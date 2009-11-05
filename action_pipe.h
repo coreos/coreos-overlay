@@ -10,7 +10,7 @@
 #include <map>
 #include <string>
 #include <tr1/memory>
-#include <glog/logging.h>
+#include <base/logging.h>
 #include "base/basictypes.h"
 
 // The structure of these classes (Action, ActionPipe, ActionProcessor, etc.)

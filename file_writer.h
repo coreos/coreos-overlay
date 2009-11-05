@@ -9,7 +9,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "glog/logging.h"
+#include "base/logging.h"
 
 // FileWriter is a class that is used to (synchronously, for now) write to
 // a file. This file is a thin wrapper around open/write/close system calls,

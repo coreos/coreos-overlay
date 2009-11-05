@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 #include "update_engine/test_utils.h"
-#include "glog/logging.h"
+#include "base/logging.h"
 
 #include "update_engine/file_writer.h"
 

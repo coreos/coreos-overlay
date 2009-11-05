@@ -5,7 +5,7 @@
 #include <openssl/bio.h>
 #include <openssl/buffer.h>
 #include <openssl/evp.h>
-#include "glog/logging.h"
+#include "base/logging.h"
 #include "update_engine/omaha_hash_calculator.h"
 
 namespace chromeos_update_engine {

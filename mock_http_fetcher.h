@@ -7,7 +7,7 @@
 
 #include <vector>
 #include <glib.h>
-#include <glog/logging.h>
+#include <base/logging.h>
 #include "update_engine/http_fetcher.h"
 
 // This is a mock implementation of HttpFetcher which is useful for testing.

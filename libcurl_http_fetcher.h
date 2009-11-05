@@ -10,7 +10,7 @@
 #include <curl/curl.h>
 #include <glib.h>
 #include "base/basictypes.h"
-#include "glog/logging.h"
+#include "base/logging.h"
 #include "update_engine/http_fetcher.h"
 
 // This is a concrete implementation of HttpFetcher that uses libcurl to do the

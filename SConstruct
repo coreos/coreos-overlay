@@ -5,7 +5,7 @@
 env = Environment()
 env['CCFLAGS'] = '-g -fno-exceptions -Wall -Werror -D_FILE_OFFSET_BITS=64 ' + \
                  '-I/usr/include/libxml2'
-env['LIBS'] = Split('curl glog gtest ssl xml2 z')
+env['LIBS'] = Split('curl gtest ssl xml2 z')
 env['CPPPATH'] = ['..']
 env.ParseConfig('pkg-config --cflags --libs glib-2.0')
 

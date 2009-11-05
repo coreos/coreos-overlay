@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "glog/logging.h"
+#include "base/logging.h"
 #include "update_engine/mock_http_fetcher.h"
 
 // This is a mac implementation of HttpFetcher which is useful for testing.

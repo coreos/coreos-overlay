@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <base/scoped_ptr.h>
 #include <glib.h>
-#include <glog/logging.h>
+#include <base/logging.h>
 #include <gtest/gtest.h>
 #include "update_engine/libcurl_http_fetcher.h"
 #include "update_engine/mock_http_fetcher.h"

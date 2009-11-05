@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <glib.h>
-#include <glog/logging.h>
+#include <base/logging.h>
 
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
