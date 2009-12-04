@@ -2,10 +2,13 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "base/logging.h"
 #include "update_engine/mock_http_fetcher.h"
+#include <algorithm>
+#include "chromeos/obsolete_logging.h"
 
 // This is a mac implementation of HttpFetcher which is useful for testing.
+
+using std::min;
 
 namespace chromeos_update_engine {
 

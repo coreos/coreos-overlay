@@ -9,14 +9,16 @@
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
 
+#include "chromeos/obsolete_logging.h"
 #include "update_engine/action_pipe.h"
+#include "update_engine/utils.h"
 
 using std::string;
 
 namespace chromeos_update_engine {
 
 const char* const UpdateCheckParams::kAppId(
-    "87efface-864d-49a5-9bb3-4b050a7c227a");
+    "{87efface-864d-49a5-9bb3-4b050a7c227a}");
 const char* const UpdateCheckParams::kOsPlatform("Chrome OS");
 const char* const UpdateCheckParams::kOsVersion("Indy");
 
@@ -91,13 +93,14 @@ string XmlEncode(const string& input) {
   return string(reinterpret_cast<const char *>(str.get()));
 }
 
-UpdateCheckAction::UpdateCheckAction(const UpdateCheckParams& params,
-                                     HttpFetcher* http_fetcher)
-    : params_(params), http_fetcher_(http_fetcher) {}
+UpdateCheckAction::UpdateCheckAction(HttpFetcher* http_fetcher)
+    : http_fetcher_(http_fetcher) {}
 
 UpdateCheckAction::~UpdateCheckAction() {}
 
 void UpdateCheckAction::PerformAction() {
+  CHECK(HasInputObject());
+  params_ = GetInputObject();
   http_fetcher_->set_delegate(this);
   string request_post(FormatRequest(params_));
   http_fetcher_->SetPostData(request_post.data(), request_post.size());
@@ -118,26 +121,6 @@ void UpdateCheckAction::ReceivedBytes(HttpFetcher *fetcher,
 }
 
 namespace {
-// A little object to call ActionComplete on the ActionProcessor when
-// it's destructed.
-class ScopedActionCompleter {
- public:
-  explicit ScopedActionCompleter(ActionProcessor* processor,
-                                 AbstractAction* action)
-      : processor_(processor), action_(action), success_(false) {}
-  ~ScopedActionCompleter() {
-    processor_->ActionComplete(action_, success_);
-  }
-  void set_success(bool success) {
-    success_ = success;
-  }
- private:
-  ActionProcessor* processor_;
-  AbstractAction* action_;
-  bool success_;
-  DISALLOW_COPY_AND_ASSIGN(ScopedActionCompleter);
-};
-
 // If non-NULL response, caller is responsible for calling xmlXPathFreeObject()
 // on the returned object.
 // This code is roughly based on the libxml tutorial at:

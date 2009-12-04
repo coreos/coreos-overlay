@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef UPDATE_ENGINE_ACTION_PROCESSOR_H__
-#define UPDATE_ENGINE_ACTION_PROCESSOR_H__
+#ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_ACTION_PROCESSOR_H__
+#define CHROMEOS_PLATFORM_UPDATE_ENGINE_ACTION_PROCESSOR_H__
 
 #include <deque>
 
@@ -57,7 +57,7 @@ class ActionProcessor {
   }
 
   // Called by an action to notify processor that it's done. Caller passes self.
-  void ActionComplete(const AbstractAction* actionptr, bool success);
+  void ActionComplete(AbstractAction* actionptr, bool success);
 
  private:
   // Actions that have not yet begun processing, in the order in which
@@ -87,11 +87,11 @@ class ActionProcessorDelegate {
 
   // Called whenever an action has finished processing, either successfully
   // or otherwise.
-  virtual void ActionCompleted(const ActionProcessor* processor,
-                               const AbstractAction* action,
+  virtual void ActionCompleted(ActionProcessor* processor,
+                               AbstractAction* action,
                                bool success) {}
 };
 
 }  // namespace chromeos_update_engine
 
-#endif  // UPDATE_ENGINE_ACTION_PROCESSOR_H__
+#endif  // CHROMEOS_PLATFORM_UPDATE_ENGINE_ACTION_PROCESSOR_H__

@@ -2,12 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef UPDATE_ENGINE_MOCK_HTTP_FETCHER_H__
-#define UPDATE_ENGINE_MOCK_HTTP_FETCHER_H__
+#ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_MOCK_HTTP_FETCHER_H__
+#define CHROMEOS_PLATFORM_UPDATE_ENGINE_MOCK_HTTP_FETCHER_H__
 
 #include <vector>
 #include <glib.h>
-#include <base/logging.h>
+#include "chromeos/obsolete_logging.h"
 #include "update_engine/http_fetcher.h"
 
 // This is a mock implementation of HttpFetcher which is useful for testing.
@@ -54,7 +54,7 @@ class MockHttpFetcher : public HttpFetcher {
   const std::vector<char>& post_data() const {
     return post_data_;
   }
-  
+
  private:
   // Sends data to the delegate and sets up a glib timeout callback if needed.
   // There must be a delegate and there must be data to send. If there is
@@ -91,4 +91,4 @@ class MockHttpFetcher : public HttpFetcher {
 
 }  // namespace chromeos_update_engine
 
-#endif  // UPDATE_ENGINE_MOCK_HTTP_FETCHER_H__
+#endif  // CHROMEOS_PLATFORM_UPDATE_ENGINE_MOCK_HTTP_FETCHER_H__

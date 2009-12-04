@@ -2,17 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef UPDATE_ENGINE_ACTION_H__
-#define UPDATE_ENGINE_ACTION_H__
+#ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_ACTION_H__
+#define CHROMEOS_PLATFORM_UPDATE_ENGINE_ACTION_H__
 
 #include <stdio.h>
 #include <tr1/memory>
 #include <iostream>
-
 #include "base/basictypes.h"
-#include <base/logging.h>
-
+#include "chromeos/obsolete_logging.h"
 #include "update_engine/action_processor.h"
+#include "update_engine/action_pipe.h"
 
 // The structure of these classes (Action, ActionPipe, ActionProcessor, etc.)
 // is based on the KSAction* classes from the Google Update Engine code at
@@ -157,7 +156,7 @@ class Action : public AbstractAction {
           out_pipe) {
     out_pipe_ = out_pipe;
   }
- protected:
+
   // Returns true iff there is an associated input pipe. If there's an input
   // pipe, there's an input object, but it may have been constructed with the
   // default ctor if the previous action didn't call SetOutputObject().
@@ -184,6 +183,13 @@ class Action : public AbstractAction {
     out_pipe_->set_contents(out_obj);
   }
 
+  // Returns a reference to the object sitting in the output pipe.
+  const typename ActionTraits<SubClass>::OutputObjectType& GetOutputObject() {
+    CHECK(HasOutputPipe());
+    return out_pipe_->contents();
+  }
+
+protected:
   // We use a shared_ptr to the pipe. shared_ptr objects destroy what they
   // point to when the last such shared_ptr object dies. We consider the
   // Actions on either end of a pipe to "own" the pipe. When the last Action
@@ -196,4 +202,4 @@ class Action : public AbstractAction {
 
 };  // namespace chromeos_update_engine
 
-#endif  // UPDATE_ENGINE_ACTION_H__
+#endif  // CHROMEOS_PLATFORM_UPDATE_ENGINE_ACTION_H__

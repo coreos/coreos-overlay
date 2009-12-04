@@ -5,13 +5,13 @@
 #include <openssl/bio.h>
 #include <openssl/buffer.h>
 #include <openssl/evp.h>
-#include "base/logging.h"
+#include "chromeos/obsolete_logging.h"
 #include "update_engine/omaha_hash_calculator.h"
 
 namespace chromeos_update_engine {
 
 OmahaHashCalculator::OmahaHashCalculator() {
-  CHECK_EQ(1, SHA1_Init(&ctx_));
+  CHECK_EQ(SHA1_Init(&ctx_), 1);
 }
 
 // Update is called with all of the data that should be hashed in order.
@@ -20,7 +20,7 @@ void OmahaHashCalculator::Update(const char* data, size_t length) {
   CHECK(hash_.empty()) << "Can't Update after hash is finalized";
   COMPILE_ASSERT(sizeof(size_t) <= sizeof(unsigned long),
                  length_param_may_be_truncated_in_SHA1_Update);
-  CHECK_EQ(1, SHA1_Update(&ctx_, data, length));
+  CHECK_EQ(SHA1_Update(&ctx_, data, length), 1);
 }
 
 // Call Finalize() when all data has been passed in. This mostly just
@@ -28,7 +28,7 @@ void OmahaHashCalculator::Update(const char* data, size_t length) {
 void OmahaHashCalculator::Finalize() {
   CHECK(hash_.empty()) << "Don't call Finalize() twice";
   unsigned char md[SHA_DIGEST_LENGTH];
-  CHECK_EQ(1, SHA1_Final(md, &ctx_));
+  CHECK_EQ(SHA1_Final(md, &ctx_), 1);
 
   // Convert md to base64 encoding and store it in hash_
   BIO *b64 = BIO_new(BIO_f_base64());
@@ -36,8 +36,8 @@ void OmahaHashCalculator::Finalize() {
   BIO *bmem = BIO_new(BIO_s_mem());
   CHECK(bmem);
   b64 = BIO_push(b64, bmem);
-  CHECK_EQ(sizeof(md), BIO_write(b64, md, sizeof(md)));
-  CHECK_EQ(1, BIO_flush(b64));
+  CHECK_EQ(BIO_write(b64, md, sizeof(md)), sizeof(md));
+  CHECK_EQ(BIO_flush(b64), 1);
 
   BUF_MEM *bptr = NULL;
   BIO_get_mem_ptr(b64, &bptr);

@@ -2,10 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef UPDATE_ENGINE_HTTP_FETCHER_H__
-#define UPDATE_ENGINE_HTTP_FETCHER_H__
+#ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_HTTP_FETCHER_H__
+#define CHROMEOS_PLATFORM_UPDATE_ENGINE_HTTP_FETCHER_H__
 
 #include <string>
+#include <vector>
 #include <glib.h>
 #include "base/basictypes.h"
 
@@ -22,7 +23,7 @@ class HttpFetcherDelegate;
 
 class HttpFetcher {
  public:
-  HttpFetcher() : delegate_(NULL) {}
+  HttpFetcher() : post_data_set_(false), delegate_(NULL) {}
   virtual ~HttpFetcher() {}
   void set_delegate(HttpFetcherDelegate* delegate) {
     delegate_ = delegate;
@@ -87,4 +88,4 @@ class HttpFetcherDelegate {
 
 }  // namespace chromeos_update_engine
 
-#endif  // UPDATE_ENGINE_HTTP_FETCHER_H__
+#endif  // CHROMEOS_PLATFORM_UPDATE_ENGINE_HTTP_FETCHER_H__

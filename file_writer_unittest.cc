@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <errno.h>
 #include <string.h>
 #include <unistd.h>
 #include <string>
@@ -9,6 +10,7 @@
 #include <gtest/gtest.h>
 #include "update_engine/file_writer.h"
 #include "update_engine/test_utils.h"
+#include "update_engine/utils.h"
 
 using std::string;
 using std::vector;
@@ -24,7 +26,8 @@ TEST(FileWriterTest, SimpleTest) {
                                 O_CREAT | O_LARGEFILE | O_TRUNC | O_WRONLY,
                                 0644));
   ASSERT_EQ(4, file_writer.Write("test", 4));
-  vector<char> actual_data = ReadFile(path);
+  vector<char> actual_data;
+  EXPECT_TRUE(utils::ReadFile(path, &actual_data));
 
   EXPECT_FALSE(memcmp("test", &actual_data[0], actual_data.size()));
   EXPECT_EQ(0, file_writer.Close());

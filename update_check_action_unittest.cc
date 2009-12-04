@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <string>
+#include <vector>
 #include <glib.h>
 #include <gtest/gtest.h>
 #include "update_engine/action_pipe.h"
@@ -11,9 +12,10 @@
 #include "update_engine/omaha_hash_calculator.h"
 #include "update_engine/test_utils.h"
 
-namespace chromeos_update_engine {
-
 using std::string;
+using std::vector;
+
+namespace chromeos_update_engine {
 
 class UpdateCheckActionTest : public ::testing::Test { };
 
@@ -35,8 +37,9 @@ string GetUpdateResponse(const string& app_id,
                          const string& needsadmin,
                          const string& size) {
   return string("<?xml version=\"1.0\" encoding=\"UTF-8\"?><gupdate "
-      "xmlns=\"http://www.google.com/update2/response\" protocol=\"2.0\"><app "
-      "appid=\"") + app_id + "\" status=\"ok\"><ping "
+                "xmlns=\"http://www.google.com/update2/response\" "
+                "protocol=\"2.0\"><app "
+                "appid=\"") + app_id + "\" status=\"ok\"><ping "
       "status=\"ok\"/><updatecheck DisplayVersion=\"" + display_version + "\" "
       "MoreInfo=\"" + more_info_url + "\" Prompt=\"" + prompt + "\" "
       "codebase=\"" + codebase + "\" "
@@ -56,11 +59,11 @@ class UpdateCheckActionTestProcessorDelegate : public ActionProcessorDelegate {
     g_main_loop_quit(loop_);
   }
 
-  virtual void ActionCompleted(const ActionProcessor* processor,
-                               const AbstractAction* action,
+  virtual void ActionCompleted(ActionProcessor* processor,
+                               AbstractAction* action,
                                bool success) {
     // make sure actions always succeed
-    if (action->Type() == "UpdateCheckAction")
+    if (action->Type() == UpdateCheckAction::StaticType())
       EXPECT_EQ(expected_success_, success);
     else
       EXPECT_TRUE(success);
@@ -102,7 +105,10 @@ class OutputObjectCollectorAction : public Action<OutputObjectCollectorAction> {
     CHECK(false);
   }
   // Debugging/logging
-  std::string Type() const { return "OutputObjectCollectorAction"; }
+  static std::string StaticType() {
+    return "OutputObjectCollectorAction";
+  }
+  std::string Type() const { return StaticType(); }
   bool has_input_object_;
   UpdateCheckResponse update_check_response_;
 };
@@ -119,17 +125,20 @@ bool TestUpdateCheckAction(const UpdateCheckParams& params,
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
   MockHttpFetcher *fetcher = new MockHttpFetcher(http_response.data(),
                                                  http_response.size());
-
-  UpdateCheckAction action(params, fetcher);  // takes ownership of fetcher
+  ObjectFeederAction<UpdateCheckParams> feeder_action;
+  UpdateCheckAction action(fetcher);  // takes ownership of fetcher
   UpdateCheckActionTestProcessorDelegate delegate;
   delegate.loop_ = loop;
   delegate.expected_success_ = expected_success;
   ActionProcessor processor;
+  feeder_action.set_obj(params);
   processor.set_delegate(&delegate);
+  processor.EnqueueAction(&feeder_action);
   processor.EnqueueAction(&action);
 
   OutputObjectCollectorAction collector_action;
 
+  BondActions(&feeder_action, &action);
   BondActions(&action, &collector_action);
   processor.EnqueueAction(&collector_action);
 
@@ -211,14 +220,17 @@ TEST(UpdateCheckActionTest, NoOutputPipeTest) {
 
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
 
-  UpdateCheckAction action(params,
-                           new MockHttpFetcher(http_response.data(),
+  ObjectFeederAction<UpdateCheckParams> feeder_action;
+  feeder_action.set_obj(params);
+  UpdateCheckAction action(new MockHttpFetcher(http_response.data(),
                                                http_response.size()));
   UpdateCheckActionTestProcessorDelegate delegate;
   delegate.loop_ = loop;
   ActionProcessor processor;
   processor.set_delegate(&delegate);
+  processor.EnqueueAction(&feeder_action);
   processor.EnqueueAction(&action);
+  BondActions(&feeder_action, &action);
 
   g_timeout_add(0, &StartProcessorInRunLoop, &processor);
   g_main_loop_run(loop);
@@ -327,18 +339,23 @@ TEST(UpdateCheckActionTest, MissingFieldTest) {
                            "unittest_track");
   UpdateCheckResponse response;
   ASSERT_TRUE(TestUpdateCheckAction(params,
-      string("<?xml version=\"1.0\" encoding=\"UTF-8\"?><gupdate "
-          "xmlns=\"http://www.google.com/update2/response\" "
-          "protocol=\"2.0\"><app  appid=\"") +
-          UpdateCheckParams::kAppId + "\" status=\"ok\"><ping "
-          "status=\"ok\"/><updatecheck DisplayVersion=\"1.2.3.4\" "
-          "Prompt=\"false\" "
-          "codebase=\"http://code/base\" "
-          "hash=\"HASH1234=\" needsadmin=\"true\" "
-          "size=\"123\" status=\"ok\"/></app></gupdate>",
-      true,
-      &response,
-      NULL));
+                                    string("<?xml version=\"1.0\" "
+                                           "encoding=\"UTF-8\"?><gupdate "
+                                           "xmlns=\"http://www.google.com/"
+                                           "update2/response\" "
+                                           "protocol=\"2.0\"><app  appid=\"") +
+                                    UpdateCheckParams::kAppId
+                                    + "\" status=\"ok\"><ping "
+                                    "status=\"ok\"/><updatecheck "
+                                    "DisplayVersion=\"1.2.3.4\" "
+                                    "Prompt=\"false\" "
+                                    "codebase=\"http://code/base\" "
+                                    "hash=\"HASH1234=\" needsadmin=\"true\" "
+                                    "size=\"123\" "
+                                    "status=\"ok\"/></app></gupdate>",
+                                    true,
+                                    &response,
+                                    NULL));
   EXPECT_TRUE(response.update_exists);
   EXPECT_EQ("1.2.3.4", response.display_version);
   EXPECT_EQ("http://code/base", response.codebase);
@@ -381,14 +398,17 @@ TEST(UpdateCheckActionTest, TerminateTransferTest) {
   string http_response("doesn't matter");
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
 
-  UpdateCheckAction action(params,
-                           new MockHttpFetcher(http_response.data(),
+  ObjectFeederAction<UpdateCheckParams> feeder_action;
+  feeder_action.set_obj(params);
+  UpdateCheckAction action(new MockHttpFetcher(http_response.data(),
                                                http_response.size()));
   TerminateEarlyTestProcessorDelegate delegate;
   delegate.loop_ = loop;
   ActionProcessor processor;
   processor.set_delegate(&delegate);
+  processor.EnqueueAction(&feeder_action);
   processor.EnqueueAction(&action);
+  BondActions(&feeder_action, &action);
 
   g_timeout_add(0, &TerminateTransferTestStarter, &processor);
   g_main_loop_run(loop);

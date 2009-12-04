@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include "update_engine/action_processor.h"
+#include "chromeos/obsolete_logging.h"
 #include "update_engine/action.h"
 
 namespace chromeos_update_engine {
@@ -49,7 +50,7 @@ void ActionProcessor::StopProcessing() {
     delegate_->ProcessingStopped(this);
 }
 
-void ActionProcessor::ActionComplete(const AbstractAction* actionptr,
+void ActionProcessor::ActionComplete(AbstractAction* actionptr,
                                      bool success) {
   CHECK_EQ(actionptr, current_action_);
   if (delegate_)
@@ -57,6 +58,14 @@ void ActionProcessor::ActionComplete(const AbstractAction* actionptr,
   string old_type = current_action_->Type();
   current_action_->SetProcessor(NULL);
   current_action_ = NULL;
+  if (actions_.empty()) {
+    LOG(INFO) << "ActionProcessor::ActionComplete: finished last action of"
+                 " type " << old_type;
+  } else if (!success) {
+    LOG(INFO) << "ActionProcessor::ActionComplete: " << old_type
+              << " action failed. Aborting processing.";
+    actions_.clear();
+  }
   if (actions_.empty()) {
     LOG(INFO) << "ActionProcessor::ActionComplete: finished last action of"
                  " type " << old_type;

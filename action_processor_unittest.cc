@@ -70,8 +70,8 @@ class MyActionProcessorDelegate : public ActionProcessorDelegate {
     EXPECT_FALSE(processing_stopped_called_);
     processing_stopped_called_ = true;
   }
-  virtual void ActionCompleted(const ActionProcessor* processor,
-                               const AbstractAction* action,
+  virtual void ActionCompleted(ActionProcessor* processor,
+                               AbstractAction* action,
                                bool success) {
     EXPECT_EQ(processor_, processor);
     EXPECT_FALSE(action_completed_called_);

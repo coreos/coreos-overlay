@@ -37,7 +37,10 @@ int GzipDecompressingFileWriter::Write(const void* bytes, size_t count) {
   // so not all data we get fed to us this time will necessarily
   // be written out this time (in decompressed form).
 
-  CHECK_EQ(0, stream_.avail_in);
+  if (stream_.avail_in) {
+    LOG(ERROR) << "Have data already. Bailing";
+    return -1;
+  }
   char buf[1024];
 
   buffer_.reserve(count);

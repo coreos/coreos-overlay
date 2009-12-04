@@ -2,14 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef UPDATE_ENGINE_FILE_WRITER_H__
-#define UPDATE_ENGINE_FILE_WRITER_H__
+#ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_FILE_WRITER_H__
+#define CHROMEOS_PLATFORM_UPDATE_ENGINE_FILE_WRITER_H__
 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "base/logging.h"
+#include "chromeos/obsolete_logging.h"
+#include "update_engine/utils.h"
 
 // FileWriter is a class that is used to (synchronously, for now) write to
 // a file. This file is a thin wrapper around open/write/close system calls,
@@ -41,39 +42,29 @@ class DirectFileWriter : public FileWriter {
   DirectFileWriter() : fd_(-1) {}
   virtual ~DirectFileWriter() {}
 
-  virtual int Open(const char* path, int flags, mode_t mode) {
-    CHECK_EQ(-1, fd_);
-    fd_ = open(path, flags, mode);
-    if (fd_ < 0)
-      return -errno;
-    return 0;
-  }
+  virtual int Open(const char* path, int flags, mode_t mode);
+  virtual int Write(const void* bytes, size_t count);
+  virtual int Close();
 
-  virtual int Write(const void* bytes, size_t count) {
-    CHECK_GE(fd_, 0);
-    ssize_t rc = write(fd_, bytes, count);
-    if (rc < 0)
-      return -errno;
-    return rc;
-  }
-
-  virtual int Close() {
-    CHECK_GE(fd_, 0);
-    int rc = close(fd_);
-
-    // This can be any negative number that's not -1. This way, this FileWriter
-    // won't be used again for another file.
-    fd_ = -2;
-
-    if (rc < 0)
-      return -errno;
-    return rc;
-  }
+  int fd() const { return fd_; }
 
  private:
   int fd_;
 };
 
+class ScopedFileWriterCloser {
+ public:
+  explicit ScopedFileWriterCloser(FileWriter* writer) : writer_(writer) {}
+  ~ScopedFileWriterCloser() {
+    int err = writer_->Close();
+    if (err)
+      LOG(ERROR) << "FileWriter::Close failed: "
+                 << utils::ErrnoNumberAsString(-err);
+  }
+ private:
+  FileWriter* writer_;
+};
+
 }  // namespace chromeos_update_engine
 
-#endif  // UPDATE_ENGINE_FILE_WRITER_H__
+#endif  // CHROMEOS_PLATFORM_UPDATE_ENGINE_FILE_WRITER_H__

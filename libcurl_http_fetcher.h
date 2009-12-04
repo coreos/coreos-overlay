@@ -2,15 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef UPDATE_ENGINE_LIBCURL_HTTP_FETCHER_H__
-#define UPDATE_ENGINE_LIBCURL_HTTP_FETCHER_H__
+#ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_LIBCURL_HTTP_FETCHER_H__
+#define CHROMEOS_PLATFORM_UPDATE_ENGINE_LIBCURL_HTTP_FETCHER_H__
 
 #include <map>
 #include <string>
 #include <curl/curl.h>
 #include <glib.h>
 #include "base/basictypes.h"
-#include "base/logging.h"
+#include "chromeos/obsolete_logging.h"
 #include "update_engine/http_fetcher.h"
 
 // This is a concrete implementation of HttpFetcher that uses libcurl to do the
@@ -54,6 +54,10 @@ class LibcurlHttpFetcher : public HttpFetcher {
     idle_ms_ = ms;
   }
  private:
+  // Resumes a transfer where it left off. This will use the
+  // HTTP Range: header to make a new connection from where the last
+  // left off.
+  virtual void ResumeTransfer(const std::string& url);
 
   // These two methods are for glib main loop callbacks. They are called
   // when either a file descriptor is ready for work or when a timer
@@ -109,10 +113,20 @@ class LibcurlHttpFetcher : public HttpFetcher {
 
   bool transfer_in_progress_;
 
+  // The transfer size. -1 if not known.
+  off_t transfer_size_;
+
+  // How many bytes have been downloaded and sent to the delegate.
+  off_t bytes_downloaded_;
+
+  // If we resumed an earlier transfer, data offset that we used for the
+  // new connection.  0 otherwise.
+  off_t resume_offset_;
+
   long idle_ms_;
   DISALLOW_COPY_AND_ASSIGN(LibcurlHttpFetcher);
 };
 
 }  // namespace chromeos_update_engine
 
-#endif  // UPDATE_ENGINE_LIBCURL_HTTP_FETCHER_H__
+#endif  // CHROMEOS_PLATFORM_UPDATE_ENGINE_LIBCURL_HTTP_FETCHER_H__

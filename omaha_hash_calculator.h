@@ -2,11 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef UPDATE_ENGINE_OMAHA_HASH_CALCULATOR_H__
-#define UPDATE_ENGINE_OMAHA_HASH_CALCULATOR_H__
+#ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_OMAHA_HASH_CALCULATOR_H__
+#define CHROMEOS_PLATFORM_UPDATE_ENGINE_OMAHA_HASH_CALCULATOR_H__
 
 #include "base/basictypes.h"
 #include <string>
+#include <vector>
 #include <openssl/sha.h>
 
 // Omaha uses base64 encoded SHA-1 as the hash. This class provides a simple
@@ -53,4 +54,4 @@ class OmahaHashCalculator {
 
 }  // namespace chromeos_update_engine
 
-#endif  // UPDATE_ENGINE_OMAHA_HASH_CALCULATOR_H__
+#endif  // CHROMEOS_PLATFORM_UPDATE_ENGINE_OMAHA_HASH_CALCULATOR_H__

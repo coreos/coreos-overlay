@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef UPDATE_ENGINE_MOCK_FILE_WRITER_H__
-#define UPDATE_ENGINE_MOCK_FILE_WRITER_H__
+#ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_MOCK_FILE_WRITER_H__
+#define CHROMEOS_PLATFORM_UPDATE_ENGINE_MOCK_FILE_WRITER_H__
 
 #include "base/basictypes.h"
 #include "update_engine/file_writer.h"
@@ -56,4 +56,4 @@ class MockFileWriter : public FileWriter {
 
 }  // namespace chromeos_update_engine
 
-#endif  // UPDATE_ENGINE_MOCK_FILE_WRITER_H__
+#endif  // CHROMEOS_PLATFORM_UPDATE_ENGINE_MOCK_FILE_WRITER_H__

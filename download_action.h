@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef UPDATE_ENGINE_DOWNLOAD_ACTION_H__
-#define UPDATE_ENGINE_DOWNLOAD_ACTION_H__
+#ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_DOWNLOAD_ACTION_H__
+#define CHROMEOS_PLATFORM_UPDATE_ENGINE_DOWNLOAD_ACTION_H__
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -19,11 +19,11 @@
 #include "update_engine/decompressing_file_writer.h"
 #include "update_engine/file_writer.h"
 #include "update_engine/http_fetcher.h"
+#include "update_engine/install_plan.h"
 #include "update_engine/omaha_hash_calculator.h"
 
 // The Download Action downloads a requested url to a specified path on disk.
-// It takes no input object, but if successful, passes the output path
-// to the output pipe.
+// The url and output path are determined by the InstallPlan passed in.
 
 using std::map;
 using std::string;
@@ -36,10 +36,9 @@ class NoneType;
 template<>
 class ActionTraits<DownloadAction> {
  public:
-  // Does not take an object for input
-  typedef NoneType InputObjectType;
-  // On success, puts the output path on output
-  typedef std::string OutputObjectType;
+  // Takes and returns an InstallPlan
+  typedef InstallPlan InputObjectType;
+  typedef InstallPlan OutputObjectType;
 };
 
 class DownloadAction : public Action<DownloadAction>,
@@ -47,11 +46,8 @@ class DownloadAction : public Action<DownloadAction>,
  public:
   // Takes ownership of the passed in HttpFetcher. Useful for testing.
   // A good calling pattern is:
-  // DownloadAction(..., new WhateverHttpFetcher);
-  DownloadAction(const std::string& url, const std::string& output_path,
-                 off_t size, const std::string& hash,
-                 const bool should_decompress,
-                 HttpFetcher* http_fetcher);
+  // DownloadAction(new WhateverHttpFetcher);
+  DownloadAction(HttpFetcher* http_fetcher);
   virtual ~DownloadAction();
   typedef ActionTraits<DownloadAction>::InputObjectType InputObjectType;
   typedef ActionTraits<DownloadAction>::OutputObjectType OutputObjectType;
@@ -59,7 +55,8 @@ class DownloadAction : public Action<DownloadAction>,
   void TerminateProcessing();
 
   // Debugging/logging
-  std::string Type() const { return "DownloadAction"; }
+  static std::string StaticType() { return "DownloadAction"; }
+  std::string Type() const { return StaticType(); }
 
   // Delegate methods (see http_fetcher.h)
   virtual void ReceivedBytes(HttpFetcher *fetcher,
@@ -71,17 +68,17 @@ class DownloadAction : public Action<DownloadAction>,
   const size_t size_;
 
   // URL to download
-  const std::string url_;
+  std::string url_;
 
   // Path to save URL to
-  const std::string output_path_;
+  std::string output_path_;
 
   // Expected hash of the file. The hash must match for this action to
   // succeed.
-  const std::string hash_;
+  std::string hash_;
 
   // Whether the caller requested that we decompress the downloaded data.
-  const bool should_decompress_;
+  bool should_decompress_;
 
   // The FileWriter that downloaded data should be written to. It will
   // either point to *decompressing_file_writer_ or *direct_file_writer_.
@@ -107,4 +104,4 @@ COMPILE_ASSERT(8 == sizeof(off_t), off_t_not_64_bit);
 
 }  // namespace chromeos_update_engine
 
-#endif  // UPDATE_ENGINE_DOWNLOAD_ACTION_H__
+#endif  // CHROMEOS_PLATFORM_UPDATE_ENGINE_DOWNLOAD_ACTION_H__

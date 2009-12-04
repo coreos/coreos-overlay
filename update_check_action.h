@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef UPDATE_ENGINE_UPDATE_CHECK_ACTION_H__
-#define UPDATE_ENGINE_UPDATE_CHECK_ACTION_H__
+#ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_UPDATE_CHECK_ACTION_H__
+#define CHROMEOS_PLATFORM_UPDATE_ENGINE_UPDATE_CHECK_ACTION_H__
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -93,8 +93,8 @@ class NoneType;
 template<>
 class ActionTraits<UpdateCheckAction> {
  public:
-  // Does not take an object for input
-  typedef NoneType InputObjectType;
+  // Takes parameters on the input pipe
+  typedef UpdateCheckParams InputObjectType;
   // On success, puts the output path on output
   typedef UpdateCheckResponse OutputObjectType;
 };
@@ -108,8 +108,7 @@ class UpdateCheckAction : public Action<UpdateCheckAction>,
   // Takes ownership of the passed in HttpFetcher. Useful for testing.
   // A good calling pattern is:
   // UpdateCheckAction(..., new WhateverHttpFetcher);
-  UpdateCheckAction(const UpdateCheckParams& params,
-                    HttpFetcher* http_fetcher);
+  UpdateCheckAction(HttpFetcher* http_fetcher);
   virtual ~UpdateCheckAction();
   typedef ActionTraits<UpdateCheckAction>::InputObjectType InputObjectType;
   typedef ActionTraits<UpdateCheckAction>::OutputObjectType OutputObjectType;
@@ -117,7 +116,8 @@ class UpdateCheckAction : public Action<UpdateCheckAction>,
   void TerminateProcessing();
 
   // Debugging/logging
-  std::string Type() const { return "UpdateCheckAction"; }
+  static std::string StaticType() { return "UpdateCheckAction"; }
+  std::string Type() const { return StaticType(); }
 
   // Delegate methods (see http_fetcher.h)
   virtual void ReceivedBytes(HttpFetcher *fetcher,
@@ -139,4 +139,4 @@ class UpdateCheckAction : public Action<UpdateCheckAction>,
 
 }  // namespace chromeos_update_engine
 
-#endif  // UPDATE_ENGINE_UPDATE_CHECK_ACTION_H__
+#endif  // CHROMEOS_PLATFORM_UPDATE_ENGINE_UPDATE_CHECK_ACTION_H__

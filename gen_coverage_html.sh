@@ -6,10 +6,11 @@
 
 set -ex
 
-scons debug=1 -c
-scons debug=1
+scons debug=1 -j 2
 lcov -d . --zerocounters
-./update_engine_unittests
+./update_engine_unittests --gtest_filter='-*.RunAsRoot*:*.Fakeroot*'
+fakeroot ./update_engine_unittests --gtest_filter='*.Fakeroot*'
+sudo ./update_engine_unittests --gtest_filter='*.RunAsRoot*'
 lcov --directory . --capture --output-file app.info
 
 # some versions of genhtml support the --no-function-coverage argument,
@@ -19,3 +20,4 @@ lcov --directory . --capture --output-file app.info
 # is tested, but it shows only 50% function coverage b/c it thinks we didn't
 # test the prod version.
 genhtml --no-function-coverage -o html ./app.info || genhtml -o html ./app.info
+./local_coverage_rate.sh

@@ -11,6 +11,7 @@
 #include "update_engine/mock_http_fetcher.h"
 #include "update_engine/omaha_hash_calculator.h"
 #include "update_engine/test_utils.h"
+#include "update_engine/utils.h"
 
 namespace chromeos_update_engine {
 
@@ -30,7 +31,8 @@ class DownloadActionTestProcessorDelegate : public ActionProcessorDelegate {
   virtual void ProcessingDone(const ActionProcessor* processor) {
     ASSERT_TRUE(loop_);
     g_main_loop_quit(loop_);
-    vector<char> found_data = ReadFile(path_);
+    vector<char> found_data;
+    ASSERT_TRUE(utils::ReadFile(path_, &found_data));
     ASSERT_EQ(expected_data_.size(), found_data.size());
     for (unsigned i = 0; i < expected_data_.size(); i++) {
       EXPECT_EQ(expected_data_[i], found_data[i]);
@@ -38,8 +40,8 @@ class DownloadActionTestProcessorDelegate : public ActionProcessorDelegate {
     processing_done_called_ = true;
   }
 
-  virtual void ActionCompleted(const ActionProcessor* processor,
-                               const AbstractAction* action,
+  virtual void ActionCompleted(ActionProcessor* processor,
+                               AbstractAction* action,
                                bool success) {
     // make sure actions always succeed
     EXPECT_TRUE(success);
@@ -76,16 +78,22 @@ void TestWithData(const vector<char>& data, bool compress) {
   // TODO(adlr): see if we need a different file for build bots
   const string path("/tmp/DownloadActionTest");
   // takes ownership of passed in HttpFetcher
-  DownloadAction download_action("", path, 0,
-                                 OmahaHashCalculator::OmahaHashOfData(use_data),
-                                 compress, new MockHttpFetcher(&use_data[0],
-                                 use_data.size()));
+  InstallPlan install_plan(compress, "",
+                           OmahaHashCalculator::OmahaHashOfData(use_data),
+                           compress ? "" : path, compress ? path : "");
+  ObjectFeederAction<InstallPlan> feeder_action;
+  feeder_action.set_obj(install_plan);
+  DownloadAction download_action(new MockHttpFetcher(&use_data[0],
+                                                     use_data.size()));
+  BondActions(&feeder_action, &download_action);
+
   DownloadActionTestProcessorDelegate delegate;
   delegate.loop_ = loop;
   delegate.expected_data_ = data;
   delegate.path_ = path;
   ActionProcessor processor;
   processor.set_delegate(&delegate);
+  processor.EnqueueAction(&feeder_action);
   processor.EnqueueAction(&download_action);
 
   g_timeout_add(0, &StartProcessorInRunLoop, &processor);
@@ -148,13 +156,17 @@ TEST(DownloadActionTest, TerminateEarlyTest) {
   const string path("/tmp/DownloadActionTest");
   {
     // takes ownership of passed in HttpFetcher
-    DownloadAction download_action("", path, 0, "", false,
-        new MockHttpFetcher(&data[0], data.size()));
+    ObjectFeederAction<InstallPlan> feeder_action;
+    InstallPlan install_plan(false, "", "", path, "");
+    feeder_action.set_obj(install_plan);
+    DownloadAction download_action(new MockHttpFetcher(&data[0], data.size()));
     TerminateEarlyTestProcessorDelegate delegate;
     delegate.loop_ = loop;
     ActionProcessor processor;
     processor.set_delegate(&delegate);
+    processor.EnqueueAction(&feeder_action);
     processor.EnqueueAction(&download_action);
+    BondActions(&feeder_action, &download_action);
 
     g_timeout_add(0, &TerminateEarlyTestStarter, &processor);
     g_main_loop_run(loop);
@@ -172,27 +184,27 @@ class DownloadActionTestAction;
 template<>
 class ActionTraits<DownloadActionTestAction> {
  public:
-  typedef string OutputObjectType;
-  typedef string InputObjectType;
+  typedef InstallPlan OutputObjectType;
+  typedef InstallPlan InputObjectType;
 };
 
 // This is a simple Action class for testing.
 struct DownloadActionTestAction : public Action<DownloadActionTestAction> {
   DownloadActionTestAction() : did_run_(false) {}
-  typedef string InputObjectType;
-  typedef string OutputObjectType;
-  ActionPipe<string>* in_pipe() { return in_pipe_.get(); }
-  ActionPipe<string>* out_pipe() { return out_pipe_.get(); }
+  typedef InstallPlan InputObjectType;
+  typedef InstallPlan OutputObjectType;
+  ActionPipe<InstallPlan>* in_pipe() { return in_pipe_.get(); }
+  ActionPipe<InstallPlan>* out_pipe() { return out_pipe_.get(); }
   ActionProcessor* processor() { return processor_; }
   void PerformAction() {
     did_run_ = true;
     ASSERT_TRUE(HasInputObject());
-    EXPECT_EQ(expected_input_object_, GetInputObject());
+    EXPECT_TRUE(expected_input_object_ == GetInputObject());
     ASSERT_TRUE(processor());
     processor()->ActionComplete(this, true);
   }
   string Type() const { return "DownloadActionTestAction"; }
-  string expected_input_object_;
+  InstallPlan expected_input_object_;
   bool did_run_;
 };
 
@@ -222,18 +234,23 @@ TEST(DownloadActionTest, PassObjectOutTest) {
   const string path("/tmp/DownloadActionTest");
 
   // takes ownership of passed in HttpFetcher
-  DownloadAction download_action("", path, 0,
-                                 OmahaHashCalculator::OmahaHashOfString("x"),
-                                 false, new MockHttpFetcher("x", 1));
+  InstallPlan install_plan(false, "",
+                           OmahaHashCalculator::OmahaHashOfString("x"), path,
+                           "");
+  ObjectFeederAction<InstallPlan> feeder_action;
+  feeder_action.set_obj(install_plan);
+  DownloadAction download_action(new MockHttpFetcher("x", 1));
 
   DownloadActionTestAction test_action;
-  test_action.expected_input_object_ = path;
+  test_action.expected_input_object_ = install_plan;
+  BondActions(&feeder_action, &download_action);
   BondActions(&download_action, &test_action);
 
   ActionProcessor processor;
   PassObjectOutTestProcessorDelegate delegate;
   delegate.loop_ = loop;
   processor.set_delegate(&delegate);
+  processor.EnqueueAction(&feeder_action);
   processor.EnqueueAction(&download_action);
   processor.EnqueueAction(&test_action);
 
@@ -250,10 +267,14 @@ TEST(DownloadActionTest, BadOutFileTest) {
   const string path("/fake/path/that/cant/be/created/because/of/missing/dirs");
 
   // takes ownership of passed in HttpFetcher
-  DownloadAction download_action("", path, 0, "", false,
-                                 new MockHttpFetcher("x", 1));
+  InstallPlan install_plan(false, "", "", path, "");
+  ObjectFeederAction<InstallPlan> feeder_action;
+  feeder_action.set_obj(install_plan);
+  DownloadAction download_action(new MockHttpFetcher("x", 1));
+  BondActions(&feeder_action, &download_action);
 
   ActionProcessor processor;
+  processor.EnqueueAction(&feeder_action);
   processor.EnqueueAction(&download_action);
   processor.StartProcessing();
   ASSERT_FALSE(processor.IsRunning());

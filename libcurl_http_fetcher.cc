@@ -2,8 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "base/logging.h"
 #include "update_engine/libcurl_http_fetcher.h"
+#include <algorithm>
+#include "chromeos/obsolete_logging.h"
+
+using std::max;
+using std::make_pair;
 
 // This is a concrete implementation of HttpFetcher that uses libcurl to do the
 // http work.
@@ -14,8 +18,7 @@ LibcurlHttpFetcher::~LibcurlHttpFetcher() {
   CleanUp();
 }
 
-// Begins the transfer, which must not have already been started.
-void LibcurlHttpFetcher::BeginTransfer(const std::string& url) {
+void LibcurlHttpFetcher::ResumeTransfer(const std::string& url) {
   CHECK(!transfer_in_progress_);
   url_ = url;
   curl_multi_handle_ = curl_multi_init();
@@ -25,20 +28,38 @@ void LibcurlHttpFetcher::BeginTransfer(const std::string& url) {
   CHECK(curl_handle_);
 
   if (post_data_set_) {
-    CHECK_EQ(CURLE_OK, curl_easy_setopt(curl_handle_, CURLOPT_POST, 1));
-    CHECK_EQ(CURLE_OK, curl_easy_setopt(curl_handle_, CURLOPT_POSTFIELDS,
-                                        &post_data_[0]));
-    CHECK_EQ(CURLE_OK, curl_easy_setopt(curl_handle_, CURLOPT_POSTFIELDSIZE,
-                                        post_data_.size()));
+    CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_POST, 1), CURLE_OK);
+    CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_POSTFIELDS,
+                              &post_data_[0]),
+             CURLE_OK);
+    CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_POSTFIELDSIZE,
+                              post_data_.size()),
+             CURLE_OK);
   }
 
-  CHECK_EQ(CURLE_OK, curl_easy_setopt(curl_handle_, CURLOPT_WRITEDATA, this));
-  CHECK_EQ(CURLE_OK, curl_easy_setopt(curl_handle_, CURLOPT_WRITEFUNCTION,
-                                      StaticLibcurlWrite));
-  CHECK_EQ(CURLE_OK, curl_easy_setopt(curl_handle_, CURLOPT_URL, url_.c_str()));
-  CHECK_EQ(CURLM_OK, curl_multi_add_handle(curl_multi_handle_, curl_handle_));
+  if (bytes_downloaded_ > 0) {
+    // Resume from where we left off
+    resume_offset_ = bytes_downloaded_;
+    CHECK_EQ(curl_easy_setopt(curl_handle_,
+                              CURLOPT_RESUME_FROM_LARGE,
+                              bytes_downloaded_), CURLE_OK);
+  }
+
+  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_WRITEDATA, this), CURLE_OK);
+  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_WRITEFUNCTION,
+                            StaticLibcurlWrite), CURLE_OK);
+  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_URL, url_.c_str()), CURLE_OK);
+  CHECK_EQ(curl_multi_add_handle(curl_multi_handle_, curl_handle_), CURLM_OK);
   transfer_in_progress_ = true;
   CurlPerformOnce();
+}
+
+// Begins the transfer, which must not have already been started.
+void LibcurlHttpFetcher::BeginTransfer(const std::string& url) {
+  transfer_size_ = -1;
+  bytes_downloaded_ = 0;
+  resume_offset_ = 0;
+  ResumeTransfer(url);
 }
 
 void LibcurlHttpFetcher::TerminateTransfer() {
@@ -59,8 +80,14 @@ void LibcurlHttpFetcher::CurlPerformOnce() {
   if (0 == running_handles) {
     // we're done!
     CleanUp();
-    if (delegate_)
-      delegate_->TransferComplete(this, true);  // success
+
+    if ((transfer_size_ >= 0) && (bytes_downloaded_ < transfer_size_)) {
+      ResumeTransfer(url_);
+    } else {
+      if (delegate_) {
+        delegate_->TransferComplete(this, true);  // success
+      }
+    }
   } else {
     // set up callback
     SetupMainloopSources();
@@ -68,6 +95,17 @@ void LibcurlHttpFetcher::CurlPerformOnce() {
 }
 
 size_t LibcurlHttpFetcher::LibcurlWrite(void *ptr, size_t size, size_t nmemb) {
+  {
+    double transfer_size_double;
+    CHECK_EQ(curl_easy_getinfo(curl_handle_,
+                               CURLINFO_CONTENT_LENGTH_DOWNLOAD,
+                               &transfer_size_double), CURLE_OK);
+    off_t new_transfer_size = static_cast<off_t>(transfer_size_double);
+    if (new_transfer_size > 0) {
+      transfer_size_ = resume_offset_ + new_transfer_size;
+    }
+  }
+  bytes_downloaded_ += size * nmemb;
   if (delegate_)
     delegate_->ReceivedBytes(this, reinterpret_cast<char*>(ptr), size * nmemb);
   return size * nmemb;
@@ -76,13 +114,13 @@ size_t LibcurlHttpFetcher::LibcurlWrite(void *ptr, size_t size, size_t nmemb) {
 void LibcurlHttpFetcher::Pause() {
   CHECK(curl_handle_);
   CHECK(transfer_in_progress_);
-  CHECK_EQ(CURLE_OK, curl_easy_pause(curl_handle_, CURLPAUSE_ALL));
+  CHECK_EQ(curl_easy_pause(curl_handle_, CURLPAUSE_ALL), CURLE_OK);
 }
 
 void LibcurlHttpFetcher::Unpause() {
   CHECK(curl_handle_);
   CHECK(transfer_in_progress_);
-  CHECK_EQ(CURLE_OK, curl_easy_pause(curl_handle_, CURLPAUSE_CONT));
+  CHECK_EQ(curl_easy_pause(curl_handle_, CURLPAUSE_CONT), CURLE_OK);
 }
 
 // This method sets up callbacks with the glib main loop.
@@ -99,8 +137,8 @@ void LibcurlHttpFetcher::SetupMainloopSources() {
 
   // Ask libcurl for the set of file descriptors we should track on its
   // behalf.
-  CHECK_EQ(CURLM_OK, curl_multi_fdset(curl_multi_handle_, &fd_read, &fd_write,
-                                      &fd_exec, &fd_max));
+  CHECK_EQ(curl_multi_fdset(curl_multi_handle_, &fd_read, &fd_write,
+                            &fd_exec, &fd_max), CURLM_OK);
 
   // We should iterate through all file descriptors up to libcurl's fd_max or
   // the highest one we're tracking, whichever is larger
@@ -113,7 +151,7 @@ void LibcurlHttpFetcher::SetupMainloopSources() {
   // in io_channels_ as there are fds that we're tracking.
   for (int i = 0; i <= fd_max; i++) {
     if (!(FD_ISSET(i, &fd_read) || FD_ISSET(i, &fd_write) ||
-        FD_ISSET(i, &fd_exec))) {
+          FD_ISSET(i, &fd_exec))) {
       // if we have an outstanding io_channel, remove it
       if (io_channels_.find(i) != io_channels_.end()) {
         g_source_remove(io_channels_[i].second);
@@ -139,7 +177,7 @@ void LibcurlHttpFetcher::SetupMainloopSources() {
 
   // Wet up a timeout callback for libcurl
   long ms = 0;
-  CHECK_EQ(CURLM_OK, curl_multi_timeout(curl_multi_handle_, &ms));
+  CHECK_EQ(curl_multi_timeout(curl_multi_handle_, &ms), CURLM_OK);
   if (ms < 0) {
     // From http://curl.haxx.se/libcurl/c/curl_multi_timeout.html:
     //     if libcurl returns a -1 timeout here, it just means that libcurl
@@ -210,14 +248,14 @@ void LibcurlHttpFetcher::CleanUp() {
 
   if (curl_handle_) {
     if (curl_multi_handle_) {
-      CHECK_EQ(CURLM_OK,
-               curl_multi_remove_handle(curl_multi_handle_, curl_handle_));
+      CHECK_EQ(curl_multi_remove_handle(curl_multi_handle_, curl_handle_),
+               CURLM_OK);
     }
     curl_easy_cleanup(curl_handle_);
     curl_handle_ = NULL;
   }
   if (curl_multi_handle_) {
-    CHECK_EQ(CURLM_OK, curl_multi_cleanup(curl_multi_handle_));
+    CHECK_EQ(curl_multi_cleanup(curl_multi_handle_), CURLM_OK);
     curl_multi_handle_ = NULL;
   }
   transfer_in_progress_ = false;

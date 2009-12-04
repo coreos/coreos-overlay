@@ -2,16 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef UPDATE_ENGINE_PIPE_H__
-#define UPDATE_ENGINE_PIPE_H__
+#ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_PIPE_H__
+#define CHROMEOS_PLATFORM_UPDATE_ENGINE_PIPE_H__
 
 #include <stdio.h>
 #include <iostream>
 #include <map>
 #include <string>
 #include <tr1/memory>
-#include <base/logging.h>
 #include "base/basictypes.h"
+#include "chromeos/obsolete_logging.h"
 
 // The structure of these classes (Action, ActionPipe, ActionProcessor, etc.)
 // is based on the KSAction* classes from the Google Update Engine code at
@@ -91,4 +91,4 @@ void BondActions(FromAction* from, ToAction* to) {
 
 }  // namespace chromeos_update_engine
 
-#endif  // UPDATE_ENGINE_PIPE_H__
+#endif  // CHROMEOS_PLATFORM_UPDATE_ENGINE_PIPE_H__
