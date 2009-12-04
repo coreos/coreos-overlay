@@ -1,0 +1,127 @@
+// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+// Update file format: A delta update file contains all the deltas needed
+// to update a system from one specific version to another specific
+// version. The update format is represented by this struct pseudocode:
+// struct delta_update_file {
+//   char magic[4] = "CrAU";
+//   uint64 bom_offset;  // Offset of protobuf DeltaArchiveManifest
+//   uint64 bom_size;  // Sise of protobuf DeltaArchiveManifest
+//
+//   // Data blobs for files, no specific format. The specific offset
+//   // and length of each data blob is recorded in the DeltaArchiveManifest.
+//   struct {
+//     char data[];
+//   } blobs[];
+//
+//   // The Gzip compressed DeltaArchiveManifest
+//   char bom[];
+// };
+
+// The DeltaArchiveManifest protobuf is an ordered list of File objects.
+// These File objects are stored in a linear array in the
+// DeltaArchiveManifest, each with a specific index. Each File object
+// can contain children in its children list. Each child in the list
+// has a name and an index. The index refers to the index within
+// DeltaArchiveManifest.files. Thus, the DeltaArchiveManifest.files
+// can be seen as a tree structure that mimicks the filesystem.
+// The root object (the object an index 0) has no name, since names
+// for children are stored in the parent.
+
+// The DeltaArchiveManifest will contain one File entry for each
+// file that will be on the resultant filesystem. Because we have
+// a tree structure, and children are ordered alphabetically within
+// a parent, we can do log-time˜path lookup on a DeltaArchiveManifest
+// object. We can also iterate through a DeltaArchiveManifest object
+// using a preorder tree traversal to see each file in the
+// DeltaArchiveManifest, seeing each directory before any of its children;
+// this takes linear time.
+
+// Here's an example from Dan Erat showing DeltaArchiveManifest
+// for a filesystem with files /bin/cat and /bin/ls.:
+
+// files[0] {  // "/" directory
+//   children[0] {
+//     name "bin"
+//     index 1
+//   }
+// }
+// files[1] {  // "/bin" directory
+//   children[0] {
+//     name "cat"
+//     index 2
+//   }
+//   children[1] {
+//     name "ls"
+//     index 3
+//   }
+// }
+// files[2] {  // "/bin/cat"
+// }
+// files[3] {  // "/bin/ls"
+// }
+
+// If a file has a data_format set, it should also have data_offset and
+// data_length set. data_offset and data_length refer to a range of bytes
+// in the delta update file itself which have the format specified by
+// data_format. FULL and FULL_GZ mean the entire file is present (FULL_GZ,
+// gzip compressed). BSDIFF means the old file with the same path should be
+// patched with 'bspatch' to produce the desired output file. COURGETTE
+// is not yet used, but it will be another binary diff format.
+
+// Directories should not have any data.
+
+// There are other types of files, too: symlinks, block and character devices,
+// fifos, and sockets. Fifos and sockets contain no data. Block and
+// character devices have data. It must be the format FULL or FULL_GZ, and
+// the contents are a serialized LinuxDevice protobuf. Symlinks must either
+// be FULL, FULL_GZ, or have no data. A symlink with no data is unchanged,
+// and with data it's set to that data.
+
+// TODO(adlr): Add support for hard links; CL is prepared already.
+// Extended attributes are unsupported at this time.
+
+package chromeos_update_engine;
+
+message DeltaArchiveManifest {
+  message File {
+    // This is st_mode from struct stat. It includes file type and permission
+    // bits.
+    optional uint32 mode = 1;
+    optional uint32 uid = 2;
+    optional uint32 gid = 3;
+
+    // File Data, not for directories
+    enum DataFormat {
+      FULL = 0;  // The data is the complete file
+      FULL_GZ = 1;  // The data is the complete file gzipped
+      BSDIFF = 2;  // The data is a bsdiff binary diff
+      COURGETTE = 3;  // The data is a courgette binary diff
+    }
+    // If present, there is data associated with this File object and
+    // data_offset and data_size must be set.
+    optional DataFormat data_format = 4;
+    // The offset into the delta file where the data (if any) is stored
+    optional uint32 data_offset = 5;
+    // The length of the data in the delta file
+    optional uint32 data_length = 6;
+
+    message Child {
+      // A File that's a directory (and only those types of File objects)
+      // will have exactly one Child submessage per child.
+      required string name = 1;  // File name of child
+
+      // Index into DeltaArchiveManifest.files for the File object of the child.
+      required uint32 index = 2;
+    }
+    repeated Child children = 7;
+  }
+  repeated File files = 1;
+}
+
+message LinuxDevice {
+  required int32 major = 1;
+  required int32 minor = 2;
+}
