@@ -107,6 +107,13 @@ message DeltaArchiveManifest {
     optional uint32 data_offset = 5;
     // The length of the data in the delta file
     optional uint32 data_length = 6;
+    
+    // When a file is a hard link, hardlink_path exists and
+    // is the path within the DeltaArchiveManifest to the "original" file.
+    // When iterating through a DeltaArchiveManifest,  you will be guaranteed
+    // to hit a hardlink only after you've hit the path to the first file.
+    // Directories can't be hardlinked.
+    optional string hardlink_path = 8;
 
     message Child {
       // A File that's a directory (and only those types of File objects)
@@ -116,7 +123,7 @@ message DeltaArchiveManifest {
       // Index into DeltaArchiveManifest.files for the File object of the child.
       required uint32 index = 2;
     }
-    repeated Child children = 7;
+    repeated Child children = 9;
   }
   repeated File files = 1;
 }

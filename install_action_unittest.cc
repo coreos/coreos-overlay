@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
+#include <utime.h>
 #include <set>
 #include <string>
 #include <vector>
@@ -16,7 +17,10 @@
 #include "update_engine/test_utils.h"
 #include "update_engine/utils.h"
 
+using chromeos_update_engine::DeltaDiffGenerator;
+using chromeos_update_engine::kRandomString;
 using chromeos_update_engine::System;
+using chromeos_update_engine::WriteFile;
 using std::set;
 using std::string;
 using std::vector;
@@ -24,6 +28,8 @@ using std::vector;
 namespace {
 void GenerateFilesAtPath(const string& base) {
   EXPECT_EQ(0, System(StringPrintf("echo hi > %s/hi", base.c_str())));
+  EXPECT_EQ(0, System(StringPrintf("ln %s/hi %s/hard_link", base.c_str(),
+                                   base.c_str())));
   EXPECT_EQ(0, System(StringPrintf("mkdir -p %s/dir", base.c_str())));
   EXPECT_EQ(0, System(StringPrintf("echo hello > %s/dir/hello", base.c_str())));
   EXPECT_EQ(0, System(StringPrintf("echo -n > %s/dir/newempty", base.c_str())));
@@ -41,6 +47,9 @@ void GenerateFilesAtPath(const string& base) {
   EXPECT_EQ(0, System(StringPrintf("mkfifo %s/dir/subdir/fifo", base.c_str())));
   EXPECT_EQ(0, System(StringPrintf("ln -f -s /target %s/dir/subdir/link",
                                    base.c_str())));
+  EXPECT_TRUE(WriteFile((base + "/big_file").c_str(),
+                        reinterpret_cast<const char*>(kRandomString),
+                        sizeof(kRandomString)));
 }
 
 // Returns true if files at paths a, b are equal and there are no errors.
@@ -56,6 +65,8 @@ bool FilesEqual(const string& a, const string& b) {
   TEST_AND_RETURN_FALSE(a_stbuf.st_mode == b_stbuf.st_mode);
   if (S_ISBLK(a_stbuf.st_mode) || S_ISCHR(a_stbuf.st_mode))
     TEST_AND_RETURN_FALSE(a_stbuf.st_rdev == b_stbuf.st_rdev);
+  if (!S_ISDIR(a_stbuf.st_mode))
+    TEST_AND_RETURN_FALSE(a_stbuf.st_nlink == b_stbuf.st_nlink);
   if (!S_ISREG(a_stbuf.st_mode)) {
     return true;
   }
@@ -113,6 +124,24 @@ TEST(InstallActionTest, RunAsRootDiffTest) {
     }
     EXPECT_TRUE(WriteFileVector(new_dir + "/dir/bigfile", buf));
   }
+  const char* const new_dir_cstr = new_dir.c_str();
+  EXPECT_EQ(0, System(StringPrintf("mkdir -p '%s/newdir'", new_dir_cstr)));
+  EXPECT_EQ(0, System(StringPrintf("mkdir -p '%s/newdir/x'", new_dir_cstr)));
+  EXPECT_EQ(0, System(StringPrintf("echo -n foo > '%s/newdir/x/file'",
+                                   new_dir_cstr)));
+  EXPECT_EQ(0, System(StringPrintf("echo -n x >> '%s/big_file'",
+                                   new_dir_cstr)));
+  // Make a symlink that compresses well:
+  EXPECT_EQ(0, System(StringPrintf(
+      "ln -s "
+      "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx "
+      "'%s/compress_sym'", new_dir_cstr)));
+
+  // Make a device that will compress
+  EXPECT_EQ(0, mknod((new_dir + "/bdev_gz").c_str(), S_IFCHR | 0644, 0));
+
   // Make a diff
   DeltaArchiveManifest* delta =
       DeltaDiffGenerator::EncodeMetadataToProtoBuffer(new_dir.c_str());
@@ -120,7 +149,8 @@ TEST(InstallActionTest, RunAsRootDiffTest) {
   EXPECT_TRUE(DeltaDiffGenerator::EncodeDataToDeltaFile(delta,
                                                         original_dir,
                                                         new_dir,
-                                                        "delta"));
+                                                        "delta",
+                                                        new_dir + "/bdev_gz"));
 
   ASSERT_EQ(0, System(string("umount ") + original_dir));
 
@@ -174,15 +204,70 @@ TEST(InstallActionTest, RunAsRootDiffTest) {
   }
   LOG(INFO) << "new_count = " << new_count;
   EXPECT_EQ(new_count, original_count);
-  EXPECT_EQ(12, original_count);  // 12 files in each dir
+  EXPECT_EQ(19, original_count);
 
-  ASSERT_EQ(0, System(string("umount ") + original_dir));
+  // Make sure hard-link installed properly
+  {
+    struct stat hard_link_stbuf;
+    struct stat hi_stbuf;
+    EXPECT_EQ(0, lstat((string(new_dir) + "/hard_link").c_str(),
+                       &hard_link_stbuf));
+    EXPECT_EQ(0, lstat((string(new_dir) + "/hi").c_str(), &hi_stbuf));
+    EXPECT_EQ(hard_link_stbuf.st_mode, hi_stbuf.st_mode);
+    EXPECT_EQ(2, hard_link_stbuf.st_nlink);
+    EXPECT_EQ(2, hi_stbuf.st_nlink);
+    EXPECT_EQ(hi_stbuf.st_ino, hard_link_stbuf.st_ino);
+  }
+
+  EXPECT_EQ(0, System(string("umount ") + original_dir));
 
   // Cleanup generated files
-  ASSERT_EQ(0, System(string("rm -rf ") + original_dir));
-  ASSERT_EQ(0, System(string("rm -rf ") + new_dir));
+  EXPECT_EQ(0, System(string("rm -rf ") + original_dir));
+  EXPECT_EQ(0, System(string("rm -rf ") + new_dir));
   EXPECT_EQ(0, System(string("rm -f ") + original_image));
-  ASSERT_EQ(0, system("rm -f delta"));
+  EXPECT_EQ(0, system("rm -f delta"));
+}
+
+TEST(InstallActionTest, FullUpdateTest) {
+  ObjectFeederAction<InstallPlan> feeder_action;
+  InstallAction install_action;
+  ObjectCollectorAction<string> collector_action;
+
+  BondActions(&feeder_action, &install_action);
+  BondActions(&install_action, &collector_action);
+
+  ActionProcessor processor;
+  processor.EnqueueAction(&feeder_action);
+  processor.EnqueueAction(&install_action);
+  processor.EnqueueAction(&collector_action);
+
+  InstallPlan install_plan(true, "", "", "delta", "install_path");
+  feeder_action.set_obj(install_plan);
+
+  processor.StartProcessing();
+  EXPECT_FALSE(processor.IsRunning()) << "Update to handle async actions";
+  EXPECT_EQ("install_path", collector_action.object());
+}
+
+TEST(InstallActionTest, InvalidDeltaFileTest) {
+  ObjectFeederAction<InstallPlan> feeder_action;
+  InstallAction install_action;
+  ObjectCollectorAction<string> collector_action;
+
+  BondActions(&feeder_action, &install_action);
+  BondActions(&install_action, &collector_action);
+
+  ActionProcessor processor;
+  processor.EnqueueAction(&feeder_action);
+  processor.EnqueueAction(&install_action);
+  processor.EnqueueAction(&collector_action);
+
+  InstallPlan install_plan(false, "", "", "no_such_file", "install_path");
+  feeder_action.set_obj(install_plan);
+
+  processor.StartProcessing();
+  EXPECT_FALSE(processor.IsRunning()) << "Update to handle async actions";
+  EXPECT_TRUE(collector_action.object().empty());
 }
 
 }  // namespace chromeos_update_engine

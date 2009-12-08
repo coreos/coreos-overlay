@@ -63,11 +63,14 @@ void InstallAction::PerformAction() {
   ScopedFilesystemUnmounter filesystem_unmounter(mountpoint);
 
   {
-    // iterate through existing fs, deleting unneeded files
+    // Iterate through existing fs, deleting unneeded files
+    // Delete files that don't exist in the update, or exist but are
+    // hard links.
     FilesystemIterator iter(mountpoint,
                             utils::SetWithValue<string>("/lost+found"));
     for (; !iter.IsEnd(); iter.Increment()) {
-      if (!parser.ContainsPath(iter.GetPartialPath())) {
+      if (!parser.ContainsPath(iter.GetPartialPath()) ||
+          parser.GetFileAtPath(iter.GetPartialPath()).has_hardlink_path()) {
         VLOG(1) << "install removing local path: " << iter.GetFullPath();
         TEST_AND_RETURN(utils::RecursiveUnlinkDir(iter.GetFullPath()));
       }
@@ -96,7 +99,12 @@ bool InstallAction::InstallFile(const std::string& mountpoint,
   TEST_AND_RETURN_FALSE_ERRNO((result == 0) || (errno == ENOENT));
   bool exists = (result == 0);
   // Create the proper file
-  if (S_ISDIR(file.mode())) {
+  if (file.has_hardlink_path()) {
+    TEST_AND_RETURN_FALSE(file.has_hardlink_path());
+    TEST_AND_RETURN_FALSE_ERRNO(link(
+        (mountpoint + file.hardlink_path()).c_str(),
+        (mountpoint + path).c_str()) == 0);
+  } else if (S_ISDIR(file.mode())) {
     if (!exists) {
       TEST_AND_RETURN_FALSE_ERRNO(
           (mkdir((mountpoint + path).c_str(), file.mode())) == 0);
@@ -186,6 +194,7 @@ bool InstallAction::InstallFileSpecialFile(
   dev_t dev = 0;
   if (S_ISCHR(file.mode()) || S_ISBLK(file.mode())) {
     vector<char> dev_proto;
+    TEST_AND_RETURN_FALSE(file.has_data_format());
     TEST_AND_RETURN_FALSE(parser.ReadDataVector(file.data_offset(),
                                                 file.data_length(),
                                                 &dev_proto));

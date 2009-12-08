@@ -39,6 +39,12 @@ void DumpProto(const DeltaArchiveManifest* archive) {
   }
 }
 
+const char* const kWellCompressingFilename =
+    "this_compresses_well_xxxxxxxxxxxxxxxxx"
+    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
 // The following files are generated at the path 'base':
 // /
 //  cdev (c 2 1)
@@ -71,19 +77,24 @@ void GenerateFilesAtPath(const string& base) {
   EXPECT_EQ(0, System(StringPrintf("mkfifo '%s/dir/subdir/fifo'", base_c)));
   EXPECT_EQ(0, System(StringPrintf("ln -f -s /target '%s/dir/subdir/link'",
                                    base_c)));
+  EXPECT_EQ(0, System(StringPrintf("rm -f '%s/hard_link'", base_c)));
+  EXPECT_EQ(0, System(StringPrintf("ln '%s/hi' '%s/hard_link'",
+                                   base_c, base_c)));
+  EXPECT_EQ(0, System(StringPrintf(
+      "ln -f -s '%s' '%s/compress_link'", kWellCompressingFilename, base_c)));
 
-  // Things that will encode differently:
-  EXPECT_EQ(0, System(StringPrintf("mkdir -p '%s/encoding'", base_c)));
-  EXPECT_EQ(0, System(StringPrintf("echo nochange > '%s/encoding/nochange'",
-                                   base_c)));
-  EXPECT_EQ(0, System(StringPrintf("echo -n > '%s/encoding/onebyte'", base_c)));
-  EXPECT_EQ(0, System(StringPrintf("echo -n > '%s/encoding/long_new'",
-                                   base_c)));
-  // Random 1 MiB byte length file
-  EXPECT_TRUE(WriteFile((base +
-                         "/encoding/long_small_change").c_str(),
-                        reinterpret_cast<const char*>(kRandomString),
-                        sizeof(kRandomString)));
+// Things that will encode differently:
+EXPECT_EQ(0, System(StringPrintf("mkdir -p '%s/encoding'", base_c)));
+EXPECT_EQ(0, System(StringPrintf("echo nochange > '%s/encoding/nochange'",
+                                 base_c)));
+EXPECT_EQ(0, System(StringPrintf("echo -n > '%s/encoding/onebyte'", base_c)));
+EXPECT_EQ(0, System(StringPrintf("echo -n > '%s/encoding/long_new'",
+                                 base_c)));
+// Random 1 MiB byte length file
+EXPECT_TRUE(WriteFile((base +
+                       "/encoding/long_small_change").c_str(),
+                      reinterpret_cast<const char*>(kRandomString),
+                      sizeof(kRandomString)));
 }
 // base points to a folder that was passed to GenerateFilesAtPath().
 // This edits some, so that one can make a diff from the original data
@@ -120,17 +131,20 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeMetadataToProtoBufferTest) {
           (string(cwd) + "/diff-gen-test/new").c_str());
   EXPECT_TRUE(NULL != archive);
 
-  EXPECT_EQ(16, archive->files_size());
+  EXPECT_EQ(18, archive->files_size());
   //DumpProto(archive);
   const DeltaArchiveManifest_File& root = archive->files(0);
   EXPECT_TRUE(S_ISDIR(root.mode()));
   EXPECT_EQ(0, root.uid());
   EXPECT_EQ(0, root.gid());
-  ASSERT_EQ(4, root.children_size());
+  ASSERT_EQ(6, root.children_size());
   EXPECT_EQ("cdev", root.children(0).name());
-  EXPECT_EQ("dir", root.children(1).name());
-  EXPECT_EQ("encoding", root.children(2).name());
-  EXPECT_EQ("hi", root.children(3).name());
+  EXPECT_EQ("compress_link", root.children(1).name());
+  EXPECT_EQ("dir", root.children(2).name());
+  EXPECT_EQ("encoding", root.children(3).name());
+  EXPECT_EQ("hard_link", root.children(4).name());
+  EXPECT_EQ("hi", root.children(5).name());
+  EXPECT_FALSE(root.has_hardlink_path());
   EXPECT_FALSE(root.has_data_format());
   EXPECT_FALSE(root.has_data_offset());
   EXPECT_FALSE(root.has_data_length());
@@ -141,22 +155,47 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeMetadataToProtoBufferTest) {
   EXPECT_TRUE(S_ISCHR(cdev.mode()));
   EXPECT_EQ(0, cdev.uid());
   EXPECT_EQ(0, cdev.gid());
+  EXPECT_FALSE(cdev.has_hardlink_path());
   EXPECT_FALSE(cdev.has_data_format());
   EXPECT_FALSE(cdev.has_data_offset());
   EXPECT_FALSE(cdev.has_data_length());
 
+  const DeltaArchiveManifest_File& compress_link =
+      archive->files(root.children(1).index());
+  EXPECT_EQ(0, compress_link.children_size());
+  EXPECT_TRUE(S_ISLNK(compress_link.mode()));
+  EXPECT_EQ(0, compress_link.uid());
+  EXPECT_EQ(0, compress_link.gid());
+  EXPECT_FALSE(compress_link.has_hardlink_path());
+  EXPECT_FALSE(compress_link.has_data_format());
+  EXPECT_FALSE(compress_link.has_data_offset());
+  EXPECT_FALSE(compress_link.has_data_length());
+
+  const DeltaArchiveManifest_File& hard_link =
+      archive->files(root.children(4).index());
+  EXPECT_EQ(0, hard_link.children_size());
+  EXPECT_TRUE(S_ISREG(hard_link.mode()));
+  EXPECT_EQ(0, hard_link.uid());
+  EXPECT_EQ(0, hard_link.gid());
+  EXPECT_FALSE(hard_link.has_hardlink_path());
+  EXPECT_FALSE(hard_link.has_data_format());
+  EXPECT_FALSE(hard_link.has_data_offset());
+  EXPECT_FALSE(hard_link.has_data_length());
+
   const DeltaArchiveManifest_File& hi =
-      archive->files(root.children(3).index());
+      archive->files(root.children(5).index());
   EXPECT_EQ(0, hi.children_size());
   EXPECT_TRUE(S_ISREG(hi.mode()));
   EXPECT_EQ(0, hi.uid());
   EXPECT_EQ(0, hi.gid());
+  EXPECT_TRUE(hi.has_hardlink_path());
+  EXPECT_EQ("/hard_link", hi.hardlink_path());
   EXPECT_FALSE(hi.has_data_format());
   EXPECT_FALSE(hi.has_data_offset());
   EXPECT_FALSE(hi.has_data_length());
 
   const DeltaArchiveManifest_File& encoding =
-      archive->files(root.children(2).index());
+      archive->files(root.children(3).index());
   EXPECT_TRUE(S_ISDIR(encoding.mode()));
   EXPECT_EQ(0, encoding.uid());
   EXPECT_EQ(0, encoding.gid());
@@ -165,6 +204,7 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeMetadataToProtoBufferTest) {
   EXPECT_EQ("long_small_change", encoding.children(1).name());
   EXPECT_EQ("nochange", encoding.children(2).name());
   EXPECT_EQ("onebyte", encoding.children(3).name());
+  EXPECT_FALSE(encoding.has_hardlink_path());
   EXPECT_FALSE(encoding.has_data_format());
   EXPECT_FALSE(encoding.has_data_offset());
   EXPECT_FALSE(encoding.has_data_length());
@@ -175,6 +215,7 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeMetadataToProtoBufferTest) {
   EXPECT_TRUE(S_ISREG(long_new.mode()));
   EXPECT_EQ(0, long_new.uid());
   EXPECT_EQ(0, long_new.gid());
+  EXPECT_FALSE(long_new.has_hardlink_path());
   EXPECT_FALSE(long_new.has_data_format());
   EXPECT_FALSE(long_new.has_data_offset());
   EXPECT_FALSE(long_new.has_data_length());
@@ -185,6 +226,7 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeMetadataToProtoBufferTest) {
   EXPECT_TRUE(S_ISREG(long_small_change.mode()));
   EXPECT_EQ(0, long_small_change.uid());
   EXPECT_EQ(0, long_small_change.gid());
+  EXPECT_FALSE(long_small_change.has_hardlink_path());
   EXPECT_FALSE(long_small_change.has_data_format());
   EXPECT_FALSE(long_small_change.has_data_offset());
   EXPECT_FALSE(long_small_change.has_data_length());
@@ -195,6 +237,7 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeMetadataToProtoBufferTest) {
   EXPECT_TRUE(S_ISREG(nochange.mode()));
   EXPECT_EQ(0, nochange.uid());
   EXPECT_EQ(0, nochange.gid());
+  EXPECT_FALSE(nochange.has_hardlink_path());
   EXPECT_FALSE(nochange.has_data_format());
   EXPECT_FALSE(nochange.has_data_offset());
   EXPECT_FALSE(nochange.has_data_length());
@@ -205,12 +248,13 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeMetadataToProtoBufferTest) {
   EXPECT_TRUE(S_ISREG(onebyte.mode()));
   EXPECT_EQ(0, onebyte.uid());
   EXPECT_EQ(0, onebyte.gid());
+  EXPECT_FALSE(onebyte.has_hardlink_path());
   EXPECT_FALSE(onebyte.has_data_format());
   EXPECT_FALSE(onebyte.has_data_offset());
   EXPECT_FALSE(onebyte.has_data_length());
 
   const DeltaArchiveManifest_File& dir =
-      archive->files(root.children(1).index());
+      archive->files(root.children(2).index());
   EXPECT_TRUE(S_ISDIR(dir.mode()));
   EXPECT_EQ(0, dir.uid());
   EXPECT_EQ(0, dir.gid());
@@ -220,6 +264,7 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeMetadataToProtoBufferTest) {
   EXPECT_EQ("hello", dir.children(2).name());
   EXPECT_EQ("newempty", dir.children(3).name());
   EXPECT_EQ("subdir", dir.children(4).name());
+  EXPECT_FALSE(dir.has_hardlink_path());
   EXPECT_FALSE(dir.has_data_format());
   EXPECT_FALSE(dir.has_data_offset());
   EXPECT_FALSE(dir.has_data_length());
@@ -230,6 +275,7 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeMetadataToProtoBufferTest) {
   EXPECT_TRUE(S_ISBLK(bdev.mode()));
   EXPECT_EQ(0, bdev.uid());
   EXPECT_EQ(0, bdev.gid());
+  EXPECT_FALSE(bdev.has_hardlink_path());
   EXPECT_FALSE(bdev.has_data_format());
   EXPECT_FALSE(bdev.has_data_offset());
   EXPECT_FALSE(bdev.has_data_length());
@@ -240,6 +286,7 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeMetadataToProtoBufferTest) {
   EXPECT_TRUE(S_ISDIR(emptydir.mode()));
   EXPECT_EQ(501, emptydir.uid());
   EXPECT_EQ(503, emptydir.gid());
+  EXPECT_FALSE(emptydir.has_hardlink_path());
   EXPECT_FALSE(emptydir.has_data_format());
   EXPECT_FALSE(emptydir.has_data_offset());
   EXPECT_FALSE(emptydir.has_data_length());
@@ -250,6 +297,7 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeMetadataToProtoBufferTest) {
   EXPECT_TRUE(S_ISREG(hello.mode()));
   EXPECT_EQ(0, hello.uid());
   EXPECT_EQ(0, hello.gid());
+  EXPECT_FALSE(hello.has_hardlink_path());
   EXPECT_FALSE(hello.has_data_format());
   EXPECT_FALSE(hello.has_data_offset());
   EXPECT_FALSE(hello.has_data_length());
@@ -260,6 +308,7 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeMetadataToProtoBufferTest) {
   EXPECT_TRUE(S_ISREG(newempty.mode()));
   EXPECT_EQ(0, newempty.uid());
   EXPECT_EQ(0, newempty.gid());
+  EXPECT_FALSE(newempty.has_hardlink_path());
   EXPECT_FALSE(newempty.has_data_format());
   EXPECT_FALSE(newempty.has_data_offset());
   EXPECT_FALSE(newempty.has_data_length());
@@ -272,6 +321,7 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeMetadataToProtoBufferTest) {
   EXPECT_TRUE(S_ISDIR(subdir.mode()));
   EXPECT_EQ(0, subdir.uid());
   EXPECT_EQ(0, subdir.gid());
+  EXPECT_FALSE(subdir.has_hardlink_path());
   EXPECT_FALSE(subdir.has_data_format());
   EXPECT_FALSE(subdir.has_data_offset());
   EXPECT_FALSE(subdir.has_data_length());
@@ -282,6 +332,7 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeMetadataToProtoBufferTest) {
   EXPECT_TRUE(S_ISFIFO(fifo.mode()));
   EXPECT_EQ(0, fifo.uid());
   EXPECT_EQ(0, fifo.gid());
+  EXPECT_FALSE(fifo.has_hardlink_path());
   EXPECT_FALSE(fifo.has_data_format());
   EXPECT_FALSE(fifo.has_data_offset());
   EXPECT_FALSE(fifo.has_data_length());
@@ -292,6 +343,7 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeMetadataToProtoBufferTest) {
   EXPECT_TRUE(S_ISLNK(link.mode()));
   EXPECT_EQ(0, link.uid());
   EXPECT_EQ(0, link.gid());
+  EXPECT_FALSE(link.has_hardlink_path());
   EXPECT_FALSE(link.has_data_format());
   EXPECT_FALSE(link.has_data_offset());
   EXPECT_FALSE(link.has_data_length());
@@ -316,19 +368,23 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeDataToDeltaFileTest) {
       archive,
       string(cwd) + "/diff-gen-test/old",
       string(cwd) + "/diff-gen-test/new",
-      string(cwd) + "/diff-gen-test/out.dat"));
+      string(cwd) + "/diff-gen-test/out.dat",
+      ""));
 
-  EXPECT_EQ(16, archive->files_size());
+  EXPECT_EQ(18, archive->files_size());
 
   const DeltaArchiveManifest_File& root = archive->files(0);
   EXPECT_TRUE(S_ISDIR(root.mode()));
   EXPECT_EQ(0, root.uid());
   EXPECT_EQ(0, root.gid());
-  ASSERT_EQ(4, root.children_size());
+  ASSERT_EQ(6, root.children_size());
   EXPECT_EQ("cdev", root.children(0).name());
-  EXPECT_EQ("dir", root.children(1).name());
-  EXPECT_EQ("encoding", root.children(2).name());
-  EXPECT_EQ("hi", root.children(3).name());
+  EXPECT_EQ("compress_link", root.children(1).name());
+  EXPECT_EQ("dir", root.children(2).name());
+  EXPECT_EQ("encoding", root.children(3).name());
+  EXPECT_EQ("hard_link", root.children(4).name());
+  EXPECT_EQ("hi", root.children(5).name());
+  EXPECT_FALSE(root.has_hardlink_path());
   EXPECT_FALSE(root.has_data_format());
   EXPECT_FALSE(root.has_data_offset());
   EXPECT_FALSE(root.has_data_length());
@@ -344,21 +400,49 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeDataToDeltaFileTest) {
   EXPECT_TRUE(cdev.has_data_offset());
   ASSERT_TRUE(cdev.has_data_length());
   EXPECT_GT(cdev.data_length(), 0);
+  EXPECT_FALSE(cdev.has_hardlink_path());
+
+  const DeltaArchiveManifest_File& compress_link =
+      archive->files(root.children(1).index());
+  EXPECT_EQ(0, compress_link.children_size());
+  EXPECT_TRUE(S_ISLNK(compress_link.mode()));
+  EXPECT_EQ(0, compress_link.uid());
+  EXPECT_EQ(0, compress_link.gid());
+  ASSERT_TRUE(compress_link.has_data_format());
+  EXPECT_EQ(DeltaArchiveManifest_File_DataFormat_FULL_GZ,
+            compress_link.data_format());
+  EXPECT_TRUE(compress_link.has_data_offset());
+  ASSERT_TRUE(compress_link.has_data_length());
+  EXPECT_GT(compress_link.data_length(), 0);
+  EXPECT_FALSE(compress_link.has_hardlink_path());
+
+  const DeltaArchiveManifest_File& hard_link =
+      archive->files(root.children(4).index());
+  EXPECT_EQ(0, hard_link.children_size());
+  EXPECT_TRUE(S_ISREG(hard_link.mode()));
+  EXPECT_EQ(0, hard_link.uid());
+  EXPECT_EQ(0, hard_link.gid());
+  ASSERT_TRUE(hard_link.has_data_format());
+  EXPECT_EQ(DeltaArchiveManifest_File_DataFormat_FULL, hard_link.data_format());
+  EXPECT_TRUE(hard_link.has_data_offset());
+  ASSERT_TRUE(hard_link.has_data_length());
+  EXPECT_GT(hard_link.data_length(), 0);
+  EXPECT_FALSE(hard_link.has_hardlink_path());
 
   const DeltaArchiveManifest_File& hi =
-      archive->files(root.children(3).index());
+      archive->files(root.children(5).index());
   EXPECT_EQ(0, hi.children_size());
   EXPECT_TRUE(S_ISREG(hi.mode()));
   EXPECT_EQ(0, hi.uid());
   EXPECT_EQ(0, hi.gid());
-  ASSERT_TRUE(hi.has_data_format());
-  EXPECT_EQ(DeltaArchiveManifest_File_DataFormat_FULL, hi.data_format());
-  EXPECT_TRUE(hi.has_data_offset());
-  ASSERT_TRUE(hi.has_data_length());
-  EXPECT_GT(hi.data_length(), 0);
+  EXPECT_FALSE(hi.has_data_format());
+  EXPECT_FALSE(hi.has_data_offset());
+  EXPECT_FALSE(hi.has_data_length());
+  EXPECT_TRUE(hi.has_hardlink_path());
+  EXPECT_EQ("/hard_link", hi.hardlink_path());
 
   const DeltaArchiveManifest_File& encoding =
-      archive->files(root.children(2).index());
+      archive->files(root.children(3).index());
   EXPECT_TRUE(S_ISDIR(encoding.mode()));
   EXPECT_EQ(0, encoding.uid());
   EXPECT_EQ(0, encoding.gid());
@@ -370,6 +454,7 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeDataToDeltaFileTest) {
   EXPECT_FALSE(encoding.has_data_format());
   EXPECT_FALSE(encoding.has_data_offset());
   EXPECT_FALSE(encoding.has_data_length());
+  EXPECT_FALSE(encoding.has_hardlink_path());
 
   const DeltaArchiveManifest_File& long_new =
       archive->files(encoding.children(0).index());
@@ -382,6 +467,7 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeDataToDeltaFileTest) {
             long_new.data_format());
   EXPECT_TRUE(long_new.has_data_offset());
   EXPECT_TRUE(long_new.has_data_length());
+  EXPECT_FALSE(long_new.has_hardlink_path());
 
   const DeltaArchiveManifest_File& long_small_change =
       archive->files(encoding.children(1).index());
@@ -394,6 +480,7 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeDataToDeltaFileTest) {
             long_small_change.data_format());
   EXPECT_TRUE(long_small_change.has_data_offset());
   EXPECT_TRUE(long_small_change.has_data_length());
+  EXPECT_FALSE(long_small_change.has_hardlink_path());
 
   const DeltaArchiveManifest_File& nochange =
       archive->files(encoding.children(2).index());
@@ -405,6 +492,7 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeDataToDeltaFileTest) {
   EXPECT_EQ(DeltaArchiveManifest_File_DataFormat_FULL, nochange.data_format());
   EXPECT_TRUE(nochange.has_data_offset());
   EXPECT_TRUE(nochange.has_data_length());
+  EXPECT_FALSE(nochange.has_hardlink_path());
 
   const DeltaArchiveManifest_File& onebyte =
       archive->files(encoding.children(3).index());
@@ -417,9 +505,10 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeDataToDeltaFileTest) {
   EXPECT_TRUE(onebyte.has_data_offset());
   EXPECT_TRUE(onebyte.has_data_length());
   EXPECT_EQ(1, onebyte.data_length());
+  EXPECT_FALSE(onebyte.has_hardlink_path());
 
   const DeltaArchiveManifest_File& dir =
-      archive->files(root.children(1).index());
+      archive->files(root.children(2).index());
   EXPECT_TRUE(S_ISDIR(dir.mode()));
   EXPECT_EQ(0, dir.uid());
   EXPECT_EQ(0, dir.gid());
@@ -432,6 +521,7 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeDataToDeltaFileTest) {
   EXPECT_FALSE(dir.has_data_format());
   EXPECT_FALSE(dir.has_data_offset());
   EXPECT_FALSE(dir.has_data_length());
+  EXPECT_FALSE(dir.has_hardlink_path());
 
   const DeltaArchiveManifest_File& bdev =
       archive->files(dir.children(0).index());
@@ -444,6 +534,7 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeDataToDeltaFileTest) {
   EXPECT_TRUE(bdev.has_data_offset());
   ASSERT_TRUE(bdev.has_data_length());
   EXPECT_GT(bdev.data_length(), 0);
+  EXPECT_FALSE(bdev.has_hardlink_path());
 
   const DeltaArchiveManifest_File& emptydir =
       archive->files(dir.children(1).index());
@@ -454,6 +545,7 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeDataToDeltaFileTest) {
   EXPECT_FALSE(emptydir.has_data_format());
   EXPECT_FALSE(emptydir.has_data_offset());
   EXPECT_FALSE(emptydir.has_data_length());
+  EXPECT_FALSE(emptydir.has_hardlink_path());
 
   const DeltaArchiveManifest_File& hello =
       archive->files(dir.children(2).index());
@@ -466,6 +558,7 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeDataToDeltaFileTest) {
   EXPECT_TRUE(hello.has_data_offset());
   ASSERT_TRUE(hello.has_data_length());
   EXPECT_GT(hello.data_length(), 0);
+  EXPECT_FALSE(hello.has_hardlink_path());
 
   const DeltaArchiveManifest_File& newempty =
       archive->files(dir.children(3).index());
@@ -476,6 +569,7 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeDataToDeltaFileTest) {
   EXPECT_FALSE(newempty.has_data_format());
   EXPECT_FALSE(newempty.has_data_offset());
   EXPECT_FALSE(newempty.has_data_length());
+  EXPECT_FALSE(newempty.has_hardlink_path());
 
   const DeltaArchiveManifest_File& subdir =
       archive->files(dir.children(4).index());
@@ -488,6 +582,7 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeDataToDeltaFileTest) {
   EXPECT_FALSE(subdir.has_data_format());
   EXPECT_FALSE(subdir.has_data_offset());
   EXPECT_FALSE(subdir.has_data_length());
+  EXPECT_FALSE(subdir.has_hardlink_path());
 
   const DeltaArchiveManifest_File& fifo =
       archive->files(subdir.children(0).index());
@@ -498,6 +593,7 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeDataToDeltaFileTest) {
   EXPECT_FALSE(fifo.has_data_format());
   EXPECT_FALSE(fifo.has_data_offset());
   EXPECT_FALSE(fifo.has_data_length());
+  EXPECT_FALSE(fifo.has_hardlink_path());
 
   const DeltaArchiveManifest_File& link =
       archive->files(subdir.children(1).index());
@@ -510,6 +606,7 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeDataToDeltaFileTest) {
   EXPECT_TRUE(link.has_data_offset());
   ASSERT_TRUE(link.has_data_length());
   EXPECT_GT(link.data_length(), 0);
+  EXPECT_FALSE(link.has_hardlink_path());
 }
 
 class DeltaDiffParserTest : public ::testing::Test {
@@ -569,7 +666,8 @@ TEST_F(DeltaDiffParserTest, FakerootDecodeDataFromDeltaFileTest) {
       archive,
       string(cwd) + "/diff-gen-test/old",
       string(cwd) + "/diff-gen-test/new",
-      string(cwd) + "/diff-gen-test/out.dat"));
+      string(cwd) + "/diff-gen-test/out.dat",
+      ""));
   // parse the file
 
   DeltaDiffParser parser(string(cwd) + "/diff-gen-test/out.dat");
@@ -578,6 +676,7 @@ TEST_F(DeltaDiffParserTest, FakerootDecodeDataFromDeltaFileTest) {
   string expected_paths[] = {
     "",
     "/cdev",
+    "/compress_link",
     "/dir",
     "/dir/bdev",
     "/dir/emptydir",
@@ -591,6 +690,7 @@ TEST_F(DeltaDiffParserTest, FakerootDecodeDataFromDeltaFileTest) {
     "/encoding/long_small_change",
     "/encoding/nochange",
     "/encoding/onebyte",
+    "/hard_link",
     "/hi"
   };
   for (unsigned int i = 0;
@@ -646,6 +746,16 @@ TEST_F(DeltaDiffParserTest, FakerootDecodeDataFromDeltaFileTest) {
   EXPECT_EQ(linux_device.major(), 2);
   EXPECT_EQ(linux_device.minor(), 1);
 
+  // compress_link
+  file = parser.GetFileAtPath("/compress_link");
+  EXPECT_TRUE(S_ISLNK(file.mode()));
+  EXPECT_TRUE(file.has_data_format());
+  EXPECT_EQ(DeltaArchiveManifest_File_DataFormat_FULL_GZ, file.data_format());
+  EXPECT_EQ(kWellCompressingFilename,
+            GzipDecompressToString(ReadFilePart(string(cwd) +
+                                                "/diff-gen-test/out.dat",
+                                                file.data_offset(),
+                                                file.data_length())));
   // dir
   file = parser.GetFileAtPath("/dir");
   EXPECT_TRUE(S_ISDIR(file.mode()));
@@ -764,8 +874,8 @@ TEST_F(DeltaDiffParserTest, FakerootDecodeDataFromDeltaFileTest) {
                                       file.data_offset(),
                                       file.data_length()));
 
-  // hi
-  file = parser.GetFileAtPath("/hi");
+  // hard_link
+  file = parser.GetFileAtPath("/hard_link");
   EXPECT_TRUE(S_ISREG(file.mode()));
   EXPECT_TRUE(file.has_data_format());
   EXPECT_EQ(DeltaArchiveManifest_File_DataFormat_FULL, file.data_format());
@@ -773,6 +883,13 @@ TEST_F(DeltaDiffParserTest, FakerootDecodeDataFromDeltaFileTest) {
                                             "/diff-gen-test/out.dat",
                                             file.data_offset(),
                                             file.data_length()));
+
+  // hi
+  file = parser.GetFileAtPath("/hi");
+  EXPECT_TRUE(S_ISREG(file.mode()));
+  EXPECT_FALSE(file.has_data_format());
+  EXPECT_TRUE(file.has_hardlink_path());
+  EXPECT_EQ("/hard_link", file.hardlink_path());
 }
 
 TEST_F(DeltaDiffParserTest, FakerootInvalidTest) {

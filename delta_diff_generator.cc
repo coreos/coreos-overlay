@@ -72,6 +72,8 @@ struct Node {
       : mode(0),
         uid(0),
         gid(0),
+        nlink(0),
+        inode(0),
         compressed(false),
         offset(-1),
         length(0),
@@ -80,6 +82,14 @@ struct Node {
   mode_t mode;
   uid_t uid;
   gid_t gid;
+
+  // a file may be a potential hardlink if it's not a directory
+  // and it has a link count > 1.
+  bool IsPotentialHardlink() const {
+    return !S_ISDIR(mode) && nlink > 1;
+  }
+  nlink_t nlink;  // number of hard links
+  ino_t inode;
 
   // data
   bool compressed;
@@ -102,6 +112,8 @@ bool UpdateNodeFromPath(const string& path, Node* node) {
   node->mode = stbuf.st_mode;
   node->uid = stbuf.st_uid;
   node->gid = stbuf.st_gid;
+  node->nlink = stbuf.st_nlink;
+  node->inode = stbuf.st_ino;
   if (!S_ISDIR(node->mode)) {
     return true;
   }
@@ -153,11 +165,20 @@ void PopulateChildIndexes(Node* n, int* next_index_value) {
 }
 
 // This converts a Node tree rooted at n into a DeltaArchiveManifest.
-void NodeToDeltaArchiveManifest(Node* n, DeltaArchiveManifest* archive) {
+void NodeToDeltaArchiveManifest(Node* n, DeltaArchiveManifest* archive,
+                                map<ino_t, string>* hard_links,
+                                const string& path) {
   DeltaArchiveManifest_File *f = archive->add_files();
   f->set_mode(n->mode);
   f->set_uid(n->uid);
   f->set_gid(n->gid);
+  if (utils::MapContainsKey(*hard_links, n->inode)) {
+    // We have a hard link
+    CHECK(!S_ISDIR(n->mode));
+    f->set_hardlink_path((*hard_links)[n->inode]);
+  } else if (n->IsPotentialHardlink()) {
+    (*hard_links)[n->inode] = path;
+  }
   if (!S_ISDIR(n->mode))
     return;
   for (unsigned int i = 0; i < n->children.size(); i++) {
@@ -166,7 +187,8 @@ void NodeToDeltaArchiveManifest(Node* n, DeltaArchiveManifest* archive) {
     child->set_index(n->children[i]->node->idx);
   }
   for (unsigned int i = 0; i < n->children.size(); i++) {
-    NodeToDeltaArchiveManifest(n->children[i]->node.get(), archive);
+    NodeToDeltaArchiveManifest(n->children[i]->node.get(), archive, hard_links,
+                               path + "/" + n->children[i]->name);
   }
 }
 
@@ -182,7 +204,8 @@ bool DeltaDiffGenerator::WriteFileDiffsToDeltaFile(
     const std::string& old_path,
     const std::string& new_path,
     FileWriter* out_file_writer,
-    int* out_file_length) {
+    int* out_file_length,
+    const std::string& force_compress_dev_path) {
   TEST_AND_RETURN_FALSE(file->has_mode());
 
   // Stat the actual file, too
@@ -204,12 +227,14 @@ bool DeltaDiffGenerator::WriteFileDiffsToDeltaFile(
           old_path + "/" + file_name,
           new_path + "/" + file_name,
           out_file_writer,
-          out_file_length));
+          out_file_length,
+          force_compress_dev_path));
     }
     return true;
   }
 
-  if (S_ISFIFO(file->mode()) || S_ISSOCK(file->mode())) {
+  if (S_ISFIFO(file->mode()) || S_ISSOCK(file->mode()) ||
+      file->has_hardlink_path()) {
     // These don't store any additional data
     return true;
   }
@@ -219,13 +244,13 @@ bool DeltaDiffGenerator::WriteFileDiffsToDeltaFile(
   bool format_set = false;
   DeltaArchiveManifest_File_DataFormat format;
   if (S_ISLNK(file->mode())) {
-    LOG(INFO) << "link";
     TEST_AND_RETURN_FALSE(EncodeLink(new_path + "/" + file_name, &data));
   } else if (S_ISCHR(file->mode()) || S_ISBLK(file->mode())) {
-    LOG(INFO) << "dev";
-    TEST_AND_RETURN_FALSE(EncodeDev(stbuf, &data));
+    TEST_AND_RETURN_FALSE(EncodeDev(stbuf, &data, &format,
+                                    new_path + "/" + file_name ==
+                                    force_compress_dev_path));
+    format_set = true;
   } else if (S_ISREG(file->mode())) {
-    LOG(INFO) << "reg";
     // regular file. We may use a delta here.
     TEST_AND_RETURN_FALSE(EncodeFile(old_path, new_path, file_name, &format,
                                      &data));
@@ -239,7 +264,7 @@ bool DeltaDiffGenerator::WriteFileDiffsToDeltaFile(
     LOG(ERROR) << "Unhandled mode type: " << file->mode();
     return false;
   }
-  LOG(INFO) << "data len: " << data.size();
+
   if (!format_set) {
     // Pick a format now
     vector<char> compressed_data;
@@ -276,13 +301,24 @@ bool DeltaDiffGenerator::EncodeLink(const std::string& path,
   return true;
 }
 
-bool DeltaDiffGenerator::EncodeDev(const struct stat& stbuf,
-                                   std::vector<char>* out) {
+bool DeltaDiffGenerator::EncodeDev(
+    const struct stat& stbuf,
+    vector<char>* out,
+    DeltaArchiveManifest_File_DataFormat* format,
+    bool force_compression) {
   LinuxDevice dev;
   dev.set_major(major(stbuf.st_rdev));
   dev.set_minor(minor(stbuf.st_rdev));
   out->resize(dev.ByteSize());
   TEST_AND_RETURN_FALSE(dev.SerializeToArray(&(*out)[0], out->size()));
+  if (force_compression) {
+    vector<char> compressed;
+    TEST_AND_RETURN_FALSE(GzipCompress(*out, &compressed));
+    out->swap(compressed);
+    *format = DeltaArchiveManifest_File_DataFormat_FULL_GZ;
+  } else {
+    *format = DeltaArchiveManifest_File_DataFormat_FULL;
+  }
   return true;
 }
 
@@ -354,14 +390,17 @@ DeltaArchiveManifest* DeltaDiffGenerator::EncodeMetadataToProtoBuffer(
   int index = 0;
   PopulateChildIndexes(&node, &index);
   DeltaArchiveManifest *ret = new DeltaArchiveManifest;
-  NodeToDeltaArchiveManifest(&node, ret);
+  map<ino_t, string> hard_links;  // inode -> first found path for inode
+  NodeToDeltaArchiveManifest(&node, ret, &hard_links, "");
   return ret;
 }
 
-bool DeltaDiffGenerator::EncodeDataToDeltaFile(DeltaArchiveManifest* archive,
-                                               const std::string& old_path,
-                                               const std::string& new_path,
-                                               const std::string& out_file) {
+bool DeltaDiffGenerator::EncodeDataToDeltaFile(
+    DeltaArchiveManifest* archive,
+    const std::string& old_path,
+    const std::string& new_path,
+    const std::string& out_file,
+    const std::string& force_compress_dev_path) {
   DirectFileWriter out_writer;
   int r = out_writer.Open(out_file.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
   TEST_AND_RETURN_FALSE_ERRNO(r >= 0);
@@ -386,7 +425,8 @@ bool DeltaDiffGenerator::EncodeDataToDeltaFile(DeltaArchiveManifest* archive,
                                                   old_path,
                                                   new_path,
                                                   &out_writer,
-                                                  &out_file_length));
+                                                  &out_file_length,
+                                                  force_compress_dev_path));
 
   // Finally, write the protobuf to the end of the file
   string encoded_archive;

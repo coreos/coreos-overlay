@@ -33,10 +33,13 @@ class DeltaDiffGenerator {
   // fill in the missing fields (DeltaArchiveManifest_File_data_*), and
   // write the full delta out to the output file.
   // Returns true on success.
+  // If non-empty, the device at force_compress_dev_path will be compressed.
   static bool EncodeDataToDeltaFile(DeltaArchiveManifest* archive,
                                     const std::string& old_path,
                                     const std::string& new_path,
-                                    const std::string& out_file);
+                                    const std::string& out_file,
+                                    const std::string& force_compress_dev_path);
+
  private:
   // These functions encode all the data about a file that's not already
   // stored in the DeltaArchiveManifest message into the vector 'out'.
@@ -46,7 +49,10 @@ class DeltaDiffGenerator {
   static bool EncodeLink(const std::string& path, std::vector<char>* out);
   // EncodeDev stores the major and minor device numbers.
   // Specifically it writes a LinuxDevice message.
-  static bool EncodeDev(const struct stat& stbuf, std::vector<char>* out);
+  static bool EncodeDev(
+      const struct stat& stbuf, std::vector<char>* out,
+      DeltaArchiveManifest_File_DataFormat* format,
+      bool force_compression);
   // EncodeFile stores the full data, gzipped data, or a binary diff from
   // the old data. out_data_format will be set to the method used.
   static bool EncodeFile(const std::string& old_dir,
@@ -55,13 +61,16 @@ class DeltaDiffGenerator {
                          DeltaArchiveManifest_File_DataFormat* out_data_format,
                          std::vector<char>* out);
 
-  static bool WriteFileDiffsToDeltaFile(DeltaArchiveManifest* archive,
-                                        DeltaArchiveManifest_File* file,
-                                        const std::string& file_name,
-                                        const std::string& old_path,
-                                        const std::string& new_path,
-                                        FileWriter* out_file_writer,
-                                        int* out_file_length);
+  // If non-empty, the device at force_compress_dev_path will be compressed.
+  static bool WriteFileDiffsToDeltaFile(
+      DeltaArchiveManifest* archive,
+      DeltaArchiveManifest_File* file,
+      const std::string& file_name,
+      const std::string& old_path,
+      const std::string& new_path,
+      FileWriter* out_file_writer,
+      int* out_file_length,
+      const std::string& force_compress_dev_path);
 
   // This should never be constructed
   DISALLOW_IMPLICIT_CONSTRUCTORS(DeltaDiffGenerator);
