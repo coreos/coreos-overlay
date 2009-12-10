@@ -83,18 +83,18 @@ void GenerateFilesAtPath(const string& base) {
   EXPECT_EQ(0, System(StringPrintf(
       "ln -f -s '%s' '%s/compress_link'", kWellCompressingFilename, base_c)));
 
-// Things that will encode differently:
-EXPECT_EQ(0, System(StringPrintf("mkdir -p '%s/encoding'", base_c)));
-EXPECT_EQ(0, System(StringPrintf("echo nochange > '%s/encoding/nochange'",
-                                 base_c)));
-EXPECT_EQ(0, System(StringPrintf("echo -n > '%s/encoding/onebyte'", base_c)));
-EXPECT_EQ(0, System(StringPrintf("echo -n > '%s/encoding/long_new'",
-                                 base_c)));
-// Random 1 MiB byte length file
-EXPECT_TRUE(WriteFile((base +
-                       "/encoding/long_small_change").c_str(),
-                      reinterpret_cast<const char*>(kRandomString),
-                      sizeof(kRandomString)));
+  // Things that will encode differently:
+  EXPECT_EQ(0, System(StringPrintf("mkdir -p '%s/encoding'", base_c)));
+  EXPECT_EQ(0, System(StringPrintf("echo nochange > '%s/encoding/nochange'",
+                                   base_c)));
+  EXPECT_EQ(0, System(StringPrintf("echo -n > '%s/encoding/onebyte'", base_c)));
+  EXPECT_EQ(0, System(StringPrintf("echo -n > '%s/encoding/long_new'",
+                                   base_c)));
+  // Random 1 MiB byte length file
+  EXPECT_TRUE(utils::WriteFile((base +
+                                "/encoding/long_small_change").c_str(),
+                               reinterpret_cast<const char*>(kRandomString),
+                               sizeof(kRandomString)));
 }
 // base points to a folder that was passed to GenerateFilesAtPath().
 // This edits some, so that one can make a diff from the original data

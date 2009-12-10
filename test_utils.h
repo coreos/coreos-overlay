@@ -17,7 +17,6 @@ namespace chromeos_update_engine {
 
 // Writes the data passed to path. The file at path will be overwritten if it
 // exists. Returns true on success, false otherwise.
-bool WriteFile(const char* path, const char* data, int data_len);
 bool WriteFileVector(const std::string& path, const std::vector<char>& data);
 bool WriteFileString(const std::string& path, const std::string& data);
 

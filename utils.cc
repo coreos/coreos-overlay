@@ -8,12 +8,14 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <algorithm>
 #include "chromeos/obsolete_logging.h"
+#include "update_engine/file_writer.h"
 
 using std::min;
 using std::string;
@@ -22,6 +24,16 @@ using std::vector;
 namespace chromeos_update_engine {
 
 namespace utils {
+
+bool WriteFile(const char* path, const char* data, int data_len) {
+  DirectFileWriter writer;
+  TEST_AND_RETURN_FALSE_ERRNO(0 == writer.Open(path,
+                                               O_WRONLY | O_CREAT | O_TRUNC,
+                                               0666));
+  ScopedFileWriterCloser closer(&writer);
+  TEST_AND_RETURN_FALSE_ERRNO(data_len == writer.Write(data, data_len));
+  return true;
+}
 
 bool ReadFile(const std::string& path, std::vector<char>* out) {
   CHECK(out);

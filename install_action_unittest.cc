@@ -20,7 +20,7 @@
 using chromeos_update_engine::DeltaDiffGenerator;
 using chromeos_update_engine::kRandomString;
 using chromeos_update_engine::System;
-using chromeos_update_engine::WriteFile;
+using chromeos_update_engine::utils::WriteFile;
 using std::set;
 using std::string;
 using std::vector;

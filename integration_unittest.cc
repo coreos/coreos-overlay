@@ -133,6 +133,9 @@ TEST(IntegrationTest, DISABLED_RunAsRootFullInstallTest) {
   ASSERT_EQ(0, System(string("rm -rf ") + kTestDir));
   ASSERT_EQ(0, system("rm -f /tmp/update_engine_test_postinst_out.txt"));
   ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir + "/etc"));
+  ASSERT_EQ(0, system((string("mkdir -p ") + kTestDir +
+                       utils::kStatefulPartition +
+                       "/etc").c_str()));
   ASSERT_TRUE(WriteFileString(string(kTestDir) + "/etc/lsb-release",
                               "GOOGLE_RELEASE=0.2.0.0\n"
                               "GOOGLE_TRACK=unittest-track"));

@@ -15,6 +15,10 @@ namespace chromeos_update_engine {
 
 namespace utils {
 
+// Writes the data passed to path. The file at path will be overwritten if it
+// exists. Returns true on success, false otherwise.
+bool WriteFile(const char* path, const char* data, int data_len);
+
 // Returns the entire contents of the file at path. Returns true on success.
 bool ReadFile(const std::string& path, std::vector<char>* out);
 bool ReadFileToString(const std::string& path, std::string* out);

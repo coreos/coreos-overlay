@@ -64,26 +64,22 @@ bool OmahaRequestPrepActionTest::DoTest(bool force_full_update,
 }
 
 namespace {
-// Returns true iff str is formatted as a mac address
-bool IsValidMac(const string& str) {
-  if (str.size() != (3 * 6 - 1))
-    return false;
-  for (unsigned int i = 0; i < str.size(); i++) {
-    char c = str[i];
-    switch (i % 3) {
-      case 0:  // fall through
-      case 1:
-        if ((c >= '0') && (c <= '9'))
-          break;
-        if ((c >= 'a') && (c <= 'f'))
-          break;
-        if ((c >= 'A') && (c <= 'F'))
-          break;
-        return false;
-      case 2:
-        if (c == ':')
-          break;
-        return false;
+bool IsHexDigit(char c) {
+  return ((c >= '0') && (c <= '9')) ||
+      ((c >= 'a') && (c <= 'f')) ||
+      ((c >= 'A') && (c <= 'F'));
+}
+  
+// Returns true iff str is formatted as a GUID. Example GUID:
+// "{2251FFAD-DBAB-4E53-8B3A-18F98BB4EB80}"
+bool IsValidGuid(const string& str) {
+  TEST_AND_RETURN_FALSE(str.size() == 38);
+  TEST_AND_RETURN_FALSE((*str.begin() == '{') && (*str.rbegin() == '}'));
+  for (string::size_type i = 1; i < (str.size() - 1); ++i) {
+    if ((i == 9) || (i == 14) || (i == 19) || (i == 24)) {
+      TEST_AND_RETURN_FALSE(str[i] == '-');
+    } else {
+      TEST_AND_RETURN_FALSE(IsHexDigit(str[i]));
     }
   }
   return true;
@@ -110,15 +106,17 @@ string GetMachineType() {
 
 TEST_F(OmahaRequestPrepActionTest, SimpleTest) {
   ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir + "/etc"));
+  ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir +
+                      utils::kStatefulPartition + "/etc"));
   {
     ASSERT_TRUE(WriteFileString(
         kTestDir + "/etc/lsb-release",
         "GOOGLE_FOO=bar\nGOOGLE_RELEASE=0.2.2.3\nGOOGLE_TRACK=footrack"));
     UpdateCheckParams out;
     EXPECT_TRUE(DoTest(false, &out));
-    EXPECT_TRUE(IsValidMac(out.machine_id));
+    EXPECT_TRUE(IsValidGuid(out.machine_id)) << "id: " << out.machine_id;
     // for now we're just using the machine id here
-    EXPECT_TRUE(IsValidMac(out.user_id));
+    EXPECT_TRUE(IsValidGuid(out.user_id)) << "id: " << out.user_id;
     EXPECT_EQ("Chrome OS", out.os_platform);
     EXPECT_EQ(string("0.2.2.3_") + GetMachineType(), out.os_sp);
     EXPECT_EQ("{87efface-864d-49a5-9bb3-4b050a7c227a}", out.app_id);
@@ -131,15 +129,17 @@ TEST_F(OmahaRequestPrepActionTest, SimpleTest) {
 
 TEST_F(OmahaRequestPrepActionTest, MissingTrackTest) {
   ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir + "/etc"));
+  ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir +
+                      utils::kStatefulPartition + "/etc"));
   {
     ASSERT_TRUE(WriteFileString(
         kTestDir + "/etc/lsb-release",
         "GOOGLE_FOO=bar\nGOOGLE_RELEASE=0.2.2.3\nGOOGLE_TRXCK=footrack"));
     UpdateCheckParams out;
     EXPECT_TRUE(DoTest(false, &out));
-    EXPECT_TRUE(IsValidMac(out.machine_id));
+    EXPECT_TRUE(IsValidGuid(out.machine_id));
     // for now we're just using the machine id here
-    EXPECT_TRUE(IsValidMac(out.user_id));
+    EXPECT_TRUE(IsValidGuid(out.user_id));
     EXPECT_EQ("Chrome OS", out.os_platform);
     EXPECT_EQ(string("0.2.2.3_") + GetMachineType(), out.os_sp);
     EXPECT_EQ("{87efface-864d-49a5-9bb3-4b050a7c227a}", out.app_id);
@@ -152,6 +152,8 @@ TEST_F(OmahaRequestPrepActionTest, MissingTrackTest) {
 
 TEST_F(OmahaRequestPrepActionTest, ConfusingReleaseTest) {
   ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir + "/etc"));
+  ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir +
+                      utils::kStatefulPartition + "/etc"));
   {
     ASSERT_TRUE(WriteFileString(
         kTestDir + "/etc/lsb-release",
@@ -159,9 +161,9 @@ TEST_F(OmahaRequestPrepActionTest, ConfusingReleaseTest) {
         "GOOGLE_RELEASE=0.2.2.3\nGOOGLE_TRXCK=footrack"));
     UpdateCheckParams out;
     EXPECT_TRUE(DoTest(false, &out));
-    EXPECT_TRUE(IsValidMac(out.machine_id));
+    EXPECT_TRUE(IsValidGuid(out.machine_id)) << out.machine_id;
     // for now we're just using the machine id here
-    EXPECT_TRUE(IsValidMac(out.user_id));
+    EXPECT_TRUE(IsValidGuid(out.user_id));
     EXPECT_EQ("Chrome OS", out.os_platform);
     EXPECT_EQ(string("0.2.2.3_") + GetMachineType(), out.os_sp);
     EXPECT_EQ("{87efface-864d-49a5-9bb3-4b050a7c227a}", out.app_id);
@@ -169,6 +171,28 @@ TEST_F(OmahaRequestPrepActionTest, ConfusingReleaseTest) {
     EXPECT_EQ("en-US", out.app_lang);
     EXPECT_EQ("", out.app_track);
   }
+  EXPECT_EQ(0, System(string("rm -rf ") + kTestDir));
+}
+
+TEST_F(OmahaRequestPrepActionTest, MachineIdPersistsTest) {
+  ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir + "/etc"));
+  ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir +
+                      utils::kStatefulPartition + "/etc"));
+  ASSERT_TRUE(WriteFileString(
+      kTestDir + "/etc/lsb-release",
+      "GOOGLE_FOO=GOOGLE_RELEASE=1.2.3.4\n"
+      "GOOGLE_RELEASE=0.2.2.3\nGOOGLE_TRXCK=footrack"));
+  UpdateCheckParams out1;
+  EXPECT_TRUE(DoTest(false, &out1));
+  string machine_id;
+  EXPECT_TRUE(utils::ReadFileToString(
+      kTestDir +
+      utils::kStatefulPartition + "/etc/omaha_id",
+      &machine_id));
+  EXPECT_EQ(machine_id, out1.machine_id);
+  UpdateCheckParams out2;
+  EXPECT_TRUE(DoTest(false, &out2));
+  EXPECT_EQ(machine_id, out2.machine_id);
   EXPECT_EQ(0, System(string("rm -rf ") + kTestDir));
 }
 

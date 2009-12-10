@@ -25,22 +25,12 @@ using std::vector;
 
 namespace chromeos_update_engine {
 
-bool WriteFile(const char* path, const char* data, int data_len) {
-  DirectFileWriter writer;
-  TEST_AND_RETURN_FALSE_ERRNO(0 == writer.Open(path,
-                                               O_WRONLY | O_CREAT | O_TRUNC,
-                                               0666));
-  ScopedFileWriterCloser closer(&writer);
-  TEST_AND_RETURN_FALSE_ERRNO(data_len == writer.Write(data, data_len));
-  return true;
-}
-
 bool WriteFileVector(const std::string& path, const std::vector<char>& data) {
-  return WriteFile(path.c_str(), &data[0], data.size());
+  return utils::WriteFile(path.c_str(), &data[0], data.size());
 }
 
 bool WriteFileString(const std::string& path, const std::string& data) {
-  return WriteFile(path.c_str(), data.data(), data.size());
+  return utils::WriteFile(path.c_str(), data.data(), data.size());
 }
 
 off_t FileSize(const string& path) {

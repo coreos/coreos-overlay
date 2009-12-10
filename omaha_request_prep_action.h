@@ -49,7 +49,7 @@ class OmahaRequestPrepAction : public Action<OmahaRequestPrepAction> {
 
  private:
   // Gets a machine-local ID (for now, first MAC address we find)
-  std::string GetMachineId() const;
+  bool GetMachineId(std::string* out_id) const;
 
   // Fetches the value for a given key from
   // /mnt/stateful_partition/etc/lsb-release if possible. Failing that,
