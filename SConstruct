@@ -123,16 +123,24 @@ unittest_sources = Split("""action_unittest.cc
 unittest_main = ['testrunner.cc']
 
 delta_generator_sources = Split("""delta_diff_generator.cc""")
+delta_generator_main = ['generate_delta_main.cc']
+
+test_installer_main = ['test_installer_main.cc']
 
 env.Program('update_engine', sources + main)
 unittest_cmd = env.Program('update_engine_unittests',
                            sources + delta_generator_sources +
                            unittest_sources + unittest_main)
 
+test_installer_cmd = env.Program('test_installer',
+                                 sources + delta_generator_sources +
+                                 unittest_sources + test_installer_main)
+
 Clean(unittest_cmd, Glob('*.gcda') + Glob('*.gcno') + Glob('*.gcov') +
                     Split('html app.info'))
 
 delta_generator_cmd = env.Program('delta_generator',
-                                  sources + delta_generator_sources + main)
+                                  sources + delta_generator_sources +
+                                  delta_generator_main)
 
 http_server_cmd = env.Program('test_http_server', 'test_http_server.cc')

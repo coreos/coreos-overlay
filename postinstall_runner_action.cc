@@ -12,7 +12,7 @@ namespace chromeos_update_engine {
 using std::string;
 
 namespace {
-const string kMountPath(utils::kStatefulPartition + "/au_destination");
+const string kMountPath(string(utils::kStatefulPartition) + "/au_destination");
 const string kPostinstallScript("/postinst");
 }
 

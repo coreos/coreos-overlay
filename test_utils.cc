@@ -177,26 +177,25 @@ bool ExpectVectorsEq(const vector<char>& a, const vector<char>& b) {
 
 void CreateExtImageAtPath(const string& path, vector<string>* out_paths) {
   // create 10MiB sparse file
-  const char* const mount_path = kMountPath.c_str();
   EXPECT_EQ(0, System(StringPrintf("dd if=/dev/zero of=%s"
                                    " seek=10485759 bs=1 count=1",
                                    path.c_str())));
   EXPECT_EQ(0, System(StringPrintf("mkfs.ext3 -F %s", path.c_str())));
-  EXPECT_EQ(0, System(StringPrintf("mkdir -p %s", mount_path)));
+  EXPECT_EQ(0, System(StringPrintf("mkdir -p %s", kMountPath)));
   EXPECT_EQ(0, System(StringPrintf("mount -o loop %s %s", path.c_str(),
-                                   mount_path)));
-  EXPECT_EQ(0, System(StringPrintf("echo hi > %s/hi", mount_path)));
-  EXPECT_EQ(0, System(StringPrintf("echo hello > %s/hello", mount_path)));
-  EXPECT_EQ(0, System(StringPrintf("mkdir %s/some_dir", mount_path)));
-  EXPECT_EQ(0, System(StringPrintf("mkdir %s/some_dir/empty_dir", mount_path)));
-  EXPECT_EQ(0, System(StringPrintf("mkdir %s/some_dir/mnt", mount_path)));
-  EXPECT_EQ(0, System(StringPrintf("echo T > %s/some_dir/test", mount_path)));
-  EXPECT_EQ(0, System(StringPrintf("mkfifo %s/some_dir/fifo", mount_path)));
-  EXPECT_EQ(0, System(StringPrintf("mknod %s/cdev c 2 3", mount_path)));
-  EXPECT_EQ(0, System(StringPrintf("ln -s /some/target %s/sym", mount_path)));
+                                   kMountPath)));
+  EXPECT_EQ(0, System(StringPrintf("echo hi > %s/hi", kMountPath)));
+  EXPECT_EQ(0, System(StringPrintf("echo hello > %s/hello", kMountPath)));
+  EXPECT_EQ(0, System(StringPrintf("mkdir %s/some_dir", kMountPath)));
+  EXPECT_EQ(0, System(StringPrintf("mkdir %s/some_dir/empty_dir", kMountPath)));
+  EXPECT_EQ(0, System(StringPrintf("mkdir %s/some_dir/mnt", kMountPath)));
+  EXPECT_EQ(0, System(StringPrintf("echo T > %s/some_dir/test", kMountPath)));
+  EXPECT_EQ(0, System(StringPrintf("mkfifo %s/some_dir/fifo", kMountPath)));
+  EXPECT_EQ(0, System(StringPrintf("mknod %s/cdev c 2 3", kMountPath)));
+  EXPECT_EQ(0, System(StringPrintf("ln -s /some/target %s/sym", kMountPath)));
   EXPECT_EQ(0, System(StringPrintf("ln %s/some_dir/test %s/testlink",
-                                   mount_path, mount_path)));
-  EXPECT_EQ(0, System(StringPrintf("umount %s", mount_path)));
+                                   kMountPath, kMountPath)));
+  EXPECT_EQ(0, System(StringPrintf("umount %s", kMountPath)));
   
   if (out_paths) {
     out_paths->clear();

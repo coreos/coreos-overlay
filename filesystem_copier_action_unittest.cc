@@ -4,6 +4,7 @@
 
 #include <glib.h>
 #include <set>
+#include <string>
 #include <vector>
 #include <gtest/gtest.h>
 #include "update_engine/filesystem_copier_action.h"
@@ -13,6 +14,7 @@
 #include "update_engine/utils.h"
 
 using std::set;
+using std::string;
 using std::vector;
 
 namespace chromeos_update_engine {
@@ -32,7 +34,7 @@ class FilesystemCopierActionTest : public ::testing::Test {
 class FilesystemCopierActionTestDelegate : public ActionProcessorDelegate {
  public:
   FilesystemCopierActionTestDelegate() : ran_(false), success_(false) {}
-  void ProcessingDone(const ActionProcessor* processor) {
+  void ProcessingDone(const ActionProcessor* processor, bool success) {
     g_main_loop_quit(loop_);
   }
   void ActionCompleted(ActionProcessor* processor,

@@ -126,11 +126,16 @@ TEST(InstallActionTest, RunAsRootDiffTest) {
   }
   const char* const new_dir_cstr = new_dir.c_str();
   EXPECT_EQ(0, System(StringPrintf("mkdir -p '%s/newdir'", new_dir_cstr)));
+  EXPECT_EQ(0, System(StringPrintf("chmod 03755 '%s/newdir'", new_dir_cstr)));
   EXPECT_EQ(0, System(StringPrintf("mkdir -p '%s/newdir/x'", new_dir_cstr)));
   EXPECT_EQ(0, System(StringPrintf("echo -n foo > '%s/newdir/x/file'",
                                    new_dir_cstr)));
+  EXPECT_EQ(0, System(StringPrintf("touch '%s/new_empty'", new_dir_cstr)));
+  EXPECT_EQ(0, System(StringPrintf("chmod 04644 '%s/new_empty'",
+                                   new_dir_cstr)));
   EXPECT_EQ(0, System(StringPrintf("echo -n x >> '%s/big_file'",
                                    new_dir_cstr)));
+  EXPECT_EQ(0, System(StringPrintf("chmod 02644 '%s/big_file'", new_dir_cstr)));
   // Make a symlink that compresses well:
   EXPECT_EQ(0, System(StringPrintf(
       "ln -s "
@@ -150,6 +155,7 @@ TEST(InstallActionTest, RunAsRootDiffTest) {
                                                         original_dir,
                                                         new_dir,
                                                         "delta",
+                                                        set<string>(),
                                                         new_dir + "/bdev_gz"));
 
   ASSERT_EQ(0, System(string("umount ") + original_dir));
@@ -204,7 +210,7 @@ TEST(InstallActionTest, RunAsRootDiffTest) {
   }
   LOG(INFO) << "new_count = " << new_count;
   EXPECT_EQ(new_count, original_count);
-  EXPECT_EQ(19, original_count);
+  EXPECT_EQ(20, original_count);
 
   // Make sure hard-link installed properly
   {

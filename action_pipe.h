@@ -29,10 +29,6 @@
 // the two Action objects. a shared_ptr is used so that when the last Action
 // pointing to an ActionPipe dies, the ActionPipe dies, too.
 
-using std::map;
-using std::string;
-using std::tr1::shared_ptr;
-
 namespace chromeos_update_engine {
 
 // Used by Actions an InputObjectType or OutputObjectType to specify that
@@ -62,7 +58,8 @@ class ActionPipe {
   // when the last Action is destroyed.
   template<typename FromAction, typename ToAction>
   static void Bond(FromAction* from, ToAction* to) {
-    shared_ptr<ActionPipe<ObjectType> > pipe(new ActionPipe<ObjectType>);
+    std::tr1::shared_ptr<ActionPipe<ObjectType> > pipe(
+        new ActionPipe<ObjectType>);
     from->set_out_pipe(pipe);
 
     to->set_in_pipe(pipe);  // If you get an error on this line, then

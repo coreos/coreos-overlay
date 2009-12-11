@@ -9,6 +9,9 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <algorithm>
+#include <map>
+#include <set>
+#include <string>
 #include <vector>
 #include <tr1/memory>
 #include <zlib.h>
@@ -19,6 +22,9 @@
 #include "update_engine/subprocess.h"
 #include "update_engine/utils.h"
 
+using std::map;
+using std::set;
+using std::string;
 using std::vector;
 using std::tr1::shared_ptr;
 using chromeos_update_engine::DeltaArchiveManifest;
@@ -26,6 +32,9 @@ using chromeos_update_engine::DeltaArchiveManifest;
 namespace chromeos_update_engine {
 
 namespace {
+
+const char* kBsdiffPath = "/usr/bin/bsdiff";
+
 // These structs and methods are helpers for EncodeDataToDeltaFile()
 
 // Before moving the data into a proto buffer, the data is stored in
@@ -200,12 +209,13 @@ void NodeToDeltaArchiveManifest(Node* n, DeltaArchiveManifest* archive,
 bool DeltaDiffGenerator::WriteFileDiffsToDeltaFile(
     DeltaArchiveManifest* archive,
     DeltaArchiveManifest_File* file,
-    const std::string& file_name,
-    const std::string& old_path,
-    const std::string& new_path,
+    const string& file_name,
+    const string& old_path,
+    const string& new_path,
     FileWriter* out_file_writer,
     int* out_file_length,
-    const std::string& force_compress_dev_path) {
+    set<string> always_full_target_paths,
+    const string& force_compress_dev_path) {
   TEST_AND_RETURN_FALSE(file->has_mode());
 
   // Stat the actual file, too
@@ -220,14 +230,21 @@ bool DeltaDiffGenerator::WriteFileDiffsToDeltaFile(
       DeltaArchiveManifest_File_Child* child = file->mutable_children(i);
       DeltaArchiveManifest_File* child_file =
           archive->mutable_files(child->index());
+      string recurse_old_path = old_path;
+      string recurse_new_path = new_path;
+      if (!file_name.empty()) {
+        recurse_new_path += "/" + file_name;
+        recurse_old_path += "/" + file_name;
+      }
       TEST_AND_RETURN_FALSE(WriteFileDiffsToDeltaFile(
           archive,
           child_file,
           child->name(),
-          old_path + "/" + file_name,
-          new_path + "/" + file_name,
+          recurse_old_path,
+          recurse_new_path,
           out_file_writer,
           out_file_length,
+          always_full_target_paths,
           force_compress_dev_path));
     }
     return true;
@@ -252,8 +269,15 @@ bool DeltaDiffGenerator::WriteFileDiffsToDeltaFile(
     format_set = true;
   } else if (S_ISREG(file->mode())) {
     // regular file. We may use a delta here.
-    TEST_AND_RETURN_FALSE(EncodeFile(old_path, new_path, file_name, &format,
-                                     &data));
+    const bool avoid_diff = utils::SetContainsKey(always_full_target_paths,
+                                                  new_path + "/" + file_name);
+    bool no_change = false;
+    TEST_AND_RETURN_FALSE(EncodeFile(old_path, new_path, file_name,
+                                     avoid_diff, &format, &data, &no_change));
+    if (no_change) {
+      // No data change. We're done!
+      return true;
+    }
     should_compress = false;
     format_set = true;
     if ((format == DeltaArchiveManifest_File_DataFormat_BSDIFF) ||
@@ -278,20 +302,17 @@ bool DeltaDiffGenerator::WriteFileDiffsToDeltaFile(
     format_set = true;
   }
 
-  if (!data.empty()) {
-    TEST_AND_RETURN_FALSE(format_set);
-    file->set_data_format(format);
-    file->set_data_offset(*out_file_length);
-    TEST_AND_RETURN_FALSE(static_cast<ssize_t>(data.size()) ==
-                          out_file_writer->Write(&data[0], data.size()));
-    file->set_data_length(data.size());
-    *out_file_length += data.size();
-  }
+  TEST_AND_RETURN_FALSE(format_set);
+  file->set_data_format(format);
+  file->set_data_offset(*out_file_length);
+  TEST_AND_RETURN_FALSE(static_cast<ssize_t>(data.size()) ==
+                        out_file_writer->Write(&data[0], data.size()));
+  file->set_data_length(data.size());
+  *out_file_length += data.size();
   return true;
 }
 
-bool DeltaDiffGenerator::EncodeLink(const std::string& path,
-                                    std::vector<char>* out) {
+bool DeltaDiffGenerator::EncodeLink(const string& path, vector<char>* out) {
   // Store symlink path as file data
   vector<char> link_data(4096);
   int rc = readlink(path.c_str(), &link_data[0], link_data.size());
@@ -329,56 +350,85 @@ bool DeltaDiffGenerator::EncodeFile(
     const string& old_dir,
     const string& new_dir,
     const string& file_name,
+    const bool avoid_diff,
     DeltaArchiveManifest_File_DataFormat* out_data_format,
-    vector<char>* out) {
+    vector<char>* out,
+    bool* no_change) {
   TEST_AND_RETURN_FALSE(out_data_format);
-  // First, see the full length:
+  vector<char> ret;
   vector<char> full_data;
-  TEST_AND_RETURN_FALSE(utils::ReadFile(new_dir + "/" + file_name, &full_data));
-  vector<char> gz_data;
-  if (!full_data.empty()) {
-    TEST_AND_RETURN_FALSE(GzipCompress(full_data, &gz_data));
-  }
-  vector<char> *ret = NULL;
+  {
+    // First, see the full length:
+    TEST_AND_RETURN_FALSE(utils::ReadFile(new_dir + "/" + file_name,
+                                          &full_data));
+    vector<char> gz_data;
+    if (!full_data.empty()) {
+      TEST_AND_RETURN_FALSE(GzipCompress(full_data, &gz_data));
+    }
 
-  if (gz_data.size() < full_data.size()) {
-    *out_data_format = DeltaArchiveManifest_File_DataFormat_FULL_GZ;
-    ret = &gz_data;
-  } else {
-    *out_data_format = DeltaArchiveManifest_File_DataFormat_FULL;
-    ret = &full_data;
+    if (gz_data.size() < full_data.size()) {
+      *out_data_format = DeltaArchiveManifest_File_DataFormat_FULL_GZ;
+      ret.swap(gz_data);
+    } else {
+      *out_data_format = DeltaArchiveManifest_File_DataFormat_FULL;
+      ret = full_data;
+    }
+  }
+
+  if (avoid_diff) {
+    out->swap(ret);
+    return true;
   }
 
   struct stat old_stbuf;
   if ((stat((old_dir + "/" + file_name).c_str(), &old_stbuf) < 0) ||
       (!S_ISREG(old_stbuf.st_mode))) {
-    // stat() failed or old file is not a regular file. Just send back the full
-    // contents
-    *out = *ret;
+    // stat() failed or old file is not a regular file. Just send back
+    // the full contents
+    out->swap(ret);
     return true;
   }
-  // We have an old file. Do a binary diff. For now use bsdiff.
-  const string kPatchFile = "/tmp/delta.patch";
+  // We have an old file.
+  // First see if the data is _exactly_ the same
+  {
+    vector<char> original_data;
+    TEST_AND_RETURN_FALSE(utils::ReadFile(old_dir + "/" + file_name,
+                                          &original_data));
+    if (original_data == full_data) {
+      // Original data unchanged in new file.
+      *no_change = true;
+      return true;
+    }
+  }
+  
+  // Do a binary diff. For now use bsdiff.
+  const string kPatchFile = "/tmp/delta.patchXXXXXX";
+  vector<char> patch_file_path(kPatchFile.begin(), kPatchFile.end());
+  patch_file_path.push_back('\0');
+  
+  int fd = mkstemp(&patch_file_path[0]);
+  if (fd >= 0)
+    close(fd);
+  TEST_AND_RETURN_FALSE(fd != -1);
 
   vector<string> cmd;
-  cmd.push_back("/usr/bin/bsdiff");
+  cmd.push_back(kBsdiffPath);
   cmd.push_back(old_dir + "/" + file_name);
   cmd.push_back(new_dir + "/" + file_name);
-  cmd.push_back(kPatchFile);
+  cmd.push_back(&patch_file_path[0]);
 
   int rc = 1;
+  vector<char> patch_file;
   TEST_AND_RETURN_FALSE(Subprocess::SynchronousExec(cmd, &rc));
   TEST_AND_RETURN_FALSE(rc == 0);
-  vector<char> patch_file;
-  TEST_AND_RETURN_FALSE(utils::ReadFile(kPatchFile, &patch_file));
-  unlink(kPatchFile.c_str());
+  TEST_AND_RETURN_FALSE(utils::ReadFile(&patch_file_path[0], &patch_file));
+  unlink(&patch_file_path[0]);
 
-  if (patch_file.size() < ret->size()) {
+  if (patch_file.size() < ret.size()) {
     *out_data_format = DeltaArchiveManifest_File_DataFormat_BSDIFF;
-    ret = &patch_file;
+    ret.swap(patch_file);
   }
-
-  *out = *ret;
+  out->swap(ret);
   return true;
 }
 
@@ -397,10 +447,11 @@ DeltaArchiveManifest* DeltaDiffGenerator::EncodeMetadataToProtoBuffer(
 
 bool DeltaDiffGenerator::EncodeDataToDeltaFile(
     DeltaArchiveManifest* archive,
-    const std::string& old_path,
-    const std::string& new_path,
-    const std::string& out_file,
-    const std::string& force_compress_dev_path) {
+    const string& old_path,
+    const string& new_path,
+    const string& out_file,
+    const set<string>& nondiff_paths,
+    const string& force_compress_dev_path) {
   DirectFileWriter out_writer;
   int r = out_writer.Open(out_file.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
   TEST_AND_RETURN_FALSE_ERRNO(r >= 0);
@@ -419,6 +470,16 @@ bool DeltaDiffGenerator::EncodeDataToDeltaFile(
   TEST_AND_RETURN_FALSE(archive->files_size() > 0);
   DeltaArchiveManifest_File* file = archive->mutable_files(0);
 
+  // nondiff_paths is passed in w/ paths relative to the installed
+  // system (e.g. /etc/fstab), but WriteFileDiffsToDeltaFile requires them
+  // to be the entire path of the new file. We create a new set
+  // here with nondiff_paths expanded.
+  set<string> always_full_target_paths;
+  for (set<string>::const_iterator it = nondiff_paths.begin();
+       it != nondiff_paths.end(); ++it) {
+    always_full_target_paths.insert(new_path + *it);
+  }
+
   TEST_AND_RETURN_FALSE(WriteFileDiffsToDeltaFile(archive,
                                                   file,
                                                   "",
@@ -426,6 +487,7 @@ bool DeltaDiffGenerator::EncodeDataToDeltaFile(
                                                   new_path,
                                                   &out_writer,
                                                   &out_file_length,
+                                                  always_full_target_paths,
                                                   force_compress_dev_path));
 
   // Finally, write the protobuf to the end of the file

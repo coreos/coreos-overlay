@@ -257,7 +257,7 @@ bool UnmountFilesystem(const string& mountpoint) {
   return true;
 }
 
-const string kStatefulPartition = "/mnt/stateful_partition";
+const char* const kStatefulPartition = "/mnt/stateful_partition";
 
 }  // namespace utils
 

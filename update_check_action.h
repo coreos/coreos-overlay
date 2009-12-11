@@ -20,8 +20,6 @@
 // The Update Check action makes an update check request to Omaha and
 // can output the response on the output ActionPipe.
 
-using std::string;
-
 namespace chromeos_update_engine {
 
 // Encodes XML entities in a given string with libxml2. input must be

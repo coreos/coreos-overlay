@@ -62,8 +62,6 @@
 // consulting ActionTraits<T>::InputObjectType (and OutputObjectType).
 // This is why the ActionTraits classes are needed.
 
-using std::tr1::shared_ptr;
-
 namespace chromeos_update_engine {
 
 // It is handy to have a non-templated base class of all Actions.
@@ -111,7 +109,7 @@ class AbstractAction {
   // std::type_info for this?
   // Type() returns a string of the Action type. I.e., for DownloadAction,
   // Type() would return "DownloadAction".
-  virtual string Type() const = 0;
+  virtual std::string Type() const = 0;
 
  protected:
   // A weak pointer to the processor that owns this Action.
@@ -138,7 +136,7 @@ class Action : public AbstractAction {
   void set_in_pipe(
       // this type is a fancy way of saying: a shared_ptr to an
       // ActionPipe<InputObjectType>.
-      const shared_ptr<ActionPipe<
+      const std::tr1::shared_ptr<ActionPipe<
           typename ActionTraits<SubClass>::InputObjectType> >&
           in_pipe) {
     in_pipe_ = in_pipe;
@@ -151,7 +149,7 @@ class Action : public AbstractAction {
   void set_out_pipe(
       // this type is a fancy way of saying: a shared_ptr to an
       // ActionPipe<OutputObjectType>.
-      const shared_ptr<ActionPipe<
+      const std::tr1::shared_ptr<ActionPipe<
           typename ActionTraits<SubClass>::OutputObjectType> >&
           out_pipe) {
     out_pipe_ = out_pipe;
@@ -194,9 +192,11 @@ protected:
   // point to when the last such shared_ptr object dies. We consider the
   // Actions on either end of a pipe to "own" the pipe. When the last Action
   // of the two dies, the ActionPipe will die, too.
-  shared_ptr<ActionPipe<typename ActionTraits<SubClass>::InputObjectType> >
+  std::tr1::shared_ptr<
+      ActionPipe<typename ActionTraits<SubClass>::InputObjectType> >
       in_pipe_;
-  shared_ptr<ActionPipe<typename ActionTraits<SubClass>::OutputObjectType> >
+  std::tr1::shared_ptr<
+      ActionPipe<typename ActionTraits<SubClass>::OutputObjectType> >
       out_pipe_;
 };
 

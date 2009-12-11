@@ -78,8 +78,9 @@ class ActionProcessor {
 class ActionProcessorDelegate {
  public:
   // Called when all processing in an ActionProcessor has completed. A pointer
-  // to the ActionProcessor is passed.
-  virtual void ProcessingDone(const ActionProcessor* processor) {}
+  // to the ActionProcessor is passed. success is true iff all actions
+  // completed successfully
+  virtual void ProcessingDone(const ActionProcessor* processor, bool success) {}
 
   // Called when processing has stopped. Does not mean that all Actions have
   // completed. If/when all Actions complete, ProcessingDone() will be called.

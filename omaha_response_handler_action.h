@@ -26,7 +26,7 @@ class ActionTraits<OmahaResponseHandlerAction> {
 
 class OmahaResponseHandlerAction : public Action<OmahaResponseHandlerAction> {
  public:
-  OmahaResponseHandlerAction() {}
+  OmahaResponseHandlerAction() : got_no_update_response_(false) {}
   typedef ActionTraits<OmahaResponseHandlerAction>::InputObjectType
       InputObjectType;
   typedef ActionTraits<OmahaResponseHandlerAction>::OutputObjectType
@@ -41,6 +41,8 @@ class OmahaResponseHandlerAction : public Action<OmahaResponseHandlerAction> {
   void set_boot_device(const std::string& boot_device) {
     boot_device_ = boot_device;
   }
+  
+  bool GotNoUpdateResponse() const { return got_no_update_response_; }
 
   // Debugging/logging
   static std::string StaticType() { return "OmahaResponseHandlerAction"; }
@@ -56,6 +58,9 @@ class OmahaResponseHandlerAction : public Action<OmahaResponseHandlerAction> {
 
   // set to non-empty in unit tests
   std::string boot_device_;
+  
+  // True only if we got a response and the response said no updates
+  bool got_no_update_response_;
 
   DISALLOW_COPY_AND_ASSIGN(OmahaResponseHandlerAction);
 };

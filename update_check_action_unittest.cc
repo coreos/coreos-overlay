@@ -54,7 +54,7 @@ class UpdateCheckActionTestProcessorDelegate : public ActionProcessorDelegate {
         expected_success_(true) {}
   virtual ~UpdateCheckActionTestProcessorDelegate() {
   }
-  virtual void ProcessingDone(const ActionProcessor* processor) {
+  virtual void ProcessingDone(const ActionProcessor* processor, bool success) {
     ASSERT_TRUE(loop_);
     g_main_loop_quit(loop_);
   }

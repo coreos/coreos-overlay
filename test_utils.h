@@ -88,7 +88,7 @@ const unsigned char kRandomString[] = {
   0xbe, 0x9f, 0xa3, 0x5d
 };
 
-const string kMountPath("/tmp/UpdateEngineTests_mnt");
+const char* const kMountPath = "/tmp/UpdateEngineTests_mnt";
 }  // namespace {}
 
 // Creates an ext image with some files in it. The paths creates are

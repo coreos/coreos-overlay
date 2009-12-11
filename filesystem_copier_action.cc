@@ -9,12 +9,14 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <algorithm>
+#include <map>
 #include <string>
 #include <vector>
 #include "update_engine/filesystem_iterator.h"
 #include "update_engine/subprocess.h"
 #include "update_engine/utils.h"
 
+using std::map;
 using std::min;
 using std::string;
 using std::vector;

@@ -2,9 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <string>
 #include <gtest/gtest.h>
 #include "update_engine/action.h"
 #include "update_engine/action_processor.h"
+
+using std::string;
 
 namespace chromeos_update_engine {
 
@@ -60,7 +63,7 @@ class MyActionProcessorDelegate : public ActionProcessorDelegate {
   explicit MyActionProcessorDelegate(const ActionProcessor* processor)
       : processor_(processor), processing_done_called_(false) {}
 
-  virtual void ProcessingDone(const ActionProcessor* processor) {
+  virtual void ProcessingDone(const ActionProcessor* processor, bool success) {
     EXPECT_EQ(processor_, processor);
     EXPECT_FALSE(processing_done_called_);
     processing_done_called_ = true;

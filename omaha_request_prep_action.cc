@@ -16,7 +16,8 @@ using std::string;
 
 namespace {
 const string OmahaIdPath() {
-  return chromeos_update_engine::utils::kStatefulPartition + "/etc/omaha_id";
+  return string(chromeos_update_engine::utils::kStatefulPartition) +
+      "/etc/omaha_id";
 }
 }  // namespace {}
 
@@ -89,7 +90,7 @@ bool OmahaRequestPrepAction::GetMachineId(std::string* out_id) const {
 }
 
 std::string OmahaRequestPrepAction::GetLsbValue(const std::string& key) const {
-  string files[] = {utils::kStatefulPartition + "/etc/lsb-release",
+  string files[] = {string(utils::kStatefulPartition) + "/etc/lsb-release",
                     "/etc/lsb-release"};
   for (unsigned int i = 0; i < arraysize(files); i++) {
     string file_data;

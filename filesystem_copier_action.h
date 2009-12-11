@@ -61,7 +61,7 @@ class FilesystemCopierAction : public Action<FilesystemCopierAction> {
   void TerminateProcessing();
 
   // Used for testing, so we can copy from somewhere other than root
-  void set_copy_source(const string& path) {
+  void set_copy_source(const std::string& path) {
     copy_source_ = path;
   }
   // Returns true if we detected that a copy was unneeded and thus skipped it.
@@ -73,8 +73,8 @@ class FilesystemCopierAction : public Action<FilesystemCopierAction> {
 
  private:
   // These synchronously mount or unmount the given mountpoint
-  bool Mount(const string& device, const string& mountpoint);
-  bool Unmount(const string& mountpoint);
+  bool Mount(const std::string& device, const std::string& mountpoint);
+  bool Unmount(const std::string& mountpoint);
 
   // Performs a recursive file/directory copy from copy_source_ to dest_path_.
   // Doesn't return until the copy has completed. Returns true on success
@@ -127,11 +127,11 @@ class FilesystemCopierAction : public Action<FilesystemCopierAction> {
   bool is_mounted_;
 
   // Where the destination device is mounted.
-  string dest_path_;
+  std::string dest_path_;
 
   // The path to copy from. Usually left as the default "/", but tests can
   // change it.
-  string copy_source_;
+  std::string copy_source_;
 
   // The install plan we're passed in via the input pipe.
   InstallPlan install_plan_;

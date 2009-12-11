@@ -56,7 +56,8 @@ void PostinstallRunnerActionTest::DoTest(bool do_losetup, bool do_err_script) {
   ASSERT_EQ(0, getuid()) << "Run me as root. Ideally don't run other tests "
                          << "as root, tho.";
 
-  const string mountpoint(utils::kStatefulPartition + "/au_destination");
+  const string mountpoint(string(utils::kStatefulPartition) +
+                          "/au_destination");
 
   string cwd;
   {

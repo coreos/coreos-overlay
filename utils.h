@@ -38,7 +38,7 @@ bool FileExists(const char* path);
 // of the string passed in.
 // NEVER CALL THIS FUNCTION UNLESS YOU ARE SURE
 // THAT YOUR PROCESS WILL BE THE ONLY THING WRITING FILES IN THIS DIRECTORY.
-std::string TempFilename(string path);
+std::string TempFilename(std::string path);
 
 // Deletes a directory and all its contents synchronously. Returns true
 // on success. This may be called with a regular file--it will just unlink it.
@@ -47,8 +47,8 @@ bool RecursiveUnlinkDir(const std::string& path);
 
 // Synchronously mount or unmount a filesystem. Return true on success.
 // Mounts as ext3 with default options.
-bool MountFilesystem(const string& device, const string& mountpoint);
-bool UnmountFilesystem(const string& mountpoint);
+bool MountFilesystem(const std::string& device, const std::string& mountpoint);
+bool UnmountFilesystem(const std::string& mountpoint);
 
 // Log a string in hex to LOG(INFO). Useful for debugging.
 void HexDumpArray(const unsigned char* const arr, const size_t length);
@@ -59,7 +59,7 @@ inline void HexDumpVector(const std::vector<char>& vect) {
   HexDumpArray(reinterpret_cast<const unsigned char*>(&vect[0]), vect.size());
 }
 
-extern const string kStatefulPartition;
+extern const char* const kStatefulPartition;
 
 bool StringHasSuffix(const std::string& str, const std::string& suffix);
 bool StringHasPrefix(const std::string& str, const std::string& prefix);
@@ -67,6 +67,10 @@ bool StringHasPrefix(const std::string& str, const std::string& prefix);
 template<typename KeyType, typename ValueType>
 bool MapContainsKey(const std::map<KeyType, ValueType>& m, const KeyType& k) {
   return m.find(k) != m.end();
+}
+template<typename KeyType>
+bool SetContainsKey(const std::set<KeyType>& s, const KeyType& k) {
+  return s.find(k) != s.end();
 }
 
 template<typename ValueType>

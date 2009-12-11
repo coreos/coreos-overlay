@@ -102,6 +102,8 @@ message DeltaArchiveManifest {
     }
     // If present, there is data associated with this File object and
     // data_offset and data_size must be set.
+    // If a file object doesn't have this set, it means the data is
+    // unchanged from the old version of the file.
     optional DataFormat data_format = 4;
     // The offset into the delta file where the data (if any) is stored
     optional uint32 data_offset = 5;

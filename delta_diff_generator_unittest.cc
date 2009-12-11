@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <set>
 #include <string>
 #include <vector>
 #include "base/string_util.h"
@@ -22,10 +23,17 @@
 
 namespace chromeos_update_engine {
 
+using std::set;
 using std::string;
 using std::vector;
 
-class DeltaDiffGeneratorTest : public ::testing::Test {};
+class DeltaDiffGeneratorTest : public ::testing::Test {
+  virtual void TearDown() {
+    EXPECT_EQ(0, system("rm -rf diff-gen-test"));
+  }
+protected:
+  void FakerootEncodeDataToDeltaFileTest(bool test_diff_exclusion);
+};
 
 namespace {
 void DumpProto(const DeltaArchiveManifest* archive) {
@@ -350,6 +358,14 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeMetadataToProtoBufferTest) {
 }
 
 TEST_F(DeltaDiffGeneratorTest, FakerootEncodeDataToDeltaFileTest) {
+  FakerootEncodeDataToDeltaFileTest(false);
+}
+TEST_F(DeltaDiffGeneratorTest, FakerootDiffExclusionsTest) {
+  FakerootEncodeDataToDeltaFileTest(true);
+}
+
+void DeltaDiffGeneratorTest::FakerootEncodeDataToDeltaFileTest(
+    bool test_diff_exclusion) {
   char cwd[1000];
   ASSERT_EQ(cwd, getcwd(cwd, sizeof(cwd))) << "cwd buf possibly too small";
   ASSERT_EQ(0, System(string("mkdir -p ") + cwd + "/diff-gen-test"));
@@ -358,6 +374,13 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeDataToDeltaFileTest) {
   GenerateFilesAtPath(string(cwd) + "/diff-gen-test/old");
   GenerateFilesAtPath(string(cwd) + "/diff-gen-test/new");
   EditFilesAtPath(string(cwd) + "/diff-gen-test/new");
+
+  set<string> diff_exclusions;
+  if (test_diff_exclusion) {
+    diff_exclusions.insert("/encoding/long_small_change");
+  } else {
+    diff_exclusions.insert("/hi");
+  }
 
   DeltaArchiveManifest* archive =
       DeltaDiffGenerator::EncodeMetadataToProtoBuffer(
@@ -369,7 +392,7 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeDataToDeltaFileTest) {
       string(cwd) + "/diff-gen-test/old",
       string(cwd) + "/diff-gen-test/new",
       string(cwd) + "/diff-gen-test/out.dat",
-      ""));
+      diff_exclusions, ""));
 
   EXPECT_EQ(18, archive->files_size());
 
@@ -476,8 +499,11 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeDataToDeltaFileTest) {
   EXPECT_EQ(0, long_small_change.uid());
   EXPECT_EQ(0, long_small_change.gid());
   EXPECT_TRUE(long_small_change.has_data_format());
-  EXPECT_EQ(DeltaArchiveManifest_File_DataFormat_BSDIFF,
-            long_small_change.data_format());
+  DeltaArchiveManifest_File_DataFormat expected_format =
+      DeltaArchiveManifest_File_DataFormat_BSDIFF;
+  if (test_diff_exclusion)
+    expected_format = DeltaArchiveManifest_File_DataFormat_FULL;
+  EXPECT_EQ(expected_format, long_small_change.data_format());
   EXPECT_TRUE(long_small_change.has_data_offset());
   EXPECT_TRUE(long_small_change.has_data_length());
   EXPECT_FALSE(long_small_change.has_hardlink_path());
@@ -488,10 +514,9 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeDataToDeltaFileTest) {
   EXPECT_TRUE(S_ISREG(nochange.mode()));
   EXPECT_EQ(0, nochange.uid());
   EXPECT_EQ(0, nochange.gid());
-  EXPECT_TRUE(nochange.has_data_format());
-  EXPECT_EQ(DeltaArchiveManifest_File_DataFormat_FULL, nochange.data_format());
-  EXPECT_TRUE(nochange.has_data_offset());
-  EXPECT_TRUE(nochange.has_data_length());
+  EXPECT_FALSE(nochange.has_data_format());
+  EXPECT_FALSE(nochange.has_data_offset());
+  EXPECT_FALSE(nochange.has_data_length());
   EXPECT_FALSE(nochange.has_hardlink_path());
 
   const DeltaArchiveManifest_File& onebyte =
@@ -566,9 +591,10 @@ TEST_F(DeltaDiffGeneratorTest, FakerootEncodeDataToDeltaFileTest) {
   EXPECT_TRUE(S_ISREG(newempty.mode()));
   EXPECT_EQ(0, newempty.uid());
   EXPECT_EQ(0, newempty.gid());
-  EXPECT_FALSE(newempty.has_data_format());
-  EXPECT_FALSE(newempty.has_data_offset());
-  EXPECT_FALSE(newempty.has_data_length());
+  EXPECT_TRUE(newempty.has_data_format());
+  EXPECT_EQ(DeltaArchiveManifest_File_DataFormat_FULL, newempty.data_format());
+  EXPECT_TRUE(newempty.has_data_offset());
+  EXPECT_TRUE(newempty.has_data_length());
   EXPECT_FALSE(newempty.has_hardlink_path());
 
   const DeltaArchiveManifest_File& subdir =
@@ -667,7 +693,7 @@ TEST_F(DeltaDiffParserTest, FakerootDecodeDataFromDeltaFileTest) {
       string(cwd) + "/diff-gen-test/old",
       string(cwd) + "/diff-gen-test/new",
       string(cwd) + "/diff-gen-test/out.dat",
-      ""));
+      set<string>(), ""));
   // parse the file
 
   DeltaDiffParser parser(string(cwd) + "/diff-gen-test/out.dat");
@@ -789,7 +815,8 @@ TEST_F(DeltaDiffParserTest, FakerootDecodeDataFromDeltaFileTest) {
   // newempty
   file = parser.GetFileAtPath("/dir/newempty");
   EXPECT_TRUE(S_ISREG(file.mode()));
-  EXPECT_FALSE(file.has_data_format());
+  EXPECT_TRUE(file.has_data_format());
+  EXPECT_EQ(DeltaArchiveManifest_File_DataFormat_FULL, file.data_format());
 
   // subdir
   file = parser.GetFileAtPath("/dir/subdir");
@@ -845,7 +872,7 @@ TEST_F(DeltaDiffParserTest, FakerootDecodeDataFromDeltaFileTest) {
   cmd.push_back(string(cwd) + "/diff-gen-test/patch_result");
   cmd.push_back(string(cwd) + "/diff-gen-test/patch");
   Subprocess::SynchronousExec(cmd, &rc);
-  EXPECT_EQ(0, rc);
+  ASSERT_EQ(0, rc);
   vector<char> patch_result;
   EXPECT_TRUE(utils::ReadFile(string(cwd) + "/diff-gen-test/patch_result",
                               &patch_result));
@@ -857,12 +884,9 @@ TEST_F(DeltaDiffParserTest, FakerootDecodeDataFromDeltaFileTest) {
   // nochange
   file = parser.GetFileAtPath("/encoding/nochange");
   EXPECT_TRUE(S_ISREG(file.mode()));
-  EXPECT_TRUE(file.has_data_format());
-  EXPECT_EQ(DeltaArchiveManifest_File_DataFormat_FULL, file.data_format());
-  EXPECT_EQ("nochange\n", ReadFilePartToString(string(cwd) +
-                                               "/diff-gen-test/out.dat",
-                                               file.data_offset(),
-                                               file.data_length()));
+  EXPECT_FALSE(file.has_data_format());
+  EXPECT_FALSE(file.has_data_offset());
+  EXPECT_FALSE(file.has_data_length());
 
   // onebyte
   file = parser.GetFileAtPath("/encoding/onebyte");

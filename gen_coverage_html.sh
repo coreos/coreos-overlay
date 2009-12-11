@@ -6,7 +6,7 @@
 
 set -ex
 
-scons debug=1 -j 2
+scons debug=1 -j $(cat /proc/cpuinfo |grep '^processor' | wc -l)
 lcov -d . --zerocounters
 ./update_engine_unittests --gtest_filter='-*.RunAsRoot*:*.Fakeroot*'
 fakeroot ./update_engine_unittests --gtest_filter='*.Fakeroot*'

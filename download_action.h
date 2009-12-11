@@ -9,7 +9,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include <map>
 #include <string>
 
 #include <curl/curl.h>
@@ -24,9 +23,6 @@
 
 // The Download Action downloads a requested url to a specified path on disk.
 // The url and output path are determined by the InstallPlan passed in.
-
-using std::map;
-using std::string;
 
 namespace chromeos_update_engine {
 

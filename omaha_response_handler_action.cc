@@ -22,6 +22,7 @@ void OmahaResponseHandlerAction::PerformAction() {
   ScopedActionCompleter completer(processor_, this);
   const UpdateCheckResponse& response = GetInputObject();
   if (!response.update_exists) {
+    got_no_update_response_ = true;
     LOG(INFO) << "There are no updates. Aborting.";
     return;
   }
@@ -47,7 +48,8 @@ void OmahaResponseHandlerAction::PerformAction() {
     filename.resize(255);
   }
   // TODO(adlr): come up with a better place to download to:
-  install_plan.download_path = utils::kStatefulPartition + "/" + filename;
+  install_plan.download_path = string(utils::kStatefulPartition) + "/" +
+      filename;
   if (HasOutputPipe())
     SetOutputObject(install_plan);
   LOG(INFO) << "Using this install plan:";

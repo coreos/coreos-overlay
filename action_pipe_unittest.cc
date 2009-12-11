@@ -2,9 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <string>
 #include <gtest/gtest.h>
 #include "update_engine/action.h"
 #include "update_engine/action_pipe.h"
+
+using std::string;
 
 namespace chromeos_update_engine {
 

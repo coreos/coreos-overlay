@@ -28,7 +28,7 @@ class DownloadActionTestProcessorDelegate : public ActionProcessorDelegate {
   virtual ~DownloadActionTestProcessorDelegate() {
     EXPECT_TRUE(processing_done_called_);
   }
-  virtual void ProcessingDone(const ActionProcessor* processor) {
+  virtual void ProcessingDone(const ActionProcessor* processor, bool success) {
     ASSERT_TRUE(loop_);
     g_main_loop_quit(loop_);
     vector<char> found_data;
@@ -214,7 +214,7 @@ namespace {
 // only by the test PassObjectOutTest.
 class PassObjectOutTestProcessorDelegate : public ActionProcessorDelegate {
  public:
-  void ProcessingDone(const ActionProcessor* processor) {
+  void ProcessingDone(const ActionProcessor* processor, bool success) {
     ASSERT_TRUE(loop_);
     g_main_loop_quit(loop_);
   }

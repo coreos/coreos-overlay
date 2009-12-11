@@ -4,6 +4,7 @@
 
 #include "update_engine/install_action.h"
 #include <errno.h>
+#include <string>
 #include <vector>
 #include <gflags/gflags.h>
 #include "update_engine/filesystem_iterator.h"
@@ -15,6 +16,7 @@ DEFINE_string(mount_install_path, "",
               "If set, the path to use when mounting the "
               "destination device during install");
 
+using std::string;
 using std::vector;
 
 namespace chromeos_update_engine {
@@ -124,12 +126,12 @@ bool InstallAction::InstallFile(const std::string& mountpoint,
   }
 
   // chmod/chown new file
-  if (!S_ISLNK(file.mode()))
-    TEST_AND_RETURN_FALSE_ERRNO(chmod((mountpoint + path).c_str(), file.mode())
-                                == 0);
   TEST_AND_RETURN_FALSE(file.has_uid() && file.has_gid());
   TEST_AND_RETURN_FALSE_ERRNO(lchown((mountpoint + path).c_str(),
                                      file.uid(), file.gid()) == 0);
+  if (!S_ISLNK(file.mode()))
+    TEST_AND_RETURN_FALSE_ERRNO(chmod((mountpoint + path).c_str(), file.mode())
+                                == 0);
   return true;
 }
 

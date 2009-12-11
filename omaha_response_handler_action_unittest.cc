@@ -93,7 +93,8 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     EXPECT_TRUE(install_plan.is_full_update);
     EXPECT_EQ(in.codebase, install_plan.download_url);
     EXPECT_EQ(in.hash, install_plan.download_hash);
-    EXPECT_EQ(utils::kStatefulPartition + "/the_update_a.b.c.d_FULL_.tgz",
+    EXPECT_EQ(string(utils::kStatefulPartition) +
+              "/the_update_a.b.c.d_FULL_.tgz",
               install_plan.download_path);
     EXPECT_EQ("/dev/sda2", install_plan.install_path);
   }
@@ -112,7 +113,8 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     EXPECT_FALSE(install_plan.is_full_update);
     EXPECT_EQ(in.codebase, install_plan.download_url);
     EXPECT_EQ(in.hash, install_plan.download_hash);
-    EXPECT_EQ(utils::kStatefulPartition + "/the_update_a.b.c.d_DELTA_.tgz",
+    EXPECT_EQ(string(utils::kStatefulPartition) +
+              "/the_update_a.b.c.d_DELTA_.tgz",
               install_plan.download_path);
     EXPECT_EQ("/dev/sda3", install_plan.install_path);
   }
@@ -131,7 +133,8 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     EXPECT_FALSE(install_plan.is_full_update);
     EXPECT_EQ(in.codebase, install_plan.download_url);
     EXPECT_EQ(in.hash, install_plan.download_hash);
-    EXPECT_EQ(utils::kStatefulPartition + "/" + kLongName.substr(0, 255),
+    EXPECT_EQ(string(utils::kStatefulPartition) + "/" +
+              kLongName.substr(0, 255),
               install_plan.download_path);
     EXPECT_EQ("/dev/sda3", install_plan.install_path);
   }

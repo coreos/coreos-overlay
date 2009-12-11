@@ -3,8 +3,11 @@
 // found in the LICENSE file.
 
 #include "update_engine/action_processor.h"
+#include <string>
 #include "chromeos/obsolete_logging.h"
 #include "update_engine/action.h"
+
+using std::string;
 
 namespace chromeos_update_engine {
 
@@ -70,7 +73,7 @@ void ActionProcessor::ActionComplete(AbstractAction* actionptr,
     LOG(INFO) << "ActionProcessor::ActionComplete: finished last action of"
                  " type " << old_type;
     if (delegate_) {
-      delegate_->ProcessingDone(this);
+      delegate_->ProcessingDone(this, success);
     }
     return;
   }

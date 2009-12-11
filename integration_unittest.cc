@@ -40,7 +40,7 @@ class IntegrationTestProcessorDelegate : public ActionProcessorDelegate {
   virtual ~IntegrationTestProcessorDelegate() {
     EXPECT_TRUE(processing_done_called_);
   }
-  virtual void ProcessingDone(const ActionProcessor* processor) {
+  virtual void ProcessingDone(const ActionProcessor* processor, bool success) {
     processing_done_called_ = true;
     g_main_loop_quit(loop_);
   }

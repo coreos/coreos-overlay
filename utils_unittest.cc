@@ -5,10 +5,12 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
+#include <string>
 #include <vector>
 #include <gtest/gtest.h>
 #include "update_engine/utils.h"
 
+using std::string;
 using std::vector;
 
 namespace chromeos_update_engine {
