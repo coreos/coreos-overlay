@@ -67,6 +67,12 @@ env['LIBS'] = Split("""base
 env['CPPPATH'] = ['..', '../../third_party/chrome/files', '../../common']
 env['LIBPATH'] = ['../../third_party/chrome']
 env['BUILDERS']['ProtocolBuffer'] = proto_builder
+
+# Fix issue with scons not passing pkg-config vars through the environment.
+for key in Split('PKG_CONFIG_LIBDIR PKG_CONFIG_PATH'):
+  if os.environ.has_key(key):
+    env['ENV'][key] = os.environ[key]
+
 env.ParseConfig('pkg-config --cflags --libs glib-2.0')
 env.ProtocolBuffer('update_metadata.pb.cc', 'update_metadata.proto')
 
