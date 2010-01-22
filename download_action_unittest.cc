@@ -80,7 +80,7 @@ void TestWithData(const vector<char>& data, bool compress) {
   // takes ownership of passed in HttpFetcher
   InstallPlan install_plan(compress, "",
                            OmahaHashCalculator::OmahaHashOfData(use_data),
-                           compress ? "" : path, compress ? path : "");
+                           path);
   ObjectFeederAction<InstallPlan> feeder_action;
   feeder_action.set_obj(install_plan);
   DownloadAction download_action(new MockHttpFetcher(&use_data[0],
@@ -157,7 +157,7 @@ TEST(DownloadActionTest, TerminateEarlyTest) {
   {
     // takes ownership of passed in HttpFetcher
     ObjectFeederAction<InstallPlan> feeder_action;
-    InstallPlan install_plan(false, "", "", path, "");
+    InstallPlan install_plan(false, "", "", path);
     feeder_action.set_obj(install_plan);
     DownloadAction download_action(new MockHttpFetcher(&data[0], data.size()));
     TerminateEarlyTestProcessorDelegate delegate;
@@ -231,12 +231,10 @@ gboolean PassObjectOutTestStarter(gpointer data) {
 TEST(DownloadActionTest, PassObjectOutTest) {
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
 
-  const string path("/tmp/DownloadActionTest");
-
   // takes ownership of passed in HttpFetcher
   InstallPlan install_plan(false, "",
-                           OmahaHashCalculator::OmahaHashOfString("x"), path,
-                           "");
+                           OmahaHashCalculator::OmahaHashOfString("x"),
+                           "/dev/null");
   ObjectFeederAction<InstallPlan> feeder_action;
   feeder_action.set_obj(install_plan);
   DownloadAction download_action(new MockHttpFetcher("x", 1));
@@ -267,7 +265,7 @@ TEST(DownloadActionTest, BadOutFileTest) {
   const string path("/fake/path/that/cant/be/created/because/of/missing/dirs");
 
   // takes ownership of passed in HttpFetcher
-  InstallPlan install_plan(false, "", "", path, "");
+  InstallPlan install_plan(false, "", "", path);
   ObjectFeederAction<InstallPlan> feeder_action;
   feeder_action.set_obj(install_plan);
   DownloadAction download_action(new MockHttpFetcher("x", 1));

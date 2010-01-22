@@ -2,6 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// TODO(adlr): get rid of commented out lines or comment them back in.
+// Look for "// re-add" next to those comments.
+
 #include <string>
 #include <tr1/memory>
 #include <vector>
@@ -11,7 +14,7 @@
 #include "update_engine/action_processor.h"
 #include "update_engine/download_action.h"
 #include "update_engine/filesystem_copier_action.h"
-#include "update_engine/install_action.h"
+// #include "update_engine/install_action.h"  // re-add
 #include "update_engine/libcurl_http_fetcher.h"
 #include "update_engine/omaha_request_prep_action.h"
 #include "update_engine/omaha_response_handler_action.h"
@@ -64,8 +67,8 @@ void UpdateAttempter::Update(bool force_full_update) {
       new FilesystemCopierAction);
   shared_ptr<DownloadAction> download_action(
       new DownloadAction(new LibcurlHttpFetcher));
-  shared_ptr<InstallAction> install_action(
-      new InstallAction);
+  // shared_ptr<InstallAction> install_action(  // re-add
+  //     new InstallAction);
   shared_ptr<PostinstallRunnerAction> postinstall_runner_action(
       new PostinstallRunnerAction);
   shared_ptr<SetBootableFlagAction> set_bootable_flag_action(
@@ -78,7 +81,7 @@ void UpdateAttempter::Update(bool force_full_update) {
   actions_.push_back(shared_ptr<AbstractAction>(response_handler_action));
   actions_.push_back(shared_ptr<AbstractAction>(filesystem_copier_action));
   actions_.push_back(shared_ptr<AbstractAction>(download_action));
-  actions_.push_back(shared_ptr<AbstractAction>(install_action));
+  // actions_.push_back(shared_ptr<AbstractAction>(install_action));  // re-add
   actions_.push_back(shared_ptr<AbstractAction>(postinstall_runner_action));
   actions_.push_back(shared_ptr<AbstractAction>(set_bootable_flag_action));
   
@@ -94,8 +97,8 @@ void UpdateAttempter::Update(bool force_full_update) {
   BondActions(update_check_action.get(), response_handler_action.get());
   BondActions(response_handler_action.get(), filesystem_copier_action.get());
   BondActions(filesystem_copier_action.get(), download_action.get());
-  BondActions(download_action.get(), install_action.get());
-  BondActions(install_action.get(), postinstall_runner_action.get());
+  // BondActions(download_action.get(), install_action.get());  // re-add
+  // BondActions(install_action.get(), postinstall_runner_action.get());
   BondActions(postinstall_runner_action.get(), set_bootable_flag_action.get());
 
   processor_.StartProcessing();

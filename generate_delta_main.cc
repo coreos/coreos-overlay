@@ -25,11 +25,6 @@ using std::string;
 namespace chromeos_update_engine {
 
 namespace {
-// These paths should never be delta diffed. They should always be transmitted
-// in full in the update.
-const char* kNonDiffPaths[] = {
-  "/boot/extlinux.conf"
-};
 
 void usage(const char* argv0) {
   printf("usage: %s old_dir new_dir out_file\n", argv0);
@@ -58,19 +53,8 @@ int Main(int argc, char** argv) {
     usage(argv[0]);
   }
   
-  set<string> non_diff_paths;
-  for (size_t i = 0; i < arraysize(kNonDiffPaths); i++)
-    non_diff_paths.insert(kNonDiffPaths[i]);
-  
-  DeltaArchiveManifest* manifest =
-      DeltaDiffGenerator::EncodeMetadataToProtoBuffer(new_dir);
-  CHECK(manifest);
-  CHECK(DeltaDiffGenerator::EncodeDataToDeltaFile(manifest,
-                                                  old_dir,
-                                                  new_dir,
-                                                  argv[3],
-                                                  non_diff_paths,
-                                                  ""));
+  // TODO(adlr): generate delta file
+
   return 0;
 }
 

@@ -2,6 +2,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
+import os
+
 # Protobuffer compilation
 """ Inputs:
         target: list of targets to compile to
@@ -90,7 +92,6 @@ sources = Split("""action_processor.cc
                    filesystem_iterator.cc
                    file_writer.cc
                    gzip.cc
-                   install_action.cc
                    libcurl_http_fetcher.cc
                    omaha_hash_calculator.cc
                    omaha_request_prep_action.cc
@@ -114,8 +115,6 @@ unittest_sources = Split("""action_unittest.cc
                             filesystem_iterator_unittest.cc
                             gzip_unittest.cc
                             http_fetcher_unittest.cc
-                            install_action_unittest.cc
-                            integration_unittest.cc
                             mock_http_fetcher.cc
                             omaha_hash_calculator_unittest.cc
                             omaha_request_prep_action_unittest.cc

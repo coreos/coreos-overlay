@@ -7,8 +7,10 @@
 // version. The update format is represented by this struct pseudocode:
 // struct delta_update_file {
 //   char magic[4] = "CrAU";
-//   uint64 bom_offset;  // Offset of protobuf DeltaArchiveManifest
-//   uint64 bom_size;  // Sise of protobuf DeltaArchiveManifest
+//   uint32 file_format_version = 1;
+//   uint64 manifest_size;  // Size of protobuf DeltaArchiveManifest
+//   // The Bzip2 compressed DeltaArchiveManifest
+//   char manifest[];
 //
 //   // Data blobs for files, no specific format. The specific offset
 //   // and length of each data blob is recorded in the DeltaArchiveManifest.
@@ -16,121 +18,82 @@
 //     char data[];
 //   } blobs[];
 //
-//   // The Gzip compressed DeltaArchiveManifest
-//   char bom[];
 // };
 
-// The DeltaArchiveManifest protobuf is an ordered list of File objects.
-// These File objects are stored in a linear array in the
-// DeltaArchiveManifest, each with a specific index. Each File object
-// can contain children in its children list. Each child in the list
-// has a name and an index. The index refers to the index within
-// DeltaArchiveManifest.files. Thus, the DeltaArchiveManifest.files
-// can be seen as a tree structure that mimicks the filesystem.
-// The root object (the object an index 0) has no name, since names
-// for children are stored in the parent.
+// The DeltaArchiveManifest protobuf is an ordered list of InstallOperation
+// objects. These objects are stored in a linear array in the
+// DeltaArchiveManifest. Each operation is applied in order by the client.
 
-// The DeltaArchiveManifest will contain one File entry for each
-// file that will be on the resultant filesystem. Because we have
-// a tree structure, and children are ordered alphabetically within
-// a parent, we can do log-time˜path lookup on a DeltaArchiveManifest
-// object. We can also iterate through a DeltaArchiveManifest object
-// using a preorder tree traversal to see each file in the
-// DeltaArchiveManifest, seeing each directory before any of its children;
-// this takes linear time.
+// The DeltaArchiveManifest also contains the initial and final
+// checksums for the device.
 
-// Here's an example from Dan Erat showing DeltaArchiveManifest
-// for a filesystem with files /bin/cat and /bin/ls.:
-
-// files[0] {  // "/" directory
-//   children[0] {
-//     name "bin"
-//     index 1
-//   }
-// }
-// files[1] {  // "/bin" directory
-//   children[0] {
-//     name "cat"
-//     index 2
-//   }
-//   children[1] {
-//     name "ls"
-//     index 3
-//   }
-// }
-// files[2] {  // "/bin/cat"
-// }
-// files[3] {  // "/bin/ls"
-// }
-
-// If a file has a data_format set, it should also have data_offset and
-// data_length set. data_offset and data_length refer to a range of bytes
-// in the delta update file itself which have the format specified by
-// data_format. FULL and FULL_GZ mean the entire file is present (FULL_GZ,
-// gzip compressed). BSDIFF means the old file with the same path should be
-// patched with 'bspatch' to produce the desired output file. COURGETTE
-// is not yet used, but it will be another binary diff format.
-
-// Directories should not have any data.
-
-// There are other types of files, too: symlinks, block and character devices,
-// fifos, and sockets. Fifos and sockets contain no data. Block and
-// character devices have data. It must be the format FULL or FULL_GZ, and
-// the contents are a serialized LinuxDevice protobuf. Symlinks must either
-// be FULL, FULL_GZ, or have no data. A symlink with no data is unchanged,
-// and with data it's set to that data.
-
-// TODO(adlr): Add support for hard links; CL is prepared already.
-// Extended attributes are unsupported at this time.
+// The client will perform each InstallOperation in order, beginning even
+// before the entire delta file is downloaded (but after at least the
+// protobuf is downloaded). The types of operations are explained:
+// - REPLACE: Replace the dst_extents on the drive with the attached data,
+//   zero padding out to block size.
+// - REPLACE_BZ: bzip2-uncompress the attached data and write it into
+//   dst_extents on the drive, zero padding to block size.
+// - MOVE: Copy the data in src_extents to dst_extents. Extents may overlap,
+//   so it may be desirable to read all src_extents data into memory before
+//   writing it out.
+// - BSDIFF: Read src_length bytes from src_extents into memory, perform
+//   bspatch with attached data, write new data to dst_extents, zero padding
+//   to block size.
 
 package chromeos_update_engine;
 
-message DeltaArchiveManifest {
-  message File {
-    // This is st_mode from struct stat. It includes file type and permission
-    // bits.
-    optional uint32 mode = 1;
-    optional uint32 uid = 2;
-    optional uint32 gid = 3;
+// Data is packed into blocks on disk, always starting from the beginning
+// of the block. If a file's data is too large for one block, it overflows
+// into another block, which may or may not be the following block on the
+// physical partition. An ordered list of extents is another
+// representation of an ordered list of blocks. For example, a file stored
+// in blocks 9, 10, 11, 2, 18, 12 (in that order) would be stored in
+// extents { {9, 3}, {2, 1}, {18, 1}, {12, 1} } (in that order).
+// In general, files are stored sequentially on disk, so it's more efficient
+// to use extents to encode the block lists (this is effectively
+// run-length encoding).
+// A sentinel value (kuint64max) as the start block denotes a sparse-hole
+// in a file whose block-length is specified by num_blocks.
 
-    // File Data, not for directories
-    enum DataFormat {
-      FULL = 0;  // The data is the complete file
-      FULL_GZ = 1;  // The data is the complete file gzipped
-      BSDIFF = 2;  // The data is a bsdiff binary diff
-      COURGETTE = 3;  // The data is a courgette binary diff
-    }
-    // If present, there is data associated with this File object and
-    // data_offset and data_size must be set.
-    // If a file object doesn't have this set, it means the data is
-    // unchanged from the old version of the file.
-    optional DataFormat data_format = 4;
-    // The offset into the delta file where the data (if any) is stored
-    optional uint32 data_offset = 5;
-    // The length of the data in the delta file
-    optional uint32 data_length = 6;
-    
-    // When a file is a hard link, hardlink_path exists and
-    // is the path within the DeltaArchiveManifest to the "original" file.
-    // When iterating through a DeltaArchiveManifest,  you will be guaranteed
-    // to hit a hardlink only after you've hit the path to the first file.
-    // Directories can't be hardlinked.
-    optional string hardlink_path = 8;
-
-    message Child {
-      // A File that's a directory (and only those types of File objects)
-      // will have exactly one Child submessage per child.
-      required string name = 1;  // File name of child
-
-      // Index into DeltaArchiveManifest.files for the File object of the child.
-      required uint32 index = 2;
-    }
-    repeated Child children = 9;
-  }
-  repeated File files = 1;
+message Extent {
+  optional uint64 start_block = 1;
+  optional uint64 num_blocks = 2;
 }
 
-message LinuxDevice {
-  required int32 major = 1;
-  required int32 minor = 2;
+message DeltaArchiveManifest {
+  message InstallOperation {
+    enum Type {
+      REPLACE = 0;  // Replace destination extents w/ attached data
+      REPLACE_BZ = 1;  // Replace destination extents w/ attached bzipped data
+      MOVE = 2;  // Move source extents to destination extents
+      BSDIFF = 3;  // The data is a bsdiff binary diff
+    }
+    required Type type = 1;
+    // The offset into the delta file (after the protobuf)
+    // where the data (if any) is stored
+    optional uint32 data_offset = 2;
+    // The length of the data in the delta file
+    optional uint32 data_length = 3;
+
+    // Ordered list of extents that are read from (if any) and written to.
+    repeated Extent src_extents = 4;
+    // Byte length of src, not necessarily block aligned. It's only used for
+    // BSDIFF, because we need to pass that external program the number
+    // of bytes to read from the blocks we pass it.
+    optional uint64 src_length = 5;
+
+    repeated Extent dst_extents = 6;
+    // byte length of dst, not necessarily block aligned. It's only used for
+    // BSDIFF, because we need to fill in the rest of the last block
+    // that bsdiff writes with '\0' bytes.
+    optional uint64 dst_length = 7;
+  }
+  repeated InstallOperation install_operations = 1;
+  // The checksums of the install device before and after the install process.
+  optional string src_checksum = 2;
+  optional string dst_checksum = 3;
+
+  // (At time of writing) usually 4096
+  optional uint32 block_size = 5 [default = 4096];
 }

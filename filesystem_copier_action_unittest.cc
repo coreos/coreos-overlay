@@ -222,7 +222,7 @@ TEST_F(FilesystemCopierActionTest, FullUpdateTest) {
   processor.set_delegate(&delegate);
 
   ObjectFeederAction<InstallPlan> feeder_action;
-  InstallPlan install_plan(true, "", "", "", "");
+  InstallPlan install_plan(true, "", "", "");
   feeder_action.set_obj(install_plan);
   FilesystemCopierAction copier_action;
   ObjectCollectorAction<InstallPlan> collector_action;
@@ -246,7 +246,7 @@ TEST_F(FilesystemCopierActionTest, NonExistentDriveTest) {
   processor.set_delegate(&delegate);
 
   ObjectFeederAction<InstallPlan> feeder_action;
-  InstallPlan install_plan(false, "", "", "", "/some/missing/file/path");
+  InstallPlan install_plan(false, "", "", "/some/missing/file/path");
   feeder_action.set_obj(install_plan);
   FilesystemCopierAction copier_action;
   ObjectCollectorAction<InstallPlan> collector_action;

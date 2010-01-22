@@ -2,6 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// TODO(adlr): get rid of commented out lines or comment them back in.
+// Look for "// re-add" next to those comments.
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -17,7 +20,7 @@
 #include "update_engine/delta_diff_generator.h"
 #include "update_engine/delta_diff_parser.h"
 #include "update_engine/filesystem_copier_action.h"
-#include "update_engine/install_action.h"
+// #include "update_engine/install_action.h"  // re-add
 #include "update_engine/install_plan.h"
 #include "update_engine/test_utils.h"
 #include "update_engine/update_metadata.pb.h"
@@ -46,7 +49,6 @@ class TestInstaller : public ActionProcessorDelegate {
                 const string& install_path)
       : loop_(loop),
         sys_root_(sys_root),
-        delta_path_(delta_path),
         install_path_(install_path) {}
   void Update();
 
@@ -57,7 +59,6 @@ class TestInstaller : public ActionProcessorDelegate {
   ActionProcessor processor_;
   GMainLoop *loop_;
   string sys_root_;
-  string delta_path_;
   string install_path_;
 };
 
@@ -73,12 +74,12 @@ void TestInstaller::Update() {
       new ObjectFeederAction<InstallPlan>);
   shared_ptr<FilesystemCopierAction> filesystem_copier_action(
       new FilesystemCopierAction);
-  shared_ptr<InstallAction> install_action(
-      new InstallAction);
+  // shared_ptr<InstallAction> install_action(  // re-add
+  //     new InstallAction);
 
   actions_.push_back(object_feeder_action);
   actions_.push_back(filesystem_copier_action);
-  actions_.push_back(install_action);
+  // actions_.push_back(install_action);  // re-add
 
   // Enqueue the actions
   for (vector<shared_ptr<AbstractAction> >::iterator it = actions_.begin();
@@ -89,12 +90,12 @@ void TestInstaller::Update() {
   // Bond them together. We have to use the leaf-types when calling
   // BondActions().
   BondActions(object_feeder_action.get(), filesystem_copier_action.get());
-  BondActions(filesystem_copier_action.get(), install_action.get());
+  // re-add
+  // BondActions(filesystem_copier_action.get(), install_action.get());
   
   InstallPlan install_plan(false,
                            "",
                            "",
-                           delta_path_,
                            install_path_);
   filesystem_copier_action->set_copy_source(sys_root_);
   object_feeder_action->set_obj(install_plan);
@@ -131,50 +132,6 @@ bool Main(int argc, char** argv) {
 
   LOG(INFO) << "starting";
   
-  if (!FLAGS_dump_delta.empty()) {
-    CHECK(FLAGS_delta.empty());
-    CHECK(FLAGS_root.empty());
-    CHECK(FLAGS_output_dev.empty());
-    
-    DeltaDiffParser parser(FLAGS_dump_delta);
-    for (DeltaDiffParser::Iterator it = parser.Begin();
-         it != parser.End(); it.Increment()) {
-      DeltaArchiveManifest_File file = it.GetFile();
-      const char* format = "---";
-      ssize_t offset = -1;
-      ssize_t length = -1;
-      if (file.has_data_format()) {
-        switch (file.data_format()) {
-          case DeltaArchiveManifest_File_DataFormat_FULL:
-          format = "FULL";
-          break;
-          case DeltaArchiveManifest_File_DataFormat_FULL_GZ:
-          format = "FULL_GZ";
-          break;
-          case DeltaArchiveManifest_File_DataFormat_BSDIFF:
-          format = "BSDIFF";
-          break;
-          case DeltaArchiveManifest_File_DataFormat_COURGETTE:
-          format = "COURGETTE";
-          break;
-          default:
-            format = "???";
-        }
-        if (file.has_data_offset())
-          offset = file.data_offset();
-        if (file.has_data_length())
-          length = file.data_length();
-      }
-      printf("%s %o %s %d %d\n", it.path().c_str(), file.mode(), format, offset,
-             length);
-    }
-    exit(0);
-  }
-
-  CHECK(!FLAGS_delta.empty());
-  CHECK(!FLAGS_root.empty());
-  CHECK(!FLAGS_output_dev.empty());
-
   // Create the single GMainLoop
   GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
 

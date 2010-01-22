@@ -31,7 +31,7 @@ void DownloadAction::PerformAction() {
 
   should_decompress_ = install_plan.is_full_update;
   url_ = install_plan.download_url;
-  output_path_ = install_plan.download_path;
+  output_path_ = install_plan.install_path;
   hash_ = install_plan.download_hash;
   install_plan.Dump();
 
@@ -39,7 +39,6 @@ void DownloadAction::PerformAction() {
     decompressing_file_writer_.reset(
         new GzipDecompressingFileWriter(direct_file_writer_.get()));
     writer_ = decompressing_file_writer_.get();
-    output_path_ = install_plan.install_path;
   } else {
     writer_ = direct_file_writer_.get();
   }
