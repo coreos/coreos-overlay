@@ -80,14 +80,16 @@ env.ProtocolBuffer('update_metadata.pb.cc', 'update_metadata.proto')
 
 if ARGUMENTS.get('debug', 0):
   env['CCFLAGS'] += ' -fprofile-arcs -ftest-coverage'
-  env['LIBS'] += ['gcov']
+  env['LIBS'] += ['bz2', 'gcov']
 
 
 
 sources = Split("""action_processor.cc
+                   bzip_extent_writer.cc
                    decompressing_file_writer.cc
                    delta_diff_parser.cc
                    download_action.cc
+                   extent_writer.cc
                    filesystem_copier_action.cc
                    filesystem_iterator.cc
                    file_writer.cc
@@ -107,9 +109,11 @@ main = ['main.cc']
 unittest_sources = Split("""action_unittest.cc
                             action_pipe_unittest.cc
                             action_processor_unittest.cc
+                            bzip_extent_writer_unittest.cc
                             decompressing_file_writer_unittest.cc
                             delta_diff_generator_unittest.cc
                             download_action_unittest.cc
+                            extent_writer_unittest.cc
                             file_writer_unittest.cc
                             filesystem_copier_action_unittest.cc
                             filesystem_iterator_unittest.cc

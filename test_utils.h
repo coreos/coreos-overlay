@@ -44,6 +44,8 @@ inline int System(const std::string& cmd) {
   return system(cmd.c_str());
 }
 
+void FillWithData(std::vector<char>* buffer);
+
 namespace {
 // 300 byte pseudo-random string. Not null terminated.
 // This does not gzip compress well.

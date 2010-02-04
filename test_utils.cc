@@ -165,14 +165,23 @@ std::string GetUnusedLoopDevice() {
   return ret;
 }
 
-bool ExpectVectorsEq(const vector<char>& a, const vector<char>& b) {
-  EXPECT_EQ(a.size(), b.size());
-  if (a.size() != b.size())
+bool ExpectVectorsEq(const vector<char>& expected, const vector<char>& actual) {
+  EXPECT_EQ(expected.size(), actual.size());
+  if (expected.size() != actual.size())
     return false;
-  for (unsigned int i = 0; i < a.size(); i++) {
-    EXPECT_EQ(a[i], b[i]) << "offset: " << i;
+  for (unsigned int i = 0; i < expected.size(); i++) {
+    EXPECT_EQ(expected[i], actual[i]) << "offset: " << i;
   }
   return true;
+}
+
+void FillWithData(vector<char>* buffer) {
+  size_t input_counter = 0;
+  for (vector<char>::iterator it = buffer->begin(); it != buffer->end(); ++it) {
+    *it = kRandomString[input_counter];
+    input_counter++;
+    input_counter %= sizeof(kRandomString);
+  }
 }
 
 void CreateExtImageAtPath(const string& path, vector<string>* out_paths) {
