@@ -80,6 +80,11 @@ std::set<ValueType> SetWithValue(const ValueType& value) {
   return ret;
 }
 
+template<typename T>
+bool VectorContainsValue(const std::vector<T>& vect, const T& value) {
+  return std::find(vect.begin(), vect.end(), value) != vect.end(); 
+}
+
 // Returns the currently booted device. "/dev/sda1", for example.
 // This will not interpret LABEL= or UUID=. You'll need to use findfs
 // or something with equivalent funcionality to interpret those.

@@ -93,6 +93,7 @@ sources = Split("""action_processor.cc
                    filesystem_copier_action.cc
                    filesystem_iterator.cc
                    file_writer.cc
+                   graph_utils.cc
                    gzip.cc
                    libcurl_http_fetcher.cc
                    omaha_hash_calculator.cc
@@ -117,6 +118,7 @@ unittest_sources = Split("""action_unittest.cc
                             file_writer_unittest.cc
                             filesystem_copier_action_unittest.cc
                             filesystem_iterator_unittest.cc
+                            graph_utils_unittest.cc
                             gzip_unittest.cc
                             http_fetcher_unittest.cc
                             mock_http_fetcher.cc
