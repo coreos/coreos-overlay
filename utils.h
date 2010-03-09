@@ -5,6 +5,7 @@
 #ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_UTILS_H__
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_UTILS_H__
 
+#include <algorithm>
 #include <set>
 #include <string>
 #include <vector>
