@@ -86,6 +86,7 @@ if ARGUMENTS.get('debug', 0):
 
 sources = Split("""action_processor.cc
                    bzip_extent_writer.cc
+                   cycle_breaker.cc
                    decompressing_file_writer.cc
                    delta_diff_parser.cc
                    download_action.cc
@@ -113,6 +114,7 @@ unittest_sources = Split("""action_unittest.cc
                             action_pipe_unittest.cc
                             action_processor_unittest.cc
                             bzip_extent_writer_unittest.cc
+                            cycle_breaker_unittest.cc
                             decompressing_file_writer_unittest.cc
                             delta_diff_generator_unittest.cc
                             download_action_unittest.cc
