@@ -105,6 +105,7 @@ sources = Split("""action_processor.cc
                    set_bootable_flag_action.cc
                    subprocess.cc
                    tarjan.cc
+                   topological_sort.cc
                    update_check_action.cc
 		               update_metadata.pb.cc
 		               utils.cc""")
@@ -135,6 +136,7 @@ unittest_sources = Split("""action_unittest.cc
                             subprocess_unittest.cc
                             tarjan_unittest.cc
                             test_utils.cc
+                            topological_sort_unittest.cc
                             update_check_action_unittest.cc
                             utils_unittest.cc""")
 unittest_main = ['testrunner.cc']
