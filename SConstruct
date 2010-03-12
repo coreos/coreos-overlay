@@ -85,6 +85,7 @@ if ARGUMENTS.get('debug', 0):
 
 
 sources = Split("""action_processor.cc
+                   bzip.cc
                    bzip_extent_writer.cc
                    cycle_breaker.cc
                    decompressing_file_writer.cc
@@ -125,7 +126,6 @@ unittest_sources = Split("""action_unittest.cc
                             filesystem_copier_action_unittest.cc
                             filesystem_iterator_unittest.cc
                             graph_utils_unittest.cc
-                            gzip_unittest.cc
                             http_fetcher_unittest.cc
                             mock_http_fetcher.cc
                             omaha_hash_calculator_unittest.cc
@@ -138,7 +138,8 @@ unittest_sources = Split("""action_unittest.cc
                             test_utils.cc
                             topological_sort_unittest.cc
                             update_check_action_unittest.cc
-                            utils_unittest.cc""")
+                            utils_unittest.cc
+                            zip_unittest.cc""")
 unittest_main = ['testrunner.cc']
 
 delta_generator_sources = Split("""delta_diff_generator.cc""")
