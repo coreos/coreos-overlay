@@ -16,6 +16,8 @@
 
 #include <linux/fs.h>
 
+#include "update_engine/graph_types.h"
+#include "update_engine/graph_utils.h"
 #include "update_engine/utils.h"
 
 using std::string;
@@ -31,7 +33,6 @@ const int kBlockSize = 4096;
 
 bool ExtentsForFileFibmap(const std::string& path, std::vector<Extent>* out) {
   CHECK(out);
-  // TODO(adlr): verify path is a file
   struct stat stbuf;
   int rc = stat(path.c_str(), &stbuf);
   TEST_AND_RETURN_FALSE_ERRNO(rc == 0);
@@ -53,32 +54,23 @@ bool ExtentsForFileFibmap(const std::string& path, std::vector<Extent>* out) {
   current.set_num_blocks(0);
 
   for (int i = 0; i < block_count; i++) {
-    unsigned int block = i;
-    rc = ioctl(fd, FIBMAP, &block);
+    unsigned int block32 = i;
+    rc = ioctl(fd, FIBMAP, &block32);
     TEST_AND_RETURN_FALSE_ERRNO(rc == 0);
     
-    // Add next block to extents
-    if (current.num_blocks() == 0) {
-      // We're starting a new extent
-      current.set_start_block(block);
-      current.set_num_blocks(1);
-      continue;
-    }
-    if ((current.start_block() + current.num_blocks()) == block) {
-      // We're continuing the last extent
-      current.set_num_blocks(current.num_blocks() + 1);
-      continue;
-    }
-    // We're starting a new extent and keeping the current one
-    out->push_back(current);
-    current.set_start_block(block);
-    current.set_num_blocks(1);
-    continue;
+    const uint64 block = (block32 == 0 ? kSparseHole : block32);
+    
+    graph_utils::AppendBlockToExtents(out, block);
   }
-  
-  if (current.num_blocks() > 0)
-    out->push_back(current);
+  return true;
+}
 
+bool GetFilesystemBlockSize(const std::string& path, uint32* out_blocksize) {
+  int fd = open(path.c_str(), O_RDONLY, 0);
+  TEST_AND_RETURN_FALSE_ERRNO(fd >= 0);
+  ScopedFdCloser fd_closer(&fd);
+  int rc = ioctl(fd, FIGETBSZ, out_blocksize);
+  TEST_AND_RETURN_FALSE_ERRNO(rc != -1);
   return true;
 }
 

@@ -137,8 +137,8 @@ void FilesystemCopierActionTest::DoTest(bool double_copy,
   g_main_loop_unref(loop);
 
   EXPECT_EQ(0, System(string("losetup -d ") + dev));
-  EXPECT_EQ(0, System(string("umount ") + TestDir() + "/mnt/some_dir/mnt"));
-  EXPECT_EQ(0, System(string("umount ") + TestDir() + "/mnt"));
+  EXPECT_EQ(0, System(string("umount -d ") + TestDir() + "/mnt/some_dir/mnt"));
+  EXPECT_EQ(0, System(string("umount -d ") + TestDir() + "/mnt"));
   EXPECT_EQ(0, unlink(a_image.c_str()));
   EXPECT_EQ(0, unlink(b_image.c_str()));
 
@@ -168,7 +168,7 @@ void FilesystemCopierActionTest::DoTest(bool double_copy,
   EXPECT_TRUE(utils::ReadFileToString(TestDir() + "/mnt/hello", &file_data));
   EXPECT_EQ("hello\n", file_data);
   EXPECT_EQ("/some/target", Readlink(TestDir() + "/mnt/sym"));
-  EXPECT_EQ(0, System(string("umount ") + TestDir() + "/mnt"));
+  EXPECT_EQ(0, System(string("umount -d ") + TestDir() + "/mnt"));
 
   EXPECT_EQ(0, unlink(out_image.c_str()));
   EXPECT_EQ(0, rmdir((TestDir() + "/mnt").c_str()));

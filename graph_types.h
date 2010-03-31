@@ -7,6 +7,7 @@
 
 #include <map>
 #include <set>
+#include <string>
 #include <utility>
 #include <vector>
 #include "base/basictypes.h"
@@ -22,7 +23,7 @@ struct EdgeProperties {
 };
 
 struct Vertex {
-  Vertex() : index(-1), lowlink(-1), op(NULL) {}
+  Vertex() : index(-1), lowlink(-1) {}
   typedef std::map<std::vector<Vertex>::size_type, EdgeProperties> EdgeMap;
   EdgeMap out_edges;
 
@@ -38,7 +39,8 @@ struct Vertex {
   std::vector<Vertex>::size_type lowlink;
 
   // Other Vertex properties:
-  DeltaArchiveManifest_InstallOperation* op;
+  DeltaArchiveManifest_InstallOperation op;
+  std::string file_name;
 
   typedef std::vector<Vertex>::size_type Index;
   static const Vertex::Index kInvalidIndex = -1;
@@ -47,6 +49,8 @@ struct Vertex {
 typedef std::vector<Vertex> Graph;
 
 typedef std::pair<Vertex::Index, Vertex::Index> Edge;
+
+const uint64 kSparseHole = kuint64max;
 
 }  // namespace chromeos_update_engine
 

@@ -20,6 +20,10 @@ namespace utils {
 // exists. Returns true on success, false otherwise.
 bool WriteFile(const char* path, const char* data, int data_len);
 
+// Calls write() repeatedly until all count bytes at buf are written to
+// fd or an error occurs. Returns true on success.
+bool WriteAll(int fd, const void *buf, size_t count);
+
 // Returns the entire contents of the file at path. Returns true on success.
 bool ReadFile(const std::string& path, std::vector<char>* out);
 bool ReadFileToString(const std::string& path, std::string* out);
@@ -40,6 +44,16 @@ bool FileExists(const char* path);
 // NEVER CALL THIS FUNCTION UNLESS YOU ARE SURE
 // THAT YOUR PROCESS WILL BE THE ONLY THING WRITING FILES IN THIS DIRECTORY.
 std::string TempFilename(std::string path);
+
+// Calls mkstemp() with the template passed. Returns the filename in the
+// out param filename. If fd is non-NULL, the file fd returned by mkstemp
+// is not close()d and is returned in the out param 'fd'. However, if
+// fd is NULL, the fd from mkstemp() will be closed.
+// The last six chars of the template must be XXXXXX.
+// Returns true on success.
+bool MakeTempFile(const std::string& filename_template,
+                  std::string* filename,
+                  int* fd);
 
 // Deletes a directory and all its contents synchronously. Returns true
 // on success. This may be called with a regular file--it will just unlink it.
@@ -84,6 +98,20 @@ std::set<ValueType> SetWithValue(const ValueType& value) {
 template<typename T>
 bool VectorContainsValue(const std::vector<T>& vect, const T& value) {
   return std::find(vect.begin(), vect.end(), value) != vect.end(); 
+}
+
+template<typename T>
+bool VectorIndexOf(const std::vector<T>& vect, const T& value,
+                   typename std::vector<T>::size_type* out_index) {
+  typename std::vector<T>::const_iterator it = std::find(vect.begin(),
+                                                         vect.end(),
+                                                         value);
+  if (it == vect.end()) {
+    return false;
+  } else {
+    *out_index = it - vect.begin();
+    return true;
+  }
 }
 
 // Returns the currently booted device. "/dev/sda1", for example.

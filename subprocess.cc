@@ -80,7 +80,7 @@ void Subprocess::CancelExec(uint32 tag) {
 
 bool Subprocess::SynchronousExec(const std::vector<std::string>& cmd,
                                  int* return_code) {
-  GError *err;
+  GError *err = NULL;
   scoped_array<char *> argv(new char*[cmd.size() + 1]);
   for (unsigned int i = 0; i < cmd.size(); i++) {
     argv[i] = strdup(cmd[i].c_str());
@@ -100,6 +100,8 @@ bool Subprocess::SynchronousExec(const std::vector<std::string>& cmd,
                               return_code,
                               &err);
   FreeArgv(argv.get());
+  if (err)
+    LOG(INFO) << "err is: " << err->code << ", " << err->message;
   return success;
 }
 

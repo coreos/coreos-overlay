@@ -5,6 +5,7 @@
 #include "update_engine/topological_sort.h"
 #include <set>
 #include <vector>
+#include "base/logging.h"
 
 using std::set;
 using std::vector;
@@ -26,6 +27,8 @@ void TopologicalSortVisit(const Graph& graph,
     TopologicalSortVisit(graph, visited_nodes, nodes, it->first);
   }
   // Visit this node.
+  LOG(INFO) << graph[node].file_name << " " << graph[node].op.type() << " "
+            << graph[node].op.data_length();
   nodes->push_back(node);
 }
 }  // namespace {}

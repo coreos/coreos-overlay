@@ -17,7 +17,8 @@ uint64 EdgeWeight(const Graph& graph, const Edge& edge) {
       graph[edge.first].out_edges.find(edge.second)->second.extents;
   for (vector<Extent>::const_iterator it = extents.begin();
        it != extents.end(); ++it) {
-    weight += it->num_blocks();
+    if (it->start_block() != kSparseHole)
+      weight += it->num_blocks();
   }
   return weight;
 }
@@ -25,7 +26,15 @@ uint64 EdgeWeight(const Graph& graph, const Edge& edge) {
 void AppendBlockToExtents(vector<Extent>* extents, uint64 block) {
   if (!extents->empty()) {
     Extent& extent = extents->back();
-    if (extent.start_block() + extent.num_blocks() == block) {
+    if (block == kSparseHole) {
+      if (extent.start_block() == kSparseHole) {
+        // Extend sparse hole extent
+        extent.set_num_blocks(extent.num_blocks() + 1);
+        return;
+      } else {
+        // Create new extent below outer 'if'
+      }
+    } else if (extent.start_block() + extent.num_blocks() == block) {
       extent.set_num_blocks(extent.num_blocks() + 1);
       return;
     }

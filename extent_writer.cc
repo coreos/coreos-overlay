@@ -6,24 +6,11 @@
 #include <errno.h>
 #include <unistd.h>
 #include <algorithm>
+#include "update_engine/utils.h"
 
 using std::min;
 
 namespace chromeos_update_engine {
-
-namespace {
-// Returns true on success.
-bool WriteAll(int fd, const void *buf, size_t count) {
-  const char* c_buf = reinterpret_cast<const char*>(buf);
-  ssize_t bytes_written = 0;
-  while (bytes_written < static_cast<ssize_t>(count)) {
-    ssize_t rc = write(fd, c_buf + bytes_written, count - bytes_written);
-    TEST_AND_RETURN_FALSE_ERRNO(rc >= 0);
-    bytes_written += rc;
-  }
-  return true;
-}
-}
 
 bool DirectExtentWriter::Write(const void* bytes, size_t count) {
   if (count == 0)
@@ -48,7 +35,7 @@ bool DirectExtentWriter::Write(const void* bytes, size_t count) {
       TEST_AND_RETURN_FALSE_ERRNO(lseek64(fd_, offset, SEEK_SET) !=
                                   static_cast<off64_t>(-1));
       TEST_AND_RETURN_FALSE(
-          WriteAll(fd_, c_bytes + bytes_written, bytes_to_write));
+          utils::WriteAll(fd_, c_bytes + bytes_written, bytes_to_write));
     }
     bytes_written += bytes_to_write;
     extent_bytes_written_ += bytes_to_write;

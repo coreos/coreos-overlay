@@ -35,6 +35,17 @@ bool WriteFile(const char* path, const char* data, int data_len) {
   return true;
 }
 
+bool WriteAll(int fd, const void *buf, size_t count) {
+  const char* c_buf = static_cast<const char*>(buf);
+  ssize_t bytes_written = 0;
+  while (bytes_written < static_cast<ssize_t>(count)) {
+    ssize_t rc = write(fd, c_buf + bytes_written, count - bytes_written);
+    TEST_AND_RETURN_FALSE_ERRNO(rc >= 0);
+    bytes_written += rc;
+  }
+  return true;
+}
+
 bool ReadFile(const std::string& path, std::vector<char>* out) {
   CHECK(out);
   FILE* fp = fopen(path.c_str(), "r");
@@ -114,7 +125,7 @@ bool RecursiveUnlinkDir(const std::string& path) {
     return true;
   if (!S_ISDIR(stbuf.st_mode)) {
     TEST_AND_RETURN_FALSE_ERRNO((unlink(path.c_str()) == 0) ||
-                                 (errno == ENOENT));
+                                (errno == ENOENT));
     // success or path disappeared before we could unlink.
     return true;
   }
@@ -136,7 +147,7 @@ bool RecursiveUnlinkDir(const std::string& path) {
           !strcmp(dir_entry_p->d_name, ".."))
         continue;
       TEST_AND_RETURN_FALSE(RecursiveUnlinkDir(path + "/" +
-                                                dir_entry_p->d_name));
+                                               dir_entry_p->d_name));
     }
     TEST_AND_RETURN_FALSE(err == 0);
   }
@@ -199,6 +210,27 @@ std::string TempFilename(string path) {
     path.append(new_suffix);
   } while (FileExists(path.c_str()));
   return path;
+}
+
+bool MakeTempFile(const std::string& filename_template,
+                  std::string* filename,
+                  int* fd) {
+  DCHECK(filename || fd);
+  vector<char> buf(filename_template.size() + 1);
+  memcpy(&buf[0], filename_template.data(), filename_template.size());
+  buf[filename_template.size()] = '\0';
+  
+  int mkstemp_fd = mkstemp(&buf[0]);
+  TEST_AND_RETURN_FALSE_ERRNO(mkstemp_fd >= 0);
+  if (filename) {
+    *filename = &buf[0];
+  }
+  if (fd) {
+    *fd = mkstemp_fd;
+  } else {
+    close(mkstemp_fd);
+  }
+  return true;
 }
 
 bool StringHasSuffix(const std::string& str, const std::string& suffix) {
