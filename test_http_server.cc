@@ -14,6 +14,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <errno.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -98,7 +99,7 @@ void WriteString(int fd, const string& str) {
 
 string Itoa(off_t num) {
   char buf[100] = {0};
-  snprintf(buf, sizeof(buf), "%lld", num);
+  snprintf(buf, sizeof(buf), "%" PRIi64, num);
   return buf;
 }
 
@@ -120,6 +121,7 @@ void WriteHeaders(int fd, bool support_range, off_t full_size,
 }
 
 void HandleQuitQuitQuit(int fd) {
+  WriteHeaders(fd, true, 0, 0);
   exit(0);
 }
 
@@ -142,14 +144,15 @@ void HandleBig(int fd, const HttpRequest& request) {
 void HandleFlaky(int fd, const HttpRequest& request) {
   const off_t full_length = kBigLength;
   WriteHeaders(fd, true, full_length, request.offset);
-  const off_t content_length = min(9000LL, full_length - request.offset);
+  const off_t content_length =
+      min(static_cast<off_t>(9000), full_length - request.offset);
   const bool should_sleep = (request.offset % (9000 * 7)) == 0;
 
   string buf;
 
   for (int i = request.offset; i % 10; i++)
     buf.append(1, 'a' + (i % 10));
-  while (buf.size() < content_length)
+  while (static_cast<off_t>(buf.size()) < content_length)
     buf.append("abcdefghij");
   buf.resize(content_length);
 

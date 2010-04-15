@@ -40,8 +40,23 @@ proto_builder = Builder(generator = ProtocolBufferGenerator,
                         suffix = '.pb.cc')
 
 env = Environment()
+for key in Split('CC CXX AR RANLIB LD NM'):
+  value = os.environ.get(key)
+  if value != None:
+    env[key] = value
+for key in Split('CFLAGS CCFLAGS CPPPATH LIBPATH'):
+  value = os.environ.get(key)
+  if value != None:
+    env[key] = Split(value)
+
+for key in Split('PKG_CONFIG_LIBDIR PKG_CONFIG_PATH SYSROOT'):
+  if os.environ.has_key(key):
+    env['ENV'][key] = os.environ[key]
+
+
 env['CCFLAGS'] = ' '.join("""-g
                              -fno-exceptions
+                             -fno-strict-aliasing
                              -Wall
                              -Werror
                              -Wclobbered
@@ -51,10 +66,13 @@ env['CCFLAGS'] = ' '.join("""-g
                              -Wsign-compare
                              -Wtype-limits
                              -Wuninitialized
+                             -D__STDC_FORMAT_MACROS=1
                              -D_FILE_OFFSET_BITS=64
                              -I/usr/include/libxml2""".split());
+env['CCFLAGS'] += (' ' + ' '.join(env['CFLAGS']))
 
 env['LIBS'] = Split("""base
+                       bz2
                        curl
                        gflags
                        glib-2.0
@@ -123,7 +141,6 @@ unittest_sources = Split("""action_unittest.cc
                             extent_mapper_unittest.cc
                             extent_writer_unittest.cc
                             file_writer_unittest.cc
-                            filesystem_copier_action_unittest.cc
                             filesystem_iterator_unittest.cc
                             graph_utils_unittest.cc
                             http_fetcher_unittest.cc

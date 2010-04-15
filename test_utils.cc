@@ -57,14 +57,15 @@ std::string Readlink(const std::string& path) {
 std::vector<char> GzipCompressData(const std::vector<char>& data) {
   const char fname[] = "/tmp/GzipCompressDataTemp";
   if (!WriteFileVector(fname, data)) {
-    system((string("rm ") + fname).c_str());
+    EXPECT_EQ(0, system((string("rm ") + fname).c_str()));
     return vector<char>();
   }
-  system((string("cat ") + fname + "|gzip>" + fname + ".gz").c_str());
-  system((string("rm ") + fname).c_str());
+  EXPECT_EQ(0, system((string("cat ") + fname + "|gzip>" +
+                       fname + ".gz").c_str()));
+  EXPECT_EQ(0, system((string("rm ") + fname).c_str()));
   vector<char> ret;
   EXPECT_TRUE(utils::ReadFile(string(fname) + ".gz", &ret));
-  system((string("rm ") + fname + ".gz").c_str());
+  EXPECT_EQ(0, system((string("rm ") + fname + ".gz").c_str()));
   return ret;
 }
 

@@ -93,7 +93,7 @@ bool GzipCompressData(const char* const in, const size_t in_size,
                                       Z_DEFAULT_STRATEGY) == Z_OK);
 
   // guess that output will be roughly half the input size
-  *out_size = max(1U, in_size / 2);
+  *out_size = max(static_cast<size_t>(1), in_size / 2);
   *out = reinterpret_cast<char*>(malloc(*out_size));
   TEST_AND_RETURN_FALSE(*out);
 

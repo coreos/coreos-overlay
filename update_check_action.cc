@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include "update_engine/update_check_action.h"
+#include <inttypes.h>
 #include <sstream>
 
 #include <libxml/parser.h>
@@ -172,8 +173,7 @@ string XmlGetProperty(xmlNode* node, const char* name) {
 // error.
 off_t ParseInt(const string& str) {
   off_t ret = 0;
-
-  int rc = sscanf(str.c_str(), "%lld", &ret);
+  int rc = sscanf(str.c_str(), "%" PRIi64, &ret);
   if (rc < 1) {
     // failure
     return 0;

@@ -4,7 +4,7 @@
 
 #include "update_engine/action_processor.h"
 #include <string>
-#include "chromeos/obsolete_logging.h"
+#include "base/logging.h"
 #include "update_engine/action.h"
 
 using std::string;

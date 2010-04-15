@@ -29,7 +29,6 @@ class MockHttpFetcher : public HttpFetcher {
   MockHttpFetcher(const char* data, size_t size)
       : sent_size_(0), timeout_source_(NULL), timout_tag_(0), paused_(false) {
     data_.insert(data_.end(), data, data + size);
-    LOG(INFO) << "timeout_source_ = " << (int)timeout_source_;
   }
 
   // Cleans up all internal state. Does not notify delegate

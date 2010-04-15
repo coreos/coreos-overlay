@@ -61,6 +61,7 @@ class HttpFetcherTest<MockHttpFetcher> : public ::testing::Test {
   }
   bool IsMock() const { return true; }
   typedef NullHttpServer HttpServer;
+  void IgnoreServerAborting(HttpServer* server) const {}
 };
 
 class PythonHttpServer {
@@ -69,6 +70,7 @@ class PythonHttpServer {
     char *argv[2] = {strdup("./test_http_server"), NULL};
     GError *err;
     started_ = false;
+    validate_quit_ = true;
     if (!g_spawn_async(NULL,
                        argv,
                        NULL,
@@ -93,12 +95,15 @@ class PythonHttpServer {
     if (!started_)
       return;
     // request that the server exit itself
-    system((string("wget --output-document=/dev/null ") +
-            LocalServerUrlForPath("/quitquitquit")).c_str());
+    int rc = system((string("wget -t 1 --output-document=/dev/null ") +
+                    LocalServerUrlForPath("/quitquitquit")).c_str());
+    if (validate_quit_)
+      EXPECT_EQ(0, rc);
     waitpid(pid_, NULL, 0);
   }
   GPid pid_;
   bool started_;
+  bool validate_quit_;
 };
 
 template <>
@@ -120,6 +125,10 @@ class HttpFetcherTest<LibcurlHttpFetcher> : public ::testing::Test {
   }
   bool IsMock() const { return false; }
   typedef PythonHttpServer HttpServer;
+  void IgnoreServerAborting(HttpServer* server) const {
+    PythonHttpServer *pyserver = reinterpret_cast<PythonHttpServer*>(server);
+    pyserver->validate_quit_ = false;
+  }
 };
 
 typedef ::testing::Types<LibcurlHttpFetcher, MockHttpFetcher>
@@ -277,6 +286,7 @@ TYPED_TEST(HttpFetcherTest, AbortTest) {
     fetcher->set_delegate(&delegate);
 
     typename TestFixture::HttpServer server;
+    this->IgnoreServerAborting(&server);
     ASSERT_TRUE(server.started_);
     GSource* timeout_source_;
     timeout_source_ = g_timeout_source_new(0);  // ms

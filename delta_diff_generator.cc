@@ -691,7 +691,6 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(const string& old_root,
 
   vector<Block> blocks(min(old_image_stbuf.st_size / kBlockSize,
                            new_image_stbuf.st_size / kBlockSize));
-  LOG(INFO) << "blocks (orig): " << (uint32)(&blocks);
   LOG(INFO) << "w:" << blocks[4097].writer;
   LOG(INFO) << "invalid: " << Vertex::kInvalidIndex;
   LOG(INFO) << "len: " << blocks.size();
@@ -826,7 +825,7 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(const string& old_root,
   
   // Write header
   TEST_AND_RETURN_FALSE(writer.Write(kDeltaMagic, strlen(kDeltaMagic)) ==
-                        strlen(kDeltaMagic));
+                        static_cast<ssize_t>(strlen(kDeltaMagic)));
   
   // Write version number
   TEST_AND_RETURN_FALSE(WriteUint64AsBigEndian(&writer, kVersionNumber));

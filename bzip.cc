@@ -20,9 +20,9 @@ namespace {
 // Returns true on success.
 // Use one of BzipBuffToBuff*ompress as the template parameter to BzipData().
 int BzipBuffToBuffDecompress(char* out,
-                             size_t* out_length,
+                             uint32_t* out_length,
                              const char* in,
-                             size_t in_length) {
+                             uint32_t in_length) {
   return BZ2_bzBuffToBuffDecompress(out,
                                     out_length,
                                     const_cast<char*>(in),
@@ -32,9 +32,9 @@ int BzipBuffToBuffDecompress(char* out,
 }
 
 int BzipBuffToBuffCompress(char* out,
-                           size_t* out_length,
+                           uint32_t* out_length,
                            const char* in,
-                           size_t in_length) {
+                           uint32_t in_length) {
   return BZ2_bzBuffToBuffCompress(out,
                                   out_length,
                                   const_cast<char*>(in),
@@ -45,11 +45,11 @@ int BzipBuffToBuffCompress(char* out,
 }
 
 template<int F(char* out,
-               size_t* out_length,
+               uint32_t* out_length,
                const char* in,
-               size_t in_length)>
+               uint32_t in_length)>
 bool BzipData(const char* const in,
-              const size_t in_size,
+              const int32_t in_size,
               vector<char>* const out) {
   TEST_AND_RETURN_FALSE(out);
   out->clear();
@@ -61,7 +61,7 @@ bool BzipData(const char* const in,
   out->resize(buf_size);
   
   for (;;) {
-    size_t data_size = buf_size;
+    uint32_t data_size = buf_size;
     int rc = F(&(*out)[0], &data_size, in, in_size);
     TEST_AND_RETURN_FALSE(rc == BZ_OUTBUFF_FULL || rc == BZ_OK);
     if (rc == BZ_OK) {
@@ -79,7 +79,9 @@ bool BzipData(const char* const in,
 }  // namespace {}
 
 bool BzipDecompress(const std::vector<char>& in, std::vector<char>* out) {
-  return BzipData<BzipBuffToBuffDecompress>(&in[0], in.size(), out);
+  return BzipData<BzipBuffToBuffDecompress>(&in[0],
+                                            static_cast<int32_t>(in.size()),
+                                            out);
 }
 
 bool BzipCompress(const std::vector<char>& in, std::vector<char>* out) {
@@ -88,7 +90,7 @@ bool BzipCompress(const std::vector<char>& in, std::vector<char>* out) {
 
 namespace {
 template<bool F(const char* const in,
-                const size_t in_size,
+                const int32_t in_size,
                 vector<char>* const out)>
 bool BzipString(const std::string& str,
                 std::vector<char>* out) {

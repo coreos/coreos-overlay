@@ -93,6 +93,7 @@ class ActionTraits<OutputObjectCollectorAction> {
 
 class OutputObjectCollectorAction : public Action<OutputObjectCollectorAction> {
  public:
+  OutputObjectCollectorAction() : has_input_object_(false) {}
   void PerformAction() {
     // copy input object
     has_input_object_ = HasInputObject();
@@ -249,7 +250,7 @@ TEST(UpdateCheckActionTest, InvalidXmlTest) {
                            "en-US",
                            "unittest_track");
   UpdateCheckResponse response;
-  ASSERT_TRUE(
+  ASSERT_FALSE(
       TestUpdateCheckAction(params,
                             "invalid xml>",
                             false,
@@ -269,7 +270,7 @@ TEST(UpdateCheckActionTest, MissingStatusTest) {
                            "en-US",
                            "unittest_track");
   UpdateCheckResponse response;
-  ASSERT_TRUE(TestUpdateCheckAction(
+  ASSERT_FALSE(TestUpdateCheckAction(
       params,
       "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gupdate "
       "xmlns=\"http://www.google.com/update2/response\" protocol=\"2.0\"><app "
@@ -292,7 +293,7 @@ TEST(UpdateCheckActionTest, InvalidStatusTest) {
                            "en-US",
                            "unittest_track");
   UpdateCheckResponse response;
-  ASSERT_TRUE(TestUpdateCheckAction(
+  ASSERT_FALSE(TestUpdateCheckAction(
       params,
       "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gupdate "
       "xmlns=\"http://www.google.com/update2/response\" protocol=\"2.0\"><app "
@@ -315,7 +316,7 @@ TEST(UpdateCheckActionTest, MissingNodesetTest) {
                            "en-US",
                            "unittest_track");
   UpdateCheckResponse response;
-  ASSERT_TRUE(TestUpdateCheckAction(
+  ASSERT_FALSE(TestUpdateCheckAction(
       params,
       "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gupdate "
       "xmlns=\"http://www.google.com/update2/response\" protocol=\"2.0\"><app "
@@ -435,7 +436,7 @@ TEST(UpdateCheckActionTest, XmlEncodeTest) {
                            "en-US",
                            "unittest_track");
   UpdateCheckResponse response;
-  ASSERT_TRUE(
+  ASSERT_FALSE(
       TestUpdateCheckAction(params,
                             "invalid xml>",
                             false,

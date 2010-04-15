@@ -75,7 +75,8 @@ TEST(GzipDecompressingFileWriterTest, LargeTest) {
   uncompressed_file.Close();
 
   // compress the file
-  system((string("cat ") + kPath + " | gzip > " + kPathgz).c_str());
+  EXPECT_EQ(0,
+            system((string("cat ") + kPath + " | gzip > " + kPathgz).c_str()));
 
   // Now read the compressed file and put it into a DecompressingFileWriter
   MockFileWriter mock_file_writer;

@@ -29,7 +29,7 @@ class ExtentWriter {
   // Returns true on success.
   virtual bool Init(int fd,
                     const std::vector<Extent>& extents,
-                    size_t block_size) = 0;
+                    uint32_t block_size) = 0;
 
   // Returns true on success.
   virtual bool Write(const void* bytes, size_t count) = 0;
@@ -57,7 +57,7 @@ class DirectExtentWriter : public ExtentWriter {
         next_extent_index_(0) {}
   ~DirectExtentWriter() {}
 
-  bool Init(int fd, const std::vector<Extent>& extents, size_t block_size) {
+  bool Init(int fd, const std::vector<Extent>& extents, uint32_t block_size) {
     fd_ = fd;
     block_size_ = block_size;
     extents_ = extents;
@@ -92,7 +92,7 @@ class ZeroPadExtentWriter : public ExtentWriter {
         bytes_written_mod_block_size_(0) {}
   ~ZeroPadExtentWriter() {}
 
-  bool Init(int fd, const std::vector<Extent>& extents, size_t block_size) {
+  bool Init(int fd, const std::vector<Extent>& extents, uint32_t block_size) {
     block_size_ = block_size;
     return underlying_extent_writer_->Init(fd, extents, block_size);
   }

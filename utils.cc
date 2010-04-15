@@ -80,7 +80,7 @@ void HexDumpArray(const unsigned char* const arr, const size_t length) {
       reinterpret_cast<const unsigned char* const>(arr);
   LOG(INFO) << "Logging array of length: " << length;
   const unsigned int bytes_per_line = 16;
-  for (size_t i = 0; i < length; i += bytes_per_line) {
+  for (uint32_t i = 0; i < length; i += bytes_per_line) {
     const unsigned int bytes_remaining = length - i;
     const unsigned int bytes_per_this_line = min(bytes_per_line,
                                                  bytes_remaining);
