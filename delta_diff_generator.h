@@ -111,6 +111,10 @@ class DeltaDiffGenerator {
   DISALLOW_IMPLICIT_CONSTRUCTORS(DeltaDiffGenerator);
 };
 
+extern const char* const kBsdiffPath;
+extern const char* const kBspatchPath;
+extern const char* const kDeltaMagic;
+
 };  // namespace chromeos_update_engine
 
 #endif  // CHROMEOS_PLATFORM_UPDATE_ENGINE_DELTA_DIFF_GENERATOR_H__

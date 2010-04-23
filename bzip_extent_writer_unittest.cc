@@ -21,7 +21,7 @@ namespace chromeos_update_engine {
 
 namespace {
 const char kPathTemplate[] = "./BzipExtentWriterTest-file.XXXXXX";
-const uint32 kBlockSize = 4096;
+const uint32_t kBlockSize = 4096;
 }
 
 class BzipExtentWriterTest : public ::testing::Test {

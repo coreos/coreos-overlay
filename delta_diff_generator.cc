@@ -38,9 +38,7 @@ typedef DeltaDiffGenerator::Block Block;
 
 namespace {
 const size_t kBlockSize = 4096;
-const char* const kBsdiffPath = "/usr/bin/bsdiff";
-const uint64 kVersionNumber = 1;
-const char* const kDeltaMagic = "CrAU";
+const uint64_t kVersionNumber = 1;
 
 // Stores all Extents for a file into 'out'. Returns true on success.
 bool GatherExtents(const string& path,
@@ -378,10 +376,10 @@ bool ReadUnwrittenBlocks(const vector<Block>& blocks,
   return true;
 }
 
-// Writes the uint64 passed in in host-endian to the file as big-endian.
+// Writes the uint64_t passed in in host-endian to the file as big-endian.
 // Returns true on success.
-bool WriteUint64AsBigEndian(FileWriter* writer, const uint64 value) {
-  uint64 value_be = htobe64(value);
+bool WriteUint64AsBigEndian(FileWriter* writer, const uint64_t value) {
+  uint64_t value_be = htobe64(value);
   TEST_AND_RETURN_FALSE(writer->Write(&value_be, sizeof(value_be)) ==
                         sizeof(value_be));
   return true;
@@ -492,13 +490,13 @@ void DeltaDiffGenerator::SubstituteBlocks(
     const vector<Extent>& remove_extents,
     const vector<Extent>& replace_extents) {
   // First, expand out the blocks that op reads from
-  vector<uint64> read_blocks;
+  vector<uint64_t> read_blocks;
   for (int i = 0; i < op->src_extents_size(); i++) {
     const Extent& extent = op->src_extents(i);
     if (extent.start_block() == kSparseHole) {
       read_blocks.resize(read_blocks.size() + extent.num_blocks(), kSparseHole);
     } else {
-      for (uint64 block = extent.start_block();
+      for (uint64_t block = extent.start_block();
            block < (extent.start_block() + extent.num_blocks()); block++) {
         read_blocks.push_back(block);
       }
@@ -506,28 +504,28 @@ void DeltaDiffGenerator::SubstituteBlocks(
   }
   {
     // Expand remove_extents and replace_extents
-    vector<uint64> remove_extents_expanded;
+    vector<uint64_t> remove_extents_expanded;
     for (vector<Extent>::const_iterator it = remove_extents.begin();
          it != remove_extents.end(); ++it) {
       const Extent& extent = *it;
-      for (uint64 block = extent.start_block();
+      for (uint64_t block = extent.start_block();
            block < (extent.start_block() + extent.num_blocks()); block++) {
         remove_extents_expanded.push_back(block);
       }
     }
-    vector<uint64> replace_extents_expanded;
+    vector<uint64_t> replace_extents_expanded;
     for (vector<Extent>::const_iterator it = replace_extents.begin();
          it != replace_extents.end(); ++it) {
       const Extent& extent = *it;
-      for (uint64 block = extent.start_block();
+      for (uint64_t block = extent.start_block();
            block < (extent.start_block() + extent.num_blocks()); block++) {
         replace_extents_expanded.push_back(block);
       }
     }
     CHECK_EQ(remove_extents_expanded.size(), replace_extents_expanded.size());
-    for (vector<uint64>::size_type i = 0;
+    for (vector<uint64_t>::size_type i = 0;
          i < replace_extents_expanded.size(); i++) {
-      vector<uint64>::size_type index = 0;
+      vector<uint64_t>::size_type index = 0;
       CHECK(utils::VectorIndexOf(read_blocks,
                                  remove_extents_expanded[i],
                                  &index));
@@ -538,7 +536,7 @@ void DeltaDiffGenerator::SubstituteBlocks(
   // Convert read_blocks back to extents
   op->clear_src_extents();
   vector<Extent> new_extents;
-  for (vector<uint64>::const_iterator it = read_blocks.begin();
+  for (vector<uint64_t>::const_iterator it = read_blocks.begin();
        it != read_blocks.end(); ++it) {
     graph_utils::AppendBlockToExtents(&new_extents, *it);
   }
@@ -653,7 +651,7 @@ bool DeltaDiffGenerator::ReorderDataBlobs(
                   O_WRONLY | O_TRUNC | O_CREAT,
                   0644) == 0);
   ScopedFileWriterCloser writer_closer(&writer);
-  uint64 out_file_size = 0;
+  uint64_t out_file_size = 0;
   
   for (int i = 0; i < manifest->install_operations_size(); i++) {
     DeltaArchiveManifest_InstallOperation* op =
@@ -691,7 +689,6 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(const string& old_root,
 
   vector<Block> blocks(min(old_image_stbuf.st_size / kBlockSize,
                            new_image_stbuf.st_size / kBlockSize));
-  LOG(INFO) << "w:" << blocks[4097].writer;
   LOG(INFO) << "invalid: " << Vertex::kInvalidIndex;
   LOG(INFO) << "len: " << blocks.size();
   for (vector<Block>::size_type i = 0; i < blocks.size(); i++) {
@@ -781,14 +778,14 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(const string& old_root,
 
   // Check that install op blobs are in order and that all blocks are written.
   {
-    vector<uint32> written_count(blocks.size(), 0);
-    uint64 next_blob_offset = 0;
+    vector<uint32_t> written_count(blocks.size(), 0);
+    uint64_t next_blob_offset = 0;
     for (int i = 0; i < manifest.install_operations_size(); i++) {
       const DeltaArchiveManifest_InstallOperation& op =
           manifest.install_operations(i);
       for (int j = 0; j < op.dst_extents_size(); j++) {
         const Extent& extent = op.dst_extents(j);
-        for (uint64 block = extent.start_block();
+        for (uint64_t block = extent.start_block();
              block < (extent.start_block() + extent.num_blocks()); block++) {
           written_count[block]++;
         }
@@ -802,7 +799,7 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(const string& old_root,
       }
     }
     // check all blocks written to
-    for (vector<uint32>::size_type i = 0; i < written_count.size(); i++) {
+    for (vector<uint32_t>::size_type i = 0; i < written_count.size(); i++) {
       if (written_count[i] == 0) {
         LOG(FATAL) << "block " << i << " not written!";
       }
@@ -843,7 +840,7 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(const string& old_root,
   
   // Append the data blobs
   LOG(INFO) << "Writing final delta file data blobs...";
-  int blobs_fd = open(temp_file_path.c_str(), O_RDONLY, 0);
+  int blobs_fd = open(ordered_blobs_path.c_str(), O_RDONLY, 0);
   ScopedFdCloser blobs_fd_closer(&blobs_fd);
   TEST_AND_RETURN_FALSE(blobs_fd >= 0);
   for (;;) {
@@ -860,5 +857,9 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(const string& old_root,
   LOG(INFO) << "All done. Successfully created delta file.";
   return true;
 }
+
+const char* const kBsdiffPath = "/usr/bin/bsdiff";
+const char* const kBspatchPath = "/usr/bin/bspatch";
+const char* const kDeltaMagic = "CrAU";
 
 };  // namespace chromeos_update_engine

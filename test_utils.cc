@@ -3,18 +3,20 @@
 // found in the LICENSE file.
 
 #include "update_engine/test_utils.h"
+
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+
 #include <set>
 #include <string>
 #include <vector>
+
 #include "base/string_util.h"
 #include "chromeos/obsolete_logging.h"
-
 #include "update_engine/file_writer.h"
 #include "update_engine/filesystem_iterator.h"
 #include "update_engine/utils.h"
@@ -190,7 +192,7 @@ void CreateExtImageAtPath(const string& path, vector<string>* out_paths) {
   EXPECT_EQ(0, System(StringPrintf("dd if=/dev/zero of=%s"
                                    " seek=10485759 bs=1 count=1",
                                    path.c_str())));
-  EXPECT_EQ(0, System(StringPrintf("mkfs.ext3 -F %s", path.c_str())));
+  EXPECT_EQ(0, System(StringPrintf("mkfs.ext3 -b 4096 -F %s", path.c_str())));
   EXPECT_EQ(0, System(StringPrintf("mkdir -p %s", kMountPath)));
   EXPECT_EQ(0, System(StringPrintf("mount -o loop %s %s", path.c_str(),
                                    kMountPath)));

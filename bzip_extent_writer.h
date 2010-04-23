@@ -23,7 +23,7 @@ class BzipExtentWriter : public ExtentWriter {
   }
   ~BzipExtentWriter() {}
 
-  bool Init(int fd, const std::vector<Extent>& extents, uint32 block_size);
+  bool Init(int fd, const std::vector<Extent>& extents, uint32_t block_size);
   bool Write(const void* bytes, size_t count);
   bool EndImpl();
 

@@ -5,6 +5,7 @@
 #ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_UTILS_H__
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_UTILS_H__
 
+#include <errno.h>
 #include <algorithm>
 #include <set>
 #include <string>
@@ -20,9 +21,15 @@ namespace utils {
 // exists. Returns true on success, false otherwise.
 bool WriteFile(const char* path, const char* data, int data_len);
 
-// Calls write() repeatedly until all count bytes at buf are written to
-// fd or an error occurs. Returns true on success.
-bool WriteAll(int fd, const void *buf, size_t count);
+// Calls write() or pwrite() repeatedly until all count bytes at buf are
+// written to fd or an error occurs. Returns true on success.
+bool WriteAll(int fd, const void* buf, size_t count);
+bool PWriteAll(int fd, const void* buf, size_t count, off_t offset);
+
+// Calls pread() repeatedly until count bytes are read, or EOF is reached.
+// Returns number of bytes read in *bytes_read. Returns true on success.
+bool PReadAll(int fd, void* buf, size_t count, off_t offset,
+              ssize_t* out_bytes_read);
 
 // Returns the entire contents of the file at path. Returns true on success.
 bool ReadFile(const std::string& path, std::vector<char>* out);
@@ -55,6 +62,11 @@ bool MakeTempFile(const std::string& filename_template,
                   std::string* filename,
                   int* fd);
 
+// Calls mkdtemp() with the tempate passed. Returns the generated dirname
+// in the dirname param. Returns TRUE on success. dirname must not be NULL.
+bool MakeTempDirectory(const std::string& dirname_template,
+                       std::string* dirname);
+
 // Deletes a directory and all its contents synchronously. Returns true
 // on success. This may be called with a regular file--it will just unlink it.
 // This WILL cross filesystem boundaries.
@@ -62,7 +74,8 @@ bool RecursiveUnlinkDir(const std::string& path);
 
 // Synchronously mount or unmount a filesystem. Return true on success.
 // Mounts as ext3 with default options.
-bool MountFilesystem(const std::string& device, const std::string& mountpoint);
+bool MountFilesystem(const std::string& device, const std::string& mountpoint,
+                     unsigned long flags);
 bool UnmountFilesystem(const std::string& mountpoint);
 
 // Log a string in hex to LOG(INFO). Useful for debugging.
@@ -131,6 +144,7 @@ class ScopedFilesystemUnmounter {
   }
  private:
   const std::string mountpoint_;
+  DISALLOW_COPY_AND_ASSIGN(ScopedFilesystemUnmounter);
 };
 
 // Utility class to close a file descriptor
@@ -149,6 +163,35 @@ class ScopedFdCloser {
  private:
   int* fd_;
   bool should_close_;
+  DISALLOW_COPY_AND_ASSIGN(ScopedFdCloser);
+};
+
+// Utility class to delete a file when it goes out of scope.
+class ScopedPathUnlinker {
+ public:
+  explicit ScopedPathUnlinker(const std::string& path) : path_(path) {}
+  ~ScopedPathUnlinker() {
+    if (unlink(path_.c_str()) < 0) {
+      std::string err_message = strerror(errno);
+      LOG(ERROR) << "Unable to unlink path " << path_ << ": " << err_message;
+    }
+  }
+ private:
+  const std::string path_;
+  DISALLOW_COPY_AND_ASSIGN(ScopedPathUnlinker);
+};
+
+// Utility class to delete an empty directory when it goes out of scope.
+class ScopedDirRemover {
+ public:
+  explicit ScopedDirRemover(const std::string& path) : path_(path) {}
+  ~ScopedDirRemover() {
+    if (rmdir(path_.c_str()) < 0)
+      PLOG(ERROR) << "Unable to remove dir " << path_;
+  }
+ private:
+  const std::string path_;
+  DISALLOW_COPY_AND_ASSIGN(ScopedDirRemover);
 };
 
 // A little object to call ActionComplete on the ActionProcessor when

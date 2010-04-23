@@ -26,7 +26,7 @@ bool ExtentsForFileFibmap(const std::string& path, std::vector<Extent>* out);
 
 // Puts the blocksize of the filesystem, as used by the FIBMAP ioctl, into
 // out_blocksize by using the FIGETBSZ ioctl. Returns true on success.
-bool GetFilesystemBlockSize(const std::string& path, uint32* out_blocksize);
+bool GetFilesystemBlockSize(const std::string& path, uint32_t* out_blocksize);
 
 }  // namespace extent_mapper
 

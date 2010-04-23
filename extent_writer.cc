@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <algorithm>
+#include "update_engine/graph_types.h"
 #include "update_engine/utils.h"
 
 using std::min;
@@ -19,12 +20,12 @@ bool DirectExtentWriter::Write(const void* bytes, size_t count) {
   size_t bytes_written = 0;
   while (count - bytes_written > 0) {
     TEST_AND_RETURN_FALSE(next_extent_index_ < extents_.size());
-    uint64 bytes_remaining_next_extent =
+    uint64_t bytes_remaining_next_extent =
         extents_[next_extent_index_].num_blocks() * block_size_ -
         extent_bytes_written_;
     CHECK_NE(bytes_remaining_next_extent, 0);
     size_t bytes_to_write =
-        static_cast<size_t>(min(static_cast<uint64>(count - bytes_written),
+        static_cast<size_t>(min(static_cast<uint64_t>(count - bytes_written),
                                 bytes_remaining_next_extent));
     TEST_AND_RETURN_FALSE(bytes_to_write > 0);
 

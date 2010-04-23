@@ -5,8 +5,8 @@
 #ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_UPDATE_CHECK_ACTION_H__
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_UPDATE_CHECK_ACTION_H__
 
-#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <fcntl.h>
 
 #include <string>
@@ -14,8 +14,8 @@
 #include <curl/curl.h>
 
 #include "base/scoped_ptr.h"
-#include "action.h"
-#include "http_fetcher.h"
+#include "update_engine/action.h"
+#include "update_engine/http_fetcher.h"
 
 // The Update Check action makes an update check request to Omaha and
 // can output the response on the output ActionPipe.

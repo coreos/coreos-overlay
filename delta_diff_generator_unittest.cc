@@ -14,6 +14,7 @@
 #include "chromeos/obsolete_logging.h"
 #include "update_engine/cycle_breaker.h"
 #include "update_engine/delta_diff_generator.h"
+#include "update_engine/delta_performer.h"
 #include "update_engine/graph_types.h"
 #include "update_engine/graph_utils.h"
 #include "update_engine/subprocess.h"
@@ -30,9 +31,9 @@ namespace chromeos_update_engine {
 typedef DeltaDiffGenerator::Block Block;
 
 namespace {
-int64 BlocksInExtents(
+int64_t BlocksInExtents(
     const google::protobuf::RepeatedPtrField<Extent>& extents) {
-  int64 ret = 0;
+  int64_t ret = 0;
   for (int i = 0; i < extents.size(); i++) {
     ret += extents.Get(i).num_blocks();
   }
@@ -139,14 +140,14 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootReplaceSmallTest) {
 }
 
 namespace {
-void AppendExtent(vector<Extent>* vect, uint64 start, uint64 length) {
+void AppendExtent(vector<Extent>* vect, uint64_t start, uint64_t length) {
   vect->resize(vect->size() + 1);
   vect->back().set_start_block(start);
   vect->back().set_num_blocks(length);
 }
 void OpAppendExtent(DeltaArchiveManifest_InstallOperation* op,
-                    uint64 start,
-                    uint64 length) {
+                    uint64_t start,
+                    uint64_t length) {
   Extent* extent = op->add_src_extents();
   extent->set_start_block(start);
   extent->set_num_blocks(length);

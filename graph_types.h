@@ -50,7 +50,7 @@ typedef std::vector<Vertex> Graph;
 
 typedef std::pair<Vertex::Index, Vertex::Index> Edge;
 
-const uint64 kSparseHole = kuint64max;
+const uint64_t kSparseHole = kuint64max;
 
 }  // namespace chromeos_update_engine
 

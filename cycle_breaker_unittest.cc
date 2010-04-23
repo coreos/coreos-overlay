@@ -72,7 +72,7 @@ TEST(CycleBreakerTest, SimpleTest) {
 
 namespace {
 pair<Vertex::Index, EdgeProperties> EdgeWithWeight(Vertex::Index dest,
-uint64 weight) {
+uint64_t weight) {
   EdgeProperties props;
   props.extents.resize(1);
   props.extents[0].set_num_blocks(weight);

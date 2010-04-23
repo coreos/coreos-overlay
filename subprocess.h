@@ -9,8 +9,8 @@
 #include <string>
 #include <vector>
 #include <glib.h>
-#include "chromeos/obsolete_logging.h"
 #include "base/basictypes.h"
+#include "chromeos/obsolete_logging.h"
 
 // The Subprocess class is a singleton. It's used to spawn off a subprocess
 // and get notified when the subprocess exits. The result of Exec() can
@@ -29,12 +29,12 @@ class Subprocess {
   typedef void(*ExecCallback)(int return_code, void *p);
 
   // Returns a tag > 0 on success.
-  uint32 Exec(const std::vector<std::string>& cmd,
-              ExecCallback callback,
-              void* p);
+  uint32_t Exec(const std::vector<std::string>& cmd,
+                ExecCallback callback,
+                void* p);
 
   // Used to cancel the callback. The process will still run to completion.
-  void CancelExec(uint32 tag);
+  void CancelExec(uint32_t tag);
 
   // Executes a command synchronously. Returns true on success.
   static bool SynchronousExec(const std::vector<std::string>& cmd,

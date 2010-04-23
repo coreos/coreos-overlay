@@ -8,8 +8,8 @@
 #include <set>
 #include <string>
 #include <vector>
-#include "base/string_util.h"
 #include <gtest/gtest.h>
+#include "base/string_util.h"
 #include "update_engine/filesystem_iterator.h"
 #include "update_engine/test_utils.h"
 #include "update_engine/utils.h"

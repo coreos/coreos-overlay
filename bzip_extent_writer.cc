@@ -14,7 +14,7 @@ const vector<char>::size_type kOutputBufferLength = 1024 * 1024;
 
 bool BzipExtentWriter::Init(int fd,
                             const vector<Extent>& extents,
-                            uint32 block_size) {
+                            uint32_t block_size) {
   // Init bzip2 stream
   int rc = BZ2_bzDecompressInit(&stream_,
                                 0,  // verbosity. (0 == silent)

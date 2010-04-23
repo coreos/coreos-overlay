@@ -17,7 +17,7 @@ using std::vector;
 namespace chromeos_update_engine {
 
 void Subprocess::GChildExitedCallback(GPid pid, gint status, gpointer data) {
-  COMPILE_ASSERT(sizeof(guint) == sizeof(uint32),
+  COMPILE_ASSERT(sizeof(guint) == sizeof(uint32_t),
                  guint_uint32_size_mismatch);
   guint* tag = reinterpret_cast<guint*>(data);
   const SubprocessCallbackRecord& record = Get().callback_records_[*tag];
@@ -37,7 +37,7 @@ void FreeArgv(char** argv) {
 }
 }  // namespace {}
 
-uint32 Subprocess::Exec(const std::vector<std::string>& cmd,
+uint32_t Subprocess::Exec(const std::vector<std::string>& cmd,
                         ExecCallback callback,
                         void* p) {
   GPid child_pid;
@@ -79,7 +79,7 @@ uint32 Subprocess::Exec(const std::vector<std::string>& cmd,
   return *tag;
 }
 
-void Subprocess::CancelExec(uint32 tag) {
+void Subprocess::CancelExec(uint32_t tag) {
   if (callback_records_[tag].callback) {
     callback_records_[tag].callback = NULL;
   }

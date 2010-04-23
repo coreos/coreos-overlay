@@ -93,7 +93,7 @@ void FilesystemCopierAction::TerminateProcessing() {
 bool FilesystemCopierAction::Mount(const string& device,
                                    const string& mountpoint) {
   CHECK(!is_mounted_);
-  if(utils::MountFilesystem(device, mountpoint))
+  if(utils::MountFilesystem(device, mountpoint, 0))
     is_mounted_ = true;
   return is_mounted_;
 }

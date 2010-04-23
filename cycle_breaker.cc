@@ -76,7 +76,7 @@ void CycleBreaker::HandleCircuit() {
   stack_.push_back(current_vertex_);
   CHECK_GE(stack_.size(), 2);
   Edge min_edge = make_pair(stack_[0], stack_[1]);
-  uint64 min_edge_weight = kuint64max;
+  uint64_t min_edge_weight = kuint64max;
   for (vector<Vertex::Index>::const_iterator it = stack_.begin();
        it != (stack_.end() - 1); ++it) {
     Edge edge = make_pair(*it, *(it + 1));
@@ -84,7 +84,7 @@ void CycleBreaker::HandleCircuit() {
       stack_.pop_back();
       return;
     }
-    uint64 edge_weight = graph_utils::EdgeWeight(subgraph_, edge);
+    uint64_t edge_weight = graph_utils::EdgeWeight(subgraph_, edge);
     if (edge_weight < min_edge_weight) {
       min_edge_weight = edge_weight;
       min_edge = edge;

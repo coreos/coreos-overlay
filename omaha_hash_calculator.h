@@ -5,10 +5,10 @@
 #ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_OMAHA_HASH_CALCULATOR_H__
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_OMAHA_HASH_CALCULATOR_H__
 
-#include "base/basictypes.h"
 #include <string>
 #include <vector>
 #include <openssl/sha.h>
+#include "base/basictypes.h"
 
 // Omaha uses base64 encoded SHA-1 as the hash. This class provides a simple
 // wrapper around OpenSSL providing such a formatted hash of data passed in.

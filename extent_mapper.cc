@@ -58,14 +58,14 @@ bool ExtentsForFileFibmap(const std::string& path, std::vector<Extent>* out) {
     rc = ioctl(fd, FIBMAP, &block32);
     TEST_AND_RETURN_FALSE_ERRNO(rc == 0);
     
-    const uint64 block = (block32 == 0 ? kSparseHole : block32);
+    const uint64_t block = (block32 == 0 ? kSparseHole : block32);
     
     graph_utils::AppendBlockToExtents(out, block);
   }
   return true;
 }
 
-bool GetFilesystemBlockSize(const std::string& path, uint32* out_blocksize) {
+bool GetFilesystemBlockSize(const std::string& path, uint32_t* out_blocksize) {
   int fd = open(path.c_str(), O_RDONLY, 0);
   TEST_AND_RETURN_FALSE_ERRNO(fd >= 0);
   ScopedFdCloser fd_closer(&fd);

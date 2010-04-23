@@ -17,12 +17,12 @@ namespace chromeos_update_engine {
 namespace graph_utils {
 
 // Returns the number of blocks represented by all extents in the edge.
-uint64 EdgeWeight(const Graph& graph, const Edge& edge);
+uint64_t EdgeWeight(const Graph& graph, const Edge& edge);
 
 // block must either be the next block in the last extent or a block
 // in the next extent. This function will not handle inserting block
 // into an arbitrary place in the extents.
-void AppendBlockToExtents(std::vector<Extent>* extents, uint64 block);
+void AppendBlockToExtents(std::vector<Extent>* extents, uint64_t block);
 
 }  // namespace graph_utils
 

@@ -10,6 +10,7 @@
 #include <vector>
 #include <gtest/gtest.h>
 #include "update_engine/action.h"
+#include "update_engine/subprocess.h"
 
 // These are some handy functions for unittests.
 
@@ -104,6 +105,23 @@ void CreateExtImageAtPath(const std::string& path,
 // Intentionally copies expected_paths.
 void VerifyAllPaths(const std::string& parent,
                     std::set<std::string> expected_paths);
+
+class ScopedLoopbackDeviceReleaser {
+ public:
+  explicit ScopedLoopbackDeviceReleaser(const std::string& dev) : dev_(dev) {}
+  ~ScopedLoopbackDeviceReleaser() {
+    std::vector<std::string> args;
+    args.push_back("/sbin/losetup");
+    args.push_back("-d");
+    args.push_back(dev_);
+    int return_code = 0;
+    EXPECT_TRUE(Subprocess::SynchronousExec(args, &return_code));
+    EXPECT_EQ(0, return_code);
+  }
+ private:
+  const std::string dev_;
+  DISALLOW_COPY_AND_ASSIGN(ScopedLoopbackDeviceReleaser);
+};
 
 // Useful actions for test
 

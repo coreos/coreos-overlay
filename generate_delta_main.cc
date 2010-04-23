@@ -5,14 +5,17 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <set>
 #include <string>
+#include <vector>
 #include <gflags/gflags.h>
 #include <glib.h>
 #include "base/command_line.h"
 #include "chromeos/obsolete_logging.h"
 #include "update_engine/delta_diff_generator.h"
+#include "update_engine/delta_performer.h"
 #include "update_engine/subprocess.h"
 #include "update_engine/update_metadata.pb.h"
 #include "update_engine/utils.h"
@@ -24,6 +27,8 @@ DEFINE_string(new_dir, "",
 DEFINE_string(old_image, "", "Path to the old rootfs");
 DEFINE_string(new_image, "", "Path to the new rootfs");
 DEFINE_string(out_file, "", "Path to output file");
+DEFINE_string(apply_delta, "",
+              "If set, apply delta over old_image. (For debugging.)");
 
 // This file contains a simple program that takes an old path, a new path,
 // and an output file as arguments and the path to an output file and
@@ -31,6 +36,7 @@ DEFINE_string(out_file, "", "Path to output file");
 
 using std::set;
 using std::string;
+using std::vector;
 
 namespace chromeos_update_engine {
 
@@ -51,6 +57,27 @@ int Main(int argc, char** argv) {
                        logging::LOG_ONLY_TO_SYSTEM_DEBUG_LOG,
                        logging::DONT_LOCK_LOG_FILE,
                        logging::APPEND_TO_OLD_LOG_FILE);
+  if (!FLAGS_apply_delta.empty()) {
+    if (FLAGS_old_image.empty()) {
+      LOG(FATAL) << "Must pass --old_image with --apply_delta.";
+    }
+    DeltaPerformer performer;
+    CHECK_EQ(performer.Open(FLAGS_old_image.c_str(), 0, 0), 0);
+    vector<char> buf(1024 * 1024);
+    int fd = open(FLAGS_apply_delta.c_str(), O_RDONLY, 0);
+    CHECK_GE(fd, 0);
+    ScopedFdCloser fd_closer(&fd);
+    for (off_t offset = 0;; offset += buf.size()) {
+      ssize_t bytes_read;
+      CHECK(utils::PReadAll(fd, &buf[0], buf.size(), offset, &bytes_read));
+      if (bytes_read == 0)
+        break;
+      CHECK_EQ(performer.Write(&buf[0], bytes_read), bytes_read);
+    }
+    CHECK_EQ(performer.Close(), 0);
+    LOG(INFO) << "done applying delta.";
+    return 0;
+  }
   if (FLAGS_old_dir.empty() || FLAGS_new_dir.empty() ||
       FLAGS_old_image.empty() || FLAGS_new_image.empty() ||
       FLAGS_out_file.empty()) {

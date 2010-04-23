@@ -10,6 +10,7 @@
 #include <vector>
 #include <gtest/gtest.h>
 #include "update_engine/extent_writer.h"
+#include "update_engine/graph_types.h"
 #include "update_engine/test_utils.h"
 #include "update_engine/utils.h"
 

@@ -35,7 +35,7 @@ bool WriteFile(const char* path, const char* data, int data_len) {
   return true;
 }
 
-bool WriteAll(int fd, const void *buf, size_t count) {
+bool WriteAll(int fd, const void* buf, size_t count) {
   const char* c_buf = static_cast<const char*>(buf);
   ssize_t bytes_written = 0;
   while (bytes_written < static_cast<ssize_t>(count)) {
@@ -44,6 +44,36 @@ bool WriteAll(int fd, const void *buf, size_t count) {
     bytes_written += rc;
   }
   return true;
+}
+
+bool PWriteAll(int fd, const void* buf, size_t count, off_t offset) {
+  const char* c_buf = static_cast<const char*>(buf);
+  ssize_t bytes_written = 0;
+  while (bytes_written < static_cast<ssize_t>(count)) {
+    ssize_t rc = pwrite(fd, c_buf + bytes_written, count - bytes_written,
+                        offset + bytes_written);
+    TEST_AND_RETURN_FALSE_ERRNO(rc >= 0);
+    bytes_written += rc;
+  }
+  return true;
+}
+
+bool PReadAll(int fd, void* buf, size_t count, off_t offset,
+              ssize_t* out_bytes_read) {
+  char* c_buf = static_cast<char*>(buf);
+  ssize_t bytes_read = 0;
+  while (bytes_read < static_cast<ssize_t>(count)) {
+    ssize_t rc = pread(fd, c_buf + bytes_read, count - bytes_read,
+                       offset + bytes_read);
+    TEST_AND_RETURN_FALSE_ERRNO(rc >= 0);
+    if (rc == 0) {
+      break;
+    }
+    bytes_read += rc;
+  }
+  *out_bytes_read = bytes_read;
+  return true;
+  
 }
 
 bool ReadFile(const std::string& path, std::vector<char>* out) {
@@ -233,6 +263,19 @@ bool MakeTempFile(const std::string& filename_template,
   return true;
 }
 
+bool MakeTempDirectory(const std::string& dirname_template,
+                       std::string* dirname) {
+  DCHECK(dirname);
+  vector<char> buf(dirname_template.size() + 1);
+  memcpy(&buf[0], dirname_template.data(), dirname_template.size());
+  buf[dirname_template.size()] = '\0';
+  
+  char* return_code = mkdtemp(&buf[0]);
+  TEST_AND_RETURN_FALSE_ERRNO(return_code != NULL);
+  *dirname = &buf[0];
+  return true;
+}
+
 bool StringHasSuffix(const std::string& str, const std::string& suffix) {
   if (suffix.size() > str.size())
     return false;
@@ -273,8 +316,9 @@ const std::string BootDevice() {
 }
 
 bool MountFilesystem(const string& device,
-                     const string& mountpoint) {
-  int rc = mount(device.c_str(), mountpoint.c_str(), "ext3", 0, NULL);
+                     const string& mountpoint,
+                     unsigned long mountflags) {
+  int rc = mount(device.c_str(), mountpoint.c_str(), "ext3", mountflags, NULL);
   if (rc < 0) {
     string msg = ErrnoNumberAsString(errno);
     LOG(ERROR) << "Unable to mount destination device: " << msg << ". "

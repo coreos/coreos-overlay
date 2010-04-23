@@ -15,10 +15,6 @@
 
 namespace chromeos_update_engine {
 
-// When an extent's start block is kSparseHole, that data written for that
-// extent will be dropped rather than written to the unerlying fd.
-const uint64 kSparseHole = kuint64max;
-
 class ExtentWriter {
  public:
   ExtentWriter() : end_called_(false) {}
@@ -73,7 +69,7 @@ class DirectExtentWriter : public ExtentWriter {
   
   size_t block_size_;
   // Bytes written into next_extent_index_ thus far
-  uint64 extent_bytes_written_;
+  uint64_t extent_bytes_written_;
   std::vector<Extent> extents_;
   // The next call to write should correspond to extents_[next_extent_index_]
   std::vector<Extent>::size_type next_extent_index_;

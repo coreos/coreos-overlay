@@ -11,8 +11,8 @@ namespace chromeos_update_engine {
 
 namespace graph_utils {
 
-uint64 EdgeWeight(const Graph& graph, const Edge& edge) {
-  uint64 weight = 0;
+uint64_t EdgeWeight(const Graph& graph, const Edge& edge) {
+  uint64_t weight = 0;
   const vector<Extent>& extents =
       graph[edge.first].out_edges.find(edge.second)->second.extents;
   for (vector<Extent>::const_iterator it = extents.begin();
@@ -23,7 +23,7 @@ uint64 EdgeWeight(const Graph& graph, const Edge& edge) {
   return weight;
 }
 
-void AppendBlockToExtents(vector<Extent>* extents, uint64 block) {
+void AppendBlockToExtents(vector<Extent>* extents, uint64_t block) {
   if (!extents->empty()) {
     Extent& extent = extents->back();
     if (block == kSparseHole) {

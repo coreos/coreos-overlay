@@ -29,7 +29,7 @@ TEST(ExtentMapperTest, RunAsRootSimpleTest) {
   // executable are consistent and they match with the size of the file.
   const string kFilename = "/proc/self/exe";
   
-  uint32 block_size = 0;
+  uint32_t block_size = 0;
   EXPECT_TRUE(extent_mapper::GetFilesystemBlockSize(kFilename, &block_size));
   EXPECT_GT(block_size, 0);
     
@@ -38,11 +38,11 @@ TEST(ExtentMapperTest, RunAsRootSimpleTest) {
   ASSERT_TRUE(extent_mapper::ExtentsForFileFibmap(kFilename, &extents));
   
   EXPECT_FALSE(extents.empty());
-  set<uint64> blocks;
+  set<uint64_t> blocks;
   
   for (vector<Extent>::const_iterator it = extents.begin();
        it != extents.end(); ++it) {
-    for (uint64 block = it->start_block();
+    for (uint64_t block = it->start_block();
          block < it->start_block() + it->num_blocks();
          block++) {
       EXPECT_FALSE(utils::SetContainsKey(blocks, block));
@@ -68,7 +68,7 @@ TEST(ExtentMapperTest, RunAsRootSparseFileTest) {
   int fd = mkstemp(buf);
   ASSERT_GE(fd, 0);
 
-  uint32 block_size = 0;
+  uint32_t block_size = 0;
   EXPECT_TRUE(extent_mapper::GetFilesystemBlockSize(buf, &block_size));
   EXPECT_GT(block_size, 0);
   

@@ -51,7 +51,7 @@ class SetBootableFlagActionTest : public ::testing::Test {
   }
   vector<char> DoTest(vector<char> mbr_in,
                       const string& filename,
-                      uint32 test_flags);
+                      uint32_t test_flags);
   // first partition bootable, no others bootable
   const vector<char> sample_mbr_;
 };
@@ -64,7 +64,7 @@ SetBootableFlagActionTest::SetBootableFlagActionTest()
 
 vector<char> SetBootableFlagActionTest::DoTest(vector<char> mbr_in,
                                                const string& filename,
-                                               uint32 flags) {
+                                               uint32_t flags) {
   CHECK(!filename.empty());
   const string root_filename(filename.begin(), --filename.end());
   if (flags & WRITE_FILE)

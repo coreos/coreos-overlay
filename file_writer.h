@@ -21,6 +21,7 @@ namespace chromeos_update_engine {
 
 class FileWriter {
  public:
+  FileWriter() {}
   virtual ~FileWriter() {}
 
   // Wrapper around open. Returns 0 on success or -errno on error.
@@ -32,6 +33,9 @@ class FileWriter {
 
   // Wrapper around close. Returns 0 on success or -errno on error.
   virtual int Close() = 0;
+
+ private:
+  DISALLOW_COPY_AND_ASSIGN(FileWriter);
 };
 
 // Direct file writer is probably the simplest FileWriter implementation.
@@ -50,6 +54,8 @@ class DirectFileWriter : public FileWriter {
 
  private:
   int fd_;
+  
+  DISALLOW_COPY_AND_ASSIGN(DirectFileWriter);
 };
 
 class ScopedFileWriterCloser {
@@ -63,6 +69,8 @@ class ScopedFileWriterCloser {
   }
  private:
   FileWriter* writer_;
+  
+  DISALLOW_COPY_AND_ASSIGN(ScopedFileWriterCloser);
 };
 
 }  // namespace chromeos_update_engine
