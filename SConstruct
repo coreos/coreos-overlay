@@ -39,6 +39,46 @@ proto_builder = Builder(generator = ProtocolBufferGenerator,
                         single_source = 1,
                         suffix = '.pb.cc')
 
+""" Inputs:
+        target: unused
+        source: list containing the source .xml file
+        env: the scons environment in which we are compiling
+    Outputs:
+        target: the list of targets we'll emit
+        source: the list of sources we'll process"""
+def DbusBindingsEmitter(target, source, env):
+  output = str(source[0])
+  output = output[0:output.rfind('.xml')]
+  target = [
+    output + '.dbusserver.h',
+    output + '.dbusclient.h'
+  ]
+  return target, source
+
+""" Inputs:
+        source: list of sources to process
+        target: list of targets to generate
+        env: scons environment in which we are working
+        for_signature: unused
+    Outputs: a list of commands to execute to generate the targets from
+             the sources."""
+def DbusBindingsGenerator(source, target, env, for_signature):
+  commands = []
+  for target_file in target:
+    if str(target_file).endswith('.dbusserver.h'):
+      mode_flag = '--mode=glib-server '
+    else:
+      mode_flag = '--mode=glib-client '
+    cmd = '/usr/bin/dbus-binding-tool %s --prefix=update_engine_service ' \
+          '%s > %s' % (mode_flag, str(source[0]), str(target_file))
+    commands.append(cmd)
+  return commands
+
+dbus_bindings_builder = Builder(generator = DbusBindingsGenerator,
+                                emitter = DbusBindingsEmitter,
+                                single_source = 1,
+                                suffix = 'dbusclient.h')
+
 env = Environment()
 for key in Split('CC CXX AR RANLIB LD NM'):
   value = os.environ.get(key)
@@ -54,13 +94,17 @@ for key in Split('PKG_CONFIG_LIBDIR PKG_CONFIG_PATH SYSROOT'):
     env['ENV'][key] = os.environ[key]
 
 
+    # -Wclobbered
+    # -Wempty-body
+    # -Wignored-qualifiers
+    # -Wtype-limits
 env['CCFLAGS'] = ' '.join("""-g
                              -fno-exceptions
                              -fno-strict-aliasing
                              -Wall
-                             -Werror
                              -Wclobbered
                              -Wempty-body
+                             -Werror
                              -Wignored-qualifiers
                              -Wmissing-field-initializers
                              -Wsign-compare
@@ -87,25 +131,27 @@ env['LIBS'] = Split("""base
 env['CPPPATH'] = ['..', '../../third_party/chrome/files', '../../common']
 env['LIBPATH'] = ['../../third_party/chrome']
 env['BUILDERS']['ProtocolBuffer'] = proto_builder
+env['BUILDERS']['DbusBindings'] = dbus_bindings_builder
 
 # Fix issue with scons not passing pkg-config vars through the environment.
 for key in Split('PKG_CONFIG_LIBDIR PKG_CONFIG_PATH'):
   if os.environ.has_key(key):
     env['ENV'][key] = os.environ[key]
 
-env.ParseConfig('pkg-config --cflags --libs glib-2.0')
+env.ParseConfig('pkg-config --cflags --libs glib-2.0 dbus-1 dbus-glib-1')
 env.ProtocolBuffer('update_metadata.pb.cc', 'update_metadata.proto')
+
+env.DbusBindings('update_engine.dbusclient.h', 'update_engine.xml')
 
 if ARGUMENTS.get('debug', 0):
   env['CCFLAGS'] += ' -fprofile-arcs -ftest-coverage'
   env['LIBS'] += ['bz2', 'gcov']
 
-
-
 sources = Split("""action_processor.cc
                    bzip.cc
                    bzip_extent_writer.cc
                    cycle_breaker.cc
+                   dbus_service.cc
                    decompressing_file_writer.cc
                    delta_diff_generator.cc
                    delta_performer.cc
@@ -126,6 +172,7 @@ sources = Split("""action_processor.cc
                    subprocess.cc
                    tarjan.cc
                    topological_sort.cc
+                   update_attempter.cc
                    update_check_action.cc
 		               update_metadata.pb.cc
 		               utils.cc""")
@@ -161,11 +208,15 @@ unittest_sources = Split("""action_unittest.cc
                             zip_unittest.cc""")
 unittest_main = ['testrunner.cc']
 
+client_main = ['update_engine_client.cc']
+
 delta_generator_main = ['generate_delta_main.cc']
 
 env.Program('update_engine', sources + main)
 unittest_cmd = env.Program('update_engine_unittests',
                            sources + unittest_sources + unittest_main)
+
+client_cmd = env.Program('update_engine_client', sources + client_main);
 
 Clean(unittest_cmd, Glob('*.gcda') + Glob('*.gcno') + Glob('*.gcov') +
                     Split('html app.info'))
