@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2010 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <gtest/gtest.h>
+#include "base/string_util.h"
 #include "update_engine/filesystem_copier_action.h"
 #include "update_engine/filesystem_iterator.h"
 #include "update_engine/omaha_hash_calculator.h"
@@ -21,21 +22,27 @@ namespace chromeos_update_engine {
 
 class FilesystemCopierActionTest : public ::testing::Test {
  protected:
-  void DoTest(bool double_copy, bool run_out_of_space);
-  string TestDir() { return "./FilesystemCopierActionTestDir"; }
+  void DoTest(bool run_out_of_space, bool terminate_early);
   void SetUp() {
-    System(string("mkdir -p ") + TestDir());
   }
   void TearDown() {
-    System(string("rm -rf ") + TestDir());
   }
 };
 
 class FilesystemCopierActionTestDelegate : public ActionProcessorDelegate {
  public:
   FilesystemCopierActionTestDelegate() : ran_(false), success_(false) {}
-  void ProcessingDone(const ActionProcessor* processor, bool success) {
+  void ExitMainLoop() {
+    while (g_main_context_pending(NULL)) {
+      g_main_context_iteration(NULL, false);
+    }
     g_main_loop_quit(loop_);
+  }
+  void ProcessingDone(const ActionProcessor* processor, bool success) {
+    ExitMainLoop();
+  }
+  void ProcessingStopped(const ActionProcessor* processor) {
+    ExitMainLoop();
   }
   void ActionCompleted(ActionProcessor* processor,
                        AbstractAction* action,
@@ -56,9 +63,21 @@ class FilesystemCopierActionTestDelegate : public ActionProcessorDelegate {
   bool success_;
 };
 
+struct StartProcessorCallbackArgs {
+  ActionProcessor* processor;
+  FilesystemCopierAction* filesystem_copier_action;
+  bool terminate_early;
+};
+
 gboolean StartProcessorInRunLoop(gpointer data) {
-  ActionProcessor* processor = reinterpret_cast<ActionProcessor*>(data);
+  StartProcessorCallbackArgs* args =
+      reinterpret_cast<StartProcessorCallbackArgs*>(data);
+  ActionProcessor* processor = args->processor;
   processor->StartProcessing();
+  if (args->terminate_early) {
+    EXPECT_TRUE(args->filesystem_copier_action);
+    args->processor->StopProcessing();
+  }
   return FALSE;
 }
 
@@ -66,44 +85,54 @@ TEST_F(FilesystemCopierActionTest, RunAsRootSimpleTest) {
   ASSERT_EQ(0, getuid());
   DoTest(false, false);
 }
-void FilesystemCopierActionTest::DoTest(bool double_copy,
-                                        bool run_out_of_space) {
+void FilesystemCopierActionTest::DoTest(bool run_out_of_space,
+                                        bool terminate_early) {
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
 
-  // make two populated ext images, mount them both (one in the other),
-  // and copy to a loop device setup to correspond to another file.
+  string a_loop_file;
+  string b_loop_file;
+  
+  EXPECT_TRUE(utils::MakeTempFile("/tmp/a_loop_file.XXXXXX",
+                                  &a_loop_file,
+                                  NULL));
+  ScopedPathUnlinker a_loop_file_unlinker(a_loop_file);
+  EXPECT_TRUE(utils::MakeTempFile("/tmp/b_loop_file.XXXXXX",
+                                  &b_loop_file,
+                                  NULL));
+  ScopedPathUnlinker b_loop_file_unlinker(b_loop_file);
+  
+  // Make random data for a, zero filled data for b.
+  const size_t kLoopFileSize = 10 * 1024 * 1024 + 512;
+  vector<char> a_loop_data(kLoopFileSize);
+  FillWithData(&a_loop_data);
+  vector<char> b_loop_data(run_out_of_space ?
+                           (kLoopFileSize - 1) :
+                           kLoopFileSize,
+                           '\0');  // Fill with 0s
 
-  const string a_image(TestDir() + "/a_image");
-  const string b_image(TestDir() + "/b_image");
-  const string out_image(TestDir() + "/out_image");
+  // Write data to disk
+  EXPECT_TRUE(WriteFileVector(a_loop_file, a_loop_data));
+  EXPECT_TRUE(WriteFileVector(b_loop_file, b_loop_data));
 
-  vector<string> expected_paths_vector;
-  CreateExtImageAtPath(a_image, &expected_paths_vector);
-  CreateExtImageAtPath(b_image, NULL);
+  // Make loop devices for the files
+  string a_dev = GetUnusedLoopDevice();
+  EXPECT_FALSE(a_dev.empty());
+  EXPECT_EQ(0, System(StringPrintf("losetup %s %s",
+                                   a_dev.c_str(),
+                                   a_loop_file.c_str())));
+  ScopedLoopbackDeviceReleaser a_dev_releaser(a_dev);
 
-  // create 5 MiB file
-  ASSERT_EQ(0, System(string("dd if=/dev/zero of=") + out_image
-                      + " seek=5242879 bs=1 count=1"));
+  string b_dev = GetUnusedLoopDevice();
+  EXPECT_FALSE(b_dev.empty());
+  EXPECT_EQ(0, System(StringPrintf("losetup %s %s",
+                                   b_dev.c_str(),
+                                   b_loop_file.c_str())));
+  ScopedLoopbackDeviceReleaser b_dev_releaser(b_dev);
 
-  // mount them both
-  System(("mkdir -p " + TestDir() + "/mnt").c_str());
-  ASSERT_EQ(0, System(string("mount -o loop ") + a_image + " " +
-                      TestDir() + "/mnt"));
-  ASSERT_EQ(0,
-            System(string("mount -o loop ") + b_image + " " +
-                   TestDir() + "/mnt/some_dir/mnt"));
-
-  if (run_out_of_space)
-    ASSERT_EQ(0, System(string("dd if=/dev/zero of=") +
-                        TestDir() + "/mnt/big_zero bs=5M count=1"));
-
-  string dev = GetUnusedLoopDevice();
-
-  EXPECT_EQ(0, System(string("losetup ") + dev + " " + out_image));
-
+  // Set up the action objects
   InstallPlan install_plan;
   install_plan.is_full_update = false;
-  install_plan.install_path = dev;
+  install_plan.install_path = b_dev;
 
   ActionProcessor processor;
   FilesystemCopierActionTestDelegate delegate;
@@ -112,72 +141,43 @@ void FilesystemCopierActionTest::DoTest(bool double_copy,
 
   ObjectFeederAction<InstallPlan> feeder_action;
   FilesystemCopierAction copier_action;
-  FilesystemCopierAction copier_action2;
   ObjectCollectorAction<InstallPlan> collector_action;
 
   BondActions(&feeder_action, &copier_action);
-  if (double_copy) {
-    BondActions(&copier_action, &copier_action2);
-    BondActions(&copier_action2, &collector_action);
-  } else {
-    BondActions(&copier_action, &collector_action);
-  }
+  BondActions(&copier_action, &collector_action);
 
   processor.EnqueueAction(&feeder_action);
   processor.EnqueueAction(&copier_action);
-  if (double_copy)
-    processor.EnqueueAction(&copier_action2);
   processor.EnqueueAction(&collector_action);
 
-  copier_action.set_copy_source(TestDir() + "/mnt");
+  copier_action.set_copy_source(a_dev);
   feeder_action.set_obj(install_plan);
 
-  g_timeout_add(0, &StartProcessorInRunLoop, &processor);
+  StartProcessorCallbackArgs start_callback_args;
+  start_callback_args.processor = &processor;
+  start_callback_args.filesystem_copier_action = &copier_action;
+  start_callback_args.terminate_early = terminate_early;
+
+  g_timeout_add(0, &StartProcessorInRunLoop, &start_callback_args);
   g_main_loop_run(loop);
   g_main_loop_unref(loop);
 
-  EXPECT_EQ(0, System(string("losetup -d ") + dev));
-  EXPECT_EQ(0, System(string("umount -d ") + TestDir() + "/mnt/some_dir/mnt"));
-  EXPECT_EQ(0, System(string("umount -d ") + TestDir() + "/mnt"));
-  EXPECT_EQ(0, unlink(a_image.c_str()));
-  EXPECT_EQ(0, unlink(b_image.c_str()));
-
-  EXPECT_TRUE(delegate.ran());
-  if (run_out_of_space) {
+  if (!terminate_early)
+    EXPECT_TRUE(delegate.ran());
+  if (run_out_of_space || terminate_early) {
     EXPECT_FALSE(delegate.success());
-    EXPECT_EQ(0, unlink(out_image.c_str()));
-    EXPECT_EQ(0, rmdir((TestDir() + "/mnt").c_str()));
     return;
   }
   EXPECT_TRUE(delegate.success());
 
-  EXPECT_EQ(0, System(string("mount -o loop ") + out_image + " " +
-                      TestDir() + "/mnt"));
   // Make sure everything in the out_image is there
-  expected_paths_vector.push_back("/update_engine_copy_success");
-  for (vector<string>::iterator it = expected_paths_vector.begin();
-       it != expected_paths_vector.end(); ++it) {
-    *it = TestDir() + "/mnt" + *it;
-  }
-  set<string> expected_paths(expected_paths_vector.begin(),
-                             expected_paths_vector.end());
-  VerifyAllPaths(TestDir() + "/mnt", expected_paths);
-  string file_data;
-  EXPECT_TRUE(utils::ReadFileToString(TestDir() + "/mnt/hi", &file_data));
-  EXPECT_EQ("hi\n", file_data);
-  EXPECT_TRUE(utils::ReadFileToString(TestDir() + "/mnt/hello", &file_data));
-  EXPECT_EQ("hello\n", file_data);
-  EXPECT_EQ("/some/target", Readlink(TestDir() + "/mnt/sym"));
-  EXPECT_EQ(0, System(string("umount -d ") + TestDir() + "/mnt"));
+  vector<char> a_out;
+  vector<char> b_out;
+  EXPECT_TRUE(utils::ReadFile(a_dev, &a_out));
+  EXPECT_TRUE(utils::ReadFile(b_dev, &b_out));
+  EXPECT_TRUE(ExpectVectorsEq(a_out, b_out));
+  EXPECT_TRUE(ExpectVectorsEq(a_loop_data, a_out));
 
-  EXPECT_EQ(0, unlink(out_image.c_str()));
-  EXPECT_EQ(0, rmdir((TestDir() + "/mnt").c_str()));
-
-  EXPECT_FALSE(copier_action.skipped_copy());
-  LOG(INFO) << "collected plan:";
-  collector_action.object().Dump();
-  LOG(INFO) << "expected plan:";
-  install_plan.Dump();
   EXPECT_TRUE(collector_action.object() == install_plan);
 }
 
@@ -262,12 +262,12 @@ TEST_F(FilesystemCopierActionTest, NonExistentDriveTest) {
   EXPECT_FALSE(delegate.success_);
 }
 
-TEST_F(FilesystemCopierActionTest, RunAsRootSkipUpdateTest) {
+TEST_F(FilesystemCopierActionTest, RunAsRootNoSpaceTest) {
   ASSERT_EQ(0, getuid());
   DoTest(true, false);
 }
 
-TEST_F(FilesystemCopierActionTest, RunAsRootNoSpaceTest) {
+TEST_F(FilesystemCopierActionTest, RunAsRootTerminateEarlyTest) {
   ASSERT_EQ(0, getuid());
   DoTest(false, true);
 }

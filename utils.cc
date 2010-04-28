@@ -333,6 +333,12 @@ bool UnmountFilesystem(const string& mountpoint) {
   return true;
 }
 
+const char* GetGErrorMessage(const GError* error) {
+  if (!error)
+    return "Unknown error.";
+  return error->message;
+}
+
 const char* const kStatefulPartition = "/mnt/stateful_partition";
 
 }  // namespace utils

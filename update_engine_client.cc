@@ -16,6 +16,7 @@ extern "C" {
 using chromeos_update_engine::kUpdateEngineServiceName;
 using chromeos_update_engine::kUpdateEngineServicePath;
 using chromeos_update_engine::kUpdateEngineServiceInterface;
+using chromeos_update_engine::utils::GetGErrorMessage;
 
 DEFINE_bool(status, false, "Print the status to stdout.");
 DEFINE_bool(force_update, false,
@@ -24,12 +25,6 @@ DEFINE_bool(check_for_update, false,
             "Initiate check for updates.");
 
 namespace {
-
-const char* GetErrorMessage(const GError* error) {
-  if (!error)
-    return "Unknown error.";
-  return error->message;
-}
 
 bool GetStatus() {
   DBusGConnection *bus;
@@ -46,7 +41,7 @@ bool GetStatus() {
                                           kUpdateEngineServiceInterface,
                                           &error);
   if (!proxy) {
-    LOG(FATAL) << "Error getting proxy: " << GetErrorMessage(error);
+    LOG(FATAL) << "Error getting proxy: " << GetGErrorMessage(error);
   }
 
   gint64 last_checked_time = 0;
@@ -64,7 +59,7 @@ bool GetStatus() {
       &new_size,
       &error);
   if (rc == FALSE) {
-    LOG(INFO) << "Error getting status: " << GetErrorMessage(error);
+    LOG(INFO) << "Error getting status: " << GetGErrorMessage(error);
   }
   printf("LAST_CHECKED_TIME=%" PRIi64 "\nPROGRESS=%f\nCURRENT_OP=%s\n"
          "NEW_VERSION=%s\nNEW_SIZE=%" PRIi64 "\n",

@@ -10,6 +10,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <glib.h>
 #include "update_engine/action.h"
 #include "update_engine/action_processor.h"
 
@@ -77,6 +78,9 @@ bool RecursiveUnlinkDir(const std::string& path);
 bool MountFilesystem(const std::string& device, const std::string& mountpoint,
                      unsigned long flags);
 bool UnmountFilesystem(const std::string& mountpoint);
+
+// Returns the error message, if any, from a GError pointer.
+const char* GetGErrorMessage(const GError* error);
 
 // Log a string in hex to LOG(INFO). Useful for debugging.
 void HexDumpArray(const unsigned char* const arr, const size_t length);

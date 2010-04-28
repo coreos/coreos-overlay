@@ -138,7 +138,8 @@ for key in Split('PKG_CONFIG_LIBDIR PKG_CONFIG_PATH'):
   if os.environ.has_key(key):
     env['ENV'][key] = os.environ[key]
 
-env.ParseConfig('pkg-config --cflags --libs glib-2.0 dbus-1 dbus-glib-1')
+env.ParseConfig('pkg-config --cflags --libs '
+                'dbus-1 dbus-glib-1 gio-2.0 gio-unix-2.0 glib-2.0')
 env.ProtocolBuffer('update_metadata.pb.cc', 'update_metadata.proto')
 
 env.DbusBindings('update_engine.dbusclient.h', 'update_engine.xml')
@@ -190,6 +191,7 @@ unittest_sources = Split("""action_unittest.cc
                             extent_mapper_unittest.cc
                             extent_writer_unittest.cc
                             file_writer_unittest.cc
+                            filesystem_copier_action_unittest.cc
                             filesystem_iterator_unittest.cc
                             graph_utils_unittest.cc
                             http_fetcher_unittest.cc
