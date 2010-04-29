@@ -110,7 +110,7 @@ int DeltaPerformer::Close() {
 // -errno on error.
 // This function performs as many actions as it can, given the amount of
 // data received thus far.
-int DeltaPerformer::Write(const void* bytes, size_t count) {
+ssize_t DeltaPerformer::Write(const void* bytes, size_t count) {
   const char* c_bytes = reinterpret_cast<const char*>(bytes);
   buffer_.insert(buffer_.end(), c_bytes, c_bytes + count);
 

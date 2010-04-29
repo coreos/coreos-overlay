@@ -25,7 +25,7 @@ class MockFileWriter : public FileWriter {
     return 0;
   }
 
-  virtual int Write(const void* bytes, size_t count) {
+  virtual ssize_t Write(const void* bytes, size_t count) {
     CHECK(was_opened_);
     CHECK(!was_closed_);
     const char* char_bytes = reinterpret_cast<const char*>(bytes);

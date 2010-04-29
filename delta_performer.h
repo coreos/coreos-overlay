@@ -30,7 +30,7 @@ class DeltaPerformer : public FileWriter {
 
   // Wrapper around write. Returns bytes written on success or
   // -errno on error.
-  int Write(const void* bytes, size_t count);
+  ssize_t Write(const void* bytes, size_t count);
 
   // Wrapper around close. Returns 0 on success or -errno on error.
   int Close();

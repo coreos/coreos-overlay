@@ -15,7 +15,7 @@ int DirectFileWriter::Open(const char* path, int flags, mode_t mode) {
   return 0;
 }
 
-int DirectFileWriter::Write(const void* bytes, size_t count) {
+ssize_t DirectFileWriter::Write(const void* bytes, size_t count) {
   CHECK_GE(fd_, 0);
   const char* char_bytes = reinterpret_cast<const char*>(bytes);
 

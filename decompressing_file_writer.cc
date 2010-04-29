@@ -27,7 +27,7 @@ namespace chromeos_update_engine {
 //      uLong   reserved;   /* reserved for future use */
 //  } z_stream;
 
-int GzipDecompressingFileWriter::Write(const void* bytes, size_t count) {
+ssize_t GzipDecompressingFileWriter::Write(const void* bytes, size_t count) {
   // Steps:
   // put the data on next_in
   // call inflate until it returns nothing, each time writing what we get

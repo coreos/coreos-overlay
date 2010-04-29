@@ -36,7 +36,7 @@ class GzipDecompressingFileWriter : public FileWriter {
   // stream, after the entire stream has been written to this object,
   // the entire decompressed stream will have been written to the
   // underlying FileWriter.
-  virtual int Write(const void* bytes, size_t count);
+  virtual ssize_t Write(const void* bytes, size_t count);
 
   virtual int Close() {
     return next_->Close();

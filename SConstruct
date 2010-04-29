@@ -170,6 +170,7 @@ sources = Split("""action_processor.cc
                    omaha_response_handler_action.cc
                    postinstall_runner_action.cc
                    set_bootable_flag_action.cc
+                   split_file_writer.cc
                    subprocess.cc
                    tarjan.cc
                    topological_sort.cc
@@ -201,6 +202,7 @@ unittest_sources = Split("""action_unittest.cc
                             omaha_response_handler_action_unittest.cc
                             postinstall_runner_action_unittest.cc
                             set_bootable_flag_action_unittest.cc
+                            split_file_writer_unittest.cc
                             subprocess_unittest.cc
                             tarjan_unittest.cc
                             test_utils.cc
