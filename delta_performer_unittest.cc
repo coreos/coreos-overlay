@@ -154,6 +154,29 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
                                  sizeof(kRandomString)));
   }
 
+  string old_kernel;
+  EXPECT_TRUE(utils::MakeTempFile("/tmp/old_kernel.XXXXXX", &old_kernel, NULL));
+  ScopedPathUnlinker old_kernel_unlinker(old_kernel);
+
+  string new_kernel;
+  EXPECT_TRUE(utils::MakeTempFile("/tmp/new_kernel.XXXXXX", &new_kernel, NULL));
+  ScopedPathUnlinker new_kernel_unlinker(new_kernel);
+
+  vector<char> old_kernel_data(4096);  // Something small for a test
+  vector<char> new_kernel_data(old_kernel_data.size());
+  FillWithData(&old_kernel_data);
+  FillWithData(&new_kernel_data);
+  
+  // change the new kernel data
+  const char* new_data_string = "This is new data.";
+  strcpy(&new_kernel_data[0], new_data_string);
+
+  // Write kernels to disk
+  EXPECT_TRUE(utils::WriteFile(
+      old_kernel.c_str(), &old_kernel_data[0], old_kernel_data.size()));
+  EXPECT_TRUE(utils::WriteFile(
+      new_kernel.c_str(), &new_kernel_data[0], new_kernel_data.size()));
+
   string delta_path;
   EXPECT_TRUE(utils::MakeTempFile("/tmp/delta.XXXXXX", &delta_path, NULL));
   ScopedPathUnlinker delta_path_unlinker(delta_path);
@@ -166,6 +189,8 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
                                                             a_img,
                                                             b_mnt,
                                                             b_img,
+                                                            old_kernel,
+                                                            new_kernel,
                                                             delta_path));
   }
 
@@ -177,6 +202,7 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
   DeltaPerformer performer;
 
   EXPECT_EQ(0, performer.Open(a_img.c_str(), 0, 0));
+  EXPECT_TRUE(performer.OpenKernel(old_kernel.c_str()));
 
   // Write at some number of bytes per operation. Arbitrarily chose 5.
   const size_t kBytesPerWrite = 5;
@@ -189,6 +215,12 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
   EXPECT_EQ(0, performer.Close());
 
   CompareFilesByBlock("/tmp/a_ref", "/tmp/b_ref");
+  CompareFilesByBlock(old_kernel, new_kernel);
+  
+  vector<char> updated_kernel_partition;
+  EXPECT_TRUE(utils::ReadFile(old_kernel, &updated_kernel_partition));
+  EXPECT_EQ(0, strncmp(&updated_kernel_partition[0], new_data_string,
+                       strlen(new_data_string)));
 }
 
 }  // namespace chromeos_update_engine

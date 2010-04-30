@@ -174,7 +174,7 @@ TEST(DownloadActionTest, TerminateEarlyTest) {
   }
 
   // 1 or 0 chunks should have come through
-  const off_t resulting_file_size(FileSize(path));
+  const off_t resulting_file_size(utils::FileSize(path));
   if (resulting_file_size != 0)
     EXPECT_EQ(kMockHttpFetcherChunkSize, resulting_file_size);
 }

@@ -105,6 +105,15 @@ bool ReadFileToString(const std::string& path, std::string* out) {
   return true;
 }
 
+off_t FileSize(const string& path) {
+  struct stat stbuf;
+  int rc = stat(path.c_str(), &stbuf);
+  CHECK_EQ(rc, 0);
+  if (rc < 0)
+    return rc;
+  return stbuf.st_size;
+}
+
 void HexDumpArray(const unsigned char* const arr, const size_t length) {
   const unsigned char* const char_arr =
       reinterpret_cast<const unsigned char* const>(arr);

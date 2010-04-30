@@ -390,6 +390,7 @@ bool WriteUint64AsBigEndian(FileWriter* writer, const uint64_t value) {
 void InstallOperationsToManifest(
     const Graph& graph,
     const vector<Vertex::Index>& order,
+    const vector<DeltaArchiveManifest_InstallOperation>& kernel_ops,
     DeltaArchiveManifest* out_manifest) {
   for (vector<Vertex::Index>::const_iterator it = order.begin();
        it != order.end(); ++it) {
@@ -397,12 +398,67 @@ void InstallOperationsToManifest(
         out_manifest->add_install_operations();
     *op = graph[*it].op;
   }
+  for (vector<DeltaArchiveManifest_InstallOperation>::const_iterator it =
+           kernel_ops.begin(); it != kernel_ops.end(); ++it) {
+    DeltaArchiveManifest_InstallOperation* op =
+        out_manifest->add_kernel_install_operations();
+    *op = *it;
+  }
 }
 
 void CheckGraph(const Graph& graph) {
   for (Graph::const_iterator it = graph.begin(); it != graph.end(); ++it) {
     CHECK(it->op.has_type());
   }
+}
+
+// Delta compresses a kernel partition new_kernel_part with knowledge of
+// the old kernel partition old_kernel_part. 
+bool DeltaCompressKernelPartition(
+    const string& old_kernel_part,
+    const string& new_kernel_part,
+    vector<DeltaArchiveManifest_InstallOperation>* ops,
+    int blobs_fd,
+    off_t* blobs_length) {
+  // For now, just bsdiff the kernel partition as a whole.
+  // TODO(adlr): Use knowledge of how the kernel partition is laid out
+  // to more efficiently compress it.
+
+  LOG(INFO) << "Delta compressing kernel partition...";
+
+  // Add a new install operation
+  ops->resize(1);
+  DeltaArchiveManifest_InstallOperation* op = &(*ops)[0];
+  op->set_type(DeltaArchiveManifest_InstallOperation_Type_BSDIFF);
+  op->set_data_offset(*blobs_length);
+
+  // Do the actual compression
+  vector<char> data;
+  TEST_AND_RETURN_FALSE(BsdiffFiles(old_kernel_part, new_kernel_part, &data));
+  TEST_AND_RETURN_FALSE(utils::WriteAll(blobs_fd, &data[0], data.size()));
+  *blobs_length += data.size();
+  
+  off_t old_part_size = utils::FileSize(old_kernel_part);
+  TEST_AND_RETURN_FALSE(old_part_size >= 0);
+  off_t new_part_size = utils::FileSize(new_kernel_part);
+  TEST_AND_RETURN_FALSE(new_part_size >= 0);
+  
+  op->set_data_length(data.size());
+
+  op->set_src_length(old_part_size);
+  op->set_dst_length(new_part_size);
+
+  // Theres a single src/dest extent for each
+  Extent* src_extent = op->add_src_extents();
+  src_extent->set_start_block(0);
+  src_extent->set_num_blocks((old_part_size + kBlockSize - 1) / kBlockSize);
+
+  Extent* dst_extent = op->add_dst_extents();
+  dst_extent->set_start_block(0);
+  dst_extent->set_num_blocks((new_part_size + kBlockSize - 1) / kBlockSize);
+  
+  LOG(INFO) << "Done delta compressing kernel partition.";
+  return true;
 }
 
 }  // namespace {}
@@ -653,9 +709,15 @@ bool DeltaDiffGenerator::ReorderDataBlobs(
   ScopedFileWriterCloser writer_closer(&writer);
   uint64_t out_file_size = 0;
   
-  for (int i = 0; i < manifest->install_operations_size(); i++) {
-    DeltaArchiveManifest_InstallOperation* op =
-        manifest->mutable_install_operations(i);
+  for (int i = 0; i < (manifest->install_operations_size() +
+                       manifest->kernel_install_operations_size()); i++) {
+    DeltaArchiveManifest_InstallOperation* op = NULL;
+    if (i < manifest->install_operations_size()) {
+      op = manifest->mutable_install_operations(i);
+    } else {
+      op = manifest->mutable_kernel_install_operations(
+          i - manifest->install_operations_size());
+    }
     if (!op->has_data_offset())
       continue;
     CHECK(op->has_data_length());
@@ -671,11 +733,14 @@ bool DeltaDiffGenerator::ReorderDataBlobs(
   return true;
 }
 
-bool DeltaDiffGenerator::GenerateDeltaUpdateFile(const string& old_root,
-                                                 const string& old_image,
-                                                 const string& new_root,
-                                                 const string& new_image,
-                                                 const string& output_path) {
+bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
+    const string& old_root,
+    const string& old_image,
+    const string& new_root,
+    const string& new_image,
+    const std::string& old_kernel_part,
+    const std::string& new_kernel_part,
+    const string& output_path) {
   struct stat old_image_stbuf;
   TEST_AND_RETURN_FALSE_ERRNO(stat(old_image.c_str(), &old_image_stbuf) == 0);
   struct stat new_image_stbuf;
@@ -686,6 +751,10 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(const string& old_root,
       << "New image not a multiple of block size " << kBlockSize;
   LOG_IF(FATAL, old_image_stbuf.st_size % kBlockSize)
       << "Old image not a multiple of block size " << kBlockSize;
+
+  // Sanity check kernel partition args
+  TEST_AND_RETURN_FALSE(utils::FileSize(old_kernel_part) >= 0);
+  TEST_AND_RETURN_FALSE(utils::FileSize(new_kernel_part) >= 0);
 
   vector<Block> blocks(min(old_image_stbuf.st_size / kBlockSize,
                            new_image_stbuf.st_size / kBlockSize));
@@ -704,6 +773,8 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(const string& old_root,
 
   LOG(INFO) << "Reading files...";
 
+  vector<DeltaArchiveManifest_InstallOperation> kernel_ops;
+
   DeltaArchiveManifest_InstallOperation final_op;
   {
     int fd;
@@ -720,12 +791,18 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(const string& old_root,
                                          &data_file_size));
     CheckGraph(graph);
                                          
-    // TODO(adlr): read all the rest of the blocks in
     TEST_AND_RETURN_FALSE(ReadUnwrittenBlocks(blocks,
                                               fd,
                                               &data_file_size,
                                               new_image,
                                               &final_op));  
+
+    // Read kernel partition
+    TEST_AND_RETURN_FALSE(DeltaCompressKernelPartition(old_kernel_part,
+                                                       new_kernel_part,
+                                                       &kernel_ops,
+                                                       fd,
+                                                       &data_file_size));
   }
   CheckGraph(graph);
   
@@ -753,7 +830,7 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(const string& old_root,
   // Convert to protobuf Manifest object
   DeltaArchiveManifest manifest;
   CheckGraph(graph);
-  InstallOperationsToManifest(graph, final_order, &manifest);
+  InstallOperationsToManifest(graph, final_order, kernel_ops, &manifest);
   {
     // Write final operation
     DeltaArchiveManifest_InstallOperation* op =
@@ -762,9 +839,9 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(const string& old_root,
     CHECK(op->has_type());
     LOG(INFO) << "final op length: " << op->data_length();
   }
+  
   CheckGraph(graph);
   manifest.set_block_size(kBlockSize);
-  // TODO(adlr): set checksums
 
   // Reorder the data blobs with the newly ordered manifest
   string ordered_blobs_path;
@@ -780,9 +857,13 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(const string& old_root,
   {
     vector<uint32_t> written_count(blocks.size(), 0);
     uint64_t next_blob_offset = 0;
-    for (int i = 0; i < manifest.install_operations_size(); i++) {
+    for (int i = 0; i < (manifest.install_operations_size() +
+                         manifest.kernel_install_operations_size()); i++) {
       const DeltaArchiveManifest_InstallOperation& op =
-          manifest.install_operations(i);
+          i < manifest.install_operations_size() ?
+          manifest.install_operations(i) :
+          manifest.kernel_install_operations(
+              i - manifest.install_operations_size());
       for (int j = 0; j < op.dst_extents_size(); j++) {
         const Extent& extent = op.dst_extents(j);
         for (uint64_t block = extent.start_block();

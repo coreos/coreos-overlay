@@ -90,10 +90,8 @@ message DeltaArchiveManifest {
     optional uint64 dst_length = 7;
   }
   repeated InstallOperation install_operations = 1;
-  // The checksums of the install device before and after the install process.
-  optional string src_checksum = 2;
-  optional string dst_checksum = 3;
+  repeated InstallOperation kernel_install_operations = 2;
 
   // (At time of writing) usually 4096
-  optional uint32 block_size = 5 [default = 4096];
+  optional uint32 block_size = 3 [default = 4096];
 }

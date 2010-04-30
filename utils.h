@@ -36,6 +36,10 @@ bool PReadAll(int fd, void* buf, size_t count, off_t offset,
 bool ReadFile(const std::string& path, std::vector<char>* out);
 bool ReadFileToString(const std::string& path, std::string* out);
 
+// Returns the size of the file at path. If the file doesn't exist or some
+// error occurrs, -1 is returned.
+off_t FileSize(const std::string& path);
+
 std::string ErrnoNumberAsString(int err);
 
 // Strips duplicate slashes, and optionally removes all trailing slashes.

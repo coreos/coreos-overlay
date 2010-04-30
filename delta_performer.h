@@ -20,10 +20,16 @@ class DeltaPerformer : public FileWriter {
  public:
   DeltaPerformer()
       : fd_(-1),
+        kernel_fd_(-1),
         manifest_valid_(false),
-        next_operation_(0),
+        next_operation_num_(0),
         buffer_offset_(0),
         block_size_(0) {}
+  
+  // Opens the kernel. Should be called before or after Open(), but before
+  // Write(). The kernel file will be close()d when Close() is called.
+  bool OpenKernel(const char* kernel_path);
+
   // flags and mode ignored. Once Close()d, a DeltaPerformer can't be
   // Open()ed again.
   int Open(const char* path, int flags, mode_t mode);
@@ -33,6 +39,7 @@ class DeltaPerformer : public FileWriter {
   ssize_t Write(const void* bytes, size_t count);
 
   // Wrapper around close. Returns 0 on success or -errno on error.
+  // Closes both 'path' given to Open() and the kernel path.
   int Close();
   
   // Converts an ordered collection of Extent objects which contain data of
@@ -62,22 +69,29 @@ class DeltaPerformer : public FileWriter {
   
   // These perform a specific type of operation and return true on success.
   bool PerformReplaceOperation(
-      const DeltaArchiveManifest_InstallOperation& operation);
+      const DeltaArchiveManifest_InstallOperation& operation,
+      bool is_kernel_partition);
   bool PerformMoveOperation(
-      const DeltaArchiveManifest_InstallOperation& operation);
+      const DeltaArchiveManifest_InstallOperation& operation,
+      bool is_kernel_partition);
   bool PerformBsdiffOperation(
-      const DeltaArchiveManifest_InstallOperation& operation);
+      const DeltaArchiveManifest_InstallOperation& operation,
+      bool is_kernel_partition);
 
   // File descriptor of open device.
   int fd_;
   
-  std::string path_;  // Path that fd_ refers to
+  // File descriptor of the kernel device
+  int kernel_fd_;
+  
+  std::string path_;  // Path that fd_ refers to.
+  std::string kernel_path_;  // Path that kernel_fd_ refers to.
   
   DeltaArchiveManifest manifest_;
   bool manifest_valid_;
   
   // Index of the next operation to perform in the manifest.
-  int next_operation_;
+  int next_operation_num_;
 
   // buffer_ is a window of the data that's been downloaded. At first,
   // it contains the beginning of the download, but after the protobuf

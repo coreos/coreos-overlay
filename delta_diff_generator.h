@@ -40,12 +40,16 @@ class DeltaDiffGenerator {
   // This is the only function that external users of the class should call.
   // old_image and new_image are paths to two image files. They should be
   // mounted read-only at paths old_root and new_root respectively.
+  // {old,new}_kernel_part are paths to the old and new kernel partition
+  // images, respectively.
   // output_path is the filename where the delta update should be written.
   // Returns true on success.
   static bool GenerateDeltaUpdateFile(const std::string& old_root,
                                       const std::string& old_image,
                                       const std::string& new_root,
                                       const std::string& new_image,
+                                      const std::string& old_kernel_part,
+                                      const std::string& new_kernel_part,
                                       const std::string& output_path);
 
   // These functions are public so that the unit tests can access them:

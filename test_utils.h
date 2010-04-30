@@ -21,10 +21,6 @@ namespace chromeos_update_engine {
 bool WriteFileVector(const std::string& path, const std::vector<char>& data);
 bool WriteFileString(const std::string& path, const std::string& data);
 
-// Returns the size of the file at path. If the file doesn't exist or some
-// error occurrs, -1 is returned.
-off_t FileSize(const std::string& path);
-
 // Reads a symlink from disk. Returns empty string on failure.
 std::string Readlink(const std::string& path);
 

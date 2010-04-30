@@ -27,6 +27,8 @@ DEFINE_string(new_dir, "",
 DEFINE_string(old_image, "", "Path to the old rootfs");
 DEFINE_string(new_image, "", "Path to the new rootfs");
 DEFINE_string(out_file, "", "Path to output file");
+DEFINE_string(old_kernel, "", "Path to the old kernel partition image");
+DEFINE_string(new_kernel, "", "Path to the new kernel partition image");
 DEFINE_string(apply_delta, "",
               "If set, apply delta over old_image. (For debugging.)");
 
@@ -78,11 +80,13 @@ int Main(int argc, char** argv) {
     LOG(INFO) << "done applying delta.";
     return 0;
   }
-  if (FLAGS_old_dir.empty() || FLAGS_new_dir.empty() ||
-      FLAGS_old_image.empty() || FLAGS_new_image.empty() ||
-      FLAGS_out_file.empty()) {
-    LOG(FATAL) << "Missing required argument(s)";
-  }
+  CHECK(!FLAGS_old_dir.empty());
+  CHECK(!FLAGS_new_dir.empty());
+  CHECK(!FLAGS_old_image.empty());
+  CHECK(!FLAGS_new_image.empty());
+  CHECK(!FLAGS_out_file.empty());
+  CHECK(!FLAGS_old_kernel.empty());
+  CHECK(!FLAGS_new_kernel.empty());
   if ((!IsDir(FLAGS_old_dir.c_str())) || (!IsDir(FLAGS_new_dir.c_str()))) {
     LOG(FATAL) << "old_dir or new_dir not directory";
   }
@@ -91,6 +95,8 @@ int Main(int argc, char** argv) {
                                               FLAGS_old_image,
                                               FLAGS_new_dir,
                                               FLAGS_new_image,
+                                              FLAGS_old_kernel,
+                                              FLAGS_new_kernel,
                                               FLAGS_out_file);
 
   return 0;

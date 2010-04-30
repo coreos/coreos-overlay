@@ -237,7 +237,7 @@ TEST_F(ExtentWriterTest, SparseFileTest) {
   EXPECT_TRUE(direct_writer.End());
   
   // check file size, then data inside
-  ASSERT_EQ(2 * kBlockSize, FileSize(path()));
+  ASSERT_EQ(2 * kBlockSize, utils::FileSize(path()));
   
   vector<char> resultant_data;
   EXPECT_TRUE(utils::ReadFile(path(), &resultant_data));

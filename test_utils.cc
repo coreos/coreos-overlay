@@ -35,15 +35,6 @@ bool WriteFileString(const std::string& path, const std::string& data) {
   return utils::WriteFile(path.c_str(), data.data(), data.size());
 }
 
-off_t FileSize(const string& path) {
-  struct stat stbuf;
-  int rc = stat(path.c_str(), &stbuf);
-  CHECK_EQ(rc, 0);
-  if (rc < 0)
-    return rc;
-  return stbuf.st_size;
-}
-
 std::string Readlink(const std::string& path) {
   vector<char> buf(PATH_MAX + 1);
   ssize_t r = readlink(path.c_str(), &buf[0], buf.size());
