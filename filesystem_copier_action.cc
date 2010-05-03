@@ -47,17 +47,23 @@ void FilesystemCopierAction::PerformAction() {
     return;
   }
 
-  const string source =
-      copy_source_.empty() ? utils::BootDevice() : copy_source_;
-  LOG(INFO) << "Copying from " << source << " to "
-            << install_plan_.install_path;
+  string source = copy_source_;
+  if (source.empty()) {
+    source = copying_kernel_install_path_ ?
+        utils::BootKernelDevice(utils::BootDevice()) :
+        utils::BootDevice();
+  }
+
+  const string destination = copying_kernel_install_path_ ?
+      install_plan_.kernel_install_path :
+      install_plan_.install_path;
   
   int src_fd = open(source.c_str(), O_RDONLY);
   if (src_fd < 0) {
     PLOG(ERROR) << "Unable to open " << source << " for reading:";
     return;
   }
-  int dst_fd = open(install_plan_.install_path.c_str(),
+  int dst_fd = open(destination.c_str(),
                     O_WRONLY | O_TRUNC | O_CREAT,
                     0644);
   if (dst_fd < 0) {

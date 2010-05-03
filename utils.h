@@ -135,10 +135,18 @@ bool VectorIndexOf(const std::vector<T>& vect, const T& value,
   }
 }
 
-// Returns the currently booted device. "/dev/sda1", for example.
+// Returns the currently booted device. "/dev/sda3", for example.
 // This will not interpret LABEL= or UUID=. You'll need to use findfs
 // or something with equivalent funcionality to interpret those.
 const std::string BootDevice();
+
+// Returns the currently booted kernel device, "dev/sda2", for example.
+// Client must pass in the boot device. The suggested calling convention
+// is: BootKernelDevice(BootDevice()).
+// This function works by doing string modification on boot_device.
+// Returns empty string on failure.
+const std::string BootKernelDevice(const std::string& boot_device);
+
 
 }  // namespace utils
 

@@ -16,13 +16,20 @@
 #include "base/scoped_ptr.h"
 #include "update_engine/action.h"
 #include "update_engine/decompressing_file_writer.h"
+#include "update_engine/delta_performer.h"
 #include "update_engine/file_writer.h"
 #include "update_engine/http_fetcher.h"
 #include "update_engine/install_plan.h"
 #include "update_engine/omaha_hash_calculator.h"
+#include "update_engine/split_file_writer.h"
 
-// The Download Action downloads a requested url to a specified path on disk.
-// The url and output path are determined by the InstallPlan passed in.
+// The Download Action downloads a specified url to disk. The url should
+// point to either a full or delta update. If a full update, the file will
+// be piped into a SplitFileWriter, which will direct it to the kernel
+// and rootfs partitions. If it's a delta update, the destination kernel
+// and rootfs should already contain the source-version that this delta
+// update goes from. In this case, the update will be piped into a
+// DeltaPerformer that will apply the delta to the disk.
 
 namespace chromeos_update_engine {
 
@@ -50,6 +57,11 @@ class DownloadAction : public Action<DownloadAction>,
   void PerformAction();
   void TerminateProcessing();
 
+  // Testing
+  void SetTestFileWriter(FileWriter* writer) {
+    writer_ = writer;
+  }
+
   // Debugging/logging
   static std::string StaticType() { return "DownloadAction"; }
   std::string Type() const { return StaticType(); }
@@ -60,33 +72,23 @@ class DownloadAction : public Action<DownloadAction>,
   virtual void TransferComplete(HttpFetcher *fetcher, bool successful);
 
  private:
-  // Expected size of the file (will be used for progress info)
-  const size_t size_;
-
-  // URL to download
-  std::string url_;
-
-  // Path to save URL to
-  std::string output_path_;
-
-  // Expected hash of the file. The hash must match for this action to
-  // succeed.
-  std::string hash_;
-
-  // Whether the caller requested that we decompress the downloaded data.
-  bool should_decompress_;
+  // The InstallPlan passed in
+  InstallPlan install_plan_;
 
   // The FileWriter that downloaded data should be written to. It will
-  // either point to *decompressing_file_writer_ or *direct_file_writer_.
+  // either point to *decompressing_file_writer_ or *delta_performer_.
   FileWriter* writer_;
 
-  // If non-null, a FileWriter used for gzip decompressing downloaded data
+  // These are used for full updates:
   scoped_ptr<GzipDecompressingFileWriter> decompressing_file_writer_;
+  scoped_ptr<SplitFileWriter> split_file_writer_;
+  scoped_ptr<DirectFileWriter> kernel_file_writer_;
+  scoped_ptr<DirectFileWriter> rootfs_file_writer_;
 
-  // Used to write out the downloaded file
-  scoped_ptr<DirectFileWriter> direct_file_writer_;
+  // Used to apply a delta update:
+  scoped_ptr<DeltaPerformer> delta_performer_;
 
-  // pointer to the HttpFetcher that does the http work
+  // Pointer to the HttpFetcher that does the http work.
   scoped_ptr<HttpFetcher> http_fetcher_;
 
   // Used to find the hash of the bytes downloaded

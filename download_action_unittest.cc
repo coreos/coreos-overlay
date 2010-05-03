@@ -65,32 +65,30 @@ gboolean StartProcessorInRunLoop(gpointer data) {
   return FALSE;
 }
 
-void TestWithData(const vector<char>& data, bool compress) {
-  vector<char> use_data;
-  if (compress) {
-    use_data = GzipCompressData(data);
-  } else {
-    use_data = data;
-  }
-
+void TestWithData(const vector<char>& data) {
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
 
   // TODO(adlr): see if we need a different file for build bots
-  const string path("/tmp/DownloadActionTest");
+  ScopedTempFile output_temp_file;
+  DirectFileWriter writer;
+
   // takes ownership of passed in HttpFetcher
-  InstallPlan install_plan(compress, "",
-                           OmahaHashCalculator::OmahaHashOfData(use_data),
-                           path);
+  InstallPlan install_plan(true,
+                           "",
+                           OmahaHashCalculator::OmahaHashOfData(data),
+                           output_temp_file.GetPath(),
+                           "");
   ObjectFeederAction<InstallPlan> feeder_action;
   feeder_action.set_obj(install_plan);
-  DownloadAction download_action(new MockHttpFetcher(&use_data[0],
-                                                     use_data.size()));
+  DownloadAction download_action(new MockHttpFetcher(&data[0],
+                                                     data.size()));
+  download_action.SetTestFileWriter(&writer);
   BondActions(&feeder_action, &download_action);
 
   DownloadActionTestProcessorDelegate delegate;
   delegate.loop_ = loop;
   delegate.expected_data_ = data;
-  delegate.path_ = path;
+  delegate.path_ = output_temp_file.GetPath();
   ActionProcessor processor;
   processor.set_delegate(&delegate);
   processor.EnqueueAction(&feeder_action);
@@ -99,9 +97,6 @@ void TestWithData(const vector<char>& data, bool compress) {
   g_timeout_add(0, &StartProcessorInRunLoop, &processor);
   g_main_loop_run(loop);
   g_main_loop_unref(loop);
-
-  // remove temp file; don't care if there are errors here
-  unlink(path.c_str());
 }
 }  // namespace {}
 
@@ -109,8 +104,7 @@ TEST(DownloadActionTest, SimpleTest) {
   vector<char> small;
   const char* foo = "foo";
   small.insert(small.end(), foo, foo + strlen(foo));
-  TestWithData(small, false);
-  TestWithData(small, true);
+  TestWithData(small);
 }
 
 TEST(DownloadActionTest, LargeTest) {
@@ -123,8 +117,7 @@ TEST(DownloadActionTest, LargeTest) {
     else
       c++;
   }
-  TestWithData(big, false);
-  TestWithData(big, true);
+  TestWithData(big);
 }
 
 namespace {
@@ -153,13 +146,16 @@ TEST(DownloadActionTest, TerminateEarlyTest) {
   vector<char> data(kMockHttpFetcherChunkSize + kMockHttpFetcherChunkSize / 2);
   memset(&data[0], 0, data.size());
 
-  const string path("/tmp/DownloadActionTest");
+  ScopedTempFile temp_file;
   {
+    DirectFileWriter writer;
+
     // takes ownership of passed in HttpFetcher
     ObjectFeederAction<InstallPlan> feeder_action;
-    InstallPlan install_plan(false, "", "", path);
+    InstallPlan install_plan(true, "", "", temp_file.GetPath(), "");
     feeder_action.set_obj(install_plan);
     DownloadAction download_action(new MockHttpFetcher(&data[0], data.size()));
+    download_action.SetTestFileWriter(&writer);
     TerminateEarlyTestProcessorDelegate delegate;
     delegate.loop_ = loop;
     ActionProcessor processor;
@@ -174,7 +170,8 @@ TEST(DownloadActionTest, TerminateEarlyTest) {
   }
 
   // 1 or 0 chunks should have come through
-  const off_t resulting_file_size(utils::FileSize(path));
+  const off_t resulting_file_size(utils::FileSize(temp_file.GetPath()));
+  EXPECT_GE(resulting_file_size, 0);
   if (resulting_file_size != 0)
     EXPECT_EQ(kMockHttpFetcherChunkSize, resulting_file_size);
 }
@@ -231,13 +228,18 @@ gboolean PassObjectOutTestStarter(gpointer data) {
 TEST(DownloadActionTest, PassObjectOutTest) {
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
 
+  DirectFileWriter writer;
+
   // takes ownership of passed in HttpFetcher
-  InstallPlan install_plan(false, "",
+  InstallPlan install_plan(true,
+                           "",
                            OmahaHashCalculator::OmahaHashOfString("x"),
+                           "/dev/null",
                            "/dev/null");
   ObjectFeederAction<InstallPlan> feeder_action;
   feeder_action.set_obj(install_plan);
   DownloadAction download_action(new MockHttpFetcher("x", 1));
+  download_action.SetTestFileWriter(&writer);
 
   DownloadActionTestAction test_action;
   test_action.expected_input_object_ = install_plan;
@@ -263,12 +265,15 @@ TEST(DownloadActionTest, BadOutFileTest) {
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
 
   const string path("/fake/path/that/cant/be/created/because/of/missing/dirs");
+  DirectFileWriter writer;
 
   // takes ownership of passed in HttpFetcher
-  InstallPlan install_plan(false, "", "", path);
+  InstallPlan install_plan(true, "", "", path, "");
   ObjectFeederAction<InstallPlan> feeder_action;
   feeder_action.set_obj(install_plan);
   DownloadAction download_action(new MockHttpFetcher("x", 1));
+  download_action.SetTestFileWriter(&writer);
+  
   BondActions(&feeder_action, &download_action);
 
   ActionProcessor processor;

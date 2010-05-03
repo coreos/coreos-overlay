@@ -22,7 +22,9 @@ namespace chromeos_update_engine {
 
 class FilesystemCopierActionTest : public ::testing::Test {
  protected:
-  void DoTest(bool run_out_of_space, bool terminate_early);
+  void DoTest(bool run_out_of_space,
+              bool terminate_early,
+              bool use_kernel_partition);
   void SetUp() {
   }
   void TearDown() {
@@ -83,10 +85,13 @@ gboolean StartProcessorInRunLoop(gpointer data) {
 
 TEST_F(FilesystemCopierActionTest, RunAsRootSimpleTest) {
   ASSERT_EQ(0, getuid());
-  DoTest(false, false);
+  DoTest(false, false, false);
+
+  DoTest(false, false, true);
 }
 void FilesystemCopierActionTest::DoTest(bool run_out_of_space,
-                                        bool terminate_early) {
+                                        bool terminate_early,
+                                        bool use_kernel_partition) {
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
 
   string a_loop_file;
@@ -132,7 +137,10 @@ void FilesystemCopierActionTest::DoTest(bool run_out_of_space,
   // Set up the action objects
   InstallPlan install_plan;
   install_plan.is_full_update = false;
-  install_plan.install_path = b_dev;
+  if (use_kernel_partition)
+    install_plan.kernel_install_path = b_dev;
+  else
+    install_plan.install_path = b_dev;
 
   ActionProcessor processor;
   FilesystemCopierActionTestDelegate delegate;
@@ -140,7 +148,7 @@ void FilesystemCopierActionTest::DoTest(bool run_out_of_space,
   processor.set_delegate(&delegate);
 
   ObjectFeederAction<InstallPlan> feeder_action;
-  FilesystemCopierAction copier_action;
+  FilesystemCopierAction copier_action(use_kernel_partition);
   ObjectCollectorAction<InstallPlan> collector_action;
 
   BondActions(&feeder_action, &copier_action);
@@ -202,7 +210,7 @@ TEST_F(FilesystemCopierActionTest, MissingInputObjectTest) {
 
   processor.set_delegate(&delegate);
 
-  FilesystemCopierAction copier_action;
+  FilesystemCopierAction copier_action(false);
   ObjectCollectorAction<InstallPlan> collector_action;
 
   BondActions(&copier_action, &collector_action);
@@ -222,9 +230,9 @@ TEST_F(FilesystemCopierActionTest, FullUpdateTest) {
   processor.set_delegate(&delegate);
 
   ObjectFeederAction<InstallPlan> feeder_action;
-  InstallPlan install_plan(true, "", "", "");
+  InstallPlan install_plan(true, "", "", "", "");
   feeder_action.set_obj(install_plan);
-  FilesystemCopierAction copier_action;
+  FilesystemCopierAction copier_action(false);
   ObjectCollectorAction<InstallPlan> collector_action;
 
   BondActions(&feeder_action, &copier_action);
@@ -246,9 +254,9 @@ TEST_F(FilesystemCopierActionTest, NonExistentDriveTest) {
   processor.set_delegate(&delegate);
 
   ObjectFeederAction<InstallPlan> feeder_action;
-  InstallPlan install_plan(false, "", "", "/some/missing/file/path");
+  InstallPlan install_plan(false, "", "", "/no/such/file", "/no/such/file");
   feeder_action.set_obj(install_plan);
-  FilesystemCopierAction copier_action;
+  FilesystemCopierAction copier_action(false);
   ObjectCollectorAction<InstallPlan> collector_action;
 
   BondActions(&copier_action, &collector_action);
@@ -264,12 +272,12 @@ TEST_F(FilesystemCopierActionTest, NonExistentDriveTest) {
 
 TEST_F(FilesystemCopierActionTest, RunAsRootNoSpaceTest) {
   ASSERT_EQ(0, getuid());
-  DoTest(true, false);
+  DoTest(true, false, false);
 }
 
 TEST_F(FilesystemCopierActionTest, RunAsRootTerminateEarlyTest) {
   ASSERT_EQ(0, getuid());
-  DoTest(false, true);
+  DoTest(false, true, false);
 }
 
 }  // namespace chromeos_update_engine

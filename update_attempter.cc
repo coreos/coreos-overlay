@@ -35,7 +35,9 @@ void UpdateAttempter::Update(bool force_full_update) {
   shared_ptr<OmahaResponseHandlerAction> response_handler_action(
       new OmahaResponseHandlerAction);
   shared_ptr<FilesystemCopierAction> filesystem_copier_action(
-      new FilesystemCopierAction);
+      new FilesystemCopierAction(false));
+  shared_ptr<FilesystemCopierAction> filesystem_copier_action_kernel(
+      new FilesystemCopierAction(true));
   shared_ptr<DownloadAction> download_action(
       new DownloadAction(new LibcurlHttpFetcher));
   shared_ptr<PostinstallRunnerAction> postinstall_runner_action(
@@ -49,6 +51,8 @@ void UpdateAttempter::Update(bool force_full_update) {
   actions_.push_back(shared_ptr<AbstractAction>(update_check_action));
   actions_.push_back(shared_ptr<AbstractAction>(response_handler_action));
   actions_.push_back(shared_ptr<AbstractAction>(filesystem_copier_action));
+  actions_.push_back(shared_ptr<AbstractAction>(
+      filesystem_copier_action_kernel));
   actions_.push_back(shared_ptr<AbstractAction>(download_action));
   actions_.push_back(shared_ptr<AbstractAction>(postinstall_runner_action));
   actions_.push_back(shared_ptr<AbstractAction>(set_bootable_flag_action));
@@ -64,7 +68,10 @@ void UpdateAttempter::Update(bool force_full_update) {
   BondActions(request_prep_action.get(), update_check_action.get());
   BondActions(update_check_action.get(), response_handler_action.get());
   BondActions(response_handler_action.get(), filesystem_copier_action.get());
-  BondActions(filesystem_copier_action.get(), download_action.get());
+  BondActions(response_handler_action.get(),
+              filesystem_copier_action_kernel.get());
+  BondActions(filesystem_copier_action_kernel.get(),
+              download_action.get());
   // TODO(adlr): Bond these actions together properly
   // BondActions(download_action.get(), install_action.get());
   // BondActions(install_action.get(), postinstall_runner_action.get());

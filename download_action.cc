@@ -13,44 +13,60 @@ using std::min;
 namespace chromeos_update_engine {
 
 DownloadAction::DownloadAction(HttpFetcher* http_fetcher)
-    : size_(0),
-      should_decompress_(false),
-      writer_(NULL),
+    : writer_(NULL),
       http_fetcher_(http_fetcher) {}
 
 DownloadAction::~DownloadAction() {}
 
 void DownloadAction::PerformAction() {
   http_fetcher_->set_delegate(this);
-  CHECK(!writer_);
-  direct_file_writer_.reset(new DirectFileWriter);
 
   // Get the InstallPlan and read it
   CHECK(HasInputObject());
-  InstallPlan install_plan(GetInputObject());
+  install_plan_ = GetInputObject();
 
-  should_decompress_ = install_plan.is_full_update;
-  url_ = install_plan.download_url;
-  output_path_ = install_plan.install_path;
-  hash_ = install_plan.download_hash;
-  install_plan.Dump();
+  install_plan_.Dump();
 
-  if (should_decompress_) {
-    decompressing_file_writer_.reset(
-        new GzipDecompressingFileWriter(direct_file_writer_.get()));
-    writer_ = decompressing_file_writer_.get();
+  if (writer_) {
+    LOG(INFO) << "Using writer for test.";
   } else {
-    writer_ = direct_file_writer_.get();
+    if (install_plan_.is_full_update) {
+      kernel_file_writer_.reset(new DirectFileWriter);
+      rootfs_file_writer_.reset(new DirectFileWriter);
+      split_file_writer_.reset(new SplitFileWriter(kernel_file_writer_.get(),
+                                                   rootfs_file_writer_.get()));
+      split_file_writer_->SetFirstOpenArgs(
+          install_plan_.kernel_install_path.c_str(),
+          O_WRONLY | O_CREAT | O_TRUNC | O_LARGEFILE,
+          0644);
+      decompressing_file_writer_.reset(
+          new GzipDecompressingFileWriter(split_file_writer_.get()));
+      writer_ = decompressing_file_writer_.get();
+    } else {
+      delta_performer_.reset(new DeltaPerformer);
+      writer_ = delta_performer_.get();
+    }
   }
-  int rc = writer_->Open(output_path_.c_str(),
-                         O_TRUNC | O_WRONLY | O_CREAT | O_LARGEFILE, 0644);
+  int rc = writer_->Open(install_plan_.install_path.c_str(),
+                         O_TRUNC | O_WRONLY | O_CREAT | O_LARGEFILE,
+                         0644);
   if (rc < 0) {
-    LOG(ERROR) << "Unable to open output file " << output_path_;
+    LOG(ERROR) << "Unable to open output file " << install_plan_.install_path;
     // report error to processor
     processor_->ActionComplete(this, false);
     return;
   }
-  http_fetcher_->BeginTransfer(url_);
+  if (!install_plan_.is_full_update) {
+    if (!delta_performer_->OpenKernel(
+            install_plan_.kernel_install_path.c_str())) {
+      LOG(ERROR) << "Unable to open kernel file "
+                 << install_plan_.kernel_install_path.c_str();
+      writer_->Close();
+      processor_->ActionComplete(this, false);
+      return;
+    }
+  }
+  http_fetcher_->BeginTransfer(install_plan_.download_url);
 }
 
 void DownloadAction::TerminateProcessing() {
@@ -76,9 +92,10 @@ void DownloadAction::TransferComplete(HttpFetcher *fetcher, bool successful) {
   if (successful) {
     // Make sure hash is correct
     omaha_hash_calculator_.Finalize();
-    if (omaha_hash_calculator_.hash() != hash_) {
-      LOG(ERROR) << "Download of " << url_ << " failed. Expect hash "
-                 << hash_ << " but got hash " << omaha_hash_calculator_.hash();
+    if (omaha_hash_calculator_.hash() != install_plan_.download_hash) {
+      LOG(ERROR) << "Download of " << install_plan_.download_url
+                 << " failed. Expect hash " << install_plan_.download_hash
+                 << " but got hash " << omaha_hash_calculator_.hash();
       successful = false;
     }
   }

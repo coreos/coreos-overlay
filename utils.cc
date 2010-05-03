@@ -297,7 +297,7 @@ bool StringHasPrefix(const std::string& str, const std::string& prefix) {
   return 0 == str.compare(0, prefix.size(), prefix);
 }
 
-const std::string BootDevice() {
+const string BootDevice() {
   string proc_cmdline;
   if (!ReadFileToString("/proc/cmdline", &proc_cmdline))
     return "";
@@ -322,6 +322,21 @@ const std::string BootDevice() {
   }
   return ret;
   // TODO(adlr): use findfs to figure out UUID= or LABEL= filesystems
+}
+
+const string BootKernelDevice(const std::string& boot_device) {
+  // Currntly this assumes the last digit of the boot device is
+  // 3, 5, or 7, and changes it to 2, 4, or 6, respectively, to
+  // get the kernel device.
+  string ret = boot_device;
+  if (ret.empty())
+    return ret;
+  char last_char = ret[ret.size() - 1];
+  if (last_char == '3' || last_char == '5' || last_char == '7') {
+    ret[ret.size() - 1] = last_char - 1;
+    return ret;
+  }
+  return "";
 }
 
 bool MountFilesystem(const string& device,

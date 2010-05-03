@@ -9,8 +9,10 @@
 #include <string>
 #include <vector>
 #include <gtest/gtest.h>
+#include "base/scoped_ptr.h"
 #include "update_engine/action.h"
 #include "update_engine/subprocess.h"
+#include "update_engine/utils.h"
 
 // These are some handy functions for unittests.
 
@@ -117,6 +119,20 @@ class ScopedLoopbackDeviceReleaser {
  private:
   const std::string dev_;
   DISALLOW_COPY_AND_ASSIGN(ScopedLoopbackDeviceReleaser);
+};
+
+class ScopedTempFile {
+ public:
+  ScopedTempFile() {
+    EXPECT_TRUE(utils::MakeTempFile("/tmp/update_engine_test_temp_file.XXXXXX",
+                                    &path_,
+                                    NULL));
+    unlinker_.reset(new ScopedPathUnlinker(path_));
+  }
+  const std::string& GetPath() { return path_; }
+ private:
+  std::string path_;
+  scoped_ptr<ScopedPathUnlinker> unlinker_;
 };
 
 // Useful actions for test

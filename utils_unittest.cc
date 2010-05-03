@@ -88,6 +88,20 @@ TEST(UtilsTest, BootDeviceTest) {
   EXPECT_FALSE(utils::BootDevice().empty());
 }
 
+TEST(UtilsTest, BootKernelDeviceTest) {
+  EXPECT_EQ("", utils::BootKernelDevice("foo"));
+  EXPECT_EQ("", utils::BootKernelDevice("/dev/sda0"));
+  EXPECT_EQ("", utils::BootKernelDevice("/dev/sda1"));
+  EXPECT_EQ("", utils::BootKernelDevice("/dev/sda2"));
+  EXPECT_EQ("/dev/sda2", utils::BootKernelDevice("/dev/sda3"));
+  EXPECT_EQ("", utils::BootKernelDevice("/dev/sda4"));
+  EXPECT_EQ("/dev/sda4", utils::BootKernelDevice("/dev/sda5"));
+  EXPECT_EQ("", utils::BootKernelDevice("/dev/sda6"));
+  EXPECT_EQ("/dev/sda6", utils::BootKernelDevice("/dev/sda7"));
+  EXPECT_EQ("", utils::BootKernelDevice("/dev/sda8"));
+  EXPECT_EQ("", utils::BootKernelDevice("/dev/sda9"));
+}
+
 TEST(UtilsTest, RecursiveUnlinkDirTest) {
   EXPECT_EQ(0, mkdir("RecursiveUnlinkDirTest-a", 0755));
   EXPECT_EQ(0, mkdir("RecursiveUnlinkDirTest-b", 0755));

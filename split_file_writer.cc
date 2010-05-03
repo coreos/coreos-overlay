@@ -49,8 +49,9 @@ ssize_t SplitFileWriter::Write(const void* bytes, size_t count) {
   // to the first FileWriter.
   if (bytes_received_ < static_cast<off_t>(sizeof(uint64_t))) {
     // Write more to the initial buffer
-    size_t bytes_to_copy = min(count,
-                               sizeof(first_length_buf_) - bytes_received_);
+    size_t bytes_to_copy = min(static_cast<off_t>(count),
+                               static_cast<off_t>(sizeof(first_length_buf_)) -
+                               bytes_received_);
     memcpy(&first_length_buf_[bytes_received_], bytes, bytes_to_copy);
     bytes_received_ += bytes_to_copy;
     count -= bytes_to_copy;

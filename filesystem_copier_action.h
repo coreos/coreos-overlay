@@ -32,8 +32,9 @@ class ActionTraits<FilesystemCopierAction> {
 
 class FilesystemCopierAction : public Action<FilesystemCopierAction> {
  public:
-  FilesystemCopierAction()
-      : src_stream_(NULL),
+  explicit FilesystemCopierAction(bool copying_kernel_install_path)
+      : copying_kernel_install_path_(copying_kernel_install_path),
+        src_stream_(NULL),
         dst_stream_(NULL),
         canceller_(NULL),
         read_in_flight_(false),
@@ -68,6 +69,10 @@ class FilesystemCopierAction : public Action<FilesystemCopierAction> {
   // the ActionProcessor we're done w/ success as passed in.
   // was_cancelled should be true if TerminateProcessing() was called.
   void Cleanup(bool success, bool was_cancelled);
+  
+  // If true, this action is copying to the kernel_install_path from
+  // the install plan, otherwise it's copying just to the install_path.
+  const bool copying_kernel_install_path_;
   
   // The path to copy from. If empty (the default), the source is from the
   // passed in InstallPlan.
