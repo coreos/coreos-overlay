@@ -8,110 +8,70 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <string>
+#include <vector>
+#include "update_engine/subprocess.h"
 #include "update_engine/utils.h"
 
 using std::string;
+using std::vector;
 
 namespace chromeos_update_engine {
+
+namespace {
+const char* const kGpt = "/usr/bin/gpt";
+const ssize_t kPmbrLength = 512;
+}
 
 void SetBootableFlagAction::PerformAction() {
   ScopedActionCompleter completer(processor_, this);
 
-  if (!HasInputObject() || GetInputObject().empty()) {
-    LOG(ERROR) << "SetBootableFlagAction: No input object.";
-    return;
+  TEST_AND_RETURN(HasInputObject());
+  const InstallPlan install_plan = GetInputObject();
+  TEST_AND_RETURN(!install_plan.install_path.empty());
+  const string partition = install_plan.install_path;
+  string root_device = utils::RootDevice(partition);
+  string partition_number = utils::PartitionNumber(partition);
+
+  utils::BootLoader boot_loader;
+  TEST_AND_RETURN(utils::GetBootloader(&boot_loader));
+
+  // For now, only support Syslinux bootloader
+  TEST_AND_RETURN(boot_loader == utils::BootLoader_SYSLINUX);
+
+  string temp_file;
+  TEST_AND_RETURN(utils::MakeTempFile("/tmp/pmbr_copy.XXXXXX",
+                                      &temp_file,
+                                      NULL));
+  ScopedPathUnlinker temp_file_unlinker(temp_file);
+
+  // Copy existing PMBR to temp file
+  vector<char> buf(kPmbrLength);
+  {
+    int fd = open(root_device.c_str(), O_RDONLY);
+    TEST_AND_RETURN(fd >= 0);
+    ScopedFdCloser fd_closer(&fd);
+    ssize_t bytes_read;
+    TEST_AND_RETURN(utils::PReadAll(fd, &buf[0], buf.size(), 0, &bytes_read));
   }
-  string device = GetInputObject();
+  TEST_AND_RETURN(utils::WriteFile(temp_file.c_str(), &buf[0], buf.size()));
 
-  if (device.size() < 2) {
-    LOG(ERROR) << "Device name too short: " << device;
-    return;
-  }
+  // Call gpt tool to do the work
+  vector<string> command;
+  command.push_back(kGpt);
+  command.push_back("-S");
+  command.push_back("boot");
+  command.push_back("-i");
+  command.push_back(partition_number);
+  command.push_back("-b");
+  command.push_back(temp_file);
+  command.push_back(root_device);
+  int rc = 0;
+  Subprocess::SynchronousExec(command, &rc);
+  TEST_AND_RETURN(rc == 0);
 
-  // Make sure device is valid.
-  const char last_char = device[device.size() - 1];
-  if ((last_char < '1') || (last_char > '4')) {
-    LOG(ERROR) << "Bad device:" << device;
-    return;
-  }
-
-  // We were passed the partition_number'th partition; indexed from 1, not 0
-  int partition_number = last_char - '0';
-
-  const char second_to_last_char = device[device.size() - 2];
-  if ((second_to_last_char >= '0') && (second_to_last_char <= '9')) {
-    LOG(ERROR) << "Bad device:" << device;
-    return;
-  }
-
-  // Strip trailing 1-4 off end of device
-  device.resize(device.size() - 1);
-
-  char mbr[512];  // MBR is the first 512 bytes of the device
-  if (!ReadMbr(mbr, sizeof(mbr), device.c_str()))
-    return;
-
-  // Check MBR. Verify that last two byes are 0x55aa. This is the MBR signature.
-  if ((mbr[510] != static_cast<char>(0x55)) ||
-      (mbr[511] != static_cast<char>(0xaa))) {
-    LOG(ERROR) << "Bad MBR signature";
-    return;
-  }
-
-  // Mark partition passed in bootable and all other partitions non bootable.
-  // There are 4 partition table entries, each 16 bytes, stored consecutively
-  // beginning at byte 446. Within each entry, the first byte is the
-  // bootable flag. It's set to 0x80 (bootable) or 0x00 (not bootable).
-  for (int i = 0; i < 4; i++) {
-    int offset = 446 + 16 * i;
-
-    // partition_number is indexed from 1, not 0
-    if ((i + 1) == partition_number)
-      mbr[offset] = 0x80;
-    else
-      mbr[offset] = '\0';
-  }
-
-  // Write MBR back to disk
-  bool success = WriteMbr(mbr, sizeof(mbr), device.c_str());
-  if (success) {
-    completer.set_success(true);
-    if (HasOutputPipe()) {
-      SetOutputObject(GetInputObject());
-    }
-  }
+  completer.set_success(true);
+  if (HasOutputPipe())
+    SetOutputObject(GetInputObject());
 }
-
-bool SetBootableFlagAction::ReadMbr(char* buffer,
-                                    int buffer_len,
-                                    const char* device) {
-  int fd = open(device, O_RDONLY, 0);
-  TEST_AND_RETURN_FALSE(fd >= 0);
-
-  ssize_t r = read(fd, buffer, buffer_len);
-  close(fd);
-  TEST_AND_RETURN_FALSE(r == buffer_len);
-
-  return true;
-}
-
-bool SetBootableFlagAction::WriteMbr(const char* buffer,
-                                     int buffer_len,
-                                     const char* device) {
-  int fd = open(device, O_WRONLY, 0666);
-  TEST_AND_RETURN_FALSE(fd >= 0);
-  ScopedFdCloser fd_closer(&fd);
-
-  ssize_t bytes_written = 0;
-  while (bytes_written < buffer_len) {
-    ssize_t r = write(fd, buffer + bytes_written, buffer_len - bytes_written);
-    TEST_AND_RETURN_FALSE_ERRNO(r >= 0);
-    bytes_written += r;
-  }
-  TEST_AND_RETURN_FALSE(bytes_written == buffer_len);
-
-  return true;
-}
-
 
 }  // namespace chromeos_update_engine

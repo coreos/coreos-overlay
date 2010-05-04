@@ -29,7 +29,9 @@ namespace chromeos_update_engine {
 gboolean SetupInMainLoop(void* arg) {
   // TODO(adlr): Tell update_attempter to start working.
   // Comment this in for that:
-  //UpdateAttempter* update_attempter = reinterpret_cast<UpdateAttempter*>(arg);
+  UpdateAttempter* update_attempter = reinterpret_cast<UpdateAttempter*>(arg);
+  LOG(INFO) << "Starting update!";
+  update_attempter->Update(false);
 
   return FALSE;  // Don't call this callback function again
 }
@@ -59,7 +61,6 @@ void SetupDbusService(UpdateEngineService* service) {
   if (request_name_ret != DBUS_REQUEST_NAME_REPLY_PRIMARY_OWNER) {
     g_warning("Got result code %u from requesting name", request_name_ret);
     g_error_free(error);
-    exit(1);
     LOG(FATAL) << "Got result code " << request_name_ret
                << " from requesting name, but expected "
                << DBUS_REQUEST_NAME_REPLY_PRIMARY_OWNER;

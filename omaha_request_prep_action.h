@@ -54,7 +54,8 @@ class OmahaRequestPrepAction : public Action<OmahaRequestPrepAction> {
   // Fetches the value for a given key from
   // /mnt/stateful_partition/etc/lsb-release if possible. Failing that,
   // it looks for the key in /etc/lsb-release .
-  std::string GetLsbValue(const std::string& key) const;
+  std::string GetLsbValue(const std::string& key,
+                          const std::string& default_value) const;
 
   // Gets the machine type (e.g. "i686")
   std::string GetMachineType() const;

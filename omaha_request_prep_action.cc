@@ -28,9 +28,11 @@ void OmahaRequestPrepAction::PerformAction() {
   ScopedActionCompleter completer(processor_, this);
   string machine_id;
   TEST_AND_RETURN(GetMachineId(&machine_id));
-  const string version(GetLsbValue("GOOGLE_RELEASE"));
+  const string version(GetLsbValue("CHROMEOS_RELEASE_VERSION", ""));
   const string sp(version + "_" + GetMachineType());
-  const string track(GetLsbValue("GOOGLE_TRACK"));
+  const string track(GetLsbValue("CHROMEOS_RELEASE_TRACK", ""));
+  const string update_url(GetLsbValue("CHROMEOS_AUSERVER",
+                                      UpdateCheckParams::kUpdateUrl));
 
   UpdateCheckParams out(machine_id,  // machine_id
                         machine_id,  // user_id (use machine_id)
@@ -39,8 +41,9 @@ void OmahaRequestPrepAction::PerformAction() {
                         sp,  // e.g. 0.2.3.3_i686
                         UpdateCheckParams::kAppId,
                         version,  // app version (from lsb-release)
-                        "en-US",  //lang
-                        track);  // track
+                        "en-US",  // lang
+                        track,  // track
+                        UpdateCheckParams::kUpdateUrl);
 
   CHECK(HasOutputPipe());
   SetOutputObject(out);
@@ -89,10 +92,13 @@ bool OmahaRequestPrepAction::GetMachineId(std::string* out_id) const {
   return true;
 }
 
-std::string OmahaRequestPrepAction::GetLsbValue(const std::string& key) const {
+string OmahaRequestPrepAction::GetLsbValue(
+    const string& key, const string& default_value) const {
   string files[] = {string(utils::kStatefulPartition) + "/etc/lsb-release",
                     "/etc/lsb-release"};
   for (unsigned int i = 0; i < arraysize(files); i++) {
+    // TODO(adlr): make sure files checked are owned as root (and all
+    // their parents are recursively, too).
     string file_data;
     if (!utils::ReadFileToString(root_ + files[i], &file_data))
       continue;
@@ -111,10 +117,10 @@ std::string OmahaRequestPrepAction::GetLsbValue(const std::string& key) const {
     return file_data.substr(pos, length);
   }
   // not found
-  return "";
+  return default_value;
 }
 
-std::string OmahaRequestPrepAction::GetMachineType() const {
+string OmahaRequestPrepAction::GetMachineType() const {
   struct utsname buf;
   string ret;
   if (uname(&buf) == 0)

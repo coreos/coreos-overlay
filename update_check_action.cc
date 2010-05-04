@@ -22,6 +22,8 @@ const char* const UpdateCheckParams::kAppId(
     "{87efface-864d-49a5-9bb3-4b050a7c227a}");
 const char* const UpdateCheckParams::kOsPlatform("Chrome OS");
 const char* const UpdateCheckParams::kOsVersion("Indy");
+const char* const UpdateCheckParams::kUpdateUrl(
+    "https://tools.google.com/service/update2");
 
 namespace {
 
@@ -105,7 +107,7 @@ void UpdateCheckAction::PerformAction() {
   http_fetcher_->set_delegate(this);
   string request_post(FormatRequest(params_));
   http_fetcher_->SetPostData(request_post.data(), request_post.size());
-  http_fetcher_->BeginTransfer("https://tools.google.com/service/update2");
+  http_fetcher_->BeginTransfer(params_.update_url);
 }
 
 void UpdateCheckAction::TerminateProcessing() {

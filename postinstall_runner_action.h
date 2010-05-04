@@ -7,6 +7,7 @@
 
 #include <string>
 #include "update_engine/action.h"
+#include "update_engine/install_plan.h"
 
 // The Postinstall Runner Action is responsible for running the postinstall
 // script of a successfully downloaded update.
@@ -20,14 +21,14 @@ template<>
 class ActionTraits<PostinstallRunnerAction> {
  public:
   // Takes the device path as input
-  typedef std::string InputObjectType;
+  typedef InstallPlan InputObjectType;
   // Passes the device path as output
-  typedef std::string OutputObjectType;
+  typedef InstallPlan OutputObjectType;
 };
 
 class PostinstallRunnerAction : public Action<PostinstallRunnerAction> {
  public:
-  PostinstallRunnerAction() {}
+  explicit PostinstallRunnerAction(bool precommit) : precommit_(precommit) {}
   typedef ActionTraits<PostinstallRunnerAction>::InputObjectType
       InputObjectType;
   typedef ActionTraits<PostinstallRunnerAction>::OutputObjectType
@@ -43,6 +44,10 @@ class PostinstallRunnerAction : public Action<PostinstallRunnerAction> {
   std::string Type() const { return StaticType(); }
 
  private:
+  // If true, this action runs before we've committed to the new update
+  // (by marking it as bootable in the partition table).
+  bool precommit_;
+
   DISALLOW_COPY_AND_ASSIGN(PostinstallRunnerAction);
 };
 

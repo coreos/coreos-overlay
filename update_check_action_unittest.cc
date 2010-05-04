@@ -162,7 +162,8 @@ TEST(UpdateCheckActionTest, NoUpdateTest) {
                            UpdateCheckParams::kAppId,
                            "0.1.0.0",
                            "en-US",
-                           "unittest");
+                           "unittest",
+                           "");  // url
   UpdateCheckResponse response;
   ASSERT_TRUE(
       TestUpdateCheckAction(params,
@@ -182,7 +183,8 @@ TEST(UpdateCheckActionTest, ValidUpdateTest) {
                            UpdateCheckParams::kAppId,
                            "0.1.0.0",
                            "en-US",
-                           "unittest_track");
+                           "unittest_track",
+                           "");  // url
   UpdateCheckResponse response;
   ASSERT_TRUE(
       TestUpdateCheckAction(params,
@@ -216,7 +218,8 @@ TEST(UpdateCheckActionTest, NoOutputPipeTest) {
                            UpdateCheckParams::kAppId,
                            "0.1.0.0",
                            "en-US",
-                           "unittest");
+                           "unittest",
+                           "");  // url
   const string http_response(GetNoUpdateResponse(UpdateCheckParams::kAppId));
 
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
@@ -248,7 +251,8 @@ TEST(UpdateCheckActionTest, InvalidXmlTest) {
                            UpdateCheckParams::kAppId,
                            "0.1.0.0",
                            "en-US",
-                           "unittest_track");
+                           "unittest_track",
+                           "http://url");
   UpdateCheckResponse response;
   ASSERT_FALSE(
       TestUpdateCheckAction(params,
@@ -268,7 +272,8 @@ TEST(UpdateCheckActionTest, MissingStatusTest) {
                            UpdateCheckParams::kAppId,
                            "0.1.0.0",
                            "en-US",
-                           "unittest_track");
+                           "unittest_track",
+                           "http://url");
   UpdateCheckResponse response;
   ASSERT_FALSE(TestUpdateCheckAction(
       params,
@@ -291,7 +296,8 @@ TEST(UpdateCheckActionTest, InvalidStatusTest) {
                            UpdateCheckParams::kAppId,
                            "0.1.0.0",
                            "en-US",
-                           "unittest_track");
+                           "unittest_track",
+                           "http://url");
   UpdateCheckResponse response;
   ASSERT_FALSE(TestUpdateCheckAction(
       params,
@@ -314,7 +320,8 @@ TEST(UpdateCheckActionTest, MissingNodesetTest) {
                            UpdateCheckParams::kAppId,
                            "0.1.0.0",
                            "en-US",
-                           "unittest_track");
+                           "unittest_track",
+                           "http://url");
   UpdateCheckResponse response;
   ASSERT_FALSE(TestUpdateCheckAction(
       params,
@@ -337,7 +344,8 @@ TEST(UpdateCheckActionTest, MissingFieldTest) {
                            UpdateCheckParams::kAppId,
                            "0.1.0.0",
                            "en-US",
-                           "unittest_track");
+                           "unittest_track",
+                           "http://url");
   UpdateCheckResponse response;
   ASSERT_TRUE(TestUpdateCheckAction(params,
                                     string("<?xml version=\"1.0\" "
@@ -395,7 +403,8 @@ TEST(UpdateCheckActionTest, TerminateTransferTest) {
                            UpdateCheckParams::kAppId,
                            "0.1.0.0",
                            "en-US",
-                           "unittest");
+                           "unittest",
+                           "http://url");
   string http_response("doesn't matter");
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
 
@@ -434,7 +443,8 @@ TEST(UpdateCheckActionTest, XmlEncodeTest) {
                            UpdateCheckParams::kAppId,
                            "0.1.0.0",
                            "en-US",
-                           "unittest_track");
+                           "unittest_track",
+                           "http://url");
   UpdateCheckResponse response;
   ASSERT_FALSE(
       TestUpdateCheckAction(params,
@@ -461,7 +471,8 @@ TEST(UpdateCheckActionTest, XmlDecodeTest) {
                            UpdateCheckParams::kAppId,
                            "0.1.0.0",
                            "en-US",
-                           "unittest_track");
+                           "unittest_track",
+                           "http://url");
   UpdateCheckResponse response;
   ASSERT_TRUE(
       TestUpdateCheckAction(params,
@@ -490,7 +501,8 @@ TEST(UpdateCheckActionTest, ParseIntTest) {
                            UpdateCheckParams::kAppId,
                            "0.1.0.0",
                            "en-US",
-                           "unittest_track");
+                           "unittest_track",
+                           "http://url");
   UpdateCheckResponse response;
   ASSERT_TRUE(
       TestUpdateCheckAction(params,

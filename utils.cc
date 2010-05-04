@@ -195,6 +195,30 @@ bool RecursiveUnlinkDir(const std::string& path) {
   return true;
 }
 
+string RootDevice(const string& partition_device) {
+  CHECK(!partition_device.empty());
+  string::const_iterator it = --partition_device.end();
+  for (; it >= partition_device.begin(); --it) {
+    if (!isdigit(*it))
+      break;
+  }
+  // Some devices contain a p before the partitions. For example:
+  // /dev/mmc0p4 should be shortened to /dev/mmc0.
+  if (*it == 'p')
+    --it;
+  return string(partition_device.begin(), it + 1);
+}
+
+string PartitionNumber(const string& partition_device) {
+  CHECK(!partition_device.empty());
+  string::const_iterator it = --partition_device.end();
+  for (; it >= partition_device.begin(); --it) {
+    if (!isdigit(*it))
+      break;
+  }
+  return string(it + 1, partition_device.end());
+}
+
 std::string ErrnoNumberAsString(int err) {
   char buf[100];
   buf[0] = '\0';
@@ -354,6 +378,12 @@ bool MountFilesystem(const string& device,
 
 bool UnmountFilesystem(const string& mountpoint) {
   TEST_AND_RETURN_FALSE_ERRNO(umount(mountpoint.c_str()) == 0);
+  return true;
+}
+
+bool GetBootloader(BootLoader* out_bootloader) {
+  // For now, hardcode to syslinux.
+  *out_bootloader = BootLoader_SYSLINUX;
   return true;
 }
 

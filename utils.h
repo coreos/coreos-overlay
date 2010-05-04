@@ -77,11 +77,27 @@ bool MakeTempDirectory(const std::string& dirname_template,
 // This WILL cross filesystem boundaries.
 bool RecursiveUnlinkDir(const std::string& path);
 
+// Returns the root device for a partition. For example,
+// RootDevice("/dev/sda3") returns "/dev/sda".
+std::string RootDevice(const std::string& partition_device);
+
+// Returns the partition number, as a string, of partition_device. For example,
+// PartitionNumber("/dev/sda3") return "3".
+std::string PartitionNumber(const std::string& partition_device);
+
 // Synchronously mount or unmount a filesystem. Return true on success.
 // Mounts as ext3 with default options.
 bool MountFilesystem(const std::string& device, const std::string& mountpoint,
                      unsigned long flags);
 bool UnmountFilesystem(const std::string& mountpoint);
+
+enum BootLoader {
+  BootLoader_SYSLINUX = 0,
+  BootLoader_CHROME_FIRMWARE = 1
+};
+// Detects which bootloader this system uses and returns it via the out
+// param. Returns true on success.
+bool GetBootloader(BootLoader* out_bootloader);
 
 // Returns the error message, if any, from a GError pointer.
 const char* GetGErrorMessage(const GError* error);

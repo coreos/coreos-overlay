@@ -5,45 +5,70 @@
 #include "update_engine/postinstall_runner_action.h"
 #include <sys/mount.h>
 #include <stdlib.h>
+#include <vector>
+#include "update_engine/subprocess.h"
 #include "update_engine/utils.h"
 
 namespace chromeos_update_engine {
 
 using std::string;
+using std::vector;
 
 namespace {
-const string kMountPath(string(utils::kStatefulPartition) + "/au_destination");
 const string kPostinstallScript("/postinst");
 }
 
 void PostinstallRunnerAction::PerformAction() {
   CHECK(HasInputObject());
-  const string install_device = GetInputObject();
+  const InstallPlan install_plan = GetInputObject();
+  const string install_device = install_plan.install_path;
+  ScopedActionCompleter completer(processor_, this);
+  
+  utils::BootLoader boot_loader;
+  TEST_AND_RETURN(utils::GetBootloader(&boot_loader));
 
-  int rc = mount(install_device.c_str(), kMountPath.c_str(), "ext3", 0, NULL);
-  if (rc < 0) {
-    LOG(ERROR) << "Unable to mount destination device " << install_device
-               << " onto " << kMountPath;
-    processor_->ActionComplete(this, false);
-    return;
+  bool read_only = (boot_loader == utils::BootLoader_CHROME_FIRMWARE);
+
+  // Make mountpoint
+  string temp_dir;
+  TEST_AND_RETURN(utils::MakeTempDirectory("/tmp/au_postint_mount.XXXXXX",
+                                           &temp_dir));
+  ScopedDirRemover temp_dir_remover(temp_dir);
+
+  {
+    // Scope for the mount
+    unsigned long mountflags = read_only ? MS_RDONLY : 0;
+
+    int rc = mount(install_device.c_str(),
+                   temp_dir.c_str(),
+                   "ext3",
+                   mountflags,
+                   NULL);
+    if (rc < 0) {
+      LOG(ERROR) << "Unable to mount destination device " << install_device
+                 << " onto " << temp_dir;
+      return;
+    }
+    ScopedFilesystemUnmounter unmounter(temp_dir);
+
+    // run postinstall script
+    vector<string> command;
+    command.push_back(temp_dir + kPostinstallScript);
+    command.push_back(install_device);
+    command.push_back(precommit_ ? "" : "--postcommit");
+    rc = 0;
+    TEST_AND_RETURN(Subprocess::SynchronousExec(command, &rc));
+    bool success = (rc == 0);
+    if (!success) {
+      LOG(ERROR) << "Postinst command failed with code: " << rc;
+      return;
+    }
   }
 
-  // run postinstall script
-  rc = system((kMountPath + kPostinstallScript + " " + install_device).c_str());
-  bool success = (rc == 0);
-  if (!success) {
-    LOG(ERROR) << "Postinst command failed with code: " << rc;
+  if (HasOutputPipe()) {
+    SetOutputObject(install_plan);
   }
-
-  rc = umount(kMountPath.c_str());
-  if (rc < 0) {
-    // non-fatal
-    LOG(ERROR) << "Unable to umount destination device";
-  }
-  if (success && HasOutputPipe()) {
-    SetOutputObject(install_device);
-  }
-  processor_->ActionComplete(this, success);
+  completer.set_success(true);
 }
 
 }  // namespace chromeos_update_engine

@@ -7,6 +7,7 @@
 
 #include <string>
 #include "update_engine/action.h"
+#include "update_engine/install_plan.h"
 
 // This class takes in a device via the input pipe.  The device is the
 // partition (e.g. /dev/sda1), not the full device (e.g. /dev/sda).
@@ -22,9 +23,9 @@ template<>
 class ActionTraits<SetBootableFlagAction> {
  public:
   // Takes the device path as input.
-  typedef std::string InputObjectType;
+  typedef InstallPlan InputObjectType;
   // Passes the device path as output
-  typedef std::string OutputObjectType;
+  typedef InstallPlan OutputObjectType;
 };
 
 class SetBootableFlagAction : public Action<SetBootableFlagAction> {
@@ -45,11 +46,6 @@ class SetBootableFlagAction : public Action<SetBootableFlagAction> {
   std::string Type() const { return StaticType(); }
 
  private:
-  // Returns true on success
-  bool ReadMbr(char* buffer, int buffer_len, const char* device);
-
-  // Returns true on success
-  bool WriteMbr(const char* buffer, int buffer_len, const char* device);
 
   DISALLOW_COPY_AND_ASSIGN(SetBootableFlagAction);
 };

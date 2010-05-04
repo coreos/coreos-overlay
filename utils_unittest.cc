@@ -125,4 +125,14 @@ TEST(UtilsTest, TempFilenameTest) {
   EXPECT_FALSE(utils::StringHasSuffix(result, "XXXXXX"));
 }
 
+TEST(UtilsTest, RootDeviceTest) {
+  EXPECT_EQ("/dev/sda", utils::RootDevice("/dev/sda3"));
+  EXPECT_EQ("/dev/mmc0", utils::RootDevice("/dev/mmc0p3"));
+}
+
+TEST(UtilsTest, PartitionNumberTest) {
+  EXPECT_EQ("3", utils::PartitionNumber("/dev/sda3"));
+  EXPECT_EQ("3", utils::PartitionNumber("/dev/mmc0p3"));
+}
+
 }  // namespace chromeos_update_engine

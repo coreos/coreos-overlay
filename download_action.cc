@@ -5,10 +5,15 @@
 #include "update_engine/download_action.h"
 #include <errno.h>
 #include <algorithm>
+#include <string>
+#include <vector>
 #include <glib.h>
 #include "update_engine/action_pipe.h"
+#include "update_engine/subprocess.h"
 
 using std::min;
+using std::string;
+using std::vector;
 
 namespace chromeos_update_engine {
 
@@ -84,6 +89,22 @@ void DownloadAction::ReceivedBytes(HttpFetcher *fetcher,
   omaha_hash_calculator_.Update(bytes, length);
 }
 
+namespace {
+void FlushLinuxCaches() {
+  vector<string> command;
+  command.push_back("/bin/sync");
+  int rc;
+  LOG(INFO) << "FlushLinuxCaches/sync...";
+  Subprocess::SynchronousExec(command, &rc);
+  LOG(INFO) << "FlushLinuxCaches/drop_caches...";
+
+  const char* const drop_cmd = "3\n";
+  utils::WriteFile("/proc/sys/vm/drop_caches", drop_cmd, strlen(drop_cmd));
+
+  LOG(INFO) << "FlushLinuxCaches done.";
+}
+}
+
 void DownloadAction::TransferComplete(HttpFetcher *fetcher, bool successful) {
   if (writer_) {
     CHECK_EQ(writer_->Close(), 0) << errno;
@@ -99,6 +120,8 @@ void DownloadAction::TransferComplete(HttpFetcher *fetcher, bool successful) {
       successful = false;
     }
   }
+  
+  FlushLinuxCaches();
 
   // Write the path to the output pipe if we're successful
   if (successful && HasOutputPipe())

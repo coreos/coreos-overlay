@@ -39,7 +39,8 @@ struct UpdateCheckParams {
                     const std::string& in_app_id,
                     const std::string& in_app_version,
                     const std::string& in_app_lang,
-                    const std::string& in_app_track)
+                    const std::string& in_app_track,
+                    const std::string& in_update_url)
       : machine_id(in_machine_id),
         user_id(in_user_id),
         os_platform(in_os_platform),
@@ -48,22 +49,26 @@ struct UpdateCheckParams {
         app_id(in_app_id),
         app_version(in_app_version),
         app_lang(in_app_lang),
-        app_track(in_app_track) {}
+        app_track(in_app_track),
+        update_url(in_update_url) {}
 
-    std::string machine_id;
-    std::string user_id;
-    std::string os_platform;
-    std::string os_version;
-    std::string os_sp;
-    std::string app_id;
-    std::string app_version;
-    std::string app_lang;
-    std::string app_track;
+  std::string machine_id;
+  std::string user_id;
+  std::string os_platform;
+  std::string os_version;
+  std::string os_sp;
+  std::string app_id;
+  std::string app_version;
+  std::string app_lang;
+  std::string app_track;
+  
+  std::string update_url;
 
   // Suggested defaults
   static const char* const kAppId;
   static const char* const kOsPlatform;
   static const char* const kOsVersion;
+  static const char* const kUpdateUrl;
 };
 
 // This struct encapsulates the data Omaha returns for the update check.

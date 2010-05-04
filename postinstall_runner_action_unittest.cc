@@ -110,11 +110,13 @@ void PostinstallRunnerActionTest::DoTest(bool do_losetup, bool do_err_script) {
     ASSERT_EQ(0, System(string("losetup ") + dev + " " + cwd + "/image.dat"));
 
   ActionProcessor processor;
-  ObjectFeederAction<string> feeder_action;
-  feeder_action.set_obj(dev);
-  PostinstallRunnerAction runner_action;
+  ObjectFeederAction<InstallPlan> feeder_action;
+  InstallPlan install_plan;
+  install_plan.install_path = dev;
+  feeder_action.set_obj(install_plan);
+  PostinstallRunnerAction runner_action(true);
   BondActions(&feeder_action, &runner_action);
-  ObjectCollectorAction<string> collector_action;
+  ObjectCollectorAction<InstallPlan> collector_action;
   BondActions(&runner_action, &collector_action);
   PostinstActionProcessorDelegate delegate;
   processor.EnqueueAction(&feeder_action);
@@ -127,9 +129,10 @@ void PostinstallRunnerActionTest::DoTest(bool do_losetup, bool do_err_script) {
 
   EXPECT_TRUE(delegate.success_set_);
   EXPECT_EQ(do_losetup && !do_err_script, delegate.success_);
-  EXPECT_EQ(do_losetup && !do_err_script, !collector_action.object().empty());
+  EXPECT_EQ(do_losetup && !do_err_script,
+            !collector_action.object().install_path.empty());
   if (do_losetup && !do_err_script) {
-    EXPECT_EQ(dev, collector_action.object());
+    EXPECT_TRUE(install_plan == collector_action.object());
   }
 
   struct stat stbuf;
@@ -148,7 +151,7 @@ void PostinstallRunnerActionTest::DoTest(bool do_losetup, bool do_err_script) {
 // Death tests don't seem to be working on Hardy
 TEST_F(PostinstallRunnerActionTest, DISABLED_RunAsRootDeathTest) {
   ASSERT_EQ(0, getuid());
-  PostinstallRunnerAction runner_action;
+  PostinstallRunnerAction runner_action(true);
   ASSERT_DEATH({ runner_action.TerminateProcessing(); },
                "postinstall_runner_action.h:.*] Check failed");
 }

@@ -36,14 +36,16 @@ void UpdateAttempter::Update(bool force_full_update) {
       new OmahaResponseHandlerAction);
   shared_ptr<FilesystemCopierAction> filesystem_copier_action(
       new FilesystemCopierAction(false));
-  shared_ptr<FilesystemCopierAction> filesystem_copier_action_kernel(
+  shared_ptr<FilesystemCopierAction> kernel_filesystem_copier_action(
       new FilesystemCopierAction(true));
   shared_ptr<DownloadAction> download_action(
       new DownloadAction(new LibcurlHttpFetcher));
-  shared_ptr<PostinstallRunnerAction> postinstall_runner_action(
-      new PostinstallRunnerAction);
+  shared_ptr<PostinstallRunnerAction> postinstall_runner_action_precommit(
+      new PostinstallRunnerAction(true));
   shared_ptr<SetBootableFlagAction> set_bootable_flag_action(
       new SetBootableFlagAction);
+  shared_ptr<PostinstallRunnerAction> postinstall_runner_action_postcommit(
+      new PostinstallRunnerAction(false));
       
   response_handler_action_ = response_handler_action;
 
@@ -52,10 +54,13 @@ void UpdateAttempter::Update(bool force_full_update) {
   actions_.push_back(shared_ptr<AbstractAction>(response_handler_action));
   actions_.push_back(shared_ptr<AbstractAction>(filesystem_copier_action));
   actions_.push_back(shared_ptr<AbstractAction>(
-      filesystem_copier_action_kernel));
+      kernel_filesystem_copier_action));
   actions_.push_back(shared_ptr<AbstractAction>(download_action));
-  actions_.push_back(shared_ptr<AbstractAction>(postinstall_runner_action));
+  actions_.push_back(shared_ptr<AbstractAction>(
+      postinstall_runner_action_precommit));
   actions_.push_back(shared_ptr<AbstractAction>(set_bootable_flag_action));
+  actions_.push_back(shared_ptr<AbstractAction>(
+      postinstall_runner_action_postcommit));
   
   // Enqueue the actions
   for (vector<shared_ptr<AbstractAction> >::iterator it = actions_.begin();
@@ -69,13 +74,14 @@ void UpdateAttempter::Update(bool force_full_update) {
   BondActions(update_check_action.get(), response_handler_action.get());
   BondActions(response_handler_action.get(), filesystem_copier_action.get());
   BondActions(response_handler_action.get(),
-              filesystem_copier_action_kernel.get());
-  BondActions(filesystem_copier_action_kernel.get(),
+              kernel_filesystem_copier_action.get());
+  BondActions(kernel_filesystem_copier_action.get(),
               download_action.get());
-  // TODO(adlr): Bond these actions together properly
-  // BondActions(download_action.get(), install_action.get());
-  // BondActions(install_action.get(), postinstall_runner_action.get());
-  BondActions(postinstall_runner_action.get(), set_bootable_flag_action.get());
+  BondActions(download_action.get(), postinstall_runner_action_precommit.get());
+  BondActions(postinstall_runner_action_precommit.get(),
+              set_bootable_flag_action.get());
+  BondActions(set_bootable_flag_action.get(),
+              postinstall_runner_action_postcommit.get());
 
   processor_.StartProcessing();
 }

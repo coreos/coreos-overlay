@@ -111,7 +111,9 @@ TEST_F(OmahaRequestPrepActionTest, SimpleTest) {
   {
     ASSERT_TRUE(WriteFileString(
         kTestDir + "/etc/lsb-release",
-        "GOOGLE_FOO=bar\nGOOGLE_RELEASE=0.2.2.3\nGOOGLE_TRACK=footrack"));
+        "CHROMEOS_RELEASE_FOO=bar\n"
+        "CHROMEOS_RELEASE_VERSION=0.2.2.3\n"
+        "CHROMEOS_RELEASE_TRACK=footrack"));
     UpdateCheckParams out;
     EXPECT_TRUE(DoTest(false, &out));
     EXPECT_TRUE(IsValidGuid(out.machine_id)) << "id: " << out.machine_id;
@@ -134,7 +136,9 @@ TEST_F(OmahaRequestPrepActionTest, MissingTrackTest) {
   {
     ASSERT_TRUE(WriteFileString(
         kTestDir + "/etc/lsb-release",
-        "GOOGLE_FOO=bar\nGOOGLE_RELEASE=0.2.2.3\nGOOGLE_TRXCK=footrack"));
+        "CHROMEOS_RELEASE_FOO=bar\n"
+        "CHROMEOS_RELEASE_VERSION=0.2.2.3\n"
+        "CHROMEOS_RELEASE_TRXCK=footrack"));
     UpdateCheckParams out;
     EXPECT_TRUE(DoTest(false, &out));
     EXPECT_TRUE(IsValidGuid(out.machine_id));
@@ -157,8 +161,9 @@ TEST_F(OmahaRequestPrepActionTest, ConfusingReleaseTest) {
   {
     ASSERT_TRUE(WriteFileString(
         kTestDir + "/etc/lsb-release",
-        "GOOGLE_FOO=GOOGLE_RELEASE=1.2.3.4\n"
-        "GOOGLE_RELEASE=0.2.2.3\nGOOGLE_TRXCK=footrack"));
+        "CHROMEOS_RELEASE_FOO=CHROMEOS_RELEASE_VERSION=1.2.3.4\n"
+        "CHROMEOS_RELEASE_VERSION=0.2.2.3\n"
+        "CHROMEOS_RELEASE_TRXCK=footrack"));
     UpdateCheckParams out;
     EXPECT_TRUE(DoTest(false, &out));
     EXPECT_TRUE(IsValidGuid(out.machine_id)) << out.machine_id;
@@ -180,8 +185,9 @@ TEST_F(OmahaRequestPrepActionTest, MachineIdPersistsTest) {
                       utils::kStatefulPartition + "/etc"));
   ASSERT_TRUE(WriteFileString(
       kTestDir + "/etc/lsb-release",
-      "GOOGLE_FOO=GOOGLE_RELEASE=1.2.3.4\n"
-      "GOOGLE_RELEASE=0.2.2.3\nGOOGLE_TRXCK=footrack"));
+      "CHROMEOS_RELEASE_FOO=CHROMEOS_RELEASE_VERSION=1.2.3.4\n"
+      "CHROMEOS_RELEASE_VERSION=0.2.2.3\n"
+      "CHROMEOS_RELEASE_TRXCK=footrack"));
   UpdateCheckParams out1;
   EXPECT_TRUE(DoTest(false, &out1));
   string machine_id;
