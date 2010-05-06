@@ -32,6 +32,8 @@ void OmahaResponseHandlerAction::PerformAction() {
   TEST_AND_RETURN(GetInstallDev(
       (!boot_device_.empty() ? boot_device_ : utils::BootDevice()),
       &install_plan.install_path));
+  install_plan.kernel_install_path =
+      utils::BootKernelDevice(install_plan.install_path);
 
   // Get the filename part of the url. Assume that if it has kFullUpdateTag
   // in the name, it's a full update.
@@ -47,27 +49,23 @@ void OmahaResponseHandlerAction::PerformAction() {
     // Very long name. Let's shorten it
     filename.resize(255);
   }
+  TEST_AND_RETURN(HasOutputPipe());
   if (HasOutputPipe())
     SetOutputObject(install_plan);
   LOG(INFO) << "Using this install plan:";
   install_plan.Dump();
+  
   completer.set_success(true);
 }
 
 bool OmahaResponseHandlerAction::GetInstallDev(const std::string& boot_dev,
                                                std::string* install_dev) {
-  TEST_AND_RETURN_FALSE(!boot_dev.empty());
+  TEST_AND_RETURN_FALSE(utils::StringHasPrefix(boot_dev, "/dev/"));
   string ret(boot_dev);
-  char last_char = *ret.rbegin();
-  TEST_AND_RETURN_FALSE((last_char >= '0') && (last_char <= '9'));
-  // Chop off last char
-  ret.resize(ret.size() - 1);
-  // If last_char is odd (1 or 3), increase it, otherwise decrease
-  if (last_char % 2)
-    last_char++;
-  else
-    last_char--;
-  ret += last_char;
+  string::reverse_iterator it = ret.rbegin();  // last character in string
+  // Right now, we just switch '3' and '5' partition numbers.
+  TEST_AND_RETURN_FALSE((*it == '3') || (*it == '5'));
+  *it = (*it == '3') ? '5' : '3';
   *install_dev = ret;
   return true;
 }

@@ -89,11 +89,11 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     in.needs_admin = true;
     in.prompt = false;
     InstallPlan install_plan;
-    EXPECT_TRUE(DoTest(in, "/dev/sda1", &install_plan));
+    EXPECT_TRUE(DoTest(in, "/dev/sda3", &install_plan));
     EXPECT_TRUE(install_plan.is_full_update);
     EXPECT_EQ(in.codebase, install_plan.download_url);
     EXPECT_EQ(in.hash, install_plan.download_hash);
-    EXPECT_EQ("/dev/sda2", install_plan.install_path);
+    EXPECT_EQ("/dev/sda5", install_plan.install_path);
   }
   {
     UpdateCheckResponse in;
@@ -106,7 +106,7 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     in.needs_admin = true;
     in.prompt = true;
     InstallPlan install_plan;
-    EXPECT_TRUE(DoTest(in, "/dev/sda4", &install_plan));
+    EXPECT_TRUE(DoTest(in, "/dev/sda5", &install_plan));
     EXPECT_FALSE(install_plan.is_full_update);
     EXPECT_EQ(in.codebase, install_plan.download_url);
     EXPECT_EQ(in.hash, install_plan.download_hash);
@@ -123,11 +123,11 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     in.needs_admin = true;
     in.prompt = true;
     InstallPlan install_plan;
-    EXPECT_TRUE(DoTest(in, "/dev/sda4", &install_plan));
+    EXPECT_TRUE(DoTest(in, "/dev/sda3", &install_plan));
     EXPECT_FALSE(install_plan.is_full_update);
     EXPECT_EQ(in.codebase, install_plan.download_url);
     EXPECT_EQ(in.hash, install_plan.download_hash);
-    EXPECT_EQ("/dev/sda3", install_plan.install_path);
+    EXPECT_EQ("/dev/sda5", install_plan.install_path);
   }
 }
 

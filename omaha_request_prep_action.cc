@@ -43,7 +43,7 @@ void OmahaRequestPrepAction::PerformAction() {
                         version,  // app version (from lsb-release)
                         "en-US",  // lang
                         track,  // track
-                        UpdateCheckParams::kUpdateUrl);
+                        update_url);
 
   CHECK(HasOutputPipe());
   SetOutputObject(out);

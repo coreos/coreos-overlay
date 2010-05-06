@@ -230,7 +230,8 @@ TEST_F(FilesystemCopierActionTest, FullUpdateTest) {
   processor.set_delegate(&delegate);
 
   ObjectFeederAction<InstallPlan> feeder_action;
-  InstallPlan install_plan(true, "", "", "", "");
+  const char* kUrl = "http://some/url";
+  InstallPlan install_plan(true, kUrl, "", "", "");
   feeder_action.set_obj(install_plan);
   FilesystemCopierAction copier_action(false);
   ObjectCollectorAction<InstallPlan> collector_action;
@@ -245,6 +246,7 @@ TEST_F(FilesystemCopierActionTest, FullUpdateTest) {
   EXPECT_FALSE(processor.IsRunning());
   EXPECT_TRUE(delegate.ran_);
   EXPECT_TRUE(delegate.success_);
+  EXPECT_EQ(kUrl, collector_action.object().download_url);
 }
 
 TEST_F(FilesystemCopierActionTest, NonExistentDriveTest) {

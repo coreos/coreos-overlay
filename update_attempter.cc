@@ -70,14 +70,18 @@ void UpdateAttempter::Update(bool force_full_update) {
 
   // Bond them together. We have to use the leaf-types when calling
   // BondActions().
-  BondActions(request_prep_action.get(), update_check_action.get());
-  BondActions(update_check_action.get(), response_handler_action.get());
-  BondActions(response_handler_action.get(), filesystem_copier_action.get());
+  BondActions(request_prep_action.get(),
+              update_check_action.get());
+  BondActions(update_check_action.get(),
+              response_handler_action.get());
   BondActions(response_handler_action.get(),
+              filesystem_copier_action.get());
+  BondActions(filesystem_copier_action.get(),
               kernel_filesystem_copier_action.get());
   BondActions(kernel_filesystem_copier_action.get(),
               download_action.get());
-  BondActions(download_action.get(), postinstall_runner_action_precommit.get());
+  BondActions(download_action.get(),
+              postinstall_runner_action_precommit.get());
   BondActions(postinstall_runner_action_precommit.get(),
               set_bootable_flag_action.get());
   BondActions(set_bootable_flag_action.get(),
@@ -96,15 +100,7 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
     return;
   }
   if (!success) {
-    if (!full_update_) {
-      LOG(ERROR) << "Update failed. Attempting full update";
-      actions_.clear();
-      response_handler_action_.reset();
-      Update(true);
-      return;
-    } else {
-      LOG(ERROR) << "Full update failed. Aborting";
-    }
+    LOG(INFO) << "Update failed.";
   }
   g_main_loop_quit(loop_);
 }

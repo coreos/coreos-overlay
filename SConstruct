@@ -94,20 +94,20 @@ for key in Split('PKG_CONFIG_LIBDIR PKG_CONFIG_PATH SYSROOT'):
     env['ENV'][key] = os.environ[key]
 
 
-    # -Wclobbered
-    # -Wempty-body
-    # -Wignored-qualifiers
-    # -Wtype-limits
 env['CCFLAGS'] = ' '.join("""-g
                              -fno-exceptions
                              -fno-strict-aliasing
                              -Wall
                              -Wclobbered
+                             -Wclobbered
+                             -Wempty-body
                              -Wempty-body
                              -Werror
                              -Wignored-qualifiers
+                             -Wignored-qualifiers
                              -Wmissing-field-initializers
                              -Wsign-compare
+                             -Wtype-limits
                              -Wtype-limits
                              -Wuninitialized
                              -D__STDC_FORMAT_MACROS=1
@@ -120,7 +120,6 @@ env['LIBS'] = Split("""base
                        curl
                        gflags
                        glib-2.0
-                       gtest
                        gthread-2.0
                        libpcrecpp
                        protobuf
@@ -216,16 +215,22 @@ client_main = ['update_engine_client.cc']
 
 delta_generator_main = ['generate_delta_main.cc']
 
-env.Program('update_engine', sources + main)
-unittest_cmd = env.Program('update_engine_unittests',
-                           sources + unittest_sources + unittest_main)
 
-client_cmd = env.Program('update_engine_client', sources + client_main);
+update_engine_core = env.Library('update_engine_core', sources)
+env.Prepend(LIBS=[update_engine_core])
 
-Clean(unittest_cmd, Glob('*.gcda') + Glob('*.gcno') + Glob('*.gcov') +
-                    Split('html app.info'))
+env.Program('update_engine', main)
+
+client_cmd = env.Program('update_engine_client', client_main);
 
 delta_generator_cmd = env.Program('delta_generator',
-                                  sources + delta_generator_main)
+                                  delta_generator_main)
 
 http_server_cmd = env.Program('test_http_server', 'test_http_server.cc')
+
+unittest_env = env.Clone()
+unittest_env.Append(LIBS=['gtest'])
+unittest_cmd = unittest_env.Program('update_engine_unittests',
+                           unittest_sources + unittest_main)
+Clean(unittest_cmd, Glob('*.gcda') + Glob('*.gcno') + Glob('*.gcov') +
+                    Split('html app.info'))

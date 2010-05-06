@@ -107,6 +107,8 @@ void UpdateCheckAction::PerformAction() {
   http_fetcher_->set_delegate(this);
   string request_post(FormatRequest(params_));
   http_fetcher_->SetPostData(request_post.data(), request_post.size());
+  LOG(INFO) << "Checking for update at " << params_.update_url;
+  LOG(INFO) << "Request: " << request_post;
   http_fetcher_->BeginTransfer(params_.update_url);
 }
 
@@ -190,8 +192,12 @@ off_t ParseInt(const string& str) {
 void UpdateCheckAction::TransferComplete(HttpFetcher *fetcher,
                                          bool successful) {
   ScopedActionCompleter completer(processor_, this);
-  if (!successful)
+  LOG(INFO) << "Update check response: " << string(response_buffer_.begin(),
+                                                   response_buffer_.end());
+  if (!successful) {
+    LOG(ERROR) << "Update check network transfer failed.";
     return;
+  }
   if (!HasOutputPipe()) {
     // Just set success to whether or not the http transfer succeeded,
     // which must be true at this point in the code.

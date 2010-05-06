@@ -187,7 +187,7 @@ class Action : public AbstractAction {
     return out_pipe_->contents();
   }
 
-protected:
+ protected:
   // We use a shared_ptr to the pipe. shared_ptr objects destroy what they
   // point to when the last such shared_ptr object dies. We consider the
   // Actions on either end of a pipe to "own" the pipe. When the last Action

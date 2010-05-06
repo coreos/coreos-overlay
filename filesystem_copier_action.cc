@@ -43,6 +43,8 @@ void FilesystemCopierAction::PerformAction() {
 
   if (install_plan_.is_full_update) {
     // No copy needed. Done!
+    if (HasOutputPipe())
+      SetOutputObject(install_plan_);
     abort_action_completer.set_success(true);
     return;
   }
