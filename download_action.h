@@ -33,6 +33,15 @@
 
 namespace chromeos_update_engine {
 
+class DownloadActionDelegate {
+ public:
+  // Called before any bytes are received and periodically after
+  // bytes are received.
+  // bytes_received is the number of bytes downloaded thus far.
+  // total is the number of bytes expected.
+  virtual void BytesReceived(uint64_t bytes_received, uint64_t total) = 0;
+};
+
 class DownloadAction;
 class NoneType;
 
@@ -66,10 +75,14 @@ class DownloadAction : public Action<DownloadAction>,
   static std::string StaticType() { return "DownloadAction"; }
   std::string Type() const { return StaticType(); }
 
-  // Delegate methods (see http_fetcher.h)
+  // HttpFetcherDelegate methods (see http_fetcher.h)
   virtual void ReceivedBytes(HttpFetcher *fetcher,
                              const char* bytes, int length);
   virtual void TransferComplete(HttpFetcher *fetcher, bool successful);
+
+  void set_delegate(DownloadActionDelegate* delegate) {
+    delegate_ = delegate;
+  }
 
  private:
   // The InstallPlan passed in
@@ -93,6 +106,11 @@ class DownloadAction : public Action<DownloadAction>,
 
   // Used to find the hash of the bytes downloaded
   OmahaHashCalculator omaha_hash_calculator_;
+  
+  // For reporting status to outsiders
+  DownloadActionDelegate* delegate_;
+  uint64_t bytes_received_;
+  
   DISALLOW_COPY_AND_ASSIGN(DownloadAction);
 };
 

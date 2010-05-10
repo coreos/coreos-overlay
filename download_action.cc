@@ -19,7 +19,9 @@ namespace chromeos_update_engine {
 
 DownloadAction::DownloadAction(HttpFetcher* http_fetcher)
     : writer_(NULL),
-      http_fetcher_(http_fetcher) {}
+      http_fetcher_(http_fetcher),
+      delegate_(NULL),
+      bytes_received_(0) {}
 
 DownloadAction::~DownloadAction() {}
 
@@ -29,6 +31,7 @@ void DownloadAction::PerformAction() {
   // Get the InstallPlan and read it
   CHECK(HasInputObject());
   install_plan_ = GetInputObject();
+  bytes_received_ = 0;
 
   install_plan_.Dump();
 
@@ -84,6 +87,9 @@ void DownloadAction::TerminateProcessing() {
 void DownloadAction::ReceivedBytes(HttpFetcher *fetcher,
                                    const char* bytes,
                                    int length) {
+  bytes_received_ += length;
+  if (delegate_)
+    delegate_->BytesReceived(bytes_received_, install_plan_.size);
   int rc = writer_->Write(bytes, length);
   TEST_AND_RETURN(rc >= 0);
   omaha_hash_calculator_.Update(bytes, length);
@@ -94,9 +100,9 @@ void FlushLinuxCaches() {
   vector<string> command;
   command.push_back("/bin/sync");
   int rc;
-  LOG(INFO) << "FlushLinuxCaches/sync...";
+  LOG(INFO) << "FlushLinuxCaches-sync...";
   Subprocess::SynchronousExec(command, &rc);
-  LOG(INFO) << "FlushLinuxCaches/drop_caches...";
+  LOG(INFO) << "FlushLinuxCaches-drop_caches...";
 
   const char* const drop_cmd = "3\n";
   utils::WriteFile("/proc/sys/vm/drop_caches", drop_cmd, strlen(drop_cmd));

@@ -26,34 +26,22 @@ void OmahaResponseHandlerAction::PerformAction() {
     LOG(INFO) << "There are no updates. Aborting.";
     return;
   }
-  InstallPlan install_plan;
-  install_plan.download_url = response.codebase;
-  install_plan.download_hash = response.hash;
+  install_plan_.download_url = response.codebase;
+  install_plan_.size = response.size;
+  install_plan_.download_hash = response.hash;
   TEST_AND_RETURN(GetInstallDev(
       (!boot_device_.empty() ? boot_device_ : utils::BootDevice()),
-      &install_plan.install_path));
-  install_plan.kernel_install_path =
-      utils::BootKernelDevice(install_plan.install_path);
+      &install_plan_.install_path));
+  install_plan_.kernel_install_path =
+      utils::BootKernelDevice(install_plan_.install_path);
 
-  // Get the filename part of the url. Assume that if it has kFullUpdateTag
-  // in the name, it's a full update.
-  string::size_type last_slash = response.codebase.rfind('/');
-  string filename;
-  if (last_slash == string::npos)
-    filename = response.codebase;
-  else
-    filename = response.codebase.substr(last_slash + 1);
-  install_plan.is_full_update = (filename.find(kFullUpdateTag) != string::npos);
+  install_plan_.is_full_update = true;  // TODO(adlr): know if update is a delta
 
-  if (filename.size() > 255) {
-    // Very long name. Let's shorten it
-    filename.resize(255);
-  }
   TEST_AND_RETURN(HasOutputPipe());
   if (HasOutputPipe())
-    SetOutputObject(install_plan);
+    SetOutputObject(install_plan_);
   LOG(INFO) << "Using this install plan:";
-  install_plan.Dump();
+  install_plan_.Dump();
   
   completer.set_success(true);
 }

@@ -15,17 +15,17 @@
 
 // Type macros:
 #define UPDATE_ENGINE_TYPE_SERVICE (update_engine_service_get_type())
-#define UPDATE_ENGINE_SERVICE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj), UPDATE_ENGINE_TYPE_SERVICE, \
+#define UPDATE_ENGINE_SERVICE(obj)                                      \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), UPDATE_ENGINE_TYPE_SERVICE,        \
                               UpdateEngineService))
-#define UPDATE_ENGINE_IS_SERVICE(obj) \
+#define UPDATE_ENGINE_IS_SERVICE(obj)                                   \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj), UPDATE_ENGINE_TYPE_SERVICE))
-#define UPDATE_ENGINE_SERVICE_CLASS(klass) \
+#define UPDATE_ENGINE_SERVICE_CLASS(klass)                      \
   (G_TYPE_CHECK_CLASS_CAST((klass), UPDATE_ENGINE_TYPE_SERVICE, \
                            UpdateEngineService))
-#define UPDATE_ENGINE_IS_SERVICE_CLASS(klass) \
+#define UPDATE_ENGINE_IS_SERVICE_CLASS(klass)                           \
   (G_TYPE_CHECK_CLASS_TYPE((klass), UPDATE_ENGINE_TYPE_SERVICE))
-#define UPDATE_ENGINE_SERVICE_GET_CLASS(obj) \
+#define UPDATE_ENGINE_SERVICE_GET_CLASS(obj)                    \
   (G_TYPE_INSTANCE_GET_CLASS((obj), UPDATE_ENGINE_TYPE_SERVICE, \
                              UpdateEngineService))
 
@@ -47,12 +47,23 @@ GType update_engine_service_get_type(void);
 // Methods
 
 gboolean update_engine_service_get_status(UpdateEngineService* self,
-  int64_t* last_checked_time,
-  double* progress,
-  gchar** current_operation,
-  gchar** new_version,
-  int64_t* new_size,
-  GError **error);
+                                          int64_t* last_checked_time,
+                                          double* progress,
+                                          gchar** current_operation,
+                                          gchar** new_version,
+                                          int64_t* new_size,
+                                          GError **error);
+
+gboolean update_engine_service_check_for_update(UpdateEngineService* self,
+                                                GError **error);
+
+gboolean update_engine_service_emit_status_update(
+    UpdateEngineService* self,
+    gint64 last_checked_time,
+    gdouble progress,
+    const gchar* current_operation,
+    const gchar* new_version,
+    gint64 new_size);
 
 G_END_DECLS
 

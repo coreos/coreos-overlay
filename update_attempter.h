@@ -5,24 +5,52 @@
 #ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_UPDATE_ATTEMPTER_H__
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_UPDATE_ATTEMPTER_H__
 
+#include <time.h>
 #include <tr1/memory>
 #include <string>
 #include <vector>
 #include <glib.h>
 #include "update_engine/action_processor.h"
+#include "update_engine/download_action.h"
 #include "update_engine/omaha_response_handler_action.h"
+
+struct UpdateEngineService;
 
 namespace chromeos_update_engine {
 
-class UpdateAttempter : public ActionProcessorDelegate {
+enum UpdateStatus {
+  UPDATE_STATUS_IDLE = 0,
+  UPDATE_STATUS_CHECKING_FOR_UPDATE,
+  UPDATE_STATUS_UPDATE_AVAILABLE,
+  UPDATE_STATUS_DOWNLOADING,
+  UPDATE_STATUS_VERIFYING,
+  UPDATE_STATUS_FINALIZING,
+  UPDATE_STATUS_UPDATED_NEED_REBOOT
+};
+
+const char* UpdateStatusToString(UpdateStatus status);
+
+class UpdateAttempter : public ActionProcessorDelegate,
+                        public DownloadActionDelegate {
  public:
-  explicit UpdateAttempter(GMainLoop *loop)
-      : full_update_(false),
-        loop_(loop) {}
+  UpdateAttempter() : full_update_(false),
+                      dbus_service_(NULL),
+                      status_(UPDATE_STATUS_IDLE),
+                      download_progress_(0.0),
+                      last_checked_time_(0),
+                      new_version_("0.0.0.0"),
+                      new_size_(0) {
+    last_notify_time_.tv_sec = 0;
+    last_notify_time_.tv_nsec = 0;
+  }
   void Update(bool force_full_update);
   
-  // Delegate method:
+  // ActionProcessorDelegate methods:
   void ProcessingDone(const ActionProcessor* processor, bool success);
+  void ProcessingStopped(const ActionProcessor* processor);
+  void ActionCompleted(ActionProcessor* processor,
+                       AbstractAction* action,
+                       bool success);
   
   // Stop updating. An attempt will be made to record status to the disk
   // so that updates can be resumed later.
@@ -38,14 +66,40 @@ class UpdateAttempter : public ActionProcessorDelegate {
                  std::string* new_version,
                  int64_t* new_size);
 
+  void set_dbus_service(struct UpdateEngineService* dbus_service) {
+    dbus_service_ = dbus_service;
+  }
+
+  void CheckForUpdate();
+
+  // DownloadActionDelegate method
+  void BytesReceived(uint64_t bytes_received, uint64_t total);
+
  private:
+  // Sets the status to the given status and notifies a status update
+  // over dbus.
+  void SetStatusAndNotify(UpdateStatus status);
+  
+  struct timespec last_notify_time_;
+
   bool full_update_;
   std::vector<std::tr1::shared_ptr<AbstractAction> > actions_;
   ActionProcessor processor_;
-  GMainLoop *loop_;
+  
+  // If non-null, this UpdateAttempter will send status updates over this
+  // dbus service.
+  UpdateEngineService* dbus_service_;
 
   // pointer to the OmahaResponseHandlerAction in the actions_ vector;
   std::tr1::shared_ptr<OmahaResponseHandlerAction> response_handler_action_;
+
+  // For status:
+  UpdateStatus status_;
+  double download_progress_;
+  int64_t last_checked_time_;
+  std::string new_version_;
+  int64_t new_size_;
+
   DISALLOW_COPY_AND_ASSIGN(UpdateAttempter);
 };
 

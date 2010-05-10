@@ -5,6 +5,7 @@
 #include <gflags/gflags.h>
 #include <glib.h>
 
+#include "update_engine/marshal.glibmarshal.h"
 #include "update_engine/dbus_constants.h"
 #include "update_engine/subprocess.h"
 #include "update_engine/utils.h"
@@ -23,13 +24,15 @@ DEFINE_bool(force_update, false,
             "Force an update, even over an expensive network.");
 DEFINE_bool(check_for_update, false,
             "Initiate check for updates.");
+DEFINE_bool(watch_for_updates, false,
+            "Listen for status updates and print them to the screen.");
 
 namespace {
 
-bool GetStatus() {
-  DBusGConnection *bus;
-  DBusGProxy *proxy;
-  GError *error = NULL;
+bool GetProxy(DBusGProxy** out_proxy) {
+  DBusGConnection* bus;
+  DBusGProxy* proxy;
+  GError* error = NULL;
 
   bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
   if (!bus) {
@@ -43,6 +46,30 @@ bool GetStatus() {
   if (!proxy) {
     LOG(FATAL) << "Error getting proxy: " << GetGErrorMessage(error);
   }
+  *out_proxy = proxy;
+  return true;
+}
+
+static void StatusUpdateSignalHandler(DBusGProxy* proxy,
+                                      int64_t last_checked_time,
+                                      double progress,
+                                      gchar* current_operation,
+                                      gchar* new_version,
+                                      int64_t new_size,
+                                      void* user_data) {
+  LOG(INFO) << "Got status update:";
+  LOG(INFO) << "  last_checked_time: " << last_checked_time;
+  LOG(INFO) << "  progress: " << progress;
+  LOG(INFO) << "  current_operation: " << current_operation;
+  LOG(INFO) << "  new_version: " << new_version;
+  LOG(INFO) << "  new_size: " << new_size;
+}
+
+bool GetStatus() {
+  DBusGProxy* proxy;
+  GError* error = NULL;
+  
+  CHECK(GetProxy(&proxy));
 
   gint64 last_checked_time = 0;
   gdouble progress = 0.0;
@@ -71,7 +98,52 @@ bool GetStatus() {
   return true;
 }
 
+// Should never return.
+void WatchForUpdates() {
+  DBusGProxy* proxy;
+  
+  CHECK(GetProxy(&proxy));
+  
+  // Register marshaller
+  dbus_g_object_register_marshaller(
+      update_engine_VOID__INT64_DOUBLE_STRING_STRING_INT64,
+      G_TYPE_NONE,
+      G_TYPE_INT64,
+      G_TYPE_DOUBLE,
+      G_TYPE_STRING,
+      G_TYPE_STRING,
+      G_TYPE_INT64,
+      G_TYPE_INVALID);
+  
+  // TODO(adlr): make StatusUpdate a const string
+  dbus_g_proxy_add_signal(proxy,
+                          "StatusUpdate",
+                          G_TYPE_INT64,
+                          G_TYPE_DOUBLE,
+                          G_TYPE_STRING,
+                          G_TYPE_STRING,
+                          G_TYPE_INT64,
+                          G_TYPE_INVALID);
+  GMainLoop* loop = g_main_loop_new (NULL, TRUE);
+  dbus_g_proxy_connect_signal(proxy,
+                              "StatusUpdate",
+                              G_CALLBACK(StatusUpdateSignalHandler),
+                              NULL,
+                              NULL);
+  g_main_loop_run(loop);
+  g_main_loop_unref(loop);
+}
+
 bool CheckForUpdates(bool force) {
+  DBusGProxy* proxy;
+  GError* error = NULL;
+  
+  CHECK(GetProxy(&proxy));
+
+  gboolean rc =
+      org_chromium_UpdateEngineInterface_check_for_update(proxy, &error);
+  CHECK_EQ(rc, TRUE) << "Error checking for update: "
+                     << GetGErrorMessage(error);
   return true;
 }
 
@@ -100,6 +172,11 @@ int main(int argc, char** argv) {
     CHECK(CheckForUpdates(FLAGS_force_update))
         << "Update check/initiate update failed.";
     return 0;
+  }
+  if (FLAGS_watch_for_updates) {
+    LOG(INFO) << "Watching for status updates.";
+    WatchForUpdates();  // Should never return.
+    return 1;
   }
   
   LOG(INFO) << "No flags specified. Exiting.";

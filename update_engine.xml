@@ -14,5 +14,14 @@
       <arg type="s" name="new_version" direction="out" />
       <arg type="x" name="new_size" direction="out" />
     </method>
+    <method name="CheckForUpdate">
+    </method>
+    <signal name="StatusUpdate">
+      <arg type="x" name="last_checked_time" />
+      <arg type="d" name="progress" />
+      <arg type="s" name="current_operation" />
+      <arg type="s" name="new_version" />
+      <arg type="x" name="new_size" />
+    </signal>
   </interface>
 </node>

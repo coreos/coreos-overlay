@@ -82,7 +82,7 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     UpdateCheckResponse in;
     in.update_exists = true;
     in.display_version = "a.b.c.d";
-    in.codebase = "http://foo/the_update_a.b.c.d_FULL_.tgz";
+    in.codebase = "http://foo/the_update_a.b.c.d.tgz";
     in.more_info_url = "http://more/info";
     in.hash = "HASH+";
     in.size = 12;
@@ -99,7 +99,7 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     UpdateCheckResponse in;
     in.update_exists = true;
     in.display_version = "a.b.c.d";
-    in.codebase = "http://foo/the_update_a.b.c.d_DELTA_.tgz";
+    in.codebase = "http://foo/the_update_a.b.c.d.tgz";
     in.more_info_url = "http://more/info";
     in.hash = "HASHj+";
     in.size = 12;
@@ -107,7 +107,7 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     in.prompt = true;
     InstallPlan install_plan;
     EXPECT_TRUE(DoTest(in, "/dev/sda5", &install_plan));
-    EXPECT_FALSE(install_plan.is_full_update);
+    EXPECT_TRUE(install_plan.is_full_update);
     EXPECT_EQ(in.codebase, install_plan.download_url);
     EXPECT_EQ(in.hash, install_plan.download_hash);
     EXPECT_EQ("/dev/sda3", install_plan.install_path);
@@ -124,7 +124,7 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     in.prompt = true;
     InstallPlan install_plan;
     EXPECT_TRUE(DoTest(in, "/dev/sda3", &install_plan));
-    EXPECT_FALSE(install_plan.is_full_update);
+    EXPECT_TRUE(install_plan.is_full_update);
     EXPECT_EQ(in.codebase, install_plan.download_url);
     EXPECT_EQ(in.hash, install_plan.download_hash);
     EXPECT_EQ("/dev/sda5", install_plan.install_path);

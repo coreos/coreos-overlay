@@ -43,6 +43,7 @@ class OmahaResponseHandlerAction : public Action<OmahaResponseHandlerAction> {
   }
   
   bool GotNoUpdateResponse() const { return got_no_update_response_; }
+  const InstallPlan& install_plan() const { return install_plan_; }
 
   // Debugging/logging
   static std::string StaticType() { return "OmahaResponseHandlerAction"; }
@@ -58,6 +59,9 @@ class OmahaResponseHandlerAction : public Action<OmahaResponseHandlerAction> {
 
   // set to non-empty in unit tests
   std::string boot_device_;
+  
+  // The install plan, if we have an update.
+  InstallPlan install_plan_;
   
   // True only if we got a response and the response said no updates
   bool got_no_update_response_;

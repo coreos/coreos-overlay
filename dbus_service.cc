@@ -5,6 +5,7 @@
 #include "update_engine/dbus_service.h"
 #include <string>
 #include "base/logging.h"
+#include "update_engine/marshal.glibmarshal.h"
 
 using std::string;
 
@@ -14,10 +15,28 @@ static void update_engine_service_finalize(GObject* object) {
   G_OBJECT_CLASS(update_engine_service_parent_class)->finalize(object);
 }
 
+static guint status_update_signal = 0;
+
 static void update_engine_service_class_init(UpdateEngineServiceClass* klass) {
   GObjectClass *object_class;
   object_class = G_OBJECT_CLASS(klass);
   object_class->finalize = update_engine_service_finalize;
+  
+  status_update_signal = g_signal_new(
+      "status_update",
+      G_OBJECT_CLASS_TYPE(klass),
+      G_SIGNAL_RUN_LAST,
+      0,  // 0 == no class method associated
+      NULL,  // Accumulator
+      NULL,  // Accumulator data
+      update_engine_VOID__INT64_DOUBLE_STRING_STRING_INT64,
+      G_TYPE_NONE,  // Return type
+      5,  // param count:
+      G_TYPE_INT64,
+      G_TYPE_DOUBLE,
+      G_TYPE_STRING,
+      G_TYPE_STRING,
+      G_TYPE_INT64);
 }
 
 static void update_engine_service_init(UpdateEngineService* object) {
@@ -49,3 +68,26 @@ gboolean update_engine_service_get_status(UpdateEngineService* self,
   return TRUE;
 }
 
+gboolean update_engine_service_check_for_update(UpdateEngineService* self,
+                                                GError **error) {
+  self->update_attempter_->CheckForUpdate();
+  return TRUE;
+}
+
+gboolean update_engine_service_emit_status_update(
+    UpdateEngineService* self,
+    gint64 last_checked_time,
+    gdouble progress,
+    const gchar* current_operation,
+    const gchar* new_version,
+    gint64 new_size) {
+  g_signal_emit(self,
+                status_update_signal,
+                0,
+                last_checked_time,
+                progress,
+                current_operation,
+                new_version,
+                new_size);
+  return TRUE;
+}

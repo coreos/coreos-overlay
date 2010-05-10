@@ -5,14 +5,14 @@
 import os
 
 # Protobuffer compilation
-""" Inputs:
-        target: list of targets to compile to
-        source: list of sources to compile
-        env: the scons environment in which we are compiling
-    Outputs:
-        target: the list of targets we'll emit
-        source: the list of sources we'll compile"""
 def ProtocolBufferEmitter(target, source, env):
+  """ Inputs:
+          target: list of targets to compile to
+          source: list of sources to compile
+          env: the scons environment in which we are compiling
+      Outputs:
+          target: the list of targets we'll emit
+          source: the list of sources we'll compile"""
   output = str(source[0])
   output = output[0:output.rfind('.proto')]
   target = [
@@ -21,14 +21,14 @@ def ProtocolBufferEmitter(target, source, env):
   ]
   return target, source
 
-""" Inputs:
-        source: list of sources to process
-        target: list of targets to generate
-        env: scons environment in which we are working
-        for_signature: unused
-    Outputs: a list of commands to execute to generate the targets from
-             the sources."""
 def ProtocolBufferGenerator(source, target, env, for_signature):
+  """ Inputs:
+          source: list of sources to process
+          target: list of targets to generate
+          env: scons environment in which we are working
+          for_signature: unused
+      Outputs: a list of commands to execute to generate the targets from
+               the sources."""
   commands = [
     '/usr/bin/protoc '
     ' --proto_path . ${SOURCES} --cpp_out .']
@@ -39,14 +39,14 @@ proto_builder = Builder(generator = ProtocolBufferGenerator,
                         single_source = 1,
                         suffix = '.pb.cc')
 
-""" Inputs:
-        target: unused
-        source: list containing the source .xml file
-        env: the scons environment in which we are compiling
-    Outputs:
-        target: the list of targets we'll emit
-        source: the list of sources we'll process"""
 def DbusBindingsEmitter(target, source, env):
+  """ Inputs:
+          target: unused
+          source: list containing the source .xml file
+          env: the scons environment in which we are compiling
+      Outputs:
+          target: the list of targets we'll emit
+          source: the list of sources we'll process"""
   output = str(source[0])
   output = output[0:output.rfind('.xml')]
   target = [
@@ -55,14 +55,14 @@ def DbusBindingsEmitter(target, source, env):
   ]
   return target, source
 
-""" Inputs:
-        source: list of sources to process
-        target: list of targets to generate
-        env: scons environment in which we are working
-        for_signature: unused
-    Outputs: a list of commands to execute to generate the targets from
-             the sources."""
 def DbusBindingsGenerator(source, target, env, for_signature):
+  """ Inputs:
+          source: list of sources to process
+          target: list of targets to generate
+          env: scons environment in which we are working
+          for_signature: unused
+      Outputs: a list of commands to execute to generate the targets from
+               the sources."""
   commands = []
   for target_file in target:
     if str(target_file).endswith('.dbusserver.h'):
@@ -78,6 +78,46 @@ dbus_bindings_builder = Builder(generator = DbusBindingsGenerator,
                                 emitter = DbusBindingsEmitter,
                                 single_source = 1,
                                 suffix = 'dbusclient.h')
+
+def GlibMarshalEmitter(target, source, env):
+  """ Inputs:
+          target: unused
+          source: list containing the source .list file
+          env: the scons environment in which we are compiling
+      Outputs:
+          target: the list of targets we'll emit
+          source: the list of sources we'll process"""
+  output = str(source[0])
+  output = output[0:output.rfind('.list')]
+  target = [
+    output + '.glibmarshal.c',
+    output + '.glibmarshal.h'
+  ]
+  return target, source
+
+def GlibMarshalGenerator(source, target, env, for_signature):
+  """ Inputs:
+          source: list of sources to process
+          target: list of targets to generate
+          env: scons environment in which we are working
+          for_signature: unused
+      Outputs: a list of commands to execute to generate the targets from
+               the sources."""
+  commands = []
+  for target_file in target:
+    if str(target_file).endswith('.glibmarshal.h'):
+      mode_flag = '--header '
+    else:
+      mode_flag = '--body '
+    cmd = '/usr/bin/glib-genmarshal %s --prefix=update_engine ' \
+          '%s > %s' % (mode_flag, str(source[0]), str(target_file))
+    commands.append(cmd)
+  return commands
+
+glib_marshal_builder = Builder(generator = GlibMarshalGenerator,
+                               emitter = GlibMarshalEmitter,
+                               single_source = 1,
+                               suffix = 'glibmarshal.c')
 
 env = Environment()
 for key in Split('CC CXX AR RANLIB LD NM'):
@@ -131,6 +171,7 @@ env['CPPPATH'] = ['..', '../../third_party/chrome/files', '../../common']
 env['LIBPATH'] = ['../../third_party/chrome']
 env['BUILDERS']['ProtocolBuffer'] = proto_builder
 env['BUILDERS']['DbusBindings'] = dbus_bindings_builder
+env['BUILDERS']['GlibMarshal'] = glib_marshal_builder
 
 # Fix issue with scons not passing pkg-config vars through the environment.
 for key in Split('PKG_CONFIG_LIBDIR PKG_CONFIG_PATH'):
@@ -142,6 +183,8 @@ env.ParseConfig('pkg-config --cflags --libs '
 env.ProtocolBuffer('update_metadata.pb.cc', 'update_metadata.proto')
 
 env.DbusBindings('update_engine.dbusclient.h', 'update_engine.xml')
+
+env.GlibMarshal('marshal.glibmarshal.c', 'marshal.list')
 
 if ARGUMENTS.get('debug', 0):
   env['CCFLAGS'] += ' -fprofile-arcs -ftest-coverage'
@@ -164,6 +207,7 @@ sources = Split("""action_processor.cc
                    graph_utils.cc
                    gzip.cc
                    libcurl_http_fetcher.cc
+                   marshal.glibmarshal.c
                    omaha_hash_calculator.cc
                    omaha_request_prep_action.cc
                    omaha_response_handler_action.cc

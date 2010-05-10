@@ -26,16 +26,6 @@ using std::vector;
 
 namespace chromeos_update_engine {
 
-gboolean SetupInMainLoop(void* arg) {
-  // TODO(adlr): Tell update_attempter to start working.
-  // Comment this in for that:
-  UpdateAttempter* update_attempter = reinterpret_cast<UpdateAttempter*>(arg);
-  LOG(INFO) << "Starting update!";
-  update_attempter->Update(false);
-
-  return FALSE;  // Don't call this callback function again
-}
-
 void SetupDbusService(UpdateEngineService* service) {
   DBusGConnection *bus;
   DBusGProxy *proxy;
@@ -82,18 +72,18 @@ int main(int argc, char** argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
   CommandLine::Init(argc, argv);
   logging::InitLogging("logfile.txt",
-                       FLAGS_logtostderr ?
-                         logging::LOG_ONLY_TO_SYSTEM_DEBUG_LOG :
-                         logging::LOG_ONLY_TO_FILE,
+                       (FLAGS_logtostderr ?
+                        logging::LOG_ONLY_TO_SYSTEM_DEBUG_LOG :
+                        logging::LOG_ONLY_TO_FILE),
                        logging::DONT_LOCK_LOG_FILE,
                        logging::APPEND_TO_OLD_LOG_FILE);
   LOG(INFO) << "Chrome OS Update Engine starting";
   
   // Create the single GMainLoop
-  GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
+  GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
 
   // Create the update attempter:
-  chromeos_update_engine::UpdateAttempter update_attempter(loop);
+  chromeos_update_engine::UpdateAttempter update_attempter;
 
   // Create the dbus service object:
   dbus_g_object_type_install_info(UPDATE_ENGINE_TYPE_SERVICE,
@@ -101,16 +91,15 @@ int main(int argc, char** argv) {
   UpdateEngineService* service =
       UPDATE_ENGINE_SERVICE(g_object_new(UPDATE_ENGINE_TYPE_SERVICE, NULL));
   service->update_attempter_ = &update_attempter;
+  update_attempter.set_dbus_service(service);
   chromeos_update_engine::SetupDbusService(service);
-
-  // Set up init routine to run within the main loop.
-  g_timeout_add(0, &chromeos_update_engine::SetupInMainLoop, &update_attempter);
 
   // Run the main loop until exit time:
   g_main_loop_run(loop);
 
   // Cleanup:
   g_main_loop_unref(loop);
+  update_attempter.set_dbus_service(NULL);
   g_object_unref(G_OBJECT(service));
 
   LOG(INFO) << "Chrome OS Update Engine terminating";

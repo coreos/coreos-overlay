@@ -231,7 +231,7 @@ TEST_F(FilesystemCopierActionTest, FullUpdateTest) {
 
   ObjectFeederAction<InstallPlan> feeder_action;
   const char* kUrl = "http://some/url";
-  InstallPlan install_plan(true, kUrl, "", "", "");
+  InstallPlan install_plan(true, kUrl, 0, "", "", "");
   feeder_action.set_obj(install_plan);
   FilesystemCopierAction copier_action(false);
   ObjectCollectorAction<InstallPlan> collector_action;
@@ -256,7 +256,7 @@ TEST_F(FilesystemCopierActionTest, NonExistentDriveTest) {
   processor.set_delegate(&delegate);
 
   ObjectFeederAction<InstallPlan> feeder_action;
-  InstallPlan install_plan(false, "", "", "/no/such/file", "/no/such/file");
+  InstallPlan install_plan(false, "", 0, "", "/no/such/file", "/no/such/file");
   feeder_action.set_obj(install_plan);
   FilesystemCopierAction copier_action(false);
   ObjectCollectorAction<InstallPlan> collector_action;
