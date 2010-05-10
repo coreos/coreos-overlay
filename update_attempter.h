@@ -18,6 +18,8 @@ struct UpdateEngineService;
 
 namespace chromeos_update_engine {
 
+extern const char* kUpdateCompletedMarker;
+
 enum UpdateStatus {
   UPDATE_STATUS_IDLE = 0,
   UPDATE_STATUS_CHECKING_FOR_UPDATE,
@@ -42,6 +44,8 @@ class UpdateAttempter : public ActionProcessorDelegate,
                       new_size_(0) {
     last_notify_time_.tv_sec = 0;
     last_notify_time_.tv_nsec = 0;
+    if (utils::FileExists(kUpdateCompletedMarker))
+      status_ = UPDATE_STATUS_UPDATED_NEED_REBOOT;
   }
   void Update(bool force_full_update);
   

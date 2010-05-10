@@ -30,6 +30,8 @@ using std::vector;
 
 namespace chromeos_update_engine {
 
+const char* kUpdateCompletedMarker = "/tmp/update_engine_autoupdate_completed";
+
 namespace {
 // Returns true on success.
 bool GetCPUClockTime(struct timespec* out) {
@@ -84,6 +86,15 @@ const char* UpdateStatusToString(UpdateStatus status) {
 }
 
 void UpdateAttempter::Update(bool force_full_update) {
+  if (status_ == UPDATE_STATUS_UPDATED_NEED_REBOOT) {
+    LOG(INFO) << "Not updating b/c we already updated and we're waiting for "
+              << "reboot";
+    return;
+  }
+  if (status_ != UPDATE_STATUS_IDLE) {
+    // Update in progress. Do nothing
+    return;
+  }
   full_update_ = force_full_update;
   CHECK(!processor_.IsRunning());
   processor_.set_delegate(this);
@@ -167,8 +178,10 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
                                      bool success) {
   CHECK(response_handler_action_);
   LOG(INFO) << "Processing Done.";
+  actions_.clear();
   if (success) {
     SetStatusAndNotify(UPDATE_STATUS_UPDATED_NEED_REBOOT);
+    utils::WriteFile(kUpdateCompletedMarker, "", 0);
   } else {
     LOG(INFO) << "Update failed.";
     SetStatusAndNotify(UPDATE_STATUS_IDLE);
@@ -178,6 +191,7 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
 void UpdateAttempter::ProcessingStopped(const ActionProcessor* processor) {
   download_progress_ = 0.0;
   SetStatusAndNotify(UPDATE_STATUS_IDLE);
+  actions_.clear();
 }
 
 // Called whenever an action has finished processing, either successfully

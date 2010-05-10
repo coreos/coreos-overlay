@@ -19,6 +19,8 @@ extern "C" {
 
 DEFINE_bool(logtostderr, false,
             "Write logs to stderr instead of to a file in log_dir.");
+DEFINE_bool(foreground, false,
+            "Don't daemon()ize; run in foreground.");
 
 using std::string;
 using std::tr1::shared_ptr;
@@ -92,6 +94,9 @@ int main(int argc, char** argv) {
                         logging::LOG_ONLY_TO_FILE),
                        logging::DONT_LOCK_LOG_FILE,
                        logging::APPEND_TO_OLD_LOG_FILE);
+  if (!FLAGS_foreground)
+    PLOG_IF(FATAL, daemon(0, 0) == 1) << "daemon() failed";
+
   LOG(INFO) << "Chrome OS Update Engine starting";
   
   // Create the single GMainLoop
