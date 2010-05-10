@@ -26,6 +26,19 @@ using std::vector;
 
 namespace chromeos_update_engine {
 
+namespace {
+
+struct PeriodicallyUpdateArgs {
+  UpdateAttempter* update_attempter;
+  gboolean should_repeat;
+};
+
+gboolean PeriodicallyUpdate(void* arg) {
+  PeriodicallyUpdateArgs* args = reinterpret_cast<PeriodicallyUpdateArgs*>(arg);
+  args->update_attempter->Update(false);
+  return args->should_repeat;
+}
+
 void SetupDbusService(UpdateEngineService* service) {
   DBusGConnection *bus;
   DBusGProxy *proxy;
@@ -60,6 +73,8 @@ void SetupDbusService(UpdateEngineService* service) {
                                       G_OBJECT(service));
 }
 
+}  // namespace {}
+
 }  // namespace chromeos_update_engine
 
 #include "update_engine/subprocess.h"
@@ -71,7 +86,7 @@ int main(int argc, char** argv) {
   chromeos_update_engine::Subprocess::Init();
   google::ParseCommandLineFlags(&argc, &argv, true);
   CommandLine::Init(argc, argv);
-  logging::InitLogging("logfile.txt",
+  logging::InitLogging("/var/log/update_engine.log",
                        (FLAGS_logtostderr ?
                         logging::LOG_ONLY_TO_SYSTEM_DEBUG_LOG :
                         logging::LOG_ONLY_TO_FILE),
@@ -93,6 +108,20 @@ int main(int argc, char** argv) {
   service->update_attempter_ = &update_attempter;
   update_attempter.set_dbus_service(service);
   chromeos_update_engine::SetupDbusService(service);
+
+  // Kick off periodic updating. First, update after 2 minutes. Also, update
+  // every 30 minutes.
+  chromeos_update_engine::PeriodicallyUpdateArgs two_min_args =
+      {&update_attempter, FALSE};
+  g_timeout_add(2 * 60 * 1000,
+                &chromeos_update_engine::PeriodicallyUpdate,
+                &two_min_args);
+
+  chromeos_update_engine::PeriodicallyUpdateArgs thirty_min_args =
+      {&update_attempter, TRUE};
+  g_timeout_add(30 * 60 * 1000,
+                &chromeos_update_engine::PeriodicallyUpdate,
+                &thirty_min_args);
 
   // Run the main loop until exit time:
   g_main_loop_run(loop);

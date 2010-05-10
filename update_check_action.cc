@@ -63,7 +63,9 @@ class ScopedPtrXmlXPathContextFree {
 string FormatRequest(const UpdateCheckParams& params) {
   return string("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
       "<o:gupdate xmlns:o=\"http://www.google.com/update2/request\" "
-      "version=\"" + XmlEncode(kGupdateVersion) + "\" protocol=\"2.0\" "
+      "version=\"" + XmlEncode(kGupdateVersion) + "\" "
+      "updaterversion=\"" + XmlEncode(kGupdateVersion) + "\" "
+      "protocol=\"2.0\" "
       "machineid=\"") + XmlEncode(params.machine_id) + "\" ismachine=\"1\" "
       "userid=\"" + XmlEncode(params.user_id) + "\">\n"
       "    <o:os version=\"" + XmlEncode(params.os_version) + "\" platform=\"" +
