@@ -5,10 +5,13 @@
 #include "update_engine/omaha_request_prep_action.h"
 #include <sys/utsname.h>
 #include <errno.h>
+#include <map>
 #include <string>
 #include "base/string_util.h"
+#include "update_engine/simple_key_value_store.h"
 #include "update_engine/utils.h"
 
+using std::map;
 using std::string;
 
 // This gathers local system information and prepares info used by the
@@ -102,19 +105,10 @@ string OmahaRequestPrepAction::GetLsbValue(
     string file_data;
     if (!utils::ReadFileToString(root_ + files[i], &file_data))
       continue;
-    string::size_type pos = 0;
-    if (!utils::StringHasPrefix(file_data, key + "=")) {
-      pos = file_data.find(string("\n") + key + "=");
-      if (pos != string::npos)
-        pos++;  // advance past \n
-    }
-    if (pos == string::npos)
-      continue;
-    pos += key.size() + 1;  // advance past the key and the '='
-    string::size_type endpos = file_data.find('\n', pos);
-    string::size_type length =
-        (endpos == string::npos ? string::npos : endpos - pos);
-    return file_data.substr(pos, length);
+    
+    map<string, string> data = simple_key_value_store::ParseString(file_data);
+    if (utils::MapContainsKey(data, key))
+      return data[key];
   }
   // not found
   return default_value;
