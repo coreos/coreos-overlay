@@ -173,6 +173,21 @@ env['BUILDERS']['ProtocolBuffer'] = proto_builder
 env['BUILDERS']['DbusBindings'] = dbus_bindings_builder
 env['BUILDERS']['GlibMarshal'] = glib_marshal_builder
 
+# Hack to fix dependencies from auto generated headers.
+#   Some files indirectly included update_metatadata.pb.h
+#     which is built as a side effect of building update_metadata.pb.cc
+env.Depends('bzip_extent_writer_unittest.cc', 'update_metadata.pb.cc');
+env.Depends('bzip_extent_writer.cc', 'update_metadata.pb.cc');
+
+#   Some files indirectly include marshal.glibmarshal.h
+#     which is built as a side effect of the .c file
+env.Depends('dbus_service.cc', 'marshal.glibmarshal.c');
+
+#   Some files indirectly include update_engine.dbusserver.h
+#     which is built as a side effect of the dbusclient.h file
+env.Depends('mock_http_fetcher.cc', 'update_engine.dbusclient.h');
+env.Depends('main.cc', 'update_engine.dbusserver.h');
+
 # Fix issue with scons not passing pkg-config vars through the environment.
 for key in Split('PKG_CONFIG_LIBDIR PKG_CONFIG_PATH'):
   if os.environ.has_key(key):
