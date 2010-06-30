@@ -159,6 +159,7 @@ TEST(UpdateCheckActionTest, NoUpdateTest) {
                            UpdateCheckParams::kOsPlatform,
                            UpdateCheckParams::kOsVersion,
                            "",  // os_sp
+                           "x86-generic",
                            UpdateCheckParams::kAppId,
                            "0.1.0.0",
                            "en-US",
@@ -180,6 +181,7 @@ TEST(UpdateCheckActionTest, ValidUpdateTest) {
                            UpdateCheckParams::kOsPlatform,
                            UpdateCheckParams::kOsVersion,
                            "service_pack",
+                           "arm-generic",
                            UpdateCheckParams::kAppId,
                            "0.1.0.0",
                            "en-US",
@@ -215,6 +217,7 @@ TEST(UpdateCheckActionTest, NoOutputPipeTest) {
                            UpdateCheckParams::kOsPlatform,
                            UpdateCheckParams::kOsVersion,
                            "",  // os_sp
+                           "",  // os_board
                            UpdateCheckParams::kAppId,
                            "0.1.0.0",
                            "en-US",
@@ -248,6 +251,7 @@ TEST(UpdateCheckActionTest, InvalidXmlTest) {
                            UpdateCheckParams::kOsPlatform,
                            UpdateCheckParams::kOsVersion,
                            "service_pack",
+                           "x86-generic",
                            UpdateCheckParams::kAppId,
                            "0.1.0.0",
                            "en-US",
@@ -269,6 +273,7 @@ TEST(UpdateCheckActionTest, MissingStatusTest) {
                            UpdateCheckParams::kOsPlatform,
                            UpdateCheckParams::kOsVersion,
                            "service_pack",
+                           "x86-generic",
                            UpdateCheckParams::kAppId,
                            "0.1.0.0",
                            "en-US",
@@ -293,6 +298,7 @@ TEST(UpdateCheckActionTest, InvalidStatusTest) {
                            UpdateCheckParams::kOsPlatform,
                            UpdateCheckParams::kOsVersion,
                            "service_pack",
+                           "x86-generic",
                            UpdateCheckParams::kAppId,
                            "0.1.0.0",
                            "en-US",
@@ -317,6 +323,7 @@ TEST(UpdateCheckActionTest, MissingNodesetTest) {
                            UpdateCheckParams::kOsPlatform,
                            UpdateCheckParams::kOsVersion,
                            "service_pack",
+                           "x86-generic",
                            UpdateCheckParams::kAppId,
                            "0.1.0.0",
                            "en-US",
@@ -341,6 +348,7 @@ TEST(UpdateCheckActionTest, MissingFieldTest) {
                            UpdateCheckParams::kOsPlatform,
                            UpdateCheckParams::kOsVersion,
                            "service_pack",
+                           "x86-generic",
                            UpdateCheckParams::kAppId,
                            "0.1.0.0",
                            "en-US",
@@ -400,6 +408,7 @@ TEST(UpdateCheckActionTest, TerminateTransferTest) {
                            UpdateCheckParams::kOsPlatform,
                            UpdateCheckParams::kOsVersion,
                            "",  // os_sp
+                           "",  // os_board
                            UpdateCheckParams::kAppId,
                            "0.1.0.0",
                            "en-US",
@@ -440,6 +449,7 @@ TEST(UpdateCheckActionTest, XmlEncodeTest) {
                            UpdateCheckParams::kOsPlatform,
                            UpdateCheckParams::kOsVersion,
                            "testtheservice_pack>",
+                           "x86 generic",
                            UpdateCheckParams::kAppId,
                            "0.1.0.0",
                            "en-US",
@@ -460,6 +470,7 @@ TEST(UpdateCheckActionTest, XmlEncodeTest) {
   EXPECT_EQ(post_str.find("testtheuser_id&lt;"), string::npos);
   EXPECT_NE(post_str.find("testtheservice_pack&gt;"), string::npos);
   EXPECT_EQ(post_str.find("testtheservice_pack>"), string::npos);
+  EXPECT_NE(post_str.find("x86 generic"), string::npos);
 }
 
 TEST(UpdateCheckActionTest, XmlDecodeTest) {
@@ -468,6 +479,7 @@ TEST(UpdateCheckActionTest, XmlDecodeTest) {
                            UpdateCheckParams::kOsPlatform,
                            UpdateCheckParams::kOsVersion,
                            "service_pack",
+                           "x86-generic",
                            UpdateCheckParams::kAppId,
                            "0.1.0.0",
                            "en-US",
@@ -498,6 +510,7 @@ TEST(UpdateCheckActionTest, ParseIntTest) {
                            UpdateCheckParams::kOsPlatform,
                            UpdateCheckParams::kOsVersion,
                            "service_pack",
+                           "the_board",
                            UpdateCheckParams::kAppId,
                            "0.1.0.0",
                            "en-US",

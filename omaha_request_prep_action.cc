@@ -36,12 +36,14 @@ void OmahaRequestPrepAction::PerformAction() {
   const string track(GetLsbValue("CHROMEOS_RELEASE_TRACK", ""));
   const string update_url(GetLsbValue("CHROMEOS_AUSERVER",
                                       UpdateCheckParams::kUpdateUrl));
+  const string board(GetLsbValue("CHROMEOS_RELEASE_BOARD", ""));
 
   UpdateCheckParams out(machine_id,  // machine_id
                         machine_id,  // user_id (use machine_id)
                         UpdateCheckParams::kOsPlatform,
                         UpdateCheckParams::kOsVersion,
                         sp,  // e.g. 0.2.3.3_i686
+                        board,  // e.g. x86-generic
                         UpdateCheckParams::kAppId,
                         version,  // app version (from lsb-release)
                         "en-US",  // lang

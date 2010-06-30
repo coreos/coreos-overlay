@@ -111,6 +111,7 @@ TEST_F(OmahaRequestPrepActionTest, SimpleTest) {
   {
     ASSERT_TRUE(WriteFileString(
         kTestDir + "/etc/lsb-release",
+        "CHROMEOS_RELEASE_BOARD=arm-generic\n"
         "CHROMEOS_RELEASE_FOO=bar\n"
         "CHROMEOS_RELEASE_VERSION=0.2.2.3\n"
         "CHROMEOS_RELEASE_TRACK=footrack"));
@@ -121,6 +122,7 @@ TEST_F(OmahaRequestPrepActionTest, SimpleTest) {
     EXPECT_TRUE(IsValidGuid(out.user_id)) << "id: " << out.user_id;
     EXPECT_EQ("Chrome OS", out.os_platform);
     EXPECT_EQ(string("0.2.2.3_") + GetMachineType(), out.os_sp);
+    EXPECT_EQ("arm-generic", out.os_board);
     EXPECT_EQ("{87efface-864d-49a5-9bb3-4b050a7c227a}", out.app_id);
     EXPECT_EQ("0.2.2.3", out.app_version);
     EXPECT_EQ("en-US", out.app_lang);

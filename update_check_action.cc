@@ -74,7 +74,8 @@ string FormatRequest(const UpdateCheckParams& params) {
       "    <o:app appid=\"" + XmlEncode(params.app_id) + "\" version=\"" +
       XmlEncode(params.app_version) + "\" "
       "lang=\"" + XmlEncode(params.app_lang) + "\" track=\"" +
-      XmlEncode(params.app_track) + "\">\n"
+      XmlEncode(params.app_track) + "\" board=\"" +
+      XmlEncode(params.os_board) + "\">\n"
       "        <o:ping active=\"0\"></o:ping>\n"
       "        <o:updatecheck></o:updatecheck>\n"
       "    </o:app>\n"

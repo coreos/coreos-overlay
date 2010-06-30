@@ -36,6 +36,7 @@ struct UpdateCheckParams {
                     const std::string& in_os_platform,
                     const std::string& in_os_version,
                     const std::string& in_os_sp,
+                    const std::string& in_os_board,
                     const std::string& in_app_id,
                     const std::string& in_app_version,
                     const std::string& in_app_lang,
@@ -46,6 +47,7 @@ struct UpdateCheckParams {
         os_platform(in_os_platform),
         os_version(in_os_version),
         os_sp(in_os_sp),
+        os_board(in_os_board),
         app_id(in_app_id),
         app_version(in_app_version),
         app_lang(in_app_lang),
@@ -57,6 +59,7 @@ struct UpdateCheckParams {
   std::string os_platform;
   std::string os_version;
   std::string os_sp;
+  std::string os_board;
   std::string app_id;
   std::string app_version;
   std::string app_lang;

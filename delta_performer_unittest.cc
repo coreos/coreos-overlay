@@ -214,7 +214,6 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
   // Wrapper around close. Returns 0 on success or -errno on error.
   EXPECT_EQ(0, performer.Close());
 
-  CompareFilesByBlock("/tmp/a_ref", "/tmp/b_ref");
   CompareFilesByBlock(old_kernel, new_kernel);
   
   vector<char> updated_kernel_partition;
