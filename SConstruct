@@ -173,22 +173,6 @@ env['BUILDERS']['ProtocolBuffer'] = proto_builder
 env['BUILDERS']['DbusBindings'] = dbus_bindings_builder
 env['BUILDERS']['GlibMarshal'] = glib_marshal_builder
 
-# Hack to fix dependencies from auto generated headers.
-#   Some files indirectly included update_metatadata.pb.h
-#     which is built as a side effect of building update_metadata.pb.cc
-env.Depends('bzip_extent_writer_unittest.cc', 'update_metadata.pb.cc');
-env.Depends('bzip_extent_writer.cc', 'update_metadata.pb.cc');
-env.Depends('cycle_breaker.cc', 'update_metadata.pb.cc');
-
-#   Some files indirectly include marshal.glibmarshal.h
-#     which is built as a side effect of the .c file
-env.Depends('dbus_service.cc', 'marshal.glibmarshal.c');
-
-#   Some files indirectly include update_engine.dbusserver.h
-#     which is built as a side effect of the dbusclient.h file
-env.Depends('mock_http_fetcher.cc', 'update_engine.dbusclient.h');
-env.Depends('main.cc', 'update_engine.dbusclient.h');
-
 # Fix issue with scons not passing pkg-config vars through the environment.
 for key in Split('PKG_CONFIG_LIBDIR PKG_CONFIG_PATH'):
   if os.environ.has_key(key):
@@ -236,8 +220,8 @@ sources = Split("""action_processor.cc
                    topological_sort.cc
                    update_attempter.cc
                    update_check_action.cc
-		               update_metadata.pb.cc
-		               utils.cc""")
+                   update_metadata.pb.cc
+                   utils.cc""")
 main = ['main.cc']
 
 unittest_sources = Split("""action_unittest.cc
@@ -277,6 +261,22 @@ client_main = ['update_engine_client.cc']
 
 delta_generator_main = ['generate_delta_main.cc']
 
+# Hack to generate header files first. They are generated as a side effect
+# of generating other files (usually their corresponding .c(c) files),
+# so we make all sources depend on those other files.
+all_sources = []
+all_sources.extend(sources)
+all_sources.extend(unittest_sources)
+all_sources.extend(main)
+all_sources.extend(unittest_main)
+all_sources.extend(client_main)
+all_sources.extend(delta_generator_main)
+for source in all_sources:
+  if source.endswith('.glibmarshal.c') or source.endswith('.pb.cc'):
+    continue
+  env.Depends(source, 'update_metadata.pb.cc')
+  env.Depends(source, 'marshal.glibmarshal.c')
+  env.Depends(source, 'update_engine.dbusclient.h')
 
 update_engine_core = env.Library('update_engine_core', sources)
 env.Prepend(LIBS=[update_engine_core])
