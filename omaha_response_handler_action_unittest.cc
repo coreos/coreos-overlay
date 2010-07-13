@@ -16,7 +16,7 @@ class OmahaResponseHandlerActionTest : public ::testing::Test {
  public:
   // Return true iff the OmahaResponseHandlerAction succeeded.
   // If out is non-NULL, it's set w/ the response from the action.
-  bool DoTest(const UpdateCheckResponse& in,
+  bool DoTest(const OmahaResponse& in,
               const string& boot_dev,
               InstallPlan* out);
 };
@@ -51,14 +51,14 @@ const string kLongName =
     "-the_update_a.b.c.d_DELTA_.tgz";
 }  // namespace {}
 
-bool OmahaResponseHandlerActionTest::DoTest(const UpdateCheckResponse& in,
+bool OmahaResponseHandlerActionTest::DoTest(const OmahaResponse& in,
                                             const string& boot_dev,
                                             InstallPlan* out) {
   ActionProcessor processor;
   OmahaResponseHandlerActionProcessorDelegate delegate;
   processor.set_delegate(&delegate);
 
-  ObjectFeederAction<UpdateCheckResponse> feeder_action;
+  ObjectFeederAction<OmahaResponse> feeder_action;
   feeder_action.set_obj(in);
   OmahaResponseHandlerAction response_handler_action;
   response_handler_action.set_boot_device(boot_dev);
@@ -79,7 +79,7 @@ bool OmahaResponseHandlerActionTest::DoTest(const UpdateCheckResponse& in,
 
 TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
   {
-    UpdateCheckResponse in;
+    OmahaResponse in;
     in.update_exists = true;
     in.display_version = "a.b.c.d";
     in.codebase = "http://foo/the_update_a.b.c.d.tgz";
@@ -96,7 +96,7 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     EXPECT_EQ("/dev/sda5", install_plan.install_path);
   }
   {
-    UpdateCheckResponse in;
+    OmahaResponse in;
     in.update_exists = true;
     in.display_version = "a.b.c.d";
     in.codebase = "http://foo/the_update_a.b.c.d.tgz";
@@ -113,7 +113,7 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     EXPECT_EQ("/dev/sda3", install_plan.install_path);
   }
   {
-    UpdateCheckResponse in;
+    OmahaResponse in;
     in.update_exists = true;
     in.display_version = "a.b.c.d";
     in.codebase = kLongName;
@@ -132,7 +132,7 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
 }
 
 TEST_F(OmahaResponseHandlerActionTest, NoUpdatesTest) {
-  UpdateCheckResponse in;
+  OmahaResponse in;
   in.update_exists = false;
   InstallPlan install_plan;
   EXPECT_FALSE(DoTest(in, "/dev/sda1", &install_plan));

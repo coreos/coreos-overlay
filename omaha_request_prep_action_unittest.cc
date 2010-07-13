@@ -18,7 +18,7 @@ class OmahaRequestPrepActionTest : public ::testing::Test {
  public:
   // Return true iff the OmahaResponseHandlerAction succeeded.
   // if out is non-NULL, it's set w/ the response from the action.
-  bool DoTest(bool force_full_update, UpdateCheckParams* out);
+  bool DoTest(bool force_full_update, OmahaRequestParams* out);
   static const string kTestDir;
 };
 
@@ -43,14 +43,14 @@ class OmahaRequestPrepActionProcessorDelegate
 };
 
 bool OmahaRequestPrepActionTest::DoTest(bool force_full_update,
-                                        UpdateCheckParams* out) {
+                                        OmahaRequestParams* out) {
   ActionProcessor processor;
   OmahaRequestPrepActionProcessorDelegate delegate;
   processor.set_delegate(&delegate);
 
   OmahaRequestPrepAction request_prep_action(force_full_update);
   request_prep_action.set_root(string("./") + kTestDir);
-  ObjectCollectorAction<UpdateCheckParams> collector_action;
+  ObjectCollectorAction<OmahaRequestParams> collector_action;
   BondActions(&request_prep_action, &collector_action);
   processor.EnqueueAction(&request_prep_action);
   processor.EnqueueAction(&collector_action);
@@ -69,7 +69,7 @@ bool IsHexDigit(char c) {
       ((c >= 'a') && (c <= 'f')) ||
       ((c >= 'A') && (c <= 'F'));
 }
-  
+
 // Returns true iff str is formatted as a GUID. Example GUID:
 // "{2251FFAD-DBAB-4E53-8B3A-18F98BB4EB80}"
 bool IsValidGuid(const string& str) {
@@ -115,7 +115,7 @@ TEST_F(OmahaRequestPrepActionTest, SimpleTest) {
         "CHROMEOS_RELEASE_FOO=bar\n"
         "CHROMEOS_RELEASE_VERSION=0.2.2.3\n"
         "CHROMEOS_RELEASE_TRACK=footrack"));
-    UpdateCheckParams out;
+    OmahaRequestParams out;
     EXPECT_TRUE(DoTest(false, &out));
     EXPECT_TRUE(IsValidGuid(out.machine_id)) << "id: " << out.machine_id;
     // for now we're just using the machine id here
@@ -141,7 +141,7 @@ TEST_F(OmahaRequestPrepActionTest, MissingTrackTest) {
         "CHROMEOS_RELEASE_FOO=bar\n"
         "CHROMEOS_RELEASE_VERSION=0.2.2.3\n"
         "CHROMEOS_RELEASE_TRXCK=footrack"));
-    UpdateCheckParams out;
+    OmahaRequestParams out;
     EXPECT_TRUE(DoTest(false, &out));
     EXPECT_TRUE(IsValidGuid(out.machine_id));
     // for now we're just using the machine id here
@@ -166,7 +166,7 @@ TEST_F(OmahaRequestPrepActionTest, ConfusingReleaseTest) {
         "CHROMEOS_RELEASE_FOO=CHROMEOS_RELEASE_VERSION=1.2.3.4\n"
         "CHROMEOS_RELEASE_VERSION=0.2.2.3\n"
         "CHROMEOS_RELEASE_TRXCK=footrack"));
-    UpdateCheckParams out;
+    OmahaRequestParams out;
     EXPECT_TRUE(DoTest(false, &out));
     EXPECT_TRUE(IsValidGuid(out.machine_id)) << out.machine_id;
     // for now we're just using the machine id here
@@ -190,7 +190,7 @@ TEST_F(OmahaRequestPrepActionTest, MachineIdPersistsTest) {
       "CHROMEOS_RELEASE_FOO=CHROMEOS_RELEASE_VERSION=1.2.3.4\n"
       "CHROMEOS_RELEASE_VERSION=0.2.2.3\n"
       "CHROMEOS_RELEASE_TRXCK=footrack"));
-  UpdateCheckParams out1;
+  OmahaRequestParams out1;
   EXPECT_TRUE(DoTest(false, &out1));
   string machine_id;
   EXPECT_TRUE(utils::ReadFileToString(
@@ -198,7 +198,7 @@ TEST_F(OmahaRequestPrepActionTest, MachineIdPersistsTest) {
       utils::kStatefulPartition + "/etc/omaha_id",
       &machine_id));
   EXPECT_EQ(machine_id, out1.machine_id);
-  UpdateCheckParams out2;
+  OmahaRequestParams out2;
   EXPECT_TRUE(DoTest(false, &out2));
   EXPECT_EQ(machine_id, out2.machine_id);
   EXPECT_EQ(0, System(string("rm -rf ") + kTestDir));

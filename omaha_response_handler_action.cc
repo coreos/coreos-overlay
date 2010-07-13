@@ -20,7 +20,7 @@ const string kFullUpdateTag = "_FULL_";
 void OmahaResponseHandlerAction::PerformAction() {
   CHECK(HasInputObject());
   ScopedActionCompleter completer(processor_, this);
-  const UpdateCheckResponse& response = GetInputObject();
+  const OmahaResponse& response = GetInputObject();
   if (!response.update_exists) {
     got_no_update_response_ = true;
     LOG(INFO) << "There are no updates. Aborting.";
@@ -42,7 +42,7 @@ void OmahaResponseHandlerAction::PerformAction() {
     SetOutputObject(install_plan_);
   LOG(INFO) << "Using this install plan:";
   install_plan_.Dump();
-  
+
   completer.set_success(true);
 }
 

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "update_engine/update_check_action.h"
+#include "update_engine/omaha_request_action.h"
 #include <inttypes.h>
 #include <sstream>
 
@@ -18,11 +18,11 @@ using std::string;
 
 namespace chromeos_update_engine {
 
-const char* const UpdateCheckParams::kAppId(
+const char* const OmahaRequestParams::kAppId(
     "{87efface-864d-49a5-9bb3-4b050a7c227a}");
-const char* const UpdateCheckParams::kOsPlatform("Chrome OS");
-const char* const UpdateCheckParams::kOsVersion("Indy");
-const char* const UpdateCheckParams::kUpdateUrl(
+const char* const OmahaRequestParams::kOsPlatform("Chrome OS");
+const char* const OmahaRequestParams::kOsVersion("Indy");
+const char* const OmahaRequestParams::kUpdateUrl(
     "https://tools.google.com/service/update2");
 
 namespace {
@@ -59,14 +59,14 @@ class ScopedPtrXmlXPathContextFree {
   }
 };
 
-// Returns a properly formatted omaha request for an update check
-string FormatRequest(const UpdateCheckParams& params) {
+// Returns a properly formatted omaha request for a request to Omaha.
+string FormatRequest(const OmahaRequestParams& params) {
   return string("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-      "<o:gupdate xmlns:o=\"http://www.google.com/update2/request\" "
-      "version=\"" + XmlEncode(kGupdateVersion) + "\" "
-      "updaterversion=\"" + XmlEncode(kGupdateVersion) + "\" "
-      "protocol=\"2.0\" "
-      "machineid=\"") + XmlEncode(params.machine_id) + "\" ismachine=\"1\" "
+                "<o:gupdate xmlns:o=\"http://www.google.com/update2/request\" "
+                "version=\"" + XmlEncode(kGupdateVersion) + "\" "
+                "updaterversion=\"" + XmlEncode(kGupdateVersion) + "\" "
+                "protocol=\"2.0\" "
+                "machineid=\"") + XmlEncode(params.machine_id) + "\" ismachine=\"1\" "
       "userid=\"" + XmlEncode(params.user_id) + "\">\n"
       "    <o:os version=\"" + XmlEncode(params.os_version) + "\" platform=\"" +
       XmlEncode(params.os_platform) + "\" sp=\"" +
@@ -86,25 +86,25 @@ string FormatRequest(const UpdateCheckParams& params) {
 // Encodes XML entities in a given string with libxml2. input must be
 // UTF-8 formatted. Output will be UTF-8 formatted.
 string XmlEncode(const string& input) {
-//  // TODO(adlr): if allocating a new xmlDoc each time is taking up too much
-//  // cpu, considering creating one and caching it.
-//  scoped_ptr_malloc<xmlDoc, ScopedPtrXmlDocFree> xml_doc(
-//      xmlNewDoc(ConstXMLStr("1.0")));
-//  if (!xml_doc.get()) {
-//    LOG(ERROR) << "Unable to create xmlDoc";
-//    return "";
-//  }
+  //  // TODO(adlr): if allocating a new xmlDoc each time is taking up too much
+  //  // cpu, considering creating one and caching it.
+  //  scoped_ptr_malloc<xmlDoc, ScopedPtrXmlDocFree> xml_doc(
+  //      xmlNewDoc(ConstXMLStr("1.0")));
+  //  if (!xml_doc.get()) {
+  //    LOG(ERROR) << "Unable to create xmlDoc";
+  //    return "";
+  //  }
   scoped_ptr_malloc<xmlChar, ScopedPtrXmlFree> str(
       xmlEncodeEntitiesReentrant(NULL, ConstXMLStr(input.c_str())));
   return string(reinterpret_cast<const char *>(str.get()));
 }
 
-UpdateCheckAction::UpdateCheckAction(HttpFetcher* http_fetcher)
+OmahaRequestAction::OmahaRequestAction(HttpFetcher* http_fetcher)
     : http_fetcher_(http_fetcher) {}
 
-UpdateCheckAction::~UpdateCheckAction() {}
+OmahaRequestAction::~OmahaRequestAction() {}
 
-void UpdateCheckAction::PerformAction() {
+void OmahaRequestAction::PerformAction() {
   CHECK(HasInputObject());
   params_ = GetInputObject();
   http_fetcher_->set_delegate(this);
@@ -115,15 +115,15 @@ void UpdateCheckAction::PerformAction() {
   http_fetcher_->BeginTransfer(params_.update_url);
 }
 
-void UpdateCheckAction::TerminateProcessing() {
+void OmahaRequestAction::TerminateProcessing() {
   http_fetcher_->TerminateTransfer();
 }
 
 // We just store the response in the buffer. Once we've received all bytes,
 // we'll look in the buffer and decide what to do.
-void UpdateCheckAction::ReceivedBytes(HttpFetcher *fetcher,
-                                   const char* bytes,
-                                   int length) {
+void OmahaRequestAction::ReceivedBytes(HttpFetcher *fetcher,
+                                       const char* bytes,
+                                       int length) {
   response_buffer_.reserve(response_buffer_.size() + length);
   response_buffer_.insert(response_buffer_.end(), bytes, bytes + length);
 }
@@ -192,8 +192,8 @@ off_t ParseInt(const string& str) {
 // If the transfer was successful, this uses libxml2 to parse the response
 // and fill in the appropriate fields of the output object. Also, notifies
 // the processor that we're done.
-void UpdateCheckAction::TransferComplete(HttpFetcher *fetcher,
-                                         bool successful) {
+void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
+                                          bool successful) {
   ScopedActionCompleter completer(processor_, this);
   LOG(INFO) << "Update check response: " << string(response_buffer_.begin(),
                                                    response_buffer_.end());
@@ -240,7 +240,7 @@ void UpdateCheckAction::TransferComplete(HttpFetcher *fetcher,
   }
 
   const string status(XmlGetProperty(updatecheck_node, "status"));
-  UpdateCheckResponse output_object;
+  OmahaResponse output_object;
   if (status == "noupdate") {
     LOG(INFO) << "No update.";
     output_object.update_exists = false;

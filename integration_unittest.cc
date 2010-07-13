@@ -11,12 +11,12 @@
 #include "update_engine/install_action.h"
 #include "update_engine/libcurl_http_fetcher.h"
 #include "update_engine/mock_http_fetcher.h"
+#include "update_engine/omaha_request_action.h"
 #include "update_engine/omaha_request_prep_action.h"
 #include "update_engine/omaha_response_handler_action.h"
 #include "update_engine/postinstall_runner_action.h"
 #include "update_engine/set_bootable_flag_action.h"
 #include "update_engine/test_utils.h"
-#include "update_engine/update_check_action.h"
 #include "update_engine/utils.h"
 
 // The tests here integrate many Action objects together. This test that
@@ -105,7 +105,7 @@ TEST(IntegrationTest, DISABLED_RunAsRootFullInstallTest) {
 
   // Actions:
   OmahaRequestPrepAction request_prep_action(false);
-  UpdateCheckAction update_check_action(new LibcurlHttpFetcher);
+  OmahaRequestAction update_check_action(new LibcurlHttpFetcher);
   OmahaResponseHandlerAction response_handler_action;
   DownloadAction download_action(new LibcurlHttpFetcher);
   InstallAction install_action;

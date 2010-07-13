@@ -8,7 +8,7 @@
 #include <string>
 #include "update_engine/action.h"
 #include "update_engine/install_plan.h"
-#include "update_engine/update_check_action.h"
+#include "update_engine/omaha_request_action.h"
 
 // This class reads in an Omaha response and converts what it sees into
 // an install plan which is passed out.
@@ -20,7 +20,7 @@ class OmahaResponseHandlerAction;
 template<>
 class ActionTraits<OmahaResponseHandlerAction> {
  public:
-  typedef UpdateCheckResponse InputObjectType;
+  typedef OmahaResponse InputObjectType;
   typedef InstallPlan OutputObjectType;
 };
 
@@ -41,7 +41,7 @@ class OmahaResponseHandlerAction : public Action<OmahaResponseHandlerAction> {
   void set_boot_device(const std::string& boot_device) {
     boot_device_ = boot_device;
   }
-  
+
   bool GotNoUpdateResponse() const { return got_no_update_response_; }
   const InstallPlan& install_plan() const { return install_plan_; }
 
@@ -59,10 +59,10 @@ class OmahaResponseHandlerAction : public Action<OmahaResponseHandlerAction> {
 
   // set to non-empty in unit tests
   std::string boot_device_;
-  
+
   // The install plan, if we have an update.
   InstallPlan install_plan_;
-  
+
   // True only if we got a response and the response said no updates
   bool got_no_update_response_;
 

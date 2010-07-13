@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_UPDATE_CHECK_ACTION_H__
-#define CHROMEOS_PLATFORM_UPDATE_ENGINE_UPDATE_CHECK_ACTION_H__
+#ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_OMAHA_REQUEST_ACTION_H__
+#define CHROMEOS_PLATFORM_UPDATE_ENGINE_OMAHA_REQUEST_ACTION_H__
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -17,8 +17,8 @@
 #include "update_engine/action.h"
 #include "update_engine/http_fetcher.h"
 
-// The Update Check action makes an update check request to Omaha and
-// can output the response on the output ActionPipe.
+// The Omaha Request action makes a request to Omaha and can output
+// the response on the output ActionPipe.
 
 namespace chromeos_update_engine {
 
@@ -26,22 +26,22 @@ namespace chromeos_update_engine {
 // UTF-8 formatted. Output will be UTF-8 formatted.
 std::string XmlEncode(const std::string& input);
 
-// This struct encapsulates the data Omaha gets for the update check.
+// This struct encapsulates the data Omaha gets for the request.
 // These strings in this struct should not be XML escaped.
-struct UpdateCheckParams {
-  UpdateCheckParams()
+struct OmahaRequestParams {
+  OmahaRequestParams()
       : os_platform(kOsPlatform), os_version(kOsVersion), app_id(kAppId) {}
-  UpdateCheckParams(const std::string& in_machine_id,
-                    const std::string& in_user_id,
-                    const std::string& in_os_platform,
-                    const std::string& in_os_version,
-                    const std::string& in_os_sp,
-                    const std::string& in_os_board,
-                    const std::string& in_app_id,
-                    const std::string& in_app_version,
-                    const std::string& in_app_lang,
-                    const std::string& in_app_track,
-                    const std::string& in_update_url)
+  OmahaRequestParams(const std::string& in_machine_id,
+                     const std::string& in_user_id,
+                     const std::string& in_os_platform,
+                     const std::string& in_os_version,
+                     const std::string& in_os_sp,
+                     const std::string& in_os_board,
+                     const std::string& in_app_id,
+                     const std::string& in_app_version,
+                     const std::string& in_app_lang,
+                     const std::string& in_app_track,
+                     const std::string& in_update_url)
       : machine_id(in_machine_id),
         user_id(in_user_id),
         os_platform(in_os_platform),
@@ -64,7 +64,7 @@ struct UpdateCheckParams {
   std::string app_version;
   std::string app_lang;
   std::string app_track;
-  
+
   std::string update_url;
 
   // Suggested defaults
@@ -74,10 +74,10 @@ struct UpdateCheckParams {
   static const char* const kUpdateUrl;
 };
 
-// This struct encapsulates the data Omaha returns for the update check.
+// This struct encapsulates the data Omaha's response for the request.
 // These strings in this struct are not XML escaped.
-struct UpdateCheckResponse {
-  UpdateCheckResponse()
+struct OmahaResponse {
+  OmahaResponse()
       : update_exists(false), size(0), needs_admin(false), prompt(false) {}
   // True iff there is an update to be downloaded.
   bool update_exists;
@@ -93,36 +93,36 @@ struct UpdateCheckResponse {
 };
 COMPILE_ASSERT(sizeof(off_t) == 8, off_t_not_64bit);
 
-class UpdateCheckAction;
+class OmahaRequestAction;
 class NoneType;
 
 template<>
-class ActionTraits<UpdateCheckAction> {
+class ActionTraits<OmahaRequestAction> {
  public:
   // Takes parameters on the input pipe
-  typedef UpdateCheckParams InputObjectType;
+  typedef OmahaRequestParams InputObjectType;
   // On success, puts the output path on output
-  typedef UpdateCheckResponse OutputObjectType;
+  typedef OmahaResponse OutputObjectType;
 };
 
-class UpdateCheckAction : public Action<UpdateCheckAction>,
-                          public HttpFetcherDelegate {
+class OmahaRequestAction : public Action<OmahaRequestAction>,
+                           public HttpFetcherDelegate {
  public:
   // The ctor takes in all the parameters that will be used for
   // making the request to Omaha. For some of them we have constants
   // that should be used.
   // Takes ownership of the passed in HttpFetcher. Useful for testing.
   // A good calling pattern is:
-  // UpdateCheckAction(..., new WhateverHttpFetcher);
-  UpdateCheckAction(HttpFetcher* http_fetcher);
-  virtual ~UpdateCheckAction();
-  typedef ActionTraits<UpdateCheckAction>::InputObjectType InputObjectType;
-  typedef ActionTraits<UpdateCheckAction>::OutputObjectType OutputObjectType;
+  // OmahaRequestAction(..., new WhateverHttpFetcher);
+  OmahaRequestAction(HttpFetcher* http_fetcher);
+  virtual ~OmahaRequestAction();
+  typedef ActionTraits<OmahaRequestAction>::InputObjectType InputObjectType;
+  typedef ActionTraits<OmahaRequestAction>::OutputObjectType OutputObjectType;
   void PerformAction();
   void TerminateProcessing();
 
   // Debugging/logging
-  static std::string StaticType() { return "UpdateCheckAction"; }
+  static std::string StaticType() { return "OmahaRequestAction"; }
   std::string Type() const { return StaticType(); }
 
   // Delegate methods (see http_fetcher.h)
@@ -132,7 +132,7 @@ class UpdateCheckAction : public Action<UpdateCheckAction>,
 
  private:
   // These are data that are passed in the request to the Omaha server
-  UpdateCheckParams params_;
+  OmahaRequestParams params_;
 
   // pointer to the HttpFetcher that does the http work
   scoped_ptr<HttpFetcher> http_fetcher_;
@@ -140,9 +140,9 @@ class UpdateCheckAction : public Action<UpdateCheckAction>,
   // Stores the response from the omaha server
   std::vector<char> response_buffer_;
 
-  DISALLOW_COPY_AND_ASSIGN(UpdateCheckAction);
+  DISALLOW_COPY_AND_ASSIGN(OmahaRequestAction);
 };
 
 }  // namespace chromeos_update_engine
 
-#endif  // CHROMEOS_PLATFORM_UPDATE_ENGINE_UPDATE_CHECK_ACTION_H__
+#endif  // CHROMEOS_PLATFORM_UPDATE_ENGINE_OMAHA_REQUEST_ACTION_H__

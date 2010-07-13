@@ -209,6 +209,7 @@ sources = Split("""action_processor.cc
                    libcurl_http_fetcher.cc
                    marshal.glibmarshal.c
                    omaha_hash_calculator.cc
+                   omaha_request_action.cc
                    omaha_request_prep_action.cc
                    omaha_response_handler_action.cc
                    postinstall_runner_action.cc
@@ -219,7 +220,6 @@ sources = Split("""action_processor.cc
                    tarjan.cc
                    topological_sort.cc
                    update_attempter.cc
-                   update_check_action.cc
                    update_metadata.pb.cc
                    utils.cc""")
 main = ['main.cc']
@@ -242,6 +242,7 @@ unittest_sources = Split("""action_unittest.cc
                             http_fetcher_unittest.cc
                             mock_http_fetcher.cc
                             omaha_hash_calculator_unittest.cc
+                            omaha_request_action_unittest.cc
                             omaha_request_prep_action_unittest.cc
                             omaha_response_handler_action_unittest.cc
                             postinstall_runner_action_unittest.cc
@@ -252,7 +253,6 @@ unittest_sources = Split("""action_unittest.cc
                             tarjan_unittest.cc
                             test_utils.cc
                             topological_sort_unittest.cc
-                            update_check_action_unittest.cc
                             utils_unittest.cc
                             zip_unittest.cc""")
 unittest_main = ['testrunner.cc']

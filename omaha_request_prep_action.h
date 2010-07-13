@@ -7,7 +7,7 @@
 
 #include <string>
 #include "update_engine/action.h"
-#include "update_engine/update_check_action.h"
+#include "update_engine/omaha_request_action.h"
 
 // This gathers local system information and prepares info used by the
 // update check action.
@@ -21,7 +21,7 @@ template<>
 class ActionTraits<OmahaRequestPrepAction> {
  public:
   typedef NoneType InputObjectType;
-  typedef UpdateCheckParams OutputObjectType;
+  typedef OmahaRequestParams OutputObjectType;
 };
 
 class OmahaRequestPrepAction : public Action<OmahaRequestPrepAction> {

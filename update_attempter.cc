@@ -18,11 +18,11 @@
 #include "update_engine/download_action.h"
 #include "update_engine/filesystem_copier_action.h"
 #include "update_engine/libcurl_http_fetcher.h"
+#include "update_engine/omaha_request_action.h"
 #include "update_engine/omaha_request_prep_action.h"
 #include "update_engine/omaha_response_handler_action.h"
 #include "update_engine/postinstall_runner_action.h"
 #include "update_engine/set_bootable_flag_action.h"
-#include "update_engine/update_check_action.h"
 
 using std::tr1::shared_ptr;
 using std::string;
@@ -102,8 +102,8 @@ void UpdateAttempter::Update(bool force_full_update) {
   // Actions:
   shared_ptr<OmahaRequestPrepAction> request_prep_action(
       new OmahaRequestPrepAction(force_full_update));
-  shared_ptr<UpdateCheckAction> update_check_action(
-      new UpdateCheckAction(new LibcurlHttpFetcher));
+  shared_ptr<OmahaRequestAction> update_check_action(
+      new OmahaRequestAction(new LibcurlHttpFetcher));
   shared_ptr<OmahaResponseHandlerAction> response_handler_action(
       new OmahaResponseHandlerAction);
   shared_ptr<FilesystemCopierAction> filesystem_copier_action(
@@ -118,7 +118,7 @@ void UpdateAttempter::Update(bool force_full_update) {
       new SetBootableFlagAction);
   shared_ptr<PostinstallRunnerAction> postinstall_runner_action_postcommit(
       new PostinstallRunnerAction(false));
-  
+
   download_action->set_delegate(this);
   response_handler_action_ = response_handler_action;
 
@@ -134,7 +134,7 @@ void UpdateAttempter::Update(bool force_full_update) {
   actions_.push_back(shared_ptr<AbstractAction>(set_bootable_flag_action));
   actions_.push_back(shared_ptr<AbstractAction>(
       postinstall_runner_action_postcommit));
-  
+
   // Enqueue the actions
   for (vector<shared_ptr<AbstractAction> >::iterator it = actions_.begin();
        it != actions_.end(); ++it) {
@@ -209,7 +209,7 @@ void UpdateAttempter::ActionCompleted(ActionProcessor* processor,
   // Find out which action completed.
   if (type == OmahaResponseHandlerAction::StaticType()) {
     SetStatusAndNotify(UPDATE_STATUS_DOWNLOADING);
-    OmahaResponseHandlerAction* omaha_response_handler_action = 
+    OmahaResponseHandlerAction* omaha_response_handler_action =
         dynamic_cast<OmahaResponseHandlerAction*>(action);
     CHECK(omaha_response_handler_action);
     const InstallPlan& plan = omaha_response_handler_action->install_plan();
