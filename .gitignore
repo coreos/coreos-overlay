@@ -1,0 +1,30 @@
+#
+# NOTE! Please use 'git ls-files -i --exclude-standard'
+# command after changing this file, to see if there are
+# any tracked files which get ignored after the change.
+#
+
+# Standard excludes
+*~
+*.a
+*.o
+
+# Build/test generated files
+*.gcda
+*.gcno
+/.sconsign.dblite
+/app.info
+/delta_generator
+/html/
+/marshal.glibmarshal.c
+/marshal.glibmarshal.h
+/quitquitquit*
+/test_http_server
+/update_engine
+/update_engine.dbusclient.h
+/update_engine.dbusserver.h
+/update_engine_client
+/update_engine_unittests
+/update_metadata.pb.cc
+/update_metadata.pb.h
+
