@@ -4,8 +4,11 @@
 
 #include <string>
 #include <vector>
+
 #include <glib.h>
-#include <gtest/gtest.h>
+
+#include "base/string_util.h"
+#include "gtest/gtest.h"
 #include "update_engine/action_pipe.h"
 #include "update_engine/mock_http_fetcher.h"
 #include "update_engine/omaha_hash_calculator.h"
@@ -118,16 +121,16 @@ class OutputObjectCollectorAction : public Action<OutputObjectCollectorAction> {
 // OmahaRequestAction. out_response may be NULL.
 // out_post_data may be null; if non-null, the post-data received by the
 // mock HttpFetcher is returned.
-bool TestOmahaRequestAction(const OmahaRequestParams& params,
-                            const string& http_response,
-                            bool expected_success,
-                            OmahaResponse* out_response,
-                            vector<char> *out_post_data) {
-  GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
-  MockHttpFetcher *fetcher = new MockHttpFetcher(http_response.data(),
+bool TestUpdateCheck(const OmahaRequestParams& params,
+                     const string& http_response,
+                     bool expected_success,
+                     OmahaResponse* out_response,
+                     vector<char>* out_post_data) {
+  GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
+  MockHttpFetcher* fetcher = new MockHttpFetcher(http_response.data(),
                                                  http_response.size());
   ObjectFeederAction<OmahaRequestParams> feeder_action;
-  OmahaRequestAction action(fetcher);  // takes ownership of fetcher
+  OmahaRequestAction action(NULL, fetcher);  // takes ownership of fetcher
   OmahaRequestActionTestProcessorDelegate delegate;
   delegate.loop_ = loop;
   delegate.expected_success_ = expected_success;
@@ -153,6 +156,35 @@ bool TestOmahaRequestAction(const OmahaRequestParams& params,
   return collector_action.has_input_object_;
 }
 
+// Tests Event requests -- they should always succeed. |out_post_data|
+// may be null; if non-null, the post-data received by the mock
+// HttpFetcher is returned.
+void TestEvent(const OmahaRequestParams& params,
+               OmahaEvent* event,
+               const string& http_response,
+               vector<char>* out_post_data) {
+  GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
+  MockHttpFetcher* fetcher = new MockHttpFetcher(http_response.data(),
+                                                 http_response.size());
+  ObjectFeederAction<OmahaRequestParams> feeder_action;
+  OmahaRequestAction action(event, fetcher);  // takes ownership of fetcher
+  OmahaRequestActionTestProcessorDelegate delegate;
+  delegate.loop_ = loop;
+  ActionProcessor processor;
+  feeder_action.set_obj(params);
+  processor.set_delegate(&delegate);
+  processor.EnqueueAction(&feeder_action);
+  processor.EnqueueAction(&action);
+
+  BondActions(&feeder_action, &action);
+
+  g_timeout_add(0, &StartProcessorInRunLoop, &processor);
+  g_main_loop_run(loop);
+  g_main_loop_unref(loop);
+  if (out_post_data)
+    *out_post_data = fetcher->post_data();
+}
+
 TEST(OmahaRequestActionTest, NoUpdateTest) {
   OmahaRequestParams params("",  // machine_id
                             "",  // user_id
@@ -167,11 +199,11 @@ TEST(OmahaRequestActionTest, NoUpdateTest) {
                             "");  // url
   OmahaResponse response;
   ASSERT_TRUE(
-      TestOmahaRequestAction(params,
-                             GetNoUpdateResponse(OmahaRequestParams::kAppId),
-                             true,
-                             &response,
-                             NULL));
+      TestUpdateCheck(params,
+                      GetNoUpdateResponse(OmahaRequestParams::kAppId),
+                      true,
+                      &response,
+                      NULL));
   EXPECT_FALSE(response.update_exists);
 }
 
@@ -189,18 +221,18 @@ TEST(OmahaRequestActionTest, ValidUpdateTest) {
                             "");  // url
   OmahaResponse response;
   ASSERT_TRUE(
-      TestOmahaRequestAction(params,
-                             GetUpdateResponse(OmahaRequestParams::kAppId,
-                                               "1.2.3.4",  // version
-                                               "http://more/info",
-                                               "true",  // prompt
-                                               "http://code/base",  // dl url
-                                               "HASH1234=",  // checksum
-                                               "false",  // needs admin
-                                               "123"),  // size
-                             true,
-                             &response,
-                             NULL));
+      TestUpdateCheck(params,
+                      GetUpdateResponse(OmahaRequestParams::kAppId,
+                                        "1.2.3.4",  // version
+                                        "http://more/info",
+                                        "true",  // prompt
+                                        "http://code/base",  // dl url
+                                        "HASH1234=",  // checksum
+                                        "false",  // needs admin
+                                        "123"),  // size
+                      true,
+                      &response,
+                      NULL));
   EXPECT_TRUE(response.update_exists);
   EXPECT_EQ("1.2.3.4", response.display_version);
   EXPECT_EQ("http://code/base", response.codebase);
@@ -229,7 +261,8 @@ TEST(OmahaRequestActionTest, NoOutputPipeTest) {
 
   ObjectFeederAction<OmahaRequestParams> feeder_action;
   feeder_action.set_obj(params);
-  OmahaRequestAction action(new MockHttpFetcher(http_response.data(),
+  OmahaRequestAction action(NULL,
+                            new MockHttpFetcher(http_response.data(),
                                                 http_response.size()));
   OmahaRequestActionTestProcessorDelegate delegate;
   delegate.loop_ = loop;
@@ -259,11 +292,11 @@ TEST(OmahaRequestActionTest, InvalidXmlTest) {
                             "http://url");
   OmahaResponse response;
   ASSERT_FALSE(
-      TestOmahaRequestAction(params,
-                             "invalid xml>",
-                             false,
-                             &response,
-                             NULL));
+      TestUpdateCheck(params,
+                      "invalid xml>",
+                      false,
+                      &response,
+                      NULL));
   EXPECT_FALSE(response.update_exists);
 }
 
@@ -280,7 +313,7 @@ TEST(OmahaRequestActionTest, MissingStatusTest) {
                             "unittest_track",
                             "http://url");
   OmahaResponse response;
-  ASSERT_FALSE(TestOmahaRequestAction(
+  ASSERT_FALSE(TestUpdateCheck(
       params,
       "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gupdate "
       "xmlns=\"http://www.google.com/update2/response\" protocol=\"2.0\"><app "
@@ -305,7 +338,7 @@ TEST(OmahaRequestActionTest, InvalidStatusTest) {
                             "unittest_track",
                             "http://url");
   OmahaResponse response;
-  ASSERT_FALSE(TestOmahaRequestAction(
+  ASSERT_FALSE(TestUpdateCheck(
       params,
       "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gupdate "
       "xmlns=\"http://www.google.com/update2/response\" protocol=\"2.0\"><app "
@@ -330,7 +363,7 @@ TEST(OmahaRequestActionTest, MissingNodesetTest) {
                             "unittest_track",
                             "http://url");
   OmahaResponse response;
-  ASSERT_FALSE(TestOmahaRequestAction(
+  ASSERT_FALSE(TestUpdateCheck(
       params,
       "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gupdate "
       "xmlns=\"http://www.google.com/update2/response\" protocol=\"2.0\"><app "
@@ -355,24 +388,24 @@ TEST(OmahaRequestActionTest, MissingFieldTest) {
                             "unittest_track",
                             "http://url");
   OmahaResponse response;
-  ASSERT_TRUE(TestOmahaRequestAction(params,
-                                     string("<?xml version=\"1.0\" "
-                                            "encoding=\"UTF-8\"?><gupdate "
-                                            "xmlns=\"http://www.google.com/"
-                                            "update2/response\" "
-                                            "protocol=\"2.0\"><app appid=\"") +
-                                     OmahaRequestParams::kAppId
-                                     + "\" status=\"ok\"><ping "
-                                     "status=\"ok\"/><updatecheck "
-                                     "DisplayVersion=\"1.2.3.4\" "
-                                     "Prompt=\"false\" "
-                                     "codebase=\"http://code/base\" "
-                                     "hash=\"HASH1234=\" needsadmin=\"true\" "
-                                     "size=\"123\" "
-                                     "status=\"ok\"/></app></gupdate>",
-                                     true,
-                                     &response,
-                                     NULL));
+  ASSERT_TRUE(TestUpdateCheck(params,
+                              string("<?xml version=\"1.0\" "
+                                     "encoding=\"UTF-8\"?><gupdate "
+                                     "xmlns=\"http://www.google.com/"
+                                     "update2/response\" "
+                                     "protocol=\"2.0\"><app appid=\"") +
+                              OmahaRequestParams::kAppId
+                              + "\" status=\"ok\"><ping "
+                              "status=\"ok\"/><updatecheck "
+                              "DisplayVersion=\"1.2.3.4\" "
+                              "Prompt=\"false\" "
+                              "codebase=\"http://code/base\" "
+                              "hash=\"HASH1234=\" needsadmin=\"true\" "
+                              "size=\"123\" "
+                              "status=\"ok\"/></app></gupdate>",
+                              true,
+                              &response,
+                              NULL));
   EXPECT_TRUE(response.update_exists);
   EXPECT_EQ("1.2.3.4", response.display_version);
   EXPECT_EQ("http://code/base", response.codebase);
@@ -419,7 +452,8 @@ TEST(OmahaRequestActionTest, TerminateTransferTest) {
 
   ObjectFeederAction<OmahaRequestParams> feeder_action;
   feeder_action.set_obj(params);
-  OmahaRequestAction action(new MockHttpFetcher(http_response.data(),
+  OmahaRequestAction action(NULL,
+                            new MockHttpFetcher(http_response.data(),
                                                 http_response.size()));
   TerminateEarlyTestProcessorDelegate delegate;
   delegate.loop_ = loop;
@@ -457,11 +491,11 @@ TEST(OmahaRequestActionTest, XmlEncodeTest) {
                             "http://url");
   OmahaResponse response;
   ASSERT_FALSE(
-      TestOmahaRequestAction(params,
-                             "invalid xml>",
-                             false,
-                             &response,
-                             &post_data));
+      TestUpdateCheck(params,
+                      "invalid xml>",
+                      false,
+                      &response,
+                      &post_data));
   // convert post_data to string
   string post_str(&post_data[0], post_data.size());
   EXPECT_NE(post_str.find("testthemachine&lt;id"), string::npos);
@@ -487,21 +521,21 @@ TEST(OmahaRequestActionTest, XmlDecodeTest) {
                             "http://url");
   OmahaResponse response;
   ASSERT_TRUE(
-      TestOmahaRequestAction(params,
-                             GetUpdateResponse(OmahaRequestParams::kAppId,
-                                               "1.2.3.4",  // version
-                                               "testthe&lt;url",  // more info
-                                               "true",  // prompt
-                                               "testthe&amp;code",  // dl url
-                                               "HASH1234=", // checksum
-                                               "false",  // needs admin
-                                               "123"),  // size
-                             true,
-                             &response,
-                             NULL));
+      TestUpdateCheck(params,
+                      GetUpdateResponse(OmahaRequestParams::kAppId,
+                                        "1.2.3.4",  // version
+                                        "testthe&lt;url",  // more info
+                                        "true",  // prompt
+                                        "testthe&amp;codebase",  // dl url
+                                        "HASH1234=", // checksum
+                                        "false",  // needs admin
+                                        "123"),  // size
+                      true,
+                      &response,
+                      NULL));
 
   EXPECT_EQ(response.more_info_url, "testthe<url");
-  EXPECT_EQ(response.codebase, "testthe&code");
+  EXPECT_EQ(response.codebase, "testthe&codebase");
 }
 
 TEST(OmahaRequestActionTest, ParseIntTest) {
@@ -518,21 +552,97 @@ TEST(OmahaRequestActionTest, ParseIntTest) {
                             "http://url");
   OmahaResponse response;
   ASSERT_TRUE(
-      TestOmahaRequestAction(params,
-                             GetUpdateResponse(OmahaRequestParams::kAppId,
-                                               "1.2.3.4",  // version
-                                               "theurl",  // more info
-                                               "true",  // prompt
-                                               "thecodebase",  // dl url
-                                               "HASH1234=", // checksum
-                                               "false",  // needs admin
-                                               // overflows int32:
-                                               "123123123123123"),  // size
-                             true,
-                             &response,
-                             NULL));
+      TestUpdateCheck(params,
+                      GetUpdateResponse(OmahaRequestParams::kAppId,
+                                        "1.2.3.4",  // version
+                                        "theurl",  // more info
+                                        "true",  // prompt
+                                        "thecodebase",  // dl url
+                                        "HASH1234=", // checksum
+                                        "false",  // needs admin
+                                        // overflows int32:
+                                        "123123123123123"),  // size
+                      true,
+                      &response,
+                      NULL));
 
   EXPECT_EQ(response.size, 123123123123123ll);
+}
+
+TEST(OmahaRequestActionTest, FormatUpdateCheckOutputTest) {
+  vector<char> post_data;
+  OmahaRequestParams params("machine_id",
+                            "user_id",
+                            OmahaRequestParams::kOsPlatform,
+                            OmahaRequestParams::kOsVersion,
+                            "service_pack",
+                            "x86-generic",
+                            OmahaRequestParams::kAppId,
+                            "0.1.0.0",
+                            "en-US",
+                            "unittest_track",
+                            "http://url");
+  OmahaResponse response;
+  ASSERT_FALSE(TestUpdateCheck(params,
+                               "invalid xml>",
+                               false,
+                               &response,
+                               &post_data));
+  // convert post_data to string
+  string post_str(&post_data[0], post_data.size());
+  EXPECT_NE(post_str.find("        <o:ping active=\"0\"></o:ping>\n"
+                          "        <o:updatecheck></o:updatecheck>\n"),
+            string::npos);
+  EXPECT_EQ(post_str.find("o:event"), string::npos);
+}
+
+TEST(OmahaRequestActionTest, FormatEventOutputTest) {
+  vector<char> post_data;
+  OmahaRequestParams params("machine_id",
+                            "user_id",
+                            OmahaRequestParams::kOsPlatform,
+                            OmahaRequestParams::kOsVersion,
+                            "service_pack",
+                            "x86-generic",
+                            OmahaRequestParams::kAppId,
+                            "0.1.0.0",
+                            "en-US",
+                            "unittest_track",
+                            "http://url");
+  TestEvent(params,
+            new OmahaEvent(OmahaEvent::kTypeDownloadComplete,
+                           OmahaEvent::kResultError,
+                           5),
+            "invalid xml>",
+            &post_data);
+  // convert post_data to string
+  string post_str(&post_data[0], post_data.size());
+  string expected_event = StringPrintf(
+      "        <o:event eventtype=\"%d\" eventresult=\"%d\" "
+      "errorcode=\"%d\"></o:event>\n",
+      OmahaEvent::kTypeDownloadComplete,
+      OmahaEvent::kResultError,
+      5);
+  EXPECT_NE(post_str.find(expected_event), string::npos);
+  EXPECT_EQ(post_str.find("o:updatecheck"), string::npos);
+}
+
+TEST(OmahaRequestActionTest, IsEventTest) {
+  string http_response("doesn't matter");
+
+  OmahaRequestAction update_check_action(
+      NULL,
+      new MockHttpFetcher(http_response.data(),
+                          http_response.size()));
+  EXPECT_FALSE(update_check_action.IsEvent());
+
+  OmahaRequestAction event_action(
+      new OmahaEvent(OmahaEvent::kTypeInstallComplete,
+                     OmahaEvent::kResultError,
+                     0),
+      new MockHttpFetcher(http_response.data(),
+                          http_response.size()));
+  EXPECT_TRUE(event_action.IsEvent());
 }
 
 }  // namespace chromeos_update_engine

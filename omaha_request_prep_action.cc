@@ -39,16 +39,16 @@ void OmahaRequestPrepAction::PerformAction() {
   const string board(GetLsbValue("CHROMEOS_RELEASE_BOARD", ""));
 
   OmahaRequestParams out(machine_id,  // machine_id
-                        machine_id,  // user_id (use machine_id)
-                        OmahaRequestParams::kOsPlatform,
-                        OmahaRequestParams::kOsVersion,
-                        sp,  // e.g. 0.2.3.3_i686
-                        board,  // e.g. x86-generic
-                        OmahaRequestParams::kAppId,
-                        version,  // app version (from lsb-release)
-                        "en-US",  // lang
-                        track,  // track
-                        update_url);
+                         machine_id,  // user_id (use machine_id)
+                         OmahaRequestParams::kOsPlatform,
+                         OmahaRequestParams::kOsVersion,
+                         sp,  // e.g. 0.2.3.3_i686
+                         board,  // e.g. x86-generic
+                         OmahaRequestParams::kAppId,
+                         version,  // app version (from lsb-release)
+                         "en-US",  // lang
+                         track,  // track
+                         update_url);
 
   CHECK(HasOutputPipe());
   SetOutputObject(out);

@@ -100,10 +100,10 @@ void UpdateAttempter::Update(bool force_full_update) {
   processor_.set_delegate(this);
 
   // Actions:
-  shared_ptr<OmahaRequestPrepAction> request_prep_action(
+  shared_ptr<OmahaRequestPrepAction> update_check_prep_action(
       new OmahaRequestPrepAction(force_full_update));
   shared_ptr<OmahaRequestAction> update_check_action(
-      new OmahaRequestAction(new LibcurlHttpFetcher));
+      new OmahaRequestAction(NULL, new LibcurlHttpFetcher));
   shared_ptr<OmahaResponseHandlerAction> response_handler_action(
       new OmahaResponseHandlerAction);
   shared_ptr<FilesystemCopierAction> filesystem_copier_action(
@@ -118,11 +118,18 @@ void UpdateAttempter::Update(bool force_full_update) {
       new SetBootableFlagAction);
   shared_ptr<PostinstallRunnerAction> postinstall_runner_action_postcommit(
       new PostinstallRunnerAction(false));
+  shared_ptr<OmahaRequestPrepAction> install_success_prep_action(
+      new OmahaRequestPrepAction(false));
+  shared_ptr<OmahaRequestAction> install_success_action(
+      new OmahaRequestAction(new OmahaEvent(OmahaEvent::kTypeInstallComplete,
+                                            OmahaEvent::kResultSuccess,
+                                            0),
+                             new LibcurlHttpFetcher));
 
   download_action->set_delegate(this);
   response_handler_action_ = response_handler_action;
 
-  actions_.push_back(shared_ptr<AbstractAction>(request_prep_action));
+  actions_.push_back(shared_ptr<AbstractAction>(update_check_prep_action));
   actions_.push_back(shared_ptr<AbstractAction>(update_check_action));
   actions_.push_back(shared_ptr<AbstractAction>(response_handler_action));
   actions_.push_back(shared_ptr<AbstractAction>(filesystem_copier_action));
@@ -134,6 +141,8 @@ void UpdateAttempter::Update(bool force_full_update) {
   actions_.push_back(shared_ptr<AbstractAction>(set_bootable_flag_action));
   actions_.push_back(shared_ptr<AbstractAction>(
       postinstall_runner_action_postcommit));
+  actions_.push_back(shared_ptr<AbstractAction>(install_success_prep_action));
+  actions_.push_back(shared_ptr<AbstractAction>(install_success_action));
 
   // Enqueue the actions
   for (vector<shared_ptr<AbstractAction> >::iterator it = actions_.begin();
@@ -143,7 +152,7 @@ void UpdateAttempter::Update(bool force_full_update) {
 
   // Bond them together. We have to use the leaf-types when calling
   // BondActions().
-  BondActions(request_prep_action.get(),
+  BondActions(update_check_prep_action.get(),
               update_check_action.get());
   BondActions(update_check_action.get(),
               response_handler_action.get());
@@ -159,6 +168,8 @@ void UpdateAttempter::Update(bool force_full_update) {
               set_bootable_flag_action.get());
   BondActions(set_bootable_flag_action.get(),
               postinstall_runner_action_postcommit.get());
+  BondActions(install_success_prep_action.get(),
+              install_success_action.get());
 
   SetStatusAndNotify(UPDATE_STATUS_CHECKING_FOR_UPDATE);
   processor_.StartProcessing();

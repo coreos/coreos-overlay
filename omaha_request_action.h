@@ -93,28 +93,68 @@ struct OmahaResponse {
 };
 COMPILE_ASSERT(sizeof(off_t) == 8, off_t_not_64bit);
 
+// This struct encapsulates the Omaha event information. For a
+// complete list of defined event types and results, see
+// http://code.google.com/p/omaha/wiki/ServerProtocol#event
+struct OmahaEvent {
+  enum Type {
+    kTypeUnknown = 0,
+    kTypeDownloadComplete = 1,
+    kTypeInstallComplete = 2,
+    kTypeUpdateComplete = 3,
+  };
+
+  enum Result {
+    kResultError = 0,
+    kResultSuccess = 1,
+  };
+
+  OmahaEvent()
+      : type(kTypeUnknown),
+        result(kResultError),
+        error_code(0) {}
+  OmahaEvent(Type in_type, Result in_result, int in_error_code)
+      : type(in_type),
+        result(in_result),
+        error_code(in_error_code) {}
+
+  Type type;
+  Result result;
+  int error_code;
+};
+
 class OmahaRequestAction;
 class NoneType;
 
 template<>
 class ActionTraits<OmahaRequestAction> {
  public:
-  // Takes parameters on the input pipe
+  // Takes parameters on the input pipe.
   typedef OmahaRequestParams InputObjectType;
-  // On success, puts the output path on output
+  // On UpdateCheck success, puts the Omaha response on output. Event
+  // requests do not have an output pipe.
   typedef OmahaResponse OutputObjectType;
 };
 
 class OmahaRequestAction : public Action<OmahaRequestAction>,
                            public HttpFetcherDelegate {
  public:
-  // The ctor takes in all the parameters that will be used for
-  // making the request to Omaha. For some of them we have constants
-  // that should be used.
+  // The ctor takes in all the parameters that will be used for making
+  // the request to Omaha. For some of them we have constants that
+  // should be used.
+  //
   // Takes ownership of the passed in HttpFetcher. Useful for testing.
+  //
+  // Takes ownership of the passed in OmahaEvent. If |event| is NULL,
+  // this is an UpdateCheck request, otherwise it's an Event request.
+  // Event requests always succeed.
+  //
   // A good calling pattern is:
-  // OmahaRequestAction(..., new WhateverHttpFetcher);
-  OmahaRequestAction(HttpFetcher* http_fetcher);
+  // OmahaRequestAction(new OmahaEvent(...), new WhateverHttpFetcher);
+  // or
+  // OmahaRequestAction(NULL, new WhateverHttpFetcher);
+  OmahaRequestAction(OmahaEvent* event,
+                     HttpFetcher* http_fetcher);
   virtual ~OmahaRequestAction();
   typedef ActionTraits<OmahaRequestAction>::InputObjectType InputObjectType;
   typedef ActionTraits<OmahaRequestAction>::OutputObjectType OutputObjectType;
@@ -130,9 +170,15 @@ class OmahaRequestAction : public Action<OmahaRequestAction>,
                              const char* bytes, int length);
   virtual void TransferComplete(HttpFetcher *fetcher, bool successful);
 
+  // Returns true if this is an Event request, false if it's an UpdateCheck.
+  bool IsEvent() const { return event_.get() != NULL; }
+
  private:
   // These are data that are passed in the request to the Omaha server
   OmahaRequestParams params_;
+
+  // Pointer to the OmahaEvent info. This is an UpdateCheck request if NULL.
+  scoped_ptr<OmahaEvent> event_;
 
   // pointer to the HttpFetcher that does the http work
   scoped_ptr<HttpFetcher> http_fetcher_;

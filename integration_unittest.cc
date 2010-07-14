@@ -105,7 +105,7 @@ TEST(IntegrationTest, DISABLED_RunAsRootFullInstallTest) {
 
   // Actions:
   OmahaRequestPrepAction request_prep_action(false);
-  OmahaRequestAction update_check_action(new LibcurlHttpFetcher);
+  OmahaRequestAction update_check_action(NULL, new LibcurlHttpFetcher);
   OmahaResponseHandlerAction response_handler_action;
   DownloadAction download_action(new LibcurlHttpFetcher);
   InstallAction install_action;

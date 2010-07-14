@@ -10,6 +10,7 @@
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
 
+#include "base/string_util.h"
 #include "chromeos/obsolete_logging.h"
 #include "update_engine/action_pipe.h"
 #include "update_engine/utils.h"
@@ -59,15 +60,26 @@ class ScopedPtrXmlXPathContextFree {
   }
 };
 
-// Returns a properly formatted omaha request for a request to Omaha.
-string FormatRequest(const OmahaRequestParams& params) {
+string FormatRequest(const OmahaEvent* event,
+                     const OmahaRequestParams& params) {
+  string body;
+  if (event == NULL) {
+    body = string(
+        "        <o:ping active=\"0\"></o:ping>\n"
+        "        <o:updatecheck></o:updatecheck>\n");
+  } else {
+    body = StringPrintf(
+        "        <o:event eventtype=\"%d\" eventresult=\"%d\" "
+        "errorcode=\"%d\"></o:event>\n",
+        event->type, event->result, event->error_code);
+  }
   return string("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                 "<o:gupdate xmlns:o=\"http://www.google.com/update2/request\" "
                 "version=\"" + XmlEncode(kGupdateVersion) + "\" "
                 "updaterversion=\"" + XmlEncode(kGupdateVersion) + "\" "
                 "protocol=\"2.0\" "
-                "machineid=\"") + XmlEncode(params.machine_id) + "\" ismachine=\"1\" "
-      "userid=\"" + XmlEncode(params.user_id) + "\">\n"
+                "machineid=\"") + XmlEncode(params.machine_id) +
+      "\" ismachine=\"1\" userid=\"" + XmlEncode(params.user_id) + "\">\n"
       "    <o:os version=\"" + XmlEncode(params.os_version) + "\" platform=\"" +
       XmlEncode(params.os_platform) + "\" sp=\"" +
       XmlEncode(params.os_sp) + "\"></o:os>\n"
@@ -75,9 +87,7 @@ string FormatRequest(const OmahaRequestParams& params) {
       XmlEncode(params.app_version) + "\" "
       "lang=\"" + XmlEncode(params.app_lang) + "\" track=\"" +
       XmlEncode(params.app_track) + "\" board=\"" +
-      XmlEncode(params.os_board) + "\">\n"
-      "        <o:ping active=\"0\"></o:ping>\n"
-      "        <o:updatecheck></o:updatecheck>\n"
+      XmlEncode(params.os_board) + "\">\n" + body +
       "    </o:app>\n"
       "</o:gupdate>\n";
 }
@@ -99,8 +109,10 @@ string XmlEncode(const string& input) {
   return string(reinterpret_cast<const char *>(str.get()));
 }
 
-OmahaRequestAction::OmahaRequestAction(HttpFetcher* http_fetcher)
-    : http_fetcher_(http_fetcher) {}
+OmahaRequestAction::OmahaRequestAction(OmahaEvent* event,
+                                       HttpFetcher* http_fetcher)
+    : event_(event),
+      http_fetcher_(http_fetcher) {}
 
 OmahaRequestAction::~OmahaRequestAction() {}
 
@@ -108,9 +120,9 @@ void OmahaRequestAction::PerformAction() {
   CHECK(HasInputObject());
   params_ = GetInputObject();
   http_fetcher_->set_delegate(this);
-  string request_post(FormatRequest(params_));
+  string request_post(FormatRequest(event_.get(), params_));
   http_fetcher_->SetPostData(request_post.data(), request_post.size());
-  LOG(INFO) << "Checking for update at " << params_.update_url;
+  LOG(INFO) << "Posting an Omaha request to " << params_.update_url;
   LOG(INFO) << "Request: " << request_post;
   http_fetcher_->BeginTransfer(params_.update_url);
 }
@@ -195,10 +207,18 @@ off_t ParseInt(const string& str) {
 void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
                                           bool successful) {
   ScopedActionCompleter completer(processor_, this);
-  LOG(INFO) << "Update check response: " << string(response_buffer_.begin(),
-                                                   response_buffer_.end());
+  LOG(INFO) << "Omaha request response: " << string(response_buffer_.begin(),
+                                                    response_buffer_.end());
+
+  // Events are best effort transactions -- assume they always succeed.
+  if (IsEvent()) {
+    CHECK(!HasOutputPipe()) << "No output pipe allowed for event requests.";
+    completer.set_success(true);
+    return;
+  }
+
   if (!successful) {
-    LOG(ERROR) << "Update check network transfer failed.";
+    LOG(ERROR) << "Omaha request network transfer failed.";
     return;
   }
   if (!HasOutputPipe()) {
