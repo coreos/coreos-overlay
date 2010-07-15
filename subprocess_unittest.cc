@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -67,6 +67,8 @@ gboolean StartAndCancelInRunLoop(gpointer data) {
   cancel_test_data->spawned = true;
   printf("spawned\n");
   // Wait for server to be up and running
+  useconds_t total_wait_time = 0;
+  const useconds_t kMaxWaitTime = 3 * 1000000;  // 3 seconds
   for (;;) {
     int status =
         System(StringPrintf("wget -O /dev/null http://127.0.0.1:%d/foo",
@@ -76,7 +78,11 @@ gboolean StartAndCancelInRunLoop(gpointer data) {
         << "command failed to run or died abnormally";
     if (0 == WEXITSTATUS(status))
       break;
-    usleep(100 * 1000);  // 100 ms
+
+    const useconds_t kSleepTime = 100 * 1000;  // 100ms
+    usleep(kSleepTime);  // 100 ms
+    total_wait_time += kSleepTime;
+    CHECK_LT(total_wait_time, kMaxWaitTime);
   }
   Subprocess::Get().CancelExec(tag);
   return FALSE;
