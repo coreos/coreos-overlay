@@ -14,6 +14,10 @@ using std::make_pair;
 
 namespace chromeos_update_engine {
 
+namespace {
+const int kMaxRetriesCount = 20;
+}
+
 LibcurlHttpFetcher::~LibcurlHttpFetcher() {
   CleanUp();
 }
@@ -66,9 +70,9 @@ void LibcurlHttpFetcher::BeginTransfer(const std::string& url) {
   transfer_size_ = -1;
   bytes_downloaded_ = 0;
   resume_offset_ = 0;
-  do {
-    ResumeTransfer(url);
-  } while (CurlPerformOnce());
+  retry_count_ = 0;
+  ResumeTransfer(url);
+  CurlPerformOnce();
 }
 
 void LibcurlHttpFetcher::TerminateTransfer() {
@@ -86,15 +90,37 @@ bool LibcurlHttpFetcher::CurlPerformOnce() {
     retcode = curl_multi_perform(curl_multi_handle_, &running_handles);
   }
   if (0 == running_handles) {
+    long http_response_code = 0;
+    if (curl_easy_getinfo(curl_handle_,
+                          CURLINFO_RESPONSE_CODE,
+                          &http_response_code) == CURLE_OK) {
+      LOG(INFO) << "HTTP response code: " << http_response_code;
+    } else {
+      LOG(ERROR) << "Unable to get http response code.";
+    }
+    
     // we're done!
     CleanUp();
 
     if ((transfer_size_ >= 0) && (bytes_downloaded_ < transfer_size_)) {
       // Need to restart transfer
-      return true;
+      retry_count_++;
+      LOG(INFO) << "Restarting transfer b/c we finished, had downloaded "
+                << bytes_downloaded_ << " bytes, but transfer_size_ is "
+                << transfer_size_ << ". retry_count: " << retry_count_;
+      if (retry_count_ > kMaxRetriesCount) {
+        if (delegate_)
+          delegate_->TransferComplete(this, false);  // success
+      } else {
+        g_timeout_add(5 * 1000,
+                      &LibcurlHttpFetcher::StaticRetryTimeoutCallback,
+                      this);
+      }
+      return false;
     } else {
       if (delegate_) {
-        delegate_->TransferComplete(this, true);  // success
+        // success is when http_response_code is 200
+        delegate_->TransferComplete(this, http_response_code == 200);
       }
     }
   } else {
@@ -217,14 +243,18 @@ void LibcurlHttpFetcher::SetupMainloopSources() {
 
 bool LibcurlHttpFetcher::FDCallback(GIOChannel *source,
                                     GIOCondition condition) {
-  while (CurlPerformOnce()) {
-    ResumeTransfer(url_);
-  }
+  CurlPerformOnce();
   // We handle removing of this source elsewhere, so we always return true.
   // The docs say, "the function should return FALSE if the event source
   // should be removed."
   // http://www.gtk.org/api/2.6/glib/glib-IO-Channels.html#GIOFunc
   return true;
+}
+
+gboolean LibcurlHttpFetcher::RetryTimeoutCallback() {
+  ResumeTransfer(url_);
+  CurlPerformOnce();
+  return FALSE;  // Don't have glib auto call this callback again
 }
 
 gboolean LibcurlHttpFetcher::TimeoutCallback() {
@@ -236,9 +266,7 @@ gboolean LibcurlHttpFetcher::TimeoutCallback() {
   // timeout callback then.
   // TODO(adlr): optimize by checking if we can keep this timeout callback.
   //timeout_source_ = NULL;
-  while (CurlPerformOnce()) {
-    ResumeTransfer(url_);
-  }
+  CurlPerformOnce();
   return TRUE;
 }
 

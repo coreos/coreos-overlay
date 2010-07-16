@@ -23,7 +23,7 @@ class LibcurlHttpFetcher : public HttpFetcher {
   LibcurlHttpFetcher()
       : curl_multi_handle_(NULL), curl_handle_(NULL),
         timeout_source_(NULL), transfer_in_progress_(false),
-        idle_ms_(1000) {}
+        retry_count_(0), idle_ms_(1000) {}
 
   // Cleans up all internal state. Does not notify delegate
   ~LibcurlHttpFetcher();
@@ -72,6 +72,11 @@ class LibcurlHttpFetcher : public HttpFetcher {
   gboolean TimeoutCallback();
   static gboolean StaticTimeoutCallback(gpointer data) {
     return reinterpret_cast<LibcurlHttpFetcher*>(data)->TimeoutCallback();
+  }
+  
+  gboolean RetryTimeoutCallback();
+  static gboolean StaticRetryTimeoutCallback(void* arg) {
+    return static_cast<LibcurlHttpFetcher*>(arg)->RetryTimeoutCallback();
   }
 
   // Calls into curl_multi_perform to let libcurl do its work. Returns after
@@ -123,6 +128,9 @@ class LibcurlHttpFetcher : public HttpFetcher {
   // If we resumed an earlier transfer, data offset that we used for the
   // new connection.  0 otherwise.
   off_t resume_offset_;
+  
+  // Number of resumes performed.
+  int retry_count_;
 
   long idle_ms_;
   DISALLOW_COPY_AND_ASSIGN(LibcurlHttpFetcher);

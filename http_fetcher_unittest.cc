@@ -106,7 +106,7 @@ class PythonHttpServer {
     // request that the server exit itself
     LOG(INFO) << "running wget to exit";
     int rc = system((string("wget -t 1 --output-document=/dev/null ") +
-                    LocalServerUrlForPath("/quitquitquit")).c_str());
+                     LocalServerUrlForPath("/quitquitquit")).c_str());
     LOG(INFO) << "done running wget to exit";
     if (validate_quit_)
       EXPECT_EQ(0, rc);
@@ -174,7 +174,7 @@ gboolean StartTransfer(gpointer data) {
 }  // namespace {}
 
 TYPED_TEST(HttpFetcherTest, SimpleTest) {
-  GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
+  GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
   {
     HttpFetcherTestDelegate delegate;
     delegate.loop_ = loop;
@@ -193,7 +193,7 @@ TYPED_TEST(HttpFetcherTest, SimpleTest) {
 }
 
 TYPED_TEST(HttpFetcherTest, SimpleBigTest) {
-  GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
+  GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
   {
     HttpFetcherTestDelegate delegate;
     delegate.loop_ = loop;
@@ -246,7 +246,7 @@ gboolean UnpausingTimeoutCallback(gpointer data) {
 }  // namespace {}
 
 TYPED_TEST(HttpFetcherTest, PauseTest) {
-  GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
+  GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
   {
     PausingHttpFetcherTestDelegate delegate;
     scoped_ptr<HttpFetcher> fetcher(this->NewLargeFetcher());
@@ -306,7 +306,7 @@ gboolean AbortingTimeoutCallback(gpointer data) {
 }  // namespace {}
 
 TYPED_TEST(HttpFetcherTest, AbortTest) {
-  GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
+  GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
   {
     AbortingHttpFetcherTestDelegate delegate;
     scoped_ptr<HttpFetcher> fetcher(this->NewLargeFetcher());
@@ -349,7 +349,7 @@ class FlakyHttpFetcherTestDelegate : public HttpFetcherDelegate {
 TYPED_TEST(HttpFetcherTest, FlakyTest) {
   if (this->IsMock())
     return;
-  GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
+  GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
   {
     FlakyHttpFetcherTestDelegate delegate;
     delegate.loop_ = loop;
@@ -373,6 +373,76 @@ TYPED_TEST(HttpFetcherTest, FlakyTest) {
       // Assert so that we don't flood the screen w/ EXPECT errors on failure.
       ASSERT_EQ(delegate.data.substr(i, 10), "abcdefghij");
     }
+  }
+  g_main_loop_unref(loop);
+}
+
+namespace {
+class FailureHttpFetcherTestDelegate : public HttpFetcherDelegate {
+ public:
+  FailureHttpFetcherTestDelegate() : loop_(NULL), server_(NULL) {}
+  virtual void ReceivedBytes(HttpFetcher* fetcher,
+                             const char* bytes, int length) {
+    if (server_) {
+      LOG(INFO) << "Stopping server";
+      delete server_;
+      LOG(INFO) << "server stopped";
+      server_ = NULL;
+    }
+  }
+  virtual void TransferComplete(HttpFetcher* fetcher, bool successful) {
+    EXPECT_FALSE(successful);
+    g_main_loop_quit(loop_);
+  }
+  GMainLoop* loop_;
+  PythonHttpServer* server_;
+};
+}  // namespace {}
+
+
+TYPED_TEST(HttpFetcherTest, FailureTest) {
+  if (this->IsMock())
+    return;
+  GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
+  {
+    FailureHttpFetcherTestDelegate delegate;
+    delegate.loop_ = loop;
+    scoped_ptr<HttpFetcher> fetcher(this->NewSmallFetcher());
+    fetcher->set_delegate(&delegate);
+
+    StartTransferArgs start_xfer_args = {
+      fetcher.get(),
+      LocalServerUrlForPath(this->SmallUrl())
+    };
+
+    g_timeout_add(0, StartTransfer, &start_xfer_args);
+    g_main_loop_run(loop);
+
+    // Exiting and testing happens in the delegate
+  }
+  g_main_loop_unref(loop);
+}
+
+TYPED_TEST(HttpFetcherTest, ServerDiesTest) {
+  if (this->IsMock())
+    return;
+  GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
+  {
+    FailureHttpFetcherTestDelegate delegate;
+    delegate.loop_ = loop;
+    delegate.server_ = new PythonHttpServer;
+    scoped_ptr<HttpFetcher> fetcher(this->NewSmallFetcher());
+    fetcher->set_delegate(&delegate);
+
+    StartTransferArgs start_xfer_args = {
+      fetcher.get(),
+      LocalServerUrlForPath("/flaky")
+    };
+
+    g_timeout_add(0, StartTransfer, &start_xfer_args);
+    g_main_loop_run(loop);
+
+    // Exiting and testing happens in the delegate
   }
   g_main_loop_unref(loop);
 }
