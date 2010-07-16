@@ -46,6 +46,7 @@ string GetUpdateResponse(const string& app_id,
                 "appid=\"") + app_id + "\" status=\"ok\"><ping "
       "status=\"ok\"/><updatecheck DisplayVersion=\"" + display_version + "\" "
       "MoreInfo=\"" + more_info_url + "\" Prompt=\"" + prompt + "\" "
+      "IsDelta=\"true\" "
       "codebase=\"" + codebase + "\" "
       "hash=\"" + hash + "\" needsadmin=\"" + needsadmin + "\" "
       "size=\"" + size + "\" status=\"ok\"/></app></gupdate>";
@@ -229,6 +230,7 @@ TEST(OmahaRequestActionTest, ValidUpdateTest) {
   EXPECT_EQ("1.2.3.4", response.display_version);
   EXPECT_EQ("http://code/base", response.codebase);
   EXPECT_EQ("http://more/info", response.more_info_url);
+  EXPECT_TRUE(response.is_delta);
   EXPECT_EQ("HASH1234=", response.hash);
   EXPECT_EQ(123, response.size);
   EXPECT_FALSE(response.needs_admin);
@@ -398,6 +400,7 @@ TEST(OmahaRequestActionTest, MissingFieldTest) {
   EXPECT_EQ("1.2.3.4", response.display_version);
   EXPECT_EQ("http://code/base", response.codebase);
   EXPECT_EQ("", response.more_info_url);
+  EXPECT_FALSE(response.is_delta);
   EXPECT_EQ("HASH1234=", response.hash);
   EXPECT_EQ(123, response.size);
   EXPECT_TRUE(response.needs_admin);

@@ -82,12 +82,21 @@ class PythonHttpServer {
       return;
     }
     int rc = 1;
+    int tries = 10;
+    started_ = true;
     while (0 != rc) {
+      LOG(INFO) << "running wget to start";
       rc = system((string("wget --output-document=/dev/null ") +
                    LocalServerUrlForPath("/test")).c_str());
+      LOG(INFO) << "done running wget to start";
       usleep(10 * 1000);  // 10 ms
+      tries--;
+      if (tries == 0) {
+        LOG(ERROR) << "Unable to start server.";
+        started_ = false;
+        break;
+      }
     }
-    started_ = true;
     free(argv[0]);
     return;
   }
@@ -95,8 +104,10 @@ class PythonHttpServer {
     if (!started_)
       return;
     // request that the server exit itself
+    LOG(INFO) << "running wget to exit";
     int rc = system((string("wget -t 1 --output-document=/dev/null ") +
                     LocalServerUrlForPath("/quitquitquit")).c_str());
+    LOG(INFO) << "done running wget to exit";
     if (validate_quit_)
       EXPECT_EQ(0, rc);
     waitpid(pid_, NULL, 0);
@@ -111,7 +122,7 @@ class HttpFetcherTest<LibcurlHttpFetcher> : public ::testing::Test {
  public:
   HttpFetcher* NewLargeFetcher() {
     LibcurlHttpFetcher *ret = new LibcurlHttpFetcher;
-    ret->set_idle_ms(1);  // speeds up test execution
+    ret->set_idle_ms(1000);  // speeds up test execution
     return ret;
   }
   HttpFetcher* NewSmallFetcher() {
@@ -174,6 +185,25 @@ TYPED_TEST(HttpFetcherTest, SimpleTest) {
     ASSERT_TRUE(server.started_);
 
     StartTransferArgs start_xfer_args = {fetcher.get(), this->SmallUrl()};
+
+    g_timeout_add(0, StartTransfer, &start_xfer_args);
+    g_main_loop_run(loop);
+  }
+  g_main_loop_unref(loop);
+}
+
+TYPED_TEST(HttpFetcherTest, SimpleBigTest) {
+  GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
+  {
+    HttpFetcherTestDelegate delegate;
+    delegate.loop_ = loop;
+    scoped_ptr<HttpFetcher> fetcher(this->NewLargeFetcher());
+    fetcher->set_delegate(&delegate);
+
+    typename TestFixture::HttpServer server;
+    ASSERT_TRUE(server.started_);
+
+    StartTransferArgs start_xfer_args = {fetcher.get(), this->BigUrl()};
 
     g_timeout_add(0, StartTransfer, &start_xfer_args);
     g_main_loop_run(loop);

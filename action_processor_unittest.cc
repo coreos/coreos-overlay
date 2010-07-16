@@ -61,7 +61,11 @@ namespace {
 class MyActionProcessorDelegate : public ActionProcessorDelegate {
  public:
   explicit MyActionProcessorDelegate(const ActionProcessor* processor)
-      : processor_(processor), processing_done_called_(false) {}
+      : processor_(processor),
+        processing_done_called_(false),
+        processing_stopped_called_(false),
+        action_completed_called_(false),
+        action_completed_success_(false) {}
 
   virtual void ProcessingDone(const ActionProcessor* processor, bool success) {
     EXPECT_EQ(processor_, processor);

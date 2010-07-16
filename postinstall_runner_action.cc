@@ -24,11 +24,6 @@ void PostinstallRunnerAction::PerformAction() {
   const string install_device = install_plan.install_path;
   ScopedActionCompleter completer(processor_, this);
   
-  utils::BootLoader boot_loader;
-  TEST_AND_RETURN(utils::GetBootloader(&boot_loader));
-
-  bool read_only = (boot_loader == utils::BootLoader_CHROME_FIRMWARE);
-
   // Make mountpoint
   string temp_dir;
   TEST_AND_RETURN(utils::MakeTempDirectory("/tmp/au_postint_mount.XXXXXX",
@@ -37,13 +32,21 @@ void PostinstallRunnerAction::PerformAction() {
 
   {
     // Scope for the mount
-    unsigned long mountflags = read_only ? MS_RDONLY : 0;
+    unsigned long mountflags = MS_RDONLY;
 
     int rc = mount(install_device.c_str(),
                    temp_dir.c_str(),
-                   "ext3",
+                   "ext4",
                    mountflags,
                    NULL);
+    if (rc < 0) {
+      LOG(INFO) << "Failed to mount install part as ext4. Trying ext3.";
+      rc = mount(install_device.c_str(),
+                 temp_dir.c_str(),
+                 "ext3",
+                 mountflags,
+                 NULL);
+    }
     if (rc < 0) {
       LOG(ERROR) << "Unable to mount destination device " << install_device
                  << " onto " << temp_dir;

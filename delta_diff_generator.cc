@@ -27,6 +27,7 @@
 #include "update_engine/utils.h"
 
 using std::make_pair;
+using std::max;
 using std::min;
 using std::set;
 using std::string;
@@ -756,7 +757,7 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
   TEST_AND_RETURN_FALSE(utils::FileSize(old_kernel_part) >= 0);
   TEST_AND_RETURN_FALSE(utils::FileSize(new_kernel_part) >= 0);
 
-  vector<Block> blocks(min(old_image_stbuf.st_size / kBlockSize,
+  vector<Block> blocks(max(old_image_stbuf.st_size / kBlockSize,
                            new_image_stbuf.st_size / kBlockSize));
   LOG(INFO) << "invalid: " << Vertex::kInvalidIndex;
   LOG(INFO) << "len: " << blocks.size();

@@ -74,8 +74,8 @@ class ScopedLoopMounter {
 
 void CompareFilesByBlock(const string& a_file, const string& b_file) {
   vector<char> a_data, b_data;
-  EXPECT_TRUE(utils::ReadFile(a_file, &a_data));
-  EXPECT_TRUE(utils::ReadFile(b_file, &b_data));
+  EXPECT_TRUE(utils::ReadFile(a_file, &a_data)) << "file failed: " << a_file;
+  EXPECT_TRUE(utils::ReadFile(b_file, &b_data)) << "file failed: " << b_file;
 
   EXPECT_EQ(a_data.size(), b_data.size());
   size_t kBlockSize = 4096;

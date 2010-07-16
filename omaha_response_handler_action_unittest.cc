@@ -88,6 +88,7 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     in.size = 12;
     in.needs_admin = true;
     in.prompt = false;
+    in.is_delta = false;
     InstallPlan install_plan;
     EXPECT_TRUE(DoTest(in, "/dev/sda3", &install_plan));
     EXPECT_TRUE(install_plan.is_full_update);
@@ -105,9 +106,10 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     in.size = 12;
     in.needs_admin = true;
     in.prompt = true;
+    in.is_delta = true;
     InstallPlan install_plan;
     EXPECT_TRUE(DoTest(in, "/dev/sda5", &install_plan));
-    EXPECT_TRUE(install_plan.is_full_update);
+    EXPECT_FALSE(install_plan.is_full_update);
     EXPECT_EQ(in.codebase, install_plan.download_url);
     EXPECT_EQ(in.hash, install_plan.download_hash);
     EXPECT_EQ("/dev/sda3", install_plan.install_path);
@@ -122,6 +124,7 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     in.size = 12;
     in.needs_admin = true;
     in.prompt = true;
+    in.is_delta = false;
     InstallPlan install_plan;
     EXPECT_TRUE(DoTest(in, "/dev/sda3", &install_plan));
     EXPECT_TRUE(install_plan.is_full_update);

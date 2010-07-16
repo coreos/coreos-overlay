@@ -35,11 +35,42 @@ void FreeArgv(char** argv) {
     argv[i] = NULL;
   }
 }
+
+// Note: Caller responsible for free()ing the returned value!
+char** ArgPointer() {
+  const char* keys[] = {"LD_LIBRARY_PATH", "PATH"};
+  char** ret = new char*[arraysize(keys) + 1];
+  int pointer = 0;
+  for (size_t i = 0; i < arraysize(keys); i++) {
+    ret[i] = NULL;
+    if (getenv(keys[i])) {
+      ret[pointer] = strdup(StringPrintf("%s=%s", keys[i],
+                                         getenv(keys[i])).c_str());
+      pointer++;
+    }
+  }
+  return ret;
+}
+
+class ScopedFreeArgPointer {
+ public:
+  ScopedFreeArgPointer(char** arr) : arr_(arr) {}
+  ~ScopedFreeArgPointer() {
+    if (!arr_)
+      return;
+    for (int i = 0; arr_[i]; i++)
+      free(arr_[i]);
+    delete[] arr_;
+  }
+ private:
+  char** arr_;
+  DISALLOW_COPY_AND_ASSIGN(ScopedFreeArgPointer);
+};
 }  // namespace {}
 
 uint32_t Subprocess::Exec(const std::vector<std::string>& cmd,
-                        ExecCallback callback,
-                        void* p) {
+                          ExecCallback callback,
+                          void* p) {
   GPid child_pid;
   GError* err;
   scoped_array<char*> argv(new char*[cmd.size() + 1]);
@@ -48,13 +79,8 @@ uint32_t Subprocess::Exec(const std::vector<std::string>& cmd,
   }
   argv[cmd.size()] = NULL;
 
-  scoped_array<char*> argp(new char*[2]);
-  argp[0] = argp[1] = NULL;
-  const char* kLdLibraryPathKey = "LD_LIBRARY_PATH";
-  if (getenv(kLdLibraryPathKey)) {
-    argp[0] = strdup(StringPrintf("%s=%s", kLdLibraryPathKey,
-                                  getenv(kLdLibraryPathKey)).c_str());
-  }
+  char** argp = ArgPointer();
+  ScopedFreeArgPointer argp_free(argp);
 
   SubprocessCallbackRecord callback_record;
   callback_record.callback = callback;
@@ -62,7 +88,7 @@ uint32_t Subprocess::Exec(const std::vector<std::string>& cmd,
 
   bool success = g_spawn_async(NULL,  // working directory
                                argv.get(),
-                               argp.get(),
+                               argp,
                                G_SPAWN_DO_NOT_REAP_CHILD,  // flags
                                NULL,  // child setup function
                                NULL,  // child setup data pointer
@@ -93,8 +119,12 @@ bool Subprocess::SynchronousExec(const std::vector<std::string>& cmd,
     argv[i] = strdup(cmd[i].c_str());
   }
   argv[cmd.size()] = NULL;
-  char* argp[1];
-  argp[0] = NULL;
+
+  char** argp = ArgPointer();
+  ScopedFreeArgPointer argp_free(argp);
+
+  char* child_stdout;
+  char* child_stderr;
 
   bool success = g_spawn_sync(NULL,  // working directory
                               argv.get(),
@@ -102,13 +132,17 @@ bool Subprocess::SynchronousExec(const std::vector<std::string>& cmd,
                               static_cast<GSpawnFlags>(NULL),  // flags
                               NULL,  // child setup function
                               NULL,  // data for child setup function
-                              NULL,  // return location for stdout
-                              NULL,  // return location for stderr
+                              &child_stdout,
+                              &child_stderr,
                               return_code,
                               &err);
   FreeArgv(argv.get());
   if (err)
     LOG(INFO) << "err is: " << err->code << ", " << err->message;
+  if (child_stdout)
+    LOG(INFO) << "Postinst stdout:" << child_stdout;
+  if (child_stderr)
+    LOG(INFO) << "Postinst stderr:" << child_stderr;
   return success;
 }
 

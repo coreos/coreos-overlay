@@ -289,6 +289,8 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
   output_object.needs_admin =
       XmlGetProperty(updatecheck_node, "needsadmin") == "true";
   output_object.prompt = XmlGetProperty(updatecheck_node, "Prompt") == "true";
+  output_object.is_delta =
+      XmlGetProperty(updatecheck_node, "IsDelta") == "true";
   SetOutputObject(output_object);
   return;
 }

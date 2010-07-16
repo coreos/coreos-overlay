@@ -35,7 +35,7 @@ void OmahaResponseHandlerAction::PerformAction() {
   install_plan_.kernel_install_path =
       utils::BootKernelDevice(install_plan_.install_path);
 
-  install_plan_.is_full_update = true;  // TODO(adlr): know if update is a delta
+  install_plan_.is_full_update = !response.is_delta;
 
   TEST_AND_RETURN(HasOutputPipe());
   if (HasOutputPipe())

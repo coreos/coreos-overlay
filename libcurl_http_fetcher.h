@@ -69,7 +69,7 @@ class LibcurlHttpFetcher : public HttpFetcher {
     return reinterpret_cast<LibcurlHttpFetcher*>(data)->FDCallback(source,
                                                                    condition);
   }
-  bool TimeoutCallback();
+  gboolean TimeoutCallback();
   static gboolean StaticTimeoutCallback(gpointer data) {
     return reinterpret_cast<LibcurlHttpFetcher*>(data)->TimeoutCallback();
   }
@@ -79,7 +79,8 @@ class LibcurlHttpFetcher : public HttpFetcher {
   // one call to curl_multi_perform. This method will set up the glib run
   // loop with sources for future work that libcurl will do.
   // This method will not block.
-  void CurlPerformOnce();
+  // Returns true if we should resume immediately after this call.
+  bool CurlPerformOnce();
 
   // Sets up glib main loop sources as needed by libcurl. This is generally
   // the file descriptor of the socket and a timer in case nothing happens
