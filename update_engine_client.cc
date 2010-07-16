@@ -68,7 +68,7 @@ static void StatusUpdateSignalHandler(DBusGProxy* proxy,
 bool GetStatus() {
   DBusGProxy* proxy;
   GError* error = NULL;
-  
+
   CHECK(GetProxy(&proxy));
 
   gint64 last_checked_time = 0;
@@ -101,9 +101,9 @@ bool GetStatus() {
 // Should never return.
 void WatchForUpdates() {
   DBusGProxy* proxy;
-  
+
   CHECK(GetProxy(&proxy));
-  
+
   // Register marshaller
   dbus_g_object_register_marshaller(
       update_engine_VOID__INT64_DOUBLE_STRING_STRING_INT64,
@@ -114,10 +114,10 @@ void WatchForUpdates() {
       G_TYPE_STRING,
       G_TYPE_INT64,
       G_TYPE_INVALID);
-  
-  // TODO(adlr): make StatusUpdate a const string
+
+  static const char kStatusUpdate[] = "StatusUpdate";
   dbus_g_proxy_add_signal(proxy,
-                          "StatusUpdate",
+                          kStatusUpdate,
                           G_TYPE_INT64,
                           G_TYPE_DOUBLE,
                           G_TYPE_STRING,
@@ -126,7 +126,7 @@ void WatchForUpdates() {
                           G_TYPE_INVALID);
   GMainLoop* loop = g_main_loop_new (NULL, TRUE);
   dbus_g_proxy_connect_signal(proxy,
-                              "StatusUpdate",
+                              kStatusUpdate,
                               G_CALLBACK(StatusUpdateSignalHandler),
                               NULL,
                               NULL);
@@ -137,7 +137,7 @@ void WatchForUpdates() {
 bool CheckForUpdates(bool force) {
   DBusGProxy* proxy;
   GError* error = NULL;
-  
+
   CHECK(GetProxy(&proxy));
 
   gboolean rc =
@@ -156,7 +156,7 @@ int main(int argc, char** argv) {
   dbus_g_thread_init();
   chromeos_update_engine::Subprocess::Init();
   google::ParseCommandLineFlags(&argc, &argv, true);
-  
+
   if (FLAGS_status) {
     LOG(INFO) << "Querying Update Engine status...";
     if (!GetStatus()) {
@@ -178,7 +178,7 @@ int main(int argc, char** argv) {
     WatchForUpdates();  // Should never return.
     return 1;
   }
-  
+
   LOG(INFO) << "No flags specified. Exiting.";
   return 0;
 }
