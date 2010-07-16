@@ -55,6 +55,8 @@ struct OmahaEvent {
     kTypeDownloadComplete = 1,
     kTypeInstallComplete = 2,
     kTypeUpdateComplete = 3,
+    kTypeUpdateDownloadStarted = 13,
+    kTypeUpdateDownloadFinished = 14,
   };
 
   enum Result {

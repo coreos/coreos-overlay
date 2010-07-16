@@ -113,17 +113,31 @@ void UpdateAttempter::Update() {
       new FilesystemCopierAction(false));
   shared_ptr<FilesystemCopierAction> kernel_filesystem_copier_action(
       new FilesystemCopierAction(true));
+  shared_ptr<OmahaRequestAction> download_started_action(
+      new OmahaRequestAction(omaha_request_params_,
+                             new OmahaEvent(
+                                 OmahaEvent::kTypeUpdateDownloadStarted,
+                                 OmahaEvent::kResultSuccess,
+                                 0),
+                             new LibcurlHttpFetcher));
   shared_ptr<DownloadAction> download_action(
       new DownloadAction(new LibcurlHttpFetcher));
+  shared_ptr<OmahaRequestAction> download_finished_action(
+      new OmahaRequestAction(omaha_request_params_,
+                             new OmahaEvent(
+                                 OmahaEvent::kTypeUpdateDownloadFinished,
+                                 OmahaEvent::kResultSuccess,
+                                 0),
+                             new LibcurlHttpFetcher));
   shared_ptr<PostinstallRunnerAction> postinstall_runner_action_precommit(
       new PostinstallRunnerAction(true));
   shared_ptr<SetBootableFlagAction> set_bootable_flag_action(
       new SetBootableFlagAction);
   shared_ptr<PostinstallRunnerAction> postinstall_runner_action_postcommit(
       new PostinstallRunnerAction(false));
-  shared_ptr<OmahaRequestAction> install_success_action(
+  shared_ptr<OmahaRequestAction> update_complete_action(
       new OmahaRequestAction(omaha_request_params_,
-                             new OmahaEvent(OmahaEvent::kTypeInstallComplete,
+                             new OmahaEvent(OmahaEvent::kTypeUpdateComplete,
                                             OmahaEvent::kResultSuccess,
                                             0),
                              new LibcurlHttpFetcher));
@@ -136,13 +150,15 @@ void UpdateAttempter::Update() {
   actions_.push_back(shared_ptr<AbstractAction>(filesystem_copier_action));
   actions_.push_back(shared_ptr<AbstractAction>(
       kernel_filesystem_copier_action));
+  actions_.push_back(shared_ptr<AbstractAction>(download_started_action));
   actions_.push_back(shared_ptr<AbstractAction>(download_action));
+  actions_.push_back(shared_ptr<AbstractAction>(download_finished_action));
   actions_.push_back(shared_ptr<AbstractAction>(
       postinstall_runner_action_precommit));
   actions_.push_back(shared_ptr<AbstractAction>(set_bootable_flag_action));
   actions_.push_back(shared_ptr<AbstractAction>(
       postinstall_runner_action_postcommit));
-  actions_.push_back(shared_ptr<AbstractAction>(install_success_action));
+  actions_.push_back(shared_ptr<AbstractAction>(update_complete_action));
 
   // Enqueue the actions
   for (vector<shared_ptr<AbstractAction> >::iterator it = actions_.begin();
