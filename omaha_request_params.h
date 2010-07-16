@@ -29,6 +29,7 @@ struct OmahaRequestParams {
                      const std::string& in_app_version,
                      const std::string& in_app_lang,
                      const std::string& in_app_track,
+                     const bool in_delta_okay,
                      const std::string& in_update_url)
       : machine_id(in_machine_id),
         user_id(in_user_id),
@@ -40,6 +41,7 @@ struct OmahaRequestParams {
         app_version(in_app_version),
         app_lang(in_app_lang),
         app_track(in_app_track),
+        delta_okay(in_delta_okay),
         update_url(in_update_url) {}
 
   std::string machine_id;
@@ -52,6 +54,7 @@ struct OmahaRequestParams {
   std::string app_version;
   std::string app_lang;
   std::string app_track;
+  bool delta_okay;  // If this client can accept a delta
 
   std::string update_url;
 

@@ -98,6 +98,7 @@ TEST_F(OmahaRequestDeviceParamsTest, SimpleTest) {
     EXPECT_EQ("{87efface-864d-49a5-9bb3-4b050a7c227a}", out.app_id);
     EXPECT_EQ("0.2.2.3", out.app_version);
     EXPECT_EQ("en-US", out.app_lang);
+    EXPECT_TRUE(out.delta_okay);
     EXPECT_EQ("footrack", out.app_track);
   }
   EXPECT_EQ(0, System(string("rm -rf ") + kTestDir));
@@ -173,6 +174,22 @@ TEST_F(OmahaRequestDeviceParamsTest, MachineIdPersistsTest) {
   OmahaRequestParams out2;
   EXPECT_TRUE(DoTest(&out2));
   EXPECT_EQ(machine_id, out2.machine_id);
+  EXPECT_EQ(0, System(string("rm -rf ") + kTestDir));
+}
+
+TEST_F(OmahaRequestDeviceParamsTest, NoDeltasTest) {
+  ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir + "/etc"));
+  ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir +
+                      utils::kStatefulPartition + "/etc"));
+  ASSERT_TRUE(WriteFileString(
+      kTestDir + "/etc/lsb-release",
+      "CHROMEOS_RELEASE_FOO=CHROMEOS_RELEASE_VERSION=1.2.3.4\n"
+      "CHROMEOS_RELEASE_VERSION=0.2.2.3\n"
+      "CHROMEOS_RELEASE_TRXCK=footrack"));
+  ASSERT_TRUE(WriteFileString(kTestDir + "/.nodelta", ""));
+  OmahaRequestParams out;
+  EXPECT_TRUE(DoTest(&out));
+  EXPECT_FALSE(out.delta_okay);
   EXPECT_EQ(0, System(string("rm -rf ") + kTestDir));
 }
 

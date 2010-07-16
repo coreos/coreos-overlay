@@ -38,6 +38,14 @@ bool OmahaRequestDeviceParams::Init() {
   app_id = OmahaRequestParams::kAppId;
   app_lang = "en-US";
   app_track = GetLsbValue("CHROMEOS_RELEASE_TRACK", "");
+  struct stat stbuf;
+  
+  // Deltas are only okay if the /.nodelta file does not exist.
+  // If we don't know (i.e. stat() returns some unexpected error),
+  // then err on the side of caution and say deltas are not okay
+  delta_okay = (stat((root_ + "/.nodelta").c_str(), &stbuf) < 0) &&
+               (errno == ENOENT);
+
   update_url = GetLsbValue("CHROMEOS_AUSERVER",
                            OmahaRequestParams::kUpdateUrl);
   return true;

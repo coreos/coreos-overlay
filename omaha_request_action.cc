@@ -88,7 +88,8 @@ string FormatRequest(const OmahaEvent* event,
       XmlEncode(params.app_version) + "\" "
       "lang=\"" + XmlEncode(params.app_lang) + "\" track=\"" +
       XmlEncode(params.app_track) + "\" board=\"" +
-      XmlEncode(params.os_board) + "\">\n" + body +
+      XmlEncode(params.os_board) + "\" delta_okay=\"" +
+      (params.delta_okay ? "true" : "false") + "\">\n" + body +
       "    </o:app>\n"
       "</o:gupdate>\n";
 }

@@ -189,6 +189,7 @@ TEST(OmahaRequestActionTest, NoUpdateTest) {
                             "0.1.0.0",
                             "en-US",
                             "unittest",
+                            false,  // delta okay
                             "");  // url
   OmahaResponse response;
   ASSERT_TRUE(
@@ -211,6 +212,7 @@ TEST(OmahaRequestActionTest, ValidUpdateTest) {
                             "0.1.0.0",
                             "en-US",
                             "unittest_track",
+                            false,  // delta okay
                             "");  // url
   OmahaResponse response;
   ASSERT_TRUE(
@@ -248,6 +250,7 @@ TEST(OmahaRequestActionTest, NoOutputPipeTest) {
                             "0.1.0.0",
                             "en-US",
                             "unittest",
+                            false,  // delta okay
                             "");  // url
   const string http_response(GetNoUpdateResponse(OmahaRequestParams::kAppId));
 
@@ -279,6 +282,7 @@ TEST(OmahaRequestActionTest, InvalidXmlTest) {
                             "0.1.0.0",
                             "en-US",
                             "unittest_track",
+                            false,  // delta okay
                             "http://url");
   OmahaResponse response;
   ASSERT_FALSE(
@@ -301,6 +305,7 @@ TEST(OmahaRequestActionTest, MissingStatusTest) {
                             "0.1.0.0",
                             "en-US",
                             "unittest_track",
+                            false,  // delta okay
                             "http://url");
   OmahaResponse response;
   ASSERT_FALSE(TestUpdateCheck(
@@ -326,6 +331,7 @@ TEST(OmahaRequestActionTest, InvalidStatusTest) {
                             "0.1.0.0",
                             "en-US",
                             "unittest_track",
+                            false,  // delta okay
                             "http://url");
   OmahaResponse response;
   ASSERT_FALSE(TestUpdateCheck(
@@ -351,6 +357,7 @@ TEST(OmahaRequestActionTest, MissingNodesetTest) {
                             "0.1.0.0",
                             "en-US",
                             "unittest_track",
+                            false,  // delta okay
                             "http://url");
   OmahaResponse response;
   ASSERT_FALSE(TestUpdateCheck(
@@ -376,6 +383,7 @@ TEST(OmahaRequestActionTest, MissingFieldTest) {
                             "0.1.0.0",
                             "en-US",
                             "unittest_track",
+                            false,  // delta okay
                             "http://url");
   OmahaResponse response;
   ASSERT_TRUE(TestUpdateCheck(params,
@@ -437,6 +445,7 @@ TEST(OmahaRequestActionTest, TerminateTransferTest) {
                             "0.1.0.0",
                             "en-US",
                             "unittest",
+                            false,  // delta okay
                             "http://url");
   string http_response("doesn't matter");
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
@@ -475,6 +484,7 @@ TEST(OmahaRequestActionTest, XmlEncodeTest) {
                             "0.1.0.0",
                             "en-US",
                             "unittest_track",
+                            false,  // delta okay
                             "http://url");
   OmahaResponse response;
   ASSERT_FALSE(
@@ -505,6 +515,7 @@ TEST(OmahaRequestActionTest, XmlDecodeTest) {
                             "0.1.0.0",
                             "en-US",
                             "unittest_track",
+                            false,  // delta okay
                             "http://url");
   OmahaResponse response;
   ASSERT_TRUE(
@@ -536,6 +547,7 @@ TEST(OmahaRequestActionTest, ParseIntTest) {
                             "0.1.0.0",
                             "en-US",
                             "unittest_track",
+                            false,  // delta okay
                             "http://url");
   OmahaResponse response;
   ASSERT_TRUE(
@@ -568,6 +580,7 @@ TEST(OmahaRequestActionTest, FormatUpdateCheckOutputTest) {
                             "0.1.0.0",
                             "en-US",
                             "unittest_track",
+                            false,  // delta okay
                             "http://url");
   OmahaResponse response;
   ASSERT_FALSE(TestUpdateCheck(params,
@@ -595,6 +608,7 @@ TEST(OmahaRequestActionTest, FormatEventOutputTest) {
                             "0.1.0.0",
                             "en-US",
                             "unittest_track",
+                            false,  // delta okay
                             "http://url");
   TestEvent(params,
             new OmahaEvent(OmahaEvent::kTypeDownloadComplete,
@@ -626,6 +640,7 @@ TEST(OmahaRequestActionTest, IsEventTest) {
                             "0.1.0.0",
                             "en-US",
                             "unittest_track",
+                            false,  // delta okay
                             "http://url");
 
   OmahaRequestAction update_check_action(
@@ -643,6 +658,36 @@ TEST(OmahaRequestActionTest, IsEventTest) {
       new MockHttpFetcher(http_response.data(),
                           http_response.size()));
   EXPECT_TRUE(event_action.IsEvent());
+}
+
+TEST(OmahaRequestActionTest, FormatDeltaOkayOutputTest) {
+  for (int i = 0; i < 2; i++) {
+    bool delta_okay = i == 1;
+    const char* delta_okay_str = delta_okay ? "true" : "false";
+    vector<char> post_data;
+    OmahaRequestParams params("machine_id",
+                              "user_id",
+                              OmahaRequestParams::kOsPlatform,
+                              OmahaRequestParams::kOsVersion,
+                              "service_pack",
+                              "x86-generic",
+                              OmahaRequestParams::kAppId,
+                              "0.1.0.0",
+                              "en-US",
+                              "unittest_track",
+                              delta_okay,
+                              "http://url");
+    ASSERT_FALSE(TestUpdateCheck(params,
+                                 "invalid xml>",
+                                 false,
+                                 NULL,
+                                 &post_data));
+    // convert post_data to string
+    string post_str(&post_data[0], post_data.size());
+    EXPECT_NE(post_str.find(StringPrintf(" delta_okay=\"%s\"", delta_okay_str)),
+              string::npos)
+        << "i = " << i;
+  }
 }
 
 }  // namespace chromeos_update_engine
