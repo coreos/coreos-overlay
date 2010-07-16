@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -6,7 +6,7 @@
 #include <string>
 #include <gtest/gtest.h>
 #include "update_engine/install_plan.h"
-#include "update_engine/omaha_request_prep_action.h"
+#include "update_engine/omaha_request_params.h"
 #include "update_engine/test_utils.h"
 #include "update_engine/utils.h"
 
@@ -14,53 +14,24 @@ using std::string;
 
 namespace chromeos_update_engine {
 
-class OmahaRequestPrepActionTest : public ::testing::Test {
+class OmahaRequestDeviceParamsTest : public ::testing::Test {
  public:
-  // Return true iff the OmahaResponseHandlerAction succeeded.
-  // if out is non-NULL, it's set w/ the response from the action.
-  bool DoTest(bool force_full_update, OmahaRequestParams* out);
+  // Return true iff the OmahaRequestDeviceParams::Init succeeded. If
+  // out is non-NULL, it's set w/ the generated data.
+  bool DoTest(OmahaRequestParams* out);
   static const string kTestDir;
 };
 
-const string OmahaRequestPrepActionTest::kTestDir = "request_prep_action-test";
+const string OmahaRequestDeviceParamsTest::kTestDir =
+    "omaha_request_device_params-test";
 
-class OmahaRequestPrepActionProcessorDelegate
-    : public ActionProcessorDelegate {
- public:
-  OmahaRequestPrepActionProcessorDelegate()
-      : success_(false),
-        success_set_(false) {}
-  void ActionCompleted(ActionProcessor* processor,
-                       AbstractAction* action,
-                       bool success) {
-    if (action->Type() == OmahaRequestPrepAction::StaticType()) {
-      success_ = success;
-      success_set_ = true;
-    }
-  }
-  bool success_;
-  bool success_set_;
-};
-
-bool OmahaRequestPrepActionTest::DoTest(bool force_full_update,
-                                        OmahaRequestParams* out) {
-  ActionProcessor processor;
-  OmahaRequestPrepActionProcessorDelegate delegate;
-  processor.set_delegate(&delegate);
-
-  OmahaRequestPrepAction request_prep_action(force_full_update);
-  request_prep_action.set_root(string("./") + kTestDir);
-  ObjectCollectorAction<OmahaRequestParams> collector_action;
-  BondActions(&request_prep_action, &collector_action);
-  processor.EnqueueAction(&request_prep_action);
-  processor.EnqueueAction(&collector_action);
-  processor.StartProcessing();
-  EXPECT_TRUE(!processor.IsRunning())
-      << "Update test to handle non-asynch actions";
+bool OmahaRequestDeviceParamsTest::DoTest(OmahaRequestParams* out) {
+  OmahaRequestDeviceParams params;
+  params.set_root(string("./") + kTestDir);
+  bool success = params.Init();
   if (out)
-    *out = collector_action.object();
-  EXPECT_TRUE(delegate.success_set_);
-  return delegate.success_;
+    *out = params;
+  return success;
 }
 
 namespace {
@@ -84,6 +55,7 @@ bool IsValidGuid(const string& str) {
   }
   return true;
 }
+
 string GetMachineType() {
   FILE* fp = popen("uname -m", "r");
   if (!fp)
@@ -104,7 +76,7 @@ string GetMachineType() {
 }
 }  // namespace {}
 
-TEST_F(OmahaRequestPrepActionTest, SimpleTest) {
+TEST_F(OmahaRequestDeviceParamsTest, SimpleTest) {
   ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir + "/etc"));
   ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir +
                       utils::kStatefulPartition + "/etc"));
@@ -116,7 +88,7 @@ TEST_F(OmahaRequestPrepActionTest, SimpleTest) {
         "CHROMEOS_RELEASE_VERSION=0.2.2.3\n"
         "CHROMEOS_RELEASE_TRACK=footrack"));
     OmahaRequestParams out;
-    EXPECT_TRUE(DoTest(false, &out));
+    EXPECT_TRUE(DoTest(&out));
     EXPECT_TRUE(IsValidGuid(out.machine_id)) << "id: " << out.machine_id;
     // for now we're just using the machine id here
     EXPECT_TRUE(IsValidGuid(out.user_id)) << "id: " << out.user_id;
@@ -131,7 +103,7 @@ TEST_F(OmahaRequestPrepActionTest, SimpleTest) {
   EXPECT_EQ(0, System(string("rm -rf ") + kTestDir));
 }
 
-TEST_F(OmahaRequestPrepActionTest, MissingTrackTest) {
+TEST_F(OmahaRequestDeviceParamsTest, MissingTrackTest) {
   ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir + "/etc"));
   ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir +
                       utils::kStatefulPartition + "/etc"));
@@ -142,7 +114,7 @@ TEST_F(OmahaRequestPrepActionTest, MissingTrackTest) {
         "CHROMEOS_RELEASE_VERSION=0.2.2.3\n"
         "CHROMEOS_RELEASE_TRXCK=footrack"));
     OmahaRequestParams out;
-    EXPECT_TRUE(DoTest(false, &out));
+    EXPECT_TRUE(DoTest(&out));
     EXPECT_TRUE(IsValidGuid(out.machine_id));
     // for now we're just using the machine id here
     EXPECT_TRUE(IsValidGuid(out.user_id));
@@ -156,7 +128,7 @@ TEST_F(OmahaRequestPrepActionTest, MissingTrackTest) {
   EXPECT_EQ(0, System(string("rm -rf ") + kTestDir));
 }
 
-TEST_F(OmahaRequestPrepActionTest, ConfusingReleaseTest) {
+TEST_F(OmahaRequestDeviceParamsTest, ConfusingReleaseTest) {
   ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir + "/etc"));
   ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir +
                       utils::kStatefulPartition + "/etc"));
@@ -167,7 +139,7 @@ TEST_F(OmahaRequestPrepActionTest, ConfusingReleaseTest) {
         "CHROMEOS_RELEASE_VERSION=0.2.2.3\n"
         "CHROMEOS_RELEASE_TRXCK=footrack"));
     OmahaRequestParams out;
-    EXPECT_TRUE(DoTest(false, &out));
+    EXPECT_TRUE(DoTest(&out));
     EXPECT_TRUE(IsValidGuid(out.machine_id)) << out.machine_id;
     // for now we're just using the machine id here
     EXPECT_TRUE(IsValidGuid(out.user_id));
@@ -181,7 +153,7 @@ TEST_F(OmahaRequestPrepActionTest, ConfusingReleaseTest) {
   EXPECT_EQ(0, System(string("rm -rf ") + kTestDir));
 }
 
-TEST_F(OmahaRequestPrepActionTest, MachineIdPersistsTest) {
+TEST_F(OmahaRequestDeviceParamsTest, MachineIdPersistsTest) {
   ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir + "/etc"));
   ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir +
                       utils::kStatefulPartition + "/etc"));
@@ -191,7 +163,7 @@ TEST_F(OmahaRequestPrepActionTest, MachineIdPersistsTest) {
       "CHROMEOS_RELEASE_VERSION=0.2.2.3\n"
       "CHROMEOS_RELEASE_TRXCK=footrack"));
   OmahaRequestParams out1;
-  EXPECT_TRUE(DoTest(false, &out1));
+  EXPECT_TRUE(DoTest(&out1));
   string machine_id;
   EXPECT_TRUE(utils::ReadFileToString(
       kTestDir +
@@ -199,7 +171,7 @@ TEST_F(OmahaRequestPrepActionTest, MachineIdPersistsTest) {
       &machine_id));
   EXPECT_EQ(machine_id, out1.machine_id);
   OmahaRequestParams out2;
-  EXPECT_TRUE(DoTest(false, &out2));
+  EXPECT_TRUE(DoTest(&out2));
   EXPECT_EQ(machine_id, out2.machine_id);
   EXPECT_EQ(0, System(string("rm -rf ") + kTestDir));
 }

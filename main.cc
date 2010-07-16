@@ -37,7 +37,7 @@ struct PeriodicallyUpdateArgs {
 
 gboolean PeriodicallyUpdate(void* arg) {
   PeriodicallyUpdateArgs* args = reinterpret_cast<PeriodicallyUpdateArgs*>(arg);
-  args->update_attempter->Update(false);
+  args->update_attempter->Update();
   return args->should_repeat;
 }
 
@@ -98,7 +98,7 @@ int main(int argc, char** argv) {
     PLOG_IF(FATAL, daemon(0, 0) == 1) << "daemon() failed";
 
   LOG(INFO) << "Chrome OS Update Engine starting";
-  
+
   // Create the single GMainLoop
   GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
 

@@ -1,21 +1,22 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "update_engine/omaha_request_prep_action.h"
-#include <sys/utsname.h>
+#include "update_engine/omaha_request_params.h"
+
 #include <errno.h>
+#include <fcntl.h>
+#include <sys/utsname.h>
+
 #include <map>
 #include <string>
+
 #include "base/string_util.h"
 #include "update_engine/simple_key_value_store.h"
 #include "update_engine/utils.h"
 
 using std::map;
 using std::string;
-
-// This gathers local system information and prepares info used by the
-// update check action.
 
 namespace {
 const string OmahaIdPath() {
@@ -26,33 +27,20 @@ const string OmahaIdPath() {
 
 namespace chromeos_update_engine {
 
-void OmahaRequestPrepAction::PerformAction() {
-  // TODO(adlr): honor force_full_update_
-  ScopedActionCompleter completer(processor_, this);
-  string machine_id;
-  TEST_AND_RETURN(GetMachineId(&machine_id));
-  const string version(GetLsbValue("CHROMEOS_RELEASE_VERSION", ""));
-  const string sp(version + "_" + GetMachineType());
-  const string track(GetLsbValue("CHROMEOS_RELEASE_TRACK", ""));
-  const string update_url(GetLsbValue("CHROMEOS_AUSERVER",
-                                      OmahaRequestParams::kUpdateUrl));
-  const string board(GetLsbValue("CHROMEOS_RELEASE_BOARD", ""));
-
-  OmahaRequestParams out(machine_id,  // machine_id
-                         machine_id,  // user_id (use machine_id)
-                         OmahaRequestParams::kOsPlatform,
-                         OmahaRequestParams::kOsVersion,
-                         sp,  // e.g. 0.2.3.3_i686
-                         board,  // e.g. x86-generic
-                         OmahaRequestParams::kAppId,
-                         version,  // app version (from lsb-release)
-                         "en-US",  // lang
-                         track,  // track
-                         update_url);
-
-  CHECK(HasOutputPipe());
-  SetOutputObject(out);
-  completer.set_success(true);
+bool OmahaRequestDeviceParams::Init() {
+  TEST_AND_RETURN_FALSE(GetMachineId(&machine_id));
+  user_id = machine_id;
+  os_platform = OmahaRequestParams::kOsPlatform;
+  os_version = OmahaRequestParams::kOsVersion;
+  app_version = GetLsbValue("CHROMEOS_RELEASE_VERSION", "");
+  os_sp = app_version + "_" + GetMachineType();
+  os_board = GetLsbValue("CHROMEOS_RELEASE_BOARD", "");
+  app_id = OmahaRequestParams::kAppId;
+  app_lang = "en-US";
+  app_track = GetLsbValue("CHROMEOS_RELEASE_TRACK", "");
+  update_url = GetLsbValue("CHROMEOS_AUSERVER",
+                           OmahaRequestParams::kUpdateUrl);
+  return true;
 }
 
 namespace {
@@ -70,8 +58,8 @@ string GuidFromData(const unsigned char data[kGuidDataByteLength]) {
 }
 
 // Returns true on success.
-bool OmahaRequestPrepAction::GetMachineId(std::string* out_id) const {
-  // See if we have an existing Machine ID
+bool OmahaRequestDeviceParams::GetMachineId(std::string* out_id) const {
+  // Checks if we have an existing Machine ID.
   const string omaha_id_path = root_ + OmahaIdPath();
 
   if (utils::ReadFileToString(omaha_id_path, out_id) &&
@@ -79,7 +67,7 @@ bool OmahaRequestPrepAction::GetMachineId(std::string* out_id) const {
     return true;
   }
 
-  // Create a new ID
+  // Creates a new ID.
   int rand_fd = open("/dev/urandom", O_RDONLY, 0);
   TEST_AND_RETURN_FALSE_ERRNO(rand_fd >= 0);
   ScopedFdCloser rand_fd_closer(&rand_fd);
@@ -97,11 +85,11 @@ bool OmahaRequestPrepAction::GetMachineId(std::string* out_id) const {
   return true;
 }
 
-string OmahaRequestPrepAction::GetLsbValue(
+string OmahaRequestDeviceParams::GetLsbValue(
     const string& key, const string& default_value) const {
   string files[] = {string(utils::kStatefulPartition) + "/etc/lsb-release",
                     "/etc/lsb-release"};
-  for (unsigned int i = 0; i < arraysize(files); i++) {
+  for (unsigned int i = 0; i < arraysize(files); ++i) {
     // TODO(adlr): make sure files checked are owned as root (and all
     // their parents are recursively, too).
     string file_data;
@@ -116,7 +104,7 @@ string OmahaRequestPrepAction::GetLsbValue(
   return default_value;
 }
 
-string OmahaRequestPrepAction::GetMachineType() const {
+string OmahaRequestDeviceParams::GetMachineType() const {
   struct utsname buf;
   string ret;
   if (uname(&buf) == 0)

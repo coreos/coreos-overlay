@@ -12,6 +12,7 @@
 #include <glib.h>
 #include "update_engine/action_processor.h"
 #include "update_engine/download_action.h"
+#include "update_engine/omaha_request_params.h"
 #include "update_engine/omaha_response_handler_action.h"
 
 struct UpdateEngineService;
@@ -35,8 +36,7 @@ const char* UpdateStatusToString(UpdateStatus status);
 class UpdateAttempter : public ActionProcessorDelegate,
                         public DownloadActionDelegate {
  public:
-  UpdateAttempter() : full_update_(false),
-                      dbus_service_(NULL),
+  UpdateAttempter() : dbus_service_(NULL),
                       status_(UPDATE_STATUS_IDLE),
                       download_progress_(0.0),
                       last_checked_time_(0),
@@ -47,22 +47,22 @@ class UpdateAttempter : public ActionProcessorDelegate,
     if (utils::FileExists(kUpdateCompletedMarker))
       status_ = UPDATE_STATUS_UPDATED_NEED_REBOOT;
   }
-  void Update(bool force_full_update);
-  
+  void Update();
+
   // ActionProcessorDelegate methods:
   void ProcessingDone(const ActionProcessor* processor, bool success);
   void ProcessingStopped(const ActionProcessor* processor);
   void ActionCompleted(ActionProcessor* processor,
                        AbstractAction* action,
                        bool success);
-  
+
   // Stop updating. An attempt will be made to record status to the disk
   // so that updates can be resumed later.
   void Terminate();
-  
+
   // Try to resume from a previously Terminate()d update.
   void ResumeUpdating();
-  
+
   // Returns the current status in the out params. Returns true on success.
   bool GetStatus(int64_t* last_checked_time,
                  double* progress,
@@ -83,13 +83,12 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // Sets the status to the given status and notifies a status update
   // over dbus.
   void SetStatusAndNotify(UpdateStatus status);
-  
+
   struct timespec last_notify_time_;
 
-  bool full_update_;
   std::vector<std::tr1::shared_ptr<AbstractAction> > actions_;
   ActionProcessor processor_;
-  
+
   // If non-null, this UpdateAttempter will send status updates over this
   // dbus service.
   UpdateEngineService* dbus_service_;
@@ -103,6 +102,9 @@ class UpdateAttempter : public ActionProcessorDelegate,
   int64_t last_checked_time_;
   std::string new_version_;
   int64_t new_size_;
+
+  // Device paramaters common to all Omaha requests.
+  OmahaRequestDeviceParams omaha_request_params_;
 
   DISALLOW_COPY_AND_ASSIGN(UpdateAttempter);
 };

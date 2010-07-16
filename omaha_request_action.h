@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -25,54 +25,6 @@ namespace chromeos_update_engine {
 // Encodes XML entities in a given string with libxml2. input must be
 // UTF-8 formatted. Output will be UTF-8 formatted.
 std::string XmlEncode(const std::string& input);
-
-// This struct encapsulates the data Omaha gets for the request.
-// These strings in this struct should not be XML escaped.
-struct OmahaRequestParams {
-  OmahaRequestParams()
-      : os_platform(kOsPlatform), os_version(kOsVersion), app_id(kAppId) {}
-  OmahaRequestParams(const std::string& in_machine_id,
-                     const std::string& in_user_id,
-                     const std::string& in_os_platform,
-                     const std::string& in_os_version,
-                     const std::string& in_os_sp,
-                     const std::string& in_os_board,
-                     const std::string& in_app_id,
-                     const std::string& in_app_version,
-                     const std::string& in_app_lang,
-                     const std::string& in_app_track,
-                     const std::string& in_update_url)
-      : machine_id(in_machine_id),
-        user_id(in_user_id),
-        os_platform(in_os_platform),
-        os_version(in_os_version),
-        os_sp(in_os_sp),
-        os_board(in_os_board),
-        app_id(in_app_id),
-        app_version(in_app_version),
-        app_lang(in_app_lang),
-        app_track(in_app_track),
-        update_url(in_update_url) {}
-
-  std::string machine_id;
-  std::string user_id;
-  std::string os_platform;
-  std::string os_version;
-  std::string os_sp;
-  std::string os_board;
-  std::string app_id;
-  std::string app_version;
-  std::string app_lang;
-  std::string app_track;
-
-  std::string update_url;
-
-  // Suggested defaults
-  static const char* const kAppId;
-  static const char* const kOsPlatform;
-  static const char* const kOsVersion;
-  static const char* const kUpdateUrl;
-};
 
 // This struct encapsulates the data Omaha's response for the request.
 // These strings in this struct are not XML escaped.
@@ -123,14 +75,15 @@ struct OmahaEvent {
   int error_code;
 };
 
-class OmahaRequestAction;
 class NoneType;
+class OmahaRequestAction;
+struct OmahaRequestParams;
 
 template<>
 class ActionTraits<OmahaRequestAction> {
  public:
   // Takes parameters on the input pipe.
-  typedef OmahaRequestParams InputObjectType;
+  typedef NoneType InputObjectType;
   // On UpdateCheck success, puts the Omaha response on output. Event
   // requests do not have an output pipe.
   typedef OmahaResponse OutputObjectType;
@@ -150,10 +103,11 @@ class OmahaRequestAction : public Action<OmahaRequestAction>,
   // Event requests always succeed.
   //
   // A good calling pattern is:
-  // OmahaRequestAction(new OmahaEvent(...), new WhateverHttpFetcher);
+  // OmahaRequestAction(..., new OmahaEvent(...), new WhateverHttpFetcher);
   // or
-  // OmahaRequestAction(NULL, new WhateverHttpFetcher);
-  OmahaRequestAction(OmahaEvent* event,
+  // OmahaRequestAction(..., NULL, new WhateverHttpFetcher);
+  OmahaRequestAction(const OmahaRequestParams& params,
+                     OmahaEvent* event,
                      HttpFetcher* http_fetcher);
   virtual ~OmahaRequestAction();
   typedef ActionTraits<OmahaRequestAction>::InputObjectType InputObjectType;
@@ -174,8 +128,8 @@ class OmahaRequestAction : public Action<OmahaRequestAction>,
   bool IsEvent() const { return event_.get() != NULL; }
 
  private:
-  // These are data that are passed in the request to the Omaha server
-  OmahaRequestParams params_;
+  // These are data that are passed in the request to the Omaha server.
+  const OmahaRequestParams& params_;
 
   // Pointer to the OmahaEvent info. This is an UpdateCheck request if NULL.
   scoped_ptr<OmahaEvent> event_;

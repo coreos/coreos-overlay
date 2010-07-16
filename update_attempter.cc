@@ -19,7 +19,7 @@
 #include "update_engine/filesystem_copier_action.h"
 #include "update_engine/libcurl_http_fetcher.h"
 #include "update_engine/omaha_request_action.h"
-#include "update_engine/omaha_request_prep_action.h"
+#include "update_engine/omaha_request_params.h"
 #include "update_engine/omaha_response_handler_action.h"
 #include "update_engine/postinstall_runner_action.h"
 #include "update_engine/set_bootable_flag_action.h"
@@ -85,7 +85,7 @@ const char* UpdateStatusToString(UpdateStatus status) {
   }
 }
 
-void UpdateAttempter::Update(bool force_full_update) {
+void UpdateAttempter::Update() {
   if (status_ == UPDATE_STATUS_UPDATED_NEED_REBOOT) {
     LOG(INFO) << "Not updating b/c we already updated and we're waiting for "
               << "reboot";
@@ -95,15 +95,18 @@ void UpdateAttempter::Update(bool force_full_update) {
     // Update in progress. Do nothing
     return;
   }
-  full_update_ = force_full_update;
+  if (!omaha_request_params_.Init()) {
+    LOG(ERROR) << "Unable to initialize Omaha request device params.";
+    return;
+  }
   CHECK(!processor_.IsRunning());
   processor_.set_delegate(this);
 
   // Actions:
-  shared_ptr<OmahaRequestPrepAction> update_check_prep_action(
-      new OmahaRequestPrepAction(force_full_update));
   shared_ptr<OmahaRequestAction> update_check_action(
-      new OmahaRequestAction(NULL, new LibcurlHttpFetcher));
+      new OmahaRequestAction(omaha_request_params_,
+                             NULL,
+                             new LibcurlHttpFetcher));
   shared_ptr<OmahaResponseHandlerAction> response_handler_action(
       new OmahaResponseHandlerAction);
   shared_ptr<FilesystemCopierAction> filesystem_copier_action(
@@ -118,10 +121,9 @@ void UpdateAttempter::Update(bool force_full_update) {
       new SetBootableFlagAction);
   shared_ptr<PostinstallRunnerAction> postinstall_runner_action_postcommit(
       new PostinstallRunnerAction(false));
-  shared_ptr<OmahaRequestPrepAction> install_success_prep_action(
-      new OmahaRequestPrepAction(false));
   shared_ptr<OmahaRequestAction> install_success_action(
-      new OmahaRequestAction(new OmahaEvent(OmahaEvent::kTypeInstallComplete,
+      new OmahaRequestAction(omaha_request_params_,
+                             new OmahaEvent(OmahaEvent::kTypeInstallComplete,
                                             OmahaEvent::kResultSuccess,
                                             0),
                              new LibcurlHttpFetcher));
@@ -129,7 +131,6 @@ void UpdateAttempter::Update(bool force_full_update) {
   download_action->set_delegate(this);
   response_handler_action_ = response_handler_action;
 
-  actions_.push_back(shared_ptr<AbstractAction>(update_check_prep_action));
   actions_.push_back(shared_ptr<AbstractAction>(update_check_action));
   actions_.push_back(shared_ptr<AbstractAction>(response_handler_action));
   actions_.push_back(shared_ptr<AbstractAction>(filesystem_copier_action));
@@ -141,7 +142,6 @@ void UpdateAttempter::Update(bool force_full_update) {
   actions_.push_back(shared_ptr<AbstractAction>(set_bootable_flag_action));
   actions_.push_back(shared_ptr<AbstractAction>(
       postinstall_runner_action_postcommit));
-  actions_.push_back(shared_ptr<AbstractAction>(install_success_prep_action));
   actions_.push_back(shared_ptr<AbstractAction>(install_success_action));
 
   // Enqueue the actions
@@ -152,8 +152,6 @@ void UpdateAttempter::Update(bool force_full_update) {
 
   // Bond them together. We have to use the leaf-types when calling
   // BondActions().
-  BondActions(update_check_prep_action.get(),
-              update_check_action.get());
   BondActions(update_check_action.get(),
               response_handler_action.get());
   BondActions(response_handler_action.get(),
@@ -168,8 +166,6 @@ void UpdateAttempter::Update(bool force_full_update) {
               set_bootable_flag_action.get());
   BondActions(set_bootable_flag_action.get(),
               postinstall_runner_action_postcommit.get());
-  BondActions(install_success_prep_action.get(),
-              install_success_action.get());
 
   SetStatusAndNotify(UPDATE_STATUS_CHECKING_FOR_UPDATE);
   processor_.StartProcessing();
@@ -181,7 +177,7 @@ void UpdateAttempter::CheckForUpdate() {
               << UpdateStatusToString(status_) << ", so not checking.";
     return;
   }
-  Update(false);
+  Update();
 }
 
 // Delegate methods:

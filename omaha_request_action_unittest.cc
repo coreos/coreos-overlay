@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -13,6 +13,7 @@
 #include "update_engine/mock_http_fetcher.h"
 #include "update_engine/omaha_hash_calculator.h"
 #include "update_engine/omaha_request_action.h"
+#include "update_engine/omaha_request_params.h"
 #include "update_engine/test_utils.h"
 
 using std::string;
@@ -129,20 +130,16 @@ bool TestUpdateCheck(const OmahaRequestParams& params,
   GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
   MockHttpFetcher* fetcher = new MockHttpFetcher(http_response.data(),
                                                  http_response.size());
-  ObjectFeederAction<OmahaRequestParams> feeder_action;
-  OmahaRequestAction action(NULL, fetcher);  // takes ownership of fetcher
+  OmahaRequestAction action(params, NULL, fetcher);
   OmahaRequestActionTestProcessorDelegate delegate;
   delegate.loop_ = loop;
   delegate.expected_success_ = expected_success;
+
   ActionProcessor processor;
-  feeder_action.set_obj(params);
   processor.set_delegate(&delegate);
-  processor.EnqueueAction(&feeder_action);
   processor.EnqueueAction(&action);
 
   OutputObjectCollectorAction collector_action;
-
-  BondActions(&feeder_action, &action);
   BondActions(&action, &collector_action);
   processor.EnqueueAction(&collector_action);
 
@@ -166,17 +163,12 @@ void TestEvent(const OmahaRequestParams& params,
   GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
   MockHttpFetcher* fetcher = new MockHttpFetcher(http_response.data(),
                                                  http_response.size());
-  ObjectFeederAction<OmahaRequestParams> feeder_action;
-  OmahaRequestAction action(event, fetcher);  // takes ownership of fetcher
+  OmahaRequestAction action(params, event, fetcher);
   OmahaRequestActionTestProcessorDelegate delegate;
   delegate.loop_ = loop;
   ActionProcessor processor;
-  feeder_action.set_obj(params);
   processor.set_delegate(&delegate);
-  processor.EnqueueAction(&feeder_action);
   processor.EnqueueAction(&action);
-
-  BondActions(&feeder_action, &action);
 
   g_timeout_add(0, &StartProcessorInRunLoop, &processor);
   g_main_loop_run(loop);
@@ -259,18 +251,14 @@ TEST(OmahaRequestActionTest, NoOutputPipeTest) {
 
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
 
-  ObjectFeederAction<OmahaRequestParams> feeder_action;
-  feeder_action.set_obj(params);
-  OmahaRequestAction action(NULL,
+  OmahaRequestAction action(params, NULL,
                             new MockHttpFetcher(http_response.data(),
                                                 http_response.size()));
   OmahaRequestActionTestProcessorDelegate delegate;
   delegate.loop_ = loop;
   ActionProcessor processor;
   processor.set_delegate(&delegate);
-  processor.EnqueueAction(&feeder_action);
   processor.EnqueueAction(&action);
-  BondActions(&feeder_action, &action);
 
   g_timeout_add(0, &StartProcessorInRunLoop, &processor);
   g_main_loop_run(loop);
@@ -450,18 +438,14 @@ TEST(OmahaRequestActionTest, TerminateTransferTest) {
   string http_response("doesn't matter");
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
 
-  ObjectFeederAction<OmahaRequestParams> feeder_action;
-  feeder_action.set_obj(params);
-  OmahaRequestAction action(NULL,
+  OmahaRequestAction action(params, NULL,
                             new MockHttpFetcher(http_response.data(),
                                                 http_response.size()));
   TerminateEarlyTestProcessorDelegate delegate;
   delegate.loop_ = loop;
   ActionProcessor processor;
   processor.set_delegate(&delegate);
-  processor.EnqueueAction(&feeder_action);
   processor.EnqueueAction(&action);
-  BondActions(&feeder_action, &action);
 
   g_timeout_add(0, &TerminateTransferTestStarter, &processor);
   g_main_loop_run(loop);
@@ -629,14 +613,27 @@ TEST(OmahaRequestActionTest, FormatEventOutputTest) {
 
 TEST(OmahaRequestActionTest, IsEventTest) {
   string http_response("doesn't matter");
+  OmahaRequestParams params("machine_id",
+                            "user_id",
+                            OmahaRequestParams::kOsPlatform,
+                            OmahaRequestParams::kOsVersion,
+                            "service_pack",
+                            "x86-generic",
+                            OmahaRequestParams::kAppId,
+                            "0.1.0.0",
+                            "en-US",
+                            "unittest_track",
+                            "http://url");
 
   OmahaRequestAction update_check_action(
+      params,
       NULL,
       new MockHttpFetcher(http_response.data(),
                           http_response.size()));
   EXPECT_FALSE(update_check_action.IsEvent());
 
   OmahaRequestAction event_action(
+      params,
       new OmahaEvent(OmahaEvent::kTypeInstallComplete,
                      OmahaEvent::kResultError,
                      0),

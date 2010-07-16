@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -13,6 +13,7 @@
 #include "base/string_util.h"
 #include "chromeos/obsolete_logging.h"
 #include "update_engine/action_pipe.h"
+#include "update_engine/omaha_request_params.h"
 #include "update_engine/utils.h"
 
 using std::string;
@@ -109,16 +110,16 @@ string XmlEncode(const string& input) {
   return string(reinterpret_cast<const char *>(str.get()));
 }
 
-OmahaRequestAction::OmahaRequestAction(OmahaEvent* event,
+OmahaRequestAction::OmahaRequestAction(const OmahaRequestParams& params,
+                                       OmahaEvent* event,
                                        HttpFetcher* http_fetcher)
-    : event_(event),
+    : params_(params),
+      event_(event),
       http_fetcher_(http_fetcher) {}
 
 OmahaRequestAction::~OmahaRequestAction() {}
 
 void OmahaRequestAction::PerformAction() {
-  CHECK(HasInputObject());
-  params_ = GetInputObject();
   http_fetcher_->set_delegate(this);
   string request_post(FormatRequest(event_.get(), params_));
   http_fetcher_->SetPostData(request_post.data(), request_post.size());
