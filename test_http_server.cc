@@ -31,8 +31,10 @@ using std::vector;
 namespace chromeos_update_engine {
 
 struct HttpRequest {
+  HttpRequest() : offset(0), return_code(200) {}
   string url;
   off_t offset;
+  int return_code;
 };
 
 namespace {
@@ -76,6 +78,7 @@ bool ParseRequest(int fd, HttpRequest* request) {
     LOG(INFO) << "Range: " << range_header;
     CHECK(*range_header.rbegin() == '-');
     request->offset = atoll(range_header.c_str() + strlen("bytes="));
+    request->return_code = 206;  // Success for Range: request
     LOG(INFO) << "Offset: " << request->offset;
   }
   request->url = url;
@@ -104,9 +107,9 @@ string Itoa(off_t num) {
 }
 
 void WriteHeaders(int fd, bool support_range, off_t full_size,
-                  off_t start_offset) {
+                  off_t start_offset, int return_code) {
   LOG(INFO) << "writing headers";
-  WriteString(fd, "HTTP/1.1 200 OK\r\n");
+  WriteString(fd, string("HTTP/1.1 ") + Itoa(return_code) + " OK\r\n");
   WriteString(fd, "Content-Type: application/octet-stream\r\n");
   if (support_range) {
     WriteString(fd, "Accept-Ranges: bytes\r\n");
@@ -121,13 +124,13 @@ void WriteHeaders(int fd, bool support_range, off_t full_size,
 }
 
 void HandleQuitQuitQuit(int fd) {
-  WriteHeaders(fd, true, 0, 0);
+  WriteHeaders(fd, true, 0, 0, 200);
   exit(0);
 }
 
 void HandleBig(int fd, const HttpRequest& request) {
   const off_t full_length = kBigLength;
-  WriteHeaders(fd, true, full_length, request.offset);
+  WriteHeaders(fd, true, full_length, request.offset, request.return_code);
   const off_t content_length = full_length - request.offset;
   int i = request.offset;
   for (; i % 10; i++)
@@ -143,7 +146,7 @@ void HandleBig(int fd, const HttpRequest& request) {
 // (technically, when (offset % (9000 * 7)) == 0).
 void HandleFlaky(int fd, const HttpRequest& request) {
   const off_t full_length = kBigLength;
-  WriteHeaders(fd, true, full_length, request.offset);
+  WriteHeaders(fd, true, full_length, request.offset, request.return_code);
   const off_t content_length =
       min(static_cast<off_t>(9000), full_length - request.offset);
   const bool should_sleep = (request.offset % (9000 * 7)) == 0;
@@ -172,7 +175,7 @@ void HandleFlaky(int fd, const HttpRequest& request) {
 
 void HandleDefault(int fd, const HttpRequest& request) {
   const string data("unhandled path");
-  WriteHeaders(fd, true, data.size(), request.offset);
+  WriteHeaders(fd, true, data.size(), request.offset, request.return_code);
   const string data_to_write(data.substr(request.offset,
                                          data.size() - request.offset));
   WriteString(fd, data_to_write);

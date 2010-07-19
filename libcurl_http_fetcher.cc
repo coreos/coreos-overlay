@@ -119,8 +119,10 @@ bool LibcurlHttpFetcher::CurlPerformOnce() {
       return false;
     } else {
       if (delegate_) {
-        // success is when http_response_code is 200
-        delegate_->TransferComplete(this, http_response_code == 200);
+        // success is when http_response_code is 2xx
+        bool success = (http_response_code >= 200) &&
+            (http_response_code < 300);
+        delegate_->TransferComplete(this, success);
       }
     }
   } else {

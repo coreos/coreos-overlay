@@ -339,6 +339,7 @@ class FlakyHttpFetcherTestDelegate : public HttpFetcherDelegate {
     data.append(bytes, length);
   }
   virtual void TransferComplete(HttpFetcher* fetcher, bool successful) {
+    EXPECT_TRUE(successful);
     g_main_loop_quit(loop_);
   }
   string data;
