@@ -85,7 +85,7 @@ class LibcurlHttpFetcher : public HttpFetcher {
   // loop with sources for future work that libcurl will do.
   // This method will not block.
   // Returns true if we should resume immediately after this call.
-  bool CurlPerformOnce();
+  void CurlPerformOnce();
 
   // Sets up glib main loop sources as needed by libcurl. This is generally
   // the file descriptor of the socket and a timer in case nothing happens

@@ -79,7 +79,7 @@ void LibcurlHttpFetcher::TerminateTransfer() {
   CleanUp();
 }
 
-bool LibcurlHttpFetcher::CurlPerformOnce() {
+void LibcurlHttpFetcher::CurlPerformOnce() {
   CHECK(transfer_in_progress_);
   int running_handles = 0;
   CURLMcode retcode = CURLM_CALL_MULTI_PERFORM;
@@ -116,7 +116,7 @@ bool LibcurlHttpFetcher::CurlPerformOnce() {
                       &LibcurlHttpFetcher::StaticRetryTimeoutCallback,
                       this);
       }
-      return false;
+      return;
     } else {
       if (delegate_) {
         // success is when http_response_code is 2xx
@@ -129,7 +129,6 @@ bool LibcurlHttpFetcher::CurlPerformOnce() {
     // set up callback
     SetupMainloopSources();
   }
-  return false;
 }
 
 size_t LibcurlHttpFetcher::LibcurlWrite(void *ptr, size_t size, size_t nmemb) {
@@ -260,14 +259,11 @@ gboolean LibcurlHttpFetcher::RetryTimeoutCallback() {
 }
 
 gboolean LibcurlHttpFetcher::TimeoutCallback() {
+  // We always return true, even if we don't want glib to call us back.
+  // We will remove the event source separately if we don't want to
+  // be called back.
   if (!transfer_in_progress_)
     return TRUE;
-  // Since we will return false from this function, which tells glib to
-  // destroy the timeout callback, we must NULL it out here. This way, when
-  // setting up callback sources again, we won't try to delete this (doomed)
-  // timeout callback then.
-  // TODO(adlr): optimize by checking if we can keep this timeout callback.
-  //timeout_source_ = NULL;
   CurlPerformOnce();
   return TRUE;
 }
