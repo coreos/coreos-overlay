@@ -43,7 +43,7 @@ void OmahaResponseHandlerAction::PerformAction() {
   LOG(INFO) << "Using this install plan:";
   install_plan_.Dump();
 
-  completer.set_success(true);
+  completer.set_code(kActionCodeSuccess);
 }
 
 bool OmahaResponseHandlerAction::GetInstallDev(const std::string& boot_dev,

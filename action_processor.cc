@@ -54,17 +54,17 @@ void ActionProcessor::StopProcessing() {
 }
 
 void ActionProcessor::ActionComplete(AbstractAction* actionptr,
-                                     bool success) {
+                                     ActionExitCode code) {
   CHECK_EQ(actionptr, current_action_);
   if (delegate_)
-    delegate_->ActionCompleted(this, actionptr, success);
+    delegate_->ActionCompleted(this, actionptr, code);
   string old_type = current_action_->Type();
   current_action_->SetProcessor(NULL);
   current_action_ = NULL;
   if (actions_.empty()) {
     LOG(INFO) << "ActionProcessor::ActionComplete: finished last action of"
                  " type " << old_type;
-  } else if (!success) {
+  } else if (code != kActionCodeSuccess) {
     LOG(INFO) << "ActionProcessor::ActionComplete: " << old_type
               << " action failed. Aborting processing.";
     actions_.clear();
@@ -73,7 +73,7 @@ void ActionProcessor::ActionComplete(AbstractAction* actionptr,
     LOG(INFO) << "ActionProcessor::ActionComplete: finished last action of"
                  " type " << old_type;
     if (delegate_) {
-      delegate_->ProcessingDone(this, success);
+      delegate_->ProcessingDone(this, code);
     }
     return;
   }

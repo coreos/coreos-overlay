@@ -56,25 +56,26 @@ class OmahaRequestActionTestProcessorDelegate : public ActionProcessorDelegate {
  public:
   OmahaRequestActionTestProcessorDelegate()
       : loop_(NULL),
-        expected_success_(true) {}
+        expected_code_(kActionCodeSuccess) {}
   virtual ~OmahaRequestActionTestProcessorDelegate() {
   }
-  virtual void ProcessingDone(const ActionProcessor* processor, bool success) {
+  virtual void ProcessingDone(const ActionProcessor* processor,
+                              ActionExitCode code) {
     ASSERT_TRUE(loop_);
     g_main_loop_quit(loop_);
   }
 
   virtual void ActionCompleted(ActionProcessor* processor,
                                AbstractAction* action,
-                               bool success) {
+                               ActionExitCode code) {
     // make sure actions always succeed
     if (action->Type() == OmahaRequestAction::StaticType())
-      EXPECT_EQ(expected_success_, success);
+      EXPECT_EQ(expected_code_, code);
     else
-      EXPECT_TRUE(success);
+      EXPECT_EQ(kActionCodeSuccess, code);
   }
   GMainLoop *loop_;
-  bool expected_success_;
+  ActionExitCode expected_code_;
 };
 
 gboolean StartProcessorInRunLoop(gpointer data) {
@@ -104,7 +105,7 @@ class OutputObjectCollectorAction : public Action<OutputObjectCollectorAction> {
     has_input_object_ = HasInputObject();
     if (has_input_object_)
       omaha_response_ = GetInputObject();
-    processor_->ActionComplete(this, true);
+    processor_->ActionComplete(this, kActionCodeSuccess);
   }
   // Should never be called
   void TerminateProcessing() {
@@ -125,7 +126,7 @@ class OutputObjectCollectorAction : public Action<OutputObjectCollectorAction> {
 // mock HttpFetcher is returned.
 bool TestUpdateCheck(const OmahaRequestParams& params,
                      const string& http_response,
-                     bool expected_success,
+                     ActionExitCode expected_code,
                      OmahaResponse* out_response,
                      vector<char>* out_post_data) {
   GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
@@ -134,7 +135,7 @@ bool TestUpdateCheck(const OmahaRequestParams& params,
   OmahaRequestAction action(params, NULL, fetcher);
   OmahaRequestActionTestProcessorDelegate delegate;
   delegate.loop_ = loop;
-  delegate.expected_success_ = expected_success;
+  delegate.expected_code_ = expected_code;
 
   ActionProcessor processor;
   processor.set_delegate(&delegate);
@@ -195,7 +196,7 @@ TEST(OmahaRequestActionTest, NoUpdateTest) {
   ASSERT_TRUE(
       TestUpdateCheck(params,
                       GetNoUpdateResponse(OmahaRequestParams::kAppId),
-                      true,
+                      kActionCodeSuccess,
                       &response,
                       NULL));
   EXPECT_FALSE(response.update_exists);
@@ -225,7 +226,7 @@ TEST(OmahaRequestActionTest, ValidUpdateTest) {
                                         "HASH1234=",  // checksum
                                         "false",  // needs admin
                                         "123"),  // size
-                      true,
+                      kActionCodeSuccess,
                       &response,
                       NULL));
   EXPECT_TRUE(response.update_exists);
@@ -288,7 +289,7 @@ TEST(OmahaRequestActionTest, InvalidXmlTest) {
   ASSERT_FALSE(
       TestUpdateCheck(params,
                       "invalid xml>",
-                      false,
+                      kActionCodeError,
                       &response,
                       NULL));
   EXPECT_FALSE(response.update_exists);
@@ -314,7 +315,7 @@ TEST(OmahaRequestActionTest, MissingStatusTest) {
       "xmlns=\"http://www.google.com/update2/response\" protocol=\"2.0\"><app "
       "appid=\"foo\" status=\"ok\"><ping "
       "status=\"ok\"/><updatecheck/></app></gupdate>",
-      false,
+      kActionCodeError,
       &response,
       NULL));
   EXPECT_FALSE(response.update_exists);
@@ -340,7 +341,7 @@ TEST(OmahaRequestActionTest, InvalidStatusTest) {
       "xmlns=\"http://www.google.com/update2/response\" protocol=\"2.0\"><app "
       "appid=\"foo\" status=\"ok\"><ping "
       "status=\"ok\"/><updatecheck status=\"foo\"/></app></gupdate>",
-      false,
+      kActionCodeError,
       &response,
       NULL));
   EXPECT_FALSE(response.update_exists);
@@ -366,7 +367,7 @@ TEST(OmahaRequestActionTest, MissingNodesetTest) {
       "xmlns=\"http://www.google.com/update2/response\" protocol=\"2.0\"><app "
       "appid=\"foo\" status=\"ok\"><ping "
       "status=\"ok\"/></app></gupdate>",
-      false,
+      kActionCodeError,
       &response,
       NULL));
   EXPECT_FALSE(response.update_exists);
@@ -401,7 +402,7 @@ TEST(OmahaRequestActionTest, MissingFieldTest) {
                               "hash=\"HASH1234=\" needsadmin=\"true\" "
                               "size=\"123\" "
                               "status=\"ok\"/></app></gupdate>",
-                              true,
+                              kActionCodeSuccess,
                               &response,
                               NULL));
   EXPECT_TRUE(response.update_exists);
@@ -490,7 +491,7 @@ TEST(OmahaRequestActionTest, XmlEncodeTest) {
   ASSERT_FALSE(
       TestUpdateCheck(params,
                       "invalid xml>",
-                      false,
+                      kActionCodeError,
                       &response,
                       &post_data));
   // convert post_data to string
@@ -528,7 +529,7 @@ TEST(OmahaRequestActionTest, XmlDecodeTest) {
                                         "HASH1234=", // checksum
                                         "false",  // needs admin
                                         "123"),  // size
-                      true,
+                      kActionCodeSuccess,
                       &response,
                       NULL));
 
@@ -561,7 +562,7 @@ TEST(OmahaRequestActionTest, ParseIntTest) {
                                         "false",  // needs admin
                                         // overflows int32:
                                         "123123123123123"),  // size
-                      true,
+                      kActionCodeSuccess,
                       &response,
                       NULL));
 
@@ -585,7 +586,7 @@ TEST(OmahaRequestActionTest, FormatUpdateCheckOutputTest) {
   OmahaResponse response;
   ASSERT_FALSE(TestUpdateCheck(params,
                                "invalid xml>",
-                               false,
+                               kActionCodeError,
                                &response,
                                &post_data));
   // convert post_data to string
@@ -679,7 +680,7 @@ TEST(OmahaRequestActionTest, FormatDeltaOkayOutputTest) {
                               "http://url");
     ASSERT_FALSE(TestUpdateCheck(params,
                                  "invalid xml>",
-                                 false,
+                                 kActionCodeError,
                                  NULL,
                                  &post_data));
     // convert post_data to string

@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -162,7 +162,7 @@ struct ObjectFeederAction : public Action<ObjectFeederAction<T> > {
     if (this->HasOutputPipe()) {
       this->SetOutputObject(out_obj_);
     }
-    this->processor_->ActionComplete(this, true);
+    this->processor_->ActionComplete(this, kActionCodeSuccess);
   }
   static std::string StaticType() { return "ObjectFeederAction"; }
   std::string Type() const { return StaticType(); }
@@ -196,7 +196,7 @@ struct ObjectCollectorAction : public Action<ObjectCollectorAction<T> > {
     if (this->HasInputObject()) {
       object_ = this->GetInputObject();
     }
-    this->processor_->ActionComplete(this, true);
+    this->processor_->ActionComplete(this, kActionCodeSuccess);
   }
   static std::string StaticType() { return "ObjectCollectorAction"; }
   std::string Type() const { return StaticType(); }

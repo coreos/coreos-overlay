@@ -33,14 +33,14 @@ class FilesystemCopierActionTest : public ::testing::Test {
 
 class FilesystemCopierActionTestDelegate : public ActionProcessorDelegate {
  public:
-  FilesystemCopierActionTestDelegate() : ran_(false), success_(false) {}
+  FilesystemCopierActionTestDelegate() : ran_(false), code_(kActionCodeError) {}
   void ExitMainLoop() {
     while (g_main_context_pending(NULL)) {
       g_main_context_iteration(NULL, false);
     }
     g_main_loop_quit(loop_);
   }
-  void ProcessingDone(const ActionProcessor* processor, bool success) {
+  void ProcessingDone(const ActionProcessor* processor, ActionExitCode code) {
     ExitMainLoop();
   }
   void ProcessingStopped(const ActionProcessor* processor) {
@@ -48,21 +48,21 @@ class FilesystemCopierActionTestDelegate : public ActionProcessorDelegate {
   }
   void ActionCompleted(ActionProcessor* processor,
                        AbstractAction* action,
-                       bool success) {
+                       ActionExitCode code) {
     if (action->Type() == FilesystemCopierAction::StaticType()) {
       ran_ = true;
-      success_ = success;
+      code_ = code;
     }
   }
   void set_loop(GMainLoop* loop) {
     loop_ = loop;
   }
   bool ran() { return ran_; }
-  bool success() { return success_; }
+  ActionExitCode code() { return code_; }
  private:
   GMainLoop* loop_;
   bool ran_;
-  bool success_;
+  ActionExitCode code_;
 };
 
 struct StartProcessorCallbackArgs {
@@ -96,7 +96,7 @@ void FilesystemCopierActionTest::DoTest(bool run_out_of_space,
 
   string a_loop_file;
   string b_loop_file;
-  
+
   EXPECT_TRUE(utils::MakeTempFile("/tmp/a_loop_file.XXXXXX",
                                   &a_loop_file,
                                   NULL));
@@ -105,7 +105,7 @@ void FilesystemCopierActionTest::DoTest(bool run_out_of_space,
                                   &b_loop_file,
                                   NULL));
   ScopedPathUnlinker b_loop_file_unlinker(b_loop_file);
-  
+
   // Make random data for a, zero filled data for b.
   const size_t kLoopFileSize = 10 * 1024 * 1024 + 512;
   vector<char> a_loop_data(kLoopFileSize);
@@ -173,10 +173,10 @@ void FilesystemCopierActionTest::DoTest(bool run_out_of_space,
   if (!terminate_early)
     EXPECT_TRUE(delegate.ran());
   if (run_out_of_space || terminate_early) {
-    EXPECT_FALSE(delegate.success());
+    EXPECT_EQ(kActionCodeError, delegate.code());
     return;
   }
-  EXPECT_TRUE(delegate.success());
+  EXPECT_EQ(kActionCodeSuccess, delegate.code());
 
   // Make sure everything in the out_image is there
   vector<char> a_out;
@@ -193,15 +193,15 @@ class FilesystemCopierActionTest2Delegate : public ActionProcessorDelegate {
  public:
   void ActionCompleted(ActionProcessor* processor,
                        AbstractAction* action,
-                       bool success) {
+                       ActionExitCode code) {
     if (action->Type() == FilesystemCopierAction::StaticType()) {
       ran_ = true;
-      success_ = success;
+      code_ = code;
     }
   }
   GMainLoop *loop_;
   bool ran_;
-  bool success_;
+  ActionExitCode code_;
 };
 
 TEST_F(FilesystemCopierActionTest, MissingInputObjectTest) {
@@ -220,7 +220,7 @@ TEST_F(FilesystemCopierActionTest, MissingInputObjectTest) {
   processor.StartProcessing();
   EXPECT_FALSE(processor.IsRunning());
   EXPECT_TRUE(delegate.ran_);
-  EXPECT_FALSE(delegate.success_);
+  EXPECT_EQ(kActionCodeError, delegate.code_);
 }
 
 TEST_F(FilesystemCopierActionTest, FullUpdateTest) {
@@ -245,7 +245,7 @@ TEST_F(FilesystemCopierActionTest, FullUpdateTest) {
   processor.StartProcessing();
   EXPECT_FALSE(processor.IsRunning());
   EXPECT_TRUE(delegate.ran_);
-  EXPECT_TRUE(delegate.success_);
+  EXPECT_EQ(kActionCodeSuccess, delegate.code_);
   EXPECT_EQ(kUrl, collector_action.object().download_url);
 }
 
@@ -269,7 +269,7 @@ TEST_F(FilesystemCopierActionTest, NonExistentDriveTest) {
   processor.StartProcessing();
   EXPECT_FALSE(processor.IsRunning());
   EXPECT_TRUE(delegate.ran_);
-  EXPECT_FALSE(delegate.success_);
+  EXPECT_EQ(kActionCodeError, delegate.code_);
 }
 
 TEST_F(FilesystemCopierActionTest, RunAsRootNoSpaceTest) {

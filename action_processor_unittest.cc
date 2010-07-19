@@ -32,7 +32,7 @@ struct ActionProcessorTestAction : public Action<ActionProcessorTestAction> {
   void PerformAction() {}
   void CompleteAction() {
     ASSERT_TRUE(processor());
-    processor()->ActionComplete(this, true);
+    processor()->ActionComplete(this, kActionCodeSuccess);
   }
   string Type() const { return "ActionProcessorTestAction"; }
 };
@@ -65,9 +65,10 @@ class MyActionProcessorDelegate : public ActionProcessorDelegate {
         processing_done_called_(false),
         processing_stopped_called_(false),
         action_completed_called_(false),
-        action_completed_success_(false) {}
+        action_exit_code_(kActionCodeError) {}
 
-  virtual void ProcessingDone(const ActionProcessor* processor, bool success) {
+  virtual void ProcessingDone(const ActionProcessor* processor,
+                              ActionExitCode code) {
     EXPECT_EQ(processor_, processor);
     EXPECT_FALSE(processing_done_called_);
     processing_done_called_ = true;
@@ -79,18 +80,18 @@ class MyActionProcessorDelegate : public ActionProcessorDelegate {
   }
   virtual void ActionCompleted(ActionProcessor* processor,
                                AbstractAction* action,
-                               bool success) {
+                               ActionExitCode code) {
     EXPECT_EQ(processor_, processor);
     EXPECT_FALSE(action_completed_called_);
     action_completed_called_ = true;
-    action_completed_success_ = success;
+    action_exit_code_ = code;
   }
 
   const ActionProcessor* processor_;
   bool processing_done_called_;
   bool processing_stopped_called_;
   bool action_completed_called_;
-  bool action_completed_success_;
+  ActionExitCode action_exit_code_;
 };
 }  // namespace {}
 

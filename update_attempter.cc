@@ -198,11 +198,11 @@ void UpdateAttempter::CheckForUpdate() {
 
 // Delegate methods:
 void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
-                                     bool success) {
+                                     ActionExitCode code) {
   CHECK(response_handler_action_);
   LOG(INFO) << "Processing Done.";
   actions_.clear();
-  if (success) {
+  if (code == kActionCodeSuccess) {
     SetStatusAndNotify(UPDATE_STATUS_UPDATED_NEED_REBOOT);
     utils::WriteFile(kUpdateCompletedMarker, "", 0);
   } else {
@@ -221,13 +221,13 @@ void UpdateAttempter::ProcessingStopped(const ActionProcessor* processor) {
 // or otherwise.
 void UpdateAttempter::ActionCompleted(ActionProcessor* processor,
                                       AbstractAction* action,
-                                      bool success) {
+                                      ActionExitCode code) {
   // Reset download progress regardless of whether or not the download action
   // succeeded.
   const string type = action->Type();
   if (type == DownloadAction::StaticType())
     download_progress_ = 0.0;
-  if (!success)
+  if (code != kActionCodeSuccess)
     return;
   // Find out which action completed.
   if (type == OmahaResponseHandlerAction::StaticType()) {

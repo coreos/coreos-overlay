@@ -45,7 +45,7 @@ void FilesystemCopierAction::PerformAction() {
     // No copy needed. Done!
     if (HasOutputPipe())
       SetOutputObject(install_plan_);
-    abort_action_completer.set_success(true);
+    abort_action_completer.set_code(kActionCodeSuccess);
     return;
   }
 
@@ -59,7 +59,7 @@ void FilesystemCopierAction::PerformAction() {
   const string destination = copying_kernel_install_path_ ?
       install_plan_.kernel_install_path :
       install_plan_.install_path;
-  
+
   int src_fd = open(source.c_str(), O_RDONLY);
   if (src_fd < 0) {
     PLOG(ERROR) << "Unable to open " << source << " for reading:";
@@ -110,7 +110,9 @@ void FilesystemCopierAction::Cleanup(bool success, bool was_cancelled) {
     return;
   if (success && HasOutputPipe())
     SetOutputObject(install_plan_);
-  processor_->ActionComplete(this, success);
+  processor_->ActionComplete(
+      this,
+      success ? kActionCodeSuccess : kActionCodeError);
 }
 
 void FilesystemCopierAction::AsyncReadyCallback(GObject *source_object,

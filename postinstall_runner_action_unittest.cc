@@ -24,17 +24,19 @@ class PostinstallRunnerActionTest : public ::testing::Test {
 
 class PostinstActionProcessorDelegate : public ActionProcessorDelegate {
  public:
-  PostinstActionProcessorDelegate() : success_(false), success_set_(false) {}
+  PostinstActionProcessorDelegate()
+      : code_(kActionCodeError),
+        code_set_(false) {}
   void ActionCompleted(ActionProcessor* processor,
                        AbstractAction* action,
-                       bool success) {
+                       ActionExitCode code) {
     if (action->Type() == PostinstallRunnerAction::StaticType()) {
-      success_ = success;
-      success_set_ = true;
+      code_ = code;
+      code_set_ = true;
     }
   }
-  bool success_;
-  bool success_set_;
+  ActionExitCode code_;
+  bool code_set_;
 };
 
 TEST_F(PostinstallRunnerActionTest, RunAsRootSimpleTest) {
@@ -127,8 +129,8 @@ void PostinstallRunnerActionTest::DoTest(bool do_losetup, bool do_err_script) {
   ASSERT_FALSE(processor.IsRunning())
       << "Update test to handle non-asynch actions";
 
-  EXPECT_TRUE(delegate.success_set_);
-  EXPECT_EQ(do_losetup && !do_err_script, delegate.success_);
+  EXPECT_TRUE(delegate.code_set_);
+  EXPECT_EQ(do_losetup && !do_err_script, delegate.code_ == kActionCodeSuccess);
   EXPECT_EQ(do_losetup && !do_err_script,
             !collector_action.object().install_path.empty());
   if (do_losetup && !do_err_script) {

@@ -215,7 +215,7 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
   // Events are best effort transactions -- assume they always succeed.
   if (IsEvent()) {
     CHECK(!HasOutputPipe()) << "No output pipe allowed for event requests.";
-    completer.set_success(true);
+    completer.set_code(kActionCodeSuccess);
     return;
   }
 
@@ -226,7 +226,7 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
   if (!HasOutputPipe()) {
     // Just set success to whether or not the http transfer succeeded,
     // which must be true at this point in the code.
-    completer.set_success(true);
+    completer.set_code(kActionCodeSuccess);
     return;
   }
 
@@ -267,7 +267,7 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
     LOG(INFO) << "No update.";
     output_object.update_exists = false;
     SetOutputObject(output_object);
-    completer.set_success(true);
+    completer.set_code(kActionCodeSuccess);
     return;
   }
 
@@ -279,7 +279,7 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
   // In best-effort fashion, fetch the rest of the expected attributes
   // from the updatecheck node, then return the object
   output_object.update_exists = true;
-  completer.set_success(true);
+  completer.set_code(kActionCodeSuccess);
 
   output_object.display_version =
       XmlGetProperty(updatecheck_node, "DisplayVersion");

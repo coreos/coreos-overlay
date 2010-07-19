@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2010 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -134,7 +134,7 @@ std::set<ValueType> SetWithValue(const ValueType& value) {
 
 template<typename T>
 bool VectorContainsValue(const std::vector<T>& vect, const T& value) {
-  return std::find(vect.begin(), vect.end(), value) != vect.end(); 
+  return std::find(vect.begin(), vect.end(), value) != vect.end();
 }
 
 template<typename T>
@@ -234,22 +234,21 @@ class ScopedActionCompleter {
                                  AbstractAction* action)
       : processor_(processor),
         action_(action),
-        success_(false),
+        code_(kActionCodeError),
         should_complete_(true) {}
   ~ScopedActionCompleter() {
     if (should_complete_)
-      processor_->ActionComplete(action_, success_);
+      processor_->ActionComplete(action_, code_);
   }
-  void set_success(bool success) {
-    success_ = success;
-  }
+  void set_code(ActionExitCode code) { code_ = code; }
   void set_should_complete(bool should_complete) {
     should_complete_ = should_complete;
   }
+
  private:
   ActionProcessor* processor_;
   AbstractAction* action_;
-  bool success_;
+  ActionExitCode code_;
   bool should_complete_;
   DISALLOW_COPY_AND_ASSIGN(ScopedActionCompleter);
 };

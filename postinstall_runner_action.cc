@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2010 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -23,7 +23,7 @@ void PostinstallRunnerAction::PerformAction() {
   const InstallPlan install_plan = GetInputObject();
   const string install_device = install_plan.install_path;
   ScopedActionCompleter completer(processor_, this);
-  
+
   // Make mountpoint
   string temp_dir;
   TEST_AND_RETURN(utils::MakeTempDirectory("/tmp/au_postint_mount.XXXXXX",
@@ -71,7 +71,7 @@ void PostinstallRunnerAction::PerformAction() {
   if (HasOutputPipe()) {
     SetOutputObject(install_plan);
   }
-  completer.set_success(true);
+  completer.set_code(kActionCodeSuccess);
 }
 
 }  // namespace chromeos_update_engine

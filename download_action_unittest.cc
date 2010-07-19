@@ -28,7 +28,8 @@ class DownloadActionTestProcessorDelegate : public ActionProcessorDelegate {
   virtual ~DownloadActionTestProcessorDelegate() {
     EXPECT_TRUE(processing_done_called_);
   }
-  virtual void ProcessingDone(const ActionProcessor* processor, bool success) {
+  virtual void ProcessingDone(const ActionProcessor* processor,
+                              ActionExitCode code) {
     ASSERT_TRUE(loop_);
     g_main_loop_quit(loop_);
     vector<char> found_data;
@@ -42,9 +43,9 @@ class DownloadActionTestProcessorDelegate : public ActionProcessorDelegate {
 
   virtual void ActionCompleted(ActionProcessor* processor,
                                AbstractAction* action,
-                               bool success) {
+                               ActionExitCode code) {
     // make sure actions always succeed
-    EXPECT_TRUE(success);
+    EXPECT_EQ(kActionCodeSuccess, code);
   }
 
   GMainLoop *loop_;
@@ -199,7 +200,7 @@ struct DownloadActionTestAction : public Action<DownloadActionTestAction> {
     ASSERT_TRUE(HasInputObject());
     EXPECT_TRUE(expected_input_object_ == GetInputObject());
     ASSERT_TRUE(processor());
-    processor()->ActionComplete(this, true);
+    processor()->ActionComplete(this, kActionCodeSuccess);
   }
   string Type() const { return "DownloadActionTestAction"; }
   InstallPlan expected_input_object_;
@@ -212,7 +213,7 @@ namespace {
 // only by the test PassObjectOutTest.
 class PassObjectOutTestProcessorDelegate : public ActionProcessorDelegate {
  public:
-  void ProcessingDone(const ActionProcessor* processor, bool success) {
+  void ProcessingDone(const ActionProcessor* processor, ActionExitCode code) {
     ASSERT_TRUE(loop_);
     g_main_loop_quit(loop_);
   }
@@ -275,7 +276,7 @@ TEST(DownloadActionTest, BadOutFileTest) {
   feeder_action.set_obj(install_plan);
   DownloadAction download_action(new MockHttpFetcher("x", 1));
   download_action.SetTestFileWriter(&writer);
-  
+
   BondActions(&feeder_action, &download_action);
 
   ActionProcessor processor;

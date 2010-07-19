@@ -25,18 +25,18 @@ class OmahaResponseHandlerActionProcessorDelegate
     : public ActionProcessorDelegate {
  public:
   OmahaResponseHandlerActionProcessorDelegate()
-      : success_(false),
-        success_set_(false) {}
+      : code_(kActionCodeError),
+        code_set_(false) {}
   void ActionCompleted(ActionProcessor* processor,
                        AbstractAction* action,
-                       bool success) {
+                       ActionExitCode code) {
     if (action->Type() == OmahaResponseHandlerAction::StaticType()) {
-      success_ = success;
-      success_set_ = true;
+      code_ = code;
+      code_set_ = true;
     }
   }
-  bool success_;
-  bool success_set_;
+  ActionExitCode code_;
+  bool code_set_;
 };
 
 namespace {
@@ -73,8 +73,8 @@ bool OmahaResponseHandlerActionTest::DoTest(const OmahaResponse& in,
       << "Update test to handle non-asynch actions";
   if (out)
     *out = collector_action.object();
-  EXPECT_TRUE(delegate.success_set_);
-  return delegate.success_;
+  EXPECT_TRUE(delegate.code_set_);
+  return delegate.code_ == kActionCodeSuccess;
 }
 
 TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {

@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -61,7 +61,7 @@ void DownloadAction::PerformAction() {
   if (rc < 0) {
     LOG(ERROR) << "Unable to open output file " << install_plan_.install_path;
     // report error to processor
-    processor_->ActionComplete(this, false);
+    processor_->ActionComplete(this, kActionCodeError);
     return;
   }
   if (!install_plan_.is_full_update) {
@@ -70,7 +70,7 @@ void DownloadAction::PerformAction() {
       LOG(ERROR) << "Unable to open kernel file "
                  << install_plan_.kernel_install_path.c_str();
       writer_->Close();
-      processor_->ActionComplete(this, false);
+      processor_->ActionComplete(this, kActionCodeError);
       return;
     }
   }
@@ -126,13 +126,15 @@ void DownloadAction::TransferComplete(HttpFetcher *fetcher, bool successful) {
       successful = false;
     }
   }
-  
+
   FlushLinuxCaches();
 
   // Write the path to the output pipe if we're successful
   if (successful && HasOutputPipe())
     SetOutputObject(GetInputObject());
-  processor_->ActionComplete(this, successful);
+  processor_->ActionComplete(
+      this,
+      successful ? kActionCodeSuccess : kActionCodeError);
 }
 
 };  // namespace {}

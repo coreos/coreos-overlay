@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -20,6 +20,12 @@
 // An ActionProcessor keeps a queue of Actions and processes them in order.
 
 namespace chromeos_update_engine {
+
+// Action exit codes.
+enum ActionExitCode {
+  kActionCodeSuccess = 0,
+  kActionCodeError = 1,
+};
 
 class AbstractAction;
 class ActionProcessorDelegate;
@@ -57,7 +63,7 @@ class ActionProcessor {
   }
 
   // Called by an action to notify processor that it's done. Caller passes self.
-  void ActionComplete(AbstractAction* actionptr, bool success);
+  void ActionComplete(AbstractAction* actionptr, ActionExitCode code);
 
  private:
   // Actions that have not yet begun processing, in the order in which
@@ -78,9 +84,10 @@ class ActionProcessor {
 class ActionProcessorDelegate {
  public:
   // Called when all processing in an ActionProcessor has completed. A pointer
-  // to the ActionProcessor is passed. success is true iff all actions
-  // completed successfully
-  virtual void ProcessingDone(const ActionProcessor* processor, bool success) {}
+  // to the ActionProcessor is passed. |code| is set to the exit code of the
+  // last completed action.
+  virtual void ProcessingDone(const ActionProcessor* processor,
+                              ActionExitCode code) {}
 
   // Called when processing has stopped. Does not mean that all Actions have
   // completed. If/when all Actions complete, ProcessingDone() will be called.
@@ -90,7 +97,7 @@ class ActionProcessorDelegate {
   // or otherwise.
   virtual void ActionCompleted(ActionProcessor* processor,
                                AbstractAction* action,
-                               bool success) {}
+                               ActionExitCode code) {}
 };
 
 }  // namespace chromeos_update_engine

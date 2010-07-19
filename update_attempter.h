@@ -50,11 +50,11 @@ class UpdateAttempter : public ActionProcessorDelegate,
   void Update();
 
   // ActionProcessorDelegate methods:
-  void ProcessingDone(const ActionProcessor* processor, bool success);
+  void ProcessingDone(const ActionProcessor* processor, ActionExitCode code);
   void ProcessingStopped(const ActionProcessor* processor);
   void ActionCompleted(ActionProcessor* processor,
                        AbstractAction* action,
-                       bool success);
+                       ActionExitCode code);
 
   // Stop updating. An attempt will be made to record status to the disk
   // so that updates can be resumed later.

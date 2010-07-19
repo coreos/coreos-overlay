@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -40,16 +40,17 @@ class IntegrationTestProcessorDelegate : public ActionProcessorDelegate {
   virtual ~IntegrationTestProcessorDelegate() {
     EXPECT_TRUE(processing_done_called_);
   }
-  virtual void ProcessingDone(const ActionProcessor* processor, bool success) {
+  virtual void ProcessingDone(const ActionProcessor* processor,
+                              ActionExitCode code) {
     processing_done_called_ = true;
     g_main_loop_quit(loop_);
   }
 
   virtual void ActionCompleted(ActionProcessor* processor,
                                AbstractAction* action,
-                               bool success) {
+                               ActionExitCode code) {
     // make sure actions always succeed
-    EXPECT_TRUE(success);
+    EXPECT_EQ(kActionCodeSuccess, code);
 
     // Swap in the device path for PostinstallRunnerAction with a loop device
     if (action->Type() == InstallAction::StaticType()) {
