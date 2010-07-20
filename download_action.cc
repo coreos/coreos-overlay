@@ -61,7 +61,7 @@ void DownloadAction::PerformAction() {
   if (rc < 0) {
     LOG(ERROR) << "Unable to open output file " << install_plan_.install_path;
     // report error to processor
-    processor_->ActionComplete(this, kActionCodeError);
+    processor_->ActionComplete(this, kActionCodeInstallDeviceOpenError);
     return;
   }
   if (!install_plan_.is_full_update) {
@@ -70,7 +70,7 @@ void DownloadAction::PerformAction() {
       LOG(ERROR) << "Unable to open kernel file "
                  << install_plan_.kernel_install_path.c_str();
       writer_->Close();
-      processor_->ActionComplete(this, kActionCodeError);
+      processor_->ActionComplete(this, kActionCodeKernelDeviceOpenError);
       return;
     }
   }
@@ -116,25 +116,25 @@ void DownloadAction::TransferComplete(HttpFetcher *fetcher, bool successful) {
     CHECK_EQ(writer_->Close(), 0) << errno;
     writer_ = NULL;
   }
-  if (successful) {
+  ActionExitCode code =
+      successful ? kActionCodeSuccess : kActionCodeDownloadTransferError;
+  if (code == kActionCodeSuccess) {
     // Make sure hash is correct
     omaha_hash_calculator_.Finalize();
     if (omaha_hash_calculator_.hash() != install_plan_.download_hash) {
       LOG(ERROR) << "Download of " << install_plan_.download_url
                  << " failed. Expect hash " << install_plan_.download_hash
                  << " but got hash " << omaha_hash_calculator_.hash();
-      successful = false;
+      code = kActionCodeDownloadHashMismatchError;
     }
   }
 
   FlushLinuxCaches();
 
-  // Write the path to the output pipe if we're successful
-  if (successful && HasOutputPipe())
+  // Write the path to the output pipe if we're successful.
+  if (code == kActionCodeSuccess && HasOutputPipe())
     SetOutputObject(GetInputObject());
-  processor_->ActionComplete(
-      this,
-      successful ? kActionCodeSuccess : kActionCodeError);
+  processor_->ActionComplete(this, code);
 }
 
 };  // namespace {}

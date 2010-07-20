@@ -23,8 +23,10 @@ class DownloadActionTest : public ::testing::Test { };
 namespace {
 class DownloadActionTestProcessorDelegate : public ActionProcessorDelegate {
  public:
-  DownloadActionTestProcessorDelegate()
-      : loop_(NULL), processing_done_called_(false) {}
+  explicit DownloadActionTestProcessorDelegate(ActionExitCode expected_code)
+      : loop_(NULL),
+        processing_done_called_(false),
+        expected_code_(expected_code) {}
   virtual ~DownloadActionTestProcessorDelegate() {
     EXPECT_TRUE(processing_done_called_);
   }
@@ -44,14 +46,19 @@ class DownloadActionTestProcessorDelegate : public ActionProcessorDelegate {
   virtual void ActionCompleted(ActionProcessor* processor,
                                AbstractAction* action,
                                ActionExitCode code) {
-    // make sure actions always succeed
-    EXPECT_EQ(kActionCodeSuccess, code);
+    const string type = action->Type();
+    if (type == DownloadAction::StaticType()) {
+      EXPECT_EQ(expected_code_, code);
+    } else {
+      EXPECT_EQ(kActionCodeSuccess, code);
+    }
   }
 
   GMainLoop *loop_;
   string path_;
   vector<char> expected_data_;
   bool processing_done_called_;
+  ActionExitCode expected_code_;
 };
 
 struct EntryPointArgs {
@@ -66,7 +73,7 @@ gboolean StartProcessorInRunLoop(gpointer data) {
   return FALSE;
 }
 
-void TestWithData(const vector<char>& data) {
+void TestWithData(const vector<char>& data, bool hash_test) {
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
 
   // TODO(adlr): see if we need a different file for build bots
@@ -74,10 +81,13 @@ void TestWithData(const vector<char>& data) {
   DirectFileWriter writer;
 
   // takes ownership of passed in HttpFetcher
+  string hash = hash_test ?
+      OmahaHashCalculator::OmahaHashOfString("random string") :
+      OmahaHashCalculator::OmahaHashOfData(data);
   InstallPlan install_plan(true,
                            "",
                            0,
-                           OmahaHashCalculator::OmahaHashOfData(data),
+                           hash,
                            output_temp_file.GetPath(),
                            "");
   ObjectFeederAction<InstallPlan> feeder_action;
@@ -87,7 +97,8 @@ void TestWithData(const vector<char>& data) {
   download_action.SetTestFileWriter(&writer);
   BondActions(&feeder_action, &download_action);
 
-  DownloadActionTestProcessorDelegate delegate;
+  DownloadActionTestProcessorDelegate delegate(
+      hash_test ? kActionCodeDownloadHashMismatchError : kActionCodeSuccess);
   delegate.loop_ = loop;
   delegate.expected_data_ = data;
   delegate.path_ = output_temp_file.GetPath();
@@ -106,7 +117,7 @@ TEST(DownloadActionTest, SimpleTest) {
   vector<char> small;
   const char* foo = "foo";
   small.insert(small.end(), foo, foo + strlen(foo));
-  TestWithData(small);
+  TestWithData(small, false);
 }
 
 TEST(DownloadActionTest, LargeTest) {
@@ -119,7 +130,14 @@ TEST(DownloadActionTest, LargeTest) {
     else
       c++;
   }
-  TestWithData(big);
+  TestWithData(big, false);
+}
+
+TEST(DownloadActionTest, BadHashTest) {
+  vector<char> small;
+  const char* foo = "foo";
+  small.insert(small.end(), foo, foo + strlen(foo));
+  TestWithData(small, true);
 }
 
 namespace {
