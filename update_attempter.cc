@@ -13,7 +13,10 @@
 #include <tr1/memory>
 #include <string>
 #include <vector>
+
 #include <glib.h>
+
+#include "metrics/metrics_library.h"
 #include "update_engine/dbus_service.h"
 #include "update_engine/download_action.h"
 #include "update_engine/filesystem_copier_action.h"
@@ -199,6 +202,14 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
   if (code == kActionCodeSuccess) {
     SetStatusAndNotify(UPDATE_STATUS_UPDATED_NEED_REBOOT);
     utils::WriteFile(kUpdateCompletedMarker, "", 0);
+
+    // Report the time it took to update the system.
+    int64_t update_time = time(NULL) - last_checked_time_;
+    metrics_lib_->SendToUMA("Installer.UpdateTime",
+                            static_cast<int>(update_time),  // sample
+                            1,  // min = 1 second
+                            20 * 60,  // max = 20 minutes
+                            50);  // buckets
   } else {
     LOG(INFO) << "Update failed.";
     SetStatusAndNotify(UPDATE_STATUS_IDLE);

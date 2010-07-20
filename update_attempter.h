@@ -15,6 +15,7 @@
 #include "update_engine/omaha_request_params.h"
 #include "update_engine/omaha_response_handler_action.h"
 
+class MetricsLibraryInterface;
 struct UpdateEngineService;
 
 namespace chromeos_update_engine {
@@ -36,12 +37,14 @@ const char* UpdateStatusToString(UpdateStatus status);
 class UpdateAttempter : public ActionProcessorDelegate,
                         public DownloadActionDelegate {
  public:
-  UpdateAttempter() : dbus_service_(NULL),
-                      status_(UPDATE_STATUS_IDLE),
-                      download_progress_(0.0),
-                      last_checked_time_(0),
-                      new_version_("0.0.0.0"),
-                      new_size_(0) {
+  UpdateAttempter(MetricsLibraryInterface* metrics_lib)
+      : dbus_service_(NULL),
+        metrics_lib_(metrics_lib),
+        status_(UPDATE_STATUS_IDLE),
+        download_progress_(0.0),
+        last_checked_time_(0),
+        new_version_("0.0.0.0"),
+        new_size_(0) {
     last_notify_time_.tv_sec = 0;
     last_notify_time_.tv_nsec = 0;
     if (utils::FileExists(kUpdateCompletedMarker))
@@ -95,6 +98,9 @@ class UpdateAttempter : public ActionProcessorDelegate,
 
   // pointer to the OmahaResponseHandlerAction in the actions_ vector;
   std::tr1::shared_ptr<OmahaResponseHandlerAction> response_handler_action_;
+
+  // Pointer to the UMA metrics collection library.
+  MetricsLibraryInterface* metrics_lib_;
 
   // For status:
   UpdateStatus status_;
