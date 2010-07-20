@@ -90,7 +90,7 @@ class UpdateAttempter : public ActionProcessorDelegate,
 
   // Creates an error event object in |error_event_| to be included in
   // an OmahaRequestAction once the current action processor is done.
-  void CreatePendingErrorEvent(ActionExitCode code);
+  void CreatePendingErrorEvent(AbstractAction* action, ActionExitCode code);
 
   // If there's a pending error event allocated in |error_event_|,
   // schedules an OmahaRequestAction with that event in the current

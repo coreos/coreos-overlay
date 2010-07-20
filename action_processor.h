@@ -25,10 +25,15 @@ namespace chromeos_update_engine {
 enum ActionExitCode {
   kActionCodeSuccess = 0,
   kActionCodeError = 1,
-  kActionCodeInstallDeviceOpenError = 2,
-  kActionCodeKernelDeviceOpenError = 3,
-  kActionCodeDownloadTransferError = 4,
-  kActionCodeDownloadHashMismatchError = 5,
+  kActionCodeOmahaRequestError = 2,
+  kActionCodeOmahaResponseHandlerError = 3,
+  kActionCodeFilesystemCopierError = 4,
+  kActionCodePostinstallRunnerError = 5,
+  kActionCodeSetBootableFlagError = 6,
+  kActionCodeInstallDeviceOpenError = 7,
+  kActionCodeKernelDeviceOpenError = 8,
+  kActionCodeDownloadTransferError = 9,
+  kActionCodeDownloadHashMismatchError = 10,
 };
 
 class AbstractAction;

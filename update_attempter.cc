@@ -90,6 +90,30 @@ const char* UpdateStatusToString(UpdateStatus status) {
   }
 }
 
+// Turns a generic kActionCodeError to a generic error code specific
+// to |action| (e.g., kActionCodeFilesystemCopierError). If |code| is
+// not kActionCodeError, or the action is not matched, returns |code|
+// unchanged.
+ActionExitCode GetErrorCodeForAction(AbstractAction* action,
+                                     ActionExitCode code) {
+  if (code != kActionCodeError)
+    return code;
+
+  const string type = action->Type();
+  if (type == OmahaRequestAction::StaticType())
+    return kActionCodeOmahaRequestError;
+  if (type == OmahaResponseHandlerAction::StaticType())
+    return kActionCodeOmahaResponseHandlerError;
+  if (type == FilesystemCopierAction::StaticType())
+    return kActionCodeFilesystemCopierError;
+  if (type == PostinstallRunnerAction::StaticType())
+    return kActionCodePostinstallRunnerError;
+  if (type == SetBootableFlagAction::StaticType())
+    return kActionCodeSetBootableFlagError;
+
+  return code;
+}
+
 void UpdateAttempter::Update() {
   if (status_ == UPDATE_STATUS_UPDATED_NEED_REBOOT) {
     LOG(INFO) << "Not updating b/c we already updated and we're waiting for "
@@ -246,16 +270,8 @@ void UpdateAttempter::ActionCompleted(ActionProcessor* processor,
   if (type == DownloadAction::StaticType())
     download_progress_ = 0.0;
   if (code != kActionCodeSuccess) {
-    // On failure, schedule an error event to be sent to Omaha. For
-    // now assume that Omaha response action failure means that
-    // there's no update so don't send an event. Also, double check
-    // that the failure has not occurred while sending an error event
-    // -- in which case don't schedule another. This shouldn't really
-    // happen but just in case...
-    if (type != OmahaResponseHandlerAction::StaticType() &&
-        status_ != UPDATE_STATUS_REPORTING_ERROR_EVENT) {
-      CreatePendingErrorEvent(code);
-    }
+    // On failure, schedule an error event to be sent to Omaha.
+    CreatePendingErrorEvent(action, code);
     return;
   }
   // Find out which action completed.
@@ -332,12 +348,25 @@ void UpdateAttempter::SetStatusAndNotify(UpdateStatus status) {
       new_size_);
 }
 
-void UpdateAttempter::CreatePendingErrorEvent(ActionExitCode code) {
+void UpdateAttempter::CreatePendingErrorEvent(AbstractAction* action,
+                                              ActionExitCode code) {
   if (error_event_.get()) {
     // This shouldn't really happen.
     LOG(WARNING) << "There's already an existing pending error event.";
     return;
   }
+
+  // For now assume that Omaha response action failure means that
+  // there's no update so don't send an event. Also, double check that
+  // the failure has not occurred while sending an error event -- in
+  // which case don't schedule another. This shouldn't really happen
+  // but just in case...
+  if (action->Type() == OmahaResponseHandlerAction::StaticType() ||
+      status_ == UPDATE_STATUS_REPORTING_ERROR_EVENT) {
+    return;
+  }
+
+  code = GetErrorCodeForAction(action, code);
   error_event_.reset(new OmahaEvent(OmahaEvent::kTypeUpdateComplete,
                                     OmahaEvent::kResultError,
                                     code));
