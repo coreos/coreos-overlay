@@ -69,10 +69,15 @@ string FormatRequest(const OmahaEvent* event,
         "        <o:ping active=\"0\"></o:ping>\n"
         "        <o:updatecheck></o:updatecheck>\n");
   } else {
+    // The error code is an optional attribute so append it only if
+    // the result is not success.
+    string error_code;
+    if (event->result != OmahaEvent::kResultSuccess) {
+      error_code = StringPrintf(" errorcode=\"%d\"", event->error_code);
+    }
     body = StringPrintf(
-        "        <o:event eventtype=\"%d\" eventresult=\"%d\" "
-        "errorcode=\"%d\"></o:event>\n",
-        event->type, event->result, event->error_code);
+        "        <o:event eventtype=\"%d\" eventresult=\"%d\"%s></o:event>\n",
+        event->type, event->result, error_code.c_str());
   }
   return string("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                 "<o:gupdate xmlns:o=\"http://www.google.com/update2/request\" "

@@ -597,6 +597,66 @@ TEST(OmahaRequestActionTest, FormatUpdateCheckOutputTest) {
   EXPECT_EQ(post_str.find("o:event"), string::npos);
 }
 
+TEST(OmahaRequestActionTest, FormatSuccessEventOutputTest) {
+  vector<char> post_data;
+  OmahaRequestParams params("machine_id",
+                            "user_id",
+                            OmahaRequestParams::kOsPlatform,
+                            OmahaRequestParams::kOsVersion,
+                            "service_pack",
+                            "x86-generic",
+                            OmahaRequestParams::kAppId,
+                            "0.1.0.0",
+                            "en-US",
+                            "unittest_track",
+                            false,  // delta okay
+                            "http://url");
+  TestEvent(params,
+            new OmahaEvent(OmahaEvent::kTypeUpdateDownloadStarted),
+            "invalid xml>",
+            &post_data);
+  // convert post_data to string
+  string post_str(&post_data[0], post_data.size());
+  string expected_event = StringPrintf(
+      "        <o:event eventtype=\"%d\" eventresult=\"%d\"></o:event>\n",
+      OmahaEvent::kTypeUpdateDownloadStarted,
+      OmahaEvent::kResultSuccess);
+  EXPECT_NE(post_str.find(expected_event), string::npos);
+  EXPECT_EQ(post_str.find("o:updatecheck"), string::npos);
+}
+
+TEST(OmahaRequestActionTest, FormatErrorEventOutputTest) {
+  vector<char> post_data;
+  OmahaRequestParams params("machine_id",
+                            "user_id",
+                            OmahaRequestParams::kOsPlatform,
+                            OmahaRequestParams::kOsVersion,
+                            "service_pack",
+                            "x86-generic",
+                            OmahaRequestParams::kAppId,
+                            "0.1.0.0",
+                            "en-US",
+                            "unittest_track",
+                            false,  // delta okay
+                            "http://url");
+  TestEvent(params,
+            new OmahaEvent(OmahaEvent::kTypeDownloadComplete,
+                           OmahaEvent::kResultError,
+                           kActionCodeError),
+            "invalid xml>",
+            &post_data);
+  // convert post_data to string
+  string post_str(&post_data[0], post_data.size());
+  string expected_event = StringPrintf(
+      "        <o:event eventtype=\"%d\" eventresult=\"%d\" "
+      "errorcode=\"%d\"></o:event>\n",
+      OmahaEvent::kTypeDownloadComplete,
+      OmahaEvent::kResultError,
+      kActionCodeError);
+  EXPECT_NE(post_str.find(expected_event), string::npos);
+  EXPECT_EQ(post_str.find("o:updatecheck"), string::npos);
+}
+
 TEST(OmahaRequestActionTest, FormatEventOutputTest) {
   vector<char> post_data;
   OmahaRequestParams params("machine_id",
@@ -614,7 +674,7 @@ TEST(OmahaRequestActionTest, FormatEventOutputTest) {
   TestEvent(params,
             new OmahaEvent(OmahaEvent::kTypeDownloadComplete,
                            OmahaEvent::kResultError,
-                           5),
+                           kActionCodeError),
             "invalid xml>",
             &post_data);
   // convert post_data to string
@@ -624,7 +684,7 @@ TEST(OmahaRequestActionTest, FormatEventOutputTest) {
       "errorcode=\"%d\"></o:event>\n",
       OmahaEvent::kTypeDownloadComplete,
       OmahaEvent::kResultError,
-      5);
+      kActionCodeError);
   EXPECT_NE(post_str.find(expected_event), string::npos);
   EXPECT_EQ(post_str.find("o:updatecheck"), string::npos);
 }
@@ -653,9 +713,7 @@ TEST(OmahaRequestActionTest, IsEventTest) {
 
   OmahaRequestAction event_action(
       params,
-      new OmahaEvent(OmahaEvent::kTypeInstallComplete,
-                     OmahaEvent::kResultError,
-                     0),
+      new OmahaEvent(OmahaEvent::kTypeUpdateComplete),
       new MockHttpFetcher(http_response.data(),
                           http_response.size()));
   EXPECT_TRUE(event_action.IsEvent());
@@ -689,6 +747,25 @@ TEST(OmahaRequestActionTest, FormatDeltaOkayOutputTest) {
               string::npos)
         << "i = " << i;
   }
+}
+
+TEST(OmahaRequestActionTest, OmahaEventTest) {
+  OmahaEvent default_event;
+  EXPECT_EQ(OmahaEvent::kTypeUnknown, default_event.type);
+  EXPECT_EQ(OmahaEvent::kResultError, default_event.result);
+  EXPECT_EQ(kActionCodeError, default_event.error_code);
+
+  OmahaEvent success_event(OmahaEvent::kTypeUpdateDownloadStarted);
+  EXPECT_EQ(OmahaEvent::kTypeUpdateDownloadStarted, success_event.type);
+  EXPECT_EQ(OmahaEvent::kResultSuccess, success_event.result);
+  EXPECT_EQ(kActionCodeSuccess, success_event.error_code);
+
+  OmahaEvent error_event(OmahaEvent::kTypeUpdateDownloadFinished,
+                         OmahaEvent::kResultError,
+                         kActionCodeError);
+  EXPECT_EQ(OmahaEvent::kTypeUpdateDownloadFinished, error_event.type);
+  EXPECT_EQ(OmahaEvent::kResultError, error_event.result);
+  EXPECT_EQ(kActionCodeError, error_event.error_code);
 }
 
 }  // namespace chromeos_update_engine

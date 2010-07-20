@@ -116,18 +116,14 @@ void UpdateAttempter::Update() {
   shared_ptr<OmahaRequestAction> download_started_action(
       new OmahaRequestAction(omaha_request_params_,
                              new OmahaEvent(
-                                 OmahaEvent::kTypeUpdateDownloadStarted,
-                                 OmahaEvent::kResultSuccess,
-                                 0),
+                                 OmahaEvent::kTypeUpdateDownloadStarted),
                              new LibcurlHttpFetcher));
   shared_ptr<DownloadAction> download_action(
       new DownloadAction(new LibcurlHttpFetcher));
   shared_ptr<OmahaRequestAction> download_finished_action(
       new OmahaRequestAction(omaha_request_params_,
                              new OmahaEvent(
-                                 OmahaEvent::kTypeUpdateDownloadFinished,
-                                 OmahaEvent::kResultSuccess,
-                                 0),
+                                 OmahaEvent::kTypeUpdateDownloadFinished),
                              new LibcurlHttpFetcher));
   shared_ptr<PostinstallRunnerAction> postinstall_runner_action_precommit(
       new PostinstallRunnerAction(true));
@@ -137,9 +133,7 @@ void UpdateAttempter::Update() {
       new PostinstallRunnerAction(false));
   shared_ptr<OmahaRequestAction> update_complete_action(
       new OmahaRequestAction(omaha_request_params_,
-                             new OmahaEvent(OmahaEvent::kTypeUpdateComplete,
-                                            OmahaEvent::kResultSuccess,
-                                            0),
+                             new OmahaEvent(OmahaEvent::kTypeUpdateComplete),
                              new LibcurlHttpFetcher));
 
   download_action->set_delegate(this);
