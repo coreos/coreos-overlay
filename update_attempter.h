@@ -29,7 +29,8 @@ enum UpdateStatus {
   UPDATE_STATUS_DOWNLOADING,
   UPDATE_STATUS_VERIFYING,
   UPDATE_STATUS_FINALIZING,
-  UPDATE_STATUS_UPDATED_NEED_REBOOT
+  UPDATE_STATUS_UPDATED_NEED_REBOOT,
+  UPDATE_STATUS_REPORTING_ERROR_EVENT,
 };
 
 const char* UpdateStatusToString(UpdateStatus status);
@@ -87,6 +88,16 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // over dbus.
   void SetStatusAndNotify(UpdateStatus status);
 
+  // Creates an error event object in |error_event_| to be included in
+  // an OmahaRequestAction once the current action processor is done.
+  void CreatePendingErrorEvent(ActionExitCode code);
+
+  // If there's a pending error event allocated in |error_event_|,
+  // schedules an OmahaRequestAction with that event in the current
+  // processor, clears the pending event, updates the status and
+  // returns true. Returns false otherwise.
+  bool ScheduleErrorEventAction();
+
   struct timespec last_notify_time_;
 
   std::vector<std::tr1::shared_ptr<AbstractAction> > actions_;
@@ -101,6 +112,9 @@ class UpdateAttempter : public ActionProcessorDelegate,
 
   // Pointer to the UMA metrics collection library.
   MetricsLibraryInterface* metrics_lib_;
+
+  // Pending error event, if any.
+  scoped_ptr<OmahaEvent> error_event_;
 
   // For status:
   UpdateStatus status_;

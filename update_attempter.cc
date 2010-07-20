@@ -83,6 +83,8 @@ const char* UpdateStatusToString(UpdateStatus status) {
       return "UPDATE_STATUS_FINALIZING";
     case UPDATE_STATUS_UPDATED_NEED_REBOOT:
       return "UPDATE_STATUS_UPDATED_NEED_REBOOT";
+    case UPDATE_STATUS_REPORTING_ERROR_EVENT:
+      return "UPDATE_STATUS_REPORTING_ERROR_EVENT";
     default:
       return "unknown status";
   }
@@ -199,6 +201,13 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
   CHECK(response_handler_action_);
   LOG(INFO) << "Processing Done.";
   actions_.clear();
+
+  if (status_ == UPDATE_STATUS_REPORTING_ERROR_EVENT) {
+    LOG(INFO) << "Error event sent.";
+    SetStatusAndNotify(UPDATE_STATUS_IDLE);
+    return;
+  }
+
   if (code == kActionCodeSuccess) {
     SetStatusAndNotify(UPDATE_STATUS_UPDATED_NEED_REBOOT);
     utils::WriteFile(kUpdateCompletedMarker, "", 0);
@@ -210,16 +219,20 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
                             1,  // min = 1 second
                             20 * 60,  // max = 20 minutes
                             50);  // buckets
-  } else {
-    LOG(INFO) << "Update failed.";
-    SetStatusAndNotify(UPDATE_STATUS_IDLE);
+    return;
   }
+
+  LOG(INFO) << "Update failed.";
+  if (ScheduleErrorEventAction())
+    return;
+  SetStatusAndNotify(UPDATE_STATUS_IDLE);
 }
 
 void UpdateAttempter::ProcessingStopped(const ActionProcessor* processor) {
   download_progress_ = 0.0;
   SetStatusAndNotify(UPDATE_STATUS_IDLE);
   actions_.clear();
+  error_event_.reset(NULL);
 }
 
 // Called whenever an action has finished processing, either successfully
@@ -232,8 +245,19 @@ void UpdateAttempter::ActionCompleted(ActionProcessor* processor,
   const string type = action->Type();
   if (type == DownloadAction::StaticType())
     download_progress_ = 0.0;
-  if (code != kActionCodeSuccess)
+  if (code != kActionCodeSuccess) {
+    // On failure, schedule an error event to be sent to Omaha. For
+    // now assume that Omaha response action failure means that
+    // there's no update so don't send an event. Also, double check
+    // that the failure has not occurred while sending an error event
+    // -- in which case don't schedule another. This shouldn't really
+    // happen but just in case...
+    if (type != OmahaResponseHandlerAction::StaticType() &&
+        status_ != UPDATE_STATUS_REPORTING_ERROR_EVENT) {
+      CreatePendingErrorEvent(code);
+    }
     return;
+  }
   // Find out which action completed.
   if (type == OmahaResponseHandlerAction::StaticType()) {
     SetStatusAndNotify(UPDATE_STATUS_DOWNLOADING);
@@ -306,6 +330,32 @@ void UpdateAttempter::SetStatusAndNotify(UpdateStatus status) {
       UpdateStatusToString(status_),
       new_version_.c_str(),
       new_size_);
+}
+
+void UpdateAttempter::CreatePendingErrorEvent(ActionExitCode code) {
+  if (error_event_.get()) {
+    // This shouldn't really happen.
+    LOG(WARNING) << "There's already an existing pending error event.";
+    return;
+  }
+  error_event_.reset(new OmahaEvent(OmahaEvent::kTypeUpdateComplete,
+                                    OmahaEvent::kResultError,
+                                    code));
+}
+
+bool UpdateAttempter::ScheduleErrorEventAction() {
+  if (error_event_.get() == NULL)
+    return false;
+
+  shared_ptr<OmahaRequestAction> error_event_action(
+      new OmahaRequestAction(omaha_request_params_,
+                             error_event_.release(),  // Pass ownership.
+                             new LibcurlHttpFetcher));
+  actions_.push_back(shared_ptr<AbstractAction>(error_event_action));
+  processor_.EnqueueAction(error_event_action.get());
+  SetStatusAndNotify(UPDATE_STATUS_REPORTING_ERROR_EVENT);
+  processor_.StartProcessing();
+  return true;
 }
 
 }  // namespace chromeos_update_engine
