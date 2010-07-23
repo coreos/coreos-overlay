@@ -47,6 +47,24 @@ UpdateEngineService* update_engine_service_new(void) {
       g_object_new(UPDATE_ENGINE_TYPE_SERVICE, NULL));
 }
 
+gboolean update_engine_service_attempt_update(UpdateEngineService* self,
+                                              gchar* app_version,
+                                              gchar* omaha_url,
+                                              GError **error) {
+  const string update_app_version = app_version ? app_version : "";
+  const string update_omaha_url = omaha_url ? omaha_url : "";
+  LOG(INFO) << "Attempt update: app_version=\"" << update_app_version << "\" "
+            << "omaha_url=\"" << update_omaha_url << "\"";
+  self->update_attempter_->CheckForUpdate(app_version, omaha_url);
+  return TRUE;
+}
+
+gboolean update_engine_service_check_for_update(UpdateEngineService* self,
+                                                GError **error) {
+  self->update_attempter_->CheckForUpdate("", "");
+  return TRUE;
+}
+
 gboolean update_engine_service_get_status(UpdateEngineService* self,
                                           int64_t* last_checked_time,
                                           double* progress,
@@ -68,21 +86,12 @@ gboolean update_engine_service_get_status(UpdateEngineService* self,
   return TRUE;
 }
 
-gboolean update_engine_service_attempt_update(UpdateEngineService* self,
-                                              gchar* app_version,
-                                              gchar* omaha_url,
-                                              GError **error) {
-  const string update_app_version = app_version ? app_version : "";
-  const string update_omaha_url = omaha_url ? omaha_url : "";
-  LOG(INFO) << "Attempt update: app_version=\"" << update_app_version << "\" "
-            << "omaha_url=\"" << update_omaha_url << "\"";
-  self->update_attempter_->CheckForUpdate(app_version, omaha_url);
-  return TRUE;
-}
-
-gboolean update_engine_service_check_for_update(UpdateEngineService* self,
+gboolean update_engine_service_reboot_if_needed(UpdateEngineService* self,
                                                 GError **error) {
-  self->update_attempter_->CheckForUpdate("", "");
+  if (!self->update_attempter_->RebootIfNeeded()) {
+    *error = NULL;
+    return FALSE;
+  }
   return TRUE;
 }
 

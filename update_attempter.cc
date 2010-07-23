@@ -221,6 +221,16 @@ void UpdateAttempter::CheckForUpdate(const std::string& app_version,
   Update(app_version, omaha_url);
 }
 
+bool UpdateAttempter::RebootIfNeeded() {
+  if (status_ != UPDATE_STATUS_UPDATED_NEED_REBOOT) {
+    LOG(INFO) << "Reboot requested, but status is "
+              << UpdateStatusToString(status_) << ", so not rebooting.";
+    return false;
+  }
+  TEST_AND_RETURN_FALSE(utils::Reboot());
+  return true;
+}
+
 // Delegate methods:
 void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
                                      ActionExitCode code) {

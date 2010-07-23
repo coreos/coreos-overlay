@@ -22,14 +22,12 @@ using chromeos_update_engine::kUpdateEngineServiceInterface;
 using chromeos_update_engine::utils::GetGErrorMessage;
 using std::string;
 
-DEFINE_string(app_version, "",
-              "Force the current app version.");
-DEFINE_bool(check_for_update, false,
-            "Initiate check for updates.");
+DEFINE_string(app_version, "", "Force the current app version.");
+DEFINE_bool(check_for_update, false, "Initiate check for updates.");
 DEFINE_bool(force_update, false,
             "Force an update, even over an expensive network.");
-DEFINE_string(omaha_url, "",
-              "The URL of the Omaha update server.");
+DEFINE_string(omaha_url, "", "The URL of the Omaha update server.");
+DEFINE_bool(reboot, false, "Initiate a reboot if needed.");
 DEFINE_bool(status, false, "Print the status to stdout.");
 DEFINE_bool(watch_for_updates, false,
             "Listen for status updates and print them to the screen.");
@@ -158,6 +156,21 @@ bool CheckForUpdates(bool force, const string& app_version,
   return true;
 }
 
+bool RebootIfNeeded() {
+  DBusGProxy* proxy;
+  GError* error = NULL;
+
+  CHECK(GetProxy(&proxy));
+
+  gboolean rc =
+      org_chromium_UpdateEngineInterface_reboot_if_needed(proxy, &error);
+  // Reboot error code doesn't necessarily mean that a reboot
+  // failed. For example, D-Bus may be shutdown before we receive the
+  // result.
+  LOG_IF(INFO, !rc) << "Reboot error message: " << GetGErrorMessage(error);
+  return true;
+}
+
 }  // namespace {}
 
 int main(int argc, char** argv) {
@@ -177,6 +190,7 @@ int main(int argc, char** argv) {
   }
   if (FLAGS_force_update || FLAGS_check_for_update ||
       !FLAGS_app_version.empty() || !FLAGS_omaha_url.empty()) {
+    LOG_IF(WARNING, FLAGS_reboot) << "-reboot flag ignored.";
     LOG(INFO) << "Initiating update check and install.";
     if (FLAGS_force_update) {
       LOG(INFO) << "Will not abort due to being on expensive network.";
@@ -187,9 +201,15 @@ int main(int argc, char** argv) {
     return 0;
   }
   if (FLAGS_watch_for_updates) {
+    LOG_IF(WARNING, FLAGS_reboot) << "-reboot flag ignored.";
     LOG(INFO) << "Watching for status updates.";
     WatchForUpdates();  // Should never return.
     return 1;
+  }
+  if (FLAGS_reboot) {
+    LOG(INFO) << "Requesting a reboot...";
+    CHECK(RebootIfNeeded());
+    return 0;
   }
 
   LOG(INFO) << "No flags specified. Exiting.";

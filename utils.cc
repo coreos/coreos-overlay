@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2009 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -16,6 +16,7 @@
 #include <algorithm>
 #include "chromeos/obsolete_logging.h"
 #include "update_engine/file_writer.h"
+#include "update_engine/subprocess.h"
 
 using std::min;
 using std::string;
@@ -73,7 +74,7 @@ bool PReadAll(int fd, void* buf, size_t count, off_t offset,
   }
   *out_bytes_read = bytes_read;
   return true;
-  
+
 }
 
 bool ReadFile(const std::string& path, std::vector<char>* out) {
@@ -282,7 +283,7 @@ bool MakeTempFile(const std::string& filename_template,
   vector<char> buf(filename_template.size() + 1);
   memcpy(&buf[0], filename_template.data(), filename_template.size());
   buf[filename_template.size()] = '\0';
-  
+
   int mkstemp_fd = mkstemp(&buf[0]);
   TEST_AND_RETURN_FALSE_ERRNO(mkstemp_fd >= 0);
   if (filename) {
@@ -302,7 +303,7 @@ bool MakeTempDirectory(const std::string& dirname_template,
   vector<char> buf(dirname_template.size() + 1);
   memcpy(&buf[0], dirname_template.data(), dirname_template.size());
   buf[dirname_template.size()] = '\0';
-  
+
   char* return_code = mkdtemp(&buf[0]);
   TEST_AND_RETURN_FALSE_ERRNO(return_code != NULL);
   *dirname = &buf[0];
@@ -393,9 +394,19 @@ const char* GetGErrorMessage(const GError* error) {
   return error->message;
 }
 
+bool Reboot() {
+  vector<string> command;
+  command.push_back("/sbin/shutdown");
+  command.push_back("-r");
+  command.push_back("now");
+  int rc = 0;
+  Subprocess::SynchronousExec(command, &rc);
+  TEST_AND_RETURN_FALSE(rc == 0);
+  return true;
+}
+
 const char* const kStatefulPartition = "/mnt/stateful_partition";
 
 }  // namespace utils
 
 }  // namespace chromeos_update_engine
-

@@ -86,6 +86,10 @@ class UpdateAttempter : public ActionProcessorDelegate,
   void CheckForUpdate(const std::string& app_version,
                       const std::string& omaha_url);
 
+  // Initiates a reboot if the current state is
+  // UPDATED_NEED_REBOOT. Returns true on sucess, false otherwise.
+  bool RebootIfNeeded();
+
   // DownloadActionDelegate method
   void BytesReceived(uint64_t bytes_received, uint64_t total);
 

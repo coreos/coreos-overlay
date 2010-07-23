@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium Authors. All rights reserved.
+// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -101,6 +101,9 @@ bool GetBootloader(BootLoader* out_bootloader);
 
 // Returns the error message, if any, from a GError pointer.
 const char* GetGErrorMessage(const GError* error);
+
+// Initiates a system reboot. Returns true on success, false otherwise.
+bool Reboot();
 
 // Log a string in hex to LOG(INFO). Useful for debugging.
 void HexDumpArray(const unsigned char* const arr, const size_t length);

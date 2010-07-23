@@ -46,6 +46,14 @@ GType update_engine_service_get_type(void);
 
 // Methods
 
+gboolean update_engine_service_attempt_update(UpdateEngineService* self,
+                                              gchar* app_version,
+                                              gchar* omaha_url,
+                                              GError **error);
+
+gboolean update_engine_service_check_for_update(UpdateEngineService* self,
+                                                GError **error);
+
 gboolean update_engine_service_get_status(UpdateEngineService* self,
                                           int64_t* last_checked_time,
                                           double* progress,
@@ -54,13 +62,8 @@ gboolean update_engine_service_get_status(UpdateEngineService* self,
                                           int64_t* new_size,
                                           GError **error);
 
-gboolean update_engine_service_check_for_update(UpdateEngineService* self,
+gboolean update_engine_service_reboot_if_needed(UpdateEngineService* self,
                                                 GError **error);
-
-gboolean update_engine_service_attempt_update(UpdateEngineService* self,
-                                              gchar* app_version,
-                                              gchar* omaha_url,
-                                              GError **error);
 
 gboolean update_engine_service_emit_status_update(
     UpdateEngineService* self,
