@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <string>
+
 #include <gflags/gflags.h>
 #include <glib.h>
 
@@ -18,12 +20,17 @@ using chromeos_update_engine::kUpdateEngineServiceName;
 using chromeos_update_engine::kUpdateEngineServicePath;
 using chromeos_update_engine::kUpdateEngineServiceInterface;
 using chromeos_update_engine::utils::GetGErrorMessage;
+using std::string;
 
-DEFINE_bool(status, false, "Print the status to stdout.");
-DEFINE_bool(force_update, false,
-            "Force an update, even over an expensive network.");
+DEFINE_string(app_version, "",
+              "Force the current app version.");
 DEFINE_bool(check_for_update, false,
             "Initiate check for updates.");
+DEFINE_bool(force_update, false,
+            "Force an update, even over an expensive network.");
+DEFINE_string(omaha_url, "",
+              "The URL of the Omaha update server.");
+DEFINE_bool(status, false, "Print the status to stdout.");
 DEFINE_bool(watch_for_updates, false,
             "Listen for status updates and print them to the screen.");
 
@@ -134,14 +141,18 @@ void WatchForUpdates() {
   g_main_loop_unref(loop);
 }
 
-bool CheckForUpdates(bool force) {
+bool CheckForUpdates(bool force, const string& app_version,
+                     const string& omaha_url) {
   DBusGProxy* proxy;
   GError* error = NULL;
 
   CHECK(GetProxy(&proxy));
 
   gboolean rc =
-      org_chromium_UpdateEngineInterface_check_for_update(proxy, &error);
+      org_chromium_UpdateEngineInterface_attempt_update(proxy,
+                                                        app_version.c_str(),
+                                                        omaha_url.c_str(),
+                                                        &error);
   CHECK_EQ(rc, TRUE) << "Error checking for update: "
                      << GetGErrorMessage(error);
   return true;
@@ -164,12 +175,14 @@ int main(int argc, char** argv) {
     }
     return 0;
   }
-  if (FLAGS_force_update || FLAGS_check_for_update) {
+  if (FLAGS_force_update || FLAGS_check_for_update ||
+      !FLAGS_app_version.empty() || !FLAGS_omaha_url.empty()) {
     LOG(INFO) << "Initiating update check and install.";
     if (FLAGS_force_update) {
       LOG(INFO) << "Will not abort due to being on expensive network.";
     }
-    CHECK(CheckForUpdates(FLAGS_force_update))
+    CHECK(CheckForUpdates(FLAGS_force_update, FLAGS_app_version,
+                          FLAGS_omaha_url))
         << "Update check/initiate update failed.";
     return 0;
   }

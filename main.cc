@@ -40,7 +40,7 @@ struct PeriodicallyUpdateArgs {
 
 gboolean PeriodicallyUpdate(void* arg) {
   PeriodicallyUpdateArgs* args = reinterpret_cast<PeriodicallyUpdateArgs*>(arg);
-  args->update_attempter->Update();
+  args->update_attempter->Update("", "");
   return args->should_repeat;
 }
 

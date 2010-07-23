@@ -114,7 +114,8 @@ ActionExitCode GetErrorCodeForAction(AbstractAction* action,
   return code;
 }
 
-void UpdateAttempter::Update() {
+void UpdateAttempter::Update(const std::string& app_version,
+                             const std::string& omaha_url) {
   if (status_ == UPDATE_STATUS_UPDATED_NEED_REBOOT) {
     LOG(INFO) << "Not updating b/c we already updated and we're waiting for "
               << "reboot";
@@ -124,7 +125,7 @@ void UpdateAttempter::Update() {
     // Update in progress. Do nothing
     return;
   }
-  if (!omaha_request_params_.Init()) {
+  if (!omaha_request_params_.Init(app_version, omaha_url)) {
     LOG(ERROR) << "Unable to initialize Omaha request device params.";
     return;
   }
@@ -210,13 +211,14 @@ void UpdateAttempter::Update() {
   processor_.StartProcessing();
 }
 
-void UpdateAttempter::CheckForUpdate() {
+void UpdateAttempter::CheckForUpdate(const std::string& app_version,
+                                     const std::string& omaha_url) {
   if (status_ != UPDATE_STATUS_IDLE) {
     LOG(INFO) << "Check for update requested, but status is "
               << UpdateStatusToString(status_) << ", so not checking.";
     return;
   }
-  Update();
+  Update(app_version, omaha_url);
 }
 
 // Delegate methods:

@@ -51,7 +51,10 @@ class UpdateAttempter : public ActionProcessorDelegate,
     if (utils::FileExists(kUpdateCompletedMarker))
       status_ = UPDATE_STATUS_UPDATED_NEED_REBOOT;
   }
-  void Update();
+  // Checks for update and, if a newer version is available, attempts
+  // to update the system. Non-empty |in_app_version| or
+  // |in_update_url| prevents automatic detection of the parameter.
+  void Update(const std::string& app_version, const std::string& omaha_url);
 
   // ActionProcessorDelegate methods:
   void ProcessingDone(const ActionProcessor* processor, ActionExitCode code);
@@ -78,7 +81,10 @@ class UpdateAttempter : public ActionProcessorDelegate,
     dbus_service_ = dbus_service;
   }
 
-  void CheckForUpdate();
+  // This is the D-Bus service entry point for going through an
+  // update. If the current status is idle invokes Update.
+  void CheckForUpdate(const std::string& app_version,
+                      const std::string& omaha_url);
 
   // DownloadActionDelegate method
   void BytesReceived(uint64_t bytes_received, uint64_t total);

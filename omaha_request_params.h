@@ -67,11 +67,13 @@ struct OmahaRequestParams {
 
 class OmahaRequestDeviceParams : public OmahaRequestParams {
  public:
-  explicit OmahaRequestDeviceParams() {}
+  OmahaRequestDeviceParams() {}
 
-  // Initializes all the data in the object. Returns true on success,
-  // false otherwise.
-  bool Init();
+  // Initializes all the data in the object. Non-empty
+  // |in_app_version| or |in_update_url| prevents automatic detection
+  // of the parameter. Returns true on success, false otherwise.
+  bool Init(const std::string& in_app_version,
+            const std::string& in_update_url);
 
   // For unit-tests.
   void set_root(const std::string& root) { root_ = root; }

@@ -20,13 +20,6 @@ using std::string;
 
 namespace chromeos_update_engine {
 
-const char* const OmahaRequestParams::kAppId(
-    "{87efface-864d-49a5-9bb3-4b050a7c227a}");
-const char* const OmahaRequestParams::kOsPlatform("Chrome OS");
-const char* const OmahaRequestParams::kOsVersion("Indy");
-const char* const OmahaRequestParams::kUpdateUrl(
-    "https://tools.google.com/service/update2");
-
 namespace {
 
 const string kGupdateVersion("ChromeOSUpdateEngine-0.1.0.0");

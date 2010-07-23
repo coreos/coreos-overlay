@@ -21,7 +21,7 @@ static void update_engine_service_class_init(UpdateEngineServiceClass* klass) {
   GObjectClass *object_class;
   object_class = G_OBJECT_CLASS(klass);
   object_class->finalize = update_engine_service_finalize;
-  
+
   status_update_signal = g_signal_new(
       "status_update",
       G_OBJECT_CLASS_TYPE(klass),
@@ -56,21 +56,33 @@ gboolean update_engine_service_get_status(UpdateEngineService* self,
                                           GError **error) {
   string current_op;
   string new_version_str;
-  
+
   CHECK(self->update_attempter_->GetStatus(last_checked_time,
                                            progress,
                                            &current_op,
                                            &new_version_str,
                                            new_size));
-  
+
   *current_operation = strdup(current_op.c_str());
   *new_version = strdup(new_version_str.c_str());
   return TRUE;
 }
 
+gboolean update_engine_service_attempt_update(UpdateEngineService* self,
+                                              gchar* app_version,
+                                              gchar* omaha_url,
+                                              GError **error) {
+  const string update_app_version = app_version ? app_version : "";
+  const string update_omaha_url = omaha_url ? omaha_url : "";
+  LOG(INFO) << "Attempt update: app_version=\"" << update_app_version << "\" "
+            << "omaha_url=\"" << update_omaha_url << "\"";
+  self->update_attempter_->CheckForUpdate(app_version, omaha_url);
+  return TRUE;
+}
+
 gboolean update_engine_service_check_for_update(UpdateEngineService* self,
                                                 GError **error) {
-  self->update_attempter_->CheckForUpdate();
+  self->update_attempter_->CheckForUpdate("", "");
   return TRUE;
 }
 

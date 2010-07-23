@@ -27,27 +27,37 @@ const string OmahaIdPath() {
 
 namespace chromeos_update_engine {
 
-bool OmahaRequestDeviceParams::Init() {
+const char* const OmahaRequestParams::kAppId(
+    "{87efface-864d-49a5-9bb3-4b050a7c227a}");
+const char* const OmahaRequestParams::kOsPlatform("Chrome OS");
+const char* const OmahaRequestParams::kOsVersion("Indy");
+const char* const OmahaRequestParams::kUpdateUrl(
+    "https://tools.google.com/service/update2");
+
+bool OmahaRequestDeviceParams::Init(const std::string& in_app_version,
+                                    const std::string& in_update_url) {
   TEST_AND_RETURN_FALSE(GetMachineId(&machine_id));
   user_id = machine_id;
   os_platform = OmahaRequestParams::kOsPlatform;
   os_version = OmahaRequestParams::kOsVersion;
-  app_version = GetLsbValue("CHROMEOS_RELEASE_VERSION", "");
+  app_version = in_app_version.empty() ?
+      GetLsbValue("CHROMEOS_RELEASE_VERSION", "") : in_app_version;
   os_sp = app_version + "_" + GetMachineType();
   os_board = GetLsbValue("CHROMEOS_RELEASE_BOARD", "");
   app_id = OmahaRequestParams::kAppId;
   app_lang = "en-US";
   app_track = GetLsbValue("CHROMEOS_RELEASE_TRACK", "");
   struct stat stbuf;
-  
+
   // Deltas are only okay if the /.nodelta file does not exist.
   // If we don't know (i.e. stat() returns some unexpected error),
   // then err on the side of caution and say deltas are not okay
   delta_okay = (stat((root_ + "/.nodelta").c_str(), &stbuf) < 0) &&
                (errno == ENOENT);
 
-  update_url = GetLsbValue("CHROMEOS_AUSERVER",
-                           OmahaRequestParams::kUpdateUrl);
+  update_url = in_update_url.empty() ?
+      GetLsbValue("CHROMEOS_AUSERVER", OmahaRequestParams::kUpdateUrl) :
+      in_update_url;
   return true;
 }
 

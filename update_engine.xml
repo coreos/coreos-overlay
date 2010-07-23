@@ -16,6 +16,10 @@
     </method>
     <method name="CheckForUpdate">
     </method>
+    <method name="AttemptUpdate">
+      <arg type="s" name="app_version" />
+      <arg type="s" name="omaha_url" />
+    </method>
     <signal name="StatusUpdate">
       <arg type="x" name="last_checked_time" />
       <arg type="d" name="progress" />
