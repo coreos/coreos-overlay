@@ -55,10 +55,10 @@ void LibcurlHttpFetcher::ResumeTransfer(const std::string& url) {
                             StaticLibcurlWrite), CURLE_OK);
   CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_URL, url_.c_str()), CURLE_OK);
 
-  // If the connection drops under 10 bytes/sec for 90 seconds, reconnect.
+  // If the connection drops under 10 bytes/sec for 3 minutes, reconnect.
   CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_LOW_SPEED_LIMIT, 10),
            CURLE_OK);
-  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_LOW_SPEED_TIME, 90),
+  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_LOW_SPEED_TIME, 3 * 60),
            CURLE_OK);
 
   CHECK_EQ(curl_multi_add_handle(curl_multi_handle_, curl_handle_), CURLM_OK);
@@ -98,7 +98,7 @@ void LibcurlHttpFetcher::CurlPerformOnce() {
     } else {
       LOG(ERROR) << "Unable to get http response code.";
     }
-    
+
     // we're done!
     CleanUp();
 
