@@ -80,6 +80,77 @@ uint64_t weight) {
 }
 }  // namespace {}
 
+
+// This creates a bunch of cycles like this:
+//
+//               root <------.
+//    (t)->     / | \        |
+//             V  V  V       |
+//             N  N  N       |
+//              \ | /        |
+//               VVV         |
+//                N          |
+//              / | \        |
+//             V  V  V       |
+//             N  N  N       |
+//               ...         |
+//     (s)->    \ | /        |
+//               VVV         |
+//                N          |
+//                 \_________/
+//
+// such that the original cutting algo would cut edges (s). We changed
+// the algorithm to cut cycles (t) instead, since they are closer to the
+// root, and that can massively speed up cycle cutting.
+TEST(CycleBreakerTest, AggressiveCutTest) {
+  int counter = 0;
+  
+  const int kNodesPerGroup = 4;
+  const int kGroups = 33;
+  
+  Graph graph(kGroups * kNodesPerGroup + 1);  // + 1 for the root node
+  
+  const Vertex::Index n_root = counter++;
+
+  Vertex::Index last_hub = n_root;
+  for (int i = 0; i < kGroups; i++) {
+    uint64_t weight = 5;
+    if (i == 0)
+      weight = 2;
+    else if (i == (kGroups - 1))
+      weight = 1;
+    
+    const Vertex::Index next_hub = counter++;
+
+    for (int j = 0; j < (kNodesPerGroup - 1); j++) {
+      const Vertex::Index node = counter++;
+      graph[last_hub].out_edges.insert(EdgeWithWeight(node, weight));
+      graph[node].out_edges.insert(EdgeWithWeight(next_hub, weight));
+    }
+    last_hub = next_hub;
+  }
+  
+  graph[last_hub].out_edges.insert(EdgeWithWeight(n_root, 5));
+  
+  
+  EXPECT_EQ(counter, graph.size());
+
+  CycleBreaker breaker;
+  
+  set<Edge> broken_edges;
+  LOG(INFO) << "If this hangs for more than 1 second, the test has failed.";
+  breaker.BreakCycles(graph, &broken_edges);
+  
+  set<Edge> expected_cuts;
+
+  for (Vertex::EdgeMap::const_iterator it = graph[n_root].out_edges.begin(),
+       e = graph[n_root].out_edges.end(); it != e; ++it) {
+    expected_cuts.insert(make_pair(n_root, it->first));
+  }
+
+  EXPECT_TRUE(broken_edges == expected_cuts);
+}
+
 TEST(CycleBreakerTest, WeightTest) {
   int counter = 0;
   const Vertex::Index n_a = counter++;

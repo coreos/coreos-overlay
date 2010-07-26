@@ -77,6 +77,8 @@ void CycleBreaker::HandleCircuit() {
   CHECK_GE(stack_.size(), 2);
   Edge min_edge = make_pair(stack_[0], stack_[1]);
   uint64_t min_edge_weight = kuint64max;
+  const int kMaxEdgesToConsider = 4;
+  int edges_considered = 0;
   for (vector<Vertex::Index>::const_iterator it = stack_.begin();
        it != (stack_.end() - 1); ++it) {
     Edge edge = make_pair(*it, *(it + 1));
@@ -89,6 +91,9 @@ void CycleBreaker::HandleCircuit() {
       min_edge_weight = edge_weight;
       min_edge = edge;
     }
+    edges_considered++;
+    if (edges_considered == kMaxEdgesToConsider)
+      break;
   }
   cut_edges_.insert(min_edge);
   stack_.pop_back();
@@ -104,6 +109,17 @@ void CycleBreaker::Unblock(Vertex::Index u) {
     if (blocked_[w])
       Unblock(w);
   }
+}
+
+bool CycleBreaker::StackContainsCutEdge() const {
+  for (std::vector<Vertex::Index>::const_iterator it = ++stack_.begin(),
+        e = stack_.end(); it != e; ++it) {
+    Edge edge = make_pair(*(it - 1), *it);
+    if (utils::SetContainsKey(cut_edges_, edge)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 bool CycleBreaker::Circuit(Vertex::Index vertex) {
@@ -122,8 +138,11 @@ bool CycleBreaker::Circuit(Vertex::Index vertex) {
       HandleCircuit();
       found = true;
     } else if (!blocked_[*w]) {
-      if (Circuit(*w))
+      if (Circuit(*w)) {
         found = true;
+        if (StackContainsCutEdge())
+          break;
+      }
     }
   }
 
