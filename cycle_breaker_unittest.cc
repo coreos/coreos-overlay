@@ -128,4 +128,31 @@ TEST(CycleBreakerTest, WeightTest) {
   EXPECT_TRUE(utils::SetContainsKey(broken_edges, make_pair(n_h, n_i)));
 }
 
+TEST(CycleBreakerTest, UnblockGraphTest) {
+  int counter = 0;
+  const Vertex::Index n_a = counter++;
+  const Vertex::Index n_b = counter++;
+  const Vertex::Index n_c = counter++;
+  const Vertex::Index n_d = counter++;
+  const Graph::size_type kNodeCount = counter++;
+
+  Graph graph(kNodeCount);
+
+  graph[n_a].out_edges.insert(EdgeWithWeight(n_b, 1));
+  graph[n_a].out_edges.insert(EdgeWithWeight(n_c, 1));
+  graph[n_b].out_edges.insert(EdgeWithWeight(n_c, 2));
+  graph[n_c].out_edges.insert(EdgeWithWeight(n_b, 2));
+  graph[n_b].out_edges.insert(EdgeWithWeight(n_d, 2));
+  graph[n_d].out_edges.insert(EdgeWithWeight(n_a, 2));
+
+  CycleBreaker breaker;
+  
+  set<Edge> broken_edges;
+  breaker.BreakCycles(graph, &broken_edges);
+
+  // These are required to be broken:
+  EXPECT_TRUE(utils::SetContainsKey(broken_edges, make_pair(n_a, n_b)));
+  EXPECT_TRUE(utils::SetContainsKey(broken_edges, make_pair(n_a, n_c)));
+}
+
 }  // namespace chromeos_update_engine

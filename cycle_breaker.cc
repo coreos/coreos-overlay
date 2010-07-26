@@ -133,7 +133,11 @@ bool CycleBreaker::Circuit(Vertex::Index vertex) {
     for (Vertex::SubgraphEdgeMap::iterator w =
              subgraph_[vertex].subgraph_edges.begin();
          w != subgraph_[vertex].subgraph_edges.end(); ++w) {
-      subgraph_[*w].subgraph_edges.insert(vertex);
+      if (blocked_graph_[*w].out_edges.find(vertex) ==
+          blocked_graph_[*w].out_edges.end()) {
+        blocked_graph_[*w].out_edges.insert(make_pair(vertex,
+                                                      EdgeProperties()));
+      }
     }
   }
   CHECK_EQ(vertex, stack_.back());
