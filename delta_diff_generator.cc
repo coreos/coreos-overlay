@@ -652,6 +652,10 @@ bool DeltaDiffGenerator::CutEdges(Graph* graph,
 
     // delete the old edge
     CHECK_EQ(1, (*graph)[it->first].out_edges.erase(it->second));
+    
+    // Add an edge from dst to copy operation
+    (*graph)[it->second].out_edges.insert(make_pair(graph->size() - 1,
+                                                    EdgeProperties()));
   }
   return true;
 }

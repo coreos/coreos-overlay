@@ -284,11 +284,13 @@ TEST_F(DeltaDiffGeneratorTest, CutEdgesTest) {
   EXPECT_EQ(2, graph[0].op.dst_extents(0).num_blocks());
   EXPECT_EQ(4, graph[0].op.dst_extents(1).start_block());
   EXPECT_EQ(1, graph[0].op.dst_extents(1).num_blocks());
-  
-  // Ensure it only depends on the next node
-  EXPECT_EQ(1, graph[0].out_edges.size());
+
+  // Ensure it only depends on the next node and the new temp node
+  EXPECT_EQ(2, graph[0].out_edges.size());
   EXPECT_TRUE(graph[0].out_edges.end() != graph[0].out_edges.find(1));
-  
+  EXPECT_TRUE(graph[0].out_edges.end() != graph[0].out_edges.find(graph.size() -
+                                                                  1));
+
   // Check second node has unchanged extents
   EXPECT_EQ(2, graph[1].op.src_extents_size());
   EXPECT_EQ(1, graph[1].op.src_extents(0).start_block());
