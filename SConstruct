@@ -214,6 +214,7 @@ sources = Split("""action_processor.cc
                    omaha_request_params.cc
                    omaha_response_handler_action.cc
                    postinstall_runner_action.cc
+                   prefs.cc
                    set_bootable_flag_action.cc
                    simple_key_value_store.cc
                    split_file_writer.cc
@@ -247,6 +248,7 @@ unittest_sources = Split("""action_unittest.cc
                             omaha_request_params_unittest.cc
                             omaha_response_handler_action_unittest.cc
                             postinstall_runner_action_unittest.cc
+                            prefs_unittest.cc
                             set_bootable_flag_action_unittest.cc
                             simple_key_value_store_unittest.cc
                             split_file_writer_unittest.cc
