@@ -13,6 +13,9 @@ using std::string;
 
 namespace chromeos_update_engine {
 
+const char kPrefsLastActivePingDay[] = "last-active-ping-day";
+const char kPrefsLastRollCallPingDay[] = "last-roll-call-ping-day";
+
 bool Prefs::Init(const FilePath& prefs_dir) {
   prefs_dir_ = prefs_dir;
   return true;

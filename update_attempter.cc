@@ -134,7 +134,8 @@ void UpdateAttempter::Update(const std::string& app_version,
 
   // Actions:
   shared_ptr<OmahaRequestAction> update_check_action(
-      new OmahaRequestAction(omaha_request_params_,
+      new OmahaRequestAction(prefs_,
+                             omaha_request_params_,
                              NULL,
                              new LibcurlHttpFetcher));
   shared_ptr<OmahaResponseHandlerAction> response_handler_action(
@@ -144,14 +145,16 @@ void UpdateAttempter::Update(const std::string& app_version,
   shared_ptr<FilesystemCopierAction> kernel_filesystem_copier_action(
       new FilesystemCopierAction(true));
   shared_ptr<OmahaRequestAction> download_started_action(
-      new OmahaRequestAction(omaha_request_params_,
+      new OmahaRequestAction(prefs_,
+                             omaha_request_params_,
                              new OmahaEvent(
                                  OmahaEvent::kTypeUpdateDownloadStarted),
                              new LibcurlHttpFetcher));
   shared_ptr<DownloadAction> download_action(
       new DownloadAction(new LibcurlHttpFetcher));
   shared_ptr<OmahaRequestAction> download_finished_action(
-      new OmahaRequestAction(omaha_request_params_,
+      new OmahaRequestAction(prefs_,
+                             omaha_request_params_,
                              new OmahaEvent(
                                  OmahaEvent::kTypeUpdateDownloadFinished),
                              new LibcurlHttpFetcher));
@@ -162,7 +165,8 @@ void UpdateAttempter::Update(const std::string& app_version,
   shared_ptr<PostinstallRunnerAction> postinstall_runner_action_postcommit(
       new PostinstallRunnerAction(false));
   shared_ptr<OmahaRequestAction> update_complete_action(
-      new OmahaRequestAction(omaha_request_params_,
+      new OmahaRequestAction(prefs_,
+                             omaha_request_params_,
                              new OmahaEvent(OmahaEvent::kTypeUpdateComplete),
                              new LibcurlHttpFetcher));
 
@@ -389,7 +393,8 @@ bool UpdateAttempter::ScheduleErrorEventAction() {
     return false;
 
   shared_ptr<OmahaRequestAction> error_event_action(
-      new OmahaRequestAction(omaha_request_params_,
+      new OmahaRequestAction(prefs_,
+                             omaha_request_params_,
                              error_event_.release(),  // Pass ownership.
                              new LibcurlHttpFetcher));
   actions_.push_back(shared_ptr<AbstractAction>(error_event_action));

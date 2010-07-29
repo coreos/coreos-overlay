@@ -17,6 +17,8 @@ namespace chromeos_update_engine {
 
 class Prefs : public PrefsInterface {
  public:
+  Prefs() {}
+
   // Initializes the store by associating this object with |prefs_dir|
   // as the preference store directory. Returns true on success, false
   // otherwise.
@@ -39,6 +41,8 @@ class Prefs : public PrefsInterface {
 
   // Preference store directory.
   FilePath prefs_dir_;
+
+  DISALLOW_COPY_AND_ASSIGN(Prefs);
 };
 
 }  // namespace chromeos_update_engine

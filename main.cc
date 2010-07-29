@@ -14,6 +14,7 @@
 #include "metrics/metrics_library.h"
 #include "update_engine/dbus_constants.h"
 #include "update_engine/dbus_service.h"
+#include "update_engine/prefs.h"
 #include "update_engine/update_attempter.h"
 
 extern "C" {
@@ -105,11 +106,16 @@ int main(int argc, char** argv) {
   // Create the single GMainLoop
   GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
 
+  chromeos_update_engine::Prefs prefs;
+  LOG_IF(ERROR, !prefs.Init(FilePath("/var/lib/update_engine/prefs")))
+      << "Failed to initialize preferences.";
+
   MetricsLibrary metrics_lib;
   metrics_lib.Init();
 
   // Create the update attempter:
-  chromeos_update_engine::UpdateAttempter update_attempter(&metrics_lib);
+  chromeos_update_engine::UpdateAttempter update_attempter(&prefs,
+                                                           &metrics_lib);
 
   // Create the dbus service object:
   dbus_g_object_type_install_info(UPDATE_ENGINE_TYPE_SERVICE,

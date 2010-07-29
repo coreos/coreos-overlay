@@ -9,6 +9,9 @@
 
 namespace chromeos_update_engine {
 
+extern const char kPrefsLastActivePingDay[];
+extern const char kPrefsLastRollCallPingDay[];
+
 // The prefs interface allows access to a persistent preferences
 // store. The two reasons for providing this as an interface are
 // testing as well as easier switching to a new implementation in the
@@ -33,6 +36,8 @@ class PrefsInterface {
   // Associates |key| with an int64 |value|. Returns true on success,
   // false otherwise.
   virtual bool SetInt64(const std::string& key, const int64_t value) = 0;
+
+  virtual ~PrefsInterface() {}
 };
 
 }  // namespace chromeos_update_engine

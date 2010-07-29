@@ -85,6 +85,7 @@ struct OmahaEvent {
 class NoneType;
 class OmahaRequestAction;
 struct OmahaRequestParams;
+class PrefsInterface;
 
 template<>
 class ActionTraits<OmahaRequestAction> {
@@ -99,6 +100,9 @@ class ActionTraits<OmahaRequestAction> {
 class OmahaRequestAction : public Action<OmahaRequestAction>,
                            public HttpFetcherDelegate {
  public:
+  static const int kNeverPinged = -1;
+  static const int kPingTimeJump = -2;
+
   // The ctor takes in all the parameters that will be used for making
   // the request to Omaha. For some of them we have constants that
   // should be used.
@@ -113,7 +117,8 @@ class OmahaRequestAction : public Action<OmahaRequestAction>,
   // OmahaRequestAction(..., new OmahaEvent(...), new WhateverHttpFetcher);
   // or
   // OmahaRequestAction(..., NULL, new WhateverHttpFetcher);
-  OmahaRequestAction(const OmahaRequestParams& params,
+  OmahaRequestAction(PrefsInterface* prefs,
+                     const OmahaRequestParams& params,
                      OmahaEvent* event,
                      HttpFetcher* http_fetcher);
   virtual ~OmahaRequestAction();
@@ -135,6 +140,18 @@ class OmahaRequestAction : public Action<OmahaRequestAction>,
   bool IsEvent() const { return event_.get() != NULL; }
 
  private:
+  // If this is an update check request, initializes
+  // |ping_active_days_| and |ping_roll_call_days_| to values that may
+  // be sent as pings to Omaha.
+  void InitPingDays();
+
+  // Based on the perstitent preference store values, calculates the
+  // number of days since the last ping sent for |key|.
+  int CalculatePingDays(const std::string& key);
+
+  // Access to the preferences store.
+  PrefsInterface* prefs_;
+
   // These are data that are passed in the request to the Omaha server.
   const OmahaRequestParams& params_;
 
@@ -146,6 +163,12 @@ class OmahaRequestAction : public Action<OmahaRequestAction>,
 
   // Stores the response from the omaha server
   std::vector<char> response_buffer_;
+
+  // Initialized by InitPingDays to values that may be sent to Omaha
+  // as part of a ping message. Note that only positive values and -1
+  // are sent to Omaha.
+  int ping_active_days_;
+  int ping_roll_call_days_;
 
   DISALLOW_COPY_AND_ASSIGN(OmahaRequestAction);
 };

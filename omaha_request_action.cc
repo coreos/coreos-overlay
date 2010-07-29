@@ -11,11 +11,15 @@
 #include <libxml/xpathInternals.h>
 
 #include "base/string_util.h"
+#include "base/time.h"
 #include "chromeos/obsolete_logging.h"
 #include "update_engine/action_pipe.h"
 #include "update_engine/omaha_request_params.h"
+#include "update_engine/prefs_interface.h"
 #include "update_engine/utils.h"
 
+using base::Time;
+using base::TimeDelta;
 using std::string;
 
 namespace chromeos_update_engine {
@@ -54,13 +58,43 @@ class ScopedPtrXmlXPathContextFree {
   }
 };
 
+// Returns true if |ping_days| has a value that needs to be sent,
+// false otherwise.
+bool ShouldPing(int ping_days) {
+  return ping_days > 0 || ping_days == OmahaRequestAction::kNeverPinged;
+}
+
+// Returns an XML ping element attribute assignment with attribute
+// |name| and value |ping_days| if |ping_days| has a value that needs
+// to be sent, or an empty string otherwise.
+string GetPingAttribute(const string& name, int ping_days) {
+  if (ShouldPing(ping_days)) {
+    return StringPrintf(" %s=\"%d\"", name.c_str(), ping_days);
+  }
+  return "";
+}
+
+// Returns an XML ping element if any of the elapsed days need to be
+// sent, or an empty string otherwise.
+string GetPingBody(int ping_active_days, int ping_roll_call_days) {
+  string ping_active = GetPingAttribute("a", ping_active_days);
+  string ping_roll_call = GetPingAttribute("r", ping_roll_call_days);
+  if (!ping_active.empty() || !ping_roll_call.empty()) {
+    return StringPrintf("        <o:ping%s%s></o:ping>\n",
+                        ping_active.c_str(),
+                        ping_roll_call.c_str());
+  }
+  return "";
+}
+
 string FormatRequest(const OmahaEvent* event,
-                     const OmahaRequestParams& params) {
+                     const OmahaRequestParams& params,
+                     int ping_active_days,
+                     int ping_roll_call_days) {
   string body;
   if (event == NULL) {
-    body = string(
-        "        <o:ping active=\"0\"></o:ping>\n"
-        "        <o:updatecheck></o:updatecheck>\n");
+    body = GetPingBody(ping_active_days, ping_roll_call_days) +
+        "        <o:updatecheck></o:updatecheck>\n";
   } else {
     // The error code is an optional attribute so append it only if
     // the result is not success.
@@ -72,13 +106,11 @@ string FormatRequest(const OmahaEvent* event,
         "        <o:event eventtype=\"%d\" eventresult=\"%d\"%s></o:event>\n",
         event->type, event->result, error_code.c_str());
   }
-  return string("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-                "<o:gupdate xmlns:o=\"http://www.google.com/update2/request\" "
-                "version=\"" + XmlEncode(kGupdateVersion) + "\" "
-                "updaterversion=\"" + XmlEncode(kGupdateVersion) + "\" "
-                "protocol=\"2.0\" "
-                "machineid=\"") + XmlEncode(params.machine_id) +
-      "\" ismachine=\"1\" userid=\"" + XmlEncode(params.user_id) + "\">\n"
+  return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+      "<o:gupdate xmlns:o=\"http://www.google.com/update2/request\" "
+      "version=\"" + XmlEncode(kGupdateVersion) + "\" "
+      "updaterversion=\"" + XmlEncode(kGupdateVersion) + "\" "
+      "protocol=\"2.0\" ismachine=\"1\">\n"
       "    <o:os version=\"" + XmlEncode(params.os_version) + "\" platform=\"" +
       XmlEncode(params.os_platform) + "\" sp=\"" +
       XmlEncode(params.os_sp) + "\"></o:os>\n"
@@ -91,6 +123,7 @@ string FormatRequest(const OmahaEvent* event,
       "    </o:app>\n"
       "</o:gupdate>\n";
 }
+
 }  // namespace {}
 
 // Encodes XML entities in a given string with libxml2. input must be
@@ -109,18 +142,58 @@ string XmlEncode(const string& input) {
   return string(reinterpret_cast<const char *>(str.get()));
 }
 
-OmahaRequestAction::OmahaRequestAction(const OmahaRequestParams& params,
+OmahaRequestAction::OmahaRequestAction(PrefsInterface* prefs,
+                                       const OmahaRequestParams& params,
                                        OmahaEvent* event,
                                        HttpFetcher* http_fetcher)
-    : params_(params),
+    : prefs_(prefs),
+      params_(params),
       event_(event),
-      http_fetcher_(http_fetcher) {}
+      http_fetcher_(http_fetcher),
+      ping_active_days_(0),
+      ping_roll_call_days_(0) {}
 
 OmahaRequestAction::~OmahaRequestAction() {}
 
+// Calculates the value to use for the ping days parameter.
+int OmahaRequestAction::CalculatePingDays(const string& key) {
+  int days = kNeverPinged;
+  int64_t last_ping = 0;
+  if (prefs_->GetInt64(key, &last_ping) && last_ping >= 0) {
+    days = (Time::Now() - Time::FromInternalValue(last_ping)).InDays();
+    if (days < 0) {
+      // If |days| is negative, then the system clock must have jumped
+      // back in time since the ping was sent. Mark the value so that
+      // it doesn't get sent to the server but we still update the
+      // last ping daystart preference. This way the next ping time
+      // will be correct, hopefully.
+      days = kPingTimeJump;
+      LOG(WARNING) <<
+          "System clock jumped back in time. Resetting ping daystarts.";
+    }
+  }
+  return days;
+}
+
+void OmahaRequestAction::InitPingDays() {
+  // We send pings only along with update checks, not with events.
+  if (IsEvent()) {
+    return;
+  }
+  // TODO(petkov): Figure a way to distinguish active use pings
+  // vs. roll call pings. Currently, the two pings are identical. A
+  // fix needs to change this code as well as UpdateLastPingDays.
+  ping_active_days_ = CalculatePingDays(kPrefsLastActivePingDay);
+  ping_roll_call_days_ = CalculatePingDays(kPrefsLastRollCallPingDay);
+}
+
 void OmahaRequestAction::PerformAction() {
   http_fetcher_->set_delegate(this);
-  string request_post(FormatRequest(event_.get(), params_));
+  InitPingDays();
+  string request_post(FormatRequest(event_.get(),
+                                    params_,
+                                    ping_active_days_,
+                                    ping_roll_call_days_));
   http_fetcher_->SetPostData(request_post.data(), request_post.size());
   LOG(INFO) << "Posting an Omaha request to " << params_.update_url;
   LOG(INFO) << "Request: " << request_post;
@@ -199,6 +272,39 @@ off_t ParseInt(const string& str) {
   }
   return ret;
 }
+
+// Update the last ping day preferences based on the server daystart
+// response. Returns true on success, false otherwise.
+bool UpdateLastPingDays(xmlDoc* doc, PrefsInterface* prefs) {
+  static const char kNamespace[] = "x";
+  static const char kDaystartNodeXpath[] = "/x:gupdate/x:daystart";
+  static const char kNsUrl[] = "http://www.google.com/update2/response";
+
+  scoped_ptr_malloc<xmlXPathObject, ScopedPtrXmlXPathObjectFree>
+      xpath_nodeset(GetNodeSet(doc,
+                               ConstXMLStr(kDaystartNodeXpath),
+                               ConstXMLStr(kNamespace),
+                               ConstXMLStr(kNsUrl)));
+  TEST_AND_RETURN_FALSE(xpath_nodeset.get());
+  xmlNodeSet* nodeset = xpath_nodeset->nodesetval;
+  TEST_AND_RETURN_FALSE(nodeset && nodeset->nodeNr >= 1);
+  xmlNode* daystart_node = nodeset->nodeTab[0];
+  TEST_AND_RETURN_FALSE(xmlHasProp(daystart_node,
+                                   ConstXMLStr("elapsed_seconds")));
+
+  int64_t elapsed_seconds = 0;
+  TEST_AND_RETURN_FALSE(StringToInt64(XmlGetProperty(daystart_node,
+                                                     "elapsed_seconds"),
+                                      &elapsed_seconds));
+  TEST_AND_RETURN_FALSE(elapsed_seconds >= 0);
+
+  // Remember the local time that matches the server's last midnight
+  // time.
+  Time daystart = Time::Now() - TimeDelta::FromSeconds(elapsed_seconds);
+  prefs->SetInt64(kPrefsLastActivePingDay, daystart.ToInternalValue());
+  prefs->SetInt64(kPrefsLastRollCallPingDay, daystart.ToInternalValue());
+  return true;
+}
 }  // namespace {}
 
 // If the transfer was successful, this uses libxml2 to parse the response
@@ -234,6 +340,16 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
   if (!doc.get()) {
     LOG(ERROR) << "Omaha response not valid XML";
     return;
+  }
+
+  // If a ping was sent, update the last ping day preferences based on
+  // the server daystart response.
+  if (ShouldPing(ping_active_days_) ||
+      ShouldPing(ping_roll_call_days_) ||
+      ping_active_days_ == kPingTimeJump ||
+      ping_roll_call_days_ == kPingTimeJump) {
+    LOG_IF(ERROR, !UpdateLastPingDays(doc.get(), prefs_))
+        << "Failed to update the last ping day preferences!";
   }
 
   static const char* kNamespace("x");

@@ -91,12 +91,11 @@ TEST_F(PrefsTest, SetStringBadKey) {
 TEST_F(PrefsTest, SetStringCreateDir) {
   const char kKey[] = "a-test-key";
   const char kValue[] = "test value";
-  EXPECT_TRUE(prefs_.Init(FilePath(prefs_dir_.Append("subdir"))));
+  FilePath subdir = prefs_dir_.Append("subdir1").Append("subdir2");
+  EXPECT_TRUE(prefs_.Init(subdir));
   EXPECT_TRUE(prefs_.SetString(kKey, kValue));
   string value;
-  EXPECT_TRUE(
-      file_util::ReadFileToString(prefs_dir_.Append("subdir").Append(kKey),
-                                  &value));
+  EXPECT_TRUE(file_util::ReadFileToString(subdir.Append(kKey), &value));
   EXPECT_EQ(kValue, value);
 }
 

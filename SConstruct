@@ -294,7 +294,7 @@ delta_generator_cmd = env.Program('delta_generator',
 http_server_cmd = env.Program('test_http_server', 'test_http_server.cc')
 
 unittest_env = env.Clone()
-unittest_env.Append(LIBS=['gtest'])
+unittest_env.Append(LIBS=['gmock', 'gtest'])
 unittest_cmd = unittest_env.Program('update_engine_unittests',
                            unittest_sources + unittest_main)
 Clean(unittest_cmd, Glob('*.gcda') + Glob('*.gcno') + Glob('*.gcov') +

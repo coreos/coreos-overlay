@@ -8,22 +8,46 @@
 #include <glib.h>
 
 #include "base/string_util.h"
+#include "base/time.h"
 #include "gtest/gtest.h"
 #include "update_engine/action_pipe.h"
 #include "update_engine/mock_http_fetcher.h"
 #include "update_engine/omaha_hash_calculator.h"
 #include "update_engine/omaha_request_action.h"
 #include "update_engine/omaha_request_params.h"
+#include "update_engine/prefs_mock.h"
 #include "update_engine/test_utils.h"
 
+using base::Time;
+using base::TimeDelta;
 using std::string;
 using std::vector;
+using testing::_;
+using testing::AllOf;
+using testing::Ge;
+using testing::Le;
+using testing::Return;
+using testing::SetArgumentPointee;
 
 namespace chromeos_update_engine {
 
 class OmahaRequestActionTest : public ::testing::Test { };
 
 namespace {
+const OmahaRequestParams kDefaultTestParams(
+    "machine_id",
+    "user_id",
+    OmahaRequestParams::kOsPlatform,
+    OmahaRequestParams::kOsVersion,
+    "service_pack",
+    "x86-generic",
+    OmahaRequestParams::kAppId,
+    "0.1.0.0",
+    "en-US",
+    "unittest",
+    false,  // delta okay
+    "http://url");
+
 string GetNoUpdateResponse(const string& app_id) {
   return string(
       "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gupdate "
@@ -83,7 +107,6 @@ gboolean StartProcessorInRunLoop(gpointer data) {
   processor->StartProcessing();
   return FALSE;
 }
-
 }  // namespace {}
 
 class OutputObjectCollectorAction;
@@ -120,11 +143,13 @@ class OutputObjectCollectorAction : public Action<OutputObjectCollectorAction> {
   OmahaResponse omaha_response_;
 };
 
-// returns true iff an output response was obtained from the
-// OmahaRequestAction. out_response may be NULL.
-// out_post_data may be null; if non-null, the post-data received by the
-// mock HttpFetcher is returned.
-bool TestUpdateCheck(const OmahaRequestParams& params,
+// Returns true iff an output response was obtained from the
+// OmahaRequestAction. |prefs| may be NULL, in which case a local
+// PrefsMock is used. out_response may be NULL.  out_post_data may be
+// null; if non-null, the post-data received by the mock HttpFetcher
+// is returned.
+bool TestUpdateCheck(PrefsInterface* prefs,
+                     const OmahaRequestParams& params,
                      const string& http_response,
                      ActionExitCode expected_code,
                      OmahaResponse* out_response,
@@ -132,7 +157,11 @@ bool TestUpdateCheck(const OmahaRequestParams& params,
   GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
   MockHttpFetcher* fetcher = new MockHttpFetcher(http_response.data(),
                                                  http_response.size());
-  OmahaRequestAction action(params, NULL, fetcher);
+  PrefsMock local_prefs;
+  OmahaRequestAction action(prefs ? prefs : &local_prefs,
+                            params,
+                            NULL,
+                            fetcher);
   OmahaRequestActionTestProcessorDelegate delegate;
   delegate.loop_ = loop;
   delegate.expected_code_ = expected_code;
@@ -165,7 +194,8 @@ void TestEvent(const OmahaRequestParams& params,
   GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
   MockHttpFetcher* fetcher = new MockHttpFetcher(http_response.data(),
                                                  http_response.size());
-  OmahaRequestAction action(params, event, fetcher);
+  PrefsMock prefs;
+  OmahaRequestAction action(&prefs, params, event, fetcher);
   OmahaRequestActionTestProcessorDelegate delegate;
   delegate.loop_ = loop;
   ActionProcessor processor;
@@ -180,21 +210,10 @@ void TestEvent(const OmahaRequestParams& params,
 }
 
 TEST(OmahaRequestActionTest, NoUpdateTest) {
-  OmahaRequestParams params("",  // machine_id
-                            "",  // user_id
-                            OmahaRequestParams::kOsPlatform,
-                            OmahaRequestParams::kOsVersion,
-                            "",  // os_sp
-                            "x86-generic",
-                            OmahaRequestParams::kAppId,
-                            "0.1.0.0",
-                            "en-US",
-                            "unittest",
-                            false,  // delta okay
-                            "");  // url
   OmahaResponse response;
   ASSERT_TRUE(
-      TestUpdateCheck(params,
+      TestUpdateCheck(NULL,  // prefs
+                      kDefaultTestParams,
                       GetNoUpdateResponse(OmahaRequestParams::kAppId),
                       kActionCodeSuccess,
                       &response,
@@ -203,21 +222,10 @@ TEST(OmahaRequestActionTest, NoUpdateTest) {
 }
 
 TEST(OmahaRequestActionTest, ValidUpdateTest) {
-  OmahaRequestParams params("machine_id",
-                            "user_id",
-                            OmahaRequestParams::kOsPlatform,
-                            OmahaRequestParams::kOsVersion,
-                            "service_pack",
-                            "arm-generic",
-                            OmahaRequestParams::kAppId,
-                            "0.1.0.0",
-                            "en-US",
-                            "unittest_track",
-                            false,  // delta okay
-                            "");  // url
   OmahaResponse response;
   ASSERT_TRUE(
-      TestUpdateCheck(params,
+      TestUpdateCheck(NULL,  // prefs
+                      kDefaultTestParams,
                       GetUpdateResponse(OmahaRequestParams::kAppId,
                                         "1.2.3.4",  // version
                                         "http://more/info",
@@ -241,23 +249,12 @@ TEST(OmahaRequestActionTest, ValidUpdateTest) {
 }
 
 TEST(OmahaRequestActionTest, NoOutputPipeTest) {
-  OmahaRequestParams params("",  // machine_id
-                            "",  // usr_id
-                            OmahaRequestParams::kOsPlatform,
-                            OmahaRequestParams::kOsVersion,
-                            "",  // os_sp
-                            "",  // os_board
-                            OmahaRequestParams::kAppId,
-                            "0.1.0.0",
-                            "en-US",
-                            "unittest",
-                            false,  // delta okay
-                            "");  // url
   const string http_response(GetNoUpdateResponse(OmahaRequestParams::kAppId));
 
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
 
-  OmahaRequestAction action(params, NULL,
+  PrefsMock prefs;
+  OmahaRequestAction action(&prefs, kDefaultTestParams, NULL,
                             new MockHttpFetcher(http_response.data(),
                                                 http_response.size()));
   OmahaRequestActionTestProcessorDelegate delegate;
@@ -273,21 +270,10 @@ TEST(OmahaRequestActionTest, NoOutputPipeTest) {
 }
 
 TEST(OmahaRequestActionTest, InvalidXmlTest) {
-  OmahaRequestParams params("machine_id",
-                            "user_id",
-                            OmahaRequestParams::kOsPlatform,
-                            OmahaRequestParams::kOsVersion,
-                            "service_pack",
-                            "x86-generic",
-                            OmahaRequestParams::kAppId,
-                            "0.1.0.0",
-                            "en-US",
-                            "unittest_track",
-                            false,  // delta okay
-                            "http://url");
   OmahaResponse response;
   ASSERT_FALSE(
-      TestUpdateCheck(params,
+      TestUpdateCheck(NULL,  // prefs
+                      kDefaultTestParams,
                       "invalid xml>",
                       kActionCodeError,
                       &response,
@@ -296,21 +282,10 @@ TEST(OmahaRequestActionTest, InvalidXmlTest) {
 }
 
 TEST(OmahaRequestActionTest, MissingStatusTest) {
-  OmahaRequestParams params("machine_id",
-                            "user_id",
-                            OmahaRequestParams::kOsPlatform,
-                            OmahaRequestParams::kOsVersion,
-                            "service_pack",
-                            "x86-generic",
-                            OmahaRequestParams::kAppId,
-                            "0.1.0.0",
-                            "en-US",
-                            "unittest_track",
-                            false,  // delta okay
-                            "http://url");
   OmahaResponse response;
   ASSERT_FALSE(TestUpdateCheck(
-      params,
+      NULL,  // prefs
+      kDefaultTestParams,
       "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gupdate "
       "xmlns=\"http://www.google.com/update2/response\" protocol=\"2.0\"><app "
       "appid=\"foo\" status=\"ok\"><ping "
@@ -322,21 +297,10 @@ TEST(OmahaRequestActionTest, MissingStatusTest) {
 }
 
 TEST(OmahaRequestActionTest, InvalidStatusTest) {
-  OmahaRequestParams params("machine_id",
-                            "user_id",
-                            OmahaRequestParams::kOsPlatform,
-                            OmahaRequestParams::kOsVersion,
-                            "service_pack",
-                            "x86-generic",
-                            OmahaRequestParams::kAppId,
-                            "0.1.0.0",
-                            "en-US",
-                            "unittest_track",
-                            false,  // delta okay
-                            "http://url");
   OmahaResponse response;
   ASSERT_FALSE(TestUpdateCheck(
-      params,
+      NULL,  // prefs
+      kDefaultTestParams,
       "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gupdate "
       "xmlns=\"http://www.google.com/update2/response\" protocol=\"2.0\"><app "
       "appid=\"foo\" status=\"ok\"><ping "
@@ -348,21 +312,10 @@ TEST(OmahaRequestActionTest, InvalidStatusTest) {
 }
 
 TEST(OmahaRequestActionTest, MissingNodesetTest) {
-  OmahaRequestParams params("machine_id",
-                            "user_id",
-                            OmahaRequestParams::kOsPlatform,
-                            OmahaRequestParams::kOsVersion,
-                            "service_pack",
-                            "x86-generic",
-                            OmahaRequestParams::kAppId,
-                            "0.1.0.0",
-                            "en-US",
-                            "unittest_track",
-                            false,  // delta okay
-                            "http://url");
   OmahaResponse response;
   ASSERT_FALSE(TestUpdateCheck(
-      params,
+      NULL,  // prefs
+      kDefaultTestParams,
       "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gupdate "
       "xmlns=\"http://www.google.com/update2/response\" protocol=\"2.0\"><app "
       "appid=\"foo\" status=\"ok\"><ping "
@@ -374,20 +327,9 @@ TEST(OmahaRequestActionTest, MissingNodesetTest) {
 }
 
 TEST(OmahaRequestActionTest, MissingFieldTest) {
-  OmahaRequestParams params("machine_id",
-                            "user_id",
-                            OmahaRequestParams::kOsPlatform,
-                            OmahaRequestParams::kOsVersion,
-                            "service_pack",
-                            "x86-generic",
-                            OmahaRequestParams::kAppId,
-                            "0.1.0.0",
-                            "en-US",
-                            "unittest_track",
-                            false,  // delta okay
-                            "http://url");
   OmahaResponse response;
-  ASSERT_TRUE(TestUpdateCheck(params,
+  ASSERT_TRUE(TestUpdateCheck(NULL,  // prefs
+                              kDefaultTestParams,
                               string("<?xml version=\"1.0\" "
                                      "encoding=\"UTF-8\"?><gupdate "
                                      "xmlns=\"http://www.google.com/"
@@ -436,22 +378,11 @@ gboolean TerminateTransferTestStarter(gpointer data) {
 }  // namespace {}
 
 TEST(OmahaRequestActionTest, TerminateTransferTest) {
-  OmahaRequestParams params("",  // machine_id
-                            "",  // usr_id
-                            OmahaRequestParams::kOsPlatform,
-                            OmahaRequestParams::kOsVersion,
-                            "",  // os_sp
-                            "",  // os_board
-                            OmahaRequestParams::kAppId,
-                            "0.1.0.0",
-                            "en-US",
-                            "unittest",
-                            false,  // delta okay
-                            "http://url");
   string http_response("doesn't matter");
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
 
-  OmahaRequestAction action(params, NULL,
+  PrefsMock prefs;
+  OmahaRequestAction action(&prefs, kDefaultTestParams, NULL,
                             new MockHttpFetcher(http_response.data(),
                                                 http_response.size()));
   TerminateEarlyTestProcessorDelegate delegate;
@@ -480,47 +411,36 @@ TEST(OmahaRequestActionTest, XmlEncodeTest) {
                             OmahaRequestParams::kOsPlatform,
                             OmahaRequestParams::kOsVersion,
                             "testtheservice_pack>",
-                            "x86 generic",
+                            "x86 generic<id",
                             OmahaRequestParams::kAppId,
                             "0.1.0.0",
                             "en-US",
-                            "unittest_track",
+                            "unittest_track&lt;",
                             false,  // delta okay
                             "http://url");
   OmahaResponse response;
   ASSERT_FALSE(
-      TestUpdateCheck(params,
+      TestUpdateCheck(NULL,  // prefs
+                      params,
                       "invalid xml>",
                       kActionCodeError,
                       &response,
                       &post_data));
   // convert post_data to string
   string post_str(&post_data[0], post_data.size());
-  EXPECT_NE(post_str.find("testthemachine&lt;id"), string::npos);
-  EXPECT_EQ(post_str.find("testthemachine<id"), string::npos);
-  EXPECT_NE(post_str.find("testtheuser_id&amp;lt;"), string::npos);
-  EXPECT_EQ(post_str.find("testtheuser_id&lt;"), string::npos);
   EXPECT_NE(post_str.find("testtheservice_pack&gt;"), string::npos);
   EXPECT_EQ(post_str.find("testtheservice_pack>"), string::npos);
-  EXPECT_NE(post_str.find("x86 generic"), string::npos);
+  EXPECT_NE(post_str.find("x86 generic&lt;id"), string::npos);
+  EXPECT_EQ(post_str.find("x86 generic<id"), string::npos);
+  EXPECT_NE(post_str.find("unittest_track&amp;lt;"), string::npos);
+  EXPECT_EQ(post_str.find("unittest_track&lt;"), string::npos);
 }
 
 TEST(OmahaRequestActionTest, XmlDecodeTest) {
-  OmahaRequestParams params("machine_id",
-                            "user_id",
-                            OmahaRequestParams::kOsPlatform,
-                            OmahaRequestParams::kOsVersion,
-                            "service_pack",
-                            "x86-generic",
-                            OmahaRequestParams::kAppId,
-                            "0.1.0.0",
-                            "en-US",
-                            "unittest_track",
-                            false,  // delta okay
-                            "http://url");
   OmahaResponse response;
   ASSERT_TRUE(
-      TestUpdateCheck(params,
+      TestUpdateCheck(NULL,  // prefs
+                      kDefaultTestParams,
                       GetUpdateResponse(OmahaRequestParams::kAppId,
                                         "1.2.3.4",  // version
                                         "testthe&lt;url",  // more info
@@ -538,21 +458,10 @@ TEST(OmahaRequestActionTest, XmlDecodeTest) {
 }
 
 TEST(OmahaRequestActionTest, ParseIntTest) {
-  OmahaRequestParams params("machine_id",
-                            "user_id",
-                            OmahaRequestParams::kOsPlatform,
-                            OmahaRequestParams::kOsVersion,
-                            "service_pack",
-                            "the_board",
-                            OmahaRequestParams::kAppId,
-                            "0.1.0.0",
-                            "en-US",
-                            "unittest_track",
-                            false,  // delta okay
-                            "http://url");
   OmahaResponse response;
   ASSERT_TRUE(
-      TestUpdateCheck(params,
+      TestUpdateCheck(NULL,  // prefs
+                      kDefaultTestParams,
                       GetUpdateResponse(OmahaRequestParams::kAppId,
                                         "1.2.3.4",  // version
                                         "theurl",  // more info
@@ -571,27 +480,15 @@ TEST(OmahaRequestActionTest, ParseIntTest) {
 
 TEST(OmahaRequestActionTest, FormatUpdateCheckOutputTest) {
   vector<char> post_data;
-  OmahaRequestParams params("machine_id",
-                            "user_id",
-                            OmahaRequestParams::kOsPlatform,
-                            OmahaRequestParams::kOsVersion,
-                            "service_pack",
-                            "x86-generic",
-                            OmahaRequestParams::kAppId,
-                            "0.1.0.0",
-                            "en-US",
-                            "unittest_track",
-                            false,  // delta okay
-                            "http://url");
-  OmahaResponse response;
-  ASSERT_FALSE(TestUpdateCheck(params,
+  ASSERT_FALSE(TestUpdateCheck(NULL,  // prefs
+                               kDefaultTestParams,
                                "invalid xml>",
                                kActionCodeError,
-                               &response,
+                               NULL,  // response
                                &post_data));
   // convert post_data to string
   string post_str(&post_data[0], post_data.size());
-  EXPECT_NE(post_str.find("        <o:ping active=\"0\"></o:ping>\n"
+  EXPECT_NE(post_str.find("        <o:ping a=\"-1\" r=\"-1\"></o:ping>\n"
                           "        <o:updatecheck></o:updatecheck>\n"),
             string::npos);
   EXPECT_EQ(post_str.find("o:event"), string::npos);
@@ -599,19 +496,7 @@ TEST(OmahaRequestActionTest, FormatUpdateCheckOutputTest) {
 
 TEST(OmahaRequestActionTest, FormatSuccessEventOutputTest) {
   vector<char> post_data;
-  OmahaRequestParams params("machine_id",
-                            "user_id",
-                            OmahaRequestParams::kOsPlatform,
-                            OmahaRequestParams::kOsVersion,
-                            "service_pack",
-                            "x86-generic",
-                            OmahaRequestParams::kAppId,
-                            "0.1.0.0",
-                            "en-US",
-                            "unittest_track",
-                            false,  // delta okay
-                            "http://url");
-  TestEvent(params,
+  TestEvent(kDefaultTestParams,
             new OmahaEvent(OmahaEvent::kTypeUpdateDownloadStarted),
             "invalid xml>",
             &post_data);
@@ -622,24 +507,13 @@ TEST(OmahaRequestActionTest, FormatSuccessEventOutputTest) {
       OmahaEvent::kTypeUpdateDownloadStarted,
       OmahaEvent::kResultSuccess);
   EXPECT_NE(post_str.find(expected_event), string::npos);
+  EXPECT_EQ(post_str.find("o:ping"), string::npos);
   EXPECT_EQ(post_str.find("o:updatecheck"), string::npos);
 }
 
 TEST(OmahaRequestActionTest, FormatErrorEventOutputTest) {
   vector<char> post_data;
-  OmahaRequestParams params("machine_id",
-                            "user_id",
-                            OmahaRequestParams::kOsPlatform,
-                            OmahaRequestParams::kOsVersion,
-                            "service_pack",
-                            "x86-generic",
-                            OmahaRequestParams::kAppId,
-                            "0.1.0.0",
-                            "en-US",
-                            "unittest_track",
-                            false,  // delta okay
-                            "http://url");
-  TestEvent(params,
+  TestEvent(kDefaultTestParams,
             new OmahaEvent(OmahaEvent::kTypeDownloadComplete,
                            OmahaEvent::kResultError,
                            kActionCodeError),
@@ -659,19 +533,7 @@ TEST(OmahaRequestActionTest, FormatErrorEventOutputTest) {
 
 TEST(OmahaRequestActionTest, FormatEventOutputTest) {
   vector<char> post_data;
-  OmahaRequestParams params("machine_id",
-                            "user_id",
-                            OmahaRequestParams::kOsPlatform,
-                            OmahaRequestParams::kOsVersion,
-                            "service_pack",
-                            "x86-generic",
-                            OmahaRequestParams::kAppId,
-                            "0.1.0.0",
-                            "en-US",
-                            "unittest_track",
-                            false,  // delta okay
-                            "http://url");
-  TestEvent(params,
+  TestEvent(kDefaultTestParams,
             new OmahaEvent(OmahaEvent::kTypeDownloadComplete,
                            OmahaEvent::kResultError,
                            kActionCodeError),
@@ -691,28 +553,18 @@ TEST(OmahaRequestActionTest, FormatEventOutputTest) {
 
 TEST(OmahaRequestActionTest, IsEventTest) {
   string http_response("doesn't matter");
-  OmahaRequestParams params("machine_id",
-                            "user_id",
-                            OmahaRequestParams::kOsPlatform,
-                            OmahaRequestParams::kOsVersion,
-                            "service_pack",
-                            "x86-generic",
-                            OmahaRequestParams::kAppId,
-                            "0.1.0.0",
-                            "en-US",
-                            "unittest_track",
-                            false,  // delta okay
-                            "http://url");
-
+  PrefsMock prefs;
   OmahaRequestAction update_check_action(
-      params,
+      &prefs,
+      kDefaultTestParams,
       NULL,
       new MockHttpFetcher(http_response.data(),
                           http_response.size()));
   EXPECT_FALSE(update_check_action.IsEvent());
 
   OmahaRequestAction event_action(
-      params,
+      &prefs,
+      kDefaultTestParams,
       new OmahaEvent(OmahaEvent::kTypeUpdateComplete),
       new MockHttpFetcher(http_response.data(),
                           http_response.size()));
@@ -736,7 +588,8 @@ TEST(OmahaRequestActionTest, FormatDeltaOkayOutputTest) {
                               "unittest_track",
                               delta_okay,
                               "http://url");
-    ASSERT_FALSE(TestUpdateCheck(params,
+    ASSERT_FALSE(TestUpdateCheck(NULL,  // prefs
+                                 params,
                                  "invalid xml>",
                                  kActionCodeError,
                                  NULL,
@@ -766,6 +619,184 @@ TEST(OmahaRequestActionTest, OmahaEventTest) {
   EXPECT_EQ(OmahaEvent::kTypeUpdateDownloadFinished, error_event.type);
   EXPECT_EQ(OmahaEvent::kResultError, error_event.result);
   EXPECT_EQ(kActionCodeError, error_event.error_code);
+}
+
+TEST(OmahaRequestActionTest, PingTest) {
+  PrefsMock prefs;
+  // Add a few hours to the day difference to test no rounding, etc.
+  int64_t five_days_ago =
+      (Time::Now() - TimeDelta::FromHours(5 * 24 + 13)).ToInternalValue();
+  int64_t six_days_ago =
+      (Time::Now() - TimeDelta::FromHours(6 * 24 + 11)).ToInternalValue();
+  EXPECT_CALL(prefs, GetInt64(kPrefsLastActivePingDay, _))
+      .WillOnce(DoAll(SetArgumentPointee<1>(six_days_ago), Return(true)));
+  EXPECT_CALL(prefs, GetInt64(kPrefsLastRollCallPingDay, _))
+      .WillOnce(DoAll(SetArgumentPointee<1>(five_days_ago), Return(true)));
+  vector<char> post_data;
+  ASSERT_TRUE(
+      TestUpdateCheck(&prefs,
+                      kDefaultTestParams,
+                      GetNoUpdateResponse(OmahaRequestParams::kAppId),
+                      kActionCodeSuccess,
+                      NULL,
+                      &post_data));
+  string post_str(&post_data[0], post_data.size());
+  EXPECT_NE(post_str.find("<o:ping a=\"6\" r=\"5\"></o:ping>"), string::npos);
+}
+
+TEST(OmahaRequestActionTest, ActivePingTest) {
+  PrefsMock prefs;
+  int64_t three_days_ago =
+      (Time::Now() - TimeDelta::FromHours(3 * 24 + 12)).ToInternalValue();
+  int64_t now = Time::Now().ToInternalValue();
+  EXPECT_CALL(prefs, GetInt64(kPrefsLastActivePingDay, _))
+      .WillOnce(DoAll(SetArgumentPointee<1>(three_days_ago), Return(true)));
+  EXPECT_CALL(prefs, GetInt64(kPrefsLastRollCallPingDay, _))
+      .WillOnce(DoAll(SetArgumentPointee<1>(now), Return(true)));
+  vector<char> post_data;
+  ASSERT_TRUE(
+      TestUpdateCheck(&prefs,
+                      kDefaultTestParams,
+                      GetNoUpdateResponse(OmahaRequestParams::kAppId),
+                      kActionCodeSuccess,
+                      NULL,
+                      &post_data));
+  string post_str(&post_data[0], post_data.size());
+  EXPECT_NE(post_str.find("<o:ping a=\"3\"></o:ping>"), string::npos);
+}
+
+TEST(OmahaRequestActionTest, RollCallPingTest) {
+  PrefsMock prefs;
+  int64_t four_days_ago =
+      (Time::Now() - TimeDelta::FromHours(4 * 24)).ToInternalValue();
+  int64_t now = Time::Now().ToInternalValue();
+  EXPECT_CALL(prefs, GetInt64(kPrefsLastActivePingDay, _))
+      .WillOnce(DoAll(SetArgumentPointee<1>(now), Return(true)));
+  EXPECT_CALL(prefs, GetInt64(kPrefsLastRollCallPingDay, _))
+      .WillOnce(DoAll(SetArgumentPointee<1>(four_days_ago), Return(true)));
+  vector<char> post_data;
+  ASSERT_TRUE(
+      TestUpdateCheck(&prefs,
+                      kDefaultTestParams,
+                      GetNoUpdateResponse(OmahaRequestParams::kAppId),
+                      kActionCodeSuccess,
+                      NULL,
+                      &post_data));
+  string post_str(&post_data[0], post_data.size());
+  EXPECT_NE(post_str.find("<o:ping r=\"4\"></o:ping>\n"), string::npos);
+}
+
+TEST(OmahaRequestActionTest, NoPingTest) {
+  PrefsMock prefs;
+  int64_t one_hour_ago =
+      (Time::Now() - TimeDelta::FromHours(1)).ToInternalValue();
+  EXPECT_CALL(prefs, GetInt64(kPrefsLastActivePingDay, _))
+      .WillOnce(DoAll(SetArgumentPointee<1>(one_hour_ago), Return(true)));
+  EXPECT_CALL(prefs, GetInt64(kPrefsLastRollCallPingDay, _))
+      .WillOnce(DoAll(SetArgumentPointee<1>(one_hour_ago), Return(true)));
+  EXPECT_CALL(prefs, SetInt64(kPrefsLastActivePingDay, _)).Times(0);
+  EXPECT_CALL(prefs, SetInt64(kPrefsLastRollCallPingDay, _)).Times(0);
+  vector<char> post_data;
+  ASSERT_TRUE(
+      TestUpdateCheck(&prefs,
+                      kDefaultTestParams,
+                      GetNoUpdateResponse(OmahaRequestParams::kAppId),
+                      kActionCodeSuccess,
+                      NULL,
+                      &post_data));
+  string post_str(&post_data[0], post_data.size());
+  EXPECT_EQ(post_str.find("o:ping"), string::npos);
+}
+
+TEST(OmahaRequestActionTest, BackInTimePingTest) {
+  PrefsMock prefs;
+  int64_t future =
+      (Time::Now() + TimeDelta::FromHours(3 * 24 + 4)).ToInternalValue();
+  EXPECT_CALL(prefs, GetInt64(kPrefsLastActivePingDay, _))
+      .WillOnce(DoAll(SetArgumentPointee<1>(future), Return(true)));
+  EXPECT_CALL(prefs, GetInt64(kPrefsLastRollCallPingDay, _))
+      .WillOnce(DoAll(SetArgumentPointee<1>(future), Return(true)));
+  EXPECT_CALL(prefs, SetInt64(kPrefsLastActivePingDay, _))
+      .WillOnce(Return(true));
+  EXPECT_CALL(prefs, SetInt64(kPrefsLastRollCallPingDay, _))
+      .WillOnce(Return(true));
+  vector<char> post_data;
+  ASSERT_TRUE(
+      TestUpdateCheck(&prefs,
+                      kDefaultTestParams,
+                      "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gupdate "
+                      "xmlns=\"http://www.google.com/update2/response\" "
+                      "protocol=\"2.0\"><daystart elapsed_seconds=\"100\"/>"
+                      "<app appid=\"foo\" status=\"ok\"><ping status=\"ok\"/>"
+                      "<updatecheck status=\"noupdate\"/></app></gupdate>",
+                      kActionCodeSuccess,
+                      NULL,
+                      &post_data));
+  string post_str(&post_data[0], post_data.size());
+  EXPECT_EQ(post_str.find("o:ping"), string::npos);
+}
+
+TEST(OmahaRequestActionTest, LastPingDayUpdateTest) {
+  // This test checks that the action updates the last ping day to now
+  // minus 200 seconds with a slack for 5 seconds. Therefore, the test
+  // may fail if it runs for longer than 5 seconds. It shouldn't run
+  // that long though.
+  int64_t midnight =
+      (Time::Now() - TimeDelta::FromSeconds(200)).ToInternalValue();
+  int64_t midnight_slack =
+      (Time::Now() - TimeDelta::FromSeconds(195)).ToInternalValue();
+  PrefsMock prefs;
+  EXPECT_CALL(prefs, SetInt64(kPrefsLastActivePingDay,
+                              AllOf(Ge(midnight), Le(midnight_slack))))
+      .WillOnce(Return(true));
+  EXPECT_CALL(prefs, SetInt64(kPrefsLastRollCallPingDay,
+                              AllOf(Ge(midnight), Le(midnight_slack))))
+      .WillOnce(Return(true));
+  ASSERT_TRUE(
+      TestUpdateCheck(&prefs,
+                      kDefaultTestParams,
+                      "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gupdate "
+                      "xmlns=\"http://www.google.com/update2/response\" "
+                      "protocol=\"2.0\"><daystart elapsed_seconds=\"200\"/>"
+                      "<app appid=\"foo\" status=\"ok\"><ping status=\"ok\"/>"
+                      "<updatecheck status=\"noupdate\"/></app></gupdate>",
+                      kActionCodeSuccess,
+                      NULL,
+                      NULL));
+}
+
+TEST(OmahaRequestActionTest, NoElapsedSecondsTest) {
+  PrefsMock prefs;
+  EXPECT_CALL(prefs, SetInt64(kPrefsLastActivePingDay, _)).Times(0);
+  EXPECT_CALL(prefs, SetInt64(kPrefsLastRollCallPingDay, _)).Times(0);
+  ASSERT_TRUE(
+      TestUpdateCheck(&prefs,
+                      kDefaultTestParams,
+                      "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gupdate "
+                      "xmlns=\"http://www.google.com/update2/response\" "
+                      "protocol=\"2.0\"><daystart blah=\"200\"/>"
+                      "<app appid=\"foo\" status=\"ok\"><ping status=\"ok\"/>"
+                      "<updatecheck status=\"noupdate\"/></app></gupdate>",
+                      kActionCodeSuccess,
+                      NULL,
+                      NULL));
+}
+
+TEST(OmahaRequestActionTest, BadElapsedSecondsTest) {
+  PrefsMock prefs;
+  EXPECT_CALL(prefs, SetInt64(kPrefsLastActivePingDay, _)).Times(0);
+  EXPECT_CALL(prefs, SetInt64(kPrefsLastRollCallPingDay, _)).Times(0);
+  ASSERT_TRUE(
+      TestUpdateCheck(&prefs,
+                      kDefaultTestParams,
+                      "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gupdate "
+                      "xmlns=\"http://www.google.com/update2/response\" "
+                      "protocol=\"2.0\"><daystart elapsed_seconds=\"x\"/>"
+                      "<app appid=\"foo\" status=\"ok\"><ping status=\"ok\"/>"
+                      "<updatecheck status=\"noupdate\"/></app></gupdate>",
+                      kActionCodeSuccess,
+                      NULL,
+                      NULL));
 }
 
 }  // namespace chromeos_update_engine

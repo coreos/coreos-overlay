@@ -38,8 +38,9 @@ const char* UpdateStatusToString(UpdateStatus status);
 class UpdateAttempter : public ActionProcessorDelegate,
                         public DownloadActionDelegate {
  public:
-  UpdateAttempter(MetricsLibraryInterface* metrics_lib)
+  UpdateAttempter(PrefsInterface* prefs, MetricsLibraryInterface* metrics_lib)
       : dbus_service_(NULL),
+        prefs_(prefs),
         metrics_lib_(metrics_lib),
         status_(UPDATE_STATUS_IDLE),
         download_progress_(0.0),
@@ -119,6 +120,9 @@ class UpdateAttempter : public ActionProcessorDelegate,
 
   // pointer to the OmahaResponseHandlerAction in the actions_ vector;
   std::tr1::shared_ptr<OmahaResponseHandlerAction> response_handler_action_;
+
+  // Pointer to the preferences store interface.
+  PrefsInterface* prefs_;
 
   // Pointer to the UMA metrics collection library.
   MetricsLibraryInterface* metrics_lib_;
