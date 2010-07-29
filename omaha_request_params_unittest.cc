@@ -49,27 +49,6 @@ bool OmahaRequestDeviceParamsTest::DoTest(OmahaRequestParams* out,
 }
 
 namespace {
-bool IsHexDigit(char c) {
-  return ((c >= '0') && (c <= '9')) ||
-      ((c >= 'a') && (c <= 'f')) ||
-      ((c >= 'A') && (c <= 'F'));
-}
-
-// Returns true iff str is formatted as a GUID. Example GUID:
-// "{2251FFAD-DBAB-4E53-8B3A-18F98BB4EB80}"
-bool IsValidGuid(const string& str) {
-  TEST_AND_RETURN_FALSE(str.size() == 38);
-  TEST_AND_RETURN_FALSE((*str.begin() == '{') && (*str.rbegin() == '}'));
-  for (string::size_type i = 1; i < (str.size() - 1); ++i) {
-    if ((i == 9) || (i == 14) || (i == 19) || (i == 24)) {
-      TEST_AND_RETURN_FALSE(str[i] == '-');
-    } else {
-      TEST_AND_RETURN_FALSE(IsHexDigit(str[i]));
-    }
-  }
-  return true;
-}
-
 string GetMachineType() {
   FILE* fp = popen("uname -m", "r");
   if (!fp)
@@ -100,9 +79,6 @@ TEST_F(OmahaRequestDeviceParamsTest, SimpleTest) {
       "CHROMEOS_AUSERVER=http://www.google.com"));
   OmahaRequestParams out;
   EXPECT_TRUE(DoTest(&out, "", ""));
-  EXPECT_TRUE(IsValidGuid(out.machine_id)) << "id: " << out.machine_id;
-  // for now we're just using the machine id here
-  EXPECT_TRUE(IsValidGuid(out.user_id)) << "id: " << out.user_id;
   EXPECT_EQ("Chrome OS", out.os_platform);
   EXPECT_EQ(string("0.2.2.3_") + GetMachineType(), out.os_sp);
   EXPECT_EQ("arm-generic", out.os_board);
@@ -122,9 +98,6 @@ TEST_F(OmahaRequestDeviceParamsTest, MissingTrackTest) {
       "CHROMEOS_RELEASE_TRXCK=footrack"));
   OmahaRequestParams out;
   EXPECT_TRUE(DoTest(&out, "", ""));
-  EXPECT_TRUE(IsValidGuid(out.machine_id));
-  // for now we're just using the machine id here
-  EXPECT_TRUE(IsValidGuid(out.user_id));
   EXPECT_EQ("Chrome OS", out.os_platform);
   EXPECT_EQ(string("0.2.2.3_") + GetMachineType(), out.os_sp);
   EXPECT_EQ("{87efface-864d-49a5-9bb3-4b050a7c227a}", out.app_id);
@@ -141,34 +114,12 @@ TEST_F(OmahaRequestDeviceParamsTest, ConfusingReleaseTest) {
       "CHROMEOS_RELEASE_TRXCK=footrack"));
   OmahaRequestParams out;
   EXPECT_TRUE(DoTest(&out, "", ""));
-  EXPECT_TRUE(IsValidGuid(out.machine_id)) << out.machine_id;
-  // for now we're just using the machine id here
-  EXPECT_TRUE(IsValidGuid(out.user_id));
   EXPECT_EQ("Chrome OS", out.os_platform);
   EXPECT_EQ(string("0.2.2.3_") + GetMachineType(), out.os_sp);
   EXPECT_EQ("{87efface-864d-49a5-9bb3-4b050a7c227a}", out.app_id);
   EXPECT_EQ("0.2.2.3", out.app_version);
   EXPECT_EQ("en-US", out.app_lang);
   EXPECT_EQ("", out.app_track);
-}
-
-TEST_F(OmahaRequestDeviceParamsTest, MachineIdPersistsTest) {
-  ASSERT_TRUE(WriteFileString(
-      kTestDir + "/etc/lsb-release",
-      "CHROMEOS_RELEASE_FOO=CHROMEOS_RELEASE_VERSION=1.2.3.4\n"
-      "CHROMEOS_RELEASE_VERSION=0.2.2.3\n"
-      "CHROMEOS_RELEASE_TRXCK=footrack"));
-  OmahaRequestParams out1;
-  EXPECT_TRUE(DoTest(&out1, "", ""));
-  string machine_id;
-  EXPECT_TRUE(utils::ReadFileToString(
-      kTestDir +
-      utils::kStatefulPartition + "/etc/omaha_id",
-      &machine_id));
-  EXPECT_EQ(machine_id, out1.machine_id);
-  OmahaRequestParams out2;
-  EXPECT_TRUE(DoTest(&out2, "", ""));
-  EXPECT_EQ(machine_id, out2.machine_id);
 }
 
 TEST_F(OmahaRequestDeviceParamsTest, MissingVersionTest) {
@@ -179,9 +130,6 @@ TEST_F(OmahaRequestDeviceParamsTest, MissingVersionTest) {
       "CHROMEOS_RELEASE_TRACK=footrack"));
   OmahaRequestParams out;
   EXPECT_TRUE(DoTest(&out, "", ""));
-  EXPECT_TRUE(IsValidGuid(out.machine_id)) << "id: " << out.machine_id;
-  // for now we're just using the machine id here
-  EXPECT_TRUE(IsValidGuid(out.user_id)) << "id: " << out.user_id;
   EXPECT_EQ("Chrome OS", out.os_platform);
   EXPECT_EQ(string("_") + GetMachineType(), out.os_sp);
   EXPECT_EQ("arm-generic", out.os_board);
@@ -200,9 +148,6 @@ TEST_F(OmahaRequestDeviceParamsTest, ForceVersionTest) {
       "CHROMEOS_RELEASE_TRACK=footrack"));
   OmahaRequestParams out;
   EXPECT_TRUE(DoTest(&out, "ForcedVersion", ""));
-  EXPECT_TRUE(IsValidGuid(out.machine_id)) << "id: " << out.machine_id;
-  // for now we're just using the machine id here
-  EXPECT_TRUE(IsValidGuid(out.user_id)) << "id: " << out.user_id;
   EXPECT_EQ("Chrome OS", out.os_platform);
   EXPECT_EQ(string("ForcedVersion_") + GetMachineType(), out.os_sp);
   EXPECT_EQ("arm-generic", out.os_board);
@@ -222,9 +167,6 @@ TEST_F(OmahaRequestDeviceParamsTest, ForcedURLTest) {
       "CHROMEOS_RELEASE_TRACK=footrack"));
   OmahaRequestParams out;
   EXPECT_TRUE(DoTest(&out, "", "http://forced.google.com"));
-  EXPECT_TRUE(IsValidGuid(out.machine_id)) << "id: " << out.machine_id;
-  // for now we're just using the machine id here
-  EXPECT_TRUE(IsValidGuid(out.user_id)) << "id: " << out.user_id;
   EXPECT_EQ("Chrome OS", out.os_platform);
   EXPECT_EQ(string("0.2.2.3_") + GetMachineType(), out.os_sp);
   EXPECT_EQ("arm-generic", out.os_board);
@@ -245,9 +187,6 @@ TEST_F(OmahaRequestDeviceParamsTest, MissingURLTest) {
       "CHROMEOS_RELEASE_TRACK=footrack"));
   OmahaRequestParams out;
   EXPECT_TRUE(DoTest(&out, "", ""));
-  EXPECT_TRUE(IsValidGuid(out.machine_id)) << "id: " << out.machine_id;
-  // for now we're just using the machine id here
-  EXPECT_TRUE(IsValidGuid(out.user_id)) << "id: " << out.user_id;
   EXPECT_EQ("Chrome OS", out.os_platform);
   EXPECT_EQ(string("0.2.2.3_") + GetMachineType(), out.os_sp);
   EXPECT_EQ("arm-generic", out.os_board);

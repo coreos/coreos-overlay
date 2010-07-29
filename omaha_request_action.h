@@ -145,7 +145,7 @@ class OmahaRequestAction : public Action<OmahaRequestAction>,
   // be sent as pings to Omaha.
   void InitPingDays();
 
-  // Based on the perstitent preference store values, calculates the
+  // Based on the persistent preference store values, calculates the
   // number of days since the last ping sent for |key|.
   int CalculatePingDays(const std::string& key);
 

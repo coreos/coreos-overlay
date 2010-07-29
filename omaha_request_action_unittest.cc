@@ -35,8 +35,6 @@ class OmahaRequestActionTest : public ::testing::Test { };
 
 namespace {
 const OmahaRequestParams kDefaultTestParams(
-    "machine_id",
-    "user_id",
     OmahaRequestParams::kOsPlatform,
     OmahaRequestParams::kOsVersion,
     "service_pack",
@@ -406,9 +404,7 @@ TEST(OmahaRequestActionTest, XmlEncodeTest) {
   vector<char> post_data;
 
   // Make sure XML Encode is being called on the params
-  OmahaRequestParams params("testthemachine<id",
-                            "testtheuser_id&lt;",
-                            OmahaRequestParams::kOsPlatform,
+  OmahaRequestParams params(OmahaRequestParams::kOsPlatform,
                             OmahaRequestParams::kOsVersion,
                             "testtheservice_pack>",
                             "x86 generic<id",
@@ -576,9 +572,7 @@ TEST(OmahaRequestActionTest, FormatDeltaOkayOutputTest) {
     bool delta_okay = i == 1;
     const char* delta_okay_str = delta_okay ? "true" : "false";
     vector<char> post_data;
-    OmahaRequestParams params("machine_id",
-                              "user_id",
-                              OmahaRequestParams::kOsPlatform,
+    OmahaRequestParams params(OmahaRequestParams::kOsPlatform,
                               OmahaRequestParams::kOsVersion,
                               "service_pack",
                               "x86-generic",
@@ -738,7 +732,7 @@ TEST(OmahaRequestActionTest, BackInTimePingTest) {
 
 TEST(OmahaRequestActionTest, LastPingDayUpdateTest) {
   // This test checks that the action updates the last ping day to now
-  // minus 200 seconds with a slack for 5 seconds. Therefore, the test
+  // minus 200 seconds with a slack of 5 seconds. Therefore, the test
   // may fail if it runs for longer than 5 seconds. It shouldn't run
   // that long though.
   int64_t midnight =
@@ -797,6 +791,20 @@ TEST(OmahaRequestActionTest, BadElapsedSecondsTest) {
                       kActionCodeSuccess,
                       NULL,
                       NULL));
+}
+
+TEST(OmahaRequestActionTest, NoUniqueIDTest) {
+  vector<char> post_data;
+  ASSERT_FALSE(TestUpdateCheck(NULL,  // prefs
+                               kDefaultTestParams,
+                               "invalid xml>",
+                               kActionCodeError,
+                               NULL,  // response
+                               &post_data));
+  // convert post_data to string
+  string post_str(&post_data[0], post_data.size());
+  EXPECT_EQ(post_str.find("machineid="), string::npos);
+  EXPECT_EQ(post_str.find("userid="), string::npos);
 }
 
 }  // namespace chromeos_update_engine

@@ -19,9 +19,7 @@ namespace chromeos_update_engine {
 struct OmahaRequestParams {
   OmahaRequestParams()
       : os_platform(kOsPlatform), os_version(kOsVersion), app_id(kAppId) {}
-  OmahaRequestParams(const std::string& in_machine_id,
-                     const std::string& in_user_id,
-                     const std::string& in_os_platform,
+  OmahaRequestParams(const std::string& in_os_platform,
                      const std::string& in_os_version,
                      const std::string& in_os_sp,
                      const std::string& in_os_board,
@@ -31,9 +29,7 @@ struct OmahaRequestParams {
                      const std::string& in_app_track,
                      const bool in_delta_okay,
                      const std::string& in_update_url)
-      : machine_id(in_machine_id),
-        user_id(in_user_id),
-        os_platform(in_os_platform),
+      : os_platform(in_os_platform),
         os_version(in_os_version),
         os_sp(in_os_sp),
         os_board(in_os_board),
@@ -44,8 +40,6 @@ struct OmahaRequestParams {
         delta_okay(in_delta_okay),
         update_url(in_update_url) {}
 
-  std::string machine_id;
-  std::string user_id;
   std::string os_platform;
   std::string os_version;
   std::string os_sp;
@@ -79,9 +73,6 @@ class OmahaRequestDeviceParams : public OmahaRequestParams {
   void set_root(const std::string& root) { root_ = root; }
 
  private:
-  // Gets a machine-local ID (for now, first MAC address we find).
-  bool GetMachineId(std::string* out_id) const;
-
   // Fetches the value for a given key from
   // /mnt/stateful_partition/etc/lsb-release if possible. Failing that,
   // it looks for the key in /etc/lsb-release.

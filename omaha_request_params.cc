@@ -18,13 +18,6 @@
 using std::map;
 using std::string;
 
-namespace {
-const string OmahaIdPath() {
-  return string(chromeos_update_engine::utils::kStatefulPartition) +
-      "/etc/omaha_id";
-}
-}  // namespace {}
-
 namespace chromeos_update_engine {
 
 const char* const OmahaRequestParams::kAppId(
@@ -36,8 +29,6 @@ const char* const OmahaRequestParams::kUpdateUrl(
 
 bool OmahaRequestDeviceParams::Init(const std::string& in_app_version,
                                     const std::string& in_update_url) {
-  TEST_AND_RETURN_FALSE(GetMachineId(&machine_id));
-  user_id = machine_id;
   os_platform = OmahaRequestParams::kOsPlatform;
   os_version = OmahaRequestParams::kOsVersion;
   app_version = in_app_version.empty() ?
@@ -58,48 +49,6 @@ bool OmahaRequestDeviceParams::Init(const std::string& in_app_version,
   update_url = in_update_url.empty() ?
       GetLsbValue("CHROMEOS_AUSERVER", OmahaRequestParams::kUpdateUrl) :
       in_update_url;
-  return true;
-}
-
-namespace {
-const size_t kGuidDataByteLength = 128 / 8;
-const string::size_type kGuidStringLength = 38;
-// Formats 16 bytes (128 bits) of data as a GUID:
-// "{XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX}" where X is a hex digit
-string GuidFromData(const unsigned char data[kGuidDataByteLength]) {
-  return StringPrintf(
-      "{%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
-      data[0], data[1], data[2], data[3], data[4], data[5], data[6], data[7],
-      data[8], data[9], data[10], data[11], data[12], data[13], data[14],
-      data[15]);
-}
-}
-
-// Returns true on success.
-bool OmahaRequestDeviceParams::GetMachineId(std::string* out_id) const {
-  // Checks if we have an existing Machine ID.
-  const string omaha_id_path = root_ + OmahaIdPath();
-
-  if (utils::ReadFileToString(omaha_id_path, out_id) &&
-      out_id->size() == kGuidStringLength) {
-    return true;
-  }
-
-  // Creates a new ID.
-  int rand_fd = open("/dev/urandom", O_RDONLY, 0);
-  TEST_AND_RETURN_FALSE_ERRNO(rand_fd >= 0);
-  ScopedFdCloser rand_fd_closer(&rand_fd);
-  unsigned char buf[kGuidDataByteLength];
-  size_t bytes_read = 0;
-  while (bytes_read < sizeof(buf)) {
-    ssize_t rc = read(rand_fd, buf + bytes_read, sizeof(buf) - bytes_read);
-    TEST_AND_RETURN_FALSE_ERRNO(rc > 0);
-    bytes_read += rc;
-  }
-  string guid = GuidFromData(buf);
-  TEST_AND_RETURN_FALSE(
-      utils::WriteFile(omaha_id_path.c_str(), guid.data(), guid.size()));
-  *out_id = guid;
   return true;
 }
 
