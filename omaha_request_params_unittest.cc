@@ -3,8 +3,11 @@
 // found in the LICENSE file.
 
 #include <stdio.h>
+
 #include <string>
-#include <gtest/gtest.h>
+
+#include "base/file_util.h"
+#include "gtest/gtest.h"
 #include "update_engine/install_plan.h"
 #include "update_engine/omaha_request_params.h"
 #include "update_engine/test_utils.h"
@@ -85,6 +88,7 @@ TEST_F(OmahaRequestDeviceParamsTest, SimpleTest) {
   EXPECT_EQ("{87efface-864d-49a5-9bb3-4b050a7c227a}", out.app_id);
   EXPECT_EQ("0.2.2.3", out.app_version);
   EXPECT_EQ("en-US", out.app_lang);
+  EXPECT_EQ("", out.hardware_class);
   EXPECT_TRUE(out.delta_okay);
   EXPECT_EQ("footrack", out.app_track);
   EXPECT_EQ("http://www.google.com", out.update_url);
@@ -208,6 +212,19 @@ TEST_F(OmahaRequestDeviceParamsTest, NoDeltasTest) {
   OmahaRequestParams out;
   EXPECT_TRUE(DoTest(&out, "", ""));
   EXPECT_FALSE(out.delta_okay);
+}
+
+TEST_F(OmahaRequestDeviceParamsTest, HardwareClassTest) {
+  string test_class = " \t sample hardware class \n ";
+  FilePath hwid_path(kTestDir + "/sys/devices/platform/chromeos_acpi/HWID");
+  ASSERT_TRUE(file_util::CreateDirectory(hwid_path.DirName()));
+  ASSERT_EQ(test_class.size(),
+            file_util::WriteFile(hwid_path,
+                                 test_class.data(),
+                                 test_class.size()));
+  OmahaRequestParams out;
+  EXPECT_TRUE(DoTest(&out, "", ""));
+  EXPECT_EQ("sample hardware class", out.hardware_class);
 }
 
 }  // namespace chromeos_update_engine

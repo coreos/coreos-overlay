@@ -11,6 +11,7 @@
 #include <map>
 #include <string>
 
+#include "base/file_util.h"
 #include "base/string_util.h"
 #include "update_engine/simple_key_value_store.h"
 #include "update_engine/utils.h"
@@ -27,6 +28,8 @@ const char* const OmahaRequestParams::kOsVersion("Indy");
 const char* const OmahaRequestParams::kUpdateUrl(
     "https://tools.google.com/service/update2");
 
+static const char kHWIDPath[] = "/sys/devices/platform/chromeos_acpi/HWID";
+
 bool OmahaRequestDeviceParams::Init(const std::string& in_app_version,
                                     const std::string& in_update_url) {
   os_platform = OmahaRequestParams::kOsPlatform;
@@ -38,6 +41,7 @@ bool OmahaRequestDeviceParams::Init(const std::string& in_app_version,
   app_id = OmahaRequestParams::kAppId;
   app_lang = "en-US";
   app_track = GetLsbValue("CHROMEOS_RELEASE_TRACK", "");
+  hardware_class = GetHardwareClass();
   struct stat stbuf;
 
   // Deltas are only okay if the /.nodelta file does not exist.
@@ -77,6 +81,16 @@ string OmahaRequestDeviceParams::GetMachineType() const {
   if (uname(&buf) == 0)
     ret = buf.machine;
   return ret;
+}
+
+string OmahaRequestDeviceParams::GetHardwareClass() const {
+  string hwid;
+  if (!file_util::ReadFileToString(FilePath(root_ + kHWIDPath), &hwid)) {
+    LOG(ERROR) << "Unable to determine the system hardware qualification ID.";
+    return "";
+  }
+  TrimWhitespaceASCII(hwid, TRIM_ALL, &hwid);
+  return hwid;
 }
 
 }  // namespace chromeos_update_engine

@@ -43,6 +43,7 @@ const OmahaRequestParams kDefaultTestParams(
     "0.1.0.0",
     "en-US",
     "unittest",
+    "OEM MODEL 09235 7471",
     false,  // delta okay
     "http://url");
 
@@ -412,6 +413,7 @@ TEST(OmahaRequestActionTest, XmlEncodeTest) {
                             "0.1.0.0",
                             "en-US",
                             "unittest_track&lt;",
+                            "<OEM MODEL>",
                             false,  // delta okay
                             "http://url");
   OmahaResponse response;
@@ -430,6 +432,8 @@ TEST(OmahaRequestActionTest, XmlEncodeTest) {
   EXPECT_EQ(post_str.find("x86 generic<id"), string::npos);
   EXPECT_NE(post_str.find("unittest_track&amp;lt;"), string::npos);
   EXPECT_EQ(post_str.find("unittest_track&lt;"), string::npos);
+  EXPECT_NE(post_str.find("&lt;OEM MODEL&gt;"), string::npos);
+  EXPECT_EQ(post_str.find("<OEM MODEL>"), string::npos);
 }
 
 TEST(OmahaRequestActionTest, XmlDecodeTest) {
@@ -486,6 +490,8 @@ TEST(OmahaRequestActionTest, FormatUpdateCheckOutputTest) {
   string post_str(&post_data[0], post_data.size());
   EXPECT_NE(post_str.find("        <o:ping a=\"-1\" r=\"-1\"></o:ping>\n"
                           "        <o:updatecheck></o:updatecheck>\n"),
+            string::npos);
+  EXPECT_NE(post_str.find("hardware_class=\"OEM MODEL 09235 7471\""),
             string::npos);
   EXPECT_EQ(post_str.find("o:event"), string::npos);
 }
@@ -580,6 +586,7 @@ TEST(OmahaRequestActionTest, FormatDeltaOkayOutputTest) {
                               "0.1.0.0",
                               "en-US",
                               "unittest_track",
+                              "OEM MODEL REV 1234",
                               delta_okay,
                               "http://url");
     ASSERT_FALSE(TestUpdateCheck(NULL,  // prefs

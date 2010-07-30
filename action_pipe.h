@@ -41,9 +41,7 @@ class Action;
 template<typename ObjectType>
 class ActionPipe {
  public:
-  virtual ~ActionPipe() {
-    LOG(INFO) << "ActionPipe died";
-  }
+  virtual ~ActionPipe() {}
 
   // This should be called by an Action on its input pipe.
   // Returns a reference to the stored object.

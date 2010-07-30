@@ -27,6 +27,7 @@ struct OmahaRequestParams {
                      const std::string& in_app_version,
                      const std::string& in_app_lang,
                      const std::string& in_app_track,
+                     const std::string& in_hardware_class,
                      const bool in_delta_okay,
                      const std::string& in_update_url)
       : os_platform(in_os_platform),
@@ -37,6 +38,7 @@ struct OmahaRequestParams {
         app_version(in_app_version),
         app_lang(in_app_lang),
         app_track(in_app_track),
+        hardware_class(in_hardware_class),
         delta_okay(in_delta_okay),
         update_url(in_update_url) {}
 
@@ -48,6 +50,7 @@ struct OmahaRequestParams {
   std::string app_version;
   std::string app_lang;
   std::string app_track;
+  std::string hardware_class;  // Hardware Qualification ID of the client
   bool delta_okay;  // If this client can accept a delta
 
   std::string update_url;
@@ -81,6 +84,10 @@ class OmahaRequestDeviceParams : public OmahaRequestParams {
 
   // Gets the machine type (e.g. "i686").
   std::string GetMachineType() const;
+
+  // Returns the hardware qualification ID of the system, or empty
+  // string if the HWID is unavailable.
+  std::string GetHardwareClass() const;
 
   // When reading files, prepend root_ to the paths. Useful for testing.
   std::string root_;
