@@ -16,6 +16,7 @@
 #include "update_engine/dbus_service.h"
 #include "update_engine/prefs.h"
 #include "update_engine/update_attempter.h"
+#include "update_engine/utils.h"
 
 extern "C" {
 #include "update_engine/update_engine.dbusserver.h"
@@ -34,15 +35,28 @@ namespace chromeos_update_engine {
 
 namespace {
 
-struct PeriodicallyUpdateArgs {
-  UpdateAttempter* update_attempter;
-  gboolean should_repeat;
-};
+gboolean UpdateOnce(void* arg) {
+  UpdateAttempter* update_attempter = reinterpret_cast<UpdateAttempter*>(arg);
+  update_attempter->Update("", "");
+  return FALSE;
+}
 
-gboolean PeriodicallyUpdate(void* arg) {
-  PeriodicallyUpdateArgs* args = reinterpret_cast<PeriodicallyUpdateArgs*>(arg);
-  args->update_attempter->Update("", "");
-  return args->should_repeat;
+gboolean UpdatePeriodically(void* arg) {
+  UpdateAttempter* update_attempter = reinterpret_cast<UpdateAttempter*>(arg);
+  update_attempter->Update("", "");
+  return TRUE;
+}
+
+void SchedulePeriodicUpdateChecks(UpdateAttempter* update_attempter) {
+  if (!utils::IsOfficialBuild()) {
+    LOG(WARNING) << "No periodic update checks on non-official builds.";
+    return;
+  }
+
+  // Kick off periodic updating. First, update after 2 minutes. Also, update
+  // every 30 minutes.
+  g_timeout_add(2 * 60 * 1000, &UpdateOnce, update_attempter);
+  g_timeout_add(30 * 60 * 1000, &UpdatePeriodically, update_attempter);
 }
 
 void SetupDbusService(UpdateEngineService* service) {
@@ -126,19 +140,7 @@ int main(int argc, char** argv) {
   update_attempter.set_dbus_service(service);
   chromeos_update_engine::SetupDbusService(service);
 
-  // Kick off periodic updating. First, update after 2 minutes. Also, update
-  // every 30 minutes.
-  chromeos_update_engine::PeriodicallyUpdateArgs two_min_args =
-      {&update_attempter, FALSE};
-  g_timeout_add(2 * 60 * 1000,
-                &chromeos_update_engine::PeriodicallyUpdate,
-                &two_min_args);
-
-  chromeos_update_engine::PeriodicallyUpdateArgs thirty_min_args =
-      {&update_attempter, TRUE};
-  g_timeout_add(30 * 60 * 1000,
-                &chromeos_update_engine::PeriodicallyUpdate,
-                &thirty_min_args);
+  chromeos_update_engine::SchedulePeriodicUpdateChecks(&update_attempter);
 
   // Run the main loop until exit time:
   g_main_loop_run(loop);

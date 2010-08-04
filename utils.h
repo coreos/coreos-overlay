@@ -18,6 +18,12 @@ namespace chromeos_update_engine {
 
 namespace utils {
 
+// Returns true if this is an official Chrome OS build, false
+// otherwise. Currently, this routine errs on the official build side
+// -- if it doesn't recognize the update track as non-official, it
+// assumes the build is official.
+bool IsOfficialBuild();
+
 // Writes the data passed to path. The file at path will be overwritten if it
 // exists. Returns true on success, false otherwise.
 bool WriteFile(const char* path, const char* data, int data_len);

@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -16,6 +16,11 @@ using std::vector;
 namespace chromeos_update_engine {
 
 class UtilsTest : public ::testing::Test { };
+
+TEST(UtilsTest, IsOfficialBuild) {
+  // Pretty lame test...
+  EXPECT_TRUE(utils::IsOfficialBuild());
+}
 
 TEST(UtilsTest, NormalizePathTest) {
   EXPECT_EQ("", utils::NormalizePath("", false));

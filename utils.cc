@@ -16,6 +16,7 @@
 #include <algorithm>
 #include "chromeos/obsolete_logging.h"
 #include "update_engine/file_writer.h"
+#include "update_engine/omaha_request_params.h"
 #include "update_engine/subprocess.h"
 
 using std::min;
@@ -25,6 +26,15 @@ using std::vector;
 namespace chromeos_update_engine {
 
 namespace utils {
+
+bool IsOfficialBuild() {
+  OmahaRequestDeviceParams params;
+  if (!params.Init("", "")) {
+    return true;
+  }
+  return params.app_track != "buildbot-build" &&
+      params.app_track != "developer-build";
+}
 
 bool WriteFile(const char* path, const char* data, int data_len) {
   DirectFileWriter writer;
