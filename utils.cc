@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include "update_engine/utils.h"
+
 #include <sys/mount.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -13,7 +14,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
 #include <algorithm>
+
+#include "base/file_path.h"
+#include "base/file_util.h"
+#include "base/string_util.h"
 #include "chromeos/obsolete_logging.h"
 #include "update_engine/file_writer.h"
 #include "update_engine/omaha_request_params.h"
@@ -207,7 +213,10 @@ bool RecursiveUnlinkDir(const std::string& path) {
 }
 
 string RootDevice(const string& partition_device) {
-  CHECK(!partition_device.empty());
+  FilePath device_path(partition_device);
+  if (device_path.DirName().value() != "/dev") {
+    return "";
+  }
   string::const_iterator it = --partition_device.end();
   for (; it >= partition_device.begin(); --it) {
     if (!isdigit(*it))
@@ -228,6 +237,26 @@ string PartitionNumber(const string& partition_device) {
       break;
   }
   return string(it + 1, partition_device.end());
+}
+
+string SysfsBlockDevice(const string& device) {
+  FilePath device_path(device);
+  if (device_path.DirName().value() != "/dev") {
+    return "";
+  }
+  return FilePath("/sys/block").Append(device_path.BaseName()).value();
+}
+
+bool IsRemovableDevice(const std::string& device) {
+  string sysfs_block = SysfsBlockDevice(device);
+  string removable;
+  if (sysfs_block.empty() ||
+      !file_util::ReadFileToString(FilePath(sysfs_block).Append("removable"),
+                                   &removable)) {
+    return false;
+  }
+  TrimWhitespaceASCII(removable, TRIM_ALL, &removable);
+  return removable == "1";
 }
 
 std::string ErrnoNumberAsString(int err) {

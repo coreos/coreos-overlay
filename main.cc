@@ -49,7 +49,12 @@ gboolean UpdatePeriodically(void* arg) {
 
 void SchedulePeriodicUpdateChecks(UpdateAttempter* update_attempter) {
   if (!utils::IsOfficialBuild()) {
-    LOG(WARNING) << "No periodic update checks on non-official builds.";
+    LOG(WARNING) << "Non-official build: periodic update checks disabled.";
+    return;
+  }
+
+  if (utils::IsRemovableDevice(utils::RootDevice(utils::BootDevice()))) {
+    LOG(WARNING) << "Removable device boot: periodic update checks disabled.";
     return;
   }
 
