@@ -157,4 +157,15 @@ TEST(UtilsTest, PartitionNumberTest) {
   EXPECT_EQ("3", utils::PartitionNumber("/dev/mmc0p3"));
 }
 
+TEST(UtilsTest, ComparePriorities) {
+  EXPECT_LT(utils::ComparePriorities(utils::kProcessPriorityLow,
+                                     utils::kProcessPriorityNormal), 0);
+  EXPECT_GT(utils::ComparePriorities(utils::kProcessPriorityNormal,
+                                     utils::kProcessPriorityLow), 0);
+  EXPECT_EQ(utils::ComparePriorities(utils::kProcessPriorityNormal,
+                                     utils::kProcessPriorityNormal), 0);
+  EXPECT_GT(utils::ComparePriorities(utils::kProcessPriorityHigh,
+                                     utils::kProcessPriorityNormal), 0);
+}
+
 }  // namespace chromeos_update_engine

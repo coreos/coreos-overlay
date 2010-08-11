@@ -6,11 +6,14 @@
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_UTILS_H__
 
 #include <errno.h>
+
 #include <algorithm>
 #include <set>
 #include <string>
 #include <vector>
+
 #include <glib.h>
+
 #include "update_engine/action.h"
 #include "update_engine/action_processor.h"
 
@@ -183,6 +186,21 @@ const std::string BootDevice();
 // Returns empty string on failure.
 const std::string BootKernelDevice(const std::string& boot_device);
 
+enum ProcessPriority {
+  kProcessPriorityHigh = -10,
+  kProcessPriorityNormal = 0,
+  kProcessPriorityLow = 10,
+};
+
+// Compares process priorities and returns an integer that is less
+// than, equal to or greater than 0 if |priority_lhs| is,
+// respectively, lower than, same as or higher than |priority_rhs|.
+int ComparePriorities(ProcessPriority priority_lhs,
+                      ProcessPriority priority_rhs);
+
+// Sets the current process priority to |priority|. Returns true on
+// success, false otherwise.
+bool SetProcessPriority(ProcessPriority priority);
 
 }  // namespace utils
 

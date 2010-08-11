@@ -114,6 +114,28 @@ ActionExitCode GetErrorCodeForAction(AbstractAction* action,
   return code;
 }
 
+UpdateAttempter::UpdateAttempter(PrefsInterface* prefs,
+                                 MetricsLibraryInterface* metrics_lib)
+    : dbus_service_(NULL),
+      prefs_(prefs),
+      metrics_lib_(metrics_lib),
+      priority_(utils::kProcessPriorityNormal),
+      manage_priority_source_(NULL),
+      status_(UPDATE_STATUS_IDLE),
+      download_progress_(0.0),
+      last_checked_time_(0),
+      new_version_("0.0.0.0"),
+      new_size_(0) {
+  last_notify_time_.tv_sec = 0;
+  last_notify_time_.tv_nsec = 0;
+  if (utils::FileExists(kUpdateCompletedMarker))
+    status_ = UPDATE_STATUS_UPDATED_NEED_REBOOT;
+}
+
+UpdateAttempter::~UpdateAttempter() {
+  CleanupPriorityManagement();
+}
+
 void UpdateAttempter::Update(const std::string& app_version,
                              const std::string& omaha_url) {
   if (status_ == UPDATE_STATUS_UPDATED_NEED_REBOOT) {
@@ -242,6 +264,9 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
   LOG(INFO) << "Processing Done.";
   actions_.clear();
 
+  // Reset process priority back to normal.
+  CleanupPriorityManagement();
+
   if (status_ == UPDATE_STATUS_REPORTING_ERROR_EVENT) {
     LOG(INFO) << "Error event sent.";
     SetStatusAndNotify(UPDATE_STATUS_IDLE);
@@ -269,6 +294,8 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
 }
 
 void UpdateAttempter::ProcessingStopped(const ActionProcessor* processor) {
+  // Reset process priority back to normal.
+  CleanupPriorityManagement();
   download_progress_ = 0.0;
   SetStatusAndNotify(UPDATE_STATUS_IDLE);
   actions_.clear();
@@ -301,6 +328,7 @@ void UpdateAttempter::ActionCompleted(ActionProcessor* processor,
     // TODO(adlr): put version in InstallPlan
     new_version_ = "0.0.0.0";
     new_size_ = plan.size;
+    SetupPriorityManagement();
   } else if (type == DownloadAction::StaticType()) {
     SetStatusAndNotify(UPDATE_STATUS_FINALIZING);
   }
@@ -402,6 +430,56 @@ bool UpdateAttempter::ScheduleErrorEventAction() {
   SetStatusAndNotify(UPDATE_STATUS_REPORTING_ERROR_EVENT);
   processor_.StartProcessing();
   return true;
+}
+
+void UpdateAttempter::SetPriority(utils::ProcessPriority priority) {
+  if (priority_ == priority) {
+    return;
+  }
+  if (utils::SetProcessPriority(priority)) {
+    priority_ = priority;
+    LOG(INFO) << "Process priority = " << priority_;
+  }
+}
+
+void UpdateAttempter::SetupPriorityManagement() {
+  if (manage_priority_source_) {
+    LOG(ERROR) << "Process priority timeout source hasn't been destroyed.";
+    CleanupPriorityManagement();
+  }
+  const int kPriorityTimeout = 10 * 60;  // 10 minutes
+  manage_priority_source_ = g_timeout_source_new_seconds(kPriorityTimeout);
+  g_source_set_callback(manage_priority_source_,
+                        StaticManagePriorityCallback,
+                        this,
+                        NULL);
+  g_source_attach(manage_priority_source_, NULL);
+  SetPriority(utils::kProcessPriorityLow);
+}
+
+void UpdateAttempter::CleanupPriorityManagement() {
+  if (manage_priority_source_) {
+    g_source_destroy(manage_priority_source_);
+    manage_priority_source_ = NULL;
+  }
+  SetPriority(utils::kProcessPriorityNormal);
+}
+
+gboolean UpdateAttempter::StaticManagePriorityCallback(gpointer data) {
+  return reinterpret_cast<UpdateAttempter*>(data)->ManagePriorityCallback();
+}
+
+bool UpdateAttempter::ManagePriorityCallback() {
+  // If the current process priority is below normal, set it to normal
+  // and let GLib invoke this callback again.
+  if (utils::ComparePriorities(priority_, utils::kProcessPriorityNormal) < 0) {
+    SetPriority(utils::kProcessPriorityNormal);
+    return true;
+  }
+  // Set the priority to high and let GLib destroy the timeout source.
+  SetPriority(utils::kProcessPriorityHigh);
+  manage_priority_source_ = NULL;
+  return false;
 }
 
 }  // namespace chromeos_update_engine

@@ -6,10 +6,13 @@
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_UPDATE_ATTEMPTER_H__
 
 #include <time.h>
+
 #include <tr1/memory>
 #include <string>
 #include <vector>
+
 #include <glib.h>
+
 #include "update_engine/action_processor.h"
 #include "update_engine/download_action.h"
 #include "update_engine/omaha_request_params.h"
@@ -19,6 +22,10 @@ class MetricsLibraryInterface;
 struct UpdateEngineService;
 
 namespace chromeos_update_engine {
+
+namespace utils {
+enum ProcessPriority;
+};
 
 extern const char* kUpdateCompletedMarker;
 
@@ -38,20 +45,9 @@ const char* UpdateStatusToString(UpdateStatus status);
 class UpdateAttempter : public ActionProcessorDelegate,
                         public DownloadActionDelegate {
  public:
-  UpdateAttempter(PrefsInterface* prefs, MetricsLibraryInterface* metrics_lib)
-      : dbus_service_(NULL),
-        prefs_(prefs),
-        metrics_lib_(metrics_lib),
-        status_(UPDATE_STATUS_IDLE),
-        download_progress_(0.0),
-        last_checked_time_(0),
-        new_version_("0.0.0.0"),
-        new_size_(0) {
-    last_notify_time_.tv_sec = 0;
-    last_notify_time_.tv_nsec = 0;
-    if (utils::FileExists(kUpdateCompletedMarker))
-      status_ = UPDATE_STATUS_UPDATED_NEED_REBOOT;
-  }
+  UpdateAttempter(PrefsInterface* prefs, MetricsLibraryInterface* metrics_lib);
+  ~UpdateAttempter();
+
   // Checks for update and, if a newer version is available, attempts
   // to update the system. Non-empty |in_app_version| or
   // |in_update_url| prevents automatic detection of the parameter.
@@ -109,6 +105,26 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // returns true. Returns false otherwise.
   bool ScheduleErrorEventAction();
 
+  // Sets the process priority to |priority| and updates |priority_|
+  // if the new |priority| is different than the current |priority_|,
+  // otherwise simply returns.
+  void SetPriority(utils::ProcessPriority priority);
+
+  // Set the process priority to low and sets up timeout events to
+  // increase the priority gradually to high.
+  void SetupPriorityManagement();
+
+  // Resets the process priority to normal and destroys any scheduled
+  // timeout sources.
+  void CleanupPriorityManagement();
+
+  // The process priority timeout source callback increases the
+  // current priority by one step (low goes to normal, normal goes to
+  // high). Returns true if the callback must be invoked again after a
+  // timeout, or false if GLib can destroy this timeout source.
+  static gboolean StaticManagePriorityCallback(gpointer data);
+  bool ManagePriorityCallback();
+
   struct timespec last_notify_time_;
 
   std::vector<std::tr1::shared_ptr<AbstractAction> > actions_;
@@ -129,6 +145,12 @@ class UpdateAttempter : public ActionProcessorDelegate,
 
   // Pending error event, if any.
   scoped_ptr<OmahaEvent> error_event_;
+
+  // Current process priority.
+  utils::ProcessPriority priority_;
+
+  // The process priority management timeout source.
+  GSource* manage_priority_source_;
 
   // For status:
   UpdateStatus status_;

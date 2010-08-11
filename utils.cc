@@ -5,6 +5,7 @@
 #include "update_engine/utils.h"
 
 #include <sys/mount.h>
+#include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <dirent.h>
@@ -442,6 +443,18 @@ bool Reboot() {
   Subprocess::SynchronousExec(command, &rc);
   TEST_AND_RETURN_FALSE(rc == 0);
   return true;
+}
+
+bool SetProcessPriority(ProcessPriority priority) {
+  int prio = static_cast<int>(priority);
+  LOG(INFO) << "Setting process priority to " << prio;
+  TEST_AND_RETURN_FALSE(setpriority(PRIO_PROCESS, 0, prio) == 0);
+  return true;
+}
+
+int ComparePriorities(ProcessPriority priority_lhs,
+                      ProcessPriority priority_rhs) {
+  return static_cast<int>(priority_rhs) - static_cast<int>(priority_lhs);
 }
 
 const char* const kStatefulPartition = "/mnt/stateful_partition";
