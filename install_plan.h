@@ -6,7 +6,7 @@
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_INSTALL_PLAN_H__
 
 #include <string>
-#include "chromeos/obsolete_logging.h"
+#include "base/logging.h"
 
 // InstallPlan is a simple struct that contains relevant info for many
 // parts of the update system about the install that should happen.

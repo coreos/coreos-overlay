@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 #include <gtest/gtest.h>
-#include "chromeos/obsolete_logging.h"
+#include "base/logging.h"
 #include "update_engine/cycle_breaker.h"
 #include "update_engine/delta_diff_generator.h"
 #include "update_engine/delta_performer.h"

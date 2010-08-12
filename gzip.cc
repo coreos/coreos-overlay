@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <algorithm>
 #include <zlib.h>
-#include "chromeos/obsolete_logging.h"
+#include "base/logging.h"
 #include "update_engine/utils.h"
 
 using std::max;

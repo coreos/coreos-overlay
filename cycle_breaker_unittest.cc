@@ -7,7 +7,7 @@
 #include <utility>
 #include <vector>
 #include <gtest/gtest.h>
-#include "chromeos/obsolete_logging.h"
+#include "base/logging.h"
 #include "update_engine/cycle_breaker.h"
 #include "update_engine/graph_types.h"
 #include "update_engine/utils.h"

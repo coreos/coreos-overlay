@@ -9,7 +9,7 @@
 #include <set>
 #include <string>
 #include <vector>
-#include "chromeos/obsolete_logging.h"
+#include "base/logging.h"
 #include "update_engine/utils.h"
 
 using std::set;

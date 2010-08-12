@@ -9,7 +9,7 @@
 #include <tr1/memory>
 #include <iostream>
 #include "base/basictypes.h"
-#include "chromeos/obsolete_logging.h"
+#include "base/logging.h"
 #include "update_engine/action_processor.h"
 #include "update_engine/action_pipe.h"
 

@@ -4,7 +4,7 @@
 
 #include <algorithm>
 #include <vector>
-#include "chromeos/obsolete_logging.h"
+#include "base/logging.h"
 #include "update_engine/tarjan.h"
 #include "update_engine/utils.h"
 

@@ -10,7 +10,7 @@
 #include <glib.h>
 
 #include "base/command_line.h"
-#include "chromeos/obsolete_logging.h"
+#include "base/logging.h"
 #include "metrics/metrics_library.h"
 #include "update_engine/dbus_constants.h"
 #include "update_engine/dbus_service.h"

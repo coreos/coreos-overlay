@@ -6,6 +6,7 @@
 
 #include "base/file_util.h"
 #include "base/logging.h"
+#include "base/string_number_conversions.h"
 #include "base/string_util.h"
 #include "update_engine/utils.h"
 
@@ -45,12 +46,12 @@ bool Prefs::GetInt64(const string& key, int64_t* value) {
   string str_value;
   TEST_AND_RETURN_FALSE(GetString(key, &str_value));
   TrimWhitespaceASCII(str_value, TRIM_ALL, &str_value);
-  TEST_AND_RETURN_FALSE(StringToInt64(str_value, value));
+  TEST_AND_RETURN_FALSE(base::StringToInt64(str_value, value));
   return true;
 }
 
 bool Prefs::SetInt64(const string& key, const int64_t value) {
-  return SetString(key, Int64ToString(value));
+  return SetString(key, base::Int64ToString(value));
 }
 
 bool Prefs::GetFileNameForKey(const std::string& key, FilePath* filename) {

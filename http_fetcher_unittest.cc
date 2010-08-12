@@ -8,7 +8,7 @@
 #include <base/scoped_ptr.h>
 #include <glib.h>
 #include <gtest/gtest.h>
-#include "chromeos/obsolete_logging.h"
+#include "base/logging.h"
 #include "update_engine/libcurl_http_fetcher.h"
 #include "update_engine/mock_http_fetcher.h"
 

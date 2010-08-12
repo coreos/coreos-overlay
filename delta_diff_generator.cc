@@ -13,7 +13,7 @@
 #include <utility>
 #include <vector>
 #include <bzlib.h>
-#include "chromeos/obsolete_logging.h"
+#include "base/logging.h"
 #include "update_engine/bzip.h"
 #include "update_engine/cycle_breaker.h"
 #include "update_engine/extent_mapper.h"
@@ -652,7 +652,7 @@ bool DeltaDiffGenerator::CutEdges(Graph* graph,
 
     // delete the old edge
     CHECK_EQ(1, (*graph)[it->first].out_edges.erase(it->second));
-    
+
     // Add an edge from dst to copy operation
     (*graph)[it->second].out_edges.insert(make_pair(graph->size() - 1,
                                                     EdgeProperties()));
@@ -692,7 +692,7 @@ void DeltaDiffGenerator::CreateEdges(Graph* graph,
       (*graph)[blocks[i].writer].out_edges.insert(
           make_pair(blocks[i].reader, EdgeProperties()));
       edge_it = (*graph)[blocks[i].writer].out_edges.find(blocks[i].reader);
-      CHECK_NE(edge_it, (*graph)[blocks[i].writer].out_edges.end());
+      CHECK(edge_it != (*graph)[blocks[i].writer].out_edges.end());
     }
     graph_utils::AppendBlockToExtents(&edge_it->second.extents, i);
   }
@@ -705,7 +705,7 @@ bool DeltaDiffGenerator::ReorderDataBlobs(
   int in_fd = open(data_blobs_path.c_str(), O_RDONLY, 0);
   TEST_AND_RETURN_FALSE_ERRNO(in_fd >= 0);
   ScopedFdCloser in_fd_closer(&in_fd);
-  
+
   DirectFileWriter writer;
   TEST_AND_RETURN_FALSE(
       writer.Open(new_data_blobs_path.c_str(),
@@ -713,7 +713,7 @@ bool DeltaDiffGenerator::ReorderDataBlobs(
                   0644) == 0);
   ScopedFileWriterCloser writer_closer(&writer);
   uint64_t out_file_size = 0;
-  
+
   for (int i = 0; i < (manifest->install_operations_size() +
                        manifest->kernel_install_operations_size()); i++) {
     DeltaArchiveManifest_InstallOperation* op = NULL;

@@ -4,7 +4,7 @@
 
 #include "update_engine/libcurl_http_fetcher.h"
 #include <algorithm>
-#include "chromeos/obsolete_logging.h"
+#include "base/logging.h"
 
 using std::max;
 using std::make_pair;

@@ -7,7 +7,7 @@
 #include <string.h>
 #include <string>
 #include <vector>
-#include "chromeos/obsolete_logging.h"
+#include "base/logging.h"
 #include "base/scoped_ptr.h"
 #include "base/string_util.h"
 

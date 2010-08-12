@@ -21,7 +21,7 @@
 #include "base/file_path.h"
 #include "base/file_util.h"
 #include "base/string_util.h"
-#include "chromeos/obsolete_logging.h"
+#include "base/logging.h"
 #include "update_engine/file_writer.h"
 #include "update_engine/omaha_request_params.h"
 #include "update_engine/subprocess.h"

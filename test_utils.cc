@@ -16,7 +16,7 @@
 #include <vector>
 
 #include "base/string_util.h"
-#include "chromeos/obsolete_logging.h"
+#include "base/logging.h"
 #include "update_engine/file_writer.h"
 #include "update_engine/filesystem_iterator.h"
 #include "update_engine/utils.h"

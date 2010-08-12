@@ -13,7 +13,7 @@
 #include <gflags/gflags.h>
 #include <glib.h>
 #include "base/command_line.h"
-#include "chromeos/obsolete_logging.h"
+#include "base/logging.h"
 #include "update_engine/delta_diff_generator.h"
 #include "update_engine/delta_performer.h"
 #include "update_engine/subprocess.h"

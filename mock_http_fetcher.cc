@@ -4,7 +4,7 @@
 
 #include "update_engine/mock_http_fetcher.h"
 #include <algorithm>
-#include "chromeos/obsolete_logging.h"
+#include "base/logging.h"
 
 // This is a mac implementation of HttpFetcher which is useful for testing.
 

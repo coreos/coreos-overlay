@@ -10,9 +10,10 @@
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
 
+#include "base/string_number_conversions.h"
 #include "base/string_util.h"
 #include "base/time.h"
-#include "chromeos/obsolete_logging.h"
+#include "base/logging.h"
 #include "update_engine/action_pipe.h"
 #include "update_engine/omaha_request_params.h"
 #include "update_engine/prefs_interface.h"
@@ -294,9 +295,9 @@ bool UpdateLastPingDays(xmlDoc* doc, PrefsInterface* prefs) {
                                    ConstXMLStr("elapsed_seconds")));
 
   int64_t elapsed_seconds = 0;
-  TEST_AND_RETURN_FALSE(StringToInt64(XmlGetProperty(daystart_node,
-                                                     "elapsed_seconds"),
-                                      &elapsed_seconds));
+  TEST_AND_RETURN_FALSE(base::StringToInt64(XmlGetProperty(daystart_node,
+                                                           "elapsed_seconds"),
+                                            &elapsed_seconds));
   TEST_AND_RETURN_FALSE(elapsed_seconds >= 0);
 
   // Remember the local time that matches the server's last midnight

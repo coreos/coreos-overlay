@@ -10,7 +10,7 @@
 #include <vector>
 #include <glib.h>
 #include "base/basictypes.h"
-#include "chromeos/obsolete_logging.h"
+#include "base/logging.h"
 
 // The Subprocess class is a singleton. It's used to spawn off a subprocess
 // and get notified when the subprocess exits. The result of Exec() can

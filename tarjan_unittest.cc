@@ -4,7 +4,7 @@
 
 #include <utility>
 #include <gtest/gtest.h>
-#include "chromeos/obsolete_logging.h"
+#include "base/logging.h"
 #include "update_engine/graph_types.h"
 #include "update_engine/tarjan.h"
 #include "update_engine/utils.h"
