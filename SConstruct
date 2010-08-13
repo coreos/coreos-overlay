@@ -168,8 +168,7 @@ env['LIBS'] = Split("""base
                        ssl
                        xml2
                        z""")
-env['CPPPATH'] = ['..', '../../third_party/chrome/files', '../../common']
-env['LIBPATH'] = ['../../third_party/chrome']
+env['CPPPATH'] = ['..']
 env['BUILDERS']['ProtocolBuffer'] = proto_builder
 env['BUILDERS']['DbusBindings'] = dbus_bindings_builder
 env['BUILDERS']['GlibMarshal'] = glib_marshal_builder
