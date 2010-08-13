@@ -24,11 +24,11 @@ using std::string;
 
 DEFINE_string(app_version, "", "Force the current app version.");
 DEFINE_bool(check_for_update, false, "Initiate check for updates.");
-DEFINE_bool(force_update, false,
-            "Force an update, even over an expensive network.");
 DEFINE_string(omaha_url, "", "The URL of the Omaha update server.");
 DEFINE_bool(reboot, false, "Initiate a reboot if needed.");
 DEFINE_bool(status, false, "Print the status to stdout.");
+DEFINE_bool(update, false, "Forces an update and waits for its completion. "
+            "Exit status is 0 if the update succeeded, and 1 otherwise.");
 DEFINE_bool(watch_for_updates, false,
             "Listen for status updates and print them to the screen.");
 
@@ -70,7 +70,9 @@ static void StatusUpdateSignalHandler(DBusGProxy* proxy,
   LOG(INFO) << "  new_size: " << new_size;
 }
 
-bool GetStatus() {
+// If |op| is non-NULL, sets it to the current operation string or an
+// empty string if unable to obtain the current status.
+bool GetStatus(string* op) {
   DBusGProxy* proxy;
   GError* error = NULL;
 
@@ -100,6 +102,9 @@ bool GetStatus() {
          current_op,
          new_version,
          new_size);
+  if (op) {
+    *op = current_op ? current_op : "";
+  }
   return true;
 }
 
@@ -139,8 +144,7 @@ void WatchForUpdates() {
   g_main_loop_unref(loop);
 }
 
-bool CheckForUpdates(bool force, const string& app_version,
-                     const string& omaha_url) {
+bool CheckForUpdates(const string& app_version, const string& omaha_url) {
   DBusGProxy* proxy;
   GError* error = NULL;
 
@@ -171,6 +175,29 @@ bool RebootIfNeeded() {
   return true;
 }
 
+static gboolean CompleteUpdateSource(gpointer data) {
+  string current_op;
+  if (!GetStatus(&current_op) || current_op == "UPDATE_STATUS_IDLE") {
+    LOG(ERROR) << "Update failed.";
+    exit(1);
+  }
+  if (current_op == "UPDATE_STATUS_UPDATED_NEED_REBOOT") {
+    LOG(INFO) << "Update succeeded -- reboot needed.";
+    exit(0);
+  }
+  return TRUE;
+}
+
+// This is similar to watching for updates but rather than registering
+// a signal watch, activelly poll the daemon just in case it stops
+// sending notifications.
+void CompleteUpdate() {
+  GMainLoop* loop = g_main_loop_new (NULL, TRUE);
+  g_timeout_add_seconds(5, CompleteUpdateSource, NULL);
+  g_main_loop_run(loop);
+  g_main_loop_unref(loop);
+}
+
 }  // namespace {}
 
 int main(int argc, char** argv) {
@@ -183,29 +210,45 @@ int main(int argc, char** argv) {
 
   if (FLAGS_status) {
     LOG(INFO) << "Querying Update Engine status...";
-    if (!GetStatus()) {
-      LOG(FATAL) << "GetStatus() failed.";
+    if (!GetStatus(NULL)) {
+      LOG(FATAL) << "GetStatus failed.";
+      return 1;
     }
     return 0;
   }
-  if (FLAGS_force_update || FLAGS_check_for_update ||
-      !FLAGS_app_version.empty() || !FLAGS_omaha_url.empty()) {
+
+  // Initiate an update check, if necessary.
+  if (FLAGS_check_for_update ||
+      FLAGS_update ||
+      !FLAGS_app_version.empty() ||
+      !FLAGS_omaha_url.empty()) {
     LOG_IF(WARNING, FLAGS_reboot) << "-reboot flag ignored.";
-    LOG(INFO) << "Initiating update check and install.";
-    if (FLAGS_force_update) {
-      LOG(INFO) << "Will not abort due to being on expensive network.";
+    string app_version = FLAGS_app_version;
+    if (FLAGS_update && app_version.empty()) {
+      app_version = "ForcedUpdate";
+      LOG(INFO) << "Forcing an update by setting app_version to ForcedUpdate.";
     }
-    CHECK(CheckForUpdates(FLAGS_force_update, FLAGS_app_version,
-                          FLAGS_omaha_url))
+    LOG(INFO) << "Initiating update check and install.";
+    CHECK(CheckForUpdates(app_version, FLAGS_omaha_url))
         << "Update check/initiate update failed.";
+
+    // Wait for an update to complete.
+    if (FLAGS_update) {
+      LOG(INFO) << "Waiting for update the complete.";
+      CompleteUpdate();  // Should never return.
+      return 1;
+    }
     return 0;
   }
+
+  // Start watching for updates.
   if (FLAGS_watch_for_updates) {
     LOG_IF(WARNING, FLAGS_reboot) << "-reboot flag ignored.";
     LOG(INFO) << "Watching for status updates.";
     WatchForUpdates();  // Should never return.
     return 1;
   }
+
   if (FLAGS_reboot) {
     LOG(INFO) << "Requesting a reboot...";
     CHECK(RebootIfNeeded());
