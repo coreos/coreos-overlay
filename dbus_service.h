@@ -51,9 +51,6 @@ gboolean update_engine_service_attempt_update(UpdateEngineService* self,
                                               gchar* omaha_url,
                                               GError **error);
 
-gboolean update_engine_service_check_for_update(UpdateEngineService* self,
-                                                GError **error);
-
 gboolean update_engine_service_get_status(UpdateEngineService* self,
                                           int64_t* last_checked_time,
                                           double* progress,

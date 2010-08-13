@@ -59,12 +59,6 @@ gboolean update_engine_service_attempt_update(UpdateEngineService* self,
   return TRUE;
 }
 
-gboolean update_engine_service_check_for_update(UpdateEngineService* self,
-                                                GError **error) {
-  self->update_attempter_->CheckForUpdate("", "");
-  return TRUE;
-}
-
 gboolean update_engine_service_get_status(UpdateEngineService* self,
                                           int64_t* last_checked_time,
                                           double* progress,

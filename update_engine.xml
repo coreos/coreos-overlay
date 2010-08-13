@@ -11,8 +11,6 @@
       <arg type="s" name="app_version" />
       <arg type="s" name="omaha_url" />
     </method>
-    <method name="CheckForUpdate">
-    </method>
     <method name="GetStatus">
       <arg type="x" name="last_checked_time" direction="out" />
       <arg type="d" name="progress" direction="out" />
