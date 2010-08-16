@@ -112,9 +112,9 @@ void LibcurlHttpFetcher::CurlPerformOnce() {
         if (delegate_)
           delegate_->TransferComplete(this, false);  // success
       } else {
-        g_timeout_add(5 * 1000,
-                      &LibcurlHttpFetcher::StaticRetryTimeoutCallback,
-                      this);
+        g_timeout_add_seconds(5,
+                              &LibcurlHttpFetcher::StaticRetryTimeoutCallback,
+                              this);
       }
       return;
     } else {
@@ -229,7 +229,7 @@ void LibcurlHttpFetcher::SetupMainloopSources() {
   }
   if (!timeout_source_) {
     LOG(INFO) << "setting up timeout source:" << ms;
-    timeout_source_ = g_timeout_source_new(1000);
+    timeout_source_ = g_timeout_source_new_seconds(1);
     CHECK(timeout_source_);
     g_source_set_callback(timeout_source_, StaticTimeoutCallback, this,
                           NULL);

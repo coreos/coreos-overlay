@@ -60,8 +60,8 @@ void SchedulePeriodicUpdateChecks(UpdateAttempter* update_attempter) {
 
   // Kick off periodic updating. First, update after 2 minutes. Also, update
   // every 30 minutes.
-  g_timeout_add(2 * 60 * 1000, &UpdateOnce, update_attempter);
-  g_timeout_add(30 * 60 * 1000, &UpdatePeriodically, update_attempter);
+  g_timeout_add_seconds(2 * 60, &UpdateOnce, update_attempter);
+  g_timeout_add_seconds(30 * 60, &UpdatePeriodically, update_attempter);
 }
 
 void SetupDbusService(UpdateEngineService* service) {
