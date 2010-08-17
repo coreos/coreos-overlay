@@ -18,6 +18,10 @@
 //     char data[];
 //   } blobs[];
 //
+//   // These two are not signed:
+//   uint64 signatures_message_size;
+//   char signatures_message[];
+//
 // };
 
 // The DeltaArchiveManifest protobuf is an ordered list of InstallOperation
@@ -56,9 +60,29 @@ package chromeos_update_engine;
 // A sentinel value (kuint64max) as the start block denotes a sparse-hole
 // in a file whose block-length is specified by num_blocks.
 
+// Signatures: Updates may be signed by the OS vendor. The client verifies
+// an update's signature by hashing the entire download. The section of the
+// download the contains the signature is at the end of the file, so when
+// signing a file, only the part up to the signature part is signed.
+// Then, the client looks inside the download's Signatures message for a
+// Signature message that it knows how to handle. Generally, a client will
+// only know how to handle one type of signature, but an update may contain
+// many signatures to support many different types of client. Then client
+// selects a Signature message and uses that, along with a known public key,
+// to verify the download. The public key is expected to be part of the
+// client.
+
 message Extent {
   optional uint64 start_block = 1;
   optional uint64 num_blocks = 2;
+}
+
+message Signatures {
+  message Signature {
+    optional uint32 version = 1;
+    optional string data = 2;
+  }
+  repeated Signature signatures = 1;
 }
 
 message DeltaArchiveManifest {
@@ -94,4 +118,11 @@ message DeltaArchiveManifest {
 
   // (At time of writing) usually 4096
   optional uint32 block_size = 3 [default = 4096];
+
+  // If signatures are present, the offset into the blobs, generally
+  // tacked onto the end of the file. We use an offset rather than
+  // a bool to allow for more flexibility in future file formats.
+  // If this is absent, it means signatures aren't supported in this
+  // file.
+  optional uint64 signatures_offset = 4;
 }
