@@ -112,7 +112,7 @@ void LibcurlHttpFetcher::CurlPerformOnce() {
         if (delegate_)
           delegate_->TransferComplete(this, false);  // success
       } else {
-        g_timeout_add_seconds(5,
+        g_timeout_add_seconds(retry_seconds_,
                               &LibcurlHttpFetcher::StaticRetryTimeoutCallback,
                               this);
       }
@@ -216,29 +216,12 @@ void LibcurlHttpFetcher::SetupMainloopSources() {
     }
   }
 
-  // Wet up a timeout callback for libcurl
-  long ms = 0;
-  CHECK_EQ(curl_multi_timeout(curl_multi_handle_, &ms), CURLM_OK);
-  if (ms < 0) {
-    // From http://curl.haxx.se/libcurl/c/curl_multi_timeout.html:
-    //     if libcurl returns a -1 timeout here, it just means that libcurl
-    //     currently has no stored timeout value. You must not wait too long
-    //     (more than a few seconds perhaps) before you call
-    //     curl_multi_perform() again.
-    ms = idle_ms_;
-  }
+  // Set up a timeout callback for libcurl.
   if (!timeout_source_) {
-    LOG(INFO) << "setting up timeout source:" << ms;
-    timeout_source_ = g_timeout_source_new_seconds(1);
-    CHECK(timeout_source_);
-    g_source_set_callback(timeout_source_, StaticTimeoutCallback, this,
-                          NULL);
+    LOG(INFO) << "Setting up timeout source: " << idle_seconds_ << " seconds.";
+    timeout_source_ = g_timeout_source_new_seconds(idle_seconds_);
+    g_source_set_callback(timeout_source_, StaticTimeoutCallback, this, NULL);
     g_source_attach(timeout_source_, NULL);
-    static int counter = 0;
-    counter++;
-    if (counter % 50 == 0) {
-      LOG(INFO) << "counter = " << counter;
-    }
   }
 }
 

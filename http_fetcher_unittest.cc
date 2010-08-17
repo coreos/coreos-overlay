@@ -122,7 +122,9 @@ class HttpFetcherTest<LibcurlHttpFetcher> : public ::testing::Test {
  public:
   HttpFetcher* NewLargeFetcher() {
     LibcurlHttpFetcher *ret = new LibcurlHttpFetcher;
-    ret->set_idle_ms(1000);  // speeds up test execution
+    // Speed up test execution.
+    ret->set_idle_seconds(1);
+    ret->set_retry_seconds(1);
     return ret;
   }
   HttpFetcher* NewSmallFetcher() {

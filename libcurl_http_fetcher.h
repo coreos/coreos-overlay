@@ -21,9 +21,13 @@ namespace chromeos_update_engine {
 class LibcurlHttpFetcher : public HttpFetcher {
  public:
   LibcurlHttpFetcher()
-      : curl_multi_handle_(NULL), curl_handle_(NULL),
-        timeout_source_(NULL), transfer_in_progress_(false),
-        retry_count_(0), idle_ms_(1000) {}
+      : curl_multi_handle_(NULL),
+        curl_handle_(NULL),
+        timeout_source_(NULL),
+        transfer_in_progress_(false),
+        retry_count_(0),
+        retry_seconds_(60),
+        idle_seconds_(1) {}
 
   // Cleans up all internal state. Does not notify delegate
   ~LibcurlHttpFetcher();
@@ -50,9 +54,11 @@ class LibcurlHttpFetcher : public HttpFetcher {
   //     currently has no stored timeout value. You must not wait too long
   //     (more than a few seconds perhaps) before you call
   //     curl_multi_perform() again.
-  void set_idle_ms(long ms) {
-    idle_ms_ = ms;
-  }
+  void set_idle_seconds(int seconds) { idle_seconds_ = seconds; }
+
+  // Sets the retry timeout. Useful for testing.
+  void set_retry_seconds(int seconds) { retry_seconds_ = seconds; }
+
  private:
   // Resumes a transfer where it left off. This will use the
   // HTTP Range: header to make a new connection from where the last
@@ -73,7 +79,7 @@ class LibcurlHttpFetcher : public HttpFetcher {
   static gboolean StaticTimeoutCallback(gpointer data) {
     return reinterpret_cast<LibcurlHttpFetcher*>(data)->TimeoutCallback();
   }
-  
+
   gboolean RetryTimeoutCallback();
   static gboolean StaticRetryTimeoutCallback(void* arg) {
     return static_cast<LibcurlHttpFetcher*>(arg)->RetryTimeoutCallback();
@@ -128,11 +134,16 @@ class LibcurlHttpFetcher : public HttpFetcher {
   // If we resumed an earlier transfer, data offset that we used for the
   // new connection.  0 otherwise.
   off_t resume_offset_;
-  
+
   // Number of resumes performed.
   int retry_count_;
 
-  long idle_ms_;
+  // Seconds to wait before retrying a resume.
+  int retry_seconds_;
+
+  // Seconds to wait before asking libcurl to "perform".
+  int idle_seconds_;
+
   DISALLOW_COPY_AND_ASSIGN(LibcurlHttpFetcher);
 };
 
