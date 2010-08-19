@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <glib.h>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include "update_engine/action_pipe.h"
 #include "update_engine/download_action.h"
@@ -17,10 +18,19 @@ namespace chromeos_update_engine {
 
 using std::string;
 using std::vector;
+using testing::_;
+using testing::AtLeast;
+using testing::InSequence;
 
 class DownloadActionTest : public ::testing::Test { };
 
 namespace {
+class DownloadActionDelegateMock : public DownloadActionDelegate {
+ public:
+  MOCK_METHOD1(SetDownloadStatus, void(bool active));
+  MOCK_METHOD2(BytesReceived, void(uint64_t bytes_received, uint64_t total));
+};
+
 class DownloadActionTestProcessorDelegate : public ActionProcessorDelegate {
  public:
   explicit DownloadActionTestProcessorDelegate(ActionExitCode expected_code)
@@ -73,7 +83,9 @@ gboolean StartProcessorInRunLoop(gpointer data) {
   return FALSE;
 }
 
-void TestWithData(const vector<char>& data, bool hash_test) {
+void TestWithData(const vector<char>& data,
+                  bool hash_test,
+                  bool use_download_delegate) {
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
 
   // TODO(adlr): see if we need a different file for build bots
@@ -96,7 +108,14 @@ void TestWithData(const vector<char>& data, bool hash_test) {
                                                      data.size()));
   download_action.SetTestFileWriter(&writer);
   BondActions(&feeder_action, &download_action);
-
+  DownloadActionDelegateMock download_delegate;
+  if (use_download_delegate) {
+    InSequence s;
+    download_action.set_delegate(&download_delegate);
+    EXPECT_CALL(download_delegate, SetDownloadStatus(true)).Times(1);
+    EXPECT_CALL(download_delegate, BytesReceived(_, _)).Times(AtLeast(1));
+    EXPECT_CALL(download_delegate, SetDownloadStatus(false)).Times(1);
+  }
   DownloadActionTestProcessorDelegate delegate(
       hash_test ? kActionCodeDownloadHashMismatchError : kActionCodeSuccess);
   delegate.loop_ = loop;
@@ -117,7 +136,7 @@ TEST(DownloadActionTest, SimpleTest) {
   vector<char> small;
   const char* foo = "foo";
   small.insert(small.end(), foo, foo + strlen(foo));
-  TestWithData(small, false);
+  TestWithData(small, false, true);
 }
 
 TEST(DownloadActionTest, LargeTest) {
@@ -130,14 +149,21 @@ TEST(DownloadActionTest, LargeTest) {
     else
       c++;
   }
-  TestWithData(big, false);
+  TestWithData(big, false, true);
 }
 
 TEST(DownloadActionTest, BadHashTest) {
   vector<char> small;
   const char* foo = "foo";
   small.insert(small.end(), foo, foo + strlen(foo));
-  TestWithData(small, true);
+  TestWithData(small, true, true);
+}
+
+TEST(DownloadActionTest, NoDownloadDelegateTest) {
+  vector<char> small;
+  const char* foo = "foofoo";
+  small.insert(small.end(), foo, foo + strlen(foo));
+  TestWithData(small, false, false);
 }
 
 namespace {
@@ -158,9 +184,7 @@ gboolean TerminateEarlyTestStarter(gpointer data) {
   return FALSE;
 }
 
-}  // namespace {}
-
-TEST(DownloadActionTest, TerminateEarlyTest) {
+void TestTerminateEarly(bool use_download_delegate) {
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
 
   vector<char> data(kMockHttpFetcherChunkSize + kMockHttpFetcherChunkSize / 2);
@@ -176,6 +200,13 @@ TEST(DownloadActionTest, TerminateEarlyTest) {
     feeder_action.set_obj(install_plan);
     DownloadAction download_action(new MockHttpFetcher(&data[0], data.size()));
     download_action.SetTestFileWriter(&writer);
+    DownloadActionDelegateMock download_delegate;
+    if (use_download_delegate) {
+      InSequence s;
+      download_action.set_delegate(&download_delegate);
+      EXPECT_CALL(download_delegate, SetDownloadStatus(true)).Times(1);
+      EXPECT_CALL(download_delegate, SetDownloadStatus(false)).Times(1);
+    }
     TerminateEarlyTestProcessorDelegate delegate;
     delegate.loop_ = loop;
     ActionProcessor processor;
@@ -194,6 +225,16 @@ TEST(DownloadActionTest, TerminateEarlyTest) {
   EXPECT_GE(resulting_file_size, 0);
   if (resulting_file_size != 0)
     EXPECT_EQ(kMockHttpFetcherChunkSize, resulting_file_size);
+}
+
+}  // namespace {}
+
+TEST(DownloadActionTest, TerminateEarlyTest) {
+  TestTerminateEarly(true);
+}
+
+TEST(DownloadActionTest, TerminateEarlyNoDownloadDelegateTest) {
+  TestTerminateEarly(false);
 }
 
 class DownloadActionTestAction;

@@ -234,7 +234,7 @@ int main(int argc, char** argv) {
 
     // Wait for an update to complete.
     if (FLAGS_update) {
-      LOG(INFO) << "Waiting for update the complete.";
+      LOG(INFO) << "Waiting for update to complete.";
       CompleteUpdate();  // Should never return.
       return 1;
     }

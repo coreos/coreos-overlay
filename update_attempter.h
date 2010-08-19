@@ -87,7 +87,8 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // UPDATED_NEED_REBOOT. Returns true on sucess, false otherwise.
   bool RebootIfNeeded();
 
-  // DownloadActionDelegate method
+  // DownloadActionDelegate methods
+  void SetDownloadStatus(bool active);
   void BytesReceived(uint64_t bytes_received, uint64_t total);
 
  private:
@@ -151,6 +152,10 @@ class UpdateAttempter : public ActionProcessorDelegate,
 
   // The process priority management timeout source.
   GSource* manage_priority_source_;
+
+  // Set to true if an update download is active (and BytesReceived
+  // will be called), set to false otherwise.
+  bool download_active_;
 
   // For status:
   UpdateStatus status_;

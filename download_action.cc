@@ -74,6 +74,9 @@ void DownloadAction::PerformAction() {
       return;
     }
   }
+  if (delegate_) {
+    delegate_->SetDownloadStatus(true);  // Set to active.
+  }
   http_fetcher_->BeginTransfer(install_plan_.download_url);
 }
 
@@ -82,6 +85,9 @@ void DownloadAction::TerminateProcessing() {
   CHECK_EQ(writer_->Close(), 0);
   writer_ = NULL;
   http_fetcher_->TerminateTransfer();
+  if (delegate_) {
+    delegate_->SetDownloadStatus(false);  // Set to inactive.
+  }
 }
 
 void DownloadAction::ReceivedBytes(HttpFetcher *fetcher,
@@ -115,6 +121,9 @@ void DownloadAction::TransferComplete(HttpFetcher *fetcher, bool successful) {
   if (writer_) {
     CHECK_EQ(writer_->Close(), 0) << errno;
     writer_ = NULL;
+  }
+  if (delegate_) {
+    delegate_->SetDownloadStatus(false);  // Set to inactive.
   }
   ActionExitCode code =
       successful ? kActionCodeSuccess : kActionCodeDownloadTransferError;

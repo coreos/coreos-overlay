@@ -35,10 +35,15 @@ namespace chromeos_update_engine {
 
 class DownloadActionDelegate {
  public:
-  // Called before any bytes are received and periodically after
-  // bytes are received.
-  // bytes_received is the number of bytes downloaded thus far.
-  // total is the number of bytes expected.
+  // Called right before starting the download with |active| set to
+  // true. Called after completing the download with |active| set to
+  // false.
+  virtual void SetDownloadStatus(bool active) = 0;
+
+  // Called periodically after bytes are received. This method will be
+  // invoked only if the download is active. |bytes_received| is the
+  // number of bytes downloaded thus far. |total| is the number of
+  // bytes expected.
   virtual void BytesReceived(uint64_t bytes_received, uint64_t total) = 0;
 };
 
@@ -106,11 +111,11 @@ class DownloadAction : public Action<DownloadAction>,
 
   // Used to find the hash of the bytes downloaded
   OmahaHashCalculator omaha_hash_calculator_;
-  
+
   // For reporting status to outsiders
   DownloadActionDelegate* delegate_;
   uint64_t bytes_received_;
-  
+
   DISALLOW_COPY_AND_ASSIGN(DownloadAction);
 };
 

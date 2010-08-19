@@ -121,6 +121,7 @@ UpdateAttempter::UpdateAttempter(PrefsInterface* prefs,
       metrics_lib_(metrics_lib),
       priority_(utils::kProcessPriorityNormal),
       manage_priority_source_(NULL),
+      download_active_(false),
       status_(UPDATE_STATUS_IDLE),
       download_progress_(0.0),
       last_checked_time_(0),
@@ -319,7 +320,11 @@ void UpdateAttempter::ActionCompleted(ActionProcessor* processor,
   }
   // Find out which action completed.
   if (type == OmahaResponseHandlerAction::StaticType()) {
-    SetStatusAndNotify(UPDATE_STATUS_DOWNLOADING);
+    // Note that the status will be updated to DOWNLOADING when some
+    // bytes get actually downloaded from the server and the
+    // BytesReceived callback is invoked. This avoids notifying the
+    // user that a download has started in cases when the server and
+    // the client are unable to initiate the download.
     OmahaResponseHandlerAction* omaha_response_handler_action =
         dynamic_cast<OmahaResponseHandlerAction*>(action);
     CHECK(omaha_response_handler_action);
@@ -347,8 +352,13 @@ void UpdateAttempter::ResumeUpdating() {
   NOTIMPLEMENTED();
 }
 
+void UpdateAttempter::SetDownloadStatus(bool active) {
+  download_active_ = active;
+  LOG(INFO) << "Download status: " << (active ? "active" : "inactive");
+}
+
 void UpdateAttempter::BytesReceived(uint64_t bytes_received, uint64_t total) {
-  if (status_ != UPDATE_STATUS_DOWNLOADING) {
+  if (!download_active_) {
     LOG(ERROR) << "BytesReceived called while not downloading.";
     return;
   }
