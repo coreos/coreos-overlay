@@ -65,6 +65,7 @@ int Main(int argc, char** argv) {
     }
     DeltaPerformer performer;
     CHECK_EQ(performer.Open(FLAGS_old_image.c_str(), 0, 0), 0);
+    CHECK(performer.OpenKernel(FLAGS_old_kernel.c_str()));
     vector<char> buf(1024 * 1024);
     int fd = open(FLAGS_apply_delta.c_str(), O_RDONLY, 0);
     CHECK_GE(fd, 0);

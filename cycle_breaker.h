@@ -34,7 +34,7 @@ class CycleBreaker {
  private:
   void HandleCircuit();
   void Unblock(Vertex::Index u);
-  bool Circuit(Vertex::Index vertex);
+  bool Circuit(Vertex::Index vertex, Vertex::Index depth);
   bool StackContainsCutEdge() const;
 
   std::vector<bool> blocked_;  // "blocked" in the paper

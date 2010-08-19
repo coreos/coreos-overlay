@@ -3,8 +3,10 @@
 // found in the LICENSE file.
 
 #include "update_engine/cycle_breaker.h"
+#include <inttypes.h>
 #include <set>
 #include <utility>
+#include "base/string_util.h"
 #include "update_engine/graph_utils.h"
 #include "update_engine/tarjan.h"
 #include "update_engine/utils.h"
@@ -65,20 +67,21 @@ void CycleBreaker::BreakCycles(const Graph& graph, set<Edge>* out_cut_edges) {
     blocked_.resize(subgraph_.size());
     blocked_graph_.clear();
     blocked_graph_.resize(subgraph_.size());
-    Circuit(current_vertex_);
+    Circuit(current_vertex_, 0);
   }
   
   out_cut_edges->swap(cut_edges_);
   DCHECK(stack_.empty());
 }
 
+static const size_t kMaxEdgesToConsider = 2;
+
 void CycleBreaker::HandleCircuit() {
   stack_.push_back(current_vertex_);
   CHECK_GE(stack_.size(), 2);
   Edge min_edge = make_pair(stack_[0], stack_[1]);
   uint64_t min_edge_weight = kuint64max;
-  const int kMaxEdgesToConsider = 4;
-  int edges_considered = 0;
+  size_t edges_considered = 0;
   for (vector<Vertex::Index>::const_iterator it = stack_.begin();
        it != (stack_.end() - 1); ++it) {
     Edge edge = make_pair(*it, *(it + 1));
@@ -122,11 +125,25 @@ bool CycleBreaker::StackContainsCutEdge() const {
   return false;
 }
 
-bool CycleBreaker::Circuit(Vertex::Index vertex) {
+bool CycleBreaker::Circuit(Vertex::Index vertex, Vertex::Index depth) {
   // "vertex" was "v" in the original paper.
   bool found = false;  // Was "f" in the original paper.
   stack_.push_back(vertex);
   blocked_[vertex] = true;
+  {
+    static int counter = 0;
+    counter++;
+    if (counter == 10000) {
+      counter = 0;
+      std::string stack_str;
+      for (vector<Vertex::Index>::const_iterator it = stack_.begin();
+           it != stack_.end(); ++it) {
+        stack_str += StringPrintf("%lu -> ",
+                                  static_cast<long unsigned int>(*it));
+      }
+      LOG(INFO) << "stack: " << stack_str;
+    }
+  }
 
   for (Vertex::SubgraphEdgeMap::iterator w =
            subgraph_[vertex].subgraph_edges.begin();
@@ -138,9 +155,9 @@ bool CycleBreaker::Circuit(Vertex::Index vertex) {
       HandleCircuit();
       found = true;
     } else if (!blocked_[*w]) {
-      if (Circuit(*w)) {
+      if (Circuit(*w, depth + 1)) {
         found = true;
-        if (StackContainsCutEdge())
+        if ((depth > kMaxEdgesToConsider) || StackContainsCutEdge())
           break;
       }
     }
