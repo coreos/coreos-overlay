@@ -139,10 +139,10 @@ bool Subprocess::SynchronousExec(const std::vector<std::string>& cmd,
   FreeArgv(argv.get());
   if (err)
     LOG(INFO) << "err is: " << err->code << ", " << err->message;
-  if (child_stdout)
-    LOG(INFO) << "Postinst stdout:" << child_stdout;
-  if (child_stderr)
-    LOG(INFO) << "Postinst stderr:" << child_stderr;
+  if (child_stdout && strlen(child_stdout))
+    LOG(INFO) << "Subprocess stdout:" << child_stdout;
+  if (child_stderr && strlen(child_stderr))
+    LOG(INFO) << "Subprocess stderr:" << child_stderr;
   return success;
 }
 

@@ -193,8 +193,12 @@ ssize_t DeltaPerformer::Write(const void* bytes, size_t count) {
             next_operation_num_ - manifest_.install_operations_size());
     if (!CanPerformInstallOperation(op))
       break;
-    LOG(INFO) << "Performing operation " << next_operation_num_ << "/"
-              << total_operations;
+    // Log every thousandth operation, and also the first and last ones
+    if ((next_operation_num_ % 1000 == 0) ||
+        (next_operation_num_ + 1 == total_operations)) {
+      LOG(INFO) << "Performing operation " << (next_operation_num_ + 1) << "/"
+                << total_operations;
+    }
     bool is_kernel_partition =
         (next_operation_num_ >= manifest_.install_operations_size());
     if (op.type() == DeltaArchiveManifest_InstallOperation_Type_REPLACE ||
