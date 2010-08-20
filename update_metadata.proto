@@ -7,7 +7,7 @@
 // version. The update format is represented by this struct pseudocode:
 // struct delta_update_file {
 //   char magic[4] = "CrAU";
-//   uint32 file_format_version = 1;
+//   uint64 file_format_version = 1;
 //   uint64 manifest_size;  // Size of protobuf DeltaArchiveManifest
 //   // The Bzip2 compressed DeltaArchiveManifest
 //   char manifest[];
@@ -80,7 +80,7 @@ message Extent {
 message Signatures {
   message Signature {
     optional uint32 version = 1;
-    optional string data = 2;
+    optional bytes data = 2;
   }
   repeated Signature signatures = 1;
 }
