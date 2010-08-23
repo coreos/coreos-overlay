@@ -13,6 +13,7 @@
 
 #include <glib.h>
 
+#include "base/time.h"
 #include "update_engine/action_processor.h"
 #include "update_engine/download_action.h"
 #include "update_engine/omaha_request_params.h"
@@ -126,7 +127,10 @@ class UpdateAttempter : public ActionProcessorDelegate,
   static gboolean StaticManagePriorityCallback(gpointer data);
   bool ManagePriorityCallback();
 
-  struct timespec last_notify_time_;
+  // Last status notification timestamp used for throttling. Use
+  // monotonic TimeTicks to ensure that notifications are sent even if
+  // the system clock is set back in the middle of an update.
+  base::TimeTicks last_notify_time_;
 
   std::vector<std::tr1::shared_ptr<AbstractAction> > actions_;
   ActionProcessor processor_;

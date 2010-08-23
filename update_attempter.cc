@@ -27,6 +27,8 @@
 #include "update_engine/postinstall_runner_action.h"
 #include "update_engine/set_bootable_flag_action.h"
 
+using base::TimeDelta;
+using base::TimeTicks;
 using std::tr1::shared_ptr;
 using std::string;
 using std::vector;
@@ -34,38 +36,6 @@ using std::vector;
 namespace chromeos_update_engine {
 
 const char* kUpdateCompletedMarker = "/tmp/update_engine_autoupdate_completed";
-
-namespace {
-// Returns true on success.
-bool GetCPUClockTime(struct timespec* out) {
-  return clock_gettime(CLOCK_REALTIME, out) == 0;
-}
-// Returns stop - start.
-struct timespec CPUClockTimeElapsed(const struct timespec& start,
-                                    const struct timespec& stop) {
-  CHECK(start.tv_sec >= 0);
-  CHECK(stop.tv_sec >= 0);
-  CHECK(start.tv_nsec >= 0);
-  CHECK(stop.tv_nsec >= 0);
-
-  const int64_t kOneBillion = 1000000000L;
-  const int64_t start64 = start.tv_sec * kOneBillion + start.tv_nsec;
-  const int64_t stop64 = stop.tv_sec * kOneBillion + stop.tv_nsec;
-
-  const int64_t result64 = stop64 - start64;
-
-  struct timespec ret;
-  ret.tv_sec = result64 / kOneBillion;
-  ret.tv_nsec = result64 % kOneBillion;
-
-  return ret;
-}
-bool CPUClockTimeGreaterThanHalfSecond(const struct timespec& spec) {
-  if (spec.tv_sec >= 1)
-    return true;
-  return (spec.tv_nsec > 500000000);
-}
-}
 
 const char* UpdateStatusToString(UpdateStatus status) {
   switch (status) {
@@ -127,8 +97,6 @@ UpdateAttempter::UpdateAttempter(PrefsInterface* prefs,
       last_checked_time_(0),
       new_version_("0.0.0.0"),
       new_size_(0) {
-  last_notify_time_.tv_sec = 0;
-  last_notify_time_.tv_nsec = 0;
   if (utils::FileExists(kUpdateCompletedMarker))
     status_ = UPDATE_STATUS_UPDATED_NEED_REBOOT;
 }
@@ -362,15 +330,16 @@ void UpdateAttempter::BytesReceived(uint64_t bytes_received, uint64_t total) {
     LOG(ERROR) << "BytesReceived called while not downloading.";
     return;
   }
-  download_progress_ = static_cast<double>(bytes_received) /
+  double progress = static_cast<double>(bytes_received) /
       static_cast<double>(total);
-  // We self throttle here
-  timespec now;
-  now.tv_sec = 0;
-  now.tv_nsec = 0;
-  if (GetCPUClockTime(&now) &&
-      CPUClockTimeGreaterThanHalfSecond(
-          CPUClockTimeElapsed(last_notify_time_, now))) {
+  // Self throttle based on progress. Also send notifications if
+  // progress is too slow.
+  const double kDeltaPercent = 0.01;  // 1%
+  if (status_ != UPDATE_STATUS_DOWNLOADING ||
+      bytes_received == total ||
+      progress - download_progress_ >= kDeltaPercent ||
+      TimeTicks::Now() - last_notify_time_ >= TimeDelta::FromSeconds(10)) {
+    download_progress_ = progress;
     SetStatusAndNotify(UPDATE_STATUS_DOWNLOADING);
   }
 }
@@ -392,7 +361,7 @@ void UpdateAttempter::SetStatusAndNotify(UpdateStatus status) {
   status_ = status;
   if (!dbus_service_)
     return;
-  GetCPUClockTime(&last_notify_time_);
+  last_notify_time_ = TimeTicks::Now();
   update_engine_service_emit_status_update(
       dbus_service_,
       last_checked_time_,
