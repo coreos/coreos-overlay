@@ -11,10 +11,12 @@
 
 #include "base/command_line.h"
 #include "base/logging.h"
+#include "base/string_util.h"
 #include "metrics/metrics_library.h"
 #include "update_engine/dbus_constants.h"
 #include "update_engine/dbus_service.h"
 #include "update_engine/prefs.h"
+#include "update_engine/subprocess.h"
 #include "update_engine/update_attempter.h"
 #include "update_engine/utils.h"
 
@@ -32,6 +34,14 @@ using std::tr1::shared_ptr;
 using std::vector;
 
 namespace chromeos_update_engine {
+
+gboolean UpdateBootFlags(void* arg) {
+  // This purely best effort. Failures should be logged by Subprocess.
+  int unused = 0;
+  vector<string> cmd(1, "/usr/sbin/chromeos-setgoodkernel");
+  Subprocess::SynchronousExec(cmd, &unused);
+  return FALSE;  // Don't call this callback again
+}
 
 namespace {
 
@@ -146,6 +156,9 @@ int main(int argc, char** argv) {
   chromeos_update_engine::SetupDbusService(service);
 
   chromeos_update_engine::SchedulePeriodicUpdateChecks(&update_attempter);
+
+  // Update boot flags after 45 seconds
+  g_timeout_add_seconds(45, &chromeos_update_engine::UpdateBootFlags, NULL);
 
   // Run the main loop until exit time:
   g_main_loop_run(loop);
