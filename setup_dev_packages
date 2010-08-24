@@ -6,7 +6,7 @@
 
 set -ex
 
-sudo USE=-crash emerge -av1 \
+sudo USE=-crash emerge -DNauv1 \
   chromeos-base/libchrome \
   chromeos-base/metrics \
   dev-cpp/gmock \
