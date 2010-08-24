@@ -2,51 +2,81 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include "update_engine/omaha_hash_calculator.h"
+
 #include <openssl/bio.h>
 #include <openssl/buffer.h>
 #include <openssl/evp.h>
 #include "base/logging.h"
-#include "update_engine/omaha_hash_calculator.h"
+#include "update_engine/utils.h"
+
+using std::string;
+using std::vector;
 
 namespace chromeos_update_engine {
 
-OmahaHashCalculator::OmahaHashCalculator() {
-  CHECK_EQ(SHA1_Init(&ctx_), 1);
+OmahaHashCalculator::OmahaHashCalculator() : valid_(false) {
+  valid_ = (SHA1_Init(&ctx_) == 1);
+  LOG_IF(ERROR, !valid_) << "SHA1_Init failed";
 }
 
 // Update is called with all of the data that should be hashed in order.
 // Mostly just passes the data through to OpenSSL's SHA1_Update()
-void OmahaHashCalculator::Update(const char* data, size_t length) {
-  CHECK(hash_.empty()) << "Can't Update after hash is finalized";
+bool OmahaHashCalculator::Update(const char* data, size_t length) {
+  TEST_AND_RETURN_FALSE(valid_);
+  TEST_AND_RETURN_FALSE(hash_.empty());
   COMPILE_ASSERT(sizeof(size_t) <= sizeof(unsigned long),
                  length_param_may_be_truncated_in_SHA1_Update);
-  CHECK_EQ(SHA1_Update(&ctx_, data, length), 1);
+  TEST_AND_RETURN_FALSE(SHA1_Update(&ctx_, data, length) == 1);
+  return true;
 }
 
 // Call Finalize() when all data has been passed in. This mostly just
 // calls OpenSSL's SHA1_Final() and then base64 encodes the hash.
-void OmahaHashCalculator::Finalize() {
-  CHECK(hash_.empty()) << "Don't call Finalize() twice";
+bool OmahaHashCalculator::Finalize() {
+  bool success = true;
+  TEST_AND_RETURN_FALSE(hash_.empty());
   unsigned char md[SHA_DIGEST_LENGTH];
-  CHECK_EQ(SHA1_Final(md, &ctx_), 1);
+  TEST_AND_RETURN_FALSE(SHA1_Final(md, &ctx_) == 1);
 
   // Convert md to base64 encoding and store it in hash_
   BIO *b64 = BIO_new(BIO_f_base64());
-  CHECK(b64);
+  if (!b64)
+    LOG(INFO) << "BIO_new(BIO_f_base64()) failed";
   BIO *bmem = BIO_new(BIO_s_mem());
-  CHECK(bmem);
-  b64 = BIO_push(b64, bmem);
-  CHECK_EQ(BIO_write(b64, md, sizeof(md)), sizeof(md));
-  CHECK_EQ(BIO_flush(b64), 1);
+  if (!bmem)
+    LOG(INFO) << "BIO_new(BIO_s_mem()) failed";
+  if (b64 && bmem) {
+    b64 = BIO_push(b64, bmem);
+    success = (BIO_write(b64, md, sizeof(md)) == sizeof(md));
+    if (success)
+      success = (BIO_flush(b64) == 1);
 
-  BUF_MEM *bptr = NULL;
-  BIO_get_mem_ptr(b64, &bptr);
-  hash_.assign(bptr->data, bptr->length - 1);
-
-  BIO_free_all(b64);
+    BUF_MEM *bptr = NULL;
+    BIO_get_mem_ptr(b64, &bptr);
+    hash_.assign(bptr->data, bptr->length - 1);
+  }
+  if (b64) {
+    BIO_free_all(b64);
+    b64 = NULL;
+  }
+  return success;
 }
 
-std::string OmahaHashCalculator::OmahaHashOfBytes(
+bool OmahaHashCalculator::RawHashOfData(const vector<char>& data,
+                                        vector<char>* out_hash) {
+  OmahaHashCalculator calc;
+  calc.Update(&data[0], data.size());
+  
+  out_hash->resize(out_hash->size() + SHA_DIGEST_LENGTH);
+  TEST_AND_RETURN_FALSE(
+      SHA1_Final(reinterpret_cast<unsigned char*>(&(*(out_hash->end() -
+                                                      SHA_DIGEST_LENGTH))),
+                 &calc.ctx_) == 1);
+  return true;
+}
+
+string OmahaHashCalculator::OmahaHashOfBytes(
     const void* data, size_t length) {
   OmahaHashCalculator calc;
   calc.Update(reinterpret_cast<const char*>(data), length);
@@ -54,13 +84,11 @@ std::string OmahaHashCalculator::OmahaHashOfBytes(
   return calc.hash();
 }
 
-std::string OmahaHashCalculator::OmahaHashOfString(
-    const std::string& str) {
+string OmahaHashCalculator::OmahaHashOfString(const string& str) {
   return OmahaHashOfBytes(str.data(), str.size());
 }
 
-std::string OmahaHashCalculator::OmahaHashOfData(
-    const std::vector<char>& data) {
+string OmahaHashCalculator::OmahaHashOfData(const vector<char>& data) {
   return OmahaHashOfBytes(&data[0], data.size());
 }
 

@@ -9,6 +9,7 @@
 #include <vector>
 #include <openssl/sha.h>
 #include "base/basictypes.h"
+#include "base/logging.h"
 
 // Omaha uses base64 encoded SHA-1 as the hash. This class provides a simple
 // wrapper around OpenSSL providing such a formatted hash of data passed in.
@@ -20,22 +21,27 @@ namespace chromeos_update_engine {
 
 class OmahaHashCalculator {
  public:
-   OmahaHashCalculator();
+  OmahaHashCalculator();
 
   // Update is called with all of the data that should be hashed in order.
-  // Update will read |length| bytes of |data|
-   void Update(const char* data, size_t length);
+  // Update will read |length| bytes of |data|.
+  // Returns true on success.
+  bool Update(const char* data, size_t length);
 
   // Call Finalize() when all data has been passed in. This method tells
   // OpenSSl that no more data will come in and base64 encodes the resulting
   // hash.
-   void Finalize();
+  // Returns true on success.
+  bool Finalize();
 
   // Gets the hash. Finalize() must have been called.
   const std::string& hash() const {
-    CHECK(!hash_.empty()) << "Call Finalize() first";
+    DCHECK(!hash_.empty()) << "Call Finalize() first";
     return hash_;
   }
+
+  static bool RawHashOfData(const std::vector<char>& data,
+                            std::vector<char>* out_hash);
 
   // Used by tests
   static std::string OmahaHashOfBytes(const void* data, size_t length);
@@ -46,6 +52,9 @@ class OmahaHashCalculator {
   // If non-empty, the final base64 encoded hash. Will only be set to
   // non-empty when Finalize is called.
   std::string hash_;
+
+  // Init success
+  bool valid_;
 
   // The hash state used by OpenSSL
   SHA_CTX ctx_;

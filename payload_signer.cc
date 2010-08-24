@@ -6,6 +6,7 @@
 
 #include "base/logging.h"
 #include "base/string_util.h"
+#include "update_engine/omaha_hash_calculator.h"
 #include "update_engine/subprocess.h"
 #include "update_engine/update_metadata.pb.h"
 #include "update_engine/utils.h"
@@ -24,6 +25,23 @@ bool PayloadSigner::SignPayload(const string& unsigned_payload_path,
   TEST_AND_RETURN_FALSE(
       utils::MakeTempFile("/tmp/signature.XXXXXX", &sig_path, NULL));
   ScopedPathUnlinker sig_path_unlinker(sig_path);
+
+  string hash_path;
+  TEST_AND_RETURN_FALSE(
+      utils::MakeTempFile("/tmp/hash.XXXXXX", &hash_path, NULL));
+  ScopedPathUnlinker hash_path_unlinker(hash_path);
+  
+  vector<char> hash_data;
+  {
+    vector<char> payload;
+    // TODO(adlr): Read file in chunks. Not urgent as this runs on the server.
+    TEST_AND_RETURN_FALSE(utils::ReadFile(unsigned_payload_path, &payload));
+    TEST_AND_RETURN_FALSE(OmahaHashCalculator::RawHashOfData(payload,
+                                                             &hash_data));
+  }
+  TEST_AND_RETURN_FALSE(utils::WriteFile(hash_path.c_str(),
+                                         &hash_data[0],
+                                         hash_data.size()));
   
   // This runs on the server, so it's okay to cop out and call openssl
   // executable rather than properly use the library
@@ -32,7 +50,7 @@ bool PayloadSigner::SignPayload(const string& unsigned_payload_path,
               ' ',
               &cmd);
   cmd[cmd.size() - 5] = private_key_path;
-  cmd[cmd.size() - 3] = unsigned_payload_path;
+  cmd[cmd.size() - 3] = hash_path;
   cmd[cmd.size() - 1] = sig_path;
   
   int return_code = 0;

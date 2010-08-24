@@ -29,6 +29,7 @@ DEFINE_string(new_image, "", "Path to the new rootfs");
 DEFINE_string(out_file, "", "Path to output file");
 DEFINE_string(old_kernel, "", "Path to the old kernel partition image");
 DEFINE_string(new_kernel, "", "Path to the new kernel partition image");
+DEFINE_string(private_key, "", "Path to private key in .pem format");
 DEFINE_string(apply_delta, "",
               "If set, apply delta over old_image. (For debugging.)");
 
@@ -98,7 +99,8 @@ int Main(int argc, char** argv) {
                                               FLAGS_new_image,
                                               FLAGS_old_kernel,
                                               FLAGS_new_kernel,
-                                              FLAGS_out_file);
+                                              FLAGS_out_file,
+                                              FLAGS_private_key);
 
   return 0;
 }

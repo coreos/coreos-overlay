@@ -120,9 +120,10 @@ message DeltaArchiveManifest {
   optional uint32 block_size = 3 [default = 4096];
 
   // If signatures are present, the offset into the blobs, generally
-  // tacked onto the end of the file. We use an offset rather than
-  // a bool to allow for more flexibility in future file formats.
-  // If this is absent, it means signatures aren't supported in this
+  // tacked onto the end of the file, and the length. We use an offset
+  // rather than a bool to allow for more flexibility in future file formats.
+  // If either is absent, it means signatures aren't supported in this
   // file.
   optional uint64 signatures_offset = 4;
+  optional uint64 signatures_size = 5;
 }

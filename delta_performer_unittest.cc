@@ -17,6 +17,7 @@
 #include "update_engine/delta_diff_generator.h"
 #include "update_engine/delta_performer.h"
 #include "update_engine/graph_types.h"
+#include "update_engine/payload_signer.h"
 #include "update_engine/test_utils.h"
 #include "update_engine/update_metadata.pb.h"
 #include "update_engine/utils.h"
@@ -26,6 +27,8 @@ namespace chromeos_update_engine {
 using std::min;
 using std::string;
 using std::vector;
+
+extern const char* kUnittestPrivateKeyPath;
 
 class DeltaPerformerTest : public ::testing::Test { };
 
@@ -166,7 +169,7 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
   vector<char> new_kernel_data(old_kernel_data.size());
   FillWithData(&old_kernel_data);
   FillWithData(&new_kernel_data);
-  
+
   // change the new kernel data
   const char* new_data_string = "This is new data.";
   strcpy(&new_kernel_data[0], new_data_string);
@@ -179,24 +182,56 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
 
   string delta_path;
   EXPECT_TRUE(utils::MakeTempFile("/tmp/delta.XXXXXX", &delta_path, NULL));
+  LOG(INFO) << "delta path: " << delta_path;
   ScopedPathUnlinker delta_path_unlinker(delta_path);
   {
     string a_mnt, b_mnt;
     ScopedLoopMounter a_mounter(a_img, &a_mnt, MS_RDONLY);
     ScopedLoopMounter b_mounter(b_img, &b_mnt, MS_RDONLY);
 
-    EXPECT_TRUE(DeltaDiffGenerator::GenerateDeltaUpdateFile(a_mnt,
-                                                            a_img,
-                                                            b_mnt,
-                                                            b_img,
-                                                            old_kernel,
-                                                            new_kernel,
-                                                            delta_path));
+    EXPECT_TRUE(
+        DeltaDiffGenerator::GenerateDeltaUpdateFile(a_mnt,
+                                                    a_img,
+                                                    b_mnt,
+                                                    b_img,
+                                                    old_kernel,
+                                                    new_kernel,
+                                                    delta_path,
+                                                    kUnittestPrivateKeyPath));
   }
 
   // Read delta into memory.
   vector<char> delta;
   EXPECT_TRUE(utils::ReadFile(delta_path, &delta));
+
+  // Check that the null signature blob exists
+  {
+    LOG(INFO) << "delta size: " << delta.size();
+    DeltaArchiveManifest manifest;
+    const int kManifestSizeOffset = 12;
+    const int kManifestOffset = 20;
+    uint64_t manifest_size = 0;
+    memcpy(&manifest_size, &delta[kManifestSizeOffset], sizeof(manifest_size));
+    manifest_size = be64toh(manifest_size);
+    LOG(INFO) << "manifest size: " << manifest_size;
+    EXPECT_TRUE(manifest.ParseFromArray(&delta[kManifestOffset],
+                                        manifest_size));
+    EXPECT_TRUE(manifest.has_signatures_offset());
+
+    Signatures sigs_message;
+    EXPECT_TRUE(sigs_message.ParseFromArray(
+        &delta[kManifestOffset + manifest_size + manifest.signatures_offset()],
+        manifest.signatures_size()));
+    EXPECT_EQ(1, sigs_message.signatures_size());
+    const Signatures_Signature& signature = sigs_message.signatures(0);
+    EXPECT_EQ(1, signature.version());
+
+    uint64_t expected_sig_data_length = 0;
+    EXPECT_TRUE(PayloadSigner::SignatureBlobLength(kUnittestPrivateKeyPath,
+                                                   &expected_sig_data_length));
+    EXPECT_EQ(expected_sig_data_length, manifest.signatures_size());
+    EXPECT_FALSE(signature.data().empty());
+  }
 
   // Update the A image in place.
   DeltaPerformer performer;
@@ -215,7 +250,7 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
   EXPECT_EQ(0, performer.Close());
 
   CompareFilesByBlock(old_kernel, new_kernel);
-  
+
   vector<char> updated_kernel_partition;
   EXPECT_TRUE(utils::ReadFile(old_kernel, &updated_kernel_partition));
   EXPECT_EQ(0, strncmp(&updated_kernel_partition[0], new_data_string,

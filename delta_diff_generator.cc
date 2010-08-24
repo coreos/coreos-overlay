@@ -21,6 +21,7 @@
 #include "update_engine/filesystem_iterator.h"
 #include "update_engine/graph_types.h"
 #include "update_engine/graph_utils.h"
+#include "update_engine/payload_signer.h"
 #include "update_engine/subprocess.h"
 #include "update_engine/topological_sort.h"
 #include "update_engine/update_metadata.pb.h"
@@ -92,7 +93,7 @@ bool AddInstallOpToBlocksVector(
             << graph[vertex].file_name;
   // See if this is already present.
   TEST_AND_RETURN_FALSE(operation.dst_extents_size() > 0);
-  
+
   enum BlockField { READER = 0, WRITER, BLOCK_FIELD_COUNT };
   for (int field = READER; field < BLOCK_FIELD_COUNT; field++) {
     const int extents_size =
@@ -158,13 +159,13 @@ bool DeltaReadFile(Graph* graph,
 
   TEST_AND_RETURN_FALSE(utils::WriteAll(data_fd, &data[0], data.size()));
   *data_file_size += data.size();
-  
+
   // Now, insert into graph and blocks vector
   graph->resize(graph->size() + 1);
   graph->back().op = operation;
   CHECK(graph->back().op.has_type());
   graph->back().file_name = path;
-  
+
   TEST_AND_RETURN_FALSE(AddInstallOpToBlocksVector(graph->back().op,
                                                    blocks,
                                                    *graph,
@@ -196,7 +197,7 @@ bool DeltaReadFiles(Graph* graph,
       continue;
 
     LOG(INFO) << "Encoding file " << fs_iter.GetPartialPath();
-    
+
     TEST_AND_RETURN_FALSE(DeltaReadFile(graph,
                                         blocks,
                                         old_root,
@@ -298,17 +299,17 @@ bool ReadUnwrittenBlocks(const vector<Block>& blocks,
   FILE* file = fopen(temp_file_path.c_str(), "w");
   TEST_AND_RETURN_FALSE(file);
   int err = BZ_OK;
-  
+
   BZFILE* bz_file = BZ2_bzWriteOpen(&err,
                                     file,
                                     9,  // max compression
                                     0,  // verbosity
                                     0);  // default work factor
   TEST_AND_RETURN_FALSE(err == BZ_OK);
-  
+
   vector<Extent> extents;
   vector<Block>::size_type block_count = 0;
-  
+
   LOG(INFO) << "Appending left over blocks to extents";
   for (vector<Block>::size_type i = 0; i < blocks.size(); i++) {
     if (blocks[i].writer != Vertex::kInvalidIndex)
@@ -356,12 +357,12 @@ bool ReadUnwrittenBlocks(const vector<Block>& blocks,
   bz_file = NULL;
   TEST_AND_RETURN_FALSE_ERRNO(0 == fclose(file));
   file = NULL;
-  
+
   vector<char> compressed_data;
   LOG(INFO) << "Reading compressed data off disk";
   TEST_AND_RETURN_FALSE(utils::ReadFile(temp_file_path, &compressed_data));
   TEST_AND_RETURN_FALSE(unlink(temp_file_path.c_str()) == 0);
-  
+
   // Add node to graph to write these blocks
   out_op->set_type(DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ);
   out_op->set_data_offset(*blobs_length);
@@ -369,7 +370,7 @@ bool ReadUnwrittenBlocks(const vector<Block>& blocks,
   *blobs_length += compressed_data.size();
   out_op->set_dst_length(kBlockSize * block_count);
   DeltaDiffGenerator::StoreExtents(extents, out_op->mutable_dst_extents());
-  
+
   TEST_AND_RETURN_FALSE(utils::WriteAll(blobs_fd,
                                         &compressed_data[0],
                                         compressed_data.size()));
@@ -414,7 +415,7 @@ void CheckGraph(const Graph& graph) {
 }
 
 // Delta compresses a kernel partition new_kernel_part with knowledge of
-// the old kernel partition old_kernel_part. 
+// the old kernel partition old_kernel_part.
 bool DeltaCompressKernelPartition(
     const string& old_kernel_part,
     const string& new_kernel_part,
@@ -438,12 +439,12 @@ bool DeltaCompressKernelPartition(
   TEST_AND_RETURN_FALSE(BsdiffFiles(old_kernel_part, new_kernel_part, &data));
   TEST_AND_RETURN_FALSE(utils::WriteAll(blobs_fd, &data[0], data.size()));
   *blobs_length += data.size();
-  
+
   off_t old_part_size = utils::FileSize(old_kernel_part);
   TEST_AND_RETURN_FALSE(old_part_size >= 0);
   off_t new_part_size = utils::FileSize(new_kernel_part);
   TEST_AND_RETURN_FALSE(new_part_size >= 0);
-  
+
   op->set_data_length(data.size());
 
   op->set_src_length(old_part_size);
@@ -457,7 +458,7 @@ bool DeltaCompressKernelPartition(
   Extent* dst_extent = op->add_dst_extents();
   dst_extent->set_start_block(0);
   dst_extent->set_num_blocks((new_part_size + kBlockSize - 1) / kBlockSize);
-  
+
   LOG(INFO) << "Done delta compressing kernel partition.";
   return true;
 }
@@ -472,9 +473,9 @@ bool DeltaDiffGenerator::ReadFileToDiff(
   // Read new data in
   vector<char> new_data;
   TEST_AND_RETURN_FALSE(utils::ReadFile(new_filename, &new_data));
-  
+
   TEST_AND_RETURN_FALSE(!new_data.empty());
-  
+
   vector<char> new_data_bz;
   TEST_AND_RETURN_FALSE(BzipCompress(new_data, &new_data_bz));
   CHECK(!new_data_bz.empty());
@@ -516,15 +517,15 @@ bool DeltaDiffGenerator::ReadFileToDiff(
       if (bsdiff_delta.size() < current_best_size) {
         operation.set_type(DeltaArchiveManifest_InstallOperation_Type_BSDIFF);
         current_best_size = bsdiff_delta.size();
-        
+
         data = bsdiff_delta;
       }
     }
   }
-  
+
   // Set parameters of the operations
   CHECK_EQ(data.size(), current_best_size);
-  
+
   if (operation.type() == DeltaArchiveManifest_InstallOperation_Type_MOVE ||
       operation.type() == DeltaArchiveManifest_InstallOperation_Type_BSDIFF) {
     TEST_AND_RETURN_FALSE(
@@ -535,10 +536,10 @@ bool DeltaDiffGenerator::ReadFileToDiff(
   TEST_AND_RETURN_FALSE(
       GatherExtents(new_filename, operation.mutable_dst_extents()));
   operation.set_dst_length(new_data.size());
-  
+
   out_data->swap(data);
   *out_op = operation;
-  
+
   return true;
 }
 
@@ -613,7 +614,7 @@ bool DeltaDiffGenerator::CutEdges(Graph* graph,
   TEST_AND_RETURN_FALSE(
       FindScratchSpace(blocks, blocks_required, &scratch_extents));
   LinearExtentAllocator scratch_allocator(scratch_extents);
-  
+
   uint64_t scratch_blocks_used = 0;
   for (set<Edge>::const_iterator it = edges.begin();
        it != edges.end(); ++it) {
@@ -628,7 +629,7 @@ bool DeltaDiffGenerator::CutEdges(Graph* graph,
         scratch_allocator.Allocate(graph_utils::EdgeWeight(*graph, *it));
     // create vertex to copy original->scratch
     graph->resize(graph->size() + 1);
-    
+
     // make node depend on the copy operation
     (*graph)[it->first].out_edges.insert(make_pair(graph->size() - 1,
                                                    EdgeProperties()));
@@ -743,9 +744,10 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
     const string& old_image,
     const string& new_root,
     const string& new_image,
-    const std::string& old_kernel_part,
-    const std::string& new_kernel_part,
-    const string& output_path) {
+    const string& old_kernel_part,
+    const string& new_kernel_part,
+    const string& output_path,
+    const string& private_key_path) {
   struct stat old_image_stbuf;
   TEST_AND_RETURN_FALSE_ERRNO(stat(old_image.c_str(), &old_image_stbuf) == 0);
   struct stat new_image_stbuf;
@@ -771,7 +773,7 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
   }
   Graph graph;
   CheckGraph(graph);
-  
+
   const string kTempFileTemplate("/tmp/CrAU_temp_data.XXXXXX");
   string temp_file_path;
   off_t data_file_size = 0;
@@ -787,7 +789,7 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
         utils::MakeTempFile(kTempFileTemplate, &temp_file_path, &fd));
     TEST_AND_RETURN_FALSE(fd >= 0);
     ScopedFdCloser fd_closer(&fd);
-  
+
     TEST_AND_RETURN_FALSE(DeltaReadFiles(&graph,
                                          &blocks,
                                          old_root,
@@ -795,12 +797,12 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
                                          fd,
                                          &data_file_size));
     CheckGraph(graph);
-                                         
+
     TEST_AND_RETURN_FALSE(ReadUnwrittenBlocks(blocks,
                                               fd,
                                               &data_file_size,
                                               new_image,
-                                              &final_op));  
+                                              &final_op));
 
     // Read kernel partition
     TEST_AND_RETURN_FALSE(DeltaCompressKernelPartition(old_kernel_part,
@@ -810,11 +812,11 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
                                                        &data_file_size));
   }
   CheckGraph(graph);
-  
+
   LOG(INFO) << "Creating edges...";
   CreateEdges(&graph, blocks);
   CheckGraph(graph);
-  
+
   CycleBreaker cycle_breaker;
   LOG(INFO) << "Finding cycles...";
   set<Edge> cut_edges;
@@ -831,7 +833,7 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
   LOG(INFO) << "Ordering...";
   TopologicalSort(graph, &final_order);
   CheckGraph(graph);
-  
+
   // Convert to protobuf Manifest object
   DeltaArchiveManifest manifest;
   CheckGraph(graph);
@@ -844,7 +846,7 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
     CHECK(op->has_type());
     LOG(INFO) << "final op length: " << op->data_length();
   }
-  
+
   CheckGraph(graph);
   manifest.set_block_size(kBlockSize);
 
@@ -859,29 +861,29 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
                                          ordered_blobs_path));
 
   // Check that install op blobs are in order and that all blocks are written.
+  uint64_t next_blob_offset = 0;
   {
     vector<uint32_t> written_count(blocks.size(), 0);
-    uint64_t next_blob_offset = 0;
     for (int i = 0; i < (manifest.install_operations_size() +
                          manifest.kernel_install_operations_size()); i++) {
-      const DeltaArchiveManifest_InstallOperation& op =
+      DeltaArchiveManifest_InstallOperation* op =
           i < manifest.install_operations_size() ?
-          manifest.install_operations(i) :
-          manifest.kernel_install_operations(
+          manifest.mutable_install_operations(i) :
+          manifest.mutable_kernel_install_operations(
               i - manifest.install_operations_size());
-      for (int j = 0; j < op.dst_extents_size(); j++) {
-        const Extent& extent = op.dst_extents(j);
+      for (int j = 0; j < op->dst_extents_size(); j++) {
+        const Extent& extent = op->dst_extents(j);
         for (uint64_t block = extent.start_block();
              block < (extent.start_block() + extent.num_blocks()); block++) {
           written_count[block]++;
         }
       }
-      if (op.has_data_offset()) {
-        if (op.data_offset() != next_blob_offset) {
-          LOG(FATAL) << "bad blob offset! " << op.data_offset() << " != "
+      if (op->has_data_offset()) {
+        if (op->data_offset() != next_blob_offset) {
+          LOG(FATAL) << "bad blob offset! " << op->data_offset() << " != "
                      << next_blob_offset;
         }
-        next_blob_offset += op.data_length();
+        next_blob_offset += op->data_length();
       }
     }
     // check all blocks written to
@@ -892,9 +894,34 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
     }
   }
 
+  // Signatures appear at the end of the blobs. Note the offset in the
+  // manifest
+  if (!private_key_path.empty()) {
+    LOG(INFO) << "Making room for signature in file";
+    manifest.set_signatures_offset(next_blob_offset);
+    LOG(INFO) << "set? " << manifest.has_signatures_offset();
+    // Add a dummy op at the end to appease older clients
+    DeltaArchiveManifest_InstallOperation* dummy_op =
+        manifest.add_kernel_install_operations();
+    dummy_op->set_type(DeltaArchiveManifest_InstallOperation_Type_REPLACE);
+    dummy_op->set_data_offset(next_blob_offset);
+    manifest.set_signatures_offset(next_blob_offset);
+    uint64_t signature_blob_length = 0;
+    TEST_AND_RETURN_FALSE(
+        PayloadSigner::SignatureBlobLength(private_key_path,
+                                           &signature_blob_length));
+    dummy_op->set_data_length(signature_blob_length);
+    manifest.set_signatures_size(signature_blob_length);
+    Extent* dummy_extent = dummy_op->add_dst_extents();
+    // Tell the dummy op to write this data to a big sparse hole
+    dummy_extent->set_start_block(kSparseHole);
+    dummy_extent->set_num_blocks((signature_blob_length + kBlockSize - 1) /
+                                 kBlockSize);
+  }
+
   // Serialize protobuf
   string serialized_manifest;
-  
+
   CheckGraph(graph);
   TEST_AND_RETURN_FALSE(manifest.AppendToString(&serialized_manifest));
   CheckGraph(graph);
@@ -905,25 +932,25 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
                                           O_WRONLY | O_CREAT | O_TRUNC,
                                           0644) == 0);
   ScopedFileWriterCloser writer_closer(&writer);
-  
+
   // Write header
   TEST_AND_RETURN_FALSE(writer.Write(kDeltaMagic, strlen(kDeltaMagic)) ==
                         static_cast<ssize_t>(strlen(kDeltaMagic)));
-  
+
   // Write version number
   TEST_AND_RETURN_FALSE(WriteUint64AsBigEndian(&writer, kVersionNumber));
-  
+
   // Write protobuf length
   TEST_AND_RETURN_FALSE(WriteUint64AsBigEndian(&writer,
                                                serialized_manifest.size()));
-  
+
   // Write protobuf
   LOG(INFO) << "Writing final delta file protobuf... "
             << serialized_manifest.size();
   TEST_AND_RETURN_FALSE(writer.Write(serialized_manifest.data(),
                                      serialized_manifest.size()) ==
                         static_cast<ssize_t>(serialized_manifest.size()));
-  
+
   // Append the data blobs
   LOG(INFO) << "Writing final delta file data blobs...";
   int blobs_fd = open(ordered_blobs_path.c_str(), O_RDONLY, 0);
@@ -939,7 +966,19 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
     TEST_AND_RETURN_FALSE_ERRNO(rc > 0);
     TEST_AND_RETURN_FALSE(writer.Write(buf, rc) == rc);
   }
-  
+
+  // Write signature blob.
+  if (!private_key_path.empty()) {
+    LOG(INFO) << "Signing the update...";
+    vector<char> signature_blob;
+    TEST_AND_RETURN_FALSE(PayloadSigner::SignPayload(output_path,
+                                                     private_key_path,
+                                                     &signature_blob));
+    TEST_AND_RETURN_FALSE(writer.Write(&signature_blob[0],
+                                       signature_blob.size()) ==
+                          static_cast<ssize_t>(signature_blob.size()));
+  }
+
   LOG(INFO) << "All done. Successfully created delta file.";
   return true;
 }
