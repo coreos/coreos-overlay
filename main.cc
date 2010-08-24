@@ -9,6 +9,7 @@
 #include <gflags/gflags.h>
 #include <glib.h>
 
+#include "base/at_exit.h"
 #include "base/command_line.h"
 #include "base/logging.h"
 #include "base/string_util.h"
@@ -45,16 +46,29 @@ gboolean UpdateBootFlags(void* arg) {
 
 namespace {
 
+const int kTimeoutOnce = 7 * 60;  // at 7 minutes
+const int kTimeoutPeriodic = 45 * 60;  // every 45 minutes
+const int kTimeoutFuzz = 10 * 60;  // +/- 5 minutes
+
+// Schedules an update check |seconds| from now, while adding some fuzz.
+void ScheduleUpdateCheck(int seconds,
+                         GSourceFunc update_function,
+                         UpdateAttempter* update_attempter) {
+  seconds = utils::FuzzInt(seconds, kTimeoutFuzz);
+  g_timeout_add_seconds(seconds, update_function, update_attempter);
+}
+
 gboolean UpdateOnce(void* arg) {
   UpdateAttempter* update_attempter = reinterpret_cast<UpdateAttempter*>(arg);
   update_attempter->Update("", "");
-  return FALSE;
+  return FALSE;  // Don't run again.
 }
 
 gboolean UpdatePeriodically(void* arg) {
   UpdateAttempter* update_attempter = reinterpret_cast<UpdateAttempter*>(arg);
   update_attempter->Update("", "");
-  return TRUE;
+  ScheduleUpdateCheck(kTimeoutPeriodic, &UpdatePeriodically, update_attempter);
+  return FALSE;  // Don't run again.
 }
 
 void SchedulePeriodicUpdateChecks(UpdateAttempter* update_attempter) {
@@ -62,16 +76,13 @@ void SchedulePeriodicUpdateChecks(UpdateAttempter* update_attempter) {
     LOG(WARNING) << "Non-official build: periodic update checks disabled.";
     return;
   }
-
   if (utils::IsRemovableDevice(utils::RootDevice(utils::BootDevice()))) {
     LOG(WARNING) << "Removable device boot: periodic update checks disabled.";
     return;
   }
-
-  // Kick off periodic updating. First, update after 2 minutes. Also, update
-  // every 30 minutes.
-  g_timeout_add_seconds(2 * 60, &UpdateOnce, update_attempter);
-  g_timeout_add_seconds(30 * 60, &UpdatePeriodically, update_attempter);
+  // Kick off periodic updating.
+  ScheduleUpdateCheck(kTimeoutOnce, &UpdateOnce, update_attempter);
+  ScheduleUpdateCheck(kTimeoutPeriodic, &UpdatePeriodically, update_attempter);
 }
 
 void SetupDbusService(UpdateEngineService* service) {
@@ -118,6 +129,7 @@ int main(int argc, char** argv) {
   ::g_type_init();
   g_thread_init(NULL);
   dbus_g_thread_init();
+  base::AtExitManager exit_manager;  // Required for base/rand_util.h.
   chromeos_update_engine::Subprocess::Init();
   google::ParseCommandLineFlags(&argc, &argv, true);
   CommandLine::Init(argc, argv);

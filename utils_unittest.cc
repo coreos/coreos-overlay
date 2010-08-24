@@ -5,9 +5,11 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
+
 #include <string>
 #include <vector>
-#include <gtest/gtest.h>
+
+#include "gtest/gtest.h"
 #include "update_engine/utils.h"
 
 using std::string;
@@ -157,7 +159,7 @@ TEST(UtilsTest, PartitionNumberTest) {
   EXPECT_EQ("3", utils::PartitionNumber("/dev/mmc0p3"));
 }
 
-TEST(UtilsTest, ComparePriorities) {
+TEST(UtilsTest, ComparePrioritiesTest) {
   EXPECT_LT(utils::ComparePriorities(utils::kProcessPriorityLow,
                                      utils::kProcessPriorityNormal), 0);
   EXPECT_GT(utils::ComparePriorities(utils::kProcessPriorityNormal,
@@ -166,6 +168,19 @@ TEST(UtilsTest, ComparePriorities) {
                                      utils::kProcessPriorityNormal), 0);
   EXPECT_GT(utils::ComparePriorities(utils::kProcessPriorityHigh,
                                      utils::kProcessPriorityNormal), 0);
+}
+
+TEST(UtilsTest, FuzzIntTest) {
+  static const unsigned int kRanges[] = { 0, 1, 2, 20 };
+  for (size_t r = 0; r < arraysize(kRanges); ++r) {
+    unsigned int range = kRanges[r];
+    const int kValue = 50;
+    for (int tries = 0; tries < 100; ++tries) {
+      int value = utils::FuzzInt(kValue, range);
+      EXPECT_GE(value, kValue - range / 2);
+      EXPECT_LE(value, kValue + range - range / 2);
+    }
+  }
 }
 
 }  // namespace chromeos_update_engine

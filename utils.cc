@@ -20,6 +20,7 @@
 
 #include "base/file_path.h"
 #include "base/file_util.h"
+#include "base/rand_util.h"
 #include "base/string_util.h"
 #include "base/logging.h"
 #include "update_engine/file_writer.h"
@@ -455,6 +456,12 @@ bool SetProcessPriority(ProcessPriority priority) {
 int ComparePriorities(ProcessPriority priority_lhs,
                       ProcessPriority priority_rhs) {
   return static_cast<int>(priority_rhs) - static_cast<int>(priority_lhs);
+}
+
+int FuzzInt(int value, unsigned int range) {
+  int min = value - range / 2;
+  int max = value + range - range / 2;
+  return base::RandInt(min, max);
 }
 
 const char* const kStatefulPartition = "/mnt/stateful_partition";

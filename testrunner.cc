@@ -10,6 +10,7 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <gtest/gtest.h>
+#include "base/at_exit.h"
 #include "base/command_line.h"
 #include "update_engine/subprocess.h"
 
@@ -17,6 +18,7 @@ int main(int argc, char **argv) {
   ::g_type_init();
   g_thread_init(NULL);
   dbus_g_thread_init();
+  base::AtExitManager exit_manager;
   chromeos_update_engine::Subprocess::Init();
   CommandLine::Init(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
