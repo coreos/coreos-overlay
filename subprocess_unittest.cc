@@ -94,9 +94,9 @@ gboolean ExitWhenDone(gpointer data) {
   if (cancel_test_data->spawned && !Subprocess::Get().SubprocessInFlight()) {
     // tear down the sub process
     printf("tear down time\n");
-    int status =
-        System(StringPrintf("wget http://127.0.0.1:%d/quitquitquit",
-                            kLocalHttpPort));
+    int status = System(
+        StringPrintf("wget -O /dev/null http://127.0.0.1:%d/quitquitquit",
+                     kLocalHttpPort));
     EXPECT_NE(-1, status) << "system() failed";
     EXPECT_TRUE(WIFEXITED(status))
         << "command failed to run or died abnormally";
