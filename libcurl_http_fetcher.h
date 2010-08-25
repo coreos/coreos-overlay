@@ -20,6 +20,8 @@ namespace chromeos_update_engine {
 
 class LibcurlHttpFetcher : public HttpFetcher {
  public:
+  static const int kMaxRedirects = 10;
+
   LibcurlHttpFetcher()
       : curl_multi_handle_(NULL),
         curl_handle_(NULL),

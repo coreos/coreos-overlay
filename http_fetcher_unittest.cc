@@ -3,12 +3,15 @@
 // found in the LICENSE file.
 
 #include <unistd.h>
+
 #include <string>
 #include <vector>
-#include <base/scoped_ptr.h>
-#include <glib.h>
-#include <gtest/gtest.h>
+
 #include "base/logging.h"
+#include "base/scoped_ptr.h"
+#include "base/string_util.h"
+#include "glib.h"
+#include "gtest/gtest.h"
 #include "update_engine/libcurl_http_fetcher.h"
 #include "update_engine/mock_http_fetcher.h"
 
@@ -448,6 +451,93 @@ TYPED_TEST(HttpFetcherTest, ServerDiesTest) {
     // Exiting and testing happens in the delegate
   }
   g_main_loop_unref(loop);
+}
+
+namespace {
+const int kRedirectCodes[] = { 301, 302, 303, 307 };
+
+class RedirectHttpFetcherTestDelegate : public HttpFetcherDelegate {
+ public:
+  RedirectHttpFetcherTestDelegate(bool expected_successful)
+      : expected_successful_(expected_successful) {}
+  virtual void ReceivedBytes(HttpFetcher* fetcher,
+                             const char* bytes, int length) {
+    data.append(bytes, length);
+  }
+  virtual void TransferComplete(HttpFetcher* fetcher, bool successful) {
+    EXPECT_EQ(expected_successful_, successful);
+    g_main_loop_quit(loop_);
+  }
+  bool expected_successful_;
+  string data;
+  GMainLoop* loop_;
+};
+
+// RedirectTest takes ownership of |http_fetcher|.
+void RedirectTest(bool expected_successful,
+                  const string& url,
+                  HttpFetcher* http_fetcher) {
+  GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
+  RedirectHttpFetcherTestDelegate delegate(expected_successful);
+  delegate.loop_ = loop;
+  scoped_ptr<HttpFetcher> fetcher(http_fetcher);
+  fetcher->set_delegate(&delegate);
+
+  StartTransferArgs start_xfer_args =
+      { fetcher.get(), LocalServerUrlForPath(url) };
+
+  g_timeout_add(0, StartTransfer, &start_xfer_args);
+  g_main_loop_run(loop);
+  if (expected_successful) {
+    // verify the data we get back
+    ASSERT_EQ(1000, delegate.data.size());
+    for (int i = 0; i < 1000; i += 10) {
+      // Assert so that we don't flood the screen w/ EXPECT errors on failure.
+      ASSERT_EQ(delegate.data.substr(i, 10), "abcdefghij");
+    }
+  }
+  g_main_loop_unref(loop);
+}
+}  // namespace {}
+
+TYPED_TEST(HttpFetcherTest, SimpleRedirectTest) {
+  if (this->IsMock())
+    return;
+  typename TestFixture::HttpServer server;
+  ASSERT_TRUE(server.started_);
+  for (size_t c = 0; c < arraysize(kRedirectCodes); ++c) {
+    const string url = base::StringPrintf("/redirect/%d/medium",
+                                          kRedirectCodes[c]);
+    RedirectTest(true, url, this->NewLargeFetcher());
+  }
+}
+
+TYPED_TEST(HttpFetcherTest, MaxRedirectTest) {
+  if (this->IsMock())
+    return;
+  typename TestFixture::HttpServer server;
+  ASSERT_TRUE(server.started_);
+  string url;
+  for (int r = 0; r < LibcurlHttpFetcher::kMaxRedirects; r++) {
+    url += base::StringPrintf("/redirect/%d",
+                              kRedirectCodes[r % arraysize(kRedirectCodes)]);
+  }
+  url += "/medium";
+  RedirectTest(true, url, this->NewLargeFetcher());
+}
+
+TYPED_TEST(HttpFetcherTest, BeyondMaxRedirectTest) {
+  if (this->IsMock())
+    return;
+  typename TestFixture::HttpServer server;
+  ASSERT_TRUE(server.started_);
+  string url;
+  for (int r = 0; r < LibcurlHttpFetcher::kMaxRedirects + 1; r++) {
+    url += base::StringPrintf("/redirect/%d",
+                              kRedirectCodes[r % arraysize(kRedirectCodes)]);
+  }
+  url += "/medium";
+  RedirectTest(false, url, this->NewLargeFetcher());
 }
 
 }  // namespace chromeos_update_engine

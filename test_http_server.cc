@@ -32,6 +32,7 @@ namespace chromeos_update_engine {
 
 struct HttpRequest {
   HttpRequest() : offset(0), return_code(200) {}
+  string host;
   string url;
   off_t offset;
   int return_code;
@@ -40,6 +41,7 @@ struct HttpRequest {
 namespace {
 const int kPort = 8080;  // hardcoded to 8080 for now
 const int kBigLength = 100000;
+const int kMediumLength = 1000;
 }
 
 bool ParseRequest(int fd, HttpRequest* request) {
@@ -65,6 +67,7 @@ bool ParseRequest(int fd, HttpRequest* request) {
   CHECK_NE(string::npos, url_end);
   string url = headers.substr(url_start, url_end - url_start);
   LOG(INFO) << "URL: " << url;
+  request->url = url;
 
   string::size_type range_start, range_end;
   if (headers.find("\r\nRange: ") == string::npos) {
@@ -81,7 +84,20 @@ bool ParseRequest(int fd, HttpRequest* request) {
     request->return_code = 206;  // Success for Range: request
     LOG(INFO) << "Offset: " << request->offset;
   }
-  request->url = url;
+
+  if (headers.find("\r\nHost: ") == string::npos) {
+    request->host = "";
+  } else {
+    string::size_type host_start =
+        headers.find("\r\nHost: ") + strlen("\r\nHost: ");
+    string::size_type host_end = headers.find('\r', host_start);
+    CHECK_NE(string::npos, host_end);
+    string host = headers.substr(host_start, host_end - host_start);
+
+    LOG(INFO) << "Host: " << host;
+    request->host = host;
+  }
+
   return true;
 }
 
@@ -128,8 +144,8 @@ void HandleQuitQuitQuit(int fd) {
   exit(0);
 }
 
-void HandleBig(int fd, const HttpRequest& request) {
-  const off_t full_length = kBigLength;
+void HandleBig(int fd, const HttpRequest& request, int big_length) {
+  const off_t full_length = big_length;
   WriteHeaders(fd, true, full_length, request.offset, request.return_code);
   const off_t content_length = full_length - request.offset;
   int i = request.offset;
@@ -173,6 +189,36 @@ void HandleFlaky(int fd, const HttpRequest& request) {
   }
 }
 
+// Handles /redirect/<code>/<url> requests by returning the specified
+// redirect <code> with a location pointing to /<url>.
+void HandleRedirect(int fd, const HttpRequest& request) {
+  LOG(INFO) << "Redirecting...";
+  string url = request.url;
+  CHECK_EQ(0, url.find("/redirect/"));
+  url.erase(0, strlen("/redirect/"));
+  string::size_type url_start = url.find('/');
+  CHECK_NE(url_start, string::npos);
+  string code = url.substr(0, url_start);
+  url.erase(0, url_start);
+  url = "http://" + request.host + url;
+  string status;
+  if (code == "301") {
+    status = "Moved Permanently";
+  } else if (code == "302") {
+    status = "Found";
+  } else if (code == "303") {
+    status = "See Other";
+  } else if (code == "307") {
+    status = "Temporary Redirect";
+  } else {
+    CHECK(false) << "Unrecognized redirection code: " << code;
+  }
+  LOG(INFO) << "Code: " << code << " " << status;
+  LOG(INFO) << "New URL: " << url;
+  WriteString(fd, "HTTP/1.1 " + code + " " + status + "\r\n");
+  WriteString(fd, "Location: " + url + "\r\n");
+}
+
 void HandleDefault(int fd, const HttpRequest& request) {
   const string data("unhandled path");
   WriteHeaders(fd, true, data.size(), request.offset, request.return_code);
@@ -188,9 +234,13 @@ void HandleConnection(int fd) {
   if (request.url == "/quitquitquit")
     HandleQuitQuitQuit(fd);
   else if (request.url == "/big")
-    HandleBig(fd, request);
+    HandleBig(fd, request, kBigLength);
+  else if (request.url == "/medium")
+    HandleBig(fd, request, kMediumLength);
   else if (request.url == "/flaky")
     HandleFlaky(fd, request);
+  else if (request.url.find("/redirect/") == 0)
+    HandleRedirect(fd, request);
   else
     HandleDefault(fd, request);
 

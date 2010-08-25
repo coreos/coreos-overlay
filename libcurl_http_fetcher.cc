@@ -61,6 +61,13 @@ void LibcurlHttpFetcher::ResumeTransfer(const std::string& url) {
   CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_LOW_SPEED_TIME, 3 * 60),
            CURLE_OK);
 
+  // By default, libcurl doesn't follow redirections. Allow up to
+  // |kMaxRedirects| redirections.
+  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_FOLLOWLOCATION, 1),
+           CURLE_OK);
+  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_MAXREDIRS, kMaxRedirects),
+           CURLE_OK);
+
   CHECK_EQ(curl_multi_add_handle(curl_multi_handle_, curl_handle_), CURLM_OK);
   transfer_in_progress_ = true;
 }
