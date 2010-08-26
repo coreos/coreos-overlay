@@ -78,6 +78,7 @@ void LibcurlHttpFetcher::BeginTransfer(const std::string& url) {
   bytes_downloaded_ = 0;
   resume_offset_ = 0;
   retry_count_ = 0;
+  http_response_code_ = 0;
   ResumeTransfer(url);
   CurlPerformOnce();
 }
@@ -105,6 +106,7 @@ void LibcurlHttpFetcher::CurlPerformOnce() {
     } else {
       LOG(ERROR) << "Unable to get http response code.";
     }
+    http_response_code_ = static_cast<int>(http_response_code);
 
     // we're done!
     CleanUp();

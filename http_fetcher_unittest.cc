@@ -161,6 +161,7 @@ class HttpFetcherTestDelegate : public HttpFetcherDelegate {
     memcpy(str, bytes, length);
   }
   virtual void TransferComplete(HttpFetcher* fetcher, bool successful) {
+    EXPECT_EQ(200, fetcher->http_response_code());
     g_main_loop_quit(loop_);
   }
   GMainLoop* loop_;
@@ -332,6 +333,7 @@ TYPED_TEST(HttpFetcherTest, AbortTest) {
 
     g_main_loop_run(loop);
     g_source_destroy(timeout_source_);
+    EXPECT_EQ(0, fetcher->http_response_code());
   }
   g_main_loop_unref(loop);
 }
@@ -345,6 +347,7 @@ class FlakyHttpFetcherTestDelegate : public HttpFetcherDelegate {
   }
   virtual void TransferComplete(HttpFetcher* fetcher, bool successful) {
     EXPECT_TRUE(successful);
+    EXPECT_EQ(206, fetcher->http_response_code());
     g_main_loop_quit(loop_);
   }
   string data;
@@ -398,6 +401,7 @@ class FailureHttpFetcherTestDelegate : public HttpFetcherDelegate {
   }
   virtual void TransferComplete(HttpFetcher* fetcher, bool successful) {
     EXPECT_FALSE(successful);
+    EXPECT_EQ(0, fetcher->http_response_code());
     g_main_loop_quit(loop_);
   }
   GMainLoop* loop_;
@@ -466,6 +470,12 @@ class RedirectHttpFetcherTestDelegate : public HttpFetcherDelegate {
   }
   virtual void TransferComplete(HttpFetcher* fetcher, bool successful) {
     EXPECT_EQ(expected_successful_, successful);
+    if (expected_successful_)
+      EXPECT_EQ(200, fetcher->http_response_code());
+    else {
+      EXPECT_GE(fetcher->http_response_code(), 301);
+      EXPECT_LE(fetcher->http_response_code(), 307);
+    }
     g_main_loop_quit(loop_);
   }
   bool expected_successful_;

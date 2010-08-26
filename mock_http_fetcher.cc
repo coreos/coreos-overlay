@@ -17,6 +17,7 @@ MockHttpFetcher::~MockHttpFetcher() {
 }
 
 void MockHttpFetcher::BeginTransfer(const std::string& url) {
+  http_response_code_ = 0;
   if (sent_size_ < data_.size())
     SendData(true);
 }
@@ -34,7 +35,8 @@ bool MockHttpFetcher::SendData(bool skip_delivery) {
     sent_size_ += chunk_size;
     CHECK_LE(sent_size_, data_.size());
     if (sent_size_ == data_.size()) {
-      // We've sent all the data. notify of success
+      // We've sent all the data. Notify of success.
+      http_response_code_ = 200;
       delegate_->TransferComplete(this, true);
     }
   }

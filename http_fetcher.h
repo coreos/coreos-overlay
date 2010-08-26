@@ -23,14 +23,15 @@ class HttpFetcherDelegate;
 
 class HttpFetcher {
  public:
-  HttpFetcher() : post_data_set_(false), delegate_(NULL) {}
+  HttpFetcher()
+      : post_data_set_(false),
+        http_response_code_(0),
+        delegate_(NULL) {}
   virtual ~HttpFetcher() {}
-  void set_delegate(HttpFetcherDelegate* delegate) {
-    delegate_ = delegate;
-  }
-  HttpFetcherDelegate* delegate() const {
-    return delegate_;
-  }
+
+  void set_delegate(HttpFetcherDelegate* delegate) { delegate_ = delegate; }
+  HttpFetcherDelegate* delegate() const { return delegate_; }
+  int http_response_code() const { return http_response_code_; }
 
   // Optional: Post data to the server. The HttpFetcher should make a copy
   // of this data and upload it via HTTP POST during the transfer.
@@ -65,6 +66,11 @@ class HttpFetcher {
   // POST data for the transfer, and whether or not it was ever set
   bool post_data_set_;
   std::vector<char> post_data_;
+
+  // The server's HTTP response code from the last transfer. This
+  // field should be set to 0 when a new transfer is initiated, and
+  // set to the response code when the transfer is complete.
+  int http_response_code_;
 
   // The delegate; may be NULL.
   HttpFetcherDelegate* delegate_;
