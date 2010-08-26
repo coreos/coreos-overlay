@@ -88,6 +88,13 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // UPDATED_NEED_REBOOT. Returns true on sucess, false otherwise.
   bool RebootIfNeeded();
 
+  // Kicks off the periodic update checks, if necessary.
+  void InitiatePeriodicUpdateChecks();
+
+  // Schedules the next periodic update check |seconds| from now. Note
+  // that the actual timeout will be fuzzed.
+  void SchedulePeriodicUpdateCheck(int seconds);
+
   // DownloadActionDelegate methods
   void SetDownloadStatus(bool active);
   void BytesReceived(uint64_t bytes_received, uint64_t total);

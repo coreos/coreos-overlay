@@ -35,6 +35,21 @@ using std::vector;
 
 namespace chromeos_update_engine {
 
+namespace {
+
+const int kTimeoutOnce = 7 * 60;  // at 7 minutes
+const int kTimeoutPeriodic = 45 * 60;  // every 45 minutes
+const int kTimeoutFuzz = 10 * 60;  // +/- 5 minutes
+
+gboolean CheckForUpdatePeriodically(void* arg) {
+  UpdateAttempter* update_attempter = reinterpret_cast<UpdateAttempter*>(arg);
+  update_attempter->Update("", "");
+  update_attempter->SchedulePeriodicUpdateCheck(kTimeoutPeriodic);
+  return FALSE;  // Don't run again.
+}
+
+}  // namespace {}
+
 const char* kUpdateCompletedMarker = "/tmp/update_engine_autoupdate_completed";
 
 const char* UpdateStatusToString(UpdateStatus status) {
@@ -409,6 +424,27 @@ bool UpdateAttempter::ScheduleErrorEventAction() {
   SetStatusAndNotify(UPDATE_STATUS_REPORTING_ERROR_EVENT);
   processor_.StartProcessing();
   return true;
+}
+
+void UpdateAttempter::InitiatePeriodicUpdateChecks() {
+  if (!utils::IsOfficialBuild()) {
+    LOG(WARNING) << "Non-official build: periodic update checks disabled.";
+    return;
+  }
+  if (utils::IsRemovableDevice(utils::RootDevice(utils::BootDevice()))) {
+    LOG(WARNING) << "Removable device boot: periodic update checks disabled.";
+    return;
+  }
+  // Kick off periodic update checks. The first check is scheduled
+  // |kTimeoutOnce| seconds from now. Subsequent checks are scheduled
+  // at |kTimeoutPeriodic|-second intervals.
+  SchedulePeriodicUpdateCheck(kTimeoutOnce);
+}
+
+void UpdateAttempter::SchedulePeriodicUpdateCheck(int seconds) {
+  seconds = utils::FuzzInt(seconds, kTimeoutFuzz);
+  g_timeout_add_seconds(seconds, CheckForUpdatePeriodically, this);
+  LOG(INFO) << "Next update check in " << seconds << " seconds.";
 }
 
 void UpdateAttempter::SetPriority(utils::ProcessPriority priority) {

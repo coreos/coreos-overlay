@@ -46,45 +46,6 @@ gboolean UpdateBootFlags(void* arg) {
 
 namespace {
 
-const int kTimeoutOnce = 7 * 60;  // at 7 minutes
-const int kTimeoutPeriodic = 45 * 60;  // every 45 minutes
-const int kTimeoutFuzz = 10 * 60;  // +/- 5 minutes
-
-// Schedules an update check |seconds| from now, while adding some fuzz.
-void ScheduleUpdateCheck(int seconds,
-                         GSourceFunc update_function,
-                         UpdateAttempter* update_attempter) {
-  seconds = utils::FuzzInt(seconds, kTimeoutFuzz);
-  g_timeout_add_seconds(seconds, update_function, update_attempter);
-}
-
-gboolean UpdateOnce(void* arg) {
-  UpdateAttempter* update_attempter = reinterpret_cast<UpdateAttempter*>(arg);
-  update_attempter->Update("", "");
-  return FALSE;  // Don't run again.
-}
-
-gboolean UpdatePeriodically(void* arg) {
-  UpdateAttempter* update_attempter = reinterpret_cast<UpdateAttempter*>(arg);
-  update_attempter->Update("", "");
-  ScheduleUpdateCheck(kTimeoutPeriodic, &UpdatePeriodically, update_attempter);
-  return FALSE;  // Don't run again.
-}
-
-void SchedulePeriodicUpdateChecks(UpdateAttempter* update_attempter) {
-  if (!utils::IsOfficialBuild()) {
-    LOG(WARNING) << "Non-official build: periodic update checks disabled.";
-    return;
-  }
-  if (utils::IsRemovableDevice(utils::RootDevice(utils::BootDevice()))) {
-    LOG(WARNING) << "Removable device boot: periodic update checks disabled.";
-    return;
-  }
-  // Kick off periodic updating.
-  ScheduleUpdateCheck(kTimeoutOnce, &UpdateOnce, update_attempter);
-  ScheduleUpdateCheck(kTimeoutPeriodic, &UpdatePeriodically, update_attempter);
-}
-
 void SetupDbusService(UpdateEngineService* service) {
   DBusGConnection *bus;
   DBusGProxy *proxy;
@@ -167,7 +128,7 @@ int main(int argc, char** argv) {
   update_attempter.set_dbus_service(service);
   chromeos_update_engine::SetupDbusService(service);
 
-  chromeos_update_engine::SchedulePeriodicUpdateChecks(&update_attempter);
+  update_attempter.InitiatePeriodicUpdateChecks();
 
   // Update boot flags after 45 seconds
   g_timeout_add_seconds(45, &chromeos_update_engine::UpdateBootFlags, NULL);
