@@ -18,11 +18,13 @@
 
 #include <algorithm>
 
-#include "base/file_path.h"
-#include "base/file_util.h"
-#include "base/rand_util.h"
-#include "base/string_util.h"
-#include "base/logging.h"
+#include <base/file_path.h>
+#include <base/file_util.h>
+#include <base/rand_util.h>
+#include <base/string_util.h>
+#include <base/logging.h>
+#include <rootdev/rootdev.h>
+
 #include "update_engine/file_writer.h"
 #include "update_engine/omaha_request_params.h"
 #include "update_engine/subprocess.h"
@@ -363,31 +365,21 @@ bool StringHasPrefix(const std::string& str, const std::string& prefix) {
   return 0 == str.compare(0, prefix.size(), prefix);
 }
 
-const string BootDevice() {
-  string proc_cmdline;
-  if (!ReadFileToString("/proc/cmdline", &proc_cmdline))
-    return "";
-  // look for "root=" in the command line
-  string::size_type pos = 0;
-  if (!StringHasPrefix(proc_cmdline, "root=")) {
-    pos = proc_cmdline.find(" root=") + 1;
-  }
-  if (pos == string::npos) {
-    // can't find root=
+const std::string BootDevice() {
+  char boot_path[PATH_MAX];
+  // Resolve the boot device path fully, including dereferencing
+  // through dm-verity.
+  int ret = rootdev(boot_path, sizeof(boot_path), true, false);
+
+  if (ret < 0) {
+    LOG(ERROR) << "rootdev failed to find the root device";
     return "";
   }
-  // at this point, pos is the point in the string where "root=" starts
-  string ret;
-  pos += strlen("root=");  // advance to the device name itself
-  while (pos < proc_cmdline.size()) {
-    char c = proc_cmdline[pos];
-    if (c == ' ')
-      break;
-    ret += c;
-    pos++;
-  }
-  return ret;
-  // TODO(adlr): use findfs to figure out UUID= or LABEL= filesystems
+  LOG_IF(WARNING, ret > 0) << "rootdev found a device name with no device node";
+
+  // This local variable is used to construct the return string and is not
+  // passed around after use.
+  return boot_path;
 }
 
 const string BootKernelDevice(const std::string& boot_device) {

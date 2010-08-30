@@ -165,6 +165,7 @@ env['LIBS'] = Split("""base
                        metrics
                        protobuf
                        pthread
+                       rootdev
                        ssl
                        xml2
                        z""")
