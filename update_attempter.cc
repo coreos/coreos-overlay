@@ -15,8 +15,8 @@
 #include <vector>
 
 #include <glib.h>
+#include <metrics/metrics_library.h>
 
-#include "metrics/metrics_library.h"
 #include "update_engine/dbus_service.h"
 #include "update_engine/download_action.h"
 #include "update_engine/filesystem_copier_action.h"
@@ -26,6 +26,7 @@
 #include "update_engine/omaha_response_handler_action.h"
 #include "update_engine/postinstall_runner_action.h"
 #include "update_engine/set_bootable_flag_action.h"
+#include "update_engine/update_check_scheduler.h"
 
 using base::TimeDelta;
 using base::TimeTicks;
@@ -34,21 +35,6 @@ using std::string;
 using std::vector;
 
 namespace chromeos_update_engine {
-
-namespace {
-
-const int kTimeoutOnce = 7 * 60;  // at 7 minutes
-const int kTimeoutPeriodic = 45 * 60;  // every 45 minutes
-const int kTimeoutFuzz = 10 * 60;  // +/- 5 minutes
-
-gboolean CheckForUpdatePeriodically(void* arg) {
-  UpdateAttempter* update_attempter = reinterpret_cast<UpdateAttempter*>(arg);
-  update_attempter->Update("", "");
-  update_attempter->SchedulePeriodicUpdateCheck(kTimeoutPeriodic);
-  return FALSE;  // Don't run again.
-}
-
-}  // namespace {}
 
 const char* kUpdateCompletedMarker = "/tmp/update_engine_autoupdate_completed";
 
@@ -104,6 +90,8 @@ UpdateAttempter::UpdateAttempter(PrefsInterface* prefs,
     : dbus_service_(NULL),
       prefs_(prefs),
       metrics_lib_(metrics_lib),
+      update_check_scheduler_(NULL),
+      http_response_code_(0),
       priority_(utils::kProcessPriorityNormal),
       manage_priority_source_(NULL),
       download_active_(false),
@@ -131,6 +119,7 @@ void UpdateAttempter::Update(const std::string& app_version,
     // Update in progress. Do nothing
     return;
   }
+  http_response_code_ = 0;
   if (!omaha_request_params_.Init(app_version, omaha_url)) {
     LOG(ERROR) << "Unable to initialize Omaha request device params.";
     return;
@@ -271,9 +260,10 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
     return;
   }
 
-  LOG(INFO) << "Update failed.";
-  if (ScheduleErrorEventAction())
+  if (ScheduleErrorEventAction()) {
     return;
+  }
+  LOG(INFO) << "No update.";
   SetStatusAndNotify(UPDATE_STATUS_IDLE);
 }
 
@@ -291,11 +281,23 @@ void UpdateAttempter::ProcessingStopped(const ActionProcessor* processor) {
 void UpdateAttempter::ActionCompleted(ActionProcessor* processor,
                                       AbstractAction* action,
                                       ActionExitCode code) {
-  // Reset download progress regardless of whether or not the download action
-  // succeeded.
+  // Reset download progress regardless of whether or not the download
+  // action succeeded. Also, get the response code from HTTP request
+  // actions (update download as well as the initial update check
+  // actions).
   const string type = action->Type();
-  if (type == DownloadAction::StaticType())
+  if (type == DownloadAction::StaticType()) {
     download_progress_ = 0.0;
+    DownloadAction* download_action = dynamic_cast<DownloadAction*>(action);
+    http_response_code_ = download_action->GetHTTPResponseCode();
+  } else if (type == OmahaRequestAction::StaticType()) {
+    OmahaRequestAction* omaha_request_action =
+        dynamic_cast<OmahaRequestAction*>(action);
+    // If the request is not an event, then it's the update-check.
+    if (!omaha_request_action->IsEvent()) {
+      http_response_code_ = omaha_request_action->GetHTTPResponseCode();
+    }
+  }
   if (code != kActionCodeSuccess) {
     // On failure, schedule an error event to be sent to Omaha.
     CreatePendingErrorEvent(action, code);
@@ -374,6 +376,9 @@ bool UpdateAttempter::GetStatus(int64_t* last_checked_time,
 
 void UpdateAttempter::SetStatusAndNotify(UpdateStatus status) {
   status_ = status;
+  if (update_check_scheduler_) {
+    update_check_scheduler_->SetUpdateStatus(status_);
+  }
   if (!dbus_service_)
     return;
   last_notify_time_ = TimeTicks::Now();
@@ -414,6 +419,7 @@ bool UpdateAttempter::ScheduleErrorEventAction() {
   if (error_event_.get() == NULL)
     return false;
 
+  LOG(INFO) << "Update failed -- reporting the error event.";
   shared_ptr<OmahaRequestAction> error_event_action(
       new OmahaRequestAction(prefs_,
                              omaha_request_params_,
@@ -424,27 +430,6 @@ bool UpdateAttempter::ScheduleErrorEventAction() {
   SetStatusAndNotify(UPDATE_STATUS_REPORTING_ERROR_EVENT);
   processor_.StartProcessing();
   return true;
-}
-
-void UpdateAttempter::InitiatePeriodicUpdateChecks() {
-  if (!utils::IsOfficialBuild()) {
-    LOG(WARNING) << "Non-official build: periodic update checks disabled.";
-    return;
-  }
-  if (utils::IsRemovableDevice(utils::RootDevice(utils::BootDevice()))) {
-    LOG(WARNING) << "Removable device boot: periodic update checks disabled.";
-    return;
-  }
-  // Kick off periodic update checks. The first check is scheduled
-  // |kTimeoutOnce| seconds from now. Subsequent checks are scheduled
-  // at |kTimeoutPeriodic|-second intervals.
-  SchedulePeriodicUpdateCheck(kTimeoutOnce);
-}
-
-void UpdateAttempter::SchedulePeriodicUpdateCheck(int seconds) {
-  seconds = utils::FuzzInt(seconds, kTimeoutFuzz);
-  g_timeout_add_seconds(seconds, CheckForUpdatePeriodically, this);
-  LOG(INFO) << "Next update check in " << seconds << " seconds.";
 }
 
 void UpdateAttempter::SetPriority(utils::ProcessPriority priority) {

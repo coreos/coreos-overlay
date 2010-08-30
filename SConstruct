@@ -223,6 +223,7 @@ sources = Split("""action_processor.cc
                    tarjan.cc
                    topological_sort.cc
                    update_attempter.cc
+                   update_check_scheduler.cc
                    update_metadata.pb.cc
                    utils.cc""")
 main = ['main.cc']
@@ -258,6 +259,7 @@ unittest_sources = Split("""action_unittest.cc
                             tarjan_unittest.cc
                             test_utils.cc
                             topological_sort_unittest.cc
+                            update_check_scheduler_unittest.cc
                             utils_unittest.cc
                             zip_unittest.cc""")
 unittest_main = ['testrunner.cc']

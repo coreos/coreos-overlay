@@ -24,9 +24,7 @@ struct UpdateEngineService;
 
 namespace chromeos_update_engine {
 
-namespace utils {
-enum ProcessPriority;
-};
+class UpdateCheckScheduler;
 
 extern const char* kUpdateCompletedMarker;
 
@@ -47,12 +45,13 @@ class UpdateAttempter : public ActionProcessorDelegate,
                         public DownloadActionDelegate {
  public:
   UpdateAttempter(PrefsInterface* prefs, MetricsLibraryInterface* metrics_lib);
-  ~UpdateAttempter();
+  virtual ~UpdateAttempter();
 
   // Checks for update and, if a newer version is available, attempts
   // to update the system. Non-empty |in_app_version| or
   // |in_update_url| prevents automatic detection of the parameter.
-  void Update(const std::string& app_version, const std::string& omaha_url);
+  virtual void Update(const std::string& app_version,
+                      const std::string& omaha_url);
 
   // ActionProcessorDelegate methods:
   void ProcessingDone(const ActionProcessor* processor, ActionExitCode code);
@@ -75,8 +74,20 @@ class UpdateAttempter : public ActionProcessorDelegate,
                  std::string* new_version,
                  int64_t* new_size);
 
+  UpdateStatus status() const { return status_; }
+
+  int http_response_code() const { return http_response_code_; }
+  void set_http_response_code(int code) { http_response_code_ = code; }
+
   void set_dbus_service(struct UpdateEngineService* dbus_service) {
     dbus_service_ = dbus_service;
+  }
+
+  UpdateCheckScheduler* update_check_scheduler() const {
+    return update_check_scheduler_;
+  }
+  void set_update_check_scheduler(UpdateCheckScheduler* scheduler) {
+    update_check_scheduler_ = scheduler;
   }
 
   // This is the D-Bus service entry point for going through an
@@ -87,13 +98,6 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // Initiates a reboot if the current state is
   // UPDATED_NEED_REBOOT. Returns true on sucess, false otherwise.
   bool RebootIfNeeded();
-
-  // Kicks off the periodic update checks, if necessary.
-  void InitiatePeriodicUpdateChecks();
-
-  // Schedules the next periodic update check |seconds| from now. Note
-  // that the actual timeout will be fuzzed.
-  void SchedulePeriodicUpdateCheck(int seconds);
 
   // DownloadActionDelegate methods
   void SetDownloadStatus(bool active);
@@ -155,8 +159,13 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // Pointer to the UMA metrics collection library.
   MetricsLibraryInterface* metrics_lib_;
 
+  // The current UpdateCheckScheduler to notify of state transitions.
+  UpdateCheckScheduler* update_check_scheduler_;
+
   // Pending error event, if any.
   scoped_ptr<OmahaEvent> error_event_;
+
+  int http_response_code_;
 
   // Current process priority.
   utils::ProcessPriority priority_;

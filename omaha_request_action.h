@@ -127,6 +127,8 @@ class OmahaRequestAction : public Action<OmahaRequestAction>,
   void PerformAction();
   void TerminateProcessing();
 
+  int GetHTTPResponseCode() { return http_fetcher_->http_response_code(); }
+
   // Debugging/logging
   static std::string StaticType() { return "OmahaRequestAction"; }
   std::string Type() const { return StaticType(); }

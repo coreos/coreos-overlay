@@ -76,6 +76,8 @@ class DownloadAction : public Action<DownloadAction>,
     writer_ = writer;
   }
 
+  int GetHTTPResponseCode() { return http_fetcher_->http_response_code(); }
+
   // Debugging/logging
   static std::string StaticType() { return "DownloadAction"; }
   std::string Type() const { return StaticType(); }

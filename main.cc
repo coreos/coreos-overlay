@@ -6,20 +6,20 @@
 #include <tr1/memory>
 #include <vector>
 
+#include <base/at_exit.h>
+#include <base/command_line.h>
+#include <base/logging.h>
+#include <base/string_util.h>
 #include <gflags/gflags.h>
 #include <glib.h>
+#include <metrics/metrics_library.h>
 
-#include "base/at_exit.h"
-#include "base/command_line.h"
-#include "base/logging.h"
-#include "base/string_util.h"
-#include "metrics/metrics_library.h"
 #include "update_engine/dbus_constants.h"
 #include "update_engine/dbus_service.h"
 #include "update_engine/prefs.h"
 #include "update_engine/subprocess.h"
 #include "update_engine/update_attempter.h"
-#include "update_engine/utils.h"
+#include "update_engine/update_check_scheduler.h"
 
 extern "C" {
 #include "update_engine/update_engine.dbusserver.h"
@@ -128,7 +128,9 @@ int main(int argc, char** argv) {
   update_attempter.set_dbus_service(service);
   chromeos_update_engine::SetupDbusService(service);
 
-  update_attempter.InitiatePeriodicUpdateChecks();
+  // Schedule periodic update checks.
+  chromeos_update_engine::UpdateCheckScheduler scheduler(&update_attempter);
+  scheduler.Run();
 
   // Update boot flags after 45 seconds
   g_timeout_add_seconds(45, &chromeos_update_engine::UpdateBootFlags, NULL);
