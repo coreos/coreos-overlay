@@ -17,7 +17,8 @@ UpdateCheckScheduler::UpdateCheckScheduler(UpdateAttempter* update_attempter)
     : update_attempter_(update_attempter),
       enabled_(false),
       scheduled_(false),
-      last_interval_(0) {}
+      last_interval_(0),
+      poll_interval_(0) {}
 
 UpdateCheckScheduler::~UpdateCheckScheduler() {}
 
@@ -90,18 +91,23 @@ gboolean UpdateCheckScheduler::StaticCheck(void* scheduler) {
 void UpdateCheckScheduler::ComputeNextIntervalAndFuzz(int* next_interval,
                                                       int* next_fuzz) {
   int interval = 0;
-  int fuzz = 0;
-  // Implements exponential back off on 500 (Internal Server Error) and 503
-  // (Service Unavailable) HTTP response codes.
-  if (update_attempter_->http_response_code() == 500 ||
-      update_attempter_->http_response_code() == 503) {
+  if (poll_interval_ > 0) {
+    // Server-dictated poll interval.
+    interval = poll_interval_;
+    LOG(WARNING) << "Using server-dictated poll interval: " << interval;
+  } else if (update_attempter_->http_response_code() == 500 ||
+             update_attempter_->http_response_code() == 503) {
+    // Implements exponential back off on 500 (Internal Server Error) and 503
+    // (Service Unavailable) HTTP response codes.
     interval = 2 * last_interval_;
-    if (interval > kTimeoutMaxBackoff) {
-      interval = kTimeoutMaxBackoff;
-    }
-    // Exponential back off is fuzzed by +/- |interval|/2.
-    fuzz = interval;
+    LOG(WARNING) << "Exponential back off due to 500/503 HTTP response code.";
   }
+  if (interval > kTimeoutMaxBackoff) {
+    interval = kTimeoutMaxBackoff;
+  }
+  // Back off and server-dictated poll intervals are fuzzed by +/- |interval|/2.
+  int fuzz = interval;
+
   // Ensures that under normal conditions the regular update check interval and
   // fuzz are used. Also covers the case where back off is required based on the
   // initial update check.

@@ -11,9 +11,9 @@
 
 #include <string>
 
+#include <base/scoped_ptr.h>
 #include <curl/curl.h>
 
-#include "base/scoped_ptr.h"
 #include "update_engine/action.h"
 #include "update_engine/http_fetcher.h"
 
@@ -30,9 +30,16 @@ std::string XmlEncode(const std::string& input);
 // These strings in this struct are not XML escaped.
 struct OmahaResponse {
   OmahaResponse()
-      : update_exists(false), size(0), needs_admin(false), prompt(false) {}
+      : update_exists(false),
+        poll_interval(0),
+        size(0),
+        needs_admin(false),
+        prompt(false) {}
   // True iff there is an update to be downloaded.
   bool update_exists;
+
+  // If non-zero, server-dictated poll frequency in seconds.
+  int poll_interval;
 
   // These are only valid if update_exists is true:
   std::string display_version;

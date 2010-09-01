@@ -3,17 +3,19 @@
 // found in the LICENSE file.
 
 #include "update_engine/omaha_request_action.h"
+
 #include <inttypes.h>
+
 #include <sstream>
 
+#include <base/string_number_conversions.h>
+#include <base/string_util.h>
+#include <base/time.h>
+#include <base/logging.h>
 #include <libxml/parser.h>
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
 
-#include "base/string_number_conversions.h"
-#include "base/string_util.h"
-#include "base/time.h"
-#include "base/logging.h"
 #include "update_engine/action_pipe.h"
 #include "update_engine/omaha_request_params.h"
 #include "update_engine/prefs_interface.h"
@@ -377,8 +379,10 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
     return;
   }
 
-  const string status(XmlGetProperty(updatecheck_node, "status"));
   OmahaResponse output_object;
+  base::StringToInt(XmlGetProperty(updatecheck_node, "PollInterval"),
+                    &output_object.poll_interval);
+  const string status(XmlGetProperty(updatecheck_node, "status"));
   if (status == "noupdate") {
     LOG(INFO) << "No update.";
     output_object.update_exists = false;
@@ -409,7 +413,6 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
   output_object.is_delta =
       XmlGetProperty(updatecheck_node, "IsDelta") == "true";
   SetOutputObject(output_object);
-  return;
 }
 
 };  // namespace chromeos_update_engine

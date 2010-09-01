@@ -49,10 +49,14 @@ class UpdateCheckScheduler {
   // Sets the new update status. This is invoked by UpdateAttempter.
   void SetUpdateStatus(UpdateStatus status);
 
+  void set_poll_interval(int interval) { poll_interval_ = interval; }
+
  private:
   friend class UpdateCheckSchedulerTest;
   FRIEND_TEST(UpdateCheckSchedulerTest, CanScheduleTest);
   FRIEND_TEST(UpdateCheckSchedulerTest, ComputeNextIntervalAndFuzzBackoffTest);
+  FRIEND_TEST(UpdateCheckSchedulerTest, ComputeNextIntervalAndFuzzPollTest);
+  FRIEND_TEST(UpdateCheckSchedulerTest, ComputeNextIntervalAndFuzzPriorityTest);
   FRIEND_TEST(UpdateCheckSchedulerTest, ComputeNextIntervalAndFuzzTest);
   FRIEND_TEST(UpdateCheckSchedulerTest, GTimeoutAddSecondsTest);
   FRIEND_TEST(UpdateCheckSchedulerTest, IsBootDeviceRemovableTest);
@@ -109,6 +113,9 @@ class UpdateCheckScheduler {
 
   // The timeout interval (before fuzzing) for the last update check.
   int last_interval_;
+
+  // Server dictated poll interval in seconds, if positive.
+  int poll_interval_;
 
   DISALLOW_COPY_AND_ASSIGN(UpdateCheckScheduler);
 };

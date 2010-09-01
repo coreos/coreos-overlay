@@ -48,6 +48,7 @@ class UpdateCheckSchedulerTest : public ::testing::Test {
     EXPECT_FALSE(scheduler_.enabled_);
     EXPECT_FALSE(scheduler_.scheduled_);
     EXPECT_EQ(0, scheduler_.last_interval_);
+    EXPECT_EQ(0, scheduler_.poll_interval_);
   }
 
   virtual void TearDown() {
@@ -90,11 +91,40 @@ TEST_F(UpdateCheckSchedulerTest, ComputeNextIntervalAndFuzzBackoffTest) {
   EXPECT_EQ(2 * last_interval, fuzz);
 
   attempter_.set_http_response_code(503);
-  last_interval = UpdateCheckScheduler::kTimeoutMaxBackoff / 2 + 1;
-  scheduler_.last_interval_ = last_interval;
+  scheduler_.last_interval_ = UpdateCheckScheduler::kTimeoutMaxBackoff / 2 + 1;
   scheduler_.ComputeNextIntervalAndFuzz(&interval, &fuzz);
   EXPECT_EQ(UpdateCheckScheduler::kTimeoutMaxBackoff, interval);
   EXPECT_EQ(UpdateCheckScheduler::kTimeoutMaxBackoff, fuzz);
+}
+
+TEST_F(UpdateCheckSchedulerTest, ComputeNextIntervalAndFuzzPollTest) {
+  int interval, fuzz;
+  int poll_interval = UpdateCheckScheduler::kTimeoutPeriodic + 50;
+  scheduler_.set_poll_interval(poll_interval);
+  scheduler_.ComputeNextIntervalAndFuzz(&interval, &fuzz);
+  EXPECT_EQ(poll_interval, interval);
+  EXPECT_EQ(poll_interval, fuzz);
+
+  scheduler_.set_poll_interval(UpdateCheckScheduler::kTimeoutMaxBackoff + 1);
+  scheduler_.ComputeNextIntervalAndFuzz(&interval, &fuzz);
+  EXPECT_EQ(UpdateCheckScheduler::kTimeoutMaxBackoff, interval);
+  EXPECT_EQ(UpdateCheckScheduler::kTimeoutMaxBackoff, fuzz);
+
+  scheduler_.set_poll_interval(UpdateCheckScheduler::kTimeoutPeriodic - 1);
+  scheduler_.ComputeNextIntervalAndFuzz(&interval, &fuzz);
+  EXPECT_EQ(UpdateCheckScheduler::kTimeoutPeriodic, interval);
+  EXPECT_EQ(UpdateCheckScheduler::kTimeoutRegularFuzz, fuzz);
+}
+
+TEST_F(UpdateCheckSchedulerTest, ComputeNextIntervalAndFuzzPriorityTest) {
+  int interval, fuzz;
+  attempter_.set_http_response_code(500);
+  scheduler_.last_interval_ = UpdateCheckScheduler::kTimeoutPeriodic + 50;
+  int poll_interval = UpdateCheckScheduler::kTimeoutPeriodic + 100;
+  scheduler_.set_poll_interval(poll_interval);
+  scheduler_.ComputeNextIntervalAndFuzz(&interval, &fuzz);
+  EXPECT_EQ(poll_interval, interval);
+  EXPECT_EQ(poll_interval, fuzz);
 }
 
 TEST_F(UpdateCheckSchedulerTest, ComputeNextIntervalAndFuzzTest) {

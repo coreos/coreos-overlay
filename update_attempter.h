@@ -11,10 +11,10 @@
 #include <string>
 #include <vector>
 
+#include <base/time.h>
 #include <glib.h>
 #include <gtest/gtest_prod.h>  // for FRIEND_TEST
 
-#include "base/time.h"
 #include "update_engine/action_processor.h"
 #include "update_engine/download_action.h"
 #include "update_engine/omaha_request_params.h"
@@ -169,6 +169,7 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // Pending error event, if any.
   scoped_ptr<OmahaEvent> error_event_;
 
+  // HTTP server response code from the last HTTP request action.
   int http_response_code_;
 
   // Current process priority.

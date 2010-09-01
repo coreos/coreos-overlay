@@ -297,6 +297,12 @@ void UpdateAttempter::ActionCompleted(ActionProcessor* processor,
     // If the request is not an event, then it's the update-check.
     if (!omaha_request_action->IsEvent()) {
       http_response_code_ = omaha_request_action->GetHTTPResponseCode();
+      // Forward the server-dictated poll interval to the update check
+      // scheduler, if any.
+      if (update_check_scheduler_) {
+        update_check_scheduler_->set_poll_interval(
+            omaha_request_action->GetOutputObject().poll_interval);
+      }
     }
   }
   if (code != kActionCodeSuccess) {
