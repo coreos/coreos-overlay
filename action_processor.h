@@ -43,12 +43,12 @@ class ActionProcessor {
  public:
   ActionProcessor();
 
-  ~ActionProcessor();
+  virtual ~ActionProcessor();
 
   // Starts processing the first Action in the queue. If there's a delegate,
   // when all processing is complete, ProcessingDone() will be called on the
   // delegate.
-  void StartProcessing();
+  virtual void StartProcessing();
 
   // Aborts processing. If an Action is running, it will have
   // TerminateProcessing() called on it. The Action that was running
@@ -59,9 +59,10 @@ class ActionProcessor {
   bool IsRunning() const { return NULL != current_action_; }
 
   // Adds another Action to the end of the queue.
-  void EnqueueAction(AbstractAction* action);
+  virtual void EnqueueAction(AbstractAction* action);
 
-  // Sets the current delegate. Set to NULL to remove a delegate.
+  // Sets/gets the current delegate. Set to NULL to remove a delegate.
+  ActionProcessorDelegate* delegate() const { return delegate_; }
   void set_delegate(ActionProcessorDelegate *delegate) {
     delegate_ = delegate;
   }

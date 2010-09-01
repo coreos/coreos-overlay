@@ -87,7 +87,8 @@ ActionExitCode GetErrorCodeForAction(AbstractAction* action,
 
 UpdateAttempter::UpdateAttempter(PrefsInterface* prefs,
                                  MetricsLibraryInterface* metrics_lib)
-    : dbus_service_(NULL),
+    : processor_(new ActionProcessor()),
+      dbus_service_(NULL),
       prefs_(prefs),
       metrics_lib_(metrics_lib),
       update_check_scheduler_(NULL),
@@ -124,8 +125,8 @@ void UpdateAttempter::Update(const std::string& app_version,
     LOG(ERROR) << "Unable to initialize Omaha request device params.";
     return;
   }
-  CHECK(!processor_.IsRunning());
-  processor_.set_delegate(this);
+  CHECK(!processor_->IsRunning());
+  processor_->set_delegate(this);
 
   // Actions:
   shared_ptr<OmahaRequestAction> update_check_action(
@@ -186,7 +187,7 @@ void UpdateAttempter::Update(const std::string& app_version,
   // Enqueue the actions
   for (vector<shared_ptr<AbstractAction> >::iterator it = actions_.begin();
        it != actions_.end(); ++it) {
-    processor_.EnqueueAction(it->get());
+    processor_->EnqueueAction(it->get());
   }
 
   // Bond them together. We have to use the leaf-types when calling
@@ -207,7 +208,7 @@ void UpdateAttempter::Update(const std::string& app_version,
               postinstall_runner_action_postcommit.get());
 
   SetStatusAndNotify(UPDATE_STATUS_CHECKING_FOR_UPDATE);
-  processor_.StartProcessing();
+  processor_->StartProcessing();
 }
 
 void UpdateAttempter::CheckForUpdate(const std::string& app_version,
@@ -426,9 +427,9 @@ bool UpdateAttempter::ScheduleErrorEventAction() {
                              error_event_.release(),  // Pass ownership.
                              new LibcurlHttpFetcher));
   actions_.push_back(shared_ptr<AbstractAction>(error_event_action));
-  processor_.EnqueueAction(error_event_action.get());
+  processor_->EnqueueAction(error_event_action.get());
   SetStatusAndNotify(UPDATE_STATUS_REPORTING_ERROR_EVENT);
-  processor_.StartProcessing();
+  processor_->StartProcessing();
   return true;
 }
 

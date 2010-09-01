@@ -12,6 +12,7 @@
 #include <vector>
 
 #include <glib.h>
+#include <gtest/gtest_prod.h>  // for FRIEND_TEST
 
 #include "base/time.h"
 #include "update_engine/action_processor.h"
@@ -104,6 +105,9 @@ class UpdateAttempter : public ActionProcessorDelegate,
   void BytesReceived(uint64_t bytes_received, uint64_t total);
 
  private:
+  friend class UpdateAttempterTest;
+  FRIEND_TEST(UpdateAttempterTest, UpdateTest);
+
   // Sets the status to the given status and notifies a status update
   // over dbus.
   void SetStatusAndNotify(UpdateStatus status);
@@ -144,7 +148,7 @@ class UpdateAttempter : public ActionProcessorDelegate,
   base::TimeTicks last_notify_time_;
 
   std::vector<std::tr1::shared_ptr<AbstractAction> > actions_;
-  ActionProcessor processor_;
+  scoped_ptr<ActionProcessor> processor_;
 
   // If non-null, this UpdateAttempter will send status updates over this
   // dbus service.

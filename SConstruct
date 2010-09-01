@@ -259,6 +259,7 @@ unittest_sources = Split("""action_unittest.cc
                             tarjan_unittest.cc
                             test_utils.cc
                             topological_sort_unittest.cc
+                            update_attempter_unittest.cc
                             update_check_scheduler_unittest.cc
                             utils_unittest.cc
                             zip_unittest.cc""")

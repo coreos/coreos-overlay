@@ -87,6 +87,7 @@ class DownloadAction : public Action<DownloadAction>,
                              const char* bytes, int length);
   virtual void TransferComplete(HttpFetcher *fetcher, bool successful);
 
+  DownloadActionDelegate* delegate() const { return delegate_; }
   void set_delegate(DownloadActionDelegate* delegate) {
     delegate_ = delegate;
   }
