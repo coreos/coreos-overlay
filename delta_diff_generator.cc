@@ -431,35 +431,34 @@ bool DeltaCompressKernelPartition(
   // Add a new install operation
   ops->resize(1);
   DeltaArchiveManifest_InstallOperation* op = &(*ops)[0];
-  op->set_type(DeltaArchiveManifest_InstallOperation_Type_BSDIFF);
+  op->set_type(DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ);
   op->set_data_offset(*blobs_length);
 
   // Do the actual compression
   vector<char> data;
-  TEST_AND_RETURN_FALSE(BsdiffFiles(old_kernel_part, new_kernel_part, &data));
-  TEST_AND_RETURN_FALSE(utils::WriteAll(blobs_fd, &data[0], data.size()));
-  *blobs_length += data.size();
+  TEST_AND_RETURN_FALSE(utils::ReadFile(new_kernel_part, &data));
+  TEST_AND_RETURN_FALSE(!data.empty());
 
-  off_t old_part_size = utils::FileSize(old_kernel_part);
-  TEST_AND_RETURN_FALSE(old_part_size >= 0);
+  vector<char> data_bz;
+  TEST_AND_RETURN_FALSE(BzipCompress(data, &data_bz));
+  CHECK(!data_bz.empty());
+
+  TEST_AND_RETURN_FALSE(utils::WriteAll(blobs_fd, &data_bz[0], data_bz.size()));
+  *blobs_length += data_bz.size();
+
   off_t new_part_size = utils::FileSize(new_kernel_part);
   TEST_AND_RETURN_FALSE(new_part_size >= 0);
 
-  op->set_data_length(data.size());
+  op->set_data_length(data_bz.size());
 
-  op->set_src_length(old_part_size);
   op->set_dst_length(new_part_size);
 
-  // Theres a single src/dest extent for each
-  Extent* src_extent = op->add_src_extents();
-  src_extent->set_start_block(0);
-  src_extent->set_num_blocks((old_part_size + kBlockSize - 1) / kBlockSize);
-
+  // Theres a single dest extent
   Extent* dst_extent = op->add_dst_extents();
   dst_extent->set_start_block(0);
   dst_extent->set_num_blocks((new_part_size + kBlockSize - 1) / kBlockSize);
 
-  LOG(INFO) << "Done delta compressing kernel partition.";
+  LOG(INFO) << "Done compressing kernel partition.";
   return true;
 }
 
