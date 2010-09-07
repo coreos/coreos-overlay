@@ -453,7 +453,7 @@ bool DeltaCompressKernelPartition(
 
   op->set_dst_length(new_part_size);
 
-  // Theres a single dest extent
+  // There's a single dest extent
   Extent* dst_extent = op->add_dst_extents();
   dst_extent->set_start_block(0);
   dst_extent->set_num_blocks((new_part_size + kBlockSize - 1) / kBlockSize);
