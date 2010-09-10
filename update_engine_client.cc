@@ -49,7 +49,8 @@ bool GetProxy(DBusGProxy** out_proxy) {
                                           kUpdateEngineServiceInterface,
                                           &error);
   if (!proxy) {
-    LOG(FATAL) << "Error getting proxy: " << GetGErrorMessage(error);
+    LOG(FATAL) << "Error getting dbus proxy for "
+               << kUpdateEngineServiceName << ": " << GetGErrorMessage(error);
   }
   *out_proxy = proxy;
   return true;
