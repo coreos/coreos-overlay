@@ -157,6 +157,7 @@ env['CCFLAGS'] += (' ' + ' '.join(env['CFLAGS']))
 
 env['LIBS'] = Split("""base
                        bz2
+                       crypto
                        curl
                        gflags
                        glib-2.0
