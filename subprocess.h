@@ -63,6 +63,10 @@ class Subprocess {
   // requested callback.
   static void GChildExitedCallback(GPid pid, gint status, gpointer data);
 
+  // Callback which runs in the child before exec to redirect stderr onto
+  // stdout.
+  static void GRedirectStderrToStdout(gpointer user_data);
+
   struct SubprocessCallbackRecord {
     ExecCallback callback;
     void* callback_data;

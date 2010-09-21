@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <string>
+#include <unistd.h>
 #include <vector>
 #include "base/logging.h"
 #include "base/scoped_ptr.h"
@@ -26,6 +27,10 @@ void Subprocess::GChildExitedCallback(GPid pid, gint status, gpointer data) {
   g_spawn_close_pid(pid);
   Get().callback_records_.erase(*tag);
   delete tag;
+}
+
+void Subprocess::GRedirectStderrToStdout(gpointer user_data) {
+  dup2(1, 2);
 }
 
 namespace {
@@ -124,25 +129,22 @@ bool Subprocess::SynchronousExec(const std::vector<std::string>& cmd,
   ScopedFreeArgPointer argp_free(argp);
 
   char* child_stdout;
-  char* child_stderr;
 
   bool success = g_spawn_sync(NULL,  // working directory
                               argv.get(),
                               argp,
-                              static_cast<GSpawnFlags>(NULL),  // flags
-                              NULL,  // child setup function
+                              G_SPAWN_STDERR_TO_DEV_NULL,  // flags
+                              GRedirectStderrToStdout,  // child setup function
                               NULL,  // data for child setup function
                               &child_stdout,
-                              &child_stderr,
+                              NULL,
                               return_code,
                               &err);
   FreeArgv(argv.get());
   if (err)
     LOG(INFO) << "err is: " << err->code << ", " << err->message;
   if (child_stdout && strlen(child_stdout))
-    LOG(INFO) << "Subprocess stdout:" << child_stdout;
-  if (child_stderr && strlen(child_stderr))
-    LOG(INFO) << "Subprocess stderr:" << child_stderr;
+    LOG(INFO) << "Subprocess output:\n" << child_stdout;
   return success;
 }
 
