@@ -11,13 +11,13 @@
 
 #include <string>
 
+#include <base/scoped_ptr.h>
 #include <curl/curl.h>
 
-#include "base/scoped_ptr.h"
 #include "update_engine/action.h"
 #include "update_engine/decompressing_file_writer.h"
 #include "update_engine/delta_performer.h"
-#include "update_engine/file_writer.h"
+#include "update_engine/buffered_file_writer.h"
 #include "update_engine/http_fetcher.h"
 #include "update_engine/install_plan.h"
 #include "update_engine/omaha_hash_calculator.h"
@@ -105,6 +105,8 @@ class DownloadAction : public Action<DownloadAction>,
   scoped_ptr<SplitFileWriter> split_file_writer_;
   scoped_ptr<DirectFileWriter> kernel_file_writer_;
   scoped_ptr<DirectFileWriter> rootfs_file_writer_;
+  scoped_ptr<BufferedFileWriter> kernel_buffered_file_writer_;
+  scoped_ptr<BufferedFileWriter> rootfs_buffered_file_writer_;
 
   // Used to apply a delta update:
   scoped_ptr<DeltaPerformer> delta_performer_;

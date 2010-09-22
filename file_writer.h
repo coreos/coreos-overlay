@@ -54,7 +54,7 @@ class DirectFileWriter : public FileWriter {
 
  private:
   int fd_;
-  
+
   DISALLOW_COPY_AND_ASSIGN(DirectFileWriter);
 };
 
@@ -69,7 +69,7 @@ class ScopedFileWriterCloser {
   }
  private:
   FileWriter* writer_;
-  
+
   DISALLOW_COPY_AND_ASSIGN(ScopedFileWriterCloser);
 };
 

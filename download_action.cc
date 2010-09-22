@@ -17,6 +17,9 @@ using std::vector;
 
 namespace chromeos_update_engine {
 
+// Use a buffer to reduce the number of IOPS on SSD devices.
+const size_t kFileWriterBufferSize = 128 * 1024;  // 128 KiB
+
 DownloadAction::DownloadAction(HttpFetcher* http_fetcher)
     : writer_(NULL),
       http_fetcher_(http_fetcher),
@@ -41,8 +44,15 @@ void DownloadAction::PerformAction() {
     if (install_plan_.is_full_update) {
       kernel_file_writer_.reset(new DirectFileWriter);
       rootfs_file_writer_.reset(new DirectFileWriter);
-      split_file_writer_.reset(new SplitFileWriter(kernel_file_writer_.get(),
-                                                   rootfs_file_writer_.get()));
+      kernel_buffered_file_writer_.reset(
+          new BufferedFileWriter(kernel_file_writer_.get(),
+                                 kFileWriterBufferSize));
+      rootfs_buffered_file_writer_.reset(
+          new BufferedFileWriter(rootfs_file_writer_.get(),
+                                 kFileWriterBufferSize));
+      split_file_writer_.reset(
+          new SplitFileWriter(kernel_buffered_file_writer_.get(),
+                              rootfs_buffered_file_writer_.get()));
       split_file_writer_->SetFirstOpenArgs(
           install_plan_.kernel_install_path.c_str(),
           O_WRONLY | O_CREAT | O_TRUNC | O_LARGEFILE,

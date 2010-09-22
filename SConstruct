@@ -193,6 +193,7 @@ if ARGUMENTS.get('debug', 0):
   env['LIBS'] += ['bz2', 'gcov']
 
 sources = Split("""action_processor.cc
+                   buffered_file_writer.cc
                    bzip.cc
                    bzip_extent_writer.cc
                    cycle_breaker.cc
@@ -232,6 +233,7 @@ main = ['main.cc']
 unittest_sources = Split("""action_unittest.cc
                             action_pipe_unittest.cc
                             action_processor_unittest.cc
+                            buffered_file_writer_unittest.cc
                             bzip_extent_writer_unittest.cc
                             cycle_breaker_unittest.cc
                             decompressing_file_writer_unittest.cc
