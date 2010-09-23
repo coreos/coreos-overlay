@@ -50,7 +50,7 @@ bool WriteFile(const char* path, const char* data, int data_len) {
   DirectFileWriter writer;
   TEST_AND_RETURN_FALSE_ERRNO(0 == writer.Open(path,
                                                O_WRONLY | O_CREAT | O_TRUNC,
-                                               0666));
+                                               0600));
   ScopedFileWriterCloser closer(&writer);
   TEST_AND_RETURN_FALSE_ERRNO(data_len == writer.Write(data, data_len));
   return true;

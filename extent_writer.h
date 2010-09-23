@@ -66,7 +66,7 @@ class DirectExtentWriter : public ExtentWriter {
 
  private:
   int fd_;
-  
+
   size_t block_size_;
   // Bytes written into next_extent_index_ thus far
   uint64_t extent_bytes_written_;

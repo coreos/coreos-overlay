@@ -43,7 +43,7 @@ ssize_t PerformWrite(FileWriter* writer, const void* bytes, size_t count) {
 
 ssize_t SplitFileWriter::Write(const void* bytes, size_t count) {
   const size_t original_count = count;
-  
+
   // This first block is trying to read the first sizeof(uint64_t)
   // bytes, which are the number of bytes that should be written
   // to the first FileWriter.
@@ -78,11 +78,11 @@ ssize_t SplitFileWriter::Write(const void* bytes, size_t count) {
         first_length_ -
         (bytes_received_ - static_cast<off_t>(sizeof(uint64_t))),
         static_cast<off_t>(count));
-      
+
     int rc = PerformWrite(first_file_writer_, bytes, bytes_to_write);
     if (rc != static_cast<int>(bytes_to_write))
       return rc;
-    
+
     bytes_received_ += bytes_to_write;
     count -= bytes_to_write;
     bytes = static_cast<const void*>(

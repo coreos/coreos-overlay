@@ -13,6 +13,8 @@
 #include <gflags/gflags.h>
 #include <glib.h>
 #include <metrics/metrics_library.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include "update_engine/dbus_constants.h"
 #include "update_engine/dbus_service.h"
@@ -104,6 +106,12 @@ int main(int argc, char** argv) {
     PLOG_IF(FATAL, daemon(0, 0) == 1) << "daemon() failed";
 
   LOG(INFO) << "Chrome OS Update Engine starting";
+
+  // Ensure that all written files have safe permissions.
+  // This is a mask, so we _block_ execute for the owner, and ALL
+  // permissions for other users.
+  // Done _after_ log file creation.
+  umask(S_IXUSR | S_IRWXG | S_IRWXO);
 
   // Create the single GMainLoop
   GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);

@@ -25,13 +25,13 @@ class SplitFileWriter : public FileWriter {
         first_mode_(0),
         second_file_writer_(second_file_writer),
         bytes_received_(0) {}
-  
+
   void SetFirstOpenArgs(const char* path, int flags, mode_t mode) {
     first_path_ = path;
     first_flags_ = flags;
     first_mode_ = mode;
   }
-  
+
   // If both succeed, returns the return value from the second Open() call.
   // On error, both files will be left closed.
   virtual int Open(const char* path, int flags, mode_t mode);
@@ -47,11 +47,11 @@ class SplitFileWriter : public FileWriter {
   const char* first_path_;
   int first_flags_;
   mode_t first_mode_;
-  
-  // The scond file writeer.
+
+  // The second file writer.
   FileWriter* const second_file_writer_;
 
-  // Bytes written thus far
+  // Bytes written thus far.
   off_t bytes_received_;
   char first_length_buf_[sizeof(uint64_t)];
 
