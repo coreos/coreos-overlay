@@ -36,7 +36,8 @@ using std::vector;
 
 namespace chromeos_update_engine {
 
-const char* kUpdateCompletedMarker = "/tmp/update_engine_autoupdate_completed";
+const char* kUpdateCompletedMarker =
+    "/var/run/update_engine_autoupdate_completed";
 
 const char* UpdateStatusToString(UpdateStatus status) {
   switch (status) {

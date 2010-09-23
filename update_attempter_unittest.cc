@@ -20,7 +20,7 @@ using testing::Return;
 namespace chromeos_update_engine {
 
 // Test a subclass rather than the main class directly so that we can mock out
-// methods within the class. There're explicit unit test for the mocked out
+// methods within the class. There're explicit unit tests for the mocked out
 // methods.
 class UpdateAttempterUnderTest : public UpdateAttempter {
  public:
@@ -52,7 +52,7 @@ class UpdateAttempterTest : public ::testing::Test {
   ActionProcessorMock* processor_;
 };
 
-TEST_F(UpdateAttempterTest, ConstructWithUpdatedMarkerTest) {
+TEST_F(UpdateAttempterTest, RunAsRootConstructWithUpdatedMarkerTest) {
   extern const char* kUpdateCompletedMarker;
   const FilePath kMarker(kUpdateCompletedMarker);
   EXPECT_EQ(0, file_util::WriteFile(kMarker, "", 0));
