@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2009 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -41,19 +41,30 @@ void FreeArgv(char** argv) {
   }
 }
 
+void FreeArgvInError(char** argv) {
+  FreeArgv(argv);
+  LOG(ERROR) << "Ran out of memory copying args.";
+}
+
 // Note: Caller responsible for free()ing the returned value!
+// Will return NULL on failure and free any allocated memory.
 char** ArgPointer() {
   const char* keys[] = {"LD_LIBRARY_PATH", "PATH"};
   char** ret = new char*[arraysize(keys) + 1];
   int pointer = 0;
   for (size_t i = 0; i < arraysize(keys); i++) {
-    ret[i] = NULL;
     if (getenv(keys[i])) {
       ret[pointer] = strdup(StringPrintf("%s=%s", keys[i],
                                          getenv(keys[i])).c_str());
-      pointer++;
+      if (!ret[pointer]) {
+        FreeArgv(ret);
+        delete [] ret;
+        return NULL;
+      }
+      ++pointer;
     }
   }
+  ret[pointer] = NULL;
   return ret;
 }
 
@@ -81,10 +92,18 @@ uint32_t Subprocess::Exec(const std::vector<std::string>& cmd,
   scoped_array<char*> argv(new char*[cmd.size() + 1]);
   for (unsigned int i = 0; i < cmd.size(); i++) {
     argv[i] = strdup(cmd[i].c_str());
+    if (!argv[i]) {
+      FreeArgvInError(argv.get());  // NULL in argv[i] terminates argv.
+      return 0;
+    }
   }
   argv[cmd.size()] = NULL;
 
   char** argp = ArgPointer();
+  if (!argp) {
+    FreeArgvInError(argv.get());  // NULL in argv[i] terminates argv.
+    return 0;
+  }
   ScopedFreeArgPointer argp_free(argp);
 
   SubprocessCallbackRecord callback_record;
@@ -122,10 +141,18 @@ bool Subprocess::SynchronousExec(const std::vector<std::string>& cmd,
   scoped_array<char*> argv(new char*[cmd.size() + 1]);
   for (unsigned int i = 0; i < cmd.size(); i++) {
     argv[i] = strdup(cmd[i].c_str());
+    if (!argv[i]) {
+      FreeArgvInError(argv.get());  // NULL in argv[i] terminates argv.
+      return false;
+    }
   }
   argv[cmd.size()] = NULL;
 
   char** argp = ArgPointer();
+  if (!argp) {
+    FreeArgvInError(argv.get());  // NULL in argv[i] terminates argv.
+    return false;
+  }
   ScopedFreeArgPointer argp_free(argp);
 
   char* child_stdout;

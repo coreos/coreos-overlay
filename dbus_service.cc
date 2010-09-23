@@ -77,6 +77,10 @@ gboolean update_engine_service_get_status(UpdateEngineService* self,
 
   *current_operation = strdup(current_op.c_str());
   *new_version = strdup(new_version_str.c_str());
+  if (!(*current_operation && *new_version)) {
+    *error = NULL;
+    return FALSE;
+  }
   return TRUE;
 }
 
