@@ -138,13 +138,18 @@ void DownloadAction::TransferComplete(HttpFetcher *fetcher, bool successful) {
   ActionExitCode code =
       successful ? kActionCodeSuccess : kActionCodeDownloadTransferError;
   if (code == kActionCodeSuccess) {
-    // Make sure hash is correct
+    // Makes sure the hash and size are correct.
     omaha_hash_calculator_.Finalize();
     if (omaha_hash_calculator_.hash() != install_plan_.download_hash) {
       LOG(ERROR) << "Download of " << install_plan_.download_url
-                 << " failed. Expect hash " << install_plan_.download_hash
+                 << " failed. Expected hash " << install_plan_.download_hash
                  << " but got hash " << omaha_hash_calculator_.hash();
       code = kActionCodeDownloadHashMismatchError;
+    } else if (bytes_received_ != install_plan_.size) {
+      LOG(ERROR) << "Download of " << install_plan_.download_url
+                 << " failed. Expected size " << install_plan_.size
+                 << " but got size " << bytes_received_;
+      code = kActionCodeDownloadSizeMismatchError;
     }
   }
 

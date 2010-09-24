@@ -85,6 +85,7 @@ gboolean StartProcessorInRunLoop(gpointer data) {
 
 void TestWithData(const vector<char>& data,
                   bool hash_test,
+                  bool size_test,
                   bool use_download_delegate) {
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
 
@@ -96,9 +97,10 @@ void TestWithData(const vector<char>& data,
   string hash = hash_test ?
       OmahaHashCalculator::OmahaHashOfString("random string") :
       OmahaHashCalculator::OmahaHashOfData(data);
+  uint64_t size = data.size() + (size_test ? 1 : 0);
   InstallPlan install_plan(true,
                            "",
-                           0,
+                           size,
                            hash,
                            output_temp_file.GetPath(),
                            "");
@@ -116,8 +118,12 @@ void TestWithData(const vector<char>& data,
     EXPECT_CALL(download_delegate, BytesReceived(_, _)).Times(AtLeast(1));
     EXPECT_CALL(download_delegate, SetDownloadStatus(false)).Times(1);
   }
-  DownloadActionTestProcessorDelegate delegate(
-      hash_test ? kActionCodeDownloadHashMismatchError : kActionCodeSuccess);
+  ActionExitCode expected_code = kActionCodeSuccess;
+  if (hash_test)
+    expected_code = kActionCodeDownloadHashMismatchError;
+  else if (size_test)
+    expected_code = kActionCodeDownloadSizeMismatchError;
+  DownloadActionTestProcessorDelegate delegate(expected_code);
   delegate.loop_ = loop;
   delegate.expected_data_ = data;
   delegate.path_ = output_temp_file.GetPath();
@@ -136,7 +142,10 @@ TEST(DownloadActionTest, SimpleTest) {
   vector<char> small;
   const char* foo = "foo";
   small.insert(small.end(), foo, foo + strlen(foo));
-  TestWithData(small, false, true);
+  TestWithData(small,
+               false,  // hash_test
+               false,  // size_test
+               true);  // use_download_delegate
 }
 
 TEST(DownloadActionTest, LargeTest) {
@@ -149,21 +158,39 @@ TEST(DownloadActionTest, LargeTest) {
     else
       c++;
   }
-  TestWithData(big, false, true);
+  TestWithData(big,
+               false,  // hash_test
+               false,  // size_test
+               true);  // use_download_delegate
 }
 
 TEST(DownloadActionTest, BadHashTest) {
   vector<char> small;
   const char* foo = "foo";
   small.insert(small.end(), foo, foo + strlen(foo));
-  TestWithData(small, true, true);
+  TestWithData(small,
+               true,  // hash_test
+               false,  // size_test
+               true);  // use_download_delegate
+}
+
+TEST(DownloadActionTest, BadSizeTest) {
+  const char* something = "something";
+  vector<char> small(something, something + strlen(something));
+  TestWithData(small,
+               false,  // hash_test
+               true,  // size_test
+               true);  // use_download_delegate
 }
 
 TEST(DownloadActionTest, NoDownloadDelegateTest) {
   vector<char> small;
   const char* foo = "foofoo";
   small.insert(small.end(), foo, foo + strlen(foo));
-  TestWithData(small, false, false);
+  TestWithData(small,
+               false,  // hash_test
+               false,  // size_test
+               false);  // use_download_delegate
 }
 
 namespace {
@@ -294,7 +321,7 @@ TEST(DownloadActionTest, PassObjectOutTest) {
   // takes ownership of passed in HttpFetcher
   InstallPlan install_plan(true,
                            "",
-                           0,
+                           1,
                            OmahaHashCalculator::OmahaHashOfString("x"),
                            "/dev/null",
                            "/dev/null");

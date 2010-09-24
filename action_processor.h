@@ -34,6 +34,7 @@ enum ActionExitCode {
   kActionCodeKernelDeviceOpenError = 8,
   kActionCodeDownloadTransferError = 9,
   kActionCodeDownloadHashMismatchError = 10,
+  kActionCodeDownloadSizeMismatchError = 11,
 };
 
 class AbstractAction;
