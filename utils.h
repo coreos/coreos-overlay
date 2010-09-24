@@ -27,6 +27,10 @@ namespace utils {
 // assumes the build is official.
 bool IsOfficialBuild();
 
+// Returns true if the OOBE process has been completed and EULA accepted, false
+// otherwise.
+bool IsOOBEComplete();
+
 // Writes the data passed to path. The file at path will be overwritten if it
 // exists. Returns true on success, false otherwise.
 bool WriteFile(const char* path, const char* data, int data_len);

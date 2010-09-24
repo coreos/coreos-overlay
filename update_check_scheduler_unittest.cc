@@ -10,6 +10,7 @@
 using std::string;
 using testing::_;
 using testing::AllOf;
+using testing::Assign;
 using testing::Ge;
 using testing::Le;
 using testing::MockFunction;
@@ -34,6 +35,7 @@ class UpdateCheckSchedulerUnderTest : public UpdateCheckScheduler {
   MOCK_METHOD2(GTimeoutAddSeconds, guint(guint seconds, GSourceFunc function));
   MOCK_METHOD0(IsBootDeviceRemovable, bool());
   MOCK_METHOD0(IsOfficialBuild, bool());
+  MOCK_METHOD0(IsOOBEComplete, bool());
 };
 
 class UpdateCheckSchedulerTest : public ::testing::Test {
@@ -148,6 +150,11 @@ TEST_F(UpdateCheckSchedulerTest, IsBootDeviceRemovableTest) {
   EXPECT_FALSE(scheduler_.UpdateCheckScheduler::IsBootDeviceRemovable());
 }
 
+TEST_F(UpdateCheckSchedulerTest, IsOOBECompleteTest) {
+  // Invokes the actual utils wrapper method rather than the subclass mock.
+  EXPECT_FALSE(scheduler_.UpdateCheckScheduler::IsOOBEComplete());
+}
+
 TEST_F(UpdateCheckSchedulerTest, IsOfficialBuildTest) {
   // Invokes the actual utils wrapper method rather than the subclass mock.
   EXPECT_TRUE(scheduler_.UpdateCheckScheduler::IsOfficialBuild());
@@ -260,9 +267,30 @@ TEST_F(UpdateCheckSchedulerTest, SetUpdateStatusNonIdleTest) {
   scheduler_.SetUpdateStatus(UPDATE_STATUS_DOWNLOADING);
 }
 
-TEST_F(UpdateCheckSchedulerTest, StaticCheckTest) {
+TEST_F(UpdateCheckSchedulerTest, StaticCheckOOBECompleteTest) {
   scheduler_.scheduled_ = true;
-  EXPECT_CALL(attempter_, Update("", "")).Times(1);
+  EXPECT_CALL(scheduler_, IsOOBEComplete()).Times(1).WillOnce(Return(true));
+  EXPECT_CALL(attempter_, Update("", ""))
+      .Times(1)
+      .WillOnce(Assign(&scheduler_.scheduled_, true));
+  scheduler_.enabled_ = true;
+  EXPECT_CALL(scheduler_, GTimeoutAddSeconds(_, _)).Times(0);
+  UpdateCheckSchedulerUnderTest::StaticCheck(&scheduler_);
+}
+
+TEST_F(UpdateCheckSchedulerTest, StaticCheckOOBENotCompleteTest) {
+  scheduler_.scheduled_ = true;
+  EXPECT_CALL(scheduler_, IsOOBEComplete()).Times(1).WillOnce(Return(false));
+  EXPECT_CALL(attempter_, Update("", "")).Times(0);
+  int interval_min, interval_max;
+  FuzzRange(UpdateCheckScheduler::kTimeoutOnce,
+            UpdateCheckScheduler::kTimeoutRegularFuzz,
+            &interval_min,
+            &interval_max);
+  scheduler_.enabled_ = true;
+  EXPECT_CALL(scheduler_,
+              GTimeoutAddSeconds(AllOf(Ge(interval_min), Le(interval_max)),
+                                 scheduler_.StaticCheck)).Times(1);
   UpdateCheckSchedulerUnderTest::StaticCheck(&scheduler_);
 }
 

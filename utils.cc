@@ -37,6 +37,8 @@ namespace chromeos_update_engine {
 
 namespace utils {
 
+static const char kOOBECompletedMarker[] = "/home/chronos/.oobe_completed";
+
 bool IsOfficialBuild() {
   OmahaRequestDeviceParams params;
   if (!params.Init("", "")) {
@@ -44,6 +46,10 @@ bool IsOfficialBuild() {
   }
   return params.app_track != "buildbot-build" &&
       params.app_track != "developer-build";
+}
+
+bool IsOOBEComplete() {
+  return file_util::PathExists(FilePath(kOOBECompletedMarker));
 }
 
 bool WriteFile(const char* path, const char* data, int data_len) {

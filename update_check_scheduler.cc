@@ -50,6 +50,10 @@ bool UpdateCheckScheduler::IsBootDeviceRemovable() {
   return utils::IsRemovableDevice(utils::RootDevice(utils::BootDevice()));
 }
 
+bool UpdateCheckScheduler::IsOOBEComplete() {
+  return utils::IsOOBEComplete();
+}
+
 bool UpdateCheckScheduler::IsOfficialBuild() {
   return utils::IsOfficialBuild();
 }
@@ -77,7 +81,14 @@ gboolean UpdateCheckScheduler::StaticCheck(void* scheduler) {
   UpdateCheckScheduler* me = reinterpret_cast<UpdateCheckScheduler*>(scheduler);
   CHECK(me->scheduled_);
   me->scheduled_ = false;
-  me->update_attempter_->Update("", "");
+  if (me->IsOOBEComplete()) {
+    me->update_attempter_->Update("", "");
+  } else {
+    // Skips all automatic update checks if the OOBE process is not complete and
+    // schedules a new check as if it is the first one.
+    LOG(WARNING) << "Skipping update check because OOBE is not complete.";
+    me->ScheduleCheck(kTimeoutOnce, kTimeoutRegularFuzz);
+  }
   // This check ensures that future update checks will be or are already
   // scheduled. The check should never fail. A check failure means that there's
   // a bug that will most likely prevent further automatic update checks. It
