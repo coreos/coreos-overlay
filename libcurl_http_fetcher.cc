@@ -16,6 +16,7 @@ namespace chromeos_update_engine {
 
 namespace {
 const int kMaxRetriesCount = 20;
+const char kCACertificatesPath[] = "/usr/share/update_engine/ca-certificates";
 }
 
 LibcurlHttpFetcher::~LibcurlHttpFetcher() {
@@ -63,9 +64,14 @@ void LibcurlHttpFetcher::ResumeTransfer(const std::string& url) {
 
   // By default, libcurl doesn't follow redirections. Allow up to
   // |kMaxRedirects| redirections.
-  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_FOLLOWLOCATION, 1),
-           CURLE_OK);
+  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_FOLLOWLOCATION, 1), CURLE_OK);
   CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_MAXREDIRS, kMaxRedirects),
+           CURLE_OK);
+
+  // Makes sure that peer certificate verification is enabled and restricts the
+  // set of trusted certificates.
+  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_SSL_VERIFYPEER, 1), CURLE_OK);
+  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_CAPATH, kCACertificatesPath),
            CURLE_OK);
 
   CHECK_EQ(curl_multi_add_handle(curl_multi_handle_, curl_handle_), CURLM_OK);
