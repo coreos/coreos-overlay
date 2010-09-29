@@ -16,28 +16,28 @@ using std::vector;
 namespace chromeos_update_engine {
 
 OmahaHashCalculator::OmahaHashCalculator() : valid_(false) {
-  valid_ = (SHA1_Init(&ctx_) == 1);
-  LOG_IF(ERROR, !valid_) << "SHA1_Init failed";
+  valid_ = (SHA256_Init(&ctx_) == 1);
+  LOG_IF(ERROR, !valid_) << "SHA256_Init failed";
 }
 
 // Update is called with all of the data that should be hashed in order.
-// Mostly just passes the data through to OpenSSL's SHA1_Update()
+// Mostly just passes the data through to OpenSSL's SHA256_Update()
 bool OmahaHashCalculator::Update(const char* data, size_t length) {
   TEST_AND_RETURN_FALSE(valid_);
   TEST_AND_RETURN_FALSE(hash_.empty());
   COMPILE_ASSERT(sizeof(size_t) <= sizeof(unsigned long),
-                 length_param_may_be_truncated_in_SHA1_Update);
-  TEST_AND_RETURN_FALSE(SHA1_Update(&ctx_, data, length) == 1);
+                 length_param_may_be_truncated_in_SHA256_Update);
+  TEST_AND_RETURN_FALSE(SHA256_Update(&ctx_, data, length) == 1);
   return true;
 }
 
 // Call Finalize() when all data has been passed in. This mostly just
-// calls OpenSSL's SHA1_Final() and then base64 encodes the hash.
+// calls OpenSSL's SHA256_Final() and then base64 encodes the hash.
 bool OmahaHashCalculator::Finalize() {
   bool success = true;
   TEST_AND_RETURN_FALSE(hash_.empty());
-  unsigned char md[SHA_DIGEST_LENGTH];
-  TEST_AND_RETURN_FALSE(SHA1_Final(md, &ctx_) == 1);
+  unsigned char md[SHA256_DIGEST_LENGTH];
+  TEST_AND_RETURN_FALSE(SHA256_Final(md, &ctx_) == 1);
 
   // Convert md to base64 encoding and store it in hash_
   BIO *b64 = BIO_new(BIO_f_base64());
@@ -67,12 +67,12 @@ bool OmahaHashCalculator::RawHashOfData(const vector<char>& data,
                                         vector<char>* out_hash) {
   OmahaHashCalculator calc;
   calc.Update(&data[0], data.size());
-  
-  out_hash->resize(out_hash->size() + SHA_DIGEST_LENGTH);
+
+  out_hash->resize(out_hash->size() + SHA256_DIGEST_LENGTH);
   TEST_AND_RETURN_FALSE(
-      SHA1_Final(reinterpret_cast<unsigned char*>(&(*(out_hash->end() -
-                                                      SHA_DIGEST_LENGTH))),
-                 &calc.ctx_) == 1);
+      SHA256_Final(reinterpret_cast<unsigned char*>(&(*(out_hash->end() -
+                                                        SHA256_DIGEST_LENGTH))),
+                   &calc.ctx_) == 1);
   return true;
 }
 

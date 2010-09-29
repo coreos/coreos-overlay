@@ -70,8 +70,8 @@ string GetUpdateResponse(const string& app_id,
       "status=\"ok\"/><updatecheck DisplayVersion=\"" + display_version + "\" "
       "MoreInfo=\"" + more_info_url + "\" Prompt=\"" + prompt + "\" "
       "IsDelta=\"true\" "
-      "codebase=\"" + codebase + "\" "
-      "hash=\"" + hash + "\" needsadmin=\"" + needsadmin + "\" "
+      "codebase=\"" + codebase + "\" hash=\"not-applicable\" "
+      "sha256=\"" + hash + "\" needsadmin=\"" + needsadmin + "\" "
       "size=\"" + size + "\" status=\"ok\"/></app></gupdate>";
 }
 
@@ -339,8 +339,8 @@ TEST(OmahaRequestActionTest, MissingFieldTest) {
                               "status=\"ok\"/><updatecheck "
                               "DisplayVersion=\"1.2.3.4\" "
                               "Prompt=\"false\" "
-                              "codebase=\"http://code/base\" "
-                              "hash=\"HASH1234=\" needsadmin=\"true\" "
+                              "codebase=\"http://code/base\" hash=\"foo\" "
+                              "sha256=\"HASH1234=\" needsadmin=\"true\" "
                               "size=\"123\" "
                               "status=\"ok\"/></app></gupdate>",
                               kActionCodeSuccess,

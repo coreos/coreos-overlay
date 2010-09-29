@@ -57,7 +57,7 @@ class OmahaHashCalculator {
   bool valid_;
 
   // The hash state used by OpenSSL
-  SHA_CTX ctx_;
+  SHA256_CTX ctx_;
   DISALLOW_COPY_AND_ASSIGN(OmahaHashCalculator);
 };
 

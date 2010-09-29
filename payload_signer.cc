@@ -30,7 +30,7 @@ bool PayloadSigner::SignPayload(const string& unsigned_payload_path,
   TEST_AND_RETURN_FALSE(
       utils::MakeTempFile("/tmp/hash.XXXXXX", &hash_path, NULL));
   ScopedPathUnlinker hash_path_unlinker(hash_path);
-  
+
   vector<char> hash_data;
   {
     vector<char> payload;
@@ -42,7 +42,7 @@ bool PayloadSigner::SignPayload(const string& unsigned_payload_path,
   TEST_AND_RETURN_FALSE(utils::WriteFile(hash_path.c_str(),
                                          &hash_data[0],
                                          hash_data.size()));
-  
+
   // This runs on the server, so it's okay to cop out and call openssl
   // executable rather than properly use the library
   vector<string> cmd;
@@ -52,20 +52,20 @@ bool PayloadSigner::SignPayload(const string& unsigned_payload_path,
   cmd[cmd.size() - 5] = private_key_path;
   cmd[cmd.size() - 3] = hash_path;
   cmd[cmd.size() - 1] = sig_path;
-  
+
   int return_code = 0;
   TEST_AND_RETURN_FALSE(Subprocess::SynchronousExec(cmd, &return_code));
   TEST_AND_RETURN_FALSE(return_code == 0);
-  
+
   vector<char> signature;
   TEST_AND_RETURN_FALSE(utils::ReadFile(sig_path, &signature));
-  
+
   // Pack it into a protobuf
   Signatures out_message;
   Signatures_Signature* sig_message = out_message.add_signatures();
   sig_message->set_version(kSignatureMessageVersion);
   sig_message->set_data(signature.data(), signature.size());
-  
+
   // Serialize protobuf
   string serialized;
   TEST_AND_RETURN_FALSE(out_message.AppendToString(&serialized));
@@ -79,7 +79,7 @@ bool PayloadSigner::SignatureBlobLength(
     const string& private_key_path,
     uint64_t* out_length) {
   DCHECK(out_length);
-  
+
   string x_path;
   TEST_AND_RETURN_FALSE(
       utils::MakeTempFile("/tmp/signed_data.XXXXXX", &x_path, NULL));

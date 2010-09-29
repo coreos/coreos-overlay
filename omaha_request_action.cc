@@ -405,7 +405,7 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
       XmlGetProperty(updatecheck_node, "DisplayVersion");
   output_object.codebase = XmlGetProperty(updatecheck_node, "codebase");
   output_object.more_info_url = XmlGetProperty(updatecheck_node, "MoreInfo");
-  output_object.hash = XmlGetProperty(updatecheck_node, "hash");
+  output_object.hash = XmlGetProperty(updatecheck_node, "sha256");
   output_object.size = ParseInt(XmlGetProperty(updatecheck_node, "size"));
   output_object.needs_admin =
       XmlGetProperty(updatecheck_node, "needsadmin") == "true";
