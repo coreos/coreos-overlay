@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -40,6 +40,7 @@ typedef DeltaDiffGenerator::Block Block;
 
 namespace {
 const size_t kBlockSize = 4096;
+const size_t kRootFSPartitionSize = 1 * 1024 * 1024 * 1024;  // 1 GiB
 const uint64_t kVersionNumber = 1;
 
 // Stores all Extents for a file into 'out'. Returns true on success.
@@ -209,32 +210,36 @@ bool DeltaReadFiles(Graph* graph,
   return true;
 }
 
-// Attempts to find block_count blocks to use as scratch space.
-// Returns true on success.
-// Right now we return exactly as many blocks as are required.
-// TODO(adlr): consider returning all scratch blocks,
-// even if there are extras, to make it easier for a scratch allocator
-// to find contiguous regions for specific scratch writes.
+// Attempts to find |block_count| blocks to use as scratch space. Returns true
+// on success. Right now we return exactly as many blocks as are required.
+//
+// TODO(adlr): Consider returning all scratch blocks, even if there are extras,
+// to make it easier for a scratch allocator to find contiguous regions for
+// specific scratch writes.
 bool FindScratchSpace(const vector<Block>& blocks,
                       vector<Block>::size_type block_count,
                       vector<Extent>* out) {
-  // Scan blocks for blocks that are neither read nor written.
-  // If we don't find enough of those, return false.
-  // TODO(adlr): return blocks that are written by
-  // operations that don't have incoming edges (and thus, can be
-  // deferred until all old blocks are read by other operations).
+  // Scan |blocks| for blocks that are neither read, nor written. If we don't
+  // find enough of those, look past the end of |blocks| till the end of the
+  // partition. If we don't find |block_count| scratch blocks, return false.
+  //
+  // TODO(adlr): Return blocks that are written by operations that don't have
+  // incoming edges (and thus, can be deferred until all old blocks are read by
+  // other operations).
   vector<Extent> ret;
   vector<Block>::size_type blocks_found = 0;
+  const size_t kPartitionBlocks = kRootFSPartitionSize / kBlockSize;
   for (vector<Block>::size_type i = 0;
-       i < blocks.size() && blocks_found < block_count; i++) {
-    if (blocks[i].reader == Vertex::kInvalidIndex &&
-        blocks[i].writer == Vertex::kInvalidIndex) {
+       i < kPartitionBlocks && blocks_found < block_count; i++) {
+    if (i >= blocks.size() ||
+        (blocks[i].reader == Vertex::kInvalidIndex &&
+         blocks[i].writer == Vertex::kInvalidIndex)) {
       graph_utils::AppendBlockToExtents(&ret, i);
       blocks_found++;
     }
   }
+  LOG(INFO) << "found " << blocks_found << " scratch blocks";
   if (blocks_found == block_count) {
-    LOG(INFO) << "returning " << blocks_found << " scratch blocks";
     out->swap(ret);
     return true;
   }
@@ -874,7 +879,8 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
         const Extent& extent = op->dst_extents(j);
         for (uint64_t block = extent.start_block();
              block < (extent.start_block() + extent.num_blocks()); block++) {
-          written_count[block]++;
+          if (block < blocks.size())
+            written_count[block]++;
         }
       }
       if (op->has_data_offset()) {
