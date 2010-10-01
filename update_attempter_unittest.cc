@@ -9,13 +9,17 @@
 #include "update_engine/action_processor_mock.h"
 #include "update_engine/filesystem_copier_action.h"
 #include "update_engine/postinstall_runner_action.h"
+#include "update_engine/prefs_mock.h"
 #include "update_engine/set_bootable_flag_action.h"
 #include "update_engine/update_attempter.h"
 
 using std::string;
+using testing::_;
+using testing::DoAll;
 using testing::InSequence;
 using testing::Property;
 using testing::Return;
+using testing::SetArgumentPointee;
 
 namespace chromeos_update_engine {
 
@@ -44,12 +48,15 @@ class UpdateAttempterTest : public ::testing::Test {
     EXPECT_EQ(0, attempter_.last_checked_time_);
     EXPECT_EQ("0.0.0.0", attempter_.new_version_);
     EXPECT_EQ(0, attempter_.new_size_);
+    EXPECT_FALSE(attempter_.is_full_update_);
     processor_ = new ActionProcessorMock();
     attempter_.processor_.reset(processor_);  // Transfers ownership.
+    attempter_.prefs_ = &prefs_;
   }
 
   UpdateAttempterUnderTest attempter_;
   ActionProcessorMock* processor_;
+  PrefsMock prefs_;
 };
 
 TEST_F(UpdateAttempterTest, RunAsRootConstructWithUpdatedMarkerTest) {
@@ -90,6 +97,47 @@ TEST_F(UpdateAttempterTest, GetErrorCodeForActionTest) {
   EXPECT_CALL(action_mock, Type()).Times(1).WillOnce(Return("ActionMock"));
   EXPECT_EQ(kActionCodeError,
             GetErrorCodeForAction(&action_mock, kActionCodeError));
+}
+
+TEST_F(UpdateAttempterTest, DisableDeltaUpdateIfNeededTest) {
+  attempter_.omaha_request_params_.delta_okay = true;
+  EXPECT_CALL(prefs_, GetInt64(kPrefsDeltaUpdateFailures, _))
+      .WillOnce(Return(false));
+  attempter_.DisableDeltaUpdateIfNeeded();
+  EXPECT_TRUE(attempter_.omaha_request_params_.delta_okay);
+  EXPECT_CALL(prefs_, GetInt64(kPrefsDeltaUpdateFailures, _))
+      .WillOnce(DoAll(
+          SetArgumentPointee<1>(UpdateAttempter::kMaxDeltaUpdateFailures - 1),
+          Return(true)));
+  attempter_.DisableDeltaUpdateIfNeeded();
+  EXPECT_TRUE(attempter_.omaha_request_params_.delta_okay);
+  EXPECT_CALL(prefs_, GetInt64(kPrefsDeltaUpdateFailures, _))
+      .WillOnce(DoAll(
+          SetArgumentPointee<1>(UpdateAttempter::kMaxDeltaUpdateFailures),
+          Return(true)));
+  attempter_.DisableDeltaUpdateIfNeeded();
+  EXPECT_FALSE(attempter_.omaha_request_params_.delta_okay);
+  EXPECT_CALL(prefs_, GetInt64(_, _)).Times(0);
+  attempter_.DisableDeltaUpdateIfNeeded();
+  EXPECT_FALSE(attempter_.omaha_request_params_.delta_okay);
+}
+
+TEST_F(UpdateAttempterTest, MarkDeltaUpdateFailureTest) {
+  attempter_.is_full_update_ = false;
+  EXPECT_CALL(prefs_, GetInt64(kPrefsDeltaUpdateFailures, _))
+      .WillOnce(Return(false))
+      .WillOnce(DoAll(SetArgumentPointee<1>(-1), Return(true)))
+      .WillOnce(DoAll(SetArgumentPointee<1>(1), Return(true)))
+      .WillOnce(DoAll(
+          SetArgumentPointee<1>(UpdateAttempter::kMaxDeltaUpdateFailures),
+          Return(true)));
+  EXPECT_CALL(prefs_, SetInt64(kPrefsDeltaUpdateFailures, 1)).Times(2);
+  EXPECT_CALL(prefs_, SetInt64(kPrefsDeltaUpdateFailures, 2)).Times(1);
+  EXPECT_CALL(prefs_, SetInt64(kPrefsDeltaUpdateFailures,
+                               UpdateAttempter::kMaxDeltaUpdateFailures + 1))
+      .Times(1);
+  for (int i = 0; i < 4; i ++)
+    attempter_.MarkDeltaUpdateFailure();
 }
 
 TEST_F(UpdateAttempterTest, UpdateStatusToStringTest) {

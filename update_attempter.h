@@ -45,6 +45,8 @@ const char* UpdateStatusToString(UpdateStatus status);
 class UpdateAttempter : public ActionProcessorDelegate,
                         public DownloadActionDelegate {
  public:
+  static const int kMaxDeltaUpdateFailures;
+
   UpdateAttempter(PrefsInterface* prefs, MetricsLibraryInterface* metrics_lib);
   virtual ~UpdateAttempter();
 
@@ -106,6 +108,8 @@ class UpdateAttempter : public ActionProcessorDelegate,
 
  private:
   friend class UpdateAttempterTest;
+  FRIEND_TEST(UpdateAttempterTest, DisableDeltaUpdateIfNeededTest);
+  FRIEND_TEST(UpdateAttempterTest, MarkDeltaUpdateFailureTest);
   FRIEND_TEST(UpdateAttempterTest, UpdateTest);
 
   // Sets the status to the given status and notifies a status update
@@ -141,6 +145,14 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // timeout, or false if GLib can destroy this timeout source.
   static gboolean StaticManagePriorityCallback(gpointer data);
   bool ManagePriorityCallback();
+
+  // Checks if a full update is needed and forces it by updating the Omaha
+  // request params.
+  void DisableDeltaUpdateIfNeeded();
+
+  // If this was a delta update attempt that failed, count it so that a full
+  // update can be tried when needed.
+  void MarkDeltaUpdateFailure();
 
   // Last status notification timestamp used for throttling. Use
   // monotonic TimeTicks to ensure that notifications are sent even if
@@ -188,6 +200,7 @@ class UpdateAttempter : public ActionProcessorDelegate,
   int64_t last_checked_time_;
   std::string new_version_;
   int64_t new_size_;
+  bool is_full_update_;
 
   // Device paramaters common to all Omaha requests.
   OmahaRequestDeviceParams omaha_request_params_;

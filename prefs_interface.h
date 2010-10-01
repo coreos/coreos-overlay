@@ -9,6 +9,7 @@
 
 namespace chromeos_update_engine {
 
+extern const char kPrefsDeltaUpdateFailures[];
 extern const char kPrefsLastActivePingDay[];
 extern const char kPrefsLastRollCallPingDay[];
 

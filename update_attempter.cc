@@ -25,6 +25,7 @@
 #include "update_engine/omaha_request_params.h"
 #include "update_engine/omaha_response_handler_action.h"
 #include "update_engine/postinstall_runner_action.h"
+#include "update_engine/prefs_interface.h"
 #include "update_engine/set_bootable_flag_action.h"
 #include "update_engine/update_check_scheduler.h"
 
@@ -35,6 +36,8 @@ using std::string;
 using std::vector;
 
 namespace chromeos_update_engine {
+
+const int UpdateAttempter::kMaxDeltaUpdateFailures = 3;
 
 const char* kUpdateCompletedMarker =
     "/var/run/update_engine_autoupdate_completed";
@@ -101,7 +104,8 @@ UpdateAttempter::UpdateAttempter(PrefsInterface* prefs,
       download_progress_(0.0),
       last_checked_time_(0),
       new_version_("0.0.0.0"),
-      new_size_(0) {
+      new_size_(0),
+      is_full_update_(false) {
   if (utils::FileExists(kUpdateCompletedMarker))
     status_ = UPDATE_STATUS_UPDATED_NEED_REBOOT;
 }
@@ -126,6 +130,7 @@ void UpdateAttempter::Update(const std::string& app_version,
     LOG(ERROR) << "Unable to initialize Omaha request device params.";
     return;
   }
+  DisableDeltaUpdateIfNeeded();
   CHECK(!processor_->IsRunning());
   processor_->set_delegate(this);
 
@@ -251,6 +256,7 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
   if (code == kActionCodeSuccess) {
     SetStatusAndNotify(UPDATE_STATUS_UPDATED_NEED_REBOOT);
     utils::WriteFile(kUpdateCompletedMarker, "", 0);
+    prefs_->SetInt64(kPrefsDeltaUpdateFailures, 0);
 
     // Report the time it took to update the system.
     int64_t update_time = time(NULL) - last_checked_time_;
@@ -307,6 +313,14 @@ void UpdateAttempter::ActionCompleted(ActionProcessor* processor,
     }
   }
   if (code != kActionCodeSuccess) {
+    // If this was a delta update attempt and the current state is at or past
+    // the download phase, count the failure in case a switch to full update
+    // becomes necessary. Ignore network transfer timeouts and failures.
+    if (status_ >= UPDATE_STATUS_DOWNLOADING &&
+        !is_full_update_ &&
+        code != kActionCodeDownloadTransferError) {
+      MarkDeltaUpdateFailure();
+    }
     // On failure, schedule an error event to be sent to Omaha.
     CreatePendingErrorEvent(action, code);
     return;
@@ -326,6 +340,7 @@ void UpdateAttempter::ActionCompleted(ActionProcessor* processor,
     // TODO(adlr): put version in InstallPlan
     new_version_ = "0.0.0.0";
     new_size_ = plan.size;
+    is_full_update_ = plan.is_full_update;
     SetupPriorityManagement();
   } else if (type == DownloadAction::StaticType()) {
     SetStatusAndNotify(UPDATE_STATUS_FINALIZING);
@@ -488,6 +503,26 @@ bool UpdateAttempter::ManagePriorityCallback() {
   SetPriority(utils::kProcessPriorityHigh);
   manage_priority_source_ = NULL;
   return false;
+}
+
+void UpdateAttempter::DisableDeltaUpdateIfNeeded() {
+  int64_t delta_failures;
+  if (omaha_request_params_.delta_okay &&
+      prefs_->GetInt64(kPrefsDeltaUpdateFailures, &delta_failures) &&
+      delta_failures >= kMaxDeltaUpdateFailures) {
+    LOG(WARNING) << "Too many delta update failures, forcing full update.";
+    omaha_request_params_.delta_okay = false;
+  }
+}
+
+void UpdateAttempter::MarkDeltaUpdateFailure() {
+  CHECK(!is_full_update_);
+  int64_t delta_failures;
+  if (!prefs_->GetInt64(kPrefsDeltaUpdateFailures, &delta_failures) ||
+      delta_failures < 0) {
+    delta_failures = 0;
+  }
+  prefs_->SetInt64(kPrefsDeltaUpdateFailures, ++delta_failures);
 }
 
 }  // namespace chromeos_update_engine

@@ -4,16 +4,18 @@
 
 #include "update_engine/prefs.h"
 
-#include "base/file_util.h"
-#include "base/logging.h"
-#include "base/string_number_conversions.h"
-#include "base/string_util.h"
+#include <base/file_util.h>
+#include <base/logging.h>
+#include <base/string_number_conversions.h>
+#include <base/string_util.h>
+
 #include "update_engine/utils.h"
 
 using std::string;
 
 namespace chromeos_update_engine {
 
+const char kPrefsDeltaUpdateFailures[] = "delta-update-failures";
 const char kPrefsLastActivePingDay[] = "last-active-ping-day";
 const char kPrefsLastRollCallPingDay[] = "last-roll-call-ping-day";
 
