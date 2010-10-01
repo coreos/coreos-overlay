@@ -3,17 +3,22 @@
 // found in the LICENSE file.
 
 #include "update_engine/delta_diff_generator.h"
-#include <sys/stat.h>
-#include <sys/types.h>
+
 #include <errno.h>
 #include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
 #include <algorithm>
 #include <set>
 #include <string>
 #include <utility>
 #include <vector>
+
+#include <base/logging.h>
+#include <base/string_util.h>
 #include <bzlib.h>
-#include "base/logging.h"
+
 #include "update_engine/bzip.h"
 #include "update_engine/cycle_breaker.h"
 #include "update_engine/extent_mapper.h"
@@ -465,6 +470,72 @@ bool DeltaCompressKernelPartition(
 
   LOG(INFO) << "Done compressing kernel partition.";
   return true;
+}
+
+struct DeltaObject {
+  DeltaObject(const string& in_name, const int in_type, const off_t in_size)
+      : name(in_name),
+        type(in_type),
+        size(in_size) {}
+  bool operator <(const DeltaObject& object) const {
+    return size < object.size;
+  }
+  string name;
+  int type;
+  off_t size;
+};
+
+static const char* kInstallOperationTypes[] = {
+  "REPLACE",
+  "REPLACE_BZ",
+  "MOVE",
+  "BSDIFF"
+};
+
+void ReportPayloadUsage(const Graph& graph,
+                        const DeltaArchiveManifest& manifest) {
+  vector<DeltaObject> objects;
+  off_t total_size = 0;
+
+  // Graph nodes with information about file names.
+  for (Vertex::Index node = 0; node < graph.size(); node++) {
+    objects.push_back(DeltaObject(graph[node].file_name,
+                                  graph[node].op.type(),
+                                  graph[node].op.data_length()));
+    total_size += graph[node].op.data_length();
+  }
+
+  // Final rootfs operation writing non-file-data.
+  const DeltaArchiveManifest_InstallOperation& final_op =
+      manifest.install_operations(manifest.install_operations_size() - 1);
+  objects.push_back(DeltaObject("<rootfs-final-operation>",
+                                final_op.type(),
+                                final_op.data_length()));
+  total_size += final_op.data_length();
+
+  // Kernel install operations.
+  for (int i = 0; i < manifest.kernel_install_operations_size(); ++i) {
+    const DeltaArchiveManifest_InstallOperation& op =
+        manifest.kernel_install_operations(i);
+    objects.push_back(DeltaObject(StringPrintf("<kernel-operation-%d>", i),
+                                  op.type(),
+                                  op.data_length()));
+    total_size += op.data_length();
+  }
+
+  std::sort(objects.begin(), objects.end());
+
+  static const char kFormatString[] = "%6.2f%% %10llu %-10s %s\n";
+  for (vector<DeltaObject>::const_iterator it = objects.begin();
+       it != objects.end(); ++it) {
+    const DeltaObject& object = *it;
+    fprintf(stderr, kFormatString,
+            object.size * 100.0 / total_size,
+            object.size,
+            kInstallOperationTypes[object.type],
+            object.name.c_str());
+  }
+  fprintf(stderr, kFormatString, 100.0, total_size, "", "<total>");
 }
 
 }  // namespace {}
@@ -983,6 +1054,8 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
                                        signature_blob.size()) ==
                           static_cast<ssize_t>(signature_blob.size()));
   }
+
+  ReportPayloadUsage(graph, manifest);
 
   LOG(INFO) << "All done. Successfully created delta file.";
   return true;
