@@ -1,4 +1,4 @@
-# Copyright (c) 2009 The Chromium OS Authors. All rights reserved.
+# Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -203,6 +203,7 @@ sources = Split("""action_processor.cc
                    delta_performer.cc
                    download_action.cc
                    extent_mapper.cc
+                   extent_ranges.cc
                    extent_writer.cc
                    filesystem_copier_action.cc
                    filesystem_iterator.cc
@@ -241,6 +242,7 @@ unittest_sources = Split("""action_unittest.cc
                             delta_performer_unittest.cc
                             download_action_unittest.cc
                             extent_mapper_unittest.cc
+                            extent_ranges_unittest.cc
                             extent_writer_unittest.cc
                             file_writer_unittest.cc
                             filesystem_copier_action_unittest.cc
