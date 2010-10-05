@@ -28,8 +28,11 @@ namespace chromeos_update_engine {
 
 class CycleBreaker {
  public:
+  CycleBreaker() : skipped_ops_(0) {}
   // out_cut_edges is replaced with the cut edges.
   void BreakCycles(const Graph& graph, std::set<Edge>* out_cut_edges);
+  
+  size_t skipped_ops() const { return skipped_ops_; }
 
  private:
   void HandleCircuit();
@@ -44,6 +47,10 @@ class CycleBreaker {
   Graph blocked_graph_;  // "B" in the paper
 
   std::set<Edge> cut_edges_;
+  
+  // Number of operations skipped b/c we know they don't have any
+  // incoming edges.
+  size_t skipped_ops_;
 };
 
 }  // namespace chromeos_update_engine

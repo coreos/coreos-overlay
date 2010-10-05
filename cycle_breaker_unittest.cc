@@ -20,6 +20,14 @@ using std::vector;
 
 namespace chromeos_update_engine {
 
+namespace {
+void SetOpForNodes(Graph* graph) {
+  for (Graph::iterator it = graph->begin(), e = graph->end(); it != e; ++it) {
+    it->op.set_type(DeltaArchiveManifest_InstallOperation_Type_MOVE);
+  }
+}
+}  // namespace {}
+
 class CycleBreakerTest : public ::testing::Test {};
 
 TEST(CycleBreakerTest, SimpleTest) {
@@ -35,6 +43,7 @@ TEST(CycleBreakerTest, SimpleTest) {
   const Graph::size_type kNodeCount = counter++;
 
   Graph graph(kNodeCount);
+  SetOpForNodes(&graph);
 
   graph[n_a].out_edges.insert(make_pair(n_e, EdgeProperties()));
   graph[n_a].out_edges.insert(make_pair(n_f, EdgeProperties()));
@@ -109,6 +118,7 @@ TEST(CycleBreakerTest, AggressiveCutTest) {
   const int kGroups = 33;
   
   Graph graph(kGroups * kNodesPerGroup + 1);  // + 1 for the root node
+  SetOpForNodes(&graph);
   
   const Vertex::Index n_root = counter++;
 
@@ -166,6 +176,7 @@ TEST(CycleBreakerTest, WeightTest) {
   const Graph::size_type kNodeCount = counter++;
 
   Graph graph(kNodeCount);
+  SetOpForNodes(&graph);
 
   graph[n_a].out_edges.insert(EdgeWithWeight(n_b, 4));
   graph[n_a].out_edges.insert(EdgeWithWeight(n_f, 3));
@@ -208,6 +219,7 @@ TEST(CycleBreakerTest, UnblockGraphTest) {
   const Graph::size_type kNodeCount = counter++;
 
   Graph graph(kNodeCount);
+  SetOpForNodes(&graph);
 
   graph[n_a].out_edges.insert(EdgeWithWeight(n_b, 1));
   graph[n_a].out_edges.insert(EdgeWithWeight(n_c, 1));
@@ -224,6 +236,29 @@ TEST(CycleBreakerTest, UnblockGraphTest) {
   // These are required to be broken:
   EXPECT_TRUE(utils::SetContainsKey(broken_edges, make_pair(n_a, n_b)));
   EXPECT_TRUE(utils::SetContainsKey(broken_edges, make_pair(n_a, n_c)));
+}
+
+TEST(CycleBreakerTest, SkipOpsTest) {
+  int counter = 0;
+  const Vertex::Index n_a = counter++;
+  const Vertex::Index n_b = counter++;
+  const Vertex::Index n_c = counter++;
+  const Graph::size_type kNodeCount = counter++;
+
+  Graph graph(kNodeCount);
+  SetOpForNodes(&graph);
+  graph[n_a].op.set_type(DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ);
+  graph[n_c].op.set_type(DeltaArchiveManifest_InstallOperation_Type_REPLACE);
+
+  graph[n_a].out_edges.insert(EdgeWithWeight(n_b, 1));
+  graph[n_c].out_edges.insert(EdgeWithWeight(n_b, 1));
+
+  CycleBreaker breaker;
+  
+  set<Edge> broken_edges;
+  breaker.BreakCycles(graph, &broken_edges);
+  
+  EXPECT_EQ(2, breaker.skipped_ops());
 }
 
 }  // namespace chromeos_update_engine

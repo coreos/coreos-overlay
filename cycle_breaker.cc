@@ -34,8 +34,16 @@ void CycleBreaker::BreakCycles(const Graph& graph, set<Edge>* out_cut_edges) {
   // and looking for the strongly connected component with vertex s.
 
   TarjanAlgorithm tarjan;
+  skipped_ops_ = 0;
     
   for (Graph::size_type i = 0; i < subgraph_.size(); i++) {
+    DeltaArchiveManifest_InstallOperation_Type op_type = graph[i].op.type();
+    if (op_type == DeltaArchiveManifest_InstallOperation_Type_REPLACE ||
+        op_type == DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ) {
+      skipped_ops_++;
+      continue;
+    }
+
     if (i > 0) {
       // Erase node (i - 1) from subgraph_. First, erase what it points to
       subgraph_[i - 1].out_edges.clear();
@@ -71,6 +79,7 @@ void CycleBreaker::BreakCycles(const Graph& graph, set<Edge>* out_cut_edges) {
   }
   
   out_cut_edges->swap(cut_edges_);
+  LOG(INFO) << "Cycle breaker skipped " << skipped_ops_ << " ops.";
   DCHECK(stack_.empty());
 }
 
@@ -116,7 +125,7 @@ void CycleBreaker::Unblock(Vertex::Index u) {
 
 bool CycleBreaker::StackContainsCutEdge() const {
   for (std::vector<Vertex::Index>::const_iterator it = ++stack_.begin(),
-        e = stack_.end(); it != e; ++it) {
+           e = stack_.end(); it != e; ++it) {
     Edge edge = make_pair(*(it - 1), *it);
     if (utils::SetContainsKey(cut_edges_, edge)) {
       return true;
