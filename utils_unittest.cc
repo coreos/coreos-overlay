@@ -6,12 +6,14 @@
 #include <sys/types.h>
 #include <errno.h>
 
+#include <map>
 #include <string>
 #include <vector>
 
 #include "gtest/gtest.h"
 #include "update_engine/utils.h"
 
+using std::map;
 using std::string;
 using std::vector;
 
@@ -180,6 +182,26 @@ TEST(UtilsTest, FuzzIntTest) {
       EXPECT_GE(value, kValue - range / 2);
       EXPECT_LE(value, kValue + range - range / 2);
     }
+  }
+}
+
+TEST(UtilsTest, ApplyMapTest) {
+  int initial_values[] = {1, 2, 3, 4, 6};
+  vector<int> collection(&initial_values[0],
+                         initial_values + arraysize(initial_values));
+  EXPECT_EQ(arraysize(initial_values), collection.size());
+  int expected_values[] = {1, 2, 5, 4, 8};
+  map<int, int> value_map;
+  value_map[3] = 5;
+  value_map[6] = 8;
+  value_map[5] = 10;
+
+  utils::ApplyMap(&collection, value_map);
+
+  size_t index = 0;
+  for (vector<int>::iterator it = collection.begin(), e = collection.end();
+       it != e; ++it) {
+    EXPECT_EQ(expected_values[index++], *it);
   }
 }
 

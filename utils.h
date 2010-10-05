@@ -182,6 +182,19 @@ bool VectorIndexOf(const std::vector<T>& vect, const T& value,
   }
 }
 
+template<typename ValueType>
+void ApplyMap(std::vector<ValueType>* collection,
+              const std::map<ValueType, ValueType>& the_map) {
+  for (typename std::vector<ValueType>::iterator it = collection->begin();
+       it != collection->end(); ++it) {
+    typename std::map<ValueType, ValueType>::const_iterator map_it =
+      the_map.find(*it);
+    if (map_it != the_map.end()) {
+      *it = map_it->second;
+    }
+  }
+}
+
 // Returns the currently booted device. "/dev/sda3", for example.
 // This will not interpret LABEL= or UUID=. You'll need to use findfs
 // or something with equivalent funcionality to interpret those.
