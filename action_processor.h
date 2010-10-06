@@ -35,6 +35,7 @@ enum ActionExitCode {
   kActionCodeDownloadTransferError = 9,
   kActionCodeDownloadHashMismatchError = 10,
   kActionCodeDownloadSizeMismatchError = 11,
+  kActionCodeDownloadPayloadVerificationError = 12,
 };
 
 class AbstractAction;

@@ -36,10 +36,13 @@ bool OmahaHashCalculator::Update(const char* data, size_t length) {
 bool OmahaHashCalculator::Finalize() {
   bool success = true;
   TEST_AND_RETURN_FALSE(hash_.empty());
-  unsigned char md[SHA256_DIGEST_LENGTH];
-  TEST_AND_RETURN_FALSE(SHA256_Final(md, &ctx_) == 1);
+  TEST_AND_RETURN_FALSE(raw_hash_.empty());
+  raw_hash_.resize(SHA256_DIGEST_LENGTH);
+  TEST_AND_RETURN_FALSE(
+      SHA256_Final(reinterpret_cast<unsigned char*>(&raw_hash_[0]),
+                   &ctx_) == 1);
 
-  // Convert md to base64 encoding and store it in hash_
+  // Convert raw_hash_ to base64 encoding and store it in hash_.
   BIO *b64 = BIO_new(BIO_f_base64());
   if (!b64)
     LOG(INFO) << "BIO_new(BIO_f_base64()) failed";
@@ -48,7 +51,9 @@ bool OmahaHashCalculator::Finalize() {
     LOG(INFO) << "BIO_new(BIO_s_mem()) failed";
   if (b64 && bmem) {
     b64 = BIO_push(b64, bmem);
-    success = (BIO_write(b64, md, sizeof(md)) == sizeof(md));
+    success =
+        (BIO_write(b64, &raw_hash_[0], raw_hash_.size()) ==
+         static_cast<int>(raw_hash_.size()));
     if (success)
       success = (BIO_flush(b64) == 1);
 

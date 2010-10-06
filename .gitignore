@@ -19,6 +19,7 @@
 /marshal.glibmarshal.c
 /marshal.glibmarshal.h
 /test_http_server
+/unittest_key.pub.pem
 /update_engine
 /update_engine.dbusclient.h
 /update_engine.dbusserver.h

@@ -29,6 +29,7 @@ using std::string;
 using std::vector;
 
 extern const char* kUnittestPrivateKeyPath;
+extern const char* kUnittestPublicKeyPath;
 
 class DeltaPerformerTest : public ::testing::Test { };
 
@@ -255,6 +256,9 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
   EXPECT_TRUE(utils::ReadFile(old_kernel, &updated_kernel_partition));
   EXPECT_EQ(0, strncmp(&updated_kernel_partition[0], new_data_string,
                        strlen(new_data_string)));
+
+  EXPECT_TRUE(utils::FileExists(kUnittestPublicKeyPath));
+  EXPECT_TRUE(performer.VerifyPayload(kUnittestPublicKeyPath));
 }
 
 }  // namespace chromeos_update_engine

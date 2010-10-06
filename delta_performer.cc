@@ -3,21 +3,24 @@
 // found in the LICENSE file.
 
 #include "update_engine/delta_performer.h"
+
 #include <endian.h>
 #include <errno.h>
+
 #include <algorithm>
 #include <cstring>
 #include <string>
 #include <vector>
 
+#include <base/scoped_ptr.h>
+#include <base/string_util.h>
 #include <google/protobuf/repeated_field.h>
 
-#include "base/scoped_ptr.h"
-#include "base/string_util.h"
 #include "update_engine/bzip_extent_writer.h"
 #include "update_engine/delta_diff_generator.h"
 #include "update_engine/extent_writer.h"
 #include "update_engine/graph_types.h"
+#include "update_engine/payload_signer.h"
 #include "update_engine/subprocess.h"
 
 using std::min;
@@ -31,11 +34,8 @@ namespace {
 
 const int kDeltaVersionLength = 8;
 const int kDeltaProtobufLengthLength = 8;
-
-// Remove count bytes from the beginning of *buffer.
-void RemoveBufferHeadBytes(vector<char>* buffer, size_t count) {
-  buffer->erase(buffer->begin(), buffer->begin() + count);
-}
+const char kUpdatePayloadPublicKeyPath[] =
+    "/usr/share/update_engine/update-payload-key.pub.pem";
 
 // Converts extents to a human-readable string, for use by DumpUpdateProto().
 string ExtentsToString(const RepeatedPtrField<Extent>& extents) {
@@ -136,6 +136,7 @@ int DeltaPerformer::Close() {
     err = errno;
     PLOG(ERROR) << "Unable to close rootfs fd:";
   }
+  LOG_IF(ERROR, !hash_calculator_.Finalize()) << "Unable to finalize the hash.";
   fd_ = -2;  // Set so that isn't not valid AND calls to Open() will fail.
   path_ = "";
   return -err;
@@ -176,10 +177,10 @@ ssize_t DeltaPerformer::Write(const void* bytes, size_t count) {
     }
     // Remove protobuf and header info from buffer_, so buffer_ contains
     // just data blobs
-    RemoveBufferHeadBytes(&buffer_,
-                          strlen(kDeltaMagic) +
-                          kDeltaVersionLength +
-                          kDeltaProtobufLengthLength + protobuf_length);
+    DiscardBufferHeadBytes(strlen(kDeltaMagic) +
+                           kDeltaVersionLength +
+                           kDeltaProtobufLengthLength + protobuf_length,
+                           true);  // do_hash
     manifest_valid_ = true;
     block_size_ = manifest_.block_size();
   }
@@ -239,7 +240,7 @@ bool DeltaPerformer::CanPerformInstallOperation(
     LOG(ERROR) << "we threw away data it seems?";
     return false;
   }
-  
+
   return (operation.data_offset() + operation.data_length()) <=
       (buffer_offset_ + buffer_.size());
 }
@@ -256,11 +257,14 @@ bool DeltaPerformer::PerformReplaceOperation(
   // the data we need should be exactly at the beginning of the buffer.
   CHECK_EQ(buffer_offset_, operation.data_offset());
   CHECK_GE(buffer_.size(), operation.data_length());
-  
+
+  // Don't include the signature data blob in the hash.
+  bool do_hash = !ExtractSignatureMessage(operation);
+
   DirectExtentWriter direct_writer;
   ZeroPadExtentWriter zero_pad_writer(&direct_writer);
   scoped_ptr<BzipExtentWriter> bzip_writer;
-  
+
   // Since bzip decompression is optional, we have a variable writer that will
   // point to one of the ExtentWriter objects above.
   ExtentWriter* writer = NULL;
@@ -285,10 +289,10 @@ bool DeltaPerformer::PerformReplaceOperation(
   TEST_AND_RETURN_FALSE(writer->Init(fd, extents, block_size_));
   TEST_AND_RETURN_FALSE(writer->Write(&buffer_[0], operation.data_length()));
   TEST_AND_RETURN_FALSE(writer->End());
-  
+
   // Update buffer
   buffer_offset_ += operation.data_length();
-  RemoveBufferHeadBytes(&buffer_, operation.data_length());
+  DiscardBufferHeadBytes(operation.data_length(), do_hash);
   return true;
 }
 
@@ -431,8 +435,58 @@ bool DeltaPerformer::PerformBsdiffOperation(
 
   // Update buffer.
   buffer_offset_ += operation.data_length();
-  RemoveBufferHeadBytes(&buffer_, operation.data_length());
+  DiscardBufferHeadBytes(operation.data_length(),
+                         true);  // do_hash
   return true;
+}
+
+bool DeltaPerformer::ExtractSignatureMessage(
+    const DeltaArchiveManifest_InstallOperation& operation) {
+  if (operation.type() != DeltaArchiveManifest_InstallOperation_Type_REPLACE ||
+      !manifest_.has_signatures_offset() ||
+      manifest_.signatures_offset() != operation.data_offset()) {
+    return false;
+  }
+  TEST_AND_RETURN_FALSE(manifest_.has_signatures_size() &&
+                        manifest_.signatures_size() == operation.data_length());
+  TEST_AND_RETURN_FALSE(signatures_message_data_.empty());
+  TEST_AND_RETURN_FALSE(buffer_offset_ == manifest_.signatures_offset());
+  TEST_AND_RETURN_FALSE(buffer_.size() >= manifest_.signatures_size());
+  signatures_message_data_.insert(
+      signatures_message_data_.begin(),
+      buffer_.begin(),
+      buffer_.begin() + manifest_.signatures_size());
+  LOG(INFO) << "Extracted signature data of size "
+            << manifest_.signatures_size() << " at "
+            << manifest_.signatures_offset();
+  return true;
+}
+
+bool DeltaPerformer::VerifyPayload(const string& public_key_path) {
+  string key_path = public_key_path;
+  if (key_path.empty()) {
+    key_path = kUpdatePayloadPublicKeyPath;
+  }
+  LOG(INFO) << "Verifying delta payload. Public key path: " << key_path;
+  if (!utils::FileExists(key_path.c_str())) {
+    LOG(WARNING) << "Not verifying delta payload due to missing public key.";
+    return true;
+  }
+  TEST_AND_RETURN_FALSE(!signatures_message_data_.empty());
+  vector<char> signed_hash_data;
+  TEST_AND_RETURN_FALSE(PayloadSigner::VerifySignature(signatures_message_data_,
+                                                       key_path,
+                                                       &signed_hash_data));
+  const vector<char>& hash_data = hash_calculator_.raw_hash();
+  TEST_AND_RETURN_FALSE(!hash_data.empty());
+  return hash_data == signed_hash_data;
+}
+
+void DeltaPerformer::DiscardBufferHeadBytes(size_t count, bool do_hash) {
+  if (do_hash) {
+    hash_calculator_.Update(&buffer_[0], count);
+  }
+  buffer_.erase(buffer_.begin(), buffer_.begin() + count);
 }
 
 }  // namespace chromeos_update_engine

@@ -94,4 +94,56 @@ bool PayloadSigner::SignatureBlobLength(
   return true;
 }
 
+bool PayloadSigner::VerifySignature(const std::vector<char>& signature_blob,
+                                    const std::string& public_key_path,
+                                    std::vector<char>* out_hash_data) {
+  TEST_AND_RETURN_FALSE(!public_key_path.empty());
+
+  Signatures signatures;
+  TEST_AND_RETURN_FALSE(signatures.ParseFromArray(&signature_blob[0],
+                                                  signature_blob.size()));
+
+  // Finds a signature that matches the current version.
+  int sig_index = 0;
+  for (; sig_index < signatures.signatures_size(); sig_index++) {
+    const Signatures_Signature& signature = signatures.signatures(sig_index);
+    if (signature.has_version() &&
+        signature.version() == kSignatureMessageVersion) {
+      break;
+    }
+  }
+  TEST_AND_RETURN_FALSE(sig_index < signatures.signatures_size());
+
+  const Signatures_Signature& signature = signatures.signatures(sig_index);
+  const string sig_data = signature.data();
+  string sig_path;
+  TEST_AND_RETURN_FALSE(
+      utils::MakeTempFile("/var/run/signature.XXXXXX", &sig_path, NULL));
+  ScopedPathUnlinker sig_path_unlinker(sig_path);
+  TEST_AND_RETURN_FALSE(utils::WriteFile(sig_path.c_str(),
+                                         &sig_data[0],
+                                         sig_data.size()));
+  string hash_path;
+  TEST_AND_RETURN_FALSE(
+      utils::MakeTempFile("/var/run/hash.XXXXXX", &hash_path, NULL));
+  ScopedPathUnlinker hash_path_unlinker(hash_path);
+
+  // TODO(petkov): This runs on the client so it will be cleaner if it uses
+  // direct openssl library calls.
+  vector<string> cmd;
+  SplitString("/usr/bin/openssl rsautl -verify -pubin -inkey x -in x -out x",
+              ' ',
+              &cmd);
+  cmd[cmd.size() - 5] = public_key_path;
+  cmd[cmd.size() - 3] = sig_path;
+  cmd[cmd.size() - 1] = hash_path;
+
+  int return_code = 0;
+  TEST_AND_RETURN_FALSE(Subprocess::SynchronousExec(cmd, &return_code));
+  TEST_AND_RETURN_FALSE(return_code == 0);
+
+  TEST_AND_RETURN_FALSE(utils::ReadFile(hash_path, out_hash_data));
+  return true;
+}
+
 }  // namespace chromeos_update_engine

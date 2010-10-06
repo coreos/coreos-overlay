@@ -119,6 +119,44 @@ glib_marshal_builder = Builder(generator = GlibMarshalGenerator,
                                single_source = 1,
                                suffix = 'glibmarshal.c')
 
+# Public key generation
+def PublicKeyEmitter(target, source, env):
+  """ Inputs:
+          target: list of targets to compile to
+          source: list of sources to compile
+          env: the scons environment in which we are compiling
+      Outputs:
+          target: the list of targets we'll emit
+          source: the list of sources we'll compile"""
+  targets = []
+  for source_file in source:
+    output = str(source_file)
+    output = output[0:output.rfind('.pem')]
+    output += '.pub.pem'
+    targets.append(output)
+  return targets, source
+
+def PublicKeyGenerator(source, target, env, for_signature):
+  """ Inputs:
+          source: list of sources to process
+          target: list of targets to generate
+          env: scons environment in which we are working
+          for_signature: unused
+      Outputs: a list of commands to execute to generate the targets from
+               the sources."""
+  commands = []
+  for source_file in source:
+    output = str(source_file)
+    output = output[0:output.rfind('.pem')]
+    output += '.pub.pem'
+    cmd = '/usr/bin/openssl rsa -in %s -pubout -out %s' % (source_file, output)
+    commands.append(cmd)
+  return commands
+
+public_key_builder = Builder(generator = PublicKeyGenerator,
+                             emitter = PublicKeyEmitter,
+                             suffix = '.pub.pem')
+
 env = Environment()
 for key in Split('CC CXX AR RANLIB LD NM'):
   value = os.environ.get(key)
@@ -174,6 +212,7 @@ env['CPPPATH'] = ['..']
 env['BUILDERS']['ProtocolBuffer'] = proto_builder
 env['BUILDERS']['DbusBindings'] = dbus_bindings_builder
 env['BUILDERS']['GlibMarshal'] = glib_marshal_builder
+env['BUILDERS']['PublicKey'] = public_key_builder
 
 # Fix issue with scons not passing pkg-config vars through the environment.
 for key in Split('PKG_CONFIG_LIBDIR PKG_CONFIG_PATH'):
@@ -183,6 +222,7 @@ for key in Split('PKG_CONFIG_LIBDIR PKG_CONFIG_PATH'):
 env.ParseConfig('pkg-config --cflags --libs '
                 'dbus-1 dbus-glib-1 gio-2.0 gio-unix-2.0 glib-2.0')
 env.ProtocolBuffer('update_metadata.pb.cc', 'update_metadata.proto')
+env.PublicKey('unittest_key.pub.pem', 'unittest_key.pem')
 
 env.DbusBindings('update_engine.dbusclient.h', 'update_engine.xml')
 
@@ -285,6 +325,8 @@ all_sources.extend(unittest_main)
 all_sources.extend(client_main)
 all_sources.extend(delta_generator_main)
 for source in all_sources:
+  if source.endswith('_unittest.cc'):
+    env.Depends(source, 'unittest_key.pub.pem')
   if source.endswith('.glibmarshal.c') or source.endswith('.pb.cc'):
     continue
   env.Depends(source, 'update_metadata.pb.cc')

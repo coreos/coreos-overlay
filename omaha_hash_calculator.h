@@ -40,6 +40,11 @@ class OmahaHashCalculator {
     return hash_;
   }
 
+  const std::vector<char>& raw_hash() const {
+    DCHECK(!raw_hash_.empty()) << "Call Finalize() first";
+    return raw_hash_;
+  }
+
   static bool RawHashOfData(const std::vector<char>& data,
                             std::vector<char>* out_hash);
 
@@ -49,9 +54,10 @@ class OmahaHashCalculator {
   static std::string OmahaHashOfData(const std::vector<char>& data);
 
  private:
-  // If non-empty, the final base64 encoded hash. Will only be set to
-  // non-empty when Finalize is called.
+  // If non-empty, the final base64 encoded hash and the raw hash. Will only be
+  // set to non-empty when Finalize is called.
   std::string hash_;
+  std::vector<char> raw_hash_;
 
   // Init success
   bool valid_;

@@ -150,6 +150,11 @@ void DownloadAction::TransferComplete(HttpFetcher *fetcher, bool successful) {
                  << " failed. Expected size " << install_plan_.size
                  << " but got size " << bytes_received_;
       code = kActionCodeDownloadSizeMismatchError;
+    } else if (!install_plan_.is_full_update &&
+               !delta_performer_->VerifyPayload("")) {
+      LOG(ERROR) << "Download of " << install_plan_.download_url
+                 << " failed due to payload verification error.";
+      code = kActionCodeDownloadPayloadVerificationError;
     }
   }
 

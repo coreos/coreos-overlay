@@ -28,6 +28,12 @@ class PayloadSigner {
   static bool SignatureBlobLength(const std::string& private_key_path,
                                   uint64_t* out_length);
 
+  // Returns false if the payload signature can't be verified. Returns true
+  // otherwise and sets |out_hash| to the signed payload hash.
+  static bool VerifySignature(const std::vector<char>& signature_blob,
+                              const std::string& public_key_path,
+                              std::vector<char>* out_hash_data);
+
  private:
   // This should never be constructed
   DISALLOW_IMPLICIT_CONSTRUCTORS(PayloadSigner);
