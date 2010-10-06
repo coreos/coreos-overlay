@@ -18,12 +18,28 @@
 
 namespace chromeos_update_engine {
 
+bool operator==(const Extent& a, const Extent& b);
+
 struct EdgeProperties {
-  std::vector<Extent> extents;  // filesystem extents represented
+  // Read-before extents. I.e., blocks in |extents| must be read by the
+  // node pointed to before the pointing node runs (presumably b/c it
+  // overwrites these blocks).
+  std::vector<Extent> extents;
+  
+  // Write before extents. I.e., blocks in |write_extents| must be written
+  // by the node pointed to before the pointing node runs (presumably
+  // b/c it reads the data written by the other node).
+  std::vector<Extent> write_extents;
+  
+  bool operator==(const EdgeProperties& that) const {
+    return extents == that.extents && write_extents == that.write_extents;
+  }
 };
 
 struct Vertex {
-  Vertex() : index(-1), lowlink(-1) {}
+  Vertex() : valid(true), index(-1), lowlink(-1) {}
+  bool valid;
+  
   typedef std::map<std::vector<Vertex>::size_type, EdgeProperties> EdgeMap;
   EdgeMap out_edges;
 
@@ -51,6 +67,8 @@ typedef std::vector<Vertex> Graph;
 typedef std::pair<Vertex::Index, Vertex::Index> Edge;
 
 const uint64_t kSparseHole = kuint64max;
+const uint64_t kTempBlockStart = 1ULL << 60;
+COMPILE_ASSERT(kTempBlockStart != 0, kTempBlockStart_invalid);
 
 }  // namespace chromeos_update_engine
 
