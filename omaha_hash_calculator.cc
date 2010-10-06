@@ -97,4 +97,14 @@ string OmahaHashCalculator::OmahaHashOfData(const vector<char>& data) {
   return OmahaHashOfBytes(&data[0], data.size());
 }
 
+string OmahaHashCalculator::GetContext() const {
+  return string(reinterpret_cast<const char*>(&ctx_), sizeof(ctx_));
+}
+
+bool OmahaHashCalculator::SetContext(const std::string& context) {
+  TEST_AND_RETURN_FALSE(context.size() == sizeof(ctx_));
+  memcpy(&ctx_, context.data(), sizeof(ctx_));
+  return true;
+}
+
 }  // namespace chromeos_update_engine

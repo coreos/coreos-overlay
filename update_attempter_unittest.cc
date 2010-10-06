@@ -78,7 +78,7 @@ TEST_F(UpdateAttempterTest, GetErrorCodeForActionTest) {
   OmahaRequestAction omaha_request_action(NULL, params, NULL, NULL);
   EXPECT_EQ(kActionCodeOmahaRequestError,
             GetErrorCodeForAction(&omaha_request_action, kActionCodeError));
-  OmahaResponseHandlerAction omaha_response_handler_action;
+  OmahaResponseHandlerAction omaha_response_handler_action(&prefs_);
   EXPECT_EQ(kActionCodeOmahaResponseHandlerError,
             GetErrorCodeForAction(&omaha_response_handler_action,
                                   kActionCodeError));

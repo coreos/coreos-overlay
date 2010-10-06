@@ -4,13 +4,16 @@
 
 #include <string>
 #include <vector>
+
 #include <glib.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
 #include "update_engine/action_pipe.h"
 #include "update_engine/download_action.h"
 #include "update_engine/mock_http_fetcher.h"
 #include "update_engine/omaha_hash_calculator.h"
+#include "update_engine/prefs_mock.h"
 #include "update_engine/test_utils.h"
 #include "update_engine/utils.h"
 
@@ -106,8 +109,9 @@ void TestWithData(const vector<char>& data,
                            "");
   ObjectFeederAction<InstallPlan> feeder_action;
   feeder_action.set_obj(install_plan);
-  DownloadAction download_action(new MockHttpFetcher(&data[0],
-                                                     data.size()));
+  PrefsMock prefs;
+  DownloadAction download_action(&prefs, new MockHttpFetcher(&data[0],
+                                                             data.size()));
   download_action.SetTestFileWriter(&writer);
   BondActions(&feeder_action, &download_action);
   DownloadActionDelegateMock download_delegate;
@@ -225,7 +229,9 @@ void TestTerminateEarly(bool use_download_delegate) {
     ObjectFeederAction<InstallPlan> feeder_action;
     InstallPlan install_plan(true, "", 0, "", temp_file.GetPath(), "");
     feeder_action.set_obj(install_plan);
-    DownloadAction download_action(new MockHttpFetcher(&data[0], data.size()));
+    PrefsMock prefs;
+    DownloadAction download_action(&prefs,
+                                   new MockHttpFetcher(&data[0], data.size()));
     download_action.SetTestFileWriter(&writer);
     DownloadActionDelegateMock download_delegate;
     if (use_download_delegate) {
@@ -327,7 +333,8 @@ TEST(DownloadActionTest, PassObjectOutTest) {
                            "/dev/null");
   ObjectFeederAction<InstallPlan> feeder_action;
   feeder_action.set_obj(install_plan);
-  DownloadAction download_action(new MockHttpFetcher("x", 1));
+  PrefsMock prefs;
+  DownloadAction download_action(&prefs, new MockHttpFetcher("x", 1));
   download_action.SetTestFileWriter(&writer);
 
   DownloadActionTestAction test_action;
@@ -360,7 +367,8 @@ TEST(DownloadActionTest, BadOutFileTest) {
   InstallPlan install_plan(true, "", 0, "", path, "");
   ObjectFeederAction<InstallPlan> feeder_action;
   feeder_action.set_obj(install_plan);
-  DownloadAction download_action(new MockHttpFetcher("x", 1));
+  PrefsMock prefs;
+  DownloadAction download_action(&prefs, new MockHttpFetcher("x", 1));
   download_action.SetTestFileWriter(&writer);
 
   BondActions(&feeder_action, &download_action);

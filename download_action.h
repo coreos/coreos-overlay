@@ -49,6 +49,7 @@ class DownloadActionDelegate {
 
 class DownloadAction;
 class NoneType;
+class PrefsInterface;
 
 template<>
 class ActionTraits<DownloadAction> {
@@ -64,7 +65,7 @@ class DownloadAction : public Action<DownloadAction>,
   // Takes ownership of the passed in HttpFetcher. Useful for testing.
   // A good calling pattern is:
   // DownloadAction(new WhateverHttpFetcher);
-  DownloadAction(HttpFetcher* http_fetcher);
+  DownloadAction(PrefsInterface* prefs, HttpFetcher* http_fetcher);
   virtual ~DownloadAction();
   typedef ActionTraits<DownloadAction>::InputObjectType InputObjectType;
   typedef ActionTraits<DownloadAction>::OutputObjectType OutputObjectType;
@@ -95,6 +96,9 @@ class DownloadAction : public Action<DownloadAction>,
  private:
   // The InstallPlan passed in
   InstallPlan install_plan_;
+
+  // Update Engine preference store.
+  PrefsInterface* prefs_;
 
   // The FileWriter that downloaded data should be written to. It will
   // either point to *decompressing_file_writer_ or *delta_performer_.

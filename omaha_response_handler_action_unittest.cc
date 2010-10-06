@@ -1,14 +1,18 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 #include <string>
+
 #include <gtest/gtest.h>
+
 #include "update_engine/omaha_response_handler_action.h"
+#include "update_engine/prefs_mock.h"
 #include "update_engine/test_utils.h"
 #include "update_engine/utils.h"
 
 using std::string;
+using testing::Return;
 
 namespace chromeos_update_engine {
 
@@ -60,7 +64,12 @@ bool OmahaResponseHandlerActionTest::DoTest(const OmahaResponse& in,
 
   ObjectFeederAction<OmahaResponse> feeder_action;
   feeder_action.set_obj(in);
-  OmahaResponseHandlerAction response_handler_action;
+  PrefsMock prefs;
+  if (in.update_exists) {
+    EXPECT_CALL(prefs, SetString(kPrefsUpdateCheckResponseHash, in.hash))
+        .WillOnce(Return(true));
+  }
+  OmahaResponseHandlerAction response_handler_action(&prefs);
   response_handler_action.set_boot_device(boot_dev);
   BondActions(&feeder_action, &response_handler_action);
   ObjectCollectorAction<InstallPlan> collector_action;

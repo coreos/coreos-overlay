@@ -9,15 +9,16 @@
 #include <string>
 #include <vector>
 
+#include <base/scoped_ptr.h>
+#include <base/string_util.h>
 #include <google/protobuf/repeated_field.h>
 #include <gtest/gtest.h>
 
-#include "base/scoped_ptr.h"
-#include "base/string_util.h"
 #include "update_engine/delta_diff_generator.h"
 #include "update_engine/delta_performer.h"
 #include "update_engine/graph_types.h"
 #include "update_engine/payload_signer.h"
+#include "update_engine/prefs_mock.h"
 #include "update_engine/test_utils.h"
 #include "update_engine/update_metadata.pb.h"
 #include "update_engine/utils.h"
@@ -27,6 +28,8 @@ namespace chromeos_update_engine {
 using std::min;
 using std::string;
 using std::vector;
+using testing::_;
+using testing::Return;
 
 extern const char* kUnittestPrivateKeyPath;
 extern const char* kUnittestPublicKeyPath;
@@ -205,6 +208,8 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
   vector<char> delta;
   EXPECT_TRUE(utils::ReadFile(delta_path, &delta));
 
+  uint64_t manifest_metadata_size;
+
   // Check that the null signature blob exists
   {
     LOG(INFO) << "delta size: " << delta.size();
@@ -218,10 +223,11 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
     EXPECT_TRUE(manifest.ParseFromArray(&delta[kManifestOffset],
                                         manifest_size));
     EXPECT_TRUE(manifest.has_signatures_offset());
+    manifest_metadata_size = kManifestOffset + manifest_size;
 
     Signatures sigs_message;
     EXPECT_TRUE(sigs_message.ParseFromArray(
-        &delta[kManifestOffset + manifest_size + manifest.signatures_offset()],
+        &delta[manifest_metadata_size + manifest.signatures_offset()],
         manifest.signatures_size()));
     EXPECT_EQ(1, sigs_message.signatures_size());
     const Signatures_Signature& signature = sigs_message.signatures(0);
@@ -234,8 +240,18 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
     EXPECT_FALSE(signature.data().empty());
   }
 
+  PrefsMock prefs;
+  EXPECT_CALL(prefs, SetInt64(kPrefsManifestMetadataSize,
+                              manifest_metadata_size)).WillOnce(Return(true));
+  EXPECT_CALL(prefs, SetInt64(kPrefsUpdateStateNextOperation, _))
+      .WillRepeatedly(Return(true));
+  EXPECT_CALL(prefs, SetInt64(kPrefsUpdateStateNextDataOffset, _))
+      .WillRepeatedly(Return(true));
+  EXPECT_CALL(prefs, SetString(kPrefsUpdateStateSignedSHA256Context, _))
+      .WillRepeatedly(Return(true));
+
   // Update the A image in place.
-  DeltaPerformer performer;
+  DeltaPerformer performer(&prefs);
 
   EXPECT_EQ(0, performer.Open(a_img.c_str(), 0, 0));
   EXPECT_TRUE(performer.OpenKernel(old_kernel.c_str()));

@@ -141,7 +141,7 @@ void UpdateAttempter::Update(const std::string& app_version,
                              NULL,
                              new LibcurlHttpFetcher));
   shared_ptr<OmahaResponseHandlerAction> response_handler_action(
-      new OmahaResponseHandlerAction);
+      new OmahaResponseHandlerAction(prefs_));
   shared_ptr<FilesystemCopierAction> filesystem_copier_action(
       new FilesystemCopierAction(false));
   shared_ptr<FilesystemCopierAction> kernel_filesystem_copier_action(
@@ -153,7 +153,7 @@ void UpdateAttempter::Update(const std::string& app_version,
                                  OmahaEvent::kTypeUpdateDownloadStarted),
                              new LibcurlHttpFetcher));
   shared_ptr<DownloadAction> download_action(
-      new DownloadAction(new LibcurlHttpFetcher));
+      new DownloadAction(prefs_, new LibcurlHttpFetcher));
   shared_ptr<OmahaRequestAction> download_finished_action(
       new OmahaRequestAction(prefs_,
                              omaha_request_params_,

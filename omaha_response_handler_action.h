@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -16,6 +16,7 @@
 namespace chromeos_update_engine {
 
 class OmahaResponseHandlerAction;
+class PrefsInterface;
 
 template<>
 class ActionTraits<OmahaResponseHandlerAction> {
@@ -26,7 +27,9 @@ class ActionTraits<OmahaResponseHandlerAction> {
 
 class OmahaResponseHandlerAction : public Action<OmahaResponseHandlerAction> {
  public:
-  OmahaResponseHandlerAction() : got_no_update_response_(false) {}
+  OmahaResponseHandlerAction(PrefsInterface* prefs)
+      : prefs_(prefs),
+        got_no_update_response_(false) {}
   typedef ActionTraits<OmahaResponseHandlerAction>::InputObjectType
       InputObjectType;
   typedef ActionTraits<OmahaResponseHandlerAction>::OutputObjectType
@@ -56,6 +59,9 @@ class OmahaResponseHandlerAction : public Action<OmahaResponseHandlerAction> {
   // or /dev/sda4 -> /dev/sda3
   static bool GetInstallDev(const std::string& boot_dev,
                             std::string* install_dev);
+
+  // Update Engine preference store.
+  PrefsInterface* prefs_;
 
   // set to non-empty in unit tests
   std::string boot_device_;

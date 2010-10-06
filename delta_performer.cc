@@ -21,6 +21,7 @@
 #include "update_engine/extent_writer.h"
 #include "update_engine/graph_types.h"
 #include "update_engine/payload_signer.h"
+#include "update_engine/prefs_interface.h"
 #include "update_engine/subprocess.h"
 
 using std::min;
@@ -36,6 +37,18 @@ const int kDeltaVersionLength = 8;
 const int kDeltaProtobufLengthLength = 8;
 const char kUpdatePayloadPublicKeyPath[] =
     "/usr/share/update_engine/update-payload-key.pub.pem";
+const int kUpdateStateOperationInvalid = -1;
+
+// Returns true if |op| is idempotent -- i.e., if we can interrupt it and repeat
+// it safely. Returns false otherwise.
+bool IsIdempotentOperation(const DeltaArchiveManifest_InstallOperation& op) {
+  if (op.src_extents_size() == 0) {
+    return true;
+  }
+  // TODO(petkov): Cover the case where the source and target extents don't
+  // intersect.
+  return false;
+}
 
 // Converts extents to a human-readable string, for use by DumpUpdateProto().
 string ExtentsToString(const RepeatedPtrField<Extent>& extents) {
@@ -177,10 +190,13 @@ ssize_t DeltaPerformer::Write(const void* bytes, size_t count) {
     }
     // Remove protobuf and header info from buffer_, so buffer_ contains
     // just data blobs
-    DiscardBufferHeadBytes(strlen(kDeltaMagic) +
-                           kDeltaVersionLength +
-                           kDeltaProtobufLengthLength + protobuf_length,
+    size_t metadata_size = strlen(kDeltaMagic) + kDeltaVersionLength +
+        kDeltaProtobufLengthLength + protobuf_length;
+    DiscardBufferHeadBytes(metadata_size,
                            true);  // do_hash
+    LOG_IF(WARNING, !prefs_->SetInt64(kPrefsManifestMetadataSize,
+                                      metadata_size))
+        << "Unable to save the manifest metadata size.";
     manifest_valid_ = true;
     block_size_ = manifest_.block_size();
   }
@@ -202,6 +218,12 @@ ssize_t DeltaPerformer::Write(const void* bytes, size_t count) {
     }
     bool is_kernel_partition =
         (next_operation_num_ >= manifest_.install_operations_size());
+    // If about to start a non-idempotent operation, clear the update state so
+    // that if the operation gets interrupted, we don't try to resume the
+    // update.
+    if (!IsIdempotentOperation(op)) {
+      ResetUpdateProgress();
+    }
     if (op.type() == DeltaArchiveManifest_InstallOperation_Type_REPLACE ||
         op.type() == DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ) {
       if (!PerformReplaceOperation(op, is_kernel_partition)) {
@@ -223,6 +245,7 @@ ssize_t DeltaPerformer::Write(const void* bytes, size_t count) {
       }
     }
     next_operation_num_++;
+    CheckpointUpdateProgress();
   }
   return count;
 }
@@ -487,6 +510,24 @@ void DeltaPerformer::DiscardBufferHeadBytes(size_t count, bool do_hash) {
     hash_calculator_.Update(&buffer_[0], count);
   }
   buffer_.erase(buffer_.begin(), buffer_.begin() + count);
+}
+
+bool DeltaPerformer::ResetUpdateProgress() {
+  TEST_AND_RETURN_FALSE(prefs_->SetInt64(kPrefsUpdateStateNextOperation,
+                                         kUpdateStateOperationInvalid));
+  return true;
+}
+
+bool DeltaPerformer::CheckpointUpdateProgress() {
+  // First reset the progress in case we die in the middle of the state update.
+  ResetUpdateProgress();
+  TEST_AND_RETURN_FALSE(prefs_->SetString(kPrefsUpdateStateSignedSHA256Context,
+                                          hash_calculator_.GetContext()));
+  TEST_AND_RETURN_FALSE(prefs_->SetInt64(kPrefsUpdateStateNextDataOffset,
+                                         buffer_offset_));
+  TEST_AND_RETURN_FALSE(prefs_->SetInt64(kPrefsUpdateStateNextOperation,
+                                         next_operation_num_));
+  return true;
 }
 
 }  // namespace chromeos_update_engine

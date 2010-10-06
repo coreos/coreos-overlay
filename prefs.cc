@@ -18,6 +18,12 @@ namespace chromeos_update_engine {
 const char kPrefsDeltaUpdateFailures[] = "delta-update-failures";
 const char kPrefsLastActivePingDay[] = "last-active-ping-day";
 const char kPrefsLastRollCallPingDay[] = "last-roll-call-ping-day";
+const char kPrefsManifestMetadataSize[] = "manifest-metadata-size";
+const char kPrefsUpdateCheckResponseHash[] = "update-check-response-hash";
+const char kPrefsUpdateStateNextDataOffset[] = "update-state-next-data-offset";
+const char kPrefsUpdateStateNextOperation[] = "update-state-next-operation";
+const char kPrefsUpdateStateSignedSHA256Context[] =
+    "update-state-signed-sha-256-context";
 
 bool Prefs::Init(const FilePath& prefs_dir) {
   prefs_dir_ = prefs_dir;
@@ -25,16 +31,13 @@ bool Prefs::Init(const FilePath& prefs_dir) {
 }
 
 bool Prefs::GetString(const string& key, string* value) {
-  LOG(INFO) << "Getting key \"" << key << "\"";
   FilePath filename;
   TEST_AND_RETURN_FALSE(GetFileNameForKey(key, &filename));
   TEST_AND_RETURN_FALSE(file_util::ReadFileToString(filename, value));
-  LOG(INFO) << "Key \"" << key << "\" value \"" << *value << "\"";
   return true;
 }
 
 bool Prefs::SetString(const std::string& key, const std::string& value) {
-  LOG(INFO) << "Setting key \"" << key << "\" value \"" << value << "\"";
   FilePath filename;
   TEST_AND_RETURN_FALSE(GetFileNameForKey(key, &filename));
   TEST_AND_RETURN_FALSE(file_util::CreateDirectory(filename.DirName()));

@@ -11,11 +11,11 @@
 #include "base/basictypes.h"
 #include "base/logging.h"
 
-// Omaha uses base64 encoded SHA-1 as the hash. This class provides a simple
+// Omaha uses base64 encoded SHA-256 as the hash. This class provides a simple
 // wrapper around OpenSSL providing such a formatted hash of data passed in.
-// The methods of this class must be called in a very specific order:
-// First the ctor (of course), then 0 or more calls to Update(), then
-// Finalize(), then 0 or more calls to hash().
+// The methods of this class must be called in a very specific order: First the
+// ctor (of course), then 0 or more calls to Update(), then Finalize(), then 0
+// or more calls to hash().
 
 namespace chromeos_update_engine {
 
@@ -44,6 +44,15 @@ class OmahaHashCalculator {
     DCHECK(!raw_hash_.empty()) << "Call Finalize() first";
     return raw_hash_;
   }
+
+  // Gets the current hash context. Note that the string will contain binary
+  // data (including \0 characters).
+  std::string GetContext() const;
+
+  // Sets the current hash context. |context| must the string returned by a
+  // previous OmahaHashCalculator::GetContext method call. Returns true on
+  // success, and false otherwise.
+  bool SetContext(const std::string& context);
 
   static bool RawHashOfData(const std::vector<char>& data,
                             std::vector<char>* out_hash);

@@ -17,13 +17,16 @@
 
 namespace chromeos_update_engine {
 
+class PrefsInterface;
+
 // This class performs the actions in a delta update synchronously. The delta
 // update itself should be passed in in chunks as it is received.
 
 class DeltaPerformer : public FileWriter {
  public:
-  DeltaPerformer()
-      : fd_(-1),
+  DeltaPerformer(PrefsInterface* prefs)
+      : prefs_(prefs),
+        fd_(-1),
         kernel_fd_(-1),
         manifest_valid_(false),
         next_operation_num_(0),
@@ -98,6 +101,12 @@ class DeltaPerformer : public FileWriter {
   // Discard |count| bytes from the beginning of buffer_. If |do_hash| is true,
   // updates the hash calculator with these bytes before discarding them.
   void DiscardBufferHeadBytes(size_t count, bool do_hash);
+
+  bool ResetUpdateProgress();
+  bool CheckpointUpdateProgress();
+
+  // Update Engine preference store.
+  PrefsInterface* prefs_;
 
   // File descriptor of open device.
   int fd_;

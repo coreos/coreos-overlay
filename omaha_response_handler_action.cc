@@ -1,21 +1,19 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 #include "update_engine/omaha_response_handler_action.h"
+
 #include <string>
+
+#include <base/logging.h>
+
+#include "update_engine/prefs_interface.h"
 #include "update_engine/utils.h"
 
 using std::string;
 
 namespace chromeos_update_engine {
-
-namespace {
-// If the file part of the download URL contains kFullUpdateTag, then and
-// only then do we assume it's a full update. Otherwise, we assume it's a
-// delta update.
-const string kFullUpdateTag = "_FULL_";
-}  // namespace
 
 void OmahaResponseHandlerAction::PerformAction() {
   CHECK(HasInputObject());
@@ -29,6 +27,12 @@ void OmahaResponseHandlerAction::PerformAction() {
   install_plan_.download_url = response.codebase;
   install_plan_.size = response.size;
   install_plan_.download_hash = response.hash;
+  // TODO(petkov): Decide here if this is going to be a regular update or
+  // resume-after-boot. This should also set the number of ops performed so far
+  // to invalid if no need to resume.
+  LOG_IF(WARNING, !prefs_->SetString(kPrefsUpdateCheckResponseHash,
+                                     response.hash))
+      << "Unable to save the update check response hash.";
   TEST_AND_RETURN(GetInstallDev(
       (!boot_device_.empty() ? boot_device_ : utils::BootDevice()),
       &install_plan_.install_path));

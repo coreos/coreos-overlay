@@ -20,8 +20,10 @@ namespace chromeos_update_engine {
 // Use a buffer to reduce the number of IOPS on SSD devices.
 const size_t kFileWriterBufferSize = 128 * 1024;  // 128 KiB
 
-DownloadAction::DownloadAction(HttpFetcher* http_fetcher)
-    : writer_(NULL),
+DownloadAction::DownloadAction(PrefsInterface* prefs,
+                               HttpFetcher* http_fetcher)
+    : prefs_(prefs),
+      writer_(NULL),
       http_fetcher_(http_fetcher),
       delegate_(NULL),
       bytes_received_(0) {}
@@ -61,7 +63,7 @@ void DownloadAction::PerformAction() {
           new GzipDecompressingFileWriter(split_file_writer_.get()));
       writer_ = decompressing_file_writer_.get();
     } else {
-      delta_performer_.reset(new DeltaPerformer);
+      delta_performer_.reset(new DeltaPerformer(prefs_));
       writer_ = delta_performer_.get();
     }
   }

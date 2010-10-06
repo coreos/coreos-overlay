@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -7,15 +7,19 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
+
 #include <set>
 #include <string>
 #include <vector>
+
+#include <base/command_line.h>
+#include <base/logging.h>
 #include <gflags/gflags.h>
 #include <glib.h>
-#include "base/command_line.h"
-#include "base/logging.h"
+
 #include "update_engine/delta_diff_generator.h"
 #include "update_engine/delta_performer.h"
+#include "update_engine/prefs.h"
 #include "update_engine/subprocess.h"
 #include "update_engine/update_metadata.pb.h"
 #include "update_engine/utils.h"
@@ -32,6 +36,8 @@ DEFINE_string(new_kernel, "", "Path to the new kernel partition image");
 DEFINE_string(private_key, "", "Path to private key in .pem format");
 DEFINE_string(apply_delta, "",
               "If set, apply delta over old_image. (For debugging.)");
+DEFINE_string(prefs_dir, "/tmp/update_engine_prefs",
+              "Preferences directory, used with apply_delta.");
 
 // This file contains a simple program that takes an old path, a new path,
 // and an output file as arguments and the path to an output file and
@@ -64,7 +70,11 @@ int Main(int argc, char** argv) {
     if (FLAGS_old_image.empty()) {
       LOG(FATAL) << "Must pass --old_image with --apply_delta.";
     }
-    DeltaPerformer performer;
+    Prefs prefs;
+    LOG(INFO) << "Setting up preferences under: " << FLAGS_prefs_dir;
+    LOG_IF(ERROR, !prefs.Init(FilePath(FLAGS_prefs_dir)))
+        << "Failed to initialize preferences.";
+    DeltaPerformer performer(&prefs);
     CHECK_EQ(performer.Open(FLAGS_old_image.c_str(), 0, 0), 0);
     CHECK(performer.OpenKernel(FLAGS_old_kernel.c_str()));
     vector<char> buf(1024 * 1024);
@@ -92,7 +102,7 @@ int Main(int argc, char** argv) {
   if ((!IsDir(FLAGS_old_dir.c_str())) || (!IsDir(FLAGS_new_dir.c_str()))) {
     LOG(FATAL) << "old_dir or new_dir not directory";
   }
-  
+
   DeltaDiffGenerator::GenerateDeltaUpdateFile(FLAGS_old_dir,
                                               FLAGS_old_image,
                                               FLAGS_new_dir,
