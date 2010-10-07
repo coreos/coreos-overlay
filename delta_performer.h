@@ -31,6 +31,7 @@ class DeltaPerformer : public FileWriter {
         manifest_valid_(false),
         next_operation_num_(0),
         buffer_offset_(0),
+        last_updated_buffer_offset_(kuint64max),
         block_size_(0) {}
 
   // Opens the kernel. Should be called before or after Open(), but before
@@ -72,6 +73,15 @@ class DeltaPerformer : public FileWriter {
       uint64_t full_length,
       std::string* positions_string);
 
+  // Returns true if a previous update attempt can be continued based on the
+  // persistent preferences and the new update check response hash.
+  static bool CanResumeUpdate(PrefsInterface* prefs,
+                              std::string update_check_response_hash);
+
+  // Resets the persistent update progress state to indicate that an update
+  // can't be resumed. Returns true on success, false otherwise.
+  static bool ResetUpdateProgress(PrefsInterface* prefs);
+
  private:
   // Returns true if enough of the delta file has been passed via Write()
   // to be able to perform a given install operation.
@@ -102,7 +112,8 @@ class DeltaPerformer : public FileWriter {
   // updates the hash calculator with these bytes before discarding them.
   void DiscardBufferHeadBytes(size_t count, bool do_hash);
 
-  bool ResetUpdateProgress();
+  // Checkpoints the update progress into persistent storage to allow this
+  // update attempt to be resumed after reboot.
   bool CheckpointUpdateProgress();
 
   // Update Engine preference store.
@@ -130,6 +141,9 @@ class DeltaPerformer : public FileWriter {
   std::vector<char> buffer_;
   // Offset of buffer_ in the binary blobs section of the update.
   uint64_t buffer_offset_;
+
+  // Last |buffer_offset_| value updated as part of the progress update.
+  uint64_t last_updated_buffer_offset_;
 
   // The block size (parsed from the manifest).
   uint32_t block_size_;

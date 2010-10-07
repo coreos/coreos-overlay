@@ -8,6 +8,7 @@
 
 #include <base/logging.h>
 
+#include "update_engine/delta_performer.h"
 #include "update_engine/prefs_interface.h"
 #include "update_engine/utils.h"
 
@@ -27,12 +28,17 @@ void OmahaResponseHandlerAction::PerformAction() {
   install_plan_.download_url = response.codebase;
   install_plan_.size = response.size;
   install_plan_.download_hash = response.hash;
-  // TODO(petkov): Decide here if this is going to be a regular update or
-  // resume-after-boot. This should also set the number of ops performed so far
-  // to invalid if no need to resume.
-  LOG_IF(WARNING, !prefs_->SetString(kPrefsUpdateCheckResponseHash,
-                                     response.hash))
-      << "Unable to save the update check response hash.";
+
+  install_plan_.is_resume =
+      DeltaPerformer::CanResumeUpdate(prefs_, response.hash);
+  if (!install_plan_.is_resume) {
+    LOG_IF(WARNING, !DeltaPerformer::ResetUpdateProgress(prefs_))
+        << "Unable to reset the update progress.";
+    LOG_IF(WARNING, !prefs_->SetString(kPrefsUpdateCheckResponseHash,
+                                       response.hash))
+        << "Unable to save the update check response hash.";
+  }
+
   TEST_AND_RETURN(GetInstallDev(
       (!boot_device_.empty() ? boot_device_ : utils::BootDevice()),
       &install_plan_.install_path));

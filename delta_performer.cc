@@ -222,7 +222,7 @@ ssize_t DeltaPerformer::Write(const void* bytes, size_t count) {
     // that if the operation gets interrupted, we don't try to resume the
     // update.
     if (!IsIdempotentOperation(op)) {
-      ResetUpdateProgress();
+      ResetUpdateProgress(prefs_);
     }
     if (op.type() == DeltaArchiveManifest_InstallOperation_Type_REPLACE ||
         op.type() == DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ) {
@@ -512,19 +512,57 @@ void DeltaPerformer::DiscardBufferHeadBytes(size_t count, bool do_hash) {
   buffer_.erase(buffer_.begin(), buffer_.begin() + count);
 }
 
-bool DeltaPerformer::ResetUpdateProgress() {
-  TEST_AND_RETURN_FALSE(prefs_->SetInt64(kPrefsUpdateStateNextOperation,
-                                         kUpdateStateOperationInvalid));
+bool DeltaPerformer::CanResumeUpdate(PrefsInterface* prefs,
+                                     string update_check_response_hash) {
+  int64_t next_operation = kUpdateStateOperationInvalid;
+  TEST_AND_RETURN_FALSE(prefs->GetInt64(kPrefsUpdateStateNextOperation,
+                                        &next_operation) &&
+                        next_operation != kUpdateStateOperationInvalid &&
+                        next_operation > 0);
+
+  string interrupted_hash;
+  TEST_AND_RETURN_FALSE(prefs->GetString(kPrefsUpdateCheckResponseHash,
+                                         &interrupted_hash) &&
+                        !interrupted_hash.empty() &&
+                        interrupted_hash == update_check_response_hash);
+
+  // Sanity check the rest.
+  int64_t next_data_offset = -1;
+  TEST_AND_RETURN_FALSE(prefs->GetInt64(kPrefsUpdateStateNextDataOffset,
+                                        &next_data_offset) &&
+                        next_data_offset >= 0);
+
+  string signed_sha256_context;
+  TEST_AND_RETURN_FALSE(
+      prefs->GetString(kPrefsUpdateStateSignedSHA256Context,
+                       &signed_sha256_context) &&
+      !signed_sha256_context.empty());
+
+  int64_t manifest_metadata_size = 0;
+  TEST_AND_RETURN_FALSE(prefs->GetInt64(kPrefsManifestMetadataSize,
+                                        &manifest_metadata_size) &&
+                        manifest_metadata_size > 0);
+
+  return true;
+}
+
+bool DeltaPerformer::ResetUpdateProgress(PrefsInterface* prefs) {
+  TEST_AND_RETURN_FALSE(prefs->SetInt64(kPrefsUpdateStateNextOperation,
+                                        kUpdateStateOperationInvalid));
   return true;
 }
 
 bool DeltaPerformer::CheckpointUpdateProgress() {
   // First reset the progress in case we die in the middle of the state update.
-  ResetUpdateProgress();
-  TEST_AND_RETURN_FALSE(prefs_->SetString(kPrefsUpdateStateSignedSHA256Context,
-                                          hash_calculator_.GetContext()));
-  TEST_AND_RETURN_FALSE(prefs_->SetInt64(kPrefsUpdateStateNextDataOffset,
-                                         buffer_offset_));
+  ResetUpdateProgress(prefs_);
+  if (last_updated_buffer_offset_ != buffer_offset_) {
+    TEST_AND_RETURN_FALSE(
+        prefs_->SetString(kPrefsUpdateStateSignedSHA256Context,
+                          hash_calculator_.GetContext()));
+    TEST_AND_RETURN_FALSE(prefs_->SetInt64(kPrefsUpdateStateNextDataOffset,
+                                           buffer_offset_));
+    last_updated_buffer_offset_ = buffer_offset_;
+  }
   TEST_AND_RETURN_FALSE(prefs_->SetInt64(kPrefsUpdateStateNextOperation,
                                          next_operation_num_));
   return true;
