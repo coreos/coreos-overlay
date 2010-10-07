@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <set>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -15,15 +16,18 @@
 #include "update_engine/cycle_breaker.h"
 #include "update_engine/delta_diff_generator.h"
 #include "update_engine/delta_performer.h"
+#include "update_engine/extent_ranges.h"
 #include "update_engine/graph_types.h"
 #include "update_engine/graph_utils.h"
 #include "update_engine/subprocess.h"
 #include "update_engine/test_utils.h"
+#include "update_engine/topological_sort.h"
 #include "update_engine/utils.h"
 
 using std::make_pair;
 using std::set;
 using std::string;
+using std::stringstream;
 using std::vector;
 
 namespace chromeos_update_engine {
@@ -161,13 +165,14 @@ TEST_F(DeltaDiffGeneratorTest, SubstituteBlocksTest) {
   vector<Extent> replace_blocks;
   AppendExtent(&replace_blocks, 10, 2);
   AppendExtent(&replace_blocks, 13, 2);
-  DeltaArchiveManifest_InstallOperation op;
+  Vertex vertex;
+  DeltaArchiveManifest_InstallOperation& op = vertex.op;
   OpAppendExtent(&op, 4, 3);
   OpAppendExtent(&op, kSparseHole, 4);  // Sparse hole in file
   OpAppendExtent(&op, 3, 1);
   OpAppendExtent(&op, 7, 3);
   
-  DeltaDiffGenerator::SubstituteBlocks(&op, remove_blocks, replace_blocks);
+  DeltaDiffGenerator::SubstituteBlocks(&vertex, remove_blocks, replace_blocks);
   
   EXPECT_EQ(7, op.src_extents_size());
   EXPECT_EQ(11, op.src_extents(0).start_block());
@@ -254,7 +259,8 @@ TEST_F(DeltaDiffGeneratorTest, CutEdgesTest) {
   EXPECT_TRUE(cut_edges.end() != cut_edges.find(make_pair<Vertex::Index>(1,
                                                                          0)));
 
-  EXPECT_TRUE(DeltaDiffGenerator::CutEdges(&graph, blocks, cut_edges));
+  vector<CutEdgeVertexes> cuts;
+  EXPECT_TRUE(DeltaDiffGenerator::CutEdges(&graph, cut_edges, &cuts));
   
   EXPECT_EQ(3, graph.size());
   
@@ -262,21 +268,17 @@ TEST_F(DeltaDiffGeneratorTest, CutEdgesTest) {
   EXPECT_EQ(DeltaArchiveManifest_InstallOperation_Type_MOVE,
             graph.back().op.type());
   EXPECT_EQ(2, graph.back().op.src_extents_size());
-  EXPECT_EQ(2, graph.back().op.dst_extents_size());
-  EXPECT_EQ(0, graph.back().op.dst_extents(0).start_block());
-  EXPECT_EQ(1, graph.back().op.dst_extents(0).num_blocks());
-  EXPECT_EQ(8, graph.back().op.dst_extents(1).start_block());
-  EXPECT_EQ(1, graph.back().op.dst_extents(1).num_blocks());
+  EXPECT_EQ(1, graph.back().op.dst_extents_size());
+  EXPECT_EQ(kTempBlockStart, graph.back().op.dst_extents(0).start_block());
+  EXPECT_EQ(2, graph.back().op.dst_extents(0).num_blocks());
   EXPECT_TRUE(graph.back().out_edges.empty());
   
   // Check that old node reads from new blocks
-  EXPECT_EQ(3, graph[0].op.src_extents_size());
-  EXPECT_EQ(0, graph[0].op.src_extents(0).start_block());
-  EXPECT_EQ(1, graph[0].op.src_extents(0).num_blocks());
-  EXPECT_EQ(8, graph[0].op.src_extents(1).start_block());
+  EXPECT_EQ(2, graph[0].op.src_extents_size());
+  EXPECT_EQ(kTempBlockStart, graph[0].op.src_extents(0).start_block());
+  EXPECT_EQ(2, graph[0].op.src_extents(0).num_blocks());
+  EXPECT_EQ(7, graph[0].op.src_extents(1).start_block());
   EXPECT_EQ(1, graph[0].op.src_extents(1).num_blocks());
-  EXPECT_EQ(7, graph[0].op.src_extents(2).start_block());
-  EXPECT_EQ(1, graph[0].op.src_extents(2).num_blocks());
 
   // And that the old dst extents haven't changed
   EXPECT_EQ(2, graph[0].op.dst_extents_size());
@@ -346,6 +348,211 @@ TEST_F(DeltaDiffGeneratorTest, ReorderBlobsTest) {
   
   unlink(orig_blobs.c_str());
   unlink(new_blobs.c_str());
+}
+
+TEST_F(DeltaDiffGeneratorTest, MoveFullOpsToBackTest) {
+  Graph graph(4);
+  graph[0].file_name = "A";
+  graph[0].op.set_type(DeltaArchiveManifest_InstallOperation_Type_REPLACE);
+  graph[1].file_name = "B";
+  graph[1].op.set_type(DeltaArchiveManifest_InstallOperation_Type_BSDIFF);
+  graph[2].file_name = "C";
+  graph[2].op.set_type(DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ);
+  graph[3].file_name = "D";
+  graph[3].op.set_type(DeltaArchiveManifest_InstallOperation_Type_MOVE);
+
+  vector<Vertex::Index> vect(graph.size());
+
+  for (vector<Vertex::Index>::size_type i = 0; i < vect.size(); ++i) {
+    vect[i] = i;
+  }
+  DeltaDiffGenerator::MoveFullOpsToBack(&graph, &vect);
+  EXPECT_EQ(vect.size(), graph.size());
+  EXPECT_EQ(graph[vect[0]].file_name, "B");
+  EXPECT_EQ(graph[vect[1]].file_name, "D");
+  EXPECT_EQ(graph[vect[2]].file_name, "A");
+  EXPECT_EQ(graph[vect[3]].file_name, "C");
+}
+
+namespace {
+
+#define OP_BSDIFF DeltaArchiveManifest_InstallOperation_Type_BSDIFF
+#define OP_MOVE DeltaArchiveManifest_InstallOperation_Type_MOVE
+#define OP_REPLACE DeltaArchiveManifest_InstallOperation_Type_REPLACE
+#define OP_REPLACE_BZ DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ
+
+void GenVertex(Vertex* out,
+               const vector<Extent>& src_extents,
+               const vector<Extent>& dst_extents,
+               const string& path,
+               DeltaArchiveManifest_InstallOperation_Type type) {
+  out->op.set_type(type);
+  out->file_name = path;
+  DeltaDiffGenerator::StoreExtents(src_extents, out->op.mutable_src_extents());
+  DeltaDiffGenerator::StoreExtents(dst_extents, out->op.mutable_dst_extents());
+}
+
+vector<Extent> VectOfExt(uint64_t start_block, uint64_t num_blocks) {
+  return vector<Extent>(1, ExtentForRange(start_block, num_blocks));
+}
+
+EdgeProperties EdgeWithReadDep(const vector<Extent>& extents) {
+  EdgeProperties ret;
+  ret.extents = extents;
+  return ret;
+}
+
+EdgeProperties EdgeWithWriteDep(const vector<Extent>& extents) {
+  EdgeProperties ret;
+  ret.write_extents = extents;
+  return ret;
+}
+
+template<typename T>
+void DumpVect(const vector<T>& vect) {
+  std::stringstream ss(stringstream::out);
+  for (typename vector<T>::const_iterator it = vect.begin(), e = vect.end();
+       it != e; ++it) {
+    ss << *it << ", ";
+  }
+  LOG(INFO) << "{" << ss.str() << "}";
+}
+
+}  // namespace {}
+
+TEST_F(DeltaDiffGeneratorTest, RunAsRootAssignTempBlocksTest) {
+  Graph graph(9);
+  const vector<Extent> empt;  // empty
+  const string kFilename = "/foo";
+  
+  // Some scratch space:
+  GenVertex(&graph[0], empt, VectOfExt(200, 1), "", OP_REPLACE);
+  GenVertex(&graph[1], empt, VectOfExt(210, 10), "", OP_REPLACE);
+  GenVertex(&graph[2], empt, VectOfExt(220, 1), "", OP_REPLACE);
+
+  // A cycle that requires 10 blocks to break:
+  GenVertex(&graph[3], VectOfExt(10, 11), VectOfExt(0, 9), "", OP_BSDIFF);
+  graph[3].out_edges[4] = EdgeWithReadDep(VectOfExt(0, 9));
+  GenVertex(&graph[4], VectOfExt(0, 9), VectOfExt(10, 11), "", OP_BSDIFF);
+  graph[4].out_edges[3] = EdgeWithReadDep(VectOfExt(10, 11));
+
+  // A cycle that requires 9 blocks to break:
+  GenVertex(&graph[5], VectOfExt(40, 11), VectOfExt(30, 10), "", OP_BSDIFF);
+  graph[5].out_edges[6] = EdgeWithReadDep(VectOfExt(30, 10));
+  GenVertex(&graph[6], VectOfExt(30, 10), VectOfExt(40, 11), "", OP_BSDIFF);
+  graph[6].out_edges[5] = EdgeWithReadDep(VectOfExt(40, 11));
+
+  // A cycle that requires 40 blocks to break (which is too many):
+  GenVertex(&graph[7],
+            VectOfExt(120, 50),
+            VectOfExt(60, 40),
+            "",
+            OP_BSDIFF);
+  graph[7].out_edges[8] = EdgeWithReadDep(VectOfExt(60, 40));
+  GenVertex(&graph[8],
+            VectOfExt(60, 40),
+            VectOfExt(120, 50),
+            kFilename,
+            OP_BSDIFF);
+  graph[8].out_edges[7] = EdgeWithReadDep(VectOfExt(120, 50));
+  
+  graph_utils::DumpGraph(graph);
+  
+  vector<Vertex::Index> final_order;
+
+
+  // Prepare the filesystem with the minimum required for this to work
+  string temp_dir;
+  EXPECT_TRUE(utils::MakeTempDirectory("/tmp/AssignTempBlocksTest.XXXXXX",
+                                       &temp_dir));
+  ScopedDirRemover temp_dir_remover(temp_dir);
+  
+  const size_t kBlockSize = 4096;
+  vector<char> temp_data(kBlockSize * 50);
+  FillWithData(&temp_data);
+  EXPECT_TRUE(WriteFileVector(temp_dir + kFilename, temp_data));
+  ScopedPathUnlinker filename_unlinker(temp_dir + kFilename);
+  
+  int fd;
+  EXPECT_TRUE(utils::MakeTempFile("/tmp/AssignTempBlocksTestData.XXXXXX",
+                                  NULL,
+                                  &fd));
+  ScopedFdCloser fd_closer(&fd);
+  off_t data_file_size = 0;
+
+
+  EXPECT_TRUE(DeltaDiffGenerator::ConvertGraphToDag(&graph,
+                                                    temp_dir,
+                                                    fd,
+                                                    &data_file_size,
+                                                    &final_order));
+
+  
+  Graph expected_graph(12);
+  GenVertex(&expected_graph[0], empt, VectOfExt(200, 1), "", OP_REPLACE);
+  GenVertex(&expected_graph[1], empt, VectOfExt(210, 10), "", OP_REPLACE);
+  GenVertex(&expected_graph[2], empt, VectOfExt(220, 1), "", OP_REPLACE);
+  GenVertex(&expected_graph[3],
+            VectOfExt(10, 11),
+            VectOfExt(0, 9),
+            "",
+            OP_BSDIFF);
+  expected_graph[3].out_edges[9] = EdgeWithReadDep(VectOfExt(0, 9));
+  GenVertex(&expected_graph[4],
+            VectOfExt(60, 9),
+            VectOfExt(10, 11),
+            "",
+            OP_BSDIFF);
+  expected_graph[4].out_edges[3] = EdgeWithReadDep(VectOfExt(10, 11));
+  expected_graph[4].out_edges[9] = EdgeWithWriteDep(VectOfExt(60, 9));
+  GenVertex(&expected_graph[5],
+            VectOfExt(40, 11),
+            VectOfExt(30, 10),
+            "",
+            OP_BSDIFF);
+  expected_graph[5].out_edges[10] = EdgeWithReadDep(VectOfExt(30, 10));
+
+  GenVertex(&expected_graph[6],
+            VectOfExt(60, 10),
+            VectOfExt(40, 11),
+            "",
+            OP_BSDIFF);
+  expected_graph[6].out_edges[5] = EdgeWithReadDep(VectOfExt(40, 11));
+  expected_graph[6].out_edges[10] = EdgeWithWriteDep(VectOfExt(60, 10));
+  
+  GenVertex(&expected_graph[7],
+            VectOfExt(120, 50),
+            VectOfExt(60, 40),
+            "",
+            OP_BSDIFF);
+  expected_graph[7].out_edges[6] = EdgeWithReadDep(VectOfExt(60, 10));
+
+  GenVertex(&expected_graph[8], empt, VectOfExt(0, 50), "/foo", OP_REPLACE_BZ);
+  expected_graph[8].out_edges[7] = EdgeWithReadDep(VectOfExt(120, 50));
+
+  GenVertex(&expected_graph[9],
+            VectOfExt(0, 9),
+            VectOfExt(60, 9),
+            "",
+            OP_MOVE);
+
+  GenVertex(&expected_graph[10],
+            VectOfExt(30, 10),
+            VectOfExt(60, 10),
+            "",
+            OP_MOVE);
+  expected_graph[10].out_edges[4] = EdgeWithReadDep(VectOfExt(60, 9));
+  
+  EXPECT_EQ(12, graph.size());
+  EXPECT_FALSE(graph.back().valid);
+  for (Graph::size_type i = 0; i < graph.size() - 1; i++) {
+    EXPECT_TRUE(graph[i].out_edges == expected_graph[i].out_edges);
+    if (i == 8) {
+      // special case
+    } else {
+      // EXPECT_TRUE(graph[i] == expected_graph[i]) << "i = " << i;
+    }
+  }
 }
 
 }  // namespace chromeos_update_engine

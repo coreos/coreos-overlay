@@ -20,6 +20,22 @@
 
 namespace chromeos_update_engine {
 
+// This struct stores all relevant info for an edge that is cut between
+// nodes old_src -> old_dst by creating new vertex new_vertex. The new
+// relationship is:
+// old_src -(read before)-> new_vertex <-(write before)- old_dst
+// new_vertex is a MOVE operation that moves some existing blocks into
+// temp space. The temp extents are, by necessity, stored in new_vertex
+// (as dst extents) and old_dst (as src extents), but they are also broken
+// out into tmp_extents, as the nodes themselves may contain many more
+// extents.
+struct CutEdgeVertexes {
+  Vertex::Index new_vertex;
+  Vertex::Index old_src;
+  Vertex::Index old_dst;
+  std::vector<Extent> tmp_extents;
+};
+
 class DeltaDiffGenerator {
  public:
   // Represents a disk block on the install partition.
@@ -57,6 +73,19 @@ class DeltaDiffGenerator {
 
   // These functions are public so that the unit tests can access them:
 
+  // Takes a graph, which is not a DAG, which represents the files just
+  // read from disk, and converts it into a DAG by breaking all cycles
+  // and finding temp space to resolve broken edges.
+  // The final order of the nodes is given in |final_order|
+  // Some files may need to be reread from disk, thus |fd| and
+  // |data_file_size| are be passed.
+  // Returns true on success.
+  static bool ConvertGraphToDag(Graph* graph,
+                                const std::string& new_root,
+                                int fd,
+                                off_t* data_file_size,
+                                std::vector<Vertex::Index>* final_order);
+
   // Reads old_filename (if it exists) and a new_filename and determines
   // the smallest way to encode this file for the diff. It stores
   // necessary data in out_data and fills in out_op.
@@ -78,7 +107,7 @@ class DeltaDiffGenerator {
   // contains blocks 6, 2, 3, 5, and replace blocks contains
   // 12, 13, 14, 15, then op will be changed to read from:
   // 1, 13, 14, 4, 15, 12, 7, 8
-  static void SubstituteBlocks(DeltaArchiveManifest_InstallOperation* op,
+  static void SubstituteBlocks(Vertex* vertex,
                                const std::vector<Extent>& remove_extents,
                                const std::vector<Extent>& replace_extents);
 
@@ -90,17 +119,32 @@ class DeltaDiffGenerator {
   // but not on B. Free space is found by looking in 'blocks'.
   // Returns true on success.
   static bool CutEdges(Graph* graph,
-                       const std::vector<Block>& blocks,
-                       const std::set<Edge>& edges);
+                       const std::set<Edge>& edges,
+                       std::vector<CutEdgeVertexes>* out_cuts);
 
   // Stores all Extents in 'extents' into 'out'.
-  static void StoreExtents(std::vector<Extent>& extents,
+  static void StoreExtents(const std::vector<Extent>& extents,
                            google::protobuf::RepeatedPtrField<Extent>* out);
                            
   // Creates all the edges for the graph. Writers of a block point to
   // readers of the same block. This is because for an edge A->B, B
   // must complete before A executes.
   static void CreateEdges(Graph* graph, const std::vector<Block>& blocks);
+
+  // Given a topologically sorted graph |op_indexes| and |graph|, alters
+  // |op_indexes| to move all the full operations to the end of the vector.
+  // Full operations should not be depended on, so this is safe.
+  static void MoveFullOpsToBack(Graph* graph,
+                                std::vector<Vertex::Index>* op_indexes);
+
+  // Sorts the vector |cuts| by its |cuts[].old_dest| member. Order is
+  // determined by the order of elements in op_indexes.
+  static void SortCutsByTopoOrder(std::vector<Vertex::Index>& op_indexes,
+                                  std::vector<CutEdgeVertexes>* cuts);
+
+  // Returns true iff there are no extents in the graph that refer to temp
+  // blocks. Temp blocks are in the range [kTempBlockStart, kSparseHole).
+  static bool NoTempBlocksRemain(const Graph& graph);
   
   // Install operations in the manifest may reference data blobs, which
   // are in data_blobs_path. This function creates a new data blobs file
@@ -112,6 +156,42 @@ class DeltaDiffGenerator {
   static bool ReorderDataBlobs(DeltaArchiveManifest* manifest,
                                const std::string& data_blobs_path,
                                const std::string& new_data_blobs_path);
+                               
+  // Handles allocation of temp blocks to a cut edge by converting the
+  // dest node to a full op. This removes the need for temp blocks, but
+  // comes at the cost of a worse compression ratio.
+  // For example, say we have A->B->A. It would first be cut to form:
+  // A->B->N<-A, where N copies blocks to temp space. If there are no
+  // temp blocks, this function can be called to convert it to the form:
+  // A->B. Now, A is a full operation.
+  static bool ConvertCutToFullOp(Graph* graph,
+                                 const CutEdgeVertexes& cut,
+                                 const std::string& new_root,
+                                 int data_fd,
+                                 off_t* data_file_size);
+                                 
+  // Takes |op_indexes|, which is effectively a mapping from order in
+  // which the op is performed -> graph vertex index, and produces the
+  // reverse: a mapping from graph vertex index -> op_indexes index.
+  static void GenerateReverseTopoOrderMap(
+      std::vector<Vertex::Index>& op_indexes,
+      std::vector<std::vector<Vertex::Index>::size_type>* reverse_op_indexes);
+                                 
+  // Takes a |graph|, which has edges that must be cut, as listed in
+  // |cuts|.  Cuts the edges. Maintains a list in which the operations
+  // will be performed (in |op_indexes|) and the reverse (in
+  // |reverse_op_indexes|).  Cutting edges requires scratch space, and
+  // if insufficient scratch is found, the file is reread and will be
+  // send down (either as REPLACE or REPLACE_BZ).  Returns true on
+  // success.
+  static bool AssignTempBlocks(
+      Graph* graph,
+      const std::string& new_root,
+      int data_fd,
+      off_t* data_file_size,
+      std::vector<Vertex::Index>* op_indexes,
+      std::vector<std::vector<Vertex::Index>::size_type>* reverse_op_indexes,
+      std::vector<CutEdgeVertexes>& cuts);
 
  private:
   // This should never be constructed
