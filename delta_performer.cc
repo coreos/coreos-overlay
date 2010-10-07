@@ -190,12 +190,11 @@ ssize_t DeltaPerformer::Write(const void* bytes, size_t count) {
     }
     // Remove protobuf and header info from buffer_, so buffer_ contains
     // just data blobs
-    size_t metadata_size = strlen(kDeltaMagic) + kDeltaVersionLength +
+    manifest_metadata_size_ = strlen(kDeltaMagic) + kDeltaVersionLength +
         kDeltaProtobufLengthLength + protobuf_length;
-    DiscardBufferHeadBytes(metadata_size,
-                           true);  // do_hash
+    DiscardBufferHeadBytes(manifest_metadata_size_);
     LOG_IF(WARNING, !prefs_->SetInt64(kPrefsManifestMetadataSize,
-                                      metadata_size))
+                                      manifest_metadata_size_))
         << "Unable to save the manifest metadata size.";
     manifest_valid_ = true;
     block_size_ = manifest_.block_size();
@@ -281,8 +280,8 @@ bool DeltaPerformer::PerformReplaceOperation(
   CHECK_EQ(buffer_offset_, operation.data_offset());
   CHECK_GE(buffer_.size(), operation.data_length());
 
-  // Don't include the signature data blob in the hash.
-  bool do_hash = !ExtractSignatureMessage(operation);
+  // Extract the signature message if it's in this operation.
+  ExtractSignatureMessage(operation);
 
   DirectExtentWriter direct_writer;
   ZeroPadExtentWriter zero_pad_writer(&direct_writer);
@@ -315,7 +314,7 @@ bool DeltaPerformer::PerformReplaceOperation(
 
   // Update buffer
   buffer_offset_ += operation.data_length();
-  DiscardBufferHeadBytes(operation.data_length(), do_hash);
+  DiscardBufferHeadBytes(operation.data_length());
   return true;
 }
 
@@ -458,8 +457,7 @@ bool DeltaPerformer::PerformBsdiffOperation(
 
   // Update buffer.
   buffer_offset_ += operation.data_length();
-  DiscardBufferHeadBytes(operation.data_length(),
-                         true);  // do_hash
+  DiscardBufferHeadBytes(operation.data_length());
   return true;
 }
 
@@ -479,20 +477,40 @@ bool DeltaPerformer::ExtractSignatureMessage(
       signatures_message_data_.begin(),
       buffer_.begin(),
       buffer_.begin() + manifest_.signatures_size());
+  // The hash of all data consumed so far should be verified against the signed
+  // hash.
+  signed_hash_context_ = hash_calculator_.GetContext();
+  LOG_IF(WARNING, !prefs_->SetString(kPrefsUpdateStateSignedSHA256Context,
+                                     signed_hash_context_))
+      << "Unable to store the signed hash context.";
   LOG(INFO) << "Extracted signature data of size "
             << manifest_.signatures_size() << " at "
             << manifest_.signatures_offset();
   return true;
 }
 
-bool DeltaPerformer::VerifyPayload(const string& public_key_path) {
+bool DeltaPerformer::VerifyPayload(
+    const string& public_key_path,
+    const std::string& update_check_response_hash,
+    const uint64_t update_check_response_size) {
   string key_path = public_key_path;
   if (key_path.empty()) {
     key_path = kUpdatePayloadPublicKeyPath;
   }
   LOG(INFO) << "Verifying delta payload. Public key path: " << key_path;
+
+  // Verifies the download hash.
+  const string& download_hash_data = hash_calculator_.hash();
+  TEST_AND_RETURN_FALSE(!download_hash_data.empty());
+  TEST_AND_RETURN_FALSE(download_hash_data == update_check_response_hash);
+
+  // Verifies the download size.
+  TEST_AND_RETURN_FALSE(update_check_response_size ==
+                        manifest_metadata_size_ + buffer_offset_);
+
+  // Verifies the signed payload hash.
   if (!utils::FileExists(key_path.c_str())) {
-    LOG(WARNING) << "Not verifying delta payload due to missing public key.";
+    LOG(WARNING) << "Not verifying signed delta payload -- missing public key.";
     return true;
   }
   TEST_AND_RETURN_FALSE(!signatures_message_data_.empty());
@@ -500,15 +518,19 @@ bool DeltaPerformer::VerifyPayload(const string& public_key_path) {
   TEST_AND_RETURN_FALSE(PayloadSigner::VerifySignature(signatures_message_data_,
                                                        key_path,
                                                        &signed_hash_data));
-  const vector<char>& hash_data = hash_calculator_.raw_hash();
+  OmahaHashCalculator signed_hasher;
+  // TODO(petkov): Make sure signed_hash_context_ is loaded when resuming an
+  // update.
+  TEST_AND_RETURN_FALSE(signed_hasher.SetContext(signed_hash_context_));
+  TEST_AND_RETURN_FALSE(signed_hasher.Finalize());
+  const vector<char>& hash_data = signed_hasher.raw_hash();
   TEST_AND_RETURN_FALSE(!hash_data.empty());
-  return hash_data == signed_hash_data;
+  TEST_AND_RETURN_FALSE(hash_data == signed_hash_data);
+  return true;
 }
 
-void DeltaPerformer::DiscardBufferHeadBytes(size_t count, bool do_hash) {
-  if (do_hash) {
-    hash_calculator_.Update(&buffer_[0], count);
-  }
+void DeltaPerformer::DiscardBufferHeadBytes(size_t count) {
+  hash_calculator_.Update(&buffer_[0], count);
   buffer_.erase(buffer_.begin(), buffer_.begin() + count);
 }
 
@@ -532,11 +554,10 @@ bool DeltaPerformer::CanResumeUpdate(PrefsInterface* prefs,
                                         &next_data_offset) &&
                         next_data_offset >= 0);
 
-  string signed_sha256_context;
+  string sha256_context;
   TEST_AND_RETURN_FALSE(
-      prefs->GetString(kPrefsUpdateStateSignedSHA256Context,
-                       &signed_sha256_context) &&
-      !signed_sha256_context.empty());
+      prefs->GetString(kPrefsUpdateStateSHA256Context, &sha256_context) &&
+      !sha256_context.empty());
 
   int64_t manifest_metadata_size = 0;
   TEST_AND_RETURN_FALSE(prefs->GetInt64(kPrefsManifestMetadataSize,
@@ -557,7 +578,7 @@ bool DeltaPerformer::CheckpointUpdateProgress() {
   ResetUpdateProgress(prefs_);
   if (last_updated_buffer_offset_ != buffer_offset_) {
     TEST_AND_RETURN_FALSE(
-        prefs_->SetString(kPrefsUpdateStateSignedSHA256Context,
+        prefs_->SetString(kPrefsUpdateStateSHA256Context,
                           hash_calculator_.GetContext()));
     TEST_AND_RETURN_FALSE(prefs_->SetInt64(kPrefsUpdateStateNextDataOffset,
                                            buffer_offset_));

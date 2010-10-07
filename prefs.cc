@@ -22,6 +22,7 @@ const char kPrefsManifestMetadataSize[] = "manifest-metadata-size";
 const char kPrefsUpdateCheckResponseHash[] = "update-check-response-hash";
 const char kPrefsUpdateStateNextDataOffset[] = "update-state-next-data-offset";
 const char kPrefsUpdateStateNextOperation[] = "update-state-next-operation";
+const char kPrefsUpdateStateSHA256Context[] = "update-state-sha-256-context";
 const char kPrefsUpdateStateSignedSHA256Context[] =
     "update-state-signed-sha-256-context";
 

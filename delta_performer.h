@@ -29,6 +29,7 @@ class DeltaPerformer : public FileWriter {
         fd_(-1),
         kernel_fd_(-1),
         manifest_valid_(false),
+        manifest_metadata_size_(0),
         next_operation_num_(0),
         buffer_offset_(0),
         last_updated_buffer_offset_(kuint64max),
@@ -51,12 +52,15 @@ class DeltaPerformer : public FileWriter {
   int Close();
 
   // Verifies the downloaded payload against the signed hash included in the
-  // payload and returns true on success, false on failure. This method should
-  // be called after closing the stream. Note this method returns true if the
-  // public key is unavailable; it returns false if the public key is available
-  // but the delta payload doesn't include a signature. If |public_key_path| is
-  // an empty string, uses the default public key path.
-  bool VerifyPayload(const std::string& public_key_path);
+  // payload as well as against the update check hash and size and returns true
+  // on success, false on failure. This method should be called after closing
+  // the stream. Note this method skips the signed hash check if the public key
+  // is unavailable; it returns false if the public key is available but the
+  // delta payload doesn't include a signature. If |public_key_path| is an empty
+  // string, uses the default public key path.
+  bool VerifyPayload(const std::string& public_key_path,
+                     const std::string& update_check_response_hash,
+                     const uint64_t update_check_response_size);
 
   // Converts an ordered collection of Extent objects which contain data of
   // length full_length to a comma-separated string. For each Extent, the
@@ -108,9 +112,9 @@ class DeltaPerformer : public FileWriter {
   bool ExtractSignatureMessage(
       const DeltaArchiveManifest_InstallOperation& operation);
 
-  // Discard |count| bytes from the beginning of buffer_. If |do_hash| is true,
-  // updates the hash calculator with these bytes before discarding them.
-  void DiscardBufferHeadBytes(size_t count, bool do_hash);
+  // Updates the hash calculator with |count| bytes at the head of |buffer_| and
+  // then discards them.
+  void DiscardBufferHeadBytes(size_t count);
 
   // Checkpoints the update progress into persistent storage to allow this
   // update attempt to be resumed after reboot.
@@ -130,6 +134,7 @@ class DeltaPerformer : public FileWriter {
 
   DeltaArchiveManifest manifest_;
   bool manifest_valid_;
+  uint64_t manifest_metadata_size_;
 
   // Index of the next operation to perform in the manifest.
   int next_operation_num_;
@@ -148,8 +153,11 @@ class DeltaPerformer : public FileWriter {
   // The block size (parsed from the manifest).
   uint32_t block_size_;
 
-  // Calculate the payload hash to verify against the signed hash.
+  // Calculates the payload hash.
   OmahaHashCalculator hash_calculator_;
+
+  // Saves the signed hash context.
+  std::string signed_hash_context_;
 
   // Signatures message blob extracted directly from the payload.
   std::vector<char> signatures_message_data_;

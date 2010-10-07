@@ -140,23 +140,28 @@ void DownloadAction::TransferComplete(HttpFetcher *fetcher, bool successful) {
   ActionExitCode code =
       successful ? kActionCodeSuccess : kActionCodeDownloadTransferError;
   if (code == kActionCodeSuccess) {
-    // Makes sure the hash and size are correct.
-    omaha_hash_calculator_.Finalize();
-    if (omaha_hash_calculator_.hash() != install_plan_.download_hash) {
-      LOG(ERROR) << "Download of " << install_plan_.download_url
-                 << " failed. Expected hash " << install_plan_.download_hash
-                 << " but got hash " << omaha_hash_calculator_.hash();
-      code = kActionCodeDownloadHashMismatchError;
-    } else if (bytes_received_ != install_plan_.size) {
-      LOG(ERROR) << "Download of " << install_plan_.download_url
-                 << " failed. Expected size " << install_plan_.size
-                 << " but got size " << bytes_received_;
-      code = kActionCodeDownloadSizeMismatchError;
-    } else if (!install_plan_.is_full_update &&
-               !delta_performer_->VerifyPayload("")) {
-      LOG(ERROR) << "Download of " << install_plan_.download_url
-                 << " failed due to payload verification error.";
-      code = kActionCodeDownloadPayloadVerificationError;
+    if (!install_plan_.is_full_update) {
+      if (!delta_performer_->VerifyPayload("",
+                                           install_plan_.download_hash,
+                                           install_plan_.size)) {
+        LOG(ERROR) << "Download of " << install_plan_.download_url
+                   << " failed due to payload verification error.";
+        code = kActionCodeDownloadPayloadVerificationError;
+      }
+    } else {
+      // Makes sure the hash and size are correct for an old-style full update.
+      omaha_hash_calculator_.Finalize();
+      if (omaha_hash_calculator_.hash() != install_plan_.download_hash) {
+        LOG(ERROR) << "Download of " << install_plan_.download_url
+                   << " failed. Expected hash " << install_plan_.download_hash
+                   << " but got hash " << omaha_hash_calculator_.hash();
+        code = kActionCodeDownloadHashMismatchError;
+      } else if (bytes_received_ != install_plan_.size) {
+        LOG(ERROR) << "Download of " << install_plan_.download_url
+                   << " failed. Expected size " << install_plan_.size
+                   << " but got size " << bytes_received_;
+        code = kActionCodeDownloadSizeMismatchError;
+      }
     }
   }
 

@@ -251,8 +251,10 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
       .WillRepeatedly(Return(true));
   EXPECT_CALL(prefs, SetInt64(kPrefsUpdateStateNextDataOffset, _))
       .WillRepeatedly(Return(true));
-  EXPECT_CALL(prefs, SetString(kPrefsUpdateStateSignedSHA256Context, _))
+  EXPECT_CALL(prefs, SetString(kPrefsUpdateStateSHA256Context, _))
       .WillRepeatedly(Return(true));
+  EXPECT_CALL(prefs, SetString(kPrefsUpdateStateSignedSHA256Context, _))
+      .WillOnce(Return(true));
 
   // Update the A image in place.
   DeltaPerformer performer(&prefs);
@@ -278,7 +280,10 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
                        strlen(new_data_string)));
 
   EXPECT_TRUE(utils::FileExists(kUnittestPublicKeyPath));
-  EXPECT_TRUE(performer.VerifyPayload(kUnittestPublicKeyPath));
+  EXPECT_TRUE(performer.VerifyPayload(
+      kUnittestPublicKeyPath,
+      OmahaHashCalculator::OmahaHashOfData(delta),
+      delta.size()));
 }
 
 TEST(DeltaPerformerTest, NewFullUpdateTest) {
@@ -287,7 +292,7 @@ TEST(DeltaPerformerTest, NewFullUpdateTest) {
   const off_t kChunkSize = 128 * 1024;
   FillWithData(&new_root);
   FillWithData(&new_kern);
-  
+
   string new_root_path;
   EXPECT_TRUE(utils::MakeTempFile("/tmp/NewFullUpdateTest_R.XXXXXX",
                                   &new_root_path,
@@ -309,13 +314,13 @@ TEST(DeltaPerformerTest, NewFullUpdateTest) {
                                   &out_blobs_fd));
   ScopedPathUnlinker out_blobs_path_unlinker(out_blobs_path);
   ScopedFdCloser out_blobs_fd_closer(&out_blobs_fd);
-  
+
   off_t out_blobs_length = 0;
-  
+
   Graph graph;
   vector<DeltaArchiveManifest_InstallOperation> kernel_ops;
   vector<Vertex::Index> final_order;
-  
+
   EXPECT_TRUE(DeltaDiffGenerator::ReadFullUpdateFromDisk(&graph,
                                                          new_kern_path,
                                                          new_root_path,
