@@ -193,6 +193,21 @@ class DeltaDiffGenerator {
       std::vector<std::vector<Vertex::Index>::size_type>* reverse_op_indexes,
       std::vector<CutEdgeVertexes>& cuts);
 
+  // Given a new rootfs and kernel (|new_image|, |new_kernel_part|),
+  // Reads them sequentially, creating a full update of chunk_size chunks.
+  // Populates |graph|, |kernel_ops|, and |final_order|, with data
+  // about the update operations, and writes relevant data to |fd|,
+  // updating |data_file_size| as it does.
+  static bool ReadFullUpdateFromDisk(
+      Graph* graph,
+      const std::string& new_kernel_part,
+      const std::string& new_image,
+      int fd,
+      off_t* data_file_size,
+      off_t chunk_size,
+      std::vector<DeltaArchiveManifest_InstallOperation>* kernel_ops,
+      std::vector<Vertex::Index>* final_order);
+
  private:
   // This should never be constructed
   DISALLOW_IMPLICIT_CONSTRUCTORS(DeltaDiffGenerator);

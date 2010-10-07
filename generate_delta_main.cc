@@ -92,17 +92,20 @@ int Main(int argc, char** argv) {
     LOG(INFO) << "done applying delta.";
     return 0;
   }
-  CHECK(!FLAGS_old_dir.empty());
-  CHECK(!FLAGS_new_dir.empty());
-  CHECK(!FLAGS_old_image.empty());
   CHECK(!FLAGS_new_image.empty());
   CHECK(!FLAGS_out_file.empty());
-  CHECK(!FLAGS_old_kernel.empty());
   CHECK(!FLAGS_new_kernel.empty());
-  if ((!IsDir(FLAGS_old_dir.c_str())) || (!IsDir(FLAGS_new_dir.c_str()))) {
-    LOG(FATAL) << "old_dir or new_dir not directory";
+  if (FLAGS_old_image.empty()) {
+    LOG(INFO) << "Generating full update";
+  } else {
+    LOG(INFO) << "Generating delta update";
+    CHECK(!FLAGS_old_kernel.empty());
+    CHECK(!FLAGS_old_dir.empty());
+    CHECK(!FLAGS_new_dir.empty());
+    if ((!IsDir(FLAGS_old_dir.c_str())) || (!IsDir(FLAGS_new_dir.c_str()))) {
+      LOG(FATAL) << "old_dir or new_dir not directory";
+    }
   }
-
   DeltaDiffGenerator::GenerateDeltaUpdateFile(FLAGS_old_dir,
                                               FLAGS_old_image,
                                               FLAGS_new_dir,

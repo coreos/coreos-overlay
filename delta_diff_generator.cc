@@ -6,6 +6,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <inttypes.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -47,9 +48,10 @@ namespace chromeos_update_engine {
 typedef DeltaDiffGenerator::Block Block;
 
 namespace {
-const size_t kBlockSize = 4096;
+const size_t kBlockSize = 4096;  // bytes
 const size_t kRootFSPartitionSize = 1 * 1024 * 1024 * 1024;  // 1 GiB
 const uint64_t kVersionNumber = 1;
+const uint64_t kFullUpdateChunkSize = 128 * 1024;  // bytes
 
 // Stores all Extents for a file into 'out'. Returns true on success.
 bool GatherExtents(const string& path,
@@ -1119,6 +1121,82 @@ bool DeltaDiffGenerator::ConvertGraphToDag(Graph* graph,
   return true;
 }
 
+bool DeltaDiffGenerator::ReadFullUpdateFromDisk(
+    Graph* graph,
+    const std::string& new_kernel_part,
+    const std::string& new_image,
+    int fd,
+    off_t* data_file_size,
+    off_t chunk_size,
+    vector<DeltaArchiveManifest_InstallOperation>* kernel_ops,
+    std::vector<Vertex::Index>* final_order) {
+  TEST_AND_RETURN_FALSE(chunk_size > 0);
+  TEST_AND_RETURN_FALSE((chunk_size % kBlockSize) == 0);
+  
+  // Get the sizes early in the function, so we can fail fast if the user
+  // passed us bad paths.
+  const off_t image_size = utils::FileSize(new_image);
+  TEST_AND_RETURN_FALSE(image_size >= 0);
+  const off_t kernel_size = utils::FileSize(new_kernel_part);
+  TEST_AND_RETURN_FALSE(kernel_size >= 0);
+
+  off_t part_sizes[] = { image_size, kernel_size };
+  string paths[] = { new_image, new_kernel_part };
+
+  for (int partition = 0; partition < 2; ++partition) {
+    const string& path = paths[partition];
+    LOG(INFO) << "compressing " << path;
+
+    int in_fd = open(path.c_str(), O_RDONLY, 0);
+    TEST_AND_RETURN_FALSE(in_fd >= 0);
+    ScopedFdCloser in_fd_closer(&in_fd);
+
+    for (off_t bytes_left = part_sizes[partition], counter = 0, offset = 0;
+         bytes_left > 0;
+         bytes_left -= chunk_size, ++counter, offset += chunk_size) {
+      LOG(INFO) << "offset = " << offset;
+      DeltaArchiveManifest_InstallOperation* op = NULL;
+      if (partition == 0) {
+        graph->resize(graph->size() + 1);
+        graph->back().file_name = path + StringPrintf("-%" PRIi64, counter);
+        op = &graph->back().op;
+        final_order->push_back(graph->size() - 1);
+      } else {
+        kernel_ops->resize(kernel_ops->size() + 1);
+        op = &kernel_ops->back();
+      }
+      LOG(INFO) << "have an op";
+      
+      vector<char> buf(min(bytes_left, chunk_size));
+      LOG(INFO) << "buf size: " << buf.size();
+      ssize_t bytes_read = -1;
+      
+      TEST_AND_RETURN_FALSE(utils::PReadAll(
+          in_fd, &buf[0], buf.size(), offset, &bytes_read));
+      TEST_AND_RETURN_FALSE(bytes_read == static_cast<ssize_t>(buf.size()));
+      
+      vector<char> buf_compressed;
+      
+      TEST_AND_RETURN_FALSE(BzipCompress(buf, &buf_compressed));
+      const bool compress = buf_compressed.size() < buf.size();
+      const vector<char>& use_buf = compress ? buf_compressed : buf;
+      if (compress) {
+        op->set_type(DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ);
+      } else {
+        op->set_type(DeltaArchiveManifest_InstallOperation_Type_REPLACE);
+      }
+      op->set_data_offset(*data_file_size);
+      *data_file_size += use_buf.size();
+      op->set_data_length(use_buf.size());
+      Extent* dst_extent = op->add_dst_extents();
+      dst_extent->set_start_block(offset / kBlockSize);
+      dst_extent->set_num_blocks(chunk_size / kBlockSize);
+    }
+  }
+
+  return true;
+}
+
 bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
     const string& old_root,
     const string& old_image,
@@ -1129,18 +1207,23 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
     const string& output_path,
     const string& private_key_path) {
   struct stat old_image_stbuf;
-  TEST_AND_RETURN_FALSE_ERRNO(stat(old_image.c_str(), &old_image_stbuf) == 0);
   struct stat new_image_stbuf;
   TEST_AND_RETURN_FALSE_ERRNO(stat(new_image.c_str(), &new_image_stbuf) == 0);
-  LOG_IF(WARNING, new_image_stbuf.st_size != old_image_stbuf.st_size)
-      << "Old and new images are different sizes.";
+  if (!old_image.empty()) {
+    TEST_AND_RETURN_FALSE_ERRNO(stat(old_image.c_str(), &old_image_stbuf) == 0);
+    LOG_IF(WARNING, new_image_stbuf.st_size != old_image_stbuf.st_size)
+        << "Old and new images are different sizes.";
+    LOG_IF(FATAL, old_image_stbuf.st_size % kBlockSize)
+        << "Old image not a multiple of block size " << kBlockSize;
+    // Sanity check kernel partition arg
+    TEST_AND_RETURN_FALSE(utils::FileSize(old_kernel_part) >= 0);
+  } else {
+    old_image_stbuf.st_size = 0;
+  }
   LOG_IF(FATAL, new_image_stbuf.st_size % kBlockSize)
       << "New image not a multiple of block size " << kBlockSize;
-  LOG_IF(FATAL, old_image_stbuf.st_size % kBlockSize)
-      << "Old image not a multiple of block size " << kBlockSize;
 
-  // Sanity check kernel partition args
-  TEST_AND_RETURN_FALSE(utils::FileSize(old_kernel_part) >= 0);
+  // Sanity check kernel partition arg
   TEST_AND_RETURN_FALSE(utils::FileSize(new_kernel_part) >= 0);
 
   vector<Block> blocks(max(old_image_stbuf.st_size / kBlockSize,
@@ -1163,7 +1246,8 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
   vector<DeltaArchiveManifest_InstallOperation> kernel_ops;
 
   vector<Vertex::Index> final_order;
-  {
+  if (!old_image.empty()) {
+    // Delta update
     int fd;
     TEST_AND_RETURN_FALSE(
         utils::MakeTempFile(kTempFileTemplate, &temp_file_path, &fd));
@@ -1206,6 +1290,17 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
                                             fd,
                                             &data_file_size,
                                             &final_order));
+  } else {
+    // Full update
+    int fd = 0;
+    TEST_AND_RETURN_FALSE(ReadFullUpdateFromDisk(&graph,
+                                                 new_kernel_part,
+                                                 new_image,
+                                                 fd,
+                                                 &data_file_size,
+                                                 kFullUpdateChunkSize,
+                                                 &kernel_ops,
+                                                 &final_order));
   }
 
   // Convert to protobuf Manifest object
