@@ -21,6 +21,7 @@
 #include "update_engine/delta_performer.h"
 #include "update_engine/prefs.h"
 #include "update_engine/subprocess.h"
+#include "update_engine/terminator.h"
 #include "update_engine/update_metadata.pb.h"
 #include "update_engine/utils.h"
 
@@ -61,6 +62,7 @@ int Main(int argc, char** argv) {
   g_thread_init(NULL);
   google::ParseCommandLineFlags(&argc, &argv, true);
   CommandLine::Init(argc, argv);
+  Terminator::Init();
   Subprocess::Init();
   logging::InitLogging("delta_generator.log",
                        logging::LOG_ONLY_TO_SYSTEM_DEBUG_LOG,

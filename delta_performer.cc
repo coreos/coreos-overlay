@@ -23,6 +23,7 @@
 #include "update_engine/payload_signer.h"
 #include "update_engine/prefs_interface.h"
 #include "update_engine/subprocess.h"
+#include "update_engine/terminator.h"
 
 using std::min;
 using std::string;
@@ -209,6 +210,8 @@ ssize_t DeltaPerformer::Write(const void* bytes, size_t count) {
             next_operation_num_ - manifest_.install_operations_size());
     if (!CanPerformInstallOperation(op))
       break;
+    ScopedTerminatorExitUnblocker exit_unblocker =
+        ScopedTerminatorExitUnblocker();  // Avoids a compiler unused var bug.
     // Log every thousandth operation, and also the first and last ones
     if ((next_operation_num_ % 1000 == 0) ||
         (next_operation_num_ + 1 == total_operations)) {
@@ -221,6 +224,7 @@ ssize_t DeltaPerformer::Write(const void* bytes, size_t count) {
     // that if the operation gets interrupted, we don't try to resume the
     // update.
     if (!IsIdempotentOperation(op)) {
+      Terminator::set_exit_blocked(true);
       ResetUpdateProgress(prefs_);
     }
     if (op.type() == DeltaArchiveManifest_InstallOperation_Type_REPLACE ||
@@ -574,9 +578,10 @@ bool DeltaPerformer::ResetUpdateProgress(PrefsInterface* prefs) {
 }
 
 bool DeltaPerformer::CheckpointUpdateProgress() {
-  // First reset the progress in case we die in the middle of the state update.
-  ResetUpdateProgress(prefs_);
+  Terminator::set_exit_blocked(true);
   if (last_updated_buffer_offset_ != buffer_offset_) {
+    // Resets the progress in case we die in the middle of the state update.
+    ResetUpdateProgress(prefs_);
     TEST_AND_RETURN_FALSE(
         prefs_->SetString(kPrefsUpdateStateSHA256Context,
                           hash_calculator_.GetContext()));

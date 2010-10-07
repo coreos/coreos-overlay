@@ -20,6 +20,7 @@
 #include "update_engine/dbus_service.h"
 #include "update_engine/prefs.h"
 #include "update_engine/subprocess.h"
+#include "update_engine/terminator.h"
 #include "update_engine/update_attempter.h"
 #include "update_engine/update_check_scheduler.h"
 
@@ -93,6 +94,7 @@ int main(int argc, char** argv) {
   g_thread_init(NULL);
   dbus_g_thread_init();
   base::AtExitManager exit_manager;  // Required for base/rand_util.h.
+  chromeos_update_engine::Terminator::Init();
   chromeos_update_engine::Subprocess::Init();
   google::ParseCommandLineFlags(&argc, &argv, true);
   CommandLine::Init(argc, argv);

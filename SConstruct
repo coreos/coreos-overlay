@@ -264,6 +264,7 @@ sources = Split("""action_processor.cc
                    split_file_writer.cc
                    subprocess.cc
                    tarjan.cc
+                   terminator.cc
                    topological_sort.cc
                    update_attempter.cc
                    update_check_scheduler.cc
