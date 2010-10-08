@@ -214,7 +214,7 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
 
   uint64_t manifest_metadata_size;
 
-  // Check that the null signature blob exists
+  // Check the metadata.
   {
     LOG(INFO) << "delta size: " << delta.size();
     DeltaArchiveManifest manifest;
@@ -242,6 +242,16 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
                                                    &expected_sig_data_length));
     EXPECT_EQ(expected_sig_data_length, manifest.signatures_size());
     EXPECT_FALSE(signature.data().empty());
+
+    EXPECT_EQ(old_kernel_data.size(), manifest.old_kernel_info().size());
+    EXPECT_EQ(new_kernel_data.size(), manifest.new_kernel_info().size());
+    EXPECT_EQ(utils::FileSize(a_img), manifest.old_rootfs_info().size());
+    EXPECT_EQ(utils::FileSize(b_img), manifest.new_rootfs_info().size());
+
+    EXPECT_FALSE(manifest.old_kernel_info().hash().empty());
+    EXPECT_FALSE(manifest.new_kernel_info().hash().empty());
+    EXPECT_FALSE(manifest.old_rootfs_info().hash().empty());
+    EXPECT_FALSE(manifest.new_rootfs_info().hash().empty());
   }
 
   PrefsMock prefs;

@@ -4,10 +4,14 @@
 
 #include "update_engine/omaha_hash_calculator.h"
 
+#include <fcntl.h>
+
+#include <base/eintr_wrapper.h>
+#include <base/logging.h>
 #include <openssl/bio.h>
 #include <openssl/buffer.h>
 #include <openssl/evp.h>
-#include "base/logging.h"
+
 #include "update_engine/utils.h"
 
 using std::string;
@@ -29,6 +33,34 @@ bool OmahaHashCalculator::Update(const char* data, size_t length) {
                  length_param_may_be_truncated_in_SHA256_Update);
   TEST_AND_RETURN_FALSE(SHA256_Update(&ctx_, data, length) == 1);
   return true;
+}
+
+off_t OmahaHashCalculator::UpdateFile(const string& name, off_t length) {
+  int fd = HANDLE_EINTR(open(name.c_str(), O_RDONLY));
+  if (fd < 0) {
+    return -1;
+  }
+
+  const int kBufferSize = 128 * 1024;  // 128 KiB
+  vector<char> buffer(kBufferSize);
+  off_t bytes_processed = 0;
+  while (length < 0 || bytes_processed < length) {
+    off_t bytes_to_read = buffer.size();
+    if (length >= 0 && bytes_to_read > length - bytes_processed) {
+      bytes_to_read = length - bytes_processed;
+    }
+    ssize_t rc = HANDLE_EINTR(read(fd, buffer.data(), bytes_to_read));
+    if (rc == 0) {  // EOF
+      break;
+    }
+    if (rc < 0 || !Update(buffer.data(), rc)) {
+      bytes_processed = -1;
+      break;
+    }
+    bytes_processed += rc;
+  }
+  HANDLE_EINTR(close(fd));
+  return bytes_processed;
 }
 
 // Call Finalize() when all data has been passed in. This mostly just

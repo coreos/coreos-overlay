@@ -7,9 +7,10 @@
 
 #include <string>
 #include <vector>
+
 #include <openssl/sha.h>
-#include "base/basictypes.h"
-#include "base/logging.h"
+#include <base/basictypes.h>
+#include <base/logging.h>
 
 // Omaha uses base64 encoded SHA-256 as the hash. This class provides a simple
 // wrapper around OpenSSL providing such a formatted hash of data passed in.
@@ -27,6 +28,11 @@ class OmahaHashCalculator {
   // Update will read |length| bytes of |data|.
   // Returns true on success.
   bool Update(const char* data, size_t length);
+
+  // Updates the hash with up to |length| bytes of data from |file|. If |length|
+  // is negative, reads in and updates with the whole file. Returns the number
+  // of bytes that the hash was updated with, or -1 on error.
+  off_t UpdateFile(const std::string& name, off_t length);
 
   // Call Finalize() when all data has been passed in. This method tells
   // OpenSSl that no more data will come in and base64 encodes the resulting

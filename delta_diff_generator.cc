@@ -29,6 +29,7 @@
 #include "update_engine/filesystem_iterator.h"
 #include "update_engine/graph_types.h"
 #include "update_engine/graph_utils.h"
+#include "update_engine/omaha_hash_calculator.h"
 #include "update_engine/payload_signer.h"
 #include "update_engine/subprocess.h"
 #include "update_engine/topological_sort.h"
@@ -586,6 +587,40 @@ bool DeltaDiffGenerator::ReadFileToDiff(
   return true;
 }
 
+bool InitializePartitionInfo(const string& partition, PartitionInfo* info) {
+  const off_t size = utils::FileSize(partition);
+  TEST_AND_RETURN_FALSE(size >= 0);
+  info->set_size(size);
+  OmahaHashCalculator hasher;
+  TEST_AND_RETURN_FALSE(hasher.UpdateFile(partition, -1) == size);
+  TEST_AND_RETURN_FALSE(hasher.Finalize());
+  const vector<char>& hash = hasher.raw_hash();
+  info->set_hash(hash.data(), hash.size());
+  return true;
+}
+
+bool InitializePartitionInfos(const string& old_kernel,
+                              const string& new_kernel,
+                              const string& old_rootfs,
+                              const string& new_rootfs,
+                              DeltaArchiveManifest* manifest) {
+  if (!old_kernel.empty()) {
+    TEST_AND_RETURN_FALSE(
+        InitializePartitionInfo(old_kernel,
+                                manifest->mutable_old_kernel_info()));
+  }
+  TEST_AND_RETURN_FALSE(
+      InitializePartitionInfo(new_kernel, manifest->mutable_new_kernel_info()));
+  if (!old_rootfs.empty()) {
+    TEST_AND_RETURN_FALSE(
+        InitializePartitionInfo(old_rootfs,
+                                manifest->mutable_old_rootfs_info()));
+  }
+  TEST_AND_RETURN_FALSE(
+      InitializePartitionInfo(new_rootfs, manifest->mutable_new_rootfs_info()));
+  return true;
+}
+
 namespace {
 
 // Takes a collection (vector or RepeatedPtrField) of Extent and
@@ -679,7 +714,7 @@ bool DeltaDiffGenerator::CutEdges(Graph* graph,
     graph->resize(graph->size() + 1);
     cuts.back().old_src = it->first;
     cuts.back().old_dst = it->second;
-    
+
     EdgeProperties& cut_edge_properties =
         (*graph)[it->first].out_edges.find(it->second)->second;
 
@@ -903,7 +938,7 @@ bool DeltaDiffGenerator::AssignTempBlocks(
            edge_i != edge_e; ++edge_i) {
         ranges.SubtractExtents(edge_i->second.extents);
       }
-      
+
       uint64_t blocks_found = ranges.blocks();
       if (blocks_found < blocks_needed) {
         if (blocks_found > 0)
@@ -919,12 +954,12 @@ bool DeltaDiffGenerator::AssignTempBlocks(
       // depend on old_dst.
       vector<Extent> real_extents =
           ranges.GetExtentsForBlockCount(blocks_needed);
-      
+
       // Fix the old dest node w/ the real blocks
       SubstituteBlocks(&(*graph)[node],
                        cuts[i].tmp_extents,
                        real_extents);
-                       
+
       // Fix the new node w/ the real blocks. Since the new node is just a
       // copy operation, we can replace all the dest extents w/ the real
       // blocks.
@@ -932,7 +967,7 @@ bool DeltaDiffGenerator::AssignTempBlocks(
           &(*graph)[cuts[i].new_vertex].op;
       op->clear_dst_extents();
       StoreExtents(real_extents, op->mutable_dst_extents());
-      
+
       // Add an edge from the real-block supplier to the old dest block.
       graph_utils::AddReadBeforeDepExtents(&(*graph)[test_node],
                                            node,
@@ -960,7 +995,7 @@ bool DeltaDiffGenerator::AssignTempBlocks(
       }
       new_op_indexes.push_back(cuts[i].old_dst);
       op_indexes->swap(new_op_indexes);
-      
+
       GenerateReverseTopoOrderMap(*op_indexes, reverse_op_indexes);
     }
     if (i == e) {
@@ -1045,11 +1080,11 @@ bool DeltaDiffGenerator::ConvertCutToFullOp(Graph* graph,
                                             int data_fd,
                                             off_t* data_file_size) {
   // Drop all incoming edges, keep all outgoing edges
-  
+
   // Keep all outgoing edges
   Vertex::EdgeMap out_edges = (*graph)[cut.old_dst].out_edges;
   graph_utils::DropWriteBeforeDeps(&out_edges);
-  
+
   TEST_AND_RETURN_FALSE(DeltaReadFile(graph,
                                       cut.old_dst,
                                       NULL,
@@ -1058,7 +1093,7 @@ bool DeltaDiffGenerator::ConvertCutToFullOp(Graph* graph,
                                       (*graph)[cut.old_dst].file_name,
                                       data_fd,
                                       data_file_size));
-                                      
+
   (*graph)[cut.old_dst].out_edges = out_edges;
 
   // Right now we don't have doubly-linked edges, so we have to scan
@@ -1132,7 +1167,7 @@ bool DeltaDiffGenerator::ReadFullUpdateFromDisk(
     std::vector<Vertex::Index>* final_order) {
   TEST_AND_RETURN_FALSE(chunk_size > 0);
   TEST_AND_RETURN_FALSE((chunk_size % kBlockSize) == 0);
-  
+
   // Get the sizes early in the function, so we can fail fast if the user
   // passed us bad paths.
   const off_t image_size = utils::FileSize(new_image);
@@ -1166,17 +1201,17 @@ bool DeltaDiffGenerator::ReadFullUpdateFromDisk(
         op = &kernel_ops->back();
       }
       LOG(INFO) << "have an op";
-      
+
       vector<char> buf(min(bytes_left, chunk_size));
       LOG(INFO) << "buf size: " << buf.size();
       ssize_t bytes_read = -1;
-      
+
       TEST_AND_RETURN_FALSE(utils::PReadAll(
           in_fd, &buf[0], buf.size(), offset, &bytes_read));
       TEST_AND_RETURN_FALSE(bytes_read == static_cast<ssize_t>(buf.size()));
-      
+
       vector<char> buf_compressed;
-      
+
       TEST_AND_RETURN_FALSE(BzipCompress(buf, &buf_compressed));
       const bool compress = buf_compressed.size() < buf.size();
       const vector<char>& use_buf = compress ? buf_compressed : buf;
@@ -1380,6 +1415,12 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
     dummy_extent->set_num_blocks((signature_blob_length + kBlockSize - 1) /
                                  kBlockSize);
   }
+
+  TEST_AND_RETURN_FALSE(InitializePartitionInfos(old_kernel_part,
+                                                 new_kernel_part,
+                                                 old_image,
+                                                 new_image,
+                                                 &manifest));
 
   // Serialize protobuf
   string serialized_manifest;
