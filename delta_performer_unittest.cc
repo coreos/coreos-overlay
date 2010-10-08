@@ -16,6 +16,7 @@
 
 #include "update_engine/delta_diff_generator.h"
 #include "update_engine/delta_performer.h"
+#include "update_engine/extent_ranges.h"
 #include "update_engine/graph_types.h"
 #include "update_engine/payload_signer.h"
 #include "update_engine/prefs_mock.h"
@@ -357,6 +358,22 @@ TEST(DeltaPerformerTest, NewFullUpdateTest) {
                 graph[i].op.type());
     }
   }
+}
+
+TEST(DeltaPerformerTest, IsIdempotentOperationTest) {
+  DeltaArchiveManifest_InstallOperation op;
+  EXPECT_TRUE(DeltaPerformer::IsIdempotentOperation(op));
+  *(op.add_dst_extents()) = ExtentForRange(0, 5);
+  EXPECT_TRUE(DeltaPerformer::IsIdempotentOperation(op));
+  *(op.add_src_extents()) = ExtentForRange(4, 1);
+  EXPECT_FALSE(DeltaPerformer::IsIdempotentOperation(op));
+  op.clear_src_extents();
+  *(op.add_src_extents()) = ExtentForRange(5, 3);
+  EXPECT_TRUE(DeltaPerformer::IsIdempotentOperation(op));
+  *(op.add_dst_extents()) = ExtentForRange(20, 6);
+  EXPECT_TRUE(DeltaPerformer::IsIdempotentOperation(op));
+  *(op.add_src_extents()) = ExtentForRange(19, 2);
+  EXPECT_FALSE(DeltaPerformer::IsIdempotentOperation(op));
 }
 
 }  // namespace chromeos_update_engine

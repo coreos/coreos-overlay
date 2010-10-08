@@ -10,6 +10,7 @@
 #include <vector>
 
 #include <google/protobuf/repeated_field.h>
+#include <gtest/gtest_prod.h>  // for FRIEND_TEST
 
 #include "update_engine/file_writer.h"
 #include "update_engine/omaha_hash_calculator.h"
@@ -89,6 +90,12 @@ class DeltaPerformer : public FileWriter {
   static bool ResetUpdateProgress(PrefsInterface* prefs, bool quick);
 
  private:
+  friend class DeltaPerformerTest;
+  FRIEND_TEST(DeltaPerformerTest, IsIdempotentOperationTest);
+
+  static bool IsIdempotentOperation(
+      const DeltaArchiveManifest_InstallOperation& op);
+
   // Returns true if enough of the delta file has been passed via Write()
   // to be able to perform a given install operation.
   bool CanPerformInstallOperation(

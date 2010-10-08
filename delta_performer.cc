@@ -18,6 +18,7 @@
 
 #include "update_engine/bzip_extent_writer.h"
 #include "update_engine/delta_diff_generator.h"
+#include "update_engine/extent_ranges.h"
 #include "update_engine/extent_writer.h"
 #include "update_engine/graph_types.h"
 #include "update_engine/payload_signer.h"
@@ -39,17 +40,6 @@ const int kDeltaProtobufLengthLength = 8;
 const char kUpdatePayloadPublicKeyPath[] =
     "/usr/share/update_engine/update-payload-key.pub.pem";
 const int kUpdateStateOperationInvalid = -1;
-
-// Returns true if |op| is idempotent -- i.e., if we can interrupt it and repeat
-// it safely. Returns false otherwise.
-bool IsIdempotentOperation(const DeltaArchiveManifest_InstallOperation& op) {
-  if (op.src_extents_size() == 0) {
-    return true;
-  }
-  // TODO(petkov): Cover the case where the source and target extents don't
-  // intersect.
-  return false;
-}
 
 // Converts extents to a human-readable string, for use by DumpUpdateProto().
 string ExtentsToString(const RepeatedPtrField<Extent>& extents) {
@@ -120,6 +110,24 @@ bool OpenFile(const char* path, int* fd, int* err) {
 }
 
 }  // namespace {}
+
+// Returns true if |op| is idempotent -- i.e., if we can interrupt it and repeat
+// it safely. Returns false otherwise.
+bool DeltaPerformer::IsIdempotentOperation(
+    const DeltaArchiveManifest_InstallOperation& op) {
+  if (op.src_extents_size() == 0) {
+    return true;
+  }
+  // TODO(adlr): detect other types of idempotent operations. For example,
+  // a MOVE may move a block onto itself.
+
+  // When in doubt, it's safe to declare an op non-idempotent.
+  ExtentRanges src_ranges;
+  src_ranges.AddRepeatedExtents(op.src_extents());
+  const uint64_t block_count = src_ranges.blocks();
+  src_ranges.SubtractRepeatedExtents(op.dst_extents());
+  return block_count == src_ranges.blocks();
+}
 
 int DeltaPerformer::Open(const char* path, int flags, mode_t mode) {
   int err;
