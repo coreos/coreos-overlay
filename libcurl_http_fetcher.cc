@@ -81,7 +81,6 @@ void LibcurlHttpFetcher::ResumeTransfer(const std::string& url) {
 // Begins the transfer, which must not have already been started.
 void LibcurlHttpFetcher::BeginTransfer(const std::string& url) {
   transfer_size_ = -1;
-  bytes_downloaded_ = 0;
   resume_offset_ = 0;
   retry_count_ = 0;
   http_response_code_ = 0;
@@ -90,7 +89,10 @@ void LibcurlHttpFetcher::BeginTransfer(const std::string& url) {
 }
 
 void LibcurlHttpFetcher::TerminateTransfer() {
-  CleanUp();
+  if (in_write_callback_)
+    terminate_requested_ = true;
+  else
+    CleanUp();
 }
 
 void LibcurlHttpFetcher::CurlPerformOnce() {
@@ -102,17 +104,18 @@ void LibcurlHttpFetcher::CurlPerformOnce() {
   // returns, so we do. libcurl promises that curl_multi_perform will not block.
   while (CURLM_CALL_MULTI_PERFORM == retcode) {
     retcode = curl_multi_perform(curl_multi_handle_, &running_handles);
+    if (terminate_requested_) {
+      CleanUp();
+      return;
+    }
   }
   if (0 == running_handles) {
-    long http_response_code = 0;
-    if (curl_easy_getinfo(curl_handle_,
-                          CURLINFO_RESPONSE_CODE,
-                          &http_response_code) == CURLE_OK) {
-      LOG(INFO) << "HTTP response code: " << http_response_code;
+    GetHttpResponseCode();
+    if (http_response_code_) {
+      LOG(INFO) << "HTTP response code: " << http_response_code_;
     } else {
       LOG(ERROR) << "Unable to get http response code.";
     }
-    http_response_code_ = static_cast<int>(http_response_code);
 
     // we're done!
     CleanUp();
@@ -135,8 +138,8 @@ void LibcurlHttpFetcher::CurlPerformOnce() {
     } else {
       if (delegate_) {
         // success is when http_response_code is 2xx
-        bool success = (http_response_code >= 200) &&
-            (http_response_code < 300);
+        bool success = (http_response_code_ >= 200) &&
+            (http_response_code_ < 300);
         delegate_->TransferComplete(this, success);
       }
     }
@@ -147,6 +150,7 @@ void LibcurlHttpFetcher::CurlPerformOnce() {
 }
 
 size_t LibcurlHttpFetcher::LibcurlWrite(void *ptr, size_t size, size_t nmemb) {
+  GetHttpResponseCode();
   {
     double transfer_size_double;
     CHECK_EQ(curl_easy_getinfo(curl_handle_,
@@ -158,8 +162,10 @@ size_t LibcurlHttpFetcher::LibcurlWrite(void *ptr, size_t size, size_t nmemb) {
     }
   }
   bytes_downloaded_ += size * nmemb;
+  in_write_callback_ = true;
   if (delegate_)
     delegate_->ReceivedBytes(this, reinterpret_cast<char*>(ptr), size * nmemb);
+  in_write_callback_ = false;
   return size * nmemb;
 }
 
@@ -292,6 +298,15 @@ void LibcurlHttpFetcher::CleanUp() {
     curl_multi_handle_ = NULL;
   }
   transfer_in_progress_ = false;
+}
+
+void LibcurlHttpFetcher::GetHttpResponseCode() {
+  long http_response_code = 0;
+  if (curl_easy_getinfo(curl_handle_,
+                        CURLINFO_RESPONSE_CODE,
+                        &http_response_code) == CURLE_OK) {
+    http_response_code_ = static_cast<int>(http_response_code);
+  }
 }
 
 }  // namespace chromeos_update_engine

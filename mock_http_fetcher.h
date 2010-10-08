@@ -34,6 +34,9 @@ class MockHttpFetcher : public HttpFetcher {
   // Cleans up all internal state. Does not notify delegate
   ~MockHttpFetcher();
 
+  // Ignores this.
+  virtual void SetOffset(off_t offset) {}
+
   // Begins the transfer if it hasn't already begun.
   virtual void BeginTransfer(const std::string& url);
 

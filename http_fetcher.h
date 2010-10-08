@@ -42,6 +42,9 @@ class HttpFetcher {
     post_data_.insert(post_data_.end(), char_data, char_data + size);
   }
 
+  // Downloading should resume from this offset
+  virtual void SetOffset(off_t offset) = 0;
+
   // Begins the transfer to the specified URL.
   virtual void BeginTransfer(const std::string& url) = 0;
 
@@ -58,6 +61,11 @@ class HttpFetcher {
   // If a delegate is set, ReceivedBytes() may be called on it before
   // Unpause() returns
   virtual void Unpause() = 0;
+
+  // These two function are overloaded in LibcurlHttp fetcher to speed
+  // testing.
+  virtual void set_idle_seconds(int seconds) {}
+  virtual void set_retry_seconds(int seconds) {}
 
  protected:
   // The URL we're actively fetching from

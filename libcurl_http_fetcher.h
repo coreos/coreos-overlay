@@ -27,12 +27,19 @@ class LibcurlHttpFetcher : public HttpFetcher {
         curl_handle_(NULL),
         timeout_source_(NULL),
         transfer_in_progress_(false),
+        transfer_size_(0),
+        bytes_downloaded_(0),
+        resume_offset_(0),
         retry_count_(0),
         retry_seconds_(60),
-        idle_seconds_(1) {}
+        idle_seconds_(1),
+        in_write_callback_(false),
+        terminate_requested_(false) {}
 
   // Cleans up all internal state. Does not notify delegate
   ~LibcurlHttpFetcher();
+
+  void SetOffset(off_t offset) { bytes_downloaded_ = offset; }
 
   // Begins the transfer if it hasn't already begun.
   virtual void BeginTransfer(const std::string& url);
@@ -62,6 +69,9 @@ class LibcurlHttpFetcher : public HttpFetcher {
   void set_retry_seconds(int seconds) { retry_seconds_ = seconds; }
 
  private:
+  // Asks libcurl for the http response code and stores it in the object.
+  void GetHttpResponseCode();
+
   // Resumes a transfer where it left off. This will use the
   // HTTP Range: header to make a new connection from where the last
   // left off.
@@ -135,6 +145,8 @@ class LibcurlHttpFetcher : public HttpFetcher {
 
   // If we resumed an earlier transfer, data offset that we used for the
   // new connection.  0 otherwise.
+  // In this class, resume refers to resuming a dropped HTTP connection,
+  // not to resuming an interrupted download.
   off_t resume_offset_;
 
   // Number of resumes performed.
@@ -145,6 +157,13 @@ class LibcurlHttpFetcher : public HttpFetcher {
 
   // Seconds to wait before asking libcurl to "perform".
   int idle_seconds_;
+
+  // If true, we are currently performing a write callback on the delegate.
+  bool in_write_callback_;
+  
+  // We can't clean everything up while we're in a write callback, so
+  // if we get a terminate request, queue it until we can handle it.
+  bool terminate_requested_;
 
   DISALLOW_COPY_AND_ASSIGN(LibcurlHttpFetcher);
 };

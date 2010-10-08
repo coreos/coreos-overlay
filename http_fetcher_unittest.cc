@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "base/logging.h"
@@ -14,15 +15,18 @@
 #include "gtest/gtest.h"
 #include "update_engine/libcurl_http_fetcher.h"
 #include "update_engine/mock_http_fetcher.h"
+#include "update_engine/multi_http_fetcher.h"
 
+using std::make_pair;
 using std::string;
 using std::vector;
 
 namespace chromeos_update_engine {
 
 namespace {
-// WARNING, if you update this, you must also update test_http_server.py
+// WARNING, if you update these, you must also update test_http_server.py
 const char* const kServerPort = "8080";
+const int kBigSize = 100000;
 string LocalServerUrlForPath(const string& path) {
   return string("http://127.0.0.1:") + kServerPort + path;
 }
@@ -36,6 +40,7 @@ class HttpFetcherTest : public ::testing::Test {
   string BigUrl() const = 0;
   string SmallUrl() const = 0;
   bool IsMock() const = 0;
+  bool IsMulti() const = 0;
 };
 
 class NullHttpServer {
@@ -63,6 +68,7 @@ class HttpFetcherTest<MockHttpFetcher> : public ::testing::Test {
     return "unused://unused";
   }
   bool IsMock() const { return true; }
+  bool IsMulti() const { return false; }
   typedef NullHttpServer HttpServer;
   void IgnoreServerAborting(HttpServer* server) const {}
 };
@@ -101,6 +107,7 @@ class PythonHttpServer {
       }
     }
     free(argv[0]);
+    LOG(INFO) << "gdb attach now!";
     return;
   }
   ~PythonHttpServer() {
@@ -123,7 +130,7 @@ class PythonHttpServer {
 template <>
 class HttpFetcherTest<LibcurlHttpFetcher> : public ::testing::Test {
  public:
-  HttpFetcher* NewLargeFetcher() {
+  virtual HttpFetcher* NewLargeFetcher() {
     LibcurlHttpFetcher *ret = new LibcurlHttpFetcher;
     // Speed up test execution.
     ret->set_idle_seconds(1);
@@ -140,6 +147,7 @@ class HttpFetcherTest<LibcurlHttpFetcher> : public ::testing::Test {
     return LocalServerUrlForPath("/foo");
   }
   bool IsMock() const { return false; }
+  bool IsMulti() const { return false; }
   typedef PythonHttpServer HttpServer;
   void IgnoreServerAborting(HttpServer* server) const {
     PythonHttpServer *pyserver = reinterpret_cast<PythonHttpServer*>(server);
@@ -147,8 +155,28 @@ class HttpFetcherTest<LibcurlHttpFetcher> : public ::testing::Test {
   }
 };
 
-typedef ::testing::Types<LibcurlHttpFetcher, MockHttpFetcher>
-    HttpFetcherTestTypes;
+template <>
+class HttpFetcherTest<MultiHttpFetcher<LibcurlHttpFetcher> >
+    : public HttpFetcherTest<LibcurlHttpFetcher> {
+ public:
+  HttpFetcher* NewLargeFetcher() {
+    MultiHttpFetcher<LibcurlHttpFetcher> *ret =
+        new MultiHttpFetcher<LibcurlHttpFetcher>;
+    MultiHttpFetcher<LibcurlHttpFetcher>::RangesVect
+        ranges(1, make_pair(0, -1));
+    ret->set_ranges(ranges);
+    // Speed up test execution.
+    ret->set_idle_seconds(1);
+    ret->set_retry_seconds(1);
+    return ret;
+  }
+  bool IsMulti() const { return true; }
+};
+
+typedef ::testing::Types<LibcurlHttpFetcher,
+                         MockHttpFetcher,
+                         MultiHttpFetcher<LibcurlHttpFetcher> >
+HttpFetcherTestTypes;
 TYPED_TEST_CASE(HttpFetcherTest, HttpFetcherTestTypes);
 
 namespace {
@@ -333,7 +361,6 @@ TYPED_TEST(HttpFetcherTest, AbortTest) {
 
     g_main_loop_run(loop);
     g_source_destroy(timeout_source_);
-    EXPECT_EQ(0, fetcher->http_response_code());
   }
   g_main_loop_unref(loop);
 }
@@ -548,6 +575,125 @@ TYPED_TEST(HttpFetcherTest, BeyondMaxRedirectTest) {
   }
   url += "/medium";
   RedirectTest(false, url, this->NewLargeFetcher());
+}
+
+namespace {
+class MultiHttpFetcherTestDelegate : public HttpFetcherDelegate {
+ public:
+  MultiHttpFetcherTestDelegate(int expected_response_code)
+      : expected_response_code_(expected_response_code) {}
+  virtual void ReceivedBytes(HttpFetcher* fetcher,
+                             const char* bytes, int length) {
+    data.append(bytes, length);
+  }
+  virtual void TransferComplete(HttpFetcher* fetcher, bool successful) {
+    EXPECT_EQ(expected_response_code_ != 0, successful);
+    if (expected_response_code_ != 0)
+      EXPECT_EQ(expected_response_code_, fetcher->http_response_code());
+    g_main_loop_quit(loop_);
+  }
+  int expected_response_code_;
+  string data;
+  GMainLoop* loop_;
+};
+
+void MultiTest(HttpFetcher* fetcher_in,
+               const string& url,
+               const MultiHttpFetcher<LibcurlHttpFetcher>::RangesVect& ranges,
+               const string& expected_prefix,
+               off_t expected_size,
+               int expected_response_code) {
+  GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
+  {
+    MultiHttpFetcherTestDelegate delegate(expected_response_code);
+    delegate.loop_ = loop;
+    scoped_ptr<HttpFetcher> fetcher(fetcher_in);
+    MultiHttpFetcher<LibcurlHttpFetcher>* multi_fetcher =
+        dynamic_cast<MultiHttpFetcher<LibcurlHttpFetcher>*>(fetcher.get());
+    ASSERT_TRUE(multi_fetcher);
+    multi_fetcher->set_ranges(ranges);
+    fetcher->set_delegate(&delegate);
+
+    StartTransferArgs start_xfer_args = {fetcher.get(), url};
+
+    g_timeout_add(0, StartTransfer, &start_xfer_args);
+    g_main_loop_run(loop);
+
+    EXPECT_EQ(expected_size, delegate.data.size());
+    EXPECT_EQ(expected_prefix,
+              string(delegate.data.data(), expected_prefix.size()));
+  }
+  g_main_loop_unref(loop);
+}
+}  // namespace {}
+
+TYPED_TEST(HttpFetcherTest, MultiHttpFetcherSimplTest) {
+  if (!this->IsMulti())
+    return;
+  typename TestFixture::HttpServer server;
+  ASSERT_TRUE(server.started_);
+
+  MultiHttpFetcher<LibcurlHttpFetcher>::RangesVect ranges;
+  ranges.push_back(make_pair(0, 25));
+  ranges.push_back(make_pair(99, -1));
+  MultiTest(this->NewLargeFetcher(),
+            this->BigUrl(),
+            ranges,
+            "abcdefghijabcdefghijabcdejabcdefghijabcdef",
+            kBigSize - (99 - 25),
+            206);
+}
+
+TYPED_TEST(HttpFetcherTest, MultiHttpFetcherLengthLimitTest) {
+  if (!this->IsMulti())
+    return;
+  typename TestFixture::HttpServer server;
+  ASSERT_TRUE(server.started_);
+
+  MultiHttpFetcher<LibcurlHttpFetcher>::RangesVect ranges;
+  ranges.push_back(make_pair(0, 24));
+  MultiTest(this->NewLargeFetcher(),
+            this->BigUrl(),
+            ranges,
+            "abcdefghijabcdefghijabcd",
+            24,
+            200);
+}
+
+TYPED_TEST(HttpFetcherTest, MultiHttpFetcherMultiEndTest) {
+  if (!this->IsMulti())
+    return;
+  typename TestFixture::HttpServer server;
+  ASSERT_TRUE(server.started_);
+
+  MultiHttpFetcher<LibcurlHttpFetcher>::RangesVect ranges;
+  ranges.push_back(make_pair(kBigSize - 2, -1));
+  ranges.push_back(make_pair(kBigSize - 3, -1));
+  MultiTest(this->NewLargeFetcher(),
+            this->BigUrl(),
+            ranges,
+            "ijhij",
+            5,
+            206);
+}
+
+TYPED_TEST(HttpFetcherTest, MultiHttpFetcherInsufficientTest) {
+  if (!this->IsMulti())
+    return;
+  typename TestFixture::HttpServer server;
+  ASSERT_TRUE(server.started_);
+
+  MultiHttpFetcher<LibcurlHttpFetcher>::RangesVect ranges;
+  ranges.push_back(make_pair(kBigSize - 2, 4));
+  for (int i = 0; i < 2; ++i) {
+    MultiTest(this->NewLargeFetcher(),
+              this->BigUrl(),
+              ranges,
+              "ij",
+              2,
+              0);
+    ranges.push_back(make_pair(0, 5));
+  }
 }
 
 }  // namespace chromeos_update_engine

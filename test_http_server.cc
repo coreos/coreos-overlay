@@ -10,19 +10,22 @@
 // To use this, simply make an HTTP connection to localhost:port and
 // GET a url.
 
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/types.h>
 #include <errno.h>
 #include <inttypes.h>
+#include <netinet/in.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <unistd.h>
+
 #include <algorithm>
 #include <string>
 #include <vector>
-#include "base/logging.h"
+
+#include <base/logging.h>
 
 using std::min;
 using std::string;
@@ -101,19 +104,19 @@ bool ParseRequest(int fd, HttpRequest* request) {
   return true;
 }
 
-void WriteString(int fd, const string& str) {
+bool WriteString(int fd, const string& str) {
   unsigned int bytes_written = 0;
   while (bytes_written < str.size()) {
-    ssize_t r = write(fd, str.c_str() + bytes_written,
+    ssize_t r = write(fd, str.data() + bytes_written,
                       str.size() - bytes_written);
-    LOG(INFO) << "write() wrote " << r << " bytes";
     if (r < 0) {
       perror("write");
-      return;
+      LOG(INFO) << "write failed";
+      return false;
     }
     bytes_written += r;
   }
-  LOG(INFO) << "WriteString wrote " << bytes_written << " bytes";
+  return true;
 }
 
 string Itoa(off_t num) {
@@ -145,16 +148,21 @@ void HandleQuitQuitQuit(int fd) {
 }
 
 void HandleBig(int fd, const HttpRequest& request, int big_length) {
+  LOG(INFO) << "starting big";
   const off_t full_length = big_length;
   WriteHeaders(fd, true, full_length, request.offset, request.return_code);
-  const off_t content_length = full_length - request.offset;
   int i = request.offset;
-  for (; i % 10; i++)
-    WriteString(fd, string(1, 'a' + (i % 10)));
-  CHECK_EQ(i % 10, 0);
-  for (; i < content_length; i += 10)
-    WriteString(fd, "abcdefghij");
-  CHECK_EQ(i, full_length);
+  bool success = true;
+  for (; (i % 10) && success; i++)
+    success = WriteString(fd, string(1, 'a' + (i % 10)));
+  if (success)
+    CHECK_EQ(i % 10, 0);
+  for (; (i < full_length) && success; i += 10) {
+    success = WriteString(fd, "abcdefghij");
+  }
+  if (success)
+    CHECK_EQ(i, full_length);
+  LOG(INFO) << "Done w/ big";
 }
 
 // This is like /big, but it writes at most 9000 bytes. Also,
@@ -252,6 +260,9 @@ void HandleConnection(int fd) {
 using namespace chromeos_update_engine;
 
 int main(int argc, char** argv) {
+  // Ignore SIGPIPE on write() to sockets.
+  signal(SIGPIPE, SIG_IGN);
+  
   socklen_t clilen;
   struct sockaddr_in server_addr;
   struct sockaddr_in client_addr;
