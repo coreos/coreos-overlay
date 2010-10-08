@@ -17,6 +17,7 @@ using std::string;
 using testing::_;
 using testing::DoAll;
 using testing::InSequence;
+using testing::Ne;
 using testing::Property;
 using testing::Return;
 using testing::SetArgumentPointee;
@@ -131,6 +132,8 @@ TEST_F(UpdateAttempterTest, MarkDeltaUpdateFailureTest) {
       .WillOnce(DoAll(
           SetArgumentPointee<1>(UpdateAttempter::kMaxDeltaUpdateFailures),
           Return(true)));
+  EXPECT_CALL(prefs_, SetInt64(Ne(kPrefsDeltaUpdateFailures), _))
+      .WillRepeatedly(Return(true));
   EXPECT_CALL(prefs_, SetInt64(kPrefsDeltaUpdateFailures, 1)).Times(2);
   EXPECT_CALL(prefs_, SetInt64(kPrefsDeltaUpdateFailures, 2)).Times(1);
   EXPECT_CALL(prefs_, SetInt64(kPrefsDeltaUpdateFailures,

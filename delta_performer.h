@@ -63,6 +63,11 @@ class DeltaPerformer : public FileWriter {
                      const std::string& update_check_response_hash,
                      const uint64_t update_check_response_size);
 
+  // Verifies that the generated update is correct based on the hashes sent by
+  // the server. Returns true on success, false otherwise.
+  bool VerifyAppliedUpdate(const std::string& path,
+                           const std::string& kernel_path);
+
   // Converts an ordered collection of Extent objects which contain data of
   // length full_length to a comma-separated string. For each Extent, the
   // string will have the start offset and then the length in bytes.

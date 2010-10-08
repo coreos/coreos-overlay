@@ -147,6 +147,11 @@ void DownloadAction::TransferComplete(HttpFetcher *fetcher, bool successful) {
         LOG(ERROR) << "Download of " << install_plan_.download_url
                    << " failed due to payload verification error.";
         code = kActionCodeDownloadPayloadVerificationError;
+      } else if (!delta_performer_->VerifyAppliedUpdate(
+          install_plan_.install_path, install_plan_.kernel_install_path)) {
+        LOG(ERROR) << "Download of " << install_plan_.download_url
+                   << " failed due to applied update verification error.";
+        code = kActionCodeDownloadAppliedUpdateVerificationError;
       }
     } else {
       // Makes sure the hash and size are correct for an old-style full update.

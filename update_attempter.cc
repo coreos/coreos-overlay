@@ -519,11 +519,8 @@ void UpdateAttempter::DisableDeltaUpdateIfNeeded() {
 
 void UpdateAttempter::MarkDeltaUpdateFailure() {
   CHECK(!is_full_update_);
-  // If a delta update fails after the downloading phase, don't try to resume it
-  // the next time.
-  if (status_ > UPDATE_STATUS_DOWNLOADING) {
-    DeltaPerformer::ResetUpdateProgress(prefs_, false);
-  }
+  // Don't try to resume a failed delta update.
+  DeltaPerformer::ResetUpdateProgress(prefs_, false);
   int64_t delta_failures;
   if (!prefs_->GetInt64(kPrefsDeltaUpdateFailures, &delta_failures) ||
       delta_failures < 0) {

@@ -545,13 +545,33 @@ bool DeltaPerformer::VerifyPayload(
                                                        key_path,
                                                        &signed_hash_data));
   OmahaHashCalculator signed_hasher;
-  // TODO(petkov): Make sure signed_hash_context_ is loaded when resuming an
-  // update.
   TEST_AND_RETURN_FALSE(signed_hasher.SetContext(signed_hash_context_));
   TEST_AND_RETURN_FALSE(signed_hasher.Finalize());
   const vector<char>& hash_data = signed_hasher.raw_hash();
   TEST_AND_RETURN_FALSE(!hash_data.empty());
   TEST_AND_RETURN_FALSE(hash_data == signed_hash_data);
+  return true;
+}
+
+bool DeltaPerformer::VerifyAppliedUpdate(const string& path,
+                                         const string& kernel_path) {
+  LOG(INFO) << "Verifying applied update.";
+  TEST_AND_RETURN_FALSE(manifest_valid_ &&
+                        manifest_.has_new_kernel_info() &&
+                        manifest_.has_new_rootfs_info());
+  const string* paths[] = { &kernel_path, &path };
+  const PartitionInfo* infos[] = {
+    &manifest_.new_kernel_info(), &manifest_.new_rootfs_info()
+  };
+  for (size_t i = 0; i < arraysize(paths); ++i) {
+    OmahaHashCalculator hasher;
+    TEST_AND_RETURN_FALSE(hasher.UpdateFile(*paths[i], infos[i]->size()));
+    TEST_AND_RETURN_FALSE(hasher.Finalize());
+    TEST_AND_RETURN_FALSE(hasher.raw_hash().size() == infos[i]->hash().size());
+    TEST_AND_RETURN_FALSE(memcmp(hasher.raw_hash().data(),
+                                 infos[i]->hash().data(),
+                                 hasher.raw_hash().size()) == 0);
+  }
   return true;
 }
 

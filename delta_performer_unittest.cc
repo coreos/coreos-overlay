@@ -286,6 +286,7 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
   EXPECT_EQ(0, performer.Close());
 
   CompareFilesByBlock(old_kernel, new_kernel);
+  CompareFilesByBlock(a_img, b_img);
 
   vector<char> updated_kernel_partition;
   EXPECT_TRUE(utils::ReadFile(old_kernel, &updated_kernel_partition));
@@ -297,6 +298,7 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
       kUnittestPublicKeyPath,
       OmahaHashCalculator::OmahaHashOfData(delta),
       delta.size()));
+  EXPECT_TRUE(performer.VerifyAppliedUpdate(a_img, old_kernel));
 }
 
 TEST(DeltaPerformerTest, NewFullUpdateTest) {
