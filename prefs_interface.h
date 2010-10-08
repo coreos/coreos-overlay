@@ -13,6 +13,7 @@ extern const char kPrefsDeltaUpdateFailures[];
 extern const char kPrefsLastActivePingDay[];
 extern const char kPrefsLastRollCallPingDay[];
 extern const char kPrefsManifestMetadataSize[];
+extern const char kPrefsResumedUpdateFailures[];
 extern const char kPrefsUpdateCheckResponseHash[];
 extern const char kPrefsUpdateStateNextDataOffset[];
 extern const char kPrefsUpdateStateNextOperation[];

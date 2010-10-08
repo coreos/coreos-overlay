@@ -40,6 +40,7 @@ const int kDeltaProtobufLengthLength = 8;
 const char kUpdatePayloadPublicKeyPath[] =
     "/usr/share/update_engine/update-payload-key.pub.pem";
 const int kUpdateStateOperationInvalid = -1;
+const int kMaxResumedUpdateFailures = 10;
 
 // Converts extents to a human-readable string, for use by DumpUpdateProto().
 string ExtentsToString(const RepeatedPtrField<Extent>& extents) {
@@ -563,6 +564,11 @@ bool DeltaPerformer::CanResumeUpdate(PrefsInterface* prefs,
                         !interrupted_hash.empty() &&
                         interrupted_hash == update_check_response_hash);
 
+  int64_t resumed_update_failures;
+  TEST_AND_RETURN_FALSE(!prefs->GetInt64(kPrefsResumedUpdateFailures,
+                                         &resumed_update_failures) ||
+                        resumed_update_failures <= kMaxResumedUpdateFailures);
+
   // Sanity check the rest.
   int64_t next_data_offset = -1;
   TEST_AND_RETURN_FALSE(prefs->GetInt64(kPrefsUpdateStateNextDataOffset,
@@ -591,6 +597,7 @@ bool DeltaPerformer::ResetUpdateProgress(PrefsInterface* prefs, bool quick) {
     prefs->SetString(kPrefsUpdateStateSHA256Context, "");
     prefs->SetString(kPrefsUpdateStateSignedSHA256Context, "");
     prefs->SetInt64(kPrefsManifestMetadataSize, -1);
+    prefs->SetInt64(kPrefsResumedUpdateFailures, 0);
   }
   return true;
 }
@@ -648,6 +655,14 @@ bool DeltaPerformer::PrimeUpdateState() {
                         manifest_metadata_size > 0);
   manifest_metadata_size_ = manifest_metadata_size;
 
+  // Speculatively count the resume as a failure.
+  int64_t resumed_update_failures;
+  if (prefs_->GetInt64(kPrefsResumedUpdateFailures, &resumed_update_failures)) {
+    resumed_update_failures++;
+  } else {
+    resumed_update_failures = 1;
+  }
+  prefs_->SetInt64(kPrefsResumedUpdateFailures, resumed_update_failures);
   return true;
 }
 
