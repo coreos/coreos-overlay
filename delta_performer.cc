@@ -222,6 +222,7 @@ ssize_t DeltaPerformer::Write(const void* bytes, size_t count) {
             next_operation_num_ - manifest_.install_operations_size());
     if (!CanPerformInstallOperation(op))
       break;
+    // Makes sure we unblock exit when this operation completes.
     ScopedTerminatorExitUnblocker exit_unblocker =
         ScopedTerminatorExitUnblocker();  // Avoids a compiler unused var bug.
     // Log every thousandth operation, and also the first and last ones
@@ -232,13 +233,6 @@ ssize_t DeltaPerformer::Write(const void* bytes, size_t count) {
     }
     bool is_kernel_partition =
         (next_operation_num_ >= manifest_.install_operations_size());
-    // If about to start a non-idempotent operation, clear the update state so
-    // that if the operation gets interrupted, we don't try to resume the
-    // update.
-    if (!IsIdempotentOperation(op)) {
-      Terminator::set_exit_blocked(true);
-      ResetUpdateProgress(prefs_, true);
-    }
     if (op.type() == DeltaArchiveManifest_InstallOperation_Type_REPLACE ||
         op.type() == DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ) {
       if (!PerformReplaceOperation(op, is_kernel_partition)) {
@@ -371,6 +365,14 @@ bool DeltaPerformer::PerformMoveOperation(
     bytes_read += bytes_read_this_iteration;
   }
 
+  // If this is a non-idempotent operation, request a delayed exit and clear the
+  // update state in case the operation gets interrupted. Do this as late as
+  // possible.
+  if (!IsIdempotentOperation(operation)) {
+    Terminator::set_exit_blocked(true);
+    ResetUpdateProgress(prefs_, true);
+  }
+
   // Write bytes out.
   ssize_t bytes_written = 0;
   for (int i = 0; i < operation.dst_extents_size(); i++) {
@@ -445,6 +447,14 @@ bool DeltaPerformer::PerformBsdiffOperation(
 
   int fd = is_kernel_partition ? kernel_fd_ : fd_;
   const string& path = is_kernel_partition ? kernel_path_ : path_;
+
+  // If this is a non-idempotent operation, request a delayed exit and clear the
+  // update state in case the operation gets interrupted. Do this as late as
+  // possible.
+  if (!IsIdempotentOperation(operation)) {
+    Terminator::set_exit_blocked(true);
+    ResetUpdateProgress(prefs_, true);
+  }
 
   vector<string> cmd;
   cmd.push_back(kBspatchPath);
