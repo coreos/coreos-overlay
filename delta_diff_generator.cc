@@ -260,6 +260,8 @@ bool ReadUnwrittenBlocks(const vector<Block>& blocks,
                          off_t* blobs_length,
                          const string& image_path,
                          Vertex* vertex) {
+  vertex->file_name = "<rootfs-non-file-data>";
+
   DeltaArchiveManifest_InstallOperation* out_op = &vertex->op;
   int image_fd = open(image_path.c_str(), O_RDONLY, 000);
   TEST_AND_RETURN_FALSE_ERRNO(image_fd >= 0);
@@ -468,19 +470,15 @@ void ReportPayloadUsage(const Graph& graph,
 
   // Graph nodes with information about file names.
   for (Vertex::Index node = 0; node < graph.size(); node++) {
-    objects.push_back(DeltaObject(graph[node].file_name,
-                                  graph[node].op.type(),
-                                  graph[node].op.data_length()));
-    total_size += graph[node].op.data_length();
+    const Vertex& vertex = graph[node];
+    if (!vertex.valid) {
+      continue;
+    }
+    objects.push_back(DeltaObject(vertex.file_name,
+                                  vertex.op.type(),
+                                  vertex.op.data_length()));
+    total_size += vertex.op.data_length();
   }
-
-  // Final rootfs operation writing non-file-data.
-  const DeltaArchiveManifest_InstallOperation& final_op =
-      manifest.install_operations(manifest.install_operations_size() - 1);
-  objects.push_back(DeltaObject("<rootfs-final-operation>",
-                                final_op.type(),
-                                final_op.data_length()));
-  total_size += final_op.data_length();
 
   // Kernel install operations.
   for (int i = 0; i < manifest.kernel_install_operations_size(); ++i) {
