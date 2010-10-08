@@ -83,8 +83,10 @@ class DeltaPerformer : public FileWriter {
                               std::string update_check_response_hash);
 
   // Resets the persistent update progress state to indicate that an update
-  // can't be resumed. Returns true on success, false otherwise.
-  static bool ResetUpdateProgress(PrefsInterface* prefs);
+  // can't be resumed. Performs a quick update-in-progress reset if |quick| is
+  // true, otherwise resets all progress-related update state. Returns true on
+  // success, false otherwise.
+  static bool ResetUpdateProgress(PrefsInterface* prefs, bool quick);
 
  private:
   // Returns true if enough of the delta file has been passed via Write()
@@ -119,6 +121,11 @@ class DeltaPerformer : public FileWriter {
   // Checkpoints the update progress into persistent storage to allow this
   // update attempt to be resumed after reboot.
   bool CheckpointUpdateProgress();
+
+  // Primes the required update state. Returns true if the update state was
+  // successfully initialized to a saved resume state or if the update is a new
+  // update. Returns false otherwise.
+  bool PrimeUpdateState();
 
   // Update Engine preference store.
   PrefsInterface* prefs_;

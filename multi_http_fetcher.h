@@ -40,7 +40,7 @@ class MultiHttpFetcher : public HttpFetcher, public HttpFetcherDelegate {
       (*it)->set_delegate(this);
     }
   }
-  
+
   void SetOffset(off_t offset) {}  // for now, doesn't support this
 
   // Begins the transfer to the specified URL.
@@ -100,17 +100,18 @@ class MultiHttpFetcher : public HttpFetcher, public HttpFetcherDelegate {
     if (delegate_)
       delegate_->TransferComplete(this, successful);
   }
-   
+
   void StartTransfer() {
     if (current_index_ >= ranges_.size()) {
       return;
     }
-    LOG(INFO) << "Starting a transfer";
+    LOG(INFO) << "Starting a transfer @" << ranges_[current_index_].first << "("
+              << ranges_[current_index_].second << ")";
     bytes_received_this_fetcher_ = 0;
     fetchers_[current_index_]->SetOffset(ranges_[current_index_].first);
     fetchers_[current_index_]->BeginTransfer(url_);
   }
-  
+
   void ReceivedBytes(HttpFetcher* fetcher,
                      const char* bytes,
                      int length) {
@@ -148,7 +149,7 @@ class MultiHttpFetcher : public HttpFetcher, public HttpFetcherDelegate {
       SendTransferComplete(fetcher, true);
       return;
     }
-    
+
     if (ranges_[current_index_].second < 0) {
       // We're done with the current operation
       current_index_++;
@@ -160,7 +161,7 @@ class MultiHttpFetcher : public HttpFetcher, public HttpFetcherDelegate {
       }
       return;
     }
-    
+
     if (bytes_received_this_fetcher_ < ranges_[current_index_].second) {
       LOG(WARNING) << "Received insufficient bytes from fetcher. "
                    << "Ending early";
@@ -170,13 +171,13 @@ class MultiHttpFetcher : public HttpFetcher, public HttpFetcherDelegate {
       LOG(INFO) << "Got spurious TransferComplete. Ingoring.";
     }
   }
-  
+
   // If true, do not send any more data or TransferComplete to the delegate.
   bool sent_transfer_complete_;  
-  
+
   RangesVect ranges_;
   std::vector<std::tr1::shared_ptr<BaseHttpFetcher> > fetchers_;
-  
+
   RangesVect::size_type current_index_;  // index into ranges_, fetchers_
   off_t bytes_received_this_fetcher_;
 

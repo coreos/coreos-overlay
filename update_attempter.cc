@@ -10,8 +10,8 @@
 #endif  // _POSIX_C_SOURCE
 #include <time.h>
 
-#include <tr1/memory>
 #include <string>
+#include <tr1/memory>
 #include <vector>
 
 #include <glib.h>
@@ -21,6 +21,7 @@
 #include "update_engine/download_action.h"
 #include "update_engine/filesystem_copier_action.h"
 #include "update_engine/libcurl_http_fetcher.h"
+#include "update_engine/multi_http_fetcher.h"
 #include "update_engine/omaha_request_action.h"
 #include "update_engine/omaha_request_params.h"
 #include "update_engine/omaha_response_handler_action.h"
@@ -31,6 +32,7 @@
 
 using base::TimeDelta;
 using base::TimeTicks;
+using std::make_pair;
 using std::tr1::shared_ptr;
 using std::string;
 using std::vector;
@@ -153,7 +155,7 @@ void UpdateAttempter::Update(const std::string& app_version,
                                  OmahaEvent::kTypeUpdateDownloadStarted),
                              new LibcurlHttpFetcher));
   shared_ptr<DownloadAction> download_action(
-      new DownloadAction(prefs_, new LibcurlHttpFetcher));
+      new DownloadAction(prefs_, new MultiHttpFetcher<LibcurlHttpFetcher>));
   shared_ptr<OmahaRequestAction> download_finished_action(
       new OmahaRequestAction(prefs_,
                              omaha_request_params_,
@@ -174,6 +176,7 @@ void UpdateAttempter::Update(const std::string& app_version,
 
   download_action->set_delegate(this);
   response_handler_action_ = response_handler_action;
+  download_action_ = download_action;
 
   actions_.push_back(shared_ptr<AbstractAction>(update_check_action));
   actions_.push_back(shared_ptr<AbstractAction>(response_handler_action));
@@ -254,9 +257,10 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
   }
 
   if (code == kActionCodeSuccess) {
-    SetStatusAndNotify(UPDATE_STATUS_UPDATED_NEED_REBOOT);
     utils::WriteFile(kUpdateCompletedMarker, "", 0);
     prefs_->SetInt64(kPrefsDeltaUpdateFailures, 0);
+    DeltaPerformer::ResetUpdateProgress(prefs_, false);
+    SetStatusAndNotify(UPDATE_STATUS_UPDATED_NEED_REBOOT);
 
     // Report the time it took to update the system.
     int64_t update_time = time(NULL) - last_checked_time_;
@@ -327,20 +331,18 @@ void UpdateAttempter::ActionCompleted(ActionProcessor* processor,
   }
   // Find out which action completed.
   if (type == OmahaResponseHandlerAction::StaticType()) {
-    // Note that the status will be updated to DOWNLOADING when some
-    // bytes get actually downloaded from the server and the
-    // BytesReceived callback is invoked. This avoids notifying the
-    // user that a download has started in cases when the server and
-    // the client are unable to initiate the download.
-    OmahaResponseHandlerAction* omaha_response_handler_action =
-        dynamic_cast<OmahaResponseHandlerAction*>(action);
-    CHECK(omaha_response_handler_action);
-    const InstallPlan& plan = omaha_response_handler_action->install_plan();
+    // Note that the status will be updated to DOWNLOADING when some bytes get
+    // actually downloaded from the server and the BytesReceived callback is
+    // invoked. This avoids notifying the user that a download has started in
+    // cases when the server and the client are unable to initiate the download.
+    CHECK(action == response_handler_action_.get());
+    const InstallPlan& plan = response_handler_action_->install_plan();
     last_checked_time_ = time(NULL);
     // TODO(adlr): put version in InstallPlan
     new_version_ = "0.0.0.0";
     new_size_ = plan.size;
     is_full_update_ = plan.is_full_update;
+    SetupDownload();
     SetupPriorityManagement();
   } else if (type == DownloadAction::StaticType()) {
     SetStatusAndNotify(UPDATE_STATUS_FINALIZING);
@@ -517,12 +519,35 @@ void UpdateAttempter::DisableDeltaUpdateIfNeeded() {
 
 void UpdateAttempter::MarkDeltaUpdateFailure() {
   CHECK(!is_full_update_);
+  // If a delta update fails after the downloading phase, don't try to resume it
+  // the next time.
+  if (status_ > UPDATE_STATUS_DOWNLOADING) {
+    DeltaPerformer::ResetUpdateProgress(prefs_, false);
+  }
   int64_t delta_failures;
   if (!prefs_->GetInt64(kPrefsDeltaUpdateFailures, &delta_failures) ||
       delta_failures < 0) {
     delta_failures = 0;
   }
   prefs_->SetInt64(kPrefsDeltaUpdateFailures, ++delta_failures);
+}
+
+void UpdateAttempter::SetupDownload() {
+  MultiHttpFetcher<LibcurlHttpFetcher>* fetcher =
+      dynamic_cast<MultiHttpFetcher<LibcurlHttpFetcher>*>(
+          download_action_->http_fetcher());
+  MultiHttpFetcher<LibcurlHttpFetcher>::RangesVect ranges;
+  if (response_handler_action_->install_plan().is_resume) {
+    int64_t manifest_metadata_size = 0;
+    prefs_->GetInt64(kPrefsManifestMetadataSize, &manifest_metadata_size);
+    int64_t next_data_offset = 0;
+    prefs_->GetInt64(kPrefsUpdateStateNextDataOffset, &next_data_offset);
+    ranges.push_back(make_pair(0, manifest_metadata_size));
+    ranges.push_back(make_pair(manifest_metadata_size + next_data_offset, -1));
+  } else {
+    ranges.push_back(make_pair(0, -1));
+  }
+  fetcher->set_ranges(ranges);
 }
 
 }  // namespace chromeos_update_engine

@@ -116,33 +116,36 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // over dbus.
   void SetStatusAndNotify(UpdateStatus status);
 
-  // Creates an error event object in |error_event_| to be included in
-  // an OmahaRequestAction once the current action processor is done.
+  // Sets up the download parameters after receiving the update check response.
+  void SetupDownload();
+
+  // Creates an error event object in |error_event_| to be included in an
+  // OmahaRequestAction once the current action processor is done.
   void CreatePendingErrorEvent(AbstractAction* action, ActionExitCode code);
 
-  // If there's a pending error event allocated in |error_event_|,
-  // schedules an OmahaRequestAction with that event in the current
-  // processor, clears the pending event, updates the status and
-  // returns true. Returns false otherwise.
+  // If there's a pending error event allocated in |error_event_|, schedules an
+  // OmahaRequestAction with that event in the current processor, clears the
+  // pending event, updates the status and returns true. Returns false
+  // otherwise.
   bool ScheduleErrorEventAction();
 
-  // Sets the process priority to |priority| and updates |priority_|
-  // if the new |priority| is different than the current |priority_|,
-  // otherwise simply returns.
+  // Sets the process priority to |priority| and updates |priority_| if the new
+  // |priority| is different than the current |priority_|, otherwise simply
+  // returns.
   void SetPriority(utils::ProcessPriority priority);
 
-  // Set the process priority to low and sets up timeout events to
-  // increase the priority gradually to high.
+  // Set the process priority to low and sets up timeout events to increase the
+  // priority gradually to high.
   void SetupPriorityManagement();
 
-  // Resets the process priority to normal and destroys any scheduled
-  // timeout sources.
+  // Resets the process priority to normal and destroys any scheduled timeout
+  // sources.
   void CleanupPriorityManagement();
 
-  // The process priority timeout source callback increases the
-  // current priority by one step (low goes to normal, normal goes to
-  // high). Returns true if the callback must be invoked again after a
-  // timeout, or false if GLib can destroy this timeout source.
+  // The process priority timeout source callback increases the current priority
+  // by one step (low goes to normal, normal goes to high). Returns true if the
+  // callback must be invoked again after a timeout, or false if GLib can
+  // destroy this timeout source.
   static gboolean StaticManagePriorityCallback(gpointer data);
   bool ManagePriorityCallback();
 
@@ -154,9 +157,9 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // update can be tried when needed.
   void MarkDeltaUpdateFailure();
 
-  // Last status notification timestamp used for throttling. Use
-  // monotonic TimeTicks to ensure that notifications are sent even if
-  // the system clock is set back in the middle of an update.
+  // Last status notification timestamp used for throttling. Use monotonic
+  // TimeTicks to ensure that notifications are sent even if the system clock is
+  // set back in the middle of an update.
   base::TimeTicks last_notify_time_;
 
   std::vector<std::tr1::shared_ptr<AbstractAction> > actions_;
@@ -166,8 +169,11 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // dbus service.
   UpdateEngineService* dbus_service_;
 
-  // pointer to the OmahaResponseHandlerAction in the actions_ vector;
+  // Pointer to the OmahaResponseHandlerAction in the actions_ vector.
   std::tr1::shared_ptr<OmahaResponseHandlerAction> response_handler_action_;
+
+  // Pointer to the DownloadAction in the actions_ vector.
+  std::tr1::shared_ptr<DownloadAction> download_action_;
 
   // Pointer to the preferences store interface.
   PrefsInterface* prefs_;

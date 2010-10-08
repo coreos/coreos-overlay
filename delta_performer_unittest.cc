@@ -259,6 +259,8 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
                               manifest_metadata_size)).WillOnce(Return(true));
   EXPECT_CALL(prefs, SetInt64(kPrefsUpdateStateNextOperation, _))
       .WillRepeatedly(Return(true));
+  EXPECT_CALL(prefs, GetInt64(kPrefsUpdateStateNextOperation, _))
+      .WillOnce(Return(false));
   EXPECT_CALL(prefs, SetInt64(kPrefsUpdateStateNextDataOffset, _))
       .WillRepeatedly(Return(true));
   EXPECT_CALL(prefs, SetString(kPrefsUpdateStateSHA256Context, _))

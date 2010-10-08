@@ -1,21 +1,25 @@
-// Copyright (c) 2010 The Chromium Authors. All rights reserved.
+// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 #include "update_engine/filesystem_copier_action.h"
+
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <stdlib.h>
+
 #include <algorithm>
+#include <cstdlib>
 #include <map>
 #include <string>
 #include <vector>
+
 #include <gio/gio.h>
 #include <gio/gunixinputstream.h>
 #include <gio/gunixoutputstream.h>
 #include <glib.h>
+
 #include "update_engine/filesystem_iterator.h"
 #include "update_engine/subprocess.h"
 #include "update_engine/utils.h"
@@ -41,7 +45,7 @@ void FilesystemCopierAction::PerformAction() {
   }
   install_plan_ = GetInputObject();
 
-  if (install_plan_.is_full_update) {
+  if (install_plan_.is_full_update || install_plan_.is_resume) {
     // No copy needed. Done!
     if (HasOutputPipe())
       SetOutputObject(install_plan_);

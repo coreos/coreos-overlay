@@ -93,6 +93,8 @@ class DownloadAction : public Action<DownloadAction>,
     delegate_ = delegate;
   }
 
+  HttpFetcher* http_fetcher() { return http_fetcher_.get(); }
+
  private:
   // The InstallPlan passed in
   InstallPlan install_plan_;

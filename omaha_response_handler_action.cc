@@ -32,7 +32,7 @@ void OmahaResponseHandlerAction::PerformAction() {
   install_plan_.is_resume =
       DeltaPerformer::CanResumeUpdate(prefs_, response.hash);
   if (!install_plan_.is_resume) {
-    LOG_IF(WARNING, !DeltaPerformer::ResetUpdateProgress(prefs_))
+    LOG_IF(WARNING, !DeltaPerformer::ResetUpdateProgress(prefs_, false))
         << "Unable to reset the update progress.";
     LOG_IF(WARNING, !prefs_->SetString(kPrefsUpdateCheckResponseHash,
                                        response.hash))

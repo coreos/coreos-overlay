@@ -198,7 +198,10 @@ ssize_t DeltaPerformer::Write(const void* bytes, size_t count) {
                                       manifest_metadata_size_))
         << "Unable to save the manifest metadata size.";
     manifest_valid_ = true;
-    block_size_ = manifest_.block_size();
+    if (!PrimeUpdateState()) {
+      LOG(ERROR) << "Unable to prime the update state.";
+      return -EINVAL;
+    }
   }
   ssize_t total_operations = manifest_.install_operations_size() +
       manifest_.kernel_install_operations_size();
@@ -225,7 +228,7 @@ ssize_t DeltaPerformer::Write(const void* bytes, size_t count) {
     // update.
     if (!IsIdempotentOperation(op)) {
       Terminator::set_exit_blocked(true);
-      ResetUpdateProgress(prefs_);
+      ResetUpdateProgress(prefs_, true);
     }
     if (op.type() == DeltaArchiveManifest_InstallOperation_Type_REPLACE ||
         op.type() == DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ) {
@@ -281,8 +284,8 @@ bool DeltaPerformer::PerformReplaceOperation(
 
   // Since we delete data off the beginning of the buffer as we use it,
   // the data we need should be exactly at the beginning of the buffer.
-  CHECK_EQ(buffer_offset_, operation.data_offset());
-  CHECK_GE(buffer_.size(), operation.data_length());
+  TEST_AND_RETURN_FALSE(buffer_offset_ == operation.data_offset());
+  TEST_AND_RETURN_FALSE(buffer_.size() >= operation.data_length());
 
   // Extract the signature message if it's in this operation.
   ExtractSignatureMessage(operation);
@@ -405,8 +408,8 @@ bool DeltaPerformer::PerformBsdiffOperation(
     bool is_kernel_partition) {
   // Since we delete data off the beginning of the buffer as we use it,
   // the data we need should be exactly at the beginning of the buffer.
-  CHECK_EQ(buffer_offset_, operation.data_offset());
-  CHECK_GE(buffer_.size(), operation.data_length());
+  TEST_AND_RETURN_FALSE(buffer_offset_ == operation.data_offset());
+  TEST_AND_RETURN_FALSE(buffer_.size() >= operation.data_length());
 
   string input_positions;
   TEST_AND_RETURN_FALSE(ExtentsToBsdiffPositionsString(operation.src_extents(),
@@ -571,9 +574,16 @@ bool DeltaPerformer::CanResumeUpdate(PrefsInterface* prefs,
   return true;
 }
 
-bool DeltaPerformer::ResetUpdateProgress(PrefsInterface* prefs) {
+bool DeltaPerformer::ResetUpdateProgress(PrefsInterface* prefs, bool quick) {
   TEST_AND_RETURN_FALSE(prefs->SetInt64(kPrefsUpdateStateNextOperation,
                                         kUpdateStateOperationInvalid));
+  if (!quick) {
+    prefs->SetString(kPrefsUpdateCheckResponseHash, "");
+    prefs->SetInt64(kPrefsUpdateStateNextDataOffset, -1);
+    prefs->SetString(kPrefsUpdateStateSHA256Context, "");
+    prefs->SetString(kPrefsUpdateStateSignedSHA256Context, "");
+    prefs->SetInt64(kPrefsManifestMetadataSize, -1);
+  }
   return true;
 }
 
@@ -581,7 +591,7 @@ bool DeltaPerformer::CheckpointUpdateProgress() {
   Terminator::set_exit_blocked(true);
   if (last_updated_buffer_offset_ != buffer_offset_) {
     // Resets the progress in case we die in the middle of the state update.
-    ResetUpdateProgress(prefs_);
+    ResetUpdateProgress(prefs_, true);
     TEST_AND_RETURN_FALSE(
         prefs_->SetString(kPrefsUpdateStateSHA256Context,
                           hash_calculator_.GetContext()));
@@ -591,6 +601,45 @@ bool DeltaPerformer::CheckpointUpdateProgress() {
   }
   TEST_AND_RETURN_FALSE(prefs_->SetInt64(kPrefsUpdateStateNextOperation,
                                          next_operation_num_));
+  return true;
+}
+
+bool DeltaPerformer::PrimeUpdateState() {
+  CHECK(manifest_valid_);
+  block_size_ = manifest_.block_size();
+
+  int64_t next_operation = kUpdateStateOperationInvalid;
+  if (!prefs_->GetInt64(kPrefsUpdateStateNextOperation, &next_operation) ||
+      next_operation == kUpdateStateOperationInvalid ||
+      next_operation <= 0) {
+    // Initiating a new update, no more state needs to be initialized.
+    return true;
+  }
+  next_operation_num_ = next_operation;
+
+  // Resuming an update -- load the rest of the update state.
+  int64_t next_data_offset = -1;
+  TEST_AND_RETURN_FALSE(prefs_->GetInt64(kPrefsUpdateStateNextDataOffset,
+                                         &next_data_offset) &&
+                        next_data_offset >= 0);
+  buffer_offset_ = next_data_offset;
+
+  // The signed hash context may be empty if the interrupted update didn't reach
+  // the signature blob.
+  prefs_->GetString(kPrefsUpdateStateSignedSHA256Context,
+                    &signed_hash_context_);
+
+  string hash_context;
+  TEST_AND_RETURN_FALSE(prefs_->GetString(kPrefsUpdateStateSHA256Context,
+                                          &hash_context) &&
+                        hash_calculator_.SetContext(hash_context));
+
+  int64_t manifest_metadata_size = 0;
+  TEST_AND_RETURN_FALSE(prefs_->GetInt64(kPrefsManifestMetadataSize,
+                                         &manifest_metadata_size) &&
+                        manifest_metadata_size > 0);
+  manifest_metadata_size_ = manifest_metadata_size;
+
   return true;
 }
 

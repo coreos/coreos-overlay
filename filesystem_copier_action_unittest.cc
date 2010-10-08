@@ -249,6 +249,32 @@ TEST_F(FilesystemCopierActionTest, FullUpdateTest) {
   EXPECT_EQ(kUrl, collector_action.object().download_url);
 }
 
+TEST_F(FilesystemCopierActionTest, ResumeTest) {
+  ActionProcessor processor;
+  FilesystemCopierActionTest2Delegate delegate;
+
+  processor.set_delegate(&delegate);
+
+  ObjectFeederAction<InstallPlan> feeder_action;
+  const char* kUrl = "http://some/url";
+  InstallPlan install_plan(false, true, kUrl, 0, "", "", "");
+  feeder_action.set_obj(install_plan);
+  FilesystemCopierAction copier_action(false);
+  ObjectCollectorAction<InstallPlan> collector_action;
+
+  BondActions(&feeder_action, &copier_action);
+  BondActions(&copier_action, &collector_action);
+
+  processor.EnqueueAction(&feeder_action);
+  processor.EnqueueAction(&copier_action);
+  processor.EnqueueAction(&collector_action);
+  processor.StartProcessing();
+  EXPECT_FALSE(processor.IsRunning());
+  EXPECT_TRUE(delegate.ran_);
+  EXPECT_EQ(kActionCodeSuccess, delegate.code_);
+  EXPECT_EQ(kUrl, collector_action.object().download_url);
+}
+
 TEST_F(FilesystemCopierActionTest, NonExistentDriveTest) {
   ActionProcessor processor;
   FilesystemCopierActionTest2Delegate delegate;

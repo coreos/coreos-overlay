@@ -91,6 +91,7 @@ int Main(int argc, char** argv) {
       CHECK_EQ(performer.Write(&buf[0], bytes_read), bytes_read);
     }
     CHECK_EQ(performer.Close(), 0);
+    DeltaPerformer::ResetUpdateProgress(&prefs, false);
     LOG(INFO) << "done applying delta.";
     return 0;
   }
