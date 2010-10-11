@@ -1219,6 +1219,7 @@ bool DeltaDiffGenerator::ReadFullUpdateFromDisk(
         op->set_type(DeltaArchiveManifest_InstallOperation_Type_REPLACE);
       }
       op->set_data_offset(*data_file_size);
+      TEST_AND_RETURN_FALSE(utils::WriteAll(fd, &use_buf[0], use_buf.size()));
       *data_file_size += use_buf.size();
       op->set_data_length(use_buf.size());
       Extent* dst_extent = op->add_dst_extents();
@@ -1279,61 +1280,62 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
   vector<DeltaArchiveManifest_InstallOperation> kernel_ops;
 
   vector<Vertex::Index> final_order;
-  if (!old_image.empty()) {
-    // Delta update
+  {
     int fd;
     TEST_AND_RETURN_FALSE(
         utils::MakeTempFile(kTempFileTemplate, &temp_file_path, &fd));
     TEST_AND_RETURN_FALSE(fd >= 0);
     ScopedFdCloser fd_closer(&fd);
+    if (!old_image.empty()) {
+      // Delta update
 
-    TEST_AND_RETURN_FALSE(DeltaReadFiles(&graph,
-                                         &blocks,
-                                         old_root,
-                                         new_root,
-                                         fd,
-                                         &data_file_size));
-    LOG(INFO) << "done reading normal files";
-    CheckGraph(graph);
+      TEST_AND_RETURN_FALSE(DeltaReadFiles(&graph,
+                                           &blocks,
+                                           old_root,
+                                           new_root,
+                                           fd,
+                                           &data_file_size));
+      LOG(INFO) << "done reading normal files";
+      CheckGraph(graph);
 
-    graph.resize(graph.size() + 1);
-    TEST_AND_RETURN_FALSE(ReadUnwrittenBlocks(blocks,
+      graph.resize(graph.size() + 1);
+      TEST_AND_RETURN_FALSE(ReadUnwrittenBlocks(blocks,
+                                                fd,
+                                                &data_file_size,
+                                                new_image,
+                                                &graph.back()));
+
+      // Read kernel partition
+      TEST_AND_RETURN_FALSE(DeltaCompressKernelPartition(old_kernel_part,
+                                                         new_kernel_part,
+                                                         &kernel_ops,
+                                                         fd,
+                                                         &data_file_size));
+
+      LOG(INFO) << "done reading kernel";
+      CheckGraph(graph);
+
+      LOG(INFO) << "Creating edges...";
+      CreateEdges(&graph, blocks);
+      LOG(INFO) << "Done creating edges";
+      CheckGraph(graph);
+
+      TEST_AND_RETURN_FALSE(ConvertGraphToDag(&graph,
+                                              new_root,
                                               fd,
                                               &data_file_size,
-                                              new_image,
-                                              &graph.back()));
-
-    // Read kernel partition
-    TEST_AND_RETURN_FALSE(DeltaCompressKernelPartition(old_kernel_part,
-                                                       new_kernel_part,
-                                                       &kernel_ops,
-                                                       fd,
-                                                       &data_file_size));
-
-    LOG(INFO) << "done reading kernel";
-    CheckGraph(graph);
-
-    LOG(INFO) << "Creating edges...";
-    CreateEdges(&graph, blocks);
-    LOG(INFO) << "Done creating edges";
-    CheckGraph(graph);
-
-    TEST_AND_RETURN_FALSE(ConvertGraphToDag(&graph,
-                                            new_root,
-                                            fd,
-                                            &data_file_size,
-                                            &final_order));
-  } else {
-    // Full update
-    int fd = 0;
-    TEST_AND_RETURN_FALSE(ReadFullUpdateFromDisk(&graph,
-                                                 new_kernel_part,
-                                                 new_image,
-                                                 fd,
-                                                 &data_file_size,
-                                                 kFullUpdateChunkSize,
-                                                 &kernel_ops,
-                                                 &final_order));
+                                              &final_order));
+    } else {
+      // Full update
+      TEST_AND_RETURN_FALSE(ReadFullUpdateFromDisk(&graph,
+                                                   new_kernel_part,
+                                                   new_image,
+                                                   fd,
+                                                   &data_file_size,
+                                                   kFullUpdateChunkSize,
+                                                   &kernel_ops,
+                                                   &final_order));
+    }
   }
 
   // Convert to protobuf Manifest object
