@@ -464,7 +464,8 @@ static const char* kInstallOperationTypes[] = {
 };
 
 void ReportPayloadUsage(const Graph& graph,
-                        const DeltaArchiveManifest& manifest) {
+                        const DeltaArchiveManifest& manifest,
+                        const int64_t manifest_metadata_size) {
   vector<DeltaObject> objects;
   off_t total_size = 0;
 
@@ -490,6 +491,11 @@ void ReportPayloadUsage(const Graph& graph,
     total_size += op.data_length();
   }
 
+  objects.push_back(DeltaObject("<manifest-metadata>",
+                                -1,
+                                manifest_metadata_size));
+  total_size += manifest_metadata_size;
+
   std::sort(objects.begin(), objects.end());
 
   static const char kFormatString[] = "%6.2f%% %10llu %-10s %s\n";
@@ -499,7 +505,7 @@ void ReportPayloadUsage(const Graph& graph,
     fprintf(stderr, kFormatString,
             object.size * 100.0 / total_size,
             object.size,
-            kInstallOperationTypes[object.type],
+            object.type >= 0 ? kInstallOperationTypes[object.type] : "-",
             object.name.c_str());
   }
   fprintf(stderr, kFormatString, 100.0, total_size, "", "<total>");
@@ -1482,7 +1488,9 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
                           static_cast<ssize_t>(signature_blob.size()));
   }
 
-  ReportPayloadUsage(graph, manifest);
+  int64_t manifest_metadata_size =
+      strlen(kDeltaMagic) + 2 * sizeof(uint64_t) + serialized_manifest.size();
+  ReportPayloadUsage(graph, manifest, manifest_metadata_size);
 
   LOG(INFO) << "All done. Successfully created delta file.";
   return true;
