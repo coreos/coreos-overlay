@@ -135,8 +135,9 @@ void Subprocess::CancelExec(uint32_t tag) {
   }
 }
 
-bool Subprocess::SynchronousExec(const std::vector<std::string>& cmd,
-                                 int* return_code) {
+bool Subprocess::SynchronousExecFlags(const std::vector<std::string>& cmd,
+                                      int* return_code,
+                                      GSpawnFlags flags) {
   GError* err = NULL;
   scoped_array<char*> argv(new char*[cmd.size() + 1]);
   for (unsigned int i = 0; i < cmd.size(); i++) {
@@ -157,16 +158,17 @@ bool Subprocess::SynchronousExec(const std::vector<std::string>& cmd,
 
   char* child_stdout;
 
-  bool success = g_spawn_sync(NULL,  // working directory
-                              argv.get(),
-                              argp,
-                              G_SPAWN_STDERR_TO_DEV_NULL,  // flags
-                              GRedirectStderrToStdout,  // child setup function
-                              NULL,  // data for child setup function
-                              &child_stdout,
-                              NULL,
-                              return_code,
-                              &err);
+  bool success = g_spawn_sync(
+      NULL,  // working directory
+      argv.get(),
+      argp,
+      static_cast<GSpawnFlags>(G_SPAWN_STDERR_TO_DEV_NULL | flags),  // flags
+      GRedirectStderrToStdout,  // child setup function
+      NULL,  // data for child setup function
+      &child_stdout,
+      NULL,
+      return_code,
+      &err);
   FreeArgv(argv.get());
   if (err)
     LOG(INFO) << "err is: " << err->code << ", " << err->message;

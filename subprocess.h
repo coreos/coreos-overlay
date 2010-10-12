@@ -37,8 +37,13 @@ class Subprocess {
   void CancelExec(uint32_t tag);
 
   // Executes a command synchronously. Returns true on success.
+  static bool SynchronousExecFlags(const std::vector<std::string>& cmd,
+                                   int* return_code,
+                                   GSpawnFlags flags);
   static bool SynchronousExec(const std::vector<std::string>& cmd,
-                              int* return_code);
+                              int* return_code) {
+    return SynchronousExecFlags(cmd, return_code, static_cast<GSpawnFlags>(0));
+  }
 
   // Gets the one instance
   static Subprocess& Get() {

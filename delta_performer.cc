@@ -446,7 +446,7 @@ bool DeltaPerformer::PerformBsdiffOperation(
   }
 
   int fd = is_kernel_partition ? kernel_fd_ : fd_;
-  const string& path = is_kernel_partition ? kernel_path_ : path_;
+  const string& path = StringPrintf("/dev/fd/%d", fd);
 
   // If this is a non-idempotent operation, request a delayed exit and clear the
   // update state in case the operation gets interrupted. Do this as late as
@@ -464,7 +464,10 @@ bool DeltaPerformer::PerformBsdiffOperation(
   cmd.push_back(input_positions);
   cmd.push_back(output_positions);
   int return_code = 0;
-  TEST_AND_RETURN_FALSE(Subprocess::SynchronousExec(cmd, &return_code));
+  TEST_AND_RETURN_FALSE(
+      Subprocess::SynchronousExecFlags(cmd,
+                                       &return_code,
+                                       G_SPAWN_LEAVE_DESCRIPTORS_OPEN));
   TEST_AND_RETURN_FALSE(return_code == 0);
 
   if (operation.dst_length() % block_size_) {
