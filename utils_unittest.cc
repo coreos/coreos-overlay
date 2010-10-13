@@ -10,7 +10,10 @@
 #include <string>
 #include <vector>
 
-#include "gtest/gtest.h"
+#include <base/string_util.h>
+#include <gtest/gtest.h>
+
+#include "update_engine/test_utils.h"
 #include "update_engine/utils.h"
 
 using std::map;
@@ -203,6 +206,23 @@ TEST(UtilsTest, ApplyMapTest) {
        it != e; ++it) {
     EXPECT_EQ(expected_values[index++], *it);
   }
+}
+
+TEST(UtilsTest, RunAsRootGetFilesystemSizeTest) {
+  string img;
+  EXPECT_TRUE(utils::MakeTempFile("/tmp/img.XXXXXX", &img, NULL));
+  ScopedPathUnlinker img_unlinker(img);
+  CreateExtImageAtPath(img, NULL);
+  // Extend the "partition" holding the file system from 10MiB to 20MiB.
+  EXPECT_EQ(0, System(base::StringPrintf(
+      "dd if=/dev/zero of=%s seek=20971519 bs=1 count=1",
+      img.c_str())));
+  EXPECT_EQ(20 * 1024 * 1024, utils::FileSize(img));
+  int block_count = 0;
+  int block_size = 0;
+  EXPECT_TRUE(utils::GetFilesystemSize(img, &block_count, &block_size));
+  EXPECT_EQ(4096, block_size);
+  EXPECT_EQ(10 * 1024 * 1024 / 4096, block_count);
 }
 
 }  // namespace chromeos_update_engine

@@ -115,6 +115,17 @@ bool MountFilesystem(const std::string& device, const std::string& mountpoint,
                      unsigned long flags);
 bool UnmountFilesystem(const std::string& mountpoint);
 
+// Returns the block count and the block byte size of the ext3 file system on
+// |device| (which may be a real device or a path to a filesystem image) or on
+// an opened file descriptor |fd|. The actual file-system size is |block_count|
+// * |block_size| bytes. Returns true on success, false otherwise.
+bool GetFilesystemSize(const std::string& device,
+                       int* out_block_count,
+                       int* out_block_size);
+bool GetFilesystemSizeFromFD(int fd,
+                             int* out_block_count,
+                             int* out_block_size);
+
 enum BootLoader {
   BootLoader_SYSLINUX = 0,
   BootLoader_CHROME_FIRMWARE = 1
