@@ -591,12 +591,23 @@ bool DeltaDiffGenerator::ReadFileToDiff(
   return true;
 }
 
-bool InitializePartitionInfo(const string& partition, PartitionInfo* info) {
-  const off_t size = utils::FileSize(partition);
-  TEST_AND_RETURN_FALSE(size >= 0);
+bool InitializePartitionInfo(bool is_kernel,
+                             const string& partition,
+                             PartitionInfo* info) {
+  int64_t size = 0;
+  if (is_kernel) {
+    size = utils::FileSize(partition);
+  } else {
+    int block_count = 0, block_size = 0;
+    TEST_AND_RETURN_FALSE(utils::GetFilesystemSize(partition,
+                                                   &block_count,
+                                                   &block_size));
+    size = static_cast<int64_t>(block_count) * block_size;
+  }
+  TEST_AND_RETURN_FALSE(size > 0);
   info->set_size(size);
   OmahaHashCalculator hasher;
-  TEST_AND_RETURN_FALSE(hasher.UpdateFile(partition, -1) == size);
+  TEST_AND_RETURN_FALSE(hasher.UpdateFile(partition, size) == size);
   TEST_AND_RETURN_FALSE(hasher.Finalize());
   const vector<char>& hash = hasher.raw_hash();
   info->set_hash(hash.data(), hash.size());
@@ -610,18 +621,24 @@ bool InitializePartitionInfos(const string& old_kernel,
                               DeltaArchiveManifest* manifest) {
   if (!old_kernel.empty()) {
     TEST_AND_RETURN_FALSE(
-        InitializePartitionInfo(old_kernel,
+        InitializePartitionInfo(true,
+                                old_kernel,
                                 manifest->mutable_old_kernel_info()));
   }
   TEST_AND_RETURN_FALSE(
-      InitializePartitionInfo(new_kernel, manifest->mutable_new_kernel_info()));
+      InitializePartitionInfo(true,
+                              new_kernel,
+                              manifest->mutable_new_kernel_info()));
   if (!old_rootfs.empty()) {
     TEST_AND_RETURN_FALSE(
-        InitializePartitionInfo(old_rootfs,
+        InitializePartitionInfo(false,
+                                old_rootfs,
                                 manifest->mutable_old_rootfs_info()));
   }
   TEST_AND_RETURN_FALSE(
-      InitializePartitionInfo(new_rootfs, manifest->mutable_new_rootfs_info()));
+      InitializePartitionInfo(false,
+                              new_rootfs,
+                              manifest->mutable_new_rootfs_info()));
   return true;
 }
 
@@ -1164,6 +1181,7 @@ bool DeltaDiffGenerator::ReadFullUpdateFromDisk(
     Graph* graph,
     const std::string& new_kernel_part,
     const std::string& new_image,
+    off_t image_size,
     int fd,
     off_t* data_file_size,
     off_t chunk_size,
@@ -1174,8 +1192,8 @@ bool DeltaDiffGenerator::ReadFullUpdateFromDisk(
 
   // Get the sizes early in the function, so we can fail fast if the user
   // passed us bad paths.
-  const off_t image_size = utils::FileSize(new_image);
-  TEST_AND_RETURN_FALSE(image_size >= 0);
+  TEST_AND_RETURN_FALSE(image_size >= 0 &&
+                        image_size <= utils::FileSize(new_image));
   const off_t kernel_size = utils::FileSize(new_kernel_part);
   TEST_AND_RETURN_FALSE(kernel_size >= 0);
 
@@ -1246,30 +1264,27 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
     const string& new_kernel_part,
     const string& output_path,
     const string& private_key_path) {
-  struct stat old_image_stbuf;
-  struct stat new_image_stbuf;
-  TEST_AND_RETURN_FALSE_ERRNO(stat(new_image.c_str(), &new_image_stbuf) == 0);
+  int old_image_block_count = 0, old_image_block_size = 0;
+  int new_image_block_count = 0, new_image_block_size = 0;
+  TEST_AND_RETURN_FALSE(utils::GetFilesystemSize(new_image,
+                                                 &new_image_block_count,
+                                                 &new_image_block_size));
   if (!old_image.empty()) {
-    TEST_AND_RETURN_FALSE_ERRNO(stat(old_image.c_str(), &old_image_stbuf) == 0);
-    LOG_IF(WARNING, new_image_stbuf.st_size != old_image_stbuf.st_size)
-        << "Old and new images are different sizes.";
-    LOG_IF(FATAL, old_image_stbuf.st_size % kBlockSize)
-        << "Old image not a multiple of block size " << kBlockSize;
+    TEST_AND_RETURN_FALSE(utils::GetFilesystemSize(old_image,
+                                                   &old_image_block_count,
+                                                   &old_image_block_size));
+    TEST_AND_RETURN_FALSE(old_image_block_size == new_image_block_size);
+    LOG_IF(WARNING, old_image_block_count != new_image_block_count)
+        << "Old and new images have different block counts.";
     // Sanity check kernel partition arg
     TEST_AND_RETURN_FALSE(utils::FileSize(old_kernel_part) >= 0);
-  } else {
-    old_image_stbuf.st_size = 0;
   }
-  LOG_IF(FATAL, new_image_stbuf.st_size % kBlockSize)
-      << "New image not a multiple of block size " << kBlockSize;
-
   // Sanity check kernel partition arg
   TEST_AND_RETURN_FALSE(utils::FileSize(new_kernel_part) >= 0);
 
-  vector<Block> blocks(max(old_image_stbuf.st_size / kBlockSize,
-                           new_image_stbuf.st_size / kBlockSize));
-  LOG(INFO) << "invalid: " << Vertex::kInvalidIndex;
-  LOG(INFO) << "len: " << blocks.size();
+  vector<Block> blocks(max(old_image_block_count, new_image_block_count));
+  LOG(INFO) << "Invalid block index: " << Vertex::kInvalidIndex;
+  LOG(INFO) << "Block count: " << blocks.size();
   for (vector<Block>::size_type i = 0; i < blocks.size(); i++) {
     CHECK(blocks[i].reader == Vertex::kInvalidIndex);
     CHECK(blocks[i].writer == Vertex::kInvalidIndex);
@@ -1333,9 +1348,12 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
                                               &final_order));
     } else {
       // Full update
+      off_t new_image_size =
+          static_cast<off_t>(new_image_block_count) * new_image_block_size;
       TEST_AND_RETURN_FALSE(ReadFullUpdateFromDisk(&graph,
                                                    new_kernel_part,
                                                    new_image,
+                                                   new_image_size,
                                                    fd,
                                                    &data_file_size,
                                                    kFullUpdateChunkSize,

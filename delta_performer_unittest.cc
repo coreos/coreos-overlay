@@ -123,6 +123,20 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
   CreateExtImageAtPath(a_img, NULL);
   CreateExtImageAtPath(b_img, NULL);
 
+  int image_size = static_cast<int>(utils::FileSize(a_img));
+
+  // Extend the "partitions" holding the file system a bit.
+  EXPECT_EQ(0, System(base::StringPrintf(
+      "dd if=/dev/zero of=%s seek=%d bs=1 count=1",
+      a_img.c_str(),
+      image_size + 1024 * 1024 - 1)));
+  EXPECT_EQ(0, System(base::StringPrintf(
+      "dd if=/dev/zero of=%s seek=%d bs=1 count=1",
+      b_img.c_str(),
+      image_size + 1024 * 1024 - 1)));
+  EXPECT_EQ(image_size + 1024 * 1024, utils::FileSize(a_img));
+  EXPECT_EQ(image_size + 1024 * 1024, utils::FileSize(b_img));
+
   // Make some changes to the A image.
   {
     string a_mnt;
@@ -246,8 +260,8 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
 
     EXPECT_EQ(old_kernel_data.size(), manifest.old_kernel_info().size());
     EXPECT_EQ(new_kernel_data.size(), manifest.new_kernel_info().size());
-    EXPECT_EQ(utils::FileSize(a_img), manifest.old_rootfs_info().size());
-    EXPECT_EQ(utils::FileSize(b_img), manifest.new_rootfs_info().size());
+    EXPECT_EQ(image_size, manifest.old_rootfs_info().size());
+    EXPECT_EQ(image_size, manifest.new_rootfs_info().size());
 
     EXPECT_FALSE(manifest.old_kernel_info().hash().empty());
     EXPECT_FALSE(manifest.new_kernel_info().hash().empty());
@@ -307,6 +321,8 @@ TEST(DeltaPerformerTest, NewFullUpdateTest) {
   const off_t kChunkSize = 128 * 1024;
   FillWithData(&new_root);
   FillWithData(&new_kern);
+  // Assume hashes take 2 MiB beyond the rootfs.
+  off_t new_rootfs_size = new_root.size() - 2 * 1024 * 1024;
 
   string new_root_path;
   EXPECT_TRUE(utils::MakeTempFile("/tmp/NewFullUpdateTest_R.XXXXXX",
@@ -339,15 +355,16 @@ TEST(DeltaPerformerTest, NewFullUpdateTest) {
   EXPECT_TRUE(DeltaDiffGenerator::ReadFullUpdateFromDisk(&graph,
                                                          new_kern_path,
                                                          new_root_path,
+                                                         new_rootfs_size,
                                                          out_blobs_fd,
                                                          &out_blobs_length,
                                                          kChunkSize,
                                                          &kernel_ops,
                                                          &final_order));
-  EXPECT_EQ(new_root.size() / kChunkSize, graph.size());
-  EXPECT_EQ(new_root.size() / kChunkSize, final_order.size());
+  EXPECT_EQ(new_rootfs_size / kChunkSize, graph.size());
+  EXPECT_EQ(new_rootfs_size / kChunkSize, final_order.size());
   EXPECT_EQ(new_kern.size() / kChunkSize, kernel_ops.size());
-  for (size_t i = 0; i < (new_root.size() / kChunkSize); ++i) {
+  for (off_t i = 0; i < (new_rootfs_size / kChunkSize); ++i) {
     EXPECT_EQ(i, final_order[i]);
     EXPECT_EQ(1, graph[i].op.dst_extents_size());
     EXPECT_EQ(i * kChunkSize / kBlockSize,

@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium Authors. All rights reserved.
+// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -125,7 +125,7 @@ class DeltaDiffGenerator {
   // Stores all Extents in 'extents' into 'out'.
   static void StoreExtents(const std::vector<Extent>& extents,
                            google::protobuf::RepeatedPtrField<Extent>* out);
-                           
+
   // Creates all the edges for the graph. Writers of a block point to
   // readers of the same block. This is because for an edge A->B, B
   // must complete before A executes.
@@ -145,7 +145,7 @@ class DeltaDiffGenerator {
   // Returns true iff there are no extents in the graph that refer to temp
   // blocks. Temp blocks are in the range [kTempBlockStart, kSparseHole).
   static bool NoTempBlocksRemain(const Graph& graph);
-  
+
   // Install operations in the manifest may reference data blobs, which
   // are in data_blobs_path. This function creates a new data blobs file
   // with the data blobs in the same order as the referencing install
@@ -156,7 +156,7 @@ class DeltaDiffGenerator {
   static bool ReorderDataBlobs(DeltaArchiveManifest* manifest,
                                const std::string& data_blobs_path,
                                const std::string& new_data_blobs_path);
-                               
+
   // Handles allocation of temp blocks to a cut edge by converting the
   // dest node to a full op. This removes the need for temp blocks, but
   // comes at the cost of a worse compression ratio.
@@ -169,14 +169,14 @@ class DeltaDiffGenerator {
                                  const std::string& new_root,
                                  int data_fd,
                                  off_t* data_file_size);
-                                 
+
   // Takes |op_indexes|, which is effectively a mapping from order in
   // which the op is performed -> graph vertex index, and produces the
   // reverse: a mapping from graph vertex index -> op_indexes index.
   static void GenerateReverseTopoOrderMap(
       std::vector<Vertex::Index>& op_indexes,
       std::vector<std::vector<Vertex::Index>::size_type>* reverse_op_indexes);
-                                 
+
   // Takes a |graph|, which has edges that must be cut, as listed in
   // |cuts|.  Cuts the edges. Maintains a list in which the operations
   // will be performed (in |op_indexes|) and the reverse (in
@@ -193,15 +193,17 @@ class DeltaDiffGenerator {
       std::vector<std::vector<Vertex::Index>::size_type>* reverse_op_indexes,
       std::vector<CutEdgeVertexes>& cuts);
 
-  // Given a new rootfs and kernel (|new_image|, |new_kernel_part|),
-  // Reads them sequentially, creating a full update of chunk_size chunks.
-  // Populates |graph|, |kernel_ops|, and |final_order|, with data
-  // about the update operations, and writes relevant data to |fd|,
-  // updating |data_file_size| as it does.
+  // Given a new rootfs and kernel (|new_image|, |new_kernel_part|), Reads them
+  // sequentially, creating a full update of chunk_size chunks.  Populates
+  // |graph|, |kernel_ops|, and |final_order|, with data about the update
+  // operations, and writes relevant data to |fd|, updating |data_file_size| as
+  // it does. Only the first |image_size| bytes are read from |new_image|
+  // assuming that this is the actual file system.
   static bool ReadFullUpdateFromDisk(
       Graph* graph,
       const std::string& new_kernel_part,
       const std::string& new_image,
+      off_t image_size,
       int fd,
       off_t* data_file_size,
       off_t chunk_size,
