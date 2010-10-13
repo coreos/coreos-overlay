@@ -64,6 +64,10 @@ void DownloadAction::PerformAction() {
       writer_ = decompressing_file_writer_.get();
     } else {
       delta_performer_.reset(new DeltaPerformer(prefs_));
+      delta_performer_->set_current_kernel_hash(
+          &install_plan_.current_kernel_hash);
+      delta_performer_->set_current_rootfs_hash(
+          &install_plan_.current_rootfs_hash);
       writer_ = delta_performer_.get();
     }
   }
@@ -93,9 +97,10 @@ void DownloadAction::PerformAction() {
 }
 
 void DownloadAction::TerminateProcessing() {
-  CHECK(writer_);
-  CHECK_EQ(writer_->Close(), 0);
-  writer_ = NULL;
+  if (writer_) {
+    LOG_IF(WARNING, writer_->Close() != 0) << "Error closing the writer.";
+    writer_ = NULL;
+  }
   http_fetcher_->TerminateTransfer();
   if (delegate_) {
     delegate_->SetDownloadStatus(false);  // Set to inactive.
@@ -108,8 +113,12 @@ void DownloadAction::ReceivedBytes(HttpFetcher *fetcher,
   bytes_received_ += length;
   if (delegate_)
     delegate_->BytesReceived(bytes_received_, install_plan_.size);
-  int rc = writer_->Write(bytes, length);
-  TEST_AND_RETURN(rc >= 0);
+  if (writer_ && writer_->Write(bytes, length) < 0) {
+    LOG(ERROR) << "Write error -- terminating processing.";
+    TerminateProcessing();
+    processor_->ActionComplete(this, kActionCodeDownloadWriteError);
+    return;
+  }
   omaha_hash_calculator_.Update(bytes, length);
 }
 
@@ -131,7 +140,7 @@ void FlushLinuxCaches() {
 
 void DownloadAction::TransferComplete(HttpFetcher *fetcher, bool successful) {
   if (writer_) {
-    CHECK_EQ(writer_->Close(), 0) << errno;
+    LOG_IF(WARNING, writer_->Close() != 0) << "Error closing the writer.";
     writer_ = NULL;
   }
   if (delegate_) {

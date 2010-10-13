@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium Authors. All rights reserved.
+// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -7,12 +7,17 @@
 
 #include <sys/stat.h>
 #include <sys/types.h>
+
 #include <string>
 #include <vector>
+
 #include <gio/gio.h>
 #include <glib.h>
+#include <gtest/gtest_prod.h>  // for FRIEND_TEST
+
 #include "update_engine/action.h"
 #include "update_engine/install_plan.h"
+#include "update_engine/omaha_hash_calculator.h"
 
 // This action will only do real work if it's a delta update. It will
 // copy the root partition to install partition, and then terminate.
@@ -38,7 +43,8 @@ class FilesystemCopierAction : public Action<FilesystemCopierAction> {
         dst_stream_(NULL),
         canceller_(NULL),
         read_in_flight_(false),
-        buffer_valid_size_(0) {}
+        buffer_valid_size_(0),
+        filesystem_size_(kint64max) {}
   typedef ActionTraits<FilesystemCopierAction>::InputObjectType
   InputObjectType;
   typedef ActionTraits<FilesystemCopierAction>::OutputObjectType
@@ -56,6 +62,9 @@ class FilesystemCopierAction : public Action<FilesystemCopierAction> {
   std::string Type() const { return StaticType(); }
 
  private:
+  friend class FilesystemCopierActionTest;
+  FRIEND_TEST(FilesystemCopierActionTest, RunAsRootDetermineFilesystemSizeTest);
+
   // Callback from glib when the copy operation is done.
   void AsyncReadyCallback(GObject *source_object, GAsyncResult *res);
   static void StaticAsyncReadyCallback(GObject *source_object,
@@ -64,16 +73,25 @@ class FilesystemCopierAction : public Action<FilesystemCopierAction> {
     reinterpret_cast<FilesystemCopierAction*>(user_data)->AsyncReadyCallback(
         source_object, res);
   }
-  
+
   // Cleans up all the variables we use for async operations and tells
   // the ActionProcessor we're done w/ success as passed in.
   // was_cancelled should be true if TerminateProcessing() was called.
   void Cleanup(bool success, bool was_cancelled);
-  
+
+  // Determine, if possible, the source file system size to avoid copying the
+  // whole partition. Currently this supports only the root file system assuming
+  // it's ext3-compatible.
+  void DetermineFilesystemSize(int fd);
+
+  // Returns the number of bytes to read based on the size of the buffer and the
+  // filesystem size.
+  int64_t GetBytesToRead();
+
   // If true, this action is copying to the kernel_install_path from
   // the install plan, otherwise it's copying just to the install_path.
   const bool copying_kernel_install_path_;
-  
+
   // The path to copy from. If empty (the default), the source is from the
   // passed in InstallPlan.
   std::string copy_source_;
@@ -82,14 +100,14 @@ class FilesystemCopierAction : public Action<FilesystemCopierAction> {
   // source/destination partitions.
   GInputStream* src_stream_;
   GOutputStream* dst_stream_;
-  
+
   // If non-NULL, the cancellable object for the in-flight async call.
   GCancellable* canceller_;
-  
+
   // True if we're waiting on a read to complete; false if we're
   // waiting on a write.
   bool read_in_flight_;
-  
+
   // The buffer for storing data we read/write.
   std::vector<char> buffer_;
 
@@ -98,7 +116,15 @@ class FilesystemCopierAction : public Action<FilesystemCopierAction> {
 
   // The install plan we're passed in via the input pipe.
   InstallPlan install_plan_;
-  
+
+  // Calculates the hash of the copied data.
+  OmahaHashCalculator hasher_;
+
+  // Copies and hashes this many bytes from the head of the input stream. This
+  // field is initialized when the action is started and decremented as more
+  // bytes get copied.
+  int64_t filesystem_size_;
+
   DISALLOW_COPY_AND_ASSIGN(FilesystemCopierAction);
 };
 

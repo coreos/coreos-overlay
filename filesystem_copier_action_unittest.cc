@@ -2,12 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <glib.h>
+#include <fcntl.h>
+
 #include <set>
 #include <string>
 #include <vector>
+
+#include <base/eintr_wrapper.h>
+#include <base/string_util.h>
+#include <glib.h>
 #include <gtest/gtest.h>
-#include "base/string_util.h"
+
 #include "update_engine/filesystem_copier_action.h"
 #include "update_engine/filesystem_iterator.h"
 #include "update_engine/omaha_hash_calculator.h"
@@ -313,5 +318,32 @@ TEST_F(FilesystemCopierActionTest, RunAsRootTerminateEarlyTest) {
   ASSERT_EQ(0, getuid());
   DoTest(false, true, false);
 }
+
+TEST_F(FilesystemCopierActionTest, RunAsRootDetermineFilesystemSizeTest) {
+  string img;
+  EXPECT_TRUE(utils::MakeTempFile("/tmp/img.XXXXXX", &img, NULL));
+  ScopedPathUnlinker img_unlinker(img);
+  CreateExtImageAtPath(img, NULL);
+  // Extend the "partition" holding the file system from 10MiB to 20MiB.
+  EXPECT_EQ(0, System(StringPrintf(
+      "dd if=/dev/zero of=%s seek=20971519 bs=1 count=1",
+      img.c_str())));
+  EXPECT_EQ(20 * 1024 * 1024, utils::FileSize(img));
+
+  for (int i = 0; i < 2; ++i) {
+    bool is_kernel = i == 1;
+    FilesystemCopierAction action(is_kernel);
+    EXPECT_EQ(kint64max, action.filesystem_size_);
+    {
+      int fd = HANDLE_EINTR(open(img.c_str(), O_RDONLY));
+      EXPECT_TRUE(fd > 0);
+      ScopedFdCloser fd_closer(&fd);
+      action.DetermineFilesystemSize(fd);
+    }
+    EXPECT_EQ(is_kernel ? kint64max : 10 * 1024 * 1024,
+              action.filesystem_size_);
+  }
+}
+
 
 }  // namespace chromeos_update_engine

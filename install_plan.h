@@ -6,6 +6,8 @@
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_INSTALL_PLAN_H__
 
 #include <string>
+#include <vector>
+
 #include "base/logging.h"
 
 // InstallPlan is a simple struct that contains relevant info for many
@@ -37,6 +39,8 @@ struct InstallPlan {
   std::string download_hash;  // hash of the data at the url
   std::string install_path;  // path to install device
   std::string kernel_install_path;  // path to kernel install device
+  std::vector<char> current_kernel_hash;  // computed by FileSystemCopierAction
+  std::vector<char> current_rootfs_hash;  // computed by FileSystemCopierAction
 
   bool operator==(const InstallPlan& that) const {
     return (is_full_update == that.is_full_update) &&

@@ -62,6 +62,8 @@ class OmahaHashCalculator {
 
   static bool RawHashOfData(const std::vector<char>& data,
                             std::vector<char>* out_hash);
+  static off_t RawHashOfFile(const std::string& name, off_t length,
+                             std::vector<char>* out_hash);
 
   // Used by tests
   static std::string OmahaHashOfBytes(const void* data, size_t length);

@@ -113,6 +113,20 @@ bool OmahaHashCalculator::RawHashOfData(const vector<char>& data,
   return true;
 }
 
+off_t OmahaHashCalculator::RawHashOfFile(const std::string& name, off_t length,
+                                         std::vector<char>* out_hash) {
+  OmahaHashCalculator calc;
+  off_t res = calc.UpdateFile(name, length);
+  if (res < 0) {
+    return res;
+  }
+  if (!calc.Finalize()) {
+    return -1;
+  }
+  *out_hash = calc.raw_hash();
+  return res;
+}
+
 string OmahaHashCalculator::OmahaHashOfBytes(
     const void* data, size_t length) {
   OmahaHashCalculator calc;

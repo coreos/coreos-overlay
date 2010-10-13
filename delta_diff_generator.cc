@@ -611,6 +611,7 @@ bool InitializePartitionInfo(bool is_kernel,
   TEST_AND_RETURN_FALSE(hasher.Finalize());
   const vector<char>& hash = hasher.raw_hash();
   info->set_hash(hash.data(), hash.size());
+  LOG(INFO) << "hash: " << hasher.hash();
   return true;
 }
 
@@ -619,12 +620,8 @@ bool InitializePartitionInfos(const string& old_kernel,
                               const string& old_rootfs,
                               const string& new_rootfs,
                               DeltaArchiveManifest* manifest) {
-  if (!old_kernel.empty()) {
-    TEST_AND_RETURN_FALSE(
-        InitializePartitionInfo(true,
-                                old_kernel,
-                                manifest->mutable_old_kernel_info()));
-  }
+  // TODO(petkov): Generate the old kernel info when we stop generating full
+  // updates for the kernel partition.
   TEST_AND_RETURN_FALSE(
       InitializePartitionInfo(true,
                               new_kernel,

@@ -115,6 +115,25 @@ TEST(OmahaHashCalculatorTest, UpdateFileSimpleTest) {
   EXPECT_EQ("qqlAJmTxpB9A67xSyZk+tmrrNmYClY/fqig7ceZNsSM=", calc.hash());
 }
 
+TEST(OmahaHashCalculatorTest, RawHashOfFileSimpleTest) {
+  string data_path;
+  ASSERT_TRUE(
+      utils::MakeTempFile("/tmp/data.XXXXXX", &data_path, NULL));
+  ScopedPathUnlinker data_path_unlinker(data_path);
+  ASSERT_TRUE(utils::WriteFile(data_path.c_str(), "hi", 2));
+
+  static const int kLengths[] = { -1, 2, 10 };
+  for (size_t i = 0; i < arraysize(kLengths); i++) {
+    vector<char> exp_raw_hash(kExpectedRawHash,
+                              kExpectedRawHash + arraysize(kExpectedRawHash));
+    vector<char> raw_hash;
+    EXPECT_EQ(2, OmahaHashCalculator::RawHashOfFile(data_path,
+                                                    kLengths[i],
+                                                    &raw_hash));
+    EXPECT_TRUE(exp_raw_hash == raw_hash);
+  }
+}
+
 TEST(OmahaHashCalculatorTest, UpdateFileNonexistentTest) {
   OmahaHashCalculator calc;
   EXPECT_EQ(-1, calc.UpdateFile("/some/non-existent/file", -1));

@@ -34,7 +34,9 @@ class DeltaPerformer : public FileWriter {
         next_operation_num_(0),
         buffer_offset_(0),
         last_updated_buffer_offset_(kuint64max),
-        block_size_(0) {}
+        block_size_(0),
+        current_kernel_hash_(NULL),
+        current_rootfs_hash_(NULL) {}
 
   // Opens the kernel. Should be called before or after Open(), but before
   // Write(). The kernel file will be close()d when Close() is called.
@@ -94,12 +96,26 @@ class DeltaPerformer : public FileWriter {
   // success, false otherwise.
   static bool ResetUpdateProgress(PrefsInterface* prefs, bool quick);
 
+  void set_current_kernel_hash(const std::vector<char>* hash) {
+    current_kernel_hash_ = hash;
+  }
+
+  void set_current_rootfs_hash(const std::vector<char>* hash) {
+    current_rootfs_hash_ = hash;
+  }
+
  private:
   friend class DeltaPerformerTest;
   FRIEND_TEST(DeltaPerformerTest, IsIdempotentOperationTest);
 
   static bool IsIdempotentOperation(
       const DeltaArchiveManifest_InstallOperation& op);
+
+  // Verifies that the expected source partition hashes (if present) match the
+  // hashes for the current partitions. Returns true if there're no expected
+  // hashes in the payload (e.g., if it's a new-style full update) or if the
+  // hashes match; returns false otherwise.
+  bool VerifySourcePartitions();
 
   // Returns true if enough of the delta file has been passed via Write()
   // to be able to perform a given install operation.
@@ -180,6 +196,11 @@ class DeltaPerformer : public FileWriter {
 
   // Signatures message blob extracted directly from the payload.
   std::vector<char> signatures_message_data_;
+
+  // Hashes for the current partitions to be used for source partition
+  // verification.
+  const std::vector<char>* current_kernel_hash_;
+  const std::vector<char>* current_rootfs_hash_;
 
   DISALLOW_COPY_AND_ASSIGN(DeltaPerformer);
 };

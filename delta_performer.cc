@@ -578,6 +578,28 @@ bool DeltaPerformer::VerifyAppliedUpdate(const string& path,
   return true;
 }
 
+bool DeltaPerformer::VerifySourcePartitions() {
+  LOG(INFO) << "Verifying source partitions.";
+  CHECK(manifest_valid_);
+  if (manifest_.has_old_kernel_info()) {
+    const PartitionInfo& info = manifest_.old_kernel_info();
+    TEST_AND_RETURN_FALSE(current_kernel_hash_ != NULL &&
+                          current_kernel_hash_->size() == info.hash().size() &&
+                          memcmp(current_kernel_hash_->data(),
+                                 info.hash().data(),
+                                 current_kernel_hash_->size()) == 0);
+  }
+  if (manifest_.has_old_rootfs_info()) {
+    const PartitionInfo& info = manifest_.old_rootfs_info();
+    TEST_AND_RETURN_FALSE(current_rootfs_hash_ != NULL &&
+                          current_rootfs_hash_->size() == info.hash().size() &&
+                          memcmp(current_rootfs_hash_->data(),
+                                 info.hash().data(),
+                                 current_rootfs_hash_->size()) == 0);
+  }
+  return true;
+}
+
 void DeltaPerformer::DiscardBufferHeadBytes(size_t count) {
   hash_calculator_.Update(&buffer_[0], count);
   buffer_.erase(buffer_.begin(), buffer_.begin() + count);
@@ -661,6 +683,7 @@ bool DeltaPerformer::PrimeUpdateState() {
       next_operation == kUpdateStateOperationInvalid ||
       next_operation <= 0) {
     // Initiating a new update, no more state needs to be initialized.
+    TEST_AND_RETURN_FALSE(VerifySourcePartitions());
     return true;
   }
   next_operation_num_ = next_operation;

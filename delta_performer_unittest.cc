@@ -258,12 +258,14 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
     EXPECT_EQ(expected_sig_data_length, manifest.signatures_size());
     EXPECT_FALSE(signature.data().empty());
 
-    EXPECT_EQ(old_kernel_data.size(), manifest.old_kernel_info().size());
+    // TODO(petkov): Add a test once the generator start sending old kernel
+    // info.
+    EXPECT_FALSE(manifest.has_old_kernel_info());
+
     EXPECT_EQ(new_kernel_data.size(), manifest.new_kernel_info().size());
     EXPECT_EQ(image_size, manifest.old_rootfs_info().size());
     EXPECT_EQ(image_size, manifest.new_rootfs_info().size());
 
-    EXPECT_FALSE(manifest.old_kernel_info().hash().empty());
     EXPECT_FALSE(manifest.new_kernel_info().hash().empty());
     EXPECT_FALSE(manifest.old_rootfs_info().hash().empty());
     EXPECT_FALSE(manifest.new_rootfs_info().hash().empty());
@@ -288,6 +290,11 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
 
   EXPECT_EQ(0, performer.Open(a_img.c_str(), 0, 0));
   EXPECT_TRUE(performer.OpenKernel(old_kernel.c_str()));
+
+  vector<char> rootfs_hash;
+  CHECK_EQ(image_size,
+           OmahaHashCalculator::RawHashOfFile(a_img, image_size, &rootfs_hash));
+  performer.set_current_rootfs_hash(&rootfs_hash);
 
   // Write at some number of bytes per operation. Arbitrarily chose 5.
   const size_t kBytesPerWrite = 5;

@@ -79,6 +79,8 @@ void FilesystemCopierAction::PerformAction() {
     return;
   }
 
+  DetermineFilesystemSize(src_fd);
+
   src_stream_ = g_unix_input_stream_new(src_fd, TRUE);
   dst_stream_ = g_unix_output_stream_new(dst_fd, TRUE);
 
@@ -89,7 +91,7 @@ void FilesystemCopierAction::PerformAction() {
 
   g_input_stream_read_async(src_stream_,
                             &buffer_[0],
-                            buffer_.size(),
+                            GetBytesToRead(),
                             G_PRIORITY_DEFAULT,
                             canceller_,
                             &FilesystemCopierAction::StaticAsyncReadyCallback,
@@ -137,9 +139,27 @@ void FilesystemCopierAction::AsyncReadyCallback(GObject *source_object,
 
     if (bytes_read == 0) {
       // We're done!
+      if (!hasher_.Finalize()) {
+        LOG(ERROR) << "Unable to finalize the hash.";
+        Cleanup(false, was_cancelled);
+        return;
+      }
+      LOG(INFO) << "hash: " << hasher_.hash();
+      if (copying_kernel_install_path_) {
+        install_plan_.current_kernel_hash = hasher_.raw_hash();
+      } else {
+        install_plan_.current_rootfs_hash = hasher_.raw_hash();
+      }
       Cleanup(true, was_cancelled);
       return;
     }
+    if (!hasher_.Update(buffer_.data(), bytes_read)) {
+      LOG(ERROR) << "Unable to update the hash.";
+      Cleanup(false, was_cancelled);
+      return;
+    }
+    filesystem_size_ -= bytes_read;
+
     // Kick off a write
     read_in_flight_ = false;
     buffer_valid_size_ = bytes_read;
@@ -175,11 +195,26 @@ void FilesystemCopierAction::AsyncReadyCallback(GObject *source_object,
   g_input_stream_read_async(
       src_stream_,
       &buffer_[0],
-      buffer_.size(),
+      GetBytesToRead(),
       G_PRIORITY_DEFAULT,
       canceller_,
       &FilesystemCopierAction::StaticAsyncReadyCallback,
       this);
+}
+
+void FilesystemCopierAction::DetermineFilesystemSize(int fd) {
+  filesystem_size_ = kint64max;
+  int block_count = 0, block_size = 0;
+  if (!copying_kernel_install_path_ &&
+      utils::GetFilesystemSizeFromFD(fd, &block_count, &block_size)) {
+    filesystem_size_ = static_cast<int64_t>(block_count) * block_size;
+    LOG(INFO) << "Filesystem size: " << filesystem_size_ << " bytes ("
+              << block_count << "x" << block_size << ").";
+  }
+}
+
+int64_t FilesystemCopierAction::GetBytesToRead() {
+  return std::min(static_cast<int64_t>(buffer_.size()), filesystem_size_);
 }
 
 }  // namespace chromeos_update_engine
