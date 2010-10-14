@@ -111,9 +111,8 @@ bool WriteSparseFile(const string& path, off_t size) {
   TEST_AND_RETURN_FALSE_ERRNO(return_code == 0);
   return true;
 }
-}
 
-TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
+void DoSmallImageTest(bool full_kernel) {
   string a_img, b_img;
   EXPECT_TRUE(utils::MakeTempFile("/tmp/a_img.XXXXXX", &a_img, NULL));
   ScopedPathUnlinker a_img_unlinker(a_img);
@@ -213,14 +212,15 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
     ScopedLoopMounter b_mounter(b_img, &b_mnt, MS_RDONLY);
 
     EXPECT_TRUE(
-        DeltaDiffGenerator::GenerateDeltaUpdateFile(a_mnt,
-                                                    a_img,
-                                                    b_mnt,
-                                                    b_img,
-                                                    old_kernel,
-                                                    new_kernel,
-                                                    delta_path,
-                                                    kUnittestPrivateKeyPath));
+        DeltaDiffGenerator::GenerateDeltaUpdateFile(
+            a_mnt,
+            a_img,
+            b_mnt,
+            b_img,
+            full_kernel ? "" : old_kernel,
+            new_kernel,
+            delta_path,
+            kUnittestPrivateKeyPath));
   }
 
   // Read delta into memory.
@@ -320,6 +320,15 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
       OmahaHashCalculator::OmahaHashOfData(delta),
       delta.size()));
   EXPECT_TRUE(performer.VerifyAppliedUpdate(a_img, old_kernel));
+}
+}
+
+TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
+  DoSmallImageTest(false);
+}
+
+TEST(DeltaPerformerTest, RunAsRootFullKernelSmallImageTest) {
+  DoSmallImageTest(true);
 }
 
 TEST(DeltaPerformerTest, NewFullUpdateTest) {

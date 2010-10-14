@@ -102,7 +102,6 @@ int Main(int argc, char** argv) {
     LOG(INFO) << "Generating full update";
   } else {
     LOG(INFO) << "Generating delta update";
-    CHECK(!FLAGS_old_kernel.empty());
     CHECK(!FLAGS_old_dir.empty());
     CHECK(!FLAGS_new_dir.empty());
     if ((!IsDir(FLAGS_old_dir.c_str())) || (!IsDir(FLAGS_new_dir.c_str()))) {

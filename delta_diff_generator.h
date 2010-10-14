@@ -97,7 +97,8 @@ class DeltaDiffGenerator {
   static bool ReadFileToDiff(const std::string& old_filename,
                              const std::string& new_filename,
                              std::vector<char>* out_data,
-                             DeltaArchiveManifest_InstallOperation* out_op);
+                             DeltaArchiveManifest_InstallOperation* out_op,
+                             bool gather_extents);
 
   // Modifies blocks read by 'op' so that any blocks referred to by
   // 'remove_extents' are replaced with blocks from 'replace_extents'.

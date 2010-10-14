@@ -54,6 +54,13 @@ const size_t kRootFSPartitionSize = 1 * 1024 * 1024 * 1024;  // 1 GiB
 const uint64_t kVersionNumber = 1;
 const uint64_t kFullUpdateChunkSize = 128 * 1024;  // bytes
 
+static const char* kInstallOperationTypes[] = {
+  "REPLACE",
+  "REPLACE_BZ",
+  "MOVE",
+  "BSDIFF"
+};
+
 // Stores all Extents for a file into 'out'. Returns true on success.
 bool GatherExtents(const string& path,
                    google::protobuf::RepeatedPtrField<Extent>* out) {
@@ -163,7 +170,8 @@ bool DeltaReadFile(Graph* graph,
   TEST_AND_RETURN_FALSE(DeltaDiffGenerator::ReadFileToDiff(old_root + path,
                                                            new_root + path,
                                                            &data,
-                                                           &operation));
+                                                           &operation,
+                                                           true));
 
   // Write the data
   if (operation.type() != DeltaArchiveManifest_InstallOperation_Type_MOVE) {
@@ -395,51 +403,40 @@ void CheckGraph(const Graph& graph) {
   }
 }
 
-// Delta compresses a kernel partition new_kernel_part with knowledge of
-// the old kernel partition old_kernel_part.
+// Delta compresses a kernel partition |new_kernel_part| with knowledge of the
+// old kernel partition |old_kernel_part|. If |old_kernel_part| is an empty
+// string, generates a full update of the partition.
 bool DeltaCompressKernelPartition(
     const string& old_kernel_part,
     const string& new_kernel_part,
     vector<DeltaArchiveManifest_InstallOperation>* ops,
     int blobs_fd,
     off_t* blobs_length) {
-  // For now, just bsdiff the kernel partition as a whole.
-  // TODO(adlr): Use knowledge of how the kernel partition is laid out
-  // to more efficiently compress it.
-
   LOG(INFO) << "Delta compressing kernel partition...";
+  LOG_IF(INFO, old_kernel_part.empty()) << "Generating full kernel update...";
 
   // Add a new install operation
   ops->resize(1);
   DeltaArchiveManifest_InstallOperation* op = &(*ops)[0];
-  op->set_type(DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ);
-  op->set_data_offset(*blobs_length);
 
-  // Do the actual compression
   vector<char> data;
-  TEST_AND_RETURN_FALSE(utils::ReadFile(new_kernel_part, &data));
-  TEST_AND_RETURN_FALSE(!data.empty());
+  TEST_AND_RETURN_FALSE(DeltaDiffGenerator::ReadFileToDiff(old_kernel_part,
+                                                           new_kernel_part,
+                                                           &data,
+                                                           op,
+                                                           false));
 
-  vector<char> data_bz;
-  TEST_AND_RETURN_FALSE(BzipCompress(data, &data_bz));
-  CHECK(!data_bz.empty());
+  // Write the data
+  if (op->type() != DeltaArchiveManifest_InstallOperation_Type_MOVE) {
+    op->set_data_offset(*blobs_length);
+    op->set_data_length(data.size());
+  }
 
-  TEST_AND_RETURN_FALSE(utils::WriteAll(blobs_fd, &data_bz[0], data_bz.size()));
-  *blobs_length += data_bz.size();
+  TEST_AND_RETURN_FALSE(utils::WriteAll(blobs_fd, &data[0], data.size()));
+  *blobs_length += data.size();
 
-  off_t new_part_size = utils::FileSize(new_kernel_part);
-  TEST_AND_RETURN_FALSE(new_part_size >= 0);
-
-  op->set_data_length(data_bz.size());
-
-  op->set_dst_length(new_part_size);
-
-  // There's a single dest extent
-  Extent* dst_extent = op->add_dst_extents();
-  dst_extent->set_start_block(0);
-  dst_extent->set_num_blocks((new_part_size + kBlockSize - 1) / kBlockSize);
-
-  LOG(INFO) << "Done compressing kernel partition.";
+  LOG(INFO) << "Done delta compressing kernel partition: "
+            << kInstallOperationTypes[op->type()];
   return true;
 }
 
@@ -454,13 +451,6 @@ struct DeltaObject {
   string name;
   int type;
   off_t size;
-};
-
-static const char* kInstallOperationTypes[] = {
-  "REPLACE",
-  "REPLACE_BZ",
-  "MOVE",
-  "BSDIFF"
 };
 
 void ReportPayloadUsage(const Graph& graph,
@@ -517,7 +507,8 @@ bool DeltaDiffGenerator::ReadFileToDiff(
     const string& old_filename,
     const string& new_filename,
     vector<char>* out_data,
-    DeltaArchiveManifest_InstallOperation* out_op) {
+    DeltaArchiveManifest_InstallOperation* out_op,
+    bool gather_extents) {
   // Read new data in
   vector<char> new_data;
   TEST_AND_RETURN_FALSE(utils::ReadFile(new_filename, &new_data));
@@ -544,10 +535,13 @@ bool DeltaDiffGenerator::ReadFileToDiff(
 
   // Do we have an original file to consider?
   struct stat old_stbuf;
-  if (0 != stat(old_filename.c_str(), &old_stbuf)) {
+  bool no_original = old_filename.empty();
+  if (!no_original && 0 != stat(old_filename.c_str(), &old_stbuf)) {
     // If stat-ing the old file fails, it should be because it doesn't exist.
     TEST_AND_RETURN_FALSE(errno == ENOTDIR || errno == ENOENT);
-  } else {
+    no_original = true;
+  }
+  if (!no_original) {
     // Read old data
     vector<char> old_data;
     TEST_AND_RETURN_FALSE(utils::ReadFile(old_filename, &old_data));
@@ -576,13 +570,26 @@ bool DeltaDiffGenerator::ReadFileToDiff(
 
   if (operation.type() == DeltaArchiveManifest_InstallOperation_Type_MOVE ||
       operation.type() == DeltaArchiveManifest_InstallOperation_Type_BSDIFF) {
-    TEST_AND_RETURN_FALSE(
-        GatherExtents(old_filename, operation.mutable_src_extents()));
+    if (gather_extents) {
+      TEST_AND_RETURN_FALSE(
+          GatherExtents(old_filename, operation.mutable_src_extents()));
+    } else {
+      Extent* src_extent = operation.add_src_extents();
+      src_extent->set_start_block(0);
+      src_extent->set_num_blocks(
+          (old_stbuf.st_size + kBlockSize - 1) / kBlockSize);
+    }
     operation.set_src_length(old_stbuf.st_size);
   }
 
-  TEST_AND_RETURN_FALSE(
-      GatherExtents(new_filename, operation.mutable_dst_extents()));
+  if (gather_extents) {
+    TEST_AND_RETURN_FALSE(
+        GatherExtents(new_filename, operation.mutable_dst_extents()));
+  } else {
+    Extent* dst_extent = operation.add_dst_extents();
+    dst_extent->set_start_block(0);
+    dst_extent->set_num_blocks((new_data.size() + kBlockSize - 1) / kBlockSize);
+  }
   operation.set_dst_length(new_data.size());
 
   out_data->swap(data);
@@ -1273,8 +1280,6 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
     TEST_AND_RETURN_FALSE(old_image_block_size == new_image_block_size);
     LOG_IF(WARNING, old_image_block_count != new_image_block_count)
         << "Old and new images have different block counts.";
-    // Sanity check kernel partition arg
-    TEST_AND_RETURN_FALSE(utils::FileSize(old_kernel_part) >= 0);
   }
   // Sanity check kernel partition arg
   TEST_AND_RETURN_FALSE(utils::FileSize(new_kernel_part) >= 0);

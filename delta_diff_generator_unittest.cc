@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -67,7 +67,8 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootMoveSmallTest) {
   EXPECT_TRUE(DeltaDiffGenerator::ReadFileToDiff(old_path(),
                                                  new_path(),
                                                  &data,
-                                                 &op));
+                                                 &op,
+                                                 true));
   EXPECT_TRUE(data.empty());
 
   EXPECT_TRUE(op.has_type());
@@ -95,7 +96,8 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootBsdiffSmallTest) {
   EXPECT_TRUE(DeltaDiffGenerator::ReadFileToDiff(old_path(),
                                                  new_path(),
                                                  &data,
-                                                 &op));
+                                                 &op,
+                                                 true));
   EXPECT_FALSE(data.empty());
 
   EXPECT_TRUE(op.has_type());
@@ -125,7 +127,8 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootReplaceSmallTest) {
     EXPECT_TRUE(DeltaDiffGenerator::ReadFileToDiff(old_path(),
                                                    new_path(),
                                                    &data,
-                                                   &op));
+                                                   &op,
+                                                   true));
     EXPECT_FALSE(data.empty());
 
     EXPECT_TRUE(op.has_type());
@@ -141,6 +144,36 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootReplaceSmallTest) {
     EXPECT_EQ(new_data.size(), op.dst_length());
     EXPECT_EQ(1, BlocksInExtents(op.dst_extents()));
   }
+}
+
+TEST_F(DeltaDiffGeneratorTest, RunAsRootBsdiffNoGatherExtentsSmallTest) {
+  EXPECT_TRUE(utils::WriteFile(old_path().c_str(),
+                               reinterpret_cast<const char*>(kRandomString),
+                               sizeof(kRandomString) - 1));
+  EXPECT_TRUE(utils::WriteFile(new_path().c_str(),
+                               reinterpret_cast<const char*>(kRandomString),
+                               sizeof(kRandomString)));
+  vector<char> data;
+  DeltaArchiveManifest_InstallOperation op;
+  EXPECT_TRUE(DeltaDiffGenerator::ReadFileToDiff(old_path(),
+                                                 new_path(),
+                                                 &data,
+                                                 &op,
+                                                 false));
+  EXPECT_FALSE(data.empty());
+
+  EXPECT_TRUE(op.has_type());
+  EXPECT_EQ(DeltaArchiveManifest_InstallOperation_Type_BSDIFF, op.type());
+  EXPECT_FALSE(op.has_data_offset());
+  EXPECT_FALSE(op.has_data_length());
+  EXPECT_EQ(1, op.src_extents_size());
+  EXPECT_EQ(0, op.src_extents().Get(0).start_block());
+  EXPECT_EQ(1, op.src_extents().Get(0).num_blocks());
+  EXPECT_EQ(sizeof(kRandomString) - 1, op.src_length());
+  EXPECT_EQ(1, op.dst_extents_size());
+  EXPECT_EQ(0, op.dst_extents().Get(0).start_block());
+  EXPECT_EQ(1, op.dst_extents().Get(0).num_blocks());
+  EXPECT_EQ(sizeof(kRandomString), op.dst_length());
 }
 
 namespace {
@@ -171,9 +204,9 @@ TEST_F(DeltaDiffGeneratorTest, SubstituteBlocksTest) {
   OpAppendExtent(&op, kSparseHole, 4);  // Sparse hole in file
   OpAppendExtent(&op, 3, 1);
   OpAppendExtent(&op, 7, 3);
-  
+
   DeltaDiffGenerator::SubstituteBlocks(&vertex, remove_blocks, replace_blocks);
-  
+
   EXPECT_EQ(7, op.src_extents_size());
   EXPECT_EQ(11, op.src_extents(0).start_block());
   EXPECT_EQ(1, op.src_extents(0).num_blocks());
@@ -194,7 +227,7 @@ TEST_F(DeltaDiffGeneratorTest, SubstituteBlocksTest) {
 TEST_F(DeltaDiffGeneratorTest, CutEdgesTest) {
   Graph graph;
   vector<Block> blocks(9);
-  
+
   // Create nodes in graph
   {
     graph.resize(graph.size() + 1);
@@ -209,7 +242,7 @@ TEST_F(DeltaDiffGeneratorTest, CutEdgesTest) {
     blocks[3].reader = graph.size() - 1;
     blocks[5].reader = graph.size() - 1;
     blocks[7].reader = graph.size() - 1;
-    
+
     // Writes to blocks 1, 2, 4
     extents.clear();
     graph_utils::AppendBlockToExtents(&extents, 1);
@@ -234,7 +267,7 @@ TEST_F(DeltaDiffGeneratorTest, CutEdgesTest) {
     blocks[1].reader = graph.size() - 1;
     blocks[2].reader = graph.size() - 1;
     blocks[4].reader = graph.size() - 1;
-    
+
     // Writes to blocks 3, 5, 6
     extents.clear();
     graph_utils::AppendBlockToExtents(&extents, 3);
@@ -246,10 +279,10 @@ TEST_F(DeltaDiffGeneratorTest, CutEdgesTest) {
     blocks[5].writer = graph.size() - 1;
     blocks[6].writer = graph.size() - 1;
   }
-  
+
   // Create edges
   DeltaDiffGenerator::CreateEdges(&graph, blocks);
-  
+
   // Find cycles
   CycleBreaker cycle_breaker;
   set<Edge> cut_edges;
@@ -261,9 +294,9 @@ TEST_F(DeltaDiffGeneratorTest, CutEdgesTest) {
 
   vector<CutEdgeVertexes> cuts;
   EXPECT_TRUE(DeltaDiffGenerator::CutEdges(&graph, cut_edges, &cuts));
-  
+
   EXPECT_EQ(3, graph.size());
-  
+
   // Check new node in graph:
   EXPECT_EQ(DeltaArchiveManifest_InstallOperation_Type_MOVE,
             graph.back().op.type());
@@ -272,7 +305,7 @@ TEST_F(DeltaDiffGeneratorTest, CutEdgesTest) {
   EXPECT_EQ(kTempBlockStart, graph.back().op.dst_extents(0).start_block());
   EXPECT_EQ(2, graph.back().op.dst_extents(0).num_blocks());
   EXPECT_TRUE(graph.back().out_edges.empty());
-  
+
   // Check that old node reads from new blocks
   EXPECT_EQ(2, graph[0].op.src_extents_size());
   EXPECT_EQ(kTempBlockStart, graph[0].op.src_extents(0).start_block());
@@ -305,7 +338,7 @@ TEST_F(DeltaDiffGeneratorTest, CutEdgesTest) {
   EXPECT_EQ(1, graph[1].op.dst_extents(0).num_blocks());
   EXPECT_EQ(5, graph[1].op.dst_extents(1).start_block());
   EXPECT_EQ(2, graph[1].op.dst_extents(1).num_blocks());
-  
+
   // Ensure it only depends on the next node
   EXPECT_EQ(1, graph[1].out_edges.size());
   EXPECT_TRUE(graph[1].out_edges.end() != graph[1].out_edges.find(2));
@@ -323,7 +356,7 @@ TEST_F(DeltaDiffGeneratorTest, ReorderBlobsTest) {
   string new_blobs;
   EXPECT_TRUE(
       utils::MakeTempFile("ReorderBlobsTest.new.XXXXXX", &new_blobs, NULL));
-  
+
   DeltaArchiveManifest manifest;
   DeltaArchiveManifest_InstallOperation* op =
       manifest.add_install_operations();
@@ -332,11 +365,11 @@ TEST_F(DeltaDiffGeneratorTest, ReorderBlobsTest) {
   op = manifest.add_install_operations();
   op->set_data_offset(0);
   op->set_data_length(1);
-  
+
   EXPECT_TRUE(DeltaDiffGenerator::ReorderDataBlobs(&manifest,
                                                    orig_blobs,
                                                    new_blobs));
-                                                   
+
   string new_data;
   EXPECT_TRUE(utils::ReadFileToString(new_blobs, &new_data));
   EXPECT_EQ("bcda", new_data);
@@ -345,7 +378,7 @@ TEST_F(DeltaDiffGeneratorTest, ReorderBlobsTest) {
   EXPECT_EQ(3, manifest.install_operations(0).data_length());
   EXPECT_EQ(3, manifest.install_operations(1).data_offset());
   EXPECT_EQ(1, manifest.install_operations(1).data_length());
-  
+
   unlink(orig_blobs.c_str());
   unlink(new_blobs.c_str());
 }
@@ -424,7 +457,7 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootAssignTempBlocksTest) {
   Graph graph(9);
   const vector<Extent> empt;  // empty
   const string kFilename = "/foo";
-  
+
   // Some scratch space:
   GenVertex(&graph[0], empt, VectOfExt(200, 1), "", OP_REPLACE);
   GenVertex(&graph[1], empt, VectOfExt(210, 10), "", OP_REPLACE);
@@ -455,9 +488,9 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootAssignTempBlocksTest) {
             kFilename,
             OP_BSDIFF);
   graph[8].out_edges[7] = EdgeWithReadDep(VectOfExt(120, 50));
-  
+
   graph_utils::DumpGraph(graph);
-  
+
   vector<Vertex::Index> final_order;
 
 
@@ -466,13 +499,13 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootAssignTempBlocksTest) {
   EXPECT_TRUE(utils::MakeTempDirectory("/tmp/AssignTempBlocksTest.XXXXXX",
                                        &temp_dir));
   ScopedDirRemover temp_dir_remover(temp_dir);
-  
+
   const size_t kBlockSize = 4096;
   vector<char> temp_data(kBlockSize * 50);
   FillWithData(&temp_data);
   EXPECT_TRUE(WriteFileVector(temp_dir + kFilename, temp_data));
   ScopedPathUnlinker filename_unlinker(temp_dir + kFilename);
-  
+
   int fd;
   EXPECT_TRUE(utils::MakeTempFile("/tmp/AssignTempBlocksTestData.XXXXXX",
                                   NULL,
@@ -487,7 +520,7 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootAssignTempBlocksTest) {
                                                     &data_file_size,
                                                     &final_order));
 
-  
+
   Graph expected_graph(12);
   GenVertex(&expected_graph[0], empt, VectOfExt(200, 1), "", OP_REPLACE);
   GenVertex(&expected_graph[1], empt, VectOfExt(210, 10), "", OP_REPLACE);
@@ -519,7 +552,7 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootAssignTempBlocksTest) {
             OP_BSDIFF);
   expected_graph[6].out_edges[5] = EdgeWithReadDep(VectOfExt(40, 11));
   expected_graph[6].out_edges[10] = EdgeWithWriteDep(VectOfExt(60, 10));
-  
+
   GenVertex(&expected_graph[7],
             VectOfExt(120, 50),
             VectOfExt(60, 40),
@@ -542,7 +575,7 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootAssignTempBlocksTest) {
             "",
             OP_MOVE);
   expected_graph[10].out_edges[4] = EdgeWithReadDep(VectOfExt(60, 9));
-  
+
   EXPECT_EQ(12, graph.size());
   EXPECT_FALSE(graph.back().valid);
   for (Graph::size_type i = 0; i < graph.size() - 1; i++) {
