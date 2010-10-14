@@ -50,9 +50,9 @@ typedef DeltaDiffGenerator::Block Block;
 
 namespace {
 const size_t kBlockSize = 4096;  // bytes
-const size_t kRootFSPartitionSize = 1 * 1024 * 1024 * 1024;  // 1 GiB
+const size_t kRootFSPartitionSize = 1 * 1024 * 1024 * 1024;  // bytes
 const uint64_t kVersionNumber = 1;
-const uint64_t kFullUpdateChunkSize = 128 * 1024;  // bytes
+const uint64_t kFullUpdateChunkSize = 1024 * 1024;  // bytes
 
 static const char* kInstallOperationTypes[] = {
   "REPLACE",
