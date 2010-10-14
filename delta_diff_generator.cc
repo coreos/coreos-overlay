@@ -446,7 +446,7 @@ struct DeltaObject {
         type(in_type),
         size(in_size) {}
   bool operator <(const DeltaObject& object) const {
-    return size < object.size;
+    return (size != object.size) ? (size < object.size) : (name < object.name);
   }
   string name;
   int type;
@@ -618,7 +618,7 @@ bool InitializePartitionInfo(bool is_kernel,
   TEST_AND_RETURN_FALSE(hasher.Finalize());
   const vector<char>& hash = hasher.raw_hash();
   info->set_hash(hash.data(), hash.size());
-  LOG(INFO) << "hash: " << hasher.hash();
+  LOG(INFO) << partition << ": size=" << size << " hash=" << hasher.hash();
   return true;
 }
 
@@ -627,8 +627,12 @@ bool InitializePartitionInfos(const string& old_kernel,
                               const string& old_rootfs,
                               const string& new_rootfs,
                               DeltaArchiveManifest* manifest) {
-  // TODO(petkov): Generate the old kernel info when we stop generating full
-  // updates for the kernel partition.
+  if (!old_kernel.empty()) {
+    TEST_AND_RETURN_FALSE(
+        InitializePartitionInfo(true,
+                                old_kernel,
+                                manifest->mutable_old_kernel_info()));
+  }
   TEST_AND_RETURN_FALSE(
       InitializePartitionInfo(true,
                               new_kernel,
