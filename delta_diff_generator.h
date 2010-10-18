@@ -211,6 +211,10 @@ class DeltaDiffGenerator {
       std::vector<DeltaArchiveManifest_InstallOperation>* kernel_ops,
       std::vector<Vertex::Index>* final_order);
 
+  // Returns true if |op| is a no-op operation that doesn't do any useful work
+  // (e.g., a move operation that copies blocks onto themselves).
+  static bool IsNoopOperation(const DeltaArchiveManifest_InstallOperation& op);
+
  private:
   // This should never be constructed
   DISALLOW_IMPLICIT_CONSTRUCTORS(DeltaDiffGenerator);

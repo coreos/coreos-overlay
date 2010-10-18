@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include <base/file_util.h>
 #include <base/scoped_ptr.h>
 #include <base/string_util.h>
 #include <google/protobuf/repeated_field.h>
@@ -112,7 +113,7 @@ bool WriteSparseFile(const string& path, off_t size) {
   return true;
 }
 
-void DoSmallImageTest(bool full_kernel) {
+void DoSmallImageTest(bool full_kernel, bool noop) {
   string a_img, b_img;
   EXPECT_TRUE(utils::MakeTempFile("/tmp/a_img.XXXXXX", &a_img, NULL));
   ScopedPathUnlinker a_img_unlinker(a_img);
@@ -120,7 +121,6 @@ void DoSmallImageTest(bool full_kernel) {
   ScopedPathUnlinker b_img_unlinker(b_img);
 
   CreateExtImageAtPath(a_img, NULL);
-  CreateExtImageAtPath(b_img, NULL);
 
   int image_size = static_cast<int>(utils::FileSize(a_img));
 
@@ -129,12 +129,7 @@ void DoSmallImageTest(bool full_kernel) {
       "dd if=/dev/zero of=%s seek=%d bs=1 count=1",
       a_img.c_str(),
       image_size + 1024 * 1024 - 1)));
-  EXPECT_EQ(0, System(base::StringPrintf(
-      "dd if=/dev/zero of=%s seek=%d bs=1 count=1",
-      b_img.c_str(),
-      image_size + 1024 * 1024 - 1)));
   EXPECT_EQ(image_size + 1024 * 1024, utils::FileSize(a_img));
-  EXPECT_EQ(image_size + 1024 * 1024, utils::FileSize(b_img));
 
   // Make some changes to the A image.
   {
@@ -154,8 +149,17 @@ void DoSmallImageTest(bool full_kernel) {
                                  ones.size()));
   }
 
-  // Make some changes to the B image.
-  {
+  if (noop) {
+    EXPECT_TRUE(file_util::CopyFile(FilePath(a_img), FilePath(b_img)));
+  } else {
+    CreateExtImageAtPath(b_img, NULL);
+    EXPECT_EQ(0, System(base::StringPrintf(
+        "dd if=/dev/zero of=%s seek=%d bs=1 count=1",
+        b_img.c_str(),
+        image_size + 1024 * 1024 - 1)));
+    EXPECT_EQ(image_size + 1024 * 1024, utils::FileSize(b_img));
+
+    // Make some changes to the B image.
     string b_mnt;
     ScopedLoopMounter b_mounter(b_img, &b_mnt, 0);
 
@@ -195,6 +199,10 @@ void DoSmallImageTest(bool full_kernel) {
   // change the new kernel data
   const char* new_data_string = "This is new data.";
   strcpy(&new_kernel_data[0], new_data_string);
+
+  if (noop) {
+    old_kernel_data = new_kernel_data;
+  }
 
   // Write kernels to disk
   EXPECT_TRUE(utils::WriteFile(
@@ -257,6 +265,11 @@ void DoSmallImageTest(bool full_kernel) {
                                                    &expected_sig_data_length));
     EXPECT_EQ(expected_sig_data_length, manifest.signatures_size());
     EXPECT_FALSE(signature.data().empty());
+
+    if (noop) {
+      EXPECT_EQ(1, manifest.install_operations_size());
+      EXPECT_EQ(1, manifest.kernel_install_operations_size());
+    }
 
     if (full_kernel) {
       EXPECT_FALSE(manifest.has_old_kernel_info());
@@ -333,11 +346,15 @@ void DoSmallImageTest(bool full_kernel) {
 }
 
 TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
-  DoSmallImageTest(false);
+  DoSmallImageTest(false, false);
 }
 
 TEST(DeltaPerformerTest, RunAsRootFullKernelSmallImageTest) {
-  DoSmallImageTest(true);
+  DoSmallImageTest(true, false);
+}
+
+TEST(DeltaPerformerTest, RunAsRootNoopSmallImageTest) {
+  DoSmallImageTest(false, true);
 }
 
 TEST(DeltaPerformerTest, NewFullUpdateTest) {

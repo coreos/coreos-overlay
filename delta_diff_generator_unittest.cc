@@ -588,4 +588,29 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootAssignTempBlocksTest) {
   }
 }
 
+TEST_F(DeltaDiffGeneratorTest, IsNoopOperationTest) {
+  DeltaArchiveManifest_InstallOperation op;
+  op.set_type(DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ);
+  EXPECT_FALSE(DeltaDiffGenerator::IsNoopOperation(op));
+  op.set_type(DeltaArchiveManifest_InstallOperation_Type_MOVE);
+  EXPECT_TRUE(DeltaDiffGenerator::IsNoopOperation(op));
+  *(op.add_src_extents()) = ExtentForRange(3, 2);
+  *(op.add_dst_extents()) = ExtentForRange(3, 2);
+  EXPECT_TRUE(DeltaDiffGenerator::IsNoopOperation(op));
+  *(op.add_src_extents()) = ExtentForRange(7, 5);
+  *(op.add_dst_extents()) = ExtentForRange(7, 5);
+  EXPECT_TRUE(DeltaDiffGenerator::IsNoopOperation(op));
+  *(op.add_src_extents()) = ExtentForRange(20, 2);
+  *(op.add_dst_extents()) = ExtentForRange(20, 1);
+  *(op.add_dst_extents()) = ExtentForRange(21, 1);
+  EXPECT_TRUE(DeltaDiffGenerator::IsNoopOperation(op));
+  *(op.add_src_extents()) = ExtentForRange(kSparseHole, 2);
+  *(op.add_src_extents()) = ExtentForRange(kSparseHole, 1);
+  *(op.add_dst_extents()) = ExtentForRange(kSparseHole, 3);
+  EXPECT_TRUE(DeltaDiffGenerator::IsNoopOperation(op));
+  *(op.add_src_extents()) = ExtentForRange(24, 1);
+  *(op.add_dst_extents()) = ExtentForRange(25, 1);
+  EXPECT_FALSE(DeltaDiffGenerator::IsNoopOperation(op));
+}
+
 }  // namespace chromeos_update_engine

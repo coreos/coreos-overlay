@@ -47,6 +47,8 @@ using std::vector;
 namespace chromeos_update_engine {
 
 typedef DeltaDiffGenerator::Block Block;
+typedef map<const DeltaArchiveManifest_InstallOperation*,
+            const string*> OperationNameMap;
 
 namespace {
 const size_t kBlockSize = 4096;  // bytes
@@ -376,24 +378,37 @@ bool WriteUint64AsBigEndian(FileWriter* writer, const uint64_t value) {
   return true;
 }
 
-// Adds each operation from the graph to the manifest in the order
-// specified by 'order'.
+// Adds each operation from |graph| to |out_manifest| in the order specified by
+// |order| while building |out_op_name_map| with operation to name
+// mappings. Adds all |kernel_ops| to |out_manifest|. Filters out no-op
+// operations.
 void InstallOperationsToManifest(
     const Graph& graph,
     const vector<Vertex::Index>& order,
     const vector<DeltaArchiveManifest_InstallOperation>& kernel_ops,
-    DeltaArchiveManifest* out_manifest) {
+    DeltaArchiveManifest* out_manifest,
+    OperationNameMap* out_op_name_map) {
   for (vector<Vertex::Index>::const_iterator it = order.begin();
        it != order.end(); ++it) {
+    const Vertex& vertex = graph[*it];
+    const DeltaArchiveManifest_InstallOperation& add_op = vertex.op;
+    if (DeltaDiffGenerator::IsNoopOperation(add_op)) {
+      continue;
+    }
     DeltaArchiveManifest_InstallOperation* op =
         out_manifest->add_install_operations();
-    *op = graph[*it].op;
+    *op = add_op;
+    (*out_op_name_map)[op] = &vertex.file_name;
   }
   for (vector<DeltaArchiveManifest_InstallOperation>::const_iterator it =
            kernel_ops.begin(); it != kernel_ops.end(); ++it) {
+    const DeltaArchiveManifest_InstallOperation& add_op = *it;
+    if (DeltaDiffGenerator::IsNoopOperation(add_op)) {
+      continue;
+    }
     DeltaArchiveManifest_InstallOperation* op =
         out_manifest->add_kernel_install_operations();
-    *op = *it;
+    *op = add_op;
   }
 }
 
@@ -453,22 +468,20 @@ struct DeltaObject {
   off_t size;
 };
 
-void ReportPayloadUsage(const Graph& graph,
-                        const DeltaArchiveManifest& manifest,
-                        const int64_t manifest_metadata_size) {
+void ReportPayloadUsage(const DeltaArchiveManifest& manifest,
+                        const int64_t manifest_metadata_size,
+                        const OperationNameMap& op_name_map) {
   vector<DeltaObject> objects;
   off_t total_size = 0;
 
-  // Graph nodes with information about file names.
-  for (Vertex::Index node = 0; node < graph.size(); node++) {
-    const Vertex& vertex = graph[node];
-    if (!vertex.valid) {
-      continue;
-    }
-    objects.push_back(DeltaObject(vertex.file_name,
-                                  vertex.op.type(),
-                                  vertex.op.data_length()));
-    total_size += vertex.op.data_length();
+  // Rootfs install operations.
+  for (int i = 0; i < manifest.install_operations_size(); ++i) {
+    const DeltaArchiveManifest_InstallOperation& op =
+        manifest.install_operations(i);
+    objects.push_back(DeltaObject(*op_name_map.find(&op)->second,
+                                  op.type(),
+                                  op.data_length()));
+    total_size += op.data_length();
   }
 
   // Kernel install operations.
@@ -911,6 +924,14 @@ bool TempBlocksExistInExtents(const T& extents) {
 }
 
 }  // namespace {}
+
+// Returns true if |op| is a no-op operation that doesn't do any useful work
+// (e.g., a move operation that copies blocks onto themselves).
+bool DeltaDiffGenerator::IsNoopOperation(
+    const DeltaArchiveManifest_InstallOperation& op) {
+  return (op.type() == DeltaArchiveManifest_InstallOperation_Type_MOVE &&
+          ExpandExtents(op.src_extents()) == ExpandExtents(op.dst_extents()));
+}
 
 bool DeltaDiffGenerator::AssignTempBlocks(
     Graph* graph,
@@ -1370,9 +1391,13 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
 
   // Convert to protobuf Manifest object
   DeltaArchiveManifest manifest;
+  OperationNameMap op_name_map;
   CheckGraph(graph);
-  InstallOperationsToManifest(graph, final_order, kernel_ops, &manifest);
-
+  InstallOperationsToManifest(graph,
+                              final_order,
+                              kernel_ops,
+                              &manifest,
+                              &op_name_map);
   CheckGraph(graph);
   manifest.set_block_size(kBlockSize);
 
@@ -1386,10 +1411,9 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
                                          temp_file_path,
                                          ordered_blobs_path));
 
-  // Check that install op blobs are in order and that all blocks are written.
+  // Check that install op blobs are in order.
   uint64_t next_blob_offset = 0;
   {
-    vector<uint32_t> written_count(blocks.size(), 0);
     for (int i = 0; i < (manifest.install_operations_size() +
                          manifest.kernel_install_operations_size()); i++) {
       DeltaArchiveManifest_InstallOperation* op =
@@ -1397,26 +1421,12 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
           manifest.mutable_install_operations(i) :
           manifest.mutable_kernel_install_operations(
               i - manifest.install_operations_size());
-      for (int j = 0; j < op->dst_extents_size(); j++) {
-        const Extent& extent = op->dst_extents(j);
-        for (uint64_t block = extent.start_block();
-             block < (extent.start_block() + extent.num_blocks()); block++) {
-          if (block < blocks.size())
-            written_count[block]++;
-        }
-      }
       if (op->has_data_offset()) {
         if (op->data_offset() != next_blob_offset) {
           LOG(FATAL) << "bad blob offset! " << op->data_offset() << " != "
                      << next_blob_offset;
         }
         next_blob_offset += op->data_length();
-      }
-    }
-    // check all blocks written to
-    for (vector<uint32_t>::size_type i = 0; i < written_count.size(); i++) {
-      if (written_count[i] == 0) {
-        LOG(FATAL) << "block " << i << " not written!";
       }
     }
   }
@@ -1514,7 +1524,7 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
 
   int64_t manifest_metadata_size =
       strlen(kDeltaMagic) + 2 * sizeof(uint64_t) + serialized_manifest.size();
-  ReportPayloadUsage(graph, manifest, manifest_metadata_size);
+  ReportPayloadUsage(manifest, manifest_metadata_size, op_name_map);
 
   LOG(INFO) << "All done. Successfully created delta file.";
   return true;

@@ -119,10 +119,10 @@ bool DeltaPerformer::IsIdempotentOperation(
   if (op.src_extents_size() == 0) {
     return true;
   }
-  // TODO(adlr): detect other types of idempotent operations. For example,
-  // a MOVE may move a block onto itself.
-
-  // When in doubt, it's safe to declare an op non-idempotent.
+  // When in doubt, it's safe to declare an op non-idempotent. Note that we
+  // could detect other types of idempotent operations here such as a MOVE that
+  // moves blocks onto themselves. However, we rely on the server to not send
+  // such operations at all.
   ExtentRanges src_ranges;
   src_ranges.AddRepeatedExtents(op.src_extents());
   const uint64_t block_count = src_ranges.blocks();
