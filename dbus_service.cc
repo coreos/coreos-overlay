@@ -69,7 +69,7 @@ gboolean update_engine_service_attempt_update(UpdateEngineService* self,
   }
   LOG(INFO) << "Attempt update: app_version=\"" << update_app_version << "\" "
             << "omaha_url=\"" << update_omaha_url << "\"";
-  self->update_attempter_->CheckForUpdate(app_version, omaha_url);
+  self->update_attempter_->CheckForUpdate(update_app_version, update_omaha_url);
   return TRUE;
 }
 
