@@ -3,9 +3,13 @@
 // found in the LICENSE file.
 
 #include "update_engine/dbus_service.h"
+
 #include <string>
-#include "base/logging.h"
+
+#include <base/logging.h>
+
 #include "update_engine/marshal.glibmarshal.h"
+#include "update_engine/utils.h"
 
 using std::string;
 
@@ -51,8 +55,18 @@ gboolean update_engine_service_attempt_update(UpdateEngineService* self,
                                               gchar* app_version,
                                               gchar* omaha_url,
                                               GError **error) {
-  const string update_app_version = app_version ? app_version : "";
-  const string update_omaha_url = omaha_url ? omaha_url : "";
+  string update_app_version;
+  string update_omaha_url;
+  // Only non-official (e.g., dev and test) builds can override the current
+  // version and update server URL over D-Bus.
+  if (!chromeos_update_engine::utils::IsOfficialBuild()) {
+    if (app_version) {
+      update_app_version = app_version;
+    }
+    if (omaha_url) {
+      update_omaha_url = omaha_url;
+    }
+  }
   LOG(INFO) << "Attempt update: app_version=\"" << update_app_version << "\" "
             << "omaha_url=\"" << update_omaha_url << "\"";
   self->update_attempter_->CheckForUpdate(app_version, omaha_url);

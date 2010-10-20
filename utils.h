@@ -21,10 +21,7 @@ namespace chromeos_update_engine {
 
 namespace utils {
 
-// Returns true if this is an official Chrome OS build, false
-// otherwise. Currently, this routine errs on the official build side
-// -- if it doesn't recognize the update track as non-official, it
-// assumes the build is official.
+// Returns true if this is an official Chrome OS build, false otherwise.
 bool IsOfficialBuild();
 
 // Returns true if the OOBE process has been completed and EULA accepted, false

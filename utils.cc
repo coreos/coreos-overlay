@@ -39,14 +39,10 @@ namespace chromeos_update_engine {
 namespace utils {
 
 static const char kOOBECompletedMarker[] = "/home/chronos/.oobe_completed";
+static const char kDevImageMarker[] = "/root/.dev_mode";
 
 bool IsOfficialBuild() {
-  OmahaRequestDeviceParams params;
-  if (!params.Init("", "")) {
-    return true;
-  }
-  return params.app_track != "buildbot-build" &&
-      params.app_track != "developer-build";
+  return !file_util::PathExists(FilePath(kDevImageMarker));
 }
 
 bool IsOOBEComplete() {
