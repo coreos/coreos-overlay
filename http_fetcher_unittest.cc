@@ -135,6 +135,7 @@ class HttpFetcherTest<LibcurlHttpFetcher> : public ::testing::Test {
     // Speed up test execution.
     ret->set_idle_seconds(1);
     ret->set_retry_seconds(1);
+    ret->SetConnectionAsExpensive(false);
     return ret;
   }
   HttpFetcher* NewSmallFetcher() {
@@ -694,6 +695,46 @@ TYPED_TEST(HttpFetcherTest, MultiHttpFetcherInsufficientTest) {
               0);
     ranges.push_back(make_pair(0, 5));
   }
+}
+
+namespace {
+class ExpensiveConnectionTestDelegate : public HttpFetcherDelegate {
+ public:
+  virtual void ReceivedBytes(HttpFetcher* fetcher,
+                             const char* bytes, int length) {
+    ADD_FAILURE();
+  }
+  virtual void TransferComplete(HttpFetcher* fetcher, bool successful) {
+    EXPECT_FALSE(successful);
+    g_main_loop_quit(loop_);
+  }
+  GMainLoop* loop_;
+};
+
+}  // namespace
+
+TYPED_TEST(HttpFetcherTest, ExpensiveConnectionTest) {
+  if (this->IsMock() || this->IsMulti())
+    return;
+  typename TestFixture::HttpServer server;
+  
+  ASSERT_TRUE(server.started_);
+
+  GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
+  ExpensiveConnectionTestDelegate delegate;
+  delegate.loop_ = loop;
+
+  scoped_ptr<HttpFetcher> fetcher(this->NewLargeFetcher());
+  dynamic_cast<LibcurlHttpFetcher*>(
+      fetcher.get())->SetConnectionAsExpensive(true);
+  fetcher->set_delegate(&delegate);
+
+  StartTransferArgs start_xfer_args =
+      { fetcher.get(), LocalServerUrlForPath(this->SmallUrl()) };
+
+  g_timeout_add(0, StartTransfer, &start_xfer_args);
+  g_main_loop_run(loop);
+  g_main_loop_unref(loop);
 }
 
 }  // namespace chromeos_update_engine

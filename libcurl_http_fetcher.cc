@@ -3,11 +3,19 @@
 // found in the LICENSE file.
 
 #include "update_engine/libcurl_http_fetcher.h"
+
 #include <algorithm>
-#include "base/logging.h"
+#include <string>
+
+#include <base/logging.h>
+
+#include "update_engine/dbus_interface.h"
+#include "update_engine/flimflam_proxy.h"
+#include "update_engine/utils.h"
 
 using std::max;
 using std::make_pair;
+using std::string;
 
 // This is a concrete implementation of HttpFetcher that uses libcurl to do the
 // http work.
@@ -17,10 +25,22 @@ namespace chromeos_update_engine {
 namespace {
 const int kMaxRetriesCount = 20;
 const char kCACertificatesPath[] = "/usr/share/update_engine/ca-certificates";
-}
+}  // namespace {}
 
 LibcurlHttpFetcher::~LibcurlHttpFetcher() {
   CleanUp();
+}
+
+// On error, returns false.
+bool LibcurlHttpFetcher::ConnectionIsExpensive() const {
+  if (force_connection_type_)
+    return forced_expensive_connection_;
+  NetworkConnectionType type;
+  ConcreteDbusGlib dbus_iface;
+  TEST_AND_RETURN_FALSE(FlimFlamProxy::GetConnectionType(&dbus_iface, &type));
+  LOG(INFO) << "We are connected via "
+            << FlimFlamProxy::StringForConnectionType(type);
+  return FlimFlamProxy::IsExpensiveConnectionType(type);
 }
 
 void LibcurlHttpFetcher::ResumeTransfer(const std::string& url) {
@@ -54,7 +74,18 @@ void LibcurlHttpFetcher::ResumeTransfer(const std::string& url) {
   CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_WRITEDATA, this), CURLE_OK);
   CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_WRITEFUNCTION,
                             StaticLibcurlWrite), CURLE_OK);
-  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_URL, url_.c_str()), CURLE_OK);
+
+  string url_to_use(url_);
+  if (ConnectionIsExpensive()) {
+    LOG(INFO) << "Not initiating HTTP connection b/c we are on an expensive"
+              << " connection";
+    url_to_use = "";  // Sabotage the URL
+  }
+
+  CHECK_EQ(curl_easy_setopt(curl_handle_,
+                            CURLOPT_URL,
+                            url_to_use.c_str()),
+           CURLE_OK);
 
   // If the connection drops under 10 bytes/sec for 3 minutes, reconnect.
   CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_LOW_SPEED_LIMIT, 10),

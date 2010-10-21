@@ -33,6 +33,8 @@ class LibcurlHttpFetcher : public HttpFetcher {
         retry_count_(0),
         retry_seconds_(60),
         idle_seconds_(1),
+        force_connection_type_(false),
+        forced_expensive_connection_(false),
         in_write_callback_(false),
         terminate_requested_(false) {}
 
@@ -67,6 +69,11 @@ class LibcurlHttpFetcher : public HttpFetcher {
 
   // Sets the retry timeout. Useful for testing.
   void set_retry_seconds(int seconds) { retry_seconds_ = seconds; }
+  
+  void SetConnectionAsExpensive(bool is_expensive) {
+    force_connection_type_ = true;
+    forced_expensive_connection_ = is_expensive;
+  }
 
  private:
   // Asks libcurl for the http response code and stores it in the object.
@@ -122,6 +129,10 @@ class LibcurlHttpFetcher : public HttpFetcher {
   // curl(m) handles, io_channels_, timeout_source_.
   void CleanUp();
 
+  // Returns whether or not the current network connection is considered
+  // expensive.
+  bool ConnectionIsExpensive() const;
+
   // Handles for the libcurl library
   CURLM *curl_multi_handle_;
   CURL *curl_handle_;
@@ -157,6 +168,11 @@ class LibcurlHttpFetcher : public HttpFetcher {
 
   // Seconds to wait before asking libcurl to "perform".
   int idle_seconds_;
+  
+  // If true, assume the network is expensive or not, according to
+  // forced_expensive_connection_. (Useful for testing).
+  bool force_connection_type_;
+  bool forced_expensive_connection_;
 
   // If true, we are currently performing a write callback on the delegate.
   bool in_write_callback_;
