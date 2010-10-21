@@ -27,6 +27,8 @@ class ActionTraits<OmahaResponseHandlerAction> {
 
 class OmahaResponseHandlerAction : public Action<OmahaResponseHandlerAction> {
  public:
+  static const char kDeadlineFile[];
+
   OmahaResponseHandlerAction(PrefsInterface* prefs)
       : prefs_(prefs),
         got_no_update_response_(false) {}

@@ -46,6 +46,7 @@ struct OmahaResponse {
   std::string codebase;
   std::string more_info_url;
   std::string hash;
+  std::string deadline;
   off_t size;
   bool needs_admin;
   bool prompt;

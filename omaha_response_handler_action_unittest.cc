@@ -87,6 +87,8 @@ bool OmahaResponseHandlerActionTest::DoTest(const OmahaResponse& in,
 }
 
 TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
+  ScopedPathUnlinker deadline_unlinker(
+      OmahaResponseHandlerAction::kDeadlineFile);
   {
     OmahaResponse in;
     in.update_exists = true;
@@ -98,12 +100,23 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     in.needs_admin = true;
     in.prompt = false;
     in.is_delta = false;
+    in.deadline = "20101020";
     InstallPlan install_plan;
     EXPECT_TRUE(DoTest(in, "/dev/sda3", &install_plan));
     EXPECT_TRUE(install_plan.is_full_update);
     EXPECT_EQ(in.codebase, install_plan.download_url);
     EXPECT_EQ(in.hash, install_plan.download_hash);
     EXPECT_EQ("/dev/sda5", install_plan.install_path);
+    string deadline;
+    EXPECT_TRUE(utils::ReadFileToString(
+        OmahaResponseHandlerAction::kDeadlineFile,
+        &deadline));
+    EXPECT_EQ("20101020", deadline);
+    struct stat deadline_stat;
+    EXPECT_EQ(0, stat(OmahaResponseHandlerAction::kDeadlineFile,
+                      &deadline_stat));
+    EXPECT_EQ(S_IFREG | S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH,
+              deadline_stat.st_mode);
   }
   {
     OmahaResponse in;
@@ -122,6 +135,10 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     EXPECT_EQ(in.codebase, install_plan.download_url);
     EXPECT_EQ(in.hash, install_plan.download_hash);
     EXPECT_EQ("/dev/sda3", install_plan.install_path);
+    string deadline;
+    EXPECT_TRUE(utils::ReadFileToString(
+        OmahaResponseHandlerAction::kDeadlineFile,
+        &deadline) && deadline.empty());
   }
   {
     OmahaResponse in;
@@ -134,12 +151,18 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     in.needs_admin = true;
     in.prompt = true;
     in.is_delta = false;
+    in.deadline = "some-deadline";
     InstallPlan install_plan;
     EXPECT_TRUE(DoTest(in, "/dev/sda3", &install_plan));
     EXPECT_TRUE(install_plan.is_full_update);
     EXPECT_EQ(in.codebase, install_plan.download_url);
     EXPECT_EQ(in.hash, install_plan.download_hash);
     EXPECT_EQ("/dev/sda5", install_plan.install_path);
+    string deadline;
+    EXPECT_TRUE(utils::ReadFileToString(
+        OmahaResponseHandlerAction::kDeadlineFile,
+        &deadline));
+    EXPECT_EQ("some-deadline", deadline);
   }
 }
 

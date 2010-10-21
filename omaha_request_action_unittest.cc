@@ -62,7 +62,8 @@ string GetUpdateResponse(const string& app_id,
                          const string& codebase,
                          const string& hash,
                          const string& needsadmin,
-                         const string& size) {
+                         const string& size,
+                         const string& deadline) {
   return string("<?xml version=\"1.0\" encoding=\"UTF-8\"?><gupdate "
                 "xmlns=\"http://www.google.com/update2/response\" "
                 "protocol=\"2.0\"><app "
@@ -72,7 +73,8 @@ string GetUpdateResponse(const string& app_id,
       "IsDelta=\"true\" "
       "codebase=\"" + codebase + "\" hash=\"not-applicable\" "
       "sha256=\"" + hash + "\" needsadmin=\"" + needsadmin + "\" "
-      "size=\"" + size + "\" status=\"ok\"/></app></gupdate>";
+      "size=\"" + size + "\" deadline=\"" + deadline +
+      "\" status=\"ok\"/></app></gupdate>";
 }
 
 class OmahaRequestActionTestProcessorDelegate : public ActionProcessorDelegate {
@@ -232,7 +234,8 @@ TEST(OmahaRequestActionTest, ValidUpdateTest) {
                                         "http://code/base",  // dl url
                                         "HASH1234=",  // checksum
                                         "false",  // needs admin
-                                        "123"),  // size
+                                        "123",  // size
+                                        "20101020"),  // deadline
                       kActionCodeSuccess,
                       &response,
                       NULL));
@@ -245,6 +248,7 @@ TEST(OmahaRequestActionTest, ValidUpdateTest) {
   EXPECT_EQ(123, response.size);
   EXPECT_FALSE(response.needs_admin);
   EXPECT_TRUE(response.prompt);
+  EXPECT_EQ("20101020", response.deadline);
 }
 
 TEST(OmahaRequestActionTest, NoOutputPipeTest) {
@@ -355,6 +359,7 @@ TEST(OmahaRequestActionTest, MissingFieldTest) {
   EXPECT_EQ(123, response.size);
   EXPECT_TRUE(response.needs_admin);
   EXPECT_FALSE(response.prompt);
+  EXPECT_TRUE(response.deadline.empty());
 }
 
 namespace {
@@ -448,13 +453,15 @@ TEST(OmahaRequestActionTest, XmlDecodeTest) {
                                         "testthe&amp;codebase",  // dl url
                                         "HASH1234=", // checksum
                                         "false",  // needs admin
-                                        "123"),  // size
+                                        "123",  // size
+                                        "&lt;20110101"),  // deadline
                       kActionCodeSuccess,
                       &response,
                       NULL));
 
   EXPECT_EQ(response.more_info_url, "testthe<url");
   EXPECT_EQ(response.codebase, "testthe&codebase");
+  EXPECT_EQ(response.deadline, "<20110101");
 }
 
 TEST(OmahaRequestActionTest, ParseIntTest) {
@@ -470,7 +477,8 @@ TEST(OmahaRequestActionTest, ParseIntTest) {
                                         "HASH1234=", // checksum
                                         "false",  // needs admin
                                         // overflows int32:
-                                        "123123123123123"),  // size
+                                        "123123123123123",  // size
+                                        "deadline"),
                       kActionCodeSuccess,
                       &response,
                       NULL));
