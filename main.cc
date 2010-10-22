@@ -40,7 +40,19 @@ using std::vector;
 namespace chromeos_update_engine {
 
 gboolean UpdateBootFlags(void* arg) {
-  // This purely best effort. Failures should be logged by Subprocess.
+  UpdateAttempter* attempter = reinterpret_cast<UpdateAttempter*>(arg);
+  if (attempter->status() == UPDATE_STATUS_UPDATED_NEED_REBOOT) {
+    // Don't update the flags if there's an update that's just been applied and
+    // we're waiting for reboot because we may end up reverting the update.
+    return FALSE;  // Don't call this callback again.
+  }
+  if (attempter->status() != UPDATE_STATUS_IDLE) {
+    // To avoid races (e.g., setting a good kernel right after post-install but
+    // before the status changes), update the boot flag only if the attempter is
+    // idle.
+    return TRUE;  // Call this callback again.
+  }
+  // This is purely best effort. Failures should be logged by Subprocess.
   int unused = 0;
   vector<string> cmd(1, "/usr/sbin/chromeos-setgoodkernel");
   Subprocess::SynchronousExec(cmd, &unused);
@@ -142,8 +154,10 @@ int main(int argc, char** argv) {
   chromeos_update_engine::UpdateCheckScheduler scheduler(&update_attempter);
   scheduler.Run();
 
-  // Update boot flags after 45 seconds
-  g_timeout_add_seconds(45, &chromeos_update_engine::UpdateBootFlags, NULL);
+  // Update boot flags after 45 seconds.
+  g_timeout_add_seconds(45,
+                        &chromeos_update_engine::UpdateBootFlags,
+                        &update_attempter);
 
   // Run the main loop until exit time:
   g_main_loop_run(loop);
