@@ -70,6 +70,8 @@ class OmahaHashCalculator {
   static std::string OmahaHashOfString(const std::string& str);
   static std::string OmahaHashOfData(const std::vector<char>& data);
 
+  static bool Base64Encode(const void* data, size_t size, std::string* out);
+
  private:
   // If non-empty, the final base64 encoded hash and the raw hash. Will only be
   // set to non-empty when Finalize is called.

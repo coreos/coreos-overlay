@@ -165,6 +165,33 @@ int DeltaPerformer::Close() {
   return -err;
 }
 
+namespace {
+
+void LogPartitionInfoHash(const PartitionInfo& info, const string& tag) {
+  string sha256;
+  if (OmahaHashCalculator::Base64Encode(info.hash().data(),
+                                        info.hash().size(),
+                                        &sha256)) {
+    LOG(INFO) << "PartitionInfo " << tag << " sha256:" << sha256
+              << " length:" << tag.size();
+  } else {
+    LOG(ERROR) << "Base64Encode failed for tag: " << tag;
+  }
+}
+
+void LogPartitionInfo(const DeltaArchiveManifest& manifest) {
+  if (manifest.has_old_kernel_info())
+    LogPartitionInfoHash(manifest.old_kernel_info(), "old_kernel_info");
+  if (manifest.has_old_rootfs_info())
+    LogPartitionInfoHash(manifest.old_rootfs_info(), "old_rootfs_info");
+  if (manifest.has_new_kernel_info())
+    LogPartitionInfoHash(manifest.new_kernel_info(), "new_kernel_info");
+  if (manifest.has_new_rootfs_info())
+    LogPartitionInfoHash(manifest.new_rootfs_info(), "new_rootfs_info");
+}
+
+}  // namespace {}
+
 // Wrapper around write. Returns bytes written on success or
 // -errno on error.
 // This function performs as many actions as it can, given the amount of
@@ -207,6 +234,7 @@ ssize_t DeltaPerformer::Write(const void* bytes, size_t count) {
                                       manifest_metadata_size_))
         << "Unable to save the manifest metadata size.";
     manifest_valid_ = true;
+    LogPartitionInfo(manifest_);
     if (!PrimeUpdateState()) {
       LOG(ERROR) << "Unable to prime the update state.";
       return -EINVAL;

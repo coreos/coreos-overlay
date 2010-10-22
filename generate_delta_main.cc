@@ -76,7 +76,22 @@ int Main(int argc, char** argv) {
     LOG(INFO) << "Setting up preferences under: " << FLAGS_prefs_dir;
     LOG_IF(ERROR, !prefs.Init(FilePath(FLAGS_prefs_dir)))
         << "Failed to initialize preferences.";
+    // Get original checksums
+    LOG(INFO) << "Calculating original checksums";
+    PartitionInfo kern_info, root_info;
+    CHECK(DeltaDiffGenerator::InitializePartitionInfo(true,  // is_kernel
+                                                      FLAGS_old_kernel,
+                                                      &kern_info));
+    CHECK(DeltaDiffGenerator::InitializePartitionInfo(false,  // is_kernel
+                                                      FLAGS_old_image,
+                                                      &root_info));
+    vector<char> kern_hash(kern_info.hash().begin(),
+                           kern_info.hash().end());
+    vector<char> root_hash(root_info.hash().begin(),
+                           root_info.hash().end());
     DeltaPerformer performer(&prefs);
+    performer.set_current_kernel_hash(&kern_hash);
+    performer.set_current_rootfs_hash(&root_hash);
     CHECK_EQ(performer.Open(FLAGS_old_image.c_str(), 0, 0), 0);
     CHECK(performer.OpenKernel(FLAGS_old_kernel.c_str()));
     vector<char> buf(1024 * 1024);

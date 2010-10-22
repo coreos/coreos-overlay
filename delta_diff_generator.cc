@@ -611,9 +611,9 @@ bool DeltaDiffGenerator::ReadFileToDiff(
   return true;
 }
 
-bool InitializePartitionInfo(bool is_kernel,
-                             const string& partition,
-                             PartitionInfo* info) {
+bool DeltaDiffGenerator::InitializePartitionInfo(bool is_kernel,
+                                                 const string& partition,
+                                                 PartitionInfo* info) {
   int64_t size = 0;
   if (is_kernel) {
     size = utils::FileSize(partition);
@@ -641,25 +641,25 @@ bool InitializePartitionInfos(const string& old_kernel,
                               const string& new_rootfs,
                               DeltaArchiveManifest* manifest) {
   if (!old_kernel.empty()) {
-    TEST_AND_RETURN_FALSE(
-        InitializePartitionInfo(true,
-                                old_kernel,
-                                manifest->mutable_old_kernel_info()));
+    TEST_AND_RETURN_FALSE(DeltaDiffGenerator::InitializePartitionInfo(
+        true,
+        old_kernel,
+        manifest->mutable_old_kernel_info()));
   }
-  TEST_AND_RETURN_FALSE(
-      InitializePartitionInfo(true,
-                              new_kernel,
-                              manifest->mutable_new_kernel_info()));
+  TEST_AND_RETURN_FALSE(DeltaDiffGenerator::InitializePartitionInfo(
+      true,
+      new_kernel,
+      manifest->mutable_new_kernel_info()));
   if (!old_rootfs.empty()) {
-    TEST_AND_RETURN_FALSE(
-        InitializePartitionInfo(false,
-                                old_rootfs,
-                                manifest->mutable_old_rootfs_info()));
+    TEST_AND_RETURN_FALSE(DeltaDiffGenerator::InitializePartitionInfo(
+        false,
+        old_rootfs,
+        manifest->mutable_old_rootfs_info()));
   }
-  TEST_AND_RETURN_FALSE(
-      InitializePartitionInfo(false,
-                              new_rootfs,
-                              manifest->mutable_new_rootfs_info()));
+  TEST_AND_RETURN_FALSE(DeltaDiffGenerator::InitializePartitionInfo(
+      false,
+      new_rootfs,
+      manifest->mutable_new_rootfs_info()));
   return true;
 }
 

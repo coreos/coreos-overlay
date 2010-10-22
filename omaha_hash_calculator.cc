@@ -63,18 +63,10 @@ off_t OmahaHashCalculator::UpdateFile(const string& name, off_t length) {
   return bytes_processed;
 }
 
-// Call Finalize() when all data has been passed in. This mostly just
-// calls OpenSSL's SHA256_Final() and then base64 encodes the hash.
-bool OmahaHashCalculator::Finalize() {
+bool OmahaHashCalculator::Base64Encode(const void* data,
+                                       size_t size,
+                                       string* out) {
   bool success = true;
-  TEST_AND_RETURN_FALSE(hash_.empty());
-  TEST_AND_RETURN_FALSE(raw_hash_.empty());
-  raw_hash_.resize(SHA256_DIGEST_LENGTH);
-  TEST_AND_RETURN_FALSE(
-      SHA256_Final(reinterpret_cast<unsigned char*>(&raw_hash_[0]),
-                   &ctx_) == 1);
-
-  // Convert raw_hash_ to base64 encoding and store it in hash_.
   BIO *b64 = BIO_new(BIO_f_base64());
   if (!b64)
     LOG(INFO) << "BIO_new(BIO_f_base64()) failed";
@@ -84,20 +76,33 @@ bool OmahaHashCalculator::Finalize() {
   if (b64 && bmem) {
     b64 = BIO_push(b64, bmem);
     success =
-        (BIO_write(b64, &raw_hash_[0], raw_hash_.size()) ==
-         static_cast<int>(raw_hash_.size()));
+        (BIO_write(b64, data, size) == static_cast<int>(size));
     if (success)
       success = (BIO_flush(b64) == 1);
 
     BUF_MEM *bptr = NULL;
     BIO_get_mem_ptr(b64, &bptr);
-    hash_.assign(bptr->data, bptr->length - 1);
+    out->assign(bptr->data, bptr->length - 1);
   }
   if (b64) {
     BIO_free_all(b64);
     b64 = NULL;
   }
   return success;
+}
+
+// Call Finalize() when all data has been passed in. This mostly just
+// calls OpenSSL's SHA256_Final() and then base64 encodes the hash.
+bool OmahaHashCalculator::Finalize() {
+  TEST_AND_RETURN_FALSE(hash_.empty());
+  TEST_AND_RETURN_FALSE(raw_hash_.empty());
+  raw_hash_.resize(SHA256_DIGEST_LENGTH);
+  TEST_AND_RETURN_FALSE(
+      SHA256_Final(reinterpret_cast<unsigned char*>(&raw_hash_[0]),
+                   &ctx_) == 1);
+
+  // Convert raw_hash_ to base64 encoding and store it in hash_.
+  return Base64Encode(&raw_hash_[0], raw_hash_.size(), &hash_);;
 }
 
 bool OmahaHashCalculator::RawHashOfData(const vector<char>& data,

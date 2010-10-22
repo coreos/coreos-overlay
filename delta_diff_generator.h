@@ -215,6 +215,10 @@ class DeltaDiffGenerator {
   // (e.g., a move operation that copies blocks onto themselves).
   static bool IsNoopOperation(const DeltaArchiveManifest_InstallOperation& op);
 
+  static bool InitializePartitionInfo(bool is_kernel,
+                                      const std::string& partition,
+                                      PartitionInfo* info);
+
  private:
   // This should never be constructed
   DISALLOW_IMPLICIT_CONSTRUCTORS(DeltaDiffGenerator);
