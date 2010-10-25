@@ -73,8 +73,7 @@ class MultiHttpFetcher : public HttpFetcher, public HttpFetcherDelegate {
       fetchers_[current_index_]->Unpause();
   }
 
-  // These two function are overloaded in LibcurlHttp fetcher to speed
-  // testing.
+  // These functions are overloaded in LibcurlHttp fetcher for testing purposes.
   void set_idle_seconds(int seconds) {
     for (typename std::vector<std::tr1::shared_ptr<BaseHttpFetcher> >::iterator
              it = fetchers_.begin(),
@@ -87,6 +86,20 @@ class MultiHttpFetcher : public HttpFetcher, public HttpFetcherDelegate {
              it = fetchers_.begin(),
              e = fetchers_.end(); it != e; ++it) {
       (*it)->set_retry_seconds(seconds);
+    }
+  }
+  void SetConnectionAsExpensive(bool is_expensive) {
+    for (typename std::vector<std::tr1::shared_ptr<BaseHttpFetcher> >::iterator
+             it = fetchers_.begin(),
+             e = fetchers_.end(); it != e; ++it) {
+      (*it)->SetConnectionAsExpensive(is_expensive);
+    }
+  }
+  void SetBuildType(bool is_official) {
+    for (typename std::vector<std::tr1::shared_ptr<BaseHttpFetcher> >::iterator
+             it = fetchers_.begin(),
+             e = fetchers_.end(); it != e; ++it) {
+      (*it)->SetBuildType(is_official);
     }
   }
 
@@ -173,7 +186,7 @@ class MultiHttpFetcher : public HttpFetcher, public HttpFetcherDelegate {
   }
 
   // If true, do not send any more data or TransferComplete to the delegate.
-  bool sent_transfer_complete_;  
+  bool sent_transfer_complete_;
 
   RangesVect ranges_;
   std::vector<std::tr1::shared_ptr<BaseHttpFetcher> > fetchers_;

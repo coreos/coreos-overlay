@@ -35,6 +35,8 @@ class LibcurlHttpFetcher : public HttpFetcher {
         idle_seconds_(1),
         force_connection_type_(false),
         forced_expensive_connection_(false),
+        force_build_type_(false),
+        forced_official_build_(false),
         in_write_callback_(false),
         terminate_requested_(false) {}
 
@@ -69,10 +71,15 @@ class LibcurlHttpFetcher : public HttpFetcher {
 
   // Sets the retry timeout. Useful for testing.
   void set_retry_seconds(int seconds) { retry_seconds_ = seconds; }
-  
+
   void SetConnectionAsExpensive(bool is_expensive) {
     force_connection_type_ = true;
     forced_expensive_connection_ = is_expensive;
+  }
+
+  void SetBuildType(bool is_official) {
+    force_build_type_ = true;
+    forced_official_build_ = is_official;
   }
 
  private:
@@ -133,6 +140,9 @@ class LibcurlHttpFetcher : public HttpFetcher {
   // expensive.
   bool ConnectionIsExpensive() const;
 
+  // Returns whether or not the current build is official.
+  bool IsOfficialBuild() const;
+
   // Handles for the libcurl library
   CURLM *curl_multi_handle_;
   CURL *curl_handle_;
@@ -168,15 +178,20 @@ class LibcurlHttpFetcher : public HttpFetcher {
 
   // Seconds to wait before asking libcurl to "perform".
   int idle_seconds_;
-  
+
   // If true, assume the network is expensive or not, according to
   // forced_expensive_connection_. (Useful for testing).
   bool force_connection_type_;
   bool forced_expensive_connection_;
 
+  // If true, assume the build is official or not, according to
+  // forced_official_build_. Useful for testing.
+  bool force_build_type_;
+  bool forced_official_build_;
+
   // If true, we are currently performing a write callback on the delegate.
   bool in_write_callback_;
-  
+
   // We can't clean everything up while we're in a write callback, so
   // if we get a terminate request, queue it until we can handle it.
   bool terminate_requested_;

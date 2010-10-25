@@ -43,6 +43,10 @@ bool LibcurlHttpFetcher::ConnectionIsExpensive() const {
   return FlimFlamProxy::IsExpensiveConnectionType(type);
 }
 
+bool LibcurlHttpFetcher::IsOfficialBuild() const {
+  return force_build_type_ ? forced_official_build_ : utils::IsOfficialBuild();
+}
+
 void LibcurlHttpFetcher::ResumeTransfer(const std::string& url) {
   LOG(INFO) << "Starting/Resuming transfer";
   CHECK(!transfer_in_progress_);
@@ -82,9 +86,7 @@ void LibcurlHttpFetcher::ResumeTransfer(const std::string& url) {
     url_to_use = "";  // Sabotage the URL
   }
 
-  CHECK_EQ(curl_easy_setopt(curl_handle_,
-                            CURLOPT_URL,
-                            url_to_use.c_str()),
+  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_URL, url_to_use.c_str()),
            CURLE_OK);
 
   // If the connection drops under 10 bytes/sec for 3 minutes, reconnect.
@@ -104,6 +106,16 @@ void LibcurlHttpFetcher::ResumeTransfer(const std::string& url) {
   CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_SSL_VERIFYPEER, 1), CURLE_OK);
   CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_CAPATH, kCACertificatesPath),
            CURLE_OK);
+
+  // Restrict protocols to HTTPS in official builds.
+  if (IsOfficialBuild()) {
+    CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS),
+             CURLE_OK);
+    CHECK_EQ(curl_easy_setopt(curl_handle_,
+                              CURLOPT_REDIR_PROTOCOLS,
+                              CURLPROTO_HTTPS),
+             CURLE_OK);
+  }
 
   CHECK_EQ(curl_multi_add_handle(curl_multi_handle_, curl_handle_), CURLM_OK);
   transfer_in_progress_ = true;

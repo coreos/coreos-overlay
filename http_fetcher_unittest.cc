@@ -136,6 +136,7 @@ class HttpFetcherTest<LibcurlHttpFetcher> : public ::testing::Test {
     ret->set_idle_seconds(1);
     ret->set_retry_seconds(1);
     ret->SetConnectionAsExpensive(false);
+    ret->SetBuildType(false);
     return ret;
   }
   HttpFetcher* NewSmallFetcher() {
@@ -169,6 +170,8 @@ class HttpFetcherTest<MultiHttpFetcher<LibcurlHttpFetcher> >
     // Speed up test execution.
     ret->set_idle_seconds(1);
     ret->set_retry_seconds(1);
+    ret->SetConnectionAsExpensive(false);
+    ret->SetBuildType(false);
     return ret;
   }
   bool IsMulti() const { return true; }
@@ -613,6 +616,8 @@ void MultiTest(HttpFetcher* fetcher_in,
         dynamic_cast<MultiHttpFetcher<LibcurlHttpFetcher>*>(fetcher.get());
     ASSERT_TRUE(multi_fetcher);
     multi_fetcher->set_ranges(ranges);
+    multi_fetcher->SetConnectionAsExpensive(false);
+    multi_fetcher->SetBuildType(false);
     fetcher->set_delegate(&delegate);
 
     StartTransferArgs start_xfer_args = {fetcher.get(), url};
@@ -698,7 +703,7 @@ TYPED_TEST(HttpFetcherTest, MultiHttpFetcherInsufficientTest) {
 }
 
 namespace {
-class ExpensiveConnectionTestDelegate : public HttpFetcherDelegate {
+class BlockedTransferTestDelegate : public HttpFetcherDelegate {
  public:
   virtual void ReceivedBytes(HttpFetcher* fetcher,
                              const char* bytes, int length) {
@@ -713,28 +718,37 @@ class ExpensiveConnectionTestDelegate : public HttpFetcherDelegate {
 
 }  // namespace
 
-TYPED_TEST(HttpFetcherTest, ExpensiveConnectionTest) {
+TYPED_TEST(HttpFetcherTest, BlockedTransferTest) {
   if (this->IsMock() || this->IsMulti())
     return;
-  typename TestFixture::HttpServer server;
-  
-  ASSERT_TRUE(server.started_);
 
-  GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
-  ExpensiveConnectionTestDelegate delegate;
-  delegate.loop_ = loop;
+  for (int i = 0; i < 2; i++) {
+    typename TestFixture::HttpServer server;
 
-  scoped_ptr<HttpFetcher> fetcher(this->NewLargeFetcher());
-  dynamic_cast<LibcurlHttpFetcher*>(
-      fetcher.get())->SetConnectionAsExpensive(true);
-  fetcher->set_delegate(&delegate);
+    ASSERT_TRUE(server.started_);
 
-  StartTransferArgs start_xfer_args =
-      { fetcher.get(), LocalServerUrlForPath(this->SmallUrl()) };
+    GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
+    BlockedTransferTestDelegate delegate;
+    delegate.loop_ = loop;
 
-  g_timeout_add(0, StartTransfer, &start_xfer_args);
-  g_main_loop_run(loop);
-  g_main_loop_unref(loop);
+    scoped_ptr<HttpFetcher> fetcher(this->NewLargeFetcher());
+    LibcurlHttpFetcher* curl_fetcher =
+        dynamic_cast<LibcurlHttpFetcher*>(fetcher.get());
+    bool is_expensive_connection = (i == 0);
+    bool is_official_build = (i == 1);
+    LOG(INFO) << "is_expensive_connection: " << is_expensive_connection;
+    LOG(INFO) << "is_official_build: " << is_official_build;
+    curl_fetcher->SetConnectionAsExpensive(is_expensive_connection);
+    curl_fetcher->SetBuildType(is_official_build);
+    fetcher->set_delegate(&delegate);
+
+    StartTransferArgs start_xfer_args =
+        { fetcher.get(), LocalServerUrlForPath(this->SmallUrl()) };
+
+    g_timeout_add(0, StartTransfer, &start_xfer_args);
+    g_main_loop_run(loop);
+    g_main_loop_unref(loop);
+  }
 }
 
 }  // namespace chromeos_update_engine
