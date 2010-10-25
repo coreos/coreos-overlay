@@ -107,6 +107,15 @@ gboolean update_engine_service_reboot_if_needed(UpdateEngineService* self,
   return TRUE;
 }
 
+gboolean update_engine_service_set_track(UpdateEngineService* self,
+                                         gchar* track,
+                                         GError **error) {
+  if (track) {
+    LOG(INFO) << "TODO: Setting track to: " << track;
+  }
+  return TRUE;
+}
+
 gboolean update_engine_service_emit_status_update(
     UpdateEngineService* self,
     gint64 last_checked_time,

@@ -20,6 +20,9 @@
     </method>
     <method name="RebootIfNeeded">
     </method>
+    <method name="SetTrack">
+      <arg type="s" name="track" />
+    </method>
     <signal name="StatusUpdate">
       <arg type="x" name="last_checked_time" />
       <arg type="d" name="progress" />

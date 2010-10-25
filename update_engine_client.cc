@@ -27,6 +27,7 @@ DEFINE_bool(check_for_update, false, "Initiate check for updates.");
 DEFINE_string(omaha_url, "", "The URL of the Omaha update server.");
 DEFINE_bool(reboot, false, "Initiate a reboot if needed.");
 DEFINE_bool(status, false, "Print the status to stdout.");
+DEFINE_string(track, "", "Permanently change the update track.");
 DEFINE_bool(update, false, "Forces an update and waits for its completion. "
             "Exit status is 0 if the update succeeded, and 1 otherwise.");
 DEFINE_bool(watch_for_updates, false,
@@ -176,6 +177,21 @@ bool RebootIfNeeded() {
   return true;
 }
 
+void SetTrack(const string& track) {
+  DBusGProxy* proxy;
+  GError* error = NULL;
+
+  CHECK(GetProxy(&proxy));
+
+  gboolean rc =
+      org_chromium_UpdateEngineInterface_set_track(proxy,
+                                                   track.c_str(),
+                                                   &error);
+  CHECK_EQ(rc, true) << "Error setting the track: "
+                     << GetGErrorMessage(error);
+  LOG(INFO) << "TODO: Track permanently set to: " << track;
+}
+
 static gboolean CompleteUpdateSource(gpointer data) {
   string current_op;
   if (!GetStatus(&current_op) || current_op == "UPDATE_STATUS_IDLE") {
@@ -218,6 +234,11 @@ int main(int argc, char** argv) {
     return 0;
   }
 
+  // First, update the track if requested.
+  if (!FLAGS_track.empty()) {
+    SetTrack(FLAGS_track);
+  }
+
   // Initiate an update check, if necessary.
   if (FLAGS_check_for_update ||
       FLAGS_update ||
@@ -256,6 +277,6 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  LOG(INFO) << "No flags specified. Exiting.";
+  LOG(INFO) << "Done.";
   return 0;
 }

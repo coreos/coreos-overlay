@@ -62,6 +62,10 @@ gboolean update_engine_service_get_status(UpdateEngineService* self,
 gboolean update_engine_service_reboot_if_needed(UpdateEngineService* self,
                                                 GError **error);
 
+gboolean update_engine_service_set_track(UpdateEngineService* self,
+                                         gchar* track,
+                                         GError **error);
+
 gboolean update_engine_service_emit_status_update(
     UpdateEngineService* self,
     gint64 last_checked_time,
