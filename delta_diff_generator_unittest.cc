@@ -429,6 +429,13 @@ vector<Extent> VectOfExt(uint64_t start_block, uint64_t num_blocks) {
   return vector<Extent>(1, ExtentForRange(start_block, num_blocks));
 }
 
+vector<Extent> VectOfExts(uint64_t start_block1, uint64_t num_blocks1,
+                          uint64_t start_block2, uint64_t num_blocks2) {
+  vector<Extent> ret(1, ExtentForRange(start_block1, num_blocks1));
+  ret.push_back(ExtentForRange(start_block2, num_blocks2));
+  return ret;
+}
+
 EdgeProperties EdgeWithReadDep(const vector<Extent>& extents) {
   EdgeProperties ret;
   ret.extents = extents;
@@ -611,6 +618,114 @@ TEST_F(DeltaDiffGeneratorTest, IsNoopOperationTest) {
   *(op.add_src_extents()) = ExtentForRange(24, 1);
   *(op.add_dst_extents()) = ExtentForRange(25, 1);
   EXPECT_FALSE(DeltaDiffGenerator::IsNoopOperation(op));
+}
+
+TEST_F(DeltaDiffGeneratorTest, RunAsRootAssignTempBlocksReuseTest) {
+  // AssignTempBlocks(Graph* graph,
+  // const string& new_root,
+  // int data_fd,
+  // off_t* data_file_size,
+  // vector<Vertex::Index>* op_indexes,
+  // vector<vector<Vertex::Index>::size_type>* reverse_op_indexes,
+  // const vector<CutEdgeVertexes>& cuts
+  Graph graph(9);
+
+  const vector<Extent> empt;
+  uint64_t tmp = kTempBlockStart;
+  const string kFilename = "/foo";
+
+  vector<CutEdgeVertexes> cuts;
+  cuts.resize(3);
+
+  // Simple broken loop:
+  GenVertex(&graph[0], VectOfExt(0, 1), VectOfExt(1, 1), "", OP_MOVE);
+  GenVertex(&graph[1], VectOfExt(tmp, 1), VectOfExt(0, 1), "", OP_MOVE);
+  GenVertex(&graph[2], VectOfExt(1, 1), VectOfExt(tmp, 1), "", OP_MOVE);
+  // Corresponding edges:
+  graph[0].out_edges[2] = EdgeWithReadDep(VectOfExt(1, 1));
+  graph[1].out_edges[2] = EdgeWithWriteDep(VectOfExt(tmp, 1));
+  graph[1].out_edges[0] = EdgeWithReadDep(VectOfExt(0, 1));
+  // Store the cut:
+  cuts[0].old_dst = 1;
+  cuts[0].old_src = 0;
+  cuts[0].new_vertex = 2;
+  cuts[0].tmp_extents = VectOfExt(tmp, 1);
+  tmp++;
+
+  // Slightly more complex pair of loops:
+  GenVertex(&graph[3], VectOfExt(4, 2), VectOfExt(2, 2), "", OP_MOVE);
+  GenVertex(&graph[4], VectOfExt(6, 1), VectOfExt(7, 1), "", OP_MOVE);
+  GenVertex(&graph[5], VectOfExt(tmp, 3), VectOfExt(4, 3), kFilename, OP_MOVE);
+  GenVertex(&graph[6], VectOfExt(2, 2), VectOfExt(tmp, 2), "", OP_MOVE);
+  GenVertex(&graph[7], VectOfExt(7, 1), VectOfExt(tmp + 2, 1), "", OP_MOVE);
+  // Corresponding edges:
+  graph[3].out_edges[6] = EdgeWithReadDep(VectOfExt(2, 2));
+  graph[4].out_edges[7] = EdgeWithReadDep(VectOfExt(7, 1));
+  graph[5].out_edges[6] = EdgeWithWriteDep(VectOfExt(tmp, 2));
+  graph[5].out_edges[7] = EdgeWithWriteDep(VectOfExt(tmp + 2, 1));
+  graph[5].out_edges[3] = EdgeWithReadDep(VectOfExt(4, 2));
+  graph[5].out_edges[4] = EdgeWithReadDep(VectOfExt(6, 1));
+  // Store the cuts:
+  cuts[1].old_dst = 5;
+  cuts[1].old_src = 3;
+  cuts[1].new_vertex = 6;
+  cuts[1].tmp_extents = VectOfExt(tmp, 2);
+  cuts[2].old_dst = 5;
+  cuts[2].old_src = 4;
+  cuts[2].new_vertex = 7;
+  cuts[2].tmp_extents = VectOfExt(tmp + 2, 1);
+
+  // Supplier of temp block:
+  GenVertex(&graph[8], empt, VectOfExt(8, 1), "", OP_REPLACE);
+
+  // Specify the final order:
+  vector<Vertex::Index> op_indexes;
+  op_indexes.push_back(2);
+  op_indexes.push_back(0);
+  op_indexes.push_back(1);
+  op_indexes.push_back(6);
+  op_indexes.push_back(3);
+  op_indexes.push_back(7);
+  op_indexes.push_back(4);
+  op_indexes.push_back(5);
+  op_indexes.push_back(8);
+
+  vector<vector<Vertex::Index>::size_type> reverse_op_indexes;
+  DeltaDiffGenerator::GenerateReverseTopoOrderMap(op_indexes,
+                                                  &reverse_op_indexes);
+
+  // Prepare the filesystem with the minimum required for this to work
+  string temp_dir;
+  EXPECT_TRUE(utils::MakeTempDirectory("/tmp/AssignTempBlocksReuseTest.XXXXXX",
+                                       &temp_dir));
+  ScopedDirRemover temp_dir_remover(temp_dir);
+
+  const size_t kBlockSize = 4096;
+  vector<char> temp_data(kBlockSize * 3);
+  FillWithData(&temp_data);
+  EXPECT_TRUE(WriteFileVector(temp_dir + kFilename, temp_data));
+  ScopedPathUnlinker filename_unlinker(temp_dir + kFilename);
+
+  int fd;
+  EXPECT_TRUE(utils::MakeTempFile("/tmp/AssignTempBlocksReuseTest.XXXXXX",
+                                  NULL,
+                                  &fd));
+  ScopedFdCloser fd_closer(&fd);
+  off_t data_file_size = 0;
+  
+  EXPECT_TRUE(DeltaDiffGenerator::AssignTempBlocks(&graph,
+                                                   temp_dir,
+                                                   fd,
+                                                   &data_file_size,
+                                                   &op_indexes,
+                                                   &reverse_op_indexes,
+                                                   cuts));
+  EXPECT_FALSE(graph[6].valid);
+  EXPECT_FALSE(graph[7].valid);
+  EXPECT_EQ(1, graph[1].op.src_extents_size());
+  EXPECT_EQ(2, graph[1].op.src_extents(0).start_block());
+  EXPECT_EQ(1, graph[1].op.src_extents(0).num_blocks());
+  EXPECT_EQ(OP_REPLACE_BZ, graph[5].op.type());
 }
 
 }  // namespace chromeos_update_engine

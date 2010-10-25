@@ -40,6 +40,7 @@ using std::make_pair;
 using std::map;
 using std::max;
 using std::min;
+using std::pair;
 using std::set;
 using std::string;
 using std::vector;
@@ -923,6 +924,170 @@ bool TempBlocksExistInExtents(const T& extents) {
   return false;
 }
 
+// Convertes the cuts, which must all have the same |old_dst| member,
+// to full. It does this by converting the |old_dst| to REPLACE or
+// REPLACE_BZ, dropping all incoming edges to |old_dst|, and marking
+// all temp nodes invalid.
+bool ConvertCutsToFull(
+    Graph* graph,
+    const string& new_root,
+    int data_fd,
+    off_t* data_file_size,
+    vector<Vertex::Index>* op_indexes,
+    vector<vector<Vertex::Index>::size_type>* reverse_op_indexes,
+    const vector<CutEdgeVertexes>& cuts) {
+  CHECK(!cuts.empty());
+  set<Vertex::Index> deleted_nodes;
+  for (vector<CutEdgeVertexes>::const_iterator it = cuts.begin(),
+           e = cuts.end(); it != e; ++it) {
+    TEST_AND_RETURN_FALSE(DeltaDiffGenerator::ConvertCutToFullOp(
+        graph,
+        *it,
+        new_root,
+        data_fd,
+        data_file_size));
+    deleted_nodes.insert(it->new_vertex);
+  }
+  deleted_nodes.insert(cuts[0].old_dst);
+  
+  vector<Vertex::Index> new_op_indexes;
+  new_op_indexes.reserve(op_indexes->size());
+  for (vector<Vertex::Index>::iterator it = op_indexes->begin(),
+           e = op_indexes->end(); it != e; ++it) {
+    if (utils::SetContainsKey(deleted_nodes, *it))
+      continue;
+    new_op_indexes.push_back(*it);
+  }
+  new_op_indexes.push_back(cuts[0].old_dst);
+  op_indexes->swap(new_op_indexes);
+  DeltaDiffGenerator::GenerateReverseTopoOrderMap(*op_indexes,
+                                                  reverse_op_indexes);
+  return true;
+}
+
+// Tries to assign temp blocks for a collection of cuts, all of which share
+// the same old_dst member. If temp blocks can't be found, old_dst will be
+// converted to a REPLACE or REPLACE_BZ operation. Returns true on success,
+// which can happen even if blocks are converted to full. Returns false
+// on exceptional error cases.
+bool AssignBlockForAdjoiningCuts(
+    Graph* graph,
+    const string& new_root,
+    int data_fd,
+    off_t* data_file_size,
+    vector<Vertex::Index>* op_indexes,
+    vector<vector<Vertex::Index>::size_type>* reverse_op_indexes,
+    const vector<CutEdgeVertexes>& cuts) {
+  CHECK(!cuts.empty());
+  const Vertex::Index old_dst = cuts[0].old_dst;
+  // Calculate # of blocks needed
+  uint64_t blocks_needed = 0;
+  map<const CutEdgeVertexes*, uint64_t> cuts_blocks_needed;
+  for (vector<CutEdgeVertexes>::const_iterator it = cuts.begin(),
+           e = cuts.end(); it != e; ++it) {
+    uint64_t cut_blocks_needed = 0;
+    for (vector<Extent>::const_iterator jt = it->tmp_extents.begin(),
+             je = it->tmp_extents.end(); jt != je; ++jt) {
+      cut_blocks_needed += jt->num_blocks();
+    }
+    blocks_needed += cut_blocks_needed;
+    cuts_blocks_needed[&*it] = cut_blocks_needed;
+  }
+  LOG(INFO) << "Need to find " << blocks_needed << " blocks for "
+            << cuts.size() << " cuts";
+  
+  // Find enough blocks
+  ExtentRanges scratch_ranges;
+  // Each block that's supplying temp blocks and the corresponding blocks:
+  typedef vector<pair<Vertex::Index, ExtentRanges> > SupplierVector;
+  SupplierVector block_suppliers;
+  uint64_t scratch_blocks_found = 0;
+  LOG(INFO) << "scan from " << (*reverse_op_indexes)[old_dst] + 1
+            << " to " << op_indexes->size();
+  for (vector<Vertex::Index>::size_type i = (*reverse_op_indexes)[old_dst] + 1,
+           e = op_indexes->size(); i < e; ++i) {
+    Vertex::Index test_node = (*op_indexes)[i];
+    if (!(*graph)[test_node].valid)
+      continue;
+    // See if this node has sufficient blocks
+    ExtentRanges ranges;
+    ranges.AddRepeatedExtents((*graph)[test_node].op.dst_extents());
+    ranges.SubtractExtent(ExtentForRange(
+        kTempBlockStart, kSparseHole - kTempBlockStart));
+    ranges.SubtractRepeatedExtents((*graph)[test_node].op.src_extents());
+    // For now, for simplicity, subtract out all blocks in read-before
+    // dependencies.
+    for (Vertex::EdgeMap::const_iterator edge_i =
+             (*graph)[test_node].out_edges.begin(),
+             edge_e = (*graph)[test_node].out_edges.end();
+         edge_i != edge_e; ++edge_i) {
+      ranges.SubtractExtents(edge_i->second.extents);
+    }
+    if (ranges.blocks() == 0)
+      continue;
+
+    if (ranges.blocks() + scratch_blocks_found > blocks_needed) {
+      // trim down ranges
+      vector<Extent> new_ranges = ranges.GetExtentsForBlockCount(
+        blocks_needed - scratch_blocks_found);
+      ranges = ExtentRanges();
+      ranges.AddExtents(new_ranges);
+    }
+    scratch_ranges.AddRanges(ranges);
+    block_suppliers.push_back(make_pair(test_node, ranges));
+    scratch_blocks_found += ranges.blocks();
+    LOG(INFO) << "Adding " << ranges.blocks() << " blocks. Now have "
+              << scratch_ranges.blocks();
+    if (scratch_ranges.blocks() >= blocks_needed)
+      break;
+  }
+  if (scratch_ranges.blocks() < blocks_needed) {
+    LOG(INFO) << "Unable to find sufficient scratch";
+    TEST_AND_RETURN_FALSE(ConvertCutsToFull(graph,
+                                            new_root,
+                                            data_fd,
+                                            data_file_size,
+                                            op_indexes,
+                                            reverse_op_indexes,
+                                            cuts));
+    return true;
+  }
+  // Use the scratch we found
+  TEST_AND_RETURN_FALSE(scratch_ranges.blocks() == scratch_blocks_found);
+
+  // Make all the suppliers depend on this node
+  for (SupplierVector::iterator it = block_suppliers.begin(),
+           e = block_suppliers.end(); it != e; ++it) {
+    graph_utils::AddReadBeforeDepExtents(
+        &(*graph)[it->first],
+        old_dst,
+        it->second.GetExtentsForBlockCount(it->second.blocks()));
+  }
+  
+  // Replace temp blocks in each cut
+  for (vector<CutEdgeVertexes>::const_iterator it = cuts.begin(),
+           e = cuts.end(); it != e; ++it) {
+    vector<Extent> real_extents =
+        scratch_ranges.GetExtentsForBlockCount(cuts_blocks_needed[&*it]);
+    scratch_ranges.SubtractExtents(real_extents);
+
+    // Fix the old dest node w/ the real blocks
+    DeltaDiffGenerator::SubstituteBlocks(&(*graph)[old_dst],
+                                         it->tmp_extents,
+                                         real_extents);
+
+    // Fix the new node w/ the real blocks. Since the new node is just a
+    // copy operation, we can replace all the dest extents w/ the real
+    // blocks.
+    DeltaArchiveManifest_InstallOperation *op =
+        &(*graph)[it->new_vertex].op;
+    op->clear_dst_extents();
+    DeltaDiffGenerator::StoreExtents(real_extents, op->mutable_dst_extents());
+  }
+  LOG(INFO) << "Done subbing in for cut set";
+  return true;
+}
+
 }  // namespace {}
 
 // Returns true if |op| is a no-op operation that doesn't do any useful work
@@ -940,119 +1105,47 @@ bool DeltaDiffGenerator::AssignTempBlocks(
     off_t* data_file_size,
     vector<Vertex::Index>* op_indexes,
     vector<vector<Vertex::Index>::size_type>* reverse_op_indexes,
-    vector<CutEdgeVertexes>& cuts) {
+    const vector<CutEdgeVertexes>& cuts) {
   CHECK(!cuts.empty());
+
+  // group of cuts w/ the same old_dst:
+  vector<CutEdgeVertexes> cuts_group;
+
   for (vector<CutEdgeVertexes>::size_type i = cuts.size() - 1, e = 0;
        true ; --i) {
     LOG(INFO) << "Fixing temp blocks in cut " << i
               << ": old dst: " << cuts[i].old_dst << " new vertex: "
-              << cuts[i].new_vertex;
-    const uint64_t blocks_needed =
-        graph_utils::BlocksInExtents(cuts[i].tmp_extents);
-    LOG(INFO) << "Scanning for usable blocks (" << blocks_needed << " needed)";
-    // For now, just look for a single op w/ sufficient blocks, not
-    // considering blocks from outgoing read-before deps.
-    Vertex::Index node = cuts[i].old_dst;
-    DeltaArchiveManifest_InstallOperation_Type node_type =
-        (*graph)[node].op.type();
-    if (node_type == DeltaArchiveManifest_InstallOperation_Type_REPLACE ||
-        node_type == DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ) {
-      LOG(INFO) << "This was already converted to full, so skipping.";
-      // Delete the temp node and pointer to it from old src
-      if (!(*graph)[cuts[i].old_src].out_edges.erase(cuts[i].new_vertex)) {
-        LOG(INFO) << "Odd. node " << cuts[i].old_src << " didn't point to "
-                  << cuts[i].new_vertex;
-      }
-      (*graph)[cuts[i].new_vertex].valid = false;
-      vector<Vertex::Index>::size_type new_topo_idx =
-          (*reverse_op_indexes)[cuts[i].new_vertex];
-      op_indexes->erase(op_indexes->begin() + new_topo_idx);
-      GenerateReverseTopoOrderMap(*op_indexes, reverse_op_indexes);
-      continue;
+              << cuts[i].new_vertex << " path: "
+              << (*graph)[cuts[i].old_dst].file_name;
+
+    if (cuts_group.empty() || (cuts_group[0].old_dst == cuts[i].old_dst)) {
+      cuts_group.push_back(cuts[i]);
+    } else {
+      CHECK(!cuts_group.empty());
+      TEST_AND_RETURN_FALSE(AssignBlockForAdjoiningCuts(graph,
+                                                        new_root,
+                                                        data_fd,
+                                                        data_file_size,
+                                                        op_indexes,
+                                                        reverse_op_indexes,
+                                                        cuts_group));
+      cuts_group.clear();
+      cuts_group.push_back(cuts[i]);
     }
-    bool found_node = false;
-    for (vector<Vertex::Index>::size_type j = (*reverse_op_indexes)[node] + 1,
-             je = op_indexes->size(); j < je; ++j) {
-      Vertex::Index test_node = (*op_indexes)[j];
-      // See if this node has sufficient blocks
-      ExtentRanges ranges;
-      ranges.AddRepeatedExtents((*graph)[test_node].op.dst_extents());
-      ranges.SubtractExtent(ExtentForRange(
-          kTempBlockStart, kSparseHole - kTempBlockStart));
-      ranges.SubtractRepeatedExtents((*graph)[test_node].op.src_extents());
-      // For now, for simplicity, subtract out all blocks in read-before
-      // dependencies.
-      for (Vertex::EdgeMap::const_iterator edge_i =
-               (*graph)[test_node].out_edges.begin(),
-               edge_e = (*graph)[test_node].out_edges.end();
-           edge_i != edge_e; ++edge_i) {
-        ranges.SubtractExtents(edge_i->second.extents);
-      }
 
-      uint64_t blocks_found = ranges.blocks();
-      if (blocks_found < blocks_needed) {
-        if (blocks_found > 0)
-          LOG(INFO) << "insufficient blocks found in topo node " << j
-                    << " (node " << (*op_indexes)[j] << "). Found only "
-                    << blocks_found;
-        continue;
-      }
-      found_node = true;
-      LOG(INFO) << "Found sufficient blocks in topo node " << j
-                << " (node " << (*op_indexes)[j] << ")";
-      // Sub in the blocks, and make the node supplying the blocks
-      // depend on old_dst.
-      vector<Extent> real_extents =
-          ranges.GetExtentsForBlockCount(blocks_needed);
-
-      // Fix the old dest node w/ the real blocks
-      SubstituteBlocks(&(*graph)[node],
-                       cuts[i].tmp_extents,
-                       real_extents);
-
-      // Fix the new node w/ the real blocks. Since the new node is just a
-      // copy operation, we can replace all the dest extents w/ the real
-      // blocks.
-      DeltaArchiveManifest_InstallOperation *op =
-          &(*graph)[cuts[i].new_vertex].op;
-      op->clear_dst_extents();
-      StoreExtents(real_extents, op->mutable_dst_extents());
-
-      // Add an edge from the real-block supplier to the old dest block.
-      graph_utils::AddReadBeforeDepExtents(&(*graph)[test_node],
-                                           node,
-                                           real_extents);
-      break;
-    }
-    if (!found_node) {
-      // convert to full op
-      LOG(WARNING) << "Failed to find enough temp blocks for cut " << i
-                   << " with old dest (graph node " << node
-                   << "). Converting to a full op, at the expense of a "
-                   << "good compression ratio.";
-      TEST_AND_RETURN_FALSE(ConvertCutToFullOp(graph,
-                                               cuts[i],
-                                               new_root,
-                                               data_fd,
-                                               data_file_size));
-      // move the full op to the back
-      vector<Vertex::Index> new_op_indexes;
-      for (vector<Vertex::Index>::const_iterator iter_i = op_indexes->begin(),
-               iter_e = op_indexes->end(); iter_i != iter_e; ++iter_i) {
-        if ((*iter_i == cuts[i].old_dst) || (*iter_i == cuts[i].new_vertex))
-          continue;
-        new_op_indexes.push_back(*iter_i);
-      }
-      new_op_indexes.push_back(cuts[i].old_dst);
-      op_indexes->swap(new_op_indexes);
-
-      GenerateReverseTopoOrderMap(*op_indexes, reverse_op_indexes);
-    }
     if (i == e) {
       // break out of for() loop
       break;
     }
   }
+  CHECK(!cuts_group.empty());
+  TEST_AND_RETURN_FALSE(AssignBlockForAdjoiningCuts(graph,
+                                                    new_root,
+                                                    data_fd,
+                                                    data_file_size,
+                                                    op_indexes,
+                                                    reverse_op_indexes,
+                                                    cuts_group));
   return true;
 }
 
@@ -1132,29 +1225,35 @@ bool DeltaDiffGenerator::ConvertCutToFullOp(Graph* graph,
   // Drop all incoming edges, keep all outgoing edges
 
   // Keep all outgoing edges
-  Vertex::EdgeMap out_edges = (*graph)[cut.old_dst].out_edges;
-  graph_utils::DropWriteBeforeDeps(&out_edges);
+  if ((*graph)[cut.old_dst].op.type() !=
+      DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ &&
+      (*graph)[cut.old_dst].op.type() !=
+      DeltaArchiveManifest_InstallOperation_Type_REPLACE) {
+    Vertex::EdgeMap out_edges = (*graph)[cut.old_dst].out_edges;
+    graph_utils::DropWriteBeforeDeps(&out_edges);
 
-  TEST_AND_RETURN_FALSE(DeltaReadFile(graph,
-                                      cut.old_dst,
-                                      NULL,
-                                      "/-!@:&*nonexistent_path",
-                                      new_root,
-                                      (*graph)[cut.old_dst].file_name,
-                                      data_fd,
-                                      data_file_size));
+    TEST_AND_RETURN_FALSE(DeltaReadFile(graph,
+                                        cut.old_dst,
+                                        NULL,
+                                        "/-!@:&*nonexistent_path",
+                                        new_root,
+                                        (*graph)[cut.old_dst].file_name,
+                                        data_fd,
+                                        data_file_size));
 
-  (*graph)[cut.old_dst].out_edges = out_edges;
+    (*graph)[cut.old_dst].out_edges = out_edges;
 
-  // Right now we don't have doubly-linked edges, so we have to scan
-  // the whole graph.
-  graph_utils::DropIncomingEdgesTo(graph, cut.old_dst);
+    // Right now we don't have doubly-linked edges, so we have to scan
+    // the whole graph.
+    graph_utils::DropIncomingEdgesTo(graph, cut.old_dst);
+  }
 
   // Delete temp node
   (*graph)[cut.old_src].out_edges.erase(cut.new_vertex);
   CHECK((*graph)[cut.old_dst].out_edges.find(cut.new_vertex) ==
         (*graph)[cut.old_dst].out_edges.end());
   (*graph)[cut.new_vertex].valid = false;
+  LOG(INFO) << "marked node invalid: " << cut.new_vertex;
   return true;
 }
 
@@ -1191,6 +1290,8 @@ bool DeltaDiffGenerator::ConvertGraphToDag(Graph* graph,
   vector<vector<Vertex::Index>::size_type> inverse_final_order;
   GenerateReverseTopoOrderMap(*final_order, &inverse_final_order);
 
+  SortCutsByTopoOrder(*final_order, &cuts);
+
   if (!cuts.empty())
     TEST_AND_RETURN_FALSE(AssignTempBlocks(graph,
                                            new_root,
@@ -1200,6 +1301,7 @@ bool DeltaDiffGenerator::ConvertGraphToDag(Graph* graph,
                                            &inverse_final_order,
                                            cuts));
   LOG(INFO) << "Making sure all temp blocks have been allocated";
+
   graph_utils::DumpGraph(*graph);
   CHECK(NoTempBlocksRemain(*graph));
   LOG(INFO) << "done making sure all temp blocks are allocated";

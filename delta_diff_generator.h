@@ -192,7 +192,7 @@ class DeltaDiffGenerator {
       off_t* data_file_size,
       std::vector<Vertex::Index>* op_indexes,
       std::vector<std::vector<Vertex::Index>::size_type>* reverse_op_indexes,
-      std::vector<CutEdgeVertexes>& cuts);
+      const std::vector<CutEdgeVertexes>& cuts);
 
   // Given a new rootfs and kernel (|new_image|, |new_kernel_part|), Reads them
   // sequentially, creating a full update of chunk_size chunks.  Populates
