@@ -189,7 +189,7 @@ void SetTrack(const string& track) {
                                                    &error);
   CHECK_EQ(rc, true) << "Error setting the track: "
                      << GetGErrorMessage(error);
-  LOG(INFO) << "TODO: Track permanently set to: " << track;
+  LOG(INFO) << "Track permanently set to: " << track;
 }
 
 static gboolean CompleteUpdateSource(gpointer data) {

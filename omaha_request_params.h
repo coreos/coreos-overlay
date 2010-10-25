@@ -7,7 +7,8 @@
 
 #include <string>
 
-#include "base/basictypes.h"
+#include <base/basictypes.h>
+#include <gtest/gtest_prod.h>  // for FRIEND_TEST
 
 // This gathers local system information and prepares info used by the
 // Omaha request action.
@@ -55,6 +56,8 @@ struct OmahaRequestParams {
 
   std::string update_url;
 
+  static const char kUpdateTrackKey[];
+
   // Suggested defaults
   static const char* const kAppId;
   static const char* const kOsPlatform;
@@ -64,7 +67,7 @@ struct OmahaRequestParams {
 
 class OmahaRequestDeviceParams : public OmahaRequestParams {
  public:
-  OmahaRequestDeviceParams() {}
+  OmahaRequestDeviceParams();
 
   // Initializes all the data in the object. Non-empty
   // |in_app_version| or |in_update_url| prevents automatic detection
@@ -72,15 +75,40 @@ class OmahaRequestDeviceParams : public OmahaRequestParams {
   bool Init(const std::string& in_app_version,
             const std::string& in_update_url);
 
+  // Permanently changes the release track to |track|. Returns true on success,
+  // false otherwise.
+  bool SetTrack(const std::string& track);
+  static bool SetDeviceTrack(const std::string& track);
+
   // For unit-tests.
   void set_root(const std::string& root) { root_ = root; }
 
+  // Force build type for testing purposes.
+  void SetBuildTypeOfficial(bool is_official);
+
  private:
+  FRIEND_TEST(OmahaRequestDeviceParamsTest, IsValidTrackTest);
+
+  // Use a validator that is a non-static member of this class so that its
+  // inputs can be mocked in unit tests (e.g., build type for IsValidTrack).
+  typedef bool(OmahaRequestDeviceParams::*ValueValidator)(
+      const std::string&) const;
+
+  // Returns true if this is an official build, false otherwise.
+  bool IsOfficialBuild() const;
+
+  // Returns true if |track| is a valid track, false otherwise. This method
+  // restricts the track value only if the image is official (see
+  // IsOfficialBuild).
+  bool IsValidTrack(const std::string& track) const;
+
   // Fetches the value for a given key from
-  // /mnt/stateful_partition/etc/lsb-release if possible. Failing that,
-  // it looks for the key in /etc/lsb-release.
+  // /mnt/stateful_partition/etc/lsb-release if possible. Failing that, it looks
+  // for the key in /etc/lsb-release. If |validator| is non-NULL, uses it to
+  // validate and ignore invalid valies.
   std::string GetLsbValue(const std::string& key,
-                          const std::string& default_value) const;
+                          const std::string& default_value,
+                          ValueValidator validator) const;
 
   // Gets the machine type (e.g. "i686").
   std::string GetMachineType() const;
@@ -91,6 +119,10 @@ class OmahaRequestDeviceParams : public OmahaRequestParams {
 
   // When reading files, prepend root_ to the paths. Useful for testing.
   std::string root_;
+
+  // Force build type for testing purposes.
+  bool force_build_type_;
+  bool forced_official_build_;
 
   DISALLOW_COPY_AND_ASSIGN(OmahaRequestDeviceParams);
 };

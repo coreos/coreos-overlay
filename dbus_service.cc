@@ -9,6 +9,7 @@
 #include <base/logging.h>
 
 #include "update_engine/marshal.glibmarshal.h"
+#include "update_engine/omaha_request_params.h"
 #include "update_engine/utils.h"
 
 using std::string;
@@ -111,7 +112,12 @@ gboolean update_engine_service_set_track(UpdateEngineService* self,
                                          gchar* track,
                                          GError **error) {
   if (track) {
-    LOG(INFO) << "TODO: Setting track to: " << track;
+    LOG(INFO) << "Setting track to: " << track;
+    if (!chromeos_update_engine::OmahaRequestDeviceParams::SetDeviceTrack(
+            track)) {
+      *error = NULL;
+      return FALSE;
+    }
   }
   return TRUE;
 }
