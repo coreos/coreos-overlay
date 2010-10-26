@@ -7,6 +7,7 @@
 set -ex
 
 sudo USE="-crash cros-debug" emerge -DNauv1 \
+  chromeos-base/hard-host-depends \
   chromeos-base/libchrome \
   chromeos-base/metrics \
   dev-cpp/gmock \
