@@ -344,6 +344,7 @@ void UpdateAttempter::ActionCompleted(ActionProcessor* processor,
     is_full_update_ = plan.is_full_update;
     SetupDownload();
     SetupPriorityManagement();
+    SetStatusAndNotify(UPDATE_STATUS_UPDATE_AVAILABLE);
   } else if (type == DownloadAction::StaticType()) {
     SetStatusAndNotify(UPDATE_STATUS_FINALIZING);
   }
