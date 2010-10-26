@@ -134,18 +134,15 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // returns.
   void SetPriority(utils::ProcessPriority priority);
 
-  // Set the process priority to low and sets up timeout events to increase the
-  // priority gradually to high.
+  // Sets the process priority to low and sets up timeout events to increase it.
   void SetupPriorityManagement();
 
   // Resets the process priority to normal and destroys any scheduled timeout
   // sources.
   void CleanupPriorityManagement();
 
-  // The process priority timeout source callback increases the current priority
-  // by one step (low goes to normal, normal goes to high). Returns true if the
-  // callback must be invoked again after a timeout, or false if GLib can
-  // destroy this timeout source.
+  // The process priority timeout source callback sets the current priority to
+  // normal. Returns false so that GLib destroys the timeout source.
   static gboolean StaticManagePriorityCallback(gpointer data);
   bool ManagePriorityCallback();
 

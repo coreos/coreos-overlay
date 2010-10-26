@@ -472,7 +472,7 @@ void UpdateAttempter::SetupPriorityManagement() {
     LOG(ERROR) << "Process priority timeout source hasn't been destroyed.";
     CleanupPriorityManagement();
   }
-  const int kPriorityTimeout = 10 * 60;  // 10 minutes
+  const int kPriorityTimeout = 2 * 60 * 60;  // 2 hours
   manage_priority_source_ = g_timeout_source_new_seconds(kPriorityTimeout);
   g_source_set_callback(manage_priority_source_,
                         StaticManagePriorityCallback,
@@ -495,16 +495,9 @@ gboolean UpdateAttempter::StaticManagePriorityCallback(gpointer data) {
 }
 
 bool UpdateAttempter::ManagePriorityCallback() {
-  // If the current process priority is below normal, set it to normal
-  // and let GLib invoke this callback again.
-  if (utils::ComparePriorities(priority_, utils::kProcessPriorityNormal) < 0) {
-    SetPriority(utils::kProcessPriorityNormal);
-    return true;
-  }
-  // Set the priority to high and let GLib destroy the timeout source.
-  SetPriority(utils::kProcessPriorityHigh);
+  SetPriority(utils::kProcessPriorityNormal);
   manage_priority_source_ = NULL;
-  return false;
+  return false;  // Destroy the timeout source.
 }
 
 void UpdateAttempter::DisableDeltaUpdateIfNeeded() {
