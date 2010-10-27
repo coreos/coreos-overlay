@@ -122,6 +122,8 @@ class MultiHttpFetcher : public HttpFetcher, public HttpFetcherDelegate {
               << ranges_[current_index_].second << ")";
     bytes_received_this_fetcher_ = 0;
     fetchers_[current_index_]->SetOffset(ranges_[current_index_].first);
+    if (delegate_)
+      delegate_->SeekToOffset(ranges_[current_index_].first);
     fetchers_[current_index_]->BeginTransfer(url_);
   }
 
@@ -141,8 +143,9 @@ class MultiHttpFetcher : public HttpFetcher, public HttpFetcherDelegate {
                            bytes_received_this_fetcher_);
     }
     LOG_IF(WARNING, next_size <= 0) << "Asked to write length <= 0";
-    if (delegate_)
+    if (delegate_) {
       delegate_->ReceivedBytes(this, bytes, next_size);
+    }
     bytes_received_this_fetcher_ += length;
     if (ranges_[current_index_].second >= 0 &&
         bytes_received_this_fetcher_ >= ranges_[current_index_].second) {

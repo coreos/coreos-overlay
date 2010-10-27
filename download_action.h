@@ -86,6 +86,7 @@ class DownloadAction : public Action<DownloadAction>,
   // HttpFetcherDelegate methods (see http_fetcher.h)
   virtual void ReceivedBytes(HttpFetcher *fetcher,
                              const char* bytes, int length);
+  virtual void SeekToOffset(off_t offset);
   virtual void TransferComplete(HttpFetcher *fetcher, bool successful);
 
   DownloadActionDelegate* delegate() const { return delegate_; }

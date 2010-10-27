@@ -80,9 +80,18 @@ struct EntryPointArgs {
   ActionProcessor *processor;
 };
 
+struct StartProcessorInRunLoopArgs {
+  ActionProcessor* processor;
+  MockHttpFetcher* http_fetcher;
+};
+
 gboolean StartProcessorInRunLoop(gpointer data) {
-  ActionProcessor *processor = reinterpret_cast<ActionProcessor*>(data);
+  ActionProcessor* processor =
+      reinterpret_cast<StartProcessorInRunLoopArgs*>(data)->processor;
   processor->StartProcessing();
+  MockHttpFetcher* http_fetcher =
+      reinterpret_cast<StartProcessorInRunLoopArgs*>(data)->http_fetcher;
+  http_fetcher->SetOffset(1);
   return FALSE;
 }
 
@@ -96,10 +105,11 @@ void TestWithData(const vector<char>& data,
   ScopedTempFile output_temp_file;
   DirectFileWriter writer;
 
-  // takes ownership of passed in HttpFetcher
+  // We pull off the first byte from data and seek past it.
+
   string hash = hash_test ?
       OmahaHashCalculator::OmahaHashOfString("random string") :
-      OmahaHashCalculator::OmahaHashOfData(data);
+      OmahaHashCalculator::OmahaHashOfBytes(&data[1], data.size() - 1);
   uint64_t size = data.size() + (size_test ? 1 : 0);
   InstallPlan install_plan(true,
                            false,
@@ -111,8 +121,9 @@ void TestWithData(const vector<char>& data,
   ObjectFeederAction<InstallPlan> feeder_action;
   feeder_action.set_obj(install_plan);
   PrefsMock prefs;
-  DownloadAction download_action(&prefs, new MockHttpFetcher(&data[0],
-                                                             data.size()));
+  MockHttpFetcher* http_fetcher = new MockHttpFetcher(&data[0], data.size());
+  // takes ownership of passed in HttpFetcher
+  DownloadAction download_action(&prefs, http_fetcher);
   download_action.SetTestFileWriter(&writer);
   BondActions(&feeder_action, &download_action);
   DownloadActionDelegateMock download_delegate;
@@ -120,7 +131,11 @@ void TestWithData(const vector<char>& data,
     InSequence s;
     download_action.set_delegate(&download_delegate);
     EXPECT_CALL(download_delegate, SetDownloadStatus(true)).Times(1);
-    EXPECT_CALL(download_delegate, BytesReceived(_, _)).Times(AtLeast(1));
+    if (data.size() > kMockHttpFetcherChunkSize)
+      EXPECT_CALL(download_delegate,
+                  BytesReceived(1 + kMockHttpFetcherChunkSize, _));
+
+      EXPECT_CALL(download_delegate, BytesReceived(_, _)).Times(AtLeast(1));
     EXPECT_CALL(download_delegate, SetDownloadStatus(false)).Times(1);
   }
   ActionExitCode expected_code = kActionCodeSuccess;
@@ -130,14 +145,17 @@ void TestWithData(const vector<char>& data,
     expected_code = kActionCodeDownloadSizeMismatchError;
   DownloadActionTestProcessorDelegate delegate(expected_code);
   delegate.loop_ = loop;
-  delegate.expected_data_ = data;
+  delegate.expected_data_ = vector<char>(data.begin() + 1, data.end());
   delegate.path_ = output_temp_file.GetPath();
   ActionProcessor processor;
   processor.set_delegate(&delegate);
   processor.EnqueueAction(&feeder_action);
   processor.EnqueueAction(&download_action);
 
-  g_timeout_add(0, &StartProcessorInRunLoop, &processor);
+  StartProcessorInRunLoopArgs args;
+  args.processor = &processor;
+  args.http_fetcher = http_fetcher;
+  g_timeout_add(0, &StartProcessorInRunLoop, &args);
   g_main_loop_run(loop);
   g_main_loop_unref(loop);
 }

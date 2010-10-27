@@ -35,7 +35,11 @@ bool Prefs::Init(const FilePath& prefs_dir) {
 bool Prefs::GetString(const string& key, string* value) {
   FilePath filename;
   TEST_AND_RETURN_FALSE(GetFileNameForKey(key, &filename));
-  TEST_AND_RETURN_FALSE(file_util::ReadFileToString(filename, value));
+  if (!file_util::ReadFileToString(filename, value)) {
+    PLOG(INFO) << "Unable to read prefs from " << filename.value()
+               << ". This is likely harmless.";
+    return false;
+  }
   return true;
 }
 

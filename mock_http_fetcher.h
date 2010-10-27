@@ -35,7 +35,11 @@ class MockHttpFetcher : public HttpFetcher {
   ~MockHttpFetcher();
 
   // Ignores this.
-  virtual void SetOffset(off_t offset) {}
+  virtual void SetOffset(off_t offset) {
+    sent_size_ = offset;
+    if (delegate_)
+      delegate_->SeekToOffset(offset);
+  }
 
   // Begins the transfer if it hasn't already begun.
   virtual void BeginTransfer(const std::string& url);

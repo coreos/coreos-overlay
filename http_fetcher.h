@@ -89,11 +89,13 @@ class HttpFetcher {
 // Interface for delegates
 class HttpFetcherDelegate {
  public:
-  // Called every time bytes are received, even if they are automatically
-  // delivered to an output file.
+  // Called every time bytes are received.
   virtual void ReceivedBytes(HttpFetcher* fetcher,
                              const char* bytes,
                              int length) = 0;
+
+  // Called if the fetcher seeks to a particular offset.
+  virtual void SeekToOffset(off_t offset) {}
 
   // Called when the transfer has completed successfully or been somehow
   // aborted.

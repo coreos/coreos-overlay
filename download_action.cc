@@ -107,6 +107,10 @@ void DownloadAction::TerminateProcessing() {
   }
 }
 
+void DownloadAction::SeekToOffset(off_t offset) {
+  bytes_received_ = offset;
+}
+
 void DownloadAction::ReceivedBytes(HttpFetcher *fetcher,
                                    const char* bytes,
                                    int length) {
