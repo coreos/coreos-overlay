@@ -80,6 +80,9 @@ class OmahaRequestDeviceParams : public OmahaRequestParams {
   bool SetTrack(const std::string& track);
   static bool SetDeviceTrack(const std::string& track);
 
+  // Returns the release track. On error, returns an empty string.
+  static std::string GetDeviceTrack();
+
   // For unit-tests.
   void set_root(const std::string& root) { root_ = root; }
 

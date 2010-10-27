@@ -92,6 +92,13 @@ bool OmahaRequestDeviceParams::SetDeviceTrack(const std::string& track) {
   return params.SetTrack(track);
 }
 
+string OmahaRequestDeviceParams::GetDeviceTrack() {
+  OmahaRequestDeviceParams params;
+  // Note that params.app_track is an empty string if the value in
+  // lsb-release file is invalid. See Init() for details.
+  return params.Init("", "") ? params.app_track : "";
+}
+
 string OmahaRequestDeviceParams::GetLsbValue(const string& key,
                                              const string& default_value,
                                              ValueValidator validator) const {

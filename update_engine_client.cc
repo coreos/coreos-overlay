@@ -26,6 +26,7 @@ DEFINE_string(app_version, "", "Force the current app version.");
 DEFINE_bool(check_for_update, false, "Initiate check for updates.");
 DEFINE_string(omaha_url, "", "The URL of the Omaha update server.");
 DEFINE_bool(reboot, false, "Initiate a reboot if needed.");
+DEFINE_bool(show_track, false, "Show the update track.");
 DEFINE_bool(status, false, "Print the status to stdout.");
 DEFINE_string(track, "", "Permanently change the update track.");
 DEFINE_bool(update, false, "Forces an update and waits for its completion. "
@@ -192,6 +193,24 @@ void SetTrack(const string& track) {
   LOG(INFO) << "Track permanently set to: " << track;
 }
 
+string GetTrack() {
+  DBusGProxy* proxy;
+  GError* error = NULL;
+
+  CHECK(GetProxy(&proxy));
+
+  char* track = NULL;
+  gboolean rc =
+      org_chromium_UpdateEngineInterface_get_track(proxy,
+                                                   &track,
+                                                   &error);
+  CHECK_EQ(rc, true) << "Error getting the track: "
+                     << GetGErrorMessage(error);
+  string output = track;
+  g_free(track);
+  return output;
+}
+
 static gboolean CompleteUpdateSource(gpointer data) {
   string current_op;
   if (!GetStatus(&current_op) || current_op == "UPDATE_STATUS_IDLE") {
@@ -237,6 +256,11 @@ int main(int argc, char** argv) {
   // First, update the track if requested.
   if (!FLAGS_track.empty()) {
     SetTrack(FLAGS_track);
+  }
+
+  // Show the track if requested.
+  if (FLAGS_show_track) {
+    LOG(INFO) << "Track: " << GetTrack();
   }
 
   // Initiate an update check, if necessary.

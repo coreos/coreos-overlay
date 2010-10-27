@@ -59,6 +59,10 @@ gboolean update_engine_service_get_status(UpdateEngineService* self,
                                           int64_t* new_size,
                                           GError **error);
 
+gboolean update_engine_service_get_track(UpdateEngineService* self,
+                                         gchar** track,
+                                         GError **error);
+
 gboolean update_engine_service_reboot_if_needed(UpdateEngineService* self,
                                                 GError **error);
 

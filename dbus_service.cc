@@ -99,6 +99,15 @@ gboolean update_engine_service_get_status(UpdateEngineService* self,
   return TRUE;
 }
 
+gboolean update_engine_service_get_track(UpdateEngineService* self,
+                                         gchar** track,
+                                         GError **error) {
+  string track_str =
+      chromeos_update_engine::OmahaRequestDeviceParams::GetDeviceTrack();
+  *track = strdup(track_str.c_str());
+  return TRUE;
+}
+
 gboolean update_engine_service_reboot_if_needed(UpdateEngineService* self,
                                                 GError **error) {
   if (!self->update_attempter_->RebootIfNeeded()) {

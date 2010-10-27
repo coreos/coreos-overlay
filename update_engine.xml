@@ -18,6 +18,9 @@
       <arg type="s" name="new_version" direction="out" />
       <arg type="x" name="new_size" direction="out" />
     </method>
+    <method name="GetTrack">
+      <arg type="s" name="track" direction="out" />
+    </method>
     <method name="RebootIfNeeded">
     </method>
     <method name="SetTrack">
