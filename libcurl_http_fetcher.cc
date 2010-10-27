@@ -228,55 +228,71 @@ void LibcurlHttpFetcher::Unpause() {
 void LibcurlHttpFetcher::SetupMainloopSources() {
   fd_set fd_read;
   fd_set fd_write;
-  fd_set fd_exec;
+  fd_set fd_exc;
 
   FD_ZERO(&fd_read);
   FD_ZERO(&fd_write);
-  FD_ZERO(&fd_exec);
+  FD_ZERO(&fd_exc);
 
   int fd_max = 0;
 
   // Ask libcurl for the set of file descriptors we should track on its
   // behalf.
   CHECK_EQ(curl_multi_fdset(curl_multi_handle_, &fd_read, &fd_write,
-                            &fd_exec, &fd_max), CURLM_OK);
+                            &fd_exc, &fd_max), CURLM_OK);
 
   // We should iterate through all file descriptors up to libcurl's fd_max or
-  // the highest one we're tracking, whichever is larger
-  if (!io_channels_.empty())
-    fd_max = max(fd_max, io_channels_.rbegin()->first);
+  // the highest one we're tracking, whichever is larger.
+  for (size_t t = 0; t < arraysize(io_channels_); ++t) {
+    if (!io_channels_[t].empty())
+      fd_max = max(fd_max, io_channels_[t].rbegin()->first);
+  }
 
-  // For each fd, if we're not tracking it, track it. If we are tracking it,
-  // but libcurl doesn't care about it anymore, stop tracking it.
-  // After this loop, there should be exactly as many GIOChannel objects
-  // in io_channels_ as there are fds that we're tracking.
-  for (int i = 0; i <= fd_max; i++) {
-    if (!(FD_ISSET(i, &fd_read) || FD_ISSET(i, &fd_write) ||
-          FD_ISSET(i, &fd_exec))) {
-      // if we have an outstanding io_channel, remove it
-      if (io_channels_.find(i) != io_channels_.end()) {
-        g_source_remove(io_channels_[i].second);
-        g_io_channel_unref(io_channels_[i].first);
-        io_channels_.erase(io_channels_.find(i));
+  // For each fd, if we're not tracking it, track it. If we are tracking it, but
+  // libcurl doesn't care about it anymore, stop tracking it. After this loop,
+  // there should be exactly as many GIOChannel objects in io_channels_[0|1] as
+  // there are read/write fds that we're tracking.
+  for (int fd = 0; fd <= fd_max; ++fd) {
+    // Note that fd_exc is unused in the current version of libcurl so is_exc
+    // should always be false.
+    bool is_exc = FD_ISSET(fd, &fd_exc) != 0;
+    bool must_track[2] = {
+      is_exc || (FD_ISSET(fd, &fd_read) != 0),  // track 0 -- read
+      is_exc || (FD_ISSET(fd, &fd_write) != 0)  // track 1 -- write
+    };
+
+    for (size_t t = 0; t < arraysize(io_channels_); ++t) {
+      bool tracked = io_channels_[t].find(fd) != io_channels_[t].end();
+
+      if (!must_track[t]) {
+        // If we have an outstanding io_channel, remove it.
+        if (tracked) {
+          g_source_remove(io_channels_[t][fd].second);
+          g_io_channel_unref(io_channels_[t][fd].first);
+          io_channels_[t].erase(io_channels_[t].find(fd));
+        }
+        continue;
       }
-      continue;
-    }
-    // If we are already tracking this fd, continue.
-    if (io_channels_.find(i) != io_channels_.end())
-      continue;
-    // We must track a new fd
-    GIOChannel *io_channel = g_io_channel_unix_new(i);
-    guint tag = g_io_add_watch(
-        io_channel,
-        static_cast<GIOCondition>(G_IO_IN | G_IO_OUT | G_IO_PRI |
-                                  G_IO_ERR | G_IO_HUP),
-        &StaticFDCallback,
-        this);
-    io_channels_[i] = make_pair(io_channel, tag);
-    static int io_counter = 0;
-    io_counter++;
-    if (io_counter % 50 == 0) {
-      LOG(INFO) << "io_counter = " << io_counter;
+
+      // If we are already tracking this fd, continue -- nothing to do.
+      if (tracked)
+        continue;
+
+      // Set conditions appropriately -- read for track 0, write for track 1.
+      GIOCondition condition = static_cast<GIOCondition>(
+          ((t == 0) ? (G_IO_IN | G_IO_PRI) : G_IO_OUT) | G_IO_ERR | G_IO_HUP);
+
+      // Track a new fd.
+      GIOChannel* io_channel = g_io_channel_unix_new(fd);
+      guint tag =
+          g_io_add_watch(io_channel, condition, &StaticFDCallback, this);
+
+      io_channels_[t][fd] = make_pair(io_channel, tag);
+      static int io_counter = 0;
+      io_counter++;
+      if (io_counter % 50 == 0) {
+        LOG(INFO) << "io_counter = " << io_counter;
+      }
     }
   }
 
@@ -321,12 +337,14 @@ void LibcurlHttpFetcher::CleanUp() {
     timeout_source_ = NULL;
   }
 
-  for (IOChannels::iterator it = io_channels_.begin();
-       it != io_channels_.end(); ++it) {
-    g_source_remove(it->second.second);
-    g_io_channel_unref(it->second.first);
+  for (size_t t = 0; t < arraysize(io_channels_); ++t) {
+    for (IOChannels::iterator it = io_channels_[t].begin();
+         it != io_channels_[t].end(); ++it) {
+      g_source_remove(it->second.second);
+      g_io_channel_unref(it->second.first);
+    }
+    io_channels_[t].clear();
   }
-  io_channels_.clear();
 
   if (curl_handle_) {
     if (curl_multi_handle_) {

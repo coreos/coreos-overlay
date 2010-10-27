@@ -147,10 +147,12 @@ class LibcurlHttpFetcher : public HttpFetcher {
   CURLM *curl_multi_handle_;
   CURL *curl_handle_;
 
-  // a list of all file descriptors that we're waiting on from the
-  // glib main loop
+  // Lists of all read(0)/write(1) file descriptors that we're waiting on from
+  // the glib main loop. libcurl may open/close descriptors and switch their
+  // directions so maintain two separate lists so that watch conditions can be
+  // set appropriately.
   typedef std::map<int, std::pair<GIOChannel*, guint> > IOChannels;
-  IOChannels io_channels_;
+  IOChannels io_channels_[2];
 
   // if non-NULL, a timer we're waiting on. glib main loop will call us back
   // when it fires.
