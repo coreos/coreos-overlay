@@ -123,7 +123,10 @@ void DownloadAction::ReceivedBytes(HttpFetcher *fetcher,
     processor_->ActionComplete(this, kActionCodeDownloadWriteError);
     return;
   }
-  omaha_hash_calculator_.Update(bytes, length);
+  // DeltaPerformer checks the hashes for delta updates.
+  if (install_plan_.is_full_update) {
+    omaha_hash_calculator_.Update(bytes, length);
+  }
 }
 
 namespace {
