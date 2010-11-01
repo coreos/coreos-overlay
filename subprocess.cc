@@ -162,7 +162,8 @@ bool Subprocess::SynchronousExecFlags(const std::vector<std::string>& cmd,
       NULL,  // working directory
       argv.get(),
       argp,
-      static_cast<GSpawnFlags>(G_SPAWN_STDERR_TO_DEV_NULL | flags),  // flags
+      static_cast<GSpawnFlags>(G_SPAWN_STDERR_TO_DEV_NULL |
+                               G_SPAWN_SEARCH_PATH | flags),  // flags
       GRedirectStderrToStdout,  // child setup function
       NULL,  // data for child setup function
       &child_stdout,

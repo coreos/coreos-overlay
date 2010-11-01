@@ -1632,8 +1632,8 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
   return true;
 }
 
-const char* const kBsdiffPath = "/usr/bin/bsdiff";
-const char* const kBspatchPath = "/usr/bin/bspatch";
+const char* const kBsdiffPath = "bsdiff";
+const char* const kBspatchPath = "bspatch";
 const char* const kDeltaMagic = "CrAU";
 
 };  // namespace chromeos_update_engine
