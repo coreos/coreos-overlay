@@ -949,7 +949,7 @@ bool ConvertCutsToFull(
     deleted_nodes.insert(it->new_vertex);
   }
   deleted_nodes.insert(cuts[0].old_dst);
-  
+
   vector<Vertex::Index> new_op_indexes;
   new_op_indexes.reserve(op_indexes->size());
   for (vector<Vertex::Index>::iterator it = op_indexes->begin(),
@@ -995,7 +995,7 @@ bool AssignBlockForAdjoiningCuts(
   }
   LOG(INFO) << "Need to find " << blocks_needed << " blocks for "
             << cuts.size() << " cuts";
-  
+
   // Find enough blocks
   ExtentRanges scratch_ranges;
   // Each block that's supplying temp blocks and the corresponding blocks:
@@ -1063,7 +1063,7 @@ bool AssignBlockForAdjoiningCuts(
         old_dst,
         it->second.GetExtentsForBlockCount(it->second.blocks()));
   }
-  
+
   // Replace temp blocks in each cut
   for (vector<CutEdgeVertexes>::const_iterator it = cuts.begin(),
            e = cuts.end(); it != e; ++it) {
@@ -1342,7 +1342,6 @@ bool DeltaDiffGenerator::ReadFullUpdateFromDisk(
     for (off_t bytes_left = part_sizes[partition], counter = 0, offset = 0;
          bytes_left > 0;
          bytes_left -= chunk_size, ++counter, offset += chunk_size) {
-      LOG(INFO) << "offset = " << offset;
       DeltaArchiveManifest_InstallOperation* op = NULL;
       if (partition == 0) {
         graph->resize(graph->size() + 1);
@@ -1353,10 +1352,8 @@ bool DeltaDiffGenerator::ReadFullUpdateFromDisk(
         kernel_ops->resize(kernel_ops->size() + 1);
         op = &kernel_ops->back();
       }
-      LOG(INFO) << "have an op";
 
       vector<char> buf(min(bytes_left, chunk_size));
-      LOG(INFO) << "buf size: " << buf.size();
       ssize_t bytes_read = -1;
 
       TEST_AND_RETURN_FALSE(utils::PReadAll(
@@ -1380,6 +1377,10 @@ bool DeltaDiffGenerator::ReadFullUpdateFromDisk(
       Extent* dst_extent = op->add_dst_extents();
       dst_extent->set_start_block(offset / kBlockSize);
       dst_extent->set_num_blocks(chunk_size / kBlockSize);
+
+      LOG(INFO) << StringPrintf("%.1f", offset * 100.0 / part_sizes[partition])
+                << "% complete (offset: " << offset << ", buf size: "
+                << buf.size() << ")";
     }
   }
 
