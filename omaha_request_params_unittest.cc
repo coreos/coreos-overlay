@@ -325,11 +325,13 @@ TEST_F(OmahaRequestDeviceParamsTest, SetTrackInvalidTest) {
 
 TEST_F(OmahaRequestDeviceParamsTest, IsValidTrackTest) {
   params_.SetBuildTypeOfficial(true);
+  EXPECT_TRUE(params_.IsValidTrack("canary-channel"));
   EXPECT_TRUE(params_.IsValidTrack("beta-channel"));
   EXPECT_TRUE(params_.IsValidTrack("dev-channel"));
   EXPECT_FALSE(params_.IsValidTrack("some-channel"));
   EXPECT_FALSE(params_.IsValidTrack(""));
   params_.SetBuildTypeOfficial(false);
+  EXPECT_TRUE(params_.IsValidTrack("canary-channel"));
   EXPECT_TRUE(params_.IsValidTrack("beta-channel"));
   EXPECT_TRUE(params_.IsValidTrack("dev-channel"));
   EXPECT_TRUE(params_.IsValidTrack("some-channel"));

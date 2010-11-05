@@ -147,8 +147,20 @@ bool OmahaRequestDeviceParams::IsOfficialBuild() const {
 }
 
 bool OmahaRequestDeviceParams::IsValidTrack(const std::string& track) const {
-  return IsOfficialBuild() ?
-      (track == "beta-channel" || track == "dev-channel") : true;
+  static const char* kValidTracks[] = {
+    "canary-channel",
+    "beta-channel",
+    "dev-channel",
+  };
+  if (!IsOfficialBuild()) {
+    return true;
+  }
+  for (size_t t = 0; t < arraysize(kValidTracks); ++t) {
+    if (track == kValidTracks[t]) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void OmahaRequestDeviceParams::SetBuildTypeOfficial(bool is_official) {
