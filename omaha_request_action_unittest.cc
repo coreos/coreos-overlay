@@ -145,19 +145,24 @@ class OutputObjectCollectorAction : public Action<OutputObjectCollectorAction> {
 };
 
 // Returns true iff an output response was obtained from the
-// OmahaRequestAction. |prefs| may be NULL, in which case a local
-// PrefsMock is used. out_response may be NULL.  out_post_data may be
-// null; if non-null, the post-data received by the mock HttpFetcher
-// is returned.
+// OmahaRequestAction. |prefs| may be NULL, in which case a local PrefsMock is
+// used. out_response may be NULL. If |fail_http_response_code| is
+// non-negative, the transfer will fail with that code. out_post_data may be
+// null; if non-null, the post-data received by the mock HttpFetcher is
+// returned.
 bool TestUpdateCheck(PrefsInterface* prefs,
                      const OmahaRequestParams& params,
                      const string& http_response,
+                     int fail_http_response_code,
                      ActionExitCode expected_code,
                      OmahaResponse* out_response,
                      vector<char>* out_post_data) {
   GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
   MockHttpFetcher* fetcher = new MockHttpFetcher(http_response.data(),
                                                  http_response.size());
+  if (fail_http_response_code >= 0) {
+    fetcher->FailTransfer(fail_http_response_code);
+  }
   PrefsMock local_prefs;
   OmahaRequestAction action(prefs ? prefs : &local_prefs,
                             params,
@@ -216,6 +221,7 @@ TEST(OmahaRequestActionTest, NoUpdateTest) {
       TestUpdateCheck(NULL,  // prefs
                       kDefaultTestParams,
                       GetNoUpdateResponse(OmahaRequestParams::kAppId),
+                      -1,
                       kActionCodeSuccess,
                       &response,
                       NULL));
@@ -236,6 +242,7 @@ TEST(OmahaRequestActionTest, ValidUpdateTest) {
                                         "false",  // needs admin
                                         "123",  // size
                                         "20101020"),  // deadline
+                      -1,
                       kActionCodeSuccess,
                       &response,
                       NULL));
@@ -278,7 +285,21 @@ TEST(OmahaRequestActionTest, InvalidXmlTest) {
       TestUpdateCheck(NULL,  // prefs
                       kDefaultTestParams,
                       "invalid xml>",
-                      kActionCodeError,
+                      -1,
+                      kActionCodeOmahaRequestXMLParseError,
+                      &response,
+                      NULL));
+  EXPECT_FALSE(response.update_exists);
+}
+
+TEST(OmahaRequestActionTest, EmptyResponseTest) {
+  OmahaResponse response;
+  ASSERT_FALSE(
+      TestUpdateCheck(NULL,  // prefs
+                      kDefaultTestParams,
+                      "",
+                      -1,
+                      kActionCodeOmahaRequestEmptyResponseError,
                       &response,
                       NULL));
   EXPECT_FALSE(response.update_exists);
@@ -293,7 +314,8 @@ TEST(OmahaRequestActionTest, MissingStatusTest) {
       "xmlns=\"http://www.google.com/update2/response\" protocol=\"2.0\"><app "
       "appid=\"foo\" status=\"ok\"><ping "
       "status=\"ok\"/><updatecheck/></app></gupdate>",
-      kActionCodeError,
+      -1,
+      kActionCodeOmahaRequestNoUpdateCheckStatus,
       &response,
       NULL));
   EXPECT_FALSE(response.update_exists);
@@ -308,7 +330,8 @@ TEST(OmahaRequestActionTest, InvalidStatusTest) {
       "xmlns=\"http://www.google.com/update2/response\" protocol=\"2.0\"><app "
       "appid=\"foo\" status=\"ok\"><ping "
       "status=\"ok\"/><updatecheck status=\"foo\"/></app></gupdate>",
-      kActionCodeError,
+      -1,
+      kActionCodeOmahaRequestBadUpdateCheckStatus,
       &response,
       NULL));
   EXPECT_FALSE(response.update_exists);
@@ -323,7 +346,8 @@ TEST(OmahaRequestActionTest, MissingNodesetTest) {
       "xmlns=\"http://www.google.com/update2/response\" protocol=\"2.0\"><app "
       "appid=\"foo\" status=\"ok\"><ping "
       "status=\"ok\"/></app></gupdate>",
-      kActionCodeError,
+      -1,
+      kActionCodeOmahaRequestNoUpdateCheckNode,
       &response,
       NULL));
   EXPECT_FALSE(response.update_exists);
@@ -347,6 +371,7 @@ TEST(OmahaRequestActionTest, MissingFieldTest) {
                               "sha256=\"HASH1234=\" needsadmin=\"true\" "
                               "size=\"123\" "
                               "status=\"ok\"/></app></gupdate>",
+                              -1,
                               kActionCodeSuccess,
                               &response,
                               NULL));
@@ -426,7 +451,8 @@ TEST(OmahaRequestActionTest, XmlEncodeTest) {
       TestUpdateCheck(NULL,  // prefs
                       params,
                       "invalid xml>",
-                      kActionCodeError,
+                      -1,
+                      kActionCodeOmahaRequestXMLParseError,
                       &response,
                       &post_data));
   // convert post_data to string
@@ -455,6 +481,7 @@ TEST(OmahaRequestActionTest, XmlDecodeTest) {
                                         "false",  // needs admin
                                         "123",  // size
                                         "&lt;20110101"),  // deadline
+                      -1,
                       kActionCodeSuccess,
                       &response,
                       NULL));
@@ -479,6 +506,7 @@ TEST(OmahaRequestActionTest, ParseIntTest) {
                                         // overflows int32:
                                         "123123123123123",  // size
                                         "deadline"),
+                      -1,
                       kActionCodeSuccess,
                       &response,
                       NULL));
@@ -491,7 +519,8 @@ TEST(OmahaRequestActionTest, FormatUpdateCheckOutputTest) {
   ASSERT_FALSE(TestUpdateCheck(NULL,  // prefs
                                kDefaultTestParams,
                                "invalid xml>",
-                               kActionCodeError,
+                               -1,
+                               kActionCodeOmahaRequestXMLParseError,
                                NULL,  // response
                                &post_data));
   // convert post_data to string
@@ -600,7 +629,8 @@ TEST(OmahaRequestActionTest, FormatDeltaOkayOutputTest) {
     ASSERT_FALSE(TestUpdateCheck(NULL,  // prefs
                                  params,
                                  "invalid xml>",
-                                 kActionCodeError,
+                                 -1,
+                                 kActionCodeOmahaRequestXMLParseError,
                                  NULL,
                                  &post_data));
     // convert post_data to string
@@ -646,6 +676,7 @@ TEST(OmahaRequestActionTest, PingTest) {
       TestUpdateCheck(&prefs,
                       kDefaultTestParams,
                       GetNoUpdateResponse(OmahaRequestParams::kAppId),
+                      -1,
                       kActionCodeSuccess,
                       NULL,
                       &post_data));
@@ -667,6 +698,7 @@ TEST(OmahaRequestActionTest, ActivePingTest) {
       TestUpdateCheck(&prefs,
                       kDefaultTestParams,
                       GetNoUpdateResponse(OmahaRequestParams::kAppId),
+                      -1,
                       kActionCodeSuccess,
                       NULL,
                       &post_data));
@@ -688,6 +720,7 @@ TEST(OmahaRequestActionTest, RollCallPingTest) {
       TestUpdateCheck(&prefs,
                       kDefaultTestParams,
                       GetNoUpdateResponse(OmahaRequestParams::kAppId),
+                      -1,
                       kActionCodeSuccess,
                       NULL,
                       &post_data));
@@ -710,6 +743,7 @@ TEST(OmahaRequestActionTest, NoPingTest) {
       TestUpdateCheck(&prefs,
                       kDefaultTestParams,
                       GetNoUpdateResponse(OmahaRequestParams::kAppId),
+                      -1,
                       kActionCodeSuccess,
                       NULL,
                       &post_data));
@@ -738,6 +772,7 @@ TEST(OmahaRequestActionTest, BackInTimePingTest) {
                       "protocol=\"2.0\"><daystart elapsed_seconds=\"100\"/>"
                       "<app appid=\"foo\" status=\"ok\"><ping status=\"ok\"/>"
                       "<updatecheck status=\"noupdate\"/></app></gupdate>",
+                      -1,
                       kActionCodeSuccess,
                       NULL,
                       &post_data));
@@ -769,6 +804,7 @@ TEST(OmahaRequestActionTest, LastPingDayUpdateTest) {
                       "protocol=\"2.0\"><daystart elapsed_seconds=\"200\"/>"
                       "<app appid=\"foo\" status=\"ok\"><ping status=\"ok\"/>"
                       "<updatecheck status=\"noupdate\"/></app></gupdate>",
+                      -1,
                       kActionCodeSuccess,
                       NULL,
                       NULL));
@@ -786,6 +822,7 @@ TEST(OmahaRequestActionTest, NoElapsedSecondsTest) {
                       "protocol=\"2.0\"><daystart blah=\"200\"/>"
                       "<app appid=\"foo\" status=\"ok\"><ping status=\"ok\"/>"
                       "<updatecheck status=\"noupdate\"/></app></gupdate>",
+                      -1,
                       kActionCodeSuccess,
                       NULL,
                       NULL));
@@ -803,6 +840,7 @@ TEST(OmahaRequestActionTest, BadElapsedSecondsTest) {
                       "protocol=\"2.0\"><daystart elapsed_seconds=\"x\"/>"
                       "<app appid=\"foo\" status=\"ok\"><ping status=\"ok\"/>"
                       "<updatecheck status=\"noupdate\"/></app></gupdate>",
+                      -1,
                       kActionCodeSuccess,
                       NULL,
                       NULL));
@@ -813,13 +851,42 @@ TEST(OmahaRequestActionTest, NoUniqueIDTest) {
   ASSERT_FALSE(TestUpdateCheck(NULL,  // prefs
                                kDefaultTestParams,
                                "invalid xml>",
-                               kActionCodeError,
+                               -1,
+                               kActionCodeOmahaRequestXMLParseError,
                                NULL,  // response
                                &post_data));
   // convert post_data to string
   string post_str(&post_data[0], post_data.size());
   EXPECT_EQ(post_str.find("machineid="), string::npos);
   EXPECT_EQ(post_str.find("userid="), string::npos);
+}
+
+TEST(OmahaRequestActionTest, NetworkFailureTest) {
+  OmahaResponse response;
+  ASSERT_FALSE(
+      TestUpdateCheck(NULL,  // prefs
+                      kDefaultTestParams,
+                      "",
+                      501,
+                      static_cast<ActionExitCode>(
+                          kActionCodeOmahaRequestHTTPResponseBase + 501),
+                      &response,
+                      NULL));
+  EXPECT_FALSE(response.update_exists);
+}
+
+TEST(OmahaRequestActionTest, NetworkFailureBadHTTPCodeTest) {
+  OmahaResponse response;
+  ASSERT_FALSE(
+      TestUpdateCheck(NULL,  // prefs
+                      kDefaultTestParams,
+                      "",
+                      1500,
+                      static_cast<ActionExitCode>(
+                          kActionCodeOmahaRequestHTTPResponseBase + 999),
+                      &response,
+                      NULL));
+  EXPECT_FALSE(response.update_exists);
 }
 
 }  // namespace chromeos_update_engine

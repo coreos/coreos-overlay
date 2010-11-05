@@ -329,6 +329,13 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
 
   if (!successful) {
     LOG(ERROR) << "Omaha request network transfer failed.";
+    int code = GetHTTPResponseCode();
+    // Makes sure we send sane error values.
+    if (code < 0 || code >= 1000) {
+      code = 999;
+    }
+    completer.set_code(static_cast<ActionExitCode>(
+        kActionCodeOmahaRequestHTTPResponseBase + code));
     return;
   }
   if (!HasOutputPipe()) {
@@ -343,6 +350,9 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
       xmlParseMemory(&response_buffer_[0], response_buffer_.size()));
   if (!doc.get()) {
     LOG(ERROR) << "Omaha response not valid XML";
+    completer.set_code(response_buffer_.empty() ?
+                       kActionCodeOmahaRequestEmptyResponseError :
+                       kActionCodeOmahaRequestXMLParseError);
     return;
   }
 
@@ -366,6 +376,7 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
                                ConstXMLStr(kNamespace),
                                ConstXMLStr(kNsUrl)));
   if (!xpath_nodeset.get()) {
+    completer.set_code(kActionCodeOmahaRequestNoUpdateCheckNode);
     return;
   }
   xmlNodeSet* nodeset = xpath_nodeset->nodesetval;
@@ -376,6 +387,7 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
   // get status
   if (!xmlHasProp(updatecheck_node, ConstXMLStr("status"))) {
     LOG(ERROR) << "Response missing status";
+    completer.set_code(kActionCodeOmahaRequestNoUpdateCheckStatus);
     return;
   }
 
@@ -393,6 +405,7 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
 
   if (status != "ok") {
     LOG(ERROR) << "Unknown status: " << status;
+    completer.set_code(kActionCodeOmahaRequestBadUpdateCheckStatus);
     return;
   }
 

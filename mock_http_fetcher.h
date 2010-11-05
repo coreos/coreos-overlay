@@ -27,7 +27,11 @@ class MockHttpFetcher : public HttpFetcher {
   // The data passed in here is copied and then passed to the delegate after
   // the transfer begins.
   MockHttpFetcher(const char* data, size_t size)
-      : sent_size_(0), timeout_source_(NULL), timout_tag_(0), paused_(false) {
+      : sent_size_(0),
+        timeout_source_(NULL),
+        timout_tag_(0),
+        paused_(false),
+        fail_transfer_(false) {
     data_.insert(data_.end(), data, data + size);
   }
 
@@ -55,7 +59,7 @@ class MockHttpFetcher : public HttpFetcher {
   virtual void Unpause();
 
   // Fail the transfer. This simulates a network failure.
-  void FailTransfer();
+  void FailTransfer(int http_response_code);
 
   const std::vector<char>& post_data() const {
     return post_data_;
@@ -76,6 +80,10 @@ class MockHttpFetcher : public HttpFetcher {
     return reinterpret_cast<MockHttpFetcher*>(data)->TimeoutCallback();
   }
 
+  // Sets the HTTP response code and signals to the delegate that the transfer
+  // is complete.
+  void SignalTransferComplete();
+
   // A full copy of the data we'll return to the delegate
   std::vector<char> data_;
 
@@ -91,6 +99,9 @@ class MockHttpFetcher : public HttpFetcher {
 
   // True iff the fetcher is paused.
   bool paused_;
+
+  // Set to true if the transfer should fail.
+  bool fail_transfer_;
 
   DISALLOW_COPY_AND_ASSIGN(MockHttpFetcher);
 };

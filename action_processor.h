@@ -38,6 +38,12 @@ enum ActionExitCode {
   kActionCodeDownloadPayloadVerificationError = 12,
   kActionCodeDownloadAppliedUpdateVerificationError = 13,
   kActionCodeDownloadWriteError = 14,
+  kActionCodeOmahaRequestEmptyResponseError = 200,
+  kActionCodeOmahaRequestXMLParseError = 201,
+  kActionCodeOmahaRequestNoUpdateCheckNode = 202,
+  kActionCodeOmahaRequestNoUpdateCheckStatus = 203,
+  kActionCodeOmahaRequestBadUpdateCheckStatus = 204,
+  kActionCodeOmahaRequestHTTPResponseBase = 2000,  // + HTTP response code
 };
 
 class AbstractAction;

@@ -17,7 +17,11 @@ MockHttpFetcher::~MockHttpFetcher() {
 }
 
 void MockHttpFetcher::BeginTransfer(const std::string& url) {
-  http_response_code_ = 0;
+  if (fail_transfer_ || data_.empty()) {
+    // No data to send, just notify of completion..
+    SignalTransferComplete();
+    return;
+  }
   if (sent_size_ < data_.size())
     SendData(true);
 }
@@ -26,6 +30,11 @@ void MockHttpFetcher::BeginTransfer(const std::string& url) {
 // and it needs to be deleted by the caller. If timeout_source_ is NULL
 // when this function is called, this function will always return true.
 bool MockHttpFetcher::SendData(bool skip_delivery) {
+  if (fail_transfer_) {
+    SignalTransferComplete();
+    return timeout_source_;
+  }
+
   CHECK_LT(sent_size_, data_.size());
   if (!skip_delivery) {
     const size_t chunk_size = min(kMockHttpFetcherChunkSize,
@@ -36,8 +45,7 @@ bool MockHttpFetcher::SendData(bool skip_delivery) {
     CHECK_LE(sent_size_, data_.size());
     if (sent_size_ == data_.size()) {
       // We've sent all the data. Notify of success.
-      http_response_code_ = 200;
-      delegate_->TransferComplete(this, true);
+      SignalTransferComplete();
     }
   }
 
@@ -99,6 +107,20 @@ void MockHttpFetcher::Unpause() {
   if (sent_size_ < data_.size()) {
     SendData(false);
   }
+}
+
+void MockHttpFetcher::FailTransfer(int http_response_code) {
+  fail_transfer_ = true;
+  http_response_code_ = http_response_code;
+}
+
+void MockHttpFetcher::SignalTransferComplete() {
+  // If the transfer has been failed, the HTTP response code should be set
+  // already.
+  if (!fail_transfer_) {
+    http_response_code_ = 200;
+  }
+  delegate_->TransferComplete(this, !fail_transfer_);
 }
 
 }  // namespace chromeos_update_engine
