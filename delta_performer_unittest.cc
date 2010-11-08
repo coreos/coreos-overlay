@@ -18,6 +18,7 @@
 #include "update_engine/delta_diff_generator.h"
 #include "update_engine/delta_performer.h"
 #include "update_engine/extent_ranges.h"
+#include "update_engine/full_update_generator.h"
 #include "update_engine/graph_types.h"
 #include "update_engine/payload_signer.h"
 #include "update_engine/prefs_mock.h"
@@ -113,7 +114,7 @@ bool WriteSparseFile(const string& path, off_t size) {
   return true;
 }
 
-void DoSmallImageTest(bool full_kernel, bool noop) {
+void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop) {
   string a_img, b_img;
   EXPECT_TRUE(utils::MakeTempFile("/tmp/a_img.XXXXXX", &a_img, NULL));
   ScopedPathUnlinker a_img_unlinker(a_img);
@@ -221,8 +222,8 @@ void DoSmallImageTest(bool full_kernel, bool noop) {
 
     EXPECT_TRUE(
         DeltaDiffGenerator::GenerateDeltaUpdateFile(
-            a_mnt,
-            a_img,
+            full_rootfs ? "" : a_mnt,
+            full_rootfs ? "" : a_img,
             b_mnt,
             b_img,
             full_kernel ? "" : old_kernel,
@@ -278,12 +279,17 @@ void DoSmallImageTest(bool full_kernel, bool noop) {
       EXPECT_FALSE(manifest.old_kernel_info().hash().empty());
     }
 
+    if (full_rootfs) {
+      EXPECT_FALSE(manifest.has_old_rootfs_info());
+    } else {
+      EXPECT_EQ(image_size, manifest.old_rootfs_info().size());
+      EXPECT_FALSE(manifest.old_rootfs_info().hash().empty());
+    }
+
     EXPECT_EQ(new_kernel_data.size(), manifest.new_kernel_info().size());
-    EXPECT_EQ(image_size, manifest.old_rootfs_info().size());
     EXPECT_EQ(image_size, manifest.new_rootfs_info().size());
 
     EXPECT_FALSE(manifest.new_kernel_info().hash().empty());
-    EXPECT_FALSE(manifest.old_rootfs_info().hash().empty());
     EXPECT_FALSE(manifest.new_rootfs_info().hash().empty());
   }
 
@@ -346,79 +352,19 @@ void DoSmallImageTest(bool full_kernel, bool noop) {
 }
 
 TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
-  DoSmallImageTest(false, false);
+  DoSmallImageTest(false, false, false);
 }
 
 TEST(DeltaPerformerTest, RunAsRootFullKernelSmallImageTest) {
-  DoSmallImageTest(true, false);
+  DoSmallImageTest(true, false, false);
+}
+
+TEST(DeltaPerformerTest, RunAsRootFullSmallImageTest) {
+  DoSmallImageTest(true, true, false);
 }
 
 TEST(DeltaPerformerTest, RunAsRootNoopSmallImageTest) {
-  DoSmallImageTest(false, true);
-}
-
-TEST(DeltaPerformerTest, NewFullUpdateTest) {
-  vector<char> new_root(20 * 1024 * 1024);
-  vector<char> new_kern(16 * 1024 * 1024);
-  const off_t kChunkSize = 128 * 1024;
-  FillWithData(&new_root);
-  FillWithData(&new_kern);
-  // Assume hashes take 2 MiB beyond the rootfs.
-  off_t new_rootfs_size = new_root.size() - 2 * 1024 * 1024;
-
-  string new_root_path;
-  EXPECT_TRUE(utils::MakeTempFile("/tmp/NewFullUpdateTest_R.XXXXXX",
-                                  &new_root_path,
-                                  NULL));
-  ScopedPathUnlinker new_root_path_unlinker(new_root_path);
-  EXPECT_TRUE(WriteFileVector(new_root_path, new_root));
-
-  string new_kern_path;
-  EXPECT_TRUE(utils::MakeTempFile("/tmp/NewFullUpdateTest_K.XXXXXX",
-                                  &new_kern_path,
-                                  NULL));
-  ScopedPathUnlinker new_kern_path_unlinker(new_kern_path);
-  EXPECT_TRUE(WriteFileVector(new_kern_path, new_kern));
-
-  string out_blobs_path;
-  int out_blobs_fd;
-  EXPECT_TRUE(utils::MakeTempFile("/tmp/NewFullUpdateTest_D.XXXXXX",
-                                  &out_blobs_path,
-                                  &out_blobs_fd));
-  ScopedPathUnlinker out_blobs_path_unlinker(out_blobs_path);
-  ScopedFdCloser out_blobs_fd_closer(&out_blobs_fd);
-
-  off_t out_blobs_length = 0;
-
-  Graph graph;
-  vector<DeltaArchiveManifest_InstallOperation> kernel_ops;
-  vector<Vertex::Index> final_order;
-
-  EXPECT_TRUE(DeltaDiffGenerator::ReadFullUpdateFromDisk(&graph,
-                                                         new_kern_path,
-                                                         new_root_path,
-                                                         new_rootfs_size,
-                                                         out_blobs_fd,
-                                                         &out_blobs_length,
-                                                         kChunkSize,
-                                                         &kernel_ops,
-                                                         &final_order));
-  EXPECT_EQ(new_rootfs_size / kChunkSize, graph.size());
-  EXPECT_EQ(new_rootfs_size / kChunkSize, final_order.size());
-  EXPECT_EQ(new_kern.size() / kChunkSize, kernel_ops.size());
-  for (off_t i = 0; i < (new_rootfs_size / kChunkSize); ++i) {
-    EXPECT_EQ(i, final_order[i]);
-    EXPECT_EQ(1, graph[i].op.dst_extents_size());
-    EXPECT_EQ(i * kChunkSize / kBlockSize,
-              graph[i].op.dst_extents(0).start_block()) << "i = " << i;
-    EXPECT_EQ(kChunkSize / kBlockSize,
-              graph[i].op.dst_extents(0).num_blocks());
-    if (graph[i].op.type() !=
-        DeltaArchiveManifest_InstallOperation_Type_REPLACE) {
-      EXPECT_EQ(DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ,
-                graph[i].op.type());
-    }
-  }
+  DoSmallImageTest(false, false, true);
 }
 
 TEST(DeltaPerformerTest, IsIdempotentOperationTest) {

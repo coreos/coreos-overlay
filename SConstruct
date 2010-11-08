@@ -249,6 +249,7 @@ sources = Split("""action_processor.cc
                    filesystem_iterator.cc
                    file_writer.cc
                    flimflam_proxy.cc
+                   full_update_generator.cc
                    graph_utils.cc
                    gzip.cc
                    libcurl_http_fetcher.cc
@@ -290,6 +291,7 @@ unittest_sources = Split("""action_unittest.cc
                             filesystem_copier_action_unittest.cc
                             filesystem_iterator_unittest.cc
                             flimflam_proxy_unittest.cc
+                            full_update_generator_unittest.cc
                             graph_utils_unittest.cc
                             http_fetcher_unittest.cc
                             mock_http_fetcher.cc

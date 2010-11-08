@@ -194,23 +194,6 @@ class DeltaDiffGenerator {
       std::vector<std::vector<Vertex::Index>::size_type>* reverse_op_indexes,
       const std::vector<CutEdgeVertexes>& cuts);
 
-  // Given a new rootfs and kernel (|new_image|, |new_kernel_part|), Reads them
-  // sequentially, creating a full update of chunk_size chunks.  Populates
-  // |graph|, |kernel_ops|, and |final_order|, with data about the update
-  // operations, and writes relevant data to |fd|, updating |data_file_size| as
-  // it does. Only the first |image_size| bytes are read from |new_image|
-  // assuming that this is the actual file system.
-  static bool ReadFullUpdateFromDisk(
-      Graph* graph,
-      const std::string& new_kernel_part,
-      const std::string& new_image,
-      off_t image_size,
-      int fd,
-      off_t* data_file_size,
-      off_t chunk_size,
-      std::vector<DeltaArchiveManifest_InstallOperation>* kernel_ops,
-      std::vector<Vertex::Index>* final_order);
-
   // Returns true if |op| is a no-op operation that doesn't do any useful work
   // (e.g., a move operation that copies blocks onto themselves).
   static bool IsNoopOperation(const DeltaArchiveManifest_InstallOperation& op);

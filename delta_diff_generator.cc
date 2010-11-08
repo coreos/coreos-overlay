@@ -27,6 +27,7 @@
 #include "update_engine/extent_ranges.h"
 #include "update_engine/file_writer.h"
 #include "update_engine/filesystem_iterator.h"
+#include "update_engine/full_update_generator.h"
 #include "update_engine/graph_types.h"
 #include "update_engine/graph_utils.h"
 #include "update_engine/omaha_hash_calculator.h"
@@ -1308,85 +1309,6 @@ bool DeltaDiffGenerator::ConvertGraphToDag(Graph* graph,
   return true;
 }
 
-bool DeltaDiffGenerator::ReadFullUpdateFromDisk(
-    Graph* graph,
-    const std::string& new_kernel_part,
-    const std::string& new_image,
-    off_t image_size,
-    int fd,
-    off_t* data_file_size,
-    off_t chunk_size,
-    vector<DeltaArchiveManifest_InstallOperation>* kernel_ops,
-    std::vector<Vertex::Index>* final_order) {
-  TEST_AND_RETURN_FALSE(chunk_size > 0);
-  TEST_AND_RETURN_FALSE((chunk_size % kBlockSize) == 0);
-
-  // Get the sizes early in the function, so we can fail fast if the user
-  // passed us bad paths.
-  TEST_AND_RETURN_FALSE(image_size >= 0 &&
-                        image_size <= utils::FileSize(new_image));
-  const off_t kernel_size = utils::FileSize(new_kernel_part);
-  TEST_AND_RETURN_FALSE(kernel_size >= 0);
-
-  off_t part_sizes[] = { image_size, kernel_size };
-  string paths[] = { new_image, new_kernel_part };
-
-  for (int partition = 0; partition < 2; ++partition) {
-    const string& path = paths[partition];
-    LOG(INFO) << "compressing " << path;
-
-    int in_fd = open(path.c_str(), O_RDONLY, 0);
-    TEST_AND_RETURN_FALSE(in_fd >= 0);
-    ScopedFdCloser in_fd_closer(&in_fd);
-
-    for (off_t bytes_left = part_sizes[partition], counter = 0, offset = 0;
-         bytes_left > 0;
-         bytes_left -= chunk_size, ++counter, offset += chunk_size) {
-      DeltaArchiveManifest_InstallOperation* op = NULL;
-      if (partition == 0) {
-        graph->resize(graph->size() + 1);
-        graph->back().file_name = path + StringPrintf("-%" PRIi64, counter);
-        op = &graph->back().op;
-        final_order->push_back(graph->size() - 1);
-      } else {
-        kernel_ops->resize(kernel_ops->size() + 1);
-        op = &kernel_ops->back();
-      }
-
-      vector<char> buf(min(bytes_left, chunk_size));
-      ssize_t bytes_read = -1;
-
-      TEST_AND_RETURN_FALSE(utils::PReadAll(
-          in_fd, &buf[0], buf.size(), offset, &bytes_read));
-      TEST_AND_RETURN_FALSE(bytes_read == static_cast<ssize_t>(buf.size()));
-
-      vector<char> buf_compressed;
-
-      TEST_AND_RETURN_FALSE(BzipCompress(buf, &buf_compressed));
-      const bool compress = buf_compressed.size() < buf.size();
-      const vector<char>& use_buf = compress ? buf_compressed : buf;
-      if (compress) {
-        op->set_type(DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ);
-      } else {
-        op->set_type(DeltaArchiveManifest_InstallOperation_Type_REPLACE);
-      }
-      op->set_data_offset(*data_file_size);
-      TEST_AND_RETURN_FALSE(utils::WriteAll(fd, &use_buf[0], use_buf.size()));
-      *data_file_size += use_buf.size();
-      op->set_data_length(use_buf.size());
-      Extent* dst_extent = op->add_dst_extents();
-      dst_extent->set_start_block(offset / kBlockSize);
-      dst_extent->set_num_blocks(chunk_size / kBlockSize);
-
-      LOG(INFO) << StringPrintf("%.1f", offset * 100.0 / part_sizes[partition])
-                << "% complete (offset: " << offset << ", buf size: "
-                << buf.size() << ")";
-    }
-  }
-
-  return true;
-}
-
 bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
     const string& old_root,
     const string& old_image,
@@ -1480,15 +1402,16 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
       // Full update
       off_t new_image_size =
           static_cast<off_t>(new_image_block_count) * new_image_block_size;
-      TEST_AND_RETURN_FALSE(ReadFullUpdateFromDisk(&graph,
-                                                   new_kernel_part,
-                                                   new_image,
-                                                   new_image_size,
-                                                   fd,
-                                                   &data_file_size,
-                                                   kFullUpdateChunkSize,
-                                                   &kernel_ops,
-                                                   &final_order));
+      TEST_AND_RETURN_FALSE(FullUpdateGenerator::Run(&graph,
+                                                     new_kernel_part,
+                                                     new_image,
+                                                     new_image_size,
+                                                     fd,
+                                                     &data_file_size,
+                                                     kFullUpdateChunkSize,
+                                                     kBlockSize,
+                                                     &kernel_ops,
+                                                     &final_order));
     }
   }
 
