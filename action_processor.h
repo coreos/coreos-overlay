@@ -29,7 +29,7 @@ enum ActionExitCode {
   kActionCodeOmahaResponseHandlerError = 3,
   kActionCodeFilesystemCopierError = 4,
   kActionCodePostinstallRunnerError = 5,
-  kActionCodeSetBootableFlagError = 6,
+  kActionCodeSetBootableFlagError = 6,  // TODO(petkov): Unused. Recycle?
   kActionCodeInstallDeviceOpenError = 7,
   kActionCodeKernelDeviceOpenError = 8,
   kActionCodeDownloadTransferError = 9,

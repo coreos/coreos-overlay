@@ -10,7 +10,6 @@
 #include "update_engine/filesystem_copier_action.h"
 #include "update_engine/postinstall_runner_action.h"
 #include "update_engine/prefs_mock.h"
-#include "update_engine/set_bootable_flag_action.h"
 #include "update_engine/update_attempter.h"
 
 using std::string;
@@ -89,10 +88,6 @@ TEST_F(UpdateAttempterTest, GetErrorCodeForActionTest) {
   PostinstallRunnerAction postinstall_runner_action(true);
   EXPECT_EQ(kActionCodePostinstallRunnerError,
             GetErrorCodeForAction(&postinstall_runner_action,
-                                  kActionCodeError));
-  SetBootableFlagAction set_bootable_flag_action;
-  EXPECT_EQ(kActionCodeSetBootableFlagError,
-            GetErrorCodeForAction(&set_bootable_flag_action,
                                   kActionCodeError));
   ActionMock action_mock;
   EXPECT_CALL(action_mock, Type()).Times(1).WillOnce(Return("ActionMock"));
@@ -176,7 +171,6 @@ TEST_F(UpdateAttempterTest, UpdateTest) {
     DownloadAction::StaticType(),
     OmahaRequestAction::StaticType(),
     PostinstallRunnerAction::StaticType(),
-    SetBootableFlagAction::StaticType(),
     PostinstallRunnerAction::StaticType(),
     OmahaRequestAction::StaticType()
   };

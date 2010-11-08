@@ -27,7 +27,6 @@
 #include "update_engine/omaha_response_handler_action.h"
 #include "update_engine/postinstall_runner_action.h"
 #include "update_engine/prefs_interface.h"
-#include "update_engine/set_bootable_flag_action.h"
 #include "update_engine/update_check_scheduler.h"
 
 using base::TimeDelta;
@@ -85,8 +84,6 @@ ActionExitCode GetErrorCodeForAction(AbstractAction* action,
     return kActionCodeFilesystemCopierError;
   if (type == PostinstallRunnerAction::StaticType())
     return kActionCodePostinstallRunnerError;
-  if (type == SetBootableFlagAction::StaticType())
-    return kActionCodeSetBootableFlagError;
 
   return code;
 }
@@ -164,8 +161,6 @@ void UpdateAttempter::Update(const std::string& app_version,
                              new LibcurlHttpFetcher));
   shared_ptr<PostinstallRunnerAction> postinstall_runner_action_precommit(
       new PostinstallRunnerAction(true));
-  shared_ptr<SetBootableFlagAction> set_bootable_flag_action(
-      new SetBootableFlagAction);
   shared_ptr<PostinstallRunnerAction> postinstall_runner_action_postcommit(
       new PostinstallRunnerAction(false));
   shared_ptr<OmahaRequestAction> update_complete_action(
@@ -188,7 +183,6 @@ void UpdateAttempter::Update(const std::string& app_version,
   actions_.push_back(shared_ptr<AbstractAction>(download_finished_action));
   actions_.push_back(shared_ptr<AbstractAction>(
       postinstall_runner_action_precommit));
-  actions_.push_back(shared_ptr<AbstractAction>(set_bootable_flag_action));
   actions_.push_back(shared_ptr<AbstractAction>(
       postinstall_runner_action_postcommit));
   actions_.push_back(shared_ptr<AbstractAction>(update_complete_action));
@@ -212,8 +206,6 @@ void UpdateAttempter::Update(const std::string& app_version,
   BondActions(download_action.get(),
               postinstall_runner_action_precommit.get());
   BondActions(postinstall_runner_action_precommit.get(),
-              set_bootable_flag_action.get());
-  BondActions(set_bootable_flag_action.get(),
               postinstall_runner_action_postcommit.get());
 
   SetStatusAndNotify(UPDATE_STATUS_CHECKING_FOR_UPDATE);
