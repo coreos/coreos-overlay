@@ -112,8 +112,6 @@ bool AddInstallOpToBlocksVector(
     vector<Block>* blocks,
     const Graph& graph,
     Vertex::Index vertex) {
-  LOG(INFO) << "AddInstallOpToBlocksVector(" << vertex << "), "
-            << graph[vertex].file_name;
   // See if this is already present.
   TEST_AND_RETURN_FALSE(operation.dst_extents_size() > 0);
 
@@ -136,7 +134,6 @@ bool AddInstallOpToBlocksVector(
       }
       for (uint64_t block = extent.start_block();
            block < (extent.start_block() + extent.num_blocks()); block++) {
-        LOG(INFO) << "ext: " << i << " block: " << block;
         if ((*blocks)[block].*access_type != Vertex::kInvalidIndex) {
           LOG(FATAL) << "Block " << block << " is already "
                      << past_participle << " by "
@@ -324,6 +321,7 @@ bool ReadUnwrittenBlocks(const vector<Block>& blocks,
   for (vector<Extent>::const_iterator it = extents.begin();
        it != extents.end(); ++it) {
     vector<Block>::size_type blocks_read = 0;
+    float printed_progress = -1;
     while (blocks_read < it->num_blocks()) {
       const int copy_block_cnt =
           min(buf.size() / kBlockSize,
@@ -340,7 +338,13 @@ bool ReadUnwrittenBlocks(const vector<Block>& blocks,
       TEST_AND_RETURN_FALSE(err == BZ_OK);
       blocks_read += copy_block_cnt;
       blocks_copied_count += copy_block_cnt;
-      LOG(INFO) << "progress: " << ((float)blocks_copied_count)/block_count;
+      float current_progress =
+          static_cast<float>(blocks_copied_count) / block_count;
+      if (printed_progress + 0.1 < current_progress ||
+          blocks_copied_count == block_count) {
+        LOG(INFO) << "progress: " << current_progress;
+        printed_progress = current_progress;
+      }
     }
   }
   BZ2_bzWriteClose(&err, bz_file, 0, NULL, NULL);
@@ -748,9 +752,6 @@ bool DeltaDiffGenerator::CutEdges(Graph* graph,
         (*graph)[it->first].out_edges[it->second].extents;
     // Choose some scratch space
     scratch_blocks_used += graph_utils::EdgeWeight(*graph, *it);
-    LOG(INFO) << "using " << graph_utils::EdgeWeight(*graph, *it)
-              << " scratch blocks ("
-              << scratch_blocks_used << ")";
     cuts.back().tmp_extents =
         scratch_allocator.Allocate(graph_utils::EdgeWeight(*graph, *it));
     // create vertex to copy original->scratch
@@ -994,8 +995,6 @@ bool AssignBlockForAdjoiningCuts(
     blocks_needed += cut_blocks_needed;
     cuts_blocks_needed[&*it] = cut_blocks_needed;
   }
-  LOG(INFO) << "Need to find " << blocks_needed << " blocks for "
-            << cuts.size() << " cuts";
 
   // Find enough blocks
   ExtentRanges scratch_ranges;
@@ -1003,8 +1002,6 @@ bool AssignBlockForAdjoiningCuts(
   typedef vector<pair<Vertex::Index, ExtentRanges> > SupplierVector;
   SupplierVector block_suppliers;
   uint64_t scratch_blocks_found = 0;
-  LOG(INFO) << "scan from " << (*reverse_op_indexes)[old_dst] + 1
-            << " to " << op_indexes->size();
   for (vector<Vertex::Index>::size_type i = (*reverse_op_indexes)[old_dst] + 1,
            e = op_indexes->size(); i < e; ++i) {
     Vertex::Index test_node = (*op_indexes)[i];
@@ -1037,8 +1034,6 @@ bool AssignBlockForAdjoiningCuts(
     scratch_ranges.AddRanges(ranges);
     block_suppliers.push_back(make_pair(test_node, ranges));
     scratch_blocks_found += ranges.blocks();
-    LOG(INFO) << "Adding " << ranges.blocks() << " blocks. Now have "
-              << scratch_ranges.blocks();
     if (scratch_ranges.blocks() >= blocks_needed)
       break;
   }
@@ -1085,7 +1080,6 @@ bool AssignBlockForAdjoiningCuts(
     op->clear_dst_extents();
     DeltaDiffGenerator::StoreExtents(real_extents, op->mutable_dst_extents());
   }
-  LOG(INFO) << "Done subbing in for cut set";
   return true;
 }
 
