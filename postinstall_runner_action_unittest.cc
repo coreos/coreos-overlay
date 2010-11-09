@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -116,7 +116,7 @@ void PostinstallRunnerActionTest::DoTest(bool do_losetup, bool do_err_script) {
   InstallPlan install_plan;
   install_plan.install_path = dev;
   feeder_action.set_obj(install_plan);
-  PostinstallRunnerAction runner_action(true);
+  PostinstallRunnerAction runner_action;
   BondActions(&feeder_action, &runner_action);
   ObjectCollectorAction<InstallPlan> collector_action;
   BondActions(&runner_action, &collector_action);
@@ -153,7 +153,7 @@ void PostinstallRunnerActionTest::DoTest(bool do_losetup, bool do_err_script) {
 // Death tests don't seem to be working on Hardy
 TEST_F(PostinstallRunnerActionTest, DISABLED_RunAsRootDeathTest) {
   ASSERT_EQ(0, getuid());
-  PostinstallRunnerAction runner_action(true);
+  PostinstallRunnerAction runner_action;
   ASSERT_DEATH({ runner_action.TerminateProcessing(); },
                "postinstall_runner_action.h:.*] Check failed");
 }

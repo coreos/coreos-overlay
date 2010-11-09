@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium Authors. All rights reserved.
+// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -58,7 +58,6 @@ void PostinstallRunnerAction::PerformAction() {
     vector<string> command;
     command.push_back(temp_dir + kPostinstallScript);
     command.push_back(install_device);
-    command.push_back(precommit_ ? "" : "--postcommit");
     rc = 0;
     TEST_AND_RETURN(Subprocess::SynchronousExec(command, &rc));
     bool success = (rc == 0);

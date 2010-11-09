@@ -159,10 +159,8 @@ void UpdateAttempter::Update(const std::string& app_version,
                              new OmahaEvent(
                                  OmahaEvent::kTypeUpdateDownloadFinished),
                              new LibcurlHttpFetcher));
-  shared_ptr<PostinstallRunnerAction> postinstall_runner_action_precommit(
-      new PostinstallRunnerAction(true));
-  shared_ptr<PostinstallRunnerAction> postinstall_runner_action_postcommit(
-      new PostinstallRunnerAction(false));
+  shared_ptr<PostinstallRunnerAction> postinstall_runner_action(
+      new PostinstallRunnerAction);
   shared_ptr<OmahaRequestAction> update_complete_action(
       new OmahaRequestAction(prefs_,
                              omaha_request_params_,
@@ -181,10 +179,7 @@ void UpdateAttempter::Update(const std::string& app_version,
   actions_.push_back(shared_ptr<AbstractAction>(download_started_action));
   actions_.push_back(shared_ptr<AbstractAction>(download_action));
   actions_.push_back(shared_ptr<AbstractAction>(download_finished_action));
-  actions_.push_back(shared_ptr<AbstractAction>(
-      postinstall_runner_action_precommit));
-  actions_.push_back(shared_ptr<AbstractAction>(
-      postinstall_runner_action_postcommit));
+  actions_.push_back(shared_ptr<AbstractAction>(postinstall_runner_action));
   actions_.push_back(shared_ptr<AbstractAction>(update_complete_action));
 
   // Enqueue the actions
@@ -204,9 +199,7 @@ void UpdateAttempter::Update(const std::string& app_version,
   BondActions(kernel_filesystem_copier_action.get(),
               download_action.get());
   BondActions(download_action.get(),
-              postinstall_runner_action_precommit.get());
-  BondActions(postinstall_runner_action_precommit.get(),
-              postinstall_runner_action_postcommit.get());
+              postinstall_runner_action.get());
 
   SetStatusAndNotify(UPDATE_STATUS_CHECKING_FOR_UPDATE);
   processor_->StartProcessing();

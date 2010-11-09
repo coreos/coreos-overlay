@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -28,7 +28,7 @@ class ActionTraits<PostinstallRunnerAction> {
 
 class PostinstallRunnerAction : public Action<PostinstallRunnerAction> {
  public:
-  explicit PostinstallRunnerAction(bool precommit) : precommit_(precommit) {}
+  PostinstallRunnerAction() {}
   typedef ActionTraits<PostinstallRunnerAction>::InputObjectType
       InputObjectType;
   typedef ActionTraits<PostinstallRunnerAction>::OutputObjectType
@@ -44,10 +44,6 @@ class PostinstallRunnerAction : public Action<PostinstallRunnerAction> {
   std::string Type() const { return StaticType(); }
 
  private:
-  // If true, this action runs before we've committed to the new update
-  // (by marking it as bootable in the partition table).
-  bool precommit_;
-
   DISALLOW_COPY_AND_ASSIGN(PostinstallRunnerAction);
 };
 
