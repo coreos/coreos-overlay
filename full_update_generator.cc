@@ -133,13 +133,11 @@ bool FullUpdateGenerator::Run(
   for (int partition = 0; partition < 2; ++partition) {
     const string& path = paths[partition];
     LOG(INFO) << "compressing " << path;
-
     int in_fd = open(path.c_str(), O_RDONLY, 0);
     TEST_AND_RETURN_FALSE(in_fd >= 0);
     ScopedFdCloser in_fd_closer(&in_fd);
-
     deque<shared_ptr<ChunkProcessor> > threads;
-
+    int last_progress_update = INT_MIN;
     off_t bytes_left = part_sizes[partition], counter = 0, offset = 0;
     while (bytes_left > 0 || !threads.empty()) {
       // Check and start new chunk processors if possible.
@@ -184,10 +182,15 @@ bool FullUpdateGenerator::Run(
       dst_extent->set_start_block(processor->offset() / block_size);
       dst_extent->set_num_blocks(chunk_size / block_size);
 
-      LOG(INFO)
-          << StringPrintf("%.1f",
-                          processor->offset() * 100.0 / part_sizes[partition])
-          << "% complete (output size: " << *data_file_size << ")";
+      int progress = static_cast<int>(
+          (processor->offset() + processor->buffer_in().size()) * 100.0 /
+          part_sizes[partition]);
+      if (last_progress_update < progress &&
+          (last_progress_update + 10 <= progress || progress == 100)) {
+        LOG(INFO) << progress << "% complete (output size: "
+                  << *data_file_size << ")";
+        last_progress_update = progress;
+      }
     }
   }
 
