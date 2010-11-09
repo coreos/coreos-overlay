@@ -42,7 +42,7 @@ struct HttpRequest {
 };
 
 namespace {
-const int kPort = 8080;  // hardcoded to 8080 for now
+const int kPort = 8088;  // hardcoded for now
 const int kBigLength = 100000;
 const int kMediumLength = 1000;
 }
@@ -262,7 +262,7 @@ using namespace chromeos_update_engine;
 int main(int argc, char** argv) {
   // Ignore SIGPIPE on write() to sockets.
   signal(SIGPIPE, SIG_IGN);
-  
+
   socklen_t clilen;
   struct sockaddr_in server_addr;
   struct sockaddr_in client_addr;

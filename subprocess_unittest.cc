@@ -25,7 +25,7 @@ class SubprocessTest : public ::testing::Test {
 };
 
 namespace {
-const int kLocalHttpPort = 8080;
+const int kLocalHttpPort = 8088;
 
 void Callback(int return_code, void *p) {
   EXPECT_EQ(256, return_code);

@@ -24,8 +24,8 @@ using std::vector;
 namespace chromeos_update_engine {
 
 namespace {
-// WARNING, if you update these, you must also update test_http_server.py
-const char* const kServerPort = "8080";
+// WARNING, if you update these, you must also update test_http_server.cc.
+const char* const kServerPort = "8088";
 const int kBigSize = 100000;
 string LocalServerUrlForPath(const string& path) {
   return string("http://127.0.0.1:") + kServerPort + path;
