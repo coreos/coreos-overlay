@@ -27,8 +27,16 @@ class SubprocessTest : public ::testing::Test {
 namespace {
 const int kLocalHttpPort = 8088;
 
-void Callback(int return_code, void *p) {
+void Callback(int return_code, const string& output, void *p) {
   EXPECT_EQ(256, return_code);
+  GMainLoop* loop = reinterpret_cast<GMainLoop*>(p);
+  g_main_loop_quit(loop);
+}
+
+void CallbackEcho(int return_code, const string& output, void *p) {
+  EXPECT_EQ(0, return_code);
+  EXPECT_NE(string::npos, output.find("this is stdout"));
+  EXPECT_NE(string::npos, output.find("this is stderr"));
   GMainLoop* loop = reinterpret_cast<GMainLoop*>(p);
   g_main_loop_quit(loop);
 }
@@ -37,6 +45,15 @@ gboolean LaunchFalseInMainLoop(gpointer data) {
   vector<string> cmd;
   cmd.push_back("/bin/false");
   Subprocess::Get().Exec(cmd, Callback, data);
+  return FALSE;
+}
+
+gboolean LaunchEchoInMainLoop(gpointer data) {
+  vector<string> cmd;
+  cmd.push_back("/bin/sh");
+  cmd.push_back("-c");
+  cmd.push_back("echo this is stdout; echo this is stderr > /dev/stderr");
+  Subprocess::Get().Exec(cmd, CallbackEcho, data);
   return FALSE;
 }
 }  // namespace {}
@@ -48,8 +65,15 @@ TEST(SubprocessTest, SimpleTest) {
   g_main_loop_unref(loop);
 }
 
+TEST(SubprocessTest, EchoTest) {
+  GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
+  g_timeout_add(0, &LaunchEchoInMainLoop, loop);
+  g_main_loop_run(loop);
+  g_main_loop_unref(loop);
+}
+
 namespace {
-void CallbackBad(int return_code, void *p) {
+void CallbackBad(int return_code, const string& output, void *p) {
   CHECK(false) << "should never be called.";
 }
 

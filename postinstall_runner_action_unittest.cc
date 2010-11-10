@@ -17,6 +17,14 @@ using std::vector;
 
 namespace chromeos_update_engine {
 
+namespace {
+gboolean StartProcessorInRunLoop(gpointer data) {
+  ActionProcessor *processor = reinterpret_cast<ActionProcessor*>(data);
+  processor->StartProcessing();
+  return FALSE;
+}
+}  // namespace
+
 class PostinstallRunnerActionTest : public ::testing::Test {
  public:
   void DoTest(bool do_losetup, bool do_err_script);
@@ -25,8 +33,14 @@ class PostinstallRunnerActionTest : public ::testing::Test {
 class PostinstActionProcessorDelegate : public ActionProcessorDelegate {
  public:
   PostinstActionProcessorDelegate()
-      : code_(kActionCodeError),
+      : loop_(NULL),
+        code_(kActionCodeError),
         code_set_(false) {}
+  void ProcessingDone(const ActionProcessor* processor,
+                      ActionExitCode code) {
+    ASSERT_TRUE(loop_);
+    g_main_loop_quit(loop_);
+  }
   void ActionCompleted(ActionProcessor* processor,
                        AbstractAction* action,
                        ActionExitCode code) {
@@ -35,6 +49,7 @@ class PostinstActionProcessorDelegate : public ActionProcessorDelegate {
       code_set_ = true;
     }
   }
+  GMainLoop* loop_;
   ActionExitCode code_;
   bool code_set_;
 };
@@ -125,9 +140,13 @@ void PostinstallRunnerActionTest::DoTest(bool do_losetup, bool do_err_script) {
   processor.EnqueueAction(&runner_action);
   processor.EnqueueAction(&collector_action);
   processor.set_delegate(&delegate);
-  processor.StartProcessing();
-  ASSERT_FALSE(processor.IsRunning())
-      << "Update test to handle non-asynch actions";
+
+  GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
+  delegate.loop_ = loop;
+  g_timeout_add(0, &StartProcessorInRunLoop, &processor);
+  g_main_loop_run(loop);
+  g_main_loop_unref(loop);
+  ASSERT_FALSE(processor.IsRunning());
 
   EXPECT_TRUE(delegate.code_set_);
   EXPECT_EQ(do_losetup && !do_err_script, delegate.code_ == kActionCodeSuccess);

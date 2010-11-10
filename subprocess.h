@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -7,8 +7,11 @@
 
 #include <map>
 #include <string>
+#include <tr1/memory>
 #include <vector>
+
 #include <glib.h>
+
 #include "base/basictypes.h"
 #include "base/logging.h"
 
@@ -21,12 +24,14 @@ namespace chromeos_update_engine {
 
 class Subprocess {
  public:
+  typedef void(*ExecCallback)(int return_code,
+                              const std::string& output,
+                              void *p);
+
   static void Init() {
     CHECK(!subprocess_singleton_);
     subprocess_singleton_ = new Subprocess;
   }
-   
-  typedef void(*ExecCallback)(int return_code, void *p);
 
   // Returns a tag > 0 on success.
   uint32_t Exec(const std::vector<std::string>& cmd,
@@ -49,20 +54,27 @@ class Subprocess {
   static Subprocess& Get() {
     return *subprocess_singleton_;
   }
-  
+
   // Returns true iff there is at least one subprocess we're waiting on.
-  bool SubprocessInFlight() {
-    for (std::map<int, SubprocessCallbackRecord>::iterator it =
-             callback_records_.begin();
-         it != callback_records_.end(); ++it) {
-      if (it->second.callback)
-        return true;
-    }
-    return false;
-  }
+  bool SubprocessInFlight();
+
  private:
-  // The global instance
-  static Subprocess* subprocess_singleton_;
+  struct SubprocessRecord {
+    SubprocessRecord()
+        : tag(0),
+          callback(NULL),
+          callback_data(NULL),
+          gioout(NULL),
+          gioout_tag(0) {}
+    uint32_t tag;
+    ExecCallback callback;
+    void* callback_data;
+    GIOChannel* gioout;
+    guint gioout_tag;
+    std::string stdout;
+  };
+
+  Subprocess() {}
 
   // Callback for when any subprocess terminates. This calls the user
   // requested callback.
@@ -72,14 +84,19 @@ class Subprocess {
   // stdout.
   static void GRedirectStderrToStdout(gpointer user_data);
 
-  struct SubprocessCallbackRecord {
-    ExecCallback callback;
-    void* callback_data;
-  };
+  // Callback which runs whenever there is input available on the subprocess
+  // stdout pipe.
+  static gboolean GStdoutWatchCallback(GIOChannel* source,
+                                       GIOCondition condition,
+                                       gpointer data);
 
-  std::map<int, SubprocessCallbackRecord> callback_records_;
+  // The global instance.
+  static Subprocess* subprocess_singleton_;
 
-  Subprocess() {}
+  // A map from the asynchronous subprocess tag (see Exec) to the subprocess
+  // record structure for all active asynchronous subprocesses.
+  std::map<int, std::tr1::shared_ptr<SubprocessRecord> > subprocess_records_;
+
   DISALLOW_COPY_AND_ASSIGN(Subprocess);
 };
 

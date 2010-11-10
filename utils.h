@@ -237,12 +237,17 @@ bool SetProcessPriority(ProcessPriority priority);
 class ScopedFilesystemUnmounter {
  public:
   explicit ScopedFilesystemUnmounter(const std::string& mountpoint)
-      : mountpoint_(mountpoint) {}
+      : mountpoint_(mountpoint),
+        should_unmount_(true) {}
   ~ScopedFilesystemUnmounter() {
-    utils::UnmountFilesystem(mountpoint_);
+    if (should_unmount_) {
+      utils::UnmountFilesystem(mountpoint_);
+    }
   }
+  void set_should_unmount(bool unmount) { should_unmount_ = unmount; }
  private:
   const std::string mountpoint_;
+  bool should_unmount_;
   DISALLOW_COPY_AND_ASSIGN(ScopedFilesystemUnmounter);
 };
 
@@ -250,15 +255,13 @@ class ScopedFilesystemUnmounter {
 class ScopedFdCloser {
  public:
   explicit ScopedFdCloser(int* fd) : fd_(fd), should_close_(true) {}
-  void set_should_close(bool should_close) { should_close_ = should_close; }
   ~ScopedFdCloser() {
-    if (!should_close_)
-      return;
-    if (fd_ && (*fd_ >= 0)) {
+    if (should_close_ && fd_ && (*fd_ >= 0)) {
       close(*fd_);
       *fd_ = -1;
     }
   }
+  void set_should_close(bool should_close) { should_close_ = should_close; }
  private:
   int* fd_;
   bool should_close_;
@@ -283,14 +286,35 @@ class ScopedPathUnlinker {
 // Utility class to delete an empty directory when it goes out of scope.
 class ScopedDirRemover {
  public:
-  explicit ScopedDirRemover(const std::string& path) : path_(path) {}
+  explicit ScopedDirRemover(const std::string& path)
+      : path_(path),
+        should_remove_(true) {}
   ~ScopedDirRemover() {
-    if (rmdir(path_.c_str()) < 0)
+    if (should_remove_ && (rmdir(path_.c_str()) < 0)) {
       PLOG(ERROR) << "Unable to remove dir " << path_;
+    }
+  }
+  void set_should_remove(bool should_remove) { should_remove_ = should_remove; }
+
+ protected:
+  const std::string path_;
+
+ private:
+  bool should_remove_;
+  DISALLOW_COPY_AND_ASSIGN(ScopedDirRemover);
+};
+
+// Utility class to unmount a filesystem mounted on a temporary directory and
+// delete the temporary directory when it goes out of scope.
+class ScopedTempUnmounter : public ScopedDirRemover {
+ public:
+  explicit ScopedTempUnmounter(const std::string& path) :
+      ScopedDirRemover(path) {}
+  ~ScopedTempUnmounter() {
+    utils::UnmountFilesystem(path_);
   }
  private:
-  const std::string path_;
-  DISALLOW_COPY_AND_ASSIGN(ScopedDirRemover);
+  DISALLOW_COPY_AND_ASSIGN(ScopedTempUnmounter);
 };
 
 // A little object to call ActionComplete on the ActionProcessor when

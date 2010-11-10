@@ -15,7 +15,7 @@ using std::string;
 using std::vector;
 
 namespace {
-const string kPostinstallScript("/postinst");
+const char kPostinstallScript[] = "/postinst";
 }
 
 void PostinstallRunnerAction::PerformAction() {
@@ -24,53 +24,61 @@ void PostinstallRunnerAction::PerformAction() {
   const string install_device = install_plan.install_path;
   ScopedActionCompleter completer(processor_, this);
 
-  // Make mountpoint
-  string temp_dir;
+  // Make mountpoint.
   TEST_AND_RETURN(utils::MakeTempDirectory("/tmp/au_postint_mount.XXXXXX",
-                                           &temp_dir));
-  ScopedDirRemover temp_dir_remover(temp_dir);
+                                           &temp_rootfs_dir_));
+  ScopedDirRemover temp_dir_remover(temp_rootfs_dir_);
 
-  {
-    // Scope for the mount
-    unsigned long mountflags = MS_RDONLY;
-
-    int rc = mount(install_device.c_str(),
-                   temp_dir.c_str(),
-                   "ext4",
-                   mountflags,
-                   NULL);
-    if (rc < 0) {
-      LOG(INFO) << "Failed to mount install part as ext4. Trying ext3.";
-      rc = mount(install_device.c_str(),
-                 temp_dir.c_str(),
-                 "ext3",
+  unsigned long mountflags = MS_RDONLY;
+  int rc = mount(install_device.c_str(),
+                 temp_rootfs_dir_.c_str(),
+                 "ext4",
                  mountflags,
                  NULL);
-    }
-    if (rc < 0) {
-      LOG(ERROR) << "Unable to mount destination device " << install_device
-                 << " onto " << temp_dir;
-      return;
-    }
-    ScopedFilesystemUnmounter unmounter(temp_dir);
-
-    // run postinstall script
-    vector<string> command;
-    command.push_back(temp_dir + kPostinstallScript);
-    command.push_back(install_device);
-    rc = 0;
-    TEST_AND_RETURN(Subprocess::SynchronousExec(command, &rc));
-    bool success = (rc == 0);
-    if (!success) {
-      LOG(ERROR) << "Postinst command failed with code: " << rc;
-      return;
-    }
+  if (rc < 0) {
+    LOG(INFO) << "Failed to mount install part as ext4. Trying ext3.";
+    rc = mount(install_device.c_str(),
+               temp_rootfs_dir_.c_str(),
+               "ext3",
+               mountflags,
+               NULL);
+  }
+  if (rc < 0) {
+    LOG(ERROR) << "Unable to mount destination device " << install_device
+               << " onto " << temp_rootfs_dir_;
+    return;
   }
 
+  temp_dir_remover.set_should_remove(false);
+  completer.set_should_complete(false);
+
+  // Runs the postinstall script asynchronously to free up the main loop while
+  // it's running.
+  vector<string> command;
+  command.push_back(temp_rootfs_dir_ + kPostinstallScript);
+  command.push_back(install_device);
+  Subprocess::Get().Exec(command, StaticCompletePostinstall, this);
+}
+
+void PostinstallRunnerAction::CompletePostinstall(int return_code) {
+  ScopedActionCompleter completer(processor_, this);
+  ScopedTempUnmounter temp_unmounter(temp_rootfs_dir_);
+  if (return_code != 0) {
+    LOG(ERROR) << "Postinst command failed with code: " << return_code;
+    return;
+  }
   if (HasOutputPipe()) {
-    SetOutputObject(install_plan);
+    CHECK(HasInputObject());
+    SetOutputObject(GetInputObject());
   }
   completer.set_code(kActionCodeSuccess);
+}
+
+void PostinstallRunnerAction::StaticCompletePostinstall(int return_code,
+                                                        const string& output,
+                                                        void* p) {
+  reinterpret_cast<PostinstallRunnerAction*>(p)->CompletePostinstall(
+      return_code);
 }
 
 }  // namespace chromeos_update_engine

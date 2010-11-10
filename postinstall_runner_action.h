@@ -6,6 +6,7 @@
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_POSTINSTALL_RUNNER_ACTION_H__
 
 #include <string>
+
 #include "update_engine/action.h"
 #include "update_engine/install_plan.h"
 
@@ -35,8 +36,7 @@ class PostinstallRunnerAction : public Action<PostinstallRunnerAction> {
       OutputObjectType;
   void PerformAction();
 
-  // This is a synchronous action, and thus TerminateProcessing() should
-  // never be called
+  // Note that there's no support for terminating this action currently.
   void TerminateProcessing() { CHECK(false); }
 
   // Debugging/logging
@@ -44,6 +44,14 @@ class PostinstallRunnerAction : public Action<PostinstallRunnerAction> {
   std::string Type() const { return StaticType(); }
 
  private:
+  // Subprocess::Exec callback.
+  void CompletePostinstall(int return_code);
+  static void StaticCompletePostinstall(int return_code,
+                                        const std::string& output,
+                                        void* p);
+
+  std::string temp_rootfs_dir_;
+
   DISALLOW_COPY_AND_ASSIGN(PostinstallRunnerAction);
 };
 
