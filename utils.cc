@@ -301,6 +301,11 @@ bool FileExists(const char* path) {
   return 0 == lstat(path, &stbuf);
 }
 
+bool IsSymlink(const char* path) {
+  struct stat stbuf;
+  return lstat(path, &stbuf) == 0 && S_ISLNK(stbuf.st_mode) != 0;
+}
+
 std::string TempFilename(string path) {
   static const string suffix("XXXXXX");
   CHECK(StringHasSuffix(path, suffix));
