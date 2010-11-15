@@ -47,7 +47,9 @@ bool OmahaRequestDeviceParams::Init(const std::string& in_app_version,
       GetLsbValue("CHROMEOS_RELEASE_VERSION", "", NULL) : in_app_version;
   os_sp = app_version + "_" + GetMachineType();
   os_board = GetLsbValue("CHROMEOS_RELEASE_BOARD", "", NULL);
-  app_id = OmahaRequestParams::kAppId;
+  app_id = GetLsbValue("CHROMEOS_RELEASE_APPID",
+                       OmahaRequestParams::kAppId,
+                       NULL);
   app_lang = "en-US";
   app_track = GetLsbValue(
       kUpdateTrackKey,

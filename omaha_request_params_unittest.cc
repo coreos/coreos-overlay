@@ -96,6 +96,29 @@ TEST_F(OmahaRequestDeviceParamsTest, SimpleTest) {
   EXPECT_EQ("http://www.google.com", out.update_url);
 }
 
+TEST_F(OmahaRequestDeviceParamsTest, AppIDTest) {
+  ASSERT_TRUE(WriteFileString(
+      kTestDir + "/etc/lsb-release",
+      "CHROMEOS_RELEASE_BOARD=arm-generic\n"
+      "CHROMEOS_RELEASE_FOO=bar\n"
+      "CHROMEOS_RELEASE_VERSION=0.2.2.3\n"
+      "CHROMEOS_RELEASE_TRACK=footrack\n"
+      "CHROMEOS_RELEASE_APPID={58c35cef-9d30-476e-9098-ce20377d535d}\n"
+      "CHROMEOS_AUSERVER=http://www.google.com"));
+  OmahaRequestParams out;
+  EXPECT_TRUE(DoTest(&out, "", ""));
+  EXPECT_EQ("Chrome OS", out.os_platform);
+  EXPECT_EQ(string("0.2.2.3_") + GetMachineType(), out.os_sp);
+  EXPECT_EQ("arm-generic", out.os_board);
+  EXPECT_EQ("{58c35cef-9d30-476e-9098-ce20377d535d}", out.app_id);
+  EXPECT_EQ("0.2.2.3", out.app_version);
+  EXPECT_EQ("en-US", out.app_lang);
+  EXPECT_EQ("", out.hardware_class);
+  EXPECT_TRUE(out.delta_okay);
+  EXPECT_EQ("footrack", out.app_track);
+  EXPECT_EQ("http://www.google.com", out.update_url);
+}
+
 TEST_F(OmahaRequestDeviceParamsTest, MissingTrackTest) {
   ASSERT_TRUE(WriteFileString(
       kTestDir + "/etc/lsb-release",
