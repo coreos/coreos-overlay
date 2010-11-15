@@ -10,6 +10,7 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
 #include <base/file_util.h>
 #include <base/string_util.h>
@@ -21,6 +22,7 @@
 
 using std::map;
 using std::string;
+using std::vector;
 
 namespace chromeos_update_engine {
 
@@ -44,28 +46,50 @@ bool OmahaRequestDeviceParams::Init(const std::string& in_app_version,
   os_platform = OmahaRequestParams::kOsPlatform;
   os_version = OmahaRequestParams::kOsVersion;
   app_version = in_app_version.empty() ?
-      GetLsbValue("CHROMEOS_RELEASE_VERSION", "", NULL) : in_app_version;
+      GetLsbValue("CHROMEOS_RELEASE_VERSION", "", NULL, true) : in_app_version;
   os_sp = app_version + "_" + GetMachineType();
-  os_board = GetLsbValue("CHROMEOS_RELEASE_BOARD", "", NULL);
+  os_board = GetLsbValue("CHROMEOS_RELEASE_BOARD", "", NULL, true);
   app_id = GetLsbValue("CHROMEOS_RELEASE_APPID",
                        OmahaRequestParams::kAppId,
-                       NULL);
+                       NULL,
+                       true);
   app_lang = "en-US";
   app_track = GetLsbValue(
       kUpdateTrackKey,
       "",
-      &chromeos_update_engine::OmahaRequestDeviceParams::IsValidTrack);
+      &chromeos_update_engine::OmahaRequestDeviceParams::IsValidTrack,
+      true);
   hardware_class = GetHardwareClass();
   struct stat stbuf;
 
-  // Deltas are only okay if the /.nodelta file does not exist.
-  // If we don't know (i.e. stat() returns some unexpected error),
-  // then err on the side of caution and say deltas are not okay
+  // Deltas are only okay if the /.nodelta file does not exist.  If we don't
+  // know (i.e. stat() returns some unexpected error), then err on the side of
+  // caution and say deltas are not okay.
   delta_okay = (stat((root_ + "/.nodelta").c_str(), &stbuf) < 0) &&
                (errno == ENOENT);
 
+  // For now, disable delta updates if the rootfs track is different than the
+  // track that we're sending to the update server because such updates are
+  // destined to fail -- the source rootfs hash will be different than the
+  // expected hash due to the different track in /etc/lsb-release.
+  //
+  // Longer term we should consider an alternative: (a) clients can send
+  // (current_version, current_channel, new_channel) information, or (b) the
+  // build process can make sure releases on separate tracks are identical (i.e,
+  // by not stamping the release with the channel), or (c) the release process
+  // can ensure that different channels get different version numbers.
+  const string rootfs_track = GetLsbValue(
+      kUpdateTrackKey,
+      "",
+      &chromeos_update_engine::OmahaRequestDeviceParams::IsValidTrack,
+      false);
+  delta_okay = delta_okay && rootfs_track == app_track;
+
   update_url = in_update_url.empty() ?
-      GetLsbValue("CHROMEOS_AUSERVER", OmahaRequestParams::kUpdateUrl, NULL) :
+      GetLsbValue("CHROMEOS_AUSERVER",
+                  OmahaRequestParams::kUpdateUrl,
+                  NULL,
+                  true) :
       in_update_url;
   return true;
 }
@@ -103,14 +127,19 @@ string OmahaRequestDeviceParams::GetDeviceTrack() {
 
 string OmahaRequestDeviceParams::GetLsbValue(const string& key,
                                              const string& default_value,
-                                             ValueValidator validator) const {
-  string files[] = {string(utils::kStatefulPartition) + "/etc/lsb-release",
-                    "/etc/lsb-release"};
-  for (unsigned int i = 0; i < arraysize(files); ++i) {
-    // TODO(adlr): make sure files checked are owned as root (and all
-    // their parents are recursively, too).
+                                             ValueValidator validator,
+                                             bool stateful_override) const {
+  vector<string> files;
+  if (stateful_override) {
+    files.push_back(string(utils::kStatefulPartition) + "/etc/lsb-release");
+  }
+  files.push_back("/etc/lsb-release");
+  for (vector<string>::const_iterator it = files.begin();
+       it != files.end(); ++it) {
+    // TODO(adlr): make sure files checked are owned as root (and all their
+    // parents are recursively, too).
     string file_data;
-    if (!utils::ReadFileToString(root_ + files[i], &file_data))
+    if (!utils::ReadFileToString(root_ + *it, &file_data))
       continue;
 
     map<string, string> data = simple_key_value_store::ParseString(file_data);

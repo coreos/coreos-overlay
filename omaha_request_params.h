@@ -106,12 +106,13 @@ class OmahaRequestDeviceParams : public OmahaRequestParams {
   bool IsValidTrack(const std::string& track) const;
 
   // Fetches the value for a given key from
-  // /mnt/stateful_partition/etc/lsb-release if possible. Failing that, it looks
-  // for the key in /etc/lsb-release. If |validator| is non-NULL, uses it to
-  // validate and ignore invalid valies.
+  // /mnt/stateful_partition/etc/lsb-release if possible and |stateful_override|
+  // is true. Failing that, it looks for the key in /etc/lsb-release. If
+  // |validator| is non-NULL, uses it to validate and ignore invalid valies.
   std::string GetLsbValue(const std::string& key,
                           const std::string& default_value,
-                          ValueValidator validator) const;
+                          ValueValidator validator,
+                          bool stateful_override) const;
 
   // Gets the machine type (e.g. "i686").
   std::string GetMachineType() const;

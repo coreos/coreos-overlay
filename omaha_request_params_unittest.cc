@@ -274,8 +274,34 @@ TEST_F(OmahaRequestDeviceParamsTest, OverrideTest) {
   EXPECT_EQ("0.2.2.3", out.app_version);
   EXPECT_EQ("en-US", out.app_lang);
   EXPECT_EQ("", out.hardware_class);
-  EXPECT_TRUE(out.delta_okay);
+  EXPECT_FALSE(out.delta_okay);
   EXPECT_EQ("bartrack", out.app_track);
+  EXPECT_EQ("http://www.google.com", out.update_url);
+}
+
+TEST_F(OmahaRequestDeviceParamsTest, OverrideSameTrackTest) {
+  ASSERT_TRUE(WriteFileString(
+      kTestDir + "/etc/lsb-release",
+      "CHROMEOS_RELEASE_BOARD=arm-generic\n"
+      "CHROMEOS_RELEASE_FOO=bar\n"
+      "CHROMEOS_RELEASE_VERSION=0.2.2.3\n"
+      "CHROMEOS_RELEASE_TRACK=footrack\n"
+      "CHROMEOS_AUSERVER=http://www.google.com"));
+  ASSERT_TRUE(WriteFileString(
+      kTestDir + utils::kStatefulPartition + "/etc/lsb-release",
+      "CHROMEOS_RELEASE_BOARD=x86-generic\n"
+      "CHROMEOS_RELEASE_TRACK=footrack"));
+  OmahaRequestParams out;
+  EXPECT_TRUE(DoTest(&out, "", ""));
+  EXPECT_EQ("Chrome OS", out.os_platform);
+  EXPECT_EQ(string("0.2.2.3_") + GetMachineType(), out.os_sp);
+  EXPECT_EQ("x86-generic", out.os_board);
+  EXPECT_EQ("{87efface-864d-49a5-9bb3-4b050a7c227a}", out.app_id);
+  EXPECT_EQ("0.2.2.3", out.app_version);
+  EXPECT_EQ("en-US", out.app_lang);
+  EXPECT_EQ("", out.hardware_class);
+  EXPECT_TRUE(out.delta_okay);
+  EXPECT_EQ("footrack", out.app_track);
   EXPECT_EQ("http://www.google.com", out.update_url);
 }
 
