@@ -101,19 +101,23 @@ void LibcurlHttpFetcher::ResumeTransfer(const std::string& url) {
   CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_MAXREDIRS, kMaxRedirects),
            CURLE_OK);
 
-  // Makes sure that peer certificate verification is enabled and restricts the
-  // set of trusted certificates.
-  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_SSL_VERIFYPEER, 1), CURLE_OK);
-  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_CAPATH, kCACertificatesPath),
-           CURLE_OK);
-
-  // Restrict protocols to HTTPS in official builds.
+  // Security lock-down in official builds: makes sure that peer certificate
+  // verification is enabled, restricts the set of trusted certificates,
+  // restricts protocols to HTTPS, restricts ciphers to HIGH.
   if (IsOfficialBuild()) {
+    CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_SSL_VERIFYPEER, 1),
+             CURLE_OK);
+    CHECK_EQ(curl_easy_setopt(curl_handle_,
+                              CURLOPT_CAPATH,
+                              kCACertificatesPath),
+             CURLE_OK);
     CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS),
              CURLE_OK);
     CHECK_EQ(curl_easy_setopt(curl_handle_,
                               CURLOPT_REDIR_PROTOCOLS,
                               CURLPROTO_HTTPS),
+             CURLE_OK);
+    CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_SSL_CIPHER_LIST, "HIGH"),
              CURLE_OK);
   }
 
