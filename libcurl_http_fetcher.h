@@ -48,8 +48,8 @@ class LibcurlHttpFetcher : public HttpFetcher {
   // Begins the transfer if it hasn't already begun.
   virtual void BeginTransfer(const std::string& url);
 
-  // If the transfer is in progress, aborts the transfer early.
-  // The transfer cannot be resumed.
+  // If the transfer is in progress, aborts the transfer early. The transfer
+  // cannot be resumed.
   virtual void TerminateTransfer();
 
   // Suspend the transfer by calling curl_easy_pause(CURLPAUSE_ALL).
@@ -135,6 +135,11 @@ class LibcurlHttpFetcher : public HttpFetcher {
   // Cleans up the following if they are non-null:
   // curl(m) handles, io_channels_, timeout_source_.
   void CleanUp();
+
+  // Force terminate the transfer. This will invoke the delegate's (if any)
+  // TransferTerminated callback so, after returning, this fetcher instance may
+  // be destroyed.
+  void ForceTransferTermination();
 
   // Returns whether or not the current network connection is considered
   // expensive.

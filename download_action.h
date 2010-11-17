@@ -88,6 +88,7 @@ class DownloadAction : public Action<DownloadAction>,
                              const char* bytes, int length);
   virtual void SeekToOffset(off_t offset);
   virtual void TransferComplete(HttpFetcher *fetcher, bool successful);
+  virtual void TransferTerminated(HttpFetcher *fetcher);
 
   DownloadActionDelegate* delegate() const { return delegate_; }
   void set_delegate(DownloadActionDelegate* delegate) {
@@ -123,6 +124,10 @@ class DownloadAction : public Action<DownloadAction>,
 
   // Used to find the hash of the bytes downloaded
   OmahaHashCalculator omaha_hash_calculator_;
+
+  // Used by TransferTerminated to figure if this action terminated itself or
+  // was terminated by the action processor.
+  ActionExitCode code_;
 
   // For reporting status to outsiders
   DownloadActionDelegate* delegate_;

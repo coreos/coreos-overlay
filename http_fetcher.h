@@ -45,11 +45,13 @@ class HttpFetcher {
   // Downloading should resume from this offset
   virtual void SetOffset(off_t offset) = 0;
 
-  // Begins the transfer to the specified URL.
+  // Begins the transfer to the specified URL. This fetcher instance should not
+  // be destroyed until either TransferComplete, or TransferTerminated is
+  // called.
   virtual void BeginTransfer(const std::string& url) = 0;
 
-  // Aborts the transfer. TransferComplete() will not be called on the
-  // delegate.
+  // Aborts the transfer. The transfer may not abort right away -- delegate's
+  // TransferTerminated() will be called when the transfer is actually done.
   virtual void TerminateTransfer() = 0;
 
   // If data is coming in too quickly, you can call Pause() to pause the
@@ -97,9 +99,14 @@ class HttpFetcherDelegate {
   // Called if the fetcher seeks to a particular offset.
   virtual void SeekToOffset(off_t offset) {}
 
-  // Called when the transfer has completed successfully or been somehow
-  // aborted.
+  // Called when the transfer has completed successfully or been aborted through
+  // means other than TerminateTransfer. It's OK to destroy the |fetcher| object
+  // in this callback.
   virtual void TransferComplete(HttpFetcher* fetcher, bool successful) = 0;
+
+  // Called when the transfer has been aborted through TerminateTransfer. It's
+  // OK to destroy the |fetcher| object in this callback.
+  virtual void TransferTerminated(HttpFetcher* fetcher) {}
 };
 
 }  // namespace chromeos_update_engine

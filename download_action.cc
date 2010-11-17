@@ -25,6 +25,7 @@ DownloadAction::DownloadAction(PrefsInterface* prefs,
     : prefs_(prefs),
       writer_(NULL),
       http_fetcher_(http_fetcher),
+      code_(kActionCodeSuccess),
       delegate_(NULL),
       bytes_received_(0) {}
 
@@ -101,10 +102,12 @@ void DownloadAction::TerminateProcessing() {
     LOG_IF(WARNING, writer_->Close() != 0) << "Error closing the writer.";
     writer_ = NULL;
   }
-  http_fetcher_->TerminateTransfer();
   if (delegate_) {
     delegate_->SetDownloadStatus(false);  // Set to inactive.
   }
+  // Terminates the transfer. The action is terminated, if necessary, when the
+  // TransferTerminated callback is received.
+  http_fetcher_->TerminateTransfer();
 }
 
 void DownloadAction::SeekToOffset(off_t offset) {
@@ -119,8 +122,11 @@ void DownloadAction::ReceivedBytes(HttpFetcher *fetcher,
     delegate_->BytesReceived(bytes_received_, install_plan_.size);
   if (writer_ && writer_->Write(bytes, length) < 0) {
     LOG(ERROR) << "Write error -- terminating processing.";
+    // Don't tell the action processor that the action is complete until we get
+    // the TransferTerminated callback. Otherwise, this and the HTTP fetcher
+    // objects may get destroyed before all callbacks are complete.
+    code_ = kActionCodeDownloadWriteError;
     TerminateProcessing();
-    processor_->ActionComplete(this, kActionCodeDownloadWriteError);
     return;
   }
   // DeltaPerformer checks the hashes for delta updates.
@@ -192,6 +198,12 @@ void DownloadAction::TransferComplete(HttpFetcher *fetcher, bool successful) {
   if (code == kActionCodeSuccess && HasOutputPipe())
     SetOutputObject(GetInputObject());
   processor_->ActionComplete(this, code);
+}
+
+void DownloadAction::TransferTerminated(HttpFetcher *fetcher) {
+  if (code_ != kActionCodeSuccess) {
+    processor_->ActionComplete(this, code_);
+  }
 }
 
 };  // namespace {}

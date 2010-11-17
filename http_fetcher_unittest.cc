@@ -196,6 +196,9 @@ class HttpFetcherTestDelegate : public HttpFetcherDelegate {
     EXPECT_EQ(200, fetcher->http_response_code());
     g_main_loop_quit(loop_);
   }
+  virtual void TransferTerminated(HttpFetcher* fetcher) {
+    ADD_FAILURE();
+  }
   GMainLoop* loop_;
 };
 
@@ -264,6 +267,9 @@ class PausingHttpFetcherTestDelegate : public HttpFetcherDelegate {
   virtual void TransferComplete(HttpFetcher* fetcher, bool successful) {
     g_main_loop_quit(loop_);
   }
+  virtual void TransferTerminated(HttpFetcher* fetcher) {
+    ADD_FAILURE();
+  }
   void Unpause() {
     CHECK(paused_);
     paused_ = false;
@@ -314,9 +320,17 @@ class AbortingHttpFetcherTestDelegate : public HttpFetcherDelegate {
   virtual void ReceivedBytes(HttpFetcher* fetcher,
                              const char* bytes, int length) {}
   virtual void TransferComplete(HttpFetcher* fetcher, bool successful) {
-    CHECK(false);  // We should never get here
+    ADD_FAILURE();  // We should never get here
     g_main_loop_quit(loop_);
   }
+  virtual void TransferTerminated(HttpFetcher* fetcher) {
+    EXPECT_EQ(fetcher, fetcher_.get());
+    EXPECT_FALSE(once_);
+    EXPECT_TRUE(callback_once_);
+    callback_once_ = false;
+    // |fetcher| can be destroyed during this callback.
+    fetcher_.reset(NULL);
+ }
   void TerminateTransfer() {
     CHECK(once_);
     once_ = false;
@@ -326,7 +340,8 @@ class AbortingHttpFetcherTestDelegate : public HttpFetcherDelegate {
     g_main_loop_quit(loop_);
   }
   bool once_;
-  HttpFetcher* fetcher_;
+  bool callback_once_;
+  scoped_ptr<HttpFetcher> fetcher_;
   GMainLoop* loop_;
 };
 
@@ -347,11 +362,11 @@ TYPED_TEST(HttpFetcherTest, AbortTest) {
   GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
   {
     AbortingHttpFetcherTestDelegate delegate;
-    scoped_ptr<HttpFetcher> fetcher(this->NewLargeFetcher());
+    delegate.fetcher_.reset(this->NewLargeFetcher());
     delegate.once_ = true;
+    delegate.callback_once_ = true;
     delegate.loop_ = loop;
-    delegate.fetcher_ = fetcher.get();
-    fetcher->set_delegate(&delegate);
+    delegate.fetcher_->set_delegate(&delegate);
 
     typename TestFixture::HttpServer server;
     this->IgnoreServerAborting(&server);
@@ -361,9 +376,11 @@ TYPED_TEST(HttpFetcherTest, AbortTest) {
     g_source_set_callback(timeout_source_, AbortingTimeoutCallback, &delegate,
                           NULL);
     g_source_attach(timeout_source_, NULL);
-    fetcher->BeginTransfer(this->BigUrl());
+    delegate.fetcher_->BeginTransfer(this->BigUrl());
 
     g_main_loop_run(loop);
+    CHECK(!delegate.once_);
+    CHECK(!delegate.callback_once_);
     g_source_destroy(timeout_source_);
   }
   g_main_loop_unref(loop);
@@ -380,6 +397,9 @@ class FlakyHttpFetcherTestDelegate : public HttpFetcherDelegate {
     EXPECT_TRUE(successful);
     EXPECT_EQ(206, fetcher->http_response_code());
     g_main_loop_quit(loop_);
+  }
+  virtual void TransferTerminated(HttpFetcher* fetcher) {
+    ADD_FAILURE();
   }
   string data;
   GMainLoop* loop_;
@@ -434,6 +454,9 @@ class FailureHttpFetcherTestDelegate : public HttpFetcherDelegate {
     EXPECT_FALSE(successful);
     EXPECT_EQ(0, fetcher->http_response_code());
     g_main_loop_quit(loop_);
+  }
+  virtual void TransferTerminated(HttpFetcher* fetcher) {
+    ADD_FAILURE();
   }
   GMainLoop* loop_;
   PythonHttpServer* server_;
@@ -508,6 +531,9 @@ class RedirectHttpFetcherTestDelegate : public HttpFetcherDelegate {
       EXPECT_LE(fetcher->http_response_code(), 307);
     }
     g_main_loop_quit(loop_);
+  }
+  virtual void TransferTerminated(HttpFetcher* fetcher) {
+    ADD_FAILURE();
   }
   bool expected_successful_;
   string data;
@@ -588,14 +614,22 @@ class MultiHttpFetcherTestDelegate : public HttpFetcherDelegate {
       : expected_response_code_(expected_response_code) {}
   virtual void ReceivedBytes(HttpFetcher* fetcher,
                              const char* bytes, int length) {
+    EXPECT_EQ(fetcher, fetcher_.get());
     data.append(bytes, length);
   }
   virtual void TransferComplete(HttpFetcher* fetcher, bool successful) {
+    EXPECT_EQ(fetcher, fetcher_.get());
     EXPECT_EQ(expected_response_code_ != 0, successful);
     if (expected_response_code_ != 0)
       EXPECT_EQ(expected_response_code_, fetcher->http_response_code());
+    // Destroy the fetcher (because we're allowed to).
+    fetcher_.reset(NULL);
     g_main_loop_quit(loop_);
   }
+  virtual void TransferTerminated(HttpFetcher* fetcher) {
+    ADD_FAILURE();
+  }
+  scoped_ptr<HttpFetcher> fetcher_;
   int expected_response_code_;
   string data;
   GMainLoop* loop_;
@@ -611,16 +645,16 @@ void MultiTest(HttpFetcher* fetcher_in,
   {
     MultiHttpFetcherTestDelegate delegate(expected_response_code);
     delegate.loop_ = loop;
-    scoped_ptr<HttpFetcher> fetcher(fetcher_in);
+    delegate.fetcher_.reset(fetcher_in);
     MultiHttpFetcher<LibcurlHttpFetcher>* multi_fetcher =
-        dynamic_cast<MultiHttpFetcher<LibcurlHttpFetcher>*>(fetcher.get());
+        dynamic_cast<MultiHttpFetcher<LibcurlHttpFetcher>*>(fetcher_in);
     ASSERT_TRUE(multi_fetcher);
     multi_fetcher->set_ranges(ranges);
     multi_fetcher->SetConnectionAsExpensive(false);
     multi_fetcher->SetBuildType(false);
-    fetcher->set_delegate(&delegate);
+    multi_fetcher->set_delegate(&delegate);
 
-    StartTransferArgs start_xfer_args = {fetcher.get(), url};
+    StartTransferArgs start_xfer_args = {multi_fetcher, url};
 
     g_timeout_add(0, StartTransfer, &start_xfer_args);
     g_main_loop_run(loop);
@@ -633,7 +667,7 @@ void MultiTest(HttpFetcher* fetcher_in,
 }
 }  // namespace {}
 
-TYPED_TEST(HttpFetcherTest, MultiHttpFetcherSimplTest) {
+TYPED_TEST(HttpFetcherTest, MultiHttpFetcherSimpleTest) {
   if (!this->IsMulti())
     return;
   typename TestFixture::HttpServer server;
@@ -712,6 +746,9 @@ class BlockedTransferTestDelegate : public HttpFetcherDelegate {
   virtual void TransferComplete(HttpFetcher* fetcher, bool successful) {
     EXPECT_FALSE(successful);
     g_main_loop_quit(loop_);
+  }
+  virtual void TransferTerminated(HttpFetcher* fetcher) {
+    ADD_FAILURE();
   }
   GMainLoop* loop_;
 };

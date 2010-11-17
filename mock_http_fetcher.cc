@@ -41,6 +41,11 @@ bool MockHttpFetcher::SendData(bool skip_delivery) {
                                   data_.size() - sent_size_);
     CHECK(delegate_);
     delegate_->ReceivedBytes(this, &data_[sent_size_], chunk_size);
+    // We may get terminated in the callback.
+    if (sent_size_ == data_.size()) {
+      LOG(INFO) << "Terminated in the ReceivedBytes callback.";
+      return timeout_source_;
+    }
     sent_size_ += chunk_size;
     CHECK_LE(sent_size_, data_.size());
     if (sent_size_ == data_.size()) {
@@ -81,6 +86,7 @@ bool MockHttpFetcher::TimeoutCallback() {
 // If the transfer is in progress, aborts the transfer early.
 // The transfer cannot be resumed.
 void MockHttpFetcher::TerminateTransfer() {
+  LOG(INFO) << "Terminating transfer.";
   sent_size_ = data_.size();
   // kill any timeout
   if (timeout_source_) {
@@ -88,6 +94,7 @@ void MockHttpFetcher::TerminateTransfer() {
     g_source_destroy(timeout_source_);
     timeout_source_ = NULL;
   }
+  delegate_->TransferTerminated(this);
 }
 
 void MockHttpFetcher::Pause() {

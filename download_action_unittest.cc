@@ -49,9 +49,11 @@ class DownloadActionTestProcessorDelegate : public ActionProcessorDelegate {
     g_main_loop_quit(loop_);
     vector<char> found_data;
     ASSERT_TRUE(utils::ReadFile(path_, &found_data));
-    ASSERT_EQ(expected_data_.size(), found_data.size());
-    for (unsigned i = 0; i < expected_data_.size(); i++) {
-      EXPECT_EQ(expected_data_[i], found_data[i]);
+    if (expected_code_ != kActionCodeDownloadWriteError) {
+      ASSERT_EQ(expected_data_.size(), found_data.size());
+      for (unsigned i = 0; i < expected_data_.size(); i++) {
+        EXPECT_EQ(expected_data_[i], found_data[i]);
+      }
     }
     processing_done_called_ = true;
   }
@@ -72,6 +74,24 @@ class DownloadActionTestProcessorDelegate : public ActionProcessorDelegate {
   vector<char> expected_data_;
   bool processing_done_called_;
   ActionExitCode expected_code_;
+};
+
+class TestDirectFileWriter : public DirectFileWriter {
+ public:
+  TestDirectFileWriter() : fail_write_(0), current_write_(0) {}
+  void set_fail_write(int fail_write) { fail_write_ = fail_write; }
+
+  virtual ssize_t Write(const void* bytes, size_t count) {
+    if (++current_write_ == fail_write_) {
+      return -EINVAL;
+    }
+    return DirectFileWriter::Write(bytes, count);
+  }
+
+ private:
+  // If positive, fail on the |fail_write_| call to Write.
+  int fail_write_;
+  int current_write_;
 };
 
 struct EntryPointArgs {
@@ -98,12 +118,14 @@ gboolean StartProcessorInRunLoop(gpointer data) {
 void TestWithData(const vector<char>& data,
                   bool hash_test,
                   bool size_test,
+                  int fail_write,
                   bool use_download_delegate) {
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
 
   // TODO(adlr): see if we need a different file for build bots
   ScopedTempFile output_temp_file;
-  DirectFileWriter writer;
+  TestDirectFileWriter writer;
+  writer.set_fail_write(fail_write);
 
   // We pull off the first byte from data and seek past it.
 
@@ -134,8 +156,7 @@ void TestWithData(const vector<char>& data,
     if (data.size() > kMockHttpFetcherChunkSize)
       EXPECT_CALL(download_delegate,
                   BytesReceived(1 + kMockHttpFetcherChunkSize, _));
-
-      EXPECT_CALL(download_delegate, BytesReceived(_, _)).Times(AtLeast(1));
+    EXPECT_CALL(download_delegate, BytesReceived(_, _)).Times(AtLeast(1));
     EXPECT_CALL(download_delegate, SetDownloadStatus(false)).Times(1);
   }
   ActionExitCode expected_code = kActionCodeSuccess;
@@ -143,6 +164,8 @@ void TestWithData(const vector<char>& data,
     expected_code = kActionCodeDownloadHashMismatchError;
   else if (size_test)
     expected_code = kActionCodeDownloadSizeMismatchError;
+  else if (fail_write > 0)
+    expected_code = kActionCodeDownloadWriteError;
   DownloadActionTestProcessorDelegate delegate(expected_code);
   delegate.loop_ = loop;
   delegate.expected_data_ = vector<char>(data.begin() + 1, data.end());
@@ -168,6 +191,7 @@ TEST(DownloadActionTest, SimpleTest) {
   TestWithData(small,
                false,  // hash_test
                false,  // size_test
+               0,  // fail_write
                true);  // use_download_delegate
 }
 
@@ -176,14 +200,26 @@ TEST(DownloadActionTest, LargeTest) {
   char c = '0';
   for (unsigned int i = 0; i < big.size(); i++) {
     big[i] = c;
-    if ('9' == c)
-      c = '0';
-    else
-      c++;
+    c = ('9' == c) ? '0' : c + 1;
   }
   TestWithData(big,
                false,  // hash_test
                false,  // size_test
+               0,  // fail_write
+               true);  // use_download_delegate
+}
+
+TEST(DownloadActionTest, FailWriteTest) {
+  vector<char> big(5 * kMockHttpFetcherChunkSize);
+  char c = '0';
+  for (unsigned int i = 0; i < big.size(); i++) {
+    big[i] = c;
+    c = ('9' == c) ? '0' : c + 1;
+  }
+  TestWithData(big,
+               false,  // hash_test
+               false,  // size_test
+               2,  // fail_write
                true);  // use_download_delegate
 }
 
@@ -194,6 +230,7 @@ TEST(DownloadActionTest, BadHashTest) {
   TestWithData(small,
                true,  // hash_test
                false,  // size_test
+               0,  // fail_write
                true);  // use_download_delegate
 }
 
@@ -203,6 +240,7 @@ TEST(DownloadActionTest, BadSizeTest) {
   TestWithData(small,
                false,  // hash_test
                true,  // size_test
+               0,  // fail_write
                true);  // use_download_delegate
 }
 
@@ -213,6 +251,7 @@ TEST(DownloadActionTest, NoDownloadDelegateTest) {
   TestWithData(small,
                false,  // hash_test
                false,  // size_test
+               0,  // fail_write
                false);  // use_download_delegate
 }
 

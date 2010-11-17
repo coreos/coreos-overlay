@@ -28,6 +28,8 @@ const char kCACertificatesPath[] = "/usr/share/update_engine/ca-certificates";
 }  // namespace {}
 
 LibcurlHttpFetcher::~LibcurlHttpFetcher() {
+  LOG_IF(ERROR, transfer_in_progress_)
+      << "Destroying the fetcher while a transfer is in progress.";
   CleanUp();
 }
 
@@ -135,11 +137,20 @@ void LibcurlHttpFetcher::BeginTransfer(const std::string& url) {
   CurlPerformOnce();
 }
 
+void LibcurlHttpFetcher::ForceTransferTermination() {
+  CleanUp();
+  if (delegate_) {
+    // Note that after the callback returns this object may be destroyed.
+    delegate_->TransferTerminated(this);
+  }
+}
+
 void LibcurlHttpFetcher::TerminateTransfer() {
-  if (in_write_callback_)
+  if (in_write_callback_) {
     terminate_requested_ = true;
-  else
-    CleanUp();
+  } else {
+    ForceTransferTermination();
+  }
 }
 
 void LibcurlHttpFetcher::CurlPerformOnce() {
@@ -152,7 +163,7 @@ void LibcurlHttpFetcher::CurlPerformOnce() {
   while (CURLM_CALL_MULTI_PERFORM == retcode) {
     retcode = curl_multi_perform(curl_multi_handle_, &running_handles);
     if (terminate_requested_) {
-      CleanUp();
+      ForceTransferTermination();
       return;
     }
   }
