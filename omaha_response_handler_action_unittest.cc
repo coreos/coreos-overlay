@@ -12,6 +12,7 @@
 #include "update_engine/utils.h"
 
 using std::string;
+using testing::NiceMock;
 using testing::Return;
 
 namespace chromeos_update_engine {
@@ -64,7 +65,7 @@ bool OmahaResponseHandlerActionTest::DoTest(const OmahaResponse& in,
 
   ObjectFeederAction<OmahaResponse> feeder_action;
   feeder_action.set_obj(in);
-  PrefsMock prefs;
+  NiceMock<PrefsMock> prefs;
   if (in.update_exists) {
     EXPECT_CALL(prefs, SetString(kPrefsUpdateCheckResponseHash, in.hash))
         .WillOnce(Return(true));

@@ -26,6 +26,7 @@ using testing::_;
 using testing::AllOf;
 using testing::Ge;
 using testing::Le;
+using testing::NiceMock;
 using testing::Return;
 using testing::SetArgumentPointee;
 
@@ -163,7 +164,7 @@ bool TestUpdateCheck(PrefsInterface* prefs,
   if (fail_http_response_code >= 0) {
     fetcher->FailTransfer(fail_http_response_code);
   }
-  PrefsMock local_prefs;
+  NiceMock<PrefsMock> local_prefs;
   OmahaRequestAction action(prefs ? prefs : &local_prefs,
                             params,
                             NULL,
@@ -200,7 +201,7 @@ void TestEvent(const OmahaRequestParams& params,
   GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
   MockHttpFetcher* fetcher = new MockHttpFetcher(http_response.data(),
                                                  http_response.size());
-  PrefsMock prefs;
+  NiceMock<PrefsMock> prefs;
   OmahaRequestAction action(&prefs, params, event, fetcher);
   OmahaRequestActionTestProcessorDelegate delegate;
   delegate.loop_ = loop;
@@ -263,7 +264,7 @@ TEST(OmahaRequestActionTest, NoOutputPipeTest) {
 
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
 
-  PrefsMock prefs;
+  NiceMock<PrefsMock> prefs;
   OmahaRequestAction action(&prefs, kDefaultTestParams, NULL,
                             new MockHttpFetcher(http_response.data(),
                                                 http_response.size()));
@@ -410,7 +411,7 @@ TEST(OmahaRequestActionTest, TerminateTransferTest) {
   string http_response("doesn't matter");
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
 
-  PrefsMock prefs;
+  NiceMock<PrefsMock> prefs;
   OmahaRequestAction action(&prefs, kDefaultTestParams, NULL,
                             new MockHttpFetcher(http_response.data(),
                                                 http_response.size()));
@@ -592,7 +593,7 @@ TEST(OmahaRequestActionTest, FormatEventOutputTest) {
 
 TEST(OmahaRequestActionTest, IsEventTest) {
   string http_response("doesn't matter");
-  PrefsMock prefs;
+  NiceMock<PrefsMock> prefs;
   OmahaRequestAction update_check_action(
       &prefs,
       kDefaultTestParams,
@@ -661,7 +662,7 @@ TEST(OmahaRequestActionTest, OmahaEventTest) {
 }
 
 TEST(OmahaRequestActionTest, PingTest) {
-  PrefsMock prefs;
+  NiceMock<PrefsMock> prefs;
   // Add a few hours to the day difference to test no rounding, etc.
   int64_t five_days_ago =
       (Time::Now() - TimeDelta::FromHours(5 * 24 + 13)).ToInternalValue();
@@ -685,7 +686,7 @@ TEST(OmahaRequestActionTest, PingTest) {
 }
 
 TEST(OmahaRequestActionTest, ActivePingTest) {
-  PrefsMock prefs;
+  NiceMock<PrefsMock> prefs;
   int64_t three_days_ago =
       (Time::Now() - TimeDelta::FromHours(3 * 24 + 12)).ToInternalValue();
   int64_t now = Time::Now().ToInternalValue();
@@ -707,7 +708,7 @@ TEST(OmahaRequestActionTest, ActivePingTest) {
 }
 
 TEST(OmahaRequestActionTest, RollCallPingTest) {
-  PrefsMock prefs;
+  NiceMock<PrefsMock> prefs;
   int64_t four_days_ago =
       (Time::Now() - TimeDelta::FromHours(4 * 24)).ToInternalValue();
   int64_t now = Time::Now().ToInternalValue();
@@ -729,7 +730,7 @@ TEST(OmahaRequestActionTest, RollCallPingTest) {
 }
 
 TEST(OmahaRequestActionTest, NoPingTest) {
-  PrefsMock prefs;
+  NiceMock<PrefsMock> prefs;
   int64_t one_hour_ago =
       (Time::Now() - TimeDelta::FromHours(1)).ToInternalValue();
   EXPECT_CALL(prefs, GetInt64(kPrefsLastActivePingDay, _))
@@ -752,7 +753,7 @@ TEST(OmahaRequestActionTest, NoPingTest) {
 }
 
 TEST(OmahaRequestActionTest, BackInTimePingTest) {
-  PrefsMock prefs;
+  NiceMock<PrefsMock> prefs;
   int64_t future =
       (Time::Now() + TimeDelta::FromHours(3 * 24 + 4)).ToInternalValue();
   EXPECT_CALL(prefs, GetInt64(kPrefsLastActivePingDay, _))
@@ -789,7 +790,7 @@ TEST(OmahaRequestActionTest, LastPingDayUpdateTest) {
       (Time::Now() - TimeDelta::FromSeconds(200)).ToInternalValue();
   int64_t midnight_slack =
       (Time::Now() - TimeDelta::FromSeconds(195)).ToInternalValue();
-  PrefsMock prefs;
+  NiceMock<PrefsMock> prefs;
   EXPECT_CALL(prefs, SetInt64(kPrefsLastActivePingDay,
                               AllOf(Ge(midnight), Le(midnight_slack))))
       .WillOnce(Return(true));
@@ -811,7 +812,7 @@ TEST(OmahaRequestActionTest, LastPingDayUpdateTest) {
 }
 
 TEST(OmahaRequestActionTest, NoElapsedSecondsTest) {
-  PrefsMock prefs;
+  NiceMock<PrefsMock> prefs;
   EXPECT_CALL(prefs, SetInt64(kPrefsLastActivePingDay, _)).Times(0);
   EXPECT_CALL(prefs, SetInt64(kPrefsLastRollCallPingDay, _)).Times(0);
   ASSERT_TRUE(
@@ -829,7 +830,7 @@ TEST(OmahaRequestActionTest, NoElapsedSecondsTest) {
 }
 
 TEST(OmahaRequestActionTest, BadElapsedSecondsTest) {
-  PrefsMock prefs;
+  NiceMock<PrefsMock> prefs;
   EXPECT_CALL(prefs, SetInt64(kPrefsLastActivePingDay, _)).Times(0);
   EXPECT_CALL(prefs, SetInt64(kPrefsLastRollCallPingDay, _)).Times(0);
   ASSERT_TRUE(

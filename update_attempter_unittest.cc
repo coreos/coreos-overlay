@@ -17,6 +17,7 @@ using testing::_;
 using testing::DoAll;
 using testing::InSequence;
 using testing::Ne;
+using testing::NiceMock;
 using testing::Property;
 using testing::Return;
 using testing::SetArgumentPointee;
@@ -56,7 +57,7 @@ class UpdateAttempterTest : public ::testing::Test {
 
   UpdateAttempterUnderTest attempter_;
   ActionProcessorMock* processor_;
-  PrefsMock prefs_;
+  NiceMock<PrefsMock> prefs_;
 };
 
 TEST_F(UpdateAttempterTest, RunAsRootConstructWithUpdatedMarkerTest) {
