@@ -146,10 +146,6 @@ bool DeltaPerformer::OpenKernel(const char* kernel_path) {
 }
 
 int DeltaPerformer::Close() {
-  if (!buffer_.empty()) {
-    LOG(ERROR) << "Called Close() while buffer not empty!";
-    return -1;
-  }
   int err = 0;
   if (close(kernel_fd_) == -1) {
     err = errno;
@@ -160,8 +156,14 @@ int DeltaPerformer::Close() {
     PLOG(ERROR) << "Unable to close rootfs fd:";
   }
   LOG_IF(ERROR, !hash_calculator_.Finalize()) << "Unable to finalize the hash.";
-  fd_ = -2;  // Set so that isn't not valid AND calls to Open() will fail.
+  fd_ = -2;  // Set to invalid so that calls to Open() will fail.
   path_ = "";
+  if (!buffer_.empty()) {
+    LOG(ERROR) << "Called Close() while buffer not empty!";
+    if (err >= 0) {
+      err = 1;
+    }
+  }
   return -err;
 }
 
@@ -201,11 +203,14 @@ ssize_t DeltaPerformer::Write(const void* bytes, size_t count) {
   buffer_.insert(buffer_.end(), c_bytes, c_bytes + count);
 
   if (!manifest_valid_) {
-    // See if we have enough bytes for the manifest yet
     if (buffer_.size() < strlen(kDeltaMagic) +
         kDeltaVersionLength + kDeltaProtobufLengthLength) {
-      // Don't have enough bytes to even know the protobuf length
+      // Don't have enough bytes to know the protobuf length.
       return count;
+    }
+    if (memcmp(buffer_.data(), kDeltaMagic, strlen(kDeltaMagic)) != 0) {
+      LOG(ERROR) << "Bad payload format -- invalid delta magic.";
+      return -EINVAL;
     }
     uint64_t protobuf_length;
     COMPILE_ASSERT(sizeof(protobuf_length) == kDeltaProtobufLengthLength,

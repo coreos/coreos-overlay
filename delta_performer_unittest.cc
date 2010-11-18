@@ -367,6 +367,17 @@ TEST(DeltaPerformerTest, RunAsRootNoopSmallImageTest) {
   DoSmallImageTest(false, false, true);
 }
 
+TEST(DeltaPerformerTest, BadDeltaMagicTest) {
+  PrefsMock prefs;
+  DeltaPerformer performer(&prefs);
+  EXPECT_EQ(0, performer.Open("/dev/null", 0, 0));
+  EXPECT_TRUE(performer.OpenKernel("/dev/null"));
+  EXPECT_EQ(4, performer.Write("junk", 4));
+  EXPECT_EQ(8, performer.Write("morejunk", 8));
+  EXPECT_LT(performer.Write("morejunk", 8), 0);
+  EXPECT_LT(performer.Close(), 0);
+}
+
 TEST(DeltaPerformerTest, IsIdempotentOperationTest) {
   DeltaArchiveManifest_InstallOperation op;
   EXPECT_TRUE(DeltaPerformer::IsIdempotentOperation(op));
