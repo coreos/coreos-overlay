@@ -12,6 +12,8 @@ volatile sig_atomic_t Terminator::exit_blocked_ = 0;
 volatile sig_atomic_t Terminator::exit_requested_ = 0;
 
 void Terminator::Init() {
+  exit_blocked_ = 0;
+  exit_requested_ = 0;
   signal(SIGTERM, HandleSignal);
 }
 
