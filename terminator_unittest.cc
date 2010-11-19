@@ -19,6 +19,11 @@ class TerminatorTest : public ::testing::Test {
     ASSERT_FALSE(Terminator::exit_blocked());
     ASSERT_FALSE(Terminator::exit_requested());
   }
+  virtual void TearDown() {
+    // Makes sure subsequent non-Terminator tests don't get accidentally
+    // terminated.
+    Terminator::Init();
+  }
 };
 
 typedef TerminatorTest TerminatorDeathTest;
