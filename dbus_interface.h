@@ -7,6 +7,7 @@
 
 // This class interfaces with DBus. The interface allows it to be mocked.
 
+#include <base/logging.h>
 #include <dbus/dbus-glib.h>
 
 namespace chromeos_update_engine {
@@ -25,7 +26,7 @@ class DbusGlibInterface {
 
   // wraps dbus_g_bus_get
   virtual DBusGConnection*  BusGet(DBusBusType type, GError** error) = 0;
-  
+
   // wraps dbus_g_proxy_call
   virtual gboolean ProxyCall(DBusGProxy* proxy,
                              const char* method,
@@ -34,6 +35,15 @@ class DbusGlibInterface {
                              GType var_arg1,
                              GHashTable** var_arg2,
                              GType var_arg3) = 0;
+
+  virtual gboolean ProxyCall(DBusGProxy* proxy,
+                             const char* method,
+                             GError** error,
+                             GType var_arg1, const char* var_arg2,
+                             GType var_arg3,
+                             GType var_arg4, gchar** var_arg5,
+                             GType var_arg6, GArray** var_arg7,
+                             GType var_arg8) = 0;
 };
 
 class ConcreteDbusGlib : public DbusGlibInterface {
@@ -66,6 +76,19 @@ class ConcreteDbusGlib : public DbusGlibInterface {
                              GType var_arg3) {
     return dbus_g_proxy_call(
         proxy, method, error, first_arg_type, var_arg1, var_arg2, var_arg3);
+  }
+
+  virtual gboolean ProxyCall(DBusGProxy* proxy,
+                             const char* method,
+                             GError** error,
+                             GType var_arg1, const char* var_arg2,
+                             GType var_arg3,
+                             GType var_arg4, gchar** var_arg5,
+                             GType var_arg6, GArray** var_arg7,
+                             GType var_arg8) {
+    return dbus_g_proxy_call(
+        proxy, method, error, var_arg1, var_arg2, var_arg3,
+        var_arg4, var_arg5, var_arg6, var_arg7, var_arg8);
   }
 };
 
