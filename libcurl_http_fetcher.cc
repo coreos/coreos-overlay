@@ -24,7 +24,7 @@ namespace chromeos_update_engine {
 
 namespace {
 const int kMaxRetriesCount = 20;
-const char kCACertificatesPath[] = "/usr/share/update_engine/ca-certificates";
+const char kCACertificatesPath[] = "/usr/share/chromeos-ca-certificates";
 }  // namespace {}
 
 LibcurlHttpFetcher::~LibcurlHttpFetcher() {
