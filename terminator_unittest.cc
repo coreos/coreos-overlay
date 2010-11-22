@@ -34,7 +34,7 @@ void UnblockExitThroughUnblocker() {
 }
 
 void RaiseSIGTERM() {
-  ASSERT_EXIT(raise(SIGTERM), ExitedWithCode(0), "");
+  ASSERT_EXIT(raise(SIGTERM), ExitedWithCode(1), "");
 }
 }  // namespace {}
 
@@ -54,9 +54,9 @@ TEST_F(TerminatorTest, ScopedTerminatorExitUnblockerTest) {
 }
 
 TEST_F(TerminatorDeathTest, ExitTest) {
-  ASSERT_EXIT(Terminator::Exit(), ExitedWithCode(0), "");
+  ASSERT_EXIT(Terminator::Exit(), ExitedWithCode(1), "");
   Terminator::set_exit_blocked(true);
-  ASSERT_EXIT(Terminator::Exit(), ExitedWithCode(0), "");
+  ASSERT_EXIT(Terminator::Exit(), ExitedWithCode(1), "");
 }
 
 TEST_F(TerminatorDeathTest, RaiseSignalTest) {
@@ -68,7 +68,7 @@ TEST_F(TerminatorDeathTest, RaiseSignalTest) {
 TEST_F(TerminatorDeathTest, ScopedTerminatorExitUnblockerExitTest) {
   Terminator::set_exit_blocked(true);
   Terminator::exit_requested_ = 1;
-  ASSERT_EXIT(UnblockExitThroughUnblocker(), ExitedWithCode(0), "");
+  ASSERT_EXIT(UnblockExitThroughUnblocker(), ExitedWithCode(1), "");
 }
 
 }  // namespace chromeos_update_engine

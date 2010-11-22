@@ -18,7 +18,7 @@ void Terminator::Init() {
 }
 
 void Terminator::Exit() {
-  exit(0);
+  exit(1);
 }
 
 void Terminator::HandleSignal(int signum) {
