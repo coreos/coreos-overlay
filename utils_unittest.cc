@@ -129,6 +129,20 @@ TEST(UtilsTest, RecursiveUnlinkDirTest) {
   EXPECT_TRUE(utils::RecursiveUnlinkDir("/something/that/doesnt/exist"));
 }
 
+TEST(UtilsTest, IsSymlinkTest) {
+  string temp_dir;
+  EXPECT_TRUE(utils::MakeTempDirectory("/tmp/symlink-test.XXXXXX", &temp_dir));
+  string temp_file = temp_dir + "temp-file";
+  EXPECT_TRUE(utils::WriteFile(temp_file.c_str(), "", 0));
+  string temp_symlink = temp_dir + "temp-symlink";
+  EXPECT_EQ(0, symlink(temp_file.c_str(), temp_symlink.c_str()));
+  EXPECT_FALSE(utils::IsSymlink(temp_dir.c_str()));
+  EXPECT_FALSE(utils::IsSymlink(temp_file.c_str()));
+  EXPECT_TRUE(utils::IsSymlink(temp_symlink.c_str()));
+  EXPECT_FALSE(utils::IsSymlink("/non/existent/path"));
+  EXPECT_TRUE(utils::RecursiveUnlinkDir(temp_dir));
+}
+
 TEST(UtilsTest, TempFilenameTest) {
   const string original = "/foo.XXXXXX";
   const string result = utils::TempFilename(original);
@@ -162,6 +176,22 @@ TEST(UtilsTest, IsRemovableDeviceTest) {
 TEST(UtilsTest, PartitionNumberTest) {
   EXPECT_EQ("3", utils::PartitionNumber("/dev/sda3"));
   EXPECT_EQ("3", utils::PartitionNumber("/dev/mmc0p3"));
+}
+
+
+TEST(UtilsTest, RunAsRootSetProcessPriorityTest) {
+  // getpriority may return -1 on error so the getpriority logic needs to be
+  // enhanced if any of the pre-defined priority constants are changed to -1.
+  ASSERT_NE(-1, utils::kProcessPriorityLow);
+  ASSERT_NE(-1, utils::kProcessPriorityNormal);
+  ASSERT_NE(-1, utils::kProcessPriorityHigh);
+  EXPECT_EQ(utils::kProcessPriorityNormal, getpriority(PRIO_PROCESS, 0));
+  EXPECT_TRUE(utils::SetProcessPriority(utils::kProcessPriorityHigh));
+  EXPECT_EQ(utils::kProcessPriorityHigh, getpriority(PRIO_PROCESS, 0));
+  EXPECT_TRUE(utils::SetProcessPriority(utils::kProcessPriorityLow));
+  EXPECT_EQ(utils::kProcessPriorityLow, getpriority(PRIO_PROCESS, 0));
+  EXPECT_TRUE(utils::SetProcessPriority(utils::kProcessPriorityNormal));
+  EXPECT_EQ(utils::kProcessPriorityNormal, getpriority(PRIO_PROCESS, 0));
 }
 
 TEST(UtilsTest, ComparePrioritiesTest) {
