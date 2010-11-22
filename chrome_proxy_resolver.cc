@@ -24,7 +24,7 @@ const char kSessionManagerProxySettingsKey[] = "cros.proxy.everywhere";
 
 bool ChromeProxyResolver::GetProxiesForUrl(
     const std::string& url,
-    std::vector<std::string>* out_proxies) {
+    std::deque<std::string>* out_proxies) {
   // First, query dbus for the currently stored settings
   DBusGProxy* proxy = DbusProxy();
   TEST_AND_RETURN_FALSE(proxy);
@@ -85,7 +85,7 @@ enum ProxyMode {
 bool ChromeProxyResolver::GetProxiesForUrlWithSettings(
     const string& url,
     const string& json_settings,
-    std::vector<std::string>* out_proxies) {
+    std::deque<std::string>* out_proxies) {
   base::JSONReader parser;
 
   scoped_ptr<Value> root(

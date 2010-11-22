@@ -22,8 +22,9 @@ class LibcurlHttpFetcher : public HttpFetcher {
  public:
   static const int kMaxRedirects = 10;
 
-  LibcurlHttpFetcher()
-      : curl_multi_handle_(NULL),
+  explicit LibcurlHttpFetcher(ProxyResolver* proxy_resolver)
+      : HttpFetcher(proxy_resolver),
+        curl_multi_handle_(NULL),
         curl_handle_(NULL),
         timeout_source_(NULL),
         transfer_in_progress_(false),
@@ -38,6 +39,7 @@ class LibcurlHttpFetcher : public HttpFetcher {
         force_build_type_(false),
         forced_official_build_(false),
         in_write_callback_(false),
+        sent_byte_(false),
         terminate_requested_(false) {}
 
   // Cleans up all internal state. Does not notify delegate
@@ -198,6 +200,10 @@ class LibcurlHttpFetcher : public HttpFetcher {
 
   // If true, we are currently performing a write callback on the delegate.
   bool in_write_callback_;
+  
+  // If true, we have returned at least one byte in the write callback
+  // to the delegate.
+  bool sent_byte_;
 
   // We can't clean everything up while we're in a write callback, so
   // if we get a terminate request, queue it until we can handle it.

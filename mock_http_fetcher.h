@@ -6,8 +6,10 @@
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_MOCK_HTTP_FETCHER_H__
 
 #include <vector>
+
+#include <base/logging.h>
 #include <glib.h>
-#include "base/logging.h"
+
 #include "update_engine/http_fetcher.h"
 
 // This is a mock implementation of HttpFetcher which is useful for testing.
@@ -26,8 +28,11 @@ class MockHttpFetcher : public HttpFetcher {
  public:
   // The data passed in here is copied and then passed to the delegate after
   // the transfer begins.
-  MockHttpFetcher(const char* data, size_t size)
-      : sent_size_(0),
+  MockHttpFetcher(const char* data,
+                  size_t size,
+                  ProxyResolver* proxy_resolver)
+      : HttpFetcher(proxy_resolver),
+        sent_size_(0),
         timeout_source_(NULL),
         timout_tag_(0),
         paused_(false),

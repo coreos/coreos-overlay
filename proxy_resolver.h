@@ -7,8 +7,8 @@
 
 #include <base/logging.h>
 
+#include <deque>
 #include <string>
-#include <vector>
 
 namespace chromeos_update_engine {
 
@@ -26,7 +26,7 @@ class ProxyResolver {
   // socks{4,5}://<host>[:<port>] - SOCKS4/5 proxy
   // kNoProxy - no proxy
   virtual bool GetProxiesForUrl(const std::string& url,
-                                std::vector<std::string>* out_proxies) = 0;
+                                std::deque<std::string>* out_proxies) = 0;
 
  private:
   DISALLOW_COPY_AND_ASSIGN(ProxyResolver);
@@ -35,8 +35,9 @@ class ProxyResolver {
 // Always says to not use a proxy
 class DirectProxyResolver : public ProxyResolver {
  public:
+  DirectProxyResolver() {}
   virtual bool GetProxiesForUrl(const std::string& url,
-                                std::vector<std::string>* out_proxies);
+                                std::deque<std::string>* out_proxies);
 
  private:
   DISALLOW_COPY_AND_ASSIGN(DirectProxyResolver);

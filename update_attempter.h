@@ -16,9 +16,11 @@
 #include <gtest/gtest_prod.h>  // for FRIEND_TEST
 
 #include "update_engine/action_processor.h"
+#include "update_engine/chrome_proxy_resolver.h"
 #include "update_engine/download_action.h"
 #include "update_engine/omaha_request_params.h"
 #include "update_engine/omaha_response_handler_action.h"
+#include "update_engine/proxy_resolver.h"
 
 class MetricsLibraryInterface;
 struct UpdateEngineService;
@@ -47,14 +49,19 @@ class UpdateAttempter : public ActionProcessorDelegate,
  public:
   static const int kMaxDeltaUpdateFailures;
 
-  UpdateAttempter(PrefsInterface* prefs, MetricsLibraryInterface* metrics_lib);
+  UpdateAttempter(PrefsInterface* prefs,
+                  MetricsLibraryInterface* metrics_lib,
+                  DbusGlibInterface* dbus_iface);
   virtual ~UpdateAttempter();
 
   // Checks for update and, if a newer version is available, attempts
   // to update the system. Non-empty |in_app_version| or
   // |in_update_url| prevents automatic detection of the parameter.
+  // If |obey_proxies| is true, the update will likely respect Chrome's
+  // proxy setting. For security reasons, we may still not honor them.
   virtual void Update(const std::string& app_version,
-                      const std::string& omaha_url);
+                      const std::string& omaha_url,
+                      bool obey_proxies);
 
   // ActionProcessorDelegate methods:
   void ProcessingDone(const ActionProcessor* processor, ActionExitCode code);
@@ -153,6 +160,12 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // If this was a delta update attempt that failed, count it so that a full
   // update can be tried when needed.
   void MarkDeltaUpdateFailure();
+  
+  ProxyResolver* GetProxyResolver() {
+    return obeying_proxies_ ?
+        reinterpret_cast<ProxyResolver*>(&chrome_proxy_resolver_) :
+        reinterpret_cast<ProxyResolver*>(&direct_proxy_resolver_);
+  }
 
   // Last status notification timestamp used for throttling. Use monotonic
   // TimeTicks to ensure that notifications are sent even if the system clock is
@@ -207,6 +220,17 @@ class UpdateAttempter : public ActionProcessorDelegate,
 
   // Device paramaters common to all Omaha requests.
   OmahaRequestDeviceParams omaha_request_params_;
+
+  // Number of consecutive manual update checks we've had where we obeyed
+  // Chrome's proxy settings.
+  int proxy_manual_checks_;
+
+  // If true, this update cycle we are obeying proxies
+  bool obeying_proxies_;
+
+  // Our two proxy resolvers
+  DirectProxyResolver direct_proxy_resolver_;
+  ChromeProxyResolver chrome_proxy_resolver_;
 
   DISALLOW_COPY_AND_ASSIGN(UpdateAttempter);
 };

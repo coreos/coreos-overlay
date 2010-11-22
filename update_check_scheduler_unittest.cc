@@ -270,7 +270,7 @@ TEST_F(UpdateCheckSchedulerTest, SetUpdateStatusNonIdleTest) {
 TEST_F(UpdateCheckSchedulerTest, StaticCheckOOBECompleteTest) {
   scheduler_.scheduled_ = true;
   EXPECT_CALL(scheduler_, IsOOBEComplete()).Times(1).WillOnce(Return(true));
-  EXPECT_CALL(attempter_, Update("", ""))
+  EXPECT_CALL(attempter_, Update("", "", false))
       .Times(1)
       .WillOnce(Assign(&scheduler_.scheduled_, true));
   scheduler_.enabled_ = true;
@@ -281,7 +281,7 @@ TEST_F(UpdateCheckSchedulerTest, StaticCheckOOBECompleteTest) {
 TEST_F(UpdateCheckSchedulerTest, StaticCheckOOBENotCompleteTest) {
   scheduler_.scheduled_ = true;
   EXPECT_CALL(scheduler_, IsOOBEComplete()).Times(1).WillOnce(Return(false));
-  EXPECT_CALL(attempter_, Update("", "")).Times(0);
+  EXPECT_CALL(attempter_, Update("", "", _)).Times(0);
   int interval_min, interval_max;
   FuzzRange(UpdateCheckScheduler::kTimeoutOnce,
             UpdateCheckScheduler::kTimeoutRegularFuzz,

@@ -2,16 +2,16 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <deque>
 #include <string>
-#include <vector>
 
 #include <gtest/gtest.h>
 
 #include "update_engine/chrome_proxy_resolver.h"
 #include "update_engine/mock_dbus_interface.h"
 
+using std::deque;
 using std::string;
-using std::vector;
 using ::testing::_;
 using ::testing::Return;
 using ::testing::SetArgumentPointee;
@@ -38,7 +38,7 @@ TEST(ChromeProxyResolverTest, GetProxiesForUrlWithSettingsTest) {
       "\"mode\":4}";
 
   ChromeProxyResolver resolver(NULL);
-  vector<string> out;
+  deque<string> out;
   string urls[] = {"http://foo.com/update", "https://bar.com/foo.gz"};
   string multi_settings[] = {kAll, kHttpHttps};
   for (size_t i = 0; i < arraysize(urls); i++) {
@@ -119,7 +119,7 @@ TEST(ChromeProxyResolverTest, DbusInterfaceTest) {
                       SetArgumentPointee<9>(ret_array),
                       Return(TRUE)));
 
-  vector<string> proxies;
+  deque<string> proxies;
   EXPECT_TRUE(resolver.GetProxiesForUrl("http://user:pass@foo.com:22",
                                         &proxies));
   EXPECT_EQ(2, proxies.size());

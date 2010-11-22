@@ -192,6 +192,10 @@ void FilesystemCopierActionTest::DoTest(bool run_out_of_space,
   EXPECT_TRUE(ExpectVectorsEq(a_loop_data, a_out));
 
   EXPECT_TRUE(collector_action.object() == install_plan);
+  if (terminate_early) {
+    // sleep so OS can clean up
+    sleep(1);
+  }
 }
 
 class FilesystemCopierActionTest2Delegate : public ActionProcessorDelegate {

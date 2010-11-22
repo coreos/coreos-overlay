@@ -160,7 +160,8 @@ bool TestUpdateCheck(PrefsInterface* prefs,
                      vector<char>* out_post_data) {
   GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
   MockHttpFetcher* fetcher = new MockHttpFetcher(http_response.data(),
-                                                 http_response.size());
+                                                 http_response.size(),
+                                                 NULL);
   if (fail_http_response_code >= 0) {
     fetcher->FailTransfer(fail_http_response_code);
   }
@@ -200,7 +201,8 @@ void TestEvent(const OmahaRequestParams& params,
                vector<char>* out_post_data) {
   GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
   MockHttpFetcher* fetcher = new MockHttpFetcher(http_response.data(),
-                                                 http_response.size());
+                                                 http_response.size(),
+                                                 NULL);
   NiceMock<PrefsMock> prefs;
   OmahaRequestAction action(&prefs, params, event, fetcher);
   OmahaRequestActionTestProcessorDelegate delegate;
@@ -267,7 +269,8 @@ TEST(OmahaRequestActionTest, NoOutputPipeTest) {
   NiceMock<PrefsMock> prefs;
   OmahaRequestAction action(&prefs, kDefaultTestParams, NULL,
                             new MockHttpFetcher(http_response.data(),
-                                                http_response.size()));
+                                                http_response.size(),
+                                                NULL));
   OmahaRequestActionTestProcessorDelegate delegate;
   delegate.loop_ = loop;
   ActionProcessor processor;
@@ -414,7 +417,8 @@ TEST(OmahaRequestActionTest, TerminateTransferTest) {
   NiceMock<PrefsMock> prefs;
   OmahaRequestAction action(&prefs, kDefaultTestParams, NULL,
                             new MockHttpFetcher(http_response.data(),
-                                                http_response.size()));
+                                                http_response.size(),
+                                                NULL));
   TerminateEarlyTestProcessorDelegate delegate;
   delegate.loop_ = loop;
   ActionProcessor processor;
@@ -599,7 +603,8 @@ TEST(OmahaRequestActionTest, IsEventTest) {
       kDefaultTestParams,
       NULL,
       new MockHttpFetcher(http_response.data(),
-                          http_response.size()));
+                          http_response.size(),
+                          NULL));
   EXPECT_FALSE(update_check_action.IsEvent());
 
   OmahaRequestAction event_action(
@@ -607,7 +612,8 @@ TEST(OmahaRequestActionTest, IsEventTest) {
       kDefaultTestParams,
       new OmahaEvent(OmahaEvent::kTypeUpdateComplete),
       new MockHttpFetcher(http_response.data(),
-                          http_response.size()));
+                          http_response.size(),
+                          NULL));
   EXPECT_TRUE(event_action.IsEvent());
 }
 

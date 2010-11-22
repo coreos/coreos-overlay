@@ -5,8 +5,8 @@
 #ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_CHROME_PROXY_RESOLVER_H__
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_CHROME_PROXY_RESOLVER_H__
 
+#include <deque>
 #include <string>
-#include <vector>
 
 #include <curl/curl.h>
 #include <gtest/gtest_prod.h>  // for FRIEND_TEST
@@ -33,12 +33,11 @@ class ChromeProxyResolver : public ProxyResolver {
   virtual ~ChromeProxyResolver() {}
 
   virtual bool GetProxiesForUrl(const std::string& url,
-                                std::vector<std::string>* out_proxies);
+                                std::deque<std::string>* out_proxies);
 
   // Get the curl proxy type for a given proxy url. Returns true on success.
   // Note: if proxy is kNoProxy, this will return false.
-  static bool GetProxyType(const std::string& proxy,
-                              curl_proxytype* out_type);
+  static bool GetProxyType(const std::string& proxy, curl_proxytype* out_type);
 
  private:
   FRIEND_TEST(ChromeProxyResolverTest, GetProxiesForUrlWithSettingsTest);
@@ -54,7 +53,7 @@ class ChromeProxyResolver : public ProxyResolver {
   // success.
   bool GetProxiesForUrlWithSettings(const std::string& url,
                                     const std::string& json_settings,
-                                    std::vector<std::string>* out_proxies);
+                                    std::deque<std::string>* out_proxies);
 
   DbusGlibInterface* dbus_;
   

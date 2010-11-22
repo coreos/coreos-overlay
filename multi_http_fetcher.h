@@ -5,6 +5,7 @@
 #ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_MULTI_HTTP_FETCHER_H__
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_MULTI_HTTP_FETCHER_H__
 
+#include <deque>
 #include <tr1/memory>
 #include <utility>
 #include <vector>
@@ -24,9 +25,11 @@ template<typename BaseHttpFetcher>
 class MultiHttpFetcher : public HttpFetcher, public HttpFetcherDelegate {
  public:
   typedef std::vector<std::pair<off_t, off_t> > RangesVect;
+  typedef std::vector<std::tr1::shared_ptr<BaseHttpFetcher> > FetchersVect;
 
-  MultiHttpFetcher()
-      : sent_transfer_complete_(false),
+  MultiHttpFetcher(ProxyResolver* proxy_resolver)
+      : HttpFetcher(proxy_resolver),
+        sent_transfer_complete_(false),
         pending_next_fetcher_(false),
         current_index_(0),
         bytes_received_this_fetcher_(0) {}
@@ -38,9 +41,11 @@ class MultiHttpFetcher : public HttpFetcher, public HttpFetcherDelegate {
     for (typename std::vector<std::tr1::shared_ptr<BaseHttpFetcher>
              >::iterator it = fetchers_.begin(), e = fetchers_.end();
          it != e; ++it) {
-      (*it) = std::tr1::shared_ptr<BaseHttpFetcher>(new BaseHttpFetcher);
+      (*it) = std::tr1::shared_ptr<BaseHttpFetcher>(
+          new BaseHttpFetcher(proxy_resolver_));
       (*it)->set_delegate(this);
     }
+    LOG(INFO) << "done w/ list";
   }
 
   void SetOffset(off_t offset) {}  // for now, doesn't support this
@@ -134,6 +139,13 @@ class MultiHttpFetcher : public HttpFetcher, public HttpFetcherDelegate {
       (*it)->SetBuildType(is_official);
     }
   }
+  
+  virtual void SetProxies(const std::deque<std::string>& proxies) {
+    for (typename FetchersVect::iterator it = fetchers_.begin(),
+             e = fetchers_.end(); it != e; ++it) {
+      (*it)->SetProxies(proxies);
+    }
+  }
 
  private:
   void SendTransferComplete(HttpFetcher* fetcher, bool successful) {
@@ -220,7 +232,7 @@ class MultiHttpFetcher : public HttpFetcher, public HttpFetcherDelegate {
   bool pending_next_fetcher_;
 
   RangesVect ranges_;
-  std::vector<std::tr1::shared_ptr<BaseHttpFetcher> > fetchers_;
+  FetchersVect fetchers_;
 
   RangesVect::size_type current_index_;  // index into ranges_, fetchers_
   off_t bytes_received_this_fetcher_;

@@ -14,6 +14,7 @@
 #include <tr1/memory>
 #include <vector>
 
+#include <base/rand_util.h>
 #include <glib.h>
 #include <metrics/metrics_library.h>
 
@@ -42,6 +43,10 @@ const int UpdateAttempter::kMaxDeltaUpdateFailures = 3;
 
 const char* kUpdateCompletedMarker =
     "/var/run/update_engine_autoupdate_completed";
+
+namespace {
+const int kMaxConsecutiveObeyProxyRequests = 20;
+}  // namespace {}
 
 const char* UpdateStatusToString(UpdateStatus status) {
   switch (status) {
@@ -89,7 +94,8 @@ ActionExitCode GetErrorCodeForAction(AbstractAction* action,
 }
 
 UpdateAttempter::UpdateAttempter(PrefsInterface* prefs,
-                                 MetricsLibraryInterface* metrics_lib)
+                                 MetricsLibraryInterface* metrics_lib,
+                                 DbusGlibInterface* dbus_iface)
     : processor_(new ActionProcessor()),
       dbus_service_(NULL),
       prefs_(prefs),
@@ -104,7 +110,10 @@ UpdateAttempter::UpdateAttempter(PrefsInterface* prefs,
       last_checked_time_(0),
       new_version_("0.0.0.0"),
       new_size_(0),
-      is_full_update_(false) {
+      is_full_update_(false),
+      proxy_manual_checks_(0),
+      obeying_proxies_(true),
+      chrome_proxy_resolver_(dbus_iface) {
   if (utils::FileExists(kUpdateCompletedMarker))
     status_ = UPDATE_STATUS_UPDATED_NEED_REBOOT;
 }
@@ -114,7 +123,8 @@ UpdateAttempter::~UpdateAttempter() {
 }
 
 void UpdateAttempter::Update(const std::string& app_version,
-                             const std::string& omaha_url) {
+                             const std::string& omaha_url,
+                             bool obey_proxies) {
   if (status_ == UPDATE_STATUS_UPDATED_NEED_REBOOT) {
     LOG(INFO) << "Not updating b/c we already updated and we're waiting for "
               << "reboot";
@@ -129,6 +139,24 @@ void UpdateAttempter::Update(const std::string& app_version,
     LOG(ERROR) << "Unable to initialize Omaha request device params.";
     return;
   }
+  
+  obeying_proxies_ = true;
+  if (obey_proxies || proxy_manual_checks_ == 0) {
+    LOG(INFO) << "forced to obey proxies";
+    // If forced to obey proxies, every 20th request will not use proxies
+    proxy_manual_checks_++;
+    LOG(INFO) << "proxy manual checks: " << proxy_manual_checks_;
+    if (proxy_manual_checks_ >= kMaxConsecutiveObeyProxyRequests) {
+      proxy_manual_checks_ = 0;
+      obeying_proxies_ = false;
+    }
+  } else if (base::RandInt(0, 4) == 0) {
+    obeying_proxies_ = false;
+  }
+  LOG_IF(INFO, !obeying_proxies_) << "To help ensure updates work, this update "
+      "check we are ignoring the proxy settings and using "
+      "direct connections.";
+
   DisableDeltaUpdateIfNeeded();
   CHECK(!processor_->IsRunning());
   processor_->set_delegate(this);
@@ -138,7 +166,7 @@ void UpdateAttempter::Update(const std::string& app_version,
       new OmahaRequestAction(prefs_,
                              omaha_request_params_,
                              NULL,
-                             new LibcurlHttpFetcher));
+                             new LibcurlHttpFetcher(GetProxyResolver())));
   shared_ptr<OmahaResponseHandlerAction> response_handler_action(
       new OmahaResponseHandlerAction(prefs_));
   shared_ptr<FilesystemCopierAction> filesystem_copier_action(
@@ -150,22 +178,23 @@ void UpdateAttempter::Update(const std::string& app_version,
                              omaha_request_params_,
                              new OmahaEvent(
                                  OmahaEvent::kTypeUpdateDownloadStarted),
-                             new LibcurlHttpFetcher));
+                             new LibcurlHttpFetcher(GetProxyResolver())));
   shared_ptr<DownloadAction> download_action(
-      new DownloadAction(prefs_, new MultiHttpFetcher<LibcurlHttpFetcher>));
+      new DownloadAction(prefs_, new MultiHttpFetcher<LibcurlHttpFetcher>(
+          GetProxyResolver())));
   shared_ptr<OmahaRequestAction> download_finished_action(
       new OmahaRequestAction(prefs_,
                              omaha_request_params_,
                              new OmahaEvent(
                                  OmahaEvent::kTypeUpdateDownloadFinished),
-                             new LibcurlHttpFetcher));
+                             new LibcurlHttpFetcher(GetProxyResolver())));
   shared_ptr<PostinstallRunnerAction> postinstall_runner_action(
       new PostinstallRunnerAction);
   shared_ptr<OmahaRequestAction> update_complete_action(
       new OmahaRequestAction(prefs_,
                              omaha_request_params_,
                              new OmahaEvent(OmahaEvent::kTypeUpdateComplete),
-                             new LibcurlHttpFetcher));
+                             new LibcurlHttpFetcher(GetProxyResolver())));
 
   download_action->set_delegate(this);
   response_handler_action_ = response_handler_action;
@@ -212,7 +241,7 @@ void UpdateAttempter::CheckForUpdate(const std::string& app_version,
               << UpdateStatusToString(status_) << ", so not checking.";
     return;
   }
-  Update(app_version, omaha_url);
+  Update(app_version, omaha_url, true);
 }
 
 bool UpdateAttempter::RebootIfNeeded() {
@@ -435,7 +464,7 @@ bool UpdateAttempter::ScheduleErrorEventAction() {
       new OmahaRequestAction(prefs_,
                              omaha_request_params_,
                              error_event_.release(),  // Pass ownership.
-                             new LibcurlHttpFetcher));
+                             new LibcurlHttpFetcher(GetProxyResolver())));
   actions_.push_back(shared_ptr<AbstractAction>(error_event_action));
   processor_->EnqueueAction(error_event_action.get());
   SetStatusAndNotify(UPDATE_STATUS_REPORTING_ERROR_EVENT);

@@ -9,6 +9,7 @@
 
 #include <base/logging.h>
 
+#include "update_engine/chrome_proxy_resolver.h"
 #include "update_engine/dbus_interface.h"
 #include "update_engine/flimflam_proxy.h"
 #include "update_engine/utils.h"
@@ -58,6 +59,25 @@ void LibcurlHttpFetcher::ResumeTransfer(const std::string& url) {
 
   curl_handle_ = curl_easy_init();
   CHECK(curl_handle_);
+
+  CHECK(HasProxy());
+  LOG(INFO) << "Using proxy: " << GetCurrentProxy();
+  if (GetCurrentProxy() == kNoProxy) {
+    CHECK_EQ(curl_easy_setopt(curl_handle_,
+                              CURLOPT_PROXY,
+                              ""), CURLE_OK);
+  } else {
+    CHECK_EQ(curl_easy_setopt(curl_handle_,
+                              CURLOPT_PROXY,
+                              GetCurrentProxy().c_str()), CURLE_OK);
+    // Curl seems to require us to set the protocol
+    curl_proxytype type;
+    if (ChromeProxyResolver::GetProxyType(GetCurrentProxy(), &type)) {
+      CHECK_EQ(curl_easy_setopt(curl_handle_,
+                                CURLOPT_PROXYTYPE,
+                                type), CURLE_OK);
+    }
+  }
 
   if (post_data_set_) {
     CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_POST, 1), CURLE_OK);
@@ -133,6 +153,7 @@ void LibcurlHttpFetcher::BeginTransfer(const std::string& url) {
   resume_offset_ = 0;
   retry_count_ = 0;
   http_response_code_ = 0;
+  ResolveProxiesForUrl(url);
   ResumeTransfer(url);
   CurlPerformOnce();
 }
@@ -178,6 +199,24 @@ void LibcurlHttpFetcher::CurlPerformOnce() {
     // we're done!
     CleanUp();
 
+    if (!sent_byte_ &&
+        (http_response_code_ < 200 || http_response_code_ >= 300)) {
+      // The transfer completed w/ error and we didn't get any bytes.
+      // If we have another proxy to try, try that.
+
+      PopProxy();  // Delete the proxy we just gave up on.
+
+      if (HasProxy()) {
+        // We have another proxy. Retry immediately.
+        g_idle_add(&LibcurlHttpFetcher::StaticRetryTimeoutCallback, this);
+      } else {
+        // Out of proxies. Give up.
+        if (delegate_)
+          delegate_->TransferComplete(this, false);  // success
+      }
+      return;
+    }
+
     if ((transfer_size_ >= 0) && (bytes_downloaded_ < transfer_size_)) {
       // Need to restart transfer
       retry_count_++;
@@ -208,6 +247,9 @@ void LibcurlHttpFetcher::CurlPerformOnce() {
 }
 
 size_t LibcurlHttpFetcher::LibcurlWrite(void *ptr, size_t size, size_t nmemb) {
+  if (size == 0)
+    return 0;
+  sent_byte_ = true;
   GetHttpResponseCode();
   {
     double transfer_size_double;

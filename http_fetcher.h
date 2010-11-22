@@ -5,10 +5,15 @@
 #ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_HTTP_FETCHER_H__
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_HTTP_FETCHER_H__
 
+#include <deque>
 #include <string>
 #include <vector>
+
+#include <base/basictypes.h>
+#include <base/logging.h>
 #include <glib.h>
-#include "base/basictypes.h"
+
+#include "update_engine/proxy_resolver.h"
 
 // This class is a simple wrapper around an HTTP library (libcurl). We can
 // easily mock out this interface for testing.
@@ -23,10 +28,15 @@ class HttpFetcherDelegate;
 
 class HttpFetcher {
  public:
-  HttpFetcher()
+  // |proxy_resolver| is the resolver that will be consulted for proxy
+  // settings. It may be null, in which case direct connections will
+  // be used. Does not take ownership of the resolver.
+  explicit HttpFetcher(ProxyResolver* proxy_resolver)
       : post_data_set_(false),
         http_response_code_(0),
-        delegate_(NULL) {}
+        delegate_(NULL),
+        proxies_(1, kNoProxy),
+        proxy_resolver_(proxy_resolver) {}
   virtual ~HttpFetcher() {}
 
   void set_delegate(HttpFetcherDelegate* delegate) { delegate_ = delegate; }
@@ -35,12 +45,19 @@ class HttpFetcher {
 
   // Optional: Post data to the server. The HttpFetcher should make a copy
   // of this data and upload it via HTTP POST during the transfer.
-  void SetPostData(const void* data, size_t size) {
-    post_data_set_ = true;
-    post_data_.clear();
-    const char *char_data = reinterpret_cast<const char*>(data);
-    post_data_.insert(post_data_.end(), char_data, char_data + size);
+  void SetPostData(const void* data, size_t size);
+
+  // Proxy methods to set the proxies, then to pop them off.
+  void ResolveProxiesForUrl(const std::string& url);
+  
+  void SetProxies(const std::deque<std::string>& proxies) {
+    proxies_ = proxies;
   }
+  const std::string& GetCurrentProxy() const {
+    return proxies_.front();
+  }
+  bool HasProxy() const { return !proxies_.empty(); }
+  void PopProxy() { proxies_.pop_front(); }
 
   // Downloading should resume from this offset
   virtual void SetOffset(off_t offset) = 0;
@@ -84,6 +101,12 @@ class HttpFetcher {
 
   // The delegate; may be NULL.
   HttpFetcherDelegate* delegate_;
+
+  // Proxy servers
+  std::deque<std::string> proxies_;
+  
+  ProxyResolver* const proxy_resolver_;
+
  private:
   DISALLOW_COPY_AND_ASSIGN(HttpFetcher);
 };

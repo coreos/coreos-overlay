@@ -8,14 +8,16 @@
 #include <utility>
 #include <vector>
 
-#include "base/logging.h"
-#include "base/scoped_ptr.h"
-#include "base/string_util.h"
-#include "glib.h"
-#include "gtest/gtest.h"
+#include <base/logging.h>
+#include <base/scoped_ptr.h>
+#include <base/string_util.h>
+#include <glib.h>
+#include <gtest/gtest.h>
+
 #include "update_engine/libcurl_http_fetcher.h"
 #include "update_engine/mock_http_fetcher.h"
 #include "update_engine/multi_http_fetcher.h"
+#include "update_engine/proxy_resolver.h"
 
 using std::make_pair;
 using std::string;
@@ -56,10 +58,16 @@ class HttpFetcherTest<MockHttpFetcher> : public ::testing::Test {
  public:
   HttpFetcher* NewLargeFetcher() {
     vector<char> big_data(1000000);
-    return new MockHttpFetcher(big_data.data(), big_data.size());
+    return new MockHttpFetcher(
+        big_data.data(),
+        big_data.size(),
+        reinterpret_cast<ProxyResolver*>(&proxy_resolver_));
   }
   HttpFetcher* NewSmallFetcher() {
-    return new MockHttpFetcher("x", 1);
+    return new MockHttpFetcher(
+        "x",
+        1,
+        reinterpret_cast<ProxyResolver*>(&proxy_resolver_));
   }
   string BigUrl() const {
     return "unused://unused";
@@ -71,6 +79,8 @@ class HttpFetcherTest<MockHttpFetcher> : public ::testing::Test {
   bool IsMulti() const { return false; }
   typedef NullHttpServer HttpServer;
   void IgnoreServerAborting(HttpServer* server) const {}
+  
+  DirectProxyResolver proxy_resolver_;
 };
 
 class PythonHttpServer {
@@ -131,7 +141,8 @@ template <>
 class HttpFetcherTest<LibcurlHttpFetcher> : public ::testing::Test {
  public:
   virtual HttpFetcher* NewLargeFetcher() {
-    LibcurlHttpFetcher *ret = new LibcurlHttpFetcher;
+    LibcurlHttpFetcher *ret = new
+        LibcurlHttpFetcher(reinterpret_cast<ProxyResolver*>(&proxy_resolver_));
     // Speed up test execution.
     ret->set_idle_seconds(1);
     ret->set_retry_seconds(1);
@@ -155,6 +166,7 @@ class HttpFetcherTest<LibcurlHttpFetcher> : public ::testing::Test {
     PythonHttpServer *pyserver = reinterpret_cast<PythonHttpServer*>(server);
     pyserver->validate_quit_ = false;
   }
+  DirectProxyResolver proxy_resolver_;
 };
 
 template <>
@@ -163,7 +175,8 @@ class HttpFetcherTest<MultiHttpFetcher<LibcurlHttpFetcher> >
  public:
   HttpFetcher* NewLargeFetcher() {
     MultiHttpFetcher<LibcurlHttpFetcher> *ret =
-        new MultiHttpFetcher<LibcurlHttpFetcher>;
+        new MultiHttpFetcher<LibcurlHttpFetcher>(
+            reinterpret_cast<ProxyResolver*>(&proxy_resolver_));
     MultiHttpFetcher<LibcurlHttpFetcher>::RangesVect
         ranges(1, make_pair(0, -1));
     ret->set_ranges(ranges);
@@ -175,6 +188,7 @@ class HttpFetcherTest<MultiHttpFetcher<LibcurlHttpFetcher> >
     return ret;
   }
   bool IsMulti() const { return true; }
+  DirectProxyResolver proxy_resolver_;
 };
 
 typedef ::testing::Types<LibcurlHttpFetcher,

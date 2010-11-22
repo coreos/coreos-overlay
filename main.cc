@@ -17,6 +17,7 @@
 #include <sys/stat.h>
 
 #include "update_engine/dbus_constants.h"
+#include "update_engine/dbus_interface.h"
 #include "update_engine/dbus_service.h"
 #include "update_engine/prefs.h"
 #include "update_engine/subprocess.h"
@@ -180,8 +181,10 @@ int main(int argc, char** argv) {
   metrics_lib.Init();
 
   // Create the update attempter:
+  chromeos_update_engine::ConcreteDbusGlib dbus;
   chromeos_update_engine::UpdateAttempter update_attempter(&prefs,
-                                                           &metrics_lib);
+                                                           &metrics_lib,
+                                                           &dbus);
 
   // Create the dbus service object:
   dbus_g_object_type_install_info(UPDATE_ENGINE_TYPE_SERVICE,

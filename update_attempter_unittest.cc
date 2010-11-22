@@ -8,6 +8,7 @@
 #include "update_engine/action_mock.h"
 #include "update_engine/action_processor_mock.h"
 #include "update_engine/filesystem_copier_action.h"
+#include "update_engine/mock_dbus_interface.h"
 #include "update_engine/postinstall_runner_action.h"
 #include "update_engine/prefs_mock.h"
 #include "update_engine/update_attempter.h"
@@ -30,7 +31,8 @@ namespace chromeos_update_engine {
 class UpdateAttempterUnderTest : public UpdateAttempter {
  public:
   UpdateAttempterUnderTest()
-      : UpdateAttempter(NULL, NULL) {}
+      : UpdateAttempter(NULL, NULL, &dbus_) {}
+  MockDbusGlib dbus_;
 };
 
 class UpdateAttempterTest : public ::testing::Test {
@@ -181,7 +183,7 @@ TEST_F(UpdateAttempterTest, UpdateTest) {
   }
   EXPECT_CALL(*processor_, StartProcessing()).Times(1);
 
-  attempter_.Update("", "");
+  attempter_.Update("", "", false);
 
   EXPECT_EQ(0, attempter_.http_response_code());
   EXPECT_EQ(&attempter_, processor_->delegate());
