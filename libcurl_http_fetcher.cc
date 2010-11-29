@@ -25,6 +25,7 @@ namespace chromeos_update_engine {
 
 namespace {
 const int kMaxRetriesCount = 20;
+const int kNoNetworkRetrySeconds = 30;
 const char kCACertificatesPath[] = "/usr/share/chromeos-ca-certificates";
 }  // namespace {}
 
@@ -152,6 +153,7 @@ void LibcurlHttpFetcher::BeginTransfer(const std::string& url) {
   transfer_size_ = -1;
   resume_offset_ = 0;
   retry_count_ = 0;
+  no_network_retry_count_ = 0;
   http_response_code_ = 0;
   ResolveProxiesForUrl(url);
   ResumeTransfer(url);
@@ -192,12 +194,28 @@ void LibcurlHttpFetcher::CurlPerformOnce() {
     GetHttpResponseCode();
     if (http_response_code_) {
       LOG(INFO) << "HTTP response code: " << http_response_code_;
+      no_network_retry_count_ = 0;
     } else {
       LOG(ERROR) << "Unable to get http response code.";
     }
 
     // we're done!
     CleanUp();
+
+    // TODO(petkov): This temporary code tries to deal with the case where the
+    // update engine performs an update check while the network is not ready
+    // (e.g., right after resume). Longer term, we should check if the network
+    // is online/offline and return an appropriate error code.
+    if (!sent_byte_ &&
+        http_response_code_ == 0 &&
+        no_network_retry_count_ < no_network_max_retries_) {
+      no_network_retry_count_++;
+      g_timeout_add_seconds(kNoNetworkRetrySeconds,
+                            &LibcurlHttpFetcher::StaticRetryTimeoutCallback,
+                            this);
+      LOG(INFO) << "No HTTP response, retry " << no_network_retry_count_;
+      return;
+    }
 
     if (!sent_byte_ &&
         (http_response_code_ < 200 || http_response_code_ >= 300)) {

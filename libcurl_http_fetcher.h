@@ -33,6 +33,8 @@ class LibcurlHttpFetcher : public HttpFetcher {
         resume_offset_(0),
         retry_count_(0),
         retry_seconds_(60),
+        no_network_retry_count_(0),
+        no_network_max_retries_(0),
         idle_seconds_(1),
         force_connection_type_(false),
         forced_expensive_connection_(false),
@@ -73,6 +75,10 @@ class LibcurlHttpFetcher : public HttpFetcher {
 
   // Sets the retry timeout. Useful for testing.
   void set_retry_seconds(int seconds) { retry_seconds_ = seconds; }
+
+  void set_no_network_max_retries(int retries) {
+    no_network_max_retries_ = retries;
+  }
 
   void SetConnectionAsExpensive(bool is_expensive) {
     force_connection_type_ = true;
@@ -185,6 +191,10 @@ class LibcurlHttpFetcher : public HttpFetcher {
   // Seconds to wait before retrying a resume.
   int retry_seconds_;
 
+  // Number of resumes due to no network (e.g., HTTP response code 0).
+  int no_network_retry_count_;
+  int no_network_max_retries_;
+
   // Seconds to wait before asking libcurl to "perform".
   int idle_seconds_;
 
@@ -200,7 +210,7 @@ class LibcurlHttpFetcher : public HttpFetcher {
 
   // If true, we are currently performing a write callback on the delegate.
   bool in_write_callback_;
-  
+
   // If true, we have returned at least one byte in the write callback
   // to the delegate.
   bool sent_byte_;
