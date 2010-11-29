@@ -90,8 +90,8 @@ gboolean update_engine_service_get_status(UpdateEngineService* self,
                                            &new_version_str,
                                            new_size));
 
-  *current_operation = strdup(current_op.c_str());
-  *new_version = strdup(new_version_str.c_str());
+  *current_operation = g_strdup(current_op.c_str());
+  *new_version = g_strdup(new_version_str.c_str());
   if (!(*current_operation && *new_version)) {
     *error = NULL;
     return FALSE;
@@ -104,7 +104,7 @@ gboolean update_engine_service_get_track(UpdateEngineService* self,
                                          GError **error) {
   string track_str =
       chromeos_update_engine::OmahaRequestDeviceParams::GetDeviceTrack();
-  *track = strdup(track_str.c_str());
+  *track = g_strdup(track_str.c_str());
   return TRUE;
 }
 
