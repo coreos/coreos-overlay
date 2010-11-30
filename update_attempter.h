@@ -115,8 +115,13 @@ class UpdateAttempter : public ActionProcessorDelegate,
 
  private:
   friend class UpdateAttempterTest;
+  FRIEND_TEST(UpdateAttempterTest, ActionCompletedDownloadTest);
+  FRIEND_TEST(UpdateAttempterTest, ActionCompletedErrorTest);
+  FRIEND_TEST(UpdateAttempterTest, ActionCompletedOmahaRequestTest);
   FRIEND_TEST(UpdateAttempterTest, DisableDeltaUpdateIfNeededTest);
   FRIEND_TEST(UpdateAttempterTest, MarkDeltaUpdateFailureTest);
+  FRIEND_TEST(UpdateAttempterTest, ScheduleErrorEventActionNoEventTest);
+  FRIEND_TEST(UpdateAttempterTest, ScheduleErrorEventActionTest);
   FRIEND_TEST(UpdateAttempterTest, UpdateTest);
 
   // Sets the status to the given status and notifies a status update
@@ -160,7 +165,7 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // If this was a delta update attempt that failed, count it so that a full
   // update can be tried when needed.
   void MarkDeltaUpdateFailure();
-  
+
   ProxyResolver* GetProxyResolver() {
     return obeying_proxies_ ?
         reinterpret_cast<ProxyResolver*>(&chrome_proxy_resolver_) :

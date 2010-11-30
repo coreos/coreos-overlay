@@ -50,6 +50,7 @@ class UpdateCheckScheduler {
   void SetUpdateStatus(UpdateStatus status);
 
   void set_poll_interval(int interval) { poll_interval_ = interval; }
+  int poll_interval() const { return poll_interval_; }
 
  private:
   friend class UpdateCheckSchedulerTest;

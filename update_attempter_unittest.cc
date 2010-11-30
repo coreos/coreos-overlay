@@ -9,9 +9,12 @@
 #include "update_engine/action_processor_mock.h"
 #include "update_engine/filesystem_copier_action.h"
 #include "update_engine/mock_dbus_interface.h"
+#include "update_engine/mock_http_fetcher.h"
 #include "update_engine/postinstall_runner_action.h"
 #include "update_engine/prefs_mock.h"
+#include "update_engine/test_utils.h"
 #include "update_engine/update_attempter.h"
+#include "update_engine/update_check_scheduler.h"
 
 using std::string;
 using testing::_;
@@ -61,6 +64,47 @@ class UpdateAttempterTest : public ::testing::Test {
   ActionProcessorMock* processor_;
   NiceMock<PrefsMock> prefs_;
 };
+
+TEST_F(UpdateAttempterTest, ActionCompletedDownloadTest) {
+  scoped_ptr<MockHttpFetcher> fetcher(new MockHttpFetcher("", 0, NULL));
+  fetcher->FailTransfer(503);  // Sets the HTTP response code.
+  DownloadAction action(&prefs_, fetcher.release());
+  EXPECT_CALL(prefs_, GetInt64(kPrefsDeltaUpdateFailures, _)).Times(0);
+  attempter_.ActionCompleted(NULL, &action, kActionCodeSuccess);
+  EXPECT_EQ(503, attempter_.http_response_code());
+  EXPECT_EQ(UPDATE_STATUS_FINALIZING, attempter_.status());
+  ASSERT_TRUE(attempter_.error_event_.get() == NULL);
+}
+
+TEST_F(UpdateAttempterTest, ActionCompletedErrorTest) {
+  ActionMock action;
+  EXPECT_CALL(action, Type()).WillRepeatedly(Return("ActionMock"));
+  attempter_.status_ = UPDATE_STATUS_DOWNLOADING;
+  EXPECT_CALL(prefs_, GetInt64(kPrefsDeltaUpdateFailures, _))
+      .WillOnce(Return(false));
+  attempter_.ActionCompleted(NULL, &action, kActionCodeError);
+  ASSERT_TRUE(attempter_.error_event_.get() != NULL);
+}
+
+TEST_F(UpdateAttempterTest, ActionCompletedOmahaRequestTest) {
+  scoped_ptr<MockHttpFetcher> fetcher(new MockHttpFetcher("", 0, NULL));
+  fetcher->FailTransfer(500);  // Sets the HTTP response code.
+  OmahaRequestParams params;
+  OmahaRequestAction action(&prefs_, params, NULL, fetcher.release());
+  ObjectCollectorAction<OmahaResponse> collector_action;
+  BondActions(&action, &collector_action);
+  OmahaResponse response;
+  response.poll_interval = 234;
+  action.SetOutputObject(response);
+  UpdateCheckScheduler scheduler(&attempter_);
+  attempter_.set_update_check_scheduler(&scheduler);
+  EXPECT_CALL(prefs_, GetInt64(kPrefsDeltaUpdateFailures, _)).Times(0);
+  attempter_.ActionCompleted(NULL, &action, kActionCodeSuccess);
+  EXPECT_EQ(500, attempter_.http_response_code());
+  EXPECT_EQ(UPDATE_STATUS_IDLE, attempter_.status());
+  EXPECT_EQ(234, scheduler.poll_interval());
+  ASSERT_TRUE(attempter_.error_event_.get() == NULL);
+}
 
 TEST_F(UpdateAttempterTest, RunAsRootConstructWithUpdatedMarkerTest) {
   extern const char* kUpdateCompletedMarker;
@@ -139,6 +183,25 @@ TEST_F(UpdateAttempterTest, MarkDeltaUpdateFailureTest) {
       .Times(1);
   for (int i = 0; i < 4; i ++)
     attempter_.MarkDeltaUpdateFailure();
+}
+
+TEST_F(UpdateAttempterTest, ScheduleErrorEventActionNoEventTest) {
+  EXPECT_CALL(*processor_, EnqueueAction(_)).Times(0);
+  EXPECT_CALL(*processor_, StartProcessing()).Times(0);
+  attempter_.ScheduleErrorEventAction();
+}
+
+TEST_F(UpdateAttempterTest, ScheduleErrorEventActionTest) {
+  EXPECT_CALL(*processor_,
+              EnqueueAction(Property(&AbstractAction::Type,
+                                     OmahaRequestAction::StaticType())))
+      .Times(1);
+  EXPECT_CALL(*processor_, StartProcessing()).Times(1);
+  attempter_.error_event_.reset(new OmahaEvent(OmahaEvent::kTypeUpdateComplete,
+                                               OmahaEvent::kResultError,
+                                               kActionCodeError));
+  attempter_.ScheduleErrorEventAction();
+  EXPECT_EQ(UPDATE_STATUS_REPORTING_ERROR_EVENT, attempter_.status());
 }
 
 TEST_F(UpdateAttempterTest, UpdateStatusToStringTest) {
