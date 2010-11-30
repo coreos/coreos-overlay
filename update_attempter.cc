@@ -164,11 +164,9 @@ void UpdateAttempter::Update(const std::string& app_version,
   // Actions:
   LibcurlHttpFetcher* update_check_fetcher =
       new LibcurlHttpFetcher(GetProxyResolver());
-  // If this is an automatic check, try harder to connect to the network. See
-  // comment in libcurl_http_fetcher.cc.
-  if (!obey_proxies) {
-    update_check_fetcher->set_no_network_max_retries(3);
-  }
+  // Try harder to connect to the network. See comment in
+  // libcurl_http_fetcher.cc.
+  update_check_fetcher->set_no_network_max_retries(3);
   shared_ptr<OmahaRequestAction> update_check_action(
       new OmahaRequestAction(prefs_,
                              omaha_request_params_,
