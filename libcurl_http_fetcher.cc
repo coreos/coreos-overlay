@@ -140,7 +140,8 @@ void LibcurlHttpFetcher::ResumeTransfer(const std::string& url) {
                               CURLOPT_REDIR_PROTOCOLS,
                               CURLPROTO_HTTPS),
              CURLE_OK);
-    CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_SSL_CIPHER_LIST, "HIGH"),
+    CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_SSL_CIPHER_LIST,
+                              "HIGH:!ADH"),
              CURLE_OK);
   }
 
