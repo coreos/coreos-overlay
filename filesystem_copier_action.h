@@ -37,14 +37,8 @@ class ActionTraits<FilesystemCopierAction> {
 
 class FilesystemCopierAction : public Action<FilesystemCopierAction> {
  public:
-  explicit FilesystemCopierAction(bool copying_kernel_install_path)
-      : copying_kernel_install_path_(copying_kernel_install_path),
-        src_stream_(NULL),
-        dst_stream_(NULL),
-        canceller_(NULL),
-        read_in_flight_(false),
-        buffer_valid_size_(0),
-        filesystem_size_(kint64max) {}
+  explicit FilesystemCopierAction(bool copying_kernel_install_path);
+
   typedef ActionTraits<FilesystemCopierAction>::InputObjectType
   InputObjectType;
   typedef ActionTraits<FilesystemCopierAction>::OutputObjectType
@@ -53,9 +47,7 @@ class FilesystemCopierAction : public Action<FilesystemCopierAction> {
   void TerminateProcessing();
 
   // Used for testing, so we can copy from somewhere other than root
-  void set_copy_source(const std::string& path) {
-    copy_source_ = path;
-  }
+  void set_copy_source(const std::string& path) { copy_source_ = path; }
 
   // Debugging/logging
   static std::string StaticType() { return "FilesystemCopierAction"; }
@@ -65,19 +57,34 @@ class FilesystemCopierAction : public Action<FilesystemCopierAction> {
   friend class FilesystemCopierActionTest;
   FRIEND_TEST(FilesystemCopierActionTest, RunAsRootDetermineFilesystemSizeTest);
 
-  // Callback from glib when the copy operation is done.
-  void AsyncReadyCallback(GObject *source_object, GAsyncResult *res);
-  static void StaticAsyncReadyCallback(GObject *source_object,
-                                       GAsyncResult *res,
-                                       gpointer user_data) {
-    reinterpret_cast<FilesystemCopierAction*>(user_data)->AsyncReadyCallback(
-        source_object, res);
-  }
+  // Ping-pong buffers generally cycle through the following states:
+  // Empty->Reading->Full->Writing->Empty.
+  enum BufferState {
+    kBufferStateEmpty,
+    kBufferStateReading,
+    kBufferStateFull,
+    kBufferStateWriting
+  };
 
-  // Cleans up all the variables we use for async operations and tells
-  // the ActionProcessor we're done w/ success as passed in.
-  // was_cancelled should be true if TerminateProcessing() was called.
-  void Cleanup(bool success, bool was_cancelled);
+  // Callbacks from glib when the read/write operation is done.
+  void AsyncReadReadyCallback(GObject *source_object, GAsyncResult *res);
+  static void StaticAsyncReadReadyCallback(GObject *source_object,
+                                           GAsyncResult *res,
+                                           gpointer user_data);
+
+  void AsyncWriteReadyCallback(GObject *source_object, GAsyncResult *res);
+  static void StaticAsyncWriteReadyCallback(GObject *source_object,
+                                            GAsyncResult *res,
+                                            gpointer user_data);
+
+  // Based on the state of the ping-pong buffers spawns appropriate read/write
+  // actions asynchronously.
+  void SpawnAsyncActions();
+
+  // Cleans up all the variables we use for async operations and tells the
+  // ActionProcessor we're done w/ success as passed in. |cancelled_| should be
+  // true if TerminateProcessing() was called.
+  void Cleanup(bool success);
 
   // Determine, if possible, the source file system size to avoid copying the
   // whole partition. Currently this supports only the root file system assuming
@@ -101,18 +108,22 @@ class FilesystemCopierAction : public Action<FilesystemCopierAction> {
   GInputStream* src_stream_;
   GOutputStream* dst_stream_;
 
-  // If non-NULL, the cancellable object for the in-flight async call.
-  GCancellable* canceller_;
+  // Ping-pong buffers for storing data we read/write. Only one buffer is being
+  // read at a time and only one buffer is being written at a time.
+  std::vector<char> buffer_[2];
 
-  // True if we're waiting on a read to complete; false if we're
-  // waiting on a write.
-  bool read_in_flight_;
+  // The state of each buffer.
+  BufferState buffer_state_[2];
 
-  // The buffer for storing data we read/write.
-  std::vector<char> buffer_;
+  // Number of valid elements in |buffer_| if its state is kBufferStateFull.
+  std::vector<char>::size_type buffer_valid_size_[2];
 
-  // Number of valid elements in buffer_.
-  std::vector<char>::size_type buffer_valid_size_;
+  // The cancellable objects for the in-flight async calls.
+  GCancellable* canceller_[2];
+
+  bool read_done_;  // true if reached EOF on the input stream.
+  bool failed_;  // true if the action has failed.
+  bool cancelled_;  // true if the action has been cancelled.
 
   // The install plan we're passed in via the input pipe.
   InstallPlan install_plan_;
