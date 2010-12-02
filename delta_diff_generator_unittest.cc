@@ -525,7 +525,8 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootAssignTempBlocksTest) {
                                                     temp_dir,
                                                     fd,
                                                     &data_file_size,
-                                                    &final_order));
+                                                    &final_order,
+                                                    Vertex::kInvalidIndex));
 
 
   Graph expected_graph(12);
@@ -726,6 +727,18 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootAssignTempBlocksReuseTest) {
   EXPECT_EQ(2, graph[1].op.src_extents(0).start_block());
   EXPECT_EQ(1, graph[1].op.src_extents(0).num_blocks());
   EXPECT_EQ(OP_REPLACE_BZ, graph[5].op.type());
+}
+
+TEST_F(DeltaDiffGeneratorTest, CreateScratchNodeTest) {
+  Vertex vertex;
+  DeltaDiffGenerator::CreateScratchNode(12, 34, &vertex);
+  EXPECT_EQ(DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ,
+            vertex.op.type());
+  EXPECT_EQ(0, vertex.op.data_offset());
+  EXPECT_EQ(0, vertex.op.data_length());
+  EXPECT_EQ(1, vertex.op.dst_extents_size());
+  EXPECT_EQ(12, vertex.op.dst_extents(0).start_block());
+  EXPECT_EQ(34, vertex.op.dst_extents(0).num_blocks());
 }
 
 }  // namespace chromeos_update_engine

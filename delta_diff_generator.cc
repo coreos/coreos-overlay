@@ -54,6 +54,9 @@ typedef map<const DeltaArchiveManifest_InstallOperation*,
 
 namespace {
 const size_t kBlockSize = 4096;  // bytes
+
+// TODO(adlr): switch from 1GiB to 2GiB when we no longer care about old
+// clients:
 const size_t kRootFSPartitionSize = 1 * 1024 * 1024 * 1024;  // bytes
 const uint64_t kVersionNumber = 1;
 const uint64_t kFullUpdateChunkSize = 1024 * 1024;  // bytes
@@ -1027,7 +1030,7 @@ bool AssignBlockForAdjoiningCuts(
     if (ranges.blocks() + scratch_blocks_found > blocks_needed) {
       // trim down ranges
       vector<Extent> new_ranges = ranges.GetExtentsForBlockCount(
-        blocks_needed - scratch_blocks_found);
+          blocks_needed - scratch_blocks_found);
       ranges = ExtentRanges();
       ranges.AddExtents(new_ranges);
     }
@@ -1256,7 +1259,8 @@ bool DeltaDiffGenerator::ConvertGraphToDag(Graph* graph,
                                            const string& new_root,
                                            int fd,
                                            off_t* data_file_size,
-                                           vector<Vertex::Index>* final_order) {
+                                           vector<Vertex::Index>* final_order,
+                                           Vertex::Index scratch_vertex) {
   CycleBreaker cycle_breaker;
   LOG(INFO) << "Finding cycles...";
   set<Edge> cut_edges;
@@ -1297,10 +1301,30 @@ bool DeltaDiffGenerator::ConvertGraphToDag(Graph* graph,
                                            cuts));
   LOG(INFO) << "Making sure all temp blocks have been allocated";
 
+  // Remove the scratch node, if any
+  if (scratch_vertex != Vertex::kInvalidIndex) {
+    final_order->erase(final_order->begin() +
+                       inverse_final_order[scratch_vertex]);
+    (*graph)[scratch_vertex].valid = false;
+    GenerateReverseTopoOrderMap(*final_order, &inverse_final_order);
+  }
+
   graph_utils::DumpGraph(*graph);
   CHECK(NoTempBlocksRemain(*graph));
   LOG(INFO) << "done making sure all temp blocks are allocated";
   return true;
+}
+
+void DeltaDiffGenerator::CreateScratchNode(uint64_t start_block,
+                                           uint64_t num_blocks,
+                                           Vertex* vertex) {
+  vertex->file_name = "<scratch>";
+  vertex->op.set_type(DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ);
+  vertex->op.set_data_offset(0);
+  vertex->op.set_data_length(0);
+  Extent* extent = vertex->op.add_dst_extents();
+  extent->set_start_block(start_block);
+  extent->set_num_blocks(num_blocks);
 }
 
 bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
@@ -1347,6 +1371,7 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
   vector<DeltaArchiveManifest_InstallOperation> kernel_ops;
 
   vector<Vertex::Index> final_order;
+  Vertex::Index scratch_vertex = Vertex::kInvalidIndex;
   {
     int fd;
     TEST_AND_RETURN_FALSE(
@@ -1372,6 +1397,15 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
                                                 new_image,
                                                 &graph.back()));
 
+      // Final scratch block (if there's space)
+      if (blocks.size() < (kRootFSPartitionSize / kBlockSize)) {
+        scratch_vertex = graph.size();
+        graph.resize(graph.size() + 1);
+        CreateScratchNode(blocks.size(),
+                          (kRootFSPartitionSize / kBlockSize) - blocks.size(),
+                          &graph.back());
+      }
+
       // Read kernel partition
       TEST_AND_RETURN_FALSE(DeltaCompressKernelPartition(old_kernel_part,
                                                          new_kernel_part,
@@ -1391,7 +1425,8 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
                                               new_root,
                                               fd,
                                               &data_file_size,
-                                              &final_order));
+                                              &final_order,
+                                              scratch_vertex));
     } else {
       // Full update
       off_t new_image_size =
