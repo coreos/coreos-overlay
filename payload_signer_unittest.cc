@@ -88,7 +88,7 @@ TEST(PayloadSignerTest, SimpleTest) {
   }
 }
 
-TEST(PayloadSignerTest, RunAsRootVerifySignatureTest) {
+TEST(PayloadSignerTest, VerifySignatureTest) {
   vector<char> signature_blob;
   SignSampleData(&signature_blob);
 

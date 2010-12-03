@@ -4,8 +4,10 @@
 
 #include "update_engine/payload_signer.h"
 
-#include "base/logging.h"
-#include "base/string_util.h"
+#include <base/logging.h>
+#include <base/string_util.h>
+#include <openssl/pem.h>
+
 #include "update_engine/omaha_hash_calculator.h"
 #include "update_engine/subprocess.h"
 #include "update_engine/update_metadata.pb.h"
@@ -115,34 +117,40 @@ bool PayloadSigner::VerifySignature(const std::vector<char>& signature_blob,
   TEST_AND_RETURN_FALSE(sig_index < signatures.signatures_size());
 
   const Signatures_Signature& signature = signatures.signatures(sig_index);
-  const string sig_data = signature.data();
-  string sig_path;
-  TEST_AND_RETURN_FALSE(
-      utils::MakeTempFile("/var/run/signature.XXXXXX", &sig_path, NULL));
-  ScopedPathUnlinker sig_path_unlinker(sig_path);
-  TEST_AND_RETURN_FALSE(utils::WriteFile(sig_path.c_str(),
-                                         &sig_data[0],
-                                         sig_data.size()));
-  string hash_path;
-  TEST_AND_RETURN_FALSE(
-      utils::MakeTempFile("/var/run/hash.XXXXXX", &hash_path, NULL));
-  ScopedPathUnlinker hash_path_unlinker(hash_path);
+  const string& sig_data = signature.data();
 
-  // TODO(petkov): This runs on the client so it will be cleaner if it uses
-  // direct openssl library calls.
-  vector<string> cmd;
-  SplitString("/usr/bin/openssl rsautl -verify -pubin -inkey x -in x -out x",
-              ' ',
-              &cmd);
-  cmd[cmd.size() - 5] = public_key_path;
-  cmd[cmd.size() - 3] = sig_path;
-  cmd[cmd.size() - 1] = hash_path;
+  // The code below executes the equivalent of:
+  //
+  // openssl rsautl -verify -pubin -inkey |public_key_path|
+  //   -in |sig_data| -out |out_hash_data|
 
-  int return_code = 0;
-  TEST_AND_RETURN_FALSE(Subprocess::SynchronousExec(cmd, &return_code));
-  TEST_AND_RETURN_FALSE(return_code == 0);
+  // Loads the public key.
+  FILE* fpubkey = fopen(public_key_path.c_str(), "rb");
+  TEST_AND_RETURN_FALSE(fpubkey != NULL);
+  char dummy_password[] = { ' ', 0 };  // Ensure no password is read from stdin.
+  RSA* rsa = PEM_read_RSA_PUBKEY(fpubkey, NULL, NULL, dummy_password);
+  fclose(fpubkey);
+  TEST_AND_RETURN_FALSE(rsa != NULL);
+  unsigned int keysize = RSA_size(rsa);
+  if (sig_data.size() > 2 * keysize) {
+    LOG(ERROR) << "Signature size is too big for public key size.";
+    RSA_free(rsa);
+    return false;
+  }
 
-  TEST_AND_RETURN_FALSE(utils::ReadFile(hash_path, out_hash_data));
+  // Decrypts the signature.
+  vector<char> hash_data(keysize);
+  int decrypt_size = RSA_public_decrypt(
+      sig_data.size(),
+      reinterpret_cast<const unsigned char*>(sig_data.data()),
+      reinterpret_cast<unsigned char*>(hash_data.data()),
+      rsa,
+      RSA_PKCS1_PADDING);
+  RSA_free(rsa);
+  TEST_AND_RETURN_FALSE(decrypt_size > 0 &&
+                        decrypt_size <= static_cast<int>(hash_data.size()));
+  hash_data.resize(decrypt_size);
+  out_hash_data->swap(hash_data);
   return true;
 }
 
