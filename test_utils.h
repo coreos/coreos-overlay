@@ -108,13 +108,19 @@ class ScopedLoopbackDeviceReleaser {
  public:
   explicit ScopedLoopbackDeviceReleaser(const std::string& dev) : dev_(dev) {}
   ~ScopedLoopbackDeviceReleaser() {
-    std::vector<std::string> args;
-    args.push_back("/sbin/losetup");
-    args.push_back("-d");
-    args.push_back(dev_);
-    int return_code = 0;
-    EXPECT_TRUE(Subprocess::SynchronousExec(args, &return_code));
-    EXPECT_EQ(0, return_code);
+    for (int retry = 0; retry < 5; retry++) {
+      std::vector<std::string> args;
+      args.push_back("/sbin/losetup");
+      args.push_back("-d");
+      args.push_back(dev_);
+      int return_code = 0;
+      EXPECT_TRUE(Subprocess::SynchronousExec(args, &return_code));
+      if (return_code == 0) {
+        return;
+      }
+      sleep(1);
+    }
+    ADD_FAILURE();
   }
  private:
   const std::string dev_;
