@@ -32,12 +32,14 @@ using std::vector;
 namespace chromeos_update_engine {
 
 namespace {
-const off_t kCopyFileBufferSize = 512 * 1024;
+const off_t kCopyFileBufferSize = 128 * 1024;
 }  // namespace {}
 
 FilesystemCopierAction::FilesystemCopierAction(
-    bool copying_kernel_install_path)
+    bool copying_kernel_install_path,
+    bool verify_hash)
     : copying_kernel_install_path_(copying_kernel_install_path),
+      verify_hash_(verify_hash),
       src_stream_(NULL),
       dst_stream_(NULL),
       read_done_(false),
@@ -68,44 +70,49 @@ void FilesystemCopierAction::PerformAction() {
   }
   install_plan_ = GetInputObject();
 
-  if (install_plan_.is_full_update || install_plan_.is_resume) {
-    // No copy needed. Done!
+  // Note that we do need to run hash verification for new-style full updates
+  // but currently the |is_full_update| field is set to true only for old-style
+  // full updates and we don't have any expected partition info in that case.
+  if (install_plan_.is_full_update ||
+      (!verify_hash_ && install_plan_.is_resume)) {
+    // No copy or hash verification needed. Done!
     if (HasOutputPipe())
       SetOutputObject(install_plan_);
     abort_action_completer.set_code(kActionCodeSuccess);
     return;
   }
 
-  string source = copy_source_;
+  const string destination = copying_kernel_install_path_ ?
+      install_plan_.kernel_install_path :
+      install_plan_.install_path;
+  string source = verify_hash_ ? destination : copy_source_;
   if (source.empty()) {
     source = copying_kernel_install_path_ ?
         utils::BootKernelDevice(utils::BootDevice()) :
         utils::BootDevice();
   }
-
-  const string destination = copying_kernel_install_path_ ?
-      install_plan_.kernel_install_path :
-      install_plan_.install_path;
-
   int src_fd = open(source.c_str(), O_RDONLY);
   if (src_fd < 0) {
     PLOG(ERROR) << "Unable to open " << source << " for reading:";
     return;
   }
-  int dst_fd = open(destination.c_str(),
-                    O_WRONLY | O_TRUNC | O_CREAT,
+
+  if (!verify_hash_) {
+    int dst_fd = open(destination.c_str(),
+                      O_WRONLY | O_TRUNC | O_CREAT,
                     0644);
-  if (dst_fd < 0) {
-    close(src_fd);
-    PLOG(ERROR) << "Unable to open " << install_plan_.install_path
-                << " for writing:";
-    return;
+    if (dst_fd < 0) {
+      close(src_fd);
+      PLOG(ERROR) << "Unable to open " << install_plan_.install_path
+                  << " for writing:";
+      return;
+    }
+
+    dst_stream_ = g_unix_output_stream_new(dst_fd, TRUE);
   }
 
   DetermineFilesystemSize(src_fd);
-
   src_stream_ = g_unix_input_stream_new(src_fd, TRUE);
-  dst_stream_ = g_unix_output_stream_new(dst_fd, TRUE);
 
   for (int i = 0; i < 2; i++) {
     buffer_[i].resize(kCopyFileBufferSize);
@@ -126,22 +133,22 @@ void FilesystemCopierAction::TerminateProcessing() {
   }
 }
 
-void FilesystemCopierAction::Cleanup(bool success) {
+void FilesystemCopierAction::Cleanup(ActionExitCode code) {
   for (int i = 0; i < 2; i++) {
     g_object_unref(canceller_[i]);
     canceller_[i] = NULL;
   }
   g_object_unref(src_stream_);
   src_stream_ = NULL;
-  g_object_unref(dst_stream_);
-  dst_stream_ = NULL;
+  if (dst_stream_) {
+    g_object_unref(dst_stream_);
+    dst_stream_ = NULL;
+  }
   if (cancelled_)
     return;
-  if (success && HasOutputPipe())
+  if (code == kActionCodeSuccess && HasOutputPipe())
     SetOutputObject(install_plan_);
-  processor_->ActionComplete(
-      this,
-      success ? kActionCodeSuccess : kActionCodeError);
+  processor_->ActionComplete(this, code);
 }
 
 void FilesystemCopierAction::AsyncReadReadyCallback(GObject *source_object,
@@ -164,18 +171,20 @@ void FilesystemCopierAction::AsyncReadReadyCallback(GObject *source_object,
   } else {
     buffer_valid_size_[index] = bytes_read;
     buffer_state_[index] = kBufferStateFull;
-  }
-
-  if (bytes_read > 0) {
     filesystem_size_ -= bytes_read;
   }
-
   SpawnAsyncActions();
 
   if (bytes_read > 0) {
+    // If read_done_ is set, SpawnAsyncActions may finalize the hash so the hash
+    // update below would happen too late.
+    CHECK(!read_done_);
     if (!hasher_.Update(buffer_[index].data(), bytes_read)) {
       LOG(ERROR) << "Unable to update the hash.";
       failed_ = true;
+    }
+    if (verify_hash_) {
+      buffer_state_[index] = kBufferStateEmpty;
     }
   }
 }
@@ -235,23 +244,26 @@ void FilesystemCopierAction::SpawnAsyncActions() {
   }
   if (failed_ || cancelled_) {
     if (!reading && !writing) {
-      Cleanup(false);
+      Cleanup(kActionCodeError);
     }
     return;
   }
   for (int i = 0; i < 2; i++) {
     if (!reading && !read_done_ && buffer_state_[i] == kBufferStateEmpty) {
+      int64_t bytes_to_read = std::min(static_cast<int64_t>(buffer_[0].size()),
+                                       filesystem_size_);
       g_input_stream_read_async(
           src_stream_,
           buffer_[i].data(),
-          GetBytesToRead(),
+          bytes_to_read,
           G_PRIORITY_DEFAULT,
           canceller_[i],
           &FilesystemCopierAction::StaticAsyncReadReadyCallback,
           this);
       reading = true;
       buffer_state_[i] = kBufferStateReading;
-    } else if (!writing && buffer_state_[i] == kBufferStateFull) {
+    } else if (!writing && !verify_hash_ &&
+               buffer_state_[i] == kBufferStateFull) {
       g_output_stream_write_async(
           dst_stream_,
           buffer_[i].data(),
@@ -266,22 +278,43 @@ void FilesystemCopierAction::SpawnAsyncActions() {
   }
   if (!reading && !writing) {
     // We're done!
+    ActionExitCode code = kActionCodeSuccess;
     if (hasher_.Finalize()) {
-      LOG(INFO) << "hash: " << hasher_.hash();
-      if (copying_kernel_install_path_) {
-        install_plan_.current_kernel_hash = hasher_.raw_hash();
+      LOG(INFO) << "Hash: " << hasher_.hash();
+      if (verify_hash_) {
+        if (copying_kernel_install_path_) {
+          if (install_plan_.kernel_hash != hasher_.raw_hash()) {
+            code = kActionCodeNewKernelVerificationError;
+            LOG(ERROR) << "New kernel verification failed.";
+          }
+        } else {
+          if (install_plan_.rootfs_hash != hasher_.raw_hash()) {
+            code = kActionCodeNewRootfsVerificationError;
+            LOG(ERROR) << "New rootfs verification failed.";
+          }
+        }
       } else {
-        install_plan_.current_rootfs_hash = hasher_.raw_hash();
+        if (copying_kernel_install_path_) {
+          install_plan_.kernel_hash = hasher_.raw_hash();
+        } else {
+          install_plan_.rootfs_hash = hasher_.raw_hash();
+        }
       }
-      Cleanup(true);
     } else {
       LOG(ERROR) << "Unable to finalize the hash.";
-      Cleanup(false);
+      code = kActionCodeError;
     }
+    Cleanup(code);
   }
 }
 
 void FilesystemCopierAction::DetermineFilesystemSize(int fd) {
+  if (verify_hash_) {
+    filesystem_size_ = copying_kernel_install_path_ ?
+        install_plan_.kernel_size : install_plan_.rootfs_size;
+    LOG(INFO) << "Filesystem size: " << filesystem_size_;
+    return;
+  }
   filesystem_size_ = kint64max;
   int block_count = 0, block_size = 0;
   if (!copying_kernel_install_path_ &&
@@ -290,10 +323,6 @@ void FilesystemCopierAction::DetermineFilesystemSize(int fd) {
     LOG(INFO) << "Filesystem size: " << filesystem_size_ << " bytes ("
               << block_count << "x" << block_size << ").";
   }
-}
-
-int64_t FilesystemCopierAction::GetBytesToRead() {
-  return std::min(static_cast<int64_t>(buffer_[0].size()), filesystem_size_);
 }
 
 }  // namespace chromeos_update_engine

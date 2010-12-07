@@ -174,8 +174,8 @@ void LogPartitionInfoHash(const PartitionInfo& info, const string& tag) {
   if (OmahaHashCalculator::Base64Encode(info.hash().data(),
                                         info.hash().size(),
                                         &sha256)) {
-    LOG(INFO) << "PartitionInfo " << tag << " sha256:" << sha256
-              << " length:" << tag.size();
+    LOG(INFO) << "PartitionInfo " << tag << " sha256: " << sha256
+              << " size: " << info.size();
   } else {
     LOG(ERROR) << "Base64Encode failed for tag: " << tag;
   }
@@ -589,25 +589,21 @@ bool DeltaPerformer::VerifyPayload(
   return true;
 }
 
-bool DeltaPerformer::VerifyAppliedUpdate(const string& path,
-                                         const string& kernel_path) {
-  LOG(INFO) << "Verifying applied update.";
+bool DeltaPerformer::GetNewPartitionInfo(uint64_t* kernel_size,
+                                         vector<char>* kernel_hash,
+                                         uint64_t* rootfs_size,
+                                         vector<char>* rootfs_hash) {
   TEST_AND_RETURN_FALSE(manifest_valid_ &&
                         manifest_.has_new_kernel_info() &&
                         manifest_.has_new_rootfs_info());
-  const string* paths[] = { &kernel_path, &path };
-  const PartitionInfo* infos[] = {
-    &manifest_.new_kernel_info(), &manifest_.new_rootfs_info()
-  };
-  for (size_t i = 0; i < arraysize(paths); ++i) {
-    OmahaHashCalculator hasher;
-    TEST_AND_RETURN_FALSE(hasher.UpdateFile(*paths[i], infos[i]->size()));
-    TEST_AND_RETURN_FALSE(hasher.Finalize());
-    TEST_AND_RETURN_FALSE(hasher.raw_hash().size() == infos[i]->hash().size());
-    TEST_AND_RETURN_FALSE(memcmp(hasher.raw_hash().data(),
-                                 infos[i]->hash().data(),
-                                 hasher.raw_hash().size()) == 0);
-  }
+  *kernel_size = manifest_.new_kernel_info().size();
+  *rootfs_size = manifest_.new_rootfs_info().size();
+  vector<char> new_kernel_hash(manifest_.new_kernel_info().hash().begin(),
+                               manifest_.new_kernel_info().hash().end());
+  vector<char> new_rootfs_hash(manifest_.new_rootfs_info().hash().begin(),
+                               manifest_.new_rootfs_info().hash().end());
+  kernel_hash->swap(new_kernel_hash);
+  rootfs_hash->swap(new_rootfs_hash);
   return true;
 }
 
@@ -616,19 +612,19 @@ bool DeltaPerformer::VerifySourcePartitions() {
   CHECK(manifest_valid_);
   if (manifest_.has_old_kernel_info()) {
     const PartitionInfo& info = manifest_.old_kernel_info();
-    TEST_AND_RETURN_FALSE(current_kernel_hash_ != NULL &&
-                          current_kernel_hash_->size() == info.hash().size() &&
-                          memcmp(current_kernel_hash_->data(),
+    TEST_AND_RETURN_FALSE(!current_kernel_hash_.empty() &&
+                          current_kernel_hash_.size() == info.hash().size() &&
+                          memcmp(current_kernel_hash_.data(),
                                  info.hash().data(),
-                                 current_kernel_hash_->size()) == 0);
+                                 current_kernel_hash_.size()) == 0);
   }
   if (manifest_.has_old_rootfs_info()) {
     const PartitionInfo& info = manifest_.old_rootfs_info();
-    TEST_AND_RETURN_FALSE(current_rootfs_hash_ != NULL &&
-                          current_rootfs_hash_->size() == info.hash().size() &&
-                          memcmp(current_rootfs_hash_->data(),
+    TEST_AND_RETURN_FALSE(!current_rootfs_hash_.empty() &&
+                          current_rootfs_hash_.size() == info.hash().size() &&
+                          memcmp(current_rootfs_hash_.data(),
                                  info.hash().data(),
-                                 current_rootfs_hash_->size()) == 0);
+                                 current_rootfs_hash_.size()) == 0);
   }
   return true;
 }

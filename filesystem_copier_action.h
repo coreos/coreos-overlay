@@ -37,7 +37,8 @@ class ActionTraits<FilesystemCopierAction> {
 
 class FilesystemCopierAction : public Action<FilesystemCopierAction> {
  public:
-  explicit FilesystemCopierAction(bool copying_kernel_install_path);
+  FilesystemCopierAction(bool copying_kernel_install_path,
+                         bool verify_hash);
 
   typedef ActionTraits<FilesystemCopierAction>::InputObjectType
   InputObjectType;
@@ -58,7 +59,8 @@ class FilesystemCopierAction : public Action<FilesystemCopierAction> {
   FRIEND_TEST(FilesystemCopierActionTest, RunAsRootDetermineFilesystemSizeTest);
 
   // Ping-pong buffers generally cycle through the following states:
-  // Empty->Reading->Full->Writing->Empty.
+  // Empty->Reading->Full->Writing->Empty. In hash verification mode the state
+  // is never set to Writing.
   enum BufferState {
     kBufferStateEmpty,
     kBufferStateReading,
@@ -82,22 +84,23 @@ class FilesystemCopierAction : public Action<FilesystemCopierAction> {
   void SpawnAsyncActions();
 
   // Cleans up all the variables we use for async operations and tells the
-  // ActionProcessor we're done w/ success as passed in. |cancelled_| should be
+  // ActionProcessor we're done w/ |code| as passed in. |cancelled_| should be
   // true if TerminateProcessing() was called.
-  void Cleanup(bool success);
+  void Cleanup(ActionExitCode code);
 
   // Determine, if possible, the source file system size to avoid copying the
   // whole partition. Currently this supports only the root file system assuming
   // it's ext3-compatible.
   void DetermineFilesystemSize(int fd);
 
-  // Returns the number of bytes to read based on the size of the buffer and the
-  // filesystem size.
-  int64_t GetBytesToRead();
-
   // If true, this action is copying to the kernel_install_path from
   // the install plan, otherwise it's copying just to the install_path.
   const bool copying_kernel_install_path_;
+
+  // If true, this action is running in applied update hash verification mode --
+  // it computes a hash for the target install path and compares it against the
+  // expected value.
+  const bool verify_hash_;
 
   // The path to copy from. If empty (the default), the source is from the
   // passed in InstallPlan.

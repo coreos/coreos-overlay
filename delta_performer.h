@@ -34,9 +34,7 @@ class DeltaPerformer : public FileWriter {
         next_operation_num_(0),
         buffer_offset_(0),
         last_updated_buffer_offset_(kuint64max),
-        block_size_(0),
-        current_kernel_hash_(NULL),
-        current_rootfs_hash_(NULL) {}
+        block_size_(0) {}
 
   // Opens the kernel. Should be called before or after Open(), but before
   // Write(). The kernel file will be close()d when Close() is called.
@@ -65,10 +63,16 @@ class DeltaPerformer : public FileWriter {
                      const std::string& update_check_response_hash,
                      const uint64_t update_check_response_size);
 
-  // Verifies that the generated update is correct based on the hashes sent by
-  // the server. Returns true on success, false otherwise.
-  bool VerifyAppliedUpdate(const std::string& path,
-                           const std::string& kernel_path);
+  // Reads from the update manifest the expected sizes and hashes of the target
+  // kernel and rootfs partitions. These values can be used for applied update
+  // hash verification. This method must be called after the update manifest has
+  // been parsed (e.g., after closing the stream). Returns true on success, and
+  // false on failure (e.g., when the values are not present in the update
+  // manifest).
+  bool GetNewPartitionInfo(uint64_t* kernel_size,
+                           std::vector<char>* kernel_hash,
+                           uint64_t* rootfs_size,
+                           std::vector<char>* rootfs_hash);
 
   // Converts an ordered collection of Extent objects which contain data of
   // length full_length to a comma-separated string. For each Extent, the
@@ -96,11 +100,11 @@ class DeltaPerformer : public FileWriter {
   // success, false otherwise.
   static bool ResetUpdateProgress(PrefsInterface* prefs, bool quick);
 
-  void set_current_kernel_hash(const std::vector<char>* hash) {
+  void set_current_kernel_hash(const std::vector<char>& hash) {
     current_kernel_hash_ = hash;
   }
 
-  void set_current_rootfs_hash(const std::vector<char>* hash) {
+  void set_current_rootfs_hash(const std::vector<char>& hash) {
     current_rootfs_hash_ = hash;
   }
 
@@ -199,8 +203,8 @@ class DeltaPerformer : public FileWriter {
 
   // Hashes for the current partitions to be used for source partition
   // verification.
-  const std::vector<char>* current_kernel_hash_;
-  const std::vector<char>* current_rootfs_hash_;
+  std::vector<char> current_kernel_hash_;
+  std::vector<char> current_rootfs_hash_;
 
   DISALLOW_COPY_AND_ASSIGN(DeltaPerformer);
 };

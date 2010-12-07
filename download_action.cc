@@ -65,10 +65,8 @@ void DownloadAction::PerformAction() {
       writer_ = decompressing_file_writer_.get();
     } else {
       delta_performer_.reset(new DeltaPerformer(prefs_));
-      delta_performer_->set_current_kernel_hash(
-          &install_plan_.current_kernel_hash);
-      delta_performer_->set_current_rootfs_hash(
-          &install_plan_.current_rootfs_hash);
+      delta_performer_->set_current_kernel_hash(install_plan_.kernel_hash);
+      delta_performer_->set_current_rootfs_hash(install_plan_.rootfs_hash);
       writer_ = delta_performer_.get();
     }
   }
@@ -169,11 +167,13 @@ void DownloadAction::TransferComplete(HttpFetcher *fetcher, bool successful) {
         LOG(ERROR) << "Download of " << install_plan_.download_url
                    << " failed due to payload verification error.";
         code = kActionCodeDownloadPayloadVerificationError;
-      } else if (!delta_performer_->VerifyAppliedUpdate(
-          install_plan_.install_path, install_plan_.kernel_install_path)) {
-        LOG(ERROR) << "Download of " << install_plan_.download_url
-                   << " failed due to applied update verification error.";
-        code = kActionCodeDownloadAppliedUpdateVerificationError;
+      } else if (!delta_performer_->GetNewPartitionInfo(
+          &install_plan_.kernel_size,
+          &install_plan_.kernel_hash,
+          &install_plan_.rootfs_size,
+          &install_plan_.rootfs_hash)) {
+        LOG(ERROR) << "Unable to get new partition hash info.";
+        code = kActionCodeDownloadNewPartitionInfoError;
       }
     } else {
       // Makes sure the hash and size are correct for an old-style full update.
@@ -196,7 +196,7 @@ void DownloadAction::TransferComplete(HttpFetcher *fetcher, bool successful) {
 
   // Write the path to the output pipe if we're successful.
   if (code == kActionCodeSuccess && HasOutputPipe())
-    SetOutputObject(GetInputObject());
+    SetOutputObject(install_plan_);
   processor_->ActionComplete(this, code);
 }
 

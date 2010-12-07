@@ -129,7 +129,7 @@ TEST_F(UpdateAttempterTest, GetErrorCodeForActionTest) {
   EXPECT_EQ(kActionCodeOmahaResponseHandlerError,
             GetErrorCodeForAction(&omaha_response_handler_action,
                                   kActionCodeError));
-  FilesystemCopierAction filesystem_copier_action(false);
+  FilesystemCopierAction filesystem_copier_action(false, false);
   EXPECT_EQ(kActionCodeFilesystemCopierError,
             GetErrorCodeForAction(&filesystem_copier_action, kActionCodeError));
   PostinstallRunnerAction postinstall_runner_action;
@@ -236,6 +236,8 @@ TEST_F(UpdateAttempterTest, UpdateTest) {
     OmahaRequestAction::StaticType(),
     DownloadAction::StaticType(),
     OmahaRequestAction::StaticType(),
+    FilesystemCopierAction::StaticType(),
+    FilesystemCopierAction::StaticType(),
     PostinstallRunnerAction::StaticType(),
     OmahaRequestAction::StaticType()
   };

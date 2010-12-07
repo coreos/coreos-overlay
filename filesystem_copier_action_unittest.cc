@@ -27,9 +27,12 @@ namespace chromeos_update_engine {
 
 class FilesystemCopierActionTest : public ::testing::Test {
  protected:
+  // |verify_hash|: 0 - no hash verification, 1 -- successful hash verification,
+  // 2 -- hash verification failure.
   void DoTest(bool run_out_of_space,
               bool terminate_early,
-              bool use_kernel_partition);
+              bool use_kernel_partition,
+              int verify_hash);
   void SetUp() {
   }
   void TearDown() {
@@ -90,13 +93,14 @@ gboolean StartProcessorInRunLoop(gpointer data) {
 
 TEST_F(FilesystemCopierActionTest, RunAsRootSimpleTest) {
   ASSERT_EQ(0, getuid());
-  DoTest(false, false, false);
-
-  DoTest(false, false, true);
+  DoTest(false, false, false, 0);
+  DoTest(false, false, true, 0);
 }
+
 void FilesystemCopierActionTest::DoTest(bool run_out_of_space,
                                         bool terminate_early,
-                                        bool use_kernel_partition) {
+                                        bool use_kernel_partition,
+                                        int verify_hash) {
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
 
   string a_loop_file;
@@ -142,10 +146,29 @@ void FilesystemCopierActionTest::DoTest(bool run_out_of_space,
   // Set up the action objects
   InstallPlan install_plan;
   install_plan.is_full_update = false;
-  if (use_kernel_partition)
-    install_plan.kernel_install_path = b_dev;
-  else
-    install_plan.install_path = b_dev;
+  if (verify_hash) {
+    if (use_kernel_partition) {
+      install_plan.kernel_install_path = a_dev;
+      install_plan.kernel_size =
+          kLoopFileSize - ((verify_hash == 2) ? 1 : 0);
+      EXPECT_TRUE(OmahaHashCalculator::RawHashOfData(
+          a_loop_data,
+          &install_plan.kernel_hash));
+    } else {
+      install_plan.install_path = a_dev;
+      install_plan.rootfs_size =
+          kLoopFileSize - ((verify_hash == 2) ? 1 : 0);
+      EXPECT_TRUE(OmahaHashCalculator::RawHashOfData(
+          a_loop_data,
+          &install_plan.rootfs_hash));
+    }
+  } else {
+    if (use_kernel_partition) {
+      install_plan.kernel_install_path = b_dev;
+    } else {
+      install_plan.install_path = b_dev;
+    }
+  }
 
   ActionProcessor processor;
   FilesystemCopierActionTestDelegate delegate;
@@ -153,7 +176,8 @@ void FilesystemCopierActionTest::DoTest(bool run_out_of_space,
   processor.set_delegate(&delegate);
 
   ObjectFeederAction<InstallPlan> feeder_action;
-  FilesystemCopierAction copier_action(use_kernel_partition);
+  FilesystemCopierAction copier_action(use_kernel_partition,
+                                       verify_hash != 0);
   ObjectCollectorAction<InstallPlan> collector_action;
 
   BondActions(&feeder_action, &copier_action);
@@ -163,7 +187,9 @@ void FilesystemCopierActionTest::DoTest(bool run_out_of_space,
   processor.EnqueueAction(&copier_action);
   processor.EnqueueAction(&collector_action);
 
-  copier_action.set_copy_source(a_dev);
+  if (!verify_hash) {
+    copier_action.set_copy_source(a_dev);
+  }
   feeder_action.set_obj(install_plan);
 
   StartProcessorCallbackArgs start_callback_args;
@@ -181,21 +207,26 @@ void FilesystemCopierActionTest::DoTest(bool run_out_of_space,
     EXPECT_EQ(kActionCodeError, delegate.code());
     return;
   }
+  if (verify_hash == 2) {
+    EXPECT_EQ(use_kernel_partition ?
+              kActionCodeNewKernelVerificationError :
+              kActionCodeNewRootfsVerificationError,
+              delegate.code());
+    return;
+  }
   EXPECT_EQ(kActionCodeSuccess, delegate.code());
 
   // Make sure everything in the out_image is there
   vector<char> a_out;
-  vector<char> b_out;
   EXPECT_TRUE(utils::ReadFile(a_dev, &a_out));
-  EXPECT_TRUE(utils::ReadFile(b_dev, &b_out));
-  EXPECT_TRUE(ExpectVectorsEq(a_out, b_out));
+  if (!verify_hash) {
+    vector<char> b_out;
+    EXPECT_TRUE(utils::ReadFile(b_dev, &b_out));
+    EXPECT_TRUE(ExpectVectorsEq(a_out, b_out));
+  }
   EXPECT_TRUE(ExpectVectorsEq(a_loop_data, a_out));
 
   EXPECT_TRUE(collector_action.object() == install_plan);
-  if (terminate_early) {
-    // sleep so OS can clean up
-    sleep(1);
-  }
 }
 
 class FilesystemCopierActionTest2Delegate : public ActionProcessorDelegate {
@@ -219,7 +250,7 @@ TEST_F(FilesystemCopierActionTest, MissingInputObjectTest) {
 
   processor.set_delegate(&delegate);
 
-  FilesystemCopierAction copier_action(false);
+  FilesystemCopierAction copier_action(false, false);
   ObjectCollectorAction<InstallPlan> collector_action;
 
   BondActions(&copier_action, &collector_action);
@@ -242,7 +273,7 @@ TEST_F(FilesystemCopierActionTest, FullUpdateTest) {
   const char* kUrl = "http://some/url";
   InstallPlan install_plan(true, false, kUrl, 0, "", "", "");
   feeder_action.set_obj(install_plan);
-  FilesystemCopierAction copier_action(false);
+  FilesystemCopierAction copier_action(false, false);
   ObjectCollectorAction<InstallPlan> collector_action;
 
   BondActions(&feeder_action, &copier_action);
@@ -268,7 +299,7 @@ TEST_F(FilesystemCopierActionTest, ResumeTest) {
   const char* kUrl = "http://some/url";
   InstallPlan install_plan(false, true, kUrl, 0, "", "", "");
   feeder_action.set_obj(install_plan);
-  FilesystemCopierAction copier_action(false);
+  FilesystemCopierAction copier_action(false, false);
   ObjectCollectorAction<InstallPlan> collector_action;
 
   BondActions(&feeder_action, &copier_action);
@@ -299,7 +330,7 @@ TEST_F(FilesystemCopierActionTest, NonExistentDriveTest) {
                            "/no/such/file",
                            "/no/such/file");
   feeder_action.set_obj(install_plan);
-  FilesystemCopierAction copier_action(false);
+  FilesystemCopierAction copier_action(false, false);
   ObjectCollectorAction<InstallPlan> collector_action;
 
   BondActions(&copier_action, &collector_action);
@@ -313,14 +344,26 @@ TEST_F(FilesystemCopierActionTest, NonExistentDriveTest) {
   EXPECT_EQ(kActionCodeError, delegate.code_);
 }
 
+TEST_F(FilesystemCopierActionTest, RunAsRootVerifyHashTest) {
+  ASSERT_EQ(0, getuid());
+  DoTest(false, false, false, 1);
+  DoTest(false, false, true, 1);
+}
+
+TEST_F(FilesystemCopierActionTest, RunAsRootVerifyHashFailTest) {
+  ASSERT_EQ(0, getuid());
+  DoTest(false, false, false, 2);
+  DoTest(false, false, true, 2);
+}
+
 TEST_F(FilesystemCopierActionTest, RunAsRootNoSpaceTest) {
   ASSERT_EQ(0, getuid());
-  DoTest(true, false, false);
+  DoTest(true, false, false, 0);
 }
 
 TEST_F(FilesystemCopierActionTest, RunAsRootTerminateEarlyTest) {
   ASSERT_EQ(0, getuid());
-  DoTest(false, true, false);
+  DoTest(false, true, false, 0);
 }
 
 TEST_F(FilesystemCopierActionTest, RunAsRootDetermineFilesystemSizeTest) {
@@ -336,7 +379,7 @@ TEST_F(FilesystemCopierActionTest, RunAsRootDetermineFilesystemSizeTest) {
 
   for (int i = 0; i < 2; ++i) {
     bool is_kernel = i == 1;
-    FilesystemCopierAction action(is_kernel);
+    FilesystemCopierAction action(is_kernel, false);
     EXPECT_EQ(kint64max, action.filesystem_size_);
     {
       int fd = HANDLE_EINTR(open(img.c_str(), O_RDONLY));

@@ -315,11 +315,11 @@ void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop) {
             OmahaHashCalculator::RawHashOfFile(a_img,
                                                image_size,
                                                &rootfs_hash));
-  performer.set_current_rootfs_hash(&rootfs_hash);
+  performer.set_current_rootfs_hash(rootfs_hash);
   vector<char> kernel_hash;
   EXPECT_TRUE(OmahaHashCalculator::RawHashOfData(old_kernel_data,
                                                  &kernel_hash));
-  performer.set_current_kernel_hash(&kernel_hash);
+  performer.set_current_kernel_hash(kernel_hash);
 
   EXPECT_EQ(0, performer.Open(a_img.c_str(), 0, 0));
   EXPECT_TRUE(performer.OpenKernel(old_kernel.c_str()));
@@ -347,7 +347,27 @@ void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop) {
       kUnittestPublicKeyPath,
       OmahaHashCalculator::OmahaHashOfData(delta),
       delta.size()));
-  EXPECT_TRUE(performer.VerifyAppliedUpdate(a_img, old_kernel));
+
+  uint64_t new_kernel_size;
+  vector<char> new_kernel_hash;
+  uint64_t new_rootfs_size;
+  vector<char> new_rootfs_hash;
+  EXPECT_TRUE(performer.GetNewPartitionInfo(&new_kernel_size,
+                                            &new_kernel_hash,
+                                            &new_rootfs_size,
+                                            &new_rootfs_hash));
+  EXPECT_EQ(4096, new_kernel_size);
+  vector<char> expected_new_kernel_hash;
+  EXPECT_TRUE(OmahaHashCalculator::RawHashOfData(new_kernel_data,
+                                                 &expected_new_kernel_hash));
+  EXPECT_TRUE(expected_new_kernel_hash == new_kernel_hash);
+  EXPECT_EQ(image_size, new_rootfs_size);
+  vector<char> expected_new_rootfs_hash;
+  EXPECT_EQ(image_size,
+            OmahaHashCalculator::RawHashOfFile(b_img,
+                                               image_size,
+                                               &expected_new_rootfs_hash));
+  EXPECT_TRUE(expected_new_rootfs_hash == new_rootfs_hash);
 }
 }
 
