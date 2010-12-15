@@ -46,9 +46,9 @@ void FlimFlamProxyTest::TestWithServiceType(
   ASSERT_NE(kMockSystemBus, reinterpret_cast<DBusGConnection*>(NULL));
   const char* kServicePath = "/foo/service";
   const char kGetPropertiesMethod[] = "GetProperties";
-  
+
   MockDbusGlib dbus_iface;
-  
+
   EXPECT_CALL(dbus_iface,
               ProxyNewForNameOwner(kMockSystemBus,
                                    StrEq(kFlimFlamDbusService),
@@ -63,22 +63,20 @@ void FlimFlamProxyTest::TestWithServiceType(
                                    StrEq(kFlimFlamDbusServiceInterface),
                                    _))
       .WillOnce(Return(kMockFlimFlamServiceProxy));
-      
+
   EXPECT_CALL(dbus_iface, ProxyUnref(kMockFlimFlamManagerProxy));
   EXPECT_CALL(dbus_iface, ProxyUnref(kMockFlimFlamServiceProxy));
 
   EXPECT_CALL(dbus_iface, BusGet(DBUS_BUS_SYSTEM, _))
       .Times(2)
       .WillRepeatedly(Return(kMockSystemBus));
-  
+
   // Set up return value for first dbus call (to Manager object).
   GHashTable* manager_hash_table = g_hash_table_new(g_str_hash, g_str_equal);
-  ScopedRelease<GHashTable*, g_hash_table_unref> manager_hash_table_unref(
-      manager_hash_table);
-  
+
   GArray* array = g_array_new(FALSE, FALSE, sizeof(const char*));
   ASSERT_TRUE(array != NULL);
-  
+
   EXPECT_EQ(array, g_array_append_val(array, kServicePath));
   GValue array_value = {0, {{0}}};
   EXPECT_EQ(&array_value, g_value_init(&array_value, G_TYPE_ARRAY));
@@ -90,14 +88,12 @@ void FlimFlamProxyTest::TestWithServiceType(
   // Set up return value for second dbus call (to Service object).
 
   GHashTable* service_hash_table = g_hash_table_new(g_str_hash, g_str_equal);
-  ScopedRelease<GHashTable*, g_hash_table_unref> service_hash_table_unref(
-      service_hash_table);
-      
+
   GValue service_type_value = {0, {{0}}};
   EXPECT_EQ(&service_type_value,
             g_value_init(&service_type_value, G_TYPE_STRING));
   g_value_set_static_string(&service_type_value, service_type);
-  
+
   g_hash_table_insert(service_hash_table,
                       const_cast<char*>("Type"),
                       &service_type_value);
@@ -125,7 +121,7 @@ void FlimFlamProxyTest::TestWithServiceType(
       .WillOnce(DoAll(SetArgumentPointee<5>(service_hash_table), Return(TRUE)));
 
   NetworkConnectionType type;
-  
+
   EXPECT_TRUE(FlimFlamProxy::GetConnectionType(&dbus_iface, &type));
   EXPECT_EQ(expected_type, type);
 }
