@@ -6,13 +6,17 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+
 #include <set>
 #include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
+
+#include <base/logging.h>
+#include <base/string_util.h>
 #include <gtest/gtest.h>
-#include "base/logging.h"
+
 #include "update_engine/cycle_breaker.h"
 #include "update_engine/delta_diff_generator.h"
 #include "update_engine/delta_performer.h"
@@ -713,7 +717,7 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootAssignTempBlocksReuseTest) {
                                   &fd));
   ScopedFdCloser fd_closer(&fd);
   off_t data_file_size = 0;
-  
+
   EXPECT_TRUE(DeltaDiffGenerator::AssignTempBlocks(&graph,
                                                    temp_dir,
                                                    fd,

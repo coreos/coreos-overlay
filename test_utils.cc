@@ -178,6 +178,16 @@ void FillWithData(vector<char>* buffer) {
   }
 }
 
+void CreateEmptyExtImageAtPath(const string& path,
+                               size_t size,
+                               int block_size) {
+  EXPECT_EQ(0, System(StringPrintf("dd if=/dev/zero of=%s"
+                                   " seek=%zu bs=1 count=1",
+                                   path.c_str(), size)));
+  EXPECT_EQ(0, System(StringPrintf("mkfs.ext3 -b %d -F %s",
+                                   block_size, path.c_str())));
+}
+
 void CreateExtImageAtPath(const string& path, vector<string>* out_paths) {
   // create 10MiB sparse file
   EXPECT_EQ(0, System(StringPrintf("dd if=/dev/zero of=%s"
@@ -199,7 +209,7 @@ void CreateExtImageAtPath(const string& path, vector<string>* out_paths) {
   EXPECT_EQ(0, System(StringPrintf("ln %s/some_dir/test %s/testlink",
                                    kMountPath, kMountPath)));
   EXPECT_EQ(0, System(StringPrintf("umount -d %s", kMountPath)));
-  
+
   if (out_paths) {
     out_paths->clear();
     out_paths->push_back("");
@@ -261,6 +271,21 @@ void VerifyAllPaths(const string& parent, set<string> expected_paths) {
       LOG(INFO) << "extra path: " << *it;
     }
   }
+}
+
+ScopedLoopMounter::ScopedLoopMounter(const std::string& file_path,
+                                     std::string* mnt_path,
+                                     unsigned long flags) {
+  EXPECT_TRUE(utils::MakeTempDirectory("/tmp/mnt.XXXXXX", mnt_path));
+  dir_remover_.reset(new ScopedDirRemover(*mnt_path));
+
+  std::string loop_dev = GetUnusedLoopDevice();
+  EXPECT_EQ(0, system(StringPrintf("losetup %s %s", loop_dev.c_str(),
+                                   file_path.c_str()).c_str()));
+  loop_releaser_.reset(new ScopedLoopbackDeviceReleaser(loop_dev));
+
+  EXPECT_TRUE(utils::MountFilesystem(loop_dev, *mnt_path, flags));
+  unmounter_.reset(new ScopedFilesystemUnmounter(*mnt_path));
 }
 
 }  // namespace chromeos_update_engine

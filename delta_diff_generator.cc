@@ -30,6 +30,7 @@
 #include "update_engine/full_update_generator.h"
 #include "update_engine/graph_types.h"
 #include "update_engine/graph_utils.h"
+#include "update_engine/metadata.h"
 #include "update_engine/omaha_hash_calculator.h"
 #include "update_engine/payload_signer.h"
 #include "update_engine/subprocess.h"
@@ -74,81 +75,6 @@ bool GatherExtents(const string& path,
   vector<Extent> extents;
   TEST_AND_RETURN_FALSE(extent_mapper::ExtentsForFileFibmap(path, &extents));
   DeltaDiffGenerator::StoreExtents(extents, out);
-  return true;
-}
-
-// Runs the bsdiff tool on two files and returns the resulting delta in
-// 'out'. Returns true on success.
-bool BsdiffFiles(const string& old_file,
-                 const string& new_file,
-                 vector<char>* out) {
-  const string kPatchFile = "/tmp/delta.patchXXXXXX";
-  string patch_file_path;
-
-  TEST_AND_RETURN_FALSE(
-      utils::MakeTempFile(kPatchFile, &patch_file_path, NULL));
-
-  vector<string> cmd;
-  cmd.push_back(kBsdiffPath);
-  cmd.push_back(old_file);
-  cmd.push_back(new_file);
-  cmd.push_back(patch_file_path);
-
-  int rc = 1;
-  vector<char> patch_file;
-  TEST_AND_RETURN_FALSE(Subprocess::SynchronousExec(cmd, &rc));
-  TEST_AND_RETURN_FALSE(rc == 0);
-  TEST_AND_RETURN_FALSE(utils::ReadFile(patch_file_path, out));
-  unlink(patch_file_path.c_str());
-  return true;
-}
-
-// The blocks vector contains a reader and writer for each block on the
-// filesystem that's being in-place updated. We populate the reader/writer
-// fields of blocks by calling this function.
-// For each block in 'operation' that is read or written, find that block
-// in 'blocks' and set the reader/writer field to the vertex passed.
-// 'graph' is not strictly necessary, but useful for printing out
-// error messages.
-bool AddInstallOpToBlocksVector(
-    const DeltaArchiveManifest_InstallOperation& operation,
-    vector<Block>* blocks,
-    const Graph& graph,
-    Vertex::Index vertex) {
-  // See if this is already present.
-  TEST_AND_RETURN_FALSE(operation.dst_extents_size() > 0);
-
-  enum BlockField { READER = 0, WRITER, BLOCK_FIELD_COUNT };
-  for (int field = READER; field < BLOCK_FIELD_COUNT; field++) {
-    const int extents_size =
-        (field == READER) ? operation.src_extents_size() :
-        operation.dst_extents_size();
-    const char* past_participle = (field == READER) ? "read" : "written";
-    const google::protobuf::RepeatedPtrField<Extent>& extents =
-        (field == READER) ? operation.src_extents() : operation.dst_extents();
-    Vertex::Index Block::*access_type =
-        (field == READER) ? &Block::reader : &Block::writer;
-
-    for (int i = 0; i < extents_size; i++) {
-      const Extent& extent = extents.Get(i);
-      if (extent.start_block() == kSparseHole) {
-        // Hole in sparse file. skip
-        continue;
-      }
-      for (uint64_t block = extent.start_block();
-           block < (extent.start_block() + extent.num_blocks()); block++) {
-        if ((*blocks)[block].*access_type != Vertex::kInvalidIndex) {
-          LOG(FATAL) << "Block " << block << " is already "
-                     << past_participle << " by "
-                     << (*blocks)[block].*access_type << "("
-                     << graph[(*blocks)[block].*access_type].file_name
-                     << ") and also " << vertex << "("
-                     << graph[vertex].file_name << ")";
-        }
-        (*blocks)[block].*access_type = vertex;
-      }
-    }
-  }
   return true;
 }
 
@@ -197,10 +123,11 @@ bool DeltaReadFile(Graph* graph,
   (*graph)[vertex].file_name = path;
 
   if (blocks)
-    TEST_AND_RETURN_FALSE(AddInstallOpToBlocksVector((*graph)[vertex].op,
-                                                     blocks,
-                                                     *graph,
-                                                     vertex));
+    TEST_AND_RETURN_FALSE(DeltaDiffGenerator::AddInstallOpToBlocksVector(
+        (*graph)[vertex].op,
+        *graph,
+        vertex,
+        blocks));
   return true;
 }
 
@@ -1390,6 +1317,16 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
       LOG(INFO) << "done reading normal files";
       CheckGraph(graph);
 
+      LOG(INFO) << "Starting metadata processing";
+      TEST_AND_RETURN_FALSE(Metadata::DeltaReadMetadata(&graph,
+                                                        &blocks,
+                                                        old_image,
+                                                        new_image,
+                                                        fd,
+                                                        &data_file_size));
+      LOG(INFO) << "Done metadata processing";
+      CheckGraph(graph);
+
       graph.resize(graph.size() + 1);
       TEST_AND_RETURN_FALSE(ReadUnwrittenBlocks(blocks,
                                                 fd,
@@ -1582,6 +1519,81 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
   ReportPayloadUsage(manifest, manifest_metadata_size, op_name_map);
 
   LOG(INFO) << "All done. Successfully created delta file.";
+  return true;
+}
+
+// Runs the bsdiff tool on two files and returns the resulting delta in
+// 'out'. Returns true on success.
+bool DeltaDiffGenerator::BsdiffFiles(const string& old_file,
+                                     const string& new_file,
+                                     vector<char>* out) {
+  const string kPatchFile = "/tmp/delta.patchXXXXXX";
+  string patch_file_path;
+
+  TEST_AND_RETURN_FALSE(
+      utils::MakeTempFile(kPatchFile, &patch_file_path, NULL));
+
+  vector<string> cmd;
+  cmd.push_back(kBsdiffPath);
+  cmd.push_back(old_file);
+  cmd.push_back(new_file);
+  cmd.push_back(patch_file_path);
+
+  int rc = 1;
+  vector<char> patch_file;
+  TEST_AND_RETURN_FALSE(Subprocess::SynchronousExec(cmd, &rc));
+  TEST_AND_RETURN_FALSE(rc == 0);
+  TEST_AND_RETURN_FALSE(utils::ReadFile(patch_file_path, out));
+  unlink(patch_file_path.c_str());
+  return true;
+}
+
+// The |blocks| vector contains a reader and writer for each block on the
+// filesystem that's being in-place updated. We populate the reader/writer
+// fields of |blocks| by calling this function.
+// For each block in |operation| that is read or written, find that block
+// in |blocks| and set the reader/writer field to the vertex passed.
+// |graph| is not strictly necessary, but useful for printing out
+// error messages.
+bool DeltaDiffGenerator::AddInstallOpToBlocksVector(
+    const DeltaArchiveManifest_InstallOperation& operation,
+    const Graph& graph,
+    Vertex::Index vertex,
+    vector<Block>* blocks) {
+  // See if this is already present.
+  TEST_AND_RETURN_FALSE(operation.dst_extents_size() > 0);
+
+  enum BlockField { READER = 0, WRITER, BLOCK_FIELD_COUNT };
+  for (int field = READER; field < BLOCK_FIELD_COUNT; field++) {
+    const int extents_size =
+        (field == READER) ? operation.src_extents_size() :
+        operation.dst_extents_size();
+    const char* past_participle = (field == READER) ? "read" : "written";
+    const google::protobuf::RepeatedPtrField<Extent>& extents =
+        (field == READER) ? operation.src_extents() : operation.dst_extents();
+    Vertex::Index Block::*access_type =
+        (field == READER) ? &Block::reader : &Block::writer;
+
+    for (int i = 0; i < extents_size; i++) {
+      const Extent& extent = extents.Get(i);
+      if (extent.start_block() == kSparseHole) {
+        // Hole in sparse file. skip
+        continue;
+      }
+      for (uint64_t block = extent.start_block();
+           block < (extent.start_block() + extent.num_blocks()); block++) {
+        if ((*blocks)[block].*access_type != Vertex::kInvalidIndex) {
+          LOG(FATAL) << "Block " << block << " is already "
+                     << past_participle << " by "
+                     << (*blocks)[block].*access_type << "("
+                     << graph[(*blocks)[block].*access_type].file_name
+                     << ") and also " << vertex << "("
+                     << graph[vertex].file_name << ")";
+        }
+        (*blocks)[block].*access_type = vertex;
+      }
+    }
+  }
   return true;
 }
 

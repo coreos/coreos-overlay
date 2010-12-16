@@ -197,6 +197,7 @@ env['LIBS'] = Split("""base
                        bz2
                        crypto
                        curl
+                       ext2fs
                        gflags
                        glib-2.0
                        gthread-2.0
@@ -256,6 +257,7 @@ sources = Split("""action_processor.cc
                    http_fetcher.cc
                    libcurl_http_fetcher.cc
                    marshal.glibmarshal.c
+                   metadata.cc
                    omaha_hash_calculator.cc
                    omaha_request_action.cc
                    omaha_request_params.cc
@@ -297,6 +299,7 @@ unittest_sources = Split("""action_unittest.cc
                             full_update_generator_unittest.cc
                             graph_utils_unittest.cc
                             http_fetcher_unittest.cc
+                            metadata_unittest.cc
                             mock_http_fetcher.cc
                             omaha_hash_calculator_unittest.cc
                             omaha_request_action_unittest.cc

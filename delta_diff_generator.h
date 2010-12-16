@@ -213,6 +213,25 @@ class DeltaDiffGenerator {
                                       const std::string& partition,
                                       PartitionInfo* info);
 
+  // Runs the bsdiff tool on two files and returns the resulting delta in
+  // |out|. Returns true on success.
+  static bool BsdiffFiles(const std::string& old_file,
+                          const std::string& new_file,
+                          std::vector<char>* out);
+
+  // The |blocks| vector contains a reader and writer for each block on the
+  // filesystem that's being in-place updated. We populate the reader/writer
+  // fields of |blocks| by calling this function.
+  // For each block in |operation| that is read or written, find that block
+  // in |blocks| and set the reader/writer field to the vertex passed.
+  // |graph| is not strictly necessary, but useful for printing out
+  // error messages.
+  static bool AddInstallOpToBlocksVector(
+      const DeltaArchiveManifest_InstallOperation& operation,
+      const Graph& graph,
+      Vertex::Index vertex,
+      std::vector<DeltaDiffGenerator::Block>* blocks);
+
  private:
   // This should never be constructed
   DISALLOW_IMPLICIT_CONSTRUCTORS(DeltaDiffGenerator);

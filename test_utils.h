@@ -8,8 +8,10 @@
 #include <set>
 #include <string>
 #include <vector>
+
+#include <base/scoped_ptr.h>
 #include <gtest/gtest.h>
-#include "base/scoped_ptr.h"
+
 #include "update_engine/action.h"
 #include "update_engine/subprocess.h"
 #include "update_engine/utils.h"
@@ -91,6 +93,11 @@ const unsigned char kRandomString[] = {
 
 const char* const kMountPath = "/tmp/UpdateEngineTests_mnt";
 }  // namespace {}
+
+// Creates an empty ext image.
+void CreateEmptyExtImageAtPath(const std::string& path,
+                               size_t size,
+                               int block_size);
 
 // Creates an ext image with some files in it. The paths creates are
 // returned in out_paths.
@@ -209,6 +216,22 @@ struct ObjectCollectorAction : public Action<ObjectCollectorAction<T> > {
   const T& object() const { return object_; }
  private:
   T object_;
+};
+
+class ScopedLoopMounter {
+ public:
+  explicit ScopedLoopMounter(const std::string& file_path,
+                             std::string* mnt_path,
+                             unsigned long flags);
+
+ private:
+  // These objects must be destructed in the following order:
+  //   ScopedFilesystemUnmounter (the file system must be unmounted first)
+  //   ScopedLoopbackDeviceReleaser (then the loop device can be deleted)
+  //   ScopedDirRemover (then the mount point can be deleted)
+  scoped_ptr<ScopedDirRemover> dir_remover_;
+  scoped_ptr<ScopedLoopbackDeviceReleaser> loop_releaser_;
+  scoped_ptr<ScopedFilesystemUnmounter> unmounter_;
 };
 
 }  // namespace chromeos_update_engine

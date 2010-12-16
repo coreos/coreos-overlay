@@ -66,27 +66,6 @@ TEST(DeltaPerformerTest, ExtentsToByteStringTest) {
   EXPECT_EQ(expected_output, actual_output);
 }
 
-class ScopedLoopMounter {
- public:
-  explicit ScopedLoopMounter(const string& file_path, string* mnt_path,
-                             unsigned long flags) {
-    EXPECT_TRUE(utils::MakeTempDirectory("/tmp/mnt.XXXXXX", mnt_path));
-    dir_remover_.reset(new ScopedDirRemover(*mnt_path));
-
-    string loop_dev = GetUnusedLoopDevice();
-    EXPECT_EQ(0, system(StringPrintf("losetup %s %s", loop_dev.c_str(),
-                                     file_path.c_str()).c_str()));
-    loop_releaser_.reset(new ScopedLoopbackDeviceReleaser(loop_dev));
-
-    EXPECT_TRUE(utils::MountFilesystem(loop_dev, *mnt_path, flags));
-    unmounter_.reset(new ScopedFilesystemUnmounter(*mnt_path));
-  }
- private:
-  scoped_ptr<ScopedDirRemover> dir_remover_;
-  scoped_ptr<ScopedLoopbackDeviceReleaser> loop_releaser_;
-  scoped_ptr<ScopedFilesystemUnmounter> unmounter_;
-};
-
 void CompareFilesByBlock(const string& a_file, const string& b_file) {
   vector<char> a_data, b_data;
   EXPECT_TRUE(utils::ReadFile(a_file, &a_data)) << "file failed: " << a_file;
