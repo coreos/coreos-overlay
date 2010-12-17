@@ -22,7 +22,7 @@
 #include "update_engine/download_action.h"
 #include "update_engine/filesystem_copier_action.h"
 #include "update_engine/libcurl_http_fetcher.h"
-#include "update_engine/multi_http_fetcher.h"
+#include "update_engine/multi_range_http_fetcher.h"
 #include "update_engine/omaha_request_action.h"
 #include "update_engine/omaha_request_params.h"
 #include "update_engine/omaha_response_handler_action.h"
@@ -185,8 +185,8 @@ void UpdateAttempter::Update(const std::string& app_version,
                                  OmahaEvent::kTypeUpdateDownloadStarted),
                              new LibcurlHttpFetcher(GetProxyResolver())));
   shared_ptr<DownloadAction> download_action(
-      new DownloadAction(prefs_, new MultiHttpFetcher<LibcurlHttpFetcher>(
-          GetProxyResolver())));
+      new DownloadAction(prefs_, new MultiRangeHTTPFetcher(
+          new LibcurlHttpFetcher(GetProxyResolver()))));
   shared_ptr<OmahaRequestAction> download_finished_action(
       new OmahaRequestAction(prefs_,
                              omaha_request_params_,
@@ -554,15 +554,14 @@ void UpdateAttempter::MarkDeltaUpdateFailure() {
 }
 
 void UpdateAttempter::SetupDownload() {
-  MultiHttpFetcher<LibcurlHttpFetcher>* fetcher =
-      dynamic_cast<MultiHttpFetcher<LibcurlHttpFetcher>*>(
-          download_action_->http_fetcher());
-  MultiHttpFetcher<LibcurlHttpFetcher>::RangesVect ranges;
+  MultiRangeHTTPFetcher* fetcher =
+      dynamic_cast<MultiRangeHTTPFetcher*>(download_action_->http_fetcher());
+  fetcher->ClearRanges();
   if (response_handler_action_->install_plan().is_resume) {
     // Resuming an update so fetch the update manifest metadata first.
     int64_t manifest_metadata_size = 0;
     prefs_->GetInt64(kPrefsManifestMetadataSize, &manifest_metadata_size);
-    ranges.push_back(make_pair(0, manifest_metadata_size));
+    fetcher->AddRange(0, manifest_metadata_size);
     // If there're remaining unprocessed data blobs, fetch them. Be careful not
     // to request data beyond the end of the payload to avoid 416 HTTP response
     // error codes.
@@ -570,12 +569,11 @@ void UpdateAttempter::SetupDownload() {
     prefs_->GetInt64(kPrefsUpdateStateNextDataOffset, &next_data_offset);
     uint64_t resume_offset = manifest_metadata_size + next_data_offset;
     if (resume_offset < response_handler_action_->install_plan().size) {
-      ranges.push_back(make_pair(resume_offset, -1));
+      fetcher->AddRange(resume_offset, -1);
     }
   } else {
-    ranges.push_back(make_pair(0, -1));
+    fetcher->AddRange(0, -1);
   }
-  fetcher->set_ranges(ranges);
 }
 
 }  // namespace chromeos_update_engine

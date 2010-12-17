@@ -16,10 +16,11 @@
 
 #include "update_engine/libcurl_http_fetcher.h"
 #include "update_engine/mock_http_fetcher.h"
-#include "update_engine/multi_http_fetcher.h"
+#include "update_engine/multi_range_http_fetcher.h"
 #include "update_engine/proxy_resolver.h"
 
 using std::make_pair;
+using std::pair;
 using std::string;
 using std::vector;
 
@@ -170,16 +171,16 @@ class HttpFetcherTest<LibcurlHttpFetcher> : public ::testing::Test {
 };
 
 template <>
-class HttpFetcherTest<MultiHttpFetcher<LibcurlHttpFetcher> >
+class HttpFetcherTest<MultiRangeHTTPFetcher>
     : public HttpFetcherTest<LibcurlHttpFetcher> {
  public:
   HttpFetcher* NewLargeFetcher() {
-    MultiHttpFetcher<LibcurlHttpFetcher> *ret =
-        new MultiHttpFetcher<LibcurlHttpFetcher>(
-            reinterpret_cast<ProxyResolver*>(&proxy_resolver_));
-    MultiHttpFetcher<LibcurlHttpFetcher>::RangesVect
-        ranges(1, make_pair(0, -1));
-    ret->set_ranges(ranges);
+    ProxyResolver* resolver =
+        reinterpret_cast<ProxyResolver*>(&proxy_resolver_);
+    MultiRangeHTTPFetcher *ret =
+        new MultiRangeHTTPFetcher(new LibcurlHttpFetcher(resolver));
+    ret->ClearRanges();
+    ret->AddRange(0, -1);
     // Speed up test execution.
     ret->set_idle_seconds(1);
     ret->set_retry_seconds(1);
@@ -193,7 +194,7 @@ class HttpFetcherTest<MultiHttpFetcher<LibcurlHttpFetcher> >
 
 typedef ::testing::Types<LibcurlHttpFetcher,
                          MockHttpFetcher,
-                         MultiHttpFetcher<LibcurlHttpFetcher> >
+                         MultiRangeHTTPFetcher>
 HttpFetcherTestTypes;
 TYPED_TEST_CASE(HttpFetcherTest, HttpFetcherTestTypes);
 
@@ -344,7 +345,7 @@ class AbortingHttpFetcherTestDelegate : public HttpFetcherDelegate {
     callback_once_ = false;
     // |fetcher| can be destroyed during this callback.
     fetcher_.reset(NULL);
- }
+  }
   void TerminateTransfer() {
     CHECK(once_);
     once_ = false;
@@ -651,7 +652,7 @@ class MultiHttpFetcherTestDelegate : public HttpFetcherDelegate {
 
 void MultiTest(HttpFetcher* fetcher_in,
                const string& url,
-               const MultiHttpFetcher<LibcurlHttpFetcher>::RangesVect& ranges,
+               const vector<pair<off_t, off_t> >& ranges,
                const string& expected_prefix,
                off_t expected_size,
                int expected_response_code) {
@@ -660,10 +661,15 @@ void MultiTest(HttpFetcher* fetcher_in,
     MultiHttpFetcherTestDelegate delegate(expected_response_code);
     delegate.loop_ = loop;
     delegate.fetcher_.reset(fetcher_in);
-    MultiHttpFetcher<LibcurlHttpFetcher>* multi_fetcher =
-        dynamic_cast<MultiHttpFetcher<LibcurlHttpFetcher>*>(fetcher_in);
+    MultiRangeHTTPFetcher* multi_fetcher =
+        dynamic_cast<MultiRangeHTTPFetcher*>(fetcher_in);
     ASSERT_TRUE(multi_fetcher);
-    multi_fetcher->set_ranges(ranges);
+    multi_fetcher->ClearRanges();
+    for (vector<pair<off_t, off_t> >::const_iterator it = ranges.begin(),
+             e = ranges.end(); it != e; ++it) {
+               LOG(INFO) << "Adding range";
+      multi_fetcher->AddRange(it->first, it->second);
+    }
     multi_fetcher->SetConnectionAsExpensive(false);
     multi_fetcher->SetBuildType(false);
     multi_fetcher->set_delegate(&delegate);
@@ -687,7 +693,7 @@ TYPED_TEST(HttpFetcherTest, MultiHttpFetcherSimpleTest) {
   typename TestFixture::HttpServer server;
   ASSERT_TRUE(server.started_);
 
-  MultiHttpFetcher<LibcurlHttpFetcher>::RangesVect ranges;
+  vector<pair<off_t, off_t> > ranges;
   ranges.push_back(make_pair(0, 25));
   ranges.push_back(make_pair(99, -1));
   MultiTest(this->NewLargeFetcher(),
@@ -704,7 +710,7 @@ TYPED_TEST(HttpFetcherTest, MultiHttpFetcherLengthLimitTest) {
   typename TestFixture::HttpServer server;
   ASSERT_TRUE(server.started_);
 
-  MultiHttpFetcher<LibcurlHttpFetcher>::RangesVect ranges;
+  vector<pair<off_t, off_t> > ranges;
   ranges.push_back(make_pair(0, 24));
   MultiTest(this->NewLargeFetcher(),
             this->BigUrl(),
@@ -720,7 +726,7 @@ TYPED_TEST(HttpFetcherTest, MultiHttpFetcherMultiEndTest) {
   typename TestFixture::HttpServer server;
   ASSERT_TRUE(server.started_);
 
-  MultiHttpFetcher<LibcurlHttpFetcher>::RangesVect ranges;
+  vector<pair<off_t, off_t> > ranges;
   ranges.push_back(make_pair(kBigSize - 2, -1));
   ranges.push_back(make_pair(kBigSize - 3, -1));
   MultiTest(this->NewLargeFetcher(),
@@ -737,9 +743,10 @@ TYPED_TEST(HttpFetcherTest, MultiHttpFetcherInsufficientTest) {
   typename TestFixture::HttpServer server;
   ASSERT_TRUE(server.started_);
 
-  MultiHttpFetcher<LibcurlHttpFetcher>::RangesVect ranges;
+  vector<pair<off_t, off_t> > ranges;
   ranges.push_back(make_pair(kBigSize - 2, 4));
   for (int i = 0; i < 2; ++i) {
+    LOG(INFO) << "i = " << i;
     MultiTest(this->NewLargeFetcher(),
               this->BigUrl(),
               ranges,

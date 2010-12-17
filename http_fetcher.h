@@ -86,6 +86,12 @@ class HttpFetcher {
   virtual void set_idle_seconds(int seconds) {}
   virtual void set_retry_seconds(int seconds) {}
 
+  ProxyResolver* proxy_resolver() const { return proxy_resolver_; }
+
+  // These are used for testing:
+  virtual void SetConnectionAsExpensive(bool is_expensive) {}
+  virtual void SetBuildType(bool is_official) {}
+
  protected:
   // The URL we're actively fetching from
   std::string url_;
@@ -122,13 +128,11 @@ class HttpFetcherDelegate {
   // Called if the fetcher seeks to a particular offset.
   virtual void SeekToOffset(off_t offset) {}
 
-  // Called when the transfer has completed successfully or been aborted through
-  // means other than TerminateTransfer. It's OK to destroy the |fetcher| object
-  // in this callback.
+  // When a transfer has completed, exactly one of these two methods will be
+  // called. TransferTerminated is called when the transfer has been aborted
+  // through TerminateTransfer. TransferComplete is called in all other
+  // situations. It's OK to destroy the |fetcher| object in this callback.
   virtual void TransferComplete(HttpFetcher* fetcher, bool successful) = 0;
-
-  // Called when the transfer has been aborted through TerminateTransfer. It's
-  // OK to destroy the |fetcher| object in this callback.
   virtual void TransferTerminated(HttpFetcher* fetcher) {}
 };
 

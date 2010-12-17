@@ -156,6 +156,7 @@ void LibcurlHttpFetcher::BeginTransfer(const std::string& url) {
   retry_count_ = 0;
   no_network_retry_count_ = 0;
   http_response_code_ = 0;
+  terminate_requested_ = false;
   ResolveProxiesForUrl(url);
   ResumeTransfer(url);
   CurlPerformOnce();
