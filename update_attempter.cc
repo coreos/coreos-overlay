@@ -289,6 +289,7 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
   if (code == kActionCodeSuccess) {
     utils::WriteFile(kUpdateCompletedMarker, "", 0);
     prefs_->SetInt64(kPrefsDeltaUpdateFailures, 0);
+    prefs_->SetString(kPrefsPreviousVersion, omaha_request_params_.app_version);
     DeltaPerformer::ResetUpdateProgress(prefs_, false);
     SetStatusAndNotify(UPDATE_STATUS_UPDATED_NEED_REBOOT);
 

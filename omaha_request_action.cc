@@ -93,11 +93,31 @@ string GetPingBody(int ping_active_days, int ping_roll_call_days) {
 string FormatRequest(const OmahaEvent* event,
                      const OmahaRequestParams& params,
                      int ping_active_days,
-                     int ping_roll_call_days) {
+                     int ping_roll_call_days,
+                     PrefsInterface* prefs) {
   string body;
   if (event == NULL) {
     body = GetPingBody(ping_active_days, ping_roll_call_days) +
         "        <o:updatecheck></o:updatecheck>\n";
+    // If this is the first update check after a reboot following a previous
+    // update, generate an event containing the previous version number. If the
+    // previous version preference file doesn't exist the event is still
+    // generated with a previous version of 0.0.0.0 -- this is relevant for
+    // older clients or new installs.
+    string prev_version;
+    if (!prefs->GetString(kPrefsPreviousVersion, &prev_version)) {
+      prev_version = "0.0.0.0";
+    }
+    if (!prev_version.empty()) {
+      body += StringPrintf(
+          "        <o:event eventtype=\"%d\" eventresult=\"%d\" "
+          "previousversion=\"%s\"></o:event>\n",
+          OmahaEvent::kTypeUpdateComplete,
+          OmahaEvent::kResultSuccessReboot,
+          prev_version.c_str());
+      LOG_IF(WARNING, !prefs->SetString(kPrefsPreviousVersion, ""))
+          << "Unable to reset the previous version.";
+    }
   } else {
     // The error code is an optional attribute so append it only if
     // the result is not success.
@@ -197,7 +217,8 @@ void OmahaRequestAction::PerformAction() {
   string request_post(FormatRequest(event_.get(),
                                     params_,
                                     ping_active_days_,
-                                    ping_roll_call_days_));
+                                    ping_roll_call_days_,
+                                    prefs_));
   http_fetcher_->SetPostData(request_post.data(), request_post.size());
   LOG(INFO) << "Posting an Omaha request to " << params_.update_url;
   LOG(INFO) << "Request: " << request_post;

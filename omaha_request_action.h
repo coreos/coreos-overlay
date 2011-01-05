@@ -70,6 +70,7 @@ struct OmahaEvent {
   enum Result {
     kResultError = 0,
     kResultSuccess = 1,
+    kResultSuccessReboot = 2,
   };
 
   OmahaEvent()

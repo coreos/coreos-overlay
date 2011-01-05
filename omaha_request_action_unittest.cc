@@ -521,7 +521,11 @@ TEST(OmahaRequestActionTest, ParseIntTest) {
 
 TEST(OmahaRequestActionTest, FormatUpdateCheckOutputTest) {
   vector<char> post_data;
-  ASSERT_FALSE(TestUpdateCheck(NULL,  // prefs
+  NiceMock<PrefsMock> prefs;
+  EXPECT_CALL(prefs, GetString(kPrefsPreviousVersion, _))
+      .WillOnce(DoAll(SetArgumentPointee<1>(string("")), Return(true)));
+  EXPECT_CALL(prefs, SetString(kPrefsPreviousVersion, _)).Times(0);
+  ASSERT_FALSE(TestUpdateCheck(&prefs,
                                kDefaultTestParams,
                                "invalid xml>",
                                -1,
@@ -536,6 +540,35 @@ TEST(OmahaRequestActionTest, FormatUpdateCheckOutputTest) {
   EXPECT_NE(post_str.find("hardware_class=\"OEM MODEL 09235 7471\""),
             string::npos);
   EXPECT_EQ(post_str.find("o:event"), string::npos);
+}
+
+TEST(OmahaRequestActionTest, FormatUpdateCheckPrevVersionOutputTest) {
+  vector<char> post_data;
+  NiceMock<PrefsMock> prefs;
+  EXPECT_CALL(prefs, GetString(kPrefsPreviousVersion, _))
+      .WillOnce(DoAll(SetArgumentPointee<1>(string("1.2.3.4")), Return(true)));
+  EXPECT_CALL(prefs, SetString(kPrefsPreviousVersion, ""))
+      .WillOnce(Return(true));
+  ASSERT_FALSE(TestUpdateCheck(&prefs,
+                               kDefaultTestParams,
+                               "invalid xml>",
+                               -1,
+                               kActionCodeOmahaRequestXMLParseError,
+                               NULL,  // response
+                               &post_data));
+  // convert post_data to string
+  string post_str(&post_data[0], post_data.size());
+  EXPECT_NE(post_str.find("        <o:ping a=\"-1\" r=\"-1\"></o:ping>\n"
+                          "        <o:updatecheck></o:updatecheck>\n"),
+            string::npos);
+  EXPECT_NE(post_str.find("hardware_class=\"OEM MODEL 09235 7471\""),
+            string::npos);
+  string prev_version_event = StringPrintf(
+      "        <o:event eventtype=\"%d\" eventresult=\"%d\" "
+      "previousversion=\"1.2.3.4\"></o:event>\n",
+      OmahaEvent::kTypeUpdateComplete,
+      OmahaEvent::kResultSuccessReboot);
+  EXPECT_NE(post_str.find(prev_version_event), string::npos);
 }
 
 TEST(OmahaRequestActionTest, FormatSuccessEventOutputTest) {
