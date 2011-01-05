@@ -220,7 +220,7 @@ bool ReadFilesystemMetadata(Graph* graph,
 
     // Due to bsdiff slowness, we're going to break each block group down
     // into metadata chunks and feed them to bsdiff.
-    __u32 num_chunks = 10;
+    __u32 num_chunks = 4;
     __u32 blocks_per_chunk = num_metadata_blocks / num_chunks;
     __u32 curr_block = bg_start_block;
     for (__u32 chunk = 0; chunk < num_chunks; chunk++) {
