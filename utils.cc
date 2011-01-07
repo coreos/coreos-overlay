@@ -8,6 +8,7 @@
 #include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -499,6 +500,27 @@ bool Reboot() {
   Subprocess::SynchronousExec(command, &rc);
   TEST_AND_RETURN_FALSE(rc == 0);
   return true;
+}
+
+namespace {
+// Do the actual trigger. We do it as a main-loop callback to (try to) get a
+// consistent stack trace.
+gboolean TriggerCrashReporterUpload(void* unused) {
+  pid_t pid = fork();
+  CHECK(pid >= 0) << "fork failed";  // fork() failed. Something is very wrong.
+  if (pid == 0) {
+    // We are the child. Crash.
+    abort();  // never returns
+  }
+  // We are the parent. Wait for child to terminate.
+  pid_t result = waitpid(pid, NULL, 0);
+  LOG_IF(ERROR, result < 0) << "waitpid() failed";
+  return FALSE;  // Don't call this callback again
+}
+}  // namespace {}
+
+void ScheduleCrashReporterUpload() {
+  g_idle_add(&TriggerCrashReporterUpload, NULL);
 }
 
 bool SetProcessPriority(ProcessPriority priority) {

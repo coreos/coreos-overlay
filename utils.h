@@ -141,6 +141,10 @@ const char* GetGErrorMessage(const GError* error);
 // Initiates a system reboot. Returns true on success, false otherwise.
 bool Reboot();
 
+// Schedules a Main Loop callback to trigger the crash reporter to perform an
+// upload as if this process had crashed.
+void ScheduleCrashReporterUpload();
+
 // Fuzzes an integer |value| randomly in the range:
 // [value - range / 2, value + range - range / 2]
 int FuzzInt(int value, unsigned int range);

@@ -255,4 +255,22 @@ TEST(UtilsTest, RunAsRootGetFilesystemSizeTest) {
   EXPECT_EQ(10 * 1024 * 1024 / 4096, block_count);
 }
 
+namespace {
+gboolean  TerminateScheduleCrashReporterUploadTest(void* arg) {
+  GMainLoop* loop = reinterpret_cast<GMainLoop*>(arg);
+  g_main_loop_quit(loop);
+  return FALSE;  // Don't call this callback again
+}
+}  // namespace {}
+
+TEST(UtilsTest, ScheduleCrashReporterUploadTest) {
+  // Not much to test. At least this tests for memory leaks, crashes,
+  // log errors.
+  GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
+  utils::ScheduleCrashReporterUpload();
+  g_timeout_add_seconds(1, &TerminateScheduleCrashReporterUploadTest, loop);
+  g_main_loop_run(loop);
+  g_main_loop_unref(loop);
+}
+
 }  // namespace chromeos_update_engine
