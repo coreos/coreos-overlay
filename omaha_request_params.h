@@ -86,19 +86,23 @@ class OmahaRequestDeviceParams : public OmahaRequestParams {
   // For unit-tests.
   void set_root(const std::string& root) { root_ = root; }
 
-  // Force build type for testing purposes.
-  void SetBuildTypeOfficial(bool is_official);
+  // Enforce security mode for testing purposes.
+  void SetLockDown(bool lock);
 
  private:
   FRIEND_TEST(OmahaRequestDeviceParamsTest, IsValidTrackTest);
+  FRIEND_TEST(OmahaRequestDeviceParamsTest, ShouldLockDownTest);
 
   // Use a validator that is a non-static member of this class so that its
   // inputs can be mocked in unit tests (e.g., build type for IsValidTrack).
   typedef bool(OmahaRequestDeviceParams::*ValueValidator)(
       const std::string&) const;
 
-  // Returns true if this is an official build, false otherwise.
-  bool IsOfficialBuild() const;
+  // Returns true if parameter values should be locked down for security
+  // reasons. If this is an official build running in normal boot mode, all
+  // values except the release track are parsed only from the read-only rootfs
+  // partition and the track values are restricted to a pre-approved set.
+  bool ShouldLockDown() const;
 
   // Returns true if |track| is a valid track, false otherwise. This method
   // restricts the track value only if the image is official (see
@@ -124,9 +128,9 @@ class OmahaRequestDeviceParams : public OmahaRequestParams {
   // When reading files, prepend root_ to the paths. Useful for testing.
   std::string root_;
 
-  // Force build type for testing purposes.
-  bool force_build_type_;
-  bool forced_official_build_;
+  // Force security lock down for testing purposes.
+  bool force_lock_down_;
+  bool forced_lock_down_;
 
   DISALLOW_COPY_AND_ASSIGN(OmahaRequestDeviceParams);
 };

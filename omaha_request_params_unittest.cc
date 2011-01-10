@@ -29,7 +29,7 @@ class OmahaRequestDeviceParamsTest : public ::testing::Test {
     ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir +
                         utils::kStatefulPartition + "/etc"));
     params_.set_root(string("./") + kTestDir);
-    params_.SetBuildTypeOfficial(false);
+    params_.SetLockDown(false);
   }
 
   virtual void TearDown() {
@@ -264,7 +264,7 @@ TEST_F(OmahaRequestDeviceParamsTest, OverrideTest) {
       kTestDir + utils::kStatefulPartition + "/etc/lsb-release",
       "CHROMEOS_RELEASE_BOARD=x86-generic\n"
       "CHROMEOS_RELEASE_TRACK=bartrack\n"
-      "CHROMEOS_AUSERVER=http://www.google.com"));
+      "CHROMEOS_AUSERVER=https://www.google.com"));
   OmahaRequestParams out;
   EXPECT_TRUE(DoTest(&out, "", ""));
   EXPECT_EQ("Chrome OS", out.os_platform);
@@ -276,7 +276,32 @@ TEST_F(OmahaRequestDeviceParamsTest, OverrideTest) {
   EXPECT_EQ("", out.hardware_class);
   EXPECT_FALSE(out.delta_okay);
   EXPECT_EQ("bartrack", out.app_track);
-  EXPECT_EQ("http://www.google.com", out.update_url);
+  EXPECT_EQ("https://www.google.com", out.update_url);
+}
+
+TEST_F(OmahaRequestDeviceParamsTest, OverrideLockDownTest) {
+  ASSERT_TRUE(WriteFileString(
+      kTestDir + "/etc/lsb-release",
+      "CHROMEOS_RELEASE_BOARD=arm-generic\n"
+      "CHROMEOS_RELEASE_FOO=bar\n"
+      "CHROMEOS_RELEASE_VERSION=0.2.2.3\n"
+      "CHROMEOS_RELEASE_TRACK=footrack\n"
+      "CHROMEOS_AUSERVER=https://www.google.com"));
+  ASSERT_TRUE(WriteFileString(
+      kTestDir + utils::kStatefulPartition + "/etc/lsb-release",
+      "CHROMEOS_RELEASE_BOARD=x86-generic\n"
+      "CHROMEOS_RELEASE_TRACK=dev-channel\n"
+      "CHROMEOS_AUSERVER=http://www.google.com"));
+  params_.SetLockDown(true);
+  OmahaRequestParams out;
+  EXPECT_TRUE(DoTest(&out, "", ""));
+  EXPECT_EQ("arm-generic", out.os_board);
+  EXPECT_EQ("{87efface-864d-49a5-9bb3-4b050a7c227a}", out.app_id);
+  EXPECT_EQ("0.2.2.3", out.app_version);
+  EXPECT_EQ("", out.hardware_class);
+  EXPECT_FALSE(out.delta_okay);
+  EXPECT_EQ("dev-channel", out.app_track);
+  EXPECT_EQ("https://www.google.com", out.update_url);
 }
 
 TEST_F(OmahaRequestDeviceParamsTest, OverrideSameTrackTest) {
@@ -293,12 +318,9 @@ TEST_F(OmahaRequestDeviceParamsTest, OverrideSameTrackTest) {
       "CHROMEOS_RELEASE_TRACK=footrack"));
   OmahaRequestParams out;
   EXPECT_TRUE(DoTest(&out, "", ""));
-  EXPECT_EQ("Chrome OS", out.os_platform);
-  EXPECT_EQ(string("0.2.2.3_") + GetMachineType(), out.os_sp);
   EXPECT_EQ("x86-generic", out.os_board);
   EXPECT_EQ("{87efface-864d-49a5-9bb3-4b050a7c227a}", out.app_id);
   EXPECT_EQ("0.2.2.3", out.app_version);
-  EXPECT_EQ("en-US", out.app_lang);
   EXPECT_EQ("", out.hardware_class);
   EXPECT_TRUE(out.delta_okay);
   EXPECT_EQ("footrack", out.app_track);
@@ -316,7 +338,7 @@ TEST_F(OmahaRequestDeviceParamsTest, SetTrackSimpleTest) {
   {
     OmahaRequestDeviceParams params;
     params.set_root(string("./") + kTestDir);
-    params.SetBuildTypeOfficial(false);
+    params.SetLockDown(false);
     EXPECT_TRUE(params.Init("", ""));
     params.SetTrack("zootrack");
   }
@@ -341,7 +363,7 @@ TEST_F(OmahaRequestDeviceParamsTest, SetTrackPreserveTest) {
   {
     OmahaRequestDeviceParams params;
     params.set_root(string("./") + kTestDir);
-    params.SetBuildTypeOfficial(false);
+    params.SetLockDown(false);
     EXPECT_TRUE(params.Init("", ""));
     params.SetTrack("zootrack");
   }
@@ -362,7 +384,7 @@ TEST_F(OmahaRequestDeviceParamsTest, SetTrackInvalidTest) {
   {
     OmahaRequestDeviceParams params;
     params.set_root(string("./") + kTestDir);
-    params.SetBuildTypeOfficial(true);
+    params.SetLockDown(true);
     EXPECT_TRUE(params.Init("", ""));
     params.SetTrack("zootrack");
   }
@@ -373,41 +395,18 @@ TEST_F(OmahaRequestDeviceParamsTest, SetTrackInvalidTest) {
 }
 
 TEST_F(OmahaRequestDeviceParamsTest, IsValidTrackTest) {
-  params_.SetBuildTypeOfficial(true);
+  params_.SetLockDown(true);
   EXPECT_TRUE(params_.IsValidTrack("canary-channel"));
   EXPECT_TRUE(params_.IsValidTrack("beta-channel"));
   EXPECT_TRUE(params_.IsValidTrack("dev-channel"));
   EXPECT_FALSE(params_.IsValidTrack("some-channel"));
   EXPECT_FALSE(params_.IsValidTrack(""));
-  params_.SetBuildTypeOfficial(false);
+  params_.SetLockDown(false);
   EXPECT_TRUE(params_.IsValidTrack("canary-channel"));
   EXPECT_TRUE(params_.IsValidTrack("beta-channel"));
   EXPECT_TRUE(params_.IsValidTrack("dev-channel"));
   EXPECT_TRUE(params_.IsValidTrack("some-channel"));
   EXPECT_TRUE(params_.IsValidTrack(""));
-}
-
-TEST_F(OmahaRequestDeviceParamsTest, InvalidTrackTest) {
-  ASSERT_TRUE(WriteFileString(
-      kTestDir + "/etc/lsb-release",
-      "CHROMEOS_RELEASE_BOARD=arm-generic\n"
-      "CHROMEOS_RELEASE_FOO=bar\n"
-      "CHROMEOS_RELEASE_VERSION=0.2.2.3\n"
-      "CHROMEOS_RELEASE_TRACK=footrack\n"
-      "CHROMEOS_AUSERVER=http://www.google.com"));
-  params_.SetBuildTypeOfficial(true);
-  OmahaRequestParams out;
-  EXPECT_TRUE(DoTest(&out, "", ""));
-  EXPECT_EQ("Chrome OS", out.os_platform);
-  EXPECT_EQ(string("0.2.2.3_") + GetMachineType(), out.os_sp);
-  EXPECT_EQ("arm-generic", out.os_board);
-  EXPECT_EQ("{87efface-864d-49a5-9bb3-4b050a7c227a}", out.app_id);
-  EXPECT_EQ("0.2.2.3", out.app_version);
-  EXPECT_EQ("en-US", out.app_lang);
-  EXPECT_EQ("", out.hardware_class);
-  EXPECT_TRUE(out.delta_okay);
-  EXPECT_EQ("", out.app_track);
-  EXPECT_EQ("http://www.google.com", out.update_url);
 }
 
 TEST_F(OmahaRequestDeviceParamsTest, ValidTrackTest) {
@@ -418,7 +417,7 @@ TEST_F(OmahaRequestDeviceParamsTest, ValidTrackTest) {
       "CHROMEOS_RELEASE_VERSION=0.2.2.3\n"
       "CHROMEOS_RELEASE_TRACK=dev-channel\n"
       "CHROMEOS_AUSERVER=http://www.google.com"));
-  params_.SetBuildTypeOfficial(true);
+  params_.SetLockDown(true);
   OmahaRequestParams out;
   EXPECT_TRUE(DoTest(&out, "", ""));
   EXPECT_EQ("Chrome OS", out.os_platform);
@@ -431,6 +430,10 @@ TEST_F(OmahaRequestDeviceParamsTest, ValidTrackTest) {
   EXPECT_TRUE(out.delta_okay);
   EXPECT_EQ("dev-channel", out.app_track);
   EXPECT_EQ("http://www.google.com", out.update_url);
+}
+
+TEST_F(OmahaRequestDeviceParamsTest, ShouldLockDownTest) {
+  EXPECT_FALSE(params_.ShouldLockDown());
 }
 
 }  // namespace chromeos_update_engine

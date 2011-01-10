@@ -38,27 +38,29 @@ const char* const OmahaRequestParams::kUpdateUrl(
 static const char kHWIDPath[] = "/sys/devices/platform/chromeos_acpi/HWID";
 
 OmahaRequestDeviceParams::OmahaRequestDeviceParams() :
-    force_build_type_(false),
-    forced_official_build_(false) {}
+    force_lock_down_(false),
+    forced_lock_down_(false) {}
 
 bool OmahaRequestDeviceParams::Init(const std::string& in_app_version,
                                     const std::string& in_update_url) {
+  bool stateful_override = !ShouldLockDown();
   os_platform = OmahaRequestParams::kOsPlatform;
   os_version = OmahaRequestParams::kOsVersion;
   app_version = in_app_version.empty() ?
-      GetLsbValue("CHROMEOS_RELEASE_VERSION", "", NULL, true) : in_app_version;
+      GetLsbValue("CHROMEOS_RELEASE_VERSION", "", NULL, stateful_override) :
+      in_app_version;
   os_sp = app_version + "_" + GetMachineType();
-  os_board = GetLsbValue("CHROMEOS_RELEASE_BOARD", "", NULL, true);
+  os_board = GetLsbValue("CHROMEOS_RELEASE_BOARD", "", NULL, stateful_override);
   app_id = GetLsbValue("CHROMEOS_RELEASE_APPID",
                        OmahaRequestParams::kAppId,
                        NULL,
-                       true);
+                       stateful_override);
   app_lang = "en-US";
   app_track = GetLsbValue(
       kUpdateTrackKey,
       "",
       &chromeos_update_engine::OmahaRequestDeviceParams::IsValidTrack,
-      true);
+      true);  // stateful_override
   hardware_class = GetHardwareClass();
   struct stat stbuf;
 
@@ -81,15 +83,15 @@ bool OmahaRequestDeviceParams::Init(const std::string& in_app_version,
   const string rootfs_track = GetLsbValue(
       kUpdateTrackKey,
       "",
-      &chromeos_update_engine::OmahaRequestDeviceParams::IsValidTrack,
-      false);
+      NULL,  // No need to validate the read-only rootfs track.
+      false);  // stateful_override
   delta_okay = delta_okay && rootfs_track == app_track;
 
   update_url = in_update_url.empty() ?
       GetLsbValue("CHROMEOS_AUSERVER",
                   OmahaRequestParams::kUpdateUrl,
                   NULL,
-                  true) :
+                  stateful_override) :
       in_update_url;
   return true;
 }
@@ -173,8 +175,11 @@ string OmahaRequestDeviceParams::GetHardwareClass() const {
   return hwid;
 }
 
-bool OmahaRequestDeviceParams::IsOfficialBuild() const {
-  return force_build_type_ ? forced_official_build_ : utils::IsOfficialBuild();
+bool OmahaRequestDeviceParams::ShouldLockDown() const {
+  if (force_lock_down_) {
+    return forced_lock_down_;
+  }
+  return utils::IsOfficialBuild() && utils::IsNormalBootMode();
 }
 
 bool OmahaRequestDeviceParams::IsValidTrack(const std::string& track) const {
@@ -183,7 +188,7 @@ bool OmahaRequestDeviceParams::IsValidTrack(const std::string& track) const {
     "beta-channel",
     "dev-channel",
   };
-  if (!IsOfficialBuild()) {
+  if (!ShouldLockDown()) {
     return true;
   }
   for (size_t t = 0; t < arraysize(kValidTracks); ++t) {
@@ -194,9 +199,9 @@ bool OmahaRequestDeviceParams::IsValidTrack(const std::string& track) const {
   return false;
 }
 
-void OmahaRequestDeviceParams::SetBuildTypeOfficial(bool is_official) {
-  force_build_type_ = true;
-  forced_official_build_ = is_official;
+void OmahaRequestDeviceParams::SetLockDown(bool lock) {
+  force_lock_down_ = true;
+  forced_lock_down_ = lock;
 }
 
 }  // namespace chromeos_update_engine
