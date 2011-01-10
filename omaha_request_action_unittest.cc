@@ -603,27 +603,7 @@ TEST(OmahaRequestActionTest, FormatErrorEventOutputTest) {
       "errorcode=\"%d\"></o:event>\n",
       OmahaEvent::kTypeDownloadComplete,
       OmahaEvent::kResultError,
-      kActionCodeError);
-  EXPECT_NE(post_str.find(expected_event), string::npos);
-  EXPECT_EQ(post_str.find("o:updatecheck"), string::npos);
-}
-
-TEST(OmahaRequestActionTest, FormatEventOutputTest) {
-  vector<char> post_data;
-  TestEvent(kDefaultTestParams,
-            new OmahaEvent(OmahaEvent::kTypeDownloadComplete,
-                           OmahaEvent::kResultError,
-                           kActionCodeError),
-            "invalid xml>",
-            &post_data);
-  // convert post_data to string
-  string post_str(&post_data[0], post_data.size());
-  string expected_event = StringPrintf(
-      "        <o:event eventtype=\"%d\" eventresult=\"%d\" "
-      "errorcode=\"%d\"></o:event>\n",
-      OmahaEvent::kTypeDownloadComplete,
-      OmahaEvent::kResultError,
-      kActionCodeError);
+      kActionCodeError | kActionCodeBootModeFlag);
   EXPECT_NE(post_str.find(expected_event), string::npos);
   EXPECT_EQ(post_str.find("o:updatecheck"), string::npos);
 }

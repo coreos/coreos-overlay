@@ -119,11 +119,15 @@ string FormatRequest(const OmahaEvent* event,
           << "Unable to reset the previous version.";
     }
   } else {
-    // The error code is an optional attribute so append it only if
-    // the result is not success.
+    // The error code is an optional attribute so append it only if the result
+    // is not success.
     string error_code;
     if (event->result != OmahaEvent::kResultSuccess) {
-      error_code = StringPrintf(" errorcode=\"%d\"", event->error_code);
+      int code = event->error_code;
+      if (!utils::IsNormalBootMode()) {
+        code |= kActionCodeBootModeFlag;
+      }
+      error_code = StringPrintf(" errorcode=\"%d\"", code);
     }
     body = StringPrintf(
         "        <o:event eventtype=\"%d\" eventresult=\"%d\"%s></o:event>\n",

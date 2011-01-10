@@ -46,6 +46,9 @@ enum ActionExitCode {
   kActionCodeOmahaRequestNoUpdateCheckStatus = 203,
   kActionCodeOmahaRequestBadUpdateCheckStatus = 204,
   kActionCodeOmahaRequestHTTPResponseBase = 2000,  // + HTTP response code
+
+  // Bit flags.
+  kActionCodeBootModeFlag = 1 << 31,  // Set if boot mode not normal.
 };
 
 class AbstractAction;

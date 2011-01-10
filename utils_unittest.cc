@@ -29,6 +29,11 @@ TEST(UtilsTest, IsOfficialBuild) {
   EXPECT_TRUE(utils::IsOfficialBuild());
 }
 
+TEST(UtilsTest, IsNormalBootMode) {
+  // Pretty lame test...
+  EXPECT_FALSE(utils::IsNormalBootMode());
+}
+
 TEST(UtilsTest, NormalizePathTest) {
   EXPECT_EQ("", utils::NormalizePath("", false));
   EXPECT_EQ("", utils::NormalizePath("", true));

@@ -25,6 +25,7 @@
 #include <base/rand_util.h>
 #include <base/string_util.h>
 #include <base/logging.h>
+#include <cros_boot_mode/boot_mode.h>
 #include <rootdev/rootdev.h>
 
 #include "update_engine/file_writer.h"
@@ -48,6 +49,15 @@ bool IsOfficialBuild() {
 
 bool IsOOBEComplete() {
   return file_util::PathExists(FilePath(kOOBECompletedMarker));
+}
+
+bool IsNormalBootMode() {
+  cros_boot_mode::BootMode mode;
+  mode.Initialize(false,  // unsupported_is_developer
+                  true);  // use_bootloader
+  bool normal = mode.mode() == cros_boot_mode::BootMode::kNormal;
+  LOG_IF(INFO, !normal) << "Boot mode not normal: " << mode.mode_text();
+  return normal;
 }
 
 bool WriteFile(const char* path, const char* data, int data_len) {
