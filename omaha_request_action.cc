@@ -348,6 +348,11 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
   // Events are best effort transactions -- assume they always succeed.
   if (IsEvent()) {
     CHECK(!HasOutputPipe()) << "No output pipe allowed for event requests.";
+    if (event_->result == OmahaEvent::kResultError && successful &&
+        utils::IsOfficialBuild()) {
+      LOG(INFO) << "Signalling Crash Reporter.";
+      utils::ScheduleCrashReporterUpload();
+    }
     completer.set_code(kActionCodeSuccess);
     return;
   }

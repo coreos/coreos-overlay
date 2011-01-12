@@ -282,8 +282,6 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
 
   if (status_ == UPDATE_STATUS_REPORTING_ERROR_EVENT) {
     LOG(INFO) << "Error event sent.";
-    // Tell crash reporter there was a problem.
-    utils::ScheduleCrashReporterUpload();
     SetStatusAndNotify(UPDATE_STATUS_IDLE);
     return;
   }
