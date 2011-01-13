@@ -546,7 +546,7 @@ TEST(OmahaRequestActionTest, FormatUpdateCheckPrevVersionOutputTest) {
   vector<char> post_data;
   NiceMock<PrefsMock> prefs;
   EXPECT_CALL(prefs, GetString(kPrefsPreviousVersion, _))
-      .WillOnce(DoAll(SetArgumentPointee<1>(string("1.2.3.4")), Return(true)));
+      .WillOnce(DoAll(SetArgumentPointee<1>(string("1.2>3.4")), Return(true)));
   EXPECT_CALL(prefs, SetString(kPrefsPreviousVersion, ""))
       .WillOnce(Return(true));
   ASSERT_FALSE(TestUpdateCheck(&prefs,
@@ -565,7 +565,7 @@ TEST(OmahaRequestActionTest, FormatUpdateCheckPrevVersionOutputTest) {
             string::npos);
   string prev_version_event = StringPrintf(
       "        <o:event eventtype=\"%d\" eventresult=\"%d\" "
-      "previousversion=\"1.2.3.4\"></o:event>\n",
+      "previousversion=\"1.2&gt;3.4\"></o:event>\n",
       OmahaEvent::kTypeUpdateComplete,
       OmahaEvent::kResultSuccessReboot);
   EXPECT_NE(post_str.find(prev_version_event), string::npos);

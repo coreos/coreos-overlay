@@ -114,7 +114,7 @@ string FormatRequest(const OmahaEvent* event,
           "previousversion=\"%s\"></o:event>\n",
           OmahaEvent::kTypeUpdateComplete,
           OmahaEvent::kResultSuccessReboot,
-          prev_version.c_str());
+          XmlEncode(prev_version).c_str());
       LOG_IF(WARNING, !prefs->SetString(kPrefsPreviousVersion, ""))
           << "Unable to reset the previous version.";
     }
