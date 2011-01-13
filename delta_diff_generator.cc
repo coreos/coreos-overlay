@@ -1426,26 +1426,11 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
   // Signatures appear at the end of the blobs. Note the offset in the
   // manifest
   if (!private_key_path.empty()) {
-    LOG(INFO) << "Making room for signature in file";
-    manifest.set_signatures_offset(next_blob_offset);
-    LOG(INFO) << "set? " << manifest.has_signatures_offset();
-    // Add a dummy op at the end to appease older clients
-    DeltaArchiveManifest_InstallOperation* dummy_op =
-        manifest.add_kernel_install_operations();
-    dummy_op->set_type(DeltaArchiveManifest_InstallOperation_Type_REPLACE);
-    dummy_op->set_data_offset(next_blob_offset);
-    manifest.set_signatures_offset(next_blob_offset);
     uint64_t signature_blob_length = 0;
     TEST_AND_RETURN_FALSE(
         PayloadSigner::SignatureBlobLength(private_key_path,
                                            &signature_blob_length));
-    dummy_op->set_data_length(signature_blob_length);
-    manifest.set_signatures_size(signature_blob_length);
-    Extent* dummy_extent = dummy_op->add_dst_extents();
-    // Tell the dummy op to write this data to a big sparse hole
-    dummy_extent->set_start_block(kSparseHole);
-    dummy_extent->set_num_blocks((signature_blob_length + kBlockSize - 1) /
-                                 kBlockSize);
+    AddSignatureOp(next_blob_offset, signature_blob_length, &manifest);
   }
 
   TEST_AND_RETURN_FALSE(InitializePartitionInfos(old_kernel_part,
@@ -1595,6 +1580,27 @@ bool DeltaDiffGenerator::AddInstallOpToBlocksVector(
     }
   }
   return true;
+}
+
+void DeltaDiffGenerator::AddSignatureOp(uint64_t signature_blob_offset,
+                                        uint64_t signature_blob_length,
+                                        DeltaArchiveManifest* manifest) {
+  LOG(INFO) << "Making room for signature in file";
+  manifest->set_signatures_offset(signature_blob_offset);
+  LOG(INFO) << "set? " << manifest->has_signatures_offset();
+  // Add a dummy op at the end to appease older clients
+  DeltaArchiveManifest_InstallOperation* dummy_op =
+      manifest->add_kernel_install_operations();
+  dummy_op->set_type(DeltaArchiveManifest_InstallOperation_Type_REPLACE);
+  dummy_op->set_data_offset(signature_blob_offset);
+  manifest->set_signatures_offset(signature_blob_offset);
+  dummy_op->set_data_length(signature_blob_length);
+  manifest->set_signatures_size(signature_blob_length);
+  Extent* dummy_extent = dummy_op->add_dst_extents();
+  // Tell the dummy op to write this data to a big sparse hole
+  dummy_extent->set_start_block(kSparseHole);
+  dummy_extent->set_num_blocks((signature_blob_length + kBlockSize - 1) /
+                               kBlockSize);
 }
 
 const char* const kBsdiffPath = "bsdiff";

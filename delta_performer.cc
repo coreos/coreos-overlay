@@ -194,6 +194,43 @@ void LogPartitionInfo(const DeltaArchiveManifest& manifest) {
 
 }  // namespace {}
 
+DeltaPerformer::MetadataParseResult DeltaPerformer::ParsePayloadMetadata(
+    const std::vector<char>& payload,
+    DeltaArchiveManifest* manifest,
+    uint64_t* metadata_size) {
+  if (payload.size() < strlen(kDeltaMagic) +
+      kDeltaVersionLength + kDeltaProtobufLengthLength) {
+    // Don't have enough bytes to know the protobuf length.
+    return kMetadataParseInsufficientData;
+  }
+  if (memcmp(payload.data(), kDeltaMagic, strlen(kDeltaMagic)) != 0) {
+    LOG(ERROR) << "Bad payload format -- invalid delta magic.";
+    return kMetadataParseError;
+  }
+  uint64_t protobuf_length;
+  COMPILE_ASSERT(sizeof(protobuf_length) == kDeltaProtobufLengthLength,
+                 protobuf_length_size_mismatch);
+  memcpy(&protobuf_length,
+         &payload[strlen(kDeltaMagic) + kDeltaVersionLength],
+         kDeltaProtobufLengthLength);
+  protobuf_length = be64toh(protobuf_length);  // switch big endian to host
+  if (payload.size() < strlen(kDeltaMagic) + kDeltaVersionLength +
+      kDeltaProtobufLengthLength + protobuf_length) {
+    return kMetadataParseInsufficientData;
+  }
+  // We have the full proto buffer in |payload|. Parse it.
+  const int offset = strlen(kDeltaMagic) + kDeltaVersionLength +
+      kDeltaProtobufLengthLength;
+  if (!manifest->ParseFromArray(&payload[offset], protobuf_length)) {
+    LOG(ERROR) << "Unable to parse manifest in update file.";
+    return kMetadataParseError;
+  }
+  *metadata_size = strlen(kDeltaMagic) + kDeltaVersionLength +
+      kDeltaProtobufLengthLength + protobuf_length;
+  return kMetadataParseSuccess;
+}
+
+
 // Wrapper around write. Returns bytes written on success or
 // -errno on error.
 // This function performs as many actions as it can, given the amount of
@@ -203,37 +240,17 @@ ssize_t DeltaPerformer::Write(const void* bytes, size_t count) {
   buffer_.insert(buffer_.end(), c_bytes, c_bytes + count);
 
   if (!manifest_valid_) {
-    if (buffer_.size() < strlen(kDeltaMagic) +
-        kDeltaVersionLength + kDeltaProtobufLengthLength) {
-      // Don't have enough bytes to know the protobuf length.
-      return count;
-    }
-    if (memcmp(buffer_.data(), kDeltaMagic, strlen(kDeltaMagic)) != 0) {
-      LOG(ERROR) << "Bad payload format -- invalid delta magic.";
+    MetadataParseResult result = ParsePayloadMetadata(buffer_,
+                                                      &manifest_,
+                                                      &manifest_metadata_size_);
+    if (result == kMetadataParseError) {
       return -EINVAL;
     }
-    uint64_t protobuf_length;
-    COMPILE_ASSERT(sizeof(protobuf_length) == kDeltaProtobufLengthLength,
-                   protobuf_length_size_mismatch);
-    memcpy(&protobuf_length,
-           &buffer_[strlen(kDeltaMagic) + kDeltaVersionLength],
-           kDeltaProtobufLengthLength);
-    protobuf_length = be64toh(protobuf_length);  // switch big endian to host
-    if (buffer_.size() < strlen(kDeltaMagic) + kDeltaVersionLength +
-        kDeltaProtobufLengthLength + protobuf_length) {
+    if (result == kMetadataParseInsufficientData) {
       return count;
-    }
-    // We have the full proto buffer in buffer_. Parse it.
-    const int offset = strlen(kDeltaMagic) + kDeltaVersionLength +
-        kDeltaProtobufLengthLength;
-    if (!manifest_.ParseFromArray(&buffer_[offset], protobuf_length)) {
-      LOG(ERROR) << "Unable to parse manifest in update file.";
-      return -EINVAL;
     }
     // Remove protobuf and header info from buffer_, so buffer_ contains
     // just data blobs
-    manifest_metadata_size_ = strlen(kDeltaMagic) + kDeltaVersionLength +
-        kDeltaProtobufLengthLength + protobuf_length;
     DiscardBufferHeadBytes(manifest_metadata_size_);
     LOG_IF(WARNING, !prefs_->SetInt64(kPrefsManifestMetadataSize,
                                       manifest_metadata_size_))

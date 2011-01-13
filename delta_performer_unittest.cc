@@ -92,8 +92,11 @@ bool WriteSparseFile(const string& path, off_t size) {
   TEST_AND_RETURN_FALSE_ERRNO(return_code == 0);
   return true;
 }
+}  // namespace {}
 
-void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop) {
+namespace {
+void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop,
+                      bool post_sign) {
   string a_img, b_img;
   EXPECT_TRUE(utils::MakeTempFile("/tmp/a_img.XXXXXX", &a_img, NULL));
   ScopedPathUnlinker a_img_unlinker(a_img);
@@ -208,7 +211,33 @@ void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop) {
             full_kernel ? "" : old_kernel,
             new_kernel,
             delta_path,
-            kUnittestPrivateKeyPath));
+            post_sign ? "" : kUnittestPrivateKeyPath));
+  }
+
+  if (post_sign) {
+    int signature_size;
+    {
+      const vector<char> data(1, 'x');
+      vector<char> hash;
+      ASSERT_TRUE(OmahaHashCalculator::RawHashOfData(data, &hash));
+      vector<char> signature;
+      ASSERT_TRUE(PayloadSigner::SignHash(hash,
+                                          kUnittestPrivateKeyPath,
+                                          &signature));
+      signature_size = signature.size();
+    }
+
+    vector<char> hash;
+    ASSERT_TRUE(PayloadSigner::HashPayloadForSigning(delta_path,
+                                                     signature_size,
+                                                     &hash));
+    vector<char> signature;
+    ASSERT_TRUE(PayloadSigner::SignHash(hash,
+                                        kUnittestPrivateKeyPath,
+                                        &signature));
+    ASSERT_TRUE(PayloadSigner::AddSignatureToPayload(delta_path,
+                                                     signature,
+                                                     delta_path));
   }
 
   // Read delta into memory.
@@ -351,19 +380,23 @@ void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop) {
 }
 
 TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
-  DoSmallImageTest(false, false, false);
+  DoSmallImageTest(false, false, false, false);
 }
 
 TEST(DeltaPerformerTest, RunAsRootFullKernelSmallImageTest) {
-  DoSmallImageTest(true, false, false);
+  DoSmallImageTest(true, false, false, false);
 }
 
 TEST(DeltaPerformerTest, RunAsRootFullSmallImageTest) {
-  DoSmallImageTest(true, true, false);
+  DoSmallImageTest(true, true, false, false);
 }
 
 TEST(DeltaPerformerTest, RunAsRootNoopSmallImageTest) {
-  DoSmallImageTest(false, false, true);
+  DoSmallImageTest(false, false, true, false);
+}
+
+TEST(DeltaPerformerTest, RunAsRootSmallImagePostSignTest) {
+  DoSmallImageTest(false, false, false, true);
 }
 
 TEST(DeltaPerformerTest, BadDeltaMagicTest) {

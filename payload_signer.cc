@@ -8,6 +8,8 @@
 #include <base/string_util.h>
 #include <openssl/pem.h>
 
+#include "update_engine/delta_diff_generator.h"
+#include "update_engine/delta_performer.h"
 #include "update_engine/omaha_hash_calculator.h"
 #include "update_engine/subprocess.h"
 #include "update_engine/update_metadata.pb.h"
@@ -20,9 +22,76 @@ namespace chromeos_update_engine {
 
 const uint32_t kSignatureMessageVersion = 1;
 
-bool PayloadSigner::SignPayload(const string& unsigned_payload_path,
-                                const string& private_key_path,
-                                vector<char>* out_signature_blob) {
+namespace {
+// Given a raw |signature|, packs it into a protobuf and serializes it into a
+// binary blob. Returns true on success, false otherwise.
+bool ConvertSignatureToProtobufBlob(const vector<char> signature,
+                                    vector<char>* out_signature_blob) {
+  // Pack it into a protobuf
+  Signatures out_message;
+  Signatures_Signature* sig_message = out_message.add_signatures();
+  sig_message->set_version(kSignatureMessageVersion);
+  sig_message->set_data(signature.data(), signature.size());
+
+  // Serialize protobuf
+  string serialized;
+  TEST_AND_RETURN_FALSE(out_message.AppendToString(&serialized));
+  out_signature_blob->insert(out_signature_blob->end(),
+                             serialized.begin(),
+                             serialized.end());
+  LOG(INFO) << "Signature blob size: " << out_signature_blob->size();
+  return true;
+}
+
+// Given an unsigned payload under |payload_path| and the |signature_blob_size|
+// generates an updated payload that includes a dummy signature op in its
+// manifest. Returns true on success, false otherwise.
+bool AddSignatureOpToPayload(const std::string& payload_path,
+                             int signature_blob_size,
+                             vector<char>* out_payload) {
+  const int kProtobufOffset = 20;
+  const int kProtobufSizeOffset = 12;
+
+  vector<char> payload;
+  // Loads the payload and parses the manifest.
+  TEST_AND_RETURN_FALSE(utils::ReadFile(payload_path, &payload));
+  LOG(INFO) << "Original payload size: " << payload.size();
+  uint64_t metadata_size;
+  DeltaArchiveManifest manifest;
+  TEST_AND_RETURN_FALSE(DeltaPerformer::ParsePayloadMetadata(
+      payload, &manifest, &metadata_size) ==
+                        DeltaPerformer::kMetadataParseSuccess);
+  LOG(INFO) << "Metadata size: " << metadata_size;
+  TEST_AND_RETURN_FALSE(!manifest.has_signatures_offset() &&
+                        !manifest.has_signatures_size());
+
+  // Updates the manifest to include the signature operation.
+  DeltaDiffGenerator::AddSignatureOp(payload.size() - metadata_size,
+                                     signature_blob_size,
+                                     &manifest);
+
+  // Updates the payload to include the new manifest.
+  string serialized_manifest;
+  TEST_AND_RETURN_FALSE(manifest.AppendToString(&serialized_manifest));
+  LOG(INFO) << "Updated protobuf size: " << serialized_manifest.size();
+  payload.erase(payload.begin() + kProtobufOffset,
+                payload.begin() + metadata_size);
+  payload.insert(payload.begin() + kProtobufOffset,
+                 serialized_manifest.begin(),
+                 serialized_manifest.end());
+
+  // Updates the protobuf size.
+  uint64_t size_be = htobe64(serialized_manifest.size());
+  memcpy(&payload[kProtobufSizeOffset], &size_be, sizeof(size_be));
+  LOG(INFO) << "Updated payload size: " << payload.size();
+  out_payload->swap(payload);
+  return true;
+}
+}  // namespace {}
+
+bool PayloadSigner::SignHash(const vector<char>& hash,
+                             const string& private_key_path,
+                             vector<char>* out_signature) {
   string sig_path;
   TEST_AND_RETURN_FALSE(
       utils::MakeTempFile("/tmp/signature.XXXXXX", &sig_path, NULL));
@@ -32,18 +101,9 @@ bool PayloadSigner::SignPayload(const string& unsigned_payload_path,
   TEST_AND_RETURN_FALSE(
       utils::MakeTempFile("/tmp/hash.XXXXXX", &hash_path, NULL));
   ScopedPathUnlinker hash_path_unlinker(hash_path);
-
-  vector<char> hash_data;
-  {
-    vector<char> payload;
-    // TODO(adlr): Read file in chunks. Not urgent as this runs on the server.
-    TEST_AND_RETURN_FALSE(utils::ReadFile(unsigned_payload_path, &payload));
-    TEST_AND_RETURN_FALSE(OmahaHashCalculator::RawHashOfData(payload,
-                                                             &hash_data));
-  }
   TEST_AND_RETURN_FALSE(utils::WriteFile(hash_path.c_str(),
-                                         &hash_data[0],
-                                         hash_data.size()));
+                                         hash.data(),
+                                         hash.size()));
 
   // This runs on the server, so it's okay to cop out and call openssl
   // executable rather than properly use the library
@@ -61,19 +121,22 @@ bool PayloadSigner::SignPayload(const string& unsigned_payload_path,
 
   vector<char> signature;
   TEST_AND_RETURN_FALSE(utils::ReadFile(sig_path, &signature));
+  out_signature->swap(signature);
+  return true;
+}
 
-  // Pack it into a protobuf
-  Signatures out_message;
-  Signatures_Signature* sig_message = out_message.add_signatures();
-  sig_message->set_version(kSignatureMessageVersion);
-  sig_message->set_data(signature.data(), signature.size());
+bool PayloadSigner::SignPayload(const string& unsigned_payload_path,
+                                const string& private_key_path,
+                                vector<char>* out_signature_blob) {
+  vector<char> hash_data;
+  TEST_AND_RETURN_FALSE(OmahaHashCalculator::RawHashOfFile(
+      unsigned_payload_path, -1, &hash_data) ==
+                        utils::FileSize(unsigned_payload_path));
 
-  // Serialize protobuf
-  string serialized;
-  TEST_AND_RETURN_FALSE(out_message.AppendToString(&serialized));
-  out_signature_blob->insert(out_signature_blob->end(),
-                             serialized.begin(),
-                             serialized.end());
+  vector<char> signature;
+  TEST_AND_RETURN_FALSE(SignHash(hash_data, private_key_path, &signature));
+  TEST_AND_RETURN_FALSE(ConvertSignatureToProtobufBlob(signature,
+                                                       out_signature_blob));
   return true;
 }
 
@@ -151,6 +214,50 @@ bool PayloadSigner::VerifySignature(const std::vector<char>& signature_blob,
                         decrypt_size <= static_cast<int>(hash_data.size()));
   hash_data.resize(decrypt_size);
   out_hash_data->swap(hash_data);
+  return true;
+}
+
+bool PayloadSigner::HashPayloadForSigning(const std::string& payload_path,
+                                          int signature_size,
+                                          vector<char>* out_hash_data) {
+  // TODO(petkov): Reduce memory usage -- the payload is manipulated in memory.
+
+  // Loads the payload and adds the signature op to it.
+  vector<char> signature(signature_size, 0);
+  vector<char> signature_blob;
+  TEST_AND_RETURN_FALSE(ConvertSignatureToProtobufBlob(signature,
+                                                       &signature_blob));
+  vector<char> payload;
+  TEST_AND_RETURN_FALSE(AddSignatureOpToPayload(payload_path,
+                                                signature_blob.size(),
+                                                &payload));
+  // Calculates the hash on the updated payload. Note that the payload includes
+  // the signature op but doesn't include the signature blob at the end.
+  TEST_AND_RETURN_FALSE(OmahaHashCalculator::RawHashOfData(payload,
+                                                           out_hash_data));
+  return true;
+}
+
+bool PayloadSigner::AddSignatureToPayload(const string& payload_path,
+                                          const vector<char>& signature,
+                                          const string& signed_payload_path) {
+  // TODO(petkov): Reduce memory usage -- the payload is manipulated in memory.
+
+  // Loads the payload and adds the signature op to it.
+  vector<char> signature_blob;
+  TEST_AND_RETURN_FALSE(ConvertSignatureToProtobufBlob(signature,
+                                                       &signature_blob));
+  vector<char> payload;
+  TEST_AND_RETURN_FALSE(AddSignatureOpToPayload(payload_path,
+                                                signature_blob.size(),
+                                                &payload));
+  // Appends the signature blob to the end of the payload and writes the new
+  // payload.
+  payload.insert(payload.end(), signature_blob.begin(), signature_blob.end());
+  LOG(INFO) << "Signed payload size: " << payload.size();
+  TEST_AND_RETURN_FALSE(utils::WriteFile(signed_payload_path.c_str(),
+                                         payload.data(),
+                                         payload.size()));
   return true;
 }
 

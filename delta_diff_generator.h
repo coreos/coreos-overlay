@@ -232,6 +232,12 @@ class DeltaDiffGenerator {
       Vertex::Index vertex,
       std::vector<DeltaDiffGenerator::Block>* blocks);
 
+  // Adds to |manifest| a dummy operation that points to a signature blob
+  // located at the specified offset/length.
+  static void AddSignatureOp(uint64_t signature_blob_offset,
+                             uint64_t signature_blob_length,
+                             DeltaArchiveManifest* manifest);
+
  private:
   // This should never be constructed
   DISALLOW_IMPLICIT_CONSTRUCTORS(DeltaDiffGenerator);
