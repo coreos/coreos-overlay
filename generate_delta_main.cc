@@ -40,6 +40,7 @@ DEFINE_string(in_file, "",
 DEFINE_string(out_file, "", "Path to output delta payload file");
 DEFINE_string(out_hash_file, "", "Path to output hash file");
 DEFINE_string(private_key, "", "Path to private key in .pem format");
+DEFINE_string(public_key, "", "Path to public key in .pem format");
 DEFINE_string(prefs_dir, "/tmp/update_engine_prefs",
               "Preferences directory, used with apply_delta");
 DEFINE_int32(signature_size, 0, "Raw signature size used for hash calculation");
@@ -92,6 +93,16 @@ void SignPayload() {
   CHECK(PayloadSigner::AddSignatureToPayload(
       FLAGS_in_file, signature, FLAGS_out_file));
   LOG(INFO) << "Done signing payload.";
+}
+
+void VerifySignedPayload() {
+  LOG(INFO) << "Verifying signed payload.";
+  LOG_IF(FATAL, FLAGS_in_file.empty())
+      << "Must pass --in_file to verify signed payload.";
+  LOG_IF(FATAL, FLAGS_public_key.empty())
+      << "Must pass --public_key to verify signed payload.";
+  CHECK(PayloadSigner::VerifySignedPayload(FLAGS_in_file, FLAGS_public_key));
+  LOG(INFO) << "Done verifying signed payload.";
 }
 
 void ApplyDelta() {
@@ -152,6 +163,10 @@ int Main(int argc, char** argv) {
   }
   if (!FLAGS_signature_file.empty()) {
     SignPayload();
+    return 0;
+  }
+  if (!FLAGS_public_key.empty()) {
+    VerifySignedPayload();
     return 0;
   }
   if (!FLAGS_in_file.empty()) {

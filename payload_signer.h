@@ -39,13 +39,6 @@ class PayloadSigner {
   static bool SignatureBlobLength(const std::string& private_key_path,
                                   uint64_t* out_length);
 
-  // Returns false if the payload signature can't be verified. Returns true
-  // otherwise and sets |out_hash| to the signed payload hash.
-  static bool VerifySignature(const std::vector<char>& signature_blob,
-                              const std::string& public_key_path,
-                              std::vector<char>* out_hash_data);
-
-
   // Given an unsigned payload in |payload_path| (with no dummy signature op)
   // and the raw |signature_size| calculates the raw hash that needs to be
   // signed in |out_hash_data|. Returns true on success, false otherwise.
@@ -61,6 +54,18 @@ class PayloadSigner {
   static bool AddSignatureToPayload(const std::string& payload_path,
                                     const std::vector<char>& signature,
                                     const std::string& signed_payload_path);
+
+  // Returns false if the payload signature can't be verified. Returns true
+  // otherwise and sets |out_hash| to the signed payload hash.
+  static bool VerifySignature(const std::vector<char>& signature_blob,
+                              const std::string& public_key_path,
+                              std::vector<char>* out_hash_data);
+
+  // Returns true if the payload in |payload_path| is signed and its hash can be
+  // verified using the public key in |public_key_path|. Returns false
+  // otherwise.
+  static bool VerifySignedPayload(const std::string& payload_path,
+                                  const std::string& public_key_path);
 
  private:
   // This should never be constructed

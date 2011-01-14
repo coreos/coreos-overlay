@@ -105,21 +105,23 @@ bool OmahaHashCalculator::Finalize() {
   return Base64Encode(&raw_hash_[0], raw_hash_.size(), &hash_);;
 }
 
-bool OmahaHashCalculator::RawHashOfData(const vector<char>& data,
-                                        vector<char>* out_hash) {
+bool OmahaHashCalculator::RawHashOfBytes(const char* data,
+                                         size_t length,
+                                         vector<char>* out_hash) {
   OmahaHashCalculator calc;
-  calc.Update(&data[0], data.size());
-
-  out_hash->resize(out_hash->size() + SHA256_DIGEST_LENGTH);
-  TEST_AND_RETURN_FALSE(
-      SHA256_Final(reinterpret_cast<unsigned char*>(&(*(out_hash->end() -
-                                                        SHA256_DIGEST_LENGTH))),
-                   &calc.ctx_) == 1);
+  TEST_AND_RETURN_FALSE(calc.Update(data, length));
+  TEST_AND_RETURN_FALSE(calc.Finalize());
+  *out_hash = calc.raw_hash();
   return true;
 }
 
-off_t OmahaHashCalculator::RawHashOfFile(const std::string& name, off_t length,
-                                         std::vector<char>* out_hash) {
+bool OmahaHashCalculator::RawHashOfData(const vector<char>& data,
+                                        vector<char>* out_hash) {
+  return RawHashOfBytes(data.data(), data.size(), out_hash);
+}
+
+off_t OmahaHashCalculator::RawHashOfFile(const string& name, off_t length,
+                                         vector<char>* out_hash) {
   OmahaHashCalculator calc;
   off_t res = calc.UpdateFile(name, length);
   if (res < 0) {

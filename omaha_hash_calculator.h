@@ -60,6 +60,9 @@ class OmahaHashCalculator {
   // success, and false otherwise.
   bool SetContext(const std::string& context);
 
+  static bool RawHashOfBytes(const char* data,
+                             size_t length,
+                             std::vector<char>* out_hash);
   static bool RawHashOfData(const std::vector<char>& data,
                             std::vector<char>* out_hash);
   static off_t RawHashOfFile(const std::string& name, off_t length,

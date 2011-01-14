@@ -238,6 +238,8 @@ void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop,
     ASSERT_TRUE(PayloadSigner::AddSignatureToPayload(delta_path,
                                                      signature,
                                                      delta_path));
+    EXPECT_TRUE(PayloadSigner::VerifySignedPayload(delta_path,
+                                                   kUnittestPublicKeyPath));
   }
 
   // Read delta into memory.
