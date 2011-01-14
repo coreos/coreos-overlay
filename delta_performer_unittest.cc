@@ -95,8 +95,80 @@ bool WriteSparseFile(const string& path, off_t size) {
 }  // namespace {}
 
 namespace {
+enum SignatureTest {
+  kSignatureNone,  // No payload signing.
+  kSignatureGenerator,  // Sign the payload at generation time.
+  kSignatureGenerated,  // Sign the payload after it's generated.
+  kSignatureGeneratedShell,  // Sign the generated payload through shell cmds.
+};
+
+size_t GetSignatureSize() {
+  const vector<char> data(1, 'x');
+  vector<char> hash;
+  EXPECT_TRUE(OmahaHashCalculator::RawHashOfData(data, &hash));
+  vector<char> signature;
+  EXPECT_TRUE(PayloadSigner::SignHash(hash,
+                                      kUnittestPrivateKeyPath,
+                                      &signature));
+  return signature.size();
+}
+
+void SignGeneratedPayload(const string& payload_path) {
+  int signature_size = GetSignatureSize();
+  vector<char> hash;
+  ASSERT_TRUE(PayloadSigner::HashPayloadForSigning(payload_path,
+                                                   signature_size,
+                                                   &hash));
+  vector<char> signature;
+  ASSERT_TRUE(PayloadSigner::SignHash(hash,
+                                      kUnittestPrivateKeyPath,
+                                      &signature));
+  ASSERT_TRUE(PayloadSigner::AddSignatureToPayload(payload_path,
+                                                   signature,
+                                                   payload_path));
+  EXPECT_TRUE(PayloadSigner::VerifySignedPayload(payload_path,
+                                                 kUnittestPublicKeyPath));
+}
+
+void SignGeneratedShellPayload(const string& payload_path) {
+  int signature_size = GetSignatureSize();
+  string hash_file;
+  ASSERT_TRUE(utils::MakeTempFile("/tmp/hash.XXXXXX", &hash_file, NULL));
+  ScopedPathUnlinker hash_unlinker(hash_file);
+
+  ASSERT_EQ(0,
+            System(StringPrintf(
+                "./delta_generator -in_file %s -signature_size %d "
+                "-out_hash_file %s",
+                payload_path.c_str(),
+                signature_size,
+                hash_file.c_str())));
+
+  string sig_file;
+  ASSERT_TRUE(utils::MakeTempFile("/tmp/signature.XXXXXX", &sig_file, NULL));
+  ScopedPathUnlinker sig_unlinker(sig_file);
+  ASSERT_EQ(0,
+            System(StringPrintf(
+                "/usr/bin/openssl rsautl -pkcs -sign -inkey %s -in %s -out %s",
+                kUnittestPrivateKeyPath,
+                hash_file.c_str(),
+                sig_file.c_str())));
+  ASSERT_EQ(0,
+            System(StringPrintf(
+                "./delta_generator -in_file %s -signature_file %s "
+                "-out_file %s",
+                payload_path.c_str(),
+                sig_file.c_str(),
+                payload_path.c_str())));
+  ASSERT_EQ(0,
+            System(StringPrintf(
+                "./delta_generator -in_file %s -public_key %s",
+                payload_path.c_str(),
+                kUnittestPublicKeyPath)));
+}
+
 void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop,
-                      bool post_sign) {
+                      SignatureTest signature_test) {
   string a_img, b_img;
   EXPECT_TRUE(utils::MakeTempFile("/tmp/a_img.XXXXXX", &a_img, NULL));
   ScopedPathUnlinker a_img_unlinker(a_img);
@@ -201,7 +273,8 @@ void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop,
     string a_mnt, b_mnt;
     ScopedLoopMounter a_mounter(a_img, &a_mnt, MS_RDONLY);
     ScopedLoopMounter b_mounter(b_img, &b_mnt, MS_RDONLY);
-
+    const string private_key =
+        signature_test == kSignatureGenerator ? kUnittestPrivateKeyPath : "";
     EXPECT_TRUE(
         DeltaDiffGenerator::GenerateDeltaUpdateFile(
             full_rootfs ? "" : a_mnt,
@@ -211,35 +284,13 @@ void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop,
             full_kernel ? "" : old_kernel,
             new_kernel,
             delta_path,
-            post_sign ? "" : kUnittestPrivateKeyPath));
+            private_key));
   }
 
-  if (post_sign) {
-    int signature_size;
-    {
-      const vector<char> data(1, 'x');
-      vector<char> hash;
-      ASSERT_TRUE(OmahaHashCalculator::RawHashOfData(data, &hash));
-      vector<char> signature;
-      ASSERT_TRUE(PayloadSigner::SignHash(hash,
-                                          kUnittestPrivateKeyPath,
-                                          &signature));
-      signature_size = signature.size();
-    }
-
-    vector<char> hash;
-    ASSERT_TRUE(PayloadSigner::HashPayloadForSigning(delta_path,
-                                                     signature_size,
-                                                     &hash));
-    vector<char> signature;
-    ASSERT_TRUE(PayloadSigner::SignHash(hash,
-                                        kUnittestPrivateKeyPath,
-                                        &signature));
-    ASSERT_TRUE(PayloadSigner::AddSignatureToPayload(delta_path,
-                                                     signature,
-                                                     delta_path));
-    EXPECT_TRUE(PayloadSigner::VerifySignedPayload(delta_path,
-                                                   kUnittestPublicKeyPath));
+  if (signature_test == kSignatureGenerated) {
+    SignGeneratedPayload(delta_path);
+  } else if (signature_test == kSignatureGeneratedShell) {
+    SignGeneratedShellPayload(delta_path);
   }
 
   // Read delta into memory.
@@ -260,22 +311,28 @@ void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop,
     LOG(INFO) << "manifest size: " << manifest_size;
     EXPECT_TRUE(manifest.ParseFromArray(&delta[kManifestOffset],
                                         manifest_size));
-    EXPECT_TRUE(manifest.has_signatures_offset());
     manifest_metadata_size = kManifestOffset + manifest_size;
 
-    Signatures sigs_message;
-    EXPECT_TRUE(sigs_message.ParseFromArray(
-        &delta[manifest_metadata_size + manifest.signatures_offset()],
-        manifest.signatures_size()));
-    EXPECT_EQ(1, sigs_message.signatures_size());
-    const Signatures_Signature& signature = sigs_message.signatures(0);
-    EXPECT_EQ(1, signature.version());
+    if (signature_test == kSignatureNone) {
+      EXPECT_FALSE(manifest.has_signatures_offset());
+      EXPECT_FALSE(manifest.has_signatures_size());
+    } else {
+      EXPECT_TRUE(manifest.has_signatures_offset());
+      EXPECT_TRUE(manifest.has_signatures_size());
+      Signatures sigs_message;
+      EXPECT_TRUE(sigs_message.ParseFromArray(
+          &delta[manifest_metadata_size + manifest.signatures_offset()],
+          manifest.signatures_size()));
+      EXPECT_EQ(1, sigs_message.signatures_size());
+      const Signatures_Signature& signature = sigs_message.signatures(0);
+      EXPECT_EQ(1, signature.version());
 
-    uint64_t expected_sig_data_length = 0;
-    EXPECT_TRUE(PayloadSigner::SignatureBlobLength(kUnittestPrivateKeyPath,
-                                                   &expected_sig_data_length));
-    EXPECT_EQ(expected_sig_data_length, manifest.signatures_size());
-    EXPECT_FALSE(signature.data().empty());
+      uint64_t expected_sig_data_length = 0;
+      EXPECT_TRUE(PayloadSigner::SignatureBlobLength(
+          kUnittestPrivateKeyPath, &expected_sig_data_length));
+      EXPECT_EQ(expected_sig_data_length, manifest.signatures_size());
+      EXPECT_FALSE(signature.data().empty());
+    }
 
     if (noop) {
       EXPECT_EQ(1, manifest.install_operations_size());
@@ -314,8 +371,10 @@ void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop,
       .WillRepeatedly(Return(true));
   EXPECT_CALL(prefs, SetString(kPrefsUpdateStateSHA256Context, _))
       .WillRepeatedly(Return(true));
-  EXPECT_CALL(prefs, SetString(kPrefsUpdateStateSignedSHA256Context, _))
-      .WillOnce(Return(true));
+  if (signature_test != kSignatureNone) {
+    EXPECT_CALL(prefs, SetString(kPrefsUpdateStateSignedSHA256Context, _))
+        .WillOnce(Return(true));
+  }
 
   // Update the A image in place.
   DeltaPerformer performer(&prefs);
@@ -353,10 +412,11 @@ void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop,
                        strlen(new_data_string)));
 
   EXPECT_TRUE(utils::FileExists(kUnittestPublicKeyPath));
-  EXPECT_TRUE(performer.VerifyPayload(
-      kUnittestPublicKeyPath,
-      OmahaHashCalculator::OmahaHashOfData(delta),
-      delta.size()));
+  EXPECT_EQ(signature_test != kSignatureNone,
+            performer.VerifyPayload(
+                kUnittestPublicKeyPath,
+                OmahaHashCalculator::OmahaHashOfData(delta),
+                delta.size()));
 
   uint64_t new_kernel_size;
   vector<char> new_kernel_hash;
@@ -382,23 +442,31 @@ void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop,
 }
 
 TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
-  DoSmallImageTest(false, false, false, false);
+  DoSmallImageTest(false, false, false, kSignatureGenerator);
 }
 
 TEST(DeltaPerformerTest, RunAsRootFullKernelSmallImageTest) {
-  DoSmallImageTest(true, false, false, false);
+  DoSmallImageTest(true, false, false, kSignatureGenerator);
 }
 
 TEST(DeltaPerformerTest, RunAsRootFullSmallImageTest) {
-  DoSmallImageTest(true, true, false, false);
+  DoSmallImageTest(true, true, false, kSignatureGenerator);
 }
 
 TEST(DeltaPerformerTest, RunAsRootNoopSmallImageTest) {
-  DoSmallImageTest(false, false, true, false);
+  DoSmallImageTest(false, false, true, kSignatureGenerator);
 }
 
-TEST(DeltaPerformerTest, RunAsRootSmallImagePostSignTest) {
-  DoSmallImageTest(false, false, false, true);
+TEST(DeltaPerformerTest, RunAsRootSmallImageSignNoneTest) {
+  DoSmallImageTest(false, false, false, kSignatureNone);
+}
+
+TEST(DeltaPerformerTest, RunAsRootSmallImageSignGeneratedTest) {
+  DoSmallImageTest(false, false, false, kSignatureGenerated);
+}
+
+TEST(DeltaPerformerTest, RunAsRootSmallImageSignGeneratedShellTest) {
+  DoSmallImageTest(false, false, false, kSignatureGeneratedShell);
 }
 
 TEST(DeltaPerformerTest, BadDeltaMagicTest) {
