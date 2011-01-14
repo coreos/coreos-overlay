@@ -100,21 +100,22 @@ enum SignatureTest {
   kSignatureGenerator,  // Sign the payload at generation time.
   kSignatureGenerated,  // Sign the payload after it's generated.
   kSignatureGeneratedShell,  // Sign the generated payload through shell cmds.
+  kSignatureGeneratedShellBadKey,  // Sign with a bad key through shell cmds.
 };
 
-size_t GetSignatureSize() {
+size_t GetSignatureSize(const string& private_key_path) {
   const vector<char> data(1, 'x');
   vector<char> hash;
   EXPECT_TRUE(OmahaHashCalculator::RawHashOfData(data, &hash));
   vector<char> signature;
   EXPECT_TRUE(PayloadSigner::SignHash(hash,
-                                      kUnittestPrivateKeyPath,
+                                      private_key_path,
                                       &signature));
   return signature.size();
 }
 
 void SignGeneratedPayload(const string& payload_path) {
-  int signature_size = GetSignatureSize();
+  int signature_size = GetSignatureSize(kUnittestPrivateKeyPath);
   vector<char> hash;
   ASSERT_TRUE(PayloadSigner::HashPayloadForSigning(payload_path,
                                                    signature_size,
@@ -130,12 +131,31 @@ void SignGeneratedPayload(const string& payload_path) {
                                                  kUnittestPublicKeyPath));
 }
 
-void SignGeneratedShellPayload(const string& payload_path) {
-  int signature_size = GetSignatureSize();
+void SignGeneratedShellPayload(SignatureTest signature_test,
+                               const string& payload_path) {
+  string private_key_path = kUnittestPrivateKeyPath;
+  if (signature_test == kSignatureGeneratedShellBadKey) {
+    ASSERT_TRUE(utils::MakeTempFile("/tmp/key.XXXXXX",
+                                    &private_key_path,
+                                    NULL));
+  } else {
+    ASSERT_EQ(kSignatureGeneratedShell, signature_test);
+  }
+  ScopedPathUnlinker key_unlinker(private_key_path);
+  key_unlinker.set_should_remove(signature_test ==
+                                 kSignatureGeneratedShellBadKey);
+  // Generates a new private key that will not match the public key.
+  if (signature_test == kSignatureGeneratedShellBadKey) {
+    LOG(INFO) << "Generating a mismatched private key.";
+    ASSERT_EQ(0,
+              System(StringPrintf(
+                  "/usr/bin/openssl genrsa -out %s 1024",
+                  private_key_path.c_str())));
+  }
+  int signature_size = GetSignatureSize(private_key_path);
   string hash_file;
   ASSERT_TRUE(utils::MakeTempFile("/tmp/hash.XXXXXX", &hash_file, NULL));
   ScopedPathUnlinker hash_unlinker(hash_file);
-
   ASSERT_EQ(0,
             System(StringPrintf(
                 "./delta_generator -in_file %s -signature_size %d "
@@ -150,7 +170,7 @@ void SignGeneratedShellPayload(const string& payload_path) {
   ASSERT_EQ(0,
             System(StringPrintf(
                 "/usr/bin/openssl rsautl -pkcs -sign -inkey %s -in %s -out %s",
-                kUnittestPrivateKeyPath,
+                private_key_path.c_str(),
                 hash_file.c_str(),
                 sig_file.c_str())));
   ASSERT_EQ(0,
@@ -160,11 +180,15 @@ void SignGeneratedShellPayload(const string& payload_path) {
                 payload_path.c_str(),
                 sig_file.c_str(),
                 payload_path.c_str())));
-  ASSERT_EQ(0,
-            System(StringPrintf(
-                "./delta_generator -in_file %s -public_key %s",
-                payload_path.c_str(),
-                kUnittestPublicKeyPath)));
+  int verify_result =
+      System(StringPrintf("./delta_generator -in_file %s -public_key %s",
+                          payload_path.c_str(),
+                          kUnittestPublicKeyPath));
+  if (signature_test == kSignatureGeneratedShellBadKey) {
+    ASSERT_NE(0, verify_result);
+  } else {
+    ASSERT_EQ(0, verify_result);
+  }
 }
 
 void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop,
@@ -289,8 +313,9 @@ void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop,
 
   if (signature_test == kSignatureGenerated) {
     SignGeneratedPayload(delta_path);
-  } else if (signature_test == kSignatureGeneratedShell) {
-    SignGeneratedShellPayload(delta_path);
+  } else if (signature_test == kSignatureGeneratedShell ||
+             signature_test == kSignatureGeneratedShellBadKey) {
+    SignGeneratedShellPayload(signature_test, delta_path);
   }
 
   // Read delta into memory.
@@ -412,11 +437,18 @@ void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop,
                        strlen(new_data_string)));
 
   EXPECT_TRUE(utils::FileExists(kUnittestPublicKeyPath));
-  EXPECT_EQ(signature_test != kSignatureNone,
+  bool expect_verify_success =
+      signature_test != kSignatureNone &&
+      signature_test != kSignatureGeneratedShellBadKey;
+  EXPECT_EQ(expect_verify_success,
             performer.VerifyPayload(
                 kUnittestPublicKeyPath,
                 OmahaHashCalculator::OmahaHashOfData(delta),
                 delta.size()));
+  EXPECT_TRUE(performer.VerifyPayload(
+      "/public/key/does/not/exists",
+      OmahaHashCalculator::OmahaHashOfData(delta),
+      delta.size()));
 
   uint64_t new_kernel_size;
   vector<char> new_kernel_hash;
@@ -467,6 +499,10 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageSignGeneratedTest) {
 
 TEST(DeltaPerformerTest, RunAsRootSmallImageSignGeneratedShellTest) {
   DoSmallImageTest(false, false, false, kSignatureGeneratedShell);
+}
+
+TEST(DeltaPerformerTest, RunAsRootSmallImageSignGeneratedShellBadKeyTest) {
+  DoSmallImageTest(false, false, false, kSignatureGeneratedShellBadKey);
 }
 
 TEST(DeltaPerformerTest, BadDeltaMagicTest) {

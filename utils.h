@@ -294,15 +294,20 @@ class ScopedExt2fsCloser {
 // Utility class to delete a file when it goes out of scope.
 class ScopedPathUnlinker {
  public:
-  explicit ScopedPathUnlinker(const std::string& path) : path_(path) {}
+  explicit ScopedPathUnlinker(const std::string& path)
+      : path_(path),
+        should_remove_(true) {}
   ~ScopedPathUnlinker() {
-    if (unlink(path_.c_str()) < 0) {
+    if (should_remove_ && unlink(path_.c_str()) < 0) {
       std::string err_message = strerror(errno);
       LOG(ERROR) << "Unable to unlink path " << path_ << ": " << err_message;
     }
   }
+  void set_should_remove(bool should_remove) { should_remove_ = should_remove; }
+
  private:
   const std::string path_;
+  bool should_remove_;
   DISALLOW_COPY_AND_ASSIGN(ScopedPathUnlinker);
 };
 
