@@ -5,9 +5,13 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+
 #include <string>
 #include <vector>
+
+#include <base/string_util.h>
 #include <gtest/gtest.h>
+
 #include "update_engine/postinstall_runner_action.h"
 #include "update_engine/test_utils.h"
 #include "update_engine/utils.h"
@@ -90,14 +94,19 @@ void PostinstallRunnerActionTest::DoTest(bool do_losetup, bool do_err_script) {
   ASSERT_EQ(0, system("dd if=/dev/zero of=image.dat seek=10485759 bs=1 "
                       "count=1"));
 
-  // format it as ext3
-  ASSERT_EQ(0, system("mkfs.ext3 -F image.dat"));
+  // format it as ext2
+  ASSERT_EQ(0, system("mkfs.ext2 -F image.dat"));
 
   // mount it
   ASSERT_EQ(0, System(string("mount -o loop image.dat ") + mountpoint));
 
   // put a postinst script in
-  string script = string("#!/bin/bash\ntouch ") + cwd + "/postinst_called\n";
+  string script = StringPrintf("#!/bin/bash\n"
+                               "mount | grep au_postint_mount | grep ext2\n"
+                               "if [ $? -eq 0 ]; then\n"
+                               "  touch %s/postinst_called\n"
+                               "fi\n",
+                               cwd.c_str());
   if (do_err_script) {
     script = "#!/bin/bash\nexit 1";
   }

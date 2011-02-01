@@ -32,11 +32,11 @@ void PostinstallRunnerAction::PerformAction() {
   unsigned long mountflags = MS_RDONLY;
   int rc = mount(install_device.c_str(),
                  temp_rootfs_dir_.c_str(),
-                 "ext4",
+                 "ext2",
                  mountflags,
                  NULL);
   if (rc < 0) {
-    LOG(INFO) << "Failed to mount install part as ext4. Trying ext3.";
+    LOG(INFO) << "Failed to mount install part as ext2. Trying ext3.";
     rc = mount(install_device.c_str(),
                temp_rootfs_dir_.c_str(),
                "ext3",
