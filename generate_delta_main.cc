@@ -186,15 +186,16 @@ int Main(int argc, char** argv) {
       LOG(FATAL) << "old_dir or new_dir not directory";
     }
   }
-  DeltaDiffGenerator::GenerateDeltaUpdateFile(FLAGS_old_dir,
-                                              FLAGS_old_image,
-                                              FLAGS_new_dir,
-                                              FLAGS_new_image,
-                                              FLAGS_old_kernel,
-                                              FLAGS_new_kernel,
-                                              FLAGS_out_file,
-                                              FLAGS_private_key);
-
+  if (!DeltaDiffGenerator::GenerateDeltaUpdateFile(FLAGS_old_dir,
+                                                   FLAGS_old_image,
+                                                   FLAGS_new_dir,
+                                                   FLAGS_new_image,
+                                                   FLAGS_old_kernel,
+                                                   FLAGS_new_kernel,
+                                                   FLAGS_out_file,
+                                                   FLAGS_private_key)) {
+    return 1;
+  }
   return 0;
 }
 
