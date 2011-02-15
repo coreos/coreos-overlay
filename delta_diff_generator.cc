@@ -55,6 +55,7 @@ typedef map<const DeltaArchiveManifest_InstallOperation*,
 
 namespace {
 const size_t kBlockSize = 4096;  // bytes
+const string kNonexistentPath = "";
 
 // TODO(adlr): switch from 1GiB to 2GiB when we no longer care about old
 // clients:
@@ -97,7 +98,10 @@ bool DeltaReadFile(Graph* graph,
   vector<char> data;
   DeltaArchiveManifest_InstallOperation operation;
 
-  TEST_AND_RETURN_FALSE(DeltaDiffGenerator::ReadFileToDiff(old_root + path,
+  string old_path = (old_root == kNonexistentPath) ? kNonexistentPath :
+      old_root + path;
+
+  TEST_AND_RETURN_FALSE(DeltaDiffGenerator::ReadFileToDiff(old_path,
                                                            new_root + path,
                                                            &data,
                                                            &operation,
@@ -141,6 +145,7 @@ bool DeltaReadFiles(Graph* graph,
                     int data_fd,
                     off_t* data_file_size) {
   set<ino_t> visited_inodes;
+  set<ino_t> visited_src_inodes;
   for (FilesystemIterator fs_iter(new_root,
                                   utils::SetWithValue<string>("/lost+found"));
        !fs_iter.IsEnd(); fs_iter.Increment()) {
@@ -156,10 +161,30 @@ bool DeltaReadFiles(Graph* graph,
 
     LOG(INFO) << "Encoding file " << fs_iter.GetPartialPath();
 
+    // We can't visit each dst image inode more than once, as that would
+    // duplicate work. Here, we avoid visiting each source image inode
+    // more than once. Technically, we could have multiple operations
+    // that read the same blocks from the source image for diffing, but
+    // we choose not to to avoid complexity. Eventually we will move away
+    // from using a graph/cycle detection/etc to generate diffs, and at that
+    // time, it will be easy (non-complex) to have many operations read
+    // from the same source blocks. At that time, this code can die. -adlr
+    bool should_diff_from_source = true;
+    string src_path = old_root + fs_iter.GetPartialPath();
+    if (utils::FileExists(src_path.c_str())) {
+      struct stat src_stbuf;
+      TEST_AND_RETURN_FALSE_ERRNO(0 == stat(src_path.c_str(), &src_stbuf));
+      should_diff_from_source = !utils::SetContainsKey(visited_src_inodes,
+                                                       src_stbuf.st_ino);
+      visited_src_inodes.insert(src_stbuf.st_ino);
+    }
+
     TEST_AND_RETURN_FALSE(DeltaReadFile(graph,
                                         Vertex::kInvalidIndex,
                                         blocks,
-                                        old_root,
+                                        (should_diff_from_source ?
+                                         old_root :
+                                         kNonexistentPath),
                                         new_root,
                                         fs_iter.GetPartialPath(),
                                         data_fd,
@@ -1160,7 +1185,7 @@ bool DeltaDiffGenerator::ConvertCutToFullOp(Graph* graph,
     TEST_AND_RETURN_FALSE(DeltaReadFile(graph,
                                         cut.old_dst,
                                         NULL,
-                                        "/-!@:&*nonexistent_path",
+                                        kNonexistentPath,
                                         new_root,
                                         (*graph)[cut.old_dst].file_name,
                                         data_fd,

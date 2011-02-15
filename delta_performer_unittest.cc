@@ -38,7 +38,7 @@ extern const char* kUnittestPrivateKeyPath;
 extern const char* kUnittestPublicKeyPath;
 
 namespace {
-  const size_t kBlockSize = 4096;
+const size_t kBlockSize = 4096;
 }  // namespace {}
 
 
@@ -256,6 +256,10 @@ void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop,
     EXPECT_EQ(0, system(StringPrintf("dd if=/dev/zero of=%s/partsparese bs=1 "
                                      "seek=4096 count=1",
                                      b_mnt.c_str()).c_str()));
+    EXPECT_EQ(0, system(StringPrintf("cp %s/srchardlink0 %s/tmp && "
+                                     "mv %s/tmp %s/srchardlink1",
+                                     b_mnt.c_str(), b_mnt.c_str(),
+                                     b_mnt.c_str(), b_mnt.c_str()).c_str()));
     EXPECT_TRUE(utils::WriteFile(StringPrintf("%s/hardtocompress",
                                               b_mnt.c_str()).c_str(),
                                  reinterpret_cast<const char*>(kRandomString),

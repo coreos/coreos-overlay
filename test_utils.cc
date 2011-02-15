@@ -208,6 +208,9 @@ void CreateExtImageAtPath(const string& path, vector<string>* out_paths) {
   EXPECT_EQ(0, System(StringPrintf("ln -s /some/target %s/sym", kMountPath)));
   EXPECT_EQ(0, System(StringPrintf("ln %s/some_dir/test %s/testlink",
                                    kMountPath, kMountPath)));
+  EXPECT_EQ(0, System(StringPrintf("echo T > %s/srchardlink0", kMountPath)));
+  EXPECT_EQ(0, System(StringPrintf("ln %s/srchardlink0 %s/srchardlink1",
+                                   kMountPath, kMountPath)));
   EXPECT_EQ(0, System(StringPrintf("umount -d %s", kMountPath)));
 
   if (out_paths) {
@@ -223,6 +226,8 @@ void CreateExtImageAtPath(const string& path, vector<string>* out_paths) {
     out_paths->push_back("/cdev");
     out_paths->push_back("/testlink");
     out_paths->push_back("/sym");
+    out_paths->push_back("/srchardlink0");
+    out_paths->push_back("/srchardlink1");
     out_paths->push_back("/lost+found");
   }
 }
