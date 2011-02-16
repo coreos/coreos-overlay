@@ -14,6 +14,7 @@
 #include "update_engine/flimflam_proxy.h"
 #include "update_engine/utils.h"
 
+using google::protobuf::NewCallback;
 using std::max;
 using std::make_pair;
 using std::string;
@@ -151,14 +152,25 @@ void LibcurlHttpFetcher::ResumeTransfer(const std::string& url) {
 
 // Begins the transfer, which must not have already been started.
 void LibcurlHttpFetcher::BeginTransfer(const std::string& url) {
+  CHECK(!transfer_in_progress_);
+  url_ = url;
+  if (!ResolveProxiesForUrl(
+          url_,
+          NewCallback(this, &LibcurlHttpFetcher::ProxiesResolved))) {
+    LOG(ERROR) << "Couldn't resolve proxies";
+    if (delegate_)
+      delegate_->TransferComplete(this, false);
+  }
+}
+
+void LibcurlHttpFetcher::ProxiesResolved() {
   transfer_size_ = -1;
   resume_offset_ = 0;
   retry_count_ = 0;
   no_network_retry_count_ = 0;
   http_response_code_ = 0;
   terminate_requested_ = false;
-  ResolveProxiesForUrl(url);
-  ResumeTransfer(url);
+  ResumeTransfer(url_);
   CurlPerformOnce();
 }
 

@@ -4,10 +4,18 @@
 
 #include "update_engine/http_fetcher.h"
 
+using google::protobuf::Closure;
 using std::deque;
 using std::string;
 
 namespace chromeos_update_engine {
+
+HttpFetcher::~HttpFetcher() {
+  if (no_resolver_idle_id_) {
+    g_source_remove(no_resolver_idle_id_);
+    no_resolver_idle_id_ = 0;
+  }
+}
 
 void HttpFetcher::SetPostData(const void* data, size_t size) {
   post_data_set_ = true;
@@ -17,15 +25,24 @@ void HttpFetcher::SetPostData(const void* data, size_t size) {
 }
 
 // Proxy methods to set the proxies, then to pop them off.
-void HttpFetcher::ResolveProxiesForUrl(const string& url) {
+bool HttpFetcher::ResolveProxiesForUrl(const string& url, Closure* callback) {
   if (!proxy_resolver_) {
     LOG(INFO) << "Not resolving proxies (no proxy resolver).";
-    return;
+    no_resolver_idle_id_ = g_idle_add(utils::GlibRunClosure, callback);
+    return true;
   }
-  deque<string> proxies;
-  if (proxy_resolver_->GetProxiesForUrl(url, &proxies)) {
+  callback_ = callback;
+  return proxy_resolver_->GetProxiesForUrl(url,
+                                           &HttpFetcher::StaticProxiesResolved,
+                                           this);
+}
+
+void HttpFetcher::ProxiesResolved(const std::deque<std::string>& proxies) {
+  no_resolver_idle_id_ = 0;
+  if (!proxies.empty())
     SetProxies(proxies);
-  }
+  callback_->Run();
+  callback_ = NULL;
 }
 
 }  // namespace chromeos_update_engine

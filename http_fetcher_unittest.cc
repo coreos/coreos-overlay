@@ -316,15 +316,12 @@ TYPED_TEST(HttpFetcherTest, PauseTest) {
 
     typename TestFixture::HttpServer server;
     ASSERT_TRUE(server.started_);
-    GSource* timeout_source_;
-    timeout_source_ = g_timeout_source_new(0);  // ms
-    g_source_set_callback(timeout_source_, UnpausingTimeoutCallback, &delegate,
-                          NULL);
-    g_source_attach(timeout_source_, NULL);
+
+    guint callback_id = g_timeout_add(500, UnpausingTimeoutCallback, &delegate);
     fetcher->BeginTransfer(this->BigUrl());
 
     g_main_loop_run(loop);
-    g_source_destroy(timeout_source_);
+    g_source_remove(callback_id);
   }
   g_main_loop_unref(loop);
 }

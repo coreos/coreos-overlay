@@ -27,13 +27,20 @@ extern const char kSessionManagerProxySettingsKey[];
 // Currently only supports manual settings, not PAC files or autodetected
 // settings.
 
+struct ChromeProxyResolverClosureArgs {
+  std::string url;
+  ProxiesResolvedFn callback;
+  void* data;
+};
+
 class ChromeProxyResolver : public ProxyResolver {
  public:
   explicit ChromeProxyResolver(DbusGlibInterface* dbus) : dbus_(dbus) {}
   virtual ~ChromeProxyResolver() {}
 
   virtual bool GetProxiesForUrl(const std::string& url,
-                                std::deque<std::string>* out_proxies);
+                                ProxiesResolvedFn callback,
+                                void* data);
 
   // Get the curl proxy type for a given proxy url. Returns true on success.
   // Note: if proxy is kNoProxy, this will return false.
@@ -41,6 +48,10 @@ class ChromeProxyResolver : public ProxyResolver {
 
  private:
   FRIEND_TEST(ChromeProxyResolverTest, GetProxiesForUrlWithSettingsTest);
+
+  // Closure callback, so we can pretend we need to wait on the main loop
+  // before returing proxies to the client.
+  void GetProxiesForUrlCallback(ChromeProxyResolverClosureArgs args);
 
   // Fetches a dbus proxy to session manager. Returns NULL on failure.
   DBusGProxy* DbusProxy();

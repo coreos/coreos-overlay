@@ -243,6 +243,9 @@ int ComparePriorities(ProcessPriority priority_lhs,
 // success, false otherwise.
 bool SetProcessPriority(ProcessPriority priority);
 
+// Assumes data points to a Closure. Runs it and returns FALSE;
+gboolean GlibRunClosure(gpointer data);
+
 }  // namespace utils
 
 // Class to unmount FS when object goes out of scope

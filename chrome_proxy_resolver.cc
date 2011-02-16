@@ -10,6 +10,9 @@
 
 #include "update_engine/utils.h"
 
+using google::protobuf::Closure;
+using google::protobuf::NewCallback;
+using std::deque;
 using std::string;
 using std::vector;
 
@@ -24,16 +27,32 @@ const char kSessionManagerProxySettingsKey[] = "cros.proxy.everywhere";
 
 bool ChromeProxyResolver::GetProxiesForUrl(
     const std::string& url,
-    std::deque<std::string>* out_proxies) {
+    ProxiesResolvedFn callback,
+    void* data) {
+  ChromeProxyResolverClosureArgs args;
+  args.url = url;
+  args.callback = callback;
+  args.data = data;
+  Closure* closure = NewCallback(this,
+                                 &ChromeProxyResolver::GetProxiesForUrlCallback,
+                                 args);
+  g_idle_add(utils::GlibRunClosure, closure);
+  return true;
+}
+
+void ChromeProxyResolver::GetProxiesForUrlCallback(
+    ChromeProxyResolverClosureArgs args) {
+  deque<string> proxies;
   // First, query dbus for the currently stored settings
   DBusGProxy* proxy = DbusProxy();
-  TEST_AND_RETURN_FALSE(proxy);
-  string json_settings;
-  TEST_AND_RETURN_FALSE(GetJsonProxySettings(proxy, &json_settings));
-  LOG(INFO) << "got settings:" << json_settings;
-  TEST_AND_RETURN_FALSE(
-      GetProxiesForUrlWithSettings(url, json_settings, out_proxies));
-  return true;
+  if (proxy) {
+    string json_settings;
+    if (GetJsonProxySettings(proxy, &json_settings)) {
+      LOG(INFO) << "got settings:" << json_settings;
+      GetProxiesForUrlWithSettings(args.url, json_settings, &proxies);
+    }
+  }
+  (*args.callback)(proxies, args.data);
 }
 
 bool ChromeProxyResolver::GetJsonProxySettings(DBusGProxy* proxy,

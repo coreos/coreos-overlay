@@ -12,6 +12,7 @@
 #include <base/basictypes.h>
 #include <base/logging.h>
 #include <glib.h>
+#include <google/protobuf/stubs/common.h>
 
 #include "update_engine/proxy_resolver.h"
 
@@ -36,8 +37,10 @@ class HttpFetcher {
         http_response_code_(0),
         delegate_(NULL),
         proxies_(1, kNoProxy),
-        proxy_resolver_(proxy_resolver) {}
-  virtual ~HttpFetcher() {}
+        proxy_resolver_(proxy_resolver),
+        no_resolver_idle_id_(0),
+        callback_(NULL) {}
+  virtual ~HttpFetcher();
 
   void set_delegate(HttpFetcherDelegate* delegate) { delegate_ = delegate; }
   HttpFetcherDelegate* delegate() const { return delegate_; }
@@ -48,7 +51,9 @@ class HttpFetcher {
   void SetPostData(const void* data, size_t size);
 
   // Proxy methods to set the proxies, then to pop them off.
-  void ResolveProxiesForUrl(const std::string& url);
+  // Returns true on success.
+  bool ResolveProxiesForUrl(const std::string& url,
+                            google::protobuf::Closure* callback);
   
   void SetProxies(const std::deque<std::string>& proxies) {
     proxies_ = proxies;
@@ -110,10 +115,23 @@ class HttpFetcher {
 
   // Proxy servers
   std::deque<std::string> proxies_;
-  
+
   ProxyResolver* const proxy_resolver_;
 
+  // The ID of the idle callback, used when we have no proxy resolver.
+  guint no_resolver_idle_id_;
+
+  // Callback for when we are resolving proxies
+  google::protobuf::Closure* callback_;
+
  private:
+  // Callback from the proxy resolver
+  void ProxiesResolved(const std::deque<std::string>& proxies);
+  static void StaticProxiesResolved(const std::deque<std::string>& proxies,
+                                    void* data) {
+    reinterpret_cast<HttpFetcher*>(data)->ProxiesResolved(proxies);
+  }
+   
   DISALLOW_COPY_AND_ASSIGN(HttpFetcher);
 };
 

@@ -91,6 +91,10 @@ class LibcurlHttpFetcher : public HttpFetcher {
   }
 
  private:
+  // Callback for when proxy resolution has completed. This begins the
+  // transfer.
+  void ProxiesResolved();
+   
   // Asks libcurl for the http response code and stores it in the object.
   void GetHttpResponseCode();
 

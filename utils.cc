@@ -26,6 +26,7 @@
 #include <base/string_util.h>
 #include <base/logging.h>
 #include <cros_boot_mode/boot_mode.h>
+#include <google/protobuf/stubs/common.h>
 #include <rootdev/rootdev.h>
 
 #include "update_engine/file_writer.h"
@@ -549,6 +550,13 @@ int FuzzInt(int value, unsigned int range) {
   int min = value - range / 2;
   int max = value + range - range / 2;
   return base::RandInt(min, max);
+}
+
+gboolean GlibRunClosure(gpointer data) {
+  google::protobuf::Closure* callback =
+      reinterpret_cast<google::protobuf::Closure*>(data);
+  callback->Run();
+  return FALSE;
 }
 
 const char* const kStatefulPartition = "/mnt/stateful_partition";

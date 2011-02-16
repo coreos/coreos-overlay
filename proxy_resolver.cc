@@ -11,11 +11,32 @@ namespace chromeos_update_engine {
 
 const char kNoProxy[] = "direct://";
 
-bool DirectProxyResolver::GetProxiesForUrl(const string& url,
-                                           deque<string>* out_proxies) {
-  out_proxies->clear();
-  out_proxies->push_back(kNoProxy);
+DirectProxyResolver::~DirectProxyResolver() {
+  if (idle_callback_id_) {
+    g_source_remove(idle_callback_id_);
+    idle_callback_id_ = 0;
+  }
+}
+
+bool DirectProxyResolver::GetProxiesForUrl(const std::string& url,
+                                           ProxiesResolvedFn callback,
+                                           void* data) {
+  google::protobuf::Closure* closure =
+      google::protobuf::NewCallback(this,
+                                    &DirectProxyResolver::ReturnCallback,
+                                    callback,
+                                    data);
+  idle_callback_id_ = g_idle_add(utils::GlibRunClosure, closure);
   return true;
 }
+
+void DirectProxyResolver::ReturnCallback(ProxiesResolvedFn callback,
+                                         void* data) {
+  idle_callback_id_ = 0;
+  std::deque<std::string> proxies;
+  proxies.push_back(kNoProxy);
+  (*callback)(proxies, data);
+}
+
 
 }  // namespace chromeos_update_engine

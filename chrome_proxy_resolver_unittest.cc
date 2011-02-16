@@ -81,6 +81,16 @@ TEST(ChromeProxyResolverTest, GetProxiesForUrlWithSettingsTest) {
   EXPECT_EQ(kNoProxy, out[0]);
 }
 
+namespace {
+void DbusInterfaceTestResolved(const std::deque<std::string>& proxies,
+                               void* data) {
+  EXPECT_EQ(2, proxies.size());
+  EXPECT_EQ("socks5://192.168.52.83:5555", proxies[0]);
+  EXPECT_EQ(kNoProxy, proxies[1]);
+  g_main_loop_quit(reinterpret_cast<GMainLoop*>(data));
+}
+}
+
 TEST(ChromeProxyResolverTest, DbusInterfaceTest) {
   long number = 1;
   DBusGConnection* kMockSystemBus =
@@ -119,12 +129,13 @@ TEST(ChromeProxyResolverTest, DbusInterfaceTest) {
                       SetArgumentPointee<9>(ret_array),
                       Return(TRUE)));
 
-  deque<string> proxies;
+  GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
+
   EXPECT_TRUE(resolver.GetProxiesForUrl("http://user:pass@foo.com:22",
-                                        &proxies));
-  EXPECT_EQ(2, proxies.size());
-  EXPECT_EQ("socks5://192.168.52.83:5555", proxies[0]);
-  EXPECT_EQ(kNoProxy, proxies[1]);
+                                        &DbusInterfaceTestResolved,
+                                        loop));
+  g_main_loop_run(loop);
+  g_main_loop_unref(loop);
 }
 
 TEST(ChromeProxyResolverTest, GetProxyTypeTest) {
