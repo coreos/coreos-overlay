@@ -149,6 +149,7 @@ bool DeltaReadFiles(Graph* graph,
   for (FilesystemIterator fs_iter(new_root,
                                   utils::SetWithValue<string>("/lost+found"));
        !fs_iter.IsEnd(); fs_iter.Increment()) {
+    // We never diff symlinks (here, we check that dst file is not a symlink).
     if (!S_ISREG(fs_iter.GetStat().st_mode))
       continue;
 
@@ -169,11 +170,12 @@ bool DeltaReadFiles(Graph* graph,
     // from using a graph/cycle detection/etc to generate diffs, and at that
     // time, it will be easy (non-complex) to have many operations read
     // from the same source blocks. At that time, this code can die. -adlr
-    bool should_diff_from_source = true;
+    bool should_diff_from_source = false;
     string src_path = old_root + fs_iter.GetPartialPath();
-    if (utils::FileExists(src_path.c_str())) {
-      struct stat src_stbuf;
-      TEST_AND_RETURN_FALSE_ERRNO(0 == stat(src_path.c_str(), &src_stbuf));
+    struct stat src_stbuf;
+    // We never diff symlinks (here, we check that src file is not a symlink).
+    if (0 == lstat(src_path.c_str(), &src_stbuf) &&
+        S_ISREG(src_stbuf.st_mode)) {
       should_diff_from_source = !utils::SetContainsKey(visited_src_inodes,
                                                        src_stbuf.st_ino);
       visited_src_inodes.insert(src_stbuf.st_ino);

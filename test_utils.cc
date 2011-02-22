@@ -211,12 +211,15 @@ void CreateExtImageAtPath(const string& path, vector<string>* out_paths) {
   EXPECT_EQ(0, System(StringPrintf("echo T > %s/srchardlink0", kMountPath)));
   EXPECT_EQ(0, System(StringPrintf("ln %s/srchardlink0 %s/srchardlink1",
                                    kMountPath, kMountPath)));
+  EXPECT_EQ(0, System(StringPrintf("ln -s bogus %s/boguslink",
+                                   kMountPath)));
   EXPECT_EQ(0, System(StringPrintf("umount -d %s", kMountPath)));
 
   if (out_paths) {
     out_paths->clear();
     out_paths->push_back("");
     out_paths->push_back("/hi");
+    out_paths->push_back("/boguslink");
     out_paths->push_back("/hello");
     out_paths->push_back("/some_dir");
     out_paths->push_back("/some_dir/empty_dir");

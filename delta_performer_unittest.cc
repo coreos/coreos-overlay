@@ -260,6 +260,9 @@ void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop,
                                      "mv %s/tmp %s/srchardlink1",
                                      b_mnt.c_str(), b_mnt.c_str(),
                                      b_mnt.c_str(), b_mnt.c_str()).c_str()));
+    EXPECT_EQ(0, system(StringPrintf("rm %s/boguslink && "
+                                     "echo foobar > %s/boguslink",
+                                     b_mnt.c_str(), b_mnt.c_str()).c_str()));
     EXPECT_TRUE(utils::WriteFile(StringPrintf("%s/hardtocompress",
                                               b_mnt.c_str()).c_str(),
                                  reinterpret_cast<const char*>(kRandomString),
