@@ -31,6 +31,8 @@ class DeltaPerformer : public FileWriter {
     kMetadataParseInsufficientData,
   };
 
+  static const char kUpdatePayloadPublicKeyPath[];
+
   DeltaPerformer(PrefsInterface* prefs)
       : prefs_(prefs),
         fd_(-1),

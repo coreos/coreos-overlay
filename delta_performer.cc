@@ -33,12 +33,13 @@ using google::protobuf::RepeatedPtrField;
 
 namespace chromeos_update_engine {
 
+const char DeltaPerformer::kUpdatePayloadPublicKeyPath[] =
+    "/usr/share/update_engine/update-payload-key.pub.pem";
+
 namespace {
 
 const int kDeltaVersionLength = 8;
 const int kDeltaProtobufLengthLength = 8;
-const char kUpdatePayloadPublicKeyPath[] =
-    "/usr/share/update_engine/update-payload-key.pub.pem";
 const int kUpdateStateOperationInvalid = -1;
 const int kMaxResumedUpdateFailures = 10;
 

@@ -19,6 +19,11 @@ namespace chromeos_update_engine {
 const char OmahaResponseHandlerAction::kDeadlineFile[] =
     "/tmp/update-check-response-deadline";
 
+OmahaResponseHandlerAction::OmahaResponseHandlerAction(PrefsInterface* prefs)
+    : prefs_(prefs),
+      got_no_update_response_(false),
+      key_path_(DeltaPerformer::kUpdatePayloadPublicKeyPath) {}
+
 void OmahaResponseHandlerAction::PerformAction() {
   CHECK(HasInputObject());
   ScopedActionCompleter completer(processor_, this);
@@ -49,6 +54,11 @@ void OmahaResponseHandlerAction::PerformAction() {
       utils::BootKernelDevice(install_plan_.install_path);
 
   install_plan_.is_full_update = !response.is_delta;
+  if (!response.is_delta && utils::FileExists(key_path_.c_str())) {
+    // Can't sign old style full payloads but signature is required so bail out.
+    completer.set_code(kActionCodeSignedDeltaPayloadExpectedError);
+    return;
+  }
 
   TEST_AND_RETURN(HasOutputPipe());
   if (HasOutputPipe())

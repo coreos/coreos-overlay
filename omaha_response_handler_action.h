@@ -29,9 +29,7 @@ class OmahaResponseHandlerAction : public Action<OmahaResponseHandlerAction> {
  public:
   static const char kDeadlineFile[];
 
-  OmahaResponseHandlerAction(PrefsInterface* prefs)
-      : prefs_(prefs),
-        got_no_update_response_(false) {}
+  OmahaResponseHandlerAction(PrefsInterface* prefs);
   typedef ActionTraits<OmahaResponseHandlerAction>::InputObjectType
       InputObjectType;
   typedef ActionTraits<OmahaResponseHandlerAction>::OutputObjectType
@@ -53,6 +51,7 @@ class OmahaResponseHandlerAction : public Action<OmahaResponseHandlerAction> {
   // Debugging/logging
   static std::string StaticType() { return "OmahaResponseHandlerAction"; }
   std::string Type() const { return StaticType(); }
+  void set_key_path(const std::string& path) { key_path_ = path; }
 
  private:
   // Assumes you want to install on the "other" device, where the other
@@ -73,6 +72,9 @@ class OmahaResponseHandlerAction : public Action<OmahaResponseHandlerAction> {
 
   // True only if we got a response and the response said no updates
   bool got_no_update_response_;
+
+  // Public key path to use for payload verification.
+  std::string key_path_;
 
   DISALLOW_COPY_AND_ASSIGN(OmahaResponseHandlerAction);
 };

@@ -456,12 +456,12 @@ void UpdateAttempter::CreatePendingErrorEvent(AbstractAction* action,
     return;
   }
 
-  // For now assume that Omaha response action failure means that
-  // there's no update so don't send an event. Also, double check that
-  // the failure has not occurred while sending an error event -- in
-  // which case don't schedule another. This shouldn't really happen
-  // but just in case...
-  if (action->Type() == OmahaResponseHandlerAction::StaticType() ||
+  // For now assume that a generic Omaha response action failure means that
+  // there's no update so don't send an event. Also, double check that the
+  // failure has not occurred while sending an error event -- in which case
+  // don't schedule another. This shouldn't really happen but just in case...
+  if ((action->Type() == OmahaResponseHandlerAction::StaticType() &&
+       code == kActionCodeError) ||
       status_ == UPDATE_STATUS_REPORTING_ERROR_EVENT) {
     return;
   }
