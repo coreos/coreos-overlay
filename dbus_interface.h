@@ -9,6 +9,7 @@
 
 #include <base/logging.h>
 #include <dbus/dbus-glib.h>
+#include <dbus/dbus-glib-lowlevel.h>
 
 namespace chromeos_update_engine {
 
@@ -25,7 +26,7 @@ class DbusGlibInterface {
   virtual void ProxyUnref(DBusGProxy* proxy) = 0;
 
   // wraps dbus_g_bus_get
-  virtual DBusGConnection*  BusGet(DBusBusType type, GError** error) = 0;
+  virtual DBusGConnection* BusGet(DBusBusType type, GError** error) = 0;
 
   // wraps dbus_g_proxy_call
   virtual gboolean ProxyCall(DBusGProxy* proxy,
@@ -44,6 +45,38 @@ class DbusGlibInterface {
                              GType var_arg4, gchar** var_arg5,
                              GType var_arg6, GArray** var_arg7,
                              GType var_arg8) = 0;
+
+  virtual gboolean ProxyCall(DBusGProxy* proxy,
+                             const char* method,
+                             GError** error,
+                             GType var_arg1, const char* var_arg2,
+                             GType var_arg3, const char* var_arg4,
+                             GType var_arg5, const char* var_arg6,
+                             GType var_arg7, GType var_arg8) = 0;
+
+  virtual DBusConnection* ConnectionGetConnection(DBusGConnection* gbus) = 0;
+
+  virtual void DbusBusAddMatch(DBusConnection* connection,
+                               const char* rule,
+                               DBusError* error) = 0;
+
+  virtual dbus_bool_t DbusConnectionAddFilter(
+      DBusConnection* connection,
+      DBusHandleMessageFunction function,
+      void* user_data,
+      DBusFreeFunction free_data_function) = 0;
+  virtual void DbusConnectionRemoveFilter(DBusConnection* connection,
+                                          DBusHandleMessageFunction function,
+                                          void* user_data) = 0;
+  virtual dbus_bool_t DbusMessageIsSignal(DBusMessage* message,
+                                          const char* interface,
+                                          const char* signal_name) = 0;
+  virtual dbus_bool_t DbusMessageGetArgs(DBusMessage* message,
+                                         DBusError* error,
+                                         GType var_arg1, char** var_arg2,
+                                         GType var_arg3, char** var_arg4,
+                                         GType var_arg5, char** var_arg6,
+                                         GType var_arg7) = 0;
 };
 
 class ConcreteDbusGlib : public DbusGlibInterface {
@@ -63,7 +96,7 @@ class ConcreteDbusGlib : public DbusGlibInterface {
     g_object_unref(proxy);
   }
 
-  virtual DBusGConnection*  BusGet(DBusBusType type, GError** error) {
+  virtual DBusGConnection* BusGet(DBusBusType type, GError** error) {
     return dbus_g_bus_get(type, error);
   }
   
@@ -89,6 +122,62 @@ class ConcreteDbusGlib : public DbusGlibInterface {
     return dbus_g_proxy_call(
         proxy, method, error, var_arg1, var_arg2, var_arg3,
         var_arg4, var_arg5, var_arg6, var_arg7, var_arg8);
+  }
+
+  virtual gboolean ProxyCall(DBusGProxy* proxy,
+                             const char* method,
+                             GError** error,
+                             GType var_arg1, const char* var_arg2,
+                             GType var_arg3, const char* var_arg4,
+                             GType var_arg5, const char* var_arg6,
+                             GType var_arg7, GType var_arg8) {
+    return dbus_g_proxy_call(
+        proxy, method, error, var_arg1, var_arg2, var_arg3,
+        var_arg4, var_arg5, var_arg6, var_arg7, var_arg8);
+  }
+
+
+  virtual DBusConnection* ConnectionGetConnection(DBusGConnection* gbus) {
+    return dbus_g_connection_get_connection(gbus);
+  }
+
+  virtual void DbusBusAddMatch(DBusConnection* connection,
+                               const char* rule,
+                               DBusError* error) {
+    dbus_bus_add_match(connection, rule, error);
+  }
+
+  virtual dbus_bool_t DbusConnectionAddFilter(
+      DBusConnection* connection,
+      DBusHandleMessageFunction function,
+      void* user_data,
+      DBusFreeFunction free_data_function) {
+    return dbus_connection_add_filter(connection,
+                                      function,
+                                      user_data,
+                                      free_data_function);
+  }
+  virtual void DbusConnectionRemoveFilter(DBusConnection* connection,
+                                          DBusHandleMessageFunction function,
+                                          void* user_data) {
+    dbus_connection_remove_filter(connection, function, user_data);
+  }
+  dbus_bool_t DbusMessageIsSignal(DBusMessage* message,
+                                  const char* interface,
+                                  const char* signal_name) {
+    return dbus_message_is_signal(message, interface, signal_name);
+  }
+  virtual dbus_bool_t DbusMessageGetArgs(DBusMessage* message,
+                                         DBusError* error,
+                                         GType var_arg1, char** var_arg2,
+                                         GType var_arg3, char** var_arg4,
+                                         GType var_arg5, char** var_arg6,
+                                         GType var_arg7) {
+    return dbus_message_get_args(message, error,
+                                 var_arg1, var_arg2,
+                                 var_arg3, var_arg4,
+                                 var_arg5, var_arg6,
+                                 var_arg7);
   }
 };
 

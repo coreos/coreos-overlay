@@ -16,7 +16,7 @@
 #include <gtest/gtest_prod.h>  // for FRIEND_TEST
 
 #include "update_engine/action_processor.h"
-#include "update_engine/chrome_proxy_resolver.h"
+#include "update_engine/chrome_browser_proxy_resolver.h"
 #include "update_engine/download_action.h"
 #include "update_engine/omaha_request_params.h"
 #include "update_engine/omaha_response_handler_action.h"
@@ -235,7 +235,7 @@ class UpdateAttempter : public ActionProcessorDelegate,
 
   // Our two proxy resolvers
   DirectProxyResolver direct_proxy_resolver_;
-  ChromeProxyResolver chrome_proxy_resolver_;
+  ChromeBrowserProxyResolver chrome_proxy_resolver_;
 
   DISALLOW_COPY_AND_ASSIGN(UpdateAttempter);
 };

@@ -74,7 +74,6 @@ void SetupDbusService(UpdateEngineService* service) {
                                     DBUS_SERVICE_DBUS,
                                     DBUS_PATH_DBUS,
                                     DBUS_INTERFACE_DBUS);
-
   guint32 request_name_ret;
   if (!org_freedesktop_DBus_request_name(proxy,
                                          kUpdateEngineServiceName,
@@ -146,6 +145,7 @@ void SetupLogging() {
                        logging::DONT_LOCK_LOG_FILE,
                        logging::APPEND_TO_OLD_LOG_FILE);
 }
+
 }  // namespace {}
 }  // namespace chromeos_update_engine
 

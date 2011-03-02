@@ -14,12 +14,12 @@ namespace chromeos_update_engine {
 
 class UpdateAttempterMock : public UpdateAttempter {
  public:
-  UpdateAttempterMock() : UpdateAttempter(NULL, NULL, &dbus_) {}
+  explicit UpdateAttempterMock(MockDbusGlib* dbus)
+      : UpdateAttempter(NULL, NULL, dbus) {}
 
   MOCK_METHOD3(Update, void(const std::string& app_version,
                             const std::string& omaha_url,
                             bool obey_proxies));
-  MockDbusGlib dbus_;
 };
 
 }  // namespace chromeos_update_engine

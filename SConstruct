@@ -238,6 +238,7 @@ sources = Split("""action_processor.cc
                    buffered_file_writer.cc
                    bzip.cc
                    bzip_extent_writer.cc
+                   chrome_browser_proxy_resolver.cc
                    chrome_proxy_resolver.cc
                    cycle_breaker.cc
                    dbus_service.cc
@@ -285,6 +286,7 @@ unittest_sources = Split("""action_unittest.cc
                             action_processor_unittest.cc
                             buffered_file_writer_unittest.cc
                             bzip_extent_writer_unittest.cc
+                            chrome_browser_proxy_resolver_unittest.cc
                             chrome_proxy_resolver_unittest.cc
                             cycle_breaker_unittest.cc
                             decompressing_file_writer_unittest.cc

@@ -33,13 +33,13 @@ namespace chromeos_update_engine {
 // methods.
 class UpdateAttempterUnderTest : public UpdateAttempter {
  public:
-  UpdateAttempterUnderTest()
-      : UpdateAttempter(NULL, NULL, &dbus_) {}
-  MockDbusGlib dbus_;
+  explicit UpdateAttempterUnderTest(MockDbusGlib* dbus)
+      : UpdateAttempter(NULL, NULL, dbus) {}
 };
 
 class UpdateAttempterTest : public ::testing::Test {
  protected:
+  UpdateAttempterTest() : attempter_(&dbus_) {}
   virtual void SetUp() {
     EXPECT_EQ(NULL, attempter_.dbus_service_);
     EXPECT_EQ(NULL, attempter_.prefs_);
@@ -60,6 +60,7 @@ class UpdateAttempterTest : public ::testing::Test {
     attempter_.prefs_ = &prefs_;
   }
 
+  MockDbusGlib dbus_;
   UpdateAttempterUnderTest attempter_;
   ActionProcessorMock* processor_;
   NiceMock<PrefsMock> prefs_;
@@ -110,7 +111,8 @@ TEST_F(UpdateAttempterTest, RunAsRootConstructWithUpdatedMarkerTest) {
   extern const char* kUpdateCompletedMarker;
   const FilePath kMarker(kUpdateCompletedMarker);
   EXPECT_EQ(0, file_util::WriteFile(kMarker, "", 0));
-  UpdateAttempterUnderTest attempter;
+  MockDbusGlib dbus;
+  UpdateAttempterUnderTest attempter(&dbus);
   EXPECT_EQ(UPDATE_STATUS_UPDATED_NEED_REBOOT, attempter.status());
   EXPECT_TRUE(file_util::Delete(kMarker, false));
 }

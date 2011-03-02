@@ -40,7 +40,7 @@ class UpdateCheckSchedulerUnderTest : public UpdateCheckScheduler {
 
 class UpdateCheckSchedulerTest : public ::testing::Test {
  public:
-  UpdateCheckSchedulerTest() : scheduler_(&attempter_) {}
+  UpdateCheckSchedulerTest() : scheduler_(&attempter_), attempter_(&dbus_) {}
 
  protected:
   virtual void SetUp() {
@@ -65,6 +65,7 @@ class UpdateCheckSchedulerTest : public ::testing::Test {
   }
 
   UpdateCheckSchedulerUnderTest scheduler_;
+  MockDbusGlib dbus_;
   UpdateAttempterMock attempter_;
   MockFunction<gboolean(gpointer data)> source_callback_;
   GMainLoop* loop_;

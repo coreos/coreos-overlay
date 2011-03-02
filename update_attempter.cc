@@ -125,6 +125,7 @@ UpdateAttempter::~UpdateAttempter() {
 void UpdateAttempter::Update(const std::string& app_version,
                              const std::string& omaha_url,
                              bool obey_proxies) {
+  chrome_proxy_resolver_.Init();
   if (status_ == UPDATE_STATUS_UPDATED_NEED_REBOOT) {
     LOG(INFO) << "Not updating b/c we already updated and we're waiting for "
               << "reboot";

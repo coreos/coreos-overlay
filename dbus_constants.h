@@ -12,7 +12,6 @@ static const char* const kUpdateEngineServicePath =
     "/org/chromium/UpdateEngine";
 static const char* const kUpdateEngineServiceInterface =
     "org.chromium.UpdateEngineInterface";
-
 }  // namespace chromeos_update_engine
 
 #endif  // CHROMEOS_PLATFORM_UPDATE_ENGINE_DBUS_CONSTANTS_H__
