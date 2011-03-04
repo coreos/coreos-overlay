@@ -132,8 +132,11 @@ void PostinstallRunnerActionTest::DoTest(bool do_losetup, bool do_err_script) {
   if (dev[strlen(dev) - 1] == '\n')
     dev[strlen(dev) - 1] = '\0';
 
-  if (do_losetup)
+  scoped_ptr<ScopedLoopbackDeviceReleaser> loop_releaser;
+  if (do_losetup) {
     ASSERT_EQ(0, System(string("losetup ") + dev + " " + cwd + "/image.dat"));
+    loop_releaser.reset(new ScopedLoopbackDeviceReleaser(dev));
+  }
 
   ActionProcessor processor;
   ObjectFeederAction<InstallPlan> feeder_action;
@@ -172,8 +175,9 @@ void PostinstallRunnerActionTest::DoTest(bool do_losetup, bool do_err_script) {
   else
     ASSERT_LT(rc, 0);
 
-  if (do_losetup)
-    ASSERT_EQ(0, System(string("losetup -d ") + dev));
+  if (do_losetup) {
+    loop_releaser.reset(NULL);
+  }
   ASSERT_EQ(0, System(string("rm -f ") + cwd + "/postinst_called"));
   ASSERT_EQ(0, System(string("rm -f ") + cwd + "/image.dat"));
 }
