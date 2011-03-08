@@ -248,7 +248,9 @@ void UpdateAttempter::Update(const std::string& app_version,
               postinstall_runner_action.get());
 
   SetStatusAndNotify(UPDATE_STATUS_CHECKING_FOR_UPDATE);
-  processor_->StartProcessing();
+
+  // Start the processing asynchronously to unblock the event loop.
+  g_idle_add(&StaticStartProcessing, this);
 }
 
 void UpdateAttempter::CheckForUpdate(const std::string& app_version,
@@ -525,6 +527,11 @@ void UpdateAttempter::CleanupPriorityManagement() {
 
 gboolean UpdateAttempter::StaticManagePriorityCallback(gpointer data) {
   return reinterpret_cast<UpdateAttempter*>(data)->ManagePriorityCallback();
+}
+
+gboolean UpdateAttempter::StaticStartProcessing(gpointer data) {
+  reinterpret_cast<UpdateAttempter*>(data)->processor_->StartProcessing();
+  return FALSE;  // Don't call this callback again.
 }
 
 bool UpdateAttempter::ManagePriorityCallback() {

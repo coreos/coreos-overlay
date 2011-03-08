@@ -158,6 +158,9 @@ class UpdateAttempter : public ActionProcessorDelegate,
   static gboolean StaticManagePriorityCallback(gpointer data);
   bool ManagePriorityCallback();
 
+  // Callback to start the action processor.
+  static gboolean StaticStartProcessing(gpointer data);
+
   // Checks if a full update is needed and forces it by updating the Omaha
   // request params.
   void DisableDeltaUpdateIfNeeded();
