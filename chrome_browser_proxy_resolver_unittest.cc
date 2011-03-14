@@ -107,7 +107,8 @@ gboolean SendReply(gpointer data) {
 
 // chrome_replies should be set to whether or not we fake a reply from
 // chrome. If there's no reply, the resolver should time out.
-void RunTest(bool chrome_replies) {
+// If chrome_alive is false, assume that sending to chrome fails.
+void RunTest(bool chrome_replies, bool chrome_alive) {
   long number = 1;
   DBusGConnection* kMockSystemGBus =
       reinterpret_cast<DBusGConnection*>(number++);
@@ -123,11 +124,11 @@ void RunTest(bool chrome_replies) {
   MockDbusGlib dbus_iface;
   
   EXPECT_CALL(dbus_iface, BusGet(_, _))
-      .Times(3)
+      .Times(chrome_alive ? 3 : 2)
       .WillRepeatedly(Return(kMockSystemGBus));
   EXPECT_CALL(dbus_iface,
               ConnectionGetConnection(kMockSystemGBus))
-      .Times(2)
+      .Times(chrome_alive ? 2 : 1)
       .WillRepeatedly(Return(kMockSystemBus));
   EXPECT_CALL(dbus_iface, DbusBusAddMatch(kMockSystemBus, _, _));
   EXPECT_CALL(dbus_iface,
@@ -139,16 +140,17 @@ void RunTest(bool chrome_replies) {
                                    StrEq(kLibCrosServicePath),
                                    StrEq(kLibCrosServiceInterface),
                                    _))
-      .WillOnce(Return(kMockDbusProxy));
-  EXPECT_CALL(dbus_iface, ProxyCall(
-      kMockDbusProxy,
-      StrEq(kLibCrosServiceResolveNetworkProxyMethodName),
-      _,
-      G_TYPE_STRING, StrEq(kUrl),
-      G_TYPE_STRING, StrEq(kLibCrosProxyResolveSignalInterface),
-      G_TYPE_STRING, StrEq(kLibCrosProxyResolveName),
-      G_TYPE_INVALID))
-      .WillOnce(Return(TRUE));
+      .WillOnce(Return(chrome_alive ? kMockDbusProxy : NULL));
+  if (chrome_alive)
+    EXPECT_CALL(dbus_iface, ProxyCall(
+        kMockDbusProxy,
+        StrEq(kLibCrosServiceResolveNetworkProxyMethodName),
+        _,
+        G_TYPE_STRING, StrEq(kUrl),
+        G_TYPE_STRING, StrEq(kLibCrosProxyResolveSignalInterface),
+        G_TYPE_STRING, StrEq(kLibCrosProxyResolveName),
+        G_TYPE_INVALID))
+        .WillOnce(Return(chrome_alive ? TRUE : FALSE));
   EXPECT_CALL(dbus_iface,
               DbusConnectionRemoveFilter(kMockSystemBus, _, _));
   if (chrome_replies) {
@@ -172,7 +174,7 @@ void RunTest(bool chrome_replies) {
   GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
 
   ChromeBrowserProxyResolver resolver(&dbus_iface);
-  EXPECT_TRUE(resolver.Init());
+  EXPECT_EQ(chrome_alive, resolver.Init());
   resolver.set_timeout(1);
   SendReplyArgs args = {
     kMockSystemBus,
@@ -192,47 +194,15 @@ void RunTest(bool chrome_replies) {
 }  // namespace {}
 
 TEST(ChromeBrowserProxyResolverTest, SuccessTest) {
-  RunTest(true);
+  RunTest(true, true);
 }
 
 TEST(ChromeBrowserProxyResolverTest, NoReplyTest) {
-  RunTest(false);
+  RunTest(false, true);
 }
 
 TEST(ChromeBrowserProxyResolverTest, NoChromeTest) {
-  long number = 1;
-  DBusGConnection* kMockSystemGBus =
-      reinterpret_cast<DBusGConnection*>(number++);
-  DBusConnection* kMockSystemBus =
-      reinterpret_cast<DBusConnection*>(number++);
-
-  const char kUrl[] = "http://example.com/blah";
-
-  MockDbusGlib dbus_iface;
-  
-  EXPECT_CALL(dbus_iface, BusGet(_, _))
-      .Times(2)
-      .WillRepeatedly(Return(kMockSystemGBus));
-  EXPECT_CALL(dbus_iface,
-              ConnectionGetConnection(kMockSystemGBus))
-      .Times(1)
-      .WillOnce(Return(kMockSystemBus));
-  EXPECT_CALL(dbus_iface, DbusBusAddMatch(kMockSystemBus, _, _));
-  EXPECT_CALL(dbus_iface,
-              DbusConnectionAddFilter(kMockSystemBus, _, _, _))
-      .WillOnce(Return(1));
-  EXPECT_CALL(dbus_iface,
-              ProxyNewForNameOwner(kMockSystemGBus,
-                                   StrEq(kLibCrosServiceName),
-                                   StrEq(kLibCrosServicePath),
-                                   StrEq(kLibCrosServiceInterface),
-                                   _))
-      .WillOnce(Return(static_cast<DBusGProxy*>(NULL)));
-  EXPECT_CALL(dbus_iface,
-              DbusConnectionRemoveFilter(kMockSystemBus, _, _));
-  ChromeBrowserProxyResolver resolver(&dbus_iface);
-  EXPECT_FALSE(resolver.Init());
-  EXPECT_FALSE(resolver.GetProxiesForUrl(kUrl, NULL, NULL));
+  RunTest(false, false);
 }
 
 }  // namespace chromeos_update_engine

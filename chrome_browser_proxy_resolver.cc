@@ -128,8 +128,8 @@ bool ChromeBrowserProxyResolver::GetProxiesForUrl(const string& url,
                                                   ProxiesResolvedFn callback,
                                                   void* data) {
   GError* error = NULL;
-  TEST_AND_RETURN_FALSE(proxy_);
-  if (!dbus_->ProxyCall(
+  guint timeout = timeout_;
+  if (!proxy_ || !dbus_->ProxyCall(
           proxy_,
           kLibCrosServiceResolveNetworkProxyMethodName,
           &error,
@@ -137,15 +137,16 @@ bool ChromeBrowserProxyResolver::GetProxiesForUrl(const string& url,
           G_TYPE_STRING, kLibCrosProxyResolveSignalInterface,
           G_TYPE_STRING, kLibCrosProxyResolveName,
           G_TYPE_INVALID, G_TYPE_INVALID)) {
-    LOG(ERROR) << "dbus_g_proxy_call failed: "
-               << utils::GetGErrorMessage(error);
-    return false;
+    LOG(WARNING) << "dbus_g_proxy_call failed: "
+                 << utils::GetGErrorMessage(error)
+                 << " Continuing with no proxy.";
+    timeout = 0;
   }
   callbacks_.insert(make_pair(url, make_pair(callback, data)));
   Closure* closure = NewCallback(this,
                                  &ChromeBrowserProxyResolver::HandleTimeout,
                                  url);
-  GSource* timer = g_timeout_source_new_seconds(timeout_);
+  GSource* timer = g_timeout_source_new_seconds(timeout);
   g_source_set_callback(timer, &utils::GlibRunClosure, closure, NULL);
   g_source_attach(timer, NULL);
   timers_.insert(make_pair(url, timer));
