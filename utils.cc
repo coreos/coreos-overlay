@@ -25,7 +25,6 @@
 #include <base/rand_util.h>
 #include <base/string_util.h>
 #include <base/logging.h>
-#include <cros_boot_mode/boot_mode.h>
 #include <google/protobuf/stubs/common.h>
 #include <rootdev/rootdev.h>
 
@@ -53,12 +52,18 @@ bool IsOOBEComplete() {
 }
 
 bool IsNormalBootMode() {
-  cros_boot_mode::BootMode mode;
-  mode.Initialize(false,  // unsupported_is_developer
-                  true);  // use_bootloader
-  bool normal = mode.mode() == cros_boot_mode::BootMode::kNormal;
-  LOG_IF(INFO, !normal) << "Boot mode not normal: " << mode.mode_text();
-  return normal;
+  // TODO(petkov): Convert to a library call once a crossystem library is
+  // available (crosbug.com/13291).
+  int exit_code = 0;
+  vector<string> cmd(1, "/usr/bin/crossystem");
+  cmd.push_back("devsw_boot?1");
+
+  // Assume dev mode if the dev switch is set to 1 and there was no error
+  // executing crossystem. Assume normal mode otherwise.
+  bool success = Subprocess::SynchronousExec(cmd, &exit_code);
+  bool dev_mode = success && exit_code == 0;
+  LOG_IF(INFO, dev_mode) << "Booted in dev mode.";
+  return !dev_mode;
 }
 
 bool WriteFile(const char* path, const char* data, int data_len) {

@@ -195,7 +195,6 @@ env['CCFLAGS'] += (' ' + ' '.join(env['CFLAGS']))
 
 env['LIBS'] = Split("""base
                        bz2
-                       cros_boot_mode
                        crypto
                        curl
                        ext2fs

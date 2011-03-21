@@ -29,8 +29,8 @@ bool IsOfficialBuild();
 // otherwise.
 bool IsOOBEComplete();
 
-// Returns true if the boot mode is normal, false otherwise (e.g., developer or
-// recovery).
+// Returns true if the boot mode is normal or if it's unable to determine the
+// boot mode. Returns false if the boot mode is developer.
 bool IsNormalBootMode();
 
 // Writes the data passed to path. The file at path will be overwritten if it

@@ -603,7 +603,7 @@ TEST(OmahaRequestActionTest, FormatErrorEventOutputTest) {
       "errorcode=\"%d\"></o:event>\n",
       OmahaEvent::kTypeDownloadComplete,
       OmahaEvent::kResultError,
-      kActionCodeError | kActionCodeBootModeFlag);
+      kActionCodeError);
   EXPECT_NE(post_str.find(expected_event), string::npos);
   EXPECT_EQ(post_str.find("o:updatecheck"), string::npos);
 }

@@ -31,7 +31,7 @@ TEST(UtilsTest, IsOfficialBuild) {
 
 TEST(UtilsTest, IsNormalBootMode) {
   // Pretty lame test...
-  EXPECT_FALSE(utils::IsNormalBootMode());
+  EXPECT_TRUE(utils::IsNormalBootMode());
 }
 
 TEST(UtilsTest, NormalizePathTest) {
