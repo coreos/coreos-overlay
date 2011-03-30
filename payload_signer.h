@@ -67,6 +67,12 @@ class PayloadSigner {
   static bool VerifySignedPayload(const std::string& payload_path,
                                   const std::string& public_key_path);
 
+  // Pads a SHA256 hash so that it may be encrypted/signed with RSA2048
+  // using the PKCS#1 v1.5 scheme.
+  // hash should be a pointer to vector of exactly 256 bits. The vector
+  // will be modified in place and will result in having a length of
+  // 2048 bits. Returns true on success, false otherwise.
+  static bool PadRSA2048SHA256Hash(std::vector<char>* hash);
  private:
   // This should never be constructed
   DISALLOW_IMPLICIT_CONSTRUCTORS(PayloadSigner);

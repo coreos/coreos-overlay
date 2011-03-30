@@ -149,7 +149,7 @@ void SignGeneratedShellPayload(SignatureTest signature_test,
     LOG(INFO) << "Generating a mismatched private key.";
     ASSERT_EQ(0,
               System(StringPrintf(
-                  "/usr/bin/openssl genrsa -out %s 1024",
+                  "/usr/bin/openssl genrsa -out %s 2048",
                   private_key_path.c_str())));
   }
   int signature_size = GetSignatureSize(private_key_path);
@@ -164,12 +164,18 @@ void SignGeneratedShellPayload(SignatureTest signature_test,
                 signature_size,
                 hash_file.c_str())));
 
+  // Pad the hash
+  vector<char> hash;
+  ASSERT_TRUE(utils::ReadFile(hash_file, &hash));
+  ASSERT_TRUE(PayloadSigner::PadRSA2048SHA256Hash(&hash));
+  ASSERT_TRUE(WriteFileVector(hash_file, hash));
+
   string sig_file;
   ASSERT_TRUE(utils::MakeTempFile("/tmp/signature.XXXXXX", &sig_file, NULL));
   ScopedPathUnlinker sig_unlinker(sig_file);
   ASSERT_EQ(0,
             System(StringPrintf(
-                "/usr/bin/openssl rsautl -pkcs -sign -inkey %s -in %s -out %s",
+                "/usr/bin/openssl rsautl -raw -sign -inkey %s -in %s -out %s",
                 private_key_path.c_str(),
                 hash_file.c_str(),
                 sig_file.c_str())));

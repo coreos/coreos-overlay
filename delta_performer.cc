@@ -601,7 +601,8 @@ bool DeltaPerformer::VerifyPayload(
   OmahaHashCalculator signed_hasher;
   TEST_AND_RETURN_FALSE(signed_hasher.SetContext(signed_hash_context_));
   TEST_AND_RETURN_FALSE(signed_hasher.Finalize());
-  const vector<char>& hash_data = signed_hasher.raw_hash();
+  vector<char> hash_data = signed_hasher.raw_hash();
+  PayloadSigner::PadRSA2048SHA256Hash(&hash_data);
   TEST_AND_RETURN_FALSE(!hash_data.empty());
   TEST_AND_RETURN_FALSE(hash_data == signed_hash_data);
   return true;
