@@ -569,10 +569,22 @@ bool DeltaPerformer::ExtractSignatureMessage(
   return true;
 }
 
+#define TEST_SET_TRUE_RET_TRUE(_ptr, _condition)                        \
+  do {                                                                  \
+    if (!(_condition)) {                                                \
+      LOG(ERROR) << "Non fatal public key verification: " << #_condition; \
+      if (_ptr) {                                                       \
+        *(_ptr) = true;                                                 \
+      }                                                                 \
+      return true;                                                      \
+    }                                                                   \
+  } while(0)
+
 bool DeltaPerformer::VerifyPayload(
     const string& public_key_path,
     const std::string& update_check_response_hash,
-    const uint64_t update_check_response_size) {
+    const uint64_t update_check_response_size,
+    bool* signature_failed) {
   string key_path = public_key_path;
   if (key_path.empty()) {
     key_path = kUpdatePayloadPublicKeyPath;
@@ -593,20 +605,34 @@ bool DeltaPerformer::VerifyPayload(
     LOG(WARNING) << "Not verifying signed delta payload -- missing public key.";
     return true;
   }
-  TEST_AND_RETURN_FALSE(!signatures_message_data_.empty());
+  TEST_SET_TRUE_RET_TRUE(signature_failed, !signatures_message_data_.empty());
   vector<char> signed_hash_data;
-  TEST_AND_RETURN_FALSE(PayloadSigner::VerifySignature(signatures_message_data_,
-                                                       key_path,
-                                                       &signed_hash_data));
+  TEST_SET_TRUE_RET_TRUE(signature_failed, PayloadSigner::VerifySignature(
+      signatures_message_data_,
+      key_path,
+      &signed_hash_data));
   OmahaHashCalculator signed_hasher;
-  TEST_AND_RETURN_FALSE(signed_hasher.SetContext(signed_hash_context_));
-  TEST_AND_RETURN_FALSE(signed_hasher.Finalize());
+  TEST_SET_TRUE_RET_TRUE(signature_failed,
+                         signed_hasher.SetContext(signed_hash_context_));
+  TEST_SET_TRUE_RET_TRUE(signature_failed,
+                         signed_hasher.Finalize());
   vector<char> hash_data = signed_hasher.raw_hash();
   PayloadSigner::PadRSA2048SHA256Hash(&hash_data);
-  TEST_AND_RETURN_FALSE(!hash_data.empty());
-  TEST_AND_RETURN_FALSE(hash_data == signed_hash_data);
+  TEST_SET_TRUE_RET_TRUE(signature_failed, !hash_data.empty());
+  if (hash_data != signed_hash_data) {
+    LOG(ERROR) << "Public key verificaion failed. This is non-fatal. "
+        "Attached Signature:";
+    utils::HexDumpVector(signed_hash_data);
+    LOG(ERROR) << "Computed Signature:";
+    utils::HexDumpVector(hash_data);
+    if (signature_failed) {
+      *signature_failed = true;
+    }
+  }
   return true;
 }
+
+#undef TEST_SET_TRUE_RET_TRUE
 
 bool DeltaPerformer::GetNewPartitionInfo(uint64_t* kernel_size,
                                          vector<char>* kernel_hash,

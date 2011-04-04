@@ -450,18 +450,21 @@ void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop,
                        strlen(new_data_string)));
 
   EXPECT_TRUE(utils::FileExists(kUnittestPublicKeyPath));
-  bool expect_verify_success =
-      signature_test != kSignatureNone &&
-      signature_test != kSignatureGeneratedShellBadKey;
-  EXPECT_EQ(expect_verify_success,
-            performer.VerifyPayload(
-                kUnittestPublicKeyPath,
-                OmahaHashCalculator::OmahaHashOfData(delta),
-                delta.size()));
+  const bool expect_public_verify_failure =
+      signature_test == kSignatureNone ||
+      signature_test == kSignatureGeneratedShellBadKey;
+  bool public_verify_failure = false;
+  EXPECT_TRUE(performer.VerifyPayload(
+      kUnittestPublicKeyPath,
+      OmahaHashCalculator::OmahaHashOfData(delta),
+      delta.size(),
+      &public_verify_failure));
+  EXPECT_EQ(expect_public_verify_failure, public_verify_failure);
   EXPECT_TRUE(performer.VerifyPayload(
       "/public/key/does/not/exists",
       OmahaHashCalculator::OmahaHashOfData(delta),
-      delta.size()));
+      delta.size(),
+      NULL));
 
   uint64_t new_kernel_size;
   vector<char> new_kernel_hash;

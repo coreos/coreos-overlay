@@ -163,7 +163,8 @@ void DownloadAction::TransferComplete(HttpFetcher *fetcher, bool successful) {
     if (!install_plan_.is_full_update) {
       if (!delta_performer_->VerifyPayload("",
                                            install_plan_.download_hash,
-                                           install_plan_.size)) {
+                                           install_plan_.size,
+                                           NULL)) {
         LOG(ERROR) << "Download of " << install_plan_.download_url
                    << " failed due to payload verification error.";
         code = kActionCodeDownloadPayloadVerificationError;
