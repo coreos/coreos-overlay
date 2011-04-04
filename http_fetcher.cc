@@ -31,6 +31,7 @@ bool HttpFetcher::ResolveProxiesForUrl(const string& url, Closure* callback) {
     no_resolver_idle_id_ = g_idle_add(utils::GlibRunClosure, callback);
     return true;
   }
+  CHECK_EQ(reinterpret_cast<Closure*>(NULL), callback_);
   callback_ = callback;
   return proxy_resolver_->GetProxiesForUrl(url,
                                            &HttpFetcher::StaticProxiesResolved,
@@ -41,8 +42,11 @@ void HttpFetcher::ProxiesResolved(const std::deque<std::string>& proxies) {
   no_resolver_idle_id_ = 0;
   if (!proxies.empty())
     SetProxies(proxies);
-  callback_->Run();
+  CHECK_NE(reinterpret_cast<Closure*>(NULL), callback_);
+  Closure* callback = callback_;
   callback_ = NULL;
+  // This may indirectly call back into ResolveProxiesForUrl():
+  callback->Run();
 }
 
 }  // namespace chromeos_update_engine

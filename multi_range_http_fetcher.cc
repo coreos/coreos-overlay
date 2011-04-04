@@ -123,7 +123,7 @@ void MultiRangeHTTPFetcher::TransferEnded(HttpFetcher* fetcher,
     successful = true;
   }
 
-  // If we have another fetcher, use that.
+  // If we have another transfer, do that.
   if (current_index_ + 1 < ranges_.size()) {
     current_index_++;
     LOG(INFO) << "Starting next transfer (" << current_index_ << ").";
