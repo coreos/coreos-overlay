@@ -36,7 +36,8 @@ class MockHttpFetcher : public HttpFetcher {
         timeout_source_(NULL),
         timout_tag_(0),
         paused_(false),
-        fail_transfer_(false) {
+        fail_transfer_(false),
+        never_use_(false) {
     data_.insert(data_.end(), data, data + size);
   }
 
@@ -65,6 +66,9 @@ class MockHttpFetcher : public HttpFetcher {
 
   // Fail the transfer. This simulates a network failure.
   void FailTransfer(int http_response_code);
+
+  // If set to true, this will EXPECT fail on BeginTransfer
+  void set_never_use(bool never_use) { never_use_ = never_use; }
 
   const std::vector<char>& post_data() const {
     return post_data_;
@@ -107,6 +111,9 @@ class MockHttpFetcher : public HttpFetcher {
 
   // Set to true if the transfer should fail.
   bool fail_transfer_;
+
+  // Set to true if BeginTransfer should EXPECT fail.
+  bool never_use_;
 
   DISALLOW_COPY_AND_ASSIGN(MockHttpFetcher);
 };

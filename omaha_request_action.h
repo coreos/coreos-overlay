@@ -150,6 +150,8 @@ class OmahaRequestAction : public Action<OmahaRequestAction>,
   // Returns true if this is an Event request, false if it's an UpdateCheck.
   bool IsEvent() const { return event_.get() != NULL; }
 
+  void set_should_skip(bool should_skip) { should_skip_ = should_skip; }
+
  private:
   // If this is an update check request, initializes
   // |ping_active_days_| and |ping_roll_call_days_| to values that may
@@ -180,6 +182,9 @@ class OmahaRequestAction : public Action<OmahaRequestAction>,
   // are sent to Omaha.
   int ping_active_days_;
   int ping_roll_call_days_;
+
+  // If true, this action should be a noop.
+  bool should_skip_;
 
   DISALLOW_COPY_AND_ASSIGN(OmahaRequestAction);
 };

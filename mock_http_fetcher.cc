@@ -3,10 +3,14 @@
 // found in the LICENSE file.
 
 #include "update_engine/mock_http_fetcher.h"
-#include <algorithm>
-#include "base/logging.h"
 
-// This is a mac implementation of HttpFetcher which is useful for testing.
+#include <algorithm>
+
+#include <base/logging.h>
+#include <gtest/gtest.h>
+
+
+// This is a mock implementation of HttpFetcher which is useful for testing.
 
 using std::min;
 
@@ -17,6 +21,7 @@ MockHttpFetcher::~MockHttpFetcher() {
 }
 
 void MockHttpFetcher::BeginTransfer(const std::string& url) {
+  EXPECT_FALSE(never_use_);
   if (fail_transfer_ || data_.empty()) {
     // No data to send, just notify of completion..
     SignalTransferComplete();

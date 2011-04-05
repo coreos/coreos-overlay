@@ -179,7 +179,8 @@ OmahaRequestAction::OmahaRequestAction(PrefsInterface* prefs,
       event_(event),
       http_fetcher_(http_fetcher),
       ping_active_days_(0),
-      ping_roll_call_days_(0) {}
+      ping_roll_call_days_(0),
+      should_skip_(false) {}
 
 OmahaRequestAction::~OmahaRequestAction() {}
 
@@ -216,6 +217,10 @@ void OmahaRequestAction::InitPingDays() {
 }
 
 void OmahaRequestAction::PerformAction() {
+  if (should_skip_) {
+    processor_->ActionComplete(this, kActionCodeSuccess);
+    return;
+  }
   http_fetcher_->set_delegate(this);
   InitPingDays();
   string request_post(FormatRequest(event_.get(),
