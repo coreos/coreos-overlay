@@ -116,7 +116,11 @@ void LibcurlHttpFetcher::ResumeTransfer(const std::string& url) {
   // If the connection drops under 10 bytes/sec for 3 minutes, reconnect.
   CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_LOW_SPEED_LIMIT, 10),
            CURLE_OK);
-  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_LOW_SPEED_TIME, 3 * 60),
+  // Use a smaller timeout on official builds, larger for dev. Dev users
+  // want a longer timeout b/c they may be waiting on the dev server to
+  // build an image.
+  const int kTimeout = IsOfficialBuild() ? 90 : 3 * 60;
+  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_LOW_SPEED_TIME, kTimeout),
            CURLE_OK);
 
   // By default, libcurl doesn't follow redirections. Allow up to
