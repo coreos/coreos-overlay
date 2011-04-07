@@ -252,6 +252,7 @@ const string kActionTypes[] = {
   OmahaRequestAction::StaticType(),
   DownloadAction::StaticType(),
   OmahaRequestAction::StaticType(),
+  OmahaRequestAction::StaticType(),
   FilesystemCopierAction::StaticType(),
   FilesystemCopierAction::StaticType(),
   PostinstallRunnerAction::StaticType(),

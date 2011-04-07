@@ -13,6 +13,7 @@
 
 #include <base/scoped_ptr.h>
 #include <curl/curl.h>
+#include <google/protobuf/stubs/common.h>
 
 #include "update_engine/action.h"
 #include "update_engine/decompressing_file_writer.h"
@@ -97,6 +98,10 @@ class DownloadAction : public Action<DownloadAction>,
 
   HttpFetcher* http_fetcher() { return http_fetcher_.get(); }
 
+  void set_skip_reporting_signature_fail(google::protobuf::Closure* callback) {
+    skip_reporting_signature_fail_.reset(callback);
+  }
+
  private:
   // The InstallPlan passed in
   InstallPlan install_plan_;
@@ -132,6 +137,9 @@ class DownloadAction : public Action<DownloadAction>,
   // For reporting status to outsiders
   DownloadActionDelegate* delegate_;
   uint64_t bytes_received_;
+
+  // Called if the download fails OR (download success AND signature verifies)
+  scoped_ptr<google::protobuf::Closure> skip_reporting_signature_fail_;
 
   DISALLOW_COPY_AND_ASSIGN(DownloadAction);
 };

@@ -41,6 +41,7 @@ enum ActionExitCode {
   kActionCodeNewRootfsVerificationError = 15,
   kActionCodeNewKernelVerificationError = 16,
   kActionCodeSignedDeltaPayloadExpectedError = 17,
+  kActionCodeDownloadPayloadPubKeyVerificationError = 18,
   kActionCodeOmahaRequestEmptyResponseError = 200,
   kActionCodeOmahaRequestXMLParseError = 201,
   kActionCodeOmahaRequestNoUpdateCheckNode = 202,

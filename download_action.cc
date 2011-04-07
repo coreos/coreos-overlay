@@ -27,7 +27,8 @@ DownloadAction::DownloadAction(PrefsInterface* prefs,
       http_fetcher_(http_fetcher),
       code_(kActionCodeSuccess),
       delegate_(NULL),
-      bytes_received_(0) {}
+      bytes_received_(0),
+      skip_reporting_signature_fail_(NULL) {}
 
 DownloadAction::~DownloadAction() {}
 
@@ -157,6 +158,7 @@ void DownloadAction::TransferComplete(HttpFetcher *fetcher, bool successful) {
   if (delegate_) {
     delegate_->SetDownloadStatus(false);  // Set to inactive.
   }
+  bool signature_verify_failed = false;
   ActionExitCode code =
       successful ? kActionCodeSuccess : kActionCodeDownloadTransferError;
   if (code == kActionCodeSuccess) {
@@ -164,7 +166,7 @@ void DownloadAction::TransferComplete(HttpFetcher *fetcher, bool successful) {
       if (!delta_performer_->VerifyPayload("",
                                            install_plan_.download_hash,
                                            install_plan_.size,
-                                           NULL)) {
+                                           &signature_verify_failed)) {
         LOG(ERROR) << "Download of " << install_plan_.download_url
                    << " failed due to payload verification error.";
         code = kActionCodeDownloadPayloadVerificationError;
@@ -191,6 +193,12 @@ void DownloadAction::TransferComplete(HttpFetcher *fetcher, bool successful) {
         code = kActionCodeDownloadSizeMismatchError;
       }
     }
+  }
+
+  if (skip_reporting_signature_fail_.get() &&
+      (code != kActionCodeSuccess || !signature_verify_failed)) {
+    LOG(INFO) << "Suppressing signature pub key verification warning";
+    skip_reporting_signature_fail_->Run();
   }
 
   FlushLinuxCaches();
