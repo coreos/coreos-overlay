@@ -169,7 +169,8 @@ bool TestUpdateCheck(PrefsInterface* prefs,
   OmahaRequestAction action(prefs ? prefs : &local_prefs,
                             params,
                             NULL,
-                            fetcher);
+                            fetcher,
+                            false);
   OmahaRequestActionTestProcessorDelegate delegate;
   delegate.loop_ = loop;
   delegate.expected_code_ = expected_code;
@@ -204,7 +205,7 @@ void TestEvent(const OmahaRequestParams& params,
                                                  http_response.size(),
                                                  NULL);
   NiceMock<PrefsMock> prefs;
-  OmahaRequestAction action(&prefs, params, event, fetcher);
+  OmahaRequestAction action(&prefs, params, event, fetcher, false);
   OmahaRequestActionTestProcessorDelegate delegate;
   delegate.loop_ = loop;
   ActionProcessor processor;
@@ -270,7 +271,8 @@ TEST(OmahaRequestActionTest, NoOutputPipeTest) {
   OmahaRequestAction action(&prefs, kDefaultTestParams, NULL,
                             new MockHttpFetcher(http_response.data(),
                                                 http_response.size(),
-                                                NULL));
+                                                NULL),
+                            false);
   OmahaRequestActionTestProcessorDelegate delegate;
   delegate.loop_ = loop;
   ActionProcessor processor;
@@ -295,7 +297,8 @@ TEST(OmahaRequestActionTest, SkipTest) {
   fetcher->set_never_use(true);
   OmahaRequestAction action(&prefs, kDefaultTestParams,
                             new OmahaEvent(OmahaEvent::kTypeUpdateComplete),
-                            fetcher);  // Passes fetcher ownership
+                            fetcher,   // Passes fetcher ownership
+                            false);
   action.set_should_skip(true);
   OmahaRequestActionTestProcessorDelegate delegate;
   delegate.loop_ = loop;
@@ -444,7 +447,8 @@ TEST(OmahaRequestActionTest, TerminateTransferTest) {
   OmahaRequestAction action(&prefs, kDefaultTestParams, NULL,
                             new MockHttpFetcher(http_response.data(),
                                                 http_response.size(),
-                                                NULL));
+                                                NULL),
+                            false);
   TerminateEarlyTestProcessorDelegate delegate;
   delegate.loop_ = loop;
   ActionProcessor processor;
@@ -560,8 +564,9 @@ TEST(OmahaRequestActionTest, FormatUpdateCheckOutputTest) {
                                &post_data));
   // convert post_data to string
   string post_str(&post_data[0], post_data.size());
-  EXPECT_NE(post_str.find("        <o:ping a=\"-1\" r=\"-1\"></o:ping>\n"
-                          "        <o:updatecheck></o:updatecheck>\n"),
+  EXPECT_NE(post_str.find(
+                "        <o:ping active=\"1\" a=\"-1\" r=\"-1\"></o:ping>\n"
+                "        <o:updatecheck></o:updatecheck>\n"),
             string::npos);
   EXPECT_NE(post_str.find("hardware_class=\"OEM MODEL 09235 7471\""),
             string::npos);
@@ -584,8 +589,9 @@ TEST(OmahaRequestActionTest, FormatUpdateCheckPrevVersionOutputTest) {
                                &post_data));
   // convert post_data to string
   string post_str(&post_data[0], post_data.size());
-  EXPECT_NE(post_str.find("        <o:ping a=\"-1\" r=\"-1\"></o:ping>\n"
-                          "        <o:updatecheck></o:updatecheck>\n"),
+  EXPECT_NE(post_str.find(
+                "        <o:ping active=\"1\" a=\"-1\" r=\"-1\"></o:ping>\n"
+                "        <o:updatecheck></o:updatecheck>\n"),
             string::npos);
   EXPECT_NE(post_str.find("hardware_class=\"OEM MODEL 09235 7471\""),
             string::npos);
@@ -643,7 +649,8 @@ TEST(OmahaRequestActionTest, IsEventTest) {
       NULL,
       new MockHttpFetcher(http_response.data(),
                           http_response.size(),
-                          NULL));
+                          NULL),
+      false);
   EXPECT_FALSE(update_check_action.IsEvent());
 
   OmahaRequestAction event_action(
@@ -652,7 +659,8 @@ TEST(OmahaRequestActionTest, IsEventTest) {
       new OmahaEvent(OmahaEvent::kTypeUpdateComplete),
       new MockHttpFetcher(http_response.data(),
                           http_response.size(),
-                          NULL));
+                          NULL),
+      false);
   EXPECT_TRUE(event_action.IsEvent());
 }
 
@@ -727,7 +735,8 @@ TEST(OmahaRequestActionTest, PingTest) {
                       NULL,
                       &post_data));
   string post_str(&post_data[0], post_data.size());
-  EXPECT_NE(post_str.find("<o:ping a=\"6\" r=\"5\"></o:ping>"), string::npos);
+  EXPECT_NE(post_str.find("<o:ping active=\"1\" a=\"6\" r=\"5\"></o:ping>"),
+            string::npos);
 }
 
 TEST(OmahaRequestActionTest, ActivePingTest) {
@@ -749,7 +758,8 @@ TEST(OmahaRequestActionTest, ActivePingTest) {
                       NULL,
                       &post_data));
   string post_str(&post_data[0], post_data.size());
-  EXPECT_NE(post_str.find("<o:ping a=\"3\"></o:ping>"), string::npos);
+  EXPECT_NE(post_str.find("<o:ping active=\"1\" a=\"3\"></o:ping>"),
+            string::npos);
 }
 
 TEST(OmahaRequestActionTest, RollCallPingTest) {
@@ -771,7 +781,8 @@ TEST(OmahaRequestActionTest, RollCallPingTest) {
                       NULL,
                       &post_data));
   string post_str(&post_data[0], post_data.size());
-  EXPECT_NE(post_str.find("<o:ping r=\"4\"></o:ping>\n"), string::npos);
+  EXPECT_NE(post_str.find("<o:ping active=\"1\" r=\"4\"></o:ping>\n"),
+            string::npos);
 }
 
 TEST(OmahaRequestActionTest, NoPingTest) {

@@ -131,8 +131,11 @@ void UpdateAttempter::Update(const std::string& app_version,
   chrome_proxy_resolver_.Init();
   UpdateBootFlags();  // Just in case we didn't do this yet.
   if (status_ == UPDATE_STATUS_UPDATED_NEED_REBOOT) {
+    // Although we have applied an update, we still want to ping Omaha
+    // to ensure the number of active statistics is accurate.
     LOG(INFO) << "Not updating b/c we already updated and we're waiting for "
-              << "reboot";
+              << "reboot, we'll ping Omaha instead";
+    PingOmaha();
     return;
   }
   if (status_ != UPDATE_STATUS_IDLE) {
@@ -176,7 +179,8 @@ void UpdateAttempter::Update(const std::string& app_version,
       new OmahaRequestAction(prefs_,
                              omaha_request_params_,
                              NULL,
-                             update_check_fetcher));  // passes ownership
+                             update_check_fetcher,  // passes ownership
+                             false));
   shared_ptr<OmahaResponseHandlerAction> response_handler_action(
       new OmahaResponseHandlerAction(prefs_));
   shared_ptr<FilesystemCopierAction> filesystem_copier_action(
@@ -188,7 +192,8 @@ void UpdateAttempter::Update(const std::string& app_version,
                              omaha_request_params_,
                              new OmahaEvent(
                                  OmahaEvent::kTypeUpdateDownloadStarted),
-                             new LibcurlHttpFetcher(GetProxyResolver())));
+                             new LibcurlHttpFetcher(GetProxyResolver()),
+                             false));
   shared_ptr<DownloadAction> download_action(
       new DownloadAction(prefs_, new MultiRangeHTTPFetcher(
           new LibcurlHttpFetcher(GetProxyResolver()))));
@@ -202,7 +207,8 @@ void UpdateAttempter::Update(const std::string& app_version,
               OmahaEvent::kTypeUpdateDownloadFinished,
               OmahaEvent::kResultError,
               kActionCodeDownloadPayloadPubKeyVerificationError),
-          new LibcurlHttpFetcher(GetProxyResolver())));
+          new LibcurlHttpFetcher(GetProxyResolver()),
+          false));
   download_action->set_skip_reporting_signature_fail(
       NewPermanentCallback(download_signature_warning.get(),
                            &OmahaRequestAction::set_should_skip,
@@ -212,7 +218,8 @@ void UpdateAttempter::Update(const std::string& app_version,
                              omaha_request_params_,
                              new OmahaEvent(
                                  OmahaEvent::kTypeUpdateDownloadFinished),
-                             new LibcurlHttpFetcher(GetProxyResolver())));
+                             new LibcurlHttpFetcher(GetProxyResolver()),
+                             false));
   shared_ptr<FilesystemCopierAction> filesystem_verifier_action(
       new FilesystemCopierAction(false, true));
   shared_ptr<FilesystemCopierAction> kernel_filesystem_verifier_action(
@@ -223,7 +230,8 @@ void UpdateAttempter::Update(const std::string& app_version,
       new OmahaRequestAction(prefs_,
                              omaha_request_params_,
                              new OmahaEvent(OmahaEvent::kTypeUpdateComplete),
-                             new LibcurlHttpFetcher(GetProxyResolver())));
+                             new LibcurlHttpFetcher(GetProxyResolver()),
+                             false));
 
   download_action->set_delegate(this);
   response_handler_action_ = response_handler_action;
@@ -517,7 +525,8 @@ bool UpdateAttempter::ScheduleErrorEventAction() {
       new OmahaRequestAction(prefs_,
                              omaha_request_params_,
                              error_event_.release(),  // Pass ownership.
-                             new LibcurlHttpFetcher(GetProxyResolver())));
+                             new LibcurlHttpFetcher(GetProxyResolver()),
+                             false));
   actions_.push_back(shared_ptr<AbstractAction>(error_event_action));
   processor_->EnqueueAction(error_event_action.get());
   SetStatusAndNotify(UPDATE_STATUS_REPORTING_ERROR_EVENT);
@@ -616,6 +625,21 @@ void UpdateAttempter::SetupDownload() {
   } else {
     fetcher->AddRange(0, -1);
   }
+}
+
+void UpdateAttempter::PingOmaha() {
+  shared_ptr<OmahaRequestAction> ping_action(
+      new OmahaRequestAction(prefs_,
+                             omaha_request_params_,
+                             NULL,
+                             new LibcurlHttpFetcher(GetProxyResolver()),
+                             true));
+  actions_.push_back(shared_ptr<OmahaRequestAction>(ping_action));
+  CHECK(!processor_->IsRunning());
+  processor_->set_delegate(NULL);
+  processor_->EnqueueAction(ping_action.get());
+  g_idle_add(&StaticStartProcessing, this);
+  SetStatusAndNotify(UPDATE_STATUS_UPDATED_NEED_REBOOT);
 }
 
 }  // namespace chromeos_update_engine

@@ -64,6 +64,10 @@ class UpdateAttempterTest : public ::testing::Test {
   void UpdateTestVerify();
   static gboolean StaticUpdateTestStart(gpointer data);
   static gboolean StaticUpdateTestVerify(gpointer data);
+  void PingOmahaTestStart();
+  void PingOmahaTestDone();
+  static gboolean StaticPingOmahaTestStart(gpointer data);
+  static gboolean StaticPingOmahaTestDone(gpointer data);
 
   MockDbusGlib dbus_;
   UpdateAttempterUnderTest attempter_;
@@ -97,7 +101,7 @@ TEST_F(UpdateAttempterTest, ActionCompletedOmahaRequestTest) {
   scoped_ptr<MockHttpFetcher> fetcher(new MockHttpFetcher("", 0, NULL));
   fetcher->FailTransfer(500);  // Sets the HTTP response code.
   OmahaRequestParams params;
-  OmahaRequestAction action(&prefs_, params, NULL, fetcher.release());
+  OmahaRequestAction action(&prefs_, params, NULL, fetcher.release(), false);
   ObjectCollectorAction<OmahaResponse> collector_action;
   BondActions(&action, &collector_action);
   OmahaResponse response;
@@ -130,7 +134,7 @@ TEST_F(UpdateAttempterTest, GetErrorCodeForActionTest) {
             GetErrorCodeForAction(NULL, kActionCodeSuccess));
 
   OmahaRequestParams params;
-  OmahaRequestAction omaha_request_action(NULL, params, NULL, NULL);
+  OmahaRequestAction omaha_request_action(NULL, params, NULL, NULL, false);
   EXPECT_EQ(kActionCodeOmahaRequestError,
             GetErrorCodeForAction(&omaha_request_action, kActionCodeError));
   OmahaResponseHandlerAction omaha_response_handler_action(&prefs_);
@@ -243,6 +247,16 @@ gboolean UpdateAttempterTest::StaticUpdateTestVerify(gpointer data) {
   return FALSE;
 }
 
+gboolean UpdateAttempterTest::StaticPingOmahaTestStart(gpointer data) {
+  reinterpret_cast<UpdateAttempterTest*>(data)->PingOmahaTestStart();
+  return FALSE;
+}
+
+gboolean UpdateAttempterTest::StaticPingOmahaTestDone(gpointer data) {
+  reinterpret_cast<UpdateAttempterTest*>(data)->PingOmahaTestDone();
+  return FALSE;
+}
+
 namespace {
 const string kActionTypes[] = {
   OmahaRequestAction::StaticType(),
@@ -297,6 +311,34 @@ TEST_F(UpdateAttempterTest, UpdateTest) {
   g_main_loop_run(loop_);
   g_main_loop_unref(loop_);
   loop_ = NULL;
+}
+
+void UpdateAttempterTest::PingOmahaTestStart() {
+  EXPECT_CALL(*processor_,
+              EnqueueAction(Property(&AbstractAction::Type,
+                                     OmahaRequestAction::StaticType())))
+      .Times(1);
+  EXPECT_CALL(*processor_, StartProcessing()).Times(1);
+  attempter_.PingOmaha();
+  g_idle_add(&StaticPingOmahaTestDone, this);
+}
+
+void UpdateAttempterTest::PingOmahaTestDone() {
+  g_main_loop_quit(loop_);
+}
+
+TEST_F(UpdateAttempterTest, PingOmahaTest) {
+  UpdateCheckScheduler scheduler(&attempter_);
+  scheduler.enabled_ = true;
+  EXPECT_EQ(false, scheduler.scheduled_);
+  attempter_.set_update_check_scheduler(&scheduler);
+  loop_ = g_main_loop_new(g_main_context_default(), FALSE);
+  g_idle_add(&StaticPingOmahaTestStart, this);
+  g_main_loop_run(loop_);
+  g_main_loop_unref(loop_);
+  loop_ = NULL;
+  EXPECT_EQ(UPDATE_STATUS_UPDATED_NEED_REBOOT, attempter_.status());
+  EXPECT_EQ(true, scheduler.scheduled_);
 }
 
 }  // namespace chromeos_update_engine

@@ -137,7 +137,11 @@ void UpdateCheckScheduler::ScheduleNextCheck() {
 }
 
 void UpdateCheckScheduler::SetUpdateStatus(UpdateStatus status) {
-  if (status == UPDATE_STATUS_IDLE) {
+  // We want to schedule the update checks for when we're idle as well as
+  // after we've successfully applied an update and waiting for the user
+  // to reboot to ensure our active count is accurate.
+  if (status == UPDATE_STATUS_IDLE ||
+      status == UPDATE_STATUS_UPDATED_NEED_REBOOT) {
     ScheduleNextCheck();
   }
 }

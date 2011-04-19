@@ -129,7 +129,8 @@ class OmahaRequestAction : public Action<OmahaRequestAction>,
   OmahaRequestAction(PrefsInterface* prefs,
                      const OmahaRequestParams& params,
                      OmahaEvent* event,
-                     HttpFetcher* http_fetcher);
+                     HttpFetcher* http_fetcher,
+                     bool ping_only);
   virtual ~OmahaRequestAction();
   typedef ActionTraits<OmahaRequestAction>::InputObjectType InputObjectType;
   typedef ActionTraits<OmahaRequestAction>::OutputObjectType OutputObjectType;
@@ -173,6 +174,9 @@ class OmahaRequestAction : public Action<OmahaRequestAction>,
 
   // pointer to the HttpFetcher that does the http work
   scoped_ptr<HttpFetcher> http_fetcher_;
+
+  // If true, only include the <ping> element in the request.
+  bool ping_only_;
 
   // Stores the response from the omaha server
   std::vector<char> response_buffer_;

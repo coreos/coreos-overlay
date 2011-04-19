@@ -83,7 +83,7 @@ string GetPingBody(int ping_active_days, int ping_roll_call_days) {
   string ping_active = GetPingAttribute("a", ping_active_days);
   string ping_roll_call = GetPingAttribute("r", ping_roll_call_days);
   if (!ping_active.empty() || !ping_roll_call.empty()) {
-    return StringPrintf("        <o:ping%s%s></o:ping>\n",
+    return StringPrintf("        <o:ping active=\"1\"%s%s></o:ping>\n",
                         ping_active.c_str(),
                         ping_roll_call.c_str());
   }
@@ -92,13 +92,15 @@ string GetPingBody(int ping_active_days, int ping_roll_call_days) {
 
 string FormatRequest(const OmahaEvent* event,
                      const OmahaRequestParams& params,
+                     bool ping_only,
                      int ping_active_days,
                      int ping_roll_call_days,
                      PrefsInterface* prefs) {
   string body;
   if (event == NULL) {
-    body = GetPingBody(ping_active_days, ping_roll_call_days) +
-        "        <o:updatecheck></o:updatecheck>\n";
+    body = GetPingBody(ping_active_days, ping_roll_call_days);
+    if (!ping_only)
+      body += "        <o:updatecheck></o:updatecheck>\n";
     // If this is the first update check after a reboot following a previous
     // update, generate an event containing the previous version number. If the
     // previous version preference file doesn't exist the event is still
@@ -173,11 +175,13 @@ string XmlEncode(const string& input) {
 OmahaRequestAction::OmahaRequestAction(PrefsInterface* prefs,
                                        const OmahaRequestParams& params,
                                        OmahaEvent* event,
-                                       HttpFetcher* http_fetcher)
+                                       HttpFetcher* http_fetcher,
+                                       bool ping_only)
     : prefs_(prefs),
       params_(params),
       event_(event),
       http_fetcher_(http_fetcher),
+      ping_only_(ping_only),
       ping_active_days_(0),
       ping_roll_call_days_(0),
       should_skip_(false) {}
@@ -225,6 +229,7 @@ void OmahaRequestAction::PerformAction() {
   InitPingDays();
   string request_post(FormatRequest(event_.get(),
                                     params_,
+                                    ping_only_,
                                     ping_active_days_,
                                     ping_roll_call_days_,
                                     prefs_));
@@ -373,12 +378,6 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
         kActionCodeOmahaRequestHTTPResponseBase + code));
     return;
   }
-  if (!HasOutputPipe()) {
-    // Just set success to whether or not the http transfer succeeded,
-    // which must be true at this point in the code.
-    completer.set_code(kActionCodeSuccess);
-    return;
-  }
 
   // parse our response and fill the fields in the output object
   scoped_ptr_malloc<xmlDoc, ScopedPtrXmlDocFree> doc(
@@ -399,6 +398,13 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
       ping_roll_call_days_ == kPingTimeJump) {
     LOG_IF(ERROR, !UpdateLastPingDays(doc.get(), prefs_))
         << "Failed to update the last ping day preferences!";
+  }
+
+  if (!HasOutputPipe()) {
+    // Just set success to whether or not the http transfer succeeded,
+    // which must be true at this point in the code.
+    completer.set_code(kActionCodeSuccess);
+    return;
   }
 
   static const char* kNamespace("x");

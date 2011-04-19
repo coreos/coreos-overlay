@@ -127,6 +127,7 @@ class UpdateAttempter : public ActionProcessorDelegate,
   FRIEND_TEST(UpdateAttempterTest, ScheduleErrorEventActionNoEventTest);
   FRIEND_TEST(UpdateAttempterTest, ScheduleErrorEventActionTest);
   FRIEND_TEST(UpdateAttempterTest, UpdateTest);
+  FRIEND_TEST(UpdateAttempterTest, PingOmahaTest);
 
   // Sets the status to the given status and notifies a status update
   // over dbus.
@@ -178,6 +179,13 @@ class UpdateAttempter : public ActionProcessorDelegate,
         reinterpret_cast<ProxyResolver*>(&chrome_proxy_resolver_) :
         reinterpret_cast<ProxyResolver*>(&direct_proxy_resolver_);
   }
+
+  // Sends a ping to Omaha.
+  // This is used after an update has been applied and we're waiting for the
+  // user to reboot.  This ping helps keep the number of actives count
+  // accurate in case a user takes a long time to reboot the device after an
+  // update has been applied.
+  void PingOmaha();
 
   // Last status notification timestamp used for throttling. Use monotonic
   // TimeTicks to ensure that notifications are sent even if the system clock is
