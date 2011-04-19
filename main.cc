@@ -41,21 +41,7 @@ namespace chromeos_update_engine {
 
 gboolean UpdateBootFlags(void* arg) {
   UpdateAttempter* attempter = reinterpret_cast<UpdateAttempter*>(arg);
-  if (attempter->status() == UPDATE_STATUS_UPDATED_NEED_REBOOT) {
-    // Don't update the flags if there's an update that's just been applied and
-    // we're waiting for reboot because we may end up reverting the update.
-    return FALSE;  // Don't call this callback again.
-  }
-  if (attempter->status() != UPDATE_STATUS_IDLE) {
-    // To avoid races (e.g., setting a good kernel right after post-install but
-    // before the status changes), update the boot flag only if the attempter is
-    // idle.
-    return TRUE;  // Call this callback again.
-  }
-  // This is purely best effort. Failures should be logged by Subprocess.
-  int unused = 0;
-  vector<string> cmd(1, "/usr/sbin/chromeos-setgoodkernel");
-  Subprocess::SynchronousExec(cmd, &unused);
+  attempter->UpdateBootFlags();
   return FALSE;  // Don't call this callback again
 }
 

@@ -84,6 +84,10 @@ class UpdateAttempter : public ActionProcessorDelegate,
                  std::string* new_version,
                  int64_t* new_size);
 
+  // Runs setgoodkernel, whose responsibility it is to mark the currently
+  // booted partition has high priority/permanent/etc.
+  void UpdateBootFlags();
+
   UpdateStatus status() const { return status_; }
 
   int http_response_code() const { return http_response_code_; }
@@ -239,6 +243,9 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // Our two proxy resolvers
   DirectProxyResolver direct_proxy_resolver_;
   ChromeBrowserProxyResolver chrome_proxy_resolver_;
+
+  // True if UpdateBootFlags has already been called
+  bool updated_boot_flags_;
 
   DISALLOW_COPY_AND_ASSIGN(UpdateAttempter);
 };

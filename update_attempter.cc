@@ -28,6 +28,7 @@
 #include "update_engine/omaha_response_handler_action.h"
 #include "update_engine/postinstall_runner_action.h"
 #include "update_engine/prefs_interface.h"
+#include "update_engine/subprocess.h"
 #include "update_engine/update_check_scheduler.h"
 
 using base::TimeDelta;
@@ -114,7 +115,8 @@ UpdateAttempter::UpdateAttempter(PrefsInterface* prefs,
       is_full_update_(false),
       proxy_manual_checks_(0),
       obeying_proxies_(true),
-      chrome_proxy_resolver_(dbus_iface) {
+      chrome_proxy_resolver_(dbus_iface),
+      updated_boot_flags_(false) {
   if (utils::FileExists(kUpdateCompletedMarker))
     status_ = UPDATE_STATUS_UPDATED_NEED_REBOOT;
 }
@@ -127,6 +129,7 @@ void UpdateAttempter::Update(const std::string& app_version,
                              const std::string& omaha_url,
                              bool obey_proxies) {
   chrome_proxy_resolver_.Init();
+  UpdateBootFlags();  // Just in case we didn't do this yet.
   if (status_ == UPDATE_STATUS_UPDATED_NEED_REBOOT) {
     LOG(INFO) << "Not updating b/c we already updated and we're waiting for "
               << "reboot";
@@ -449,6 +452,19 @@ bool UpdateAttempter::GetStatus(int64_t* last_checked_time,
   *new_version = new_version_;
   *new_size = new_size_;
   return true;
+}
+
+void UpdateAttempter::UpdateBootFlags() {
+  if (updated_boot_flags_) {
+    LOG(INFO) << "Already updated boot flags. Skipping.";
+    return;
+  }
+  // This is purely best effort. Failures should be logged by Subprocess.
+  int unused = 0;
+  vector<string> cmd(1, "/usr/sbin/chromeos-setgoodkernel");
+  Subprocess::SynchronousExec(cmd, &unused);
+  updated_boot_flags_ = true;
+  return;
 }
 
 void UpdateAttempter::SetStatusAndNotify(UpdateStatus status) {
