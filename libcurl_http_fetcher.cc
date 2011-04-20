@@ -122,6 +122,8 @@ void LibcurlHttpFetcher::ResumeTransfer(const std::string& url) {
   const int kTimeout = IsOfficialBuild() ? 90 : 3 * 60;
   CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_LOW_SPEED_TIME, kTimeout),
            CURLE_OK);
+  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_CONNECTTIMEOUT, 30),
+           CURLE_OK);
 
   // By default, libcurl doesn't follow redirections. Allow up to
   // |kMaxRedirects| redirections.
