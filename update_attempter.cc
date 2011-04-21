@@ -103,6 +103,7 @@ UpdateAttempter::UpdateAttempter(PrefsInterface* prefs,
       prefs_(prefs),
       metrics_lib_(metrics_lib),
       update_check_scheduler_(NULL),
+      fake_update_success_(false),
       http_response_code_(0),
       priority_(utils::kProcessPriorityNormal),
       manage_priority_source_(NULL),
@@ -129,6 +130,7 @@ void UpdateAttempter::Update(const std::string& app_version,
                              const std::string& omaha_url,
                              bool obey_proxies) {
   chrome_proxy_resolver_.Init();
+  fake_update_success_ = false;
   UpdateBootFlags();  // Just in case we didn't do this yet.
   if (status_ == UPDATE_STATUS_UPDATED_NEED_REBOOT) {
     // Although we have applied an update, we still want to ping Omaha
@@ -314,7 +316,11 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
   if (status_ == UPDATE_STATUS_REPORTING_ERROR_EVENT) {
     LOG(INFO) << "Error event sent.";
     SetStatusAndNotify(UPDATE_STATUS_IDLE);
-    return;
+    if (!fake_update_success_) {
+      return;
+    }
+    LOG(INFO) << "Booted from FW B and tried to install new firmware, "
+        "so requesting reboot from user.";
   }
 
   if (code == kActionCodeSuccess) {
@@ -326,11 +332,12 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
 
     // Report the time it took to update the system.
     int64_t update_time = time(NULL) - last_checked_time_;
-    metrics_lib_->SendToUMA("Installer.UpdateTime",
-                            static_cast<int>(update_time),  // sample
-                            1,  // min = 1 second
-                            20 * 60,  // max = 20 minutes
-                            50);  // buckets
+    if (!fake_update_success_)
+      metrics_lib_->SendToUMA("Installer.UpdateTime",
+                              static_cast<int>(update_time),  // sample
+                              1,  // min = 1 second
+                              20 * 60,  // max = 20 minutes
+                              50);  // buckets
     return;
   }
 
@@ -511,6 +518,7 @@ void UpdateAttempter::CreatePendingErrorEvent(AbstractAction* action,
   }
 
   code = GetErrorCodeForAction(action, code);
+  fake_update_success_ = code == kActionCodePostinstallBootedFromFirmwareB;
   error_event_.reset(new OmahaEvent(OmahaEvent::kTypeUpdateComplete,
                                     OmahaEvent::kResultError,
                                     code));

@@ -217,6 +217,9 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // Pending error event, if any.
   scoped_ptr<OmahaEvent> error_event_;
 
+  // If we should request a reboot even tho we failed the update
+  bool fake_update_success_;
+
   // HTTP server response code from the last HTTP request action.
   int http_response_code_;
 

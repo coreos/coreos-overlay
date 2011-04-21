@@ -65,6 +65,12 @@ void PostinstallRunnerAction::CompletePostinstall(int return_code) {
   ScopedTempUnmounter temp_unmounter(temp_rootfs_dir_);
   if (return_code != 0) {
     LOG(ERROR) << "Postinst command failed with code: " << return_code;
+    if (return_code == 2) {
+      // This special return code means that we tried to update firmware,
+      // but couldn't because we booted from FW B, and we need to reboot
+      // to get back to FW A.
+      completer.set_code(kActionCodePostinstallBootedFromFirmwareB);
+    }
     return;
   }
   if (HasOutputPipe()) {

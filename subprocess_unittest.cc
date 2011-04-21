@@ -28,7 +28,7 @@ namespace {
 const int kLocalHttpPort = 8088;
 
 void Callback(int return_code, const string& output, void *p) {
-  EXPECT_EQ(256, return_code);
+  EXPECT_EQ(1, return_code);
   GMainLoop* loop = reinterpret_cast<GMainLoop*>(p);
   g_main_loop_quit(loop);
 }

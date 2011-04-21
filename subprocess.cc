@@ -29,14 +29,18 @@ void Subprocess::GChildExitedCallback(GPid pid, gint status, gpointer data) {
   close(fd);
 
   g_spawn_close_pid(pid);
+  gint use_status = status;
+  if (WIFEXITED(status))
+    use_status = WEXITSTATUS(status);
+
   if (status) {
-    LOG(INFO) << "Subprocess status: " << status;
+    LOG(INFO) << "Subprocess status: " << use_status;
   }
   if (!record->stdout.empty()) {
     LOG(INFO) << "Subprocess output:\n" << record->stdout;
   }
   if (record->callback) {
-    record->callback(status, record->stdout, record->callback_data);
+    record->callback(use_status, record->stdout, record->callback_data);
   }
   Get().subprocess_records_.erase(record->tag);
 }

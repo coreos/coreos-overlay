@@ -31,7 +31,7 @@ gboolean StartProcessorInRunLoop(gpointer data) {
 
 class PostinstallRunnerActionTest : public ::testing::Test {
  public:
-  void DoTest(bool do_losetup, bool do_err_script);
+  void DoTest(bool do_losetup, int err_code);
 };
 
 class PostinstActionProcessorDelegate : public ActionProcessorDelegate {
@@ -60,20 +60,25 @@ class PostinstActionProcessorDelegate : public ActionProcessorDelegate {
 
 TEST_F(PostinstallRunnerActionTest, RunAsRootSimpleTest) {
   ASSERT_EQ(0, getuid());
-  DoTest(true, false);
+  DoTest(true, 0);
 }
 
 TEST_F(PostinstallRunnerActionTest, RunAsRootCantMountTest) {
   ASSERT_EQ(0, getuid());
-  DoTest(false, false);
+  DoTest(false, 0);
 }
 
 TEST_F(PostinstallRunnerActionTest, RunAsRootErrScriptTest) {
   ASSERT_EQ(0, getuid());
-  DoTest(true, true);
+  DoTest(true, 1);
 }
 
-void PostinstallRunnerActionTest::DoTest(bool do_losetup, bool do_err_script) {
+TEST_F(PostinstallRunnerActionTest, RunAsRootFirmwareBErrScriptTest) {
+  ASSERT_EQ(0, getuid());
+  DoTest(true, 2);
+}
+
+void PostinstallRunnerActionTest::DoTest(bool do_losetup, int err_code) {
   ASSERT_EQ(0, getuid()) << "Run me as root. Ideally don't run other tests "
                          << "as root, tho.";
 
@@ -107,8 +112,8 @@ void PostinstallRunnerActionTest::DoTest(bool do_losetup, bool do_err_script) {
                                "  touch %s/postinst_called\n"
                                "fi\n",
                                cwd.c_str());
-  if (do_err_script) {
-    script = "#!/bin/bash\nexit 1";
+  if (err_code) {
+    script = StringPrintf("#!/bin/bash\nexit %d", err_code);
   }
   ASSERT_TRUE(WriteFileString(mountpoint + "/postinst", script));
   ASSERT_EQ(0, System(string("chmod a+x ") + mountpoint + "/postinst"));
@@ -161,16 +166,18 @@ void PostinstallRunnerActionTest::DoTest(bool do_losetup, bool do_err_script) {
   ASSERT_FALSE(processor.IsRunning());
 
   EXPECT_TRUE(delegate.code_set_);
-  EXPECT_EQ(do_losetup && !do_err_script, delegate.code_ == kActionCodeSuccess);
-  EXPECT_EQ(do_losetup && !do_err_script,
+  EXPECT_EQ(do_losetup && !err_code, delegate.code_ == kActionCodeSuccess);
+  EXPECT_EQ(do_losetup && !err_code,
             !collector_action.object().install_path.empty());
-  if (do_losetup && !do_err_script) {
+  if (do_losetup && !err_code) {
     EXPECT_TRUE(install_plan == collector_action.object());
   }
+  if (err_code == 2)
+    EXPECT_EQ(kActionCodePostinstallBootedFromFirmwareB, delegate.code_);
 
   struct stat stbuf;
   int rc = lstat((string(cwd) + "/postinst_called").c_str(), &stbuf);
-  if (do_losetup && !do_err_script)
+  if (do_losetup && !err_code)
     ASSERT_EQ(0, rc);
   else
     ASSERT_LT(rc, 0);
