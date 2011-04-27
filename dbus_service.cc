@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -13,6 +13,10 @@
 #include "update_engine/utils.h"
 
 using std::string;
+
+static const char kAUTestURLRequest[] = "autest";
+static const char kAUTestURL[] =
+    "https://omaha.corp.google.com:8082/service/update2";
 
 G_DEFINE_TYPE(UpdateEngineService, update_engine_service, G_TYPE_OBJECT)
 
@@ -59,7 +63,8 @@ gboolean update_engine_service_attempt_update(UpdateEngineService* self,
   string update_app_version;
   string update_omaha_url;
   // Only non-official (e.g., dev and test) builds can override the current
-  // version and update server URL over D-Bus.
+  // version and update server URL over D-Bus. However, pointing to the
+  // hardcoded test update server URL is always allowed.
   if (!chromeos_update_engine::utils::IsOfficialBuild()) {
     if (app_version) {
       update_app_version = app_version;
@@ -67,6 +72,9 @@ gboolean update_engine_service_attempt_update(UpdateEngineService* self,
     if (omaha_url) {
       update_omaha_url = omaha_url;
     }
+  }
+  if (omaha_url && strcmp(omaha_url, kAUTestURLRequest) == 0) {
+    update_omaha_url = kAUTestURL;
   }
   LOG(INFO) << "Attempt update: app_version=\"" << update_app_version << "\" "
             << "omaha_url=\"" << update_omaha_url << "\"";
