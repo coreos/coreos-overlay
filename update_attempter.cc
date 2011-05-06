@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -117,7 +117,9 @@ UpdateAttempter::UpdateAttempter(PrefsInterface* prefs,
       proxy_manual_checks_(0),
       obeying_proxies_(true),
       chrome_proxy_resolver_(dbus_iface),
-      updated_boot_flags_(false) {
+      updated_boot_flags_(false),
+      update_boot_flags_running_(false),
+      start_action_processor_(false) {
   if (utils::FileExists(kUpdateCompletedMarker))
     status_ = UPDATE_STATUS_UPDATED_NEED_REBOOT;
 }
@@ -131,7 +133,6 @@ void UpdateAttempter::Update(const std::string& app_version,
                              bool obey_proxies) {
   chrome_proxy_resolver_.Init();
   fake_update_success_ = false;
-  UpdateBootFlags();  // Just in case we didn't do this yet.
   if (status_ == UPDATE_STATUS_UPDATED_NEED_REBOOT) {
     // Although we have applied an update, we still want to ping Omaha
     // to ensure the number of active statistics is accurate.
@@ -279,8 +280,10 @@ void UpdateAttempter::Update(const std::string& app_version,
 
   SetStatusAndNotify(UPDATE_STATUS_CHECKING_FOR_UPDATE);
 
-  // Start the processing asynchronously to unblock the event loop.
-  g_idle_add(&StaticStartProcessing, this);
+  // Just in case we didn't update boot flags yet, make sure they're updated
+  // before any update processing starts.
+  start_action_processor_ = true;
+  UpdateBootFlags();
 }
 
 void UpdateAttempter::CheckForUpdate(const std::string& app_version,
@@ -470,16 +473,41 @@ bool UpdateAttempter::GetStatus(int64_t* last_checked_time,
 }
 
 void UpdateAttempter::UpdateBootFlags() {
-  if (updated_boot_flags_) {
-    LOG(INFO) << "Already updated boot flags. Skipping.";
+  if (update_boot_flags_running_) {
+    LOG(INFO) << "Update boot flags running, nothing to do.";
     return;
   }
-  // This is purely best effort. Failures should be logged by Subprocess.
-  int unused = 0;
+  if (updated_boot_flags_) {
+    LOG(INFO) << "Already updated boot flags. Skipping.";
+    if (start_action_processor_) {
+      ScheduleProcessingStart();
+    }
+    return;
+  }
+  // This is purely best effort. Failures should be logged by Subprocess. Run
+  // the script asynchronously to avoid blocking the event loop regardless of
+  // the script runtime.
+  update_boot_flags_running_ = true;
+  LOG(INFO) << "Updating boot flags...";
   vector<string> cmd(1, "/usr/sbin/chromeos-setgoodkernel");
-  Subprocess::SynchronousExec(cmd, &unused);
+  if (!Subprocess::Get().Exec(cmd, StaticCompleteUpdateBootFlags, this)) {
+    CompleteUpdateBootFlags(1);
+  }
+}
+
+void UpdateAttempter::CompleteUpdateBootFlags(int return_code) {
+  update_boot_flags_running_ = false;
   updated_boot_flags_ = true;
-  return;
+  if (start_action_processor_) {
+    ScheduleProcessingStart();
+  }
+}
+
+void UpdateAttempter::StaticCompleteUpdateBootFlags(
+    int return_code,
+    const std::string& output,
+    void* p) {
+  reinterpret_cast<UpdateAttempter*>(p)->CompleteUpdateBootFlags(return_code);
 }
 
 void UpdateAttempter::SetStatusAndNotify(UpdateStatus status) {
@@ -584,6 +612,12 @@ gboolean UpdateAttempter::StaticStartProcessing(gpointer data) {
   return FALSE;  // Don't call this callback again.
 }
 
+void UpdateAttempter::ScheduleProcessingStart() {
+  LOG(INFO) << "Scheduling an action processor start.";
+  start_action_processor_ = false;
+  g_idle_add(&StaticStartProcessing, this);
+}
+
 bool UpdateAttempter::ManagePriorityCallback() {
   SetPriority(utils::kProcessPriorityNormal);
   manage_priority_source_ = NULL;
@@ -636,6 +670,10 @@ void UpdateAttempter::SetupDownload() {
 }
 
 void UpdateAttempter::PingOmaha() {
+  if (processor_->IsRunning()) {
+    LOG(WARNING) << "Action processor running, Omaha ping suppressed.";
+    return;
+  }
   shared_ptr<OmahaRequestAction> ping_action(
       new OmahaRequestAction(prefs_,
                              omaha_request_params_,
@@ -643,10 +681,9 @@ void UpdateAttempter::PingOmaha() {
                              new LibcurlHttpFetcher(GetProxyResolver()),
                              true));
   actions_.push_back(shared_ptr<OmahaRequestAction>(ping_action));
-  CHECK(!processor_->IsRunning());
   processor_->set_delegate(NULL);
   processor_->EnqueueAction(ping_action.get());
-  g_idle_add(&StaticStartProcessing, this);
+  ScheduleProcessingStart();
   SetStatusAndNotify(UPDATE_STATUS_UPDATED_NEED_REBOOT);
 }
 

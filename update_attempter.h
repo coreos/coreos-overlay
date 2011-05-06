@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -84,9 +84,18 @@ class UpdateAttempter : public ActionProcessorDelegate,
                  std::string* new_version,
                  int64_t* new_size);
 
-  // Runs setgoodkernel, whose responsibility it is to mark the currently
-  // booted partition has high priority/permanent/etc.
+  // Runs chromeos-setgoodkernel, whose responsibility it is to mark the
+  // currently booted partition has high priority/permanent/etc. The execution
+  // is asynchronous. On completion, the action processor may be started
+  // depending on the |start_action_processor_| field. Note that every update
+  // attempt goes through this method.
   void UpdateBootFlags();
+
+  // Subprocess::Exec callback.
+  void CompleteUpdateBootFlags(int return_code);
+  static void StaticCompleteUpdateBootFlags(int return_code,
+                                            const std::string& output,
+                                            void* p);
 
   UpdateStatus status() const { return status_; }
 
@@ -165,6 +174,10 @@ class UpdateAttempter : public ActionProcessorDelegate,
 
   // Callback to start the action processor.
   static gboolean StaticStartProcessing(gpointer data);
+
+  // Schedules an event loop callback to start the action processor. This is
+  // scheduled asynchronously to unblock the event loop.
+  void ScheduleProcessingStart();
 
   // Checks if a full update is needed and forces it by updating the Omaha
   // request params.
@@ -255,8 +268,16 @@ class UpdateAttempter : public ActionProcessorDelegate,
   DirectProxyResolver direct_proxy_resolver_;
   ChromeBrowserProxyResolver chrome_proxy_resolver_;
 
-  // True if UpdateBootFlags has already been called
-  bool updated_boot_flags_;
+  // Originally, both of these flags are false. Once UpdateBootFlags is called,
+  // |update_boot_flags_running_| is set to true. As soon as UpdateBootFlags
+  // completes its asynchronous run, |update_boot_flags_running_| is reset to
+  // false and |updated_boot_flags_| is set to true. From that point on there
+  // will be no more changes to these flags.
+  bool updated_boot_flags_;  // True if UpdateBootFlags has completed.
+  bool update_boot_flags_running_;  // True if UpdateBootFlags is running.
+
+  // True if the action processor needs to be started by the boot flag updater.
+  bool start_action_processor_;
 
   DISALLOW_COPY_AND_ASSIGN(UpdateAttempter);
 };
