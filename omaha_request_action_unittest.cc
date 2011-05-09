@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -147,14 +147,15 @@ class OutputObjectCollectorAction : public Action<OutputObjectCollectorAction> {
 
 // Returns true iff an output response was obtained from the
 // OmahaRequestAction. |prefs| may be NULL, in which case a local PrefsMock is
-// used. out_response may be NULL. If |fail_http_response_code| is
-// non-negative, the transfer will fail with that code. out_post_data may be
-// null; if non-null, the post-data received by the mock HttpFetcher is
-// returned.
+// used. out_response may be NULL. If |fail_http_response_code| is non-negative,
+// the transfer will fail with that code. |ping_only| is passed through to the
+// OmahaRequestAction constructor. out_post_data may be null; if non-null, the
+// post-data received by the mock HttpFetcher is returned.
 bool TestUpdateCheck(PrefsInterface* prefs,
                      const OmahaRequestParams& params,
                      const string& http_response,
                      int fail_http_response_code,
+                     bool ping_only,
                      ActionExitCode expected_code,
                      OmahaResponse* out_response,
                      vector<char>* out_post_data) {
@@ -170,7 +171,7 @@ bool TestUpdateCheck(PrefsInterface* prefs,
                             params,
                             NULL,
                             fetcher,
-                            false);
+                            ping_only);
   OmahaRequestActionTestProcessorDelegate delegate;
   delegate.loop_ = loop;
   delegate.expected_code_ = expected_code;
@@ -226,6 +227,7 @@ TEST(OmahaRequestActionTest, NoUpdateTest) {
                       kDefaultTestParams,
                       GetNoUpdateResponse(OmahaRequestParams::kAppId),
                       -1,
+                      false,  // ping_only
                       kActionCodeSuccess,
                       &response,
                       NULL));
@@ -247,6 +249,7 @@ TEST(OmahaRequestActionTest, ValidUpdateTest) {
                                         "123",  // size
                                         "20101020"),  // deadline
                       -1,
+                      false,  // ping_only
                       kActionCodeSuccess,
                       &response,
                       NULL));
@@ -319,6 +322,7 @@ TEST(OmahaRequestActionTest, InvalidXmlTest) {
                       kDefaultTestParams,
                       "invalid xml>",
                       -1,
+                      false,  // ping_only
                       kActionCodeOmahaRequestXMLParseError,
                       &response,
                       NULL));
@@ -332,6 +336,7 @@ TEST(OmahaRequestActionTest, EmptyResponseTest) {
                       kDefaultTestParams,
                       "",
                       -1,
+                      false,  // ping_only
                       kActionCodeOmahaRequestEmptyResponseError,
                       &response,
                       NULL));
@@ -348,6 +353,7 @@ TEST(OmahaRequestActionTest, MissingStatusTest) {
       "appid=\"foo\" status=\"ok\"><ping "
       "status=\"ok\"/><updatecheck/></app></gupdate>",
       -1,
+      false,  // ping_only
       kActionCodeOmahaRequestNoUpdateCheckStatus,
       &response,
       NULL));
@@ -364,6 +370,7 @@ TEST(OmahaRequestActionTest, InvalidStatusTest) {
       "appid=\"foo\" status=\"ok\"><ping "
       "status=\"ok\"/><updatecheck status=\"foo\"/></app></gupdate>",
       -1,
+      false,  // ping_only
       kActionCodeOmahaRequestBadUpdateCheckStatus,
       &response,
       NULL));
@@ -380,6 +387,7 @@ TEST(OmahaRequestActionTest, MissingNodesetTest) {
       "appid=\"foo\" status=\"ok\"><ping "
       "status=\"ok\"/></app></gupdate>",
       -1,
+      false,  // ping_only
       kActionCodeOmahaRequestNoUpdateCheckNode,
       &response,
       NULL));
@@ -405,6 +413,7 @@ TEST(OmahaRequestActionTest, MissingFieldTest) {
                               "size=\"123\" "
                               "status=\"ok\"/></app></gupdate>",
                               -1,
+                              false,  // ping_only
                               kActionCodeSuccess,
                               &response,
                               NULL));
@@ -487,6 +496,7 @@ TEST(OmahaRequestActionTest, XmlEncodeTest) {
                       params,
                       "invalid xml>",
                       -1,
+                      false,  // ping_only
                       kActionCodeOmahaRequestXMLParseError,
                       &response,
                       &post_data));
@@ -517,6 +527,7 @@ TEST(OmahaRequestActionTest, XmlDecodeTest) {
                                         "123",  // size
                                         "&lt;20110101"),  // deadline
                       -1,
+                      false,  // ping_only
                       kActionCodeSuccess,
                       &response,
                       NULL));
@@ -542,6 +553,7 @@ TEST(OmahaRequestActionTest, ParseIntTest) {
                                         "123123123123123",  // size
                                         "deadline"),
                       -1,
+                      false,  // ping_only
                       kActionCodeSuccess,
                       &response,
                       NULL));
@@ -559,6 +571,7 @@ TEST(OmahaRequestActionTest, FormatUpdateCheckOutputTest) {
                                kDefaultTestParams,
                                "invalid xml>",
                                -1,
+                               false,  // ping_only
                                kActionCodeOmahaRequestXMLParseError,
                                NULL,  // response
                                &post_data));
@@ -584,6 +597,7 @@ TEST(OmahaRequestActionTest, FormatUpdateCheckPrevVersionOutputTest) {
                                kDefaultTestParams,
                                "invalid xml>",
                                -1,
+                               false,  // ping_only
                                kActionCodeOmahaRequestXMLParseError,
                                NULL,  // response
                                &post_data));
@@ -684,6 +698,7 @@ TEST(OmahaRequestActionTest, FormatDeltaOkayOutputTest) {
                                  params,
                                  "invalid xml>",
                                  -1,
+                                 false,  // ping_only
                                  kActionCodeOmahaRequestXMLParseError,
                                  NULL,
                                  &post_data));
@@ -715,28 +730,38 @@ TEST(OmahaRequestActionTest, OmahaEventTest) {
 }
 
 TEST(OmahaRequestActionTest, PingTest) {
-  NiceMock<PrefsMock> prefs;
-  // Add a few hours to the day difference to test no rounding, etc.
-  int64_t five_days_ago =
-      (Time::Now() - TimeDelta::FromHours(5 * 24 + 13)).ToInternalValue();
-  int64_t six_days_ago =
-      (Time::Now() - TimeDelta::FromHours(6 * 24 + 11)).ToInternalValue();
-  EXPECT_CALL(prefs, GetInt64(kPrefsLastActivePingDay, _))
-      .WillOnce(DoAll(SetArgumentPointee<1>(six_days_ago), Return(true)));
-  EXPECT_CALL(prefs, GetInt64(kPrefsLastRollCallPingDay, _))
-      .WillOnce(DoAll(SetArgumentPointee<1>(five_days_ago), Return(true)));
-  vector<char> post_data;
-  ASSERT_TRUE(
-      TestUpdateCheck(&prefs,
-                      kDefaultTestParams,
-                      GetNoUpdateResponse(OmahaRequestParams::kAppId),
-                      -1,
-                      kActionCodeSuccess,
-                      NULL,
-                      &post_data));
-  string post_str(&post_data[0], post_data.size());
-  EXPECT_NE(post_str.find("<o:ping active=\"1\" a=\"6\" r=\"5\"></o:ping>"),
-            string::npos);
+  for (int ping_only = 0; ping_only < 2; ping_only++) {
+    NiceMock<PrefsMock> prefs;
+    // Add a few hours to the day difference to test no rounding, etc.
+    int64_t five_days_ago =
+        (Time::Now() - TimeDelta::FromHours(5 * 24 + 13)).ToInternalValue();
+    int64_t six_days_ago =
+        (Time::Now() - TimeDelta::FromHours(6 * 24 + 11)).ToInternalValue();
+    EXPECT_CALL(prefs, GetInt64(kPrefsLastActivePingDay, _))
+        .WillOnce(DoAll(SetArgumentPointee<1>(six_days_ago), Return(true)));
+    EXPECT_CALL(prefs, GetInt64(kPrefsLastRollCallPingDay, _))
+        .WillOnce(DoAll(SetArgumentPointee<1>(five_days_ago), Return(true)));
+    vector<char> post_data;
+    ASSERT_TRUE(
+        TestUpdateCheck(&prefs,
+                        kDefaultTestParams,
+                        GetNoUpdateResponse(OmahaRequestParams::kAppId),
+                        -1,
+                        ping_only,
+                        kActionCodeSuccess,
+                        NULL,
+                        &post_data));
+    string post_str(&post_data[0], post_data.size());
+    EXPECT_NE(post_str.find("<o:ping active=\"1\" a=\"6\" r=\"5\"></o:ping>"),
+              string::npos);
+    if (ping_only) {
+      EXPECT_EQ(post_str.find("o:updatecheck"), string::npos);
+      EXPECT_EQ(post_str.find("previousversion"), string::npos);
+    } else {
+      EXPECT_NE(post_str.find("o:updatecheck"), string::npos);
+      EXPECT_NE(post_str.find("previousversion"), string::npos);
+    }
+  }
 }
 
 TEST(OmahaRequestActionTest, ActivePingTest) {
@@ -754,6 +779,7 @@ TEST(OmahaRequestActionTest, ActivePingTest) {
                       kDefaultTestParams,
                       GetNoUpdateResponse(OmahaRequestParams::kAppId),
                       -1,
+                      false,  // ping_only
                       kActionCodeSuccess,
                       NULL,
                       &post_data));
@@ -777,6 +803,7 @@ TEST(OmahaRequestActionTest, RollCallPingTest) {
                       kDefaultTestParams,
                       GetNoUpdateResponse(OmahaRequestParams::kAppId),
                       -1,
+                      false,  // ping_only
                       kActionCodeSuccess,
                       NULL,
                       &post_data));
@@ -801,6 +828,7 @@ TEST(OmahaRequestActionTest, NoPingTest) {
                       kDefaultTestParams,
                       GetNoUpdateResponse(OmahaRequestParams::kAppId),
                       -1,
+                      false,  // ping_only
                       kActionCodeSuccess,
                       NULL,
                       &post_data));
@@ -830,6 +858,7 @@ TEST(OmahaRequestActionTest, BackInTimePingTest) {
                       "<app appid=\"foo\" status=\"ok\"><ping status=\"ok\"/>"
                       "<updatecheck status=\"noupdate\"/></app></gupdate>",
                       -1,
+                      false,  // ping_only
                       kActionCodeSuccess,
                       NULL,
                       &post_data));
@@ -862,6 +891,7 @@ TEST(OmahaRequestActionTest, LastPingDayUpdateTest) {
                       "<app appid=\"foo\" status=\"ok\"><ping status=\"ok\"/>"
                       "<updatecheck status=\"noupdate\"/></app></gupdate>",
                       -1,
+                      false,  // ping_only
                       kActionCodeSuccess,
                       NULL,
                       NULL));
@@ -880,6 +910,7 @@ TEST(OmahaRequestActionTest, NoElapsedSecondsTest) {
                       "<app appid=\"foo\" status=\"ok\"><ping status=\"ok\"/>"
                       "<updatecheck status=\"noupdate\"/></app></gupdate>",
                       -1,
+                      false,  // ping_only
                       kActionCodeSuccess,
                       NULL,
                       NULL));
@@ -898,6 +929,7 @@ TEST(OmahaRequestActionTest, BadElapsedSecondsTest) {
                       "<app appid=\"foo\" status=\"ok\"><ping status=\"ok\"/>"
                       "<updatecheck status=\"noupdate\"/></app></gupdate>",
                       -1,
+                      false,  // ping_only
                       kActionCodeSuccess,
                       NULL,
                       NULL));
@@ -909,6 +941,7 @@ TEST(OmahaRequestActionTest, NoUniqueIDTest) {
                                kDefaultTestParams,
                                "invalid xml>",
                                -1,
+                               false,  // ping_only
                                kActionCodeOmahaRequestXMLParseError,
                                NULL,  // response
                                &post_data));
@@ -925,6 +958,7 @@ TEST(OmahaRequestActionTest, NetworkFailureTest) {
                       kDefaultTestParams,
                       "",
                       501,
+                      false,  // ping_only
                       static_cast<ActionExitCode>(
                           kActionCodeOmahaRequestHTTPResponseBase + 501),
                       &response,
@@ -939,6 +973,7 @@ TEST(OmahaRequestActionTest, NetworkFailureBadHTTPCodeTest) {
                       kDefaultTestParams,
                       "",
                       1500,
+                      false,  // ping_only
                       static_cast<ActionExitCode>(
                           kActionCodeOmahaRequestHTTPResponseBase + 999),
                       &response,

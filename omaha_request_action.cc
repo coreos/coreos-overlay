@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -99,26 +99,29 @@ string FormatRequest(const OmahaEvent* event,
   string body;
   if (event == NULL) {
     body = GetPingBody(ping_active_days, ping_roll_call_days);
-    if (!ping_only)
+    if (!ping_only) {
       body += "        <o:updatecheck></o:updatecheck>\n";
-    // If this is the first update check after a reboot following a previous
-    // update, generate an event containing the previous version number. If the
-    // previous version preference file doesn't exist the event is still
-    // generated with a previous version of 0.0.0.0 -- this is relevant for
-    // older clients or new installs.
-    string prev_version;
-    if (!prefs->GetString(kPrefsPreviousVersion, &prev_version)) {
-      prev_version = "0.0.0.0";
-    }
-    if (!prev_version.empty()) {
-      body += StringPrintf(
-          "        <o:event eventtype=\"%d\" eventresult=\"%d\" "
-          "previousversion=\"%s\"></o:event>\n",
-          OmahaEvent::kTypeUpdateComplete,
-          OmahaEvent::kResultSuccessReboot,
-          XmlEncode(prev_version).c_str());
-      LOG_IF(WARNING, !prefs->SetString(kPrefsPreviousVersion, ""))
-          << "Unable to reset the previous version.";
+      // If this is the first update check after a reboot following a previous
+      // update, generate an event containing the previous version number. If
+      // the previous version preference file doesn't exist the event is still
+      // generated with a previous version of 0.0.0.0 -- this is relevant for
+      // older clients or new installs. The previous version event is not sent
+      // for ping-only requests because they come before the client has
+      // rebooted.
+      string prev_version;
+      if (!prefs->GetString(kPrefsPreviousVersion, &prev_version)) {
+        prev_version = "0.0.0.0";
+      }
+      if (!prev_version.empty()) {
+        body += StringPrintf(
+            "        <o:event eventtype=\"%d\" eventresult=\"%d\" "
+            "previousversion=\"%s\"></o:event>\n",
+            OmahaEvent::kTypeUpdateComplete,
+            OmahaEvent::kResultSuccessReboot,
+            XmlEncode(prev_version).c_str());
+        LOG_IF(WARNING, !prefs->SetString(kPrefsPreviousVersion, ""))
+            << "Unable to reset the previous version.";
+      }
     }
   } else {
     // The error code is an optional attribute so append it only if the result
