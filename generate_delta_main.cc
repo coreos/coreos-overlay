@@ -156,7 +156,8 @@ int Main(int argc, char** argv) {
   logging::InitLogging("delta_generator.log",
                        logging::LOG_ONLY_TO_SYSTEM_DEBUG_LOG,
                        logging::DONT_LOCK_LOG_FILE,
-                       logging::APPEND_TO_OLD_LOG_FILE);
+                       logging::APPEND_TO_OLD_LOG_FILE,
+                       logging::DISABLE_DCHECK_FOR_NON_OFFICIAL_RELEASE_BUILDS);
   if (FLAGS_signature_size > 0 || !FLAGS_out_hash_file.empty()) {
     CalculatePayloadHashForSigning();
     return 0;

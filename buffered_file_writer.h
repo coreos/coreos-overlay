@@ -5,7 +5,7 @@
 #ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_BUFFERED_FILE_WRITER_H__
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_BUFFERED_FILE_WRITER_H__
 
-#include <base/scoped_ptr.h>
+#include <base/memory/scoped_ptr.h>
 #include <gtest/gtest_prod.h>  // for FRIEND_TEST
 
 #include "update_engine/file_writer.h"

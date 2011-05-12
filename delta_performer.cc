@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-#include <base/scoped_ptr.h>
+#include <base/memory/scoped_ptr.h>
 #include <base/string_util.h>
 #include <google/protobuf/repeated_field.h>
 

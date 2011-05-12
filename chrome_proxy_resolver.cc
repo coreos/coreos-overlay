@@ -5,7 +5,7 @@
 #include "update_engine/chrome_proxy_resolver.h"
 
 #include <base/json/json_reader.h>
-#include <base/scoped_ptr.h>
+#include <base/memory/scoped_ptr.h>
 #include <base/values.h>
 
 #include "update_engine/utils.h"

@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium Authors. All rights reserved.
+// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -6,6 +6,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "base/string_split.h"
 #include "base/string_util.h"
 
 using std::map;
@@ -20,7 +21,7 @@ map<std::string, std::string> ParseString(const string& str) {
   // Split along '\n', then along '='
   std::map<std::string, std::string> ret;
   vector<string> lines;
-  SplitStringDontTrim(str, '\n', &lines);
+  base::SplitStringDontTrim(str, '\n', &lines);
   for (vector<string>::const_iterator it = lines.begin();
        it != lines.end(); ++it) {
     string::size_type pos = it->find('=');

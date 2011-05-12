@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -121,7 +121,8 @@ void SetupLogging() {
   logging::InitLogging(NULL,
                        logging::LOG_ONLY_TO_SYSTEM_DEBUG_LOG,
                        logging::DONT_LOCK_LOG_FILE,
-                       logging::APPEND_TO_OLD_LOG_FILE);
+                       logging::APPEND_TO_OLD_LOG_FILE,
+                       logging::DISABLE_DCHECK_FOR_NON_OFFICIAL_RELEASE_BUILDS);
   if (FLAGS_logtostderr) {
     return;
   }
@@ -129,7 +130,8 @@ void SetupLogging() {
   logging::InitLogging(log_file.c_str(),
                        logging::LOG_ONLY_TO_FILE,
                        logging::DONT_LOCK_LOG_FILE,
-                       logging::APPEND_TO_OLD_LOG_FILE);
+                       logging::APPEND_TO_OLD_LOG_FILE,
+                       logging::DISABLE_DCHECK_FOR_NON_OFFICIAL_RELEASE_BUILDS);
 }
 
 }  // namespace {}

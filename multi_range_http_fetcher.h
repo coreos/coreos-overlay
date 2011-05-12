@@ -9,7 +9,7 @@
 #include <utility>
 #include <vector>
 
-#include <base/scoped_ptr.h>
+#include <base/memory/scoped_ptr.h>
 
 #include "update_engine/http_fetcher.h"
 

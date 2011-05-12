@@ -9,7 +9,7 @@
 #include <vector>
 
 #include <base/logging.h>
-#include <base/scoped_ptr.h>
+#include <base/memory/scoped_ptr.h>
 #include <base/string_util.h>
 #include <glib.h>
 #include <gtest/gtest.h>

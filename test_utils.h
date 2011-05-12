@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-#include <base/scoped_ptr.h>
+#include <base/memory/scoped_ptr.h>
 #include <gtest/gtest.h>
 
 #include "update_engine/action.h"
