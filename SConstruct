@@ -220,7 +220,9 @@ for key in Split('PKG_CONFIG_LIBDIR PKG_CONFIG_PATH'):
   if os.environ.has_key(key):
     env['ENV'][key] = os.environ[key]
 
-env.ParseConfig('pkg-config --cflags --libs '
+pkgconfig = os.environ.get('PKG_CONFIG', 'pkg-config')
+
+env.ParseConfig(pkgconfig + ' --cflags --libs '
                 'dbus-1 dbus-glib-1 gio-2.0 gio-unix-2.0 glib-2.0')
 env.ProtocolBuffer('update_metadata.pb.cc', 'update_metadata.proto')
 env.PublicKey('unittest_key.pub.pem', 'unittest_key.pem')
