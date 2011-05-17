@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -121,7 +121,6 @@ uint32_t Subprocess::Exec(const std::vector<std::string>& cmd,
                           ExecCallback callback,
                           void* p) {
   GPid child_pid;
-  GError* err;
   scoped_array<char*> argv(new char*[cmd.size() + 1]);
   for (unsigned int i = 0; i < cmd.size(); i++) {
     argv[i] = strdup(cmd[i].c_str());
@@ -154,7 +153,7 @@ uint32_t Subprocess::Exec(const std::vector<std::string>& cmd,
       NULL,
       &stdout_fd,
       NULL,
-      &err);
+      NULL);
   FreeArgv(argv.get());
   if (!success) {
     LOG(ERROR) << "g_spawn_async failed";
@@ -204,7 +203,6 @@ bool Subprocess::SynchronousExecFlags(const std::vector<std::string>& cmd,
   ScopedFreeArgPointer argp_free(argp);
 
   char* child_stdout;
-
   bool success = g_spawn_sync(
       NULL,  // working directory
       argv.get(),
@@ -218,10 +216,16 @@ bool Subprocess::SynchronousExecFlags(const std::vector<std::string>& cmd,
       return_code,
       &err);
   FreeArgv(argv.get());
-  if (err)
+  if (err) {
     LOG(INFO) << "err is: " << err->code << ", " << err->message;
-  if (child_stdout && strlen(child_stdout))
-    LOG(INFO) << "Subprocess output:\n" << child_stdout;
+    g_error_free(err);
+  }
+  if (child_stdout) {
+    if (strlen(child_stdout)) {
+      LOG(INFO) << "Subprocess output:\n" << child_stdout;
+    }
+    g_free(child_stdout);
+  }
   return success;
 }
 
