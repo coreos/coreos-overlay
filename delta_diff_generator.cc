@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -1553,7 +1553,7 @@ bool DeltaDiffGenerator::BsdiffFiles(const string& old_file,
 
   int rc = 1;
   vector<char> patch_file;
-  TEST_AND_RETURN_FALSE(Subprocess::SynchronousExec(cmd, &rc));
+  TEST_AND_RETURN_FALSE(Subprocess::SynchronousExec(cmd, &rc, NULL));
   TEST_AND_RETURN_FALSE(rc == 0);
   TEST_AND_RETURN_FALSE(utils::ReadFile(patch_file_path, out));
   unlink(patch_file_path.c_str());

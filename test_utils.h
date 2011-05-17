@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -121,7 +121,7 @@ class ScopedLoopbackDeviceReleaser {
       args.push_back("-d");
       args.push_back(dev_);
       int return_code = 0;
-      EXPECT_TRUE(Subprocess::SynchronousExec(args, &return_code));
+      EXPECT_TRUE(Subprocess::SynchronousExec(args, &return_code, NULL));
       if (return_code == 0) {
         return;
       }

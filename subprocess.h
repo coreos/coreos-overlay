@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -41,14 +41,16 @@ class Subprocess {
   // Used to cancel the callback. The process will still run to completion.
   void CancelExec(uint32_t tag);
 
-  // Executes a command synchronously. Returns true on success.
+  // Executes a command synchronously. Returns true on success. If |stdout| is
+  // non-null, the process output is stored in it, otherwise the output is
+  // logged. Note that stderr is redirected to stdout.
   static bool SynchronousExecFlags(const std::vector<std::string>& cmd,
+                                   GSpawnFlags flags,
                                    int* return_code,
-                                   GSpawnFlags flags);
+                                   std::string* stdout);
   static bool SynchronousExec(const std::vector<std::string>& cmd,
-                              int* return_code) {
-    return SynchronousExecFlags(cmd, return_code, static_cast<GSpawnFlags>(0));
-  }
+                              int* return_code,
+                              std::string* stdout);
 
   // Gets the one instance
   static Subprocess& Get() {

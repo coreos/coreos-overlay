@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -60,7 +60,7 @@ bool IsNormalBootMode() {
 
   // Assume dev mode if the dev switch is set to 1 and there was no error
   // executing crossystem. Assume normal mode otherwise.
-  bool success = Subprocess::SynchronousExec(cmd, &exit_code);
+  bool success = Subprocess::SynchronousExec(cmd, &exit_code, NULL);
   bool dev_mode = success && exit_code == 0;
   LOG_IF(INFO, dev_mode) << "Booted in dev mode.";
   return !dev_mode;
@@ -513,7 +513,7 @@ bool Reboot() {
   command.push_back("-r");
   command.push_back("now");
   int rc = 0;
-  Subprocess::SynchronousExec(command, &rc);
+  Subprocess::SynchronousExec(command, &rc, NULL);
   TEST_AND_RETURN_FALSE(rc == 0);
   return true;
 }

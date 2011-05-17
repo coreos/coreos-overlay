@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -155,7 +155,7 @@ bool PayloadSigner::SignHash(const vector<char>& hash,
   cmd[cmd.size() - 1] = sig_path;
 
   int return_code = 0;
-  TEST_AND_RETURN_FALSE(Subprocess::SynchronousExec(cmd, &return_code));
+  TEST_AND_RETURN_FALSE(Subprocess::SynchronousExec(cmd, &return_code, NULL));
   TEST_AND_RETURN_FALSE(return_code == 0);
 
   vector<char> signature;

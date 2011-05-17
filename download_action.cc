@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -140,7 +140,7 @@ void FlushLinuxCaches() {
   command.push_back("/bin/sync");
   int rc;
   LOG(INFO) << "FlushLinuxCaches-sync...";
-  Subprocess::SynchronousExec(command, &rc);
+  Subprocess::SynchronousExec(command, &rc, NULL);
   LOG(INFO) << "FlushLinuxCaches-drop_caches...";
 
   const char* const drop_cmd = "3\n";

@@ -117,7 +117,7 @@ class ScopedFreeArgPointer {
 };
 }  // namespace {}
 
-uint32_t Subprocess::Exec(const std::vector<std::string>& cmd,
+uint32_t Subprocess::Exec(const vector<string>& cmd,
                           ExecCallback callback,
                           void* p) {
   GPid child_pid;
@@ -181,9 +181,13 @@ void Subprocess::CancelExec(uint32_t tag) {
   subprocess_records_[tag]->callback = NULL;
 }
 
-bool Subprocess::SynchronousExecFlags(const std::vector<std::string>& cmd,
+bool Subprocess::SynchronousExecFlags(const vector<string>& cmd,
+                                      GSpawnFlags flags,
                                       int* return_code,
-                                      GSpawnFlags flags) {
+                                      string* stdout) {
+  if (stdout) {
+    *stdout = "";
+  }
   GError* err = NULL;
   scoped_array<char*> argv(new char*[cmd.size() + 1]);
   for (unsigned int i = 0; i < cmd.size(); i++) {
@@ -221,12 +225,23 @@ bool Subprocess::SynchronousExecFlags(const std::vector<std::string>& cmd,
     g_error_free(err);
   }
   if (child_stdout) {
-    if (strlen(child_stdout)) {
+    if (stdout) {
+      *stdout = child_stdout;
+    } else if (*child_stdout) {
       LOG(INFO) << "Subprocess output:\n" << child_stdout;
     }
     g_free(child_stdout);
   }
   return success;
+}
+
+bool Subprocess::SynchronousExec(const std::vector<std::string>& cmd,
+                                 int* return_code,
+                                 std::string* stdout) {
+  return SynchronousExecFlags(cmd,
+                              static_cast<GSpawnFlags>(0),
+                              return_code,
+                              stdout);
 }
 
 bool Subprocess::SubprocessInFlight() {

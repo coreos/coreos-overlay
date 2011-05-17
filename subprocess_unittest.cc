@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -70,6 +70,28 @@ TEST(SubprocessTest, EchoTest) {
   g_timeout_add(0, &LaunchEchoInMainLoop, loop);
   g_main_loop_run(loop);
   g_main_loop_unref(loop);
+}
+
+TEST(SubprocessTest, SynchronousEchoTest) {
+  vector<string> cmd;
+  cmd.push_back("/bin/sh");
+  cmd.push_back("-c");
+  cmd.push_back("echo -n stdout-here; echo -n stderr-there > /dev/stderr");
+  int rc = -1;
+  string stdout;
+  ASSERT_TRUE(Subprocess::SynchronousExec(cmd, &rc, &stdout));
+  EXPECT_EQ(0, rc);
+  EXPECT_EQ("stdout-herestderr-there", stdout);
+}
+
+TEST(SubprocessTest, SynchronousEchoNoOutputTest) {
+  vector<string> cmd;
+  cmd.push_back("/bin/sh");
+  cmd.push_back("-c");
+  cmd.push_back("echo test");
+  int rc = -1;
+  ASSERT_TRUE(Subprocess::SynchronousExec(cmd, &rc, NULL));
+  EXPECT_EQ(0, rc);
 }
 
 namespace {
