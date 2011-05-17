@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -13,7 +13,6 @@
 #include <vector>
 
 #include <base/file_util.h>
-#include <base/string_util.h>
 
 #include "update_engine/simple_key_value_store.h"
 #include "update_engine/utils.h"
@@ -34,8 +33,6 @@ const char* const OmahaRequestParams::kOsPlatform("Chrome OS");
 const char* const OmahaRequestParams::kOsVersion("Indy");
 const char* const OmahaRequestParams::kUpdateUrl(
     "https://tools.google.com/service/update2");
-
-static const char kHWIDPath[] = "/sys/devices/platform/chromeos_acpi/HWID";
 
 OmahaRequestDeviceParams::OmahaRequestDeviceParams() :
     force_lock_down_(false),
@@ -61,7 +58,7 @@ bool OmahaRequestDeviceParams::Init(const std::string& in_app_version,
       "",
       &chromeos_update_engine::OmahaRequestDeviceParams::IsValidTrack,
       true);  // stateful_override
-  hardware_class = GetHardwareClass();
+  hardware_class = utils::GetHardwareClass();
   struct stat stbuf;
 
   // Deltas are only okay if the /.nodelta file does not exist.  If we don't
@@ -163,16 +160,6 @@ string OmahaRequestDeviceParams::GetMachineType() const {
   if (uname(&buf) == 0)
     ret = buf.machine;
   return ret;
-}
-
-string OmahaRequestDeviceParams::GetHardwareClass() const {
-  string hwid;
-  if (!file_util::ReadFileToString(FilePath(root_ + kHWIDPath), &hwid)) {
-    LOG(ERROR) << "Unable to determine the system hardware qualification ID.";
-    return "";
-  }
-  TrimWhitespaceASCII(hwid, TRIM_ALL, &hwid);
-  return hwid;
 }
 
 bool OmahaRequestDeviceParams::ShouldLockDown() const {

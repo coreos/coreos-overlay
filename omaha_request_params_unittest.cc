@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -237,19 +237,6 @@ TEST_F(OmahaRequestDeviceParamsTest, NoDeltasTest) {
   OmahaRequestParams out;
   EXPECT_TRUE(DoTest(&out, "", ""));
   EXPECT_FALSE(out.delta_okay);
-}
-
-TEST_F(OmahaRequestDeviceParamsTest, HardwareClassTest) {
-  string test_class = " \t sample hardware class \n ";
-  FilePath hwid_path(kTestDir + "/sys/devices/platform/chromeos_acpi/HWID");
-  ASSERT_TRUE(file_util::CreateDirectory(hwid_path.DirName()));
-  ASSERT_EQ(test_class.size(),
-            file_util::WriteFile(hwid_path,
-                                 test_class.data(),
-                                 test_class.size()));
-  OmahaRequestParams out;
-  EXPECT_TRUE(DoTest(&out, "", ""));
-  EXPECT_EQ("sample hardware class", out.hardware_class);
 }
 
 TEST_F(OmahaRequestDeviceParamsTest, OverrideTest) {

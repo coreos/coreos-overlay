@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -32,6 +32,9 @@ bool IsOOBEComplete();
 // Returns true if the boot mode is normal or if it's unable to determine the
 // boot mode. Returns false if the boot mode is developer.
 bool IsNormalBootMode();
+
+// Returns the HWID or an empty string on error.
+std::string GetHardwareClass();
 
 // Writes the data passed to path. The file at path will be overwritten if it
 // exists. Returns true on success, false otherwise.
