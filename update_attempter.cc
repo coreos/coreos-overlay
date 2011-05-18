@@ -510,13 +510,10 @@ void UpdateAttempter::StaticCompleteUpdateBootFlags(
   reinterpret_cast<UpdateAttempter*>(p)->CompleteUpdateBootFlags(return_code);
 }
 
-void UpdateAttempter::SetStatusAndNotify(UpdateStatus status) {
-  status_ = status;
-  if (update_check_scheduler_) {
-    update_check_scheduler_->SetUpdateStatus(status_);
-  }
-  if (!dbus_service_)
+void UpdateAttempter::BroadcastStatus() {
+  if (!dbus_service_) {
     return;
+  }
   last_notify_time_ = TimeTicks::Now();
   update_engine_service_emit_status_update(
       dbus_service_,
@@ -525,6 +522,14 @@ void UpdateAttempter::SetStatusAndNotify(UpdateStatus status) {
       UpdateStatusToString(status_),
       new_version_.c_str(),
       new_size_);
+}
+
+void UpdateAttempter::SetStatusAndNotify(UpdateStatus status) {
+  status_ = status;
+  if (update_check_scheduler_) {
+    update_check_scheduler_->SetUpdateStatus(status_);
+  }
+  BroadcastStatus();
 }
 
 void UpdateAttempter::CreatePendingErrorEvent(AbstractAction* action,

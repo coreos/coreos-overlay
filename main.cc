@@ -40,8 +40,12 @@ using std::vector;
 namespace chromeos_update_engine {
 
 gboolean UpdateBootFlags(void* arg) {
-  UpdateAttempter* attempter = reinterpret_cast<UpdateAttempter*>(arg);
-  attempter->UpdateBootFlags();
+  reinterpret_cast<UpdateAttempter*>(arg)->UpdateBootFlags();
+  return FALSE;  // Don't call this callback again
+}
+
+gboolean BroadcastStatus(void* arg) {
+  reinterpret_cast<UpdateAttempter*>(arg)->BroadcastStatus();
   return FALSE;  // Don't call this callback again
 }
 
@@ -191,6 +195,10 @@ int main(int argc, char** argv) {
   g_timeout_add_seconds(45,
                         &chromeos_update_engine::UpdateBootFlags,
                         &update_attempter);
+
+  // Broadcast the update engine status on startup to ensure consistent system
+  // state on crashes.
+  g_idle_add(&chromeos_update_engine::BroadcastStatus, &update_attempter);
 
   // Run the main loop until exit time:
   g_main_loop_run(loop);

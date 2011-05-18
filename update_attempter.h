@@ -126,6 +126,9 @@ class UpdateAttempter : public ActionProcessorDelegate,
   void SetDownloadStatus(bool active);
   void BytesReceived(uint64_t bytes_received, uint64_t total);
 
+  // Broadcasts the current status over D-Bus.
+  void BroadcastStatus();
+
  private:
   friend class UpdateAttempterTest;
   FRIEND_TEST(UpdateAttempterTest, ActionCompletedDownloadTest);
