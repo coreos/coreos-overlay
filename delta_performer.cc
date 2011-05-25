@@ -554,10 +554,23 @@ bool DeltaPerformer::ExtractSignatureMessage(
   TEST_AND_RETURN_FALSE(signatures_message_data_.empty());
   TEST_AND_RETURN_FALSE(buffer_offset_ == manifest_.signatures_offset());
   TEST_AND_RETURN_FALSE(buffer_.size() >= manifest_.signatures_size());
-  signatures_message_data_.insert(
-      signatures_message_data_.begin(),
+  signatures_message_data_.assign(
       buffer_.begin(),
       buffer_.begin() + manifest_.signatures_size());
+
+  // Save the signature blob because if the update is interrupted after the
+  // download phase we don't go through this path anymore. Some alternatives to
+  // consider:
+  //
+  // 1. On resume, re-download the signature blob from the server and re-verify
+  // it.
+  //
+  // 2. Verify the signature as soon as it's received and don't checkpoint the
+  // blob and the signed sha-256 context.
+  LOG_IF(WARNING, !prefs_->SetString(kPrefsUpdateStateSignatureBlob,
+                                     string(&signatures_message_data_[0],
+                                            signatures_message_data_.size())))
+      << "Unable to store the signature blob.";
   // The hash of all data consumed so far should be verified against the signed
   // hash.
   signed_hash_context_ = hash_calculator_.GetContext();
@@ -726,6 +739,7 @@ bool DeltaPerformer::ResetUpdateProgress(PrefsInterface* prefs, bool quick) {
     prefs->SetInt64(kPrefsUpdateStateNextDataOffset, -1);
     prefs->SetString(kPrefsUpdateStateSHA256Context, "");
     prefs->SetString(kPrefsUpdateStateSignedSHA256Context, "");
+    prefs->SetString(kPrefsUpdateStateSignatureBlob, "");
     prefs->SetInt64(kPrefsManifestMetadataSize, -1);
     prefs->SetInt64(kPrefsResumedUpdateFailures, 0);
   }
@@ -770,10 +784,15 @@ bool DeltaPerformer::PrimeUpdateState() {
                         next_data_offset >= 0);
   buffer_offset_ = next_data_offset;
 
-  // The signed hash context may be empty if the interrupted update didn't reach
-  // the signature blob.
+  // The signed hash context and the signature blob may be empty if the
+  // interrupted update didn't reach the signature.
   prefs_->GetString(kPrefsUpdateStateSignedSHA256Context,
                     &signed_hash_context_);
+  string signature_blob;
+  if (prefs_->GetString(kPrefsUpdateStateSignatureBlob, &signature_blob)) {
+    signatures_message_data_.assign(signature_blob.begin(),
+                                    signature_blob.end());
+  }
 
   string hash_context;
   TEST_AND_RETURN_FALSE(prefs_->GetString(kPrefsUpdateStateSHA256Context,

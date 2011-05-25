@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -25,6 +25,7 @@ const char kPrefsUpdateCheckResponseHash[] = "update-check-response-hash";
 const char kPrefsUpdateStateNextDataOffset[] = "update-state-next-data-offset";
 const char kPrefsUpdateStateNextOperation[] = "update-state-next-operation";
 const char kPrefsUpdateStateSHA256Context[] = "update-state-sha-256-context";
+const char kPrefsUpdateStateSignatureBlob[] = "update-state-signature-blob";
 const char kPrefsUpdateStateSignedSHA256Context[] =
     "update-state-signed-sha-256-context";
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -411,6 +411,8 @@ void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop,
       .WillRepeatedly(Return(true));
   if (signature_test != kSignatureNone) {
     EXPECT_CALL(prefs, SetString(kPrefsUpdateStateSignedSHA256Context, _))
+        .WillOnce(Return(true));
+    EXPECT_CALL(prefs, SetString(kPrefsUpdateStateSignatureBlob, _))
         .WillOnce(Return(true));
   }
 
