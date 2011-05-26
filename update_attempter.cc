@@ -675,20 +675,32 @@ void UpdateAttempter::SetupDownload() {
 }
 
 void UpdateAttempter::PingOmaha() {
-  if (processor_->IsRunning()) {
+  if (!processor_->IsRunning()) {
+    shared_ptr<OmahaRequestAction> ping_action(
+        new OmahaRequestAction(prefs_,
+                               omaha_request_params_,
+                               NULL,
+                               new LibcurlHttpFetcher(GetProxyResolver()),
+                               true));
+    actions_.push_back(shared_ptr<OmahaRequestAction>(ping_action));
+    processor_->set_delegate(NULL);
+    processor_->EnqueueAction(ping_action.get());
+    // Call StartProcessing() synchronously here to avoid any race conditions
+    // caused by multiple outstanding ping Omaha requests.  If we call
+    // StartProcessing() asynchronously, the device can be suspended before we
+    // get a chance to callback to StartProcessing().  When the device resumes
+    // (assuming the device sleeps longer than the next update check period),
+    // StartProcessing() is called back and at the same time, the next update
+    // check is fired which eventually invokes StartProcessing().  A crash
+    // can occur because StartProcessing() checks to make sure that the
+    // processor is idle which it isn't due to the two concurrent ping Omaha
+    // requests.
+    processor_->StartProcessing();
+  } else {
     LOG(WARNING) << "Action processor running, Omaha ping suppressed.";
-    return;
   }
-  shared_ptr<OmahaRequestAction> ping_action(
-      new OmahaRequestAction(prefs_,
-                             omaha_request_params_,
-                             NULL,
-                             new LibcurlHttpFetcher(GetProxyResolver()),
-                             true));
-  actions_.push_back(shared_ptr<OmahaRequestAction>(ping_action));
-  processor_->set_delegate(NULL);
-  processor_->EnqueueAction(ping_action.get());
-  ScheduleProcessingStart();
+
+  // Update the status which will schedule the next update check
   SetStatusAndNotify(UPDATE_STATUS_UPDATED_NEED_REBOOT);
 }
 
