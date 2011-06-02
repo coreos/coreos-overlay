@@ -330,7 +330,7 @@ void UpdateAttempterTest::PingOmahaTestDone() {
 TEST_F(UpdateAttempterTest, PingOmahaTest) {
   UpdateCheckScheduler scheduler(&attempter_);
   scheduler.enabled_ = true;
-  EXPECT_EQ(false, scheduler.scheduled_);
+  EXPECT_FALSE(scheduler.scheduled_);
   attempter_.set_update_check_scheduler(&scheduler);
   loop_ = g_main_loop_new(g_main_context_default(), FALSE);
   g_idle_add(&StaticPingOmahaTestStart, this);

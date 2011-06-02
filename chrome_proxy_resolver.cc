@@ -78,7 +78,10 @@ bool ChromeProxyResolver::GetJsonProxySettings(DBusGProxy* proxy,
 DBusGProxy* ChromeProxyResolver::DbusProxy() {
   GError* error = NULL;
   DBusGConnection* bus = dbus_->BusGet(DBUS_BUS_SYSTEM, &error);
-  TEST_AND_RETURN_FALSE(bus);
+  if (!bus) {
+    LOG(ERROR) << "Failed to get System Dbus";
+    return NULL;
+  }
   DBusGProxy* proxy = dbus_->ProxyNewForNameOwner(bus,
                                                   kSessionManagerService,
                                                   kSessionManagerPath,

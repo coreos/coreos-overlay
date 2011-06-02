@@ -1425,7 +1425,7 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
   TEST_AND_RETURN_FALSE(utils::MakeTempFile(
       "/tmp/CrAU_temp_data.ordered.XXXXXX",
       &ordered_blobs_path,
-      false));
+      NULL));
   TEST_AND_RETURN_FALSE(ReorderDataBlobs(&manifest,
                                          temp_file_path,
                                          ordered_blobs_path));
