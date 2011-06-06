@@ -230,6 +230,12 @@ void OmahaRequestAction::PerformAction() {
   }
   http_fetcher_->set_delegate(this);
   InitPingDays();
+  if (ping_only_ &&
+      !ShouldPing(ping_active_days_) &&
+      !ShouldPing(ping_roll_call_days_)) {
+    processor_->ActionComplete(this, kActionCodeSuccess);
+    return;
+  }
   string request_post(FormatRequest(event_.get(),
                                     params_,
                                     ping_only_,
