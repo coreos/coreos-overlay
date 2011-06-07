@@ -75,7 +75,7 @@ TEST_F(PostinstallRunnerActionTest, RunAsRootErrScriptTest) {
 
 TEST_F(PostinstallRunnerActionTest, RunAsRootFirmwareBErrScriptTest) {
   ASSERT_EQ(0, getuid());
-  DoTest(true, 2);
+  DoTest(true, 3);
 }
 
 void PostinstallRunnerActionTest::DoTest(bool do_losetup, int err_code) {
