@@ -284,7 +284,7 @@ void UpdateAttempterTest::UpdateTestStart() {
   }
   EXPECT_CALL(*processor_, StartProcessing()).Times(1);
 
-  attempter_.Update("", "", false);
+  attempter_.Update("", "", false, false);
   g_idle_add(&StaticUpdateTestVerify, this);
 }
 

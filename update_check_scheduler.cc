@@ -82,7 +82,7 @@ gboolean UpdateCheckScheduler::StaticCheck(void* scheduler) {
   CHECK(me->scheduled_);
   me->scheduled_ = false;
   if (me->IsOOBEComplete()) {
-    me->update_attempter_->Update("", "", false);
+    me->update_attempter_->Update("", "", false, false);
   } else {
     // Skips all automatic update checks if the OOBE process is not complete and
     // schedules a new check as if it is the first one.

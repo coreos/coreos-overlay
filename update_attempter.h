@@ -59,9 +59,11 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // |in_update_url| prevents automatic detection of the parameter.
   // If |obey_proxies| is true, the update will likely respect Chrome's
   // proxy setting. For security reasons, we may still not honor them.
+  // Interactive should be true if this was called from the user (ie dbus).
   virtual void Update(const std::string& app_version,
                       const std::string& omaha_url,
-                      bool obey_proxies);
+                      bool obey_proxies,
+                      bool interactive);
 
   // ActionProcessorDelegate methods:
   void ProcessingDone(const ActionProcessor* processor, ActionExitCode code);

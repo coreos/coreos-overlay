@@ -130,7 +130,8 @@ UpdateAttempter::~UpdateAttempter() {
 
 void UpdateAttempter::Update(const std::string& app_version,
                              const std::string& omaha_url,
-                             bool obey_proxies) {
+                             bool obey_proxies,
+                             bool interactive) {
   chrome_proxy_resolver_.Init();
   fake_update_success_ = false;
   if (status_ == UPDATE_STATUS_UPDATED_NEED_REBOOT) {
@@ -175,9 +176,9 @@ void UpdateAttempter::Update(const std::string& app_version,
   // Actions:
   LibcurlHttpFetcher* update_check_fetcher =
       new LibcurlHttpFetcher(GetProxyResolver());
-  // Try harder to connect to the network. See comment in
-  // libcurl_http_fetcher.cc.
-  update_check_fetcher->set_no_network_max_retries(3);
+  // Try harder to connect to the network, esp when not interactive.
+  // See comment in libcurl_http_fetcher.cc.
+  update_check_fetcher->set_no_network_max_retries(interactive ? 1 : 3);
   shared_ptr<OmahaRequestAction> update_check_action(
       new OmahaRequestAction(prefs_,
                              omaha_request_params_,
@@ -293,7 +294,7 @@ void UpdateAttempter::CheckForUpdate(const std::string& app_version,
               << UpdateStatusToString(status_) << ", so not checking.";
     return;
   }
-  Update(app_version, omaha_url, true);
+  Update(app_version, omaha_url, true, true);
 }
 
 bool UpdateAttempter::RebootIfNeeded() {
