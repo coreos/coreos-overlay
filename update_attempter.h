@@ -136,12 +136,14 @@ class UpdateAttempter : public ActionProcessorDelegate,
   FRIEND_TEST(UpdateAttempterTest, ActionCompletedDownloadTest);
   FRIEND_TEST(UpdateAttempterTest, ActionCompletedErrorTest);
   FRIEND_TEST(UpdateAttempterTest, ActionCompletedOmahaRequestTest);
+  FRIEND_TEST(UpdateAttempterTest, CreatePendingErrorEventTest);
+  FRIEND_TEST(UpdateAttempterTest, CreatePendingErrorEventResumedTest);
   FRIEND_TEST(UpdateAttempterTest, DisableDeltaUpdateIfNeededTest);
   FRIEND_TEST(UpdateAttempterTest, MarkDeltaUpdateFailureTest);
+  FRIEND_TEST(UpdateAttempterTest, PingOmahaTest);
   FRIEND_TEST(UpdateAttempterTest, ScheduleErrorEventActionNoEventTest);
   FRIEND_TEST(UpdateAttempterTest, ScheduleErrorEventActionTest);
   FRIEND_TEST(UpdateAttempterTest, UpdateTest);
-  FRIEND_TEST(UpdateAttempterTest, PingOmahaTest);
 
   // Sets the status to the given status and notifies a status update
   // over dbus.

@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -6,6 +6,9 @@
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_OMAHA_RESPONSE_HANDLER_ACTION_H__
 
 #include <string>
+
+#include <gtest/gtest_prod.h>  // for FRIEND_TEST
+
 #include "update_engine/action.h"
 #include "update_engine/install_plan.h"
 #include "update_engine/omaha_request_action.h"
@@ -54,6 +57,8 @@ class OmahaResponseHandlerAction : public Action<OmahaResponseHandlerAction> {
   void set_key_path(const std::string& path) { key_path_ = path; }
 
  private:
+  FRIEND_TEST(UpdateAttempterTest, CreatePendingErrorEventResumedTest);
+
   // Assumes you want to install on the "other" device, where the other
   // device is what you get if you swap 1 for 2 or 3 for 4 or vice versa
   // for the number at the end of the boot device. E.g., /dev/sda1 -> /dev/sda2

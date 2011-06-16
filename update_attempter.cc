@@ -553,6 +553,15 @@ void UpdateAttempter::CreatePendingErrorEvent(AbstractAction* action,
 
   code = GetErrorCodeForAction(action, code);
   fake_update_success_ = code == kActionCodePostinstallBootedFromFirmwareB;
+
+  // Apply the bit modifiers to the error code.
+  if (!utils::IsNormalBootMode()) {
+    code = static_cast<ActionExitCode>(code | kActionCodeBootModeFlag);
+  }
+  if (response_handler_action_.get() &&
+      response_handler_action_->install_plan().is_resume) {
+    code = static_cast<ActionExitCode>(code | kActionCodeResumedFlag);
+  }
   error_event_.reset(new OmahaEvent(OmahaEvent::kTypeUpdateComplete,
                                     OmahaEvent::kResultError,
                                     code));

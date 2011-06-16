@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -339,6 +339,31 @@ TEST_F(UpdateAttempterTest, PingOmahaTest) {
   loop_ = NULL;
   EXPECT_EQ(UPDATE_STATUS_UPDATED_NEED_REBOOT, attempter_.status());
   EXPECT_EQ(true, scheduler.scheduled_);
+}
+
+TEST_F(UpdateAttempterTest, CreatePendingErrorEventTest) {
+  ActionMock action;
+  const ActionExitCode kCode = kActionCodeDownloadTransferError;
+  attempter_.CreatePendingErrorEvent(&action, kCode);
+  ASSERT_TRUE(attempter_.error_event_.get() != NULL);
+  EXPECT_EQ(OmahaEvent::kTypeUpdateComplete, attempter_.error_event_->type);
+  EXPECT_EQ(OmahaEvent::kResultError, attempter_.error_event_->result);
+  EXPECT_EQ(kCode, attempter_.error_event_->error_code);
+}
+
+TEST_F(UpdateAttempterTest, CreatePendingErrorEventResumedTest) {
+  OmahaResponseHandlerAction *response_action =
+      new OmahaResponseHandlerAction(&prefs_);
+  response_action->install_plan_.is_resume = true;
+  attempter_.response_handler_action_.reset(response_action);
+  ActionMock action;
+  const ActionExitCode kCode = kActionCodeInstallDeviceOpenError;
+  attempter_.CreatePendingErrorEvent(&action, kCode);
+  ASSERT_TRUE(attempter_.error_event_.get() != NULL);
+  EXPECT_EQ(OmahaEvent::kTypeUpdateComplete, attempter_.error_event_->type);
+  EXPECT_EQ(OmahaEvent::kResultError, attempter_.error_event_->result);
+  EXPECT_EQ(kCode | kActionCodeResumedFlag,
+            attempter_.error_event_->error_code);
 }
 
 }  // namespace chromeos_update_engine

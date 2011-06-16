@@ -128,11 +128,7 @@ string FormatRequest(const OmahaEvent* event,
     // is not success.
     string error_code;
     if (event->result != OmahaEvent::kResultSuccess) {
-      int code = event->error_code;
-      if (!utils::IsNormalBootMode()) {
-        code |= kActionCodeBootModeFlag;
-      }
-      error_code = StringPrintf(" errorcode=\"%d\"", code);
+      error_code = StringPrintf(" errorcode=\"%d\"", event->error_code);
     }
     body = StringPrintf(
         "        <o:event eventtype=\"%d\" eventresult=\"%d\"%s></o:event>\n",
