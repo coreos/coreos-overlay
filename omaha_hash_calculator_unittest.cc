@@ -72,10 +72,15 @@ TEST(OmahaHashCalculatorTest, ContextTest) {
 TEST(OmahaHashCalculatorTest, BigTest) {
   OmahaHashCalculator calc;
 
+  int digit_count = 1;
+  int next_overflow = 10;
   for (int i = 0; i < 1000000; i++) {
     char buf[8];
-    ASSERT_EQ(0 == i ? 1 : static_cast<int>(floorf(logf(i) / logf(10))) + 1,
-              snprintf(buf, sizeof(buf), "%d", i)) << " i = " << i;
+    if (i == next_overflow) {
+      next_overflow *= 10;
+      digit_count++;
+    }
+    ASSERT_EQ(digit_count, snprintf(buf, sizeof(buf), "%d", i)) << " i = " << i;
     calc.Update(buf, strlen(buf));
   }
   calc.Finalize();
