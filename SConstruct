@@ -203,6 +203,7 @@ env['LIBS'] = Split("""base
                        gthread-2.0
                        libpcrecpp
                        metrics
+                       policy
                        protobuf
                        pthread
                        rootdev

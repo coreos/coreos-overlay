@@ -17,6 +17,8 @@
 #include <base/rand_util.h>
 #include <glib.h>
 #include <metrics/metrics_library.h>
+#include <policy/libpolicy.h>
+#include <policy/device_policy.h>
 
 #include "update_engine/dbus_service.h"
 #include "update_engine/download_action.h"
@@ -119,7 +121,8 @@ UpdateAttempter::UpdateAttempter(PrefsInterface* prefs,
       chrome_proxy_resolver_(dbus_iface),
       updated_boot_flags_(false),
       update_boot_flags_running_(false),
-      start_action_processor_(false) {
+      start_action_processor_(false),
+      policy_provider_(NULL) {
   if (utils::FileExists(kUpdateCompletedMarker))
     status_ = UPDATE_STATUS_UPDATED_NEED_REBOOT;
 }
@@ -147,7 +150,20 @@ void UpdateAttempter::Update(const std::string& app_version,
     return;
   }
   http_response_code_ = 0;
-  if (!omaha_request_params_.Init(app_version, omaha_url)) {
+
+  // Lazy initialize the policy provider, or reload the latest policy data.
+  if (!policy_provider_.get()) {
+    policy_provider_.reset(new policy::PolicyProvider());
+  } else {
+    policy_provider_->Reload();
+  }
+
+  // If the release_track is specified by policy, that takes precedence.
+  string release_track;
+  if (policy_provider_->device_policy_is_loaded())
+    policy_provider_->GetDevicePolicy().GetReleaseChannel(&release_track);
+
+  if (!omaha_request_params_.Init(app_version, omaha_url, release_track)) {
     LOG(ERROR) << "Unable to initialize Omaha request device params.";
     return;
   }

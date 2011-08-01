@@ -47,7 +47,7 @@ const string OmahaRequestDeviceParamsTest::kTestDir =
 bool OmahaRequestDeviceParamsTest::DoTest(OmahaRequestParams* out,
                                           const string& app_version,
                                           const string& omaha_url) {
-  bool success = params_.Init(app_version, omaha_url);
+  bool success = params_.Init(app_version, omaha_url, "");
   if (out)
     *out = params_;
   return success;
@@ -326,7 +326,7 @@ TEST_F(OmahaRequestDeviceParamsTest, SetTrackSimpleTest) {
     OmahaRequestDeviceParams params;
     params.set_root(string("./") + kTestDir);
     params.SetLockDown(false);
-    EXPECT_TRUE(params.Init("", ""));
+    EXPECT_TRUE(params.Init("", "", ""));
     params.SetTrack("zootrack");
   }
   OmahaRequestParams out;
@@ -351,7 +351,7 @@ TEST_F(OmahaRequestDeviceParamsTest, SetTrackPreserveTest) {
     OmahaRequestDeviceParams params;
     params.set_root(string("./") + kTestDir);
     params.SetLockDown(false);
-    EXPECT_TRUE(params.Init("", ""));
+    EXPECT_TRUE(params.Init("", "", ""));
     params.SetTrack("zootrack");
   }
   OmahaRequestParams out;
@@ -372,7 +372,7 @@ TEST_F(OmahaRequestDeviceParamsTest, SetTrackInvalidTest) {
     OmahaRequestDeviceParams params;
     params.set_root(string("./") + kTestDir);
     params.SetLockDown(true);
-    EXPECT_TRUE(params.Init("", ""));
+    EXPECT_TRUE(params.Init("", "", ""));
     params.SetTrack("zootrack");
   }
   OmahaRequestParams out;
@@ -419,6 +419,28 @@ TEST_F(OmahaRequestDeviceParamsTest, ValidTrackTest) {
   EXPECT_TRUE(out.delta_okay);
   EXPECT_EQ("dev-channel", out.app_track);
   EXPECT_EQ("http://www.google.com", out.update_url);
+}
+
+TEST_F(OmahaRequestDeviceParamsTest, ChannelSpecified) {
+  ASSERT_TRUE(WriteFileString(
+      kTestDir + "/etc/lsb-release",
+      "CHROMEOS_RELEASE_BOARD=arm-generic\n"
+      "CHROMEOS_RELEASE_FOO=bar\n"
+      "CHROMEOS_RELEASE_VERSION=0.2.2.3\n"
+      "CHROMEOS_RELEASE_TRACK=dev-channel\n"
+      "CHROMEOS_AUSERVER=http://www.google.com"));
+  params_.SetLockDown(true);
+  // Passed-in value for release channel should be used.
+  params_.Init("", "", "beta-channel");
+  EXPECT_EQ("beta-channel", params_.app_track);
+
+  // When passed-in value is invalid, value from lsb-release should be used.
+  params_.Init("", "", "foo-channel");
+  EXPECT_EQ("dev-channel", params_.app_track);
+
+  // When passed-in value is empty, value from lsb-release should be used.
+  params_.Init("", "", "");
+  EXPECT_EQ("dev-channel", params_.app_track);
 }
 
 TEST_F(OmahaRequestDeviceParamsTest, ShouldLockDownTest) {

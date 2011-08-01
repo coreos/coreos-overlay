@@ -73,7 +73,8 @@ class OmahaRequestDeviceParams : public OmahaRequestParams {
   // |in_app_version| or |in_update_url| prevents automatic detection
   // of the parameter. Returns true on success, false otherwise.
   bool Init(const std::string& in_app_version,
-            const std::string& in_update_url);
+            const std::string& in_update_url,
+            const std::string& in_release_track);
 
   // Permanently changes the release track to |track|. Returns true on success,
   // false otherwise.

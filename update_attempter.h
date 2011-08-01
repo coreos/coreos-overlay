@@ -25,6 +25,10 @@
 class MetricsLibraryInterface;
 struct UpdateEngineService;
 
+namespace policy {
+  class PolicyProvider;
+}
+
 namespace chromeos_update_engine {
 
 class UpdateCheckScheduler;
@@ -140,6 +144,7 @@ class UpdateAttempter : public ActionProcessorDelegate,
   FRIEND_TEST(UpdateAttempterTest, CreatePendingErrorEventResumedTest);
   FRIEND_TEST(UpdateAttempterTest, DisableDeltaUpdateIfNeededTest);
   FRIEND_TEST(UpdateAttempterTest, MarkDeltaUpdateFailureTest);
+  FRIEND_TEST(UpdateAttempterTest, ReadTrackFromPolicy);
   FRIEND_TEST(UpdateAttempterTest, PingOmahaTest);
   FRIEND_TEST(UpdateAttempterTest, ScheduleErrorEventActionNoEventTest);
   FRIEND_TEST(UpdateAttempterTest, ScheduleErrorEventActionTest);
@@ -285,6 +290,9 @@ class UpdateAttempter : public ActionProcessorDelegate,
 
   // True if the action processor needs to be started by the boot flag updater.
   bool start_action_processor_;
+
+  // Used for fetching information about the device policy.
+  scoped_ptr<policy::PolicyProvider> policy_provider_;
 
   DISALLOW_COPY_AND_ASSIGN(UpdateAttempter);
 };

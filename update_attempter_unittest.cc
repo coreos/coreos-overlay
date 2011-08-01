@@ -4,6 +4,8 @@
 
 #include <base/file_util.h>
 #include <gtest/gtest.h>
+#include <policy/libpolicy.h>
+#include <policy/mock_device_policy.h>
 
 #include "update_engine/action_mock.h"
 #include "update_engine/action_processor_mock.h"
@@ -60,14 +62,19 @@ class UpdateAttempterTest : public ::testing::Test {
     attempter_.prefs_ = &prefs_;
   }
 
+  void QuitMainLoop();
+  static gboolean StaticQuitMainLoop(gpointer data);
+
   void UpdateTestStart();
   void UpdateTestVerify();
   static gboolean StaticUpdateTestStart(gpointer data);
   static gboolean StaticUpdateTestVerify(gpointer data);
+
   void PingOmahaTestStart();
-  void PingOmahaTestDone();
   static gboolean StaticPingOmahaTestStart(gpointer data);
-  static gboolean StaticPingOmahaTestDone(gpointer data);
+
+  void ReadTrackFromPolicyTestStart();
+  static gboolean StaticReadTrackFromPolicyTestStart(gpointer data);
 
   MockDbusGlib dbus_;
   UpdateAttempterUnderTest attempter_;
@@ -237,6 +244,15 @@ TEST_F(UpdateAttempterTest, UpdateStatusToStringTest) {
                UpdateStatusToString(static_cast<UpdateStatus>(-1)));
 }
 
+void UpdateAttempterTest::QuitMainLoop() {
+  g_main_loop_quit(loop_);
+}
+
+gboolean UpdateAttempterTest::StaticQuitMainLoop(gpointer data) {
+  reinterpret_cast<UpdateAttempterTest*>(data)->QuitMainLoop();
+  return FALSE;
+}
+
 gboolean UpdateAttempterTest::StaticUpdateTestStart(gpointer data) {
   reinterpret_cast<UpdateAttempterTest*>(data)->UpdateTestStart();
   return FALSE;
@@ -252,8 +268,9 @@ gboolean UpdateAttempterTest::StaticPingOmahaTestStart(gpointer data) {
   return FALSE;
 }
 
-gboolean UpdateAttempterTest::StaticPingOmahaTestDone(gpointer data) {
-  reinterpret_cast<UpdateAttempterTest*>(data)->PingOmahaTestDone();
+gboolean UpdateAttempterTest::StaticReadTrackFromPolicyTestStart(
+    gpointer data) {
+  reinterpret_cast<UpdateAttempterTest*>(data)->ReadTrackFromPolicyTestStart();
   return FALSE;
 }
 
@@ -320,11 +337,7 @@ void UpdateAttempterTest::PingOmahaTestStart() {
       .Times(1);
   EXPECT_CALL(*processor_, StartProcessing()).Times(1);
   attempter_.PingOmaha();
-  g_idle_add(&StaticPingOmahaTestDone, this);
-}
-
-void UpdateAttempterTest::PingOmahaTestDone() {
-  g_main_loop_quit(loop_);
+  g_idle_add(&StaticQuitMainLoop, this);
 }
 
 TEST_F(UpdateAttempterTest, PingOmahaTest) {
@@ -364,6 +377,34 @@ TEST_F(UpdateAttempterTest, CreatePendingErrorEventResumedTest) {
   EXPECT_EQ(OmahaEvent::kResultError, attempter_.error_event_->result);
   EXPECT_EQ(kCode | kActionCodeResumedFlag,
             attempter_.error_event_->error_code);
+}
+
+TEST_F(UpdateAttempterTest, ReadTrackFromPolicy) {
+  loop_ = g_main_loop_new(g_main_context_default(), FALSE);
+  g_idle_add(&StaticReadTrackFromPolicyTestStart, this);
+  g_main_loop_run(loop_);
+  g_main_loop_unref(loop_);
+  loop_ = NULL;
+}
+
+void UpdateAttempterTest::ReadTrackFromPolicyTestStart() {
+  // Tests that the update track (aka release channel) is properly fetched
+  // from the device policy.
+
+  policy::MockDevicePolicy* device_policy = new policy::MockDevicePolicy();
+  attempter_.policy_provider_.reset(new policy::PolicyProvider(device_policy));
+
+  EXPECT_CALL(*device_policy, LoadPolicy()).WillRepeatedly(Return(true));
+
+  EXPECT_CALL(*device_policy, GetReleaseChannel(_))
+      .WillRepeatedly(DoAll(
+          SetArgumentPointee<0>(std::string("canary-channel")),
+          Return(true)));
+
+  attempter_.Update("", "", false, false);
+  EXPECT_EQ("canary-channel", attempter_.omaha_request_params_.app_track);
+
+  g_idle_add(&StaticQuitMainLoop, this);
 }
 
 }  // namespace chromeos_update_engine

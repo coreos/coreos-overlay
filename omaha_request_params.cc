@@ -13,6 +13,7 @@
 #include <vector>
 
 #include <base/file_util.h>
+#include <policy/device_policy.h>
 
 #include "update_engine/simple_key_value_store.h"
 #include "update_engine/utils.h"
@@ -25,8 +26,6 @@ using std::vector;
 
 namespace chromeos_update_engine {
 
-const char OmahaRequestParams::kUpdateTrackKey[] = "CHROMEOS_RELEASE_TRACK";
-
 const char* const OmahaRequestParams::kAppId(
     "{87efface-864d-49a5-9bb3-4b050a7c227a}");
 const char* const OmahaRequestParams::kOsPlatform("Chrome OS");
@@ -34,12 +33,15 @@ const char* const OmahaRequestParams::kOsVersion("Indy");
 const char* const OmahaRequestParams::kUpdateUrl(
     "https://tools.google.com/service/update2");
 
+const char OmahaRequestParams::kUpdateTrackKey[] = "CHROMEOS_RELEASE_TRACK";
+
 OmahaRequestDeviceParams::OmahaRequestDeviceParams() :
     force_lock_down_(false),
     forced_lock_down_(false) {}
 
 bool OmahaRequestDeviceParams::Init(const std::string& in_app_version,
-                                    const std::string& in_update_url) {
+                                    const std::string& in_update_url,
+                                    const std::string& in_release_track) {
   bool stateful_override = !ShouldLockDown();
   os_platform = OmahaRequestParams::kOsPlatform;
   os_version = OmahaRequestParams::kOsVersion;
@@ -53,11 +55,18 @@ bool OmahaRequestDeviceParams::Init(const std::string& in_app_version,
                        NULL,
                        stateful_override);
   app_lang = "en-US";
-  app_track = GetLsbValue(
-      kUpdateTrackKey,
-      "",
-      &chromeos_update_engine::OmahaRequestDeviceParams::IsValidTrack,
-      true);  // stateful_override
+
+  // Determine the release track if it wasn't specified by the caller.
+  if (in_release_track.empty() || !IsValidTrack(in_release_track)) {
+    app_track = GetLsbValue(
+        kUpdateTrackKey,
+        "",
+        &chromeos_update_engine::OmahaRequestDeviceParams::IsValidTrack,
+        true);  // stateful_override
+  } else {
+    app_track = in_release_track;
+  }
+
   hardware_class = utils::GetHardwareClass();
   struct stat stbuf;
 
@@ -113,7 +122,7 @@ bool OmahaRequestDeviceParams::SetTrack(const std::string& track) {
 
 bool OmahaRequestDeviceParams::SetDeviceTrack(const std::string& track) {
   OmahaRequestDeviceParams params;
-  TEST_AND_RETURN_FALSE(params.Init("", ""));
+  TEST_AND_RETURN_FALSE(params.Init("", "", ""));
   return params.SetTrack(track);
 }
 
@@ -121,7 +130,7 @@ string OmahaRequestDeviceParams::GetDeviceTrack() {
   OmahaRequestDeviceParams params;
   // Note that params.app_track is an empty string if the value in
   // lsb-release file is invalid. See Init() for details.
-  return params.Init("", "") ? params.app_track : "";
+  return params.Init("", "", "") ? params.app_track : "";
 }
 
 string OmahaRequestDeviceParams::GetLsbValue(const string& key,
