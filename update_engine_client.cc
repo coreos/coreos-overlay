@@ -38,18 +38,22 @@ namespace {
 
 bool GetProxy(DBusGProxy** out_proxy) {
   DBusGConnection* bus;
-  DBusGProxy* proxy;
+  DBusGProxy* proxy = NULL;
   GError* error = NULL;
+  const int kTries = 4;
 
   bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
   if (!bus) {
     LOG(FATAL) << "Failed to get bus";
   }
-  proxy = dbus_g_proxy_new_for_name_owner(bus,
-                                          kUpdateEngineServiceName,
-                                          kUpdateEngineServicePath,
-                                          kUpdateEngineServiceInterface,
-                                          &error);
+  for (int i = 0; !proxy && i < kTries; ++i) {
+    LOG(INFO) << "Trying to get dbus proxy. Try " << (i + 1) << "/" << kTries;
+    proxy = dbus_g_proxy_new_for_name_owner(bus,
+                                            kUpdateEngineServiceName,
+                                            kUpdateEngineServicePath,
+                                            kUpdateEngineServiceInterface,
+                                            &error);
+  }
   if (!proxy) {
     LOG(FATAL) << "Error getting dbus proxy for "
                << kUpdateEngineServiceName << ": " << GetGErrorMessage(error);
