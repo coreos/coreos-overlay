@@ -666,24 +666,81 @@ bool DeltaPerformer::GetNewPartitionInfo(uint64_t* kernel_size,
   return true;
 }
 
+namespace {
+void LogVerifyError(bool is_kern,
+                    const string& local_hash,
+                    const string& expected_hash) {
+  const char* type = is_kern ? "kernel" : "rootfs";
+  LOG(ERROR) << "This is a server-side error due to "
+             << "mismatched delta update image!";
+  LOG(ERROR) << "The delta I've been given contains a " << type << " delta "
+             << "update that must be applied over a " << type << " with "
+             << "a specific checksum, but the " << type << " we're starting "
+             << "with doesn't have that checksum! This means that "
+             << "the delta I've been given doesn't match my existing "
+             << "system. The " << type << " partition I have has hash: "
+             << local_hash << " but the update expected me to have "
+             << expected_hash << " .";
+  if (is_kern) {
+    LOG(INFO) << "To get the checksum of a kernel partition on a "
+              << "booted machine, run this command (change /dev/sda2 "
+              << "as needed): dd if=/dev/sda2 bs=1M 2>/dev/null | "
+              << "openssl dgst -sha256 -binary | openssl base64";
+  } else {
+    LOG(INFO) << "To get the checksum of a rootfs partition on a "
+              << "booted machine, run this command (change /dev/sda3 "
+              << "as needed): dd if=/dev/sda3 bs=1M count=$(( "
+              << "$(dumpe2fs /dev/sda3  2>/dev/null | grep 'Block count' "
+              << "| sed 's/[^0-9]*//') / 256 )) | "
+              << "openssl dgst -sha256 -binary | openssl base64";
+  }
+  LOG(INFO) << "To get the checksum of partitions in a bin file, "
+            << "run: .../src/scripts/sha256_partitions.sh .../file.bin";
+}
+
+string StringForHashBytes(const void* bytes, size_t size) {
+  string ret;
+  if (!OmahaHashCalculator::Base64Encode(bytes, size, &ret)) {
+    ret = "<unknown>";
+  }
+  return ret;
+}
+}  // namespace
+
 bool DeltaPerformer::VerifySourcePartitions() {
   LOG(INFO) << "Verifying source partitions.";
   CHECK(manifest_valid_);
   if (manifest_.has_old_kernel_info()) {
     const PartitionInfo& info = manifest_.old_kernel_info();
-    TEST_AND_RETURN_FALSE(!current_kernel_hash_.empty() &&
-                          current_kernel_hash_.size() == info.hash().size() &&
-                          memcmp(current_kernel_hash_.data(),
-                                 info.hash().data(),
-                                 current_kernel_hash_.size()) == 0);
+    bool valid = !current_kernel_hash_.empty() &&
+        current_kernel_hash_.size() == info.hash().size() &&
+        memcmp(current_kernel_hash_.data(),
+               info.hash().data(),
+               current_kernel_hash_.size()) == 0;
+    if (!valid) {
+      LogVerifyError(true,
+                     StringForHashBytes(current_kernel_hash_.data(),
+                                        current_kernel_hash_.size()),
+                     StringForHashBytes(info.hash().data(),
+                                        info.hash().size()));
+    }
+    TEST_AND_RETURN_FALSE(valid);
   }
   if (manifest_.has_old_rootfs_info()) {
     const PartitionInfo& info = manifest_.old_rootfs_info();
-    TEST_AND_RETURN_FALSE(!current_rootfs_hash_.empty() &&
-                          current_rootfs_hash_.size() == info.hash().size() &&
-                          memcmp(current_rootfs_hash_.data(),
-                                 info.hash().data(),
-                                 current_rootfs_hash_.size()) == 0);
+    bool valid = !current_rootfs_hash_.empty() &&
+        current_rootfs_hash_.size() == info.hash().size() &&
+        memcmp(current_rootfs_hash_.data(),
+               info.hash().data(),
+               current_rootfs_hash_.size()) == 0;
+    if (!valid) {
+      LogVerifyError(false,
+                     StringForHashBytes(current_kernel_hash_.data(),
+                                        current_kernel_hash_.size()),
+                     StringForHashBytes(info.hash().data(),
+                                        info.hash().size()));
+    }
+    TEST_AND_RETURN_FALSE(valid);
   }
   return true;
 }
