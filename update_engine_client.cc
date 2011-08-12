@@ -47,7 +47,8 @@ bool GetProxy(DBusGProxy** out_proxy) {
     LOG(FATAL) << "Failed to get bus";
   }
   for (int i = 0; !proxy && i < kTries; ++i) {
-    LOG(INFO) << "Trying to get dbus proxy. Try " << (i + 1) << "/" << kTries;
+    LOG_IF(INFO, i) << "Trying to get dbus proxy. Try "
+                    << (i + 1) << "/" << kTries;
     proxy = dbus_g_proxy_new_for_name_owner(bus,
                                             kUpdateEngineServiceName,
                                             kUpdateEngineServicePath,
