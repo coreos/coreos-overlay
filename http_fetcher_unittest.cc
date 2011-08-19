@@ -102,16 +102,20 @@ class PythonHttpServer {
       return;
     }
     int rc = 1;
-    int tries = 10;
+    const uint64_t kMaxSleep = 60UL * 60UL * 1000UL * 1000UL;  // 60 min
+    uint64_t timeout = 15 * 1000;  // 15 ms
     started_ = true;
     while (0 != rc) {
       LOG(INFO) << "running wget to start";
       rc = system((string("wget --output-document=/dev/null ") +
                    LocalServerUrlForPath("/test")).c_str());
       LOG(INFO) << "done running wget to start";
-      usleep(10 * 1000);  // 10 ms
-      tries--;
-      if (tries == 0) {
+      if (timeout < (1000 * 1000))  // sub 1-second sleep, use usleep
+        usleep(static_cast<useconds_t>(timeout));
+      else
+        sleep(static_cast<unsigned int>(timeout / (1000 * 1000)));
+      timeout *= 2;
+      if (timeout > kMaxSleep) {
         LOG(ERROR) << "Unable to start server.";
         started_ = false;
         break;
