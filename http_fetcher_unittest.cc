@@ -110,15 +110,17 @@ class PythonHttpServer {
       rc = system((string("wget --output-document=/dev/null ") +
                    LocalServerUrlForPath("/test")).c_str());
       LOG(INFO) << "done running wget to start";
-      if (timeout < (1000 * 1000))  // sub 1-second sleep, use usleep
-        usleep(static_cast<useconds_t>(timeout));
-      else
-        sleep(static_cast<unsigned int>(timeout / (1000 * 1000)));
-      timeout *= 2;
-      if (timeout > kMaxSleep) {
-        LOG(ERROR) << "Unable to start server.";
-        started_ = false;
-        break;
+      if (0 != rc) {
+        if (timeout > kMaxSleep) {
+          LOG(ERROR) << "Unable to start server.";
+          started_ = false;
+          break;
+        }
+        if (timeout < (1000 * 1000))  // sub 1-second sleep, use usleep
+          usleep(static_cast<useconds_t>(timeout));
+        else
+          sleep(static_cast<unsigned int>(timeout / (1000 * 1000)));
+        timeout *= 2;
       }
     }
     free(argv[0]);
