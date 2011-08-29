@@ -18,6 +18,7 @@
 #include <vector>
 
 #include <base/logging.h>
+#include <base/memory/scoped_ptr.h>
 #include <base/string_util.h>
 #include <bzlib.h>
 
@@ -1318,6 +1319,7 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
 
   const string kTempFileTemplate("/tmp/CrAU_temp_data.XXXXXX");
   string temp_file_path;
+  scoped_ptr<ScopedPathUnlinker> temp_file_unlinker;
   off_t data_file_size = 0;
 
   LOG(INFO) << "Reading files...";
@@ -1330,6 +1332,7 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
     int fd;
     TEST_AND_RETURN_FALSE(
         utils::MakeTempFile(kTempFileTemplate, &temp_file_path, &fd));
+    temp_file_unlinker.reset(new ScopedPathUnlinker(temp_file_path));
     TEST_AND_RETURN_FALSE(fd >= 0);
     ScopedFdCloser fd_closer(&fd);
     if (!old_image.empty()) {
@@ -1426,9 +1429,11 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
       "/tmp/CrAU_temp_data.ordered.XXXXXX",
       &ordered_blobs_path,
       NULL));
+  ScopedPathUnlinker ordered_blobs_unlinker(ordered_blobs_path);
   TEST_AND_RETURN_FALSE(ReorderDataBlobs(&manifest,
                                          temp_file_path,
                                          ordered_blobs_path));
+  temp_file_unlinker.reset();
 
   // Check that install op blobs are in order.
   uint64_t next_blob_offset = 0;
