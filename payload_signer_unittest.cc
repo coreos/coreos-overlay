@@ -15,11 +15,14 @@ using std::vector;
 
 // Note: the test key was generated with the following command:
 // openssl genrsa -out unittest_key.pem 2048
+// The public-key version is created by the build system.
 
 namespace chromeos_update_engine {
 
 const char* kUnittestPrivateKeyPath = "unittest_key.pem";
 const char* kUnittestPublicKeyPath = "unittest_key.pub.pem";
+const char* kUnittestPrivateKey2Path = "unittest_key2.pem";
+const char* kUnittestPublicKey2Path = "unittest_key2.pub.pem";
 
 // Some data and its corresponding hash and signature:
 const char kDataToSign[] = "This is some data to sign.";
@@ -86,12 +89,14 @@ void SignSampleData(vector<char>* out_signature_blob) {
                                kDataToSign,
                                strlen(kDataToSign)));
   uint64_t length = 0;
-  EXPECT_TRUE(PayloadSigner::SignatureBlobLength(kUnittestPrivateKeyPath,
-                                                 &length));
+  EXPECT_TRUE(PayloadSigner::SignatureBlobLength(
+      vector<string> (1, kUnittestPrivateKeyPath),
+      &length));
   EXPECT_GT(length, 0);
-  EXPECT_TRUE(PayloadSigner::SignPayload(data_path,
-                                         kUnittestPrivateKeyPath,
-                                         out_signature_blob));
+  EXPECT_TRUE(PayloadSigner::SignPayload(
+      data_path,
+      vector<string>(1, kUnittestPrivateKeyPath),
+      out_signature_blob));
   EXPECT_EQ(length, out_signature_blob->size());
 }
 }
@@ -106,7 +111,7 @@ TEST(PayloadSignerTest, SimpleTest) {
                                         signature_blob.size()));
   EXPECT_EQ(1, signatures.signatures_size());
   const Signatures_Signature& signature = signatures.signatures(0);
-  EXPECT_EQ(kSignatureMessageVersion, signature.version());
+  EXPECT_EQ(kSignatureMessageOriginalVersion, signature.version());
   const string sig_data = signature.data();
   ASSERT_EQ(arraysize(kDataSignature), sig_data.size());
   for (size_t i = 0; i < arraysize(kDataSignature); i++) {

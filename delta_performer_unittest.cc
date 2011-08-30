@@ -36,6 +36,8 @@ using testing::Return;
 
 extern const char* kUnittestPrivateKeyPath;
 extern const char* kUnittestPublicKeyPath;
+extern const char* kUnittestPrivateKey2Path;
+extern const char* kUnittestPublicKey2Path;
 
 namespace {
 const size_t kBlockSize = 4096;
@@ -101,6 +103,8 @@ enum SignatureTest {
   kSignatureGenerated,  // Sign the payload after it's generated.
   kSignatureGeneratedShell,  // Sign the generated payload through shell cmds.
   kSignatureGeneratedShellBadKey,  // Sign with a bad key through shell cmds.
+  kSignatureGeneratedShellRotateCl1,  // Rotate key, test client v1
+  kSignatureGeneratedShellRotateCl2,  // Rotate key, test client v2
 };
 
 size_t GetSignatureSize(const string& private_key_path) {
@@ -117,18 +121,22 @@ size_t GetSignatureSize(const string& private_key_path) {
 void SignGeneratedPayload(const string& payload_path) {
   int signature_size = GetSignatureSize(kUnittestPrivateKeyPath);
   vector<char> hash;
-  ASSERT_TRUE(PayloadSigner::HashPayloadForSigning(payload_path,
-                                                   signature_size,
-                                                   &hash));
+  ASSERT_TRUE(PayloadSigner::HashPayloadForSigning(
+      payload_path,
+      vector<int>(1, signature_size),
+      &hash));
   vector<char> signature;
   ASSERT_TRUE(PayloadSigner::SignHash(hash,
                                       kUnittestPrivateKeyPath,
                                       &signature));
-  ASSERT_TRUE(PayloadSigner::AddSignatureToPayload(payload_path,
-                                                   signature,
-                                                   payload_path));
-  EXPECT_TRUE(PayloadSigner::VerifySignedPayload(payload_path,
-                                                 kUnittestPublicKeyPath));
+  ASSERT_TRUE(PayloadSigner::AddSignatureToPayload(
+      payload_path,
+      vector<vector<char> >(1, signature),
+      payload_path));
+  EXPECT_TRUE(PayloadSigner::VerifySignedPayload(
+      payload_path,
+      kUnittestPublicKeyPath,
+      kSignatureMessageOriginalVersion));
 }
 
 void SignGeneratedShellPayload(SignatureTest signature_test,
@@ -139,7 +147,9 @@ void SignGeneratedShellPayload(SignatureTest signature_test,
                                     &private_key_path,
                                     NULL));
   } else {
-    ASSERT_EQ(kSignatureGeneratedShell, signature_test);
+    ASSERT_TRUE(signature_test == kSignatureGeneratedShell ||
+                signature_test == kSignatureGeneratedShellRotateCl1 ||
+                signature_test == kSignatureGeneratedShellRotateCl2);
   }
   ScopedPathUnlinker key_unlinker(private_key_path);
   key_unlinker.set_should_remove(signature_test ==
@@ -156,12 +166,19 @@ void SignGeneratedShellPayload(SignatureTest signature_test,
   string hash_file;
   ASSERT_TRUE(utils::MakeTempFile("/tmp/hash.XXXXXX", &hash_file, NULL));
   ScopedPathUnlinker hash_unlinker(hash_file);
+  string signature_size_string;
+  if (signature_test == kSignatureGeneratedShellRotateCl1 ||
+      signature_test == kSignatureGeneratedShellRotateCl2)
+    signature_size_string = StringPrintf("%d:%d",
+                                         signature_size, signature_size);
+  else
+    signature_size_string = StringPrintf("%d", signature_size);
   ASSERT_EQ(0,
             System(StringPrintf(
-                "./delta_generator -in_file %s -signature_size %d "
+                "./delta_generator -in_file %s -signature_size %s "
                 "-out_hash_file %s",
                 payload_path.c_str(),
-                signature_size,
+                signature_size_string.c_str(),
                 hash_file.c_str())));
 
   // Pad the hash
@@ -179,6 +196,21 @@ void SignGeneratedShellPayload(SignatureTest signature_test,
                 private_key_path.c_str(),
                 hash_file.c_str(),
                 sig_file.c_str())));
+  string sig_file2;
+  ASSERT_TRUE(utils::MakeTempFile("/tmp/signature.XXXXXX", &sig_file2, NULL));
+  ScopedPathUnlinker sig2_unlinker(sig_file2);
+  if (signature_test == kSignatureGeneratedShellRotateCl1 ||
+      signature_test == kSignatureGeneratedShellRotateCl2) {
+    ASSERT_EQ(0,
+              System(StringPrintf(
+                  "/usr/bin/openssl rsautl -raw -sign -inkey %s -in %s -out %s",
+                  kUnittestPrivateKey2Path,
+                  hash_file.c_str(),
+                  sig_file2.c_str())));
+    // Append second sig file to first path
+    sig_file += ":" + sig_file2;
+  }
+
   ASSERT_EQ(0,
             System(StringPrintf(
                 "./delta_generator -in_file %s -signature_file %s "
@@ -187,9 +219,12 @@ void SignGeneratedShellPayload(SignatureTest signature_test,
                 sig_file.c_str(),
                 payload_path.c_str())));
   int verify_result =
-      System(StringPrintf("./delta_generator -in_file %s -public_key %s",
-                          payload_path.c_str(),
-                          kUnittestPublicKeyPath));
+      System(StringPrintf(
+          "./delta_generator -in_file %s -public_key %s -public_key_version %d",
+          payload_path.c_str(),
+          signature_test == kSignatureGeneratedShellRotateCl2 ?
+          kUnittestPublicKey2Path : kUnittestPublicKeyPath,
+          signature_test == kSignatureGeneratedShellRotateCl2 ? 2 : 1));
   if (signature_test == kSignatureGeneratedShellBadKey) {
     ASSERT_NE(0, verify_result);
   } else {
@@ -327,7 +362,9 @@ void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop,
   if (signature_test == kSignatureGenerated) {
     SignGeneratedPayload(delta_path);
   } else if (signature_test == kSignatureGeneratedShell ||
-             signature_test == kSignatureGeneratedShellBadKey) {
+             signature_test == kSignatureGeneratedShellBadKey ||
+             signature_test == kSignatureGeneratedShellRotateCl1 ||
+             signature_test == kSignatureGeneratedShellRotateCl2) {
     SignGeneratedShellPayload(signature_test, delta_path);
   }
 
@@ -361,13 +398,23 @@ void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop,
       EXPECT_TRUE(sigs_message.ParseFromArray(
           &delta[manifest_metadata_size + manifest.signatures_offset()],
           manifest.signatures_size()));
-      EXPECT_EQ(1, sigs_message.signatures_size());
+      if (signature_test == kSignatureGeneratedShellRotateCl1 ||
+          signature_test == kSignatureGeneratedShellRotateCl2)
+        EXPECT_EQ(2, sigs_message.signatures_size());
+      else
+        EXPECT_EQ(1, sigs_message.signatures_size());
       const Signatures_Signature& signature = sigs_message.signatures(0);
       EXPECT_EQ(1, signature.version());
 
       uint64_t expected_sig_data_length = 0;
+      vector<string> key_paths (1, kUnittestPrivateKeyPath);
+      if (signature_test == kSignatureGeneratedShellRotateCl1 ||
+          signature_test == kSignatureGeneratedShellRotateCl2) {
+        key_paths.push_back(kUnittestPrivateKey2Path);
+      }
       EXPECT_TRUE(PayloadSigner::SignatureBlobLength(
-          kUnittestPrivateKeyPath, &expected_sig_data_length));
+          key_paths,
+          &expected_sig_data_length));
       EXPECT_EQ(expected_sig_data_length, manifest.signatures_size());
       EXPECT_FALSE(signature.data().empty());
     }
@@ -492,7 +539,7 @@ void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop,
                                                &expected_new_rootfs_hash));
   EXPECT_TRUE(expected_new_rootfs_hash == new_rootfs_hash);
 }
-}
+}  // namespace {}
 
 TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
   DoSmallImageTest(false, false, false, kSignatureGenerator);
@@ -524,6 +571,14 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageSignGeneratedShellTest) {
 
 TEST(DeltaPerformerTest, RunAsRootSmallImageSignGeneratedShellBadKeyTest) {
   DoSmallImageTest(false, false, false, kSignatureGeneratedShellBadKey);
+}
+
+TEST(DeltaPerformerTest, RunAsRootSmallImageSignGeneratedShellRotateCl1Test) {
+  DoSmallImageTest(false, false, false, kSignatureGeneratedShellRotateCl1);
+}
+
+TEST(DeltaPerformerTest, RunAsRootSmallImageSignGeneratedShellRotateCl2Test) {
+  DoSmallImageTest(false, false, false, kSignatureGeneratedShellRotateCl2);
 }
 
 TEST(DeltaPerformerTest, BadDeltaMagicTest) {

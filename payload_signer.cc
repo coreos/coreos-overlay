@@ -21,7 +21,8 @@ using std::vector;
 
 namespace chromeos_update_engine {
 
-const uint32_t kSignatureMessageVersion = 1;
+const uint32_t kSignatureMessageOriginalVersion = 1;
+const uint32_t kSignatureMessageCurrentVersion = 1;
 
 namespace {
 
@@ -46,15 +47,26 @@ const char kRSA2048SHA256Padding[] = {
   0x00, 0x04, 0x20
 };
 
-// Given a raw |signature|, packs it into a protobuf and serializes it into a
+// Given raw |signatures|, packs them into a protobuf and serializes it into a
 // binary blob. Returns true on success, false otherwise.
-bool ConvertSignatureToProtobufBlob(const vector<char> signature,
+bool ConvertSignatureToProtobufBlob(const vector<vector<char> >& signatures,
                                     vector<char>* out_signature_blob) {
   // Pack it into a protobuf
   Signatures out_message;
-  Signatures_Signature* sig_message = out_message.add_signatures();
-  sig_message->set_version(kSignatureMessageVersion);
-  sig_message->set_data(signature.data(), signature.size());
+  uint32_t version = kSignatureMessageOriginalVersion;
+  LOG_IF(WARNING, kSignatureMessageCurrentVersion -
+         kSignatureMessageOriginalVersion + 1 < signatures.size())
+      << "You may want to support clients in the rage ["
+      << kSignatureMessageOriginalVersion << ", "
+      << kSignatureMessageCurrentVersion << "] inclusive, but you only "
+      << "provided " << signatures.size() << " signatures.";
+  for (vector<vector<char> >::const_iterator it = signatures.begin(),
+           e = signatures.end(); it != e; ++it) {
+    const vector<char>& signature = *it;
+    Signatures_Signature* sig_message = out_message.add_signatures();
+    sig_message->set_version(version++);
+    sig_message->set_data(signature.data(), signature.size());
+  }
 
   // Serialize protobuf
   string serialized;
@@ -165,23 +177,27 @@ bool PayloadSigner::SignHash(const vector<char>& hash,
 }
 
 bool PayloadSigner::SignPayload(const string& unsigned_payload_path,
-                                const string& private_key_path,
+                                const vector<string>& private_key_paths,
                                 vector<char>* out_signature_blob) {
   vector<char> hash_data;
   TEST_AND_RETURN_FALSE(OmahaHashCalculator::RawHashOfFile(
       unsigned_payload_path, -1, &hash_data) ==
                         utils::FileSize(unsigned_payload_path));
 
-  vector<char> signature;
-  TEST_AND_RETURN_FALSE(SignHash(hash_data, private_key_path, &signature));
-  TEST_AND_RETURN_FALSE(ConvertSignatureToProtobufBlob(signature,
+  vector<vector<char> > signatures;
+  for (vector<string>::const_iterator it = private_key_paths.begin(),
+           e = private_key_paths.end(); it != e; ++it) {
+    vector<char> signature;
+    TEST_AND_RETURN_FALSE(SignHash(hash_data, *it, &signature));
+    signatures.push_back(signature);
+  }
+  TEST_AND_RETURN_FALSE(ConvertSignatureToProtobufBlob(signatures,
                                                        out_signature_blob));
   return true;
 }
 
-bool PayloadSigner::SignatureBlobLength(
-    const string& private_key_path,
-    uint64_t* out_length) {
+bool PayloadSigner::SignatureBlobLength(const vector<string>& private_key_paths,
+                                        uint64_t* out_length) {
   DCHECK(out_length);
 
   string x_path;
@@ -192,7 +208,7 @@ bool PayloadSigner::SignatureBlobLength(
 
   vector<char> sig_blob;
   TEST_AND_RETURN_FALSE(PayloadSigner::SignPayload(x_path,
-                                                   private_key_path,
+                                                   private_key_paths,
                                                    &sig_blob));
   *out_length = sig_blob.size();
   return true;
@@ -201,6 +217,15 @@ bool PayloadSigner::SignatureBlobLength(
 bool PayloadSigner::VerifySignature(const std::vector<char>& signature_blob,
                                     const std::string& public_key_path,
                                     std::vector<char>* out_hash_data) {
+  return VerifySignatureVersion(signature_blob, public_key_path,
+                                kSignatureMessageCurrentVersion, out_hash_data);
+}
+
+bool PayloadSigner::VerifySignatureVersion(
+    const std::vector<char>& signature_blob,
+    const std::string& public_key_path,
+    uint32_t client_version,
+    std::vector<char>* out_hash_data) {
   TEST_AND_RETURN_FALSE(!public_key_path.empty());
 
   Signatures signatures;
@@ -212,7 +237,7 @@ bool PayloadSigner::VerifySignature(const std::vector<char>& signature_blob,
   for (; sig_index < signatures.signatures_size(); sig_index++) {
     const Signatures_Signature& signature = signatures.signatures(sig_index);
     if (signature.has_version() &&
-        signature.version() == kSignatureMessageVersion) {
+        signature.version() == client_version) {
       break;
     }
   }
@@ -257,7 +282,8 @@ bool PayloadSigner::VerifySignature(const std::vector<char>& signature_blob,
 }
 
 bool PayloadSigner::VerifySignedPayload(const std::string& payload_path,
-                                        const std::string& public_key_path) {
+                                        const std::string& public_key_path,
+                                        uint32_t client_key_check_version) {
   vector<char> payload;
   DeltaArchiveManifest manifest;
   uint64_t metadata_size;
@@ -272,8 +298,8 @@ bool PayloadSigner::VerifySignedPayload(const std::string& payload_path,
       payload.begin() + metadata_size + manifest.signatures_offset(),
       payload.end());
   vector<char> signed_hash;
-  TEST_AND_RETURN_FALSE(VerifySignature(
-      signature_blob, public_key_path, &signed_hash));
+  TEST_AND_RETURN_FALSE(VerifySignatureVersion(
+      signature_blob, public_key_path, client_key_check_version, &signed_hash));
   TEST_AND_RETURN_FALSE(!signed_hash.empty());
   vector<char> hash;
   TEST_AND_RETURN_FALSE(OmahaHashCalculator::RawHashOfBytes(
@@ -284,14 +310,19 @@ bool PayloadSigner::VerifySignedPayload(const std::string& payload_path,
 }
 
 bool PayloadSigner::HashPayloadForSigning(const std::string& payload_path,
-                                          int signature_size,
+                                          const vector<int>& signature_sizes,
                                           vector<char>* out_hash_data) {
   // TODO(petkov): Reduce memory usage -- the payload is manipulated in memory.
 
   // Loads the payload and adds the signature op to it.
-  vector<char> signature(signature_size, 0);
+  vector<vector<char> > signatures;
+  for (vector<int>::const_iterator it = signature_sizes.begin(),
+           e = signature_sizes.end(); it != e; ++it) {
+    vector<char> signature(*it, 0);
+    signatures.push_back(signature);
+  }
   vector<char> signature_blob;
-  TEST_AND_RETURN_FALSE(ConvertSignatureToProtobufBlob(signature,
+  TEST_AND_RETURN_FALSE(ConvertSignatureToProtobufBlob(signatures,
                                                        &signature_blob));
   vector<char> payload;
   TEST_AND_RETURN_FALSE(AddSignatureOpToPayload(payload_path,
@@ -304,14 +335,15 @@ bool PayloadSigner::HashPayloadForSigning(const std::string& payload_path,
   return true;
 }
 
-bool PayloadSigner::AddSignatureToPayload(const string& payload_path,
-                                          const vector<char>& signature,
-                                          const string& signed_payload_path) {
+bool PayloadSigner::AddSignatureToPayload(
+    const string& payload_path,
+    const vector<vector<char> >& signatures,
+    const string& signed_payload_path) {
   // TODO(petkov): Reduce memory usage -- the payload is manipulated in memory.
 
   // Loads the payload and adds the signature op to it.
   vector<char> signature_blob;
-  TEST_AND_RETURN_FALSE(ConvertSignatureToProtobufBlob(signature,
+  TEST_AND_RETURN_FALSE(ConvertSignatureToProtobufBlob(signatures,
                                                        &signature_blob));
   vector<char> payload;
   TEST_AND_RETURN_FALSE(AddSignatureOpToPayload(payload_path,

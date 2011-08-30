@@ -14,6 +14,8 @@
 
 #include <base/command_line.h>
 #include <base/logging.h>
+#include <base/string_number_conversions.h>
+#include <base/string_split.h>
 #include <gflags/gflags.h>
 #include <glib.h>
 
@@ -41,10 +43,22 @@ DEFINE_string(out_file, "", "Path to output delta payload file");
 DEFINE_string(out_hash_file, "", "Path to output hash file");
 DEFINE_string(private_key, "", "Path to private key in .pem format");
 DEFINE_string(public_key, "", "Path to public key in .pem format");
+DEFINE_int32(public_key_version,
+             chromeos_update_engine::kSignatureMessageCurrentVersion,
+             "Key-check version # of client");
 DEFINE_string(prefs_dir, "/tmp/update_engine_prefs",
               "Preferences directory, used with apply_delta");
-DEFINE_int32(signature_size, 0, "Raw signature size used for hash calculation");
-DEFINE_string(signature_file, "", "Raw signature file to sign payload with");
+DEFINE_string(signature_size, "",
+              "Raw signature size used for hash calculation. "
+              "You may pass in multiple sizes by colon separating them. E.g. "
+              "2048:2048:4096 will assume 3 signatures, the first two with "
+              "2048 size and the last 4096.");
+DEFINE_string(signature_file, "",
+              "Raw signature file to sign payload with. To pass multiple "
+              "signatures, use a single argument with a colon between paths, "
+              "e.g. /path/to/sig:/path/to/next:/path/to/last_sig . Each "
+              "signature will be assigned a client version, starting from "
+              "kSignatureOriginalVersion.");
 
 // This file contains a simple program that takes an old path, a new path,
 // and an output file as arguments and the path to an output file and
@@ -70,11 +84,21 @@ void CalculatePayloadHashForSigning() {
       << "Must pass --in_file to calculate hash for signing.";
   LOG_IF(FATAL, FLAGS_out_hash_file.empty())
       << "Must pass --out_hash_file to calculate hash for signing.";
-  LOG_IF(FATAL, FLAGS_signature_size <= 0)
+  LOG_IF(FATAL, FLAGS_signature_size.empty())
       << "Must pass --signature_size to calculate hash for signing.";
+  vector<int> sizes;
+  vector<string> strsizes;
+  base::SplitString(FLAGS_signature_size, ':', &strsizes);
+  for (vector<string>::iterator it = strsizes.begin(), e = strsizes.end();
+       it != e; ++it) {
+    int size = 0;
+    LOG_IF(FATAL, !base::StringToInt(*it, &size))
+        << "Not an integer: " << *it;
+    sizes.push_back(size);
+  }
   vector<char> hash;
   CHECK(PayloadSigner::HashPayloadForSigning(
-      FLAGS_in_file, FLAGS_signature_size, &hash));
+      FLAGS_in_file, sizes, &hash));
   CHECK(utils::WriteFile(
       FLAGS_out_hash_file.c_str(), hash.data(), hash.size()));
   LOG(INFO) << "Done calculating payload hash for signing.";
@@ -88,10 +112,17 @@ void SignPayload() {
       << "Must pass --out_file to sign payload.";
   LOG_IF(FATAL, FLAGS_signature_file.empty())
       << "Must pass --signature_file to sign payload.";
-  vector<char> signature;
-  CHECK(utils::ReadFile(FLAGS_signature_file, &signature));
+  vector<vector<char> > signatures;
+  vector<string> signature_files;
+  base::SplitString(FLAGS_signature_file, ':', &signature_files);
+  for (vector<string>::iterator it = signature_files.begin(),
+           e = signature_files.end(); it != e; ++it) {
+    vector<char> signature;
+    CHECK(utils::ReadFile(*it, &signature));
+    signatures.push_back(signature);
+  }
   CHECK(PayloadSigner::AddSignatureToPayload(
-      FLAGS_in_file, signature, FLAGS_out_file));
+      FLAGS_in_file, signatures, FLAGS_out_file));
   LOG(INFO) << "Done signing payload.";
 }
 
@@ -101,7 +132,8 @@ void VerifySignedPayload() {
       << "Must pass --in_file to verify signed payload.";
   LOG_IF(FATAL, FLAGS_public_key.empty())
       << "Must pass --public_key to verify signed payload.";
-  CHECK(PayloadSigner::VerifySignedPayload(FLAGS_in_file, FLAGS_public_key));
+  CHECK(PayloadSigner::VerifySignedPayload(FLAGS_in_file, FLAGS_public_key,
+                                           FLAGS_public_key_version));
   LOG(INFO) << "Done verifying signed payload.";
 }
 
@@ -158,7 +190,7 @@ int Main(int argc, char** argv) {
                        logging::DONT_LOCK_LOG_FILE,
                        logging::APPEND_TO_OLD_LOG_FILE,
                        logging::DISABLE_DCHECK_FOR_NON_OFFICIAL_RELEASE_BUILDS);
-  if (FLAGS_signature_size > 0 || !FLAGS_out_hash_file.empty()) {
+  if (!FLAGS_signature_size.empty() || !FLAGS_out_hash_file.empty()) {
     CalculatePayloadHashForSigning();
     return 0;
   }

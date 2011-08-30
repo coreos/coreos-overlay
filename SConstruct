@@ -227,6 +227,7 @@ env.ParseConfig(pkgconfig + ' --cflags --libs '
                 'dbus-1 dbus-glib-1 gio-2.0 gio-unix-2.0 glib-2.0')
 env.ProtocolBuffer('update_metadata.pb.cc', 'update_metadata.proto')
 env.PublicKey('unittest_key.pub.pem', 'unittest_key.pem')
+env.PublicKey('unittest_key2.pub.pem', 'unittest_key2.pem')
 
 env.DbusBindings('update_engine.dbusclient.h', 'update_engine.xml')
 

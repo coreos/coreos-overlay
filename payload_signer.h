@@ -15,7 +15,8 @@
 
 namespace chromeos_update_engine {
 
-extern const uint32_t kSignatureMessageVersion;
+extern const uint32_t kSignatureMessageOriginalVersion;
+extern const uint32_t kSignatureMessageCurrentVersion;
 
 class PayloadSigner {
  public:
@@ -25,35 +26,37 @@ class PayloadSigner {
                        const std::string& private_key_path,
                        std::vector<char>* out_signature);
 
-  // Given an unsigned payload in |unsigned_payload_path| and a private key in
+  // Given an unsigned payload in |unsigned_payload_path| and private keys in
   // |private_key_path|, calculates the signature blob into
   // |out_signature_blob|. Note that the payload must already have an updated
   // manifest that includes the dummy signature op. Returns true on success,
   // false otherwise.
   static bool SignPayload(const std::string& unsigned_payload_path,
-                          const std::string& private_key_path,
+                          const std::vector<std::string>& private_key_paths,
                           std::vector<char>* out_signature_blob);
 
   // Returns the length of out_signature_blob that will result in a call
-  // to SignPayload with a given private key. Returns true on success.
-  static bool SignatureBlobLength(const std::string& private_key_path,
-                                  uint64_t* out_length);
+  // to SignPayload with the given private keys. Returns true on success.
+  static bool SignatureBlobLength(
+      const std::vector<std::string>& private_key_paths,
+      uint64_t* out_length);
 
   // Given an unsigned payload in |payload_path| (with no dummy signature op)
-  // and the raw |signature_size| calculates the raw hash that needs to be
+  // and the raw |signature_sizes| calculates the raw hash that needs to be
   // signed in |out_hash_data|. Returns true on success, false otherwise.
   static bool HashPayloadForSigning(const std::string& payload_path,
-                                    int signature_size,
+                                    const std::vector<int>& signature_sizes,
                                     std::vector<char>* out_hash_data);
 
   // Given an unsigned payload in |payload_path| (with no dummy signature op)
-  // and the raw |signature| updates the payload to include the signature thus
+  // and the raw |signatures| updates the payload to include the signature thus
   // turning it into a signed payload. The new payload is stored in
   // |signed_payload_path|. |payload_path| and |signed_payload_path| can point
   // to the same file. Returns true on success, false otherwise.
-  static bool AddSignatureToPayload(const std::string& payload_path,
-                                    const std::vector<char>& signature,
-                                    const std::string& signed_payload_path);
+  static bool AddSignatureToPayload(
+      const std::string& payload_path,
+      const std::vector<std::vector<char> >& signatures,
+      const std::string& signed_payload_path);
 
   // Returns false if the payload signature can't be verified. Returns true
   // otherwise and sets |out_hash| to the signed payload hash.
@@ -61,11 +64,18 @@ class PayloadSigner {
                               const std::string& public_key_path,
                               std::vector<char>* out_hash_data);
 
+  // Same as previous function, but the client version can be set.
+  static bool VerifySignatureVersion(const std::vector<char>& signature_blob,
+                                     const std::string& public_key_path,
+                                     uint32_t client_version,
+                                     std::vector<char>* out_hash_data);
+
   // Returns true if the payload in |payload_path| is signed and its hash can be
-  // verified using the public key in |public_key_path|. Returns false
-  // otherwise.
+  // verified using the public key in |public_key_path| with the signature
+  // of a given version in the signature blob. Returns false otherwise.
   static bool VerifySignedPayload(const std::string& payload_path,
-                                  const std::string& public_key_path);
+                                  const std::string& public_key_path,
+                                  uint32_t client_key_check_version);
 
   // Pads a SHA256 hash so that it may be encrypted/signed with RSA2048
   // using the PKCS#1 v1.5 scheme.

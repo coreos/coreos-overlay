@@ -1460,7 +1460,7 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
   if (!private_key_path.empty()) {
     uint64_t signature_blob_length = 0;
     TEST_AND_RETURN_FALSE(
-        PayloadSigner::SignatureBlobLength(private_key_path,
+        PayloadSigner::SignatureBlobLength(vector<string>(1, private_key_path),
                                            &signature_blob_length));
     AddSignatureOp(next_blob_offset, signature_blob_length, &manifest);
   }
@@ -1523,9 +1523,10 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
   if (!private_key_path.empty()) {
     LOG(INFO) << "Signing the update...";
     vector<char> signature_blob;
-    TEST_AND_RETURN_FALSE(PayloadSigner::SignPayload(output_path,
-                                                     private_key_path,
-                                                     &signature_blob));
+    TEST_AND_RETURN_FALSE(PayloadSigner::SignPayload(
+        output_path,
+        vector<string>(1, private_key_path),
+        &signature_blob));
     TEST_AND_RETURN_FALSE(writer.Write(&signature_blob[0],
                                        signature_blob.size()) ==
                           static_cast<ssize_t>(signature_blob.size()));
