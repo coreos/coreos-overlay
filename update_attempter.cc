@@ -217,22 +217,6 @@ void UpdateAttempter::Update(const std::string& app_version,
   shared_ptr<DownloadAction> download_action(
       new DownloadAction(prefs_, new MultiRangeHTTPFetcher(
           new LibcurlHttpFetcher(GetProxyResolver()))));
-  // This action is always initially in place to warn OS vendor of a
-  // signature failure.  If it's not needed, it will be told to skip.
-  shared_ptr<OmahaRequestAction> download_signature_warning(
-      new OmahaRequestAction(
-          prefs_,
-          omaha_request_params_,
-          new OmahaEvent(
-              OmahaEvent::kTypeUpdateDownloadFinished,
-              OmahaEvent::kResultError,
-              kActionCodeDownloadPayloadPubKeyVerificationError),
-          new LibcurlHttpFetcher(GetProxyResolver()),
-          false));
-  download_action->set_skip_reporting_signature_fail(
-      NewPermanentCallback(download_signature_warning.get(),
-                           &OmahaRequestAction::set_should_skip,
-                           true));
   shared_ptr<OmahaRequestAction> download_finished_action(
       new OmahaRequestAction(prefs_,
                              omaha_request_params_,
@@ -264,7 +248,6 @@ void UpdateAttempter::Update(const std::string& app_version,
       kernel_filesystem_copier_action));
   actions_.push_back(shared_ptr<AbstractAction>(download_started_action));
   actions_.push_back(shared_ptr<AbstractAction>(download_action));
-  actions_.push_back(shared_ptr<AbstractAction>(download_signature_warning));
   actions_.push_back(shared_ptr<AbstractAction>(download_finished_action));
   actions_.push_back(shared_ptr<AbstractAction>(filesystem_verifier_action));
   actions_.push_back(shared_ptr<AbstractAction>(

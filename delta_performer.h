@@ -61,18 +61,16 @@ class DeltaPerformer : public FileWriter {
   int Close();
 
   // Verifies the downloaded payload against the signed hash included in the
-  // payload as well as against the update check hash and size and returns true
-  // on success, false on failure. This method should be called after closing
-  // the stream. Note this method skips the signed hash check if the public key
-  // is unavailable; it returns false if the public key is available but the
-  // delta payload doesn't include a signature. If |public_key_path| is an empty
-  // string, uses the default public key path.
-  // If the signature check fails, *signature_failed will be set to true (if
-  // it's non-NULL); this will not cause the method to fail.
-  bool VerifyPayload(const std::string& public_key_path,
-                     const std::string& update_check_response_hash,
-                     const uint64_t update_check_response_size,
-                     bool* signature_failed);
+  // payload, against the update check hash and size, and against the public
+  // key and returns kActionCodeSuccess on success, an error code on failure.
+  // This method should be called after closing the stream. Note this method
+  // skips the signed hash check if the public key is unavailable; it returns
+  // kActionCodeSignedDeltaPayloadExpectedError if the public key
+  // is available but the delta payload doesn't include a signature. If
+  // |public_key_path| is an empty string, uses the default public key path.
+  ActionExitCode VerifyPayload(const std::string& public_key_path,
+                               const std::string& update_check_response_hash,
+                               const uint64_t update_check_response_size);
 
   // Reads from the update manifest the expected sizes and hashes of the target
   // kernel and rootfs partitions. These values can be used for applied update

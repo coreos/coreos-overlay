@@ -288,33 +288,6 @@ TEST(OmahaRequestActionTest, NoOutputPipeTest) {
   EXPECT_FALSE(processor.IsRunning());
 }
 
-TEST(OmahaRequestActionTest, SkipTest) {
-  const string http_response("invalid xml>");
-
-  GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
-
-  NiceMock<PrefsMock> prefs;
-  MockHttpFetcher* fetcher = new MockHttpFetcher(http_response.data(),
-                                                 http_response.size(),
-                                                 NULL);
-  fetcher->set_never_use(true);
-  OmahaRequestAction action(&prefs, kDefaultTestParams,
-                            new OmahaEvent(OmahaEvent::kTypeUpdateComplete),
-                            fetcher,   // Passes fetcher ownership
-                            false);
-  action.set_should_skip(true);
-  OmahaRequestActionTestProcessorDelegate delegate;
-  delegate.loop_ = loop;
-  ActionProcessor processor;
-  processor.set_delegate(&delegate);
-  processor.EnqueueAction(&action);
-
-  g_timeout_add(0, &StartProcessorInRunLoop, &processor);
-  g_main_loop_run(loop);
-  g_main_loop_unref(loop);
-  EXPECT_FALSE(processor.IsRunning());
-}
-
 TEST(OmahaRequestActionTest, InvalidXmlTest) {
   OmahaResponse response;
   ASSERT_FALSE(
