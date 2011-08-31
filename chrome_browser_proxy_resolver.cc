@@ -39,7 +39,6 @@ const char kLibCrosProxyResolveSignalInterface[] =
     LIB_CROS_PROXY_RESOLVE_SIGNAL_INTERFACE;
 const char kLibCrosProxyResolveSignalFilter[] = "type='signal', "
     "interface='" LIB_CROS_PROXY_RESOLVE_SIGNAL_INTERFACE "', "
-    "path='/', "
     "member='" LIB_CROS_PROXY_RESOLVE_NAME "'";
 #undef LIB_CROS_PROXY_RESOLVE_SIGNAL_INTERFACE
 #undef LIB_CROS_PROXY_RESOLVE_NAME
