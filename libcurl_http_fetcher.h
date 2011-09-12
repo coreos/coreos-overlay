@@ -7,10 +7,13 @@
 
 #include <map>
 #include <string>
+
+#include <base/basictypes.h>
+#include <base/logging.h>
 #include <curl/curl.h>
 #include <glib.h>
-#include "base/basictypes.h"
-#include "base/logging.h"
+
+#include "update_engine/certificate_checker.h"
 #include "update_engine/http_fetcher.h"
 
 // This is a concrete implementation of HttpFetcher that uses libcurl to do the
@@ -42,7 +45,8 @@ class LibcurlHttpFetcher : public HttpFetcher {
         forced_official_build_(false),
         in_write_callback_(false),
         sent_byte_(false),
-        terminate_requested_(false) {}
+        terminate_requested_(false),
+        check_certificate_(CertificateChecker::kNone) {}
 
   // Cleans up all internal state. Does not notify delegate
   ~LibcurlHttpFetcher();
@@ -88,6 +92,11 @@ class LibcurlHttpFetcher : public HttpFetcher {
   void SetBuildType(bool is_official) {
     force_build_type_ = true;
     forced_official_build_ = is_official;
+  }
+
+  void set_check_certificate(
+      CertificateChecker::ServerToCheck check_certificate) {
+    check_certificate_ = check_certificate;
   }
 
  private:
@@ -222,6 +231,11 @@ class LibcurlHttpFetcher : public HttpFetcher {
   // We can't clean everything up while we're in a write callback, so
   // if we get a terminate request, queue it until we can handle it.
   bool terminate_requested_;
+
+  // Represents which server certificate to be checked against this
+  // connection's certificate. If no certificate check needs to be performed,
+  // this should be kNone.
+  CertificateChecker::ServerToCheck check_certificate_;
 
   DISALLOW_COPY_AND_ASSIGN(LibcurlHttpFetcher);
 };

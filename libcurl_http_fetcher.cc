@@ -9,6 +9,7 @@
 
 #include <base/logging.h>
 
+#include "update_engine/certificate_checker.h"
 #include "update_engine/chrome_proxy_resolver.h"
 #include "update_engine/dbus_interface.h"
 #include "update_engine/flimflam_proxy.h"
@@ -150,6 +151,14 @@ void LibcurlHttpFetcher::ResumeTransfer(const std::string& url) {
     CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_SSL_CIPHER_LIST,
                               "HIGH:!ADH"),
              CURLE_OK);
+    if (check_certificate_ != CertificateChecker::kNone) {
+      CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_SSL_CTX_DATA,
+                                &check_certificate_),
+               CURLE_OK);
+      CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_SSL_CTX_FUNCTION,
+                                CertificateChecker::ProcessSSLContext),
+               CURLE_OK);
+    }
   }
 
   CHECK_EQ(curl_multi_add_handle(curl_multi_handle_, curl_handle_), CURLM_OK);

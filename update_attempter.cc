@@ -20,6 +20,7 @@
 #include <policy/libpolicy.h>
 #include <policy/device_policy.h>
 
+#include "update_engine/certificate_checker.h"
 #include "update_engine/dbus_service.h"
 #include "update_engine/download_action.h"
 #include "update_engine/filesystem_copier_action.h"
@@ -195,6 +196,7 @@ void UpdateAttempter::Update(const std::string& app_version,
   // Try harder to connect to the network, esp when not interactive.
   // See comment in libcurl_http_fetcher.cc.
   update_check_fetcher->set_no_network_max_retries(interactive ? 1 : 3);
+  update_check_fetcher->set_check_certificate(CertificateChecker::kUpdate);
   shared_ptr<OmahaRequestAction> update_check_action(
       new OmahaRequestAction(prefs_,
                              omaha_request_params_,
@@ -214,9 +216,13 @@ void UpdateAttempter::Update(const std::string& app_version,
                                  OmahaEvent::kTypeUpdateDownloadStarted),
                              new LibcurlHttpFetcher(GetProxyResolver()),
                              false));
+  LibcurlHttpFetcher* download_fetcher =
+      new LibcurlHttpFetcher(GetProxyResolver());
+  download_fetcher->set_check_certificate(CertificateChecker::kDownload);
   shared_ptr<DownloadAction> download_action(
-      new DownloadAction(prefs_, new MultiRangeHTTPFetcher(
-          new LibcurlHttpFetcher(GetProxyResolver()))));
+      new DownloadAction(prefs_,
+                         new MultiRangeHTTPFetcher(
+                             download_fetcher)));  // passes ownership
   shared_ptr<OmahaRequestAction> download_finished_action(
       new OmahaRequestAction(prefs_,
                              omaha_request_params_,

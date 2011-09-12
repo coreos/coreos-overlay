@@ -15,6 +15,10 @@ using std::string;
 
 namespace chromeos_update_engine {
 
+const char kPrefsCertificateReportToSendDownload[] =
+    "certificate-report-to-send-download";
+const char kPrefsCertificateReportToSendUpdate[] =
+    "certificate-report-to-send-update";
 const char kPrefsDeltaUpdateFailures[] = "delta-update-failures";
 const char kPrefsLastActivePingDay[] = "last-active-ping-day";
 const char kPrefsLastRollCallPingDay[] = "last-roll-call-ping-day";
@@ -22,6 +26,7 @@ const char kPrefsManifestMetadataSize[] = "manifest-metadata-size";
 const char kPrefsPreviousVersion[] = "previous-version";
 const char kPrefsResumedUpdateFailures[] = "resumed-update-failures";
 const char kPrefsUpdateCheckResponseHash[] = "update-check-response-hash";
+const char kPrefsUpdateServerCertificate[] = "update-server-cert";
 const char kPrefsUpdateStateNextDataOffset[] = "update-state-next-data-offset";
 const char kPrefsUpdateStateNextOperation[] = "update-state-next-operation";
 const char kPrefsUpdateStateSHA256Context[] = "update-state-sha-256-context";

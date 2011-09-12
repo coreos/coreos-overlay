@@ -4,6 +4,7 @@
 
 #include "update_engine/update_check_scheduler.h"
 
+#include "update_engine/certificate_checker.h"
 #include "update_engine/utils.h"
 
 namespace chromeos_update_engine {
@@ -82,6 +83,8 @@ gboolean UpdateCheckScheduler::StaticCheck(void* scheduler) {
   CHECK(me->scheduled_);
   me->scheduled_ = false;
   if (me->IsOOBEComplete()) {
+    // Before updating, we flush any previously generated UMA reports.
+    CertificateChecker::FlushReport();
     me->update_attempter_->Update("", "", false, false);
   } else {
     // Skips all automatic update checks if the OOBE process is not complete and

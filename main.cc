@@ -16,6 +16,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include "update_engine/certificate_checker.h"
 #include "update_engine/dbus_constants.h"
 #include "update_engine/dbus_interface.h"
 #include "update_engine/dbus_service.h"
@@ -171,6 +172,13 @@ int main(int argc, char** argv) {
 
   MetricsLibrary metrics_lib;
   metrics_lib.Init();
+
+  // Sets static members for the certificate checker.
+  chromeos_update_engine::CertificateChecker::set_metrics_lib(&metrics_lib);
+  chromeos_update_engine::CertificateChecker::set_prefs(&prefs);
+  chromeos_update_engine::OpenSSLWrapper openssl_wrapper;
+  chromeos_update_engine::CertificateChecker::set_openssl_wrapper(
+      &openssl_wrapper);
 
   // Create the update attempter:
   chromeos_update_engine::ConcreteDbusGlib dbus;
