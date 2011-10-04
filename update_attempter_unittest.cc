@@ -56,7 +56,6 @@ class UpdateAttempterTest : public ::testing::Test {
     EXPECT_EQ(0, attempter_.last_checked_time_);
     EXPECT_EQ("0.0.0.0", attempter_.new_version_);
     EXPECT_EQ(0, attempter_.new_size_);
-    EXPECT_FALSE(attempter_.is_full_update_);
     processor_ = new ActionProcessorMock();
     attempter_.processor_.reset(processor_);  // Transfers ownership.
     attempter_.prefs_ = &prefs_;
@@ -185,7 +184,6 @@ TEST_F(UpdateAttempterTest, DisableDeltaUpdateIfNeededTest) {
 }
 
 TEST_F(UpdateAttempterTest, MarkDeltaUpdateFailureTest) {
-  attempter_.is_full_update_ = false;
   EXPECT_CALL(prefs_, GetInt64(kPrefsDeltaUpdateFailures, _))
       .WillOnce(Return(false))
       .WillOnce(DoAll(SetArgumentPointee<1>(-1), Return(true)))

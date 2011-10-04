@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -69,12 +69,7 @@ void FilesystemCopierAction::PerformAction() {
     return;
   }
   install_plan_ = GetInputObject();
-
-  // Note that we do need to run hash verification for new-style full updates
-  // but currently the |is_full_update| field is set to true only for old-style
-  // full updates and we don't have any expected partition info in that case.
-  if (install_plan_.is_full_update ||
-      (!verify_hash_ && install_plan_.is_resume)) {
+  if (!verify_hash_ && install_plan_.is_resume) {
     // No copy or hash verification needed. Done!
     if (HasOutputPipe())
       SetOutputObject(install_plan_);

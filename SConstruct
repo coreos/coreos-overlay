@@ -1,4 +1,4 @@
-# Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+# Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -208,8 +208,7 @@ env['LIBS'] = Split("""base
                        pthread
                        rootdev
                        ssl
-                       xml2
-                       z""")
+                       xml2""")
 env['CPPPATH'] = ['..']
 env['BUILDERS']['ProtocolBuffer'] = proto_builder
 env['BUILDERS']['DbusBindings'] = dbus_bindings_builder
@@ -238,7 +237,6 @@ if ARGUMENTS.get('debug', 0):
   env['LIBS'] += ['bz2', 'gcov']
 
 sources = Split("""action_processor.cc
-                   buffered_file_writer.cc
                    bzip.cc
                    bzip_extent_writer.cc
                    certificate_checker.cc
@@ -246,7 +244,6 @@ sources = Split("""action_processor.cc
                    chrome_proxy_resolver.cc
                    cycle_breaker.cc
                    dbus_service.cc
-                   decompressing_file_writer.cc
                    delta_diff_generator.cc
                    delta_performer.cc
                    download_action.cc
@@ -259,7 +256,6 @@ sources = Split("""action_processor.cc
                    flimflam_proxy.cc
                    full_update_generator.cc
                    graph_utils.cc
-                   gzip.cc
                    http_fetcher.cc
                    libcurl_http_fetcher.cc
                    marshal.glibmarshal.c
@@ -274,7 +270,6 @@ sources = Split("""action_processor.cc
                    prefs.cc
                    proxy_resolver.cc
                    simple_key_value_store.cc
-                   split_file_writer.cc
                    subprocess.cc
                    tarjan.cc
                    terminator.cc
@@ -288,13 +283,11 @@ main = ['main.cc']
 unittest_sources = Split("""action_unittest.cc
                             action_pipe_unittest.cc
                             action_processor_unittest.cc
-                            buffered_file_writer_unittest.cc
                             bzip_extent_writer_unittest.cc
                             certificate_checker_unittest.cc
                             chrome_browser_proxy_resolver_unittest.cc
                             chrome_proxy_resolver_unittest.cc
                             cycle_breaker_unittest.cc
-                            decompressing_file_writer_unittest.cc
                             delta_diff_generator_unittest.cc
                             delta_performer_unittest.cc
                             download_action_unittest.cc
@@ -318,7 +311,6 @@ unittest_sources = Split("""action_unittest.cc
                             postinstall_runner_action_unittest.cc
                             prefs_unittest.cc
                             simple_key_value_store_unittest.cc
-                            split_file_writer_unittest.cc
                             subprocess_unittest.cc
                             tarjan_unittest.cc
                             terminator_unittest.cc

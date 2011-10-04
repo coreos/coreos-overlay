@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -52,13 +52,6 @@ void OmahaResponseHandlerAction::PerformAction() {
       &install_plan_.install_path));
   install_plan_.kernel_install_path =
       utils::BootKernelDevice(install_plan_.install_path);
-
-  install_plan_.is_full_update = !response.is_delta;
-  if (!response.is_delta && utils::FileExists(key_path_.c_str())) {
-    // Can't sign old style full payloads but signature is required so bail out.
-    completer.set_code(kActionCodeSignedDeltaPayloadExpectedError);
-    return;
-  }
 
   TEST_AND_RETURN(HasOutputPipe());
   if (HasOutputPipe())

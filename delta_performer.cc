@@ -606,11 +606,11 @@ ActionExitCode DeltaPerformer::VerifyPayload(
   const string& download_hash_data = hash_calculator_.hash();
   TEST_AND_RETURN_VAL(kActionCodeDownloadPayloadVerificationError,
                       !download_hash_data.empty());
-  TEST_AND_RETURN_VAL(kActionCodeDownloadPayloadVerificationError,
+  TEST_AND_RETURN_VAL(kActionCodeDownloadHashMismatchError,
                       download_hash_data == update_check_response_hash);
 
   // Verifies the download size.
-  TEST_AND_RETURN_VAL(kActionCodeDownloadPayloadVerificationError,
+  TEST_AND_RETURN_VAL(kActionCodeDownloadSizeMismatchError,
                       update_check_response_size ==
                       manifest_metadata_size_ + buffer_offset_);
 

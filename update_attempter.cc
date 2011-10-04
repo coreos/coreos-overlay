@@ -116,7 +116,6 @@ UpdateAttempter::UpdateAttempter(PrefsInterface* prefs,
       last_checked_time_(0),
       new_version_("0.0.0.0"),
       new_size_(0),
-      is_full_update_(false),
       proxy_manual_checks_(0),
       obeying_proxies_(true),
       chrome_proxy_resolver_(dbus_iface),
@@ -395,11 +394,10 @@ void UpdateAttempter::ActionCompleted(ActionProcessor* processor,
     }
   }
   if (code != kActionCodeSuccess) {
-    // If this was a delta update attempt and the current state is at or past
-    // the download phase, count the failure in case a switch to full update
-    // becomes necessary. Ignore network transfer timeouts and failures.
+    // If the current state is at or past the download phase, count the failure
+    // in case a switch to full update becomes necessary. Ignore network
+    // transfer timeouts and failures.
     if (status_ >= UPDATE_STATUS_DOWNLOADING &&
-        !is_full_update_ &&
         code != kActionCodeDownloadTransferError) {
       MarkDeltaUpdateFailure();
     }
@@ -419,7 +417,6 @@ void UpdateAttempter::ActionCompleted(ActionProcessor* processor,
     // TODO(adlr): put version in InstallPlan
     new_version_ = "0.0.0.0";
     new_size_ = plan.size;
-    is_full_update_ = plan.is_full_update;
     SetupDownload();
     SetupPriorityManagement();
     SetStatusAndNotify(UPDATE_STATUS_UPDATE_AVAILABLE);
@@ -655,7 +652,6 @@ void UpdateAttempter::DisableDeltaUpdateIfNeeded() {
 }
 
 void UpdateAttempter::MarkDeltaUpdateFailure() {
-  CHECK(!is_full_update_);
   // Don't try to resume a failed delta update.
   DeltaPerformer::ResetUpdateProgress(prefs_, false);
   int64_t delta_failures;

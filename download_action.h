@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -16,20 +16,12 @@
 #include <google/protobuf/stubs/common.h>
 
 #include "update_engine/action.h"
-#include "update_engine/decompressing_file_writer.h"
 #include "update_engine/delta_performer.h"
-#include "update_engine/buffered_file_writer.h"
 #include "update_engine/http_fetcher.h"
 #include "update_engine/install_plan.h"
-#include "update_engine/omaha_hash_calculator.h"
-#include "update_engine/split_file_writer.h"
 
-// The Download Action downloads a specified url to disk. The url should
-// point to either a full or delta update. If a full update, the file will
-// be piped into a SplitFileWriter, which will direct it to the kernel
-// and rootfs partitions. If it's a delta update, the destination kernel
-// and rootfs should already contain the source-version that this delta
-// update goes from. In this case, the update will be piped into a
+// The Download Action downloads a specified url to disk. The url should point
+// to an update in a delta payload format. The payload will be piped into a
 // DeltaPerformer that will apply the delta to the disk.
 
 namespace chromeos_update_engine {
@@ -109,22 +101,10 @@ class DownloadAction : public Action<DownloadAction>,
   // either point to *decompressing_file_writer_ or *delta_performer_.
   FileWriter* writer_;
 
-  // These are used for full updates:
-  scoped_ptr<GzipDecompressingFileWriter> decompressing_file_writer_;
-  scoped_ptr<SplitFileWriter> split_file_writer_;
-  scoped_ptr<DirectFileWriter> kernel_file_writer_;
-  scoped_ptr<DirectFileWriter> rootfs_file_writer_;
-  scoped_ptr<BufferedFileWriter> kernel_buffered_file_writer_;
-  scoped_ptr<BufferedFileWriter> rootfs_buffered_file_writer_;
-
-  // Used to apply a delta update:
   scoped_ptr<DeltaPerformer> delta_performer_;
 
   // Pointer to the HttpFetcher that does the http work.
   scoped_ptr<HttpFetcher> http_fetcher_;
-
-  // Used to find the hash of the bytes downloaded
-  OmahaHashCalculator omaha_hash_calculator_;
 
   // Used by TransferTerminated to figure if this action terminated itself or
   // was terminated by the action processor.

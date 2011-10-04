@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -145,7 +145,6 @@ void FilesystemCopierActionTest::DoTest(bool run_out_of_space,
 
   // Set up the action objects
   InstallPlan install_plan;
-  install_plan.is_full_update = false;
   if (verify_hash) {
     if (use_kernel_partition) {
       install_plan.kernel_install_path = a_dev;
@@ -263,32 +262,6 @@ TEST_F(FilesystemCopierActionTest, MissingInputObjectTest) {
   EXPECT_EQ(kActionCodeError, delegate.code_);
 }
 
-TEST_F(FilesystemCopierActionTest, FullUpdateTest) {
-  ActionProcessor processor;
-  FilesystemCopierActionTest2Delegate delegate;
-
-  processor.set_delegate(&delegate);
-
-  ObjectFeederAction<InstallPlan> feeder_action;
-  const char* kUrl = "http://some/url";
-  InstallPlan install_plan(true, false, kUrl, 0, "", "", "");
-  feeder_action.set_obj(install_plan);
-  FilesystemCopierAction copier_action(false, false);
-  ObjectCollectorAction<InstallPlan> collector_action;
-
-  BondActions(&feeder_action, &copier_action);
-  BondActions(&copier_action, &collector_action);
-
-  processor.EnqueueAction(&feeder_action);
-  processor.EnqueueAction(&copier_action);
-  processor.EnqueueAction(&collector_action);
-  processor.StartProcessing();
-  EXPECT_FALSE(processor.IsRunning());
-  EXPECT_TRUE(delegate.ran_);
-  EXPECT_EQ(kActionCodeSuccess, delegate.code_);
-  EXPECT_EQ(kUrl, collector_action.object().download_url);
-}
-
 TEST_F(FilesystemCopierActionTest, ResumeTest) {
   ActionProcessor processor;
   FilesystemCopierActionTest2Delegate delegate;
@@ -297,7 +270,7 @@ TEST_F(FilesystemCopierActionTest, ResumeTest) {
 
   ObjectFeederAction<InstallPlan> feeder_action;
   const char* kUrl = "http://some/url";
-  InstallPlan install_plan(false, true, kUrl, 0, "", "", "");
+  InstallPlan install_plan(true, kUrl, 0, "", "", "");
   feeder_action.set_obj(install_plan);
   FilesystemCopierAction copier_action(false, false);
   ObjectCollectorAction<InstallPlan> collector_action;
@@ -323,7 +296,6 @@ TEST_F(FilesystemCopierActionTest, NonExistentDriveTest) {
 
   ObjectFeederAction<InstallPlan> feeder_action;
   InstallPlan install_plan(false,
-                           false,
                            "",
                            0,
                            "",

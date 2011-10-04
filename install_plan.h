@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -16,15 +16,13 @@
 namespace chromeos_update_engine {
 
 struct InstallPlan {
-  InstallPlan(bool is_full,
-              bool is_resume,
+  InstallPlan(bool is_resume,
               const std::string& url,
               uint64_t size,
               const std::string& hash,
               const std::string& install_path,
               const std::string& kernel_install_path)
-      : is_full_update(is_full),
-        is_resume(is_resume),
+      : is_resume(is_resume),
         download_url(url),
         size(size),
         download_hash(hash),
@@ -32,9 +30,8 @@ struct InstallPlan {
         kernel_install_path(kernel_install_path),
         kernel_size(0),
         rootfs_size(0) {}
-  InstallPlan() : is_full_update(false), is_resume(false), size(0) {}
+  InstallPlan() : is_resume(false), size(0) {}
 
-  bool is_full_update;
   bool is_resume;
   std::string download_url;  // url to download from
   uint64_t size;  // size of the download url's data
@@ -59,20 +56,18 @@ struct InstallPlan {
   std::vector<char> rootfs_hash;
 
   bool operator==(const InstallPlan& that) const {
-    return (is_full_update == that.is_full_update) &&
-        (is_resume == that.is_resume) &&
-        (download_url == that.download_url) &&
-        (size == that.size) &&
-        (download_hash == that.download_hash) &&
-        (install_path == that.install_path) &&
-        (kernel_install_path == that.kernel_install_path);
+    return ((is_resume == that.is_resume) &&
+            (download_url == that.download_url) &&
+            (size == that.size) &&
+            (download_hash == that.download_hash) &&
+            (install_path == that.install_path) &&
+            (kernel_install_path == that.kernel_install_path));
   }
   bool operator!=(const InstallPlan& that) const {
     return !((*this) == that);
   }
   void Dump() const {
     LOG(INFO) << "InstallPlan: "
-              << (is_full_update ? "full_update" : "delta_update")
               << (is_resume ? ", resume" : ", new_update")
               << ", url: " << download_url
               << ", size: " << size

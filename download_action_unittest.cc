@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -116,8 +116,6 @@ gboolean StartProcessorInRunLoop(gpointer data) {
 }
 
 void TestWithData(const vector<char>& data,
-                  bool hash_test,
-                  bool size_test,
                   int fail_write,
                   bool use_download_delegate) {
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
@@ -129,12 +127,10 @@ void TestWithData(const vector<char>& data,
 
   // We pull off the first byte from data and seek past it.
 
-  string hash = hash_test ?
-      OmahaHashCalculator::OmahaHashOfString("random string") :
+  string hash =
       OmahaHashCalculator::OmahaHashOfBytes(&data[1], data.size() - 1);
-  uint64_t size = data.size() + (size_test ? 1 : 0);
-  InstallPlan install_plan(true,
-                           false,
+  uint64_t size = data.size();
+  InstallPlan install_plan(false,
                            "",
                            size,
                            hash,
@@ -162,11 +158,7 @@ void TestWithData(const vector<char>& data,
     EXPECT_CALL(download_delegate, SetDownloadStatus(false)).Times(1);
   }
   ActionExitCode expected_code = kActionCodeSuccess;
-  if (hash_test)
-    expected_code = kActionCodeDownloadHashMismatchError;
-  else if (size_test)
-    expected_code = kActionCodeDownloadSizeMismatchError;
-  else if (fail_write > 0)
+  if (fail_write > 0)
     expected_code = kActionCodeDownloadWriteError;
   DownloadActionTestProcessorDelegate delegate(expected_code);
   delegate.loop_ = loop;
@@ -191,8 +183,6 @@ TEST(DownloadActionTest, SimpleTest) {
   const char* foo = "foo";
   small.insert(small.end(), foo, foo + strlen(foo));
   TestWithData(small,
-               false,  // hash_test
-               false,  // size_test
                0,  // fail_write
                true);  // use_download_delegate
 }
@@ -205,8 +195,6 @@ TEST(DownloadActionTest, LargeTest) {
     c = ('9' == c) ? '0' : c + 1;
   }
   TestWithData(big,
-               false,  // hash_test
-               false,  // size_test
                0,  // fail_write
                true);  // use_download_delegate
 }
@@ -219,30 +207,7 @@ TEST(DownloadActionTest, FailWriteTest) {
     c = ('9' == c) ? '0' : c + 1;
   }
   TestWithData(big,
-               false,  // hash_test
-               false,  // size_test
                2,  // fail_write
-               true);  // use_download_delegate
-}
-
-TEST(DownloadActionTest, BadHashTest) {
-  vector<char> small;
-  const char* foo = "foo";
-  small.insert(small.end(), foo, foo + strlen(foo));
-  TestWithData(small,
-               true,  // hash_test
-               false,  // size_test
-               0,  // fail_write
-               true);  // use_download_delegate
-}
-
-TEST(DownloadActionTest, BadSizeTest) {
-  const char* something = "something";
-  vector<char> small(something, something + strlen(something));
-  TestWithData(small,
-               false,  // hash_test
-               true,  // size_test
-               0,  // fail_write
                true);  // use_download_delegate
 }
 
@@ -251,8 +216,6 @@ TEST(DownloadActionTest, NoDownloadDelegateTest) {
   const char* foo = "foofoo";
   small.insert(small.end(), foo, foo + strlen(foo));
   TestWithData(small,
-               false,  // hash_test
-               false,  // size_test
                0,  // fail_write
                false);  // use_download_delegate
 }
@@ -287,7 +250,7 @@ void TestTerminateEarly(bool use_download_delegate) {
 
     // takes ownership of passed in HttpFetcher
     ObjectFeederAction<InstallPlan> feeder_action;
-    InstallPlan install_plan(true, false, "", 0, "", temp_file.GetPath(), "");
+    InstallPlan install_plan(false, "", 0, "", temp_file.GetPath(), "");
     feeder_action.set_obj(install_plan);
     PrefsMock prefs;
     DownloadAction download_action(&prefs,
@@ -387,8 +350,7 @@ TEST(DownloadActionTest, PassObjectOutTest) {
   DirectFileWriter writer;
 
   // takes ownership of passed in HttpFetcher
-  InstallPlan install_plan(true,
-                           false,
+  InstallPlan install_plan(false,
                            "",
                            1,
                            OmahaHashCalculator::OmahaHashOfString("x"),
@@ -427,7 +389,7 @@ TEST(DownloadActionTest, BadOutFileTest) {
   DirectFileWriter writer;
 
   // takes ownership of passed in HttpFetcher
-  InstallPlan install_plan(true, false, "", 0, "", path, "");
+  InstallPlan install_plan(false, "", 0, "", path, "");
   ObjectFeederAction<InstallPlan> feeder_action;
   feeder_action.set_obj(install_plan);
   PrefsMock prefs;

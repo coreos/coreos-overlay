@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -23,7 +23,6 @@ class OmahaResponseHandlerActionTest : public ::testing::Test {
   // If out is non-NULL, it's set w/ the response from the action.
   bool DoTest(const OmahaResponse& in,
               const string& boot_dev,
-              bool test_key,
               InstallPlan* out);
 };
 
@@ -59,7 +58,6 @@ const string kLongName =
 
 bool OmahaResponseHandlerActionTest::DoTest(const OmahaResponse& in,
                                             const string& boot_dev,
-                                            bool test_key,
                                             InstallPlan* out) {
   ActionProcessor processor;
   OmahaResponseHandlerActionProcessorDelegate delegate;
@@ -73,9 +71,6 @@ bool OmahaResponseHandlerActionTest::DoTest(const OmahaResponse& in,
         .WillOnce(Return(true));
   }
   OmahaResponseHandlerAction response_handler_action(&prefs);
-  if (test_key) {
-    response_handler_action.set_key_path("/dev/null");
-  }
   response_handler_action.set_boot_device(boot_dev);
   BondActions(&feeder_action, &response_handler_action);
   ObjectCollectorAction<InstallPlan> collector_action;
@@ -89,9 +84,7 @@ bool OmahaResponseHandlerActionTest::DoTest(const OmahaResponse& in,
   if (out)
     *out = collector_action.object();
   EXPECT_TRUE(delegate.code_set_);
-  ActionExitCode expected_code = test_key ?
-      kActionCodeSignedDeltaPayloadExpectedError : kActionCodeSuccess;
-  return delegate.code_ == expected_code;
+  return delegate.code_ == kActionCodeSuccess;
 }
 
 TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
@@ -107,11 +100,9 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     in.size = 12;
     in.needs_admin = true;
     in.prompt = false;
-    in.is_delta = false;
     in.deadline = "20101020";
     InstallPlan install_plan;
-    EXPECT_TRUE(DoTest(in, "/dev/sda3", false, &install_plan));
-    EXPECT_TRUE(install_plan.is_full_update);
+    EXPECT_TRUE(DoTest(in, "/dev/sda3", &install_plan));
     EXPECT_EQ(in.codebase, install_plan.download_url);
     EXPECT_EQ(in.hash, install_plan.download_hash);
     EXPECT_EQ("/dev/sda5", install_plan.install_path);
@@ -136,10 +127,8 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     in.size = 12;
     in.needs_admin = true;
     in.prompt = true;
-    in.is_delta = true;
     InstallPlan install_plan;
-    EXPECT_TRUE(DoTest(in, "/dev/sda5", false, &install_plan));
-    EXPECT_FALSE(install_plan.is_full_update);
+    EXPECT_TRUE(DoTest(in, "/dev/sda5", &install_plan));
     EXPECT_EQ(in.codebase, install_plan.download_url);
     EXPECT_EQ(in.hash, install_plan.download_hash);
     EXPECT_EQ("/dev/sda3", install_plan.install_path);
@@ -158,11 +147,9 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     in.size = 12;
     in.needs_admin = true;
     in.prompt = true;
-    in.is_delta = false;
     in.deadline = "some-deadline";
     InstallPlan install_plan;
-    EXPECT_TRUE(DoTest(in, "/dev/sda3", false, &install_plan));
-    EXPECT_TRUE(install_plan.is_full_update);
+    EXPECT_TRUE(DoTest(in, "/dev/sda3", &install_plan));
     EXPECT_EQ(in.codebase, install_plan.download_url);
     EXPECT_EQ(in.hash, install_plan.download_hash);
     EXPECT_EQ("/dev/sda5", install_plan.install_path);
@@ -174,21 +161,11 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
   }
 }
 
-TEST_F(OmahaResponseHandlerActionTest, PublicKeyOldStyleTest) {
-  OmahaResponse in;
-  in.update_exists = true;
-  in.codebase = "http://foo/the_update_a.b.c.d.tgz";
-  in.is_delta = false;
-  InstallPlan install_plan;
-  EXPECT_TRUE(DoTest(in, "/dev/sda3", true, &install_plan));
-}
-
 TEST_F(OmahaResponseHandlerActionTest, NoUpdatesTest) {
   OmahaResponse in;
   in.update_exists = false;
   InstallPlan install_plan;
-  EXPECT_FALSE(DoTest(in, "/dev/sda1", false, &install_plan));
-  EXPECT_FALSE(install_plan.is_full_update);
+  EXPECT_FALSE(DoTest(in, "/dev/sda1", &install_plan));
   EXPECT_EQ("", install_plan.download_url);
   EXPECT_EQ("", install_plan.download_hash);
   EXPECT_EQ("", install_plan.install_path);

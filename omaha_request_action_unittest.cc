@@ -257,7 +257,6 @@ TEST(OmahaRequestActionTest, ValidUpdateTest) {
   EXPECT_EQ("1.2.3.4", response.display_version);
   EXPECT_EQ("http://code/base", response.codebase);
   EXPECT_EQ("http://more/info", response.more_info_url);
-  EXPECT_TRUE(response.is_delta);
   EXPECT_EQ("HASH1234=", response.hash);
   EXPECT_EQ(123, response.size);
   EXPECT_FALSE(response.needs_admin);
@@ -381,6 +380,7 @@ TEST(OmahaRequestActionTest, MissingFieldTest) {
                               "status=\"ok\"/><updatecheck "
                               "DisplayVersion=\"1.2.3.4\" "
                               "Prompt=\"false\" "
+                              "IsDelta=\"true\" "
                               "codebase=\"http://code/base\" hash=\"foo\" "
                               "sha256=\"HASH1234=\" needsadmin=\"true\" "
                               "size=\"123\" "
@@ -394,7 +394,6 @@ TEST(OmahaRequestActionTest, MissingFieldTest) {
   EXPECT_EQ("1.2.3.4", response.display_version);
   EXPECT_EQ("http://code/base", response.codebase);
   EXPECT_EQ("", response.more_info_url);
-  EXPECT_FALSE(response.is_delta);
   EXPECT_EQ("HASH1234=", response.hash);
   EXPECT_EQ(123, response.size);
   EXPECT_TRUE(response.needs_admin);

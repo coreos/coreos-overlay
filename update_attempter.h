@@ -264,7 +264,6 @@ class UpdateAttempter : public ActionProcessorDelegate,
   int64_t last_checked_time_;
   std::string new_version_;
   int64_t new_size_;
-  bool is_full_update_;
 
   // Device paramaters common to all Omaha requests.
   OmahaRequestDeviceParams omaha_request_params_;
