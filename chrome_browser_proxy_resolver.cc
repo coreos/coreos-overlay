@@ -60,8 +60,8 @@ DBusGProxy* GetProxy(DbusGlibInterface* dbus) {
                                                  kLibCrosServiceInterface,
                                                  &error);
   if (!proxy) {
-    LOG(ERROR) << "Error getting dbus proxy for "
-               << kLibCrosServiceName << ": " << utils::GetGErrorMessage(error);
+    LOG(ERROR) << "Error getting dbus proxy for " << kLibCrosServiceName << ": "
+               << utils::GetAndFreeGError(&error);
     return NULL;
   }
   return proxy;
@@ -137,7 +137,7 @@ bool ChromeBrowserProxyResolver::GetProxiesForUrl(const string& url,
           G_TYPE_STRING, kLibCrosProxyResolveName,
           G_TYPE_INVALID, G_TYPE_INVALID)) {
     LOG(WARNING) << "dbus_g_proxy_call failed: "
-                 << utils::GetGErrorMessage(error)
+                 << utils::GetAndFreeGError(&error)
                  << " Continuing with no proxy.";
     timeout = 0;
   }

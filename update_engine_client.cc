@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -19,7 +19,7 @@ extern "C" {
 using chromeos_update_engine::kUpdateEngineServiceName;
 using chromeos_update_engine::kUpdateEngineServicePath;
 using chromeos_update_engine::kUpdateEngineServiceInterface;
-using chromeos_update_engine::utils::GetGErrorMessage;
+using chromeos_update_engine::utils::GetAndFreeGError;
 using std::string;
 
 DEFINE_string(app_version, "", "Force the current app version.");
@@ -41,24 +41,27 @@ bool GetProxy(DBusGProxy** out_proxy) {
   DBusGProxy* proxy = NULL;
   GError* error = NULL;
   const int kTries = 4;
+  const int kRetrySeconds = 10;
 
   bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
-  if (!bus) {
-    LOG(FATAL) << "Failed to get bus";
-  }
+  LOG_IF(FATAL, !bus) << "Failed to get bus: " << GetAndFreeGError(&error);
   for (int i = 0; !proxy && i < kTries; ++i) {
-    LOG_IF(INFO, i) << "Trying to get dbus proxy. Try "
-                    << (i + 1) << "/" << kTries;
+    if (i > 0) {
+      LOG(INFO) << "Retrying to get dbus proxy. Try "
+                << (i + 1) << "/" << kTries;
+      sleep(kRetrySeconds);
+    }
     proxy = dbus_g_proxy_new_for_name_owner(bus,
                                             kUpdateEngineServiceName,
                                             kUpdateEngineServicePath,
                                             kUpdateEngineServiceInterface,
                                             &error);
+    LOG_IF(WARNING, !proxy) << "Error getting dbus proxy for "
+                            << kUpdateEngineServiceName << ": "
+                            << GetAndFreeGError(&error);
   }
-  if (!proxy) {
-    LOG(FATAL) << "Error getting dbus proxy for "
-               << kUpdateEngineServiceName << ": " << GetGErrorMessage(error);
-  }
+  LOG_IF(FATAL, !proxy) << "Giving up -- unable to get dbus proxy for "
+                        << kUpdateEngineServiceName;
   *out_proxy = proxy;
   return true;
 }
@@ -101,7 +104,7 @@ bool GetStatus(string* op) {
       &new_size,
       &error);
   if (rc == FALSE) {
-    LOG(INFO) << "Error getting status: " << GetGErrorMessage(error);
+    LOG(INFO) << "Error getting status: " << GetAndFreeGError(&error);
   }
   printf("LAST_CHECKED_TIME=%" PRIi64 "\nPROGRESS=%f\nCURRENT_OP=%s\n"
          "NEW_VERSION=%s\nNEW_SIZE=%" PRIi64 "\n",
@@ -164,7 +167,7 @@ bool CheckForUpdates(const string& app_version, const string& omaha_url) {
                                                         omaha_url.c_str(),
                                                         &error);
   CHECK_EQ(rc, TRUE) << "Error checking for update: "
-                     << GetGErrorMessage(error);
+                     << GetAndFreeGError(&error);
   return true;
 }
 
@@ -179,7 +182,7 @@ bool RebootIfNeeded() {
   // Reboot error code doesn't necessarily mean that a reboot
   // failed. For example, D-Bus may be shutdown before we receive the
   // result.
-  LOG_IF(INFO, !rc) << "Reboot error message: " << GetGErrorMessage(error);
+  LOG_IF(INFO, !rc) << "Reboot error message: " << GetAndFreeGError(&error);
   return true;
 }
 
@@ -194,7 +197,7 @@ void SetTrack(const string& track) {
                                                    track.c_str(),
                                                    &error);
   CHECK_EQ(rc, true) << "Error setting the track: "
-                     << GetGErrorMessage(error);
+                     << GetAndFreeGError(&error);
   LOG(INFO) << "Track permanently set to: " << track;
 }
 
@@ -209,8 +212,7 @@ string GetTrack() {
       org_chromium_UpdateEngineInterface_get_track(proxy,
                                                    &track,
                                                    &error);
-  CHECK_EQ(rc, true) << "Error getting the track: "
-                     << GetGErrorMessage(error);
+  CHECK_EQ(rc, true) << "Error getting the track: " << GetAndFreeGError(&error);
   string output = track;
   g_free(track);
   return output;

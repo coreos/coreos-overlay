@@ -518,10 +518,17 @@ bool GetBootloader(BootLoader* out_bootloader) {
   return true;
 }
 
-const char* GetGErrorMessage(const GError* error) {
-  if (!error)
-    return "Unknown error.";
-  return error->message;
+string GetAndFreeGError(GError** error) {
+  if (!*error) {
+    return "Unknown GLib error.";
+  }
+  string message =
+      base::StringPrintf("GError(%d): %s",
+                         (*error)->code,
+                         (*error)->message ? (*error)->message : "(unknown)");
+  g_error_free(*error);
+  *error = NULL;
+  return message;
 }
 
 bool Reboot() {

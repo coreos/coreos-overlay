@@ -157,7 +157,7 @@ void FilesystemCopierAction::AsyncReadReadyCallback(GObject *source_object,
 
   ssize_t bytes_read = g_input_stream_read_finish(src_stream_, res, &error);
   if (bytes_read < 0) {
-    LOG(ERROR) << "Read failed: " << utils::GetGErrorMessage(error);
+    LOG(ERROR) << "Read failed: " << utils::GetAndFreeGError(&error);
     failed_ = true;
     buffer_state_[index] = kBufferStateEmpty;
   } else if (bytes_read == 0) {
@@ -207,7 +207,7 @@ void FilesystemCopierAction::AsyncWriteReadyCallback(GObject *source_object,
                                                        &error);
   if (bytes_written < static_cast<ssize_t>(buffer_valid_size_[index])) {
     if (bytes_written < 0) {
-      LOG(ERROR) << "Write failed: " << utils::GetGErrorMessage(error);
+      LOG(ERROR) << "Write failed: " << utils::GetAndFreeGError(&error);
     } else {
       LOG(ERROR) << "Write was short: wrote " << bytes_written
                  << " but expected to write " << buffer_valid_size_[index];

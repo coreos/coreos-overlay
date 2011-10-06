@@ -58,9 +58,8 @@ void SetupDbusService(UpdateEngineService* service) {
   GError *error = NULL;
 
   bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
-  if (!bus) {
-    LOG(FATAL) << "Failed to get bus";
-  }
+  LOG_IF(FATAL, !bus) << "Failed to get bus: "
+                      << utils::GetAndFreeGError(&error);
   proxy = dbus_g_proxy_new_for_name(bus,
                                     DBUS_SERVICE_DBUS,
                                     DBUS_PATH_DBUS,
@@ -71,11 +70,10 @@ void SetupDbusService(UpdateEngineService* service) {
                                          0,
                                          &request_name_ret,
                                          &error)) {
-    LOG(FATAL) << "Failed to get name: " << error->message;
+    LOG(FATAL) << "Failed to get name: " << utils::GetAndFreeGError(&error);
   }
   if (request_name_ret != DBUS_REQUEST_NAME_REPLY_PRIMARY_OWNER) {
     g_warning("Got result code %u from requesting name", request_name_ret);
-    g_error_free(error);
     LOG(FATAL) << "Got result code " << request_name_ret
                << " from requesting name, but expected "
                << DBUS_REQUEST_NAME_REPLY_PRIMARY_OWNER;

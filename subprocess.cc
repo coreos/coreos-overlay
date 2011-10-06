@@ -3,14 +3,19 @@
 // found in the LICENSE file.
 
 #include "update_engine/subprocess.h"
+
 #include <stdlib.h>
 #include <string.h>
-#include <string>
 #include <unistd.h>
+
+#include <string>
 #include <vector>
-#include "base/logging.h"
-#include "base/memory/scoped_ptr.h"
-#include "base/string_util.h"
+
+#include <base/logging.h>
+#include <base/memory/scoped_ptr.h>
+#include <base/string_util.h>
+
+#include "update_engine/utils.h"
 
 using std::string;
 using std::tr1::shared_ptr;
@@ -220,10 +225,7 @@ bool Subprocess::SynchronousExecFlags(const vector<string>& cmd,
       return_code,
       &err);
   FreeArgv(argv.get());
-  if (err) {
-    LOG(INFO) << "err is: " << err->code << ", " << err->message;
-    g_error_free(err);
-  }
+  LOG_IF(INFO, err) << utils::GetAndFreeGError(&err);
   if (child_stdout) {
     if (stdout) {
       *stdout = child_stdout;

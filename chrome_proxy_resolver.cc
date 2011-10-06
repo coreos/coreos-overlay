@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -79,7 +79,8 @@ DBusGProxy* ChromeProxyResolver::DbusProxy() {
   GError* error = NULL;
   DBusGConnection* bus = dbus_->BusGet(DBUS_BUS_SYSTEM, &error);
   if (!bus) {
-    LOG(ERROR) << "Failed to get System Dbus";
+    LOG(ERROR) << "Failed to get System Dbus: "
+               << utils::GetAndFreeGError(&error);
     return NULL;
   }
   DBusGProxy* proxy = dbus_->ProxyNewForNameOwner(bus,
@@ -89,7 +90,7 @@ DBusGProxy* ChromeProxyResolver::DbusProxy() {
                                                   &error);
   if (!proxy) {
     LOG(ERROR) << "Error getting FlimFlam proxy: "
-               << utils::GetGErrorMessage(error);
+               << utils::GetAndFreeGError(&error);
   }
   return proxy;
 }
@@ -101,7 +102,7 @@ enum ProxyMode {
   kProxyModePACScript,
   kProxyModeSingle,
   kProxyModeProxyPerScheme
-}; 
+};
 }  // namespace {}
 
 bool ChromeProxyResolver::GetProxiesForUrlWithSettings(
