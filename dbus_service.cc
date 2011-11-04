@@ -16,7 +16,7 @@ using std::string;
 
 static const char kAUTestURLRequest[] = "autest";
 static const char kAUTestURL[] =
-    "https://omaha.corp.google.com:8082/service/update2";
+    "https://omaha.sandbox.google.com/service/update2";
 
 G_DEFINE_TYPE(UpdateEngineService, update_engine_service, G_TYPE_OBJECT)
 
