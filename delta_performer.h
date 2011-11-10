@@ -52,9 +52,9 @@ class DeltaPerformer : public FileWriter {
   // Open()ed again.
   int Open(const char* path, int flags, mode_t mode);
 
-  // Wrapper around write. Returns bytes written on success or
-  // -errno on error.
-  ssize_t Write(const void* bytes, size_t count);
+  // Wrapper around write. Returns true if all requested bytes
+  // were written, or false on any error, reguardless of progress.
+  bool Write(const void* bytes, size_t count);
 
   // Wrapper around close. Returns 0 on success or -errno on error.
   // Closes both 'path' given to Open() and the kernel path.

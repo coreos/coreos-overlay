@@ -337,8 +337,7 @@ bool ReadUnwrittenBlocks(const vector<Block>& blocks,
 // Returns true on success.
 bool WriteUint64AsBigEndian(FileWriter* writer, const uint64_t value) {
   uint64_t value_be = htobe64(value);
-  TEST_AND_RETURN_FALSE(writer->Write(&value_be, sizeof(value_be)) ==
-                        sizeof(value_be));
+  TEST_AND_RETURN_FALSE(writer->Write(&value_be, sizeof(value_be)));
   return true;
 }
 
@@ -1163,8 +1162,7 @@ bool DeltaDiffGenerator::ReorderDataBlobs(
     TEST_AND_RETURN_FALSE(rc == static_cast<ssize_t>(buf.size()));
 
     op->set_data_offset(out_file_size);
-    TEST_AND_RETURN_FALSE(writer.Write(&buf[0], buf.size()) ==
-                          static_cast<ssize_t>(buf.size()));
+    TEST_AND_RETURN_FALSE(writer.Write(&buf[0], buf.size()));
     out_file_size += buf.size();
   }
   return true;
@@ -1486,8 +1484,7 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
   ScopedFileWriterCloser writer_closer(&writer);
 
   // Write header
-  TEST_AND_RETURN_FALSE(writer.Write(kDeltaMagic, strlen(kDeltaMagic)) ==
-                        static_cast<ssize_t>(strlen(kDeltaMagic)));
+  TEST_AND_RETURN_FALSE(writer.Write(kDeltaMagic, strlen(kDeltaMagic)));
 
   // Write version number
   TEST_AND_RETURN_FALSE(WriteUint64AsBigEndian(&writer, kVersionNumber));
@@ -1500,8 +1497,7 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
   LOG(INFO) << "Writing final delta file protobuf... "
             << serialized_manifest.size();
   TEST_AND_RETURN_FALSE(writer.Write(serialized_manifest.data(),
-                                     serialized_manifest.size()) ==
-                        static_cast<ssize_t>(serialized_manifest.size()));
+                                     serialized_manifest.size()));
 
   // Append the data blobs
   LOG(INFO) << "Writing final delta file data blobs...";
@@ -1516,7 +1512,7 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
       break;
     }
     TEST_AND_RETURN_FALSE_ERRNO(rc > 0);
-    TEST_AND_RETURN_FALSE(writer.Write(buf, rc) == rc);
+    TEST_AND_RETURN_FALSE(writer.Write(buf, rc));
   }
 
   // Write signature blob.
@@ -1528,8 +1524,7 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
         vector<string>(1, private_key_path),
         &signature_blob));
     TEST_AND_RETURN_FALSE(writer.Write(&signature_blob[0],
-                                       signature_blob.size()) ==
-                          static_cast<ssize_t>(signature_blob.size()));
+                                       signature_blob.size()));
   }
 
   int64_t manifest_metadata_size =

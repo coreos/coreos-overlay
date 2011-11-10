@@ -96,7 +96,7 @@ void DownloadAction::ReceivedBytes(HttpFetcher *fetcher,
   bytes_received_ += length;
   if (delegate_)
     delegate_->BytesReceived(bytes_received_, install_plan_.size);
-  if (writer_ && writer_->Write(bytes, length) < 0) {
+  if (writer_ && !writer_->Write(bytes, length)) {
     LOG(ERROR) << "Write error -- terminating processing.";
     // Don't tell the action processor that the action is complete until we get
     // the TransferTerminated callback. Otherwise, this and the HTTP fetcher

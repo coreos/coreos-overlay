@@ -22,10 +22,10 @@ class FileWriterTest : public ::testing::Test { };
 TEST(FileWriterTest, SimpleTest) {
   DirectFileWriter file_writer;
   const string path("/tmp/FileWriterTest");
-  ASSERT_EQ(0, file_writer.Open(path.c_str(),
+  EXPECT_EQ(0, file_writer.Open(path.c_str(),
                                 O_CREAT | O_LARGEFILE | O_TRUNC | O_WRONLY,
                                 0644));
-  ASSERT_EQ(4, file_writer.Write("test", 4));
+  EXPECT_TRUE(file_writer.Write("test", 4));
   vector<char> actual_data;
   EXPECT_TRUE(utils::ReadFile(path, &actual_data));
 
@@ -47,7 +47,7 @@ TEST(FileWriterTest, WriteErrorTest) {
   EXPECT_EQ(0, file_writer.Open(path.c_str(),
                                 O_CREAT | O_LARGEFILE | O_TRUNC | O_RDONLY,
                                 0644));
-  EXPECT_EQ(-EBADF, file_writer.Write("x", 1));
+  EXPECT_FALSE(file_writer.Write("x", 1));
   EXPECT_EQ(0, file_writer.Close());
 }
 

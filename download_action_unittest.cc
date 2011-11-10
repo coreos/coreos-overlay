@@ -81,9 +81,9 @@ class TestDirectFileWriter : public DirectFileWriter {
   TestDirectFileWriter() : fail_write_(0), current_write_(0) {}
   void set_fail_write(int fail_write) { fail_write_ = fail_write; }
 
-  virtual ssize_t Write(const void* bytes, size_t count) {
+  virtual bool Write(const void* bytes, size_t count) {
     if (++current_write_ == fail_write_) {
-      return -EINVAL;
+      return false;
     }
     return DirectFileWriter::Write(bytes, count);
   }

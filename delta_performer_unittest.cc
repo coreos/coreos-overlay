@@ -484,7 +484,7 @@ void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop,
   const size_t kBytesPerWrite = 5;
   for (size_t i = 0; i < delta.size(); i += kBytesPerWrite) {
     size_t count = min(delta.size() - i, kBytesPerWrite);
-    EXPECT_EQ(count, performer.Write(&delta[i], count));
+    EXPECT_TRUE(performer.Write(&delta[i], count));
   }
 
   // Wrapper around close. Returns 0 on success or -errno on error.
@@ -586,9 +586,9 @@ TEST(DeltaPerformerTest, BadDeltaMagicTest) {
   DeltaPerformer performer(&prefs);
   EXPECT_EQ(0, performer.Open("/dev/null", 0, 0));
   EXPECT_TRUE(performer.OpenKernel("/dev/null"));
-  EXPECT_EQ(4, performer.Write("junk", 4));
-  EXPECT_EQ(8, performer.Write("morejunk", 8));
-  EXPECT_LT(performer.Write("morejunk", 8), 0);
+  EXPECT_TRUE(performer.Write("junk", 4));
+  EXPECT_TRUE(performer.Write("morejunk", 8));
+  EXPECT_FALSE(performer.Write("morejunk", 8));
   EXPECT_LT(performer.Close(), 0);
 }
 

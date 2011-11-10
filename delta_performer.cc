@@ -232,11 +232,9 @@ DeltaPerformer::MetadataParseResult DeltaPerformer::ParsePayloadMetadata(
 }
 
 
-// Wrapper around write. Returns bytes written on success or
-// -errno on error.
-// This function performs as many actions as it can, given the amount of
-// data received thus far.
-ssize_t DeltaPerformer::Write(const void* bytes, size_t count) {
+// Wrapper around write. Returns true if all requested bytes
+// were written, or false on any error, reguardless of progress.
+bool DeltaPerformer::Write(const void* bytes, size_t count) {
   const char* c_bytes = reinterpret_cast<const char*>(bytes);
   buffer_.insert(buffer_.end(), c_bytes, c_bytes + count);
 
@@ -245,10 +243,10 @@ ssize_t DeltaPerformer::Write(const void* bytes, size_t count) {
                                                       &manifest_,
                                                       &manifest_metadata_size_);
     if (result == kMetadataParseError) {
-      return -EINVAL;
+      return false;
     }
     if (result == kMetadataParseInsufficientData) {
-      return count;
+      return true;
     }
     // Remove protobuf and header info from buffer_, so buffer_ contains
     // just data blobs
@@ -260,7 +258,7 @@ ssize_t DeltaPerformer::Write(const void* bytes, size_t count) {
     LogPartitionInfo(manifest_);
     if (!PrimeUpdateState()) {
       LOG(ERROR) << "Unable to prime the update state.";
-      return -EINVAL;
+      return false;
     }
   }
   ssize_t total_operations = manifest_.install_operations_size() +
@@ -289,25 +287,25 @@ ssize_t DeltaPerformer::Write(const void* bytes, size_t count) {
       if (!PerformReplaceOperation(op, is_kernel_partition)) {
         LOG(ERROR) << "Failed to perform replace operation "
                    << next_operation_num_;
-        return -EINVAL;
+        return false;
       }
     } else if (op.type() == DeltaArchiveManifest_InstallOperation_Type_MOVE) {
       if (!PerformMoveOperation(op, is_kernel_partition)) {
         LOG(ERROR) << "Failed to perform move operation "
                    << next_operation_num_;
-        return -EINVAL;
+        return false;
       }
     } else if (op.type() == DeltaArchiveManifest_InstallOperation_Type_BSDIFF) {
       if (!PerformBsdiffOperation(op, is_kernel_partition)) {
         LOG(ERROR) << "Failed to perform bsdiff operation "
                    << next_operation_num_;
-        return -EINVAL;
+        return false;
       }
     }
     next_operation_num_++;
     CheckpointUpdateProgress();
   }
-  return count;
+  return true;
 }
 
 bool DeltaPerformer::CanPerformInstallOperation(

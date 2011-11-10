@@ -27,9 +27,9 @@ class FileWriter {
   // Wrapper around open. Returns 0 on success or -errno on error.
   virtual int Open(const char* path, int flags, mode_t mode) = 0;
 
-  // Wrapper around write. Returns bytes written on success or
-  // -errno on error.
-  virtual ssize_t Write(const void* bytes, size_t count) = 0;
+  // Wrapper around write. Returns true if all requested bytes
+  // were written, or false on any error, reguardless of progress.
+  virtual bool Write(const void* bytes, size_t count) = 0;
 
   // Wrapper around close. Returns 0 on success or -errno on error.
   virtual int Close() = 0;
@@ -47,7 +47,7 @@ class DirectFileWriter : public FileWriter {
   virtual ~DirectFileWriter() {}
 
   virtual int Open(const char* path, int flags, mode_t mode);
-  virtual ssize_t Write(const void* bytes, size_t count);
+  virtual bool Write(const void* bytes, size_t count);
   virtual int Close();
 
   int fd() const { return fd_; }

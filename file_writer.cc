@@ -15,7 +15,7 @@ int DirectFileWriter::Open(const char* path, int flags, mode_t mode) {
   return 0;
 }
 
-ssize_t DirectFileWriter::Write(const void* bytes, size_t count) {
+bool DirectFileWriter::Write(const void* bytes, size_t count) {
   CHECK_GE(fd_, 0);
   const char* char_bytes = reinterpret_cast<const char*>(bytes);
 
@@ -24,11 +24,11 @@ ssize_t DirectFileWriter::Write(const void* bytes, size_t count) {
     ssize_t rc = write(fd_, char_bytes + bytes_written,
                        count - bytes_written);
     if (rc < 0)
-      return -errno;
+      return false;
     bytes_written += rc;
   }
   CHECK_EQ(bytes_written, count);
-  return bytes_written;
+  return bytes_written == count;
 }
 
 int DirectFileWriter::Close() {
