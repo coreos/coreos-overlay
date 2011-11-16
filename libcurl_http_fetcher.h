@@ -99,6 +99,10 @@ class LibcurlHttpFetcher : public HttpFetcher {
     check_certificate_ = check_certificate;
   }
 
+  virtual size_t GetBytesDownloaded() {
+    return static_cast<size_t>(bytes_downloaded_);
+  }
+
  private:
   // Callback for when proxy resolution has completed. This begins the
   // transfer.
@@ -106,6 +110,11 @@ class LibcurlHttpFetcher : public HttpFetcher {
    
   // Asks libcurl for the http response code and stores it in the object.
   void GetHttpResponseCode();
+
+  // Checks whether stored HTTP response is successful.
+  inline bool IsHttpResponseSuccess() {
+    return (http_response_code_ >= 200 && http_response_code_ < 300);
+  }
 
   // Resumes a transfer where it left off. This will use the
   // HTTP Range: header to make a new connection from where the last

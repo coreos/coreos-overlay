@@ -51,6 +51,11 @@ class MockHttpFetcher : public HttpFetcher {
       delegate_->SeekToOffset(offset);
   }
 
+  // Dummy: no bytes were downloaded.
+  virtual size_t GetBytesDownloaded() {
+    return sent_size_;
+  }
+
   // Begins the transfer if it hasn't already begun.
   virtual void BeginTransfer(const std::string& url);
 

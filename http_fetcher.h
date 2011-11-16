@@ -91,6 +91,9 @@ class HttpFetcher {
   virtual void set_idle_seconds(int seconds) {}
   virtual void set_retry_seconds(int seconds) {}
 
+  // Get the total number of bytes downloaded by fetcher.
+  virtual size_t GetBytesDownloaded() = 0;
+
   ProxyResolver* proxy_resolver() const { return proxy_resolver_; }
 
   // These are used for testing:

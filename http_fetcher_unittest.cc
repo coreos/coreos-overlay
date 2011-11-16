@@ -42,6 +42,7 @@ class HttpFetcherTest : public ::testing::Test {
   HttpFetcher* NewSmallFetcher() = 0;
   string BigUrl() const = 0;
   string SmallUrl() const = 0;
+  string ErrorUrl() const = 0;
   bool IsMock() const = 0;
   bool IsMulti() const = 0;
 };
@@ -74,6 +75,9 @@ class HttpFetcherTest<MockHttpFetcher> : public ::testing::Test {
     return "unused://unused";
   }
   string SmallUrl() const {
+    return "unused://unused";
+  }
+  string ErrorUrl() const {
     return "unused://unused";
   }
   bool IsMock() const { return true; }
@@ -166,6 +170,9 @@ class HttpFetcherTest<LibcurlHttpFetcher> : public ::testing::Test {
   string SmallUrl() const {
     return LocalServerUrlForPath("/foo");
   }
+  string ErrorUrl() const {
+    return LocalServerUrlForPath("/error");
+  }
   bool IsMock() const { return false; }
   bool IsMulti() const { return false; }
   typedef PythonHttpServer HttpServer;
@@ -207,20 +214,45 @@ TYPED_TEST_CASE(HttpFetcherTest, HttpFetcherTestTypes);
 namespace {
 class HttpFetcherTestDelegate : public HttpFetcherDelegate {
  public:
+  HttpFetcherTestDelegate(void) :
+      is_expect_error_(false), times_transfer_complete_called_(0),
+      times_transfer_terminated_called_(0), times_received_bytes_called_(0) {}
+
   virtual void ReceivedBytes(HttpFetcher* fetcher,
                              const char* bytes, int length) {
     char str[length + 1];
     memset(str, 0, length + 1);
     memcpy(str, bytes, length);
+
+    // Update counters
+    times_received_bytes_called_++;
   }
+
   virtual void TransferComplete(HttpFetcher* fetcher, bool successful) {
-    EXPECT_EQ(200, fetcher->http_response_code());
+    if (is_expect_error_)
+      EXPECT_EQ(404, fetcher->http_response_code());
+    else
+      EXPECT_EQ(200, fetcher->http_response_code());
     g_main_loop_quit(loop_);
+
+    // Update counter
+    times_transfer_complete_called_++;
   }
+
   virtual void TransferTerminated(HttpFetcher* fetcher) {
     ADD_FAILURE();
+    times_transfer_terminated_called_++;
   }
+
   GMainLoop* loop_;
+
+  // Are we expecting an error response? (default: no)
+  bool is_expect_error_;
+
+  // Counters for callback invocations.
+  int times_transfer_complete_called_;
+  int times_transfer_terminated_called_;
+  int times_received_bytes_called_;
 };
 
 struct StartTransferArgs {
@@ -272,6 +304,43 @@ TYPED_TEST(HttpFetcherTest, SimpleBigTest) {
   }
   g_main_loop_unref(loop);
 }
+
+// Issue #9648: when server returns an error HTTP response, the fetcher needs to
+// terminate transfer prematurely, rather than try to process the error payload.
+TYPED_TEST(HttpFetcherTest, ErrorTest) {
+  if (this->IsMock() || this->IsMulti())
+    return;
+  GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
+  {
+    HttpFetcherTestDelegate delegate;
+    delegate.loop_ = loop;
+
+    // Delegate should expect an error response.
+    delegate.is_expect_error_ = true;
+
+    scoped_ptr<HttpFetcher> fetcher(this->NewSmallFetcher());
+    fetcher->set_delegate(&delegate);
+
+    typename TestFixture::HttpServer server;
+    ASSERT_TRUE(server.started_);
+
+    StartTransferArgs start_xfer_args = {fetcher.get(), this->ErrorUrl()};
+
+    g_timeout_add(0, StartTransfer, &start_xfer_args);
+    g_main_loop_run(loop);
+
+    // Make sure that no bytes were received.
+    CHECK_EQ(delegate.times_received_bytes_called_, 0);
+    CHECK_EQ(fetcher->GetBytesDownloaded(), 0);
+
+    // Make sure that transfer completion was signaled once, and no termination
+    // was signaled.
+    CHECK_EQ(delegate.times_transfer_complete_called_, 1);
+    CHECK_EQ(delegate.times_transfer_terminated_called_, 0);
+  }
+  g_main_loop_unref(loop);
+}
+
 
 namespace {
 class PausingHttpFetcherTestDelegate : public HttpFetcherDelegate {

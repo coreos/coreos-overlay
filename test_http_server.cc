@@ -125,10 +125,52 @@ string Itoa(off_t num) {
   return buf;
 }
 
+// Return a string description for common HTTP response codes.
+const char *GetHttpStatusLine(int code_id) {
+  struct HttpStatusCode {
+    int id;
+    const char* description;
+  } http_status_codes[] = {
+    { 200, "OK" },
+    { 201, "Created" },
+    { 202, "Accepted" },
+    { 203, "Non-Authoritative Information" },
+    { 204, "No Content" },
+    { 205, "Reset Content" },
+    { 206, "Partial Content" },
+    { 300, "Multiple Choices" },
+    { 301, "Moved Permanently" },
+    { 302, "Found" },
+    { 303, "See Other" },
+    { 304, "Not Modified" },
+    { 305, "Use Proxy" },
+    { 307, "Temporary Redirect" },
+    { 400, "Bad Request" },
+    { 401, "Unauthorized" },
+    { 403, "Forbidden" },
+    { 404, "Not Found" },
+    { 408, "Request Timeout" },
+    { 500, "Internal Server Error" },
+    { 501, "Not Implemented" },
+    { 503, "Service Unavailable" },
+    { 505, "HTTP Version Not Supported" },
+    { 0, "Undefined" },
+  };
+
+  int i;
+  for (i = 0; http_status_codes[i].id; ++i)
+    if (http_status_codes[i].id == code_id)
+      break;
+
+  return http_status_codes[i].description;
+}
+
+
 void WriteHeaders(int fd, bool support_range, off_t full_size,
                   off_t start_offset, int return_code) {
   LOG(INFO) << "writing headers";
-  WriteString(fd, string("HTTP/1.1 ") + Itoa(return_code) + " OK\r\n");
+  WriteString(fd, string("HTTP/1.1 ") + Itoa(return_code) + " " +
+              GetHttpStatusLine(return_code) + "\r\n");
   WriteString(fd, "Content-Type: application/octet-stream\r\n");
   if (support_range) {
     WriteString(fd, "Accept-Ranges: bytes\r\n");
@@ -235,6 +277,16 @@ void HandleDefault(int fd, const HttpRequest& request) {
   WriteString(fd, data_to_write);
 }
 
+// Handle an error response from server.
+void HandleError(int fd, const HttpRequest& request) {
+  LOG(INFO) << "Generating error HTTP response";
+
+  // Generate a Not Found" error page with some text.
+  const string data("This is an error page.");
+  WriteHeaders(fd, false, data.size(), 0, 404);
+  WriteString(fd, data);
+}
+
 void HandleConnection(int fd) {
   HttpRequest request;
   ParseRequest(fd, &request);
@@ -249,6 +301,8 @@ void HandleConnection(int fd) {
     HandleFlaky(fd, request);
   else if (request.url.find("/redirect/") == 0)
     HandleRedirect(fd, request);
+  else if (request.url.find("/error") == 0)
+    HandleError(fd, request);
   else
     HandleDefault(fd, request);
 

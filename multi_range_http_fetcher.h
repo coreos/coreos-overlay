@@ -80,6 +80,10 @@ class MultiRangeHTTPFetcher : public HttpFetcher, public HttpFetcherDelegate {
     base_fetcher_->SetProxies(proxies);
   }
 
+  inline virtual size_t GetBytesDownloaded() {
+    return base_fetcher_->GetBytesDownloaded();
+  }
+
  private:
   // pair<offset, length>:
   typedef std::vector<std::pair<off_t, off_t> > RangesVect;

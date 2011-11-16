@@ -246,8 +246,7 @@ void LibcurlHttpFetcher::CurlPerformOnce() {
       return;
     }
 
-    if (!sent_byte_ &&
-        (http_response_code_ < 200 || http_response_code_ >= 300)) {
+    if (!sent_byte_ && ! IsHttpResponseSuccess()) {
       // The transfer completed w/ error and we didn't get any bytes.
       // If we have another proxy to try, try that.
 
@@ -282,8 +281,7 @@ void LibcurlHttpFetcher::CurlPerformOnce() {
     } else {
       if (delegate_) {
         // success is when http_response_code is 2xx
-        bool success = (http_response_code_ >= 200) &&
-            (http_response_code_ < 300);
+        bool success = IsHttpResponseSuccess();
         delegate_->TransferComplete(this, success);
       }
     }
@@ -294,10 +292,18 @@ void LibcurlHttpFetcher::CurlPerformOnce() {
 }
 
 size_t LibcurlHttpFetcher::LibcurlWrite(void *ptr, size_t size, size_t nmemb) {
-  if (size == 0)
-    return 0;
-  sent_byte_ = true;
+  // Update HTTP response first.
   GetHttpResponseCode();
+  const size_t payload_size = size * nmemb;
+
+  // Do nothing if no payload or HTTP response is an error.
+  if (payload_size == 0 || ! IsHttpResponseSuccess()) {
+    LOG(INFO) << "HTTP response unsuccessful (" << http_response_code_
+              << ") or no payload (" << payload_size << "), nothing to do";
+    return 0;
+  }
+
+  sent_byte_ = true;
   {
     double transfer_size_double;
     CHECK_EQ(curl_easy_getinfo(curl_handle_,
@@ -308,12 +314,12 @@ size_t LibcurlHttpFetcher::LibcurlWrite(void *ptr, size_t size, size_t nmemb) {
       transfer_size_ = resume_offset_ + new_transfer_size;
     }
   }
-  bytes_downloaded_ += size * nmemb;
+  bytes_downloaded_ += payload_size;
   in_write_callback_ = true;
   if (delegate_)
-    delegate_->ReceivedBytes(this, reinterpret_cast<char*>(ptr), size * nmemb);
+    delegate_->ReceivedBytes(this, reinterpret_cast<char*>(ptr), payload_size);
   in_write_callback_ = false;
-  return size * nmemb;
+  return payload_size;
 }
 
 void LibcurlHttpFetcher::Pause() {
