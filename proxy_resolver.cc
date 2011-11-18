@@ -33,8 +33,10 @@ bool DirectProxyResolver::GetProxiesForUrl(const std::string& url,
 void DirectProxyResolver::ReturnCallback(ProxiesResolvedFn callback,
                                          void* data) {
   idle_callback_id_ = 0;
-  std::deque<std::string> proxies;
-  proxies.push_back(kNoProxy);
+
+  // Initialize proxy pool with as many proxies as indicated (all identical).
+  std::deque<std::string> proxies(num_proxies_, kNoProxy);
+
   (*callback)(proxies, data);
 }
 

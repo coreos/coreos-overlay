@@ -256,6 +256,7 @@ sources = Split("""action_processor.cc
                    flimflam_proxy.cc
                    full_update_generator.cc
                    graph_utils.cc
+                   http_common.cc
                    http_fetcher.cc
                    libcurl_http_fetcher.cc
                    marshal.glibmarshal.c

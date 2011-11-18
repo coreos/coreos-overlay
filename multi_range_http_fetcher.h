@@ -14,14 +14,14 @@
 #include "update_engine/http_fetcher.h"
 
 // This class is a simple wrapper around an HttpFetcher. The client
-// specifies a vector of byte ranges. MultiRangeHTTPFetcher will fetch bytes
+// specifies a vector of byte ranges. MultiRangeHttpFetcher will fetch bytes
 // from those offsets, using the same bash fetcher for all ranges. Thus, the
 // fetcher must support beginning a transfter after one has stopped. Pass -1
 // as a length to specify unlimited length. It really only would make sense
 // for the last range specified to have unlimited length, tho it is legal for
 // other entries to have unlimited length.
 
-// There are three states a MultiRangeHTTPFetcher object will be in:
+// There are three states a MultiRangeHttpFetcher object will be in:
 // - Stopped (start state)
 // - Downloading
 // - Pending transfer ended
@@ -30,10 +30,10 @@
 
 namespace chromeos_update_engine {
 
-class MultiRangeHTTPFetcher : public HttpFetcher, public HttpFetcherDelegate {
+class MultiRangeHttpFetcher : public HttpFetcher, public HttpFetcherDelegate {
  public:
   // Takes ownership of the passed in fetcher.
-  explicit MultiRangeHTTPFetcher(HttpFetcher* base_fetcher)
+  explicit MultiRangeHttpFetcher(HttpFetcher* base_fetcher)
       : HttpFetcher(base_fetcher->proxy_resolver()),
         base_fetcher_(base_fetcher),
         base_fetcher_active_(false),
@@ -41,7 +41,7 @@ class MultiRangeHTTPFetcher : public HttpFetcher, public HttpFetcherDelegate {
         terminating_(false),
         current_index_(0),
         bytes_received_this_range_(0) {}
-  ~MultiRangeHTTPFetcher() {}
+  ~MultiRangeHttpFetcher() {}
 
   void ClearRanges() { ranges_.clear(); }
 
@@ -122,7 +122,7 @@ class MultiRangeHTTPFetcher : public HttpFetcher, public HttpFetcherDelegate {
   RangesVect::size_type current_index_;  // index into ranges_
   off_t bytes_received_this_range_;
 
-  DISALLOW_COPY_AND_ASSIGN(MultiRangeHTTPFetcher);
+  DISALLOW_COPY_AND_ASSIGN(MultiRangeHttpFetcher);
 };
 
 }  // namespace chromeos_update_engine

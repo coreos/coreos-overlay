@@ -111,9 +111,15 @@ class LibcurlHttpFetcher : public HttpFetcher {
   // Asks libcurl for the http response code and stores it in the object.
   void GetHttpResponseCode();
 
-  // Checks whether stored HTTP response is successful.
+  // Checks whether stored HTTP response is within the success range.
   inline bool IsHttpResponseSuccess() {
     return (http_response_code_ >= 200 && http_response_code_ < 300);
+  }
+
+  // Checks whether stored HTTP response is within the error range. This
+  // includes both errors with the request (4xx) and server errors (5xx).
+  inline bool IsHttpResponseError() {
+    return (http_response_code_ >= 400 && http_response_code_ < 600);
   }
 
   // Resumes a transfer where it left off. This will use the

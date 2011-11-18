@@ -11,7 +11,7 @@ namespace chromeos_update_engine {
 // Begins the transfer to the specified URL.
 // State change: Stopped -> Downloading
 // (corner case: Stopped -> Stopped for an empty request)
-void MultiRangeHTTPFetcher::BeginTransfer(const std::string& url) {
+void MultiRangeHttpFetcher::BeginTransfer(const std::string& url) {
   CHECK(!base_fetcher_active_) << "BeginTransfer but already active.";
   CHECK(!pending_transfer_ended_) << "BeginTransfer but pending.";
   CHECK(!terminating_) << "BeginTransfer but terminating.";
@@ -31,7 +31,7 @@ void MultiRangeHTTPFetcher::BeginTransfer(const std::string& url) {
 }
 
 // State change: Downloading -> Pending transfer ended
-void MultiRangeHTTPFetcher::TerminateTransfer() {
+void MultiRangeHttpFetcher::TerminateTransfer() {
   if (!base_fetcher_active_) {
     LOG(INFO) << "Called TerminateTransfer but not active.";
     // Note that after the callback returns this object may be destroyed.
@@ -47,7 +47,7 @@ void MultiRangeHTTPFetcher::TerminateTransfer() {
 }
 
 // State change: Stopped or Downloading -> Downloading
-void MultiRangeHTTPFetcher::StartTransfer() {
+void MultiRangeHttpFetcher::StartTransfer() {
   if (current_index_ >= ranges_.size()) {
     return;
   }
@@ -62,7 +62,7 @@ void MultiRangeHTTPFetcher::StartTransfer() {
 }
 
 // State change: Downloading -> Downloading or Pending transfer ended
-void MultiRangeHTTPFetcher::ReceivedBytes(HttpFetcher* fetcher,
+void MultiRangeHttpFetcher::ReceivedBytes(HttpFetcher* fetcher,
                                           const char* bytes,
                                           int length) {
   CHECK_LT(current_index_, ranges_.size());
@@ -92,7 +92,7 @@ void MultiRangeHTTPFetcher::ReceivedBytes(HttpFetcher* fetcher,
 }
 
 // State change: Downloading or Pending transfer ended -> Stopped
-void MultiRangeHTTPFetcher::TransferEnded(HttpFetcher* fetcher,
+void MultiRangeHttpFetcher::TransferEnded(HttpFetcher* fetcher,
                                           bool successful) {
   CHECK(base_fetcher_active_) << "Transfer ended unexpectedly.";
   CHECK_EQ(fetcher, base_fetcher_.get());
@@ -138,18 +138,18 @@ void MultiRangeHTTPFetcher::TransferEnded(HttpFetcher* fetcher,
     delegate_->TransferComplete(this, successful);
 }
 
-void MultiRangeHTTPFetcher::TransferComplete(HttpFetcher* fetcher,
+void MultiRangeHttpFetcher::TransferComplete(HttpFetcher* fetcher,
                                              bool successful) {
   LOG(INFO) << "Received transfer complete.";
   TransferEnded(fetcher, successful);
 }
 
-void MultiRangeHTTPFetcher::TransferTerminated(HttpFetcher* fetcher) {
+void MultiRangeHttpFetcher::TransferTerminated(HttpFetcher* fetcher) {
   LOG(INFO) << "Received transfer terminated.";
   TransferEnded(fetcher, false);
 }
 
-void MultiRangeHTTPFetcher::Reset() {
+void MultiRangeHttpFetcher::Reset() {
   base_fetcher_active_ = pending_transfer_ended_ = terminating_ = false;
   current_index_ = 0;
   bytes_received_this_range_ = 0;

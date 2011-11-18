@@ -220,7 +220,7 @@ void UpdateAttempter::Update(const std::string& app_version,
   download_fetcher->set_check_certificate(CertificateChecker::kDownload);
   shared_ptr<DownloadAction> download_action(
       new DownloadAction(prefs_,
-                         new MultiRangeHTTPFetcher(
+                         new MultiRangeHttpFetcher(
                              download_fetcher)));  // passes ownership
   shared_ptr<OmahaRequestAction> download_finished_action(
       new OmahaRequestAction(prefs_,
@@ -663,8 +663,8 @@ void UpdateAttempter::MarkDeltaUpdateFailure() {
 }
 
 void UpdateAttempter::SetupDownload() {
-  MultiRangeHTTPFetcher* fetcher =
-      dynamic_cast<MultiRangeHTTPFetcher*>(download_action_->http_fetcher());
+  MultiRangeHttpFetcher* fetcher =
+      dynamic_cast<MultiRangeHttpFetcher*>(download_action_->http_fetcher());
   fetcher->ClearRanges();
   if (response_handler_action_->install_plan().is_resume) {
     // Resuming an update so fetch the update manifest metadata first.

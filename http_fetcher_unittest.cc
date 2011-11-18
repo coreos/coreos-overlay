@@ -14,6 +14,8 @@
 #include <glib.h>
 #include <gtest/gtest.h>
 
+#include "update_engine/http_common.h"
+#include "update_engine/http_fetcher_unittest.h"
 #include "update_engine/libcurl_http_fetcher.h"
 #include "update_engine/mock_http_fetcher.h"
 #include "update_engine/multi_range_http_fetcher.h"
@@ -24,71 +26,49 @@ using std::pair;
 using std::string;
 using std::vector;
 
+namespace {
+
+const int kBigLength           = 100000;
+const int kMediumLength        = 1000;
+const int kFlakyTruncateLength = 9000;
+const int kFlakySleepEvery     = 7;
+const int kFlakySleepSecs      = 10;
+
+}  // namespace
+
 namespace chromeos_update_engine {
 
-namespace {
-// WARNING, if you update these, you must also update test_http_server.cc.
-const char* const kServerPort = "8088";
-const int kBigSize = 100000;
-string LocalServerUrlForPath(const string& path) {
-  return string("http://127.0.0.1:") + kServerPort + path;
-}
+static const char *kUnusedUrl = "unused://unused";
+
+static inline string LocalServerUrlForPath(const string& path) {
+  return (string("http://127.0.0.1:") + base::StringPrintf("%d", kServerPort) + path);
 }
 
-template <typename T>
-class HttpFetcherTest : public ::testing::Test {
- public:
-  HttpFetcher* NewLargeFetcher() = 0;
-  HttpFetcher* NewSmallFetcher() = 0;
-  string BigUrl() const = 0;
-  string SmallUrl() const = 0;
-  string ErrorUrl() const = 0;
-  bool IsMock() const = 0;
-  bool IsMulti() const = 0;
-};
 
-class NullHttpServer {
+//
+// Class hierarchy for HTTP server implementations.
+//
+
+class HttpServer {
  public:
-  NullHttpServer() : started_(true) {}
-  ~NullHttpServer() {}
+  // This makes it an abstract class (dirty but works).
+  virtual ~HttpServer() = 0;
+
   bool started_;
 };
 
+HttpServer::~HttpServer() {}
 
-template <>
-class HttpFetcherTest<MockHttpFetcher> : public ::testing::Test {
+
+class NullHttpServer : public HttpServer {
  public:
-  HttpFetcher* NewLargeFetcher() {
-    vector<char> big_data(1000000);
-    return new MockHttpFetcher(
-        big_data.data(),
-        big_data.size(),
-        reinterpret_cast<ProxyResolver*>(&proxy_resolver_));
+  NullHttpServer() {
+    started_ = true;
   }
-  HttpFetcher* NewSmallFetcher() {
-    return new MockHttpFetcher(
-        "x",
-        1,
-        reinterpret_cast<ProxyResolver*>(&proxy_resolver_));
-  }
-  string BigUrl() const {
-    return "unused://unused";
-  }
-  string SmallUrl() const {
-    return "unused://unused";
-  }
-  string ErrorUrl() const {
-    return "unused://unused";
-  }
-  bool IsMock() const { return true; }
-  bool IsMulti() const { return false; }
-  typedef NullHttpServer HttpServer;
-  void IgnoreServerAborting(HttpServer* server) const {}
-  
-  DirectProxyResolver proxy_resolver_;
 };
 
-class PythonHttpServer {
+
+class PythonHttpServer : public HttpServer {
  public:
   PythonHttpServer() {
     char *argv[2] = {strdup("./test_http_server"), NULL};
@@ -129,8 +109,8 @@ class PythonHttpServer {
     }
     free(argv[0]);
     LOG(INFO) << "gdb attach now!";
-    return;
   }
+
   ~PythonHttpServer() {
     if (!started_)
       return;
@@ -143,15 +123,84 @@ class PythonHttpServer {
       EXPECT_EQ(0, rc);
     waitpid(pid_, NULL, 0);
   }
+
   GPid pid_;
-  bool started_;
   bool validate_quit_;
 };
 
-template <>
-class HttpFetcherTest<LibcurlHttpFetcher> : public ::testing::Test {
+
+
+//
+// Class hierarchy for HTTP fetcher test wrappers.
+//
+
+class AnyHttpFetcherTest {
  public:
-  virtual HttpFetcher* NewLargeFetcher() {
+  virtual HttpFetcher* NewLargeFetcher(size_t num_proxies) = 0;
+  HttpFetcher* NewLargeFetcher() {
+    return NewLargeFetcher(1);
+  }
+
+  virtual HttpFetcher* NewSmallFetcher(size_t num_proxies) = 0;
+  HttpFetcher* NewSmallFetcher() {
+    return NewSmallFetcher(1);
+  }
+
+  virtual string BigUrl() const { return kUnusedUrl; }
+  virtual string SmallUrl() const { return kUnusedUrl; }
+  virtual string ErrorUrl() const { return kUnusedUrl; }
+
+  virtual bool IsMock() const = 0;
+  virtual bool IsMulti() const = 0;
+
+  virtual void IgnoreServerAborting(HttpServer* server) const {}
+
+  virtual HttpServer *CreateServer() = 0;
+
+ protected:
+  DirectProxyResolver proxy_resolver_;
+};
+
+class MockHttpFetcherTest : public AnyHttpFetcherTest {
+ public:
+  // Necessary to unhide the definition in the base class.
+  using AnyHttpFetcherTest::NewLargeFetcher;
+  virtual HttpFetcher* NewLargeFetcher(size_t num_proxies) {
+    vector<char> big_data(1000000);
+    CHECK(num_proxies > 0);
+    proxy_resolver_.set_num_proxies(num_proxies);
+    return new MockHttpFetcher(
+        big_data.data(),
+        big_data.size(),
+        reinterpret_cast<ProxyResolver*>(&proxy_resolver_));
+  }
+
+  // Necessary to unhide the definition in the base class.
+  using AnyHttpFetcherTest::NewSmallFetcher;
+  virtual HttpFetcher* NewSmallFetcher(size_t num_proxies) {
+    CHECK(num_proxies > 0);
+    proxy_resolver_.set_num_proxies(num_proxies);
+    return new MockHttpFetcher(
+        "x",
+        1,
+        reinterpret_cast<ProxyResolver*>(&proxy_resolver_));
+  }
+
+  virtual bool IsMock() const { return true; }
+  virtual bool IsMulti() const { return false; }
+
+  virtual HttpServer *CreateServer() {
+    return new NullHttpServer;
+  }
+};
+
+class LibcurlHttpFetcherTest : public AnyHttpFetcherTest {
+ public:
+  // Necessary to unhide the definition in the base class.
+  using AnyHttpFetcherTest::NewLargeFetcher;
+  virtual HttpFetcher* NewLargeFetcher(size_t num_proxies) {
+    CHECK(num_proxies > 0);
+    proxy_resolver_.set_num_proxies(num_proxies);
     LibcurlHttpFetcher *ret = new
         LibcurlHttpFetcher(reinterpret_cast<ProxyResolver*>(&proxy_resolver_));
     // Speed up test execution.
@@ -161,37 +210,48 @@ class HttpFetcherTest<LibcurlHttpFetcher> : public ::testing::Test {
     ret->SetBuildType(false);
     return ret;
   }
-  HttpFetcher* NewSmallFetcher() {
-    return NewLargeFetcher();
+
+  // Necessary to unhide the definition in the base class.
+  using AnyHttpFetcherTest::NewSmallFetcher;
+  virtual HttpFetcher* NewSmallFetcher(size_t num_proxies) {
+    return NewLargeFetcher(num_proxies);
   }
-  string BigUrl() const {
-    return LocalServerUrlForPath("/big");
+
+  virtual string BigUrl() const {
+    return LocalServerUrlForPath(base::StringPrintf("/download/%d",
+                                                    kBigLength));
   }
-  string SmallUrl() const {
+  virtual string SmallUrl() const {
     return LocalServerUrlForPath("/foo");
   }
-  string ErrorUrl() const {
+  virtual string ErrorUrl() const {
     return LocalServerUrlForPath("/error");
   }
-  bool IsMock() const { return false; }
-  bool IsMulti() const { return false; }
-  typedef PythonHttpServer HttpServer;
-  void IgnoreServerAborting(HttpServer* server) const {
+
+  virtual bool IsMock() const { return false; }
+  virtual bool IsMulti() const { return false; }
+
+  virtual void IgnoreServerAborting(HttpServer* server) const {
     PythonHttpServer *pyserver = reinterpret_cast<PythonHttpServer*>(server);
     pyserver->validate_quit_ = false;
   }
-  DirectProxyResolver proxy_resolver_;
+
+  virtual HttpServer *CreateServer() {
+    return new PythonHttpServer;
+  }
 };
 
-template <>
-class HttpFetcherTest<MultiRangeHTTPFetcher>
-    : public HttpFetcherTest<LibcurlHttpFetcher> {
+class MultiRangeHttpFetcherTest : public LibcurlHttpFetcherTest {
  public:
-  HttpFetcher* NewLargeFetcher() {
+  // Necessary to unhide the definition in the base class.
+  using AnyHttpFetcherTest::NewLargeFetcher;
+  virtual HttpFetcher* NewLargeFetcher(size_t num_proxies) {
+    CHECK(num_proxies > 0);
+    proxy_resolver_.set_num_proxies(num_proxies);
     ProxyResolver* resolver =
         reinterpret_cast<ProxyResolver*>(&proxy_resolver_);
-    MultiRangeHTTPFetcher *ret =
-        new MultiRangeHTTPFetcher(new LibcurlHttpFetcher(resolver));
+    MultiRangeHttpFetcher *ret =
+        new MultiRangeHttpFetcher(new LibcurlHttpFetcher(resolver));
     ret->ClearRanges();
     ret->AddRange(0, -1);
     // Speed up test execution.
@@ -201,20 +261,47 @@ class HttpFetcherTest<MultiRangeHTTPFetcher>
     ret->SetBuildType(false);
     return ret;
   }
-  bool IsMulti() const { return true; }
-  DirectProxyResolver proxy_resolver_;
+
+  // Necessary to unhide the definition in the base class.
+  using AnyHttpFetcherTest::NewSmallFetcher;
+  virtual HttpFetcher* NewSmallFetcher(size_t num_proxies) {
+    return NewLargeFetcher(num_proxies);
+  }
+
+  virtual bool IsMulti() const { return true; }
 };
 
-typedef ::testing::Types<LibcurlHttpFetcher,
-                         MockHttpFetcher,
-                         MultiRangeHTTPFetcher>
-HttpFetcherTestTypes;
+
+//
+// Infrastructure for type tests of HTTP fetcher.
+// See: http://code.google.com/p/googletest/wiki/AdvancedGuide#Typed_Tests
+//
+
+// Fixture class template. We use an explicit constraint to guarantee that it
+// can only be instantiated with an AnyHttpFetcherTest type, see:
+// http://www2.research.att.com/~bs/bs_faq2.html#constraints
+template <typename T>
+class HttpFetcherTest : public ::testing::Test {
+ public:
+  T test_;
+
+ private:
+  static void TypeConstraint(T *a) {
+    AnyHttpFetcherTest *b = a;
+  }
+};
+
+// Test case types list.
+typedef ::testing::Types<LibcurlHttpFetcherTest,
+                         MockHttpFetcherTest,
+                         MultiRangeHttpFetcherTest> HttpFetcherTestTypes;
 TYPED_TEST_CASE(HttpFetcherTest, HttpFetcherTestTypes);
+
 
 namespace {
 class HttpFetcherTestDelegate : public HttpFetcherDelegate {
  public:
-  HttpFetcherTestDelegate(void) :
+  HttpFetcherTestDelegate() :
       is_expect_error_(false), times_transfer_complete_called_(0),
       times_transfer_terminated_called_(0), times_received_bytes_called_(0) {}
 
@@ -230,9 +317,9 @@ class HttpFetcherTestDelegate : public HttpFetcherDelegate {
 
   virtual void TransferComplete(HttpFetcher* fetcher, bool successful) {
     if (is_expect_error_)
-      EXPECT_EQ(404, fetcher->http_response_code());
+      EXPECT_EQ(kHttpResponseNotFound, fetcher->http_response_code());
     else
-      EXPECT_EQ(200, fetcher->http_response_code());
+      EXPECT_EQ(kHttpResponseOk, fetcher->http_response_code());
     g_main_loop_quit(loop_);
 
     // Update counter
@@ -272,13 +359,13 @@ TYPED_TEST(HttpFetcherTest, SimpleTest) {
   {
     HttpFetcherTestDelegate delegate;
     delegate.loop_ = loop;
-    scoped_ptr<HttpFetcher> fetcher(this->NewSmallFetcher());
+    scoped_ptr<HttpFetcher> fetcher(this->test_.NewSmallFetcher());
     fetcher->set_delegate(&delegate);
 
-    typename TestFixture::HttpServer server;
-    ASSERT_TRUE(server.started_);
+    scoped_ptr<HttpServer> server(this->test_.CreateServer());
+    ASSERT_TRUE(server->started_);
 
-    StartTransferArgs start_xfer_args = {fetcher.get(), this->SmallUrl()};
+    StartTransferArgs start_xfer_args = {fetcher.get(), this->test_.SmallUrl()};
 
     g_timeout_add(0, StartTransfer, &start_xfer_args);
     g_main_loop_run(loop);
@@ -291,13 +378,13 @@ TYPED_TEST(HttpFetcherTest, SimpleBigTest) {
   {
     HttpFetcherTestDelegate delegate;
     delegate.loop_ = loop;
-    scoped_ptr<HttpFetcher> fetcher(this->NewLargeFetcher());
+    scoped_ptr<HttpFetcher> fetcher(this->test_.NewLargeFetcher());
     fetcher->set_delegate(&delegate);
 
-    typename TestFixture::HttpServer server;
-    ASSERT_TRUE(server.started_);
+    scoped_ptr<HttpServer> server(this->test_.CreateServer());
+    ASSERT_TRUE(server->started_);
 
-    StartTransferArgs start_xfer_args = {fetcher.get(), this->BigUrl()};
+    StartTransferArgs start_xfer_args = {fetcher.get(), this->test_.BigUrl()};
 
     g_timeout_add(0, StartTransfer, &start_xfer_args);
     g_main_loop_run(loop);
@@ -308,7 +395,7 @@ TYPED_TEST(HttpFetcherTest, SimpleBigTest) {
 // Issue #9648: when server returns an error HTTP response, the fetcher needs to
 // terminate transfer prematurely, rather than try to process the error payload.
 TYPED_TEST(HttpFetcherTest, ErrorTest) {
-  if (this->IsMock() || this->IsMulti())
+  if (this->test_.IsMock() || this->test_.IsMulti())
     return;
   GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
   {
@@ -318,13 +405,16 @@ TYPED_TEST(HttpFetcherTest, ErrorTest) {
     // Delegate should expect an error response.
     delegate.is_expect_error_ = true;
 
-    scoped_ptr<HttpFetcher> fetcher(this->NewSmallFetcher());
+    scoped_ptr<HttpFetcher> fetcher(this->test_.NewSmallFetcher());
     fetcher->set_delegate(&delegate);
 
-    typename TestFixture::HttpServer server;
-    ASSERT_TRUE(server.started_);
+    scoped_ptr<HttpServer> server(this->test_.CreateServer());
+    ASSERT_TRUE(server->started_);
 
-    StartTransferArgs start_xfer_args = {fetcher.get(), this->ErrorUrl()};
+    StartTransferArgs start_xfer_args = {
+      fetcher.get(),
+      this->test_.ErrorUrl()
+    };
 
     g_timeout_add(0, StartTransfer, &start_xfer_args);
     g_main_loop_run(loop);
@@ -340,7 +430,6 @@ TYPED_TEST(HttpFetcherTest, ErrorTest) {
   }
   g_main_loop_unref(loop);
 }
-
 
 namespace {
 class PausingHttpFetcherTestDelegate : public HttpFetcherDelegate {
@@ -383,17 +472,18 @@ TYPED_TEST(HttpFetcherTest, PauseTest) {
   GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
   {
     PausingHttpFetcherTestDelegate delegate;
-    scoped_ptr<HttpFetcher> fetcher(this->NewLargeFetcher());
+    scoped_ptr<HttpFetcher> fetcher(this->test_.NewLargeFetcher());
     delegate.paused_ = false;
     delegate.loop_ = loop;
     delegate.fetcher_ = fetcher.get();
     fetcher->set_delegate(&delegate);
 
-    typename TestFixture::HttpServer server;
-    ASSERT_TRUE(server.started_);
+    scoped_ptr<HttpServer> server(this->test_.CreateServer());
+    ASSERT_TRUE(server->started_);
 
-    guint callback_id = g_timeout_add(500, UnpausingTimeoutCallback, &delegate);
-    fetcher->BeginTransfer(this->BigUrl());
+    guint callback_id = g_timeout_add(kHttpResponseInternalServerError,
+                                      UnpausingTimeoutCallback, &delegate);
+    fetcher->BeginTransfer(this->test_.BigUrl());
 
     g_main_loop_run(loop);
     g_source_remove(callback_id);
@@ -449,21 +539,22 @@ TYPED_TEST(HttpFetcherTest, AbortTest) {
   GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
   {
     AbortingHttpFetcherTestDelegate delegate;
-    delegate.fetcher_.reset(this->NewLargeFetcher());
+    delegate.fetcher_.reset(this->test_.NewLargeFetcher());
     delegate.once_ = true;
     delegate.callback_once_ = true;
     delegate.loop_ = loop;
     delegate.fetcher_->set_delegate(&delegate);
 
-    typename TestFixture::HttpServer server;
-    this->IgnoreServerAborting(&server);
-    ASSERT_TRUE(server.started_);
+    scoped_ptr<HttpServer> server(this->test_.CreateServer());
+    this->test_.IgnoreServerAborting(server.get());
+    ASSERT_TRUE(server->started_);
+
     GSource* timeout_source_;
     timeout_source_ = g_timeout_source_new(0);  // ms
     g_source_set_callback(timeout_source_, AbortingTimeoutCallback, &delegate,
                           NULL);
     g_source_attach(timeout_source_, NULL);
-    delegate.fetcher_->BeginTransfer(this->BigUrl());
+    delegate.fetcher_->BeginTransfer(this->test_.BigUrl());
 
     g_main_loop_run(loop);
     CHECK(!delegate.once_);
@@ -482,7 +573,7 @@ class FlakyHttpFetcherTestDelegate : public HttpFetcherDelegate {
   }
   virtual void TransferComplete(HttpFetcher* fetcher, bool successful) {
     EXPECT_TRUE(successful);
-    EXPECT_EQ(206, fetcher->http_response_code());
+    EXPECT_EQ(kHttpResponsePartialContent, fetcher->http_response_code());
     g_main_loop_quit(loop_);
   }
   virtual void TransferTerminated(HttpFetcher* fetcher) {
@@ -494,29 +585,32 @@ class FlakyHttpFetcherTestDelegate : public HttpFetcherDelegate {
 }  // namespace {}
 
 TYPED_TEST(HttpFetcherTest, FlakyTest) {
-  if (this->IsMock())
+  if (this->test_.IsMock())
     return;
   GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
   {
     FlakyHttpFetcherTestDelegate delegate;
     delegate.loop_ = loop;
-    scoped_ptr<HttpFetcher> fetcher(this->NewSmallFetcher());
+    scoped_ptr<HttpFetcher> fetcher(this->test_.NewSmallFetcher());
     fetcher->set_delegate(&delegate);
 
-    typename TestFixture::HttpServer server;
-    ASSERT_TRUE(server.started_);
+    scoped_ptr<HttpServer> server(this->test_.CreateServer());
+    ASSERT_TRUE(server->started_);
 
     StartTransferArgs start_xfer_args = {
       fetcher.get(),
-      LocalServerUrlForPath("/flaky")
+      LocalServerUrlForPath(StringPrintf("/flaky/%d/%d/%d/%d", kBigLength,
+                                         kFlakyTruncateLength,
+                                         kFlakySleepEvery,
+                                         kFlakySleepSecs))
     };
 
     g_timeout_add(0, StartTransfer, &start_xfer_args);
     g_main_loop_run(loop);
 
     // verify the data we get back
-    ASSERT_EQ(100000, delegate.data.size());
-    for (int i = 0; i < 100000; i += 10) {
+    ASSERT_EQ(kBigLength, delegate.data.size());
+    for (int i = 0; i < kBigLength; i += 10) {
       // Assert so that we don't flood the screen w/ EXPECT errors on failure.
       ASSERT_EQ(delegate.data.substr(i, 10), "abcdefghij");
     }
@@ -552,18 +646,18 @@ class FailureHttpFetcherTestDelegate : public HttpFetcherDelegate {
 
 
 TYPED_TEST(HttpFetcherTest, FailureTest) {
-  if (this->IsMock())
+  if (this->test_.IsMock())
     return;
   GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
   {
     FailureHttpFetcherTestDelegate delegate;
     delegate.loop_ = loop;
-    scoped_ptr<HttpFetcher> fetcher(this->NewSmallFetcher());
+    scoped_ptr<HttpFetcher> fetcher(this->test_.NewSmallFetcher());
     fetcher->set_delegate(&delegate);
 
     StartTransferArgs start_xfer_args = {
       fetcher.get(),
-      LocalServerUrlForPath(this->SmallUrl())
+      LocalServerUrlForPath(this->test_.SmallUrl())
     };
 
     g_timeout_add(0, StartTransfer, &start_xfer_args);
@@ -575,19 +669,22 @@ TYPED_TEST(HttpFetcherTest, FailureTest) {
 }
 
 TYPED_TEST(HttpFetcherTest, ServerDiesTest) {
-  if (this->IsMock())
+  if (this->test_.IsMock())
     return;
   GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
   {
     FailureHttpFetcherTestDelegate delegate;
     delegate.loop_ = loop;
     delegate.server_ = new PythonHttpServer;
-    scoped_ptr<HttpFetcher> fetcher(this->NewSmallFetcher());
+    scoped_ptr<HttpFetcher> fetcher(this->test_.NewSmallFetcher());
     fetcher->set_delegate(&delegate);
 
     StartTransferArgs start_xfer_args = {
       fetcher.get(),
-      LocalServerUrlForPath("/flaky")
+      LocalServerUrlForPath(StringPrintf("/flaky/%d/%d/%d/%d", kBigLength,
+                                         kFlakyTruncateLength,
+                                         kFlakySleepEvery,
+                                         kFlakySleepSecs))
     };
 
     g_timeout_add(0, StartTransfer, &start_xfer_args);
@@ -599,7 +696,10 @@ TYPED_TEST(HttpFetcherTest, ServerDiesTest) {
 }
 
 namespace {
-const int kRedirectCodes[] = { 301, 302, 303, 307 };
+const HttpResponseCode kRedirectCodes[] = {
+  kHttpResponseMovedPermanently, kHttpResponseFound, kHttpResponseSeeOther,
+  kHttpResponseTempRedirect
+};
 
 class RedirectHttpFetcherTestDelegate : public HttpFetcherDelegate {
  public:
@@ -612,10 +712,10 @@ class RedirectHttpFetcherTestDelegate : public HttpFetcherDelegate {
   virtual void TransferComplete(HttpFetcher* fetcher, bool successful) {
     EXPECT_EQ(expected_successful_, successful);
     if (expected_successful_)
-      EXPECT_EQ(200, fetcher->http_response_code());
+      EXPECT_EQ(kHttpResponseOk, fetcher->http_response_code());
     else {
-      EXPECT_GE(fetcher->http_response_code(), 301);
-      EXPECT_LE(fetcher->http_response_code(), 307);
+      EXPECT_GE(fetcher->http_response_code(), kHttpResponseMovedPermanently);
+      EXPECT_LE(fetcher->http_response_code(), kHttpResponseTempRedirect);
     }
     g_main_loop_quit(loop_);
   }
@@ -644,8 +744,8 @@ void RedirectTest(bool expected_successful,
   g_main_loop_run(loop);
   if (expected_successful) {
     // verify the data we get back
-    ASSERT_EQ(1000, delegate.data.size());
-    for (int i = 0; i < 1000; i += 10) {
+    ASSERT_EQ(kMediumLength, delegate.data.size());
+    for (int i = 0; i < kMediumLength; i += 10) {
       // Assert so that we don't flood the screen w/ EXPECT errors on failure.
       ASSERT_EQ(delegate.data.substr(i, 10), "abcdefghij");
     }
@@ -655,43 +755,50 @@ void RedirectTest(bool expected_successful,
 }  // namespace {}
 
 TYPED_TEST(HttpFetcherTest, SimpleRedirectTest) {
-  if (this->IsMock())
+  if (this->test_.IsMock())
     return;
-  typename TestFixture::HttpServer server;
-  ASSERT_TRUE(server.started_);
+
+  scoped_ptr<HttpServer> server(this->test_.CreateServer());
+  ASSERT_TRUE(server->started_);
+
   for (size_t c = 0; c < arraysize(kRedirectCodes); ++c) {
-    const string url = base::StringPrintf("/redirect/%d/medium",
-                                          kRedirectCodes[c]);
-    RedirectTest(true, url, this->NewLargeFetcher());
+    const string url = base::StringPrintf("/redirect/%d/download/%d",
+                                          kRedirectCodes[c],
+                                          kMediumLength);
+    RedirectTest(true, url, this->test_.NewLargeFetcher());
   }
 }
 
 TYPED_TEST(HttpFetcherTest, MaxRedirectTest) {
-  if (this->IsMock())
+  if (this->test_.IsMock())
     return;
-  typename TestFixture::HttpServer server;
-  ASSERT_TRUE(server.started_);
+
+  scoped_ptr<HttpServer> server(this->test_.CreateServer());
+  ASSERT_TRUE(server->started_);
+
   string url;
   for (int r = 0; r < LibcurlHttpFetcher::kMaxRedirects; r++) {
     url += base::StringPrintf("/redirect/%d",
                               kRedirectCodes[r % arraysize(kRedirectCodes)]);
   }
-  url += "/medium";
-  RedirectTest(true, url, this->NewLargeFetcher());
+  url += base::StringPrintf("/download/%d", kMediumLength);
+  RedirectTest(true, url, this->test_.NewLargeFetcher());
 }
 
 TYPED_TEST(HttpFetcherTest, BeyondMaxRedirectTest) {
-  if (this->IsMock())
+  if (this->test_.IsMock())
     return;
-  typename TestFixture::HttpServer server;
-  ASSERT_TRUE(server.started_);
+
+  scoped_ptr<HttpServer> server(this->test_.CreateServer());
+  ASSERT_TRUE(server->started_);
+
   string url;
   for (int r = 0; r < LibcurlHttpFetcher::kMaxRedirects + 1; r++) {
     url += base::StringPrintf("/redirect/%d",
                               kRedirectCodes[r % arraysize(kRedirectCodes)]);
   }
-  url += "/medium";
-  RedirectTest(false, url, this->NewLargeFetcher());
+  url += base::StringPrintf("/download/%d", kMediumLength);
+  RedirectTest(false, url, this->test_.NewLargeFetcher());
 }
 
 namespace {
@@ -706,7 +813,7 @@ class MultiHttpFetcherTestDelegate : public HttpFetcherDelegate {
   }
   virtual void TransferComplete(HttpFetcher* fetcher, bool successful) {
     EXPECT_EQ(fetcher, fetcher_.get());
-    EXPECT_EQ(expected_response_code_ != 0, successful);
+    EXPECT_EQ(expected_response_code_ != kHttpResponseUndefined, successful);
     if (expected_response_code_ != 0)
       EXPECT_EQ(expected_response_code_, fetcher->http_response_code());
     // Destroy the fetcher (because we're allowed to).
@@ -727,14 +834,14 @@ void MultiTest(HttpFetcher* fetcher_in,
                const vector<pair<off_t, off_t> >& ranges,
                const string& expected_prefix,
                off_t expected_size,
-               int expected_response_code) {
+               HttpResponseCode expected_response_code) {
   GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
   {
     MultiHttpFetcherTestDelegate delegate(expected_response_code);
     delegate.loop_ = loop;
     delegate.fetcher_.reset(fetcher_in);
-    MultiRangeHTTPFetcher* multi_fetcher =
-        dynamic_cast<MultiRangeHTTPFetcher*>(fetcher_in);
+    MultiRangeHttpFetcher* multi_fetcher =
+        dynamic_cast<MultiRangeHttpFetcher*>(fetcher_in);
     ASSERT_TRUE(multi_fetcher);
     multi_fetcher->ClearRanges();
     for (vector<pair<off_t, off_t> >::const_iterator it = ranges.begin(),
@@ -760,74 +867,125 @@ void MultiTest(HttpFetcher* fetcher_in,
 }  // namespace {}
 
 TYPED_TEST(HttpFetcherTest, MultiHttpFetcherSimpleTest) {
-  if (!this->IsMulti())
+  if (!this->test_.IsMulti())
     return;
-  typename TestFixture::HttpServer server;
-  ASSERT_TRUE(server.started_);
+
+  scoped_ptr<HttpServer> server(this->test_.CreateServer());
+  ASSERT_TRUE(server->started_);
 
   vector<pair<off_t, off_t> > ranges;
   ranges.push_back(make_pair(0, 25));
   ranges.push_back(make_pair(99, -1));
-  MultiTest(this->NewLargeFetcher(),
-            this->BigUrl(),
+  MultiTest(this->test_.NewLargeFetcher(),
+            this->test_.BigUrl(),
             ranges,
             "abcdefghijabcdefghijabcdejabcdefghijabcdef",
-            kBigSize - (99 - 25),
-            206);
+            kBigLength - (99 - 25),
+            kHttpResponsePartialContent);
 }
 
 TYPED_TEST(HttpFetcherTest, MultiHttpFetcherLengthLimitTest) {
-  if (!this->IsMulti())
+  if (!this->test_.IsMulti())
     return;
-  typename TestFixture::HttpServer server;
-  ASSERT_TRUE(server.started_);
+
+  scoped_ptr<HttpServer> server(this->test_.CreateServer());
+  ASSERT_TRUE(server->started_);
 
   vector<pair<off_t, off_t> > ranges;
   ranges.push_back(make_pair(0, 24));
-  MultiTest(this->NewLargeFetcher(),
-            this->BigUrl(),
+  MultiTest(this->test_.NewLargeFetcher(),
+            this->test_.BigUrl(),
             ranges,
             "abcdefghijabcdefghijabcd",
             24,
-            200);
+            kHttpResponseOk);
 }
 
 TYPED_TEST(HttpFetcherTest, MultiHttpFetcherMultiEndTest) {
-  if (!this->IsMulti())
+  if (!this->test_.IsMulti())
     return;
-  typename TestFixture::HttpServer server;
-  ASSERT_TRUE(server.started_);
+
+  scoped_ptr<HttpServer> server(this->test_.CreateServer());
+  ASSERT_TRUE(server->started_);
 
   vector<pair<off_t, off_t> > ranges;
-  ranges.push_back(make_pair(kBigSize - 2, -1));
-  ranges.push_back(make_pair(kBigSize - 3, -1));
-  MultiTest(this->NewLargeFetcher(),
-            this->BigUrl(),
+  ranges.push_back(make_pair(kBigLength - 2, -1));
+  ranges.push_back(make_pair(kBigLength - 3, -1));
+  MultiTest(this->test_.NewLargeFetcher(),
+            this->test_.BigUrl(),
             ranges,
             "ijhij",
             5,
-            206);
+            kHttpResponsePartialContent);
 }
 
 TYPED_TEST(HttpFetcherTest, MultiHttpFetcherInsufficientTest) {
-  if (!this->IsMulti())
+  if (!this->test_.IsMulti())
     return;
-  typename TestFixture::HttpServer server;
-  ASSERT_TRUE(server.started_);
+
+  scoped_ptr<HttpServer> server(this->test_.CreateServer());
+  ASSERT_TRUE(server->started_);
 
   vector<pair<off_t, off_t> > ranges;
-  ranges.push_back(make_pair(kBigSize - 2, 4));
+  ranges.push_back(make_pair(kBigLength - 2, 4));
   for (int i = 0; i < 2; ++i) {
     LOG(INFO) << "i = " << i;
-    MultiTest(this->NewLargeFetcher(),
-              this->BigUrl(),
+    MultiTest(this->test_.NewLargeFetcher(),
+              this->test_.BigUrl(),
               ranges,
               "ij",
               2,
-              0);
+              kHttpResponseUndefined);
     ranges.push_back(make_pair(0, 5));
   }
 }
+
+// Issue #18143: when a fetch of a secondary chunk out of a chain, then it
+// should retry with other proxies listed before giving up.
+//
+// (1) successful recovery: The offset fetch will fail twice but succeed with
+// the third proxy.
+TYPED_TEST(HttpFetcherTest, MultiHttpFetcherErrorIfOffsetRecoverableTest) {
+  if (!this->test_.IsMulti())
+    return;
+
+  scoped_ptr<HttpServer> server(this->test_.CreateServer());
+  ASSERT_TRUE(server->started_);
+
+  vector<pair<off_t, off_t> > ranges;
+  ranges.push_back(make_pair(0, 25));
+  ranges.push_back(make_pair(99, -1));
+  MultiTest(this->test_.NewLargeFetcher(3),
+            LocalServerUrlForPath(base::StringPrintf("/error-if-offset/%d/2",
+                                                     kBigLength)),
+            ranges,
+            "abcdefghijabcdefghijabcdejabcdefghijabcdef",
+            kBigLength - (99 - 25),
+            kHttpResponsePartialContent);
+}
+
+// (2) unsuccessful recovery: The offset fetch will fail repeatedly.  The
+// fetcher will signal a (failed) completed transfer to the delegate.
+TYPED_TEST(HttpFetcherTest, MultiHttpFetcherErrorIfOffsetUnrecoverableTest) {
+  if (!this->test_.IsMulti())
+    return;
+
+  scoped_ptr<HttpServer> server(this->test_.CreateServer());
+  ASSERT_TRUE(server->started_);
+
+  vector<pair<off_t, off_t> > ranges;
+  ranges.push_back(make_pair(0, 25));
+  ranges.push_back(make_pair(99, -1));
+  MultiTest(this->test_.NewLargeFetcher(2),
+            LocalServerUrlForPath(base::StringPrintf("/error-if-offset/%d/3",
+                                                     kBigLength)),
+            ranges,
+            "abcdefghijabcdefghijabcde",  // only received the first chunk
+            25,
+            kHttpResponseUndefined);
+}
+
+
 
 namespace {
 class BlockedTransferTestDelegate : public HttpFetcherDelegate {
@@ -849,19 +1007,18 @@ class BlockedTransferTestDelegate : public HttpFetcherDelegate {
 }  // namespace
 
 TYPED_TEST(HttpFetcherTest, BlockedTransferTest) {
-  if (this->IsMock() || this->IsMulti())
+  if (this->test_.IsMock() || this->test_.IsMulti())
     return;
 
   for (int i = 0; i < 2; i++) {
-    typename TestFixture::HttpServer server;
-
-    ASSERT_TRUE(server.started_);
+    scoped_ptr<HttpServer> server(this->test_.CreateServer());
+    ASSERT_TRUE(server->started_);
 
     GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
     BlockedTransferTestDelegate delegate;
     delegate.loop_ = loop;
 
-    scoped_ptr<HttpFetcher> fetcher(this->NewLargeFetcher());
+    scoped_ptr<HttpFetcher> fetcher(this->test_.NewLargeFetcher());
     LibcurlHttpFetcher* curl_fetcher =
         dynamic_cast<LibcurlHttpFetcher*>(fetcher.get());
     bool is_expensive_connection = (i == 0);
@@ -873,7 +1030,7 @@ TYPED_TEST(HttpFetcherTest, BlockedTransferTest) {
     fetcher->set_delegate(&delegate);
 
     StartTransferArgs start_xfer_args =
-        { fetcher.get(), LocalServerUrlForPath(this->SmallUrl()) };
+        { fetcher.get(), LocalServerUrlForPath(this->test_.SmallUrl()) };
 
     g_timeout_add(0, StartTransfer, &start_xfer_args);
     g_main_loop_run(loop);

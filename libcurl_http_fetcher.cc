@@ -246,24 +246,33 @@ void LibcurlHttpFetcher::CurlPerformOnce() {
       return;
     }
 
-    if (!sent_byte_ && ! IsHttpResponseSuccess()) {
+    if ((!sent_byte_ && !IsHttpResponseSuccess()) || IsHttpResponseError()) {
       // The transfer completed w/ error and we didn't get any bytes.
       // If we have another proxy to try, try that.
+      //
+      // TODO(garnold) in fact there are two separate cases here: one case is an
+      // other-than-success return code (including no return code) and no
+      // received bytes, which is necessary due to the way callbacks are
+      // currently processing error conditions;  the second is an explicit HTTP
+      // error code, where some data may have been received (as in the case of a
+      // semi-successful multi-chunk fetch).  This is a confusing behavior and
+      // should be unified into a complete, coherent interface.
+      LOG(INFO) << "Transfer resulted in an error (" << http_response_code_
+                << "), " << bytes_downloaded_ << " bytes downloaded";
 
       PopProxy();  // Delete the proxy we just gave up on.
 
       if (HasProxy()) {
         // We have another proxy. Retry immediately.
+        LOG(INFO) << "Trying next proxy: " << GetCurrentProxy();
         g_idle_add(&LibcurlHttpFetcher::StaticRetryTimeoutCallback, this);
       } else {
         // Out of proxies. Give up.
+        LOG(INFO) << "No further proxies, indicating transfer complete";
         if (delegate_)
-          delegate_->TransferComplete(this, false);  // success
+          delegate_->TransferComplete(this, false);  // signal fail
       }
-      return;
-    }
-
-    if ((transfer_size_ >= 0) && (bytes_downloaded_ < transfer_size_)) {
+    } else if ((transfer_size_ >= 0) && (bytes_downloaded_ < transfer_size_)) {
       // Need to restart transfer
       retry_count_++;
       LOG(INFO) << "Restarting transfer b/c we finished, had downloaded "
@@ -271,16 +280,16 @@ void LibcurlHttpFetcher::CurlPerformOnce() {
                 << transfer_size_ << ". retry_count: " << retry_count_;
       if (retry_count_ > kMaxRetriesCount) {
         if (delegate_)
-          delegate_->TransferComplete(this, false);  // success
+          delegate_->TransferComplete(this, false);  // signal fail
       } else {
         g_timeout_add_seconds(retry_seconds_,
                               &LibcurlHttpFetcher::StaticRetryTimeoutCallback,
                               this);
       }
-      return;
     } else {
+      LOG(INFO) << "Transfer completed (" << http_response_code_
+                << "), " << bytes_downloaded_ << " bytes downloaded";
       if (delegate_) {
-        // success is when http_response_code is 2xx
         bool success = IsHttpResponseSuccess();
         delegate_->TransferComplete(this, success);
       }
@@ -297,7 +306,7 @@ size_t LibcurlHttpFetcher::LibcurlWrite(void *ptr, size_t size, size_t nmemb) {
   const size_t payload_size = size * nmemb;
 
   // Do nothing if no payload or HTTP response is an error.
-  if (payload_size == 0 || ! IsHttpResponseSuccess()) {
+  if (payload_size == 0 || !IsHttpResponseSuccess()) {
     LOG(INFO) << "HTTP response unsuccessful (" << http_response_code_
               << ") or no payload (" << payload_size << "), nothing to do";
     return 0;

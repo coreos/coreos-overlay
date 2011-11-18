@@ -46,15 +46,25 @@ class ProxyResolver {
 // Always says to not use a proxy
 class DirectProxyResolver : public ProxyResolver {
  public:
-  DirectProxyResolver() : idle_callback_id_(0) {}
+  DirectProxyResolver() : idle_callback_id_(0), num_proxies_(1) {}
   virtual ~DirectProxyResolver();
   virtual bool GetProxiesForUrl(const std::string& url,
                                 ProxiesResolvedFn callback,
                                 void* data);
 
+  // Set the number of direct (non-) proxies to be returned by resolver.
+  // The default value is 1; higher numbers are currently used in testing.
+  inline void set_num_proxies(size_t num_proxies) {
+    num_proxies_ = num_proxies;
+  }
+
  private:
   // The ID of the idle main loop callback
   guint idle_callback_id_;
+
+  // Number of direct proxies to return on resolved list; currently used for
+  // testing.
+  size_t num_proxies_;
 
   // The MainLoop callback, from here we return to the client.
   void ReturnCallback(ProxiesResolvedFn callback, void* data);
