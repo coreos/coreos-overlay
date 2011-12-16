@@ -147,19 +147,21 @@ TEST_F(FlimFlamProxyTest, ExpensiveConnectionsTest) {
 }
 
 TEST_F(FlimFlamProxyTest, StringForConnectionTypeTest) {
-  EXPECT_EQ(kFlimFlamNetTypeEthernet,
-            FlimFlamProxy::StringForConnectionType(kNetEthernet));
-  EXPECT_EQ(kFlimFlamNetTypeWifi,
-            FlimFlamProxy::StringForConnectionType(kNetWifi));
-  EXPECT_EQ(kFlimFlamNetTypeWimax,
-            FlimFlamProxy::StringForConnectionType(kNetWimax));
-  EXPECT_EQ(kFlimFlamNetTypeBluetooth,
-            FlimFlamProxy::StringForConnectionType(kNetBluetooth));
-  EXPECT_EQ(kFlimFlamNetTypeCellular,
-            FlimFlamProxy::StringForConnectionType(kNetCellular));
-  EXPECT_EQ("Unknown", FlimFlamProxy::StringForConnectionType(kNetUnknown));
-  EXPECT_EQ("Unknown", FlimFlamProxy::StringForConnectionType(
-      static_cast<NetworkConnectionType>(999999)));
+  EXPECT_STREQ(kFlimFlamNetTypeEthernet,
+               FlimFlamProxy::StringForConnectionType(kNetEthernet));
+  EXPECT_STREQ(kFlimFlamNetTypeWifi,
+               FlimFlamProxy::StringForConnectionType(kNetWifi));
+  EXPECT_STREQ(kFlimFlamNetTypeWimax,
+               FlimFlamProxy::StringForConnectionType(kNetWimax));
+  EXPECT_STREQ(kFlimFlamNetTypeBluetooth,
+               FlimFlamProxy::StringForConnectionType(kNetBluetooth));
+  EXPECT_STREQ(kFlimFlamNetTypeCellular,
+               FlimFlamProxy::StringForConnectionType(kNetCellular));
+  EXPECT_STREQ("Unknown",
+               FlimFlamProxy::StringForConnectionType(kNetUnknown));
+  EXPECT_STREQ("Unknown",
+               FlimFlamProxy::StringForConnectionType(
+                   static_cast<NetworkConnectionType>(999999)));
 }
 
 }  // namespace chromeos_update_engine
