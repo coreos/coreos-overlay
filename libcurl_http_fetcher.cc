@@ -8,6 +8,7 @@
 #include <string>
 
 #include <base/logging.h>
+#include <base/stringprintf.h>
 
 #include "update_engine/certificate_checker.h"
 #include "update_engine/chrome_proxy_resolver.h"
@@ -92,12 +93,26 @@ void LibcurlHttpFetcher::ResumeTransfer(const std::string& url) {
              CURLE_OK);
   }
 
-  if (bytes_downloaded_ > 0) {
-    // Resume from where we left off
+  if (bytes_downloaded_ > 0 || download_length_) {
+    // Resume from where we left off.
     resume_offset_ = bytes_downloaded_;
-    CHECK_EQ(curl_easy_setopt(curl_handle_,
-                              CURLOPT_RESUME_FROM_LARGE,
-                              bytes_downloaded_), CURLE_OK);
+    CHECK_GE(resume_offset_, 0);
+
+    // Compute end offset, if one is specified. As per HTTP specification, this
+    // is an inclusive boundary. Make sure it doesn't overflow.
+    size_t end_offset = 0;
+    if (download_length_) {
+      end_offset = static_cast<size_t>(resume_offset_) + download_length_ - 1;
+      CHECK_LE((size_t) resume_offset_, end_offset);
+    }
+
+    // Create a string representation of the desired range.
+    std::string range_str = (end_offset ?
+                             StringPrintf("%jd-%zu", resume_offset_,
+                                          end_offset) :
+                             StringPrintf("%jd-", resume_offset_));
+    CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_RANGE, range_str.c_str()),
+             CURLE_OK);
   }
 
   CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_WRITEDATA, this), CURLE_OK);

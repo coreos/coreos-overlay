@@ -678,10 +678,10 @@ void UpdateAttempter::SetupDownload() {
     prefs_->GetInt64(kPrefsUpdateStateNextDataOffset, &next_data_offset);
     uint64_t resume_offset = manifest_metadata_size + next_data_offset;
     if (resume_offset < response_handler_action_->install_plan().size) {
-      fetcher->AddRange(resume_offset, -1);
+      fetcher->AddRange(resume_offset);
     }
   } else {
-    fetcher->AddRange(0, -1);
+    fetcher->AddRange(0);
   }
 }
 

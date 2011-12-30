@@ -253,7 +253,7 @@ class MultiRangeHttpFetcherTest : public LibcurlHttpFetcherTest {
     MultiRangeHttpFetcher *ret =
         new MultiRangeHttpFetcher(new LibcurlHttpFetcher(resolver));
     ret->ClearRanges();
-    ret->AddRange(0, -1);
+    ret->AddRange(0);
     // Speed up test execution.
     ret->set_idle_seconds(1);
     ret->set_retry_seconds(1);
@@ -806,11 +806,13 @@ class MultiHttpFetcherTestDelegate : public HttpFetcherDelegate {
  public:
   MultiHttpFetcherTestDelegate(int expected_response_code)
       : expected_response_code_(expected_response_code) {}
+
   virtual void ReceivedBytes(HttpFetcher* fetcher,
                              const char* bytes, int length) {
     EXPECT_EQ(fetcher, fetcher_.get());
     data.append(bytes, length);
   }
+
   virtual void TransferComplete(HttpFetcher* fetcher, bool successful) {
     EXPECT_EQ(fetcher, fetcher_.get());
     EXPECT_EQ(expected_response_code_ != kHttpResponseUndefined, successful);
@@ -820,9 +822,11 @@ class MultiHttpFetcherTestDelegate : public HttpFetcherDelegate {
     fetcher_.reset(NULL);
     g_main_loop_quit(loop_);
   }
+
   virtual void TransferTerminated(HttpFetcher* fetcher) {
     ADD_FAILURE();
   }
+
   scoped_ptr<HttpFetcher> fetcher_;
   int expected_response_code_;
   string data;
@@ -846,8 +850,15 @@ void MultiTest(HttpFetcher* fetcher_in,
     multi_fetcher->ClearRanges();
     for (vector<pair<off_t, off_t> >::const_iterator it = ranges.begin(),
              e = ranges.end(); it != e; ++it) {
-               LOG(INFO) << "Adding range";
-      multi_fetcher->AddRange(it->first, it->second);
+      std::string tmp_str = StringPrintf("%jd+", it->first);
+      if (it->second > 0) {
+        base::StringAppendF(&tmp_str, "%jd", it->second);
+        multi_fetcher->AddRange(it->first, it->second);
+      } else {
+        base::StringAppendF(&tmp_str, "?");
+        multi_fetcher->AddRange(it->first);
+      }
+      LOG(INFO) << "added range: " << tmp_str;
     }
     multi_fetcher->SetConnectionAsExpensive(false);
     multi_fetcher->SetBuildType(false);
@@ -875,7 +886,7 @@ TYPED_TEST(HttpFetcherTest, MultiHttpFetcherSimpleTest) {
 
   vector<pair<off_t, off_t> > ranges;
   ranges.push_back(make_pair(0, 25));
-  ranges.push_back(make_pair(99, -1));
+  ranges.push_back(make_pair(99, 0));
   MultiTest(this->test_.NewLargeFetcher(),
             this->test_.BigUrl(),
             ranges,
@@ -898,7 +909,7 @@ TYPED_TEST(HttpFetcherTest, MultiHttpFetcherLengthLimitTest) {
             ranges,
             "abcdefghijabcdefghijabcd",
             24,
-            kHttpResponseOk);
+            kHttpResponsePartialContent);
 }
 
 TYPED_TEST(HttpFetcherTest, MultiHttpFetcherMultiEndTest) {
@@ -909,8 +920,8 @@ TYPED_TEST(HttpFetcherTest, MultiHttpFetcherMultiEndTest) {
   ASSERT_TRUE(server->started_);
 
   vector<pair<off_t, off_t> > ranges;
-  ranges.push_back(make_pair(kBigLength - 2, -1));
-  ranges.push_back(make_pair(kBigLength - 3, -1));
+  ranges.push_back(make_pair(kBigLength - 2, 0));
+  ranges.push_back(make_pair(kBigLength - 3, 0));
   MultiTest(this->test_.NewLargeFetcher(),
             this->test_.BigUrl(),
             ranges,
@@ -954,7 +965,7 @@ TYPED_TEST(HttpFetcherTest, MultiHttpFetcherErrorIfOffsetRecoverableTest) {
 
   vector<pair<off_t, off_t> > ranges;
   ranges.push_back(make_pair(0, 25));
-  ranges.push_back(make_pair(99, -1));
+  ranges.push_back(make_pair(99, 0));
   MultiTest(this->test_.NewLargeFetcher(3),
             LocalServerUrlForPath(base::StringPrintf("/error-if-offset/%d/2",
                                                      kBigLength)),
@@ -975,7 +986,7 @@ TYPED_TEST(HttpFetcherTest, MultiHttpFetcherErrorIfOffsetUnrecoverableTest) {
 
   vector<pair<off_t, off_t> > ranges;
   ranges.push_back(make_pair(0, 25));
-  ranges.push_back(make_pair(99, -1));
+  ranges.push_back(make_pair(99, 0));
   MultiTest(this->test_.NewLargeFetcher(2),
             LocalServerUrlForPath(base::StringPrintf("/error-if-offset/%d/3",
                                                      kBigLength)),

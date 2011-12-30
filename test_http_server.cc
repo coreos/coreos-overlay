@@ -33,6 +33,9 @@
 #include "update_engine/http_fetcher_unittest.h"
 
 
+// HTTP end-of-line delimiter; sorry, this needs to be a macro.
+#define EOL "\r\n"
+
 using std::min;
 using std::string;
 using std::vector;
@@ -40,14 +43,13 @@ using std::vector;
 
 namespace chromeos_update_engine {
 
-// HTTP end-of-line delimiter; sorry, this needs to be a macro.
-#define EOL "\r\n"
-
 struct HttpRequest {
-  HttpRequest() : start_offset(0), return_code(kHttpResponseOk) {}
+  HttpRequest()
+      : start_offset(0), end_offset(0), return_code(kHttpResponseOk) {}
   string host;
   string url;
   off_t start_offset;
+  off_t end_offset;  // non-inclusive, zero indicates unspecified.
   HttpResponseCode return_code;
 };
 
@@ -91,10 +93,20 @@ bool ParseRequest(int fd, HttpRequest* request) {
       string &range = terms[1];
       LOG(INFO) << "range attribute: " << range;
       CHECK(StartsWithASCII(range, "bytes=", true) &&
-            EndsWith(range, "-", true));
+            range.find('-') != string::npos);
       request->start_offset = atoll(range.c_str() + strlen("bytes="));
+      // Decode end offset and increment it by one (so it is non-inclusive).
+      if (range.find('-') < range.length() - 1)
+        request->end_offset = atoll(range.c_str() + range.find('-') + 1) + 1;
       request->return_code = kHttpResponsePartialContent;
-      LOG(INFO) << "decoded start offset: " << request->start_offset;
+      std::string tmp_str = StringPrintf("decoded range offsets: start=%jd "
+                                         "end=", request->start_offset);
+      if (request->end_offset > 0)
+        base::StringAppendF(&tmp_str, "%jd (non-inclusive)",
+                            request->end_offset);
+      else
+        base::StringAppendF(&tmp_str, "unspecified");
+      LOG(INFO) << tmp_str;
     } else if (terms[0] == "Host:") {
       CHECK_EQ(terms.size(), 2);
       request->host = terms[1];
@@ -148,18 +160,21 @@ ssize_t WriteHeaders(int fd, const off_t start_offset, const off_t end_offset,
     return -1;
   written += ret;
 
-  off_t content_length = end_offset;
-  if (start_offset) {
+  // Compute content legnth.
+  const off_t content_length = end_offset - start_offset;;
+
+  // A start offset that equals the end offset indicates that the response
+  // should contain the full range of bytes in the requested resource.
+  if (start_offset || start_offset == end_offset) {
     ret = WriteString(fd,
                       string("Accept-Ranges: bytes" EOL
                              "Content-Range: bytes ") +
-                      Itoa(start_offset) + "-" + Itoa(end_offset - 1) + "/" +
-                      Itoa(end_offset) + EOL);
+                      Itoa(start_offset == end_offset ? 0 : start_offset) +
+                      "-" + Itoa(end_offset - 1) + "/" + Itoa(end_offset) +
+                      EOL);
     if (ret < 0)
       return -1;
     written += ret;
-
-    content_length -= start_offset;
   }
 
   ret = WriteString(fd, string("Content-Length: ") + Itoa(content_length) +
@@ -179,7 +194,7 @@ size_t WritePayload(int fd, const off_t start_offset, const off_t end_offset,
   CHECK_LE(start_offset, end_offset);
   CHECK_GT(line_len, 0);
 
-  LOG(INFO) << "writing payload: " << line_len << " byte lines starting with `"
+  LOG(INFO) << "writing payload: " << line_len << "-byte lines starting with `"
             << first_byte << "', offset range " << start_offset << " -> "
             << end_offset;
 
@@ -236,71 +251,96 @@ void HandleQuit(int fd) {
 }
 
 
-// Generates an HTTP response with payload corresponding to given offset and
-// length.  Returns the total number of bytes delivered or -1 for error.
-ssize_t HandleGet(int fd, const HttpRequest& request, const off_t end_offset) {
-  LOG(INFO) << "starting payload";
-  ssize_t written = 0, ret;
-
-  if ((ret = WriteHeaders(fd, request.start_offset, end_offset,
-                          request.return_code)) < 0)
-    return -1;
-  written += ret;
-
-  if ((ret = WritePayload(fd, request.start_offset, end_offset)) < 0)
-    return -1;
-  written += ret;
-
-  LOG(INFO) << "payload writing completed, " << written << " bytes written";
-  return written;
-}
-
-
-// Generates an HTTP response with payload. Payload is truncated at a given
-// length. Transfer may include an optional delay midway.
-ssize_t HandleFlakyGet(int fd, const HttpRequest& request,
-                       const off_t max_end_offset, const off_t truncate_length,
-                       const int sleep_every, const int sleep_secs) {
-  CHECK_GT(truncate_length, 0);
-  CHECK_GT(sleep_every, 0);
-  CHECK_GE(sleep_secs, 0);
-
+// Generates an HTTP response with payload corresponding to requested offsets
+// and length.  Optionally, truncate the payload at a given length and add a
+// pause midway through the transfer.  Returns the total number of bytes
+// delivered or -1 for error.
+ssize_t HandleGet(int fd, const HttpRequest& request, const size_t total_length,
+                  const size_t truncate_length, const int sleep_every,
+                  const int sleep_secs) {
   ssize_t ret;
   size_t written = 0;
-  const off_t start_offset = request.start_offset;
 
-  if ((ret = WriteHeaders(fd, start_offset, max_end_offset,
+  // Obtain start offset, make sure it is within total payload length.
+  const size_t start_offset = request.start_offset;
+  if (start_offset >= total_length) {
+    LOG(WARNING) << "start offset (" << start_offset
+                 << ") exceeds total length (" << total_length
+                 << "), generating error response ("
+                 << kHttpResponseReqRangeNotSat << ")";
+    return WriteHeaders(fd, total_length, total_length,
+                        kHttpResponseReqRangeNotSat);
+  }
+
+  // Obtain end offset, adjust to fit in total payload length and ensure it does
+  // not preceded the start offset.
+  size_t end_offset = (request.end_offset > 0 ?
+                       request.end_offset : total_length);
+  if (end_offset < start_offset) {
+    LOG(WARNING) << "end offset (" << end_offset << ") precedes start offset ("
+                 << start_offset << "), generating error response";
+    return WriteHeaders(fd, 0, 0, kHttpResponseBadRequest);
+  }
+  if (end_offset > total_length) {
+    LOG(INFO) << "requested end offset (" << end_offset
+              << ") exceeds total length (" << total_length << "), adjusting";
+    end_offset = total_length;
+  }
+
+  // Generate headers
+  LOG(INFO) << "generating response header: range=" << start_offset << "-"
+            << (end_offset - 1) << "/" << (end_offset - start_offset)
+            << ", return code=" << request.return_code;
+  if ((ret = WriteHeaders(fd, start_offset, end_offset,
                           request.return_code)) < 0)
     return -1;
+  LOG(INFO) << ret << " header bytes written";
+  written += ret;
 
-  const size_t content_length =
-      min(truncate_length, max_end_offset - start_offset);
-  const off_t end_offset = start_offset + content_length;
+  // Compute payload length, truncate as necessary.
+  size_t payload_length = end_offset - start_offset;
+  if (truncate_length > 0 && truncate_length < payload_length) {
+    LOG(INFO) << "truncating request payload length (" << payload_length
+              << ") at " << truncate_length;
+    payload_length = truncate_length;
+    end_offset = start_offset + payload_length;
+  }
 
-  if (start_offset % (truncate_length * sleep_every) == 0) {
-    const size_t midway_content_length = content_length / 2;
-    const off_t midway_offset = start_offset + midway_content_length;
+  LOG(INFO) << "generating response payload: range=" << start_offset << "-"
+            << (end_offset - 1) << "/" << (end_offset - start_offset);
 
-    LOG(INFO) << "writing small data blob of size " << midway_content_length;
+  // Decide about optional midway delay.
+  if (truncate_length > 0 && sleep_every > 0 && sleep_secs >= 0 &&
+      start_offset % (truncate_length * sleep_every) == 0) {
+    const off_t midway_offset = start_offset + payload_length / 2;
+
     if ((ret = WritePayload(fd, start_offset, midway_offset)) < 0)
       return -1;
+    LOG(INFO) << ret << " payload bytes written (first chunk)";
     written += ret;
 
+    LOG(INFO) << "sleeping for " << sleep_secs << " seconds...";
     sleep(sleep_secs);
 
-    LOG(INFO) << "writing small data blob of size "
-              << (content_length - midway_content_length);
     if ((ret = WritePayload(fd, midway_offset, end_offset)) < 0)
       return -1;
+    LOG(INFO) << ret << " payload bytes written (second chunk)";
     written += ret;
   } else {
-    LOG(INFO) << "writing data blob of size " << content_length;
     if ((ret = WritePayload(fd, start_offset, end_offset)) < 0)
       return -1;
+    LOG(INFO) << ret << " payload bytes written";
     written += ret;
   }
 
+  LOG(INFO) << "response generation complete, " << written
+            << " total bytes written";
   return written;
+}
+
+ssize_t HandleGet(int fd, const HttpRequest& request,
+                  const size_t total_length) {
+  return HandleGet(fd, request, total_length, 0, 0, 0);
 }
 
 // Handles /redirect/<code>/<url> requests by returning the specified
@@ -438,8 +478,8 @@ void HandleConnection(int fd) {
     HandleGet(fd, request, terms.GetLong(1));
   } else if (StartsWithASCII(url, "/flaky/", true)) {
     const UrlTerms terms(url, 5);
-    HandleFlakyGet(fd, request, terms.GetLong(1), terms.GetLong(2),
-                   terms.GetLong(3), terms.GetLong(4));
+    HandleGet(fd, request, terms.GetLong(1), terms.GetLong(2), terms.GetLong(3),
+              terms.GetLong(4));
   } else if (url.find("/redirect/") == 0) {
     HandleRedirect(fd, request);
   } else if (url == "/error") {

@@ -67,6 +67,10 @@ class HttpFetcher {
   // Downloading should resume from this offset
   virtual void SetOffset(off_t offset) = 0;
 
+  // Set/unset the length of the range to be downloaded.
+  virtual void SetLength(size_t length) = 0;
+  virtual void UnsetLength() = 0;
+
   // Begins the transfer to the specified URL. This fetcher instance should not
   // be destroyed until either TransferComplete, or TransferTerminated is
   // called.

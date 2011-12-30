@@ -45,11 +45,19 @@ class MultiRangeHttpFetcher : public HttpFetcher, public HttpFetcherDelegate {
 
   void ClearRanges() { ranges_.clear(); }
 
-  void AddRange(off_t offset, off_t size) {
-    ranges_.push_back(std::make_pair(offset, size));
+  void AddRange(off_t offset, size_t size) {
+    CHECK_GT(size, 0);
+    ranges_.push_back(Range(offset, size));
+  }
+
+  void AddRange(off_t offset) {
+    ranges_.push_back(Range(offset));
   }
 
   virtual void SetOffset(off_t offset) {}  // for now, doesn't support this
+
+  virtual void SetLength(size_t length) {}  // unsupported
+  virtual void UnsetLength() {}
 
   // Begins the transfer to the specified URL.
   // State change: Stopped -> Downloading
@@ -85,8 +93,27 @@ class MultiRangeHttpFetcher : public HttpFetcher, public HttpFetcherDelegate {
   }
 
  private:
-  // pair<offset, length>:
-  typedef std::vector<std::pair<off_t, off_t> > RangesVect;
+  // A range object defining the offset and length of a download chunk.  Zero
+  // length indicates an unspecified end offset (note that it is impossible to
+  // request a zero-length range in HTTP).
+  class Range {
+   public:
+    Range(off_t offset, size_t length) : offset_(offset), length_(length) {}
+    Range(off_t offset) : offset_(offset), length_(0) {}
+
+    inline off_t offset() const { return offset_; }
+    inline size_t length() const { return length_; }
+
+    inline bool HasLength() const { return (length_ > 0); }
+
+    std::string ToString() const;
+
+   private:
+    off_t offset_;
+    size_t length_;
+  };
+
+  typedef std::vector<Range> RangesVect;
   
   // State change: Stopped or Downloading -> Downloading
   void StartTransfer();
@@ -120,7 +147,7 @@ class MultiRangeHttpFetcher : public HttpFetcher, public HttpFetcherDelegate {
   RangesVect ranges_;
 
   RangesVect::size_type current_index_;  // index into ranges_
-  off_t bytes_received_this_range_;
+  size_t bytes_received_this_range_;
 
   DISALLOW_COPY_AND_ASSIGN(MultiRangeHttpFetcher);
 };

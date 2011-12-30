@@ -51,6 +51,10 @@ class MockHttpFetcher : public HttpFetcher {
       delegate_->SeekToOffset(offset);
   }
 
+  // Do nothing.
+  virtual void SetLength(size_t length) {}
+  virtual void UnsetLength() {}
+
   // Dummy: no bytes were downloaded.
   virtual size_t GetBytesDownloaded() {
     return sent_size_;

@@ -2,8 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "update_engine/multi_range_http_fetcher.h"
+#include <base/stringprintf.h>
 
+#include "update_engine/multi_range_http_fetcher.h"
 #include "update_engine/utils.h"
 
 namespace chromeos_update_engine {
@@ -51,12 +52,18 @@ void MultiRangeHttpFetcher::StartTransfer() {
   if (current_index_ >= ranges_.size()) {
     return;
   }
-  LOG(INFO) << "Starting a transfer @" << ranges_[current_index_].first << "("
-            << ranges_[current_index_].second << ")";
+
+  Range range = ranges_[current_index_];
+  LOG(INFO) << "starting transfer of range " << range.ToString();
+
   bytes_received_this_range_ = 0;
-  base_fetcher_->SetOffset(ranges_[current_index_].first);
+  base_fetcher_->SetOffset(range.offset());
+  if (range.HasLength())
+    base_fetcher_->SetLength(range.length());
+  else
+    base_fetcher_->UnsetLength();
   if (delegate_)
-    delegate_->SeekToOffset(ranges_[current_index_].first);
+    delegate_->SeekToOffset(range.offset());
   base_fetcher_active_ = true;
   base_fetcher_->BeginTransfer(url_);
 }
@@ -68,19 +75,18 @@ void MultiRangeHttpFetcher::ReceivedBytes(HttpFetcher* fetcher,
   CHECK_LT(current_index_, ranges_.size());
   CHECK_EQ(fetcher, base_fetcher_.get());
   CHECK(!pending_transfer_ended_);
-  off_t next_size = length;
-  if (ranges_[current_index_].second >= 0) {
+  size_t next_size = length;
+  Range range = ranges_[current_index_];
+  if (range.HasLength()) {
     next_size = std::min(next_size,
-                         ranges_[current_index_].second -
-                         bytes_received_this_range_);
+                         range.length() - bytes_received_this_range_);
   }
   LOG_IF(WARNING, next_size <= 0) << "Asked to write length <= 0";
   if (delegate_) {
     delegate_->ReceivedBytes(this, bytes, next_size);
   }
   bytes_received_this_range_ += length;
-  if (ranges_[current_index_].second >= 0 &&
-      bytes_received_this_range_ >= ranges_[current_index_].second) {
+  if (range.HasLength() && bytes_received_this_range_ >= range.length()) {
     // Terminates the current fetcher. Waits for its TransferTerminated
     // callback before starting the next range so that we don't end up
     // signalling the delegate that the whole multi-transfer is complete
@@ -109,8 +115,9 @@ void MultiRangeHttpFetcher::TransferEnded(HttpFetcher* fetcher,
   }
 
   // If we didn't get enough bytes, it's failure
-  if (ranges_[current_index_].second >= 0) {
-    if (bytes_received_this_range_ < ranges_[current_index_].second) {
+  Range range = ranges_[current_index_];
+  if (range.HasLength()) {
+    if (bytes_received_this_range_ < range.length()) {
       // Failure
       LOG(INFO) << "Didn't get enough bytes. Ending w/ failure.";
       Reset();
@@ -153,6 +160,15 @@ void MultiRangeHttpFetcher::Reset() {
   base_fetcher_active_ = pending_transfer_ended_ = terminating_ = false;
   current_index_ = 0;
   bytes_received_this_range_ = 0;
+}
+
+std::string MultiRangeHttpFetcher::Range::ToString() const {
+  std::string range_str = StringPrintf("%jd+", offset());
+  if (HasLength())
+    base::StringAppendF(&range_str, "%zu", length());
+  else
+    base::StringAppendF(&range_str, "?");
+  return range_str;
 }
 
 }  // namespace chromeos_update_engine

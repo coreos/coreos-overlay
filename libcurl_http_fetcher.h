@@ -33,6 +33,7 @@ class LibcurlHttpFetcher : public HttpFetcher {
         transfer_in_progress_(false),
         transfer_size_(0),
         bytes_downloaded_(0),
+        download_length_(0),
         resume_offset_(0),
         retry_count_(0),
         retry_seconds_(60),
@@ -51,7 +52,10 @@ class LibcurlHttpFetcher : public HttpFetcher {
   // Cleans up all internal state. Does not notify delegate
   ~LibcurlHttpFetcher();
 
-  void SetOffset(off_t offset) { bytes_downloaded_ = offset; }
+  virtual void SetOffset(off_t offset) { bytes_downloaded_ = offset; }
+
+  virtual void SetLength(size_t length) { download_length_ = length; }
+  virtual void UnsetLength() { SetLength(0); }
 
   // Begins the transfer if it hasn't already begun.
   virtual void BeginTransfer(const std::string& url);
@@ -206,6 +210,10 @@ class LibcurlHttpFetcher : public HttpFetcher {
 
   // How many bytes have been downloaded and sent to the delegate.
   off_t bytes_downloaded_;
+
+  // The remaining maximum number of bytes to download. Zero represents an
+  // unspecified length.
+  size_t download_length_;
 
   // If we resumed an earlier transfer, data offset that we used for the
   // new connection.  0 otherwise.

@@ -32,6 +32,7 @@ enum HttpResponseCode {
   kHttpResponseForbidden           = 403,
   kHttpResponseNotFound            = 404,
   kHttpResponseRequestTimeout      = 408,
+  kHttpResponseReqRangeNotSat      = 416,
   kHttpResponseInternalServerError = 500,
   kHttpResponseNotImplemented      = 501,
   kHttpResponseServiceUnavailable  = 503,
