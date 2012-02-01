@@ -123,24 +123,12 @@ void PostinstallRunnerActionTest::DoTest(bool do_losetup, int err_code) {
   ASSERT_EQ(0, System(string("rm -f ") + cwd + "/postinst_called"));
 
   // get a loop device we can use for the install device
-  FILE* find_dev_cmd = popen("losetup -f", "r");
-  ASSERT_TRUE(find_dev_cmd);
+  string dev = "/dev/null";
 
-  char dev[100] = {0};
-  size_t r = fread(dev, 1, sizeof(dev), find_dev_cmd);
-  ASSERT_GT(r, 0);
-  ASSERT_LT(r, sizeof(dev));
-  ASSERT_TRUE(feof(find_dev_cmd));
-  fclose(find_dev_cmd);
-
-  // strip trailing newline on dev
-  if (dev[strlen(dev) - 1] == '\n')
-    dev[strlen(dev) - 1] = '\0';
-
-  scoped_ptr<ScopedLoopbackDeviceReleaser> loop_releaser;
+  scoped_ptr<ScopedLoopbackDeviceBinder> loop_releaser;
   if (do_losetup) {
-    ASSERT_EQ(0, System(string("losetup ") + dev + " " + cwd + "/image.dat"));
-    loop_releaser.reset(new ScopedLoopbackDeviceReleaser(dev));
+    loop_releaser.reset(new ScopedLoopbackDeviceBinder(cwd + "/image.dat",
+                                                       &dev));
   }
 
   ActionProcessor processor;

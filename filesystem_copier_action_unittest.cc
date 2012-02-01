@@ -128,20 +128,12 @@ void FilesystemCopierActionTest::DoTest(bool run_out_of_space,
   EXPECT_TRUE(WriteFileVector(a_loop_file, a_loop_data));
   EXPECT_TRUE(WriteFileVector(b_loop_file, b_loop_data));
 
-  // Make loop devices for the files
-  string a_dev = GetUnusedLoopDevice();
-  EXPECT_FALSE(a_dev.empty());
-  EXPECT_EQ(0, System(StringPrintf("losetup %s %s",
-                                   a_dev.c_str(),
-                                   a_loop_file.c_str())));
-  ScopedLoopbackDeviceReleaser a_dev_releaser(a_dev);
+  // Attach loop devices to the files
+  string a_dev;
+  string b_dev;
 
-  string b_dev = GetUnusedLoopDevice();
-  EXPECT_FALSE(b_dev.empty());
-  EXPECT_EQ(0, System(StringPrintf("losetup %s %s",
-                                   b_dev.c_str(),
-                                   b_loop_file.c_str())));
-  ScopedLoopbackDeviceReleaser b_dev_releaser(b_dev);
+  ScopedLoopbackDeviceBinder a_dev_releaser(a_loop_file, &a_dev);
+  ScopedLoopbackDeviceBinder b_dev_releaser(b_loop_file, &b_dev);
 
   // Set up the action objects
   InstallPlan install_plan;

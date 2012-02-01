@@ -136,9 +136,11 @@ vector<char> GenerateSampleMbr() {
   return ret;
 }
 
-std::string GetUnusedLoopDevice() {
+string BindToUnusedLoopDevice(const string &filename) {
   // get a loop device we can use for the install device
-  FILE* find_dev_cmd = popen("losetup -f", "r");
+  string cmd = "losetup --show -f " + filename;
+
+  FILE* find_dev_cmd = popen(cmd.c_str(), "r");
   CHECK(find_dev_cmd);
 
   string ret;
@@ -156,6 +158,8 @@ std::string GetUnusedLoopDevice() {
   if (*ret.rbegin() == '\n')
     ret.resize(ret.size() - 1);
 
+  // Ensure that the device starts with "/dev/loop"
+  EXPECT_TRUE(StartsWithASCII(ret, "/dev/loop", true));
   return ret;
 }
 
@@ -281,16 +285,14 @@ void VerifyAllPaths(const string& parent, set<string> expected_paths) {
   }
 }
 
-ScopedLoopMounter::ScopedLoopMounter(const std::string& file_path,
-                                     std::string* mnt_path,
+ScopedLoopMounter::ScopedLoopMounter(const string& file_path,
+                                     string* mnt_path,
                                      unsigned long flags) {
   EXPECT_TRUE(utils::MakeTempDirectory("/tmp/mnt.XXXXXX", mnt_path));
   dir_remover_.reset(new ScopedDirRemover(*mnt_path));
 
-  std::string loop_dev = GetUnusedLoopDevice();
-  EXPECT_EQ(0, system(StringPrintf("losetup %s %s", loop_dev.c_str(),
-                                   file_path.c_str()).c_str()));
-  loop_releaser_.reset(new ScopedLoopbackDeviceReleaser(loop_dev));
+  string loop_dev;
+  loop_binder_.reset(new ScopedLoopbackDeviceBinder(file_path, &loop_dev));
 
   EXPECT_TRUE(utils::MountFilesystem(loop_dev, *mnt_path, flags));
   unmounter_.reset(new ScopedFilesystemUnmounter(*mnt_path));

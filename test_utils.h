@@ -36,7 +36,7 @@ std::vector<char> GzipCompressData(const std::vector<char>& data);
 // the first partition is marked bootable.
 std::vector<char> GenerateSampleMbr();
 
-std::string GetUnusedLoopDevice();
+std::string BindToUnusedLoopDevice(const std::string &filename);
 
 // Returns true iff a == b
 bool ExpectVectorsEq(const std::vector<char>& a, const std::vector<char>& b);
@@ -111,10 +111,16 @@ void CreateExtImageAtPath(const std::string& path,
 void VerifyAllPaths(const std::string& parent,
                     std::set<std::string> expected_paths);
 
-class ScopedLoopbackDeviceReleaser {
+class ScopedLoopbackDeviceBinder {
  public:
-  explicit ScopedLoopbackDeviceReleaser(const std::string& dev) : dev_(dev) {}
-  ~ScopedLoopbackDeviceReleaser() {
+  ScopedLoopbackDeviceBinder(const std::string& file, std::string* dev) {
+    dev_ = BindToUnusedLoopDevice(file);
+
+    if (dev)
+      *dev = dev_;
+  }
+
+  ~ScopedLoopbackDeviceBinder() {
     for (int retry = 0; retry < 5; retry++) {
       std::vector<std::string> args;
       args.push_back("/sbin/losetup");
@@ -129,9 +135,12 @@ class ScopedLoopbackDeviceReleaser {
     }
     ADD_FAILURE();
   }
+
+  const std::string &dev() { return dev_; }
+
  private:
-  const std::string dev_;
-  DISALLOW_COPY_AND_ASSIGN(ScopedLoopbackDeviceReleaser);
+  std::string dev_;
+  DISALLOW_COPY_AND_ASSIGN(ScopedLoopbackDeviceBinder);
 };
 
 class ScopedTempFile {
@@ -227,10 +236,10 @@ class ScopedLoopMounter {
  private:
   // These objects must be destructed in the following order:
   //   ScopedFilesystemUnmounter (the file system must be unmounted first)
-  //   ScopedLoopbackDeviceReleaser (then the loop device can be deleted)
+  //   ScopedLoopbackDeviceBinder (then the loop device can be deleted)
   //   ScopedDirRemover (then the mount point can be deleted)
   scoped_ptr<ScopedDirRemover> dir_remover_;
-  scoped_ptr<ScopedLoopbackDeviceReleaser> loop_releaser_;
+  scoped_ptr<ScopedLoopbackDeviceBinder> loop_binder_;
   scoped_ptr<ScopedFilesystemUnmounter> unmounter_;
 };
 

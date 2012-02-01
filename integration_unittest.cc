@@ -56,9 +56,7 @@ class IntegrationTestProcessorDelegate : public ActionProcessorDelegate {
     if (action->Type() == InstallAction::StaticType()) {
       InstallAction* install_action = static_cast<InstallAction*>(action);
       old_dev_ = install_action->GetOutputObject();
-      string dev = GetUnusedLoopDevice();
-      string cmd = string("losetup ") + dev + " " + kTestDir + "/dev2";
-      EXPECT_EQ(0, system(cmd.c_str()));
+      string dev = BindToUnusedDevice(kTestDir + "/dev2");
       install_action->SetOutputObject(dev);
     } else if (action->Type() == PostinstallRunnerAction::StaticType()) {
       PostinstallRunnerAction* postinstall_runner_action =
