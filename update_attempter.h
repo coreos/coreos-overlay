@@ -14,6 +14,7 @@
 #include <base/time.h>
 #include <glib.h>
 #include <gtest/gtest_prod.h>  // for FRIEND_TEST
+#include <libudev.h>
 
 #include "update_engine/action_processor.h"
 #include "update_engine/chrome_browser_proxy_resolver.h"
@@ -136,6 +137,9 @@ class UpdateAttempter : public ActionProcessorDelegate,
   void BroadcastStatus();
 
  private:
+  // Update server URL for automated lab test.
+  static const char* const kTestUpdateUrl;
+
   friend class UpdateAttempterTest;
   FRIEND_TEST(UpdateAttempterTest, ActionCompletedDownloadTest);
   FRIEND_TEST(UpdateAttempterTest, ActionCompletedErrorTest);
@@ -211,6 +215,26 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // accurate in case a user takes a long time to reboot the device after an
   // update has been applied.
   void PingOmaha();
+
+  // Gets the fully qualified sysfs name of a dutflag device.  |udev| is a live
+  // libudev instance; |gpio_dutflag_str| is the identifier for the requested
+  // dutflag GPIO. The output is stored in the string pointed to by
+  // |dutflag_dev_name_p|.  Returns true upon success, false otherwise.
+  bool GetDutflagGpioDevName(struct udev* udev,
+                             const std::string& gpio_dutflag_str,
+                             std::string* dutflag_dev_name_p);
+
+  // Gets the dut_flaga/b GPIO device names and copies them into the two string
+  // arguments, respectively. The function caches these strings, which are
+  // assumed to be hardware constants. Returns true upon success, false
+  // otherwise.
+  bool GetDutflagGpioDevNames(std::string* dutflaga_dev_name_p,
+                              std::string* dutflagb_dev_name_p);
+
+  // Writes the dut_flaga GPIO status into its argument, where true/false stand
+  // for "on"/"off", respectively. Returns true upon success, false otherwise
+  // (in which case no value is written to |status|).
+  bool GetDutflagaGpio(bool* status);
 
   // Last status notification timestamp used for throttling. Use monotonic
   // TimeTicks to ensure that notifications are sent even if the system clock is
@@ -292,6 +316,10 @@ class UpdateAttempter : public ActionProcessorDelegate,
 
   // Used for fetching information about the device policy.
   scoped_ptr<policy::PolicyProvider> policy_provider_;
+
+  // Dutflaga/b GPIO device names.
+  std::string dutflaga_dev_name_;
+  std::string dutflagb_dev_name_;
 
   DISALLOW_COPY_AND_ASSIGN(UpdateAttempter);
 };

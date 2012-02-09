@@ -208,6 +208,7 @@ env['LIBS'] = Split("""base
                        pthread
                        rootdev
                        ssl
+                       udev
                        xml2""")
 env['CPPPATH'] = ['..']
 env['BUILDERS']['ProtocolBuffer'] = proto_builder
