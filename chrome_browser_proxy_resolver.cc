@@ -104,17 +104,24 @@ bool ChromeBrowserProxyResolver::Init() {
   return true;
 }
 
+void ChromeBrowserProxyResolver::Shutdown() {
+  if (!proxy_)
+    return;
+
+  GError* gerror = NULL;
+  DBusGConnection* gbus = dbus_->BusGet(DBUS_BUS_SYSTEM, &gerror);
+  TEST_AND_RETURN(gbus);
+  DBusConnection* connection = dbus_->ConnectionGetConnection(gbus);
+  dbus_->DbusConnectionRemoveFilter(
+      connection,
+      &ChromeBrowserProxyResolver::StaticFilterMessage,
+      this);
+  proxy_ = NULL;
+}
+
 ChromeBrowserProxyResolver::~ChromeBrowserProxyResolver() {
-  if (proxy_) {
-    GError* gerror = NULL;
-    DBusGConnection* gbus = dbus_->BusGet(DBUS_BUS_SYSTEM, &gerror);
-    TEST_AND_RETURN(gbus);
-    DBusConnection* connection = dbus_->ConnectionGetConnection(gbus);
-    dbus_->DbusConnectionRemoveFilter(
-        connection,
-        &ChromeBrowserProxyResolver::StaticFilterMessage,
-        this);
-  }
+  // Kill proxy object.
+  Shutdown();
   // Kill outstanding timers
   for (TimeoutsMap::iterator it = timers_.begin(), e = timers_.end(); it != e;
        ++it) {
@@ -128,19 +135,56 @@ bool ChromeBrowserProxyResolver::GetProxiesForUrl(const string& url,
                                                   void* data) {
   GError* error = NULL;
   guint timeout = timeout_;
-  if (!proxy_ || !dbus_->ProxyCall(
+  if (proxy_) {
+    bool dbus_success = true;
+    bool dbus_reinit = false;
+    bool dbus_got_error;
+
+    do {
+      if (!dbus_success) {
+        // We failed with a null error, time to re-init the dbus proxy.
+        LOG(WARNING) << "attempting to reinitialize dbus proxy and retrying";
+        Shutdown();
+        if (!Init()) {
+          LOG(WARNING) << "failed to reinitialize the dbus proxy";
+          break;
+        }
+        dbus_reinit = true;
+      }
+
+      dbus_success = dbus_->ProxyCall(
           proxy_,
           kLibCrosServiceResolveNetworkProxyMethodName,
           &error,
           G_TYPE_STRING, url.c_str(),
           G_TYPE_STRING, kLibCrosProxyResolveSignalInterface,
           G_TYPE_STRING, kLibCrosProxyResolveName,
-          G_TYPE_INVALID, G_TYPE_INVALID)) {
-    LOG(WARNING) << "dbus_g_proxy_call failed: "
-                 << utils::GetAndFreeGError(&error)
-                 << " Continuing with no proxy.";
+          G_TYPE_INVALID, G_TYPE_INVALID);
+
+      dbus_got_error = false;
+
+      if (dbus_success) {
+        LOG(INFO) << "dbug_g_proxy_call succeeded!";
+      } else {
+        if (error) {
+          // Register the fact that we did receive an error, as it is nullified
+          // on the next line.
+          dbus_got_error = true;
+          LOG(WARNING) << "dbus_g_proxy_call failed: "
+                       << utils::GetAndFreeGError(&error)
+                       << " Continuing with no proxy.";
+        } else {
+          LOG(WARNING) << "dbug_g_proxy_call failed with no error string, "
+                          "continuing with no proxy.";
+        }
+        timeout = 0;
+      }
+    } while (!(dbus_success || dbus_got_error || dbus_reinit));
+  } else {
+    LOG(WARNING) << "dbug proxy object missing, continuing with no proxy.";
     timeout = 0;
   }
+
   callbacks_.insert(make_pair(url, make_pair(callback, data)));
   Closure* closure = NewCallback(this,
                                  &ChromeBrowserProxyResolver::HandleTimeout,

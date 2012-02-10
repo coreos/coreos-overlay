@@ -72,6 +72,9 @@ class ChromeBrowserProxyResolver : public ProxyResolver {
                       bool delete_timer,
                       std::pair<ProxiesResolvedFn, void*>* callback);
 
+  // Shutdown the dbus proxy object.
+  void Shutdown();
+
   DbusGlibInterface* dbus_;
   DBusGProxy* proxy_;
   DBusGProxy* peer_proxy_;
