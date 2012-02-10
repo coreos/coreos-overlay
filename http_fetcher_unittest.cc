@@ -30,8 +30,8 @@ namespace {
 
 const int kBigLength           = 100000;
 const int kMediumLength        = 1000;
-const int kFlakyTruncateLength = 9000;
-const int kFlakySleepEvery     = 7;
+const int kFlakyTruncateLength = 29000;
+const int kFlakySleepEvery     = 3;
 const int kFlakySleepSecs      = 10;
 
 }  // namespace

@@ -27,7 +27,7 @@ using std::string;
 namespace chromeos_update_engine {
 
 namespace {
-const int kMaxRetriesCount = 20;
+const int kMaxRetriesCount = 3;
 const int kNoNetworkRetrySeconds = 10;
 const char kCACertificatesPath[] = "/usr/share/chromeos-ca-certificates";
 }  // namespace {}
