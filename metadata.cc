@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -212,7 +212,9 @@ bool ReadFilesystemMetadata(Graph* graph,
   // The metadata blocks are at the start of each block group and goes
   // until the end of the inode table.
   for (dgrp_t bg = 0; bg < fs_old->group_desc_count; bg++) {
-    struct ext2_group_desc* group_desc = &fs_old->group_desc[bg];
+    struct ext2_group_desc* group_desc = ext2fs_group_desc(fs_old,
+                                                           fs_old->group_desc,
+                                                           bg);
     __u32 num_metadata_blocks = (group_desc->bg_inode_table +
                                  fs_old->inode_blocks_per_group) -
                                  (bg * fs_old->super->s_blocks_per_group);
