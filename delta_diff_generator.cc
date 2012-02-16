@@ -531,7 +531,7 @@ bool DeltaDiffGenerator::ReadFileToDiff(
       vector<char> bsdiff_delta;
       TEST_AND_RETURN_FALSE(
           BsdiffFiles(old_filename, new_filename, &bsdiff_delta));
-      CHECK_GT(bsdiff_delta.size(), 0);
+      CHECK_GT(bsdiff_delta.size(), static_cast<vector<char>::size_type>(0));
       if (bsdiff_delta.size() < current_best_size) {
         operation.set_type(DeltaArchiveManifest_InstallOperation_Type_BSDIFF);
         current_best_size = bsdiff_delta.size();
@@ -748,7 +748,8 @@ bool DeltaDiffGenerator::CutEdges(Graph* graph,
         cuts.back().tmp_extents);
 
     // delete the old edge
-    CHECK_EQ(1, (*graph)[it->first].out_edges.erase(it->second));
+    CHECK_EQ(static_cast<Graph::size_type>(1),
+             (*graph)[it->first].out_edges.erase(it->second));
 
     // Add an edge from dst to copy operation
     EdgeProperties write_before_edge_properties;

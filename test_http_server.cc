@@ -77,7 +77,7 @@ bool ParseRequest(int fd, HttpRequest* request) {
   // Decode URL line.
   std::vector<string> terms;
   base::SplitStringAlongWhitespace(lines[0], &terms);
-  CHECK_EQ(terms.size(), 3);
+  CHECK_EQ(terms.size(), static_cast<vector<string>::size_type>(3));
   CHECK_EQ(terms[0], "GET");
   request->url = terms[1];
   LOG(INFO) << "URL: " << request->url;
@@ -89,7 +89,7 @@ bool ParseRequest(int fd, HttpRequest* request) {
     base::SplitStringAlongWhitespace(lines[i], &terms);
 
     if (terms[0] == "Range:") {
-      CHECK_EQ(terms.size(), 2);
+      CHECK_EQ(terms.size(), static_cast<vector<string>::size_type>(2));
       string &range = terms[1];
       LOG(INFO) << "range attribute: " << range;
       CHECK(StartsWithASCII(range, "bytes=", true) &&
@@ -108,7 +108,7 @@ bool ParseRequest(int fd, HttpRequest* request) {
         base::StringAppendF(&tmp_str, "unspecified");
       LOG(INFO) << tmp_str;
     } else if (terms[0] == "Host:") {
-      CHECK_EQ(terms.size(), 2);
+      CHECK_EQ(terms.size(), static_cast<vector<string>::size_type>(2));
       request->host = terms[1];
       LOG(INFO) << "host attribute: " << request->host;
     } else {
@@ -192,7 +192,7 @@ ssize_t WriteHeaders(int fd, const off_t start_offset, const off_t end_offset,
 size_t WritePayload(int fd, const off_t start_offset, const off_t end_offset,
                     const char first_byte, const size_t line_len) {
   CHECK_LE(start_offset, end_offset);
-  CHECK_GT(line_len, 0);
+  CHECK_GT(line_len, static_cast<size_t>(0));
 
   LOG(INFO) << "writing payload: " << line_len << "-byte lines starting with `"
             << first_byte << "', offset range " << start_offset << " -> "
@@ -348,7 +348,7 @@ ssize_t HandleGet(int fd, const HttpRequest& request,
 void HandleRedirect(int fd, const HttpRequest& request) {
   LOG(INFO) << "Redirecting...";
   string url = request.url;
-  CHECK_EQ(0, url.find("/redirect/"));
+  CHECK_EQ(static_cast<size_t>(0), url.find("/redirect/"));
   url.erase(0, strlen("/redirect/"));
   string::size_type url_start = url.find('/');
   CHECK_NE(url_start, string::npos);
@@ -439,7 +439,7 @@ class UrlTerms {
  public:
   UrlTerms(string &url, size_t num_terms) {
     // URL must be non-empty and start with a slash.
-    CHECK_GT(url.size(), 0);
+    CHECK_GT(url.size(), static_cast<size_t>(0));
     CHECK_EQ(url[0], '/');
 
     // Split it into terms delimited by slashes, omitting the preceeding slash.

@@ -87,7 +87,8 @@ static const size_t kMaxEdgesToConsider = 2;
 
 void CycleBreaker::HandleCircuit() {
   stack_.push_back(current_vertex_);
-  CHECK_GE(stack_.size(), 2);
+  CHECK_GE(stack_.size(),
+           static_cast<std::vector<Vertex::Index>::size_type>(2));
   Edge min_edge = make_pair(stack_[0], stack_[1]);
   uint64_t min_edge_weight = kuint64max;
   size_t edges_considered = 0;

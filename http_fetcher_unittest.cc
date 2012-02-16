@@ -421,7 +421,7 @@ TYPED_TEST(HttpFetcherTest, ErrorTest) {
 
     // Make sure that no bytes were received.
     CHECK_EQ(delegate.times_received_bytes_called_, 0);
-    CHECK_EQ(fetcher->GetBytesDownloaded(), 0);
+    CHECK_EQ(fetcher->GetBytesDownloaded(), static_cast<size_t>(0));
 
     // Make sure that transfer completion was signaled once, and no termination
     // was signaled.

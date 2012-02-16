@@ -46,7 +46,7 @@ class MultiRangeHttpFetcher : public HttpFetcher, public HttpFetcherDelegate {
   void ClearRanges() { ranges_.clear(); }
 
   void AddRange(off_t offset, size_t size) {
-    CHECK_GT(size, 0);
+    CHECK_GT(size, static_cast<size_t>(0));
     ranges_.push_back(Range(offset, size));
   }
 

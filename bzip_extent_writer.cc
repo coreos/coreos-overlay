@@ -50,7 +50,7 @@ bool BzipExtentWriter::Write(const void* bytes, size_t count) {
                      output_buffer.size() - stream_.avail_out));
     
     if (rc == BZ_STREAM_END)
-      CHECK_EQ(stream_.avail_in, 0);
+      CHECK_EQ(stream_.avail_in, static_cast<unsigned int>(0));
     if (stream_.avail_in == 0)
       break;  // no more input to process
   }

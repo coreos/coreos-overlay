@@ -23,7 +23,7 @@ bool DirectExtentWriter::Write(const void* bytes, size_t count) {
     uint64_t bytes_remaining_next_extent =
         extents_[next_extent_index_].num_blocks() * block_size_ -
         extent_bytes_written_;
-    CHECK_NE(bytes_remaining_next_extent, 0);
+    CHECK_NE(bytes_remaining_next_extent, static_cast<uint64_t>(0));
     size_t bytes_to_write =
         static_cast<size_t>(min(static_cast<uint64_t>(count - bytes_written),
                                 bytes_remaining_next_extent));

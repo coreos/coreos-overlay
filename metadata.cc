@@ -151,7 +151,7 @@ bool AddMetadataExtents(Graph* graph,
       TEST_AND_RETURN_FALSE(ComputeMetadataBsdiff(old_data,
                                                   new_data,
                                                   &bsdiff_delta));
-      CHECK_GT(bsdiff_delta.size(), 0);
+      CHECK_GT(bsdiff_delta.size(), static_cast<vector<char>::size_type>(0));
 
       if (bsdiff_delta.size() < current_best_size) {
         op.set_type(DeltaArchiveManifest_InstallOperation_Type_BSDIFF);
