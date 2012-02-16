@@ -17,11 +17,17 @@ HttpFetcher::~HttpFetcher() {
   }
 }
 
-void HttpFetcher::SetPostData(const void* data, size_t size) {
+void HttpFetcher::SetPostData(const void* data, size_t size,
+                              HttpContentType type) {
   post_data_set_ = true;
   post_data_.clear();
   const char *char_data = reinterpret_cast<const char*>(data);
   post_data_.insert(post_data_.end(), char_data, char_data + size);
+  post_content_type_ = type;
+}
+
+void HttpFetcher::SetPostData(const void* data, size_t size) {
+  SetPostData(data, size, kHttpContentTypeUnspecified);
 }
 
 // Proxy methods to set the proxies, then to pop them off.

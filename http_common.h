@@ -45,4 +45,14 @@ const char *GetHttpResponseDescription(HttpResponseCode code);
 // Converts a string beginning with an HTTP error code into numerical value.
 HttpResponseCode StringToHttpResponseCode(const char *s);
 
+
+// Enumeration type for HTTP Content-Type.
+enum HttpContentType {
+  kHttpContentTypeUnspecified = 0,
+  kHttpContentTypeTextXml,
+};
+
+// Returns a standard HTTP Content-Type string.
+const char *GetHttpContentTypeString(HttpContentType type);
+
 #endif  // CHROMEOS_PLATFORM_UPDATE_ENGINE_HTTP_COMMON_H__

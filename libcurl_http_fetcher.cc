@@ -91,6 +91,22 @@ void LibcurlHttpFetcher::ResumeTransfer(const std::string& url) {
     CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_POSTFIELDSIZE,
                               post_data_.size()),
              CURLE_OK);
+
+    // Set the Content-Type HTTP header, if one was specifically set.
+    CHECK(!curl_http_headers_);
+    if (post_content_type_ != kHttpContentTypeUnspecified) {
+      const string content_type_attr =
+        base::StringPrintf("Content-Type: %s",
+                           GetHttpContentTypeString(post_content_type_));
+      curl_http_headers_ = curl_slist_append(NULL, content_type_attr.c_str());
+      CHECK(curl_http_headers_);
+      CHECK_EQ(
+          curl_easy_setopt(curl_handle_, CURLOPT_HTTPHEADER,
+                           curl_http_headers_),
+          CURLE_OK);
+    } else {
+      LOG(WARNING) << "no content type set, using libcurl default";
+    }
   }
 
   if (bytes_downloaded_ > 0 || download_length_) {
@@ -480,6 +496,10 @@ void LibcurlHttpFetcher::CleanUp() {
     io_channels_[t].clear();
   }
 
+  if (curl_http_headers_) {
+    curl_slist_free_all(curl_http_headers_);
+    curl_http_headers_ = NULL;
+  }
   if (curl_handle_) {
     if (curl_multi_handle_) {
       CHECK_EQ(curl_multi_remove_handle(curl_multi_handle_, curl_handle_),

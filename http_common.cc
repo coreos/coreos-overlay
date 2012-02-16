@@ -51,3 +51,21 @@ const char *GetHttpResponseDescription(HttpResponseCode code) {
 HttpResponseCode StringToHttpResponseCode(const char *s) {
   return static_cast<HttpResponseCode>(strtoul(s, NULL, 10));
 }
+
+
+const char *GetHttpContentTypeString(HttpContentType type) {
+  static const struct {
+    HttpContentType type;
+    const char* str;
+  } http_content_type_table[] = {
+    { kHttpContentTypeTextXml, "text/xml" },
+  };
+
+  bool is_found = false;
+  size_t i;
+  for (i = 0; i < ARRAYSIZE_UNSAFE(http_content_type_table); i++)
+    if ((is_found = (http_content_type_table[i].type == type)))
+      break;
+
+  return (is_found ? http_content_type_table[i].str : NULL);
+}

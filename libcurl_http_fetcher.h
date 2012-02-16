@@ -29,6 +29,7 @@ class LibcurlHttpFetcher : public HttpFetcher {
       : HttpFetcher(proxy_resolver),
         curl_multi_handle_(NULL),
         curl_handle_(NULL),
+        curl_http_headers_(NULL),
         timeout_source_(NULL),
         transfer_in_progress_(false),
         transfer_size_(0),
@@ -191,6 +192,7 @@ class LibcurlHttpFetcher : public HttpFetcher {
   // Handles for the libcurl library
   CURLM *curl_multi_handle_;
   CURL *curl_handle_;
+  struct curl_slist *curl_http_headers_;
 
   // Lists of all read(0)/write(1) file descriptors that we're waiting on from
   // the glib main loop. libcurl may open/close descriptors and switch their

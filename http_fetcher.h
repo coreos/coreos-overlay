@@ -14,6 +14,7 @@
 #include <glib.h>
 #include <google/protobuf/stubs/common.h>
 
+#include "http_common.h"
 #include "update_engine/proxy_resolver.h"
 
 // This class is a simple wrapper around an HTTP library (libcurl). We can
@@ -47,7 +48,11 @@ class HttpFetcher {
   int http_response_code() const { return http_response_code_; }
 
   // Optional: Post data to the server. The HttpFetcher should make a copy
-  // of this data and upload it via HTTP POST during the transfer.
+  // of this data and upload it via HTTP POST during the transfer. The type of
+  // the data is necessary for properly setting the Content-Type HTTP header.
+  void SetPostData(const void* data, size_t size, HttpContentType type);
+
+  // Same without a specified Content-Type.
   void SetPostData(const void* data, size_t size);
 
   // Proxy methods to set the proxies, then to pop them off.
@@ -111,6 +116,7 @@ class HttpFetcher {
   // POST data for the transfer, and whether or not it was ever set
   bool post_data_set_;
   std::vector<char> post_data_;
+  HttpContentType post_content_type_;
 
   // The server's HTTP response code from the last transfer. This
   // field should be set to 0 when a new transfer is initiated, and

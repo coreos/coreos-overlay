@@ -233,7 +233,8 @@ void OmahaRequestAction::PerformAction() {
                                     ping_active_days_,
                                     ping_roll_call_days_,
                                     prefs_));
-  http_fetcher_->SetPostData(request_post.data(), request_post.size());
+  http_fetcher_->SetPostData(request_post.data(), request_post.size(),
+                             kHttpContentTypeTextXml);
   LOG(INFO) << "Posting an Omaha request to " << params_.update_url;
   LOG(INFO) << "Request: " << request_post;
   http_fetcher_->BeginTransfer(params_.update_url);
