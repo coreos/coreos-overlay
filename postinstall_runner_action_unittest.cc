@@ -118,7 +118,7 @@ void PostinstallRunnerActionTest::DoTest(bool do_losetup, int err_code) {
   ASSERT_TRUE(WriteFileString(mountpoint + "/postinst", script));
   ASSERT_EQ(0, System(string("chmod a+x ") + mountpoint + "/postinst"));
 
-  ASSERT_EQ(0, System(string("umount -d ") + mountpoint));
+  ASSERT_EQ(0, System(string("umount ") + mountpoint));
 
   ASSERT_EQ(0, System(string("rm -f ") + cwd + "/postinst_called"));
 

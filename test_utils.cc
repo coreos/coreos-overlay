@@ -217,7 +217,7 @@ void CreateExtImageAtPath(const string& path, vector<string>* out_paths) {
                                    kMountPath, kMountPath)));
   EXPECT_EQ(0, System(StringPrintf("ln -s bogus %s/boguslink",
                                    kMountPath)));
-  EXPECT_EQ(0, System(StringPrintf("umount -d %s", kMountPath)));
+  EXPECT_EQ(0, System(StringPrintf("umount %s", kMountPath)));
 
   if (out_paths) {
     out_paths->clear();

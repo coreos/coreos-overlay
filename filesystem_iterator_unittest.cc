@@ -57,8 +57,8 @@ TEST_F(FilesystemIteratorTest, RunAsRootSuccessTest) {
                              expected_paths_vector.end());
   VerifyAllPaths(kMountPath, expected_paths);
   
-  EXPECT_EQ(0, System(string("umount -d ") + kMountPath + "/some_dir/mnt"));
-  EXPECT_EQ(0, System(string("umount -d ") + kMountPath));
+  EXPECT_EQ(0, System(string("umount ") + kMountPath + "/some_dir/mnt"));
+  EXPECT_EQ(0, System(string("umount ") + kMountPath));
   EXPECT_EQ(0, System(string("rm -f ") + first_image + " " + sub_image));
 }
 
