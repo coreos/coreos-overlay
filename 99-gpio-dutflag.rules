@@ -1,0 +1,31 @@
+# Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+#
+# These rules are in charge of exporting the dut_flaga and dut_flagb GPIOs on
+# different platforms. The GPIO IDs are registered as attributes, which can be
+# detected by client processes. This was motivated by update engine
+# auto-testing framework.
+
+# Identify the GPIO chip and set dut_flaga identifier on different platforms.
+# Unfortunately, Mario does not have a debug header, hence no GPIOs exposed.
+#
+# - Alex:
+ATTR{[dmi/id]product_name}=="Alex", SUBSYSTEM=="gpio", KERNEL=="gpiochip192", \
+  ENV{ID_GPIO_DUTFLAGA}="205", ENV{ID_GPIO_DUTFLAGB}="202"
+# - ZGB:
+ATTR{[dmi/id]product_name}=="ZGB", SUBSYSTEM=="gpio", KERNEL=="gpiochip192", \
+  ENV{ID_GPIO_DUTFLAGA}="216", ENV{ID_GPIO_DUTFLAGB}="195"
+# - Lumpy, Stumpy:
+# TODO(garnold) Stumpy is current disabled, as its dutflag GPIOs are
+# non-pull-up wired, which means that they can read arbitrary values when not
+# connected to Servo. Once fixed or properly handled by the application, this
+# should read "Lumpy|Stumpty".
+ATTR{[dmi/id]product_name}=="Lumpy", SUBSYSTEM=="gpio", KERNEL=="gpiochip160", \
+  ENV{ID_GPIO_DUTFLAGA}="173", ENV{ID_GPIO_DUTFLAGB}="170"
+
+# Export dut_flaga/b and register their identifier as an attribute.
+ACTION=="add|change", SUBSYSTEM=="gpio", \
+  ENV{ID_GPIO_DUTFLAGA}=="?*", ENV{ID_GPIO_DUTFLAGB}=="?*", \
+  ATTR{subsystem/export}="%E{ID_GPIO_DUTFLAGA}", \
+  ATTR{subsystem/export}="%E{ID_GPIO_DUTFLAGB}"
