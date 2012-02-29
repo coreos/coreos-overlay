@@ -760,20 +760,18 @@ bool UpdateAttempter::GetDutflagaGpio(bool* status_p) {
 
   // Open device for reading.
   string dutflaga_value_dev_name = dutflaga_dev_name + "/value";
-  int dutflaga_fd;
-  HANDLE_EINTR((dutflaga_fd = open(dutflaga_value_dev_name.c_str(), 0)));
+  int dutflaga_fd = HANDLE_EINTR(open(dutflaga_value_dev_name.c_str(), 0));
   if (dutflaga_fd < 0) {
     PLOG(ERROR) << "opening dutflaga GPIO device file failed";
     return false;
   }
-  ScopedFdCloser dutflaga_fd_closer(&dutflaga_fd);
+  ScopedEintrSafeFdCloser dutflaga_fd_closer(&dutflaga_fd);
 
   // Read the dut_flaga GPIO signal. We attempt to read more than---but expect
   // to receive exactly---two characters: a '0' or '1', and a newline. This is
   // to ensure that the GPIO device returns a legible result.
   char buf[3];
-  int ret;
-  HANDLE_EINTR((ret = read(dutflaga_fd, buf, 3)));
+  int ret = HANDLE_EINTR(read(dutflaga_fd, buf, 3));
   if (ret != 2) {
     if (ret < 0)
       PLOG(ERROR) << "reading dutflaga GPIO status failed";
