@@ -13,9 +13,13 @@
 # - Alex:
 ATTR{[dmi/id]product_name}=="Alex", SUBSYSTEM=="gpio", KERNEL=="gpiochip192", \
   ENV{ID_GPIO_DUTFLAGA}="205", ENV{ID_GPIO_DUTFLAGB}="202"
+
 # - ZGB:
-ATTR{[dmi/id]product_name}=="ZGB", SUBSYSTEM=="gpio", KERNEL=="gpiochip192", \
-  ENV{ID_GPIO_DUTFLAGA}="216", ENV{ID_GPIO_DUTFLAGB}="195"
+# TODO(garnold) dutflaga/b export is disabled until we figure out what's pulling
+# the signal up (http://code.google.com/p/chromium-os/issues/detail?id=27077)
+#ATTR{[dmi/id]product_name}=="ZGB", SUBSYSTEM=="gpio", KERNEL=="gpiochip192", \
+#  ENV{ID_GPIO_DUTFLAGA}="216", ENV{ID_GPIO_DUTFLAGB}="195"
+
 # - Lumpy, Stumpy:
 # TODO(garnold) Stumpy is current disabled, as its dutflag GPIOs are
 # non-pull-up wired, which means that they can read arbitrary values when not
