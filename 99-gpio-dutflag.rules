@@ -10,23 +10,25 @@
 # Identify the GPIO chip and set dut_flaga identifier on different platforms.
 # Unfortunately, Mario does not have a debug header, hence no GPIOs exposed.
 #
+# TODO(garnold) dutflaga/b export is disabled until we figure out what's
+# pulling the signal up on zgb and lumpy, and implement a safe fallback
+# machanism for such cases where autoupdate fails with the internal address
+# (http://code.google.com/p/chromium-os/issues/detail?id=27077)
+
 # - Alex:
-ATTR{[dmi/id]product_name}=="Alex", SUBSYSTEM=="gpio", KERNEL=="gpiochip192", \
-  ENV{ID_GPIO_DUTFLAGA}="205", ENV{ID_GPIO_DUTFLAGB}="202"
+#ATTR{[dmi/id]product_name}=="Alex", SUBSYSTEM=="gpio", KERNEL=="gpiochip192", \
+#  ENV{ID_GPIO_DUTFLAGA}="205", ENV{ID_GPIO_DUTFLAGB}="202"
 
 # - ZGB:
-# TODO(garnold) dutflaga/b export is disabled until we figure out what's pulling
-# the signal up (http://code.google.com/p/chromium-os/issues/detail?id=27077)
 #ATTR{[dmi/id]product_name}=="ZGB", SUBSYSTEM=="gpio", KERNEL=="gpiochip192", \
 #  ENV{ID_GPIO_DUTFLAGA}="216", ENV{ID_GPIO_DUTFLAGB}="195"
 
 # - Lumpy, Stumpy:
-# TODO(garnold) Stumpy is current disabled, as its dutflag GPIOs are
-# non-pull-up wired, which means that they can read arbitrary values when not
-# connected to Servo. Once fixed or properly handled by the application, this
-# should read "Lumpy|Stumpty".
-ATTR{[dmi/id]product_name}=="Lumpy", SUBSYSTEM=="gpio", KERNEL=="gpiochip160", \
-  ENV{ID_GPIO_DUTFLAGA}="173", ENV{ID_GPIO_DUTFLAGB}="170"
+# TODO(garnold) stumpy's dutflag GPIOs are non-pull-up wired, which means that
+# they can read arbitrary values when not connected to Servo. Once fixed or
+# properly handled by the application, this should read "Lumpy|Stumpy".
+#ATTR{[dmi/id]product_name}=="Lumpy", SUBSYSTEM=="gpio", KERNEL=="gpiochip160", \
+#  ENV{ID_GPIO_DUTFLAGA}="173", ENV{ID_GPIO_DUTFLAGB}="170"
 
 # Export dut_flaga/b and register their identifier as an attribute.
 ACTION=="add|change", SUBSYSTEM=="gpio", \
