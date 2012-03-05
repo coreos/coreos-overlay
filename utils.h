@@ -251,6 +251,11 @@ bool SetProcessPriority(ProcessPriority priority);
 // Assumes data points to a Closure. Runs it and returns FALSE;
 gboolean GlibRunClosure(gpointer data);
 
+// Converts seconds into hour-minute-second notation. For example, 185 will
+// yield 3m5s and 4300 will yield 1h11m40s. Zero padding not applied. Seconds
+// are always shown in the result.
+std::string SecsToHourMinSecStr(unsigned secs);
+
 }  // namespace utils
 
 // Class to unmount FS when object goes out of scope

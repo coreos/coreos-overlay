@@ -14,11 +14,11 @@
 #include <base/time.h>
 #include <glib.h>
 #include <gtest/gtest_prod.h>  // for FRIEND_TEST
-#include <libudev.h>
 
 #include "update_engine/action_processor.h"
 #include "update_engine/chrome_browser_proxy_resolver.h"
 #include "update_engine/download_action.h"
+#include "update_engine/gpio_handler.h"
 #include "update_engine/omaha_request_params.h"
 #include "update_engine/omaha_response_handler_action.h"
 #include "update_engine/proxy_resolver.h"
@@ -47,6 +47,11 @@ enum UpdateStatus {
   UPDATE_STATUS_REPORTING_ERROR_EVENT,
 };
 
+enum UpdateNotice {
+  kUpdateNoticeUnspecified = 0,
+  kUpdateNoticeTestAddrFailed,
+};
+
 const char* UpdateStatusToString(UpdateStatus status);
 
 class UpdateAttempter : public ActionProcessorDelegate,
@@ -59,16 +64,18 @@ class UpdateAttempter : public ActionProcessorDelegate,
                   DbusGlibInterface* dbus_iface);
   virtual ~UpdateAttempter();
 
-  // Checks for update and, if a newer version is available, attempts
-  // to update the system. Non-empty |in_app_version| or
-  // |in_update_url| prevents automatic detection of the parameter.
-  // If |obey_proxies| is true, the update will likely respect Chrome's
-  // proxy setting. For security reasons, we may still not honor them.
-  // Interactive should be true if this was called from the user (ie dbus).
+  // Checks for update and, if a newer version is available, attempts to update
+  // the system. Non-empty |in_app_version| or |in_update_url| prevents
+  // automatic detection of the parameter.  If |obey_proxies| is true, the
+  // update will likely respect Chrome's proxy setting. For security reasons, we
+  // may still not honor them.  Interactive should be true if this was called
+  // from the user (ie dbus).  |is_test| will lead to using an alternative test
+  // server URL, if |omaha_url| is empty.
   virtual void Update(const std::string& app_version,
                       const std::string& omaha_url,
                       bool obey_proxies,
-                      bool interactive);
+                      bool interactive,
+                      bool is_test);
 
   // ActionProcessorDelegate methods:
   void ProcessingDone(const ActionProcessor* processor, ActionExitCode code);
@@ -154,9 +161,10 @@ class UpdateAttempter : public ActionProcessorDelegate,
   FRIEND_TEST(UpdateAttempterTest, ScheduleErrorEventActionTest);
   FRIEND_TEST(UpdateAttempterTest, UpdateTest);
 
-  // Sets the status to the given status and notifies a status update
-  // over dbus.
-  void SetStatusAndNotify(UpdateStatus status);
+  // Sets the status to the given status and notifies a status update over dbus.
+  // Also accepts a supplement notice, which is delegated to the scheduler and
+  // used for making better informed scheduling decisions (e.g. retry timeout).
+  void SetStatusAndNotify(UpdateStatus status, UpdateNotice notice);
 
   // Sets up the download parameters after receiving the update check response.
   void SetupDownload();
@@ -215,26 +223,6 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // accurate in case a user takes a long time to reboot the device after an
   // update has been applied.
   void PingOmaha();
-
-  // Gets the fully qualified sysfs name of a dutflag device.  |udev| is a live
-  // libudev instance; |gpio_dutflag_str| is the identifier for the requested
-  // dutflag GPIO. The output is stored in the string pointed to by
-  // |dutflag_dev_name_p|.  Returns true upon success, false otherwise.
-  bool GetDutflagGpioDevName(struct udev* udev,
-                             const std::string& gpio_dutflag_str,
-                             std::string* dutflag_dev_name_p);
-
-  // Gets the dut_flaga/b GPIO device names and copies them into the two string
-  // arguments, respectively. The function caches these strings, which are
-  // assumed to be hardware constants. Returns true upon success, false
-  // otherwise.
-  bool GetDutflagGpioDevNames(std::string* dutflaga_dev_name_p,
-                              std::string* dutflagb_dev_name_p);
-
-  // Writes the dut_flaga GPIO status into its argument, where true/false stand
-  // for "on"/"off", respectively. Returns true upon success, false otherwise
-  // (in which case no value is written to |status|).
-  bool GetDutflagaGpio(bool* status);
 
   // Last status notification timestamp used for throttling. Use monotonic
   // TimeTicks to ensure that notifications are sent even if the system clock is
@@ -317,9 +305,8 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // Used for fetching information about the device policy.
   scoped_ptr<policy::PolicyProvider> policy_provider_;
 
-  // Dutflaga/b GPIO device names.
-  std::string dutflaga_dev_name_;
-  std::string dutflagb_dev_name_;
+  // A flag for indicating whether we are using a test server URL.
+  bool is_using_test_url_;
 
   DISALLOW_COPY_AND_ASSIGN(UpdateAttempter);
 };

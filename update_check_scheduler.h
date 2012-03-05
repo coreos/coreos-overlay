@@ -35,10 +35,11 @@ namespace chromeos_update_engine {
 // \---/
 class UpdateCheckScheduler {
  public:
-  static const int kTimeoutOnce;
-  static const int kTimeoutPeriodic;
+  static const int kTimeoutInitialInterval;
+  static const int kTimeoutPeriodicInterval;
+  static const int kTimeoutQuickInterval;
   static const int kTimeoutRegularFuzz;
-  static const int kTimeoutMaxBackoff;
+  static const int kTimeoutMaxBackoffInterval;
 
   UpdateCheckScheduler(UpdateAttempter* update_attempter);
   virtual ~UpdateCheckScheduler();
@@ -46,8 +47,10 @@ class UpdateCheckScheduler {
   // Initiates the periodic update checks, if necessary.
   void Run();
 
-  // Sets the new update status. This is invoked by UpdateAttempter.
-  void SetUpdateStatus(UpdateStatus status);
+  // Sets the new update status. This is invoked by UpdateAttempter.  |notice|
+  // is used for passing supplemental information about recent update events,
+  // which may influence scheduling decisions.
+  void SetUpdateStatus(UpdateStatus status, UpdateNotice notice);
 
   void set_poll_interval(int interval) { poll_interval_ = interval; }
   int poll_interval() const { return poll_interval_; }
@@ -99,13 +102,16 @@ class UpdateCheckScheduler {
   // attempter.
   static gboolean StaticCheck(void* scheduler);
 
-  // Schedules the next update check by setting up a timeout source.
-  void ScheduleNextCheck();
+  // Schedules the next update check by setting up a timeout source;
+  // |is_force_quick| will enforce a quick subsequent update check interval.
+  void ScheduleNextCheck(bool is_force_quick);
 
   // Computes the timeout interval along with its random fuzz range for the next
   // update check by taking into account the last timeout interval as well as
-  // the last update status.
-  void ComputeNextIntervalAndFuzz(int* next_interval, int* next_fuzz);
+  // the last update status. A nonzero |forced_interval|, however, will override
+  // all other considerations.
+  void ComputeNextIntervalAndFuzz(const int forced_interval,
+                                  int* next_interval, int* next_fuzz);
 
   // The UpdateAttempter to use for update checks.
   UpdateAttempter* update_attempter_;

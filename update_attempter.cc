@@ -14,9 +14,7 @@
 #include <tr1/memory>
 #include <vector>
 
-#include <base/eintr_wrapper.h>
 #include <base/rand_util.h>
-#include <base/string_util.h>
 #include <glib.h>
 #include <metrics/metrics_library.h>
 #include <policy/libpolicy.h>
@@ -48,54 +46,16 @@ namespace chromeos_update_engine {
 
 const int UpdateAttempter::kMaxDeltaUpdateFailures = 3;
 
+// Private test server URL w/ custom port number.
 // TODO(garnold) this is currently an arbitrary address and will change based on
 // discussion about the actual test lab configuration.
-const char* const UpdateAttempter::kTestUpdateUrl("https://10.0.0.1/update");
+const char* const UpdateAttempter::kTestUpdateUrl("https://10.0.0.1:70529/update");
 
 const char* kUpdateCompletedMarker =
     "/var/run/update_engine_autoupdate_completed";
 
 namespace {
 const int kMaxConsecutiveObeyProxyRequests = 20;
-
-// Names of udev properties that are linked to the GPIO chip device and identify
-// the two dutflag GPIOs on different boards.
-const char kIdGpioDutflaga[] = "ID_GPIO_DUTFLAGA";
-const char kIdGpioDutflagb[] = "ID_GPIO_DUTFLAGB";
-
-// Scoped closer for udev and udev_enumerate objects.
-// TODO(garnold) chromium-os:26934: it would be nice to generalize the different
-// ScopedFooCloser implementations in update engine using a single template.
-class ScopedUdevCloser {
- public:
-  explicit ScopedUdevCloser(udev **udev_p) : udev_p_(udev_p) {}
-  ~ScopedUdevCloser() {
-    if (udev_p_ && *udev_p_) {
-      udev_unref(*udev_p_);
-      *udev_p_ = NULL;
-    }
-  }
- private:
-  struct udev **udev_p_;
-
-  DISALLOW_COPY_AND_ASSIGN(ScopedUdevCloser);
-};
-
-class ScopedUdevEnumerateCloser {
- public:
-  explicit ScopedUdevEnumerateCloser(udev_enumerate **udev_enum_p) :
-    udev_enum_p_(udev_enum_p) {}
-  ~ScopedUdevEnumerateCloser() {
-    if (udev_enum_p_ && *udev_enum_p_) {
-      udev_enumerate_unref(*udev_enum_p_);
-      *udev_enum_p_ = NULL;
-    }
-  }
- private:
-  struct udev_enumerate **udev_enum_p_;
-
-  DISALLOW_COPY_AND_ASSIGN(ScopedUdevEnumerateCloser);
-};
 }  // namespace {}
 
 const char* UpdateStatusToString(UpdateStatus status) {
@@ -167,7 +127,8 @@ UpdateAttempter::UpdateAttempter(PrefsInterface* prefs,
       updated_boot_flags_(false),
       update_boot_flags_running_(false),
       start_action_processor_(false),
-      policy_provider_(NULL) {
+      policy_provider_(NULL),
+      is_using_test_url_(false) {
   if (utils::FileExists(kUpdateCompletedMarker))
     status_ = UPDATE_STATUS_UPDATED_NEED_REBOOT;
 }
@@ -179,7 +140,8 @@ UpdateAttempter::~UpdateAttempter() {
 void UpdateAttempter::Update(const string& app_version,
                              const string& omaha_url,
                              bool obey_proxies,
-                             bool interactive) {
+                             bool interactive,
+                             bool is_test) {
   chrome_proxy_resolver_.Init();
   fake_update_success_ = false;
   if (status_ == UPDATE_STATUS_UPDATED_NEED_REBOOT) {
@@ -208,23 +170,11 @@ void UpdateAttempter::Update(const string& app_version,
   if (policy_provider_->device_policy_is_loaded())
     policy_provider_->GetDevicePolicy().GetReleaseChannel(&release_track);
 
-  // Force alternate default address for automated test case, based on GPIO
-  // signal. We replicate the URL string so as not to overwrite the argument.
+  // Determine whether an alternative test address should be used.
   string omaha_url_to_use = omaha_url;
-  if (omaha_url_to_use.empty()) {
-    bool dutflaga_gpio_status;
-    if (GetDutflagaGpio(&dutflaga_gpio_status)) {
-      LOG(INFO) << "dutflaga GPIO status: "
-                << (dutflaga_gpio_status ? "on" : "off");
-
-      // The dut_flaga GPIO is actually signaled when in the 'off' position.
-      if (!dutflaga_gpio_status) {
-        LOG(INFO) << "using alternative server address: " << kTestUpdateUrl;
-        omaha_url_to_use = kTestUpdateUrl;
-      }
-    } else {
-      LOG(ERROR) << "reading dutflaga GPIO status failed";
-    }
+  if ((is_using_test_url_ = (omaha_url_to_use.empty() && is_test))) {
+    omaha_url_to_use = kTestUpdateUrl;
+    LOG(INFO) << "using alternative server address: " << omaha_url_to_use;
   }
 
   if (!omaha_request_params_.Init(app_version, omaha_url_to_use,
@@ -348,7 +298,8 @@ void UpdateAttempter::Update(const string& app_version,
   BondActions(kernel_filesystem_verifier_action.get(),
               postinstall_runner_action.get());
 
-  SetStatusAndNotify(UPDATE_STATUS_CHECKING_FOR_UPDATE);
+  SetStatusAndNotify(UPDATE_STATUS_CHECKING_FOR_UPDATE,
+                     kUpdateNoticeUnspecified);
 
   // Just in case we didn't update boot flags yet, make sure they're updated
   // before any update processing starts.
@@ -363,7 +314,18 @@ void UpdateAttempter::CheckForUpdate(const string& app_version,
               << UpdateStatusToString(status_) << ", so not checking.";
     return;
   }
-  Update(app_version, omaha_url, true, true);
+
+  // Read GPIO signals and determine whether this is an automated test scenario.
+  // For safety, we only allow a test update to be performed once; subsequent
+  // update requests will be carried out normally.
+  static bool is_test_used_once = false;
+  bool is_test = !is_test_used_once && GpioHandler::IsGpioSignalingTest();
+  if (is_test) {
+    LOG(INFO) << "test mode signaled";
+    is_test_used_once = true;
+  }
+
+  Update(app_version, omaha_url, true, true, is_test);
 }
 
 bool UpdateAttempter::RebootIfNeeded() {
@@ -388,7 +350,13 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
 
   if (status_ == UPDATE_STATUS_REPORTING_ERROR_EVENT) {
     LOG(INFO) << "Error event sent.";
-    SetStatusAndNotify(UPDATE_STATUS_IDLE);
+
+    // Inform scheduler of new status; also specifically inform about a failed
+    // update attempt with a test address.
+    SetStatusAndNotify(UPDATE_STATUS_IDLE,
+                       (is_using_test_url_ ? kUpdateNoticeTestAddrFailed :
+                        kUpdateNoticeUnspecified));
+
     if (!fake_update_success_) {
       return;
     }
@@ -401,7 +369,8 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
     prefs_->SetInt64(kPrefsDeltaUpdateFailures, 0);
     prefs_->SetString(kPrefsPreviousVersion, omaha_request_params_.app_version);
     DeltaPerformer::ResetUpdateProgress(prefs_, false);
-    SetStatusAndNotify(UPDATE_STATUS_UPDATED_NEED_REBOOT);
+    SetStatusAndNotify(UPDATE_STATUS_UPDATED_NEED_REBOOT,
+                       kUpdateNoticeUnspecified);
 
     // Report the time it took to update the system.
     int64_t update_time = time(NULL) - last_checked_time_;
@@ -418,14 +387,14 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
     return;
   }
   LOG(INFO) << "No update.";
-  SetStatusAndNotify(UPDATE_STATUS_IDLE);
+  SetStatusAndNotify(UPDATE_STATUS_IDLE, kUpdateNoticeUnspecified);
 }
 
 void UpdateAttempter::ProcessingStopped(const ActionProcessor* processor) {
   // Reset process priority back to normal.
   CleanupPriorityManagement();
   download_progress_ = 0.0;
-  SetStatusAndNotify(UPDATE_STATUS_IDLE);
+  SetStatusAndNotify(UPDATE_STATUS_IDLE, kUpdateNoticeUnspecified);
   actions_.clear();
   error_event_.reset(NULL);
 }
@@ -484,9 +453,10 @@ void UpdateAttempter::ActionCompleted(ActionProcessor* processor,
     new_size_ = plan.size;
     SetupDownload();
     SetupPriorityManagement();
-    SetStatusAndNotify(UPDATE_STATUS_UPDATE_AVAILABLE);
+    SetStatusAndNotify(UPDATE_STATUS_UPDATE_AVAILABLE,
+                       kUpdateNoticeUnspecified);
   } else if (type == DownloadAction::StaticType()) {
-    SetStatusAndNotify(UPDATE_STATUS_FINALIZING);
+    SetStatusAndNotify(UPDATE_STATUS_FINALIZING, kUpdateNoticeUnspecified);
   }
 }
 
@@ -523,7 +493,7 @@ void UpdateAttempter::BytesReceived(uint64_t bytes_received, uint64_t total) {
       progress - download_progress_ >= kDeltaPercent ||
       TimeTicks::Now() - last_notify_time_ >= TimeDelta::FromSeconds(10)) {
     download_progress_ = progress;
-    SetStatusAndNotify(UPDATE_STATUS_DOWNLOADING);
+    SetStatusAndNotify(UPDATE_STATUS_DOWNLOADING, kUpdateNoticeUnspecified);
   }
 }
 
@@ -537,259 +507,6 @@ bool UpdateAttempter::GetStatus(int64_t* last_checked_time,
   *current_operation = UpdateStatusToString(status_);
   *new_version = new_version_;
   *new_size = new_size_;
-  return true;
-}
-
-// Discovers the dut_flag GPIO identified by |gpio_dutflag_str| and stores the
-// full device name in |dutflag_dev_name_p|.  The function uses an open libudev
-// instance |udev|.  Returns zero on success, -1 otherwise.
-bool UpdateAttempter::GetDutflagGpioDevName(struct udev* udev,
-                                            const string& gpio_dutflag_str,
-                                            string* dutflag_dev_name_p) {
-  CHECK(udev && dutflag_dev_name_p);
-
-  struct udev_enumerate* udev_enum = NULL;
-  int num_gpio_dutflags = 0;
-  const string gpio_dutflag_pattern = "*" + gpio_dutflag_str;
-  int ret;
-
-  // Initialize udev enumerate context and closer.
-  if (!(udev_enum = udev_enumerate_new(udev))) {
-    LOG(ERROR) << "failed to obtain udev enumerate context";
-    return false;
-  }
-  ScopedUdevEnumerateCloser udev_enum_closer(&udev_enum);
-
-  // Populate filters for find an initialized GPIO chip.
-  if ((ret = udev_enumerate_add_match_subsystem(udev_enum, "gpio")) ||
-      (ret = udev_enumerate_add_match_sysname(udev_enum,
-                                              gpio_dutflag_pattern.c_str()))) {
-    LOG(ERROR) << "failed to initialize udev enumerate context (" << ret << ")";
-    return false;
-  }
-
-  // Obtain list of matching devices.
-  if ((ret = udev_enumerate_scan_devices(udev_enum))) {
-    LOG(ERROR) << "udev enumerate context scan failed (error code "
-               << ret << ")";
-    return false;
-  }
-
-  // Iterate over matching devices, obtain GPIO dut_flaga identifier.
-  struct udev_list_entry* list_entry;
-  udev_list_entry_foreach(list_entry,
-                          udev_enumerate_get_list_entry(udev_enum)) {
-    // Make sure we're not enumerating more than one device.
-    num_gpio_dutflags++;
-    if (num_gpio_dutflags > 1) {
-      LOG(WARNING) <<
-        "enumerated multiple dutflag GPIOs, ignoring this one";
-      continue;
-    }
-
-    // Obtain device name.
-    const char* dev_name = udev_list_entry_get_name(list_entry);
-    if (!dev_name) {
-      LOG(WARNING) << "enumerated device has a null name string, skipping";
-      continue;
-    }
-
-    // Obtain device object.
-    struct udev_device* dev = udev_device_new_from_syspath(udev, dev_name);
-    if (!dev) {
-      LOG(WARNING) <<
-        "obtained a null device object for enumerated device, skipping";
-      continue;
-    }
-
-    // Obtain device syspath.
-    const char* dev_syspath = udev_device_get_syspath(dev);
-    if (dev_syspath) {
-      LOG(INFO) << "obtained device syspath: " << dev_syspath;
-      *dutflag_dev_name_p = dev_syspath;
-    } else {
-      LOG(WARNING) << "could not obtain device syspath";
-    }
-
-    udev_device_unref(dev);
-  }
-
-  return true;
-}
-
-// Discovers and stores the device names of the two dut_flag GPIOs. Returns zero
-// upon success, -1 otherwise.
-bool UpdateAttempter::GetDutflagGpioDevNames(string* dutflaga_dev_name_p,
-                                             string* dutflagb_dev_name_p) {
-  if (!(dutflaga_dev_name_p || dutflagb_dev_name_p))
-    return true;  // No output pointers, nothing to do.
-
-  string gpio_dutflaga_str, gpio_dutflagb_str;
-
-  if (dutflaga_dev_name_.empty() || dutflagb_dev_name_.empty()) {
-    struct udev* udev = NULL;
-    struct udev_enumerate* udev_enum = NULL;
-    int num_gpio_chips = 0;
-    const char* id_gpio_dutflaga = NULL;
-    const char* id_gpio_dutflagb = NULL;
-    int ret;
-
-    LOG(INFO) << "begin discovery of dut_flaga/b devices";
-
-    // Obtain libudev instance and closer.
-    if (!(udev = udev_new())) {
-      LOG(ERROR) << "failed to obtain libudev instance";
-      return false;
-    }
-    ScopedUdevCloser udev_closer(&udev);
-
-    // Initialize a udev enumerate object and closer with a bounded lifespan.
-    {
-      if (!(udev_enum = udev_enumerate_new(udev))) {
-        LOG(ERROR) << "failed to obtain udev enumerate context";
-        return false;
-      }
-      ScopedUdevEnumerateCloser udev_enum_closer(&udev_enum);
-
-      // Populate filters for find an initialized GPIO chip.
-      if ((ret = udev_enumerate_add_match_subsystem(udev_enum, "gpio")) ||
-          (ret = udev_enumerate_add_match_sysname(udev_enum, "gpiochip*")) ||
-          (ret = udev_enumerate_add_match_property(udev_enum,
-                                                   kIdGpioDutflaga, "*")) ||
-          (ret = udev_enumerate_add_match_property(udev_enum,
-                                                   kIdGpioDutflagb, "*"))) {
-        LOG(ERROR) << "failed to initialize udev enumerate context ("
-                   << ret << ")";
-        return false;
-      }
-
-      // Obtain list of matching devices.
-      if ((ret = udev_enumerate_scan_devices(udev_enum))) {
-        LOG(ERROR) << "udev enumerate context scan failed (" << ret << ")";
-        return false;
-      }
-
-      // Iterate over matching devices, obtain GPIO dut_flaga identifier.
-      struct udev_list_entry* list_entry;
-      udev_list_entry_foreach(list_entry,
-                              udev_enumerate_get_list_entry(udev_enum)) {
-        // Make sure we're not enumerating more than one device.
-        num_gpio_chips++;
-        if (num_gpio_chips > 1) {
-          LOG(WARNING) << "enumerated multiple GPIO chips, ignoring this one";
-          continue;
-        }
-
-        // Obtain device name.
-        const char* dev_name = udev_list_entry_get_name(list_entry);
-        if (!dev_name) {
-          LOG(WARNING) << "enumerated device has a null name string, skipping";
-          continue;
-        }
-
-        // Obtain device object.
-        struct udev_device* dev = udev_device_new_from_syspath(udev, dev_name);
-        if (!dev) {
-          LOG(WARNING) <<
-            "obtained a null device object for enumerated device, skipping";
-          continue;
-        }
-
-        // Obtain dut_flaga/b identifiers.
-        id_gpio_dutflaga =
-          udev_device_get_property_value(dev, kIdGpioDutflaga);
-        id_gpio_dutflagb =
-          udev_device_get_property_value(dev, kIdGpioDutflagb);
-        if (id_gpio_dutflaga && id_gpio_dutflagb) {
-          LOG(INFO) << "found dut_flaga/b identifiers: a=" << id_gpio_dutflaga
-                    << " b=" << id_gpio_dutflagb;
-
-          gpio_dutflaga_str = id_gpio_dutflaga;
-          gpio_dutflagb_str = id_gpio_dutflagb;
-        } else {
-          LOG(ERROR) << "GPIO chip missing dut_flaga/b properties";
-        }
-
-        udev_device_unref(dev);
-      }
-    }
-
-    // Obtain dut_flaga, reusing the same udev instance.
-    if (dutflaga_dev_name_.empty() && !gpio_dutflaga_str.empty()) {
-      LOG(INFO) << "discovering device for GPIO dut_flaga ";
-      if (!GetDutflagGpioDevName(udev, gpio_dutflaga_str,
-                                 &dutflaga_dev_name_)) {
-        LOG(ERROR) << "discovery of dut_flaga GPIO device failed";
-        return false;
-      }
-    }
-
-    // Now obtain dut_flagb.
-    if (dutflagb_dev_name_.empty() && !gpio_dutflagb_str.empty()) {
-      LOG(INFO) << "discovering device for GPIO dut_flagb";
-      if (!GetDutflagGpioDevName(udev, gpio_dutflagb_str,
-                                 &dutflagb_dev_name_)) {
-        LOG(ERROR) << "discovery of dut_flagb GPIO device failed";
-        return false;
-      }
-    }
-
-    LOG(INFO) << "end discovery of dut_flaga/b devices";
-  }
-
-  // Write cached GPIO dutflag(s) to output strings.
-  if (dutflaga_dev_name_p)
-    *dutflaga_dev_name_p = dutflaga_dev_name_;
-  if (dutflagb_dev_name_p)
-    *dutflagb_dev_name_p = dutflagb_dev_name_;
-
-  return true;
-}
-
-// Reads the value of the dut_flaga GPIO and stores it in |status_p|. Returns
-// true upon success, false otherwise (which also means that the GPIO value was
-// not stored and should not be used).
-bool UpdateAttempter::GetDutflagaGpio(bool* status_p) {
-  // Obtain GPIO device file name.
-  string dutflaga_dev_name;
-  GetDutflagGpioDevNames(&dutflaga_dev_name, NULL);
-  if (dutflaga_dev_name.empty()) {
-    LOG(WARNING) << "could not find dutflaga GPIO device";
-    return false;
-  }
-
-  // Open device for reading.
-  string dutflaga_value_dev_name = dutflaga_dev_name + "/value";
-  int dutflaga_fd = HANDLE_EINTR(open(dutflaga_value_dev_name.c_str(), 0));
-  if (dutflaga_fd < 0) {
-    PLOG(ERROR) << "opening dutflaga GPIO device file failed";
-    return false;
-  }
-  ScopedEintrSafeFdCloser dutflaga_fd_closer(&dutflaga_fd);
-
-  // Read the dut_flaga GPIO signal. We attempt to read more than---but expect
-  // to receive exactly---two characters: a '0' or '1', and a newline. This is
-  // to ensure that the GPIO device returns a legible result.
-  char buf[3];
-  int ret = HANDLE_EINTR(read(dutflaga_fd, buf, 3));
-  if (ret != 2) {
-    if (ret < 0)
-      PLOG(ERROR) << "reading dutflaga GPIO status failed";
-    else
-      LOG(ERROR) << "read more than one byte (" << ret << ")";
-    return false;
-  }
-
-  // Identify and write GPIO status.
-  char c = buf[0];
-  if ((c == '0' || c == '1') && buf[1] == '\n') {
-    *status_p = (c == '1');
-  } else {
-    buf[2] = '\0';
-    LOG(ERROR) << "read unexpected value from dutflaga GPIO: " << buf;
-    return false;
-  }
-
   return true;
 }
 
@@ -845,10 +562,11 @@ void UpdateAttempter::BroadcastStatus() {
       new_size_);
 }
 
-void UpdateAttempter::SetStatusAndNotify(UpdateStatus status) {
+void UpdateAttempter::SetStatusAndNotify(UpdateStatus status,
+                                         UpdateNotice notice) {
   status_ = status;
   if (update_check_scheduler_) {
-    update_check_scheduler_->SetUpdateStatus(status_);
+    update_check_scheduler_->SetUpdateStatus(status_, notice);
   }
   BroadcastStatus();
 }
@@ -900,7 +618,8 @@ bool UpdateAttempter::ScheduleErrorEventAction() {
                              false));
   actions_.push_back(shared_ptr<AbstractAction>(error_event_action));
   processor_->EnqueueAction(error_event_action.get());
-  SetStatusAndNotify(UPDATE_STATUS_REPORTING_ERROR_EVENT);
+  SetStatusAndNotify(UPDATE_STATUS_REPORTING_ERROR_EVENT,
+                     kUpdateNoticeUnspecified);
   processor_->StartProcessing();
   return true;
 }
@@ -1030,7 +749,8 @@ void UpdateAttempter::PingOmaha() {
   }
 
   // Update the status which will schedule the next update check
-  SetStatusAndNotify(UPDATE_STATUS_UPDATED_NEED_REBOOT);
+  SetStatusAndNotify(UPDATE_STATUS_UPDATED_NEED_REBOOT,
+                     kUpdateNoticeUnspecified);
 }
 
 }  // namespace chromeos_update_engine

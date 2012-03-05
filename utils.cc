@@ -588,6 +588,23 @@ gboolean GlibRunClosure(gpointer data) {
   return FALSE;
 }
 
+string SecsToHourMinSecStr(unsigned secs) {
+  // Canonicalize into hours, minutes, seconds.
+  unsigned hours = secs / (60 * 60);
+  secs -= hours * (60 * 60);
+  unsigned mins = secs / 60;
+  secs -= mins * 60;
+
+  // Construct and return string.
+  string str;
+  if (hours)
+    base::StringAppendF(&str, "%uh", hours);
+  if (hours || mins)
+    base::StringAppendF(&str, "%um", mins);
+  base::StringAppendF(&str, "%us", secs);
+  return str;
+}
+
 const char* const kStatefulPartition = "/mnt/stateful_partition";
 
 }  // namespace utils

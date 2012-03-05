@@ -256,6 +256,7 @@ sources = Split("""action_processor.cc
                    file_writer.cc
                    flimflam_proxy.cc
                    full_update_generator.cc
+                   gpio_handler.cc
                    graph_utils.cc
                    http_common.cc
                    http_fetcher.cc

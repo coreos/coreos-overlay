@@ -298,7 +298,7 @@ void UpdateAttempterTest::UpdateTestStart() {
   }
   EXPECT_CALL(*processor_, StartProcessing()).Times(1);
 
-  attempter_.Update("", "", false, false);
+  attempter_.Update("", "", false, false, false);
   g_idle_add(&StaticUpdateTestVerify, this);
 }
 
@@ -398,7 +398,7 @@ void UpdateAttempterTest::ReadTrackFromPolicyTestStart() {
           SetArgumentPointee<0>(std::string("canary-channel")),
           Return(true)));
 
-  attempter_.Update("", "", false, false);
+  attempter_.Update("", "", false, false, false);
   EXPECT_EQ("canary-channel", attempter_.omaha_request_params_.app_track);
 
   g_idle_add(&StaticQuitMainLoop, this);
