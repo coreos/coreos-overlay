@@ -193,8 +193,8 @@ env['CCFLAGS'] = ' '.join("""-g
                              -I/usr/include/libxml2""".split());
 env['CCFLAGS'] += (' ' + ' '.join(env['CFLAGS']))
 
-env['LIBS'] = Split("""base
-                       bz2
+BASE_VER = os.environ.get('BASE_VER', '85268')
+env['LIBS'] = Split("""bz2
                        crypto
                        curl
                        ext2fs
@@ -203,13 +203,13 @@ env['LIBS'] = Split("""base
                        gthread-2.0
                        libpcrecpp
                        metrics
-                       policy
+                       policy-%s
                        protobuf
                        pthread
                        rootdev
                        ssl
                        udev
-                       xml2""")
+                       xml2""" % BASE_VER)
 env['CPPPATH'] = ['..']
 env['BUILDERS']['ProtocolBuffer'] = proto_builder
 env['BUILDERS']['DbusBindings'] = dbus_bindings_builder
@@ -224,7 +224,8 @@ for key in Split('PKG_CONFIG_LIBDIR PKG_CONFIG_PATH'):
 pkgconfig = os.environ.get('PKG_CONFIG', 'pkg-config')
 
 env.ParseConfig(pkgconfig + ' --cflags --libs '
-                'dbus-1 dbus-glib-1 gio-2.0 gio-unix-2.0 glib-2.0 libchromeos')
+                'dbus-1 dbus-glib-1 gio-2.0 gio-unix-2.0 glib-2.0 libchrome-%s '
+                'libchromeos-%s' % (BASE_VER, BASE_VER))
 env.ProtocolBuffer('update_metadata.pb.cc', 'update_metadata.proto')
 env.PublicKey('unittest_key.pub.pem', 'unittest_key.pem')
 env.PublicKey('unittest_key2.pub.pem', 'unittest_key2.pem')
