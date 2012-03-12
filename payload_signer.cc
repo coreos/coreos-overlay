@@ -159,7 +159,7 @@ bool PayloadSigner::SignHash(const vector<char>& hash,
   // This runs on the server, so it's okay to cop out and call openssl
   // executable rather than properly use the library
   vector<string> cmd;
-  base::SplitString("/usr/bin/openssl rsautl -raw -sign -inkey x -in x -out x",
+  base::SplitString("openssl rsautl -raw -sign -inkey x -in x -out x",
                     ' ',
                     &cmd);
   cmd[cmd.size() - 5] = private_key_path;

@@ -159,7 +159,7 @@ void SignGeneratedShellPayload(SignatureTest signature_test,
     LOG(INFO) << "Generating a mismatched private key.";
     ASSERT_EQ(0,
               System(StringPrintf(
-                  "/usr/bin/openssl genrsa -out %s 2048",
+                  "openssl genrsa -out %s 2048",
                   private_key_path.c_str())));
   }
   int signature_size = GetSignatureSize(private_key_path);
@@ -192,7 +192,7 @@ void SignGeneratedShellPayload(SignatureTest signature_test,
   ScopedPathUnlinker sig_unlinker(sig_file);
   ASSERT_EQ(0,
             System(StringPrintf(
-                "/usr/bin/openssl rsautl -raw -sign -inkey %s -in %s -out %s",
+                "openssl rsautl -raw -sign -inkey %s -in %s -out %s",
                 private_key_path.c_str(),
                 hash_file.c_str(),
                 sig_file.c_str())));
@@ -203,7 +203,7 @@ void SignGeneratedShellPayload(SignatureTest signature_test,
       signature_test == kSignatureGeneratedShellRotateCl2) {
     ASSERT_EQ(0,
               System(StringPrintf(
-                  "/usr/bin/openssl rsautl -raw -sign -inkey %s -in %s -out %s",
+                  "openssl rsautl -raw -sign -inkey %s -in %s -out %s",
                   kUnittestPrivateKey2Path,
                   hash_file.c_str(),
                   sig_file2.c_str())));
