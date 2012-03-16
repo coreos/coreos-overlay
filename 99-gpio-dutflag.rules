@@ -16,8 +16,8 @@
 # (http://code.google.com/p/chromium-os/issues/detail?id=27077)
 
 # - Alex:
-#ATTR{[dmi/id]product_name}=="Alex", SUBSYSTEM=="gpio", KERNEL=="gpiochip192", \
-#  ENV{ID_GPIO_DUTFLAGA}="205", ENV{ID_GPIO_DUTFLAGB}="202"
+ATTR{[dmi/id]product_name}=="Alex", SUBSYSTEM=="gpio", KERNEL=="gpiochip192", \
+  ENV{ID_GPIO_DUTFLAGA}="205", ENV{ID_GPIO_DUTFLAGB}="202"
 
 # - ZGB:
 #ATTR{[dmi/id]product_name}=="ZGB", SUBSYSTEM=="gpio", KERNEL=="gpiochip192", \

@@ -47,9 +47,10 @@ namespace chromeos_update_engine {
 const int UpdateAttempter::kMaxDeltaUpdateFailures = 3;
 
 // Private test server URL w/ custom port number.
-// TODO(garnold) this is currently an arbitrary address and will change based on
-// discussion about the actual test lab configuration.
-const char* const UpdateAttempter::kTestUpdateUrl("https://10.0.0.1:70529/update");
+// TODO(garnold) This is a temporary hack to allow us to test the closed loop
+// automated update testing. To be replaced with an hard-coded local IP address.
+const char* const UpdateAttempter::kTestUpdateUrl(
+    "http://garnold.mtv.corp.google.com:8080/update");
 
 const char* kUpdateCompletedMarker =
     "/var/run/update_engine_autoupdate_completed";
