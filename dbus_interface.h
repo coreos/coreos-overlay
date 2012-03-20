@@ -11,6 +11,16 @@
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
 
+#ifndef DBUS_TYPE_G_OBJECT_PATH_ARRAY
+#define DBUS_TYPE_G_OBJECT_PATH_ARRAY \
+  (dbus_g_type_get_collection ("GPtrArray", DBUS_TYPE_G_OBJECT_PATH))
+#endif
+
+#ifndef DBUS_TYPE_G_STRING_ARRAY
+#define DBUS_TYPE_G_STRING_ARRAY \
+  (dbus_g_type_get_collection ("GPtrArray", G_TYPE_STRING))
+#endif
+
 namespace chromeos_update_engine {
 
 class DbusGlibInterface {

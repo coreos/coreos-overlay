@@ -93,12 +93,13 @@ bool GetDefaultServicePath(DbusGlibInterface* dbus_iface, string* out_path) {
                                                                 "Services"));
   GArray* array = NULL;
   bool success = false;
-  if (value &&
+  if (G_VALUE_HOLDS(value, DBUS_TYPE_G_OBJECT_PATH_ARRAY) &&
       (array = reinterpret_cast<GArray*>(g_value_get_boxed(value))) &&
       (array->len > 0)) {
     *out_path = g_array_index(array, const char*, 0);
     success = true;
   }
+
   g_hash_table_unref(hash_table);
   return success;
 }

@@ -4,11 +4,13 @@
 
 #include <base/logging.h>
 #include <gtest/gtest.h>
+#include <string>
 
 #include "update_engine/flimflam_proxy.h"
 #include "update_engine/mock_dbus_interface.h"
 
 using ::testing::_;
+using ::testing::AnyNumber;
 using ::testing::Return;
 using ::testing::SetArgumentPointee;
 using ::testing::StrEq;
@@ -28,77 +30,64 @@ class ScopedRelease {
 };
 
 class FlimFlamProxyTest : public ::testing::Test {
+ public:
+  FlimFlamProxyTest()
+      : kMockFlimFlamManagerProxy_(NULL),
+        kMockFlimFlamServiceProxy_(NULL),
+        kServicePath_(NULL) {}
+
  protected:
+  void SetupMocks(const char* service_path);
+  void SetManagerReply(gconstpointer value, const GType& type);
+  void SetServiceReply(const char* service_type);
   void TestWithServiceType(
       const char* service_type, NetworkConnectionType expected_type);
+
+  static const char* kGetPropertiesMethod;
+  DBusGProxy* kMockFlimFlamManagerProxy_;
+  DBusGProxy* kMockFlimFlamServiceProxy_;
+  DBusGConnection* kMockSystemBus_;
+  const char* kServicePath_;
+  MockDbusGlib dbus_iface_;
 };
 
-void FlimFlamProxyTest::TestWithServiceType(
-    const char* service_type,
-    NetworkConnectionType expected_type) {
+// static
+const char* FlimFlamProxyTest::kGetPropertiesMethod = "GetProperties";
+
+void FlimFlamProxyTest::SetupMocks(const char *service_path) {
   int number = 1;
-  DBusGConnection* kMockSystemBus =
-      reinterpret_cast<DBusGConnection*>(number++);
-  DBusGProxy* kMockFlimFlamManagerProxy =
-      reinterpret_cast<DBusGProxy*>(number++);
-  DBusGProxy* kMockFlimFlamServiceProxy =
-      reinterpret_cast<DBusGProxy*>(number++);
-  ASSERT_NE(kMockSystemBus, reinterpret_cast<DBusGConnection*>(NULL));
-  const char* kServicePath = "/foo/service";
-  const char kGetPropertiesMethod[] = "GetProperties";
+  kMockSystemBus_ = reinterpret_cast<DBusGConnection*>(number++);
+  kMockFlimFlamManagerProxy_ = reinterpret_cast<DBusGProxy*>(number++);
+  kMockFlimFlamServiceProxy_ = reinterpret_cast<DBusGProxy*>(number++);
+  ASSERT_NE(kMockSystemBus_, reinterpret_cast<DBusGConnection*>(NULL));
 
-  MockDbusGlib dbus_iface;
+  kServicePath_ = service_path;
 
-  EXPECT_CALL(dbus_iface,
-              ProxyNewForNameOwner(kMockSystemBus,
-                                   StrEq(kFlimFlamDbusService),
-                                   StrEq(kFlimFlamDbusManagerPath),
-                                   StrEq(kFlimFlamDbusManagerInterface),
-                                   _))
-      .WillOnce(Return(kMockFlimFlamManagerProxy));
-  EXPECT_CALL(dbus_iface,
-              ProxyNewForNameOwner(kMockSystemBus,
-                                   StrEq(kFlimFlamDbusService),
-                                   StrEq(kServicePath),
-                                   StrEq(kFlimFlamDbusServiceInterface),
-                                   _))
-      .WillOnce(Return(kMockFlimFlamServiceProxy));
+  ON_CALL(dbus_iface_, BusGet(DBUS_BUS_SYSTEM, _))
+      .WillByDefault(Return(kMockSystemBus_));
+  EXPECT_CALL(dbus_iface_, BusGet(DBUS_BUS_SYSTEM, _))
+      .Times(AnyNumber());
+}
 
-  EXPECT_CALL(dbus_iface, ProxyUnref(kMockFlimFlamManagerProxy));
-  EXPECT_CALL(dbus_iface, ProxyUnref(kMockFlimFlamServiceProxy));
-
-  EXPECT_CALL(dbus_iface, BusGet(DBUS_BUS_SYSTEM, _))
-      .Times(2)
-      .WillRepeatedly(Return(kMockSystemBus));
-
-  // Set up return value for first dbus call (to Manager object).
+void FlimFlamProxyTest::SetManagerReply(gconstpointer reply_value,
+                                        const GType &reply_type) {
+  // Initialize return value for D-Bus call to Manager object.
   GHashTable* manager_hash_table = g_hash_table_new(g_str_hash, g_str_equal);
 
-  GArray* array = g_array_new(FALSE, FALSE, sizeof(const char*));
+  GArray* array = g_array_new(FALSE, FALSE, sizeof(const char *));
   ASSERT_TRUE(array != NULL);
 
-  EXPECT_EQ(array, g_array_append_val(array, kServicePath));
-  GValue array_value = {0, {{0}}};
-  EXPECT_EQ(&array_value, g_value_init(&array_value, G_TYPE_ARRAY));
-  g_value_take_boxed(&array_value, array);
+  EXPECT_EQ(array, g_array_append_val(array, reply_value));
+  GValue* array_as_value = g_new0(GValue, 1);
+  EXPECT_EQ(array_as_value,
+            g_value_init(array_as_value, reply_type));
+  g_value_take_boxed(array_as_value, array);
   g_hash_table_insert(manager_hash_table,
                       const_cast<char*>("Services"),
-                      &array_value);
+                      array_as_value);
 
-  // Set up return value for second dbus call (to Service object).
-
-  GHashTable* service_hash_table = g_hash_table_new(g_str_hash, g_str_equal);
-
-  GValue service_type_value = {0, {{0}}};
-  EXPECT_EQ(&service_type_value,
-            g_value_init(&service_type_value, G_TYPE_STRING));
-  g_value_set_static_string(&service_type_value, service_type);
-
-  g_hash_table_insert(service_hash_table,
-                      const_cast<char*>("Type"),
-                      &service_type_value);
-
-  EXPECT_CALL(dbus_iface, ProxyCall(kMockFlimFlamManagerProxy,
+  // Plumb return value into mock object.
+  EXPECT_CALL(dbus_iface_, ProxyCall(kMockFlimFlamManagerProxy_,
                                     StrEq(kGetPropertiesMethod),
                                     _,
                                     G_TYPE_INVALID,
@@ -109,7 +98,34 @@ void FlimFlamProxyTest::TestWithServiceType(
                                     G_TYPE_INVALID))
       .WillOnce(DoAll(SetArgumentPointee<5>(manager_hash_table), Return(TRUE)));
 
-  EXPECT_CALL(dbus_iface, ProxyCall(kMockFlimFlamServiceProxy,
+  // Set other expectations.
+  EXPECT_CALL(dbus_iface_,
+              ProxyNewForNameOwner(kMockSystemBus_,
+                                   StrEq(kFlimFlamDbusService),
+                                   StrEq(kFlimFlamDbusManagerPath),
+                                   StrEq(kFlimFlamDbusManagerInterface),
+                                   _))
+      .WillOnce(Return(kMockFlimFlamManagerProxy_));
+  EXPECT_CALL(dbus_iface_, ProxyUnref(kMockFlimFlamManagerProxy_));
+  EXPECT_CALL(dbus_iface_, BusGet(DBUS_BUS_SYSTEM, _))
+      .RetiresOnSaturation();
+}
+
+void FlimFlamProxyTest::SetServiceReply(const char *service_type) {
+  // Initialize return value for D-Bus call to Service object.
+  GHashTable* service_hash_table = g_hash_table_new(g_str_hash, g_str_equal);
+
+  GValue* service_type_value = g_new0(GValue, 1);
+  EXPECT_EQ(service_type_value,
+            g_value_init(service_type_value, G_TYPE_STRING));
+  g_value_set_static_string(service_type_value, service_type);
+
+  g_hash_table_insert(service_hash_table,
+                      const_cast<char*>("Type"),
+                      service_type_value);
+
+  // Plumb return value into mock object.
+  EXPECT_CALL(dbus_iface_, ProxyCall(kMockFlimFlamServiceProxy_,
                                     StrEq(kGetPropertiesMethod),
                                     _,
                                     G_TYPE_INVALID,
@@ -120,9 +136,29 @@ void FlimFlamProxyTest::TestWithServiceType(
                                     G_TYPE_INVALID))
       .WillOnce(DoAll(SetArgumentPointee<5>(service_hash_table), Return(TRUE)));
 
-  NetworkConnectionType type;
+  // Set other expectations.
+  EXPECT_CALL(dbus_iface_,
+              ProxyNewForNameOwner(kMockSystemBus_,
+                                   StrEq(kFlimFlamDbusService),
+                                   StrEq(kServicePath_),
+                                   StrEq(kFlimFlamDbusServiceInterface),
+                                   _))
+      .WillOnce(Return(kMockFlimFlamServiceProxy_));
+  EXPECT_CALL(dbus_iface_, ProxyUnref(kMockFlimFlamServiceProxy_));
+  EXPECT_CALL(dbus_iface_, BusGet(DBUS_BUS_SYSTEM, _))
+      .RetiresOnSaturation();
+}
 
-  EXPECT_TRUE(FlimFlamProxy::GetConnectionType(&dbus_iface, &type));
+void FlimFlamProxyTest::TestWithServiceType(
+    const char* service_type,
+    NetworkConnectionType expected_type) {
+
+  SetupMocks("/service/guest-network");
+  SetManagerReply(kServicePath_, DBUS_TYPE_G_OBJECT_PATH_ARRAY);
+  SetServiceReply(service_type);
+
+  NetworkConnectionType type;
+  EXPECT_TRUE(FlimFlamProxy::GetConnectionType(&dbus_iface_, &type));
   EXPECT_EQ(expected_type, type);
 }
 
@@ -162,6 +198,15 @@ TEST_F(FlimFlamProxyTest, StringForConnectionTypeTest) {
   EXPECT_STREQ("Unknown",
                FlimFlamProxy::StringForConnectionType(
                    static_cast<NetworkConnectionType>(999999)));
+}
+
+TEST_F(FlimFlamProxyTest, MalformedServiceList) {
+  SetupMocks("/service/guest-network");
+  std::string service_name(kServicePath_);
+  SetManagerReply(&service_name, DBUS_TYPE_G_STRING_ARRAY);
+
+  NetworkConnectionType type;
+  EXPECT_FALSE(FlimFlamProxy::GetConnectionType(&dbus_iface_, &type));
 }
 
 }  // namespace chromeos_update_engine
