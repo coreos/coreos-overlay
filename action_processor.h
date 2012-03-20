@@ -43,6 +43,7 @@ enum ActionExitCode {
   kActionCodeSignedDeltaPayloadExpectedError = 17,
   kActionCodeDownloadPayloadPubKeyVerificationError = 18,
   kActionCodePostinstallBootedFromFirmwareB = 19,
+  kActionCodeOmahaUpdateIgnoredPerPolicy = 20,
   kActionCodeOmahaRequestEmptyResponseError = 200,
   kActionCodeOmahaRequestXMLParseError = 201,
   kActionCodeOmahaRequestNoUpdateCheckNode = 202,

@@ -100,7 +100,14 @@ string FormatRequest(const OmahaEvent* event,
   if (event == NULL) {
     body = GetPingBody(ping_active_days, ping_roll_call_days);
     if (!ping_only) {
-      body += "        <o:updatecheck></o:updatecheck>\n";
+      body += StringPrintf(
+          "        <o:updatecheck"
+          " updatedisabled=\"%s\""
+          " targetversionprefix=\"%s\""
+          "></o:updatecheck>\n",
+          params.update_disabled ? "true" : "false",
+          XmlEncode(params.target_version_prefix).c_str());
+
       // If this is the first update check after a reboot following a previous
       // update, generate an event containing the previous version number. If
       // the previous version preference file doesn't exist the event is still
@@ -233,6 +240,7 @@ void OmahaRequestAction::PerformAction() {
                                     ping_active_days_,
                                     ping_roll_call_days_,
                                     prefs_));
+
   http_fetcher_->SetPostData(request_post.data(), request_post.size(),
                              kHttpContentTypeTextXml);
   LOG(INFO) << "Posting an Omaha request to " << params_.update_url;
@@ -448,6 +456,12 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
   if (status != "ok") {
     LOG(ERROR) << "Unknown status: " << status;
     completer.set_code(kActionCodeOmahaRequestBadUpdateCheckStatus);
+    return;
+  }
+
+  if (params_.update_disabled) {
+    LOG(ERROR) << "Ignoring Omaha updates as updates are disabled by policy.";
+    completer.set_code(kActionCodeOmahaUpdateIgnoredPerPolicy);
     return;
   }
 

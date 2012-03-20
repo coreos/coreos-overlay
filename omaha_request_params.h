@@ -18,8 +18,14 @@ namespace chromeos_update_engine {
 // This struct encapsulates the data Omaha gets for the request.
 // These strings in this struct should not be XML escaped.
 struct OmahaRequestParams {
+
   OmahaRequestParams()
-      : os_platform(kOsPlatform), os_version(kOsVersion), app_id(kAppId) {}
+      : os_platform(kOsPlatform),
+        os_version(kOsVersion),
+        app_id(kAppId),
+        delta_okay(true),
+        update_disabled(false) {}
+
   OmahaRequestParams(const std::string& in_os_platform,
                      const std::string& in_os_version,
                      const std::string& in_os_sp,
@@ -29,8 +35,10 @@ struct OmahaRequestParams {
                      const std::string& in_app_lang,
                      const std::string& in_app_track,
                      const std::string& in_hardware_class,
-                     const bool in_delta_okay,
-                     const std::string& in_update_url)
+                     bool in_delta_okay,
+                     const std::string& in_update_url,
+                     bool in_update_disabled,
+                     const std::string& in_target_version_prefix)
       : os_platform(in_os_platform),
         os_version(in_os_version),
         os_sp(in_os_sp),
@@ -41,7 +49,9 @@ struct OmahaRequestParams {
         app_track(in_app_track),
         hardware_class(in_hardware_class),
         delta_okay(in_delta_okay),
-        update_url(in_update_url) {}
+        update_url(in_update_url),
+        update_disabled(in_update_disabled),
+        target_version_prefix(in_target_version_prefix) {}
 
   std::string os_platform;
   std::string os_version;
@@ -57,6 +67,9 @@ struct OmahaRequestParams {
   std::string update_url;
 
   static const char kUpdateTrackKey[];
+
+  bool update_disabled;
+  std::string target_version_prefix;
 
   // Suggested defaults
   static const char* const kAppId;

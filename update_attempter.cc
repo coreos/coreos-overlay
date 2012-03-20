@@ -168,8 +168,14 @@ void UpdateAttempter::Update(const string& app_version,
 
   // If the release_track is specified by policy, that takes precedence.
   string release_track;
-  if (policy_provider_->device_policy_is_loaded())
-    policy_provider_->GetDevicePolicy().GetReleaseChannel(&release_track);
+  if (policy_provider_->device_policy_is_loaded()) {
+    const policy::DevicePolicy& device_policy =
+                                policy_provider_->GetDevicePolicy();
+    device_policy.GetReleaseChannel(&release_track);
+    device_policy.GetUpdateDisabled(&omaha_request_params_.update_disabled);
+    device_policy.GetTargetVersionPrefix(
+      &omaha_request_params_.target_version_prefix);
+  }
 
   // Determine whether an alternative test address should be used.
   string omaha_url_to_use = omaha_url;
@@ -178,11 +184,17 @@ void UpdateAttempter::Update(const string& app_version,
     LOG(INFO) << "using alternative server address: " << omaha_url_to_use;
   }
 
-  if (!omaha_request_params_.Init(app_version, omaha_url_to_use,
+  if (!omaha_request_params_.Init(app_version,
+                                  omaha_url_to_use,
                                   release_track)) {
     LOG(ERROR) << "Unable to initialize Omaha request device params.";
     return;
   }
+
+  LOG(INFO) << "update_disabled = "
+            << (omaha_request_params_.update_disabled ? "true" : "false")
+            << ", target_version_prefix = "
+            << omaha_request_params_.target_version_prefix;
 
   obeying_proxies_ = true;
   if (obey_proxies || proxy_manual_checks_ == 0) {

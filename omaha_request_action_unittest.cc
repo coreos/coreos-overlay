@@ -46,7 +46,9 @@ const OmahaRequestParams kDefaultTestParams(
     "unittest",
     "OEM MODEL 09235 7471",
     false,  // delta okay
-    "http://url");
+    "http://url",
+    false, // update_disabled
+    "");   // target_version_prefix
 
 string GetNoUpdateResponse(const string& app_id) {
   return string(
@@ -65,11 +67,13 @@ string GetUpdateResponse(const string& app_id,
                          const string& needsadmin,
                          const string& size,
                          const string& deadline) {
-  return string("<?xml version=\"1.0\" encoding=\"UTF-8\"?><gupdate "
-                "xmlns=\"http://www.google.com/update2/response\" "
-                "protocol=\"2.0\"><app "
-                "appid=\"") + app_id + "\" status=\"ok\"><ping "
+  return string(
+      "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gupdate "
+      "xmlns=\"http://www.google.com/update2/response\" "
+      "protocol=\"2.0\"><app "
+      "appid=\"") + app_id + "\" status=\"ok\"><ping "
       "status=\"ok\"/><updatecheck DisplayVersion=\"" + display_version + "\" "
+      "ChromeOSVersion=\"" + display_version + "\" "
       "MoreInfo=\"" + more_info_url + "\" Prompt=\"" + prompt + "\" "
       "IsDelta=\"true\" "
       "codebase=\"" + codebase + "\" hash=\"not-applicable\" "
@@ -264,6 +268,48 @@ TEST(OmahaRequestActionTest, ValidUpdateTest) {
   EXPECT_EQ("20101020", response.deadline);
 }
 
+TEST(OmahaRequestActionTest, ValidUpdateBlockedByPolicyTest) {
+  OmahaResponse response;
+  OmahaRequestParams params = kDefaultTestParams;
+  params.update_disabled = true;
+  ASSERT_FALSE(
+      TestUpdateCheck(NULL,  // prefs
+                      params,
+                      GetUpdateResponse(OmahaRequestParams::kAppId,
+                                        "1.2.3.4",  // version
+                                        "http://more/info",
+                                        "true",  // prompt
+                                        "http://code/base",  // dl url
+                                        "HASH1234=",  // checksum
+                                        "false",  // needs admin
+                                        "123",  // size
+                                        "20101020"),  // deadline
+                      -1,
+                      false,  // ping_only
+                      kActionCodeOmahaUpdateIgnoredPerPolicy,
+                      &response,
+                      NULL));
+  EXPECT_FALSE(response.update_exists);
+}
+
+
+TEST(OmahaRequestActionTest, NoUpdatesSentWhenBlockedByPolicyTest) {
+  OmahaResponse response;
+  OmahaRequestParams params = kDefaultTestParams;
+  params.update_disabled = true;
+  ASSERT_TRUE(
+      TestUpdateCheck(NULL,  // prefs
+                      params,
+                      GetNoUpdateResponse(OmahaRequestParams::kAppId),
+                      -1,
+                      false,  // ping_only
+                      kActionCodeSuccess,
+                      &response,
+                      NULL));
+  EXPECT_FALSE(response.update_exists);
+}
+
+
 TEST(OmahaRequestActionTest, NoOutputPipeTest) {
   const string http_response(GetNoUpdateResponse(OmahaRequestParams::kAppId));
 
@@ -379,6 +425,7 @@ TEST(OmahaRequestActionTest, MissingFieldTest) {
                               + "\" status=\"ok\"><ping "
                               "status=\"ok\"/><updatecheck "
                               "DisplayVersion=\"1.2.3.4\" "
+                              "ChromeOSVersion=\"1.2.3.4\" "
                               "Prompt=\"false\" "
                               "IsDelta=\"true\" "
                               "codebase=\"http://code/base\" hash=\"foo\" "
@@ -461,7 +508,9 @@ TEST(OmahaRequestActionTest, XmlEncodeTest) {
                             "unittest_track&lt;",
                             "<OEM MODEL>",
                             false,  // delta okay
-                            "http://url");
+                            "http://url",
+                            false,   // update_disabled
+                            ""); // target_version_prefix
   OmahaResponse response;
   ASSERT_FALSE(
       TestUpdateCheck(NULL,  // prefs
@@ -550,23 +599,28 @@ TEST(OmahaRequestActionTest, FormatUpdateCheckOutputTest) {
   // convert post_data to string
   string post_str(&post_data[0], post_data.size());
   EXPECT_NE(post_str.find(
-                "        <o:ping active=\"1\" a=\"-1\" r=\"-1\"></o:ping>\n"
-                "        <o:updatecheck></o:updatecheck>\n"),
-            string::npos);
+      "        <o:ping active=\"1\" a=\"-1\" r=\"-1\"></o:ping>\n"
+      "        <o:updatecheck"
+      " updatedisabled=\"false\""
+      " targetversionprefix=\"\""
+      "></o:updatecheck>\n"),
+      string::npos);
   EXPECT_NE(post_str.find("hardware_class=\"OEM MODEL 09235 7471\""),
             string::npos);
   EXPECT_EQ(post_str.find("o:event"), string::npos);
 }
 
-TEST(OmahaRequestActionTest, FormatUpdateCheckPrevVersionOutputTest) {
+
+TEST(OmahaRequestActionTest, FormatUpdateDisabledTest) {
   vector<char> post_data;
   NiceMock<PrefsMock> prefs;
   EXPECT_CALL(prefs, GetString(kPrefsPreviousVersion, _))
-      .WillOnce(DoAll(SetArgumentPointee<1>(string("1.2>3.4")), Return(true)));
-  EXPECT_CALL(prefs, SetString(kPrefsPreviousVersion, ""))
-      .WillOnce(Return(true));
+      .WillOnce(DoAll(SetArgumentPointee<1>(string("")), Return(true)));
+  EXPECT_CALL(prefs, SetString(kPrefsPreviousVersion, _)).Times(0);
+  OmahaRequestParams params = kDefaultTestParams;
+  params.update_disabled = true;
   ASSERT_FALSE(TestUpdateCheck(&prefs,
-                               kDefaultTestParams,
+                               params,
                                "invalid xml>",
                                -1,
                                false,  // ping_only
@@ -576,17 +630,15 @@ TEST(OmahaRequestActionTest, FormatUpdateCheckPrevVersionOutputTest) {
   // convert post_data to string
   string post_str(&post_data[0], post_data.size());
   EXPECT_NE(post_str.find(
-                "        <o:ping active=\"1\" a=\"-1\" r=\"-1\"></o:ping>\n"
-                "        <o:updatecheck></o:updatecheck>\n"),
-            string::npos);
+      "        <o:ping active=\"1\" a=\"-1\" r=\"-1\"></o:ping>\n"
+      "        <o:updatecheck"
+      " updatedisabled=\"true\""
+      " targetversionprefix=\"\""
+      "></o:updatecheck>\n"),
+      string::npos);
   EXPECT_NE(post_str.find("hardware_class=\"OEM MODEL 09235 7471\""),
             string::npos);
-  string prev_version_event = StringPrintf(
-      "        <o:event eventtype=\"%d\" eventresult=\"%d\" "
-      "previousversion=\"1.2&gt;3.4\"></o:event>\n",
-      OmahaEvent::kTypeUpdateComplete,
-      OmahaEvent::kResultSuccessReboot);
-  EXPECT_NE(post_str.find(prev_version_event), string::npos);
+  EXPECT_EQ(post_str.find("o:event"), string::npos);
 }
 
 TEST(OmahaRequestActionTest, FormatSuccessEventOutputTest) {
@@ -665,7 +717,9 @@ TEST(OmahaRequestActionTest, FormatDeltaOkayOutputTest) {
                               "unittest_track",
                               "OEM MODEL REV 1234",
                               delta_okay,
-                              "http://url");
+                              "http://url",
+                              false, // update_disabled
+                              "");   // target_version_prefix
     ASSERT_FALSE(TestUpdateCheck(NULL,  // prefs
                                  params,
                                  "invalid xml>",
