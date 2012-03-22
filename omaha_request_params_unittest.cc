@@ -387,6 +387,7 @@ TEST_F(OmahaRequestDeviceParamsTest, IsValidTrackTest) {
   EXPECT_TRUE(params_.IsValidTrack("stable-channel"));
   EXPECT_TRUE(params_.IsValidTrack("beta-channel"));
   EXPECT_TRUE(params_.IsValidTrack("dev-channel"));
+  EXPECT_TRUE(params_.IsValidTrack("dogfood-channel"));
   EXPECT_FALSE(params_.IsValidTrack("some-channel"));
   EXPECT_FALSE(params_.IsValidTrack(""));
   params_.SetLockDown(false);
@@ -394,6 +395,7 @@ TEST_F(OmahaRequestDeviceParamsTest, IsValidTrackTest) {
   EXPECT_TRUE(params_.IsValidTrack("stable-channel"));
   EXPECT_TRUE(params_.IsValidTrack("beta-channel"));
   EXPECT_TRUE(params_.IsValidTrack("dev-channel"));
+  EXPECT_TRUE(params_.IsValidTrack("dogfood-channel"));
   EXPECT_TRUE(params_.IsValidTrack("some-channel"));
   EXPECT_TRUE(params_.IsValidTrack(""));
 }

@@ -180,10 +180,11 @@ bool OmahaRequestDeviceParams::ShouldLockDown() const {
 
 bool OmahaRequestDeviceParams::IsValidTrack(const std::string& track) const {
   static const char* kValidTracks[] = {
-    "canary-channel",
-    "stable-channel",
     "beta-channel",
+    "canary-channel",
     "dev-channel",
+    "dogfood-channel",
+    "stable-channel",
   };
   if (!ShouldLockDown()) {
     return true;
