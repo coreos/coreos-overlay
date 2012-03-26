@@ -100,12 +100,15 @@ string FormatRequest(const OmahaEvent* event,
   if (event == NULL) {
     body = GetPingBody(ping_active_days, ping_roll_call_days);
     if (!ping_only) {
+      // not passing update_disabled to Omaha because we want to
+      // get the update and report with UpdateDeferred result so that
+      // borgmon charts show up updates that are deferred. This is also
+      // the expected behavior when we move to Omaha v3.0 protocol, so it'll
+      // be consistent.
       body += StringPrintf(
           "        <o:updatecheck"
-          " updatedisabled=\"%s\""
           " targetversionprefix=\"%s\""
           "></o:updatecheck>\n",
-          params.update_disabled ? "true" : "false",
           XmlEncode(params.target_version_prefix).c_str());
 
       // If this is the first update check after a reboot following a previous
@@ -460,7 +463,7 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
   }
 
   if (params_.update_disabled) {
-    LOG(ERROR) << "Ignoring Omaha updates as updates are disabled by policy.";
+    LOG(INFO) << "Ignoring Omaha updates as updates are disabled by policy.";
     completer.set_code(kActionCodeOmahaUpdateIgnoredPerPolicy);
     return;
   }

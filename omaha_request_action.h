@@ -57,6 +57,7 @@ COMPILE_ASSERT(sizeof(off_t) == 8, off_t_not_64bit);
 // complete list of defined event types and results, see
 // http://code.google.com/p/omaha/wiki/ServerProtocol#event
 struct OmahaEvent {
+  // The Type values correspond to EVENT_TYPE values of Omaha.
   enum Type {
     kTypeUnknown = 0,
     kTypeDownloadComplete = 1,
@@ -66,10 +67,12 @@ struct OmahaEvent {
     kTypeUpdateDownloadFinished = 14,
   };
 
+  // The Result values correspond to EVENT_RESULT values of Omaha.
   enum Result {
     kResultError = 0,
     kResultSuccess = 1,
     kResultSuccessReboot = 2,
+    kResultUpdateDeferred = 9, // When we ignore/defer updates due to policy.
   };
 
   OmahaEvent()

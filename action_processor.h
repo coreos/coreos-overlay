@@ -23,6 +23,7 @@ namespace chromeos_update_engine {
 
 // Action exit codes.
 enum ActionExitCode {
+  // use the 0xx and 1xx ranges for client errors.
   kActionCodeSuccess = 0,
   kActionCodeError = 1,
   kActionCodeOmahaRequestError = 2,
@@ -43,13 +44,22 @@ enum ActionExitCode {
   kActionCodeSignedDeltaPayloadExpectedError = 17,
   kActionCodeDownloadPayloadPubKeyVerificationError = 18,
   kActionCodePostinstallBootedFromFirmwareB = 19,
-  kActionCodeOmahaUpdateIgnoredPerPolicy = 20,
+
+  // use the 2xx range for errors in Omaha response.
   kActionCodeOmahaRequestEmptyResponseError = 200,
   kActionCodeOmahaRequestXMLParseError = 201,
   kActionCodeOmahaRequestNoUpdateCheckNode = 202,
   kActionCodeOmahaRequestNoUpdateCheckStatus = 203,
   kActionCodeOmahaRequestBadUpdateCheckStatus = 204,
+
+  // use the 2xxx range to encode HTTP errors.
   kActionCodeOmahaRequestHTTPResponseBase = 2000,  // + HTTP response code
+
+  // use the 5xxx range for return codes that are not really errors,
+  // but deferred updates. these have to be logged with a different
+  // result in Omaha so that they don't show up as errors in borgmon charts.
+  kActionCodeOmahaUpdateIgnoredPerPolicy = 5000,
+  kActionCodeOmahaUpdateDeferredPerPolicy = 5001,
 
   // Bit flags.
   kActionCodeResumedFlag = 1 << 30,  // Set if resuming an interruped update.

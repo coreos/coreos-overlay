@@ -601,7 +601,6 @@ TEST(OmahaRequestActionTest, FormatUpdateCheckOutputTest) {
   EXPECT_NE(post_str.find(
       "        <o:ping active=\"1\" a=\"-1\" r=\"-1\"></o:ping>\n"
       "        <o:updatecheck"
-      " updatedisabled=\"false\""
       " targetversionprefix=\"\""
       "></o:updatecheck>\n"),
       string::npos);
@@ -611,7 +610,7 @@ TEST(OmahaRequestActionTest, FormatUpdateCheckOutputTest) {
 }
 
 
-TEST(OmahaRequestActionTest, FormatUpdateDisabledTest) {
+TEST(OmahaRequestActionTest, FormatTargetVersionPrefixTest) {
   vector<char> post_data;
   NiceMock<PrefsMock> prefs;
   EXPECT_CALL(prefs, GetString(kPrefsPreviousVersion, _))
@@ -632,7 +631,6 @@ TEST(OmahaRequestActionTest, FormatUpdateDisabledTest) {
   EXPECT_NE(post_str.find(
       "        <o:ping active=\"1\" a=\"-1\" r=\"-1\"></o:ping>\n"
       "        <o:updatecheck"
-      " updatedisabled=\"true\""
       " targetversionprefix=\"\""
       "></o:updatecheck>\n"),
       string::npos);

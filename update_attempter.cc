@@ -602,6 +602,22 @@ void UpdateAttempter::CreatePendingErrorEvent(AbstractAction* action,
     return;
   }
 
+  // Classify the code to generate the appropriate result so that
+  // the Borgmon charts show up the results correctly.
+  // Do this before calling GetErrorCodeForAction which could potentially
+  // augment the bit representation of code and thus cause no matches for
+  // the switch cases below.
+  OmahaEvent::Result event_result;
+  switch (code) {
+    case kActionCodeOmahaUpdateIgnoredPerPolicy:
+    case kActionCodeOmahaUpdateDeferredPerPolicy:
+      event_result = OmahaEvent::kResultUpdateDeferred;
+      break;
+    default:
+      event_result = OmahaEvent::kResultError;
+      break;
+  }
+
   code = GetErrorCodeForAction(action, code);
   fake_update_success_ = code == kActionCodePostinstallBootedFromFirmwareB;
 
@@ -613,8 +629,9 @@ void UpdateAttempter::CreatePendingErrorEvent(AbstractAction* action,
       response_handler_action_->install_plan().is_resume) {
     code = static_cast<ActionExitCode>(code | kActionCodeResumedFlag);
   }
+
   error_event_.reset(new OmahaEvent(OmahaEvent::kTypeUpdateComplete,
-                                    OmahaEvent::kResultError,
+                                    event_result,
                                     code));
 }
 
