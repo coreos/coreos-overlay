@@ -1,4 +1,4 @@
-// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -102,8 +102,19 @@ bool DeltaReadFile(Graph* graph,
   string old_path = (old_root == kNonexistentPath) ? kNonexistentPath :
       old_root + path;
 
+  // TODO(dgarrett): chromium-os:15274 Wire up this file all of the way to
+  // command line.
+  static const char* black_files[] = {
+    "/opt/google/chrome/pepper/libnetflixidd.so"
+  };
+
+  std::set<string> bsdiff_blacklist = std::set<string>(black_files,
+                                                       black_files +
+                                                       arraysize(black_files));
+
   TEST_AND_RETURN_FALSE(DeltaDiffGenerator::ReadFileToDiff(old_path,
                                                            new_root + path,
+                                                           bsdiff_blacklist,
                                                            &data,
                                                            &operation,
                                                            true));
@@ -400,6 +411,7 @@ bool DeltaCompressKernelPartition(
   vector<char> data;
   TEST_AND_RETURN_FALSE(DeltaDiffGenerator::ReadFileToDiff(old_kernel_part,
                                                            new_kernel_part,
+                                                           std::set<string>(),
                                                            &data,
                                                            op,
                                                            false));
@@ -482,6 +494,7 @@ void ReportPayloadUsage(const DeltaArchiveManifest& manifest,
 bool DeltaDiffGenerator::ReadFileToDiff(
     const string& old_filename,
     const string& new_filename,
+    const std::set<string>& bsdiff_blacklist,
     vector<char>* out_data,
     DeltaArchiveManifest_InstallOperation* out_op,
     bool gather_extents) {
@@ -511,13 +524,14 @@ bool DeltaDiffGenerator::ReadFileToDiff(
 
   // Do we have an original file to consider?
   struct stat old_stbuf;
-  bool no_original = old_filename.empty();
-  if (!no_original && 0 != stat(old_filename.c_str(), &old_stbuf)) {
+  bool original = !old_filename.empty();
+  if (original && 0 != stat(old_filename.c_str(), &old_stbuf)) {
     // If stat-ing the old file fails, it should be because it doesn't exist.
     TEST_AND_RETURN_FALSE(errno == ENOTDIR || errno == ENOENT);
-    no_original = true;
+    original = false;
   }
-  if (!no_original) {
+
+  if (original) {
     // Read old data
     vector<char> old_data;
     TEST_AND_RETURN_FALSE(utils::ReadFile(old_filename, &old_data));
@@ -527,16 +541,20 @@ bool DeltaDiffGenerator::ReadFileToDiff(
       current_best_size = 0;
       data.clear();
     } else {
-      // Try bsdiff of old to new data
-      vector<char> bsdiff_delta;
-      TEST_AND_RETURN_FALSE(
-          BsdiffFiles(old_filename, new_filename, &bsdiff_delta));
-      CHECK_GT(bsdiff_delta.size(), static_cast<vector<char>::size_type>(0));
-      if (bsdiff_delta.size() < current_best_size) {
-        operation.set_type(DeltaArchiveManifest_InstallOperation_Type_BSDIFF);
-        current_best_size = bsdiff_delta.size();
+      if (bsdiff_blacklist.find(old_filename) ==
+          bsdiff_blacklist.end()) {
+        // If the source file hasn't been bsdiff blacklisted, then try to see
+        // if bsdiff can find a smaller operation.
+        vector<char> bsdiff_delta;
+        TEST_AND_RETURN_FALSE(
+            BsdiffFiles(old_filename, new_filename, &bsdiff_delta));
+        CHECK_GT(bsdiff_delta.size(), static_cast<vector<char>::size_type>(0));
+        if (bsdiff_delta.size() < current_best_size) {
+          operation.set_type(DeltaArchiveManifest_InstallOperation_Type_BSDIFF);
+          current_best_size = bsdiff_delta.size();
 
-        data = bsdiff_delta;
+          data = bsdiff_delta;
+        }
       }
     }
   }
