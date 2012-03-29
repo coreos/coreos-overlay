@@ -70,7 +70,7 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootMoveSmallTest) {
   DeltaArchiveManifest_InstallOperation op;
   EXPECT_TRUE(DeltaDiffGenerator::ReadFileToDiff(old_path(),
                                                  new_path(),
-                                                 std::set<string>(),
+                                                 true, // bsdiff_allowed
                                                  &data,
                                                  &op,
                                                  true));
@@ -100,7 +100,7 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootBsdiffSmallTest) {
   DeltaArchiveManifest_InstallOperation op;
   EXPECT_TRUE(DeltaDiffGenerator::ReadFileToDiff(old_path(),
                                                  new_path(),
-                                                 std::set<string>(),
+                                                 true, // bsdiff_allowed
                                                  &data,
                                                  &op,
                                                  true));
@@ -119,7 +119,7 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootBsdiffSmallTest) {
   EXPECT_EQ(1, BlocksInExtents(op.dst_extents()));
 }
 
-TEST_F(DeltaDiffGeneratorTest, RunAsRootBsdiffBlacklistNoMatchTest) {
+TEST_F(DeltaDiffGeneratorTest, RunAsRootBsdiffNotAllowedTest) {
   EXPECT_TRUE(utils::WriteFile(old_path().c_str(),
                                reinterpret_cast<const char*>(kRandomString),
                                sizeof(kRandomString) - 1));
@@ -129,48 +129,9 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootBsdiffBlacklistNoMatchTest) {
   vector<char> data;
   DeltaArchiveManifest_InstallOperation op;
 
-  std::set<string> bsdiff_blacklist;
-  bsdiff_blacklist.insert("fuzzy_bunny");  // Not the new_path
-
   EXPECT_TRUE(DeltaDiffGenerator::ReadFileToDiff(old_path(),
                                                  new_path(),
-                                                 bsdiff_blacklist,
-                                                 &data,
-                                                 &op,
-                                                 true));
-  EXPECT_FALSE(data.empty());
-
-  EXPECT_TRUE(op.has_type());
-  EXPECT_EQ(DeltaArchiveManifest_InstallOperation_Type_BSDIFF, op.type());
-  EXPECT_FALSE(op.has_data_offset());
-  EXPECT_FALSE(op.has_data_length());
-  EXPECT_EQ(1, op.src_extents_size());
-  EXPECT_EQ(sizeof(kRandomString) - 1, op.src_length());
-  EXPECT_EQ(1, op.dst_extents_size());
-  EXPECT_EQ(sizeof(kRandomString), op.dst_length());
-  EXPECT_EQ(BlocksInExtents(op.src_extents()),
-            BlocksInExtents(op.dst_extents()));
-  EXPECT_EQ(1, BlocksInExtents(op.dst_extents()));
-}
-
-
-TEST_F(DeltaDiffGeneratorTest, RunAsRootBsdiffBlacklistMatchTest) {
-  EXPECT_TRUE(utils::WriteFile(old_path().c_str(),
-                               reinterpret_cast<const char*>(kRandomString),
-                               sizeof(kRandomString) - 1));
-  EXPECT_TRUE(utils::WriteFile(new_path().c_str(),
-                               reinterpret_cast<const char*>(kRandomString),
-                               sizeof(kRandomString)));
-  vector<char> data;
-  DeltaArchiveManifest_InstallOperation op;
-
-  std::set<string> bsdiff_blacklist;
-  bsdiff_blacklist.insert("fuzzy_bunny");
-  bsdiff_blacklist.insert(old_path());
-
-  EXPECT_TRUE(DeltaDiffGenerator::ReadFileToDiff(old_path(),
-                                                 new_path(),
-                                                 bsdiff_blacklist,
+                                                 false, // bsdiff_allowed
                                                  &data,
                                                  &op,
                                                  true));
@@ -182,7 +143,7 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootBsdiffBlacklistMatchTest) {
   EXPECT_NE(DeltaArchiveManifest_InstallOperation_Type_BSDIFF, op.type());
 }
 
-TEST_F(DeltaDiffGeneratorTest, RunAsRootBsdiffBlacklistMoveMatchTest) {
+TEST_F(DeltaDiffGeneratorTest, RunAsRootBsdiffNotAllowedMoveTest) {
   EXPECT_TRUE(utils::WriteFile(old_path().c_str(),
                                reinterpret_cast<const char*>(kRandomString),
                                sizeof(kRandomString)));
@@ -192,13 +153,9 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootBsdiffBlacklistMoveMatchTest) {
   vector<char> data;
   DeltaArchiveManifest_InstallOperation op;
 
-  std::set<string> bsdiff_blacklist;
-  bsdiff_blacklist.insert("fuzzy_bunny");
-  bsdiff_blacklist.insert(old_path());
-
   EXPECT_TRUE(DeltaDiffGenerator::ReadFileToDiff(old_path(),
                                                  new_path(),
-                                                 bsdiff_blacklist,
+                                                 false, // bsdiff_allowed
                                                  &data,
                                                  &op,
                                                  true));
@@ -223,7 +180,7 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootReplaceSmallTest) {
     DeltaArchiveManifest_InstallOperation op;
     EXPECT_TRUE(DeltaDiffGenerator::ReadFileToDiff(old_path(),
                                                    new_path(),
-                                                   std::set<string>(),
+                                                   true, // bsdiff_allowed
                                                    &data,
                                                    &op,
                                                    true));
@@ -255,7 +212,7 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootBsdiffNoGatherExtentsSmallTest) {
   DeltaArchiveManifest_InstallOperation op;
   EXPECT_TRUE(DeltaDiffGenerator::ReadFileToDiff(old_path(),
                                                  new_path(),
-                                                 std::set<string>(),
+                                                 true, // bsdiff_allowed
                                                  &data,
                                                  &op,
                                                  false));

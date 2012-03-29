@@ -104,17 +104,17 @@ bool DeltaReadFile(Graph* graph,
 
   // TODO(dgarrett): chromium-os:15274 Wire up this file all of the way to
   // command line.
-  static const char* black_files[] = {
-    "/opt/google/chrome/pepper/libnetflixidd.so"
-  };
+  //
+  // To hardcode for now, use the following instead of true.
+  //   (path != "/opt/google/chrome/pepper/libnetflixidd.so");
+  bool bsdiff_allowed = true;
 
-  std::set<string> bsdiff_blacklist = std::set<string>(black_files,
-                                                       black_files +
-                                                       arraysize(black_files));
+  if (!bsdiff_allowed)
+    LOG(INFO) << "bsdiff blacklisting: " << path;
 
   TEST_AND_RETURN_FALSE(DeltaDiffGenerator::ReadFileToDiff(old_path,
                                                            new_root + path,
-                                                           bsdiff_blacklist,
+                                                           bsdiff_allowed,
                                                            &data,
                                                            &operation,
                                                            true));
@@ -409,12 +409,13 @@ bool DeltaCompressKernelPartition(
   DeltaArchiveManifest_InstallOperation* op = &(*ops)[0];
 
   vector<char> data;
-  TEST_AND_RETURN_FALSE(DeltaDiffGenerator::ReadFileToDiff(old_kernel_part,
-                                                           new_kernel_part,
-                                                           std::set<string>(),
-                                                           &data,
-                                                           op,
-                                                           false));
+  TEST_AND_RETURN_FALSE(
+      DeltaDiffGenerator::ReadFileToDiff(old_kernel_part,
+                                         new_kernel_part,
+                                         true, // bsdiff_allowed
+                                         &data,
+                                         op,
+                                         false));
 
   // Write the data
   if (op->type() != DeltaArchiveManifest_InstallOperation_Type_MOVE) {
@@ -494,7 +495,7 @@ void ReportPayloadUsage(const DeltaArchiveManifest& manifest,
 bool DeltaDiffGenerator::ReadFileToDiff(
     const string& old_filename,
     const string& new_filename,
-    const std::set<string>& bsdiff_blacklist,
+    bool bsdiff_allowed,
     vector<char>* out_data,
     DeltaArchiveManifest_InstallOperation* out_op,
     bool gather_extents) {
@@ -540,21 +541,17 @@ bool DeltaDiffGenerator::ReadFileToDiff(
       operation.set_type(DeltaArchiveManifest_InstallOperation_Type_MOVE);
       current_best_size = 0;
       data.clear();
-    } else {
-      if (bsdiff_blacklist.find(old_filename) ==
-          bsdiff_blacklist.end()) {
-        // If the source file hasn't been bsdiff blacklisted, then try to see
-        // if bsdiff can find a smaller operation.
-        vector<char> bsdiff_delta;
-        TEST_AND_RETURN_FALSE(
-            BsdiffFiles(old_filename, new_filename, &bsdiff_delta));
-        CHECK_GT(bsdiff_delta.size(), static_cast<vector<char>::size_type>(0));
-        if (bsdiff_delta.size() < current_best_size) {
-          operation.set_type(DeltaArchiveManifest_InstallOperation_Type_BSDIFF);
-          current_best_size = bsdiff_delta.size();
-
-          data = bsdiff_delta;
-        }
+    } else if (bsdiff_allowed) {
+      // If the source file is considered bsdiff safe (no bsdiff bugs
+      // triggered), see if BSDIFF encoding is smaller.
+      vector<char> bsdiff_delta;
+      TEST_AND_RETURN_FALSE(
+          BsdiffFiles(old_filename, new_filename, &bsdiff_delta));
+      CHECK_GT(bsdiff_delta.size(), static_cast<vector<char>::size_type>(0));
+      if (bsdiff_delta.size() < current_best_size) {
+        operation.set_type(DeltaArchiveManifest_InstallOperation_Type_BSDIFF);
+        current_best_size = bsdiff_delta.size();
+        data = bsdiff_delta;
       }
     }
   }

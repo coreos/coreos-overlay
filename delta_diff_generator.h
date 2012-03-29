@@ -99,7 +99,7 @@ class DeltaDiffGenerator {
   // Returns true on success.
   static bool ReadFileToDiff(const std::string& old_filename,
                              const std::string& new_filename,
-                             const std::set<std::string>& bsdiff_blacklist,
+                             bool bsdiff_allowed,
                              std::vector<char>* out_data,
                              DeltaArchiveManifest_InstallOperation* out_op,
                              bool gather_extents);
