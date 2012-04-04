@@ -65,8 +65,9 @@ void LibcurlHttpFetcher::ResumeTransfer(const std::string& url) {
   CHECK(curl_handle_);
 
   CHECK(HasProxy());
-  LOG(INFO) << "Using proxy: " << GetCurrentProxy();
-  if (GetCurrentProxy() == kNoProxy) {
+  bool is_direct = (GetCurrentProxy() == kNoProxy);
+  LOG(INFO) << "Using proxy: " << (is_direct ? "no" : "yes");
+  if (is_direct) {
     CHECK_EQ(curl_easy_setopt(curl_handle_,
                               CURLOPT_PROXY,
                               ""), CURLE_OK);
@@ -295,7 +296,7 @@ void LibcurlHttpFetcher::CurlPerformOnce() {
 
       if (HasProxy()) {
         // We have another proxy. Retry immediately.
-        LOG(INFO) << "Trying next proxy: " << GetCurrentProxy();
+        LOG(INFO) << "Retrying with next proxy setting";
         g_idle_add(&LibcurlHttpFetcher::StaticRetryTimeoutCallback, this);
       } else {
         // Out of proxies. Give up.
