@@ -107,22 +107,6 @@ void DownloadAction::ReceivedBytes(HttpFetcher *fetcher,
   }
 }
 
-namespace {
-void FlushLinuxCaches() {
-  vector<string> command;
-  command.push_back("/bin/sync");
-  int rc;
-  LOG(INFO) << "FlushLinuxCaches-sync...";
-  Subprocess::SynchronousExec(command, &rc, NULL);
-  LOG(INFO) << "FlushLinuxCaches-drop_caches...";
-
-  const char* const drop_cmd = "3\n";
-  utils::WriteFile("/proc/sys/vm/drop_caches", drop_cmd, strlen(drop_cmd));
-
-  LOG(INFO) << "FlushLinuxCaches done.";
-}
-}
-
 void DownloadAction::TransferComplete(HttpFetcher *fetcher, bool successful) {
   if (writer_) {
     LOG_IF(WARNING, writer_->Close() != 0) << "Error closing the writer.";
@@ -149,8 +133,6 @@ void DownloadAction::TransferComplete(HttpFetcher *fetcher, bool successful) {
       code = kActionCodeDownloadNewPartitionInfoError;
     }
   }
-
-  FlushLinuxCaches();
 
   // Write the path to the output pipe if we're successful.
   if (code == kActionCodeSuccess && HasOutputPipe())
