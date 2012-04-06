@@ -20,6 +20,7 @@
 #include <base/logging.h>
 #include <base/memory/scoped_ptr.h>
 #include <base/string_util.h>
+#include <base/stringprintf.h>
 #include <bzlib.h>
 
 #include "update_engine/bzip.h"

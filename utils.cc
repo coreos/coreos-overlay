@@ -1,4 +1,4 @@
-// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -22,9 +22,10 @@
 #include <base/eintr_wrapper.h>
 #include <base/file_path.h>
 #include <base/file_util.h>
+#include <base/logging.h>
 #include <base/rand_util.h>
 #include <base/string_util.h>
-#include <base/logging.h>
+#include <base/stringprintf.h>
 #include <google/protobuf/stubs/common.h>
 #include <rootdev/rootdev.h>
 

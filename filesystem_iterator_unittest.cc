@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -10,6 +10,7 @@
 #include <vector>
 #include <gtest/gtest.h>
 #include "base/string_util.h"
+#include <base/stringprintf.h>
 #include "update_engine/filesystem_iterator.h"
 #include "update_engine/test_utils.h"
 #include "update_engine/utils.h"
