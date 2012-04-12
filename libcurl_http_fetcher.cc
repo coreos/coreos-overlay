@@ -217,6 +217,7 @@ void LibcurlHttpFetcher::ProxiesResolved() {
   no_network_retry_count_ = 0;
   http_response_code_ = 0;
   terminate_requested_ = false;
+  sent_byte_ = false;
   ResumeTransfer(url_);
   CurlPerformOnce();
 }
