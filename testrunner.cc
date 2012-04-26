@@ -25,5 +25,7 @@ int main(int argc, char **argv) {
   chromeos_update_engine::Subprocess::Init();
   CommandLine::Init(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+  int test_result = RUN_ALL_TESTS();
+  LOG(INFO) << "unittest return value: " << test_result;
+  return test_result;
 }
