@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -8,6 +8,7 @@
 
 namespace chromeos_update_engine {
 
+volatile sig_atomic_t Terminator::exit_status_ = 1;  // default exit status
 volatile sig_atomic_t Terminator::exit_blocked_ = 0;
 volatile sig_atomic_t Terminator::exit_requested_ = 0;
 
@@ -17,8 +18,13 @@ void Terminator::Init() {
   signal(SIGTERM, HandleSignal);
 }
 
+void Terminator::Init(int exit_status) {
+  exit_status_ = exit_status;
+  Init();
+}
+
 void Terminator::Exit() {
-  exit(1);
+  exit(exit_status_);
 }
 
 void Terminator::HandleSignal(int signum) {

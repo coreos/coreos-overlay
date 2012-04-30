@@ -1,4 +1,4 @@
-// Copyright (c) 2009 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -21,7 +21,12 @@ int main(int argc, char **argv) {
   g_thread_init(NULL);
   dbus_g_thread_init();
   base::AtExitManager exit_manager;
-  chromeos_update_engine::Terminator::Init();
+  // TODO(garnold) temporarily cause the unittest binary to exit with status
+  // code 2 upon catching a SIGTERM. This will help diagnose why the unittest
+  // binary is perceived as failing by the buildbot.  We should revert it to use
+  // the default exit status of 1.  Corresponding reverts are necessary in
+  // terminator_unittest.cc.
+  chromeos_update_engine::Terminator::Init(2);
   chromeos_update_engine::Subprocess::Init();
   CommandLine::Init(argc, argv);
   ::testing::InitGoogleTest(&argc, argv);
