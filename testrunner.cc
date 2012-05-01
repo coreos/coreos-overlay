@@ -17,6 +17,7 @@
 #include "update_engine/terminator.h"
 
 int main(int argc, char **argv) {
+  LOG(INFO) << "started";
   ::g_type_init();
   g_thread_init(NULL);
   dbus_g_thread_init();
@@ -28,8 +29,11 @@ int main(int argc, char **argv) {
   // terminator_unittest.cc.
   chromeos_update_engine::Terminator::Init(2);
   chromeos_update_engine::Subprocess::Init();
+  LOG(INFO) << "parsing command line arguments";
   CommandLine::Init(argc, argv);
+  LOG(INFO) << "initializing gtest";
   ::testing::InitGoogleTest(&argc, argv);
+  LOG(INFO) << "running unit tests";
   int test_result = RUN_ALL_TESTS();
   LOG(INFO) << "unittest return value: " << test_result;
   return test_result;
