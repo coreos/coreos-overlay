@@ -601,17 +601,17 @@ ActionExitCode DeltaPerformer::VerifyPayload(
   }
   LOG(INFO) << "Verifying delta payload. Public key path: " << key_path;
 
+  // Verifies the download size.
+  TEST_AND_RETURN_VAL(kActionCodeDownloadSizeMismatchError,
+                      update_check_response_size ==
+                      manifest_metadata_size_ + buffer_offset_);
+
   // Verifies the download hash.
   const string& download_hash_data = hash_calculator_.hash();
   TEST_AND_RETURN_VAL(kActionCodeDownloadPayloadVerificationError,
                       !download_hash_data.empty());
   TEST_AND_RETURN_VAL(kActionCodeDownloadHashMismatchError,
                       download_hash_data == update_check_response_hash);
-
-  // Verifies the download size.
-  TEST_AND_RETURN_VAL(kActionCodeDownloadSizeMismatchError,
-                      update_check_response_size ==
-                      manifest_metadata_size_ + buffer_offset_);
 
   // Verifies the signed payload hash.
   if (!utils::FileExists(key_path.c_str())) {
