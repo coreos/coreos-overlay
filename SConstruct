@@ -254,6 +254,7 @@ sources = Split("""action_processor.cc
                    extent_writer.cc
                    filesystem_copier_action.cc
                    filesystem_iterator.cc
+                   file_descriptor.cc
                    file_writer.cc
                    flimflam_proxy.cc
                    full_update_generator.cc
