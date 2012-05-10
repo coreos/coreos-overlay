@@ -1,4 +1,4 @@
-// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -13,6 +13,7 @@
 #include <vector>
 
 #include <base/eintr_wrapper.h>
+#include <base/time.h>
 #include <ext2fs/ext2fs.h>
 #include <glib.h>
 
@@ -251,10 +252,19 @@ bool SetProcessPriority(ProcessPriority priority);
 // Assumes data points to a Closure. Runs it and returns FALSE;
 gboolean GlibRunClosure(gpointer data);
 
-// Converts seconds into hour-minute-second notation. For example, 185 will
-// yield 3m5s and 4300 will yield 1h11m40s. Zero padding not applied. Seconds
-// are always shown in the result.
-std::string SecsToHourMinSecStr(unsigned secs);
+// Converts seconds into human readable notation including days, hours, minutes
+// and seconds. For example, 185 will yield 3m5s, 4300 will yield 1h11m40s, and
+// 360000 will yield 4d4h0m0s.  Zero padding not applied. Seconds are always
+// shown in the result.
+std::string FormatSecs(unsigned secs);
+
+// Converts a TimeDelta into human readable notation including days, hours,
+// minutes, seconds and fractions of a second down to microsecond granularity,
+// as necessary; for example, an output of 5d2h0m15.053s means that the input
+// time was precise to the milliseconds only. Zero padding not applied, except
+// for fractions. Seconds are always shown, but fractions thereof are only shown
+// when applicable.
+std::string FormatTimeDelta(base::TimeDelta delta);
 
 }  // namespace utils
 

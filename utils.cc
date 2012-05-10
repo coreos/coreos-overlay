@@ -589,20 +589,40 @@ gboolean GlibRunClosure(gpointer data) {
   return FALSE;
 }
 
-string SecsToHourMinSecStr(unsigned secs) {
-  // Canonicalize into hours, minutes, seconds.
-  unsigned hours = secs / (60 * 60);
-  secs -= hours * (60 * 60);
-  unsigned mins = secs / 60;
-  secs -= mins * 60;
+string FormatSecs(unsigned secs) {
+  return FormatTimeDelta(base::TimeDelta::FromSeconds(secs));
+}
+
+string FormatTimeDelta(base::TimeDelta delta) {
+  // Canonicalize into days, hours, minutes, seconds and microseconds.
+  unsigned days = delta.InDays();
+  delta -= base::TimeDelta::FromDays(days);
+  unsigned hours = delta.InHours();
+  delta -= base::TimeDelta::FromHours(hours);
+  unsigned mins = delta.InMinutes();
+  delta -= base::TimeDelta::FromMinutes(mins);
+  unsigned secs = delta.InSeconds();
+  delta -= base::TimeDelta::FromSeconds(secs);
+  unsigned usecs = delta.InMicroseconds();
 
   // Construct and return string.
   string str;
-  if (hours)
+  if (days)
+    base::StringAppendF(&str, "%ud", days);
+  if (days || hours)
     base::StringAppendF(&str, "%uh", hours);
-  if (hours || mins)
+  if (days || hours || mins)
     base::StringAppendF(&str, "%um", mins);
-  base::StringAppendF(&str, "%us", secs);
+  base::StringAppendF(&str, "%u", secs);
+  if (usecs) {
+    int width = 6;
+    while ((usecs / 10) * 10 == usecs) {
+      usecs /= 10;
+      width--;
+    }
+    base::StringAppendF(&str, ".%0*u", width, usecs);
+  }
+  base::StringAppendF(&str, "s");
   return str;
 }
 

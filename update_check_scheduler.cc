@@ -80,7 +80,7 @@ void UpdateCheckScheduler::ScheduleCheck(int interval, int fuzz) {
   }
   GTimeoutAddSeconds(interval, StaticCheck);
   scheduled_ = true;
-  LOG(INFO) << "Next update check in " << utils::SecsToHourMinSecStr(interval);
+  LOG(INFO) << "Next update check in " << utils::FormatSecs(interval);
 }
 
 gboolean UpdateCheckScheduler::StaticCheck(void* scheduler) {
