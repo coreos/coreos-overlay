@@ -12,6 +12,7 @@
 # Build/test generated files
 *.gcda
 *.gcno
+/*.pub.pem
 /.sconsign.dblite
 /app.info
 /delta_generator
@@ -19,7 +20,6 @@
 /marshal.glibmarshal.c
 /marshal.glibmarshal.h
 /test_http_server
-/unittest_key.pub.pem
 /update_engine
 /update_engine.dbusclient.h
 /update_engine.dbusserver.h
@@ -27,4 +27,3 @@
 /update_engine_unittests
 /update_metadata.pb.cc
 /update_metadata.pb.h
-
