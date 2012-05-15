@@ -168,10 +168,12 @@ bool ExpectVectorsEq(const vector<char>& expected, const vector<char>& actual) {
   EXPECT_EQ(expected.size(), actual.size());
   if (expected.size() != actual.size())
     return false;
+  bool is_all_eq = true;
   for (unsigned int i = 0; i < expected.size(); i++) {
     EXPECT_EQ(expected[i], actual[i]) << "offset: " << i;
+    is_all_eq = is_all_eq && (expected[i] == actual[i]);
   }
-  return true;
+  return is_all_eq;
 }
 
 void FillWithData(vector<char>* buffer) {

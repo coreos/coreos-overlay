@@ -211,12 +211,12 @@ void FilesystemCopierActionTest::DoTest(bool run_out_of_space,
   // Make sure everything in the out_image is there
   vector<char> a_out;
   EXPECT_TRUE(utils::ReadFile(a_dev, &a_out));
+  EXPECT_TRUE(ExpectVectorsEq(a_loop_data, a_out));
   if (!verify_hash) {
     vector<char> b_out;
     EXPECT_TRUE(utils::ReadFile(b_dev, &b_out));
     EXPECT_TRUE(ExpectVectorsEq(a_out, b_out));
   }
-  EXPECT_TRUE(ExpectVectorsEq(a_loop_data, a_out));
 
   EXPECT_TRUE(collector_action.object() == install_plan);
 }
