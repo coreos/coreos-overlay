@@ -18,12 +18,15 @@ const int UpdateCheckScheduler::kTimeoutQuickInterval      =  1 * 60;
 const int UpdateCheckScheduler::kTimeoutMaxBackoffInterval =  4 * 60 * 60;
 const int UpdateCheckScheduler::kTimeoutRegularFuzz        = 10 * 60;
 
-UpdateCheckScheduler::UpdateCheckScheduler(UpdateAttempter* update_attempter)
+UpdateCheckScheduler::UpdateCheckScheduler(UpdateAttempter* update_attempter,
+                                           GpioHandler* gpio_handler)
     : update_attempter_(update_attempter),
       enabled_(false),
       scheduled_(false),
       last_interval_(0),
-      poll_interval_(0) {}
+      poll_interval_(0),
+      is_test_update_attempted_(false),
+      gpio_handler_(gpio_handler) {}
 
 UpdateCheckScheduler::~UpdateCheckScheduler() {}
 
@@ -88,14 +91,15 @@ gboolean UpdateCheckScheduler::StaticCheck(void* scheduler) {
   CHECK(me->scheduled_);
   me->scheduled_ = false;
 
-  static bool is_test_used_once = false;
   bool is_test = false;
   if (me->IsOOBEComplete() ||
-      (is_test = !is_test_used_once && GpioHandler::IsGpioSignalingTest())) {
+      (is_test = (!me->is_test_update_attempted_ &&
+                  me->gpio_handler_ &&
+                  me->gpio_handler_->IsTestModeSignaled()))) {
     if (is_test) {
       LOG(WARNING)
           << "test mode signaled, allowing update check prior to OOBE complete";
-      is_test_used_once = true;
+      me->is_test_update_attempted_ = true;
     }
 
     // Before updating, we flush any previously generated UMA reports.

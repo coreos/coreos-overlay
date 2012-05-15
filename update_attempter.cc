@@ -106,7 +106,8 @@ ActionExitCode GetErrorCodeForAction(AbstractAction* action,
 
 UpdateAttempter::UpdateAttempter(PrefsInterface* prefs,
                                  MetricsLibraryInterface* metrics_lib,
-                                 DbusGlibInterface* dbus_iface)
+                                 DbusGlibInterface* dbus_iface,
+                                 GpioHandler* gpio_handler)
     : processor_(new ActionProcessor()),
       dbus_service_(NULL),
       prefs_(prefs),
@@ -129,7 +130,9 @@ UpdateAttempter::UpdateAttempter(PrefsInterface* prefs,
       update_boot_flags_running_(false),
       start_action_processor_(false),
       policy_provider_(NULL),
-      is_using_test_url_(false) {
+      is_using_test_url_(false),
+      is_test_update_attempted_(false),
+      gpio_handler_(gpio_handler) {
   if (utils::FileExists(kUpdateCompletedMarker))
     status_ = UPDATE_STATUS_UPDATED_NEED_REBOOT;
 }
@@ -331,11 +334,11 @@ void UpdateAttempter::CheckForUpdate(const string& app_version,
   // Read GPIO signals and determine whether this is an automated test scenario.
   // For safety, we only allow a test update to be performed once; subsequent
   // update requests will be carried out normally.
-  static bool is_test_used_once = false;
-  bool is_test = !is_test_used_once && GpioHandler::IsGpioSignalingTest();
+  bool is_test = (!is_test_update_attempted_ && gpio_handler_ &&
+                  gpio_handler_->IsTestModeSignaled());
   if (is_test) {
     LOG(INFO) << "test mode signaled";
-    is_test_used_once = true;
+    is_test_update_attempted_ = true;
   }
 
   Update(app_version, omaha_url, true, true, is_test);

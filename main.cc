@@ -183,7 +183,8 @@ int main(int argc, char** argv) {
   chromeos_update_engine::ConcreteDbusGlib dbus;
   chromeos_update_engine::UpdateAttempter update_attempter(&prefs,
                                                            &metrics_lib,
-                                                           &dbus);
+                                                           &dbus,
+                                                           NULL);
 
   // Create the dbus service object:
   dbus_g_object_type_install_info(UPDATE_ENGINE_TYPE_SERVICE,
@@ -195,7 +196,8 @@ int main(int argc, char** argv) {
   chromeos_update_engine::SetupDbusService(service);
 
   // Schedule periodic update checks.
-  chromeos_update_engine::UpdateCheckScheduler scheduler(&update_attempter);
+  chromeos_update_engine::UpdateCheckScheduler scheduler(&update_attempter,
+                                                         NULL);
   scheduler.Run();
 
   // Update boot flags after 45 seconds.

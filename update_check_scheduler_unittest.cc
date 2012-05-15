@@ -30,7 +30,7 @@ void FuzzRange(int interval, int fuzz, int* interval_min, int* interval_max) {
 class UpdateCheckSchedulerUnderTest : public UpdateCheckScheduler {
  public:
   UpdateCheckSchedulerUnderTest(UpdateAttempter* update_attempter)
-      : UpdateCheckScheduler(update_attempter) {}
+      : UpdateCheckScheduler(update_attempter, NULL) {}
 
   MOCK_METHOD2(GTimeoutAddSeconds, guint(guint seconds, GSourceFunc function));
   MOCK_METHOD0(IsBootDeviceRemovable, bool());

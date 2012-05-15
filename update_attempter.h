@@ -61,7 +61,8 @@ class UpdateAttempter : public ActionProcessorDelegate,
 
   UpdateAttempter(PrefsInterface* prefs,
                   MetricsLibraryInterface* metrics_lib,
-                  DbusGlibInterface* dbus_iface);
+                  DbusGlibInterface* dbus_iface,
+                  GpioHandler* gpio_handler);
   virtual ~UpdateAttempter();
 
   // Checks for update and, if a newer version is available, attempts to update
@@ -307,6 +308,12 @@ class UpdateAttempter : public ActionProcessorDelegate,
 
   // A flag for indicating whether we are using a test server URL.
   bool is_using_test_url_;
+
+  // A flag indicating whether a test update cycle was already attempted.
+  bool is_test_update_attempted_;
+
+  // GPIO handler object.
+  GpioHandler* gpio_handler_;
 
   DISALLOW_COPY_AND_ASSIGN(UpdateAttempter);
 };

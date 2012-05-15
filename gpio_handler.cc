@@ -4,333 +4,250 @@
 
 #include "gpio_handler.h"
 
-#include <fcntl.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-
-#include <base/eintr_wrapper.h>
+#include <base/memory/scoped_ptr.h>
 #include <base/string_util.h>
-#include <glib.h>
+#include <base/stringprintf.h>
 
-#include "update_engine/utils.h"
+#include "update_engine/file_descriptor.h"
 
+using base::Time;
+using base::TimeDelta;
 using std::string;
+
+using namespace chromeos_update_engine;
 
 namespace chromeos_update_engine {
 
-const char* GpioHandler::dutflaga_dev_name_ = NULL;
-const char* GpioHandler::dutflagb_dev_name_ = NULL;
-
-namespace {
-// Names of udev properties that are linked to the GPIO chip device and identify
-// the two dutflag GPIOs on different boards.
-const char kIdGpioDutflaga[] = "ID_GPIO_DUTFLAGA";
-const char kIdGpioDutflagb[] = "ID_GPIO_DUTFLAGB";
-
-// Scoped closer for udev and udev_enumerate objects.
-// TODO(garnold) chromium-os:26934: it would be nice to generalize the different
-// ScopedFooCloser implementations in update engine using a single template.
-class ScopedUdevCloser {
- public:
-  explicit ScopedUdevCloser(udev** udev_p) : udev_p_(udev_p) {}
-  ~ScopedUdevCloser() {
-    if (udev_p_ && *udev_p_) {
-      udev_unref(*udev_p_);
-      *udev_p_ = NULL;
-    }
-  }
- private:
-  struct udev **udev_p_;
-
-  DISALLOW_COPY_AND_ASSIGN(ScopedUdevCloser);
+const char* StandardGpioHandler::gpio_dirs_[kGpioDirMax] = {
+  "in",   // kGpioDirIn
+  "out",  // kGpioDirOut
 };
 
-class ScopedUdevEnumerateCloser {
- public:
-  explicit ScopedUdevEnumerateCloser(udev_enumerate **udev_enum_p) :
-    udev_enum_p_(udev_enum_p) {}
-  ~ScopedUdevEnumerateCloser() {
-    if (udev_enum_p_ && *udev_enum_p_) {
-      udev_enumerate_unref(*udev_enum_p_);
-      *udev_enum_p_ = NULL;
-    }
-  }
- private:
-  struct udev_enumerate** udev_enum_p_;
-
-  DISALLOW_COPY_AND_ASSIGN(ScopedUdevEnumerateCloser);
+const char* StandardGpioHandler::gpio_vals_[kGpioValMax] = {
+  "1",  // kGpioValUp
+  "0",  // kGpioValDown
 };
-}  // namespace {}
 
-bool GpioHandler::IsGpioSignalingTest() {
-  // Peek dut_flaga GPIO state.
-  bool dutflaga_gpio_state;
-  if (!GetDutflagGpioStatus(kDutflagaGpio, &dutflaga_gpio_state)) {
-    LOG(WARNING) << "dutflaga GPIO reading failed, defaulting to non-test mode";
+const StandardGpioHandler::GpioDef
+StandardGpioHandler::gpio_defs_[kGpioIdMax] = {
+  { "dutflaga", "ID_GPIO_DUTFLAGA" },  // kGpioDutflaga
+  { "dutflagb", "ID_GPIO_DUTFLAGB" },  // kGpioDutflagb
+};
+
+unsigned StandardGpioHandler::num_instances_ = 0;
+
+
+StandardGpioHandler::StandardGpioHandler(UdevInterface* udev_iface,
+                                         bool is_defer_discovery)
+    : udev_iface_(udev_iface),
+      is_discovery_attempted_(false) {
+  CHECK(udev_iface);
+
+  // Ensure there's only one instance of this class.
+  CHECK_EQ(num_instances_, static_cast<unsigned>(0));
+  num_instances_++;
+
+  // If GPIO discovery not deferred, do it.
+  if (!(is_defer_discovery || DiscoverGpios())) {
+    LOG(WARNING) << "GPIO discovery failed";
+  }
+}
+
+StandardGpioHandler::~StandardGpioHandler() {
+  num_instances_--;
+}
+
+// TODO(garnold) currently, this function always returns false and avoids the
+// GPIO signaling protocol altogether; to be extended later.
+bool StandardGpioHandler::IsTestModeSignaled() {
+  // Attempt GPIO discovery.
+  if (!DiscoverGpios()) {
+    LOG(WARNING) << "GPIO discovery failed";
+  }
+
+  return false;
+}
+
+bool StandardGpioHandler::GpioChipUdevEnumHelper::SetupEnumFilters(
+    udev_enumerate* udev_enum) {
+  CHECK(udev_enum);
+
+  return !(gpio_handler_->udev_iface_->EnumerateAddMatchSubsystem(
+               udev_enum, "gpio") ||
+           gpio_handler_->udev_iface_->EnumerateAddMatchSysname(
+               udev_enum, "gpiochip*"));
+}
+
+bool StandardGpioHandler::GpioChipUdevEnumHelper::ProcessDev(udev_device* dev) {
+  CHECK(dev);
+
+  // Ensure we did not encounter more than one chip.
+  if (num_gpio_chips_++) {
+    LOG(ERROR) << "enumerated multiple GPIO chips";
     return false;
   }
 
-  LOG(INFO) << "dutflaga GPIO reading: "
-            << (dutflaga_gpio_state ? "on (non-test mode)" : "off (test mode)");
-  return !dutflaga_gpio_state;
+  // Obtain GPIO descriptors.
+  for (int id = 0; id < kGpioIdMax; id++) {
+    const GpioDef* gpio_def = &gpio_defs_[id];
+    const char* descriptor =
+        gpio_handler_->udev_iface_->DeviceGetPropertyValue(
+            dev, gpio_def->udev_property);
+    if (!descriptor) {
+      LOG(ERROR) << "could not obtain " << gpio_def->name
+                 << " descriptor using property " << gpio_def->udev_property;
+      return false;
+    }
+    gpio_handler_->gpios_[id].descriptor = descriptor;
+  }
+
+  return true;
 }
 
-bool GpioHandler::GetDutflagGpioDevName(struct udev* udev,
-                                        const string& gpio_dutflag_str,
-                                        const char** dutflag_dev_name_p) {
-  CHECK(udev && dutflag_dev_name_p);
+bool StandardGpioHandler::GpioChipUdevEnumHelper::Finalize() {
+  if (num_gpio_chips_ != 1) {
+    LOG(ERROR) << "could not enumerate a GPIO chip";
+    return false;
+  }
+  return true;
+}
 
-  struct udev_enumerate* udev_enum = NULL;
-  int num_gpio_dutflags = 0;
-  const string gpio_dutflag_pattern = "*" + gpio_dutflag_str;
-  int ret;
+bool StandardGpioHandler::GpioUdevEnumHelper::SetupEnumFilters(
+    udev_enumerate* udev_enum) {
+  CHECK(udev_enum);
+  const string gpio_pattern =
+      string("*").append(gpio_handler_->gpios_[id_].descriptor);
+  return !(
+      gpio_handler_->udev_iface_->EnumerateAddMatchSubsystem(
+          udev_enum, "gpio") ||
+      gpio_handler_->udev_iface_->EnumerateAddMatchSysname(
+          udev_enum, gpio_pattern.c_str()));
+}
 
-  // Initialize udev enumerate context and closer.
-  if (!(udev_enum = udev_enumerate_new(udev))) {
+bool StandardGpioHandler::GpioUdevEnumHelper::ProcessDev(udev_device* dev) {
+  CHECK(dev);
+
+  // Ensure we did not encounter more than one GPIO device.
+  if (num_gpios_++) {
+    LOG(ERROR) << "enumerated multiple GPIO devices for a given descriptor";
+    return false;
+  }
+
+  // Obtain GPIO device sysfs path.
+  const char* dev_path = gpio_handler_->udev_iface_->DeviceGetSyspath(dev);
+  if (!dev_path) {
+    LOG(ERROR) << "failed to obtain device syspath for GPIO "
+               << gpio_defs_[id_].name;
+    return false;
+  }
+  gpio_handler_->gpios_[id_].dev_path = dev_path;
+
+  LOG(INFO) << "obtained device syspath: " << gpio_defs_[id_].name << " -> "
+            << gpio_handler_->gpios_[id_].dev_path;
+  return true;
+}
+
+bool StandardGpioHandler::GpioUdevEnumHelper::Finalize() {
+  if (num_gpios_ != 1) {
+    LOG(ERROR) << "could not enumerate GPIO device " << gpio_defs_[id_].name;
+    return false;
+  }
+  return true;
+}
+
+
+bool StandardGpioHandler::InitUdevEnum(struct udev* udev,
+                                       UdevEnumHelper* enum_helper) {
+  // Obtain a udev enumerate object.
+  struct udev_enumerate* udev_enum;
+  if (!(udev_enum = udev_iface_->EnumerateNew(udev))) {
     LOG(ERROR) << "failed to obtain udev enumerate context";
     return false;
   }
-  ScopedUdevEnumerateCloser udev_enum_closer(&udev_enum);
 
-  // Populate filters for find an initialized GPIO chip.
-  if ((ret = udev_enumerate_add_match_subsystem(udev_enum, "gpio")) ||
-      (ret = udev_enumerate_add_match_sysname(udev_enum,
-                                              gpio_dutflag_pattern.c_str()))) {
-    LOG(ERROR) << "failed to initialize udev enumerate context (" << ret << ")";
+  // Assign enumerate object to closer.
+  scoped_ptr<UdevInterface::UdevEnumerateCloser>
+      udev_enum_closer(udev_iface_->NewUdevEnumerateCloser(&udev_enum));
+
+  // Setup enumeration filters.
+  if (!enum_helper->SetupEnumFilters(udev_enum)) {
+    LOG(ERROR) << "failed to setup udev enumerate filters";
     return false;
   }
 
-  // Obtain list of matching devices.
-  if ((ret = udev_enumerate_scan_devices(udev_enum))) {
-    LOG(ERROR) << "udev enumerate context scan failed (error code "
-               << ret << ")";
+  // Scan for matching devices.
+  if (udev_iface_->EnumerateScanDevices(udev_enum)) {
+    LOG(ERROR) << "udev enumerate scan failed";
     return false;
   }
 
-  // Iterate over matching devices, obtain GPIO dut_flaga identifier.
+  // Iterate over matching devices.
   struct udev_list_entry* list_entry;
-  udev_list_entry_foreach(list_entry,
-                          udev_enumerate_get_list_entry(udev_enum)) {
-    // Make sure we're not enumerating more than one device.
-    num_gpio_dutflags++;
-    if (num_gpio_dutflags > 1) {
-      LOG(WARNING) <<
-        "enumerated multiple dutflag GPIOs, ignoring this one";
-      continue;
-    }
-
+  for (list_entry = udev_iface_->EnumerateGetListEntry(udev_enum);
+       list_entry; list_entry = udev_iface_->ListEntryGetNext(list_entry)) {
     // Obtain device name.
-    const char* dev_name = udev_list_entry_get_name(list_entry);
-    if (!dev_name) {
-      LOG(WARNING) << "enumerated device has a null name string, skipping";
-      continue;
+    const char* dev_path = udev_iface_->ListEntryGetName(list_entry);
+    if (!dev_path) {
+      LOG(ERROR) << "enumerated device has a null name string";
+      return false;
     }
 
     // Obtain device object.
-    struct udev_device* dev = udev_device_new_from_syspath(udev, dev_name);
+    struct udev_device* dev = udev_iface_->DeviceNewFromSyspath(udev, dev_path);
     if (!dev) {
-      LOG(WARNING) <<
-        "obtained a null device object for enumerated device, skipping";
-      continue;
-    }
-
-    // Obtain device syspath.
-    const char* dev_syspath = udev_device_get_syspath(dev);
-    if (dev_syspath) {
-      LOG(INFO) << "obtained device syspath: " << dev_syspath;
-      *dutflag_dev_name_p = strdup(dev_syspath);
-    } else {
-      LOG(WARNING) << "could not obtain device syspath";
-    }
-
-    udev_device_unref(dev);
-  }
-
-  return true;
-}
-
-bool GpioHandler::GetDutflagGpioDevNames(string* dutflaga_dev_name_p,
-                                         string* dutflagb_dev_name_p) {
-  if (!(dutflaga_dev_name_p || dutflagb_dev_name_p))
-    return true;  // No output pointers, nothing to do.
-
-  string gpio_dutflaga_str, gpio_dutflagb_str;
-
-  if (!(dutflaga_dev_name_ && dutflagb_dev_name_)) {
-    struct udev* udev = NULL;
-    struct udev_enumerate* udev_enum = NULL;
-    int num_gpio_chips = 0;
-    const char* id_gpio_dutflaga = NULL;
-    const char* id_gpio_dutflagb = NULL;
-    int ret;
-
-    LOG(INFO) << "begin discovery of dut_flaga/b devices";
-
-    // Obtain libudev instance and closer.
-    if (!(udev = udev_new())) {
-      LOG(ERROR) << "failed to obtain libudev instance";
+      LOG(ERROR) << "obtained a null device object for enumerated device";
       return false;
     }
-    ScopedUdevCloser udev_closer(&udev);
+    scoped_ptr<UdevInterface::UdevDeviceCloser>
+        dev_closer(udev_iface_->NewUdevDeviceCloser(&dev));
 
-    // Initialize a udev enumerate object and closer with a bounded lifespan.
-    {
-      if (!(udev_enum = udev_enumerate_new(udev))) {
-        LOG(ERROR) << "failed to obtain udev enumerate context";
-        return false;
-      }
-      ScopedUdevEnumerateCloser udev_enum_closer(&udev_enum);
-
-      // Populate filters for find an initialized GPIO chip.
-      if ((ret = udev_enumerate_add_match_subsystem(udev_enum, "gpio")) ||
-          (ret = udev_enumerate_add_match_sysname(udev_enum, "gpiochip*")) ||
-          (ret = udev_enumerate_add_match_property(udev_enum,
-                                                   kIdGpioDutflaga, "*")) ||
-          (ret = udev_enumerate_add_match_property(udev_enum,
-                                                   kIdGpioDutflagb, "*"))) {
-        LOG(ERROR) << "failed to initialize udev enumerate context ("
-                   << ret << ")";
-        return false;
-      }
-
-      // Obtain list of matching devices.
-      if ((ret = udev_enumerate_scan_devices(udev_enum))) {
-        LOG(ERROR) << "udev enumerate context scan failed (" << ret << ")";
-        return false;
-      }
-
-      // Iterate over matching devices, obtain GPIO dut_flaga identifier.
-      struct udev_list_entry* list_entry;
-      udev_list_entry_foreach(list_entry,
-                              udev_enumerate_get_list_entry(udev_enum)) {
-        // Make sure we're not enumerating more than one device.
-        num_gpio_chips++;
-        if (num_gpio_chips > 1) {
-          LOG(WARNING) << "enumerated multiple GPIO chips, ignoring this one";
-          continue;
-        }
-
-        // Obtain device name.
-        const char* dev_name = udev_list_entry_get_name(list_entry);
-        if (!dev_name) {
-          LOG(WARNING) << "enumerated device has a null name string, skipping";
-          continue;
-        }
-
-        // Obtain device object.
-        struct udev_device* dev = udev_device_new_from_syspath(udev, dev_name);
-        if (!dev) {
-          LOG(WARNING) <<
-            "obtained a null device object for enumerated device, skipping";
-          continue;
-        }
-
-        // Obtain dut_flaga/b identifiers.
-        id_gpio_dutflaga =
-            udev_device_get_property_value(dev, kIdGpioDutflaga);
-        id_gpio_dutflagb =
-            udev_device_get_property_value(dev, kIdGpioDutflagb);
-        if (id_gpio_dutflaga && id_gpio_dutflagb) {
-          LOG(INFO) << "found dut_flaga/b identifiers: a=" << id_gpio_dutflaga
-                    << " b=" << id_gpio_dutflagb;
-
-          gpio_dutflaga_str = id_gpio_dutflaga;
-          gpio_dutflagb_str = id_gpio_dutflagb;
-        } else {
-          LOG(ERROR) << "GPIO chip missing dut_flaga/b properties";
-        }
-
-        udev_device_unref(dev);
-      }
-    }
-
-    // Obtain dut_flaga, reusing the same udev instance.
-    if (!dutflaga_dev_name_ && !gpio_dutflaga_str.empty()) {
-      LOG(INFO) << "discovering device for GPIO dut_flaga ";
-      if (!GetDutflagGpioDevName(udev, gpio_dutflaga_str,
-                                 &dutflaga_dev_name_)) {
-        LOG(ERROR) << "discovery of dut_flaga GPIO device failed";
-        return false;
-      }
-    }
-
-    // Now obtain dut_flagb.
-    if (!dutflagb_dev_name_ && !gpio_dutflagb_str.empty()) {
-      LOG(INFO) << "discovering device for GPIO dut_flagb";
-      if (!GetDutflagGpioDevName(udev, gpio_dutflagb_str,
-                                 &dutflagb_dev_name_)) {
-        LOG(ERROR) << "discovery of dut_flagb GPIO device failed";
-        return false;
-      }
-    }
-
-    LOG(INFO) << "end discovery of dut_flaga/b devices";
+    if (!enum_helper->ProcessDev(dev))
+      return false;
   }
 
-  // Write cached GPIO dutflag(s) to output strings.
-  if (dutflaga_dev_name_p && dutflaga_dev_name_)
-    *dutflaga_dev_name_p = dutflaga_dev_name_;
-  if (dutflagb_dev_name_p && dutflagb_dev_name_)
-    *dutflagb_dev_name_p = dutflagb_dev_name_;
+  // Make sure postconditions were met.
+  return enum_helper->Finalize();
+}
+
+bool StandardGpioHandler::DiscoverGpios() {
+  if (is_discovery_attempted_)
+    return true;
+
+  is_discovery_attempted_ = true;
+
+  // Obtain libudev instance and attach to a dedicated closer.
+  struct udev* udev;
+  if (!(udev = udev_iface_->New())) {
+    LOG(ERROR) << "failed to obtain libudev instance";
+    return false;
+  }
+  scoped_ptr<UdevInterface::UdevCloser>
+      udev_closer(udev_iface_->NewUdevCloser(&udev));
+
+  // Enumerate GPIO chips, scanning for GPIO descriptors.
+  GpioChipUdevEnumHelper chip_enum_helper(this);
+  if (!InitUdevEnum(udev, &chip_enum_helper)) {
+    LOG(ERROR) << "enumeration error, aborting GPIO discovery";
+    return false;
+  }
+
+  // Obtain device names for all discovered GPIOs, reusing the udev instance.
+  for (int id = 0; id < kGpioIdMax; id++) {
+    GpioUdevEnumHelper gpio_enum_helper(this, static_cast<GpioId>(id));
+    if (!InitUdevEnum(udev, &gpio_enum_helper)) {
+      LOG(ERROR) << "enumeration error, aborting GPIO discovery";
+      return false;
+    }
+  }
 
   return true;
 }
 
-bool GpioHandler::GetDutflagGpioStatus(GpioHandler::DutflagGpioId id,
-                                       bool* status_p) {
-  CHECK(status_p);
+bool StandardGpioHandler::GetGpioDevName(StandardGpioHandler::GpioId id,
+                                         string* dev_path_p) {
+  CHECK(id >= 0 && id < kGpioIdMax && dev_path_p);
 
-  // Obtain GPIO device file name.
-  string dutflag_dev_name;
-  switch (id) {
-    case kDutflagaGpio:
-      GetDutflagGpioDevNames(&dutflag_dev_name, NULL);
-      break;
-    case kDutflagbGpio:
-      GetDutflagGpioDevNames(NULL, &dutflag_dev_name);
-      break;
-    default:
-      LOG(FATAL) << "invalid dutflag GPIO id: " << id;
-  }
-
-  if (dutflag_dev_name.empty()) {
-    LOG(WARNING) << "could not find dutflag GPIO device";
-    return false;
-  }
-
-  // Open device for reading.
-  string dutflaga_value_dev_name = dutflag_dev_name + "/value";
-  int dutflaga_fd = HANDLE_EINTR(open(dutflaga_value_dev_name.c_str(), 0));
-  if (dutflaga_fd < 0) {
-    PLOG(ERROR) << "opening dutflaga GPIO device file failed";
-    return false;
-  }
-  ScopedEintrSafeFdCloser dutflaga_fd_closer(&dutflaga_fd);
-
-  // Read the dut_flaga GPIO signal. We attempt to read more than---but expect
-  // to receive exactly---two characters: a '0' or '1', and a newline. This is
-  // to ensure that the GPIO device returns a legible result.
-  char buf[3];
-  int ret = HANDLE_EINTR(read(dutflaga_fd, buf, 3));
-  if (ret != 2) {
-    if (ret < 0)
-      PLOG(ERROR) << "reading dutflaga GPIO status failed";
-    else
-      LOG(ERROR) << "read more than one byte (" << ret << ")";
-    return false;
-  }
-
-  // Identify and write GPIO status.
-  char c = buf[0];
-  if ((c == '0' || c == '1') && buf[1] == '\n') {
-    *status_p = (c == '1');
-  } else {
-    buf[2] = '\0';
-    LOG(ERROR) << "read unexpected value from dutflaga GPIO: " << buf;
-    return false;
-  }
-
+  *dev_path_p = gpios_[id].dev_path;
   return true;
 }
 

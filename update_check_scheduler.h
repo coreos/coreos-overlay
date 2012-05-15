@@ -41,7 +41,8 @@ class UpdateCheckScheduler {
   static const int kTimeoutRegularFuzz;
   static const int kTimeoutMaxBackoffInterval;
 
-  UpdateCheckScheduler(UpdateAttempter* update_attempter);
+  UpdateCheckScheduler(UpdateAttempter* update_attempter,
+                       GpioHandler* gpio_handler);
   virtual ~UpdateCheckScheduler();
 
   // Initiates the periodic update checks, if necessary.
@@ -127,6 +128,12 @@ class UpdateCheckScheduler {
 
   // Server dictated poll interval in seconds, if positive.
   int poll_interval_;
+
+  // A flag indicating whether a test update cycle was already attempted.
+  bool is_test_update_attempted_;
+
+  // GPIO handler object.
+  GpioHandler* gpio_handler_;
 
   DISALLOW_COPY_AND_ASSIGN(UpdateCheckScheduler);
 };

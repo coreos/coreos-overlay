@@ -36,7 +36,7 @@ namespace chromeos_update_engine {
 class UpdateAttempterUnderTest : public UpdateAttempter {
  public:
   explicit UpdateAttempterUnderTest(MockDbusGlib* dbus)
-      : UpdateAttempter(NULL, NULL, dbus) {}
+      : UpdateAttempter(NULL, NULL, dbus, NULL) {}
 };
 
 class UpdateAttempterTest : public ::testing::Test {
@@ -120,7 +120,7 @@ TEST_F(UpdateAttempterTest, ActionCompletedOmahaRequestTest) {
   OmahaResponse response;
   response.poll_interval = 234;
   action.SetOutputObject(response);
-  UpdateCheckScheduler scheduler(&attempter_);
+  UpdateCheckScheduler scheduler(&attempter_, NULL);
   attempter_.set_update_check_scheduler(&scheduler);
   EXPECT_CALL(prefs_, GetInt64(kPrefsDeltaUpdateFailures, _)).Times(0);
   attempter_.ActionCompleted(NULL, &action, kActionCodeSuccess);
@@ -359,7 +359,7 @@ void UpdateAttempterTest::PingOmahaTestStart() {
 }
 
 TEST_F(UpdateAttempterTest, PingOmahaTest) {
-  UpdateCheckScheduler scheduler(&attempter_);
+  UpdateCheckScheduler scheduler(&attempter_, NULL);
   scheduler.enabled_ = true;
   EXPECT_FALSE(scheduler.scheduled_);
   attempter_.set_update_check_scheduler(&scheduler);

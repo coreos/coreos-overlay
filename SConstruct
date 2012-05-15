@@ -304,6 +304,8 @@ unittest_sources = Split("""action_unittest.cc
                             filesystem_iterator_unittest.cc
                             flimflam_proxy_unittest.cc
                             full_update_generator_unittest.cc
+                            gpio_handler_unittest.cc
+                            gpio_mock_udev_interface.cc
                             graph_utils_unittest.cc
                             http_fetcher_unittest.cc
                             metadata_unittest.cc
