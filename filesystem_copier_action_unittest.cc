@@ -9,6 +9,8 @@
 #include <vector>
 
 #include <base/eintr_wrapper.h>
+// TODO(garnold) remove this include, here for debugging purposes
+#include <base/rand_util.h>
 #include <base/string_util.h>
 #include <base/stringprintf.h>
 #include <glib.h>
@@ -30,10 +32,23 @@ class FilesystemCopierActionTest : public ::testing::Test {
  protected:
   // |verify_hash|: 0 - no hash verification, 1 -- successful hash verification,
   // 2 -- hash verification failure.
-  void DoTest(bool run_out_of_space,
+  // Returns true iff test has completed successfully.
+  // TODO(garnold) we temporarily add an |is_debug_random_loop_file_size| to try
+  // copying with different file sizes, in attempt to expose circumstances that
+  // lead to a certain unit test failure. The second variant preserves the
+  // original behavior. This code needs to be reverted.
+  bool DoTest(bool run_out_of_space,
               bool terminate_early,
               bool use_kernel_partition,
-              int verify_hash);
+              int verify_hash,
+              bool is_debug_random_loop_file_size);
+  inline bool DoTest(bool run_out_of_space,
+                     bool terminate_early,
+                     bool use_kernel_partition,
+                     int verify_hash) {
+    return DoTest(run_out_of_space, terminate_early, use_kernel_partition,
+                  verify_hash, false);
+  }
   void SetUp() {
   }
   void TearDown() {
@@ -94,30 +109,58 @@ gboolean StartProcessorInRunLoop(gpointer data) {
 
 TEST_F(FilesystemCopierActionTest, RunAsRootSimpleTest) {
   ASSERT_EQ(0, getuid());
-  DoTest(false, false, false, 0);
-  DoTest(false, false, true, 0);
+  EXPECT_TRUE(DoTest(false, false, false, 0, true));
+  EXPECT_TRUE(DoTest(false, false, true, 0, true));
 }
 
-void FilesystemCopierActionTest::DoTest(bool run_out_of_space,
+bool FilesystemCopierActionTest::DoTest(bool run_out_of_space,
                                         bool terminate_early,
                                         bool use_kernel_partition,
-                                        int verify_hash) {
+                                        int verify_hash,
+                                        bool is_debug_random_loop_file_size) {
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
 
   string a_loop_file;
   string b_loop_file;
 
-  EXPECT_TRUE(utils::MakeTempFile("/tmp/a_loop_file.XXXXXX",
-                                  &a_loop_file,
-                                  NULL));
+  if (!(utils::MakeTempFile("/tmp/a_loop_file.XXXXXX", &a_loop_file, NULL) &&
+        utils::MakeTempFile("/tmp/b_loop_file.XXXXXX", &b_loop_file, NULL))) {
+    ADD_FAILURE();
+    return false;
+  }
   ScopedPathUnlinker a_loop_file_unlinker(a_loop_file);
-  EXPECT_TRUE(utils::MakeTempFile("/tmp/b_loop_file.XXXXXX",
-                                  &b_loop_file,
-                                  NULL));
   ScopedPathUnlinker b_loop_file_unlinker(b_loop_file);
 
   // Make random data for a, zero filled data for b.
-  const size_t kLoopFileSize = 10 * 1024 * 1024 + 512;
+  // TODO(garnold) eliminate the random choice, here for debugging purposes of
+  // unittest failures. We're testing the hypothesis that the particular file
+  // size causes this nondeterministic problem.
+  size_t randomLoopFileSize = 10 * 1024 * 1024 + 512;  // original value
+  if (is_debug_random_loop_file_size) {
+    int debugRandomChoice = base::RandInt(0, 4);
+    switch (debugRandomChoice) {
+      case 0:
+        break;  // keep default value
+      case 1:
+        randomLoopFileSize = 10 * 1024 * 1024;  // exactly 10 MB
+        break;
+      case 2:
+        randomLoopFileSize = (10 * 1024 + 128) * 1024;  // 10 MB + 128 KB
+        break;
+      case 3:
+        randomLoopFileSize = 30 * 1024 * 1024;  // exactly 30 MB
+        break;
+      case 4:
+        randomLoopFileSize = 30 * 1024 * 1024 + 512;  // 10 MB + 512 bytes
+        break;
+      default:
+        ADD_FAILURE();
+        return false;
+    }
+    LOG(INFO) << "(debug) randomLoopFileSize=" << randomLoopFileSize
+              << " (option " << debugRandomChoice << ")";
+  }
+  const size_t kLoopFileSize = randomLoopFileSize;
   vector<char> a_loop_data(kLoopFileSize);
   FillWithData(&a_loop_data);
   vector<char> b_loop_data(run_out_of_space ?
@@ -126,8 +169,11 @@ void FilesystemCopierActionTest::DoTest(bool run_out_of_space,
                            '\0');  // Fill with 0s
 
   // Write data to disk
-  EXPECT_TRUE(WriteFileVector(a_loop_file, a_loop_data));
-  EXPECT_TRUE(WriteFileVector(b_loop_file, b_loop_data));
+  if (!(WriteFileVector(a_loop_file, a_loop_data) &&
+        WriteFileVector(b_loop_file, b_loop_data))) {
+    ADD_FAILURE();
+    return false;
+  }
 
   // Attach loop devices to the files
   string a_dev;
@@ -136,6 +182,8 @@ void FilesystemCopierActionTest::DoTest(bool run_out_of_space,
   ScopedLoopbackDeviceBinder a_dev_releaser(a_loop_file, &a_dev);
   ScopedLoopbackDeviceBinder b_dev_releaser(b_loop_file, &b_dev);
 
+  bool success = true;
+
   // Set up the action objects
   InstallPlan install_plan;
   if (verify_hash) {
@@ -143,16 +191,20 @@ void FilesystemCopierActionTest::DoTest(bool run_out_of_space,
       install_plan.kernel_install_path = a_dev;
       install_plan.kernel_size =
           kLoopFileSize - ((verify_hash == 2) ? 1 : 0);
-      EXPECT_TRUE(OmahaHashCalculator::RawHashOfData(
-          a_loop_data,
-          &install_plan.kernel_hash));
+      if (!OmahaHashCalculator::RawHashOfData(a_loop_data,
+                                              &install_plan.kernel_hash)) {
+        ADD_FAILURE();
+        success = false;
+      }
     } else {
       install_plan.install_path = a_dev;
       install_plan.rootfs_size =
           kLoopFileSize - ((verify_hash == 2) ? 1 : 0);
-      EXPECT_TRUE(OmahaHashCalculator::RawHashOfData(
-          a_loop_data,
-          &install_plan.rootfs_hash));
+      if (!OmahaHashCalculator::RawHashOfData(a_loop_data,
+                                              &install_plan.rootfs_hash)) {
+        ADD_FAILURE();
+        success = false;
+      }
     }
   } else {
     if (use_kernel_partition) {
@@ -193,32 +245,46 @@ void FilesystemCopierActionTest::DoTest(bool run_out_of_space,
   g_main_loop_run(loop);
   g_main_loop_unref(loop);
 
-  if (!terminate_early)
-    EXPECT_TRUE(delegate.ran());
+  if (!terminate_early) {
+    bool is_delegate_ran = delegate.ran();
+    EXPECT_TRUE(is_delegate_ran);
+    success = success && is_delegate_ran;
+  }
   if (run_out_of_space || terminate_early) {
     EXPECT_EQ(kActionCodeError, delegate.code());
-    return;
+    return (kActionCodeError == delegate.code());
   }
   if (verify_hash == 2) {
-    EXPECT_EQ(use_kernel_partition ?
-              kActionCodeNewKernelVerificationError :
-              kActionCodeNewRootfsVerificationError,
-              delegate.code());
-    return;
+    ActionExitCode expected_exit_code =
+        (use_kernel_partition ?
+         kActionCodeNewKernelVerificationError :
+         kActionCodeNewRootfsVerificationError);
+    EXPECT_EQ(expected_exit_code, delegate.code());
+    return (expected_exit_code == delegate.code());
   }
   EXPECT_EQ(kActionCodeSuccess, delegate.code());
 
   // Make sure everything in the out_image is there
   vector<char> a_out;
-  EXPECT_TRUE(utils::ReadFile(a_dev, &a_out));
-  EXPECT_TRUE(ExpectVectorsEq(a_loop_data, a_out));
+  if (!utils::ReadFile(a_dev, &a_out)) {
+    ADD_FAILURE();
+    return false;
+  }
+  success = success && ExpectVectorsEq(a_loop_data, a_out);
   if (!verify_hash) {
     vector<char> b_out;
-    EXPECT_TRUE(utils::ReadFile(b_dev, &b_out));
-    EXPECT_TRUE(ExpectVectorsEq(a_out, b_out));
+    if (!utils::ReadFile(b_dev, &b_out)) {
+      ADD_FAILURE();
+      return false;
+    }
+    success = success && ExpectVectorsEq(a_out, b_out);
   }
 
-  EXPECT_TRUE(collector_action.object() == install_plan);
+  bool is_install_plan_eq = (collector_action.object() == install_plan);
+  EXPECT_TRUE(is_install_plan_eq);
+  success = success && is_install_plan_eq;
+
+  return success;
 }
 
 class FilesystemCopierActionTest2Delegate : public ActionProcessorDelegate {
@@ -311,24 +377,24 @@ TEST_F(FilesystemCopierActionTest, NonExistentDriveTest) {
 
 TEST_F(FilesystemCopierActionTest, RunAsRootVerifyHashTest) {
   ASSERT_EQ(0, getuid());
-  DoTest(false, false, false, 1);
-  DoTest(false, false, true, 1);
+  EXPECT_TRUE(DoTest(false, false, false, 1));
+  EXPECT_TRUE(DoTest(false, false, true, 1));
 }
 
 TEST_F(FilesystemCopierActionTest, RunAsRootVerifyHashFailTest) {
   ASSERT_EQ(0, getuid());
-  DoTest(false, false, false, 2);
-  DoTest(false, false, true, 2);
+  EXPECT_TRUE(DoTest(false, false, false, 2));
+  EXPECT_TRUE(DoTest(false, false, true, 2));
 }
 
 TEST_F(FilesystemCopierActionTest, RunAsRootNoSpaceTest) {
   ASSERT_EQ(0, getuid());
-  DoTest(true, false, false, 0);
+  EXPECT_TRUE(DoTest(true, false, false, 0));
 }
 
 TEST_F(FilesystemCopierActionTest, RunAsRootTerminateEarlyTest) {
   ASSERT_EQ(0, getuid());
-  DoTest(false, true, false, 0);
+  EXPECT_TRUE(DoTest(false, true, false, 0));
 }
 
 TEST_F(FilesystemCopierActionTest, RunAsRootDetermineFilesystemSizeTest) {
