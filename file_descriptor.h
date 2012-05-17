@@ -28,6 +28,12 @@
 // * Write() returns the number of bytes written: this appears to be more useful
 //   for clients, who may wish to retry or otherwise do something useful with
 //   the remaining data that was not written.
+//
+// * Provides a Reset() method, which will force to abandon a currently open
+//   file descriptor and allow opening another file, without necessarily
+//   properly closing the old one. This may be useful in cases where a "closer"
+//   class does not care whether Close() was successful, but may need to reuse
+//   the same file descriptor again.
 
 namespace chromeos_update_engine {
 
@@ -53,13 +59,20 @@ class FileDescriptor {
   // no bytes were written. Specific implementations may set errno accordingly.
   virtual ssize_t Write(const void* buf, size_t count) = 0;
 
-  // Wrapper around close. The descriptor must be open prior to this call.
+  // Closes a file descriptor. The descriptor must be open prior to this call.
   // Returns true on success, false otherwise. Specific implementations may set
   // errno accordingly.
   virtual bool Close() = 0;
 
+  // Resets the file descriptor, abandoning a currently open file and returning
+  // the descriptor to the closed state.
+  virtual void Reset() = 0;
+
   // Indicates whether or not an implementation sets meaningful errno.
   virtual bool IsSettingErrno() = 0;
+
+  // Indicates whether the descriptor is currently open.
+  virtual bool IsOpen() = 0;
 
  private:
   DISALLOW_COPY_AND_ASSIGN(FileDescriptor);
@@ -77,26 +90,27 @@ class EintrSafeFileDescriptor : public FileDescriptor {
   virtual ssize_t Read(void* buf, size_t count);
   virtual ssize_t Write(const void* buf, size_t count);
   virtual bool Close();
+  virtual void Reset();
   virtual bool IsSettingErrno() {
     return true;
+  }
+  virtual bool IsOpen() {
+    return (fd_ >= 0);
   }
 
  private:
   int fd_;
 };
 
-// A scoped closer for a FileDescriptor object.
+// A scoped closer for a FileDescriptor object. The destructor of this class
+// invokes the Close() method of the given file descriptor, if it's not in the
+// closed state already. Note, however, that if Close() fails, this class will
+// force a Reset() invocation, which will abandon the current file descriptor.
 class ScopedFileDescriptorCloser {
  public:
   explicit ScopedFileDescriptorCloser(FileDescriptor* descriptor)
       : descriptor_(descriptor) {}
-  ~ScopedFileDescriptorCloser() {
-    if (descriptor_ && !descriptor_->Close())
-      LOG(ERROR) << "FileDescriptor::Close failed: "
-                 << (descriptor_->IsSettingErrno() ?
-                     utils::ErrnoNumberAsString(errno) :
-                     "(no error code)");
-  }
+  ~ScopedFileDescriptorCloser();
  private:
   FileDescriptor* descriptor_;
 

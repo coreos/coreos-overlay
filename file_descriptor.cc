@@ -48,10 +48,28 @@ ssize_t EintrSafeFileDescriptor::Write(const void* buf, size_t count) {
 
 bool EintrSafeFileDescriptor::Close() {
   CHECK_GE(fd_, 0);
-  int ret = HANDLE_EINTR(close(fd_));
-  if (!ret)
-    fd_ = -1;
-  return !ret;
+  if (HANDLE_EINTR(close(fd_)))
+    return false;
+  Reset();
+  return true;
+}
+
+void EintrSafeFileDescriptor::Reset() {
+  fd_ = -1;
+}
+
+
+ScopedFileDescriptorCloser::~ScopedFileDescriptorCloser() {
+  if (descriptor_ && descriptor_->IsOpen() && !descriptor_->Close()) {
+    const char* err_str = "file closing failed";
+    if (descriptor_->IsSettingErrno()) {
+      PLOG(ERROR) << err_str;
+    } else {
+      LOG(ERROR) << err_str;
+    }
+    // Abandon the current descriptor, forcing it back to a closed state.
+    descriptor_->Reset();
+  }
 }
 
 }  // namespace chromeos_update_engine

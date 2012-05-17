@@ -26,6 +26,20 @@ enum MockGpioId {
   kMockGpioIdMax  // marker, do not remove!
 };
 
+// Mock GPIO directions, which are analogous to actual GPIO directions.
+enum MockGpioDir {
+  kMockGpioDirIn = 0,
+  kMockGpioDirOut,
+  kMockGpioDirMax  // marker, do not remove!
+};
+
+// Mock GPIO values, ditto.
+enum MockGpioVal {
+  kMockGpioValUp = 0,
+  kMockGpioValDown,
+  kMockGpioValMax  // marker, do not remove!
+};
+
 }  // chromeos_update_engine
 
 #endif /* CHROMEOS_PLATFORM_UPDATE_ENGINE_GPIO_HANDLER_UNITTEST_H__ */

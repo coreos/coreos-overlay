@@ -44,10 +44,14 @@ class GpioHandler {
 // object will actually cause a runtime error.
 class StandardGpioHandler : public GpioHandler {
  public:
-  // This constructor accepts a udev interface |udev_iface|. The value of
-  // |is_defer_discovery| determines whether GPIO discovery should be attempted
-  // right away (false) or done lazily, when necessitated by other calls (true).
-  StandardGpioHandler(UdevInterface* udev_iface, bool is_defer_discovery);
+  // This constructor accepts a udev interface |udev_iface| and a reusable file
+  // descriptor |fd|. The value of |is_defer_discovery| determines whether GPIO
+  // discovery should be attempted right away (false) or done lazily, when
+  // necessitated by other calls (true). If |is_cache_test_mode| is true,
+  // checking for test mode signal is done only once and further queries return
+  // the cached result.
+  StandardGpioHandler(UdevInterface* udev_iface, FileDescriptor* fd,
+                      bool is_defer_discovery, bool is_cache_test_mode);
 
   // Free all resources, allow to reinstantiate.
   virtual ~StandardGpioHandler();
@@ -93,10 +97,20 @@ class StandardGpioHandler : public GpioHandler {
     std::string dev_path;    // sysfs device name
   };
 
-  // Various constants.
-  static const int kServoInputResponseTimeoutInSecs = 3;
-  static const int kServoInputNumChecksPerSec = 5;
+  // The number of seconds we wait before flipping the output signal (aka,
+  // producing the "challenge" signal). Assuming a 1 second sampling frequency
+  // on the servo side, a two second wait should be enough.
   static const int kServoOutputResponseWaitInSecs = 2;
+
+  // The total number of seconds we wait for a servo response from the point we
+  // flip the output signal. Assuming a 1 second sampling frequency on the servo
+  // side, a two second wait should suffice. We add one more second for grace
+  // (servod / hardware processing delays, etc).
+  static const int kServoInputResponseTimeoutInSecs = 3;
+
+  // The number of times per second we check for a servo response. Five seems
+  // like a reasonable value.
+  static const int kServoInputNumChecksPerSec = 5;
 
   // GPIO value/direction conversion tables.
   static const char* gpio_dirs_[kGpioDirMax];
@@ -168,18 +182,98 @@ class StandardGpioHandler : public GpioHandler {
     DISALLOW_COPY_AND_ASSIGN(GpioUdevEnumHelper);
   };
 
-  // Attempt GPIO discovery, at most once. Returns true if discovery process was
-  // successfully completed or already attempted, false otherwise.
-  bool DiscoverGpios();
+  // Helper class for resetting a GPIO direction.
+  class GpioDirResetter {
+   public:
+    GpioDirResetter(StandardGpioHandler* handler, GpioId id, GpioDir dir);
+    ~GpioDirResetter();
+
+    bool do_reset() const {
+      return do_reset_;
+    }
+    bool set_do_reset(bool do_reset) {
+      return (do_reset_ = do_reset);
+    }
+
+   private:
+    // Determines whether or not the GPIO direction should be reset to the
+    // initial value.
+    bool do_reset_;
+
+    // The GPIO handler to use for changing the GPIO direction.
+    StandardGpioHandler* handler_;
+
+    // The GPIO identifier and initial direction.
+    GpioId id_;
+    GpioDir dir_;
+  };
 
   // An initialization helper performing udev enumeration. |enum_helper|
   // implements an enumeration initialization and processing methods. Returns
   // true upon success, false otherwise.
   bool InitUdevEnum(struct udev* udev, UdevEnumHelper* enum_helper);
 
+  // Resets the object's flags which determine the status of test mode
+  // signaling.
+  void ResetTestModeSignalingFlags();
+
+  // Attempt GPIO discovery, at most once. Returns true if discovery process was
+  // successfully completed or already attempted, false otherwise.
+  bool DiscoverGpios();
+
   // Assigns a copy of the device name of GPIO |id| to |dev_path_p|. Assumes
   // initialization. Returns true upon success, false otherwise.
   bool GetGpioDevName(GpioId id, std::string* dev_path_p);
+
+  // Open a sysfs file device |dev_name| of GPIO |id|, for either reading or
+  // writing depending on |is_write|.  Uses the internal file descriptor for
+  // this purpose, which can be reused as long as it is closed between
+  // successive opens. Returns true upon success, false otherwise (optionally,
+  // with errno set accordingly).
+  bool OpenGpioFd(GpioId id, const char* dev_name, bool is_write);
+
+  // Writes a value to device |dev_name| of GPIO |id|. The index |output| is
+  // used to index the corresponding string to be written from the list
+  // |entries| of length |num_entries|.  Returns true upon success, false
+  // otherwise.
+  bool SetGpio(GpioId id, const char* dev_name, const char* entries[],
+               const int num_entries, int output);
+
+  // Reads a value from device |dev_name| of GPIO |id|. The list |entries| of
+  // length |num_entries| is used to convert the read string into an index,
+  // which is written to |input_p|. The call will fail if the value being read
+  // is not listed in |entries|. Returns true upon success, false otherwise.
+  bool GetGpio(GpioId id, const char* dev_name, const char* entries[],
+               const int num_entries, int* input_p);
+
+  // Sets GPIO |id| to to operate in a given |direction|. Assumes
+  // initialization. Returns true on success, false otherwise.
+  bool SetGpioDirection(GpioId id, GpioDir direction);
+
+  // Assigns the current direction of GPIO |id| into |direction_p|. Assumes
+  // initialization. Returns true on success, false otherwise.
+  bool GetGpioDirection(GpioId id, GpioDir* direction_p);
+
+  // Sets the value of GPIO |id| to |value|. Assumues initialization. The GPIO
+  // direction should be set to 'out' prior to this call. If
+  // |is_check_direction| is true, it'll ensure that the direction is indeed
+  // 'out' prior to attempting the write. Returns true on success, false
+  // otherwise.
+  bool SetGpioValue(GpioId id, GpioVal value, bool is_check_direction);
+
+  // Reads the value of a GPIO |id| and stores it in |value_p|. Assumes
+  // initialization.  The GPIO direction should be set to 'in' prior to this
+  // call. If |is_check_direction| is true, it'll ensure that the direction is
+  // indeed 'in' prior to attempting the read. Returns true upon success, false
+  // otherwise.
+  bool GetGpioValue(GpioId id, GpioVal *value_p, bool is_check_direction);
+
+  // Invokes the actual GPIO handshake protocol to determine whether test mode
+  // was signaled. Returns true iff the handshake has terminated gracefully
+  // without encountering any errors; note that a true value does *not* mean
+  // that a test mode signal has been detected.  The spec for this protocol:
+  // https://docs.google.com/a/google.com/document/d/1DB-35ptck1wT1TYrgS5AC5Y3ALfHok-iPA7kLBw2XCI/edit
+  bool DoTestModeSignalingProtocol();
 
   // Dynamic counter for the number of instances this class has. Used to enforce
   // that no more than one instance created. Thread-unsafe.
@@ -191,8 +285,20 @@ class StandardGpioHandler : public GpioHandler {
   // Udev interface.
   UdevInterface* const udev_iface_;
 
+  // A file abstraction for handling GPIO devices.
+  FileDescriptor* const fd_;
+
+  // Determines whether test mode signal should be checked at most once and
+  // cached, or reestablished on each query.
+  const bool is_cache_test_mode_;
+
   // Indicates whether GPIO discovery was performed.
   bool is_discovery_attempted_;
+
+  // Persistent state of the test mode check.
+  bool is_first_check_;
+  bool is_handshake_completed_;
+  bool is_test_mode_;
 
   DISALLOW_COPY_AND_ASSIGN(StandardGpioHandler);
 };

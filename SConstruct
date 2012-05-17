@@ -1,4 +1,4 @@
-# Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
+# Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
@@ -306,6 +306,7 @@ unittest_sources = Split("""action_unittest.cc
                             filesystem_iterator_unittest.cc
                             full_update_generator_unittest.cc
                             gpio_handler_unittest.cc
+                            gpio_mock_file_descriptor.cc
                             gpio_mock_udev_interface.cc
                             graph_utils_unittest.cc
                             http_fetcher_unittest.cc
