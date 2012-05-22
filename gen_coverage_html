@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# Builds, runs unit tests, then collects and processes coverage data for update
+# engine binaries. In the case where lcov/genhtml are missing, it will just
+# build and run the unit tests.
+
+DO_COVERAGE=$(which lcov genhtml > /dev/null 2>&1 && echo 1)
+
+set -ex
+
+./build debug=1
+if [[ $DO_COVERAGE ]]; then
+  lcov --directory . --zerocounters
+fi
+./run_unittests
+if [[ $DO_COVERAGE ]]; then
+  lcov --directory . --capture --output-file app.info
+
+  # We try to use genhtml with --no-function-coverage, if it is supported.  The
+  # problem w/ function coverage is that every template instantiation of a
+  # method counts as a different method, so if we instantiate a method twice,
+  # once for testing and once for prod, the method is tested, but it shows only
+  # 50% function coverage b/c it thinks we didn't test the prod version.
+  GENHTML_NO_FUNC_COV=$(genhtml --help | grep -q function-coverage &&
+                        echo --no-function-coverage)
+  genhtml $GENHTML_NO_FUNC_CONV --output-directory html app.info
+  ./local_coverage_rate
+fi

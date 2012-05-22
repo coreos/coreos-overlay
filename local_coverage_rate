@@ -82,6 +82,8 @@ BEGIN {
 END {
   printfile();
   print "---\nSummary: tested " GOOD_LINES " / " (BAD_LINES + GOOD_LINES);
-  printf "Test coverage: %.1f%%\n", ((GOOD_LINES * 100) / (BAD_LINES + GOOD_LINES));
+  printf(
+    "Test coverage: %.1f%%\n",
+    ((GOOD_LINES * 100) / (BAD_LINES + GOOD_LINES)));
 }
 '

@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# Invokes an incremental, parallel build of the update engine binaries. For the
+# number of build threads, it uses the number of processing cores plus one.
+
+NUM_CORES=$(cat /proc/cpuinfo | grep '^processor' | wc -l)
+scons -j $((NUM_CORES + 1)) "$@"

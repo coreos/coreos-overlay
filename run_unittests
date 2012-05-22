@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# Runs the update engine unit tests, including both userland and run-as-root
+# tests.
+
+if [ ! -e ./update_engine_unittests ]; then
+  echo 'Error: unit test binary missing' >&2
+  exit 1
+fi
+
+./update_engine_unittests --gtest_filter='-*.RunAsRoot*'
+sudo ./update_engine_unittests --gtest_filter='*.RunAsRoot*'
