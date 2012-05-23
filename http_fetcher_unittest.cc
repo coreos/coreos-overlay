@@ -238,7 +238,7 @@ class LibcurlHttpFetcherTest : public AnyHttpFetcherTest {
     proxy_resolver_.set_num_proxies(num_proxies);
     LibcurlHttpFetcher *ret = new
         LibcurlHttpFetcher(reinterpret_cast<ProxyResolver*>(&proxy_resolver_),
-                           &mock_system_state_);
+                           &mock_system_state_, false);
     // Speed up test execution.
     ret->set_idle_seconds(1);
     ret->set_retry_seconds(1);
@@ -285,8 +285,9 @@ class MultiRangeHttpFetcherTest : public LibcurlHttpFetcherTest {
     proxy_resolver_.set_num_proxies(num_proxies);
     ProxyResolver* resolver =
         reinterpret_cast<ProxyResolver*>(&proxy_resolver_);
-    MultiRangeHttpFetcher *ret = new MultiRangeHttpFetcher(
-        new LibcurlHttpFetcher(resolver, &mock_system_state_));
+    MultiRangeHttpFetcher *ret =
+        new MultiRangeHttpFetcher(
+            new LibcurlHttpFetcher(resolver, &mock_system_state_, false));
     ret->ClearRanges();
     ret->AddRange(0);
     // Speed up test execution.

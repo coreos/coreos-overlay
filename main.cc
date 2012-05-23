@@ -21,6 +21,7 @@
 #include "update_engine/dbus_constants.h"
 #include "update_engine/dbus_interface.h"
 #include "update_engine/dbus_service.h"
+#include "update_engine/gpio_handler.h"
 #include "update_engine/prefs.h"
 #include "update_engine/subprocess.h"
 #include "update_engine/terminator.h"
@@ -181,13 +182,22 @@ int main(int argc, char** argv) {
   chromeos_update_engine::CertificateChecker::set_openssl_wrapper(
       &openssl_wrapper);
 
+  // Initialize a GPIO handler. Defer GPIO discovery to ensure the udev has
+  // ample time to export the devices. Also require that test mode is physically
+  // queries at most once and the result cached, for a more consistent update
+  // behavior.
+  chromeos_update_engine::StandardUdevInterface udev_iface;
+  chromeos_update_engine::EintrSafeFileDescriptor file_descriptor;
+  chromeos_update_engine::StandardGpioHandler
+      gpio_handler(&udev_iface, &file_descriptor, true, true);
+
   // Create the update attempter:
   chromeos_update_engine::ConcreteDbusGlib dbus;
   chromeos_update_engine::RealSystemState real_system_state;
   chromeos_update_engine::UpdateAttempter update_attempter(&prefs,
                                                            &metrics_lib,
                                                            &dbus,
-                                                           NULL,
+                                                           &gpio_handler,
                                                            &real_system_state);
 
   // Create the dbus service object:
@@ -201,7 +211,7 @@ int main(int argc, char** argv) {
 
   // Schedule periodic update checks.
   chromeos_update_engine::UpdateCheckScheduler scheduler(&update_attempter,
-                                                         NULL,
+                                                         &gpio_handler,
                                                          &real_system_state);
   scheduler.Run();
 

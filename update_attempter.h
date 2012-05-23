@@ -80,7 +80,7 @@ class UpdateAttempter : public ActionProcessorDelegate,
                       const std::string& omaha_url,
                       bool obey_proxies,
                       bool interactive,
-                      bool is_test,
+                      bool is_test_mode,
                       bool is_user_initiated);
 
   // ActionProcessorDelegate methods:
@@ -334,6 +334,9 @@ class UpdateAttempter : public ActionProcessorDelegate,
 
   // A flag for indicating whether we are using a test server URL.
   bool is_using_test_url_;
+
+  // If true, will induce a test mode update attempt.
+  bool is_test_mode_;
 
   // A flag indicating whether a test update cycle was already attempted.
   bool is_test_update_attempted_;

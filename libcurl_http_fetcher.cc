@@ -171,7 +171,7 @@ void LibcurlHttpFetcher::ResumeTransfer(const std::string& url) {
   // Security lock-down in official builds: makes sure that peer certificate
   // verification is enabled, restricts the set of trusted certificates,
   // restricts protocols to HTTPS, restricts ciphers to HIGH.
-  if (IsOfficialBuild()) {
+  if (!is_test_mode_ && IsOfficialBuild()) {
     CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_SSL_VERIFYPEER, 1),
              CURLE_OK);
     CHECK_EQ(curl_easy_setopt(curl_handle_,

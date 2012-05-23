@@ -134,6 +134,7 @@ UpdateAttempter::UpdateAttempter(PrefsInterface* prefs,
       start_action_processor_(false),
       policy_provider_(NULL),
       is_using_test_url_(false),
+      is_test_mode_(false),
       is_test_update_attempted_(false),
       gpio_handler_(gpio_handler),
       init_waiting_period_from_prefs_(true),
@@ -150,7 +151,7 @@ void UpdateAttempter::Update(const string& app_version,
                              const string& omaha_url,
                              bool obey_proxies,
                              bool interactive,
-                             bool is_test,
+                             bool is_test_mode,
                              bool is_user_initiated) {
   chrome_proxy_resolver_.Init();
   fake_update_success_ = false;
@@ -171,7 +172,7 @@ void UpdateAttempter::Update(const string& app_version,
                              omaha_url,
                              obey_proxies,
                              interactive,
-                             is_test,
+                             is_test_mode,
                              is_user_initiated)) {
     return;
   }
@@ -191,9 +192,12 @@ bool UpdateAttempter::CalculateUpdateParams(const string& app_version,
                                             const string& omaha_url,
                                             bool obey_proxies,
                                             bool interactive,
-                                            bool is_test,
+                                            bool is_test_mode,
                                             bool is_user_initiated) {
   http_response_code_ = 0;
+
+  // Set the test mode flag for the current update attempt.
+  is_test_mode_ = is_test_mode;
 
   // Lazy initialize the policy provider, or reload the latest policy data.
   if (!policy_provider_.get()) {
@@ -305,7 +309,7 @@ bool UpdateAttempter::CalculateUpdateParams(const string& app_version,
 
   // Determine whether an alternative test address should be used.
   string omaha_url_to_use = omaha_url;
-  if ((is_using_test_url_ = (omaha_url_to_use.empty() && is_test))) {
+  if ((is_using_test_url_ = (omaha_url_to_use.empty() && is_test_mode_))) {
     omaha_url_to_use = kTestUpdateUrl;
     LOG(INFO) << "using alternative server address: " << omaha_url_to_use;
   }
@@ -359,7 +363,7 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
 
   // Actions:
   LibcurlHttpFetcher* update_check_fetcher =
-      new LibcurlHttpFetcher(GetProxyResolver(), system_state_);
+      new LibcurlHttpFetcher(GetProxyResolver(), system_state_, is_test_mode_);
   // Try harder to connect to the network, esp when not interactive.
   // See comment in libcurl_http_fetcher.cc.
   update_check_fetcher->set_no_network_max_retries(interactive ? 1 : 3);
@@ -382,10 +386,11 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
                              new OmahaEvent(
                                  OmahaEvent::kTypeUpdateDownloadStarted),
                              new LibcurlHttpFetcher(GetProxyResolver(),
-                                                    system_state_),
+                                                    system_state_,
+                                                    is_test_mode_),
                              false));
   LibcurlHttpFetcher* download_fetcher =
-      new LibcurlHttpFetcher(GetProxyResolver(), system_state_);
+      new LibcurlHttpFetcher(GetProxyResolver(), system_state_, is_test_mode_);
   download_fetcher->set_check_certificate(CertificateChecker::kDownload);
   shared_ptr<DownloadAction> download_action(
       new DownloadAction(prefs_,
@@ -397,7 +402,8 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
                              new OmahaEvent(
                                  OmahaEvent::kTypeUpdateDownloadFinished),
                              new LibcurlHttpFetcher(GetProxyResolver(),
-                                                    system_state_),
+                                                    system_state_,
+                                                    is_test_mode_),
                              false));
   shared_ptr<FilesystemCopierAction> filesystem_verifier_action(
       new FilesystemCopierAction(false, true, 0));
@@ -410,7 +416,8 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
                              &omaha_request_params_,
                              new OmahaEvent(OmahaEvent::kTypeUpdateComplete),
                              new LibcurlHttpFetcher(GetProxyResolver(),
-                                                    system_state_),
+                                                    system_state_,
+                                                    is_test_mode_),
                              false));
 
   download_action->set_delegate(this);
@@ -469,16 +476,16 @@ void UpdateAttempter::CheckForUpdate(const string& app_version,
   // Read GPIO signals and determine whether this is an automated test scenario.
   // For safety, we only allow a test update to be performed once; subsequent
   // update requests will be carried out normally.
-  bool is_test = (!is_test_update_attempted_ && gpio_handler_ &&
-                  gpio_handler_->IsTestModeSignaled());
-  if (is_test) {
-    LOG(INFO) << "test mode signaled";
+  bool is_test_mode = (!is_test_update_attempted_ && gpio_handler_ &&
+                       gpio_handler_->IsTestModeSignaled());
+  if (is_test_mode) {
+    LOG(WARNING) << "this is a test mode update attempt!";
     is_test_update_attempted_ = true;
   }
 
   // Passing true for is_user_initiated to indicate that this
   // is not a scheduled update check.
-  Update(app_version, omaha_url, true, true, is_test, is_user_initiated);
+  Update(app_version, omaha_url, true, true, is_test_mode, is_user_initiated);
 }
 
 bool UpdateAttempter::RebootIfNeeded() {
@@ -798,7 +805,8 @@ bool UpdateAttempter::ScheduleErrorEventAction() {
                              &omaha_request_params_,
                              error_event_.release(),  // Pass ownership.
                              new LibcurlHttpFetcher(GetProxyResolver(),
-                                                    system_state_),
+                                                    system_state_,
+                                                    is_test_mode_),
                              false));
   actions_.push_back(shared_ptr<AbstractAction>(error_event_action));
   processor_->EnqueueAction(error_event_action.get());
@@ -913,7 +921,8 @@ void UpdateAttempter::PingOmaha() {
                                &omaha_request_params_,
                                NULL,
                                new LibcurlHttpFetcher(GetProxyResolver(),
-                                                      system_state_),
+                                                      system_state_,
+                                                      is_test_mode_),
                                true));
     actions_.push_back(shared_ptr<OmahaRequestAction>(ping_action));
     processor_->set_delegate(NULL);

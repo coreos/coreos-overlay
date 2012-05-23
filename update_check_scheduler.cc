@@ -90,12 +90,12 @@ gboolean UpdateCheckScheduler::StaticCheck(void* scheduler) {
   CHECK(me->scheduled_);
   me->scheduled_ = false;
 
-  bool is_test = false;
+  bool is_test_mode = false;
   if (me->system_state_->IsOOBEComplete() ||
-      (is_test = (!me->is_test_update_attempted_ &&
-                  me->gpio_handler_ &&
-                  me->gpio_handler_->IsTestModeSignaled()))) {
-    if (is_test) {
+      (is_test_mode = (!me->is_test_update_attempted_ &&
+                       me->gpio_handler_ &&
+                       me->gpio_handler_->IsTestModeSignaled()))) {
+    if (is_test_mode) {
       LOG(WARNING)
           << "test mode signaled, allowing update check prior to OOBE complete";
       me->is_test_update_attempted_ = true;
@@ -103,7 +103,7 @@ gboolean UpdateCheckScheduler::StaticCheck(void* scheduler) {
 
     // Before updating, we flush any previously generated UMA reports.
     CertificateChecker::FlushReport();
-    me->update_attempter_->Update("", "", false, false, is_test, false);
+    me->update_attempter_->Update("", "", false, false, is_test_mode, false);
   } else {
     // Skips all automatic update checks if the OOBE process is not complete and
     // schedules a new check as if it is the first one.

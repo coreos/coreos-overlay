@@ -31,7 +31,8 @@ class LibcurlHttpFetcher : public HttpFetcher {
   static const int kMaxRetryCountOobeNotComplete;
 
   LibcurlHttpFetcher(ProxyResolver* proxy_resolver,
-                     SystemState* system_state)
+                     SystemState* system_state,
+                     bool is_test_mode)
       : HttpFetcher(proxy_resolver, system_state),
         curl_multi_handle_(NULL),
         curl_handle_(NULL),
@@ -53,7 +54,8 @@ class LibcurlHttpFetcher : public HttpFetcher {
         in_write_callback_(false),
         sent_byte_(false),
         terminate_requested_(false),
-        check_certificate_(CertificateChecker::kNone) {}
+        check_certificate_(CertificateChecker::kNone),
+        is_test_mode_(is_test_mode) {}
 
   // Cleans up all internal state. Does not notify delegate
   ~LibcurlHttpFetcher();
@@ -257,6 +259,9 @@ class LibcurlHttpFetcher : public HttpFetcher {
   // connection's certificate. If no certificate check needs to be performed,
   // this should be kNone.
   CertificateChecker::ServerToCheck check_certificate_;
+
+  // If true, utilizes a relaxed test mode fetch logic. False by default.
+  bool is_test_mode_;
 
   DISALLOW_COPY_AND_ASSIGN(LibcurlHttpFetcher);
 };
