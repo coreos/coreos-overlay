@@ -16,8 +16,10 @@
 #include "update_engine/omaha_hash_calculator.h"
 #include "update_engine/omaha_request_action.h"
 #include "update_engine/omaha_request_params.h"
+#include "update_engine/prefs.h"
 #include "update_engine/prefs_mock.h"
 #include "update_engine/test_utils.h"
+#include "update_engine/utils.h"
 
 using base::Time;
 using base::TimeDelta;
@@ -36,7 +38,8 @@ namespace chromeos_update_engine {
 class OmahaRequestActionTest : public ::testing::Test { };
 
 namespace {
-const OmahaRequestParams kDefaultTestParams(
+
+OmahaRequestParams kDefaultTestParams(
     OmahaRequestParams::kOsPlatform,
     OmahaRequestParams::kOsVersion,
     "service_pack",
@@ -49,7 +52,7 @@ const OmahaRequestParams kDefaultTestParams(
     false,  // delta okay
     "http://url",
     false, // update_disabled
-    "");   // target_version_prefix
+    ""); // target_version_prefix);
 
 string GetNoUpdateResponse(const string& app_id) {
   return string(
@@ -57,6 +60,37 @@ string GetNoUpdateResponse(const string& app_id) {
       "xmlns=\"http://www.google.com/update2/response\" protocol=\"2.0\"><app "
       "appid=\"") + app_id + "\" status=\"ok\"><ping "
       "status=\"ok\"/><updatecheck status=\"noupdate\"/></app></gupdate>";
+}
+
+string GetUpdateResponse2(const string& app_id,
+                          const string& display_version,
+                          const string& more_info_url,
+                          const string& prompt,
+                          const string& codebase,
+                          const string& hash,
+                          const string& needsadmin,
+                          const string& size,
+                          const string& deadline,
+                          Time published_on,
+                          const string& max_days_to_scatter) {
+  return string(
+      "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gupdate "
+      "xmlns=\"http://www.google.com/update2/response\" "
+      "protocol=\"2.0\"><app "
+      "appid=\"") + app_id + "\" status=\"ok\"><ping "
+      "status=\"ok\"/><updatecheck DisplayVersion=\"" + display_version + "\" "
+      "ChromeOSVersion=\"" + display_version + "\" "
+      "MoreInfo=\"" + more_info_url + "\" Prompt=\"" + prompt + "\" "
+      "IsDelta=\"true\" "
+      "UpdatePublishedOn=\"" + utils::ToString(published_on) + "\" "
+      "MaxDaysToScatter=\"" + max_days_to_scatter + "\" "
+      "codebase=\"" + codebase + "\" "
+      "hash=\"not-applicable\" "
+      "sha256=\"" + hash + "\" "
+      "needsadmin=\"" + needsadmin + "\" "
+      "size=\"" + size + "\" " +
+      (deadline.empty() ? "" : ("deadline=\"" + deadline + "\" ")) +
+      "status=\"ok\"/></app></gupdate>";
 }
 
 string GetUpdateResponse(const string& app_id,
@@ -68,19 +102,17 @@ string GetUpdateResponse(const string& app_id,
                          const string& needsadmin,
                          const string& size,
                          const string& deadline) {
-  return string(
-      "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gupdate "
-      "xmlns=\"http://www.google.com/update2/response\" "
-      "protocol=\"2.0\"><app "
-      "appid=\"") + app_id + "\" status=\"ok\"><ping "
-      "status=\"ok\"/><updatecheck DisplayVersion=\"" + display_version + "\" "
-      "ChromeOSVersion=\"" + display_version + "\" "
-      "MoreInfo=\"" + more_info_url + "\" Prompt=\"" + prompt + "\" "
-      "IsDelta=\"true\" "
-      "codebase=\"" + codebase + "\" hash=\"not-applicable\" "
-      "sha256=\"" + hash + "\" needsadmin=\"" + needsadmin + "\" "
-      "size=\"" + size + "\" deadline=\"" + deadline +
-      "\" status=\"ok\"/></app></gupdate>";
+  return GetUpdateResponse2(app_id,
+                            display_version,
+                            more_info_url,
+                            prompt,
+                            codebase,
+                            hash,
+                            needsadmin,
+                            size,
+                            deadline,
+                            Time::Now(),
+                            "7");
 }
 
 class OmahaRequestActionTestProcessorDelegate : public ActionProcessorDelegate {
@@ -157,7 +189,7 @@ class OutputObjectCollectorAction : public Action<OutputObjectCollectorAction> {
 // OmahaRequestAction constructor. out_post_data may be null; if non-null, the
 // post-data received by the mock HttpFetcher is returned.
 bool TestUpdateCheck(PrefsInterface* prefs,
-                     const OmahaRequestParams& params,
+                     OmahaRequestParams params,
                      const string& http_response,
                      int fail_http_response_code,
                      bool ping_only,
@@ -173,7 +205,7 @@ bool TestUpdateCheck(PrefsInterface* prefs,
   }
   NiceMock<PrefsMock> local_prefs;
   OmahaRequestAction action(prefs ? prefs : &local_prefs,
-                            params,
+                            &params,
                             NULL,
                             fetcher,
                             ping_only);
@@ -202,7 +234,7 @@ bool TestUpdateCheck(PrefsInterface* prefs,
 // Tests Event requests -- they should always succeed. |out_post_data|
 // may be null; if non-null, the post-data received by the mock
 // HttpFetcher is returned.
-void TestEvent(const OmahaRequestParams& params,
+void TestEvent(OmahaRequestParams params,
                OmahaEvent* event,
                const string& http_response,
                vector<char>* out_post_data) {
@@ -211,7 +243,7 @@ void TestEvent(const OmahaRequestParams& params,
                                                  http_response.size(),
                                                  NULL);
   NiceMock<PrefsMock> prefs;
-  OmahaRequestAction action(&prefs, params, event, fetcher, false);
+  OmahaRequestAction action(&prefs, &params, event, fetcher, false);
   OmahaRequestActionTestProcessorDelegate delegate;
   delegate.loop_ = loop;
   ActionProcessor processor;
@@ -284,7 +316,7 @@ TEST(OmahaRequestActionTest, ValidUpdateBlockedByPolicyTest) {
                                         "HASH1234=",  // checksum
                                         "false",  // needs admin
                                         "123",  // size
-                                        "20101020"),  // deadline
+                                        ""),  // deadline
                       -1,
                       false,  // ping_only
                       kActionCodeOmahaUpdateIgnoredPerPolicy,
@@ -292,7 +324,6 @@ TEST(OmahaRequestActionTest, ValidUpdateBlockedByPolicyTest) {
                       NULL));
   EXPECT_FALSE(response.update_exists);
 }
-
 
 TEST(OmahaRequestActionTest, NoUpdatesSentWhenBlockedByPolicyTest) {
   OmahaResponse response;
@@ -310,6 +341,265 @@ TEST(OmahaRequestActionTest, NoUpdatesSentWhenBlockedByPolicyTest) {
   EXPECT_FALSE(response.update_exists);
 }
 
+TEST(OmahaRequestActionTest, WallClockBasedWaitAloneCausesScattering) {
+  OmahaResponse response;
+  OmahaRequestParams params = kDefaultTestParams;
+  params.wall_clock_based_wait_enabled = true;
+  params.update_check_count_wait_enabled = false;
+  params.waiting_period = TimeDelta::FromDays(2);
+
+  string prefs_dir;
+  EXPECT_TRUE(utils::MakeTempDirectory("/tmp/ue_ut_prefs.XXXXXX",
+                                       &prefs_dir));
+  ScopedDirRemover temp_dir_remover(prefs_dir);
+
+  Prefs prefs;
+  LOG_IF(ERROR, !prefs.Init(FilePath(prefs_dir)))
+      << "Failed to initialize preferences.";
+
+  ASSERT_FALSE(
+      TestUpdateCheck(&prefs,  // prefs
+                      params,
+                      GetUpdateResponse2(OmahaRequestParams::kAppId,
+                                         "1.2.3.4",  // version
+                                         "http://more/info",
+                                         "true",  // prompt
+                                         "http://code/base",  // dl url
+                                         "HASH1234=",  // checksum
+                                         "false",  // needs admin
+                                         "123",  // size
+                                         "",  // deadline
+                                         Time::Now(), // published on
+                                         "7"), // max days to scatter
+                      -1,
+                      false,  // ping_only
+                      kActionCodeOmahaUpdateDeferredPerPolicy,
+                      &response,
+                      NULL));
+  EXPECT_FALSE(response.update_exists);
+}
+
+TEST(OmahaRequestActionTest, NoWallClockBasedWaitCausesNoScattering) {
+  OmahaResponse response;
+  OmahaRequestParams params = kDefaultTestParams;
+  params.wall_clock_based_wait_enabled = false;
+  params.waiting_period = TimeDelta::FromDays(2);
+
+  params.update_check_count_wait_enabled = true;
+  params.min_update_checks_needed = 1;
+  params.max_update_checks_allowed = 8;
+
+  string prefs_dir;
+  EXPECT_TRUE(utils::MakeTempDirectory("/tmp/ue_ut_prefs.XXXXXX",
+                                       &prefs_dir));
+  ScopedDirRemover temp_dir_remover(prefs_dir);
+
+  Prefs prefs;
+  LOG_IF(ERROR, !prefs.Init(FilePath(prefs_dir)))
+      << "Failed to initialize preferences.";
+
+  ASSERT_TRUE(
+      TestUpdateCheck(&prefs,  // prefs
+                      params,
+                      GetUpdateResponse2(OmahaRequestParams::kAppId,
+                                         "1.2.3.4",  // version
+                                         "http://more/info",
+                                         "true",  // prompt
+                                         "http://code/base",  // dl url
+                                         "HASH1234=",  // checksum
+                                         "false",  // needs admin
+                                         "123",  // size
+                                         "",  // deadline
+                                         Time::Now(), // published on
+                                         "7"), // max days to scatter
+                      -1,
+                      false,  // ping_only
+                      kActionCodeSuccess,
+                      &response,
+                      NULL));
+  EXPECT_TRUE(response.update_exists);
+}
+
+TEST(OmahaRequestActionTest, ZeroMaxDaysToScatterCausesNoScattering) {
+  OmahaResponse response;
+  OmahaRequestParams params = kDefaultTestParams;
+  params.wall_clock_based_wait_enabled = true;
+  params.waiting_period = TimeDelta::FromDays(2);
+
+  params.update_check_count_wait_enabled = true;
+  params.min_update_checks_needed = 1;
+  params.max_update_checks_allowed = 8;
+
+  string prefs_dir;
+  EXPECT_TRUE(utils::MakeTempDirectory("/tmp/ue_ut_prefs.XXXXXX",
+                                       &prefs_dir));
+  ScopedDirRemover temp_dir_remover(prefs_dir);
+
+  Prefs prefs;
+  LOG_IF(ERROR, !prefs.Init(FilePath(prefs_dir)))
+      << "Failed to initialize preferences.";
+
+  ASSERT_TRUE(
+      TestUpdateCheck(&prefs,  // prefs
+                      params,
+                      GetUpdateResponse2(OmahaRequestParams::kAppId,
+                                         "1.2.3.4",  // version
+                                         "http://more/info",
+                                         "true",  // prompt
+                                         "http://code/base",  // dl url
+                                         "HASH1234=",  // checksum
+                                         "false",  // needs admin
+                                         "123",  // size
+                                         "",  // deadline
+                                         Time::Now(), // published on
+                                         "0"), // max days to scatter
+                      -1,
+                      false,  // ping_only
+                      kActionCodeSuccess,
+                      &response,
+                      NULL));
+  EXPECT_TRUE(response.update_exists);
+}
+
+
+TEST(OmahaRequestActionTest, ZeroUpdateCheckCountCausesNoScattering) {
+  OmahaResponse response;
+  OmahaRequestParams params = kDefaultTestParams;
+  params.wall_clock_based_wait_enabled = true;
+  params.waiting_period = TimeDelta();
+
+  params.update_check_count_wait_enabled = true;
+  params.min_update_checks_needed = 0;
+  params.max_update_checks_allowed = 0;
+
+  string prefs_dir;
+  EXPECT_TRUE(utils::MakeTempDirectory("/tmp/ue_ut_prefs.XXXXXX",
+                                       &prefs_dir));
+  ScopedDirRemover temp_dir_remover(prefs_dir);
+
+  Prefs prefs;
+  LOG_IF(ERROR, !prefs.Init(FilePath(prefs_dir)))
+      << "Failed to initialize preferences.";
+
+  ASSERT_TRUE(TestUpdateCheck(
+                      &prefs,  // prefs
+                      params,
+                      GetUpdateResponse2(OmahaRequestParams::kAppId,
+                                         "1.2.3.4",  // version
+                                         "http://more/info",
+                                         "true",  // prompt
+                                         "http://code/base",  // dl url
+                                         "HASH1234=",  // checksum
+                                         "false",  // needs admin
+                                         "123",  // size
+                                         "",  // deadline
+                                         Time::Now(), // published on
+                                         "7"), // max days to scatter
+                      -1,
+                      false,  // ping_only
+                      kActionCodeSuccess,
+                      &response,
+                      NULL));
+
+  int64 count;
+  ASSERT_TRUE(prefs.GetInt64(kPrefsUpdateCheckCount, &count));
+  ASSERT_TRUE(count == 0);
+  EXPECT_TRUE(response.update_exists);
+}
+
+TEST(OmahaRequestActionTest, NonZeroUpdateCheckCountCausesScattering) {
+  OmahaResponse response;
+  OmahaRequestParams params = kDefaultTestParams;
+  params.wall_clock_based_wait_enabled = true;
+  params.waiting_period = TimeDelta();
+
+  params.update_check_count_wait_enabled = true;
+  params.min_update_checks_needed = 1;
+  params.max_update_checks_allowed = 8;
+
+  string prefs_dir;
+  EXPECT_TRUE(utils::MakeTempDirectory("/tmp/ue_ut_prefs.XXXXXX",
+                                       &prefs_dir));
+  ScopedDirRemover temp_dir_remover(prefs_dir);
+
+  Prefs prefs;
+  LOG_IF(ERROR, !prefs.Init(FilePath(prefs_dir)))
+      << "Failed to initialize preferences.";
+
+  ASSERT_FALSE(TestUpdateCheck(
+                      &prefs,  // prefs
+                      params,
+                      GetUpdateResponse2(OmahaRequestParams::kAppId,
+                                         "1.2.3.4",  // version
+                                         "http://more/info",
+                                         "true",  // prompt
+                                         "http://code/base",  // dl url
+                                         "HASH1234=",  // checksum
+                                         "false",  // needs admin
+                                         "123",  // size
+                                         "",  // deadline
+                                         Time::Now(), // published on
+                                         "7"), // max days to scatter
+                      -1,
+                      false,  // ping_only
+                      kActionCodeOmahaUpdateDeferredPerPolicy,
+                      &response,
+                      NULL));
+
+  int64 count;
+  ASSERT_TRUE(prefs.GetInt64(kPrefsUpdateCheckCount, &count));
+  ASSERT_TRUE(count > 0);
+  EXPECT_FALSE(response.update_exists);
+}
+
+TEST(OmahaRequestActionTest, ExistingUpdateCheckCountCausesScattering) {
+  OmahaResponse response;
+  OmahaRequestParams params = kDefaultTestParams;
+  params.wall_clock_based_wait_enabled = true;
+  params.waiting_period = TimeDelta();
+
+  params.update_check_count_wait_enabled = true;
+  params.min_update_checks_needed = 1;
+  params.max_update_checks_allowed = 8;
+
+  string prefs_dir;
+  EXPECT_TRUE(utils::MakeTempDirectory("/tmp/ue_ut_prefs.XXXXXX",
+                                       &prefs_dir));
+  ScopedDirRemover temp_dir_remover(prefs_dir);
+
+  Prefs prefs;
+  LOG_IF(ERROR, !prefs.Init(FilePath(prefs_dir)))
+      << "Failed to initialize preferences.";
+
+  ASSERT_TRUE(prefs.SetInt64(kPrefsUpdateCheckCount, 5));
+
+  ASSERT_FALSE(TestUpdateCheck(
+                      &prefs,  // prefs
+                      params,
+                      GetUpdateResponse2(OmahaRequestParams::kAppId,
+                                         "1.2.3.4",  // version
+                                         "http://more/info",
+                                         "true",  // prompt
+                                         "http://code/base",  // dl url
+                                         "HASH1234=",  // checksum
+                                         "false",  // needs admin
+                                         "123",  // size
+                                         "",  // deadline
+                                         Time::Now(), // published on
+                                         "7"), // max days to scatter
+                      -1,
+                      false,  // ping_only
+                      kActionCodeOmahaUpdateDeferredPerPolicy,
+                      &response,
+                      NULL));
+
+  int64 count;
+  ASSERT_TRUE(prefs.GetInt64(kPrefsUpdateCheckCount, &count));
+  // count remains the same, as the decrementing happens in update_attempter
+  // which this test doesn't exercise.
+  ASSERT_TRUE(count == 5);
+  EXPECT_FALSE(response.update_exists);
+}
 
 TEST(OmahaRequestActionTest, NoOutputPipeTest) {
   const string http_response(GetNoUpdateResponse(OmahaRequestParams::kAppId));
@@ -317,7 +607,8 @@ TEST(OmahaRequestActionTest, NoOutputPipeTest) {
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
 
   NiceMock<PrefsMock> prefs;
-  OmahaRequestAction action(&prefs, kDefaultTestParams, NULL,
+  OmahaRequestParams params = kDefaultTestParams;
+  OmahaRequestAction action(&prefs, &params, NULL,
                             new MockHttpFetcher(http_response.data(),
                                                 http_response.size(),
                                                 NULL),
@@ -473,7 +764,8 @@ TEST(OmahaRequestActionTest, TerminateTransferTest) {
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
 
   NiceMock<PrefsMock> prefs;
-  OmahaRequestAction action(&prefs, kDefaultTestParams, NULL,
+  OmahaRequestParams params = kDefaultTestParams;
+  OmahaRequestAction action(&prefs, &params, NULL,
                             new MockHttpFetcher(http_response.data(),
                                                 http_response.size(),
                                                 NULL),
@@ -511,7 +803,7 @@ TEST(OmahaRequestActionTest, XmlEncodeTest) {
                             false,  // delta okay
                             "http://url",
                             false,   // update_disabled
-                            ""); // target_version_prefix
+                            "");  // target_version_prefix
   OmahaResponse response;
   ASSERT_FALSE(
       TestUpdateCheck(NULL,  // prefs
@@ -680,9 +972,10 @@ TEST(OmahaRequestActionTest, FormatErrorEventOutputTest) {
 TEST(OmahaRequestActionTest, IsEventTest) {
   string http_response("doesn't matter");
   NiceMock<PrefsMock> prefs;
+  OmahaRequestParams params = kDefaultTestParams;
   OmahaRequestAction update_check_action(
       &prefs,
-      kDefaultTestParams,
+      &params,
       NULL,
       new MockHttpFetcher(http_response.data(),
                           http_response.size(),
@@ -690,9 +983,10 @@ TEST(OmahaRequestActionTest, IsEventTest) {
       false);
   EXPECT_FALSE(update_check_action.IsEvent());
 
+  params = kDefaultTestParams;
   OmahaRequestAction event_action(
       &prefs,
-      kDefaultTestParams,
+      &params,
       new OmahaEvent(OmahaEvent::kTypeUpdateComplete),
       new MockHttpFetcher(http_response.data(),
                           http_response.size(),

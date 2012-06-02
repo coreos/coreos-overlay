@@ -187,4 +187,29 @@ TEST_F(PrefsTest, SetInt64Min) {
   EXPECT_EQ(StringPrintf("%" PRIi64, kint64min), value);
 }
 
+TEST_F(PrefsTest, ExistsWorks) {
+  const char kKey[] = "exists-key";
+
+  // test that the key doesn't exist before we set it.
+  EXPECT_FALSE(prefs_.Exists(kKey));
+
+  // test that the key exists after we set it.
+  ASSERT_TRUE(prefs_.SetInt64(kKey, 8));
+  EXPECT_TRUE(prefs_.Exists(kKey));
+}
+
+TEST_F(PrefsTest, DeleteWorks) {
+  const char kKey[] = "delete-key";
+
+  // test that it's alright to delete a non-existent key.
+  EXPECT_TRUE(prefs_.Delete(kKey));
+
+  // delete the key after we set it.
+  ASSERT_TRUE(prefs_.SetInt64(kKey, 0));
+  EXPECT_TRUE(prefs_.Delete(kKey));
+
+  // make sure it doesn't exist anymore.
+  EXPECT_FALSE(prefs_.Exists(kKey));
+}
+
 }  // namespace chromeos_update_engine

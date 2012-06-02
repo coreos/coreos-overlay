@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -29,6 +29,9 @@ class Prefs : public PrefsInterface {
   bool SetString(const std::string& key, const std::string& value);
   bool GetInt64(const std::string& key, int64_t* value);
   bool SetInt64(const std::string& key, const int64_t value);
+
+  bool Exists(const std::string& key);
+  bool Delete(const std::string& key);
 
  private:
   FRIEND_TEST(PrefsTest, GetFileNameForKey);

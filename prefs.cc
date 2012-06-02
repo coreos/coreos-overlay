@@ -1,4 +1,4 @@
-// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -33,6 +33,8 @@ const char kPrefsUpdateStateSHA256Context[] = "update-state-sha-256-context";
 const char kPrefsUpdateStateSignatureBlob[] = "update-state-signature-blob";
 const char kPrefsUpdateStateSignedSHA256Context[] =
     "update-state-signed-sha-256-context";
+const char kPrefsUpdateCheckCount[] = "update-check-count";
+const char kPrefsWallClockWaitPeriod[] = "wall-clock-wait-period";
 
 bool Prefs::Init(const FilePath& prefs_dir) {
   prefs_dir_ = prefs_dir;
@@ -43,8 +45,6 @@ bool Prefs::GetString(const string& key, string* value) {
   FilePath filename;
   TEST_AND_RETURN_FALSE(GetFileNameForKey(key, &filename));
   if (!file_util::ReadFileToString(filename, value)) {
-    PLOG(INFO) << "Unable to read prefs from " << filename.value()
-               << ". This is likely harmless.";
     return false;
   }
   return true;
@@ -70,6 +70,18 @@ bool Prefs::GetInt64(const string& key, int64_t* value) {
 
 bool Prefs::SetInt64(const string& key, const int64_t value) {
   return SetString(key, base::Int64ToString(value));
+}
+
+bool Prefs::Exists(const string& key) {
+  FilePath filename;
+  TEST_AND_RETURN_FALSE(GetFileNameForKey(key, &filename));
+  return file_util::PathExists(filename);
+}
+
+bool Prefs::Delete(const string& key) {
+  FilePath filename;
+  TEST_AND_RETURN_FALSE(GetFileNameForKey(key, &filename));
+  return file_util::Delete(filename, false);
 }
 
 bool Prefs::GetFileNameForKey(const std::string& key, FilePath* filename) {

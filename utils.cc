@@ -24,6 +24,7 @@
 #include <base/file_util.h>
 #include <base/logging.h>
 #include <base/rand_util.h>
+#include <base/string_number_conversions.h>
 #include <base/string_util.h>
 #include <base/stringprintf.h>
 #include <google/protobuf/stubs/common.h>
@@ -33,6 +34,7 @@
 #include "update_engine/omaha_request_params.h"
 #include "update_engine/subprocess.h"
 
+using base::Time;
 using std::min;
 using std::string;
 using std::vector;
@@ -43,6 +45,7 @@ namespace utils {
 
 static const char kOOBECompletedMarker[] = "/home/chronos/.oobe_completed";
 static const char kDevImageMarker[] = "/root/.dev_mode";
+const char* const kStatefulPartition = "/mnt/stateful_partition";
 
 bool IsOfficialBuild() {
   return !file_util::PathExists(FilePath(kDevImageMarker));
@@ -626,7 +629,17 @@ string FormatTimeDelta(base::TimeDelta delta) {
   return str;
 }
 
-const char* const kStatefulPartition = "/mnt/stateful_partition";
+string ToString(const Time utc_time) {
+  Time::Exploded exp_time;
+  utc_time.UTCExplode(&exp_time);
+  return StringPrintf("%d/%d/%d %d:%02d:%02d GMT",
+                      exp_time.month,
+                      exp_time.day_of_month,
+                      exp_time.year,
+                      exp_time.hour,
+                      exp_time.minute,
+                      exp_time.second);
+}
 
 }  // namespace utils
 

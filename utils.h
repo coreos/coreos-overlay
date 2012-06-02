@@ -90,7 +90,7 @@ bool MakeTempFile(const std::string& filename_template,
                   std::string* filename,
                   int* fd);
 
-// Calls mkdtemp() with the tempate passed. Returns the generated dirname
+// Calls mkdtemp() with the template passed. Returns the generated dirname
 // in the dirname param. Returns TRUE on success. dirname must not be NULL.
 bool MakeTempDirectory(const std::string& dirname_template,
                        std::string* dirname);
@@ -135,6 +135,10 @@ bool GetFilesystemSize(const std::string& device,
 bool GetFilesystemSizeFromFD(int fd,
                              int* out_block_count,
                              int* out_block_size);
+
+// Returns the string representation of the given UTC time.
+// such as "11/14/2011 14:05:30 GMT".
+std::string ToString(const base::Time utc_time);
 
 enum BootLoader {
   BootLoader_SYSLINUX = 0,

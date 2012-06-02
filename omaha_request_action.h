@@ -1,4 +1,4 @@
-// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -13,6 +13,7 @@
 
 #include <base/memory/scoped_ptr.h>
 #include <curl/curl.h>
+#include <libxml/parser.h>
 
 #include "update_engine/action.h"
 #include "update_engine/http_fetcher.h"
@@ -114,6 +115,14 @@ class OmahaRequestAction : public Action<OmahaRequestAction>,
   static const int kNeverPinged = -1;
   static const int kPingTimeJump = -2;
 
+  // These are the possible outcome upon checking whether we satisfied
+  // the wall-clock-based-wait.
+  enum WallClockWaitResult {
+    kWallClockWaitNotSatisfied,
+    kWallClockWaitDoneButUpdateCheckWaitRequired,
+    kWallClockWaitDoneAndUpdateCheckWaitNotRequired,
+  };
+
   // The ctor takes in all the parameters that will be used for making
   // the request to Omaha. For some of them we have constants that
   // should be used.
@@ -129,7 +138,7 @@ class OmahaRequestAction : public Action<OmahaRequestAction>,
   // or
   // OmahaRequestAction(..., NULL, new WhateverHttpFetcher);
   OmahaRequestAction(PrefsInterface* prefs,
-                     const OmahaRequestParams& params,
+                     OmahaRequestParams* params,
                      OmahaEvent* event,
                      HttpFetcher* http_fetcher,
                      bool ping_only);
@@ -163,11 +172,26 @@ class OmahaRequestAction : public Action<OmahaRequestAction>,
   // number of days since the last ping sent for |key|.
   int CalculatePingDays(const std::string& key);
 
+  // Returns true if the download of a new update should be deferred.
+  // False if the update can be downloaded.
+  bool ShouldDeferDownload(xmlNode* updatecheck_node);
+
+  // Returns true if the basic wall-clock-based waiting period has been
+  // satisfied based on the scattering policy setting. False otherwise.
+  // If true, it also indicates whether the additional update-check-count-based
+  // waiting period also needs to be satisfied before the download can begin.
+  WallClockWaitResult IsWallClockBasedWaitingSatisfied(
+      xmlNode* updatecheck_node);
+
+  // Returns true if the update-check-count-based waiting period has been
+  // satisfied. False otherwise.
+  bool IsUpdateCheckCountBasedWaitingSatisfied(xmlNode* updatecheck_node);
+
   // Access to the preferences store.
   PrefsInterface* prefs_;
 
-  // These are data that are passed in the request to the Omaha server.
-  const OmahaRequestParams& params_;
+  // Contains state that is relevant in the processing of the Omaha request.
+  OmahaRequestParams* params_;
 
   // Pointer to the OmahaEvent info. This is an UpdateCheck request if NULL.
   scoped_ptr<OmahaEvent> event_;

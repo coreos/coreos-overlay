@@ -24,6 +24,8 @@ extern const char kPrefsUpdateStateNextOperation[];
 extern const char kPrefsUpdateStateSHA256Context[];
 extern const char kPrefsUpdateStateSignatureBlob[];
 extern const char kPrefsUpdateStateSignedSHA256Context[];
+extern const char kPrefsUpdateCheckCount[];
+extern const char kPrefsWallClockWaitPeriod[];
 
 // The prefs interface allows access to a persistent preferences
 // store. The two reasons for providing this as an interface are
@@ -49,6 +51,14 @@ class PrefsInterface {
   // Associates |key| with an int64 |value|. Returns true on success,
   // false otherwise.
   virtual bool SetInt64(const std::string& key, const int64_t value) = 0;
+
+  // Returns true if the setting exists (i.e. a file with the given key
+  // exists in the prefs directory)
+  virtual bool Exists(const std::string& key) = 0;
+
+  // Returns true if successfully deleted the file corresponding to
+  // this key. Calling with non-existent keys does nothing.
+  virtual bool Delete(const std::string& key) = 0;
 
   virtual ~PrefsInterface() {}
 };

@@ -1,4 +1,4 @@
-// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -132,7 +132,8 @@ UpdateAttempter::UpdateAttempter(PrefsInterface* prefs,
       policy_provider_(NULL),
       is_using_test_url_(false),
       is_test_update_attempted_(false),
-      gpio_handler_(gpio_handler) {
+      gpio_handler_(gpio_handler),
+      init_waiting_period_from_prefs_(true) {
   if (utils::FileExists(kUpdateCompletedMarker))
     status_ = UPDATE_STATUS_UPDATED_NEED_REBOOT;
 }
@@ -160,6 +161,31 @@ void UpdateAttempter::Update(const string& app_version,
     // Update in progress. Do nothing
     return;
   }
+
+  if (!CalculateUpdateParams(app_version,
+                             omaha_url,
+                             obey_proxies,
+                             interactive,
+                             is_test)) {
+    return;
+  }
+
+  BuildUpdateActions(interactive);
+
+  SetStatusAndNotify(UPDATE_STATUS_CHECKING_FOR_UPDATE,
+                     kUpdateNoticeUnspecified);
+
+  // Just in case we didn't update boot flags yet, make sure they're updated
+  // before any update processing starts.
+  start_action_processor_ = true;
+  UpdateBootFlags();
+}
+
+bool UpdateAttempter::CalculateUpdateParams(const string& app_version,
+                                            const string& omaha_url,
+                                            bool obey_proxies,
+                                            bool interactive,
+                                            bool is_test) {
   http_response_code_ = 0;
 
   // Lazy initialize the policy provider, or reload the latest policy data.
@@ -171,6 +197,9 @@ void UpdateAttempter::Update(const string& app_version,
 
   // If the release_track is specified by policy, that takes precedence.
   string release_track;
+
+  // Take a copy of the old scatter value before we update it.
+  int64 old_scatter_factor_in_secs = scatter_factor_.InSeconds();
   if (policy_provider_->device_policy_is_loaded()) {
     const policy::DevicePolicy& device_policy =
                                 policy_provider_->GetDevicePolicy();
@@ -178,6 +207,63 @@ void UpdateAttempter::Update(const string& app_version,
     device_policy.GetUpdateDisabled(&omaha_request_params_.update_disabled);
     device_policy.GetTargetVersionPrefix(
       &omaha_request_params_.target_version_prefix);
+    int64 new_scatter_factor_in_secs = 0;
+    device_policy.GetScatterFactorInSeconds(&new_scatter_factor_in_secs);
+    scatter_factor_ = TimeDelta::FromSeconds(new_scatter_factor_in_secs);
+  }
+
+  if (scatter_factor_.InSeconds() != old_scatter_factor_in_secs) {
+    int64 wait_period_in_secs = 0;
+    if (init_waiting_period_from_prefs_ &&
+        prefs_->GetInt64(kPrefsWallClockWaitPeriod, &wait_period_in_secs) &&
+        wait_period_in_secs >= 0 &&
+        wait_period_in_secs <= scatter_factor_.InSeconds()) {
+      // This means:
+      // 1. This is the first update check to come this far in this process.
+      // 2. There's a persisted value for the waiting period available.
+      // 3. And that persisted value is still valid.
+      // So, in this case, we should reuse the persisted value instead of
+      // generating a new random value to improve the chances of a good
+      // distribution for scattering.
+      omaha_request_params_.waiting_period =
+        TimeDelta::FromSeconds(wait_period_in_secs);
+      LOG(INFO) << "Using persisted value for wall clock based waiting period.";
+    } else {
+      // In this case, we should regenerate the waiting period to make sure
+      // it's within the bounds of the new scatter factor value.
+      omaha_request_params_.waiting_period = TimeDelta::FromSeconds(
+          base::RandInt(0, scatter_factor_.InSeconds()));
+
+      LOG(INFO) << "Generated new value of " << utils::FormatSecs(
+                    omaha_request_params_.waiting_period.InSeconds())
+                << " for wall clock based waiting period.";
+
+      // Do a best-effort to persist this. We'll work fine even if the
+      // persistence fails.
+      prefs_->SetInt64(kPrefsWallClockWaitPeriod,
+                       omaha_request_params_.waiting_period.InSeconds());
+    }
+  }
+
+  // We should reset this value since we're past the first initialization
+  // of the waiting period for this process.
+  init_waiting_period_from_prefs_ = false;
+
+  if (scatter_factor_.InSeconds() == 0) {
+    // This means the scattering feature is turned off. Make sure to disable
+    // all the knobs so that we don't invoke any scattering related code.
+    omaha_request_params_.wall_clock_based_wait_enabled = false;
+    omaha_request_params_.update_check_count_wait_enabled = false;
+    prefs_->Delete(kPrefsWallClockWaitPeriod);
+    prefs_->Delete(kPrefsUpdateCheckCount);
+  } else {
+    // This means the scattering policy is turned on. We'll do wall-clock-
+    // based-wait by default. And if we don't have any issues in accessing
+    // the file system to do update the update check count value, we'll
+    // turn that on as well.
+    omaha_request_params_.wall_clock_based_wait_enabled = true;
+    bool decrement_succeeded = DecrementUpdateCheckCount();
+    omaha_request_params_.update_check_count_wait_enabled = decrement_succeeded;
   }
 
   // Determine whether an alternative test address should be used.
@@ -191,13 +277,23 @@ void UpdateAttempter::Update(const string& app_version,
                                   omaha_url_to_use,
                                   release_track)) {
     LOG(ERROR) << "Unable to initialize Omaha request device params.";
-    return;
+    return false;
   }
 
   LOG(INFO) << "update_disabled = "
             << (omaha_request_params_.update_disabled ? "true" : "false")
             << ", target_version_prefix = "
-            << omaha_request_params_.target_version_prefix;
+            << omaha_request_params_.target_version_prefix
+            << ", scatter_factor_in_seconds = "
+            << utils::FormatSecs(scatter_factor_.InSeconds());
+
+  LOG(INFO) << "Wall Clock Based Wait Enabled = "
+            << omaha_request_params_.wall_clock_based_wait_enabled
+            << ", Update Check Count Wait Enabled = "
+            << omaha_request_params_.update_check_count_wait_enabled
+            << ", Waiting Period = "
+            << utils::FormatSecs(
+                   omaha_request_params_.waiting_period.InSeconds());
 
   obeying_proxies_ = true;
   if (obey_proxies || proxy_manual_checks_ == 0) {
@@ -217,6 +313,10 @@ void UpdateAttempter::Update(const string& app_version,
       "direct connections.";
 
   DisableDeltaUpdateIfNeeded();
+  return true;
+}
+
+void UpdateAttempter::BuildUpdateActions(bool interactive) {
   CHECK(!processor_->IsRunning());
   processor_->set_delegate(this);
 
@@ -229,7 +329,7 @@ void UpdateAttempter::Update(const string& app_version,
   update_check_fetcher->set_check_certificate(CertificateChecker::kUpdate);
   shared_ptr<OmahaRequestAction> update_check_action(
       new OmahaRequestAction(prefs_,
-                             omaha_request_params_,
+                             &omaha_request_params_,
                              NULL,
                              update_check_fetcher,  // passes ownership
                              false));
@@ -241,7 +341,7 @@ void UpdateAttempter::Update(const string& app_version,
       new FilesystemCopierAction(true, false));
   shared_ptr<OmahaRequestAction> download_started_action(
       new OmahaRequestAction(prefs_,
-                             omaha_request_params_,
+                             &omaha_request_params_,
                              new OmahaEvent(
                                  OmahaEvent::kTypeUpdateDownloadStarted),
                              new LibcurlHttpFetcher(GetProxyResolver()),
@@ -255,7 +355,7 @@ void UpdateAttempter::Update(const string& app_version,
                              download_fetcher)));  // passes ownership
   shared_ptr<OmahaRequestAction> download_finished_action(
       new OmahaRequestAction(prefs_,
-                             omaha_request_params_,
+                             &omaha_request_params_,
                              new OmahaEvent(
                                  OmahaEvent::kTypeUpdateDownloadFinished),
                              new LibcurlHttpFetcher(GetProxyResolver()),
@@ -268,7 +368,7 @@ void UpdateAttempter::Update(const string& app_version,
       new PostinstallRunnerAction);
   shared_ptr<OmahaRequestAction> update_complete_action(
       new OmahaRequestAction(prefs_,
-                             omaha_request_params_,
+                             &omaha_request_params_,
                              new OmahaEvent(OmahaEvent::kTypeUpdateComplete),
                              new LibcurlHttpFetcher(GetProxyResolver()),
                              false));
@@ -313,14 +413,6 @@ void UpdateAttempter::Update(const string& app_version,
               kernel_filesystem_verifier_action.get());
   BondActions(kernel_filesystem_verifier_action.get(),
               postinstall_runner_action.get());
-
-  SetStatusAndNotify(UPDATE_STATUS_CHECKING_FOR_UPDATE,
-                     kUpdateNoticeUnspecified);
-
-  // Just in case we didn't update boot flags yet, make sure they're updated
-  // before any update processing starts.
-  start_action_processor_ = true;
-  UpdateBootFlags();
 }
 
 void UpdateAttempter::CheckForUpdate(const string& app_version,
@@ -385,6 +477,19 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
     prefs_->SetInt64(kPrefsDeltaUpdateFailures, 0);
     prefs_->SetString(kPrefsPreviousVersion, omaha_request_params_.app_version);
     DeltaPerformer::ResetUpdateProgress(prefs_, false);
+
+    // Since we're done with scattering fully at this point, this is the
+    // safest point delete the state files, as we're sure that the status is
+    // set to reboot (which means no more updates will be applied until reboot)
+    // This deletion is required for correctness as we want the next update
+    // check to re-create a new random number for the update check count.
+    // Similarly, we also delete the wall-clock-wait period that was persisted
+    // so that we start with a new random value for the next update check
+    // after reboot so that the same device is not favored or punished in any
+    // way.
+    prefs_->Delete(kPrefsUpdateCheckCount);
+    prefs_->Delete(kPrefsWallClockWaitPeriod);
+
     SetStatusAndNotify(UPDATE_STATUS_UPDATED_NEED_REBOOT,
                        kUpdateNoticeUnspecified);
 
@@ -645,7 +750,7 @@ bool UpdateAttempter::ScheduleErrorEventAction() {
   LOG(INFO) << "Update failed -- reporting the error event.";
   shared_ptr<OmahaRequestAction> error_event_action(
       new OmahaRequestAction(prefs_,
-                             omaha_request_params_,
+                             &omaha_request_params_,
                              error_event_.release(),  // Pass ownership.
                              new LibcurlHttpFetcher(GetProxyResolver()),
                              false));
@@ -759,7 +864,7 @@ void UpdateAttempter::PingOmaha() {
   if (!processor_->IsRunning()) {
     shared_ptr<OmahaRequestAction> ping_action(
         new OmahaRequestAction(prefs_,
-                               omaha_request_params_,
+                               &omaha_request_params_,
                                NULL,
                                new LibcurlHttpFetcher(GetProxyResolver()),
                                true));
@@ -784,6 +889,55 @@ void UpdateAttempter::PingOmaha() {
   // Update the status which will schedule the next update check
   SetStatusAndNotify(UPDATE_STATUS_UPDATED_NEED_REBOOT,
                      kUpdateNoticeUnspecified);
+}
+
+
+bool UpdateAttempter::DecrementUpdateCheckCount() {
+  int64 update_check_count_value;
+
+  if (!prefs_->Exists(kPrefsUpdateCheckCount)) {
+    // This file does not exist. This means we haven't started our update
+    // check count down yet, so nothing more to do. This file will be created
+    // later when we first satisfy the wall-clock-based-wait period.
+    LOG(INFO) << "No existing update check count. That's normal.";
+    return true;
+  }
+
+  if (prefs_->GetInt64(kPrefsUpdateCheckCount, &update_check_count_value)) {
+    // Only if we're able to read a proper integer value, then go ahead
+    // and decrement and write back the result in the same file, if needed.
+    LOG(INFO) << "Update check count = " << update_check_count_value;
+
+    if (update_check_count_value == 0) {
+      // It could be 0, if, for some reason, the file didn't get deleted
+      // when we set our status to waiting for reboot. so we just leave it
+      // as is so that we can prevent another update_check wait for this client.
+      LOG(INFO) << "Not decrementing update check count as it's already 0.";
+      return true;
+    }
+
+    if (update_check_count_value > 0)
+      update_check_count_value--;
+    else
+      update_check_count_value = 0;
+
+    // Write out the new value of update_check_count_value.
+    if (prefs_->SetInt64(kPrefsUpdateCheckCount, update_check_count_value)) {
+      // We successfully wrote out te new value, so enable the
+      // update check based wait.
+      LOG(INFO) << "New update check count = " << update_check_count_value;
+      return true;
+    }
+  }
+
+  LOG(INFO) << "Deleting update check count state due to read/write errors.";
+
+  // We cannot read/write to the file, so disable the update check based wait
+  // so that we don't get stuck in this OS version by any chance (which could
+  // happen if there's some bug that causes to read/write incorrectly).
+  // Also attempt to delete the file to do our best effort to cleanup.
+  prefs_->Delete(kPrefsUpdateCheckCount);
+  return false;
 }
 
 }  // namespace chromeos_update_engine

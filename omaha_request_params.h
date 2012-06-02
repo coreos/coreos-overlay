@@ -1,4 +1,4 @@
-// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -8,6 +8,7 @@
 #include <string>
 
 #include <base/basictypes.h>
+#include <base/time.h>
 #include <gtest/gtest_prod.h>  // for FRIEND_TEST
 
 // This gathers local system information and prepares info used by the
@@ -15,8 +16,11 @@
 
 namespace chromeos_update_engine {
 
-// This struct encapsulates the data Omaha gets for the request.
-// These strings in this struct should not be XML escaped.
+// This struct encapsulates the data Omaha gets for the request, along with
+// essential state needed for the processing of the request/response.
+// The strings in this struct should not be XML escaped.
+// TODO (jaysri): Consider renaming this to reflect its lifetime more
+// appropriately.
 struct OmahaRequestParams {
 
   OmahaRequestParams()
@@ -24,7 +28,11 @@ struct OmahaRequestParams {
         os_version(kOsVersion),
         app_id(kAppId),
         delta_okay(true),
-        update_disabled(false) {}
+        update_disabled(false),
+        wall_clock_based_wait_enabled(false),
+        update_check_count_wait_enabled(false),
+        min_update_checks_needed(kDefaultMinUpdateChecks),
+        max_update_checks_allowed(kDefaultMaxUpdateChecks) {}
 
   OmahaRequestParams(const std::string& in_os_platform,
                      const std::string& in_os_version,
@@ -51,7 +59,11 @@ struct OmahaRequestParams {
         delta_okay(in_delta_okay),
         update_url(in_update_url),
         update_disabled(in_update_disabled),
-        target_version_prefix(in_target_version_prefix) {}
+        target_version_prefix(in_target_version_prefix),
+        wall_clock_based_wait_enabled(false),
+        update_check_count_wait_enabled(false),
+        min_update_checks_needed(kDefaultMinUpdateChecks),
+        max_update_checks_allowed(kDefaultMaxUpdateChecks) {}
 
   std::string os_platform;
   std::string os_version;
@@ -71,11 +83,20 @@ struct OmahaRequestParams {
   bool update_disabled;
   std::string target_version_prefix;
 
+  bool wall_clock_based_wait_enabled;
+  base::TimeDelta waiting_period;
+
+  bool update_check_count_wait_enabled;
+  int64 min_update_checks_needed;
+  int64 max_update_checks_allowed;
+
   // Suggested defaults
   static const char* const kAppId;
   static const char* const kOsPlatform;
   static const char* const kOsVersion;
   static const char* const kUpdateUrl;
+  static const int64 kDefaultMinUpdateChecks = 0;
+  static const int64 kDefaultMaxUpdateChecks = 8;
 };
 
 class OmahaRequestDeviceParams : public OmahaRequestParams {

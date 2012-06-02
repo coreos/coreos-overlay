@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -17,6 +17,9 @@ class PrefsMock : public PrefsInterface {
                                const std::string& value));
   MOCK_METHOD2(GetInt64, bool(const std::string& key, int64_t* value));
   MOCK_METHOD2(SetInt64, bool(const std::string& key, const int64_t value));
+
+  MOCK_METHOD1(Exists, bool(const std::string& key));
+  MOCK_METHOD1(Delete, bool(const std::string& key));
 };
 
 }  // namespace chromeos_update_engine

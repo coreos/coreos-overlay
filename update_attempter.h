@@ -1,4 +1,4 @@
-// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -225,6 +225,24 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // update has been applied.
   void PingOmaha();
 
+  // Helper method of Update() to calculate the update-related parameters
+  // from various sources and set the appropriate state. Please refer to
+  // Update() method for the meaning of the parametes.
+  bool CalculateUpdateParams(const std::string& app_version,
+                             const std::string& omaha_url,
+                             bool obey_proxies,
+                             bool interactive,
+                             bool is_test);
+
+  // Helper method of Update() to construct the sequence of actions to
+  // be performed for an update check. Please refer to
+  // Update() method for the meaning of the parametes.
+  void BuildUpdateActions(bool interactive);
+
+  // Decrements the count in the kUpdateCheckCountFilePath.
+  // Returns True if successfully decremented, false otherwise.
+  bool DecrementUpdateCheckCount();
+
   // Last status notification timestamp used for throttling. Use monotonic
   // TimeTicks to ensure that notifications are sent even if the system clock is
   // set back in the middle of an update.
@@ -314,6 +332,13 @@ class UpdateAttempter : public ActionProcessorDelegate,
 
   // GPIO handler object.
   GpioHandler* gpio_handler_;
+
+  // The current scatter factor as found in the policy setting.
+  base::TimeDelta scatter_factor_;
+
+  // True if we have to initialize the waiting period in prefs, if available.
+  // False otherwise.
+  bool init_waiting_period_from_prefs_;
 
   DISALLOW_COPY_AND_ASSIGN(UpdateAttempter);
 };

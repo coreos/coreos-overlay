@@ -1,4 +1,4 @@
-// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -13,6 +13,7 @@
 #include "update_engine/mock_dbus_interface.h"
 #include "update_engine/mock_http_fetcher.h"
 #include "update_engine/postinstall_runner_action.h"
+#include "update_engine/prefs.h"
 #include "update_engine/prefs_mock.h"
 #include "update_engine/test_utils.h"
 #include "update_engine/update_attempter.h"
@@ -82,6 +83,14 @@ class UpdateAttempterTest : public ::testing::Test {
   static gboolean StaticReadTargetVersionPrefixFromPolicyTestStart(
       gpointer data);
 
+  void ReadScatterFactorFromPolicyTestStart();
+  static gboolean StaticReadScatterFactorFromPolicyTestStart(
+      gpointer data);
+
+  void DecrementUpdateCheckCountTestStart();
+  static gboolean StaticDecrementUpdateCheckCountTestStart(
+      gpointer data);
+
   MockDbusGlib dbus_;
   UpdateAttempterUnderTest attempter_;
   ActionProcessorMock* processor_;
@@ -114,7 +123,7 @@ TEST_F(UpdateAttempterTest, ActionCompletedOmahaRequestTest) {
   scoped_ptr<MockHttpFetcher> fetcher(new MockHttpFetcher("", 0, NULL));
   fetcher->FailTransfer(500);  // Sets the HTTP response code.
   OmahaRequestParams params;
-  OmahaRequestAction action(&prefs_, params, NULL, fetcher.release(), false);
+  OmahaRequestAction action(&prefs_, &params, NULL, fetcher.release(), false);
   ObjectCollectorAction<OmahaResponse> collector_action;
   BondActions(&action, &collector_action);
   OmahaResponse response;
@@ -147,7 +156,7 @@ TEST_F(UpdateAttempterTest, GetErrorCodeForActionTest) {
             GetErrorCodeForAction(NULL, kActionCodeSuccess));
 
   OmahaRequestParams params;
-  OmahaRequestAction omaha_request_action(NULL, params, NULL, NULL, false);
+  OmahaRequestAction omaha_request_action(NULL, &params, NULL, NULL, false);
   EXPECT_EQ(kActionCodeOmahaRequestError,
             GetErrorCodeForAction(&omaha_request_action, kActionCodeError));
   OmahaResponseHandlerAction omaha_response_handler_action(&prefs_);
@@ -290,6 +299,20 @@ gboolean UpdateAttempterTest::StaticReadTargetVersionPrefixFromPolicyTestStart(
     gpointer data) {
   UpdateAttempterTest* ua_test = reinterpret_cast<UpdateAttempterTest*>(data);
   ua_test->ReadTargetVersionPrefixFromPolicyTestStart();
+  return FALSE;
+}
+
+gboolean UpdateAttempterTest::StaticReadScatterFactorFromPolicyTestStart(
+    gpointer data) {
+  UpdateAttempterTest* ua_test = reinterpret_cast<UpdateAttempterTest*>(data);
+  ua_test->ReadScatterFactorFromPolicyTestStart();
+  return FALSE;
+}
+
+gboolean UpdateAttempterTest::StaticDecrementUpdateCheckCountTestStart(
+    gpointer data) {
+  UpdateAttempterTest* ua_test = reinterpret_cast<UpdateAttempterTest*>(data);
+  ua_test->DecrementUpdateCheckCountTestStart();
   return FALSE;
 }
 
@@ -484,5 +507,93 @@ void UpdateAttempterTest::ReadTargetVersionPrefixFromPolicyTestStart() {
   g_idle_add(&StaticQuitMainLoop, this);
 }
 
+
+TEST_F(UpdateAttempterTest, ReadScatterFactorFromPolicy) {
+  loop_ = g_main_loop_new(g_main_context_default(), FALSE);
+  g_idle_add(&StaticReadScatterFactorFromPolicyTestStart, this);
+  g_main_loop_run(loop_);
+  g_main_loop_unref(loop_);
+  loop_ = NULL;
+}
+
+// Tests that the scatter_factor_in_seconds value is properly fetched
+// from the device policy.
+void UpdateAttempterTest::ReadScatterFactorFromPolicyTestStart() {
+  int64 scatter_factor_in_seconds = 36000;
+
+  policy::MockDevicePolicy* device_policy = new policy::MockDevicePolicy();
+  attempter_.policy_provider_.reset(new policy::PolicyProvider(device_policy));
+
+  EXPECT_CALL(*device_policy, LoadPolicy()).WillRepeatedly(Return(true));
+
+  EXPECT_CALL(*device_policy, GetScatterFactorInSeconds(_))
+      .WillRepeatedly(DoAll(
+          SetArgumentPointee<0>(scatter_factor_in_seconds),
+          Return(true)));
+
+  attempter_.Update("", "", false, false, false);
+  EXPECT_EQ(scatter_factor_in_seconds, attempter_.scatter_factor_.InSeconds());
+
+  g_idle_add(&StaticQuitMainLoop, this);
+}
+
+TEST_F(UpdateAttempterTest, DecrementUpdateCheckCountTest) {
+  loop_ = g_main_loop_new(g_main_context_default(), FALSE);
+  g_idle_add(&StaticDecrementUpdateCheckCountTestStart, this);
+  g_main_loop_run(loop_);
+  g_main_loop_unref(loop_);
+  loop_ = NULL;
+}
+
+void UpdateAttempterTest::DecrementUpdateCheckCountTestStart() {
+  // Tests that the scatter_factor_in_seconds value is properly fetched
+  // from the device policy and is decremented if value > 0.
+  int64 initial_value = 5;
+  Prefs prefs;
+  attempter_.prefs_ = &prefs;
+
+  string prefs_dir;
+  EXPECT_TRUE(utils::MakeTempDirectory("/tmp/ue_ut_prefs.XXXXXX",
+                                       &prefs_dir));
+  ScopedDirRemover temp_dir_remover(prefs_dir);
+
+  LOG_IF(ERROR, !prefs.Init(FilePath(prefs_dir)))
+      << "Failed to initialize preferences.";
+  EXPECT_TRUE(prefs.SetInt64(kPrefsUpdateCheckCount, initial_value));
+
+  int64 scatter_factor_in_seconds = 10;
+
+  policy::MockDevicePolicy* device_policy = new policy::MockDevicePolicy();
+  attempter_.policy_provider_.reset(new policy::PolicyProvider(device_policy));
+
+  EXPECT_CALL(*device_policy, LoadPolicy()).WillRepeatedly(Return(true));
+
+  EXPECT_CALL(*device_policy, GetScatterFactorInSeconds(_))
+      .WillRepeatedly(DoAll(
+          SetArgumentPointee<0>(scatter_factor_in_seconds),
+          Return(true)));
+
+  attempter_.Update("", "", false, false, false);
+  EXPECT_EQ(scatter_factor_in_seconds, attempter_.scatter_factor_.InSeconds());
+
+  // Make sure the file still exists.
+  EXPECT_TRUE(prefs.Exists(kPrefsUpdateCheckCount));
+
+  int64 new_value;
+  EXPECT_TRUE(prefs.GetInt64(kPrefsUpdateCheckCount, &new_value));
+  EXPECT_EQ(initial_value - 1, new_value);
+
+  EXPECT_TRUE(attempter_.omaha_request_params_.update_check_count_wait_enabled);
+
+  // However, if the count is already 0, it's not decremented. Test that.
+  initial_value = 0;
+  EXPECT_TRUE(prefs.SetInt64(kPrefsUpdateCheckCount, initial_value));
+  attempter_.Update("", "", false, false, false);
+  EXPECT_TRUE(prefs.Exists(kPrefsUpdateCheckCount));
+  EXPECT_TRUE(prefs.GetInt64(kPrefsUpdateCheckCount, &new_value));
+  EXPECT_EQ(initial_value, new_value);
+
+  g_idle_add(&StaticQuitMainLoop, this);
+}
 
 }  // namespace chromeos_update_engine
