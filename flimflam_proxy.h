@@ -39,10 +39,10 @@ class FlimFlamProxy {
                                 NetworkConnectionType* out_type);
 
   static bool IsExpensiveConnectionType(NetworkConnectionType type) {
-    return type == kNetWimax || type == kNetBluetooth || type == kNetCellular;
+    return type == kNetBluetooth || type == kNetCellular;
   }
   static const char* StringForConnectionType(NetworkConnectionType type);
-  
+
  private:
   // Should never be allocated
   DISALLOW_IMPLICIT_CONSTRUCTORS(FlimFlamProxy);

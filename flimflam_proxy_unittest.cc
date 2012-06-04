@@ -177,7 +177,7 @@ TEST_F(FlimFlamProxyTest, UnknownTest) {
 TEST_F(FlimFlamProxyTest, ExpensiveConnectionsTest) {
   EXPECT_FALSE(FlimFlamProxy::IsExpensiveConnectionType(kNetEthernet));
   EXPECT_FALSE(FlimFlamProxy::IsExpensiveConnectionType(kNetWifi));
-  EXPECT_TRUE(FlimFlamProxy::IsExpensiveConnectionType(kNetWimax));
+  EXPECT_FALSE(FlimFlamProxy::IsExpensiveConnectionType(kNetWimax));
   EXPECT_TRUE(FlimFlamProxy::IsExpensiveConnectionType(kNetBluetooth));
   EXPECT_TRUE(FlimFlamProxy::IsExpensiveConnectionType(kNetCellular));
 }
