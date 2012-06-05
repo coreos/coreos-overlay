@@ -27,7 +27,6 @@ using std::string;
 namespace chromeos_update_engine {
 
 namespace {
-const int kMaxRetriesCount = 3;
 const int kNoNetworkRetrySeconds = 10;
 const char kCACertificatesPath[] = "/usr/share/chromeos-ca-certificates";
 }  // namespace {}
@@ -214,6 +213,8 @@ void LibcurlHttpFetcher::ProxiesResolved() {
   transfer_size_ = -1;
   resume_offset_ = 0;
   retry_count_ = 0;
+  max_retry_count_ = (utils::IsOOBEComplete()) ? kMaxRetryCountOobeComplete
+                                               : kMaxRetryCountOobeNotComplete;
   no_network_retry_count_ = 0;
   http_response_code_ = 0;
   terminate_requested_ = false;
@@ -306,15 +307,19 @@ void LibcurlHttpFetcher::CurlPerformOnce() {
           delegate_->TransferComplete(this, false);  // signal fail
       }
     } else if ((transfer_size_ >= 0) && (bytes_downloaded_ < transfer_size_)) {
-      // Need to restart transfer
       retry_count_++;
-      LOG(INFO) << "Restarting transfer b/c we finished, had downloaded "
-                << bytes_downloaded_ << " bytes, but transfer_size_ is "
-                << transfer_size_ << ". retry_count: " << retry_count_;
-      if (retry_count_ > kMaxRetriesCount) {
+      LOG(INFO) << "Transfer interrupted after downloading "
+                << bytes_downloaded_ << " of " << transfer_size_ << " bytes. "
+                << transfer_size_ - bytes_downloaded_ << " bytes remaining "
+                << "after " << retry_count_ << " attempt(s)";
+
+      if (retry_count_ > max_retry_count_) {
+        LOG(INFO) << "Reached max attempts (" << retry_count_ << ")";
         if (delegate_)
           delegate_->TransferComplete(this, false);  // signal fail
       } else {
+        // Need to restart transfer
+        LOG(INFO) << "Restarting transfer to download the remaining bytes";
         g_timeout_add_seconds(retry_seconds_,
                               &LibcurlHttpFetcher::StaticRetryTimeoutCallback,
                               this);

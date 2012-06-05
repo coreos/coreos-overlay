@@ -24,6 +24,8 @@ namespace chromeos_update_engine {
 class LibcurlHttpFetcher : public HttpFetcher {
  public:
   static const int kMaxRedirects = 10;
+  static const int kMaxRetryCountOobeComplete = 20;
+  static const int kMaxRetryCountOobeNotComplete = 3;
 
   explicit LibcurlHttpFetcher(ProxyResolver* proxy_resolver)
       : HttpFetcher(proxy_resolver),
@@ -37,6 +39,7 @@ class LibcurlHttpFetcher : public HttpFetcher {
         download_length_(0),
         resume_offset_(0),
         retry_count_(0),
+        max_retry_count_(kMaxRetryCountOobeNotComplete),
         retry_seconds_(20),
         no_network_retry_count_(0),
         no_network_max_retries_(0),
@@ -223,8 +226,9 @@ class LibcurlHttpFetcher : public HttpFetcher {
   // not to resuming an interrupted download.
   off_t resume_offset_;
 
-  // Number of resumes performed.
+  // Number of resumes performed so far and the max allowed.
   int retry_count_;
+  int max_retry_count_;
 
   // Seconds to wait before retrying a resume.
   int retry_seconds_;
