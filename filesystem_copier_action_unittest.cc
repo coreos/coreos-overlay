@@ -270,14 +270,18 @@ bool FilesystemCopierActionTest::DoTest(bool run_out_of_space,
     ADD_FAILURE();
     return false;
   }
-  success = success && ExpectVectorsEq(a_loop_data, a_out);
+  const bool is_a_file_reading_eq = ExpectVectorsEq(a_loop_data, a_out);
+  EXPECT_TRUE(is_a_file_reading_eq);
+  success = success && is_a_file_reading_eq;
   if (!verify_hash) {
     vector<char> b_out;
     if (!utils::ReadFile(b_dev, &b_out)) {
       ADD_FAILURE();
       return false;
     }
-    success = success && ExpectVectorsEq(a_out, b_out);
+    const bool is_b_file_reading_eq = ExpectVectorsEq(a_out, b_out);
+    EXPECT_TRUE(is_b_file_reading_eq);
+    success = success && is_b_file_reading_eq;
   }
 
   bool is_install_plan_eq = (collector_action.object() == install_plan);
