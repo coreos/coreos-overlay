@@ -41,18 +41,19 @@ using std::vector;
 
 namespace chromeos_update_engine {
 
+static const char kOOBECompletedMarker[] = "/home/chronos/.oobe_completed";
+
+bool RealSystemState::IsOOBEComplete() {
+  return file_util::PathExists(FilePath(kOOBECompletedMarker));
+}
+
 namespace utils {
 
-static const char kOOBECompletedMarker[] = "/home/chronos/.oobe_completed";
 static const char kDevImageMarker[] = "/root/.dev_mode";
 const char* const kStatefulPartition = "/mnt/stateful_partition";
 
 bool IsOfficialBuild() {
   return !file_util::PathExists(FilePath(kDevImageMarker));
-}
-
-bool IsOOBEComplete() {
-  return file_util::PathExists(FilePath(kOOBECompletedMarker));
 }
 
 bool IsNormalBootMode() {

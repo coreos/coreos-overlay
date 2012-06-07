@@ -42,7 +42,8 @@ class UpdateCheckScheduler {
   static const int kTimeoutMaxBackoffInterval;
 
   UpdateCheckScheduler(UpdateAttempter* update_attempter,
-                       GpioHandler* gpio_handler);
+                       GpioHandler* gpio_handler,
+                       SystemState* system_state);
   virtual ~UpdateCheckScheduler();
 
   // Initiates the periodic update checks, if necessary.
@@ -65,7 +66,6 @@ class UpdateCheckScheduler {
   FRIEND_TEST(UpdateCheckSchedulerTest, ComputeNextIntervalAndFuzzTest);
   FRIEND_TEST(UpdateCheckSchedulerTest, GTimeoutAddSecondsTest);
   FRIEND_TEST(UpdateCheckSchedulerTest, IsBootDeviceRemovableTest);
-  FRIEND_TEST(UpdateCheckSchedulerTest, IsOOBECompleteTest);
   FRIEND_TEST(UpdateCheckSchedulerTest, IsOfficialBuildTest);
   FRIEND_TEST(UpdateCheckSchedulerTest, RunBootDeviceRemovableTest);
   FRIEND_TEST(UpdateCheckSchedulerTest, RunNonOfficialBuildTest);
@@ -87,7 +87,6 @@ class UpdateCheckScheduler {
 
   // Wrappers for utils functions so that they can be mocked in tests.
   virtual bool IsBootDeviceRemovable();
-  virtual bool IsOOBEComplete();
   virtual bool IsOfficialBuild();
 
   // Returns true if an update check can be scheduled. An update check should
@@ -134,6 +133,9 @@ class UpdateCheckScheduler {
 
   // GPIO handler object.
   GpioHandler* gpio_handler_;
+
+  // The external state of the system outside the update_engine process.
+  SystemState* system_state_;
 
   DISALLOW_COPY_AND_ASSIGN(UpdateCheckScheduler);
 };

@@ -27,10 +27,6 @@ namespace utils {
 // Returns true if this is an official Chrome OS build, false otherwise.
 bool IsOfficialBuild();
 
-// Returns true if the OOBE process has been completed and EULA accepted, false
-// otherwise.
-bool IsOOBEComplete();
-
 // Returns true if the boot mode is normal or if it's unable to determine the
 // boot mode. Returns false if the boot mode is developer.
 bool IsNormalBootMode();
@@ -271,6 +267,25 @@ std::string FormatSecs(unsigned secs);
 std::string FormatTimeDelta(base::TimeDelta delta);
 
 }  // namespace utils
+
+
+// An interface to get the state of the current system.
+// Carved out separately so it can be mocked for unit tests.
+// Currently it has only one method, but we should start migrating other
+// methods to use this as and when needed to unit test them.
+class SystemState {
+  public:
+    // Returns true if the OOBE process has been completed and EULA accepted.
+    // False otherwise.
+    virtual bool IsOOBEComplete() = 0;
+};
+
+// A real implementation of the SystemStateInterface which is
+// used by the actual product code.
+class RealSystemState : public SystemState {
+  public:
+    virtual bool IsOOBEComplete();
+};
 
 // Class to unmount FS when object goes out of scope
 class ScopedFilesystemUnmounter {

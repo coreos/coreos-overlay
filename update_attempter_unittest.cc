@@ -12,6 +12,7 @@
 #include "update_engine/filesystem_copier_action.h"
 #include "update_engine/mock_dbus_interface.h"
 #include "update_engine/mock_http_fetcher.h"
+#include "update_engine/mock_system_state.h"
 #include "update_engine/postinstall_runner_action.h"
 #include "update_engine/prefs.h"
 #include "update_engine/prefs_mock.h"
@@ -37,7 +38,7 @@ namespace chromeos_update_engine {
 class UpdateAttempterUnderTest : public UpdateAttempter {
  public:
   explicit UpdateAttempterUnderTest(MockDbusGlib* dbus)
-      : UpdateAttempter(NULL, NULL, dbus, NULL) {}
+      : UpdateAttempter(NULL, NULL, dbus, NULL, NULL) {}
 };
 
 class UpdateAttempterTest : public ::testing::Test {
@@ -46,6 +47,7 @@ class UpdateAttempterTest : public ::testing::Test {
   virtual void SetUp() {
     EXPECT_EQ(NULL, attempter_.dbus_service_);
     EXPECT_EQ(NULL, attempter_.prefs_);
+    EXPECT_EQ(NULL, attempter_.system_state_);
     EXPECT_EQ(NULL, attempter_.metrics_lib_);
     EXPECT_EQ(NULL, attempter_.update_check_scheduler_);
     EXPECT_EQ(0, attempter_.http_response_code_);
@@ -60,6 +62,7 @@ class UpdateAttempterTest : public ::testing::Test {
     processor_ = new ActionProcessorMock();
     attempter_.processor_.reset(processor_);  // Transfers ownership.
     attempter_.prefs_ = &prefs_;
+    attempter_.system_state_ = &mock_system_state_;
   }
 
   void QuitMainLoop();
@@ -91,10 +94,15 @@ class UpdateAttempterTest : public ::testing::Test {
   static gboolean StaticDecrementUpdateCheckCountTestStart(
       gpointer data);
 
+  void NoScatteringDoneDuringManualUpdateTestStart();
+  static gboolean StaticNoScatteringDoneDuringManualUpdateTestStart(
+      gpointer data);
+
   MockDbusGlib dbus_;
   UpdateAttempterUnderTest attempter_;
   ActionProcessorMock* processor_;
   NiceMock<PrefsMock> prefs_;
+  MockSystemState mock_system_state_;
   GMainLoop* loop_;
 };
 
@@ -129,7 +137,7 @@ TEST_F(UpdateAttempterTest, ActionCompletedOmahaRequestTest) {
   OmahaResponse response;
   response.poll_interval = 234;
   action.SetOutputObject(response);
-  UpdateCheckScheduler scheduler(&attempter_, NULL);
+  UpdateCheckScheduler scheduler(&attempter_, NULL, &mock_system_state_);
   attempter_.set_update_check_scheduler(&scheduler);
   EXPECT_CALL(prefs_, GetInt64(kPrefsDeltaUpdateFailures, _)).Times(0);
   attempter_.ActionCompleted(NULL, &action, kActionCodeSuccess);
@@ -316,6 +324,13 @@ gboolean UpdateAttempterTest::StaticDecrementUpdateCheckCountTestStart(
   return FALSE;
 }
 
+gboolean UpdateAttempterTest::StaticNoScatteringDoneDuringManualUpdateTestStart(
+    gpointer data) {
+  UpdateAttempterTest* ua_test = reinterpret_cast<UpdateAttempterTest*>(data);
+  ua_test->NoScatteringDoneDuringManualUpdateTestStart();
+  return FALSE;
+}
+
 namespace {
 const string kActionTypes[] = {
   OmahaRequestAction::StaticType(),
@@ -342,7 +357,7 @@ void UpdateAttempterTest::UpdateTestStart() {
   }
   EXPECT_CALL(*processor_, StartProcessing()).Times(1);
 
-  attempter_.Update("", "", false, false, false);
+  attempter_.Update("", "", false, false, false, false);
   g_idle_add(&StaticUpdateTestVerify, this);
 }
 
@@ -382,7 +397,7 @@ void UpdateAttempterTest::PingOmahaTestStart() {
 }
 
 TEST_F(UpdateAttempterTest, PingOmahaTest) {
-  UpdateCheckScheduler scheduler(&attempter_, NULL);
+  UpdateCheckScheduler scheduler(&attempter_, NULL, &mock_system_state_);
   scheduler.enabled_ = true;
   EXPECT_FALSE(scheduler.scheduled_);
   attempter_.set_update_check_scheduler(&scheduler);
@@ -442,7 +457,7 @@ void UpdateAttempterTest::ReadTrackFromPolicyTestStart() {
           SetArgumentPointee<0>(std::string("canary-channel")),
           Return(true)));
 
-  attempter_.Update("", "", false, false, false);
+  attempter_.Update("", "", false, false, false, false);
   EXPECT_EQ("canary-channel", attempter_.omaha_request_params_.app_track);
 
   g_idle_add(&StaticQuitMainLoop, this);
@@ -470,7 +485,7 @@ void UpdateAttempterTest::ReadUpdateDisabledFromPolicyTestStart() {
           SetArgumentPointee<0>(true),
           Return(true)));
 
-  attempter_.Update("", "", false, false, false);
+  attempter_.Update("", "", false, false, false, false);
   EXPECT_TRUE(attempter_.omaha_request_params_.update_disabled);
 
   g_idle_add(&StaticQuitMainLoop, this);
@@ -500,7 +515,7 @@ void UpdateAttempterTest::ReadTargetVersionPrefixFromPolicyTestStart() {
           SetArgumentPointee<0>(target_version_prefix),
           Return(true)));
 
-  attempter_.Update("", "", false, false, false);
+  attempter_.Update("", "", false, false, false, false);
   EXPECT_EQ(target_version_prefix.c_str(),
             attempter_.omaha_request_params_.target_version_prefix);
 
@@ -531,7 +546,7 @@ void UpdateAttempterTest::ReadScatterFactorFromPolicyTestStart() {
           SetArgumentPointee<0>(scatter_factor_in_seconds),
           Return(true)));
 
-  attempter_.Update("", "", false, false, false);
+  attempter_.Update("", "", false, false, false, false);
   EXPECT_EQ(scatter_factor_in_seconds, attempter_.scatter_factor_.InSeconds());
 
   g_idle_add(&StaticQuitMainLoop, this);
@@ -551,6 +566,9 @@ void UpdateAttempterTest::DecrementUpdateCheckCountTestStart() {
   int64 initial_value = 5;
   Prefs prefs;
   attempter_.prefs_ = &prefs;
+
+  EXPECT_CALL(mock_system_state_,
+              IsOOBEComplete()).WillRepeatedly(Return(true));
 
   string prefs_dir;
   EXPECT_TRUE(utils::MakeTempDirectory("/tmp/ue_ut_prefs.XXXXXX",
@@ -573,7 +591,7 @@ void UpdateAttempterTest::DecrementUpdateCheckCountTestStart() {
           SetArgumentPointee<0>(scatter_factor_in_seconds),
           Return(true)));
 
-  attempter_.Update("", "", false, false, false);
+  attempter_.Update("", "", false, false, false, false);
   EXPECT_EQ(scatter_factor_in_seconds, attempter_.scatter_factor_.InSeconds());
 
   // Make sure the file still exists.
@@ -588,10 +606,67 @@ void UpdateAttempterTest::DecrementUpdateCheckCountTestStart() {
   // However, if the count is already 0, it's not decremented. Test that.
   initial_value = 0;
   EXPECT_TRUE(prefs.SetInt64(kPrefsUpdateCheckCount, initial_value));
-  attempter_.Update("", "", false, false, false);
+  attempter_.Update("", "", false, false, false, false);
   EXPECT_TRUE(prefs.Exists(kPrefsUpdateCheckCount));
   EXPECT_TRUE(prefs.GetInt64(kPrefsUpdateCheckCount, &new_value));
   EXPECT_EQ(initial_value, new_value);
+
+  g_idle_add(&StaticQuitMainLoop, this);
+}
+
+TEST_F(UpdateAttempterTest, NoScatteringDoneDuringManualUpdateTestStart) {
+  loop_ = g_main_loop_new(g_main_context_default(), FALSE);
+  g_idle_add(&StaticNoScatteringDoneDuringManualUpdateTestStart, this);
+  g_main_loop_run(loop_);
+  g_main_loop_unref(loop_);
+  loop_ = NULL;
+}
+
+void UpdateAttempterTest::NoScatteringDoneDuringManualUpdateTestStart() {
+  // Tests that no scattering logic is enabled if the update check
+  // is manually done (as opposed to a scheduled update check)
+  int64 initial_value = 8;
+  Prefs prefs;
+  attempter_.prefs_ = &prefs;
+
+  EXPECT_CALL(mock_system_state_,
+              IsOOBEComplete()).WillRepeatedly(Return(true));
+
+  string prefs_dir;
+  EXPECT_TRUE(utils::MakeTempDirectory("/tmp/ue_ut_prefs.XXXXXX",
+                                       &prefs_dir));
+  ScopedDirRemover temp_dir_remover(prefs_dir);
+
+  LOG_IF(ERROR, !prefs.Init(FilePath(prefs_dir)))
+      << "Failed to initialize preferences.";
+  EXPECT_TRUE(prefs.SetInt64(kPrefsUpdateCheckCount, initial_value));
+
+  // make sure scatter_factor is non-zero as scattering is disabled
+  // otherwise.
+  int64 scatter_factor_in_seconds = 50;
+
+  policy::MockDevicePolicy* device_policy = new policy::MockDevicePolicy();
+  attempter_.policy_provider_.reset(new policy::PolicyProvider(device_policy));
+
+  EXPECT_CALL(*device_policy, LoadPolicy()).WillRepeatedly(Return(true));
+
+  EXPECT_CALL(*device_policy, GetScatterFactorInSeconds(_))
+      .WillRepeatedly(DoAll(
+          SetArgumentPointee<0>(scatter_factor_in_seconds),
+          Return(true)));
+
+  // pass true for is_user_initiated so we can test that the
+  // scattering is disabled.
+  attempter_.Update("", "", false, false, false, true);
+  EXPECT_EQ(scatter_factor_in_seconds, attempter_.scatter_factor_.InSeconds());
+
+  // Make sure scattering is disabled for manual (i.e. user initiated) update
+  // checks and none of the artifacts are present.
+  EXPECT_FALSE(attempter_.omaha_request_params_.wall_clock_based_wait_enabled);
+  EXPECT_FALSE(prefs.Exists(kPrefsWallClockWaitPeriod));
+  EXPECT_FALSE(attempter_.omaha_request_params_.
+                 update_check_count_wait_enabled);
+  EXPECT_FALSE(prefs.Exists(kPrefsUpdateCheckCount));
 
   g_idle_add(&StaticQuitMainLoop, this);
 }

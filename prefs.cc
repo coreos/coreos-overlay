@@ -45,6 +45,7 @@ bool Prefs::GetString(const string& key, string* value) {
   FilePath filename;
   TEST_AND_RETURN_FALSE(GetFileNameForKey(key, &filename));
   if (!file_util::ReadFileToString(filename, value)) {
+    LOG(INFO) << key << " not present in " << prefs_dir_.value();
     return false;
   }
   return true;
@@ -62,7 +63,8 @@ bool Prefs::SetString(const std::string& key, const std::string& value) {
 
 bool Prefs::GetInt64(const string& key, int64_t* value) {
   string str_value;
-  TEST_AND_RETURN_FALSE(GetString(key, &str_value));
+  if (!GetString(key, &str_value))
+    return false;
   TrimWhitespaceASCII(str_value, TRIM_ALL, &str_value);
   TEST_AND_RETURN_FALSE(base::StringToInt64(str_value, value));
   return true;

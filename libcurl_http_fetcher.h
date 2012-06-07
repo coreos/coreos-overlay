@@ -27,8 +27,10 @@ class LibcurlHttpFetcher : public HttpFetcher {
   static const int kMaxRetryCountOobeComplete = 20;
   static const int kMaxRetryCountOobeNotComplete = 3;
 
-  explicit LibcurlHttpFetcher(ProxyResolver* proxy_resolver)
+  explicit LibcurlHttpFetcher(ProxyResolver* proxy_resolver,
+                              SystemState* system_state)
       : HttpFetcher(proxy_resolver),
+        system_state_(system_state),
         curl_multi_handle_(NULL),
         curl_handle_(NULL),
         curl_http_headers_(NULL),
@@ -191,6 +193,9 @@ class LibcurlHttpFetcher : public HttpFetcher {
 
   // Returns whether or not the current build is official.
   bool IsOfficialBuild() const;
+
+  // External state of the system
+  SystemState* system_state_;
 
   // Handles for the libcurl library
   CURLM *curl_multi_handle_;

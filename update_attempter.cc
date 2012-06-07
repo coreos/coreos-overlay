@@ -107,7 +107,8 @@ ActionExitCode GetErrorCodeForAction(AbstractAction* action,
 UpdateAttempter::UpdateAttempter(PrefsInterface* prefs,
                                  MetricsLibraryInterface* metrics_lib,
                                  DbusGlibInterface* dbus_iface,
-                                 GpioHandler* gpio_handler)
+                                 GpioHandler* gpio_handler,
+                                 SystemState* system_state)
     : processor_(new ActionProcessor()),
       dbus_service_(NULL),
       prefs_(prefs),
@@ -133,7 +134,8 @@ UpdateAttempter::UpdateAttempter(PrefsInterface* prefs,
       is_using_test_url_(false),
       is_test_update_attempted_(false),
       gpio_handler_(gpio_handler),
-      init_waiting_period_from_prefs_(true) {
+      init_waiting_period_from_prefs_(true),
+      system_state_(system_state) {
   if (utils::FileExists(kUpdateCompletedMarker))
     status_ = UPDATE_STATUS_UPDATED_NEED_REBOOT;
 }
@@ -146,7 +148,8 @@ void UpdateAttempter::Update(const string& app_version,
                              const string& omaha_url,
                              bool obey_proxies,
                              bool interactive,
-                             bool is_test) {
+                             bool is_test,
+                             bool is_user_initiated) {
   chrome_proxy_resolver_.Init();
   fake_update_success_ = false;
   if (status_ == UPDATE_STATUS_UPDATED_NEED_REBOOT) {
@@ -166,7 +169,8 @@ void UpdateAttempter::Update(const string& app_version,
                              omaha_url,
                              obey_proxies,
                              interactive,
-                             is_test)) {
+                             is_test,
+                             is_user_initiated)) {
     return;
   }
 
@@ -185,7 +189,8 @@ bool UpdateAttempter::CalculateUpdateParams(const string& app_version,
                                             const string& omaha_url,
                                             bool obey_proxies,
                                             bool interactive,
-                                            bool is_test) {
+                                            bool is_test,
+                                            bool is_user_initiated) {
   http_response_code_ = 0;
 
   // Lazy initialize the policy provider, or reload the latest policy data.
@@ -209,54 +214,62 @@ bool UpdateAttempter::CalculateUpdateParams(const string& app_version,
       &omaha_request_params_.target_version_prefix);
     int64 new_scatter_factor_in_secs = 0;
     device_policy.GetScatterFactorInSeconds(&new_scatter_factor_in_secs);
+    if (new_scatter_factor_in_secs < 0) // sanitize input, just in case.
+      new_scatter_factor_in_secs  = 0;
     scatter_factor_ = TimeDelta::FromSeconds(new_scatter_factor_in_secs);
   }
 
-  if (scatter_factor_.InSeconds() != old_scatter_factor_in_secs) {
-    int64 wait_period_in_secs = 0;
-    if (init_waiting_period_from_prefs_ &&
-        prefs_->GetInt64(kPrefsWallClockWaitPeriod, &wait_period_in_secs) &&
-        wait_period_in_secs >= 0 &&
-        wait_period_in_secs <= scatter_factor_.InSeconds()) {
-      // This means:
-      // 1. This is the first update check to come this far in this process.
-      // 2. There's a persisted value for the waiting period available.
-      // 3. And that persisted value is still valid.
-      // So, in this case, we should reuse the persisted value instead of
-      // generating a new random value to improve the chances of a good
-      // distribution for scattering.
-      omaha_request_params_.waiting_period =
-        TimeDelta::FromSeconds(wait_period_in_secs);
-      LOG(INFO) << "Using persisted value for wall clock based waiting period.";
-    } else {
-      // In this case, we should regenerate the waiting period to make sure
-      // it's within the bounds of the new scatter factor value.
-      omaha_request_params_.waiting_period = TimeDelta::FromSeconds(
-          base::RandInt(0, scatter_factor_.InSeconds()));
-
-      LOG(INFO) << "Generated new value of " << utils::FormatSecs(
-                    omaha_request_params_.waiting_period.InSeconds())
-                << " for wall clock based waiting period.";
-
-      // Do a best-effort to persist this. We'll work fine even if the
-      // persistence fails.
-      prefs_->SetInt64(kPrefsWallClockWaitPeriod,
-                       omaha_request_params_.waiting_period.InSeconds());
-    }
+  bool is_scatter_enabled = false;
+  if (scatter_factor_.InSeconds() == 0) {
+    LOG(INFO) << "Scattering disabled since scatter factor is set to 0";
+  } else if (is_user_initiated) {
+    LOG(INFO) << "Scattering disabled as this update check is user-initiated";
+  } else if (!system_state_->IsOOBEComplete()) {
+    LOG(INFO) << "Scattering disabled since OOBE is not complete yet";
+  } else {
+    is_scatter_enabled = true;
+    LOG(INFO) << "Scattering is enabled";
   }
 
-  // We should reset this value since we're past the first initialization
-  // of the waiting period for this process.
-  init_waiting_period_from_prefs_ = false;
+  if (is_scatter_enabled) {
+    // This means the scattering policy is turned on.
+    if (scatter_factor_.InSeconds() != old_scatter_factor_in_secs) {
+      int64 wait_period_in_secs = 0;
+      if (init_waiting_period_from_prefs_ &&
+          prefs_->GetInt64(kPrefsWallClockWaitPeriod, &wait_period_in_secs) &&
+          wait_period_in_secs >= 0 &&
+          wait_period_in_secs <= scatter_factor_.InSeconds()) {
+        // This means:
+        // 1. This is the first update check to come this far in this process.
+        // 2. There's a persisted value for the waiting period available.
+        // 3. And that persisted value is still valid.
+        // So, in this case, we should reuse the persisted value instead of
+        // generating a new random value to improve the chances of a good
+        // distribution for scattering.
+        omaha_request_params_.waiting_period =
+          TimeDelta::FromSeconds(wait_period_in_secs);
+        LOG(INFO) << "Using persisted value for wall clock based waiting period.";
+      } else {
+        // In this case, we should regenerate the waiting period to make sure
+        // it's within the bounds of the new scatter factor value.
+        omaha_request_params_.waiting_period = TimeDelta::FromSeconds(
+            base::RandInt(0, scatter_factor_.InSeconds()));
 
-  if (scatter_factor_.InSeconds() == 0) {
-    // This means the scattering feature is turned off. Make sure to disable
-    // all the knobs so that we don't invoke any scattering related code.
-    omaha_request_params_.wall_clock_based_wait_enabled = false;
-    omaha_request_params_.update_check_count_wait_enabled = false;
-    prefs_->Delete(kPrefsWallClockWaitPeriod);
-    prefs_->Delete(kPrefsUpdateCheckCount);
-  } else {
+        LOG(INFO) << "Generated new value of " << utils::FormatSecs(
+                      omaha_request_params_.waiting_period.InSeconds())
+                  << " for wall clock based waiting period.";
+
+        // Do a best-effort to persist this. We'll work fine even if the
+        // persistence fails.
+        prefs_->SetInt64(kPrefsWallClockWaitPeriod,
+                         omaha_request_params_.waiting_period.InSeconds());
+      }
+    }
+
+    // We should reset this value since we're past the first initialization
+    // of the waiting period for this process.
+    init_waiting_period_from_prefs_ = false;
+
     // This means the scattering policy is turned on. We'll do wall-clock-
     // based-wait by default. And if we don't have any issues in accessing
     // the file system to do update the update check count value, we'll
@@ -264,6 +277,13 @@ bool UpdateAttempter::CalculateUpdateParams(const string& app_version,
     omaha_request_params_.wall_clock_based_wait_enabled = true;
     bool decrement_succeeded = DecrementUpdateCheckCount();
     omaha_request_params_.update_check_count_wait_enabled = decrement_succeeded;
+  } else {
+    // This means the scattering feature is turned off. Make sure to disable
+    // all the knobs so that we don't invoke any scattering related code.
+    omaha_request_params_.wall_clock_based_wait_enabled = false;
+    omaha_request_params_.update_check_count_wait_enabled = false;
+    prefs_->Delete(kPrefsWallClockWaitPeriod);
+    prefs_->Delete(kPrefsUpdateCheckCount);
   }
 
   // Determine whether an alternative test address should be used.
@@ -322,7 +342,7 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
 
   // Actions:
   LibcurlHttpFetcher* update_check_fetcher =
-      new LibcurlHttpFetcher(GetProxyResolver());
+      new LibcurlHttpFetcher(GetProxyResolver(), system_state_);
   // Try harder to connect to the network, esp when not interactive.
   // See comment in libcurl_http_fetcher.cc.
   update_check_fetcher->set_no_network_max_retries(interactive ? 1 : 3);
@@ -344,10 +364,11 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
                              &omaha_request_params_,
                              new OmahaEvent(
                                  OmahaEvent::kTypeUpdateDownloadStarted),
-                             new LibcurlHttpFetcher(GetProxyResolver()),
+                             new LibcurlHttpFetcher(GetProxyResolver(),
+                                                    system_state_),
                              false));
   LibcurlHttpFetcher* download_fetcher =
-      new LibcurlHttpFetcher(GetProxyResolver());
+      new LibcurlHttpFetcher(GetProxyResolver(), system_state_);
   download_fetcher->set_check_certificate(CertificateChecker::kDownload);
   shared_ptr<DownloadAction> download_action(
       new DownloadAction(prefs_,
@@ -358,7 +379,8 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
                              &omaha_request_params_,
                              new OmahaEvent(
                                  OmahaEvent::kTypeUpdateDownloadFinished),
-                             new LibcurlHttpFetcher(GetProxyResolver()),
+                             new LibcurlHttpFetcher(GetProxyResolver(),
+                                                    system_state_),
                              false));
   shared_ptr<FilesystemCopierAction> filesystem_verifier_action(
       new FilesystemCopierAction(false, true));
@@ -370,7 +392,8 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
       new OmahaRequestAction(prefs_,
                              &omaha_request_params_,
                              new OmahaEvent(OmahaEvent::kTypeUpdateComplete),
-                             new LibcurlHttpFetcher(GetProxyResolver()),
+                             new LibcurlHttpFetcher(GetProxyResolver(),
+                                                    system_state_),
                              false));
 
   download_action->set_delegate(this);
@@ -417,9 +440,11 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
 
 void UpdateAttempter::CheckForUpdate(const string& app_version,
                                      const string& omaha_url) {
+  LOG(INFO) << "New update check requested";
+
   if (status_ != UPDATE_STATUS_IDLE) {
-    LOG(INFO) << "Check for update requested, but status is "
-              << UpdateStatusToString(status_) << ", so not checking.";
+    LOG(INFO) << "Skipping update check because current status is "
+              << UpdateStatusToString(status_);
     return;
   }
 
@@ -433,7 +458,9 @@ void UpdateAttempter::CheckForUpdate(const string& app_version,
     is_test_update_attempted_ = true;
   }
 
-  Update(app_version, omaha_url, true, true, is_test);
+  // Passing true for is_user_initiated to indicate that this
+  // is not a scheduled update check.
+  Update(app_version, omaha_url, true, true, is_test, true);
 }
 
 bool UpdateAttempter::RebootIfNeeded() {
@@ -752,7 +779,8 @@ bool UpdateAttempter::ScheduleErrorEventAction() {
       new OmahaRequestAction(prefs_,
                              &omaha_request_params_,
                              error_event_.release(),  // Pass ownership.
-                             new LibcurlHttpFetcher(GetProxyResolver()),
+                             new LibcurlHttpFetcher(GetProxyResolver(),
+                                                    system_state_),
                              false));
   actions_.push_back(shared_ptr<AbstractAction>(error_event_action));
   processor_->EnqueueAction(error_event_action.get());
@@ -866,7 +894,8 @@ void UpdateAttempter::PingOmaha() {
         new OmahaRequestAction(prefs_,
                                &omaha_request_params_,
                                NULL,
-                               new LibcurlHttpFetcher(GetProxyResolver()),
+                               new LibcurlHttpFetcher(GetProxyResolver(),
+                                                      system_state_),
                                true));
     actions_.push_back(shared_ptr<OmahaRequestAction>(ping_action));
     processor_->set_delegate(NULL);

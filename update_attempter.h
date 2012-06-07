@@ -62,7 +62,8 @@ class UpdateAttempter : public ActionProcessorDelegate,
   UpdateAttempter(PrefsInterface* prefs,
                   MetricsLibraryInterface* metrics_lib,
                   DbusGlibInterface* dbus_iface,
-                  GpioHandler* gpio_handler);
+                  GpioHandler* gpio_handler,
+                  SystemState* system_state);
   virtual ~UpdateAttempter();
 
   // Checks for update and, if a newer version is available, attempts to update
@@ -71,12 +72,15 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // update will likely respect Chrome's proxy setting. For security reasons, we
   // may still not honor them.  Interactive should be true if this was called
   // from the user (ie dbus).  |is_test| will lead to using an alternative test
-  // server URL, if |omaha_url| is empty.
+  // server URL, if |omaha_url| is empty. |is_user_initiated| will be true
+  // only if the update is being kicked off through dbus and will be false for
+  // other types of kick off such as scheduled updates.
   virtual void Update(const std::string& app_version,
                       const std::string& omaha_url,
                       bool obey_proxies,
                       bool interactive,
-                      bool is_test);
+                      bool is_test,
+                      bool is_user_initiated);
 
   // ActionProcessorDelegate methods:
   void ProcessingDone(const ActionProcessor* processor, ActionExitCode code);
@@ -232,7 +236,8 @@ class UpdateAttempter : public ActionProcessorDelegate,
                              const std::string& omaha_url,
                              bool obey_proxies,
                              bool interactive,
-                             bool is_test);
+                             bool is_test,
+                             bool is_user_initiated);
 
   // Helper method of Update() to construct the sequence of actions to
   // be performed for an update check. Please refer to
@@ -339,6 +344,10 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // True if we have to initialize the waiting period in prefs, if available.
   // False otherwise.
   bool init_waiting_period_from_prefs_;
+
+  // External state of the system outside the update_engine process
+  // carved out separately to mock out easily in unit tests.
+  SystemState* system_state_;
 
   DISALLOW_COPY_AND_ASSIGN(UpdateAttempter);
 };

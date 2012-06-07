@@ -26,6 +26,7 @@
 #include "update_engine/terminator.h"
 #include "update_engine/update_attempter.h"
 #include "update_engine/update_check_scheduler.h"
+#include "update_engine/utils.h"
 
 extern "C" {
 #include "update_engine/update_engine.dbusserver.h"
@@ -181,10 +182,12 @@ int main(int argc, char** argv) {
 
   // Create the update attempter:
   chromeos_update_engine::ConcreteDbusGlib dbus;
+  chromeos_update_engine::RealSystemState real_system_state;
   chromeos_update_engine::UpdateAttempter update_attempter(&prefs,
                                                            &metrics_lib,
                                                            &dbus,
-                                                           NULL);
+                                                           NULL,
+                                                           &real_system_state);
 
   // Create the dbus service object:
   dbus_g_object_type_install_info(UPDATE_ENGINE_TYPE_SERVICE,
@@ -197,7 +200,8 @@ int main(int argc, char** argv) {
 
   // Schedule periodic update checks.
   chromeos_update_engine::UpdateCheckScheduler scheduler(&update_attempter,
-                                                         NULL);
+                                                         NULL,
+                                                         &real_system_state);
   scheduler.Run();
 
   // Update boot flags after 45 seconds.

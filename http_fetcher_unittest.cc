@@ -19,8 +19,10 @@
 #include "update_engine/http_fetcher_unittest.h"
 #include "update_engine/libcurl_http_fetcher.h"
 #include "update_engine/mock_http_fetcher.h"
+#include "update_engine/mock_system_state.h"
 #include "update_engine/multi_range_http_fetcher.h"
 #include "update_engine/proxy_resolver.h"
+#include "update_engine/utils.h"
 
 using std::make_pair;
 using std::pair;
@@ -203,7 +205,8 @@ class LibcurlHttpFetcherTest : public AnyHttpFetcherTest {
     CHECK(num_proxies > 0);
     proxy_resolver_.set_num_proxies(num_proxies);
     LibcurlHttpFetcher *ret = new
-        LibcurlHttpFetcher(reinterpret_cast<ProxyResolver*>(&proxy_resolver_));
+        LibcurlHttpFetcher(reinterpret_cast<ProxyResolver*>(&proxy_resolver_),
+                           &mock_system_state_);
     // Speed up test execution.
     ret->set_idle_seconds(1);
     ret->set_retry_seconds(1);
@@ -240,6 +243,8 @@ class LibcurlHttpFetcherTest : public AnyHttpFetcherTest {
   virtual HttpServer *CreateServer() {
     return new PythonHttpServer;
   }
+
+  MockSystemState mock_system_state_;
 };
 
 class MultiRangeHttpFetcherTest : public LibcurlHttpFetcherTest {
@@ -251,8 +256,8 @@ class MultiRangeHttpFetcherTest : public LibcurlHttpFetcherTest {
     proxy_resolver_.set_num_proxies(num_proxies);
     ProxyResolver* resolver =
         reinterpret_cast<ProxyResolver*>(&proxy_resolver_);
-    MultiRangeHttpFetcher *ret =
-        new MultiRangeHttpFetcher(new LibcurlHttpFetcher(resolver));
+    MultiRangeHttpFetcher *ret = new MultiRangeHttpFetcher(
+        new LibcurlHttpFetcher(resolver, &mock_system_state_));
     ret->ClearRanges();
     ret->AddRange(0);
     // Speed up test execution.

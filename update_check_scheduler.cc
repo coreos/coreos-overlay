@@ -19,14 +19,16 @@ const int UpdateCheckScheduler::kTimeoutMaxBackoffInterval =  4 * 60 * 60;
 const int UpdateCheckScheduler::kTimeoutRegularFuzz        = 10 * 60;
 
 UpdateCheckScheduler::UpdateCheckScheduler(UpdateAttempter* update_attempter,
-                                           GpioHandler* gpio_handler)
+                                           GpioHandler* gpio_handler,
+                                           SystemState* system_state)
     : update_attempter_(update_attempter),
       enabled_(false),
       scheduled_(false),
       last_interval_(0),
       poll_interval_(0),
       is_test_update_attempted_(false),
-      gpio_handler_(gpio_handler) {}
+      gpio_handler_(gpio_handler),
+      system_state_(system_state) {}
 
 UpdateCheckScheduler::~UpdateCheckScheduler() {}
 
@@ -59,10 +61,6 @@ bool UpdateCheckScheduler::IsBootDeviceRemovable() {
   return utils::IsRemovableDevice(utils::RootDevice(utils::BootDevice()));
 }
 
-bool UpdateCheckScheduler::IsOOBEComplete() {
-  return utils::IsOOBEComplete();
-}
-
 bool UpdateCheckScheduler::IsOfficialBuild() {
   return utils::IsOfficialBuild();
 }
@@ -92,7 +90,7 @@ gboolean UpdateCheckScheduler::StaticCheck(void* scheduler) {
   me->scheduled_ = false;
 
   bool is_test = false;
-  if (me->IsOOBEComplete() ||
+  if (me->system_state_->IsOOBEComplete() ||
       (is_test = (!me->is_test_update_attempted_ &&
                   me->gpio_handler_ &&
                   me->gpio_handler_->IsTestModeSignaled()))) {
@@ -104,7 +102,7 @@ gboolean UpdateCheckScheduler::StaticCheck(void* scheduler) {
 
     // Before updating, we flush any previously generated UMA reports.
     CertificateChecker::FlushReport();
-    me->update_attempter_->Update("", "", false, false, is_test);
+    me->update_attempter_->Update("", "", false, false, is_test, false);
   } else {
     // Skips all automatic update checks if the OOBE process is not complete and
     // schedules a new check as if it is the first one.

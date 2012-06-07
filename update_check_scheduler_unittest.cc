@@ -4,6 +4,7 @@
 
 #include <gtest/gtest.h>
 
+#include "update_engine/mock_system_state.h"
 #include "update_engine/update_attempter_mock.h"
 #include "update_engine/update_check_scheduler.h"
 
@@ -30,12 +31,13 @@ void FuzzRange(int interval, int fuzz, int* interval_min, int* interval_max) {
 class UpdateCheckSchedulerUnderTest : public UpdateCheckScheduler {
  public:
   UpdateCheckSchedulerUnderTest(UpdateAttempter* update_attempter)
-      : UpdateCheckScheduler(update_attempter, NULL) {}
+      : UpdateCheckScheduler(update_attempter, NULL, &mock_system_state_) {}
 
   MOCK_METHOD2(GTimeoutAddSeconds, guint(guint seconds, GSourceFunc function));
   MOCK_METHOD0(IsBootDeviceRemovable, bool());
   MOCK_METHOD0(IsOfficialBuild, bool());
-  MOCK_METHOD0(IsOOBEComplete, bool());
+
+  MockSystemState mock_system_state_;
 };
 
 class UpdateCheckSchedulerTest : public ::testing::Test {
@@ -155,11 +157,6 @@ TEST_F(UpdateCheckSchedulerTest, IsBootDeviceRemovableTest) {
   EXPECT_FALSE(scheduler_.UpdateCheckScheduler::IsBootDeviceRemovable());
 }
 
-TEST_F(UpdateCheckSchedulerTest, IsOOBECompleteTest) {
-  // Invokes the actual utils wrapper method rather than the subclass mock.
-  EXPECT_FALSE(scheduler_.UpdateCheckScheduler::IsOOBEComplete());
-}
-
 TEST_F(UpdateCheckSchedulerTest, IsOfficialBuildTest) {
   // Invokes the actual utils wrapper method rather than the subclass mock.
   EXPECT_TRUE(scheduler_.UpdateCheckScheduler::IsOfficialBuild());
@@ -276,8 +273,9 @@ TEST_F(UpdateCheckSchedulerTest, SetUpdateStatusNonIdleTest) {
 
 TEST_F(UpdateCheckSchedulerTest, StaticCheckOOBECompleteTest) {
   scheduler_.scheduled_ = true;
-  EXPECT_CALL(scheduler_, IsOOBEComplete()).Times(1).WillOnce(Return(true));
-  EXPECT_CALL(attempter_, Update("", "", false, false, false))
+  EXPECT_CALL(scheduler_.mock_system_state_,
+              IsOOBEComplete()).Times(1).WillOnce(Return(true));
+  EXPECT_CALL(attempter_, Update("", "", false, false, false, false))
       .Times(1)
       .WillOnce(Assign(&scheduler_.scheduled_, true));
   scheduler_.enabled_ = true;
@@ -287,8 +285,9 @@ TEST_F(UpdateCheckSchedulerTest, StaticCheckOOBECompleteTest) {
 
 TEST_F(UpdateCheckSchedulerTest, StaticCheckOOBENotCompleteTest) {
   scheduler_.scheduled_ = true;
-  EXPECT_CALL(scheduler_, IsOOBEComplete()).Times(1).WillOnce(Return(false));
-  EXPECT_CALL(attempter_, Update("", "", _, _, _)).Times(0);
+  EXPECT_CALL(scheduler_.mock_system_state_,
+              IsOOBEComplete()).Times(1).WillOnce(Return(false));
+  EXPECT_CALL(attempter_, Update("", "", _, _, _,_)).Times(0);
   int interval_min, interval_max;
   FuzzRange(UpdateCheckScheduler::kTimeoutInitialInterval,
             UpdateCheckScheduler::kTimeoutRegularFuzz,
