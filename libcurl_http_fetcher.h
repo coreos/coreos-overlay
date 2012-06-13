@@ -23,9 +23,9 @@ namespace chromeos_update_engine {
 
 class LibcurlHttpFetcher : public HttpFetcher {
  public:
-  static const int kMaxRedirects = 10;
-  static const int kMaxRetryCountOobeComplete = 20;
-  static const int kMaxRetryCountOobeNotComplete = 3;
+  static const int kMaxRedirects;
+  static const int kMaxRetryCountOobeComplete;
+  static const int kMaxRetryCountOobeNotComplete;
 
   explicit LibcurlHttpFetcher(ProxyResolver* proxy_resolver,
                               SystemState* system_state)

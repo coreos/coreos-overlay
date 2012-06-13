@@ -193,7 +193,7 @@ env['CCFLAGS'] = ' '.join("""-g
                              -I/usr/include/libxml2""".split());
 env['CCFLAGS'] += (' ' + ' '.join(env['CFLAGS']))
 
-BASE_VER = os.environ.get('BASE_VER', '85268')
+BASE_VER = os.environ.get('BASE_VER', '125070')
 env['LIBS'] = Split("""bz2
                        crypto
                        curl

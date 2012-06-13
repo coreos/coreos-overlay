@@ -31,6 +31,10 @@ const int kNoNetworkRetrySeconds = 10;
 const char kCACertificatesPath[] = "/usr/share/chromeos-ca-certificates";
 }  // namespace {}
 
+const int LibcurlHttpFetcher::kMaxRedirects = 10;
+const int LibcurlHttpFetcher::kMaxRetryCountOobeComplete = 20;
+const int LibcurlHttpFetcher::kMaxRetryCountOobeNotComplete = 3;
+
 LibcurlHttpFetcher::~LibcurlHttpFetcher() {
   LOG_IF(ERROR, transfer_in_progress_)
       << "Destroying the fetcher while a transfer is in progress.";
