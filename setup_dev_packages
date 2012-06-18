@@ -17,7 +17,5 @@ sudo USE="-crash cros-debug" emerge -DNuv1 --selective=n "$@" \
   dev-cpp/gmock \
   dev-cpp/gtest \
   dev-util/bsdiff \
+  dev-util/lcov \
   sys-apps/rootdev
-
-# Doesn't work in the current sandbox
-#  dev-util/lcov \
