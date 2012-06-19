@@ -14,7 +14,10 @@
 #include <glib.h>
 
 #include "update_engine/certificate_checker.h"
+#include "update_engine/connection_manager.h"
 #include "update_engine/http_fetcher.h"
+#include "update_engine/system_state.h"
+
 
 // This is a concrete implementation of HttpFetcher that uses libcurl to do the
 // http work.
@@ -27,10 +30,9 @@ class LibcurlHttpFetcher : public HttpFetcher {
   static const int kMaxRetryCountOobeComplete;
   static const int kMaxRetryCountOobeNotComplete;
 
-  explicit LibcurlHttpFetcher(ProxyResolver* proxy_resolver,
-                              SystemState* system_state)
-      : HttpFetcher(proxy_resolver),
-        system_state_(system_state),
+  LibcurlHttpFetcher(ProxyResolver* proxy_resolver,
+                     SystemState* system_state)
+      : HttpFetcher(proxy_resolver, system_state),
         curl_multi_handle_(NULL),
         curl_handle_(NULL),
         curl_http_headers_(NULL),
@@ -46,8 +48,6 @@ class LibcurlHttpFetcher : public HttpFetcher {
         no_network_retry_count_(0),
         no_network_max_retries_(0),
         idle_seconds_(1),
-        force_connection_type_(false),
-        forced_expensive_connection_(false),
         force_build_type_(false),
         forced_official_build_(false),
         in_write_callback_(false),
@@ -94,11 +94,6 @@ class LibcurlHttpFetcher : public HttpFetcher {
     no_network_max_retries_ = retries;
   }
 
-  void SetConnectionAsExpensive(bool is_expensive) {
-    force_connection_type_ = true;
-    forced_expensive_connection_ = is_expensive;
-  }
-
   void SetBuildType(bool is_official) {
     force_build_type_ = true;
     forced_official_build_ = is_official;
@@ -117,7 +112,7 @@ class LibcurlHttpFetcher : public HttpFetcher {
   // Callback for when proxy resolution has completed. This begins the
   // transfer.
   void ProxiesResolved();
-   
+
   // Asks libcurl for the http response code and stores it in the object.
   void GetHttpResponseCode();
 
@@ -187,15 +182,12 @@ class LibcurlHttpFetcher : public HttpFetcher {
   // be destroyed.
   void ForceTransferTermination();
 
-  // Returns whether or not the current network connection is considered
-  // expensive.
-  bool ConnectionIsExpensive() const;
+  // Returns true if updates are allowed over the current type of connection.
+  // False otherwise.
+  bool IsUpdateAllowedOverCurrentConnection() const;
 
   // Returns whether or not the current build is official.
   bool IsOfficialBuild() const;
-
-  // External state of the system
-  SystemState* system_state_;
 
   // Handles for the libcurl library
   CURLM *curl_multi_handle_;
@@ -244,11 +236,6 @@ class LibcurlHttpFetcher : public HttpFetcher {
 
   // Seconds to wait before asking libcurl to "perform".
   int idle_seconds_;
-
-  // If true, assume the network is expensive or not, according to
-  // forced_expensive_connection_. (Useful for testing).
-  bool force_connection_type_;
-  bool forced_expensive_connection_;
 
   // If true, assume the build is official or not, according to
   // forced_official_build_. Useful for testing.

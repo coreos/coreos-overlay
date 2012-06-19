@@ -32,6 +32,7 @@
 #include "update_engine/postinstall_runner_action.h"
 #include "update_engine/prefs_interface.h"
 #include "update_engine/subprocess.h"
+#include "update_engine/system_state.h"
 #include "update_engine/update_check_scheduler.h"
 
 using base::TimeDelta;
@@ -39,6 +40,7 @@ using base::TimeTicks;
 using google::protobuf::NewPermanentCallback;
 using std::make_pair;
 using std::tr1::shared_ptr;
+using std::set;
 using std::string;
 using std::vector;
 
@@ -217,6 +219,21 @@ bool UpdateAttempter::CalculateUpdateParams(const string& app_version,
     if (new_scatter_factor_in_secs < 0) // sanitize input, just in case.
       new_scatter_factor_in_secs  = 0;
     scatter_factor_ = TimeDelta::FromSeconds(new_scatter_factor_in_secs);
+
+    system_state_->SetDevicePolicy(&device_policy);
+
+    set<string> allowed_types;
+    string allowed_types_str;
+    if (device_policy.GetAllowedConnectionTypesForUpdate(&allowed_types)) {
+      set<string>::const_iterator iter;
+      for (iter = allowed_types.begin(); iter != allowed_types.end(); ++iter)
+        allowed_types_str += *iter + " ";
+    }
+
+    LOG(INFO) << "Networks over which updates are allowed per policy : "
+              << (allowed_types_str.empty() ? "all" : allowed_types_str);
+  } else {
+    LOG(INFO) << "No device policies present.";
   }
 
   bool is_scatter_enabled = false;

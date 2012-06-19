@@ -34,7 +34,8 @@ class MultiRangeHttpFetcher : public HttpFetcher, public HttpFetcherDelegate {
  public:
   // Takes ownership of the passed in fetcher.
   explicit MultiRangeHttpFetcher(HttpFetcher* base_fetcher)
-      : HttpFetcher(base_fetcher->proxy_resolver()),
+      : HttpFetcher(base_fetcher->proxy_resolver(),
+                    base_fetcher->GetSystemState()),
         base_fetcher_(base_fetcher),
         base_fetcher_active_(false),
         pending_transfer_ended_(false),
@@ -78,9 +79,6 @@ class MultiRangeHttpFetcher : public HttpFetcher, public HttpFetcherDelegate {
   virtual void set_retry_seconds(int seconds) {
     base_fetcher_->set_retry_seconds(seconds);
   }
-  virtual void SetConnectionAsExpensive(bool is_expensive) {
-    base_fetcher_->SetConnectionAsExpensive(is_expensive);
-  }
   virtual void SetBuildType(bool is_official) {
     base_fetcher_->SetBuildType(is_official);
   }
@@ -114,11 +112,11 @@ class MultiRangeHttpFetcher : public HttpFetcher, public HttpFetcherDelegate {
   };
 
   typedef std::vector<Range> RangesVect;
-  
+
   // State change: Stopped or Downloading -> Downloading
   void StartTransfer();
 
-// State change: Downloading -> Downloading or Pending transfer ended
+  // State change: Downloading -> Downloading or Pending transfer ended
   virtual void ReceivedBytes(HttpFetcher* fetcher,
                              const char* bytes,
                              int length);
@@ -139,7 +137,7 @@ class MultiRangeHttpFetcher : public HttpFetcher, public HttpFetcherDelegate {
   // If true, the next fetcher needs to be started when TransferTerminated is
   // received from the current fetcher.
   bool pending_transfer_ended_;
-  
+
   // True if we are waiting for base fetcher to terminate b/c we are
   // ourselves terminating.
   bool terminating_;

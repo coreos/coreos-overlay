@@ -1,17 +1,21 @@
-// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "update_engine/flimflam_proxy.h"
+#include "update_engine/connection_manager.h"
 
 #include <string>
 
+#include <base/stl_util.h>
 #include <base/string_util.h>
+#include <chromeos/dbus/service_constants.h>
 #include <dbus/dbus-glib.h>
 #include <glib.h>
 
+#include "update_engine/system_state.h"
 #include "update_engine/utils.h"
 
+using std::set;
 using std::string;
 
 namespace chromeos_update_engine {
@@ -33,7 +37,7 @@ bool GetFlimFlamProxy(DbusGlibInterface* dbus_iface,
     return false;
   }
   proxy = dbus_iface->ProxyNewForNameOwner(bus,
-                                           kFlimFlamDbusService,
+                                           flimflam::kFlimflamServiceName,
                                            path,
                                            interface,
                                            &error);
@@ -85,8 +89,8 @@ bool GetDefaultServicePath(DbusGlibInterface* dbus_iface, string* out_path) {
   GHashTable* hash_table = NULL;
 
   TEST_AND_RETURN_FALSE(GetProperties(dbus_iface,
-                                      kFlimFlamDbusManagerPath,
-                                      kFlimFlamDbusManagerInterface,
+                                      flimflam::kFlimflamServicePath,
+                                      flimflam::kFlimflamManagerInterface,
                                       &hash_table));
 
   GValue* value = reinterpret_cast<GValue*>(g_hash_table_lookup(hash_table,
@@ -105,15 +109,15 @@ bool GetDefaultServicePath(DbusGlibInterface* dbus_iface, string* out_path) {
 }
 
 NetworkConnectionType ParseConnectionType(const char* type_str) {
-  if (!strcmp(type_str, kFlimFlamNetTypeEthernet)) {
+  if (!strcmp(type_str, flimflam::kTypeEthernet)) {
     return kNetEthernet;
-  } else if (!strcmp(type_str, kFlimFlamNetTypeWifi)) {
+  } else if (!strcmp(type_str, flimflam::kTypeWifi)) {
     return kNetWifi;
-  } else if (!strcmp(type_str, kFlimFlamNetTypeWimax)) {
+  } else if (!strcmp(type_str, flimflam::kTypeWimax)) {
     return kNetWimax;
-  } else if (!strcmp(type_str, kFlimFlamNetTypeBluetooth)) {
+  } else if (!strcmp(type_str, flimflam::kTypeBluetooth)) {
     return kNetBluetooth;
-  } else if (!strcmp(type_str, kFlimFlamNetTypeCellular)) {
+  } else if (!strcmp(type_str, flimflam::kTypeCellular)) {
     return kNetCellular;
   }
   return kNetUnknown;
@@ -126,7 +130,7 @@ bool GetServicePathType(DbusGlibInterface* dbus_iface,
 
   TEST_AND_RETURN_FALSE(GetProperties(dbus_iface,
                                       path.c_str(),
-                                      kFlimFlamDbusServiceInterface,
+                                      flimflam::kFlimflamServiceInterface,
                                       &hash_table));
 
   GValue* value = (GValue*)g_hash_table_lookup(hash_table, "Type");
@@ -142,20 +146,61 @@ bool GetServicePathType(DbusGlibInterface* dbus_iface,
 
 }  // namespace {}
 
-const char* FlimFlamProxy::StringForConnectionType(NetworkConnectionType type) {
-  static const char* const kValues[] = {kFlimFlamNetTypeEthernet,
-                                        kFlimFlamNetTypeWifi,
-                                        kFlimFlamNetTypeWimax,
-                                        kFlimFlamNetTypeBluetooth,
-                                        kFlimFlamNetTypeCellular};
+ConnectionManager::ConnectionManager(SystemState *system_state)
+    :  system_state_(system_state) {}
+
+bool ConnectionManager::IsUpdateAllowedOver(NetworkConnectionType type) const {
+  switch (type) {
+    case kNetBluetooth:
+      return false;
+
+    case kNetCellular: {
+      set<string> allowed_types;
+      const policy::DevicePolicy* device_policy =
+          system_state_->GetDevicePolicy();
+      if (!device_policy) {
+        LOG(INFO) << "Disabling updates over cellular connection as there's no "
+                     "device policy object present";
+        return false;
+      }
+
+      if (!device_policy->GetAllowedConnectionTypesForUpdate(&allowed_types)) {
+        LOG(INFO) << "Disabling updates over cellular connection as there's no "
+                     "allowed connection types from policy";
+        return false;
+      }
+
+      if (!ContainsKey(allowed_types, flimflam::kTypeCellular)) {
+        LOG(INFO) << "Disabling updates over cellular connection as it's not "
+                     "allowed in the device policy.";
+        return false;
+      }
+
+      LOG(INFO) << "Allowing updates over cellular per device policy";
+      return true;
+    }
+
+    default:
+      return true;
+  }
+}
+
+const char* ConnectionManager::StringForConnectionType(
+    NetworkConnectionType type) const {
+  static const char* const kValues[] = {flimflam::kTypeEthernet,
+                                        flimflam::kTypeWifi,
+                                        flimflam::kTypeWimax,
+                                        flimflam::kTypeBluetooth,
+                                        flimflam::kTypeCellular};
   if (type < 0 || type >= static_cast<int>(arraysize(kValues))) {
     return "Unknown";
   }
   return kValues[type];
 }
 
-bool FlimFlamProxy::GetConnectionType(DbusGlibInterface* dbus_iface,
-                                      NetworkConnectionType* out_type) {
+bool ConnectionManager::GetConnectionType(
+    DbusGlibInterface* dbus_iface,
+    NetworkConnectionType* out_type) const {
   string default_service_path;
   TEST_AND_RETURN_FALSE(GetDefaultServicePath(dbus_iface,
                                               &default_service_path));
@@ -164,16 +209,5 @@ bool FlimFlamProxy::GetConnectionType(DbusGlibInterface* dbus_iface,
                                            out_type));
   return true;
 }
-
-const char* kFlimFlamDbusService = "org.chromium.flimflam";
-const char* kFlimFlamDbusManagerInterface = "org.chromium.flimflam.Manager";
-const char* kFlimFlamDbusManagerPath = "/";
-const char* kFlimFlamDbusServiceInterface = "org.chromium.flimflam.Service";
-
-const char* kFlimFlamNetTypeEthernet = "ethernet";
-const char* kFlimFlamNetTypeWifi = "wifi";
-const char* kFlimFlamNetTypeWimax = "wimax";
-const char* kFlimFlamNetTypeBluetooth = "bluetooth";
-const char* kFlimFlamNetTypeCellular = "cellular";
 
 }  // namespace chromeos_update_engine

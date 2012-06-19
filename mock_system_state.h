@@ -7,15 +7,32 @@
 
 #include <gmock/gmock.h>
 
-#include "update_engine/utils.h"
+#include <policy/mock_device_policy.h>
+#include "update_engine/system_state.h"
 
 namespace chromeos_update_engine {
 
 // Mock the SystemStateInterface so that we could lie that
 // OOBE is completed even when there's no such marker file, etc.
 class MockSystemState : public SystemState {
-  public:
-    MOCK_METHOD0(IsOOBEComplete, bool());
+ public:
+  MockSystemState() {}
+  virtual ~MockSystemState() {}
+
+  MOCK_METHOD0(IsOOBEComplete, bool());
+  MOCK_METHOD1(SetDevicePolicy, void(const policy::DevicePolicy*));
+  MOCK_CONST_METHOD0(GetDevicePolicy, const policy::DevicePolicy*());
+
+  void SetConnectionManager(ConnectionManager* connection_manager) {
+    connection_manager_ = connection_manager;
+  }
+
+  virtual ConnectionManager* GetConnectionManager() {
+    return connection_manager_;
+  }
+
+ private:
+  ConnectionManager* connection_manager_;
 };
 
 } // namespeace chromeos_update_engine

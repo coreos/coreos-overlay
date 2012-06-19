@@ -43,7 +43,12 @@ class UpdateAttempterUnderTest : public UpdateAttempter {
 
 class UpdateAttempterTest : public ::testing::Test {
  protected:
-  UpdateAttempterTest() : attempter_(&dbus_), loop_(NULL) {}
+  UpdateAttempterTest()
+      : attempter_(&dbus_),
+        mock_connection_manager(&mock_system_state_),
+        loop_(NULL) {
+    mock_system_state_.SetConnectionManager(&mock_connection_manager);
+  }
   virtual void SetUp() {
     EXPECT_EQ(NULL, attempter_.dbus_service_);
     EXPECT_EQ(NULL, attempter_.prefs_);
@@ -103,6 +108,7 @@ class UpdateAttempterTest : public ::testing::Test {
   ActionProcessorMock* processor_;
   NiceMock<PrefsMock> prefs_;
   MockSystemState mock_system_state_;
+  MockConnectionManager mock_connection_manager;
   GMainLoop* loop_;
 };
 

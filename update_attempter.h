@@ -22,6 +22,7 @@
 #include "update_engine/omaha_request_params.h"
 #include "update_engine/omaha_response_handler_action.h"
 #include "update_engine/proxy_resolver.h"
+#include "update_engine/system_state.h"
 
 class MetricsLibraryInterface;
 struct UpdateEngineService;

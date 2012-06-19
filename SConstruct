@@ -244,6 +244,7 @@ sources = Split("""action_processor.cc
                    certificate_checker.cc
                    chrome_browser_proxy_resolver.cc
                    chrome_proxy_resolver.cc
+                   connection_manager.cc
                    cycle_breaker.cc
                    dbus_service.cc
                    delta_diff_generator.cc
@@ -256,7 +257,6 @@ sources = Split("""action_processor.cc
                    filesystem_iterator.cc
                    file_descriptor.cc
                    file_writer.cc
-                   flimflam_proxy.cc
                    full_update_generator.cc
                    gpio_handler.cc
                    graph_utils.cc
@@ -276,6 +276,7 @@ sources = Split("""action_processor.cc
                    proxy_resolver.cc
                    simple_key_value_store.cc
                    subprocess.cc
+                   system_state.cc
                    tarjan.cc
                    terminator.cc
                    topological_sort.cc
@@ -292,6 +293,7 @@ unittest_sources = Split("""action_unittest.cc
                             certificate_checker_unittest.cc
                             chrome_browser_proxy_resolver_unittest.cc
                             chrome_proxy_resolver_unittest.cc
+                            connection_manager_unittest.cc
                             cycle_breaker_unittest.cc
                             delta_diff_generator_unittest.cc
                             delta_performer_unittest.cc
@@ -302,7 +304,6 @@ unittest_sources = Split("""action_unittest.cc
                             file_writer_unittest.cc
                             filesystem_copier_action_unittest.cc
                             filesystem_iterator_unittest.cc
-                            flimflam_proxy_unittest.cc
                             full_update_generator_unittest.cc
                             gpio_handler_unittest.cc
                             gpio_mock_udev_interface.cc

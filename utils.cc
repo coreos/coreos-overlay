@@ -41,12 +41,6 @@ using std::vector;
 
 namespace chromeos_update_engine {
 
-static const char kOOBECompletedMarker[] = "/home/chronos/.oobe_completed";
-
-bool RealSystemState::IsOOBEComplete() {
-  return file_util::PathExists(FilePath(kOOBECompletedMarker));
-}
-
 namespace utils {
 
 static const char kDevImageMarker[] = "/root/.dev_mode";

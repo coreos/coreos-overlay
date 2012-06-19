@@ -16,6 +16,7 @@
 
 #include "http_common.h"
 #include "update_engine/proxy_resolver.h"
+#include "update_engine/system_state.h"
 
 // This class is a simple wrapper around an HTTP library (libcurl). We can
 // easily mock out this interface for testing.
@@ -33,14 +34,15 @@ class HttpFetcher {
   // |proxy_resolver| is the resolver that will be consulted for proxy
   // settings. It may be null, in which case direct connections will
   // be used. Does not take ownership of the resolver.
-  explicit HttpFetcher(ProxyResolver* proxy_resolver)
+  HttpFetcher(ProxyResolver* proxy_resolver, SystemState* system_state)
       : post_data_set_(false),
         http_response_code_(0),
         delegate_(NULL),
         proxies_(1, kNoProxy),
         proxy_resolver_(proxy_resolver),
         no_resolver_idle_id_(0),
-        callback_(NULL) {}
+        callback_(NULL),
+        system_state_(system_state) {}
   virtual ~HttpFetcher();
 
   void set_delegate(HttpFetcherDelegate* delegate) { delegate_ = delegate; }
@@ -59,7 +61,7 @@ class HttpFetcher {
   // Returns true on success.
   bool ResolveProxiesForUrl(const std::string& url,
                             google::protobuf::Closure* callback);
-  
+
   void SetProxies(const std::deque<std::string>& proxies) {
     proxies_ = proxies;
   }
@@ -106,8 +108,11 @@ class HttpFetcher {
   ProxyResolver* proxy_resolver() const { return proxy_resolver_; }
 
   // These are used for testing:
-  virtual void SetConnectionAsExpensive(bool is_expensive) {}
   virtual void SetBuildType(bool is_official) {}
+
+  SystemState* GetSystemState() {
+    return system_state_;
+  }
 
  protected:
   // The URL we're actively fetching from
@@ -137,6 +142,9 @@ class HttpFetcher {
   // Callback for when we are resolving proxies
   google::protobuf::Closure* callback_;
 
+  // Global system context.
+  SystemState* system_state_;
+
  private:
   // Callback from the proxy resolver
   void ProxiesResolved(const std::deque<std::string>& proxies);
@@ -144,7 +152,7 @@ class HttpFetcher {
                                     void* data) {
     reinterpret_cast<HttpFetcher*>(data)->ProxiesResolved(proxies);
   }
-   
+
   DISALLOW_COPY_AND_ASSIGN(HttpFetcher);
 };
 

@@ -10,6 +10,7 @@
 #include <gtest/gtest_prod.h>  // for FRIEND_TEST
 
 #include "update_engine/update_attempter.h"
+#include "update_engine/system_state.h"
 
 namespace chromeos_update_engine {
 

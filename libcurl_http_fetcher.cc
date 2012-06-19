@@ -13,7 +13,6 @@
 #include "update_engine/certificate_checker.h"
 #include "update_engine/chrome_proxy_resolver.h"
 #include "update_engine/dbus_interface.h"
-#include "update_engine/flimflam_proxy.h"
 #include "update_engine/utils.h"
 
 using google::protobuf::NewCallback;
@@ -42,15 +41,17 @@ LibcurlHttpFetcher::~LibcurlHttpFetcher() {
 }
 
 // On error, returns false.
-bool LibcurlHttpFetcher::ConnectionIsExpensive() const {
-  if (force_connection_type_)
-    return forced_expensive_connection_;
+bool LibcurlHttpFetcher::IsUpdateAllowedOverCurrentConnection() const {
   NetworkConnectionType type;
   ConcreteDbusGlib dbus_iface;
-  TEST_AND_RETURN_FALSE(FlimFlamProxy::GetConnectionType(&dbus_iface, &type));
+  ConnectionManager* connection_manager = system_state_->GetConnectionManager();
+  TEST_AND_RETURN_FALSE(connection_manager->GetConnectionType(&dbus_iface,
+                                                              &type));
+  bool is_allowed = connection_manager->IsUpdateAllowedOver(type);
   LOG(INFO) << "We are connected via "
-            << FlimFlamProxy::StringForConnectionType(type);
-  return FlimFlamProxy::IsExpensiveConnectionType(type);
+            << connection_manager->StringForConnectionType(type)
+            << ", Updates allowed: " << (is_allowed ? "Yes" : "No");
+  return is_allowed;
 }
 
 bool LibcurlHttpFetcher::IsOfficialBuild() const {
@@ -140,9 +141,9 @@ void LibcurlHttpFetcher::ResumeTransfer(const std::string& url) {
                             StaticLibcurlWrite), CURLE_OK);
 
   string url_to_use(url_);
-  if (ConnectionIsExpensive()) {
-    LOG(INFO) << "Not initiating HTTP connection b/c we are on an expensive"
-              << " connection";
+  if (!IsUpdateAllowedOverCurrentConnection()) {
+    LOG(INFO) << "Not initiating HTTP connection b/c updates are disabled "
+              << "over this connection";
     url_to_use = "";  // Sabotage the URL
   }
 

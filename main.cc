@@ -26,6 +26,7 @@
 #include "update_engine/terminator.h"
 #include "update_engine/update_attempter.h"
 #include "update_engine/update_check_scheduler.h"
+#include "update_engine/system_state.h"
 #include "update_engine/utils.h"
 
 extern "C" {
