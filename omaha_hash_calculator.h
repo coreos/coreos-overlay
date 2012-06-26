@@ -6,6 +6,7 @@
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_OMAHA_HASH_CALCULATOR_H__
 
 #include <string>
+#include <unistd.h>
 #include <vector>
 
 #include <openssl/sha.h>

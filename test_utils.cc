@@ -66,7 +66,7 @@ std::vector<char> GzipCompressData(const std::vector<char>& data) {
 vector<char> GenerateSampleMbr() {
   // This is the actual MBR from my dev machine. Partition 1 (the first)
   // is currently marked bootable
-  char mbr[512] = {
+  unsigned char mbr[512] = {
     0xeb, 0x48, 0x90, 0x10, 0x8e, 0xd0, 0xbc, 0x00,
     0xb0, 0xb8, 0x00, 0x00, 0x8e, 0xd8, 0x8e, 0xc0,
     0xfb, 0xbe, 0x00, 0x7c, 0xbf, 0x00, 0x06, 0xb9,
@@ -133,7 +133,8 @@ vector<char> GenerateSampleMbr() {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x55, 0xaa
   };
   vector<char> ret;
-  ret.insert(ret.begin(), mbr, mbr + sizeof(mbr));
+  ret.insert(ret.begin(), reinterpret_cast<char *>(mbr),
+             reinterpret_cast<char *>(mbr + sizeof(mbr)));
   return ret;
 }
 

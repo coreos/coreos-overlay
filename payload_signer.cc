@@ -26,7 +26,7 @@ const uint32_t kSignatureMessageCurrentVersion = 1;
 
 namespace {
 
-const char kRSA2048SHA256Padding[] = {
+const unsigned char kRSA2048SHA256Padding[] = {
   0x00, 0x01, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
   0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
   0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -362,8 +362,9 @@ bool PayloadSigner::AddSignatureToPayload(
 bool PayloadSigner::PadRSA2048SHA256Hash(std::vector<char>* hash) {
   TEST_AND_RETURN_FALSE(hash->size() == 32);
   hash->insert(hash->begin(),
-               kRSA2048SHA256Padding,
-               kRSA2048SHA256Padding + sizeof(kRSA2048SHA256Padding));
+               reinterpret_cast<const char*>(kRSA2048SHA256Padding),
+               reinterpret_cast<const char*>(kRSA2048SHA256Padding +
+                                             sizeof(kRSA2048SHA256Padding)));
   TEST_AND_RETURN_FALSE(hash->size() == 256);
   return true;
 }

@@ -184,6 +184,7 @@ env['CCFLAGS'] = ' '.join("""-g
                              -Wignored-qualifiers
                              -Wignored-qualifiers
                              -Wmissing-field-initializers
+                             -Wno-format
                              -Wsign-compare
                              -Wtype-limits
                              -Wtype-limits

@@ -5,11 +5,11 @@
 #ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_UTILS_H__
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_UTILS_H__
 
-#include <errno.h>
-
 #include <algorithm>
+#include <errno.h>
 #include <set>
 #include <string>
+#include <unistd.h>
 #include <vector>
 
 #include <base/eintr_wrapper.h>
