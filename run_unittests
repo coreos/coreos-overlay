@@ -12,5 +12,10 @@ if [ ! -e ./update_engine_unittests ]; then
   exit 1
 fi
 
-./update_engine_unittests --gtest_filter='-*.RunAsRoot*'
-sudo ./update_engine_unittests --gtest_filter='*.RunAsRoot*'
+user_pass=0
+./update_engine_unittests --gtest_filter='-*.RunAsRoot*' && user_pass=1
+root_pass=0
+sudo ./update_engine_unittests --gtest_filter='*.RunAsRoot*' && root_pass=1
+
+echo -n "User tests: " && [ $user_pass == 1 ] && echo "PASSED" || echo "FAILED"
+echo -n "Root tests: " && [ $root_pass == 1 ] && echo "PASSED" || echo "FAILED"
