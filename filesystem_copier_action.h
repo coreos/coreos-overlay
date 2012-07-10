@@ -1,4 +1,4 @@
-// Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -37,8 +37,8 @@ class ActionTraits<FilesystemCopierAction> {
 
 class FilesystemCopierAction : public Action<FilesystemCopierAction> {
  public:
-  FilesystemCopierAction(bool copying_kernel_install_path,
-                         bool verify_hash);
+  FilesystemCopierAction(bool copying_kernel_install_path, bool verify_hash,
+                         unsigned max_rewrite_attempts);
 
   typedef ActionTraits<FilesystemCopierAction>::InputObjectType
   InputObjectType;
@@ -138,6 +138,19 @@ class FilesystemCopierAction : public Action<FilesystemCopierAction> {
   // field is initialized when the action is started and decremented as more
   // bytes get copied.
   int64_t filesystem_size_;
+
+  // The total number of bytes successfully written to the destination stream.
+  // This is used for repositioning the stream on rewrite attempts.
+  size_t total_bytes_written_;
+
+  // Number of successive rewrite attempts for a buffer, total rewrite attempts
+  // during a copy, and the maximum number of allowed attempts.
+  unsigned num_curr_rewrite_attempts_;
+  unsigned num_total_rewrite_attempts_;
+  unsigned max_rewrite_attempts_;
+
+  // TODO(garnold) used for debugging, to be removed.
+  bool is_debug_last_read_;
 
   DISALLOW_COPY_AND_ASSIGN(FilesystemCopierAction);
 };

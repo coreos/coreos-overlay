@@ -9,8 +9,6 @@
 #include <vector>
 
 #include <base/eintr_wrapper.h>
-// TODO(garnold) remove this include, here for debugging purposes
-#include <base/rand_util.h>
 #include <base/string_util.h>
 #include <base/stringprintf.h>
 #include <glib.h>
@@ -33,22 +31,10 @@ class FilesystemCopierActionTest : public ::testing::Test {
   // |verify_hash|: 0 - no hash verification, 1 -- successful hash verification,
   // 2 -- hash verification failure.
   // Returns true iff test has completed successfully.
-  // TODO(garnold) we temporarily add an |is_debug_random_loop_file_size| to try
-  // copying with different file sizes, in attempt to expose circumstances that
-  // lead to a certain unit test failure. The second variant preserves the
-  // original behavior. This code needs to be reverted.
   bool DoTest(bool run_out_of_space,
               bool terminate_early,
               bool use_kernel_partition,
-              int verify_hash,
-              bool is_debug_random_loop_file_size);
-  inline bool DoTest(bool run_out_of_space,
-                     bool terminate_early,
-                     bool use_kernel_partition,
-                     int verify_hash) {
-    return DoTest(run_out_of_space, terminate_early, use_kernel_partition,
-                  verify_hash, false);
-  }
+              int verify_hash);
   void SetUp() {
   }
   void TearDown() {
@@ -109,15 +95,14 @@ gboolean StartProcessorInRunLoop(gpointer data) {
 
 TEST_F(FilesystemCopierActionTest, RunAsRootSimpleTest) {
   ASSERT_EQ(0, getuid());
-  EXPECT_TRUE(DoTest(false, false, false, 0, true));
-  EXPECT_TRUE(DoTest(false, false, true, 0, true));
+  EXPECT_TRUE(DoTest(false, false, false, 0));
+  EXPECT_TRUE(DoTest(false, false, true, 0));
 }
 
 bool FilesystemCopierActionTest::DoTest(bool run_out_of_space,
                                         bool terminate_early,
                                         bool use_kernel_partition,
-                                        int verify_hash,
-                                        bool is_debug_random_loop_file_size) {
+                                        int verify_hash) {
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
 
   string a_loop_file;
@@ -132,35 +117,7 @@ bool FilesystemCopierActionTest::DoTest(bool run_out_of_space,
   ScopedPathUnlinker b_loop_file_unlinker(b_loop_file);
 
   // Make random data for a, zero filled data for b.
-  // TODO(garnold) eliminate the random choice, here for debugging purposes of
-  // unittest failures. We're testing the hypothesis that the particular file
-  // size causes this nondeterministic problem.
-  size_t randomLoopFileSize = 10 * 1024 * 1024 + 512;  // original value
-  if (is_debug_random_loop_file_size) {
-    int debugRandomChoice = base::RandInt(0, 4);
-    switch (debugRandomChoice) {
-      case 0:
-        break;  // keep default value
-      case 1:
-        randomLoopFileSize = 10 * 1024 * 1024;  // exactly 10 MB
-        break;
-      case 2:
-        randomLoopFileSize = (10 * 1024 + 128) * 1024;  // 10 MB + 128 KB
-        break;
-      case 3:
-        randomLoopFileSize = 30 * 1024 * 1024;  // exactly 30 MB
-        break;
-      case 4:
-        randomLoopFileSize = 30 * 1024 * 1024 + 512;  // 10 MB + 512 bytes
-        break;
-      default:
-        ADD_FAILURE();
-        return false;
-    }
-    LOG(INFO) << "(debug) randomLoopFileSize=" << randomLoopFileSize
-              << " (option " << debugRandomChoice << ")";
-  }
-  const size_t kLoopFileSize = randomLoopFileSize;
+  const size_t kLoopFileSize = 10 * 1024 * 1024 + 512;
   vector<char> a_loop_data(kLoopFileSize);
   FillWithData(&a_loop_data);
   vector<char> b_loop_data(run_out_of_space ?
@@ -221,7 +178,7 @@ bool FilesystemCopierActionTest::DoTest(bool run_out_of_space,
 
   ObjectFeederAction<InstallPlan> feeder_action;
   FilesystemCopierAction copier_action(use_kernel_partition,
-                                       verify_hash != 0);
+                                       verify_hash != 0, 3);
   ObjectCollectorAction<InstallPlan> collector_action;
 
   BondActions(&feeder_action, &copier_action);
@@ -312,7 +269,7 @@ TEST_F(FilesystemCopierActionTest, MissingInputObjectTest) {
 
   processor.set_delegate(&delegate);
 
-  FilesystemCopierAction copier_action(false, false);
+  FilesystemCopierAction copier_action(false, false, 0);
   ObjectCollectorAction<InstallPlan> collector_action;
 
   BondActions(&copier_action, &collector_action);
@@ -335,7 +292,7 @@ TEST_F(FilesystemCopierActionTest, ResumeTest) {
   const char* kUrl = "http://some/url";
   InstallPlan install_plan(true, kUrl, 0, "", "", "");
   feeder_action.set_obj(install_plan);
-  FilesystemCopierAction copier_action(false, false);
+  FilesystemCopierAction copier_action(false, false, 0);
   ObjectCollectorAction<InstallPlan> collector_action;
 
   BondActions(&feeder_action, &copier_action);
@@ -365,7 +322,7 @@ TEST_F(FilesystemCopierActionTest, NonExistentDriveTest) {
                            "/no/such/file",
                            "/no/such/file");
   feeder_action.set_obj(install_plan);
-  FilesystemCopierAction copier_action(false, false);
+  FilesystemCopierAction copier_action(false, false, 0);
   ObjectCollectorAction<InstallPlan> collector_action;
 
   BondActions(&copier_action, &collector_action);
@@ -414,7 +371,7 @@ TEST_F(FilesystemCopierActionTest, RunAsRootDetermineFilesystemSizeTest) {
 
   for (int i = 0; i < 2; ++i) {
     bool is_kernel = i == 1;
-    FilesystemCopierAction action(is_kernel, false);
+    FilesystemCopierAction action(is_kernel, false, 0);
     EXPECT_EQ(kint64max, action.filesystem_size_);
     {
       int fd = HANDLE_EINTR(open(img.c_str(), O_RDONLY));
