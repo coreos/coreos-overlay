@@ -1,4 +1,4 @@
-// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -15,6 +15,11 @@
 using std::string;
 
 static const char kAUTestURLRequest[] = "autest";
+// By default autest bypasses scattering. If we want to test scattering,
+// we should use autest-scheduled. The Url used is same in both cases, but
+// different params are passed to CheckForUpdate method.
+static const char kScheduledAUTestURLRequest[] = "autest-scheduled";
+
 static const char kAUTestURL[] =
     "https://omaha.sandbox.google.com/service/update2";
 
@@ -62,6 +67,8 @@ gboolean update_engine_service_attempt_update(UpdateEngineService* self,
                                               GError **error) {
   string update_app_version;
   string update_omaha_url;
+  bool is_user_initiated = true;
+
   // Only non-official (e.g., dev and test) builds can override the current
   // version and update server URL over D-Bus. However, pointing to the
   // hardcoded test update server URL is always allowed.
@@ -73,12 +80,23 @@ gboolean update_engine_service_attempt_update(UpdateEngineService* self,
       update_omaha_url = omaha_url;
     }
   }
-  if (omaha_url && strcmp(omaha_url, kAUTestURLRequest) == 0) {
-    update_omaha_url = kAUTestURL;
+  if (omaha_url) {
+    if (strcmp(omaha_url, kScheduledAUTestURLRequest) == 0) {
+      update_omaha_url = kAUTestURL;
+      // pretend that it's not user-initiated even though it is,
+      // so as to test scattering logic, etc. which get kicked off
+      // only in scheduled update checks.
+      is_user_initiated = false;
+    } else if (strcmp(omaha_url, kAUTestURLRequest) == 0) {
+      update_omaha_url = kAUTestURL;
+    }
   }
   LOG(INFO) << "Attempt update: app_version=\"" << update_app_version << "\" "
-            << "omaha_url=\"" << update_omaha_url << "\"";
-  self->update_attempter_->CheckForUpdate(update_app_version, update_omaha_url);
+            << "omaha_url=\"" << update_omaha_url << "\" "
+            << "is_user_initiated=" << (is_user_initiated? "yes" : "no");
+  self->update_attempter_->CheckForUpdate(update_app_version,
+                                          update_omaha_url,
+                                          is_user_initiated);
   return TRUE;
 }
 

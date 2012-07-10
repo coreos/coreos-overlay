@@ -133,10 +133,12 @@ class UpdateAttempter : public ActionProcessorDelegate,
     update_check_scheduler_ = scheduler;
   }
 
-  // This is the D-Bus service entry point for going through an
+  // This is the internal entry point for going through an
   // update. If the current status is idle invokes Update.
+  // This is called by the DBus implementation.
   void CheckForUpdate(const std::string& app_version,
-                      const std::string& omaha_url);
+                      const std::string& omaha_url,
+                      bool is_user_initiated);
 
   // Initiates a reboot if the current state is
   // UPDATED_NEED_REBOOT. Returns true on sucess, false otherwise.

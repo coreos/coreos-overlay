@@ -456,7 +456,8 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
 }
 
 void UpdateAttempter::CheckForUpdate(const string& app_version,
-                                     const string& omaha_url) {
+                                     const string& omaha_url,
+                                     bool is_user_initiated) {
   LOG(INFO) << "New update check requested";
 
   if (status_ != UPDATE_STATUS_IDLE) {
@@ -477,7 +478,7 @@ void UpdateAttempter::CheckForUpdate(const string& app_version,
 
   // Passing true for is_user_initiated to indicate that this
   // is not a scheduled update check.
-  Update(app_version, omaha_url, true, true, is_test, true);
+  Update(app_version, omaha_url, true, true, is_test, is_user_initiated);
 }
 
 bool UpdateAttempter::RebootIfNeeded() {
