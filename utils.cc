@@ -105,10 +105,18 @@ bool WriteAll(int fd, const void* buf, size_t count) {
 
 bool PWriteAll(int fd, const void* buf, size_t count, off_t offset) {
   const char* c_buf = static_cast<const char*>(buf);
-  ssize_t bytes_written = 0;
-  while (bytes_written < static_cast<ssize_t>(count)) {
+  size_t bytes_written = 0;
+  int num_attempts = 0;
+  while (bytes_written < count) {
+    num_attempts++;
     ssize_t rc = pwrite(fd, c_buf + bytes_written, count - bytes_written,
                         offset + bytes_written);
+    // TODO(garnold) for debugging failure in chromium-os:31077; to be removed.
+    if (rc < 0) {
+      PLOG(ERROR) << "pwrite error; num_attempts=" << num_attempts
+                  << " bytes_written=" << bytes_written
+                  << " count=" << count << " offset=" << offset;
+    }
     TEST_AND_RETURN_FALSE_ERRNO(rc >= 0);
     bytes_written += rc;
   }
