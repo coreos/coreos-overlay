@@ -92,37 +92,54 @@ class PythonHttpServer : public HttpServer {
                        NULL,
                        &pid_,
                        &err)) {
+      LOG(INFO) << "unable to spawn http server process";
       return;
     }
+    LOG(INFO) << "started http server with pid " << pid_;
     int rc = 1;
     const uint64_t kMaxSleep = 60UL * 60UL * 1000UL * 1000UL;  // 60 min
     uint64_t timeout = 15 * 1000;  // 15 ms
     started_ = true;
-    while (0 != rc) {
+    while (rc && timeout < kMaxSleep) {
+      // Wait before the first attempt also as it takes a while for the
+      // test_http_server to be ready.
+      LOG(INFO) << "waiting for " << timeout / 1000 << " ms";
+      if (timeout < (1000 * 1000))  // sub 1-second sleep, use usleep
+        usleep(static_cast<useconds_t>(timeout));
+      else
+        sleep(static_cast<unsigned int>(timeout / (1000 * 1000)));
+      timeout *= 2;
+
       LOG(INFO) << "running wget to start";
+      // rc should be 0 if we're able to successfully talk to the server.
       rc = system((string("wget --output-document=/dev/null ") +
                    LocalServerUrlForPath("/test")).c_str());
-      LOG(INFO) << "done running wget to start";
-      if (0 != rc) {
-        if (timeout > kMaxSleep) {
-          LOG(ERROR) << "Unable to start server.";
-          started_ = false;
-          break;
-        }
-        if (timeout < (1000 * 1000))  // sub 1-second sleep, use usleep
-          usleep(static_cast<useconds_t>(timeout));
-        else
-          sleep(static_cast<unsigned int>(timeout / (1000 * 1000)));
-        timeout *= 2;
-      }
+      LOG(INFO) << "done running wget to start, rc = " << rc;
     }
+
+    if (rc) {
+     LOG(ERROR) << "Http server is not responding to wget.";
+     // TODO(jaysri): Currently we're overloading two things in
+     // started_  flag. One is that the process is running and other
+     // is that the process is responsive. We should separate these
+     // two so that we can do cleanup appropriately in each case.
+     started_ = false;
+    }
+
     free(argv[0]);
     LOG(INFO) << "gdb attach now!";
   }
 
   ~PythonHttpServer() {
-    if (!started_)
+    if (!started_) {
+      LOG(INFO) << "not waiting for http server with pid " << pid_
+                << " to terminate, as it's not responding.";
+      // TODO(jaysri): Kill the process if it's really running but
+      // wgets or failing for some reason. Or if it's not running,
+      // add code to get rid of the defunct process.
       return;
+    }
+
     // request that the server exit itself
     LOG(INFO) << "running wget to exit";
     int rc = system((string("wget -t 1 --output-document=/dev/null ") +
@@ -130,7 +147,11 @@ class PythonHttpServer : public HttpServer {
     LOG(INFO) << "done running wget to exit";
     if (validate_quit_)
       EXPECT_EQ(0, rc);
-    waitpid(pid_, NULL, 0);
+    LOG(INFO) << "waiting for http server with pid " << pid_ << " to terminate";
+    int status;
+    waitpid(pid_, &status, 0);
+    LOG(INFO) << "http server with pid " << pid_
+              << " terminated with status " << status;
   }
 
   GPid pid_;
@@ -689,11 +710,22 @@ TYPED_TEST(HttpFetcherTest, FlakyTest) {
 namespace {
 class FailureHttpFetcherTestDelegate : public HttpFetcherDelegate {
  public:
-  FailureHttpFetcherTestDelegate() : loop_(NULL), server_(NULL) {}
+  FailureHttpFetcherTestDelegate(PythonHttpServer* server)
+      : loop_(NULL),
+        server_(server) {}
+
+  virtual ~FailureHttpFetcherTestDelegate() {
+    if (server_) {
+      LOG(INFO) << "Stopping server in destructor";
+      delete server_;
+      LOG(INFO) << "server stopped";
+    }
+  }
+
   virtual void ReceivedBytes(HttpFetcher* fetcher,
                              const char* bytes, int length) {
     if (server_) {
-      LOG(INFO) << "Stopping server";
+      LOG(INFO) << "Stopping server in ReceivedBytes";
       delete server_;
       LOG(INFO) << "server stopped";
       server_ = NULL;
@@ -718,7 +750,7 @@ TYPED_TEST(HttpFetcherTest, FailureTest) {
     return;
   GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
   {
-    FailureHttpFetcherTestDelegate delegate;
+    FailureHttpFetcherTestDelegate delegate(NULL);
     delegate.loop_ = loop;
     scoped_ptr<HttpFetcher> fetcher(this->test_.NewSmallFetcher());
     fetcher->set_delegate(&delegate);
@@ -751,9 +783,8 @@ TYPED_TEST(HttpFetcherTest, ServerDiesTest) {
     return;
   GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
   {
-    FailureHttpFetcherTestDelegate delegate;
+    FailureHttpFetcherTestDelegate delegate(new PythonHttpServer);
     delegate.loop_ = loop;
-    delegate.server_ = new PythonHttpServer;
     scoped_ptr<HttpFetcher> fetcher(this->test_.NewSmallFetcher());
     fetcher->set_delegate(&delegate);
 
@@ -810,31 +841,33 @@ void RedirectTest(bool expected_successful,
                   const string& url,
                   HttpFetcher* http_fetcher) {
   GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
-  RedirectHttpFetcherTestDelegate delegate(expected_successful);
-  delegate.loop_ = loop;
-  scoped_ptr<HttpFetcher> fetcher(http_fetcher);
-  fetcher->set_delegate(&delegate);
+  {
+    RedirectHttpFetcherTestDelegate delegate(expected_successful);
+    delegate.loop_ = loop;
+    scoped_ptr<HttpFetcher> fetcher(http_fetcher);
+    fetcher->set_delegate(&delegate);
 
-  MockConnectionManager* mock_cm = dynamic_cast<MockConnectionManager*>(
-      fetcher->GetSystemState()->GetConnectionManager());
-  EXPECT_CALL(*mock_cm, GetConnectionType(_,_))
-    .WillRepeatedly(DoAll(SetArgumentPointee<1>(kNetEthernet), Return(true)));
-  EXPECT_CALL(*mock_cm, IsUpdateAllowedOver(kNetEthernet))
-    .WillRepeatedly(Return(true));
-  EXPECT_CALL(*mock_cm, StringForConnectionType(kNetEthernet))
-    .WillRepeatedly(Return(flimflam::kTypeEthernet));
+    MockConnectionManager* mock_cm = dynamic_cast<MockConnectionManager*>(
+        fetcher->GetSystemState()->GetConnectionManager());
+    EXPECT_CALL(*mock_cm, GetConnectionType(_,_))
+      .WillRepeatedly(DoAll(SetArgumentPointee<1>(kNetEthernet), Return(true)));
+    EXPECT_CALL(*mock_cm, IsUpdateAllowedOver(kNetEthernet))
+      .WillRepeatedly(Return(true));
+    EXPECT_CALL(*mock_cm, StringForConnectionType(kNetEthernet))
+      .WillRepeatedly(Return(flimflam::kTypeEthernet));
 
-  StartTransferArgs start_xfer_args =
-      { fetcher.get(), LocalServerUrlForPath(url) };
+    StartTransferArgs start_xfer_args =
+        { fetcher.get(), LocalServerUrlForPath(url) };
 
-  g_timeout_add(0, StartTransfer, &start_xfer_args);
-  g_main_loop_run(loop);
-  if (expected_successful) {
-    // verify the data we get back
-    ASSERT_EQ(kMediumLength, delegate.data.size());
-    for (int i = 0; i < kMediumLength; i += 10) {
-      // Assert so that we don't flood the screen w/ EXPECT errors on failure.
-      ASSERT_EQ(delegate.data.substr(i, 10), "abcdefghij");
+    g_timeout_add(0, StartTransfer, &start_xfer_args);
+    g_main_loop_run(loop);
+    if (expected_successful) {
+      // verify the data we get back
+      ASSERT_EQ(kMediumLength, delegate.data.size());
+      for (int i = 0; i < kMediumLength; i += 10) {
+        // Assert so that we don't flood the screen w/ EXPECT errors on failure.
+        ASSERT_EQ(delegate.data.substr(i, 10), "abcdefghij");
+      }
     }
   }
   g_main_loop_unref(loop);
@@ -1122,31 +1155,33 @@ TYPED_TEST(HttpFetcherTest, BlockedTransferTest) {
     ASSERT_TRUE(server->started_);
 
     GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
-    BlockedTransferTestDelegate delegate;
-    delegate.loop_ = loop;
+    {
+      BlockedTransferTestDelegate delegate;
+      delegate.loop_ = loop;
 
-    bool is_allowed = (i != 0);
-    scoped_ptr<HttpFetcher> fetcher(this->test_.NewLargeFetcher());
-    MockConnectionManager* mock_cm = dynamic_cast<MockConnectionManager*>(
-        fetcher->GetSystemState()->GetConnectionManager());
-    EXPECT_CALL(*mock_cm, GetConnectionType(_,_))
-      .WillRepeatedly(DoAll(SetArgumentPointee<1>(kNetWifi), Return(true)));
-    EXPECT_CALL(*mock_cm, IsUpdateAllowedOver(kNetWifi))
-      .WillRepeatedly(Return(is_allowed));
-    EXPECT_CALL(*mock_cm, StringForConnectionType(kNetWifi))
-      .WillRepeatedly(Return(flimflam::kTypeWifi));
+      bool is_allowed = (i != 0);
+      scoped_ptr<HttpFetcher> fetcher(this->test_.NewLargeFetcher());
+      MockConnectionManager* mock_cm = dynamic_cast<MockConnectionManager*>(
+          fetcher->GetSystemState()->GetConnectionManager());
+      EXPECT_CALL(*mock_cm, GetConnectionType(_,_))
+        .WillRepeatedly(DoAll(SetArgumentPointee<1>(kNetWifi), Return(true)));
+      EXPECT_CALL(*mock_cm, IsUpdateAllowedOver(kNetWifi))
+        .WillRepeatedly(Return(is_allowed));
+      EXPECT_CALL(*mock_cm, StringForConnectionType(kNetWifi))
+        .WillRepeatedly(Return(flimflam::kTypeWifi));
 
-    bool is_official_build = (i == 1);
-    LOG(INFO) << "is_update_allowed_over_connection: " << is_allowed;
-    LOG(INFO) << "is_official_build: " << is_official_build;
-    fetcher->SetBuildType(is_official_build);
-    fetcher->set_delegate(&delegate);
+      bool is_official_build = (i == 1);
+      LOG(INFO) << "is_update_allowed_over_connection: " << is_allowed;
+      LOG(INFO) << "is_official_build: " << is_official_build;
+      fetcher->SetBuildType(is_official_build);
+      fetcher->set_delegate(&delegate);
 
-    StartTransferArgs start_xfer_args =
-        { fetcher.get(), LocalServerUrlForPath(this->test_.SmallUrl()) };
+      StartTransferArgs start_xfer_args =
+          { fetcher.get(), LocalServerUrlForPath(this->test_.SmallUrl()) };
 
-    g_timeout_add(0, StartTransfer, &start_xfer_args);
-    g_main_loop_run(loop);
+      g_timeout_add(0, StartTransfer, &start_xfer_args);
+      g_main_loop_run(loop);
+    }
     g_main_loop_unref(loop);
   }
 }

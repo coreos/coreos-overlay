@@ -248,6 +248,7 @@ inline size_t WritePayload(int fd, const off_t start_offset,
 // Send an empty response, then kill the server.
 void HandleQuit(int fd) {
   WriteHeaders(fd, 0, 0, kHttpResponseOk);
+  LOG(INFO) << "pid(" << getpid() <<  "): HTTP server exiting ...";
   exit(0);
 }
 
@@ -472,6 +473,7 @@ void HandleConnection(int fd) {
   ParseRequest(fd, &request);
 
   string &url = request.url;
+  LOG(INFO) << "pid(" << getpid() <<  "): handling url " << url;
   if (url == "/quitquitquit") {
     HandleQuit(fd);
   } else if (StartsWithASCII(url, "/download/", true)) {
@@ -523,17 +525,18 @@ int main(int argc, char** argv) {
     if (setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &tr,
                    sizeof(int)) == -1) {
       perror("setsockopt");
-      exit(1);
+      exit(2);
     }
   }
 
   if (bind(listen_fd, reinterpret_cast<struct sockaddr *>(&server_addr),
            sizeof(server_addr)) < 0) {
     perror("bind");
-    exit(1);
+    exit(3);
   }
   CHECK_EQ(listen(listen_fd,5), 0);
   while (1) {
+    LOG(INFO) << "pid(" << getpid() <<  "): waiting to accept new connection";
     clilen = sizeof(client_addr);
     int client_fd = accept(listen_fd,
                            (struct sockaddr *) &client_addr,
