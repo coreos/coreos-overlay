@@ -107,7 +107,7 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     EXPECT_EQ(in.hash, install_plan.download_hash);
     EXPECT_EQ("/dev/sda5", install_plan.install_path);
     string deadline;
-    EXPECT_TRUE(utils::ReadFileToString(
+    EXPECT_TRUE(utils::ReadFile(
         OmahaResponseHandlerAction::kDeadlineFile,
         &deadline));
     EXPECT_EQ("20101020", deadline);
@@ -133,7 +133,7 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     EXPECT_EQ(in.hash, install_plan.download_hash);
     EXPECT_EQ("/dev/sda3", install_plan.install_path);
     string deadline;
-    EXPECT_TRUE(utils::ReadFileToString(
+    EXPECT_TRUE(utils::ReadFile(
         OmahaResponseHandlerAction::kDeadlineFile,
         &deadline) && deadline.empty());
   }
@@ -154,7 +154,7 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     EXPECT_EQ(in.hash, install_plan.download_hash);
     EXPECT_EQ("/dev/sda5", install_plan.install_path);
     string deadline;
-    EXPECT_TRUE(utils::ReadFileToString(
+    EXPECT_TRUE(utils::ReadFile(
         OmahaResponseHandlerAction::kDeadlineFile,
         &deadline));
     EXPECT_EQ("some-deadline", deadline);

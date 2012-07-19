@@ -138,31 +138,27 @@ vector<char> GenerateSampleMbr() {
   return ret;
 }
 
-string BindToUnusedLoopDevice(const string &filename) {
-  // get a loop device we can use for the install device
-  string cmd = "losetup --show -f " + filename;
+// Binds provided |filename| to an unused loopback device, whose name is written
+// to the string pointed to by |lo_dev_name_p|. Returns true on success, false
+// otherwise (along with corresponding test failures), in which case the content
+// of |lo_dev_name_p| is unknown.
+bool BindToUnusedLoopDevice(const string& filename, string* lo_dev_name_p) {
+  CHECK(lo_dev_name_p);
 
-  FILE* find_dev_cmd = popen(cmd.c_str(), "r");
-  CHECK(find_dev_cmd);
-
-  string ret;
-  char dev[100] = {0};
-  size_t r;
-  while ((r = fread(dev, 1, sizeof(dev - 1), find_dev_cmd)) > 0) {
-    EXPECT_LT(r, sizeof(dev));
-    ret.insert(ret.end(), dev, dev + r);
+  // Bind to an unused loopback device, sanity check the device name.
+  lo_dev_name_p->clear();
+  if (!(utils::ReadPipe("losetup --show -f " + filename, lo_dev_name_p) &&
+        StartsWithASCII(*lo_dev_name_p, "/dev/loop", true))) {
+    ADD_FAILURE();
+    return false;
   }
-  EXPECT_EQ(r, 0);
-  EXPECT_TRUE(feof(find_dev_cmd));
-  fclose(find_dev_cmd);
 
-  // strip trailing \n on dev
-  if (*ret.rbegin() == '\n')
-    ret.resize(ret.size() - 1);
+  // Strip anything from the first newline char.
+  size_t newline_pos = lo_dev_name_p->find('\n');
+  if (newline_pos != string::npos)
+    lo_dev_name_p->erase(newline_pos);
 
-  // Ensure that the device starts with "/dev/loop"
-  EXPECT_TRUE(StartsWithASCII(ret, "/dev/loop", true));
-  return ret;
+  return true;
 }
 
 bool ExpectVectorsEq(const vector<char>& expected, const vector<char>& actual) {

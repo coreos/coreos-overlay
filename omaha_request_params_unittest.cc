@@ -55,22 +55,14 @@ bool OmahaRequestDeviceParamsTest::DoTest(OmahaRequestParams* out,
 
 namespace {
 string GetMachineType() {
-  FILE* fp = popen("uname -m", "r");
-  if (!fp)
+  string machine_type;
+  if (!utils::ReadPipe("uname -m", &machine_type))
     return "";
-  string ret;
-  for (;;) {
-    char buffer[10];
-    size_t r = fread(buffer, 1, sizeof(buffer), fp);
-    if (r == 0)
-      break;
-    ret.insert(ret.begin(), buffer, buffer + r);
-  }
-  // strip trailing '\n' if it exists
-  if ((*ret.rbegin()) == '\n')
-    ret.resize(ret.size() - 1);
-  fclose(fp);
-  return ret;
+  // Strip anything from the first newline char.
+  size_t newline_pos = machine_type.find('\n');
+  if (newline_pos != string::npos)
+    machine_type.erase(newline_pos);
+  return machine_type;
 }
 }  // namespace {}
 

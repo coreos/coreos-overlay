@@ -427,7 +427,7 @@ TEST_F(DeltaDiffGeneratorTest, ReorderBlobsTest) {
                                                    new_blobs));
 
   string new_data;
-  EXPECT_TRUE(utils::ReadFileToString(new_blobs, &new_data));
+  EXPECT_TRUE(utils::ReadFile(new_blobs, &new_data));
   EXPECT_EQ("bcda", new_data);
   EXPECT_EQ(2, manifest.install_operations_size());
   EXPECT_EQ(0, manifest.install_operations(0).data_offset());

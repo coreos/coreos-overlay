@@ -141,33 +141,70 @@ bool PReadAll(int fd, void* buf, size_t count, off_t offset,
 
 }
 
-bool ReadFile(const std::string& path, std::vector<char>* out) {
-  CHECK(out);
+// Append |nbytes| of content from |buf| to the vector pointed to by either
+// |vec_p| or |str_p|.
+static void AppendBytes(const char* buf, size_t nbytes,
+                        std::vector<char>* vec_p) {
+  CHECK(buf);
+  CHECK(vec_p);
+  vec_p->insert(vec_p->end(), buf, buf + nbytes);
+}
+static void AppendBytes(const char* buf, size_t nbytes,
+                        std::string* str_p) {
+  CHECK(buf);
+  CHECK(str_p);
+  str_p->append(buf, nbytes);
+}
+
+// Reads from an open file |fp|, appending the read content to the container
+// pointer to by |out_p|.  Returns true upon successful reading all of the
+// file's content, false otherwise.
+template <class T>
+static bool Read(FILE* fp, T* out_p) {
+  CHECK(fp);
+  char buf[1024];
+  while (size_t nbytes = fread(buf, 1, sizeof(buf), fp))
+    AppendBytes(buf, nbytes, out_p);
+  return feof(fp) && !ferror(fp);
+}
+
+// Opens a file |path| for reading, then uses |append_func| to append its
+// content to a container |out_p|.
+template <class T>
+static bool ReadFileAndAppend(const std::string& path, T* out_p) {
   FILE* fp = fopen(path.c_str(), "r");
   if (!fp)
     return false;
-  const size_t kChunkSize = 1024;
-  size_t read_size;
-  do {
-    char buf[kChunkSize];
-    read_size = fread(buf, 1, kChunkSize, fp);
-    if (read_size == 0)
-      break;
-    out->insert(out->end(), buf, buf + read_size);
-  } while (read_size == kChunkSize);
-  bool success = !ferror(fp);
-  TEST_AND_RETURN_FALSE_ERRNO(fclose(fp) == 0);
-  return success;
+  bool success = Read(fp, out_p);
+  return (success && !fclose(fp));
 }
 
-bool ReadFileToString(const std::string& path, std::string* out) {
-  vector<char> data;
-  bool success = ReadFile(path, &data);
-  if (!success) {
+// Invokes a pipe |cmd|, then uses |append_func| to append its stdout to a
+// container |out_p|.
+template <class T>
+static bool ReadPipeAndAppend(const std::string& cmd, T* out_p) {
+  FILE* fp = popen(cmd.c_str(), "r");
+  if (!fp)
     return false;
-  }
-  (*out) = string(&data[0], data.size());
-  return true;
+  bool success = Read(fp, out_p);
+  return (success && pclose(fp) >= 0);
+}
+
+
+bool ReadFile(const std::string& path, std::vector<char>* out_p) {
+  return ReadFileAndAppend(path, out_p);
+}
+
+bool ReadFile(const std::string& path, std::string* out_p) {
+  return ReadFileAndAppend(path, out_p);
+}
+
+bool ReadPipe(const std::string& cmd, std::vector<char>* out_p) {
+  return ReadPipeAndAppend(cmd, out_p);
+}
+
+bool ReadPipe(const std::string& cmd, std::string* out_p) {
+  return ReadPipeAndAppend(cmd, out_p);
 }
 
 off_t FileSize(const string& path) {

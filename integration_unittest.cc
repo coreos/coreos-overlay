@@ -56,7 +56,8 @@ class IntegrationTestProcessorDelegate : public ActionProcessorDelegate {
     if (action->Type() == InstallAction::StaticType()) {
       InstallAction* install_action = static_cast<InstallAction*>(action);
       old_dev_ = install_action->GetOutputObject();
-      string dev = BindToUnusedDevice(kTestDir + "/dev2");
+      string dev;
+      BindToUnusedDevice(kTestDir + "/dev2", &dev);
       install_action->SetOutputObject(dev);
     } else if (action->Type() == PostinstallRunnerAction::StaticType()) {
       PostinstallRunnerAction* postinstall_runner_action =
@@ -178,7 +179,7 @@ TEST(IntegrationTest, DISABLED_RunAsRootFullInstallTest) {
   ASSERT_EQ(0, lstat("/tmp/update_engine_test_postinst_out.txt", &stbuf));
   EXPECT_TRUE(S_ISREG(stbuf.st_mode));
   string file_data;
-  EXPECT_TRUE(utils::ReadFileToString(
+  EXPECT_TRUE(utils::ReadFile(
       "/tmp/update_engine_test_postinst_out.txt",
       &file_data));
   EXPECT_EQ("POSTINST_DONE\n", file_data);

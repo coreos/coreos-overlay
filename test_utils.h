@@ -36,7 +36,8 @@ std::vector<char> GzipCompressData(const std::vector<char>& data);
 // the first partition is marked bootable.
 std::vector<char> GenerateSampleMbr();
 
-std::string BindToUnusedLoopDevice(const std::string &filename);
+bool BindToUnusedLoopDevice(const std::string &filename,
+                            std::string* lo_dev_name_ptr);
 
 // Returns true iff a == b
 bool ExpectVectorsEq(const std::vector<char>& a, const std::vector<char>& b);
@@ -114,13 +115,17 @@ void VerifyAllPaths(const std::string& parent,
 class ScopedLoopbackDeviceBinder {
  public:
   ScopedLoopbackDeviceBinder(const std::string& file, std::string* dev) {
-    dev_ = BindToUnusedLoopDevice(file);
+    is_bound_ = BindToUnusedLoopDevice(file, &dev_);
+    EXPECT_TRUE(is_bound_);
 
-    if (dev)
+    if (is_bound_ && dev)
       *dev = dev_;
   }
 
   ~ScopedLoopbackDeviceBinder() {
+    if (!is_bound_)
+      return;
+
     for (int retry = 0; retry < 5; retry++) {
       std::vector<std::string> args;
       args.push_back("/sbin/losetup");
@@ -136,10 +141,14 @@ class ScopedLoopbackDeviceBinder {
     ADD_FAILURE();
   }
 
-  const std::string &dev() { return dev_; }
+  const std::string &dev() {
+    EXPECT_TRUE(is_bound_);
+    return dev_;
+  }
 
  private:
   std::string dev_;
+  bool is_bound_;
   DISALLOW_COPY_AND_ASSIGN(ScopedLoopbackDeviceBinder);
 };
 

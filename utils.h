@@ -48,9 +48,18 @@ bool PWriteAll(int fd, const void* buf, size_t count, off_t offset);
 bool PReadAll(int fd, void* buf, size_t count, off_t offset,
               ssize_t* out_bytes_read);
 
-// Returns the entire contents of the file at path. Returns true on success.
-bool ReadFile(const std::string& path, std::vector<char>* out);
-bool ReadFileToString(const std::string& path, std::string* out);
+// Opens |path| for reading and appends its entire content to the container
+// pointed to by |out_p|. Returns true upon successfully reading all of the
+// file's content, false otherwise, in which case the state of the output
+// container is unknown.
+bool ReadFile(const std::string& path, std::vector<char>* out_p);
+bool ReadFile(const std::string& path, std::string* out_p);
+
+// Invokes |cmd| in a pipe and appends its stdout to the container pointed to by
+// |out_p|. Returns true upon successfully reading all of the output, false
+// otherwise, in which case the state of the output container is unknown.
+bool ReadPipe(const std::string& cmd, std::vector<char>* out_p);
+bool ReadPipe(const std::string& cmd, std::string* out_p);
 
 // Returns the size of the file at path. If the file doesn't exist or some
 // error occurrs, -1 is returned.

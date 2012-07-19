@@ -147,7 +147,7 @@ string OmahaRequestDeviceParams::GetLsbValue(const string& key,
     // TODO(adlr): make sure files checked are owned as root (and all their
     // parents are recursively, too).
     string file_data;
-    if (!utils::ReadFileToString(root_ + *it, &file_data))
+    if (!utils::ReadFile(root_ + *it, &file_data))
       continue;
 
     map<string, string> data = simple_key_value_store::ParseString(file_data);
