@@ -15,8 +15,6 @@
 #include <string>
 #include <vector>
 
-#include <base/string_util.h>
-#include <base/stringprintf.h>
 #include <gio/gio.h>
 #include <gio/gunixinputstream.h>
 #include <gio/gunixoutputstream.h>
@@ -38,8 +36,8 @@ const off_t kCopyFileBufferSize = 128 * 1024;
 }  // namespace {}
 
 FilesystemCopierAction::FilesystemCopierAction(
-    bool copying_kernel_install_path, bool verify_hash,
-    unsigned max_rewrite_attempts)
+    bool copying_kernel_install_path,
+    bool verify_hash)
     : copying_kernel_install_path_(copying_kernel_install_path),
       verify_hash_(verify_hash),
       src_stream_(NULL),
@@ -47,12 +45,7 @@ FilesystemCopierAction::FilesystemCopierAction(
       read_done_(false),
       failed_(false),
       cancelled_(false),
-      filesystem_size_(kint64max),
-      total_bytes_written_(0),
-      num_curr_rewrite_attempts_(0),
-      num_total_rewrite_attempts_(0),
-      max_rewrite_attempts_(max_rewrite_attempts),
-      is_debug_last_read_(false) {
+      filesystem_size_(kint64max) {
   // A lot of code works on the implicit assumption that processing is done on
   // exactly 2 ping-pong buffers.
   COMPILE_ASSERT(arraysize(buffer_) == 2 &&
@@ -163,18 +156,6 @@ void FilesystemCopierAction::AsyncReadReadyCallback(GObject *source_object,
   cancelled_ = g_cancellable_is_cancelled(canceller_[index]) == TRUE;
 
   ssize_t bytes_read = g_input_stream_read_finish(src_stream_, res, &error);
-
-  // TODO(garnold) this is debugging code which needs to be removed once we
-  // figure out the reasons for write I/O error.
-  ssize_t bytes_expected = std::min(static_cast<int64_t>(buffer_[0].size()),
-                                    filesystem_size_);
-  if (!is_debug_last_read_ && bytes_read > 0 && bytes_read < bytes_expected) {
-    LOG(INFO) << "[debug] read fewer bytes than expected ("
-              << bytes_read << " < " << bytes_expected
-              << "), this is likely the final read";
-    is_debug_last_read_ = true;
-  }
-
   if (bytes_read < 0) {
     LOG(ERROR) << "Read failed: " << utils::GetAndFreeGError(&error);
     failed_ = true;
@@ -215,6 +196,7 @@ void FilesystemCopierAction::AsyncWriteReadyCallback(GObject *source_object,
                                                      GAsyncResult *res) {
   int index = buffer_state_[0] == kBufferStateWriting ? 0 : 1;
   CHECK(buffer_state_[index] == kBufferStateWriting);
+  buffer_state_[index] = kBufferStateEmpty;
 
   GError* error = NULL;
   CHECK(canceller_[index]);
@@ -229,45 +211,10 @@ void FilesystemCopierAction::AsyncWriteReadyCallback(GObject *source_object,
       LOG(ERROR) << "Write error: " << utils::GetAndFreeGError(&error);
     } else {
       LOG(ERROR) << "Wrote too few bytes: " << bytes_written
-                 << " instead of " << buffer_valid_size_[index];
+                 << " < " << buffer_valid_size_[index];
     }
-
-    bool do_fail = true;  // fail, unless we can retry
-
-    if (cancelled_) {
-      LOG(ERROR) << "write operation cancelled, copying failed";
-    } else if (num_curr_rewrite_attempts_ < max_rewrite_attempts_) {
-      // Try again: mark buffer as full, reposition the output stream.
-      num_curr_rewrite_attempts_++;
-      num_total_rewrite_attempts_++;
-      off_t ret =
-          lseek(g_unix_output_stream_get_fd(G_UNIX_OUTPUT_STREAM(dst_stream_)),
-                static_cast<off_t>(total_bytes_written_),
-                SEEK_SET);
-      if (ret == static_cast<off_t>(total_bytes_written_)) {
-        buffer_state_[index] = kBufferStateFull;
-        do_fail = false;
-        LOG(INFO) << "attempting to rewrite current buffer at offset "
-                  << total_bytes_written_ << " (" << num_curr_rewrite_attempts_
-                  << " of " << max_rewrite_attempts_ << " attempts)";
-      } else {
-        PLOG(ERROR)
-            << "can't reposition output stream for rewrite, copying failed";
-      }
-    } else {
-      LOG(ERROR) << "rewrite attempts exhausted (" << max_rewrite_attempts_
-                 << "), copying failed";
-    }
-
-    if (do_fail)
-      failed_ = true;
-  } else {
-    total_bytes_written_ += static_cast<size_t>(bytes_written);
-    num_curr_rewrite_attempts_ = 0;
+    failed_ = true;
   }
-
-  if (buffer_state_[index] == kBufferStateWriting)
-    buffer_state_[index] = kBufferStateEmpty;
 
   SpawnAsyncActions();
 }
@@ -313,12 +260,6 @@ void FilesystemCopierAction::SpawnAsyncActions() {
       buffer_state_[i] = kBufferStateReading;
     } else if (!writing && !verify_hash_ &&
                buffer_state_[i] == kBufferStateFull) {
-      // TODO(garnold) debugging code, to be removed.
-      if (is_debug_last_read_) {
-        LOG(INFO) << "[debug] spawning async write of "
-                  << buffer_valid_size_[i] << " bytes";
-      }
-
       g_output_stream_write_async(
           dst_stream_,
           buffer_[i].data(),
@@ -334,15 +275,6 @@ void FilesystemCopierAction::SpawnAsyncActions() {
   if (!reading && !writing) {
     // We're done!
     ActionExitCode code = kActionCodeSuccess;
-    // TODO(garnold) we're signaling a failure if buffer rewriting was attempted
-    // during the copy action; this is necessary for keeping our unit tests
-    // failing, allowing us to diagnose the root cause for write I/O errors.
-    // When diagnosis is complete, this error return code needs to be reversed.
-    if (num_total_rewrite_attempts_) {
-      code = kActionCodeError;
-      LOG(ERROR) << "[debug] rewrite was attempted "
-                 << num_total_rewrite_attempts_ << " time(s), copying failed";
-    }
     if (hasher_.Finalize()) {
       LOG(INFO) << "Hash: " << hasher_.hash();
       if (verify_hash_) {

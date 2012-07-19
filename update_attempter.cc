@@ -377,9 +377,9 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
   shared_ptr<OmahaResponseHandlerAction> response_handler_action(
       new OmahaResponseHandlerAction(prefs_));
   shared_ptr<FilesystemCopierAction> filesystem_copier_action(
-      new FilesystemCopierAction(false, false, 0));
+      new FilesystemCopierAction(false, false));
   shared_ptr<FilesystemCopierAction> kernel_filesystem_copier_action(
-      new FilesystemCopierAction(true, false, 0));
+      new FilesystemCopierAction(true, false));
   shared_ptr<OmahaRequestAction> download_started_action(
       new OmahaRequestAction(prefs_,
                              &omaha_request_params_,
@@ -406,9 +406,9 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
                                                     is_test_mode_),
                              false));
   shared_ptr<FilesystemCopierAction> filesystem_verifier_action(
-      new FilesystemCopierAction(false, true, 0));
+      new FilesystemCopierAction(false, true));
   shared_ptr<FilesystemCopierAction> kernel_filesystem_verifier_action(
-      new FilesystemCopierAction(true, true, 0));
+      new FilesystemCopierAction(true, true));
   shared_ptr<PostinstallRunnerAction> postinstall_runner_action(
       new PostinstallRunnerAction);
   shared_ptr<OmahaRequestAction> update_complete_action(

@@ -93,10 +93,18 @@ gboolean StartProcessorInRunLoop(gpointer data) {
   return FALSE;
 }
 
-TEST_F(FilesystemCopierActionTest, RunAsRootSimpleTest) {
+// TODO(garnold) Temporarily disabling this test, see chromium-os:31082 for
+// details; still trying to track down the root cause for these rare write
+// failures and whether or not they are due to the test setup or an inherent
+// issue with the chroot environiment, library versions we use, etc.
+TEST_F(FilesystemCopierActionTest, DISABLED_RunAsRootSimpleTest) {
   ASSERT_EQ(0, getuid());
-  EXPECT_TRUE(DoTest(false, false, false, 0));
-  EXPECT_TRUE(DoTest(false, false, true, 0));
+  bool test = DoTest(false, false, false, 0);
+  EXPECT_TRUE(test);
+  if (!test)
+    return;
+  test = DoTest(false, false, true, 0);
+  EXPECT_TRUE(test);
 }
 
 bool FilesystemCopierActionTest::DoTest(bool run_out_of_space,
@@ -139,6 +147,8 @@ bool FilesystemCopierActionTest::DoTest(bool run_out_of_space,
   ScopedLoopbackDeviceBinder a_dev_releaser(a_loop_file, &a_dev);
   ScopedLoopbackDeviceBinder b_dev_releaser(b_loop_file, &b_dev);
 
+  LOG(INFO) << "copying: " << a_loop_file << " -> " << b_loop_file
+            << ", " << kLoopFileSize << " bytes";
   bool success = true;
 
   // Set up the action objects
@@ -178,7 +188,7 @@ bool FilesystemCopierActionTest::DoTest(bool run_out_of_space,
 
   ObjectFeederAction<InstallPlan> feeder_action;
   FilesystemCopierAction copier_action(use_kernel_partition,
-                                       verify_hash != 0, 3);
+                                       verify_hash != 0);
   ObjectCollectorAction<InstallPlan> collector_action;
 
   BondActions(&feeder_action, &copier_action);
@@ -269,7 +279,7 @@ TEST_F(FilesystemCopierActionTest, MissingInputObjectTest) {
 
   processor.set_delegate(&delegate);
 
-  FilesystemCopierAction copier_action(false, false, 0);
+  FilesystemCopierAction copier_action(false, false);
   ObjectCollectorAction<InstallPlan> collector_action;
 
   BondActions(&copier_action, &collector_action);
@@ -292,7 +302,7 @@ TEST_F(FilesystemCopierActionTest, ResumeTest) {
   const char* kUrl = "http://some/url";
   InstallPlan install_plan(true, kUrl, 0, "", "", "");
   feeder_action.set_obj(install_plan);
-  FilesystemCopierAction copier_action(false, false, 0);
+  FilesystemCopierAction copier_action(false, false);
   ObjectCollectorAction<InstallPlan> collector_action;
 
   BondActions(&feeder_action, &copier_action);
@@ -322,7 +332,7 @@ TEST_F(FilesystemCopierActionTest, NonExistentDriveTest) {
                            "/no/such/file",
                            "/no/such/file");
   feeder_action.set_obj(install_plan);
-  FilesystemCopierAction copier_action(false, false, 0);
+  FilesystemCopierAction copier_action(false, false);
   ObjectCollectorAction<InstallPlan> collector_action;
 
   BondActions(&copier_action, &collector_action);
@@ -371,7 +381,7 @@ TEST_F(FilesystemCopierActionTest, RunAsRootDetermineFilesystemSizeTest) {
 
   for (int i = 0; i < 2; ++i) {
     bool is_kernel = i == 1;
-    FilesystemCopierAction action(is_kernel, false, 0);
+    FilesystemCopierAction action(is_kernel, false);
     EXPECT_EQ(kint64max, action.filesystem_size_);
     {
       int fd = HANDLE_EINTR(open(img.c_str(), O_RDONLY));
