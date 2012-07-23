@@ -467,6 +467,13 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
   if (params_->update_disabled) {
     LOG(INFO) << "Ignoring Omaha updates as updates are disabled by policy.";
     completer.set_code(kActionCodeOmahaUpdateIgnoredPerPolicy);
+    // Note: We could technically delete the UpdateFirstSeenAt state here.
+    // If we do, it'll mean a device has to restart the UpdateFirstSeenAt
+    // and thus help scattering take effect when the AU is turned on again.
+    // On the other hand, it also increases the chance of update starvation if
+    // an admin turns AU on/off more frequently. We choose to err on the side
+    // of preventing starvation at the cost of not applying scattering in
+    // those cases.
     return;
   }
 
@@ -536,23 +543,53 @@ bool OmahaRequestAction::ShouldDeferDownload(xmlNode* updatecheck_node) {
 OmahaRequestAction::WallClockWaitResult
 OmahaRequestAction::IsWallClockBasedWaitingSatisfied(
     xmlNode* updatecheck_node) {
-  Time update_published_time;
+  Time update_first_seen_at;
+  int64 update_first_seen_at_int;
 
-  // UpdatePublishedOn must be in GMT.
-  if (!Time::FromString(
-      XmlGetProperty(updatecheck_node, "UpdatePublishedOn").c_str(),
-          &update_published_time)) {
-    LOG(INFO) << "UpdatePublishedOn not present in rule. Treating as 0.";
-    return kWallClockWaitDoneAndUpdateCheckWaitNotRequired;
+  if (prefs_->Exists(kPrefsUpdateFirstSeenAt)) {
+    if (prefs_->GetInt64(kPrefsUpdateFirstSeenAt, &update_first_seen_at_int)) {
+      // Note: This timestamp could be that of ANY update we saw in the past
+      // (not necessarily this particular update we're considering to apply)
+      // but never got to apply because of some reason (e.g. stop AU policy,
+      // updates being pulled out from Omaha, changes in target version prefix,
+      // new update being rolled out, etc.). But for the purposes of scattering
+      // it doesn't matter which update the timestamp corresponds to. i.e.
+      // the clock starts ticking the first time we see an update and we're
+      // ready to apply when the random wait period is satisfied relative to
+      // that first seen timestamp.
+      update_first_seen_at = Time::FromInternalValue(update_first_seen_at_int);
+      LOG(INFO) << "Using persisted value of UpdateFirstSeenAt: "
+                << utils::ToString(update_first_seen_at);
+    } else {
+      // This seems like an unexpected error where the persisted value exists
+      // but it's not readable for some reason. Just skip scattering in this
+      // case to be safe.
+     LOG(INFO) << "Not scattering as UpdateFirstSeenAt value cannot be read";
+     return kWallClockWaitDoneAndUpdateCheckWaitNotRequired;
+    }
+  } else {
+    update_first_seen_at = Time::Now();
+    update_first_seen_at_int = update_first_seen_at.ToInternalValue();
+    if (prefs_->SetInt64(kPrefsUpdateFirstSeenAt, update_first_seen_at_int)) {
+      LOG(INFO) << "Persisted the new value for UpdateFirstSeenAt: "
+                << utils::ToString(update_first_seen_at);
+    }
+    else {
+      // This seems like an unexpected error where the value cannot be
+      // persisted for some reason. Just skip scattering in this
+      // case to be safe.
+      LOG(INFO) << "Not scattering as UpdateFirstSeenAt value "
+                << utils::ToString(update_first_seen_at)
+                << " cannot be persisted";
+     return kWallClockWaitDoneAndUpdateCheckWaitNotRequired;
+    }
   }
 
-  TimeDelta elapsed_time = Time::Now() - update_published_time;
+  TimeDelta elapsed_time = Time::Now() - update_first_seen_at;
   TimeDelta max_scatter_period = TimeDelta::FromDays(
       ParseInt(XmlGetProperty(updatecheck_node, "MaxDaysToScatter")));
 
-  LOG(INFO) << "Update Published On = "
-            << utils::ToString(update_published_time)
-            << ", Waiting Period = "
+  LOG(INFO) << "Waiting Period = "
             << utils::FormatSecs(params_->waiting_period.InSeconds())
             << ", Time Elapsed = "
             << utils::FormatSecs(elapsed_time.InSeconds())
@@ -576,10 +613,9 @@ OmahaRequestAction::IsWallClockBasedWaitingSatisfied(
   }
 
   if (elapsed_time > max_scatter_period) {
-    // This means it's been a while since the update was published and
-    // we are less likely to cause bandwidth spikes by downloading now.
-    // This also establishes an upperbound wait in terms of wall-clock time
-    // so as to prevent machines from not getting updated for too long.
+    // This means we've waited more than the upperbound wait in the rule
+    // from the time we first saw a valid update available to us.
+    // This will prevent update starvation.
     LOG(INFO) << "Not scattering as we're past the MaxDaysToScatter limit.";
     return kWallClockWaitDoneAndUpdateCheckWaitNotRequired;
   }

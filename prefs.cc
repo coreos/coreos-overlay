@@ -35,6 +35,7 @@ const char kPrefsUpdateStateSignedSHA256Context[] =
     "update-state-signed-sha-256-context";
 const char kPrefsUpdateCheckCount[] = "update-check-count";
 const char kPrefsWallClockWaitPeriod[] = "wall-clock-wait-period";
+const char kPrefsUpdateFirstSeenAt[] = "update-first-seen-at";
 
 bool Prefs::Init(const FilePath& prefs_dir) {
   prefs_dir_ = prefs_dir;

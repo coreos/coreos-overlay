@@ -238,6 +238,7 @@ bool UpdateAttempter::CalculateUpdateParams(const string& app_version,
               << (allowed_types_str.empty() ? "all" : allowed_types_str);
   } else {
     LOG(INFO) << "No device policies present.";
+    system_state_->SetDevicePolicy(NULL);
   }
 
   bool is_scatter_enabled = false;
@@ -541,6 +542,7 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
     // way.
     prefs_->Delete(kPrefsUpdateCheckCount);
     prefs_->Delete(kPrefsWallClockWaitPeriod);
+    prefs_->Delete(kPrefsUpdateFirstSeenAt);
 
     SetStatusAndNotify(UPDATE_STATUS_UPDATED_NEED_REBOOT,
                        kUpdateNoticeUnspecified);

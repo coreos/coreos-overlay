@@ -26,6 +26,7 @@ extern const char kPrefsUpdateStateSignatureBlob[];
 extern const char kPrefsUpdateStateSignedSHA256Context[];
 extern const char kPrefsUpdateCheckCount[];
 extern const char kPrefsWallClockWaitPeriod[];
+extern const char kPrefsUpdateFirstSeenAt[];
 
 // The prefs interface allows access to a persistent preferences
 // store. The two reasons for providing this as an interface are
