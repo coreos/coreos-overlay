@@ -146,9 +146,15 @@ bool FilesystemCopierActionTest::DoTest(bool run_out_of_space,
 
   ScopedLoopbackDeviceBinder a_dev_releaser(a_loop_file, &a_dev);
   ScopedLoopbackDeviceBinder b_dev_releaser(b_loop_file, &b_dev);
+  if (!(a_dev_releaser.is_bound() && b_dev_releaser.is_bound())) {
+    ADD_FAILURE();
+    return false;
+  }
 
-  LOG(INFO) << "copying: " << a_loop_file << " -> " << b_loop_file
-            << ", " << kLoopFileSize << " bytes";
+  LOG(INFO) << "copying: "
+            << a_loop_file << " (" << a_dev << ") -> "
+            << b_loop_file << " (" << b_dev << ", "
+            << kLoopFileSize << " bytes";
   bool success = true;
 
   // Set up the action objects
