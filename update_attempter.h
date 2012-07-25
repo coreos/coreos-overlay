@@ -242,6 +242,16 @@ class UpdateAttempter : public ActionProcessorDelegate,
                              bool is_test,
                              bool is_user_initiated);
 
+  // Calculates all the scattering related parameters (such as waiting period,
+  // which type of scattering is enabled, etc.) and also updates/deletes
+  // the corresponding prefs file used in scattering. Should be called
+  // only after the device policy has been loaded and set in the system_state_.
+  void CalculateScatteringParams(bool is_user_initiated);
+
+  // Sets a random value for the omaha_request_params_.waiting_period
+  // based on the current scatter_factor_ value.
+  void GenerateNewWaitingPeriod();
+
   // Helper method of Update() to construct the sequence of actions to
   // be performed for an update check. Please refer to
   // Update() method for the meaning of the parametes.
@@ -346,10 +356,6 @@ class UpdateAttempter : public ActionProcessorDelegate,
 
   // The current scatter factor as found in the policy setting.
   base::TimeDelta scatter_factor_;
-
-  // True if we have to initialize the waiting period in prefs, if available.
-  // False otherwise.
-  bool init_waiting_period_from_prefs_;
 
   // External state of the system outside the update_engine process
   // carved out separately to mock out easily in unit tests.

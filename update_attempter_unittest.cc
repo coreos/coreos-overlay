@@ -546,6 +546,8 @@ void UpdateAttempterTest::ReadScatterFactorFromPolicyTestStart() {
   attempter_.policy_provider_.reset(new policy::PolicyProvider(device_policy));
 
   EXPECT_CALL(*device_policy, LoadPolicy()).WillRepeatedly(Return(true));
+  EXPECT_CALL(mock_system_state_, GetDevicePolicy()).WillRepeatedly(
+      Return(device_policy));
 
   EXPECT_CALL(*device_policy, GetScatterFactorInSeconds(_))
       .WillRepeatedly(DoAll(
@@ -591,6 +593,8 @@ void UpdateAttempterTest::DecrementUpdateCheckCountTestStart() {
   attempter_.policy_provider_.reset(new policy::PolicyProvider(device_policy));
 
   EXPECT_CALL(*device_policy, LoadPolicy()).WillRepeatedly(Return(true));
+  EXPECT_CALL(mock_system_state_, GetDevicePolicy()).WillRepeatedly(
+      Return(device_policy));
 
   EXPECT_CALL(*device_policy, GetScatterFactorInSeconds(_))
       .WillRepeatedly(DoAll(
@@ -645,6 +649,7 @@ void UpdateAttempterTest::NoScatteringDoneDuringManualUpdateTestStart() {
 
   LOG_IF(ERROR, !prefs.Init(FilePath(prefs_dir)))
       << "Failed to initialize preferences.";
+  EXPECT_TRUE(prefs.SetInt64(kPrefsWallClockWaitPeriod, initial_value));
   EXPECT_TRUE(prefs.SetInt64(kPrefsUpdateCheckCount, initial_value));
 
   // make sure scatter_factor is non-zero as scattering is disabled
@@ -655,6 +660,8 @@ void UpdateAttempterTest::NoScatteringDoneDuringManualUpdateTestStart() {
   attempter_.policy_provider_.reset(new policy::PolicyProvider(device_policy));
 
   EXPECT_CALL(*device_policy, LoadPolicy()).WillRepeatedly(Return(true));
+  EXPECT_CALL(mock_system_state_, GetDevicePolicy()).WillRepeatedly(
+      Return(device_policy));
 
   EXPECT_CALL(*device_policy, GetScatterFactorInSeconds(_))
       .WillRepeatedly(DoAll(
@@ -667,9 +674,10 @@ void UpdateAttempterTest::NoScatteringDoneDuringManualUpdateTestStart() {
   EXPECT_EQ(scatter_factor_in_seconds, attempter_.scatter_factor_.InSeconds());
 
   // Make sure scattering is disabled for manual (i.e. user initiated) update
-  // checks and none of the artifacts are present.
+  // checks and all artifacts are removed.
   EXPECT_FALSE(attempter_.omaha_request_params_.wall_clock_based_wait_enabled);
   EXPECT_FALSE(prefs.Exists(kPrefsWallClockWaitPeriod));
+  EXPECT_TRUE(attempter_.omaha_request_params_.waiting_period.InSeconds() == 0);
   EXPECT_FALSE(attempter_.omaha_request_params_.
                  update_check_count_wait_enabled);
   EXPECT_FALSE(prefs.Exists(kPrefsUpdateCheckCount));

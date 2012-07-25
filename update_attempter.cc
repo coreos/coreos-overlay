@@ -137,7 +137,6 @@ UpdateAttempter::UpdateAttempter(PrefsInterface* prefs,
       is_test_mode_(false),
       is_test_update_attempted_(false),
       gpio_handler_(gpio_handler),
-      init_waiting_period_from_prefs_(true),
       system_state_(system_state) {
   if (utils::FileExists(kUpdateCompletedMarker))
     status_ = UPDATE_STATUS_UPDATED_NEED_REBOOT;
@@ -209,8 +208,6 @@ bool UpdateAttempter::CalculateUpdateParams(const string& app_version,
   // If the release_track is specified by policy, that takes precedence.
   string release_track;
 
-  // Take a copy of the old scatter value before we update it.
-  int64 old_scatter_factor_in_secs = scatter_factor_.InSeconds();
   if (policy_provider_->device_policy_is_loaded()) {
     const policy::DevicePolicy& device_policy =
                                 policy_provider_->GetDevicePolicy();
@@ -218,11 +215,6 @@ bool UpdateAttempter::CalculateUpdateParams(const string& app_version,
     device_policy.GetUpdateDisabled(&omaha_request_params_.update_disabled);
     device_policy.GetTargetVersionPrefix(
       &omaha_request_params_.target_version_prefix);
-    int64 new_scatter_factor_in_secs = 0;
-    device_policy.GetScatterFactorInSeconds(&new_scatter_factor_in_secs);
-    if (new_scatter_factor_in_secs < 0) // sanitize input, just in case.
-      new_scatter_factor_in_secs  = 0;
-    scatter_factor_ = TimeDelta::FromSeconds(new_scatter_factor_in_secs);
 
     system_state_->SetDevicePolicy(&device_policy);
 
@@ -241,72 +233,7 @@ bool UpdateAttempter::CalculateUpdateParams(const string& app_version,
     system_state_->SetDevicePolicy(NULL);
   }
 
-  bool is_scatter_enabled = false;
-  if (scatter_factor_.InSeconds() == 0) {
-    LOG(INFO) << "Scattering disabled since scatter factor is set to 0";
-  } else if (is_user_initiated) {
-    LOG(INFO) << "Scattering disabled as this update check is user-initiated";
-  } else if (!system_state_->IsOOBEComplete()) {
-    LOG(INFO) << "Scattering disabled since OOBE is not complete yet";
-  } else {
-    is_scatter_enabled = true;
-    LOG(INFO) << "Scattering is enabled";
-  }
-
-  if (is_scatter_enabled) {
-    // This means the scattering policy is turned on.
-    if (scatter_factor_.InSeconds() != old_scatter_factor_in_secs) {
-      int64 wait_period_in_secs = 0;
-      if (init_waiting_period_from_prefs_ &&
-          prefs_->GetInt64(kPrefsWallClockWaitPeriod, &wait_period_in_secs) &&
-          wait_period_in_secs >= 0 &&
-          wait_period_in_secs <= scatter_factor_.InSeconds()) {
-        // This means:
-        // 1. This is the first update check to come this far in this process.
-        // 2. There's a persisted value for the waiting period available.
-        // 3. And that persisted value is still valid.
-        // So, in this case, we should reuse the persisted value instead of
-        // generating a new random value to improve the chances of a good
-        // distribution for scattering.
-        omaha_request_params_.waiting_period =
-          TimeDelta::FromSeconds(wait_period_in_secs);
-        LOG(INFO) << "Using persisted value for wall clock based waiting period.";
-      } else {
-        // In this case, we should regenerate the waiting period to make sure
-        // it's within the bounds of the new scatter factor value.
-        omaha_request_params_.waiting_period = TimeDelta::FromSeconds(
-            base::RandInt(0, scatter_factor_.InSeconds()));
-
-        LOG(INFO) << "Generated new value of " << utils::FormatSecs(
-                      omaha_request_params_.waiting_period.InSeconds())
-                  << " for wall clock based waiting period.";
-
-        // Do a best-effort to persist this. We'll work fine even if the
-        // persistence fails.
-        prefs_->SetInt64(kPrefsWallClockWaitPeriod,
-                         omaha_request_params_.waiting_period.InSeconds());
-      }
-    }
-
-    // We should reset this value since we're past the first initialization
-    // of the waiting period for this process.
-    init_waiting_period_from_prefs_ = false;
-
-    // This means the scattering policy is turned on. We'll do wall-clock-
-    // based-wait by default. And if we don't have any issues in accessing
-    // the file system to do update the update check count value, we'll
-    // turn that on as well.
-    omaha_request_params_.wall_clock_based_wait_enabled = true;
-    bool decrement_succeeded = DecrementUpdateCheckCount();
-    omaha_request_params_.update_check_count_wait_enabled = decrement_succeeded;
-  } else {
-    // This means the scattering feature is turned off. Make sure to disable
-    // all the knobs so that we don't invoke any scattering related code.
-    omaha_request_params_.wall_clock_based_wait_enabled = false;
-    omaha_request_params_.update_check_count_wait_enabled = false;
-    prefs_->Delete(kPrefsWallClockWaitPeriod);
-    prefs_->Delete(kPrefsUpdateCheckCount);
-  }
+  CalculateScatteringParams(is_user_initiated);
 
   // Determine whether an alternative test address should be used.
   string omaha_url_to_use = omaha_url;
@@ -333,9 +260,8 @@ bool UpdateAttempter::CalculateUpdateParams(const string& app_version,
             << omaha_request_params_.wall_clock_based_wait_enabled
             << ", Update Check Count Wait Enabled = "
             << omaha_request_params_.update_check_count_wait_enabled
-            << ", Waiting Period = "
-            << utils::FormatSecs(
-                   omaha_request_params_.waiting_period.InSeconds());
+            << ", Waiting Period = " << utils::FormatSecs(
+               omaha_request_params_.waiting_period.InSeconds());
 
   obeying_proxies_ = true;
   if (obey_proxies || proxy_manual_checks_ == 0) {
@@ -356,6 +282,125 @@ bool UpdateAttempter::CalculateUpdateParams(const string& app_version,
 
   DisableDeltaUpdateIfNeeded();
   return true;
+}
+
+void UpdateAttempter::CalculateScatteringParams(bool is_user_initiated) {
+  // Take a copy of the old scatter value before we update it, as
+  // we need to update the waiting period if this value changes.
+  TimeDelta old_scatter_factor = scatter_factor_;
+  const policy::DevicePolicy* device_policy = system_state_->GetDevicePolicy();
+  if (device_policy) {
+    int64 new_scatter_factor_in_secs = 0;
+    device_policy->GetScatterFactorInSeconds(&new_scatter_factor_in_secs);
+    if (new_scatter_factor_in_secs < 0) // sanitize input, just in case.
+      new_scatter_factor_in_secs  = 0;
+    scatter_factor_ = TimeDelta::FromSeconds(new_scatter_factor_in_secs);
+  }
+
+  bool is_scatter_enabled = false;
+  if (scatter_factor_.InSeconds() == 0) {
+    LOG(INFO) << "Scattering disabled since scatter factor is set to 0";
+  } else if (is_user_initiated) {
+    LOG(INFO) << "Scattering disabled as this update check is user-initiated";
+  } else if (!system_state_->IsOOBEComplete()) {
+    LOG(INFO) << "Scattering disabled since OOBE is not complete yet";
+  } else {
+    is_scatter_enabled = true;
+    LOG(INFO) << "Scattering is enabled";
+  }
+
+  if (is_scatter_enabled) {
+    // This means the scattering policy is turned on.
+    // Now check if we need to update the waiting period. The two cases
+    // in which we'd need to update the waiting period are:
+    // 1. First time in process or a scheduled check after a user-initiated one.
+    //    (omaha_request_params_.waiting_period will be zero in this case).
+    // 2. Admin has changed the scattering policy value.
+    //    (new scattering value will be different from old one in this case).
+    int64 wait_period_in_secs = 0;
+    if (omaha_request_params_.waiting_period.InSeconds() == 0) {
+      // First case. Check if we have a suitable value to set for
+      // the waiting period.
+      if (prefs_->GetInt64(kPrefsWallClockWaitPeriod, &wait_period_in_secs) &&
+          wait_period_in_secs > 0 &&
+          wait_period_in_secs <= scatter_factor_.InSeconds()) {
+        // This means:
+        // 1. There's a persisted value for the waiting period available.
+        // 2. And that persisted value is still valid.
+        // So, in this case, we should reuse the persisted value instead of
+        // generating a new random value to improve the chances of a good
+        // distribution for scattering.
+        omaha_request_params_.waiting_period =
+          TimeDelta::FromSeconds(wait_period_in_secs);
+        LOG(INFO) << "Using persisted wall-clock waiting period: " <<
+            utils::FormatSecs(omaha_request_params_.waiting_period.InSeconds());
+      }
+      else {
+        // This means there's no persisted value for the waiting period
+        // available or its value is invalid given the new scatter_factor value.
+        // So, we should go ahead and regenerate a new value for the
+        // waiting period.
+        LOG(INFO) << "Persisted value not present or not valid ("
+                  << utils::FormatSecs(wait_period_in_secs)
+                  << ") for wall-clock waiting period.";
+        GenerateNewWaitingPeriod();
+      }
+    } else if (scatter_factor_ != old_scatter_factor) {
+      // This means there's already a waiting period value, but we detected
+      // a change in the scattering policy value. So, we should regenerate the
+      // waiting period to make sure it's within the bounds of the new scatter
+      // factor value.
+      GenerateNewWaitingPeriod();
+    } else {
+      // Neither the first time scattering is enabled nor the scattering value
+      // changed. Nothing to do.
+      LOG(INFO) << "Keeping current wall-clock waiting period: " <<
+          utils::FormatSecs(omaha_request_params_.waiting_period.InSeconds());
+    }
+
+    // The invariant at this point is that omaha_request_params_.waiting_period
+    // is non-zero no matter which path we took above.
+    LOG_IF(ERROR, omaha_request_params_.waiting_period.InSeconds() == 0)
+        << "Waiting Period should NOT be zero at this point!!!";
+
+    // Since scattering is enabled, wall clock based wait will always be
+    // enabled.
+    omaha_request_params_.wall_clock_based_wait_enabled = true;
+
+    // If we don't have any issues in accessing the file system to update
+    // the update check count value, we'll turn that on as well.
+    bool decrement_succeeded = DecrementUpdateCheckCount();
+    omaha_request_params_.update_check_count_wait_enabled = decrement_succeeded;
+  } else {
+    // This means the scattering feature is turned off or disabled for
+    // this particular update check. Make sure to disable
+    // all the knobs and artifacts so that we don't invoke any scattering
+    // related code.
+    omaha_request_params_.wall_clock_based_wait_enabled = false;
+    omaha_request_params_.update_check_count_wait_enabled = false;
+    omaha_request_params_.waiting_period = TimeDelta::FromSeconds(0);
+    prefs_->Delete(kPrefsWallClockWaitPeriod);
+    prefs_->Delete(kPrefsUpdateCheckCount);
+    // Don't delete the UpdateFirstSeenAt file as we don't want manual checks
+    // that result in no-updates (e.g. due to server side throttling) to
+    // cause update starvation by having the client generate a new
+    // UpdateFirstSeenAt for each scheduled check that follows a manual check.
+  }
+}
+
+void UpdateAttempter::GenerateNewWaitingPeriod() {
+  omaha_request_params_.waiting_period = TimeDelta::FromSeconds(
+      base::RandInt(1, scatter_factor_.InSeconds()));
+
+  LOG(INFO) << "Generated new wall-clock waiting period: " << utils::FormatSecs(
+                omaha_request_params_.waiting_period.InSeconds());
+
+  // Do a best-effort to persist this in all cases. Even if the persistence
+  // fails, we'll still be able to scatter based on our in-memory value.
+  // The persistence only helps in ensuring a good overall distribution
+  // across multiple devices if they tend to reboot too often.
+  prefs_->SetInt64(kPrefsWallClockWaitPeriod,
+                   omaha_request_params_.waiting_period.InSeconds());
 }
 
 void UpdateAttempter::BuildUpdateActions(bool interactive) {
