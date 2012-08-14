@@ -14,6 +14,7 @@
 #include <tr1/memory>
 #include <vector>
 
+#include <base/file_util.h>
 #include <base/rand_util.h>
 #include <glib.h>
 #include <metrics/metrics_library.h>
@@ -714,6 +715,32 @@ void UpdateAttempter::BytesReceived(uint64_t bytes_received, uint64_t total) {
       TimeTicks::Now() - last_notify_time_ >= TimeDelta::FromSeconds(10)) {
     download_progress_ = progress;
     SetStatusAndNotify(UPDATE_STATUS_DOWNLOADING, kUpdateNoticeUnspecified);
+  }
+}
+
+bool UpdateAttempter::ResetStatus() {
+  LOG(INFO) << "Attempting to reset state from "
+            << UpdateStatusToString(status_) << " to UPDATE_STATUS_IDLE";
+
+  switch (status_) {
+    case UPDATE_STATUS_IDLE:
+      // no-op.
+      return true;
+
+    case UPDATE_STATUS_UPDATED_NEED_REBOOT:  {
+      status_ = UPDATE_STATUS_IDLE;
+      LOG(INFO) << "Reset Successful";
+
+      // also remove the reboot marker so that if the machine is rebooted
+      // after resetting to idle state, it doesn't go back to
+      // UPDATE_STATUS_UPDATED_NEED_REBOOT state.
+      const FilePath kUpdateCompletedMarkerPath(kUpdateCompletedMarker);
+      return file_util::Delete(kUpdateCompletedMarkerPath, false);
+    }
+
+    default:
+      LOG(ERROR) << "Reset not allowed in this state.";
+      return false;
   }
 }
 

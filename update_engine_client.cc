@@ -1,4 +1,4 @@
-// Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
+// Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -28,6 +28,7 @@ DEFINE_string(omaha_url, "", "The URL of the Omaha update server.");
 DEFINE_bool(reboot, false, "Initiate a reboot if needed.");
 DEFINE_bool(show_track, false, "Show the update track.");
 DEFINE_bool(status, false, "Print the status to stdout.");
+DEFINE_bool(reset_status, false, "Sets the status in update_engine to idle.");
 DEFINE_string(track, "", "Permanently change the update track.");
 DEFINE_bool(update, false, "Forces an update and waits for its completion. "
             "Exit status is 0 if the update succeeded, and 1 otherwise.");
@@ -80,6 +81,18 @@ static void StatusUpdateSignalHandler(DBusGProxy* proxy,
   LOG(INFO) << "  new_version: " << new_version;
   LOG(INFO) << "  new_size: " << new_size;
 }
+
+bool ResetStatus() {
+  DBusGProxy* proxy;
+  GError* error = NULL;
+
+  CHECK(GetProxy(&proxy));
+
+  gboolean rc =
+      org_chromium_UpdateEngineInterface_reset_status(proxy, &error);
+  return rc;
+}
+
 
 // If |op| is non-NULL, sets it to the current operation string or an
 // empty string if unable to obtain the current status.
@@ -250,6 +263,19 @@ int main(int argc, char** argv) {
   dbus_g_thread_init();
   chromeos_update_engine::Subprocess::Init();
   google::ParseCommandLineFlags(&argc, &argv, true);
+
+  // Update the status if requested.
+  if (FLAGS_reset_status) {
+    LOG(INFO) << "Setting Update Engine status to idle ...";
+    if (!ResetStatus()) {
+      LOG(ERROR) << "ResetStatus failed.";
+      return 1;
+    }
+
+    LOG(INFO) << "ResetStatus succeeded.";
+    return 0;
+  }
+
 
   if (FLAGS_status) {
     LOG(INFO) << "Querying Update Engine status...";

@@ -97,6 +97,13 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // Try to resume from a previously Terminate()d update.
   void ResumeUpdating();
 
+  // Resets the current state to UPDATE_STATUS_IDLE.
+  // Used by update_engine_client for restarting a new update without
+  // having to reboot once the previous update has reached
+  // UPDATE_STATUS_UPDATED_NEED_REBOOT state. This is used only
+  // for testing purposes.
+  bool ResetStatus();
+
   // Returns the current status in the out params. Returns true on success.
   bool GetStatus(int64_t* last_checked_time,
                  double* progress,

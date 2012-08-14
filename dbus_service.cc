@@ -100,6 +100,13 @@ gboolean update_engine_service_attempt_update(UpdateEngineService* self,
   return TRUE;
 }
 
+gboolean update_engine_service_reset_status(UpdateEngineService* self,
+                                            GError **error) {
+  *error = NULL;
+  return self->update_attempter_->ResetStatus();
+}
+
+
 gboolean update_engine_service_get_status(UpdateEngineService* self,
                                           int64_t* last_checked_time,
                                           double* progress,
