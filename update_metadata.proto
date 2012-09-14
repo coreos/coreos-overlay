@@ -62,7 +62,7 @@ package chromeos_update_engine;
 
 // Signatures: Updates may be signed by the OS vendor. The client verifies
 // an update's signature by hashing the entire download. The section of the
-// download the contains the signature is at the end of the file, so when
+// download that contains the signature is at the end of the file, so when
 // signing a file, only the part up to the signature part is signed.
 // Then, the client looks inside the download's Signatures message for a
 // Signature message that it knows how to handle. Generally, a client will
@@ -117,6 +117,13 @@ message DeltaArchiveManifest {
     // BSDIFF, because we need to fill in the rest of the last block
     // that bsdiff writes with '\0' bytes.
     optional uint64 dst_length = 7;
+
+    // Optional SHA 256 hash of the blob associated with this operation.
+    // This is used as a primary validation for http-based downloads and
+    // as a defense-in-depth validation for https-based downloads. If
+    // the operation doesn't refer to any blob, this field will have
+    // zero bytes.
+    optional bytes data_sha256_hash = 8;
   }
   repeated InstallOperation install_operations = 1;
   repeated InstallOperation kernel_install_operations = 2;
