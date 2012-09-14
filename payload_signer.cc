@@ -56,7 +56,7 @@ bool ConvertSignatureToProtobufBlob(const vector<vector<char> >& signatures,
   uint32_t version = kSignatureMessageOriginalVersion;
   LOG_IF(WARNING, kSignatureMessageCurrentVersion -
          kSignatureMessageOriginalVersion + 1 < signatures.size())
-      << "You may want to support clients in the rage ["
+      << "You may want to support clients in the range ["
       << kSignatureMessageOriginalVersion << ", "
       << kSignatureMessageCurrentVersion << "] inclusive, but you only "
       << "provided " << signatures.size() << " signatures.";
@@ -86,8 +86,11 @@ bool LoadPayload(const string& payload_path,
   // Loads the payload and parses the manifest.
   TEST_AND_RETURN_FALSE(utils::ReadFile(payload_path, &payload));
   LOG(INFO) << "Payload size: " << payload.size();
-  TEST_AND_RETURN_FALSE(DeltaPerformer::ParsePayloadMetadata(
-      payload, out_manifest, out_metadata_size) ==
+  ActionExitCode error = kActionCodeSuccess;
+  InstallPlan install_plan;
+  DeltaPerformer delta_performer(NULL, &install_plan);
+  TEST_AND_RETURN_FALSE(delta_performer.ParsePayloadMetadata(
+      payload, out_manifest, out_metadata_size, &error) ==
                         DeltaPerformer::kMetadataParseSuccess);
   LOG(INFO) << "Metadata size: " << *out_metadata_size;
   out_payload->swap(payload);
@@ -139,6 +142,7 @@ bool AddSignatureOpToPayload(const string& payload_path,
 bool PayloadSigner::SignHash(const vector<char>& hash,
                              const string& private_key_path,
                              vector<char>* out_signature) {
+  LOG(INFO) << "Signing hash with private key: " << private_key_path;
   string sig_path;
   TEST_AND_RETURN_FALSE(
       utils::MakeTempFile("/tmp/signature.XXXXXX", &sig_path, NULL));
@@ -217,11 +221,11 @@ bool PayloadSigner::SignatureBlobLength(const vector<string>& private_key_paths,
 bool PayloadSigner::VerifySignature(const std::vector<char>& signature_blob,
                                     const std::string& public_key_path,
                                     std::vector<char>* out_hash_data) {
-  return VerifySignatureVersion(signature_blob, public_key_path,
+  return VerifySignatureBlob(signature_blob, public_key_path,
                                 kSignatureMessageCurrentVersion, out_hash_data);
 }
 
-bool PayloadSigner::VerifySignatureVersion(
+bool PayloadSigner::VerifySignatureBlob(
     const std::vector<char>& signature_blob,
     const std::string& public_key_path,
     uint32_t client_version,
@@ -229,6 +233,7 @@ bool PayloadSigner::VerifySignatureVersion(
   TEST_AND_RETURN_FALSE(!public_key_path.empty());
 
   Signatures signatures;
+  LOG(INFO) << "signature size = " <<  signature_blob.size();
   TEST_AND_RETURN_FALSE(signatures.ParseFromArray(&signature_blob[0],
                                                   signature_blob.size()));
 
@@ -244,7 +249,17 @@ bool PayloadSigner::VerifySignatureVersion(
   TEST_AND_RETURN_FALSE(sig_index < signatures.signatures_size());
 
   const Signatures_Signature& signature = signatures.signatures(sig_index);
-  const string& sig_data = signature.data();
+  vector<char> sig_data(signature.data().begin(), signature.data().end());
+
+  return GetRawHashFromSignature(sig_data, public_key_path, out_hash_data);
+}
+
+
+bool PayloadSigner::GetRawHashFromSignature(
+    const std::vector<char>& sig_data,
+    const std::string& public_key_path,
+    std::vector<char>* out_hash_data) {
+  TEST_AND_RETURN_FALSE(!public_key_path.empty());
 
   // The code below executes the equivalent of:
   //
@@ -253,7 +268,11 @@ bool PayloadSigner::VerifySignatureVersion(
 
   // Loads the public key.
   FILE* fpubkey = fopen(public_key_path.c_str(), "rb");
-  TEST_AND_RETURN_FALSE(fpubkey != NULL);
+  if (!fpubkey) {
+    LOG(ERROR) << "Unable to open public key file: " << public_key_path;
+    return false;
+  }
+
   char dummy_password[] = { ' ', 0 };  // Ensure no password is read from stdin.
   RSA* rsa = PEM_read_RSA_PUBKEY(fpubkey, NULL, NULL, dummy_password);
   fclose(fpubkey);
@@ -298,7 +317,7 @@ bool PayloadSigner::VerifySignedPayload(const std::string& payload_path,
       payload.begin() + metadata_size + manifest.signatures_offset(),
       payload.end());
   vector<char> signed_hash;
-  TEST_AND_RETURN_FALSE(VerifySignatureVersion(
+  TEST_AND_RETURN_FALSE(VerifySignatureBlob(
       signature_blob, public_key_path, client_key_check_version, &signed_hash));
   TEST_AND_RETURN_FALSE(!signed_hash.empty());
   vector<char> hash;
@@ -368,5 +387,28 @@ bool PayloadSigner::PadRSA2048SHA256Hash(std::vector<char>* hash) {
   TEST_AND_RETURN_FALSE(hash->size() == 256);
   return true;
 }
+
+bool PayloadSigner::GetManifestSignature(const char* manifest,
+                                         size_t manifest_size,
+                                         const string& private_key_path,
+                                         string* out_signature) {
+  // Calculates the hash on the updated payload. Note that the payload includes
+  // the signature op but doesn't include the signature blob at the end.
+  vector<char> manifest_hash;
+  TEST_AND_RETURN_FALSE(OmahaHashCalculator::RawHashOfBytes(manifest,
+                                                            manifest_size,
+                                                            &manifest_hash));
+
+  vector<char> signature;
+  TEST_AND_RETURN_FALSE(SignHash(manifest_hash,
+                                 private_key_path,
+                                 &signature));
+
+  TEST_AND_RETURN_FALSE(OmahaHashCalculator::Base64Encode(&signature[0],
+                                                          signature.size(),
+                                                          out_signature));
+  return true;
+}
+
 
 }  // namespace chromeos_update_engine

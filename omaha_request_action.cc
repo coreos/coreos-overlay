@@ -494,6 +494,10 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
   output_object.more_info_url = XmlGetProperty(updatecheck_node, "MoreInfo");
   output_object.hash = XmlGetProperty(updatecheck_node, "sha256");
   output_object.size = ParseInt(XmlGetProperty(updatecheck_node, "size"));
+  output_object.manifest_size =
+      ParseInt(XmlGetProperty(updatecheck_node, "ManifestSize"));
+  output_object.manifest_signature =
+      XmlGetProperty(updatecheck_node, "ManifestSignatureRsa");
   output_object.needs_admin =
       XmlGetProperty(updatecheck_node, "needsadmin") == "true";
   output_object.prompt = XmlGetProperty(updatecheck_node, "Prompt") == "true";

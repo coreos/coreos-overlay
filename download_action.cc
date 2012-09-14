@@ -44,9 +44,7 @@ void DownloadAction::PerformAction() {
   if (writer_) {
     LOG(INFO) << "Using writer for test.";
   } else {
-    delta_performer_.reset(new DeltaPerformer(prefs_));
-    delta_performer_->set_current_kernel_hash(install_plan_.kernel_hash);
-    delta_performer_->set_current_rootfs_hash(install_plan_.rootfs_hash);
+    delta_performer_.reset(new DeltaPerformer(prefs_, &install_plan_));
     writer_ = delta_performer_.get();
   }
   int rc = writer_->Open(install_plan_.install_path.c_str(),
@@ -95,13 +93,13 @@ void DownloadAction::ReceivedBytes(HttpFetcher *fetcher,
                                    int length) {
   bytes_received_ += length;
   if (delegate_)
-    delegate_->BytesReceived(bytes_received_, install_plan_.size);
-  if (writer_ && !writer_->Write(bytes, length)) {
-    LOG(ERROR) << "Write error -- terminating processing.";
+    delegate_->BytesReceived(bytes_received_, install_plan_.payload_size);
+  if (writer_ && !writer_->Write(bytes, length, &code_)) {
+    LOG(ERROR) << "Error " << code_ << " in DeltaPerformer's Write method when "
+               << "processing the received payload -- Terminating processing";
     // Don't tell the action processor that the action is complete until we get
     // the TransferTerminated callback. Otherwise, this and the HTTP fetcher
     // objects may get destroyed before all callbacks are complete.
-    code_ = kActionCodeDownloadWriteError;
     TerminateProcessing();
     return;
   }
@@ -118,9 +116,8 @@ void DownloadAction::TransferComplete(HttpFetcher *fetcher, bool successful) {
   ActionExitCode code =
       successful ? kActionCodeSuccess : kActionCodeDownloadTransferError;
   if (code == kActionCodeSuccess && delta_performer_.get()) {
-    code = delta_performer_->VerifyPayload("",
-                                           install_plan_.download_hash,
-                                           install_plan_.size);
+    code = delta_performer_->VerifyPayload(install_plan_.payload_hash,
+                                           install_plan_.payload_size);
     if (code != kActionCodeSuccess) {
       LOG(ERROR) << "Download of " << install_plan_.download_url
                  << " failed due to payload verification error.";

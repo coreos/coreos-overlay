@@ -319,7 +319,7 @@ class UpdateAttempter : public ActionProcessorDelegate,
   double download_progress_;
   int64_t last_checked_time_;
   std::string new_version_;
-  int64_t new_size_;
+  int64_t new_payload_size_;
 
   // Device paramaters common to all Omaha requests.
   OmahaRequestDeviceParams omaha_request_params_;

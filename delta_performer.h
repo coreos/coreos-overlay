@@ -13,6 +13,7 @@
 #include <gtest/gtest_prod.h>  // for FRIEND_TEST
 
 #include "update_engine/file_writer.h"
+#include "update_engine/install_plan.h"
 #include "update_engine/omaha_hash_calculator.h"
 #include "update_engine/update_metadata.pb.h"
 
@@ -33,8 +34,9 @@ class DeltaPerformer : public FileWriter {
 
   static const char kUpdatePayloadPublicKeyPath[];
 
-  DeltaPerformer(PrefsInterface* prefs)
+  DeltaPerformer(PrefsInterface* prefs, InstallPlan* install_plan)
       : prefs_(prefs),
+        install_plan_(install_plan),
         fd_(-1),
         kernel_fd_(-1),
         manifest_valid_(false),
@@ -42,7 +44,8 @@ class DeltaPerformer : public FileWriter {
         next_operation_num_(0),
         buffer_offset_(0),
         last_updated_buffer_offset_(kuint64max),
-        block_size_(0) {}
+        block_size_(0),
+        public_key_path_(kUpdatePayloadPublicKeyPath) {}
 
   // Opens the kernel. Should be called before or after Open(), but before
   // Write(). The kernel file will be close()d when Close() is called.
@@ -52,24 +55,29 @@ class DeltaPerformer : public FileWriter {
   // Open()ed again.
   int Open(const char* path, int flags, mode_t mode);
 
-  // Wrapper around write. Returns true if all requested bytes
-  // were written, or false on any error, reguardless of progress.
-  bool Write(const void* bytes, size_t count);
+  // FileWriter's Write implementation where caller doesn't care about
+  // error codes.
+  bool Write(const void* bytes, size_t count) {
+    ActionExitCode error;
+    return Write(bytes, count, &error);
+  }
+
+  // FileWriter's Write implementation that returns a more specific |error| code
+  // in case of failures in Write operation.
+  bool Write(const void* bytes, size_t count, ActionExitCode *error);
 
   // Wrapper around close. Returns 0 on success or -errno on error.
   // Closes both 'path' given to Open() and the kernel path.
   int Close();
 
   // Verifies the downloaded payload against the signed hash included in the
-  // payload, against the update check hash and size, and against the public
-  // key and returns kActionCodeSuccess on success, an error code on failure.
-  // This method should be called after closing the stream. Note this method
-  // skips the signed hash check if the public key is unavailable; it returns
-  // kActionCodeSignedDeltaPayloadExpectedError if the public key
-  // is available but the delta payload doesn't include a signature. If
-  // |public_key_path| is an empty string, uses the default public key path.
-  ActionExitCode VerifyPayload(const std::string& public_key_path,
-                               const std::string& update_check_response_hash,
+  // payload, against the update check hash (which is in base64 format)  and
+  // size using the public key and returns kActionCodeSuccess on success, an
+  // error code on failure.  This method should be called after closing the
+  // stream. Note this method skips the signed hash check if the public key is
+  // unavailable; it returns kActionCodeSignedDeltaPayloadExpectedError if the
+  // public key is available but the delta payload doesn't include a signature.
+  ActionExitCode VerifyPayload(const std::string& update_check_response_hash,
                                const uint64_t update_check_response_size);
 
   // Reads from the update manifest the expected sizes and hashes of the target
@@ -115,17 +123,14 @@ class DeltaPerformer : public FileWriter {
   // returns kMetadataParseSuccess. Returns kMetadataParseInsufficientData if
   // more data is needed to parse the complete metadata. Returns
   // kMetadataParseError if the metadata can't be parsed given the payload.
-  static MetadataParseResult ParsePayloadMetadata(
+  MetadataParseResult ParsePayloadMetadata(
       const std::vector<char>& payload,
       DeltaArchiveManifest* manifest,
-      uint64_t* metadata_size);
+      uint64_t* metadata_size,
+      ActionExitCode* error);
 
-  void set_current_kernel_hash(const std::vector<char>& hash) {
-    current_kernel_hash_ = hash;
-  }
-
-  void set_current_rootfs_hash(const std::vector<char>& hash) {
-    current_rootfs_hash_ = hash;
+  void set_public_key_path(const std::string& public_key_path) {
+    public_key_path_ = public_key_path;
   }
 
  private:
@@ -145,6 +150,23 @@ class DeltaPerformer : public FileWriter {
   // to be able to perform a given install operation.
   bool CanPerformInstallOperation(
       const DeltaArchiveManifest_InstallOperation& operation);
+
+  // Validates that the hash of the blobs corresponding to the given |operation|
+  // matches what's specified in the manifest in the payload.
+  // Returns kActionCodeSuccess on match or a suitable error code otherwise.
+  ActionExitCode ValidateOperationHash(
+      const DeltaArchiveManifest_InstallOperation& operation);
+
+  // Interprets the given |protobuf| as a DeltaArchiveManifest protocol buffer
+  // of the given protobuf_length and verifies that the signed hash of the
+  // manifest matches what's specified in the install plan from Omaha.
+  // Returns kActionCodeSuccess on match or a suitable error code otherwise.
+  // This method must be called before any part of the |protobuf| is parsed
+  // so that a man-in-the-middle attack on the SSL connection to the payload
+  // server doesn't exploit any vulnerability in the code that parses the
+  // protocol buffer.
+  ActionExitCode ValidateManifestSignature(const char* protobuf,
+                                           uint64_t protobuf_length);
 
   // Returns true on success.
   bool PerformInstallOperation(
@@ -181,6 +203,9 @@ class DeltaPerformer : public FileWriter {
 
   // Update Engine preference store.
   PrefsInterface* prefs_;
+
+  // Install Plan based on Omaha Response.
+  InstallPlan* install_plan_;
 
   // File descriptor of open device.
   int fd_;
@@ -221,10 +246,9 @@ class DeltaPerformer : public FileWriter {
   // Signatures message blob extracted directly from the payload.
   std::vector<char> signatures_message_data_;
 
-  // Hashes for the current partitions to be used for source partition
-  // verification.
-  std::vector<char> current_kernel_hash_;
-  std::vector<char> current_rootfs_hash_;
+  // The public key to be used. Provided as a member so that tests can
+  // override with test keys.
+  std::string public_key_path_;
 
   DISALLOW_COPY_AND_ASSIGN(DeltaPerformer);
 };

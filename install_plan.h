@@ -18,26 +18,33 @@ namespace chromeos_update_engine {
 struct InstallPlan {
   InstallPlan(bool is_resume,
               const std::string& url,
-              uint64_t size,
-              const std::string& hash,
+              uint64_t payload_size,
+              const std::string& payload_hash,
+              uint64_t manifest_size,
+              const std::string& manifest_signature,
               const std::string& install_path,
               const std::string& kernel_install_path)
       : is_resume(is_resume),
         download_url(url),
-        size(size),
-        download_hash(hash),
+        payload_size(payload_size),
+        payload_hash(payload_hash),
+        manifest_size(manifest_size),
+        manifest_signature(manifest_signature),
         install_path(install_path),
         kernel_install_path(kernel_install_path),
         kernel_size(0),
         rootfs_size(0) {}
-  InstallPlan() : is_resume(false), size(0) {}
+  InstallPlan() : is_resume(false), payload_size(0), manifest_size(0) {}
 
   bool is_resume;
   std::string download_url;  // url to download from
-  uint64_t size;  // size of the download url's data
-  std::string download_hash;  // hash of the data at the url
-  std::string install_path;  // path to install device
-  std::string kernel_install_path;  // path to kernel install device
+
+  uint64_t payload_size;                 // size of the payload
+  std::string payload_hash ;             // SHA256 hash of the payload
+  uint64_t manifest_size;                // size of the manifest
+  std::string manifest_signature;        // signature of the manifest
+  std::string install_path;              // path to install device
+  std::string kernel_install_path;       // path to kernel install device
 
   // The fields below are used for kernel and rootfs verification. The flow is:
   //
@@ -58,8 +65,10 @@ struct InstallPlan {
   bool operator==(const InstallPlan& that) const {
     return ((is_resume == that.is_resume) &&
             (download_url == that.download_url) &&
-            (size == that.size) &&
-            (download_hash == that.download_hash) &&
+            (payload_size == that.payload_size) &&
+            (payload_hash == that.payload_hash) &&
+            (manifest_size == that.manifest_size) &&
+            (manifest_signature == that.manifest_signature) &&
             (install_path == that.install_path) &&
             (kernel_install_path == that.kernel_install_path));
   }
@@ -70,8 +79,10 @@ struct InstallPlan {
     LOG(INFO) << "InstallPlan: "
               << (is_resume ? ", resume" : ", new_update")
               << ", url: " << download_url
-              << ", size: " << size
-              << ", hash: " << download_hash
+              << ", payload size: " << payload_size
+              << ", payload hash: " << payload_hash
+              << ", manifest size: " << manifest_size
+              << ", manifest signature: " << manifest_signature
               << ", install_path: " << install_path
               << ", kernel_install_path: " << kernel_install_path;
   }

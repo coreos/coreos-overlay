@@ -64,11 +64,22 @@ class PayloadSigner {
                               const std::string& public_key_path,
                               std::vector<char>* out_hash_data);
 
-  // Same as previous function, but the client version can be set.
-  static bool VerifySignatureVersion(const std::vector<char>& signature_blob,
-                                     const std::string& public_key_path,
-                                     uint32_t client_version,
-                                     std::vector<char>* out_hash_data);
+  // Interprets signature_blob as a protocol buffer containing the Signatures
+  // message and decrypts the signature data using the public_key_path and
+  // stores the resultant raw hash data in out_hash_data. Returns true if
+  // everything is successful. False otherwise. It also takes the client_version
+  // and interprets the signature blob according to that version.
+  static bool VerifySignatureBlob(const std::vector<char>& signature_blob,
+                                  const std::string& public_key_path,
+                                  uint32_t client_version,
+                                  std::vector<char>* out_hash_data);
+
+  // Decrypts sig_data with the given public_key_path and populates
+  // out_hash_data with the decoded raw hash. Returns true if successful,
+  // false otherwise.
+  static bool GetRawHashFromSignature(const std::vector<char>& sig_data,
+                                      const std::string& public_key_path,
+                                      std::vector<char>* out_hash_data);
 
   // Returns true if the payload in |payload_path| is signed and its hash can be
   // verified using the public key in |public_key_path| with the signature
@@ -83,6 +94,12 @@ class PayloadSigner {
   // will be modified in place and will result in having a length of
   // 2048 bits. Returns true on success, false otherwise.
   static bool PadRSA2048SHA256Hash(std::vector<char>* hash);
+
+  static bool GetManifestSignature(const char* manifest,
+                                   size_t manifest_size,
+                                   const std::string& private_key_path,
+                                   std::string* out_signature);
+
  private:
   // This should never be constructed
   DISALLOW_IMPLICIT_CONSTRUCTORS(PayloadSigner);

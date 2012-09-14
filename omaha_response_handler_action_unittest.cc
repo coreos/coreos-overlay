@@ -104,7 +104,7 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     InstallPlan install_plan;
     EXPECT_TRUE(DoTest(in, "/dev/sda3", &install_plan));
     EXPECT_EQ(in.codebase, install_plan.download_url);
-    EXPECT_EQ(in.hash, install_plan.download_hash);
+    EXPECT_EQ(in.hash, install_plan.payload_hash);
     EXPECT_EQ("/dev/sda5", install_plan.install_path);
     string deadline;
     EXPECT_TRUE(utils::ReadFile(
@@ -130,7 +130,7 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     InstallPlan install_plan;
     EXPECT_TRUE(DoTest(in, "/dev/sda5", &install_plan));
     EXPECT_EQ(in.codebase, install_plan.download_url);
-    EXPECT_EQ(in.hash, install_plan.download_hash);
+    EXPECT_EQ(in.hash, install_plan.payload_hash);
     EXPECT_EQ("/dev/sda3", install_plan.install_path);
     string deadline;
     EXPECT_TRUE(utils::ReadFile(
@@ -151,7 +151,7 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     InstallPlan install_plan;
     EXPECT_TRUE(DoTest(in, "/dev/sda3", &install_plan));
     EXPECT_EQ(in.codebase, install_plan.download_url);
-    EXPECT_EQ(in.hash, install_plan.download_hash);
+    EXPECT_EQ(in.hash, install_plan.payload_hash);
     EXPECT_EQ("/dev/sda5", install_plan.install_path);
     string deadline;
     EXPECT_TRUE(utils::ReadFile(
@@ -167,7 +167,7 @@ TEST_F(OmahaResponseHandlerActionTest, NoUpdatesTest) {
   InstallPlan install_plan;
   EXPECT_FALSE(DoTest(in, "/dev/sda1", &install_plan));
   EXPECT_EQ("", install_plan.download_url);
-  EXPECT_EQ("", install_plan.download_hash);
+  EXPECT_EQ("", install_plan.payload_hash);
   EXPECT_EQ("", install_plan.install_path);
 }
 

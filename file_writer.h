@@ -10,6 +10,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include "base/logging.h"
+#include "update_engine/action_processor.h"
 #include "update_engine/utils.h"
 
 // FileWriter is a class that is used to (synchronously, for now) write to
@@ -30,6 +31,17 @@ class FileWriter {
   // Wrapper around write. Returns true if all requested bytes
   // were written, or false on any error, reguardless of progress.
   virtual bool Write(const void* bytes, size_t count) = 0;
+
+  // Same as the Write method above but returns a detailed |error| code
+  // in addition if the returned value is false. By default this method
+  // returns kActionExitDownloadWriteError as the error code, but subclasses
+  // can override if they wish to return more specific error codes.
+  virtual bool Write(const void* bytes,
+                     size_t count,
+                     ActionExitCode* error) {
+     *error = kActionCodeDownloadWriteError;
+     return Write(bytes, count);
+  }
 
   // Wrapper around close. Returns 0 on success or -errno on error.
   virtual int Close() = 0;

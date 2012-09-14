@@ -34,8 +34,10 @@ void OmahaResponseHandlerAction::PerformAction() {
     return;
   }
   install_plan_.download_url = response.codebase;
-  install_plan_.size = response.size;
-  install_plan_.download_hash = response.hash;
+  install_plan_.payload_size = response.size;
+  install_plan_.payload_hash = response.hash;
+  install_plan_.manifest_size = response.manifest_size;
+  install_plan_.manifest_signature = response.manifest_signature;
 
   install_plan_.is_resume =
       DeltaPerformer::CanResumeUpdate(prefs_, response.hash);

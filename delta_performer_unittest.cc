@@ -465,18 +465,17 @@ void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop,
   }
 
   // Update the A image in place.
-  DeltaPerformer performer(&prefs);
+  InstallPlan install_plan;
+  DeltaPerformer performer(&prefs, &install_plan);
+  EXPECT_TRUE(utils::FileExists(kUnittestPublicKeyPath));
+  performer.set_public_key_path(kUnittestPublicKeyPath);
 
-  vector<char> rootfs_hash;
   EXPECT_EQ(image_size,
             OmahaHashCalculator::RawHashOfFile(a_img,
                                                image_size,
-                                               &rootfs_hash));
-  performer.set_current_rootfs_hash(rootfs_hash);
-  vector<char> kernel_hash;
+                                               &install_plan.rootfs_hash));
   EXPECT_TRUE(OmahaHashCalculator::RawHashOfData(old_kernel_data,
-                                                 &kernel_hash));
-  performer.set_current_kernel_hash(kernel_hash);
+                                                 &install_plan.kernel_hash));
 
   EXPECT_EQ(0, performer.Open(a_img.c_str(), 0, 0));
   EXPECT_TRUE(performer.OpenKernel(old_kernel.c_str()));
@@ -499,7 +498,6 @@ void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop,
   EXPECT_EQ(0, strncmp(&updated_kernel_partition[0], new_data_string,
                        strlen(new_data_string)));
 
-  EXPECT_TRUE(utils::FileExists(kUnittestPublicKeyPath));
   ActionExitCode expect_verify_result = kActionCodeSuccess;
   switch (signature_test) {
     case kSignatureNone:
@@ -511,13 +509,286 @@ void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop,
     default: break;  // appease gcc
   }
   EXPECT_EQ(expect_verify_result, performer.VerifyPayload(
-      kUnittestPublicKeyPath,
       OmahaHashCalculator::OmahaHashOfData(delta),
       delta.size()));
+
+  performer.set_public_key_path("/public/key/does/not/exists");
   EXPECT_EQ(kActionCodeSuccess, performer.VerifyPayload(
-      "/public/key/does/not/exists",
       OmahaHashCalculator::OmahaHashOfData(delta),
       delta.size()));
+
+  uint64_t new_kernel_size;
+  vector<char> new_kernel_hash;
+  uint64_t new_rootfs_size;
+  vector<char> new_rootfs_hash;
+  EXPECT_TRUE(performer.GetNewPartitionInfo(&new_kernel_size,
+                                            &new_kernel_hash,
+                                            &new_rootfs_size,
+                                            &new_rootfs_hash));
+  EXPECT_EQ(4096, new_kernel_size);
+  vector<char> expected_new_kernel_hash;
+  EXPECT_TRUE(OmahaHashCalculator::RawHashOfData(new_kernel_data,
+                                                 &expected_new_kernel_hash));
+  EXPECT_TRUE(expected_new_kernel_hash == new_kernel_hash);
+  EXPECT_EQ(image_size, new_rootfs_size);
+  vector<char> expected_new_rootfs_hash;
+  EXPECT_EQ(image_size,
+            OmahaHashCalculator::RawHashOfFile(b_img,
+                                               image_size,
+                                               &expected_new_rootfs_hash));
+  EXPECT_TRUE(expected_new_rootfs_hash == new_rootfs_hash);
+}
+
+// TODO(jaysri): Refactor the previous unit test so we can reuse a lot of
+// code between these two methods.
+void DoManifestTest() {
+  bool full_kernel = false;
+  bool full_rootfs = false;
+  string a_img, b_img;
+  EXPECT_TRUE(utils::MakeTempFile("/tmp/a_img.XXXXXX", &a_img, NULL));
+  ScopedPathUnlinker a_img_unlinker(a_img);
+  EXPECT_TRUE(utils::MakeTempFile("/tmp/b_img.XXXXXX", &b_img, NULL));
+  ScopedPathUnlinker b_img_unlinker(b_img);
+
+  CreateExtImageAtPath(a_img, NULL);
+
+  int image_size = static_cast<int>(utils::FileSize(a_img));
+
+  // Extend the "partitions" holding the file system a bit.
+  EXPECT_EQ(0, System(base::StringPrintf(
+      "dd if=/dev/zero of=%s seek=%d bs=1 count=1",
+      a_img.c_str(),
+      image_size + 1024 * 1024 - 1)));
+  EXPECT_EQ(image_size + 1024 * 1024, utils::FileSize(a_img));
+
+  // Make some changes to the A image.
+  {
+    string a_mnt;
+    ScopedLoopMounter b_mounter(a_img, &a_mnt, 0);
+
+    EXPECT_TRUE(utils::WriteFile(StringPrintf("%s/hardtocompress",
+                                              a_mnt.c_str()).c_str(),
+                                 reinterpret_cast<const char*>(kRandomString),
+                                 sizeof(kRandomString) - 1));
+    // Write 1 MiB of 0xff to try to catch the case where writing a bsdiff
+    // patch fails to zero out the final block.
+    vector<char> ones(1024 * 1024, 0xff);
+    EXPECT_TRUE(utils::WriteFile(StringPrintf("%s/ones",
+                                              a_mnt.c_str()).c_str(),
+                                 &ones[0],
+                                 ones.size()));
+  }
+
+  {
+    CreateExtImageAtPath(b_img, NULL);
+    EXPECT_EQ(0, System(base::StringPrintf(
+        "dd if=/dev/zero of=%s seek=%d bs=1 count=1",
+        b_img.c_str(),
+        image_size + 1024 * 1024 - 1)));
+    EXPECT_EQ(image_size + 1024 * 1024, utils::FileSize(b_img));
+
+    // Make some changes to the B image.
+    string b_mnt;
+    ScopedLoopMounter b_mounter(b_img, &b_mnt, 0);
+
+    EXPECT_EQ(0, system(StringPrintf("cp %s/hello %s/hello2", b_mnt.c_str(),
+                                     b_mnt.c_str()).c_str()));
+    EXPECT_EQ(0, system(StringPrintf("rm %s/hello", b_mnt.c_str()).c_str()));
+    EXPECT_EQ(0, system(StringPrintf("mv %s/hello2 %s/hello", b_mnt.c_str(),
+                                     b_mnt.c_str()).c_str()));
+    EXPECT_EQ(0, system(StringPrintf("echo foo > %s/foo",
+                                     b_mnt.c_str()).c_str()));
+    EXPECT_EQ(0, system(StringPrintf("touch %s/emptyfile",
+                                     b_mnt.c_str()).c_str()));
+    EXPECT_TRUE(WriteSparseFile(StringPrintf("%s/fullsparse", b_mnt.c_str()),
+                                1024 * 1024));
+    EXPECT_EQ(0, system(StringPrintf("dd if=/dev/zero of=%s/partsparese bs=1 "
+                                     "seek=4096 count=1",
+                                     b_mnt.c_str()).c_str()));
+    EXPECT_EQ(0, system(StringPrintf("cp %s/srchardlink0 %s/tmp && "
+                                     "mv %s/tmp %s/srchardlink1",
+                                     b_mnt.c_str(), b_mnt.c_str(),
+                                     b_mnt.c_str(), b_mnt.c_str()).c_str()));
+    EXPECT_EQ(0, system(StringPrintf("rm %s/boguslink && "
+                                     "echo foobar > %s/boguslink",
+                                     b_mnt.c_str(), b_mnt.c_str()).c_str()));
+    EXPECT_TRUE(utils::WriteFile(StringPrintf("%s/hardtocompress",
+                                              b_mnt.c_str()).c_str(),
+                                 reinterpret_cast<const char*>(kRandomString),
+                                 sizeof(kRandomString)));
+  }
+
+  string old_kernel;
+  EXPECT_TRUE(utils::MakeTempFile("/tmp/old_kernel.XXXXXX", &old_kernel, NULL));
+  ScopedPathUnlinker old_kernel_unlinker(old_kernel);
+
+  string new_kernel;
+  EXPECT_TRUE(utils::MakeTempFile("/tmp/new_kernel.XXXXXX", &new_kernel, NULL));
+  ScopedPathUnlinker new_kernel_unlinker(new_kernel);
+
+  vector<char> old_kernel_data(4096);  // Something small for a test
+  vector<char> new_kernel_data(old_kernel_data.size());
+  FillWithData(&old_kernel_data);
+  FillWithData(&new_kernel_data);
+
+  // change the new kernel data
+  const char* new_data_string = "This is new data.";
+  strcpy(&new_kernel_data[0], new_data_string);
+
+  // Write kernels to disk
+  EXPECT_TRUE(utils::WriteFile(
+      old_kernel.c_str(), &old_kernel_data[0], old_kernel_data.size()));
+  EXPECT_TRUE(utils::WriteFile(
+      new_kernel.c_str(), &new_kernel_data[0], new_kernel_data.size()));
+
+  string delta_path;
+  EXPECT_TRUE(utils::MakeTempFile("/tmp/delta.XXXXXX", &delta_path, NULL));
+  LOG(INFO) << "delta path: " << delta_path;
+  ScopedPathUnlinker delta_path_unlinker(delta_path);
+  {
+    string a_mnt, b_mnt;
+    ScopedLoopMounter a_mounter(a_img, &a_mnt, MS_RDONLY);
+    ScopedLoopMounter b_mounter(b_img, &b_mnt, MS_RDONLY);
+    const string private_key = kUnittestPrivateKeyPath;
+    EXPECT_TRUE(
+        DeltaDiffGenerator::GenerateDeltaUpdateFile(
+            full_rootfs ? "" : a_mnt,
+            full_rootfs ? "" : a_img,
+            b_mnt,
+            b_img,
+            full_kernel ? "" : old_kernel,
+            new_kernel,
+            delta_path,
+            private_key));
+  }
+
+  // Read delta into memory.
+  vector<char> delta;
+  EXPECT_TRUE(utils::ReadFile(delta_path, &delta));
+
+  uint64_t manifest_metadata_size;
+  const int kManifestSizeOffset = 12;
+  const int kManifestOffset = 20;
+  // Check the metadata.
+  {
+    LOG(INFO) << "delta size: " << delta.size();
+    DeltaArchiveManifest manifest;
+    uint64_t manifest_size = 0;
+    memcpy(&manifest_size, &delta[kManifestSizeOffset], sizeof(manifest_size));
+    manifest_size = be64toh(manifest_size);
+    LOG(INFO) << "manifest size: " << manifest_size;
+    EXPECT_TRUE(manifest.ParseFromArray(&delta[kManifestOffset],
+                                        manifest_size));
+    manifest_metadata_size = kManifestOffset + manifest_size;
+
+    {
+      EXPECT_TRUE(manifest.has_signatures_offset());
+      EXPECT_TRUE(manifest.has_signatures_size());
+      Signatures sigs_message;
+      EXPECT_TRUE(sigs_message.ParseFromArray(
+          &delta[manifest_metadata_size + manifest.signatures_offset()],
+          manifest.signatures_size()));
+      EXPECT_EQ(1, sigs_message.signatures_size());
+      const Signatures_Signature& signature = sigs_message.signatures(0);
+      EXPECT_EQ(1, signature.version());
+
+      uint64_t expected_sig_data_length = 0;
+      vector<string> key_paths (1, kUnittestPrivateKeyPath);
+      EXPECT_TRUE(PayloadSigner::SignatureBlobLength(
+          key_paths,
+          &expected_sig_data_length));
+      EXPECT_EQ(expected_sig_data_length, manifest.signatures_size());
+      EXPECT_FALSE(signature.data().empty());
+    }
+
+    if (full_kernel) {
+      EXPECT_FALSE(manifest.has_old_kernel_info());
+    } else {
+      EXPECT_EQ(old_kernel_data.size(), manifest.old_kernel_info().size());
+      EXPECT_FALSE(manifest.old_kernel_info().hash().empty());
+    }
+
+    if (full_rootfs) {
+      EXPECT_FALSE(manifest.has_old_rootfs_info());
+    } else {
+      EXPECT_EQ(image_size, manifest.old_rootfs_info().size());
+      EXPECT_FALSE(manifest.old_rootfs_info().hash().empty());
+    }
+
+    EXPECT_EQ(new_kernel_data.size(), manifest.new_kernel_info().size());
+    EXPECT_EQ(image_size, manifest.new_rootfs_info().size());
+
+    EXPECT_FALSE(manifest.new_kernel_info().hash().empty());
+    EXPECT_FALSE(manifest.new_rootfs_info().hash().empty());
+
+  }
+
+  PrefsMock prefs;
+  EXPECT_CALL(prefs, SetInt64(kPrefsManifestMetadataSize,
+                              manifest_metadata_size)).WillOnce(Return(true));
+  EXPECT_CALL(prefs, SetInt64(kPrefsUpdateStateNextOperation, _))
+      .WillRepeatedly(Return(true));
+  EXPECT_CALL(prefs, GetInt64(kPrefsUpdateStateNextOperation, _))
+      .WillOnce(Return(false));
+  EXPECT_CALL(prefs, SetInt64(kPrefsUpdateStateNextDataOffset, _))
+      .WillRepeatedly(Return(true));
+  EXPECT_CALL(prefs, SetString(kPrefsUpdateStateSHA256Context, _))
+      .WillRepeatedly(Return(true));
+  EXPECT_CALL(prefs, SetString(kPrefsUpdateStateSignedSHA256Context, _))
+      .WillRepeatedly(Return(true));
+  EXPECT_CALL(prefs, SetString(kPrefsUpdateStateSignatureBlob, _))
+      .WillOnce(Return(true));
+
+  // Update the A image in place.
+  InstallPlan install_plan;
+  install_plan.manifest_size = manifest_metadata_size;
+  LOG(INFO) << "Setting Omaha manifest size = " << manifest_metadata_size;
+  ASSERT_TRUE(PayloadSigner::GetManifestSignature(
+      &delta[kManifestOffset],
+      manifest_metadata_size-kManifestOffset,
+      kUnittestPrivateKeyPath,
+      &install_plan.manifest_signature));
+  EXPECT_FALSE(install_plan.manifest_signature.empty());
+
+  DeltaPerformer performer(&prefs, &install_plan);
+  EXPECT_TRUE(utils::FileExists(kUnittestPublicKeyPath));
+  performer.set_public_key_path(kUnittestPublicKeyPath);
+
+  EXPECT_EQ(image_size,
+            OmahaHashCalculator::RawHashOfFile(a_img,
+                                               image_size,
+                                               &install_plan.rootfs_hash));
+  EXPECT_TRUE(OmahaHashCalculator::RawHashOfData(old_kernel_data,
+                                                 &install_plan.kernel_hash));
+
+  EXPECT_EQ(0, performer.Open(a_img.c_str(), 0, 0));
+  EXPECT_TRUE(performer.OpenKernel(old_kernel.c_str()));
+
+  // Write at some number of bytes per operation. Arbitrarily chose 5.
+  const size_t kBytesPerWrite = 5;
+  for (size_t i = 0; i < delta.size(); i += kBytesPerWrite) {
+    size_t count = min(delta.size() - i, kBytesPerWrite);
+    EXPECT_TRUE(performer.Write(&delta[i], count));
+  }
+
+  // Wrapper around close. Returns 0 on success or -errno on error.
+  EXPECT_EQ(0, performer.Close());
+
+  CompareFilesByBlock(old_kernel, new_kernel);
+  CompareFilesByBlock(a_img, b_img);
+
+  vector<char> updated_kernel_partition;
+  EXPECT_TRUE(utils::ReadFile(old_kernel, &updated_kernel_partition));
+  EXPECT_EQ(0, strncmp(&updated_kernel_partition[0], new_data_string,
+                       strlen(new_data_string)));
+
+  ActionExitCode expect_verify_result = kActionCodeSuccess;
+  LOG(INFO) << "Verifying Payload ...";
+  EXPECT_EQ(expect_verify_result, performer.VerifyPayload(
+      OmahaHashCalculator::OmahaHashOfData(delta),
+      delta.size()));
+
+  LOG(INFO) << "Verified Payload";
 
   uint64_t new_kernel_size;
   vector<char> new_kernel_hash;
@@ -584,7 +855,8 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageSignGeneratedShellRotateCl2Test) {
 
 TEST(DeltaPerformerTest, BadDeltaMagicTest) {
   PrefsMock prefs;
-  DeltaPerformer performer(&prefs);
+  InstallPlan install_plan;
+  DeltaPerformer performer(&prefs, &install_plan);
   EXPECT_EQ(0, performer.Open("/dev/null", 0, 0));
   EXPECT_TRUE(performer.OpenKernel("/dev/null"));
   EXPECT_TRUE(performer.Write("junk", 4));
@@ -608,5 +880,10 @@ TEST(DeltaPerformerTest, IsIdempotentOperationTest) {
   *(op.add_src_extents()) = ExtentForRange(19, 2);
   EXPECT_FALSE(DeltaPerformer::IsIdempotentOperation(op));
 }
+
+TEST(DeltaPerformerTest, RunAsRootRunValidManifestTest) {
+  DoManifestTest();
+}
+
 
 }  // namespace chromeos_update_engine

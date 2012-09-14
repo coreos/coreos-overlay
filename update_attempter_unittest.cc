@@ -63,7 +63,7 @@ class UpdateAttempterTest : public ::testing::Test {
     EXPECT_EQ(0.0, attempter_.download_progress_);
     EXPECT_EQ(0, attempter_.last_checked_time_);
     EXPECT_EQ("0.0.0.0", attempter_.new_version_);
-    EXPECT_EQ(0, attempter_.new_size_);
+    EXPECT_EQ(0, attempter_.new_payload_size_);
     processor_ = new ActionProcessorMock();
     attempter_.processor_.reset(processor_);  // Transfers ownership.
     attempter_.prefs_ = &prefs_;

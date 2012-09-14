@@ -199,16 +199,28 @@ void LogPartitionInfo(const DeltaArchiveManifest& manifest) {
 DeltaPerformer::MetadataParseResult DeltaPerformer::ParsePayloadMetadata(
     const std::vector<char>& payload,
     DeltaArchiveManifest* manifest,
-    uint64_t* metadata_size) {
-  if (payload.size() < strlen(kDeltaMagic) +
-      kDeltaVersionLength + kDeltaProtobufLengthLength) {
+    uint64_t* metadata_size,
+    ActionExitCode* error) {
+  *error = kActionCodeSuccess;
+
+  const uint64_t protobuf_offset = strlen(kDeltaMagic) + kDeltaVersionLength +
+                                   kDeltaProtobufLengthLength;
+  if (payload.size() < protobuf_offset) {
     // Don't have enough bytes to know the protobuf length.
     return kMetadataParseInsufficientData;
   }
+
+  // Validate the magic number.
   if (memcmp(payload.data(), kDeltaMagic, strlen(kDeltaMagic)) != 0) {
     LOG(ERROR) << "Bad payload format -- invalid delta magic.";
+    *error = kActionCodeDownloadInvalidManifest;
     return kMetadataParseError;
   }
+
+  // TODO(jaysri): Compare the version number and skip unknown manifest
+  // versions. We don't check the version at all today.
+
+  // Next, parse the proto buf length.
   uint64_t protobuf_length;
   COMPILE_ASSERT(sizeof(protobuf_length) == kDeltaProtobufLengthLength,
                  protobuf_length_size_mismatch);
@@ -216,33 +228,83 @@ DeltaPerformer::MetadataParseResult DeltaPerformer::ParsePayloadMetadata(
          &payload[strlen(kDeltaMagic) + kDeltaVersionLength],
          kDeltaProtobufLengthLength);
   protobuf_length = be64toh(protobuf_length);  // switch big endian to host
-  if (payload.size() < strlen(kDeltaMagic) + kDeltaVersionLength +
-      kDeltaProtobufLengthLength + protobuf_length) {
+
+  // Now, check if the metasize we computed matches what was passed in
+  // through Omaha Response.
+  *metadata_size = protobuf_offset + protobuf_length;
+
+  // If the manifest size is present in install plan, check for it immediately
+  // even before waiting for that many number of bytes to be downloaded
+  // in the payload. This will prevent any attack which relies on us downloading
+  // data beyond the expected manifest size.
+  if (install_plan_->manifest_size > 0 &&
+      install_plan_->manifest_size != *metadata_size) {
+      LOG(ERROR) << "Invalid manifest size. Expected = "
+                 << install_plan_->manifest_size
+                 << "Actual = " << *metadata_size;
+      // TODO(jaysri): Add a UMA Stat here to help with the decision to enforce
+      // this check in a future release, as mentioned below.
+
+      // TODO(jaysri): VALIDATION: Initially we don't want to make this a fatal
+      // error.  But in the next release, we should uncomment the lines below.
+      // *error = kActionCodeDownloadInvalidManifest;
+      // return kMetadataParseError;
+  }
+
+  // Now that we have validated the metadata size, we should wait for the full
+  // metadata to be read in before we can parse it.
+  if (payload.size() < *metadata_size) {
     return kMetadataParseInsufficientData;
   }
-  // We have the full proto buffer in |payload|. Parse it.
-  const int offset = strlen(kDeltaMagic) + kDeltaVersionLength +
-      kDeltaProtobufLengthLength;
-  if (!manifest->ParseFromArray(&payload[offset], protobuf_length)) {
+
+  // Log whether we validated the size or simply trusting what's in the payload
+  // here. This is logged here (after we received the full manifest data) so
+  // that we just log once (instead of logging n times) if it takes n
+  // DeltaPerformer::Write calls to download the full manifest.
+  if (install_plan_->manifest_size == 0)
+    LOG(WARNING) << "No manifest size specified in Omaha. "
+                 << "Trusting manifest size in payload = " << *metadata_size;
+  else
+    LOG(INFO) << "Manifest size in payload matches expected value from Omaha";
+
+  // We have the full proto buffer in |payload|. Verify its integrity
+  // and authenticity based on what Omaha says.
+  *error = ValidateManifestSignature(&payload[protobuf_offset],
+                                     protobuf_length);
+  if (*error != kActionCodeSuccess) {
+    // TODO(jaysri): Add a UMA Stat here to help with the decision to enforce
+    // this check in a future release, as mentioned below.
+
+    // TODO(jaysri): VALIDATION: Initially we don't want to make this a fatal
+    // error.  But in the next release, we should remove the line below and
+    // return an error.
+    *error = kActionCodeSuccess;
+  }
+
+  // The proto buffer in |payload| is deemed valid. Parse it.
+  if (!manifest->ParseFromArray(&payload[protobuf_offset], protobuf_length)) {
     LOG(ERROR) << "Unable to parse manifest in update file.";
+    *error = kActionCodeDownloadManifestParseError;
     return kMetadataParseError;
   }
-  *metadata_size = strlen(kDeltaMagic) + kDeltaVersionLength +
-      kDeltaProtobufLengthLength + protobuf_length;
   return kMetadataParseSuccess;
 }
 
 
 // Wrapper around write. Returns true if all requested bytes
-// were written, or false on any error, reguardless of progress.
-bool DeltaPerformer::Write(const void* bytes, size_t count) {
+// were written, or false on any error, reguardless of progress
+// and stores an action exit code in |error|.
+bool DeltaPerformer::Write(const void* bytes, size_t count,
+                           ActionExitCode *error) {
+  *error = kActionCodeSuccess;
+
   const char* c_bytes = reinterpret_cast<const char*>(bytes);
   buffer_.insert(buffer_.end(), c_bytes, c_bytes + count);
-
   if (!manifest_valid_) {
     MetadataParseResult result = ParsePayloadMetadata(buffer_,
                                                       &manifest_,
-                                                      &manifest_metadata_size_);
+                                                      &manifest_metadata_size_,
+                                                      error);
     if (result == kMetadataParseError) {
       return false;
     }
@@ -256,8 +318,10 @@ bool DeltaPerformer::Write(const void* bytes, size_t count) {
                                       manifest_metadata_size_))
         << "Unable to save the manifest metadata size.";
     manifest_valid_ = true;
+
     LogPartitionInfo(manifest_);
     if (!PrimeUpdateState()) {
+      *error = kActionCodeDownloadStateInitializationError;
       LOG(ERROR) << "Unable to prime the update state.";
       return false;
     }
@@ -270,8 +334,19 @@ bool DeltaPerformer::Write(const void* bytes, size_t count) {
         manifest_.install_operations(next_operation_num_) :
         manifest_.kernel_install_operations(
             next_operation_num_ - manifest_.install_operations_size());
-    if (!CanPerformInstallOperation(op))
-      break;
+    if (!CanPerformInstallOperation(op)) {
+      // This means we don't have enough bytes received yet to carry out the
+      // next operation.
+      return true;
+    }
+
+    *error = ValidateOperationHash(op);
+    if (*error != kActionCodeSuccess) {
+      // Cannot proceed further as operation hash is invalid.
+      // Higher level code will take care of retrying appropriately.
+      return false;
+    }
+
     // Makes sure we unblock exit when this operation completes.
     ScopedTerminatorExitUnblocker exit_unblocker =
         ScopedTerminatorExitUnblocker();  // Avoids a compiler unused var bug.
@@ -288,18 +363,21 @@ bool DeltaPerformer::Write(const void* bytes, size_t count) {
       if (!PerformReplaceOperation(op, is_kernel_partition)) {
         LOG(ERROR) << "Failed to perform replace operation "
                    << next_operation_num_;
+        *error = kActionCodeDownloadOperationExecutionError;
         return false;
       }
     } else if (op.type() == DeltaArchiveManifest_InstallOperation_Type_MOVE) {
       if (!PerformMoveOperation(op, is_kernel_partition)) {
         LOG(ERROR) << "Failed to perform move operation "
                    << next_operation_num_;
+        *error = kActionCodeDownloadOperationExecutionError;
         return false;
       }
     } else if (op.type() == DeltaArchiveManifest_InstallOperation_Type_BSDIFF) {
       if (!PerformBsdiffOperation(op, is_kernel_partition)) {
         LOG(ERROR) << "Failed to perform bsdiff operation "
                    << next_operation_num_;
+        *error = kActionCodeDownloadOperationExecutionError;
         return false;
       }
     }
@@ -582,6 +660,72 @@ bool DeltaPerformer::ExtractSignatureMessage(
   return true;
 }
 
+ActionExitCode DeltaPerformer::ValidateManifestSignature(
+    const char* protobuf, uint64_t protobuf_length) {
+
+  if (install_plan_->manifest_signature.empty()) {
+    // If this is not present, we cannot validate the manifest. This should
+    // never happen in normal circumstances, but this can be used as a
+    // release-knob to turn off the new code path that verify per-operation
+    // hashes. So, for now, we should not treat this as a failure. Once we are
+    // confident this path is bug-free, we should treat this as a failure so
+    // that we remain robust even if the connection to Omaha is subjected to
+    // any SSL attack.
+    LOG(WARNING) << "Cannot validate manifest as the signature is empty";
+    return kActionCodeSuccess;
+  }
+
+  // Convert base64-encoded signature to raw bytes.
+  vector<char> manifest_signature;
+  if (!OmahaHashCalculator::Base64Decode(install_plan_->manifest_signature,
+                                         &manifest_signature)) {
+    LOG(ERROR) << "Unable to decode base64 manifest signature: "
+               << install_plan_->manifest_signature;
+    return kActionCodeDownloadManifestSignatureError;
+  }
+
+  vector<char> expected_manifest_hash;
+  if (!PayloadSigner::GetRawHashFromSignature(manifest_signature,
+                                              public_key_path_,
+                                              &expected_manifest_hash)) {
+    LOG(ERROR) << "Unable to compute expected hash from manifest signature";
+    return kActionCodeDownloadManifestSignatureError;
+  }
+
+  OmahaHashCalculator manifest_hasher;
+  manifest_hasher.Update(protobuf, protobuf_length);
+  if (!manifest_hasher.Finalize()) {
+    LOG(ERROR) << "Unable to compute actual hash of manifest";
+    return kActionCodeDownloadManifestSignatureVerificationError;
+  }
+
+  vector<char> calculated_manifest_hash = manifest_hasher.raw_hash();
+  PayloadSigner::PadRSA2048SHA256Hash(&calculated_manifest_hash);
+  if (calculated_manifest_hash.empty()) {
+    LOG(ERROR) << "Computed actual hash of manifest is empty.";
+    return kActionCodeDownloadManifestSignatureVerificationError;
+  }
+
+  if (calculated_manifest_hash != expected_manifest_hash) {
+    LOG(ERROR) << "Manifest hash verification failed. Expected hash = ";
+    utils::HexDumpVector(expected_manifest_hash);
+    LOG(ERROR) << "Calculated hash = ";
+    utils::HexDumpVector(calculated_manifest_hash);
+    return kActionCodeDownloadManifestSignatureMismatch;
+  }
+
+  LOG(INFO) << "Manifest signature matches expected value in Omaha response";
+  return kActionCodeSuccess;
+}
+
+ActionExitCode DeltaPerformer::ValidateOperationHash(
+    const DeltaArchiveManifest_InstallOperation&
+    operation) {
+
+  // TODO(jaysri): To be implemented.
+  return kActionCodeSuccess;
+}
+
 #define TEST_AND_RETURN_VAL(_retval, _condition)                \
   do {                                                          \
     if (!(_condition)) {                                        \
@@ -590,31 +734,25 @@ bool DeltaPerformer::ExtractSignatureMessage(
     }                                                           \
   } while (0);
 
-
 ActionExitCode DeltaPerformer::VerifyPayload(
-    const string& public_key_path,
     const std::string& update_check_response_hash,
     const uint64_t update_check_response_size) {
-  string key_path = public_key_path;
-  if (key_path.empty()) {
-    key_path = kUpdatePayloadPublicKeyPath;
-  }
-  LOG(INFO) << "Verifying delta payload. Public key path: " << key_path;
+  LOG(INFO) << "Verifying delta payload using public key: " << public_key_path_;
 
   // Verifies the download size.
-  TEST_AND_RETURN_VAL(kActionCodeDownloadSizeMismatchError,
+  TEST_AND_RETURN_VAL(kActionCodePayloadSizeMismatchError,
                       update_check_response_size ==
                       manifest_metadata_size_ + buffer_offset_);
 
-  // Verifies the download hash.
-  const string& download_hash_data = hash_calculator_.hash();
+  // Verifies the payload hash.
+  const string& payload_hash_data = hash_calculator_.hash();
   TEST_AND_RETURN_VAL(kActionCodeDownloadPayloadVerificationError,
-                      !download_hash_data.empty());
-  TEST_AND_RETURN_VAL(kActionCodeDownloadHashMismatchError,
-                      download_hash_data == update_check_response_hash);
+                      !payload_hash_data.empty());
+  TEST_AND_RETURN_VAL(kActionCodePayloadHashMismatchError,
+                      payload_hash_data == update_check_response_hash);
 
   // Verifies the signed payload hash.
-  if (!utils::FileExists(key_path.c_str())) {
+  if (!utils::FileExists(public_key_path_.c_str())) {
     LOG(WARNING) << "Not verifying signed delta payload -- missing public key.";
     return kActionCodeSuccess;
   }
@@ -624,7 +762,7 @@ ActionExitCode DeltaPerformer::VerifyPayload(
   TEST_AND_RETURN_VAL(kActionCodeDownloadPayloadPubKeyVerificationError,
                       PayloadSigner::VerifySignature(
                           signatures_message_data_,
-                          key_path,
+                          public_key_path_,
                           &signed_hash_data));
   OmahaHashCalculator signed_hasher;
   TEST_AND_RETURN_VAL(kActionCodeDownloadPayloadPubKeyVerificationError,
@@ -708,17 +846,19 @@ string StringForHashBytes(const void* bytes, size_t size) {
 bool DeltaPerformer::VerifySourcePartitions() {
   LOG(INFO) << "Verifying source partitions.";
   CHECK(manifest_valid_);
+  CHECK(install_plan_);
   if (manifest_.has_old_kernel_info()) {
     const PartitionInfo& info = manifest_.old_kernel_info();
-    bool valid = !current_kernel_hash_.empty() &&
-        current_kernel_hash_.size() == info.hash().size() &&
-        memcmp(current_kernel_hash_.data(),
+    bool valid =
+        !install_plan_->kernel_hash.empty() &&
+        install_plan_->kernel_hash.size() == info.hash().size() &&
+        memcmp(install_plan_->kernel_hash.data(),
                info.hash().data(),
-               current_kernel_hash_.size()) == 0;
+               install_plan_->kernel_hash.size()) == 0;
     if (!valid) {
       LogVerifyError(true,
-                     StringForHashBytes(current_kernel_hash_.data(),
-                                        current_kernel_hash_.size()),
+                     StringForHashBytes(install_plan_->kernel_hash.data(),
+                                        install_plan_->kernel_hash.size()),
                      StringForHashBytes(info.hash().data(),
                                         info.hash().size()));
     }
@@ -726,15 +866,16 @@ bool DeltaPerformer::VerifySourcePartitions() {
   }
   if (manifest_.has_old_rootfs_info()) {
     const PartitionInfo& info = manifest_.old_rootfs_info();
-    bool valid = !current_rootfs_hash_.empty() &&
-        current_rootfs_hash_.size() == info.hash().size() &&
-        memcmp(current_rootfs_hash_.data(),
+    bool valid =
+        !install_plan_->rootfs_hash.empty() &&
+        install_plan_->rootfs_hash.size() == info.hash().size() &&
+        memcmp(install_plan_->rootfs_hash.data(),
                info.hash().data(),
-               current_rootfs_hash_.size()) == 0;
+               install_plan_->rootfs_hash.size()) == 0;
     if (!valid) {
       LogVerifyError(false,
-                     StringForHashBytes(current_kernel_hash_.data(),
-                                        current_kernel_hash_.size()),
+                     StringForHashBytes(install_plan_->kernel_hash.data(),
+                                        install_plan_->kernel_hash.size()),
                      StringForHashBytes(info.hash().data(),
                                         info.hash().size()));
     }

@@ -19,6 +19,38 @@ using std::vector;
 
 namespace chromeos_update_engine {
 
+// Helper class to free a BIO structure when a method goes out of scope.
+class ScopedBioHandle {
+ public:
+  explicit ScopedBioHandle(BIO* bio) : bio_(bio) {}
+  ~ScopedBioHandle() {
+    FreeCurrentBio();
+  }
+
+  void set_bio(BIO* bio) {
+    if (bio_ != bio) {
+      // Free the current bio, but only if the caller is not trying to set
+      // the same bio object again, so that the operation can be idempotent.
+      FreeCurrentBio();
+    }
+    bio_ = bio;
+  }
+
+  BIO* bio() {
+    return bio_;
+  }
+ private:
+  DISALLOW_COPY_AND_ASSIGN(ScopedBioHandle);
+  BIO* bio_;
+
+  void FreeCurrentBio() {
+    if (bio_) {
+      BIO_free_all(bio_);
+      bio_ = NULL;
+    }
+  }
+};
+
 OmahaHashCalculator::OmahaHashCalculator() : valid_(false) {
   valid_ = (SHA256_Init(&ctx_) == 1);
   LOG_IF(ERROR, !valid_) << "SHA256_Init failed";
@@ -69,10 +101,10 @@ bool OmahaHashCalculator::Base64Encode(const void* data,
   bool success = true;
   BIO *b64 = BIO_new(BIO_f_base64());
   if (!b64)
-    LOG(INFO) << "BIO_new(BIO_f_base64()) failed";
+    LOG(ERROR) << "BIO_new(BIO_f_base64()) failed";
   BIO *bmem = BIO_new(BIO_s_mem());
   if (!bmem)
-    LOG(INFO) << "BIO_new(BIO_s_mem()) failed";
+    LOG(ERROR) << "BIO_new(BIO_s_mem()) failed";
   if (b64 && bmem) {
     b64 = BIO_push(b64, bmem);
     success =
@@ -89,6 +121,33 @@ bool OmahaHashCalculator::Base64Encode(const void* data,
     b64 = NULL;
   }
   return success;
+}
+
+bool OmahaHashCalculator::Base64Decode(const string& in,
+                                       vector<char>* out) {
+  ScopedBioHandle b64(BIO_new(BIO_f_base64()));
+  if (!b64.bio()) {
+    LOG(ERROR) << "Unable to create BIO object to decode base64 hash.";
+    return false;
+  }
+
+  BIO *bmem = BIO_new_mem_buf(const_cast<char*>(in.c_str()), in.size());
+  if (!bmem) {
+    LOG(ERROR) << "Unable to get BIO buffer to decode base64 hash.";
+    return false;
+  }
+
+  b64.set_bio(BIO_push(b64.bio(), bmem));
+  const int kOutBufferSize = 1024;
+  char out_buffer[kOutBufferSize];
+  int num_bytes_read = 1; // any non-zero value is fine to enter the loop.
+  while (num_bytes_read > 0) {
+    num_bytes_read = BIO_read(b64.bio(), &out_buffer, kOutBufferSize);
+    for (int i = 0; i < num_bytes_read; i++)
+      out->push_back(out_buffer[i]);
+  }
+
+  return true;
 }
 
 // Call Finalize() when all data has been passed in. This mostly just

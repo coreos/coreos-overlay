@@ -126,7 +126,7 @@ UpdateAttempter::UpdateAttempter(PrefsInterface* prefs,
       download_progress_(0.0),
       last_checked_time_(0),
       new_version_("0.0.0.0"),
-      new_size_(0),
+      new_payload_size_(0),
       proxy_manual_checks_(0),
       obeying_proxies_(true),
       chrome_proxy_resolver_(dbus_iface),
@@ -671,7 +671,7 @@ void UpdateAttempter::ActionCompleted(ActionProcessor* processor,
     last_checked_time_ = time(NULL);
     // TODO(adlr): put version in InstallPlan
     new_version_ = "0.0.0.0";
-    new_size_ = plan.size;
+    new_payload_size_ = plan.payload_size;
     SetupDownload();
     SetupPriorityManagement();
     SetStatusAndNotify(UPDATE_STATUS_UPDATE_AVAILABLE,
@@ -748,12 +748,12 @@ bool UpdateAttempter::GetStatus(int64_t* last_checked_time,
                                 double* progress,
                                 string* current_operation,
                                 string* new_version,
-                                int64_t* new_size) {
+                                int64_t* new_payload_size) {
   *last_checked_time = last_checked_time_;
   *progress = download_progress_;
   *current_operation = UpdateStatusToString(status_);
   *new_version = new_version_;
-  *new_size = new_size_;
+  *new_payload_size = new_payload_size_;
   return true;
 }
 
@@ -806,7 +806,7 @@ void UpdateAttempter::BroadcastStatus() {
       download_progress_,
       UpdateStatusToString(status_),
       new_version_.c_str(),
-      new_size_);
+      new_payload_size_);
 }
 
 void UpdateAttempter::SetStatusAndNotify(UpdateStatus status,
@@ -980,7 +980,7 @@ void UpdateAttempter::SetupDownload() {
     int64_t next_data_offset = 0;
     prefs_->GetInt64(kPrefsUpdateStateNextDataOffset, &next_data_offset);
     uint64_t resume_offset = manifest_metadata_size + next_data_offset;
-    if (resume_offset < response_handler_action_->install_plan().size) {
+    if (resume_offset < response_handler_action_->install_plan().payload_size) {
       fetcher->AddRange(resume_offset);
     }
   } else {
