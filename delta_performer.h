@@ -155,7 +155,7 @@ class DeltaPerformer : public FileWriter {
   // matches what's specified in the manifest in the payload.
   // Returns kActionCodeSuccess on match or a suitable error code otherwise.
   ActionExitCode ValidateOperationHash(
-      const DeltaArchiveManifest_InstallOperation& operation);
+      const DeltaArchiveManifest_InstallOperation& operation, bool should_log);
 
   // Interprets the given |protobuf| as a DeltaArchiveManifest protocol buffer
   // of the given protobuf_length and verifies that the signed hash of the

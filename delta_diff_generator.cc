@@ -1178,10 +1178,26 @@ bool DeltaDiffGenerator::ReorderDataBlobs(
     ssize_t rc = pread(in_fd, &buf[0], buf.size(), op->data_offset());
     TEST_AND_RETURN_FALSE(rc == static_cast<ssize_t>(buf.size()));
 
+    // Add the hash of the data blobs for this operation
+    TEST_AND_RETURN_FALSE(AddOperationHash(op, buf));
+
     op->set_data_offset(out_file_size);
     TEST_AND_RETURN_FALSE(writer.Write(&buf[0], buf.size()));
     out_file_size += buf.size();
   }
+  return true;
+}
+
+bool DeltaDiffGenerator::AddOperationHash(
+    DeltaArchiveManifest_InstallOperation* op,
+    const vector<char>& buf) {
+  OmahaHashCalculator hasher;
+
+  TEST_AND_RETURN_FALSE(hasher.Update(&buf[0], buf.size()));
+  TEST_AND_RETURN_FALSE(hasher.Finalize());
+
+  const vector<char>& hash = hasher.raw_hash();
+  op->set_data_sha256_hash(hash.data(), hash.size());
   return true;
 }
 

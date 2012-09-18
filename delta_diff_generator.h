@@ -170,6 +170,15 @@ class DeltaDiffGenerator {
                                const std::string& data_blobs_path,
                                const std::string& new_data_blobs_path);
 
+  // Computes a SHA256 hash of the given buf and sets the hash value in the
+  // operation so that update_engine could verify. This hash should be set
+  // for all operations that have a non-zero data blob. One exception is the
+  // dummy operation for signature blob because the contents of the signature
+  // blob will not be available at payload creation time. So, update_engine will
+  // gracefully ignore the dummy signature operation.
+  static bool AddOperationHash(DeltaArchiveManifest_InstallOperation* op,
+                               const std::vector<char>& buf);
+
   // Handles allocation of temp blocks to a cut edge by converting the
   // dest node to a full op. This removes the need for temp blocks, but
   // comes at the cost of a worse compression ratio.

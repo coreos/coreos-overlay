@@ -340,19 +340,37 @@ bool DeltaPerformer::Write(const void* bytes, size_t count,
       return true;
     }
 
-    *error = ValidateOperationHash(op);
-    if (*error != kActionCodeSuccess) {
-      // Cannot proceed further as operation hash is invalid.
-      // Higher level code will take care of retrying appropriately.
-      return false;
+    bool should_log = (next_operation_num_ % 1000 == 0 ||
+                       next_operation_num_ == total_operations - 1);
+
+    // Validate the operation only if the manifest signature is present.
+    // Otherwise, keep the old behavior. This serves as a knob to disable
+    // the validation logic in case we find some regression after rollout.
+    if (!install_plan_->manifest_signature.empty()) {
+      // Note: Validate must be called only if CanPerformInstallOperation is
+      // called. Otherwise, we might be failing operations before even if there
+      // isn't sufficient data to compute the proper hash.
+      *error = ValidateOperationHash(op, should_log);
+      if (*error != kActionCodeSuccess) {
+        // Cannot proceed further as operation hash is invalid.
+        // Higher level code will take care of retrying appropriately.
+        //
+        // TODO(jaysri): Add a UMA stat to indicate that an operation hash
+        // was failed to be validated as expected.
+        //
+        // TODO(jaysri): VALIDATION: For now, we don't treat this as fatal.
+        // But once we're confident that the new code works fine in the field,
+        // we should uncomment the line below.
+        // return false;
+        LOG(INFO) << "Ignoring operation validation errors for now";
+      }
     }
 
     // Makes sure we unblock exit when this operation completes.
     ScopedTerminatorExitUnblocker exit_unblocker =
         ScopedTerminatorExitUnblocker();  // Avoids a compiler unused var bug.
     // Log every thousandth operation, and also the first and last ones
-    if ((next_operation_num_ % 1000 == 0) ||
-        (next_operation_num_ + 1 == total_operations)) {
+    if (should_log) {
       LOG(INFO) << "Performing operation " << (next_operation_num_ + 1) << "/"
                 << total_operations;
     }
@@ -719,10 +737,70 @@ ActionExitCode DeltaPerformer::ValidateManifestSignature(
 }
 
 ActionExitCode DeltaPerformer::ValidateOperationHash(
-    const DeltaArchiveManifest_InstallOperation&
-    operation) {
+    const DeltaArchiveManifest_InstallOperation& operation,
+    bool should_log) {
 
-  // TODO(jaysri): To be implemented.
+  if (!operation.data_sha256_hash().size()) {
+    if (!operation.data_length()) {
+      // Operations that do not have any data blob won't have any operation hash
+      // either. So, these operations are always considered validated since the
+      // manifest that contains all the non-data-blob portions of the operation
+      // has already been validated.
+      return kActionCodeSuccess;
+    }
+
+    // TODO(jaysri): Add a UMA stat here so we're aware of any
+    // man-in-the-middle attempts to bypass these checks.
+    //
+    // TODO(jaysri): VALIDATION: no hash is present for the operation. This
+    // shouldn't happen normally for any client that has this code, because the
+    // corresponding update should have been produced with the operation
+    // hashes. But if it happens it's likely that we've turned this feature off
+    // in Omaha rule for some reason. Once we make these hashes mandatory, we
+    // should return an error here.
+    // One caveat though: The last operation is a dummy signature operation
+    // that doesn't have a hash at the time the manifest is created. So we
+    // should not complaint about that operation. This operation can be
+    // recognized by the fact that it's offset is mentioned in the manifest.
+    if (manifest_.signatures_offset() &&
+        manifest_.signatures_offset() == operation.data_offset()) {
+      LOG(INFO) << "Skipping hash verification for signature operation "
+                << next_operation_num_ + 1;
+    } else {
+      // TODO(jaysri): Uncomment this logging after fixing dev server
+      // LOG(WARNING) << "Cannot validate operation " << next_operation_num_ + 1
+      //             << " as no expected hash present";
+    }
+    return kActionCodeSuccess;
+  }
+
+  vector<char> expected_op_hash;
+  expected_op_hash.assign(operation.data_sha256_hash().data(),
+                          (operation.data_sha256_hash().data() +
+                           operation.data_sha256_hash().size()));
+
+  OmahaHashCalculator operation_hasher;
+  operation_hasher.Update(&buffer_[0], operation.data_length());
+  if (!operation_hasher.Finalize()) {
+    LOG(ERROR) << "Unable to compute actual hash of operation "
+               << next_operation_num_;
+    return kActionCodeDownloadOperationHashVerificationError;
+  }
+
+  vector<char> calculated_op_hash = operation_hasher.raw_hash();
+  if (calculated_op_hash != expected_op_hash) {
+    LOG(ERROR) << "Hash verification failed for operation "
+               << next_operation_num_ << ". Expected hash = ";
+    utils::HexDumpVector(expected_op_hash);
+    LOG(ERROR) << "Calculated hash over " << operation.data_length()
+               << " bytes at offset: " << operation.data_offset() << " = ";
+    utils::HexDumpVector(calculated_op_hash);
+    return kActionCodeDownloadOperationHashMismatch;
+  }
+
+  if (should_log)
+    LOG(INFO) << "Validated operation " << next_operation_num_ + 1;
+
   return kActionCodeSuccess;
 }
 
