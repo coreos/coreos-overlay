@@ -371,23 +371,14 @@ void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop,
 
   // Read delta into memory.
   vector<char> delta;
-  EXPECT_TRUE(utils::ReadFile(delta_path, &delta));
-
-  uint64_t manifest_metadata_size;
+  uint64_t metadata_size;
 
   // Check the metadata.
   {
-    LOG(INFO) << "delta size: " << delta.size();
     DeltaArchiveManifest manifest;
-    const int kManifestSizeOffset = 12;
-    const int kManifestOffset = 20;
-    uint64_t manifest_size = 0;
-    memcpy(&manifest_size, &delta[kManifestSizeOffset], sizeof(manifest_size));
-    manifest_size = be64toh(manifest_size);
-    LOG(INFO) << "manifest size: " << manifest_size;
-    EXPECT_TRUE(manifest.ParseFromArray(&delta[kManifestOffset],
-                                        manifest_size));
-    manifest_metadata_size = kManifestOffset + manifest_size;
+    EXPECT_TRUE(PayloadSigner::LoadPayload(delta_path, &delta, &manifest,
+                                           &metadata_size));
+    LOG(INFO) << "Metadata size: " << metadata_size;
 
     if (signature_test == kSignatureNone) {
       EXPECT_FALSE(manifest.has_signatures_offset());
@@ -397,7 +388,7 @@ void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop,
       EXPECT_TRUE(manifest.has_signatures_size());
       Signatures sigs_message;
       EXPECT_TRUE(sigs_message.ParseFromArray(
-          &delta[manifest_metadata_size + manifest.signatures_offset()],
+          &delta[metadata_size + manifest.signatures_offset()],
           manifest.signatures_size()));
       if (signature_test == kSignatureGeneratedShellRotateCl1 ||
           signature_test == kSignatureGeneratedShellRotateCl2)
@@ -448,7 +439,7 @@ void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop,
 
   PrefsMock prefs;
   EXPECT_CALL(prefs, SetInt64(kPrefsManifestMetadataSize,
-                              manifest_metadata_size)).WillOnce(Return(true));
+                              metadata_size)).WillOnce(Return(true));
   EXPECT_CALL(prefs, SetInt64(kPrefsUpdateStateNextOperation, _))
       .WillRepeatedly(Return(true));
   EXPECT_CALL(prefs, GetInt64(kPrefsUpdateStateNextOperation, _))
@@ -664,29 +655,21 @@ void DoManifestTest() {
 
   // Read delta into memory.
   vector<char> delta;
-  EXPECT_TRUE(utils::ReadFile(delta_path, &delta));
-
-  uint64_t manifest_metadata_size;
-  const int kManifestSizeOffset = 12;
-  const int kManifestOffset = 20;
+  uint64_t metadata_size;
   // Check the metadata.
   {
-    LOG(INFO) << "delta size: " << delta.size();
     DeltaArchiveManifest manifest;
-    uint64_t manifest_size = 0;
-    memcpy(&manifest_size, &delta[kManifestSizeOffset], sizeof(manifest_size));
-    manifest_size = be64toh(manifest_size);
-    LOG(INFO) << "manifest size: " << manifest_size;
-    EXPECT_TRUE(manifest.ParseFromArray(&delta[kManifestOffset],
-                                        manifest_size));
-    manifest_metadata_size = kManifestOffset + manifest_size;
+    EXPECT_TRUE(PayloadSigner::LoadPayload(delta_path, &delta, &manifest,
+                                           &metadata_size));
+
+    LOG(INFO) << "Metadata size: " << metadata_size;
 
     {
       EXPECT_TRUE(manifest.has_signatures_offset());
       EXPECT_TRUE(manifest.has_signatures_size());
       Signatures sigs_message;
       EXPECT_TRUE(sigs_message.ParseFromArray(
-          &delta[manifest_metadata_size + manifest.signatures_offset()],
+          &delta[metadata_size + manifest.signatures_offset()],
           manifest.signatures_size()));
       EXPECT_EQ(1, sigs_message.signatures_size());
       const Signatures_Signature& signature = sigs_message.signatures(0);
@@ -725,7 +708,7 @@ void DoManifestTest() {
 
   PrefsMock prefs;
   EXPECT_CALL(prefs, SetInt64(kPrefsManifestMetadataSize,
-                              manifest_metadata_size)).WillOnce(Return(true));
+                              metadata_size)).WillOnce(Return(true));
   EXPECT_CALL(prefs, SetInt64(kPrefsUpdateStateNextOperation, _))
       .WillRepeatedly(Return(true));
   EXPECT_CALL(prefs, GetInt64(kPrefsUpdateStateNextOperation, _))
@@ -741,14 +724,14 @@ void DoManifestTest() {
 
   // Update the A image in place.
   InstallPlan install_plan;
-  install_plan.manifest_size = manifest_metadata_size;
-  LOG(INFO) << "Setting Omaha manifest size = " << manifest_metadata_size;
-  ASSERT_TRUE(PayloadSigner::GetManifestSignature(
-      &delta[kManifestOffset],
-      manifest_metadata_size-kManifestOffset,
+  install_plan.metadata_size = metadata_size;
+  LOG(INFO) << "Setting payload metadata size in Omaha  = " << metadata_size;
+  ASSERT_TRUE(PayloadSigner::GetMetadataSignature(
+      &delta[0],
+      metadata_size,
       kUnittestPrivateKeyPath,
-      &install_plan.manifest_signature));
-  EXPECT_FALSE(install_plan.manifest_signature.empty());
+      &install_plan.metadata_signature));
+  EXPECT_FALSE(install_plan.metadata_signature.empty());
 
   DeltaPerformer performer(&prefs, &install_plan);
   EXPECT_TRUE(utils::FileExists(kUnittestPublicKeyPath));

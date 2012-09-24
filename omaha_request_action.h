@@ -34,7 +34,7 @@ struct OmahaResponse {
       : update_exists(false),
         poll_interval(0),
         size(0),
-        manifest_size(0),
+        metadata_size(0),
         needs_admin(false),
         prompt(false) {}
   // True iff there is an update to be downloaded.
@@ -48,10 +48,10 @@ struct OmahaResponse {
   std::string codebase;
   std::string more_info_url;
   std::string hash;
-  std::string manifest_signature;
+  std::string metadata_signature;
   std::string deadline;
   off_t size;
-  off_t manifest_size;
+  off_t metadata_size;
   bool needs_admin;
   bool prompt;
 };

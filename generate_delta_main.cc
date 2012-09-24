@@ -41,6 +41,7 @@ DEFINE_string(in_file, "",
               "and apply delta over old_image (for debugging)");
 DEFINE_string(out_file, "", "Path to output delta payload file");
 DEFINE_string(out_hash_file, "", "Path to output hash file");
+DEFINE_string(out_metadata_hash_file, "", "Path to output metadata hash file");
 DEFINE_string(private_key, "", "Path to private key in .pem format");
 DEFINE_string(public_key, "", "Path to public key in .pem format");
 DEFINE_int32(public_key_version,
@@ -78,30 +79,61 @@ bool IsDir(const char* path) {
   return S_ISDIR(stbuf.st_mode);
 }
 
+void ParseSignatureSizes(vector<int>* sizes) {
+  LOG_IF(FATAL, FLAGS_signature_size.empty())
+      << "Must pass --signature_size to calculate hash for signing.";
+  vector<string> strsizes;
+  base::SplitString(FLAGS_signature_size, ':', &strsizes);
+  for (vector<string>::iterator it = strsizes.begin(), e = strsizes.end();
+       it != e; ++it) {
+    int size = 0;
+    bool parsing_successful = base::StringToInt(*it, &size);
+    LOG_IF(FATAL, !parsing_successful)
+        << "Invalid signature size: " << *it;
+    sizes->push_back(size);
+  }
+}
+
+
 void CalculatePayloadHashForSigning() {
   LOG(INFO) << "Calculating payload hash for signing.";
   LOG_IF(FATAL, FLAGS_in_file.empty())
       << "Must pass --in_file to calculate hash for signing.";
   LOG_IF(FATAL, FLAGS_out_hash_file.empty())
       << "Must pass --out_hash_file to calculate hash for signing.";
-  LOG_IF(FATAL, FLAGS_signature_size.empty())
-      << "Must pass --signature_size to calculate hash for signing.";
   vector<int> sizes;
-  vector<string> strsizes;
-  base::SplitString(FLAGS_signature_size, ':', &strsizes);
-  for (vector<string>::iterator it = strsizes.begin(), e = strsizes.end();
-       it != e; ++it) {
-    int size = 0;
-    LOG_IF(FATAL, !base::StringToInt(*it, &size))
-        << "Not an integer: " << *it;
-    sizes.push_back(size);
-  }
+  ParseSignatureSizes(&sizes);
+
   vector<char> hash;
-  CHECK(PayloadSigner::HashPayloadForSigning(
-      FLAGS_in_file, sizes, &hash));
-  CHECK(utils::WriteFile(
-      FLAGS_out_hash_file.c_str(), hash.data(), hash.size()));
+  bool result = PayloadSigner::HashPayloadForSigning(FLAGS_in_file, sizes,
+                                                     &hash);
+  CHECK(result);
+
+  result = utils::WriteFile(FLAGS_out_hash_file.c_str(), hash.data(),
+                            hash.size());
+  CHECK(result);
   LOG(INFO) << "Done calculating payload hash for signing.";
+}
+
+
+void CalculateMetadataHashForSigning() {
+  LOG(INFO) << "Calculating metadata hash for signing.";
+  LOG_IF(FATAL, FLAGS_in_file.empty())
+      << "Must pass --in_file to calculate metadata hash for signing.";
+  LOG_IF(FATAL, FLAGS_out_metadata_hash_file.empty())
+      << "Must pass --out_metadata_hash_file to calculate metadata hash.";
+  vector<int> sizes;
+  ParseSignatureSizes(&sizes);
+
+  vector<char> hash;
+  bool result = PayloadSigner::HashMetadataForSigning(FLAGS_in_file, &hash);
+  CHECK(result);
+
+  result = utils::WriteFile(FLAGS_out_metadata_hash_file.c_str(), hash.data(),
+                            hash.size());
+  CHECK(result);
+
+  LOG(INFO) << "Done calculating metadata hash for signing.";
 }
 
 void SignPayload() {
@@ -189,8 +221,19 @@ int Main(int argc, char** argv) {
                        logging::DONT_LOCK_LOG_FILE,
                        logging::APPEND_TO_OLD_LOG_FILE,
                        logging::DISABLE_DCHECK_FOR_NON_OFFICIAL_RELEASE_BUILDS);
-  if (!FLAGS_signature_size.empty() || !FLAGS_out_hash_file.empty()) {
-    CalculatePayloadHashForSigning();
+  if (!FLAGS_signature_size.empty()) {
+    bool work_done = false;
+    if (!FLAGS_out_hash_file.empty()) {
+      CalculatePayloadHashForSigning();
+      work_done = true;
+    }
+    if (!FLAGS_out_metadata_hash_file.empty()) {
+      CalculateMetadataHashForSigning();
+      work_done = true;
+    }
+    if (!work_done) {
+      LOG(FATAL) << "Neither payload hash file nor metadata hash file supplied";
+    }
     return 0;
   }
   if (!FLAGS_signature_file.empty()) {

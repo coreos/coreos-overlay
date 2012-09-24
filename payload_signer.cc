@@ -78,25 +78,6 @@ bool ConvertSignatureToProtobufBlob(const vector<vector<char> >& signatures,
   return true;
 }
 
-bool LoadPayload(const string& payload_path,
-                 vector<char>* out_payload,
-                 DeltaArchiveManifest* out_manifest,
-                 uint64_t* out_metadata_size) {
-  vector<char> payload;
-  // Loads the payload and parses the manifest.
-  TEST_AND_RETURN_FALSE(utils::ReadFile(payload_path, &payload));
-  LOG(INFO) << "Payload size: " << payload.size();
-  ActionExitCode error = kActionCodeSuccess;
-  InstallPlan install_plan;
-  DeltaPerformer delta_performer(NULL, &install_plan);
-  TEST_AND_RETURN_FALSE(delta_performer.ParsePayloadMetadata(
-      payload, out_manifest, out_metadata_size, &error) ==
-                        DeltaPerformer::kMetadataParseSuccess);
-  LOG(INFO) << "Metadata size: " << *out_metadata_size;
-  out_payload->swap(payload);
-  return true;
-}
-
 // Given an unsigned payload under |payload_path| and the |signature_blob_size|
 // generates an updated payload that includes a dummy signature op in its
 // manifest. Returns true on success, false otherwise.
@@ -110,7 +91,7 @@ bool AddSignatureOpToPayload(const string& payload_path,
   vector<char> payload;
   DeltaArchiveManifest manifest;
   uint64_t metadata_size;
-  TEST_AND_RETURN_FALSE(LoadPayload(
+  TEST_AND_RETURN_FALSE(PayloadSigner::LoadPayload(
       payload_path, &payload, &manifest, &metadata_size));
   TEST_AND_RETURN_FALSE(!manifest.has_signatures_offset() &&
                         !manifest.has_signatures_size());
@@ -138,6 +119,25 @@ bool AddSignatureOpToPayload(const string& payload_path,
   return true;
 }
 }  // namespace {}
+
+bool PayloadSigner::LoadPayload(const string& payload_path,
+                 vector<char>* out_payload,
+                 DeltaArchiveManifest* out_manifest,
+                 uint64_t* out_metadata_size) {
+  vector<char> payload;
+  // Loads the payload and parses the manifest.
+  TEST_AND_RETURN_FALSE(utils::ReadFile(payload_path, &payload));
+  LOG(INFO) << "Payload size: " << payload.size();
+  ActionExitCode error = kActionCodeSuccess;
+  InstallPlan install_plan;
+  DeltaPerformer delta_performer(NULL, &install_plan);
+  TEST_AND_RETURN_FALSE(delta_performer.ParsePayloadMetadata(
+      payload, out_manifest, out_metadata_size, &error) ==
+                        DeltaPerformer::kMetadataParseSuccess);
+  LOG(INFO) << "Metadata size: " << *out_metadata_size;
+  out_payload->swap(payload);
+  return true;
+}
 
 bool PayloadSigner::SignHash(const vector<char>& hash,
                              const string& private_key_path,
@@ -328,7 +328,7 @@ bool PayloadSigner::VerifySignedPayload(const std::string& payload_path,
   return true;
 }
 
-bool PayloadSigner::HashPayloadForSigning(const std::string& payload_path,
+bool PayloadSigner::HashPayloadForSigning(const string& payload_path,
                                           const vector<int>& signature_sizes,
                                           vector<char>* out_hash_data) {
   // TODO(petkov): Reduce memory usage -- the payload is manipulated in memory.
@@ -351,6 +351,22 @@ bool PayloadSigner::HashPayloadForSigning(const std::string& payload_path,
   // the signature op but doesn't include the signature blob at the end.
   TEST_AND_RETURN_FALSE(OmahaHashCalculator::RawHashOfData(payload,
                                                            out_hash_data));
+  return true;
+}
+
+bool PayloadSigner::HashMetadataForSigning(const string& payload_path,
+                                           vector<char>* out_metadata_hash) {
+  // Extract the manifest first.
+  vector<char> payload;
+  DeltaArchiveManifest manifest_proto;
+  uint64_t metadata_size;
+  TEST_AND_RETURN_FALSE(LoadPayload(
+      payload_path, &payload, &manifest_proto, &metadata_size));
+
+  // Calculates the hash on the manifest.
+  TEST_AND_RETURN_FALSE(OmahaHashCalculator::RawHashOfBytes(&payload[0],
+                                                            metadata_size,
+                                                            out_metadata_hash));
   return true;
 }
 
@@ -388,19 +404,19 @@ bool PayloadSigner::PadRSA2048SHA256Hash(std::vector<char>* hash) {
   return true;
 }
 
-bool PayloadSigner::GetManifestSignature(const char* manifest,
-                                         size_t manifest_size,
+bool PayloadSigner::GetMetadataSignature(const char* const metadata,
+                                         size_t metadata_size,
                                          const string& private_key_path,
                                          string* out_signature) {
   // Calculates the hash on the updated payload. Note that the payload includes
   // the signature op but doesn't include the signature blob at the end.
-  vector<char> manifest_hash;
-  TEST_AND_RETURN_FALSE(OmahaHashCalculator::RawHashOfBytes(manifest,
-                                                            manifest_size,
-                                                            &manifest_hash));
+  vector<char> metadata_hash;
+  TEST_AND_RETURN_FALSE(OmahaHashCalculator::RawHashOfBytes(metadata,
+                                                            metadata_size,
+                                                            &metadata_hash));
 
   vector<char> signature;
-  TEST_AND_RETURN_FALSE(SignHash(manifest_hash,
+  TEST_AND_RETURN_FALSE(SignHash(metadata_hash,
                                  private_key_path,
                                  &signature));
 

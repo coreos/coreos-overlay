@@ -32,6 +32,8 @@ class DeltaPerformer : public FileWriter {
     kMetadataParseInsufficientData,
   };
 
+  static const uint64_t kDeltaVersionSize;
+  static const uint64_t kDeltaManifestSizeSize;
   static const char kUpdatePayloadPublicKeyPath[];
 
   DeltaPerformer(PrefsInterface* prefs, InstallPlan* install_plan)
@@ -133,6 +135,15 @@ class DeltaPerformer : public FileWriter {
     public_key_path_ = public_key_path;
   }
 
+  // Returns the byte offset at which the manifest protobuf begins in a
+  // payload.
+  static uint64_t GetManifestOffset();
+
+  // Returns the byte offset where the size of the manifest is stored in
+  // a payload. This offset precedes the actual start of the manifest
+  // that's returned by the GetManifestOffset method.
+  static uint64_t GetManifestSizeOffset();
+
  private:
   friend class DeltaPerformerTest;
   FRIEND_TEST(DeltaPerformerTest, IsIdempotentOperationTest);
@@ -159,13 +170,13 @@ class DeltaPerformer : public FileWriter {
 
   // Interprets the given |protobuf| as a DeltaArchiveManifest protocol buffer
   // of the given protobuf_length and verifies that the signed hash of the
-  // manifest matches what's specified in the install plan from Omaha.
+  // metadata matches what's specified in the install plan from Omaha.
   // Returns kActionCodeSuccess on match or a suitable error code otherwise.
   // This method must be called before any part of the |protobuf| is parsed
   // so that a man-in-the-middle attack on the SSL connection to the payload
   // server doesn't exploit any vulnerability in the code that parses the
   // protocol buffer.
-  ActionExitCode ValidateManifestSignature(const char* protobuf,
+  ActionExitCode ValidateMetadataSignature(const char* protobuf,
                                            uint64_t protobuf_length);
 
   // Returns true on success.

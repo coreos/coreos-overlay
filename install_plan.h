@@ -20,29 +20,29 @@ struct InstallPlan {
               const std::string& url,
               uint64_t payload_size,
               const std::string& payload_hash,
-              uint64_t manifest_size,
-              const std::string& manifest_signature,
+              uint64_t metadata_size,
+              const std::string& metadata_signature,
               const std::string& install_path,
               const std::string& kernel_install_path)
       : is_resume(is_resume),
         download_url(url),
         payload_size(payload_size),
         payload_hash(payload_hash),
-        manifest_size(manifest_size),
-        manifest_signature(manifest_signature),
+        metadata_size(metadata_size),
+        metadata_signature(metadata_signature),
         install_path(install_path),
         kernel_install_path(kernel_install_path),
         kernel_size(0),
         rootfs_size(0) {}
-  InstallPlan() : is_resume(false), payload_size(0), manifest_size(0) {}
+  InstallPlan() : is_resume(false), payload_size(0), metadata_size(0) {}
 
   bool is_resume;
   std::string download_url;  // url to download from
 
   uint64_t payload_size;                 // size of the payload
   std::string payload_hash ;             // SHA256 hash of the payload
-  uint64_t manifest_size;                // size of the manifest
-  std::string manifest_signature;        // signature of the manifest
+  uint64_t metadata_size;                // size of the metadata
+  std::string metadata_signature;        // signature of the  metadata
   std::string install_path;              // path to install device
   std::string kernel_install_path;       // path to kernel install device
 
@@ -67,8 +67,8 @@ struct InstallPlan {
             (download_url == that.download_url) &&
             (payload_size == that.payload_size) &&
             (payload_hash == that.payload_hash) &&
-            (manifest_size == that.manifest_size) &&
-            (manifest_signature == that.manifest_signature) &&
+            (metadata_size == that.metadata_size) &&
+            (metadata_signature == that.metadata_signature) &&
             (install_path == that.install_path) &&
             (kernel_install_path == that.kernel_install_path));
   }
@@ -81,8 +81,8 @@ struct InstallPlan {
               << ", url: " << download_url
               << ", payload size: " << payload_size
               << ", payload hash: " << payload_hash
-              << ", manifest size: " << manifest_size
-              << ", manifest signature: " << manifest_signature
+              << ", metadata size: " << metadata_size
+              << ", metadata signature: " << metadata_signature
               << ", install_path: " << install_path
               << ", kernel_install_path: " << kernel_install_path;
   }
