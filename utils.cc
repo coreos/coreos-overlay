@@ -41,6 +41,16 @@ using std::vector;
 
 namespace chromeos_update_engine {
 
+namespace {
+
+// The following constants control how UnmountFilesystem should retry if
+// umount() fails with an errno EBUSY, i.e. retry 5 times over the course of
+// one second.
+const int kUnmountMaxNumOfRetries = 5;
+const int kUnmountRetryIntervalInMicroseconds = 200 * 1000;  // 200 ms
+
+}  // namespace
+
 namespace utils {
 
 static const char kDevImageMarker[] = "/root/.dev_mode";
@@ -497,7 +507,14 @@ bool MountFilesystem(const string& device,
 }
 
 bool UnmountFilesystem(const string& mountpoint) {
-  TEST_AND_RETURN_FALSE_ERRNO(umount(mountpoint.c_str()) == 0);
+  for (int num_retries = 0; ; ++num_retries) {
+    if (umount(mountpoint.c_str()) == 0)
+      break;
+
+    TEST_AND_RETURN_FALSE_ERRNO(errno == EBUSY &&
+                                num_retries < kUnmountMaxNumOfRetries);
+    usleep(kUnmountRetryIntervalInMicroseconds);
+  }
   return true;
 }
 
