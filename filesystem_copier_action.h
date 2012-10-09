@@ -46,6 +46,12 @@ class FilesystemCopierAction : public Action<FilesystemCopierAction> {
   void PerformAction();
   void TerminateProcessing();
 
+  // Used for testing. Return true if Cleanup() has not yet been called due
+  // to a callback upon the completion or cancellation of the copier action.
+  // A test should wait until IsCleanupPending() returns false before
+  // terminating the glib main loop.
+  bool IsCleanupPending() const;
+
   // Used for testing, so we can copy from somewhere other than root
   void set_copy_source(const std::string& path) { copy_source_ = path; }
 

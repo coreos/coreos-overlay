@@ -128,6 +128,10 @@ void FilesystemCopierAction::TerminateProcessing() {
   }
 }
 
+bool FilesystemCopierAction::IsCleanupPending() const {
+  return (src_stream_ != NULL);
+}
+
 void FilesystemCopierAction::Cleanup(ActionExitCode code) {
   for (int i = 0; i < 2; i++) {
     g_object_unref(canceller_[i]);

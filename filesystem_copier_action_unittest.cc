@@ -43,10 +43,18 @@ class FilesystemCopierActionTest : public ::testing::Test {
 
 class FilesystemCopierActionTestDelegate : public ActionProcessorDelegate {
  public:
-  FilesystemCopierActionTestDelegate() : ran_(false), code_(kActionCodeError) {}
+  FilesystemCopierActionTestDelegate(GMainLoop* loop,
+                                     FilesystemCopierAction* action)
+      : loop_(loop), action_(action), ran_(false), code_(kActionCodeError) {}
   void ExitMainLoop() {
-    while (g_main_context_pending(NULL)) {
-      g_main_context_iteration(NULL, false);
+    GMainContext* context = g_main_loop_get_context(loop_);
+    // We cannot use g_main_context_pending() alone to determine if it is safe
+    // to quit the main loop here becasuse g_main_context_pending() may return
+    // FALSE when g_input_stream_read_async() in FilesystemCopierAction has
+    // been cancelled but the callback has not yet been invoked.
+    while (g_main_context_pending(context) || action_->IsCleanupPending()) {
+      g_main_context_iteration(context, false);
+      g_usleep(100);
     }
     g_main_loop_quit(loop_);
   }
@@ -64,13 +72,11 @@ class FilesystemCopierActionTestDelegate : public ActionProcessorDelegate {
       code_ = code;
     }
   }
-  void set_loop(GMainLoop* loop) {
-    loop_ = loop;
-  }
-  bool ran() { return ran_; }
-  ActionExitCode code() { return code_; }
+  bool ran() const { return ran_; }
+  ActionExitCode code() const { return code_; }
  private:
   GMainLoop* loop_;
+  FilesystemCopierAction* action_;
   bool ran_;
   ActionExitCode code_;
 };
@@ -188,9 +194,6 @@ bool FilesystemCopierActionTest::DoTest(bool run_out_of_space,
   }
 
   ActionProcessor processor;
-  FilesystemCopierActionTestDelegate delegate;
-  delegate.set_loop(loop);
-  processor.set_delegate(&delegate);
 
   ObjectFeederAction<InstallPlan> feeder_action;
   FilesystemCopierAction copier_action(use_kernel_partition,
@@ -200,6 +203,8 @@ bool FilesystemCopierActionTest::DoTest(bool run_out_of_space,
   BondActions(&feeder_action, &copier_action);
   BondActions(&copier_action, &collector_action);
 
+  FilesystemCopierActionTestDelegate delegate(loop, &copier_action);
+  processor.set_delegate(&delegate);
   processor.EnqueueAction(&feeder_action);
   processor.EnqueueAction(&copier_action);
   processor.EnqueueAction(&collector_action);
