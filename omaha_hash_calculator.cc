@@ -123,21 +123,34 @@ bool OmahaHashCalculator::Base64Encode(const void* data,
   return success;
 }
 
-bool OmahaHashCalculator::Base64Decode(const string& in,
+bool OmahaHashCalculator::Base64Decode(const string& raw_in,
                                        vector<char>* out) {
+  out->clear();
+
   ScopedBioHandle b64(BIO_new(BIO_f_base64()));
   if (!b64.bio()) {
-    LOG(ERROR) << "Unable to create BIO object to decode base64 hash.";
+    LOG(ERROR) << "Unable to create BIO object to decode base64 hash";
     return false;
   }
 
+  // Canonicalize the raw input to get rid of all newlines in the string
+  // and set the NO_NL flag so that BIO_read decodes properly. Otherwise
+  // BIO_read would just return 0 without decode anything.
+  string in;
+  for (size_t i = 0; i < raw_in.size(); i++)
+    if (raw_in[i] != '\n')
+      in.push_back(raw_in[i]);
+
+  BIO_set_flags(b64.bio(), BIO_FLAGS_BASE64_NO_NL);
+
   BIO *bmem = BIO_new_mem_buf(const_cast<char*>(in.c_str()), in.size());
   if (!bmem) {
-    LOG(ERROR) << "Unable to get BIO buffer to decode base64 hash.";
+    LOG(ERROR) << "Unable to get BIO buffer to decode base64 hash";
     return false;
   }
 
   b64.set_bio(BIO_push(b64.bio(), bmem));
+
   const int kOutBufferSize = 1024;
   char out_buffer[kOutBufferSize];
   int num_bytes_read = 1; // any non-zero value is fine to enter the loop.
@@ -147,6 +160,8 @@ bool OmahaHashCalculator::Base64Decode(const string& in,
       out->push_back(out_buffer[i]);
   }
 
+  LOG(INFO) << "Decoded " << out->size()
+            << " bytes from " << in.size() << " base64-encoded bytes";
   return true;
 }
 
