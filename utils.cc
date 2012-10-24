@@ -31,6 +31,7 @@
 #include <rootdev/rootdev.h>
 
 #include "update_engine/file_writer.h"
+#include "update_engine/install_plan.h"
 #include "update_engine/omaha_request_params.h"
 #include "update_engine/subprocess.h"
 
@@ -697,6 +698,29 @@ string ToString(const Time utc_time) {
                       exp_time.minute,
                       exp_time.second);
 }
+
+void SendErrorCodeToUMA(MetricsLibraryInterface* metrics_lib,
+                        ActionExitCode code)
+{
+  string metric = utils::IsNormalBootMode() ? "UpdateEngine.NormalErrorCodes" :
+                                              "UpdateEngine.DevModeErrorCodes";
+
+  // Ignore the higher order bits in the code by applying the mask as
+  // we want the enumerations to be in the small contiguous range
+  // with values less than kNumBucketsForUMAMetrics.
+  int actual_code = code & kActualCodeMask;
+
+  // Make additional adjustments required for UMA.
+  if (actual_code >= kActionCodeOmahaRequestHTTPResponseBase) {
+    // Since we want to keep the enums to a small value, aggregate all HTTP
+    // errors into this one bucket for UMA purposes.
+    actual_code = kActionCodeOmahaErrorInHTTPResponse;
+  }
+
+  LOG(INFO) << "Sending " << actual_code << " to UMA metric: " << metric;
+  metrics_lib->SendEnumToUMA(metric, actual_code, kNumBucketsForUMAMetrics);
+}
+
 
 }  // namespace utils
 

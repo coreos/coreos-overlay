@@ -19,6 +19,7 @@
 #include "update_engine/delta_performer.h"
 #include "update_engine/http_fetcher.h"
 #include "update_engine/install_plan.h"
+#include "update_engine/system_state.h"
 
 // The Download Action downloads a specified url to disk. The url should point
 // to an update in a delta payload format. The payload will be piped into a
@@ -57,8 +58,10 @@ class DownloadAction : public Action<DownloadAction>,
  public:
   // Takes ownership of the passed in HttpFetcher. Useful for testing.
   // A good calling pattern is:
-  // DownloadAction(new WhateverHttpFetcher);
-  DownloadAction(PrefsInterface* prefs, HttpFetcher* http_fetcher);
+  // DownloadAction(prefs, system_state, new WhateverHttpFetcher);
+  DownloadAction(PrefsInterface* prefs,
+                 SystemState* system_state,
+                 HttpFetcher* http_fetcher);
   virtual ~DownloadAction();
   typedef ActionTraits<DownloadAction>::InputObjectType InputObjectType;
   typedef ActionTraits<DownloadAction>::OutputObjectType OutputObjectType;
@@ -113,6 +116,9 @@ class DownloadAction : public Action<DownloadAction>,
   // For reporting status to outsiders
   DownloadActionDelegate* delegate_;
   uint64_t bytes_received_;
+
+  // Global context for the system.
+  SystemState* system_state_;
 
   DISALLOW_COPY_AND_ASSIGN(DownloadAction);
 };

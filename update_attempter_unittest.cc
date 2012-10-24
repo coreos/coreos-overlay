@@ -38,7 +38,7 @@ namespace chromeos_update_engine {
 class UpdateAttempterUnderTest : public UpdateAttempter {
  public:
   explicit UpdateAttempterUnderTest(MockDbusGlib* dbus)
-      : UpdateAttempter(NULL, NULL, dbus, NULL, NULL) {}
+      : UpdateAttempter(NULL, dbus, NULL, NULL) {}
 };
 
 class UpdateAttempterTest : public ::testing::Test {
@@ -53,7 +53,6 @@ class UpdateAttempterTest : public ::testing::Test {
     EXPECT_EQ(NULL, attempter_.dbus_service_);
     EXPECT_EQ(NULL, attempter_.prefs_);
     EXPECT_EQ(NULL, attempter_.system_state_);
-    EXPECT_EQ(NULL, attempter_.metrics_lib_);
     EXPECT_EQ(NULL, attempter_.update_check_scheduler_);
     EXPECT_EQ(0, attempter_.http_response_code_);
     EXPECT_EQ(utils::kProcessPriorityNormal, attempter_.priority_);
@@ -115,7 +114,7 @@ class UpdateAttempterTest : public ::testing::Test {
 TEST_F(UpdateAttempterTest, ActionCompletedDownloadTest) {
   scoped_ptr<MockHttpFetcher> fetcher(new MockHttpFetcher("", 0, NULL));
   fetcher->FailTransfer(503);  // Sets the HTTP response code.
-  DownloadAction action(&prefs_, fetcher.release());
+  DownloadAction action(&prefs_, NULL, fetcher.release());
   EXPECT_CALL(prefs_, GetInt64(kPrefsDeltaUpdateFailures, _)).Times(0);
   attempter_.ActionCompleted(NULL, &action, kActionCodeSuccess);
   EXPECT_EQ(503, attempter_.http_response_code());

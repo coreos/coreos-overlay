@@ -252,8 +252,9 @@ DeltaPerformer::MetadataParseResult DeltaPerformer::ParsePayloadMetadata(
       LOG(ERROR) << "Invalid metadata size. Expected = "
                  << install_plan_->metadata_size
                  << "Actual = " << *metadata_size;
-      // TODO(jaysri): Add a UMA Stat here to help with the decision to enforce
+      // Send a UMA Stat here to help with the decision to enforce
       // this check in a future release, as mentioned below.
+      SendUMAStat(kActionCodeDownloadInvalidMetadataSize);
 
       // TODO(jaysri): VALIDATION: Initially we don't want to make this a fatal
       // error.  But in the next release, we should uncomment the lines below.
@@ -281,8 +282,9 @@ DeltaPerformer::MetadataParseResult DeltaPerformer::ParsePayloadMetadata(
   // and authenticity based on the information we have in Omaha response.
   *error = ValidateMetadataSignature(&payload[0], *metadata_size);
   if (*error != kActionCodeSuccess) {
-    // TODO(jaysri): Add a UMA Stat here to help with the decision to enforce
+    // Send a UMA Stat here to help with the decision to enforce
     // this check in a future release, as mentioned below.
+    SendUMAStat(*error);
 
     // TODO(jaysri): VALIDATION: Initially we don't want to make this a fatal
     // error.  But in the next release, we should remove the line below and
@@ -364,10 +366,11 @@ bool DeltaPerformer::Write(const void* bytes, size_t count,
       if (*error != kActionCodeSuccess) {
         // Cannot proceed further as operation hash is invalid.
         // Higher level code will take care of retrying appropriately.
-        //
-        // TODO(jaysri): Add a UMA stat to indicate that an operation hash
-        // was failed to be validated as expected.
-        //
+
+        // Send a UMA stat to indicate that an operation hash failed to be
+        // validated as expected.
+        SendUMAStat(*error);
+
         // TODO(jaysri): VALIDATION: For now, we don't treat this as fatal.
         // But once we're confident that the new code works fine in the field,
         // we should uncomment the line below.
@@ -700,6 +703,11 @@ ActionExitCode DeltaPerformer::ValidateMetadataSignature(
     // that we remain robust even if the connection to Omaha is subjected to
     // any SSL attack.
     LOG(WARNING) << "Cannot validate metadata as the signature is empty";
+
+    // Send a UMA stat here so we're aware of any man-in-the-middle attempts to
+    // bypass these checks.
+    SendUMAStat(kActionCodeDownloadMetadataSignatureMissingError);
+
     return kActionCodeSuccess;
   }
 
@@ -759,9 +767,10 @@ ActionExitCode DeltaPerformer::ValidateOperationHash(
       return kActionCodeSuccess;
     }
 
-    // TODO(jaysri): Add a UMA stat here so we're aware of any
-    // man-in-the-middle attempts to bypass these checks.
-    //
+    // Send a UMA stat here so we're aware of any man-in-the-middle attempts to
+    // bypass these checks.
+    SendUMAStat(kActionCodeDownloadOperationHashMissingError);
+
     // TODO(jaysri): VALIDATION: no hash is present for the operation. This
     // shouldn't happen normally for any client that has this code, because the
     // corresponding update should have been produced with the operation
@@ -1098,6 +1107,12 @@ bool DeltaPerformer::PrimeUpdateState() {
   }
   prefs_->SetInt64(kPrefsResumedUpdateFailures, resumed_update_failures);
   return true;
+}
+
+void DeltaPerformer::SendUMAStat(ActionExitCode code) {
+  if (system_state_) {
+    utils::SendErrorCodeToUMA(system_state_->metrics_lib(), code);
+  }
 }
 
 }  // namespace chromeos_update_engine

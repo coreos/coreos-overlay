@@ -21,6 +21,7 @@
 #include "update_engine/extent_ranges.h"
 #include "update_engine/full_update_generator.h"
 #include "update_engine/graph_types.h"
+#include "update_engine/mock_system_state.h"
 #include "update_engine/payload_signer.h"
 #include "update_engine/prefs_mock.h"
 #include "update_engine/test_utils.h"
@@ -457,7 +458,8 @@ void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop,
 
   // Update the A image in place.
   InstallPlan install_plan;
-  DeltaPerformer performer(&prefs, &install_plan);
+  MockSystemState mock_system_state;
+  DeltaPerformer performer(&prefs, &mock_system_state, &install_plan);
   EXPECT_TRUE(utils::FileExists(kUnittestPublicKeyPath));
   performer.set_public_key_path(kUnittestPublicKeyPath);
 
@@ -733,7 +735,8 @@ void DoManifestTest() {
       &install_plan.metadata_signature));
   EXPECT_FALSE(install_plan.metadata_signature.empty());
 
-  DeltaPerformer performer(&prefs, &install_plan);
+  MockSystemState mock_system_state;
+  DeltaPerformer performer(&prefs, &mock_system_state, &install_plan);
   EXPECT_TRUE(utils::FileExists(kUnittestPublicKeyPath));
   performer.set_public_key_path(kUnittestPublicKeyPath);
 
@@ -839,7 +842,8 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageSignGeneratedShellRotateCl2Test) {
 TEST(DeltaPerformerTest, BadDeltaMagicTest) {
   PrefsMock prefs;
   InstallPlan install_plan;
-  DeltaPerformer performer(&prefs, &install_plan);
+  MockSystemState mock_system_state;
+  DeltaPerformer performer(&prefs, &mock_system_state, &install_plan);
   EXPECT_EQ(0, performer.Open("/dev/null", 0, 0));
   EXPECT_TRUE(performer.OpenKernel("/dev/null"));
   EXPECT_TRUE(performer.Write("junk", 4));

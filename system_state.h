@@ -5,6 +5,7 @@
 #ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_SYSTEM_STATE_H_
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_SYSTEM_STATE_H_
 
+#include "metrics/metrics_library.h"
 #include <policy/device_policy.h>
 #include <policy/libpolicy.h>
 
@@ -33,6 +34,10 @@ class SystemState {
 
   // Gets the connection manager object.
   virtual ConnectionManager* GetConnectionManager() = 0;
+
+  // Sets or gets the Metrics Library interface for reporting UMA stats.
+  virtual void set_metrics_lib(MetricsLibraryInterface* metrics_lib) = 0;
+  virtual MetricsLibraryInterface* metrics_lib() = 0;
 };
 
 // A real implementation of the SystemStateInterface which is
@@ -50,6 +55,9 @@ public:
 
   virtual ConnectionManager* GetConnectionManager();
 
+  virtual void set_metrics_lib(MetricsLibraryInterface* metrics_lib);
+  virtual MetricsLibraryInterface* metrics_lib();
+
 private:
   // The latest device policy object from the policy provider.
   const policy::DevicePolicy* device_policy_;
@@ -57,6 +65,9 @@ private:
   // The connection manager object that makes download
   // decisions depending on the current type of connection.
   ConnectionManager connection_manager_;
+
+  // The Metrics Library interface for reporting UMA stats.
+  MetricsLibraryInterface* metrics_lib_;
 };
 
 }  // namespace chromeos_update_engine

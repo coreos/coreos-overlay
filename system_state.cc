@@ -12,7 +12,8 @@ static const char kOOBECompletedMarker[] = "/home/chronos/.oobe_completed";
 
 RealSystemState::RealSystemState()
     : device_policy_(NULL),
-      connection_manager_(this) {}
+      connection_manager_(this),
+      metrics_lib_(NULL) {}
 
 bool RealSystemState::IsOOBEComplete() {
   return file_util::PathExists(FilePath(kOOBECompletedMarker));
@@ -29,6 +30,14 @@ const policy::DevicePolicy* RealSystemState::GetDevicePolicy() const {
 
 ConnectionManager* RealSystemState::GetConnectionManager() {
   return &connection_manager_;
+}
+
+void RealSystemState::set_metrics_lib(MetricsLibraryInterface* metrics_lib) {
+  metrics_lib_ = metrics_lib;
+}
+
+MetricsLibraryInterface* RealSystemState::metrics_lib() {
+  return metrics_lib_;
 }
 
 }  // namespace chromeos_update_engine

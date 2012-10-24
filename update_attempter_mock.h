@@ -15,7 +15,7 @@ namespace chromeos_update_engine {
 class UpdateAttempterMock : public UpdateAttempter {
  public:
   explicit UpdateAttempterMock(MockDbusGlib* dbus)
-      : UpdateAttempter(NULL, NULL, dbus, NULL, NULL) {}
+      : UpdateAttempter(NULL, dbus, NULL, NULL) {}
 
   MOCK_METHOD6(Update, void(const std::string& app_version,
                             const std::string& omaha_url,

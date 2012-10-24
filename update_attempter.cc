@@ -108,14 +108,12 @@ ActionExitCode GetErrorCodeForAction(AbstractAction* action,
 }
 
 UpdateAttempter::UpdateAttempter(PrefsInterface* prefs,
-                                 MetricsLibraryInterface* metrics_lib,
                                  DbusGlibInterface* dbus_iface,
                                  GpioHandler* gpio_handler,
                                  SystemState* system_state)
     : processor_(new ActionProcessor()),
       dbus_service_(NULL),
       prefs_(prefs),
-      metrics_lib_(metrics_lib),
       update_check_scheduler_(NULL),
       fake_update_success_(false),
       http_response_code_(0),
@@ -441,6 +439,7 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
   download_fetcher->set_check_certificate(CertificateChecker::kDownload);
   shared_ptr<DownloadAction> download_action(
       new DownloadAction(prefs_,
+                         system_state_,
                          new MultiRangeHttpFetcher(
                              download_fetcher)));  // passes ownership
   shared_ptr<OmahaRequestAction> download_finished_action(
@@ -589,6 +588,7 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
     prefs_->Delete(kPrefsUpdateCheckCount);
     prefs_->Delete(kPrefsWallClockWaitPeriod);
     prefs_->Delete(kPrefsUpdateFirstSeenAt);
+    LOG(INFO) << "Update successfully applied, waiting to reboot.";
 
     SetStatusAndNotify(UPDATE_STATUS_UPDATED_NEED_REBOOT,
                        kUpdateNoticeUnspecified);
@@ -596,11 +596,16 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
     // Report the time it took to update the system.
     int64_t update_time = time(NULL) - last_checked_time_;
     if (!fake_update_success_)
-      metrics_lib_->SendToUMA("Installer.UpdateTime",
-                              static_cast<int>(update_time),  // sample
-                              1,  // min = 1 second
-                              20 * 60,  // max = 20 minutes
-                              50);  // buckets
+      system_state_->metrics_lib()->SendToUMA(
+          "Installer.UpdateTime",
+           static_cast<int>(update_time),  // sample
+           1,  // min = 1 second
+           20 * 60,  // max = 20 minutes
+           50);  // buckets
+
+    // Also report the success code so that the percentiles can be
+    // interpreted properly for the remaining error codes in UMA.
+    utils::SendErrorCodeToUMA(system_state_->metrics_lib(), code);
     return;
   }
 
@@ -874,6 +879,8 @@ bool UpdateAttempter::ScheduleErrorEventAction() {
     return false;
 
   LOG(INFO) << "Update failed -- reporting the error event.";
+  utils::SendErrorCodeToUMA(system_state_->metrics_lib(),
+                            error_event_->error_code);
   shared_ptr<OmahaRequestAction> error_event_action(
       new OmahaRequestAction(prefs_,
                              &omaha_request_params_,

@@ -23,7 +23,6 @@ namespace chromeos_update_engine {
 
 // Action exit codes.
 enum ActionExitCode {
-  // use the 0xx and 1xx ranges for client errors.
   kActionCodeSuccess = 0,
   kActionCodeError = 1,
   kActionCodeOmahaRequestError = 2,
@@ -54,26 +53,45 @@ enum ActionExitCode {
   kActionCodeDownloadOperationHashVerificationError = 27,
   kActionCodeDownloadOperationExecutionError = 28,
   kActionCodeDownloadOperationHashMismatch = 29,
+  kActionCodeOmahaRequestEmptyResponseError = 30,
+  kActionCodeOmahaRequestXMLParseError = 31,
+  kActionCodeOmahaRequestNoUpdateCheckNode = 32,
+  kActionCodeOmahaRequestNoUpdateCheckStatus = 33,
+  kActionCodeOmahaRequestBadUpdateCheckStatus = 34,
+  kActionCodeOmahaUpdateIgnoredPerPolicy = 35,
+  kActionCodeOmahaUpdateDeferredPerPolicy = 36,
+  kActionCodeOmahaErrorInHTTPResponse = 37,
+  kActionCodeDownloadOperationHashMissingError = 38,
+  kActionCodeDownloadInvalidMetadataSize = 39,
+  kActionCodeDownloadInvalidMetadataSignature = 39,
+  kActionCodeDownloadMetadataSignatureMissingError = 40,
 
-  // use the 2xx range for errors in Omaha response.
-  kActionCodeOmahaRequestEmptyResponseError = 200,
-  kActionCodeOmahaRequestXMLParseError = 201,
-  kActionCodeOmahaRequestNoUpdateCheckNode = 202,
-  kActionCodeOmahaRequestNoUpdateCheckStatus = 203,
-  kActionCodeOmahaRequestBadUpdateCheckStatus = 204,
+  // Any code above this is sent to both Omaha and UMA as-is.
+  // Codes/flags below this line is sent only to Omaha and not to UMA.
 
-  // use the 2xxx range to encode HTTP errors.
+  // kNumBucketsForUMAMetrics is not an error code per se, it's just the count
+  // of the number of enums above.  Add any new errors above this line if you
+  // want them to show up on UMA. Stuff below this line will not be sent to UMA
+  // but is used for other errors that are sent to Omaha. We don't assign any
+  // particular value for this enum so that it's just one more than the last
+  // one above and thus always represents the correct count of UMA metrics
+  // buckets, even when new enums are added above this line in future. See
+  // utils::SendErrorCodeToUMA on how this enum is used.
+  kNumBucketsForUMAMetrics,
+
+  // use the 2xxx range to encode HTTP errors. These errors are available in
+  // Dremel with the individual granularity. But for UMA purposes, all these
+  // errors are aggregated into one: kActionCodeOmahaErrorInHTTPResponse.
   kActionCodeOmahaRequestHTTPResponseBase = 2000,  // + HTTP response code
 
-  // use the 5xxx range for return codes that are not really errors,
-  // but deferred updates. these have to be logged with a different
-  // result in Omaha so that they don't show up as errors in borgmon charts.
-  kActionCodeOmahaUpdateIgnoredPerPolicy = 5000,
-  kActionCodeOmahaUpdateDeferredPerPolicy = 5001,
-
-  // Bit flags.
+  // Bit flags. Remember to update the mask below for new bits.
   kActionCodeResumedFlag = 1 << 30,  // Set if resuming an interruped update.
   kActionCodeBootModeFlag = 1 << 31,  // Set if boot mode not normal.
+
+  // Mask to be used to extract the actual code without the higher-order
+  // bit flags (for reporting to UMA which requires small contiguous
+  // enum values)
+  kActualCodeMask = ~(kActionCodeResumedFlag | kActionCodeBootModeFlag)
 };
 
 class AbstractAction;

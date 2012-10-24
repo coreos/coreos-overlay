@@ -7,7 +7,9 @@
 
 #include <gmock/gmock.h>
 
+#include <metrics/metrics_library_mock.h>
 #include <policy/mock_device_policy.h>
+
 #include "update_engine/system_state.h"
 
 namespace chromeos_update_engine {
@@ -16,7 +18,11 @@ namespace chromeos_update_engine {
 // OOBE is completed even when there's no such marker file, etc.
 class MockSystemState : public SystemState {
  public:
-  MockSystemState() {}
+  MockSystemState() {
+    // By default, provide a mock metrics library. If the caller wants,
+    // they can override this by using set_metrics_lib() method.
+    metrics_lib_ = &mock_metrics_lib_;
+  }
   virtual ~MockSystemState() {}
 
   MOCK_METHOD0(IsOOBEComplete, bool());
@@ -31,8 +37,18 @@ class MockSystemState : public SystemState {
     return connection_manager_;
   }
 
+  void set_metrics_lib(MetricsLibraryInterface* metrics_lib) {
+    metrics_lib_ = metrics_lib;
+  }
+  virtual MetricsLibraryInterface* metrics_lib() {
+    return metrics_lib_;
+  }
+
+
  private:
   ConnectionManager* connection_manager_;
+  MetricsLibraryMock mock_metrics_lib_;
+  MetricsLibraryInterface* metrics_lib_;
 };
 
 } // namespeace chromeos_update_engine

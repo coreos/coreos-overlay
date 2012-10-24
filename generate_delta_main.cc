@@ -191,7 +191,7 @@ void ApplyDelta() {
                                   kern_info.hash().end());
   install_plan.rootfs_hash.assign(root_info.hash().begin(),
                                   root_info.hash().end());
-  DeltaPerformer performer(&prefs, &install_plan);
+  DeltaPerformer performer(&prefs, NULL, &install_plan);
   CHECK_EQ(performer.Open(FLAGS_old_image.c_str(), 0, 0), 0);
   CHECK(performer.OpenKernel(FLAGS_old_kernel.c_str()));
   vector<char> buf(1024 * 1024);

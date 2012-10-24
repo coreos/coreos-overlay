@@ -172,8 +172,11 @@ int main(int argc, char** argv) {
   LOG_IF(ERROR, !prefs.Init(FilePath("/var/lib/update_engine/prefs")))
       << "Failed to initialize preferences.";
 
+  chromeos_update_engine::RealSystemState real_system_state;
+
   MetricsLibrary metrics_lib;
   metrics_lib.Init();
+  real_system_state.set_metrics_lib(&metrics_lib);
 
   // Sets static members for the certificate checker.
   chromeos_update_engine::CertificateChecker::set_metrics_lib(&metrics_lib);
@@ -193,9 +196,7 @@ int main(int argc, char** argv) {
 
   // Create the update attempter:
   chromeos_update_engine::ConcreteDbusGlib dbus;
-  chromeos_update_engine::RealSystemState real_system_state;
   chromeos_update_engine::UpdateAttempter update_attempter(&prefs,
-                                                           &metrics_lib,
                                                            &dbus,
                                                            &gpio_handler,
                                                            &real_system_state);

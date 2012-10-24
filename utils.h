@@ -16,11 +16,14 @@
 #include <base/time.h>
 #include <ext2fs/ext2fs.h>
 #include <glib.h>
+#include "metrics/metrics_library.h"
 
 #include "update_engine/action.h"
 #include "update_engine/action_processor.h"
 
 namespace chromeos_update_engine {
+
+class InstallPlan;
 
 namespace utils {
 
@@ -275,6 +278,11 @@ std::string FormatSecs(unsigned secs);
 // when applicable.
 std::string FormatTimeDelta(base::TimeDelta delta);
 
+// Sends the error code to the appropriate bucket in UMA using the metrics_lib
+// interface. This method also massages the error code to be suitable for UMA
+// purposes.
+void SendErrorCodeToUMA(MetricsLibraryInterface* metrics_lib,
+                        ActionExitCode code);
 }  // namespace utils
 
 

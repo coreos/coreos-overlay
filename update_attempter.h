@@ -61,7 +61,6 @@ class UpdateAttempter : public ActionProcessorDelegate,
   static const int kMaxDeltaUpdateFailures;
 
   UpdateAttempter(PrefsInterface* prefs,
-                  MetricsLibraryInterface* metrics_lib,
                   DbusGlibInterface* dbus_iface,
                   GpioHandler* gpio_handler,
                   SystemState* system_state);
@@ -288,9 +287,6 @@ class UpdateAttempter : public ActionProcessorDelegate,
 
   // Pointer to the preferences store interface.
   PrefsInterface* prefs_;
-
-  // Pointer to the UMA metrics collection library.
-  MetricsLibraryInterface* metrics_lib_;
 
   // The current UpdateCheckScheduler to notify of state transitions.
   UpdateCheckScheduler* update_check_scheduler_;

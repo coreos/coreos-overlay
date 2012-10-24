@@ -130,7 +130,7 @@ bool PayloadSigner::LoadPayload(const string& payload_path,
   LOG(INFO) << "Payload size: " << payload.size();
   ActionExitCode error = kActionCodeSuccess;
   InstallPlan install_plan;
-  DeltaPerformer delta_performer(NULL, &install_plan);
+  DeltaPerformer delta_performer(NULL, NULL, &install_plan);
   TEST_AND_RETURN_FALSE(delta_performer.ParsePayloadMetadata(
       payload, out_manifest, out_metadata_size, &error) ==
                         DeltaPerformer::kMetadataParseSuccess);
