@@ -100,14 +100,17 @@ class DownloadAction : public Action<DownloadAction>,
   // Update Engine preference store.
   PrefsInterface* prefs_;
 
+  // Global context for the system.
+  SystemState* system_state_;
+
+  // Pointer to the HttpFetcher that does the http work.
+  scoped_ptr<HttpFetcher> http_fetcher_;
+
   // The FileWriter that downloaded data should be written to. It will
   // either point to *decompressing_file_writer_ or *delta_performer_.
   FileWriter* writer_;
 
   scoped_ptr<DeltaPerformer> delta_performer_;
-
-  // Pointer to the HttpFetcher that does the http work.
-  scoped_ptr<HttpFetcher> http_fetcher_;
 
   // Used by TransferTerminated to figure if this action terminated itself or
   // was terminated by the action processor.
@@ -116,9 +119,6 @@ class DownloadAction : public Action<DownloadAction>,
   // For reporting status to outsiders
   DownloadActionDelegate* delegate_;
   uint64_t bytes_received_;
-
-  // Global context for the system.
-  SystemState* system_state_;
 
   DISALLOW_COPY_AND_ASSIGN(DownloadAction);
 };

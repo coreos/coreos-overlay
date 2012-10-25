@@ -23,8 +23,6 @@
 
 namespace chromeos_update_engine {
 
-class InstallPlan;
-
 namespace utils {
 
 // Returns true if this is an official Chrome OS build, false otherwise.
@@ -281,7 +279,7 @@ std::string FormatTimeDelta(base::TimeDelta delta);
 // Sends the error code to the appropriate bucket in UMA using the metrics_lib
 // interface. This method also massages the error code to be suitable for UMA
 // purposes.
-void SendErrorCodeToUMA(MetricsLibraryInterface* metrics_lib,
+void SendErrorCodeToUma(MetricsLibraryInterface* metrics_lib,
                         ActionExitCode code);
 }  // namespace utils
 

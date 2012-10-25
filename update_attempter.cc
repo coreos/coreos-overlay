@@ -605,7 +605,7 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
 
     // Also report the success code so that the percentiles can be
     // interpreted properly for the remaining error codes in UMA.
-    utils::SendErrorCodeToUMA(system_state_->metrics_lib(), code);
+    utils::SendErrorCodeToUma(system_state_->metrics_lib(), code);
     return;
   }
 
@@ -879,7 +879,7 @@ bool UpdateAttempter::ScheduleErrorEventAction() {
     return false;
 
   LOG(INFO) << "Update failed -- reporting the error event.";
-  utils::SendErrorCodeToUMA(system_state_->metrics_lib(),
+  utils::SendErrorCodeToUma(system_state_->metrics_lib(),
                             error_event_->error_code);
   shared_ptr<OmahaRequestAction> error_event_action(
       new OmahaRequestAction(prefs_,

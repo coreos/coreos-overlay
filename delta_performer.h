@@ -217,7 +217,7 @@ class DeltaPerformer : public FileWriter {
   bool PrimeUpdateState();
 
   // Sends UMA statistics for the given error code.
-  void SendUMAStat(ActionExitCode code);
+  void SendUmaStat(ActionExitCode code);
 
   // Update Engine preference store.
   PrefsInterface* prefs_;

@@ -24,12 +24,12 @@ DownloadAction::DownloadAction(PrefsInterface* prefs,
                                SystemState* system_state,
                                HttpFetcher* http_fetcher)
     : prefs_(prefs),
-      writer_(NULL),
+      system_state_(system_state),
       http_fetcher_(http_fetcher),
+      writer_(NULL),
       code_(kActionCodeSuccess),
       delegate_(NULL),
-      bytes_received_(0),
-      system_state_(system_state) {}
+      bytes_received_(0) {}
 
 DownloadAction::~DownloadAction() {}
 

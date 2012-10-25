@@ -63,27 +63,29 @@ enum ActionExitCode {
   kActionCodeOmahaErrorInHTTPResponse = 37,
   kActionCodeDownloadOperationHashMissingError = 38,
   kActionCodeDownloadInvalidMetadataSize = 39,
-  kActionCodeDownloadInvalidMetadataSignature = 39,
-  kActionCodeDownloadMetadataSignatureMissingError = 40,
+  kActionCodeDownloadInvalidMetadataSignature = 40,
+  kActionCodeDownloadMetadataSignatureMissingError = 41,
 
   // Any code above this is sent to both Omaha and UMA as-is.
   // Codes/flags below this line is sent only to Omaha and not to UMA.
 
-  // kNumBucketsForUMAMetrics is not an error code per se, it's just the count
+  // kActionCodeUmaReportedMax is not an error code per se, it's just the count
   // of the number of enums above.  Add any new errors above this line if you
   // want them to show up on UMA. Stuff below this line will not be sent to UMA
   // but is used for other errors that are sent to Omaha. We don't assign any
   // particular value for this enum so that it's just one more than the last
   // one above and thus always represents the correct count of UMA metrics
   // buckets, even when new enums are added above this line in future. See
-  // utils::SendErrorCodeToUMA on how this enum is used.
-  kNumBucketsForUMAMetrics,
+  // utils::SendErrorCodeToUma on how this enum is used.
+  kActionCodeUmaReportedMax,
 
   // use the 2xxx range to encode HTTP errors. These errors are available in
   // Dremel with the individual granularity. But for UMA purposes, all these
   // errors are aggregated into one: kActionCodeOmahaErrorInHTTPResponse.
   kActionCodeOmahaRequestHTTPResponseBase = 2000,  // + HTTP response code
 
+  // TODO(jaysri): Move out all the bit masks into separate constants
+  // outside the enum as part of fixing bug 34369.
   // Bit flags. Remember to update the mask below for new bits.
   kActionCodeResumedFlag = 1 << 30,  // Set if resuming an interruped update.
   kActionCodeBootModeFlag = 1 << 31,  // Set if boot mode not normal.
