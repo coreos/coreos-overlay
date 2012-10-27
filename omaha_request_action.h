@@ -35,6 +35,7 @@ struct OmahaResponse {
         poll_interval(0),
         size(0),
         metadata_size(0),
+        max_days_to_scatter(0),
         needs_admin(false),
         prompt(false) {}
   // True iff there is an update to be downloaded.
@@ -52,6 +53,7 @@ struct OmahaResponse {
   std::string deadline;
   off_t size;
   off_t metadata_size;
+  int max_days_to_scatter;
   bool needs_admin;
   bool prompt;
 };
@@ -160,8 +162,8 @@ class OmahaRequestAction : public Action<OmahaRequestAction>,
   // Delegate methods (see http_fetcher.h)
   virtual void ReceivedBytes(HttpFetcher *fetcher,
                              const char* bytes, int length);
-  virtual void TransferComplete(HttpFetcher *fetcher, bool successful);
 
+  virtual void TransferComplete(HttpFetcher *fetcher, bool successful);
   // Returns true if this is an Event request, false if it's an UpdateCheck.
   bool IsEvent() const { return event_.get() != NULL; }
 
@@ -177,18 +179,54 @@ class OmahaRequestAction : public Action<OmahaRequestAction>,
 
   // Returns true if the download of a new update should be deferred.
   // False if the update can be downloaded.
-  bool ShouldDeferDownload(xmlNode* updatecheck_node);
+  bool ShouldDeferDownload(OmahaResponse* output_object);
 
   // Returns true if the basic wall-clock-based waiting period has been
   // satisfied based on the scattering policy setting. False otherwise.
   // If true, it also indicates whether the additional update-check-count-based
   // waiting period also needs to be satisfied before the download can begin.
   WallClockWaitResult IsWallClockBasedWaitingSatisfied(
-      xmlNode* updatecheck_node);
+      OmahaResponse* output_object);
 
   // Returns true if the update-check-count-based waiting period has been
   // satisfied. False otherwise.
-  bool IsUpdateCheckCountBasedWaitingSatisfied(xmlNode* updatecheck_node);
+  bool IsUpdateCheckCountBasedWaitingSatisfied();
+
+  // Parses the response from Omaha that's available in |doc| using the other
+  // helper methods below and populates the |output_object| with the relevant
+  // values. Returns true if we should continue the parsing.  False otherwise,
+  // in which case it sets any error code using |completer|.
+  bool ParseResponse(xmlDoc* doc,
+                     OmahaResponse* output_object,
+                     ScopedActionCompleter* completer);
+
+  // Parses the status property in the given update_check_node and populates
+  // |output_object| if valid. Returns true if we should continue the parsing.
+  // False otherwise, in which case it sets any error code using |completer|.
+  bool ParseStatus(xmlNode* update_check_node,
+                   OmahaResponse* output_object,
+                   ScopedActionCompleter* completer);
+
+  // Parses the URL nodes in the given XML document and populates
+  // |output_object| if valid. Returns true if we should continue the parsing.
+  // False otherwise, in which case it sets any error code using |completer|.
+  bool ParseUrls(xmlDoc* doc,
+                 OmahaResponse* output_object,
+                 ScopedActionCompleter* completer);
+
+  // Parses the package node in the given XML document and populates
+  // |output_object| if valid. Returns true if we should continue the parsing.
+  // False otherwise, in which case it sets any error code using |completer|.
+  bool ParsePackage(xmlDoc* doc,
+                    OmahaResponse* output_object,
+                    ScopedActionCompleter* completer);
+
+  // Parses the other parameters in the given XML document and populates
+  // |output_object| if valid. Returns true if we should continue the parsing.
+  // False otherwise, in which case it sets any error code using |completer|.
+  bool ParseParams(xmlDoc* doc,
+                   OmahaResponse* output_object,
+                   ScopedActionCompleter* completer);
 
   // Access to the preferences store.
   PrefsInterface* prefs_;

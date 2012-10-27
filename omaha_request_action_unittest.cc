@@ -57,10 +57,10 @@ OmahaRequestParams kDefaultTestParams(
 
 string GetNoUpdateResponse(const string& app_id) {
   return string(
-      "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gupdate "
-      "xmlns=\"http://www.google.com/update2/response\" protocol=\"2.0\"><app "
-      "appid=\"") + app_id + "\" status=\"ok\"><ping "
-      "status=\"ok\"/><updatecheck status=\"noupdate\"/></app></gupdate>";
+      "<?xml version=\"1.0\" encoding=\"UTF-8\"?><response protocol=\"3.0\">"
+      "<daystart elapsed_seconds=\"100\"/>"
+      "<app appid=\"") + app_id + "\" status=\"ok\"><ping "
+      "status=\"ok\"/><updatecheck status=\"noupdate\"/></app></response>";
 }
 
 string GetUpdateResponse2(const string& app_id,
@@ -68,28 +68,34 @@ string GetUpdateResponse2(const string& app_id,
                           const string& more_info_url,
                           const string& prompt,
                           const string& codebase,
+                          const string& filename,
                           const string& hash,
                           const string& needsadmin,
                           const string& size,
                           const string& deadline,
                           const string& max_days_to_scatter) {
-  return string(
-      "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gupdate "
-      "xmlns=\"http://www.google.com/update2/response\" "
-      "protocol=\"2.0\"><app "
-      "appid=\"") + app_id + "\" status=\"ok\"><ping "
-      "status=\"ok\"/><updatecheck DisplayVersion=\"" + display_version + "\" "
+  string response =
+      "<?xml version=\"1.0\" encoding=\"UTF-8\"?><response "
+      "protocol=\"3.0\">"
+      "<daystart elapsed_seconds=\"100\"/>"
+      "<app appid=\"" + app_id + "\" status=\"ok\">"
+      "<ping status=\"ok\"/><updatecheck status=\"ok\">"
+      "<urls><url codebase=\"" + codebase + "\"/></urls>"
+      "<manifest version=\"" + display_version + "\">"
+      "<packages><package hash=\"not-used\" name=\"" + filename +  "\" "
+      "size=\"" + size + "\"/></packages>"
+      "<actions><action event=\"postinstall\" "
+      "DisplayVersion=\"" + display_version + "\" "
       "ChromeOSVersion=\"" + display_version + "\" "
       "MoreInfo=\"" + more_info_url + "\" Prompt=\"" + prompt + "\" "
       "IsDelta=\"true\" "
       "MaxDaysToScatter=\"" + max_days_to_scatter + "\" "
-      "codebase=\"" + codebase + "\" "
-      "hash=\"not-applicable\" "
       "sha256=\"" + hash + "\" "
-      "needsadmin=\"" + needsadmin + "\" "
-      "size=\"" + size + "\" " +
+      "needsadmin=\"" + needsadmin + "\" " +
       (deadline.empty() ? "" : ("deadline=\"" + deadline + "\" ")) +
-      "status=\"ok\"/></app></gupdate>";
+      "/></actions></manifest></updatecheck></app></response>";
+  LOG(INFO) << "Response = " << response;
+  return response;
 }
 
 string GetUpdateResponse(const string& app_id,
@@ -97,6 +103,7 @@ string GetUpdateResponse(const string& app_id,
                          const string& more_info_url,
                          const string& prompt,
                          const string& codebase,
+                         const string& filename,
                          const string& hash,
                          const string& needsadmin,
                          const string& size,
@@ -106,6 +113,7 @@ string GetUpdateResponse(const string& app_id,
                             more_info_url,
                             prompt,
                             codebase,
+                            filename,
                             hash,
                             needsadmin,
                             size,
@@ -278,7 +286,8 @@ TEST(OmahaRequestActionTest, ValidUpdateTest) {
                                         "1.2.3.4",  // version
                                         "http://more/info",
                                         "true",  // prompt
-                                        "http://code/base",  // dl url
+                                        "http://code/base/",  // dl url
+                                        "file.signed", // file name
                                         "HASH1234=",  // checksum
                                         "false",  // needs admin
                                         "123",  // size
@@ -291,7 +300,7 @@ TEST(OmahaRequestActionTest, ValidUpdateTest) {
   EXPECT_TRUE(response.update_exists);
   EXPECT_TRUE(response.update_exists);
   EXPECT_EQ("1.2.3.4", response.display_version);
-  EXPECT_EQ("http://code/base", response.codebase);
+  EXPECT_EQ("http://code/base/file.signed", response.codebase);
   EXPECT_EQ("http://more/info", response.more_info_url);
   EXPECT_EQ("HASH1234=", response.hash);
   EXPECT_EQ(123, response.size);
@@ -311,7 +320,8 @@ TEST(OmahaRequestActionTest, ValidUpdateBlockedByPolicyTest) {
                                         "1.2.3.4",  // version
                                         "http://more/info",
                                         "true",  // prompt
-                                        "http://code/base",  // dl url
+                                        "http://code/base/",  // dl url
+                                        "file.signed", // file name
                                         "HASH1234=",  // checksum
                                         "false",  // needs admin
                                         "123",  // size
@@ -363,7 +373,8 @@ TEST(OmahaRequestActionTest, WallClockBasedWaitAloneCausesScattering) {
                                          "1.2.3.4",  // version
                                          "http://more/info",
                                          "true",  // prompt
-                                         "http://code/base",  // dl url
+                                         "http://code/base/",  // dl url
+                                         "file.signed", // file name
                                          "HASH1234=",  // checksum
                                          "false",  // needs admin
                                          "123",  // size
@@ -403,7 +414,8 @@ TEST(OmahaRequestActionTest, NoWallClockBasedWaitCausesNoScattering) {
                                          "1.2.3.4",  // version
                                          "http://more/info",
                                          "true",  // prompt
-                                         "http://code/base",  // dl url
+                                         "http://code/base/",  // dl url
+                                         "file.signed", // file name
                                          "HASH1234=",  // checksum
                                          "false",  // needs admin
                                          "123",  // size
@@ -443,7 +455,8 @@ TEST(OmahaRequestActionTest, ZeroMaxDaysToScatterCausesNoScattering) {
                                          "1.2.3.4",  // version
                                          "http://more/info",
                                          "true",  // prompt
-                                         "http://code/base",  // dl url
+                                         "http://code/base/",  // dl url
+                                         "file.signed", // file name
                                          "HASH1234=",  // checksum
                                          "false",  // needs admin
                                          "123",  // size
@@ -484,7 +497,8 @@ TEST(OmahaRequestActionTest, ZeroUpdateCheckCountCausesNoScattering) {
                                          "1.2.3.4",  // version
                                          "http://more/info",
                                          "true",  // prompt
-                                         "http://code/base",  // dl url
+                                         "http://code/base/",  // dl url
+                                         "file.signed", // file name
                                          "HASH1234=",  // checksum
                                          "false",  // needs admin
                                          "123",  // size
@@ -528,7 +542,8 @@ TEST(OmahaRequestActionTest, NonZeroUpdateCheckCountCausesScattering) {
                                          "1.2.3.4",  // version
                                          "http://more/info",
                                          "true",  // prompt
-                                         "http://code/base",  // dl url
+                                         "http://code/base/",  // dl url
+                                         "file.signed", // file name
                                          "HASH1234=",  // checksum
                                          "false",  // needs admin
                                          "123",  // size
@@ -574,7 +589,8 @@ TEST(OmahaRequestActionTest, ExistingUpdateCheckCountCausesScattering) {
                                          "1.2.3.4",  // version
                                          "http://more/info",
                                          "true",  // prompt
-                                         "http://code/base",  // dl url
+                                         "http://code/base/",  // dl url
+                                         "file.signed", // file name
                                          "HASH1234=",  // checksum
                                          "false",  // needs admin
                                          "123",  // size
@@ -651,13 +667,14 @@ TEST(OmahaRequestActionTest, MissingStatusTest) {
   ASSERT_FALSE(TestUpdateCheck(
       NULL,  // prefs
       kDefaultTestParams,
-      "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gupdate "
-      "xmlns=\"http://www.google.com/update2/response\" protocol=\"2.0\"><app "
-      "appid=\"foo\" status=\"ok\"><ping "
-      "status=\"ok\"/><updatecheck/></app></gupdate>",
+      "<?xml version=\"1.0\" encoding=\"UTF-8\"?><response protocol=\"3.0\">"
+      "<daystart elapsed_seconds=\"100\"/>"
+      "<app appid=\"foo\" status=\"ok\">"
+      "<ping status=\"ok\"/>"
+      "<updatecheck/></app></response>",
       -1,
       false,  // ping_only
-      kActionCodeOmahaRequestNoUpdateCheckStatus,
+      kActionCodeOmahaResponseInvalid,
       &response,
       NULL));
   EXPECT_FALSE(response.update_exists);
@@ -668,13 +685,14 @@ TEST(OmahaRequestActionTest, InvalidStatusTest) {
   ASSERT_FALSE(TestUpdateCheck(
       NULL,  // prefs
       kDefaultTestParams,
-      "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gupdate "
-      "xmlns=\"http://www.google.com/update2/response\" protocol=\"2.0\"><app "
-      "appid=\"foo\" status=\"ok\"><ping "
-      "status=\"ok\"/><updatecheck status=\"foo\"/></app></gupdate>",
+      "<?xml version=\"1.0\" encoding=\"UTF-8\"?><response protocol=\"3.0\">"
+      "<daystart elapsed_seconds=\"100\"/>"
+      "<app appid=\"foo\" status=\"ok\">"
+      "<ping status=\"ok\"/>"
+      "<updatecheck status=\"InvalidStatusTest\"/></app></response>",
       -1,
       false,  // ping_only
-      kActionCodeOmahaRequestBadUpdateCheckStatus,
+      kActionCodeOmahaResponseInvalid,
       &response,
       NULL));
   EXPECT_FALSE(response.update_exists);
@@ -685,49 +703,54 @@ TEST(OmahaRequestActionTest, MissingNodesetTest) {
   ASSERT_FALSE(TestUpdateCheck(
       NULL,  // prefs
       kDefaultTestParams,
-      "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gupdate "
-      "xmlns=\"http://www.google.com/update2/response\" protocol=\"2.0\"><app "
-      "appid=\"foo\" status=\"ok\"><ping "
-      "status=\"ok\"/></app></gupdate>",
+      "<?xml version=\"1.0\" encoding=\"UTF-8\"?><response protocol=\"3.0\">"
+      "<daystart elapsed_seconds=\"100\"/>"
+      "<app appid=\"foo\" status=\"ok\">"
+      "<ping status=\"ok\"/>"
+      "</app></response>",
       -1,
       false,  // ping_only
-      kActionCodeOmahaRequestNoUpdateCheckNode,
+      kActionCodeOmahaResponseInvalid,
       &response,
       NULL));
   EXPECT_FALSE(response.update_exists);
 }
 
 TEST(OmahaRequestActionTest, MissingFieldTest) {
+  string input_response =
+      "<?xml version=\"1.0\" encoding=\"UTF-8\"?><response protocol=\"3.0\">"
+      "<daystart elapsed_seconds=\"100\"/>"
+      "<app appid=\"xyz\" status=\"ok\">"
+      "<updatecheck status=\"ok\">"
+      "<urls><url codebase=\"http://missing/field/test/\"/></urls>"
+      "<manifest version=\"1.0.0.0\">"
+      "<packages><package hash=\"not-used\" name=\"f\" "
+      "size=\"587\"/></packages>"
+      "<actions><action event=\"postinstall\" "
+      "DisplayVersion=\"10.2.3.4\" "
+      "ChromeOSVersion=\"10.2.3.4\" "
+      "Prompt=\"false\" "
+      "IsDelta=\"true\" "
+      "sha256=\"lkq34j5345\" "
+      "needsadmin=\"true\" "
+      "/></actions></manifest></updatecheck></app></response>";
+  LOG(INFO) << "Input Response = " << input_response;
+
   OmahaResponse response;
   ASSERT_TRUE(TestUpdateCheck(NULL,  // prefs
                               kDefaultTestParams,
-                              string("<?xml version=\"1.0\" "
-                                     "encoding=\"UTF-8\"?><gupdate "
-                                     "xmlns=\"http://www.google.com/"
-                                     "update2/response\" "
-                                     "protocol=\"2.0\"><app appid=\"") +
-                              OmahaRequestParams::kAppId
-                              + "\" status=\"ok\"><ping "
-                              "status=\"ok\"/><updatecheck "
-                              "DisplayVersion=\"1.2.3.4\" "
-                              "ChromeOSVersion=\"1.2.3.4\" "
-                              "Prompt=\"false\" "
-                              "IsDelta=\"true\" "
-                              "codebase=\"http://code/base\" hash=\"foo\" "
-                              "sha256=\"HASH1234=\" needsadmin=\"true\" "
-                              "size=\"123\" "
-                              "status=\"ok\"/></app></gupdate>",
+                              input_response,
                               -1,
                               false,  // ping_only
                               kActionCodeSuccess,
                               &response,
                               NULL));
   EXPECT_TRUE(response.update_exists);
-  EXPECT_EQ("1.2.3.4", response.display_version);
-  EXPECT_EQ("http://code/base", response.codebase);
+  EXPECT_EQ("10.2.3.4", response.display_version);
+  EXPECT_EQ("http://missing/field/test/f", response.codebase);
   EXPECT_EQ("", response.more_info_url);
-  EXPECT_EQ("HASH1234=", response.hash);
-  EXPECT_EQ(123, response.size);
+  EXPECT_EQ("lkq34j5345", response.hash);
+  EXPECT_EQ(587, response.size);
   EXPECT_TRUE(response.needs_admin);
   EXPECT_FALSE(response.prompt);
   EXPECT_TRUE(response.deadline.empty());
@@ -828,7 +851,8 @@ TEST(OmahaRequestActionTest, XmlDecodeTest) {
                                         "1.2.3.4",  // version
                                         "testthe&lt;url",  // more info
                                         "true",  // prompt
-                                        "testthe&amp;codebase",  // dl url
+                                        "testthe&amp;codebase/",  // dl url
+                                        "file.signed", // file name
                                         "HASH1234=", // checksum
                                         "false",  // needs admin
                                         "123",  // size
@@ -840,7 +864,7 @@ TEST(OmahaRequestActionTest, XmlDecodeTest) {
                       NULL));
 
   EXPECT_EQ(response.more_info_url, "testthe<url");
-  EXPECT_EQ(response.codebase, "testthe&codebase");
+  EXPECT_EQ(response.codebase, "testthe&codebase/file.signed");
   EXPECT_EQ(response.deadline, "<20110101");
 }
 
@@ -853,7 +877,8 @@ TEST(OmahaRequestActionTest, ParseIntTest) {
                                         "1.2.3.4",  // version
                                         "theurl",  // more info
                                         "true",  // prompt
-                                        "thecodebase",  // dl url
+                                        "thecodebase/",  // dl url
+                                        "file.signed", // file name
                                         "HASH1234=", // checksum
                                         "false",  // needs admin
                                         // overflows int32:
@@ -885,14 +910,14 @@ TEST(OmahaRequestActionTest, FormatUpdateCheckOutputTest) {
   // convert post_data to string
   string post_str(&post_data[0], post_data.size());
   EXPECT_NE(post_str.find(
-      "        <o:ping active=\"1\" a=\"-1\" r=\"-1\"></o:ping>\n"
-      "        <o:updatecheck"
+      "        <ping active=\"1\" a=\"-1\" r=\"-1\"></ping>\n"
+      "        <updatecheck"
       " targetversionprefix=\"\""
-      "></o:updatecheck>\n"),
+      "></updatecheck>\n"),
       string::npos);
   EXPECT_NE(post_str.find("hardware_class=\"OEM MODEL 09235 7471\""),
             string::npos);
-  EXPECT_EQ(post_str.find("o:event"), string::npos);
+  EXPECT_EQ(post_str.find("event"), string::npos);
 }
 
 
@@ -915,14 +940,14 @@ TEST(OmahaRequestActionTest, FormatTargetVersionPrefixTest) {
   // convert post_data to string
   string post_str(&post_data[0], post_data.size());
   EXPECT_NE(post_str.find(
-      "        <o:ping active=\"1\" a=\"-1\" r=\"-1\"></o:ping>\n"
-      "        <o:updatecheck"
+      "        <ping active=\"1\" a=\"-1\" r=\"-1\"></ping>\n"
+      "        <updatecheck"
       " targetversionprefix=\"\""
-      "></o:updatecheck>\n"),
+      "></updatecheck>\n"),
       string::npos);
   EXPECT_NE(post_str.find("hardware_class=\"OEM MODEL 09235 7471\""),
             string::npos);
-  EXPECT_EQ(post_str.find("o:event"), string::npos);
+  EXPECT_EQ(post_str.find("event"), string::npos);
 }
 
 TEST(OmahaRequestActionTest, FormatSuccessEventOutputTest) {
@@ -934,12 +959,12 @@ TEST(OmahaRequestActionTest, FormatSuccessEventOutputTest) {
   // convert post_data to string
   string post_str(&post_data[0], post_data.size());
   string expected_event = StringPrintf(
-      "        <o:event eventtype=\"%d\" eventresult=\"%d\"></o:event>\n",
+      "        <event eventtype=\"%d\" eventresult=\"%d\"></event>\n",
       OmahaEvent::kTypeUpdateDownloadStarted,
       OmahaEvent::kResultSuccess);
   EXPECT_NE(post_str.find(expected_event), string::npos);
-  EXPECT_EQ(post_str.find("o:ping"), string::npos);
-  EXPECT_EQ(post_str.find("o:updatecheck"), string::npos);
+  EXPECT_EQ(post_str.find("ping"), string::npos);
+  EXPECT_EQ(post_str.find("updatecheck"), string::npos);
 }
 
 TEST(OmahaRequestActionTest, FormatErrorEventOutputTest) {
@@ -953,13 +978,13 @@ TEST(OmahaRequestActionTest, FormatErrorEventOutputTest) {
   // convert post_data to string
   string post_str(&post_data[0], post_data.size());
   string expected_event = StringPrintf(
-      "        <o:event eventtype=\"%d\" eventresult=\"%d\" "
-      "errorcode=\"%d\"></o:event>\n",
+      "        <event eventtype=\"%d\" eventresult=\"%d\" "
+      "errorcode=\"%d\"></event>\n",
       OmahaEvent::kTypeDownloadComplete,
       OmahaEvent::kResultError,
       kActionCodeError);
   EXPECT_NE(post_str.find(expected_event), string::npos);
-  EXPECT_EQ(post_str.find("o:updatecheck"), string::npos);
+  EXPECT_EQ(post_str.find("updatecheck"), string::npos);
 }
 
 TEST(OmahaRequestActionTest, IsEventTest) {
@@ -1064,13 +1089,13 @@ TEST(OmahaRequestActionTest, PingTest) {
                         NULL,
                         &post_data));
     string post_str(&post_data[0], post_data.size());
-    EXPECT_NE(post_str.find("<o:ping active=\"1\" a=\"6\" r=\"5\"></o:ping>"),
+    EXPECT_NE(post_str.find("<ping active=\"1\" a=\"6\" r=\"5\"></ping>"),
               string::npos);
     if (ping_only) {
-      EXPECT_EQ(post_str.find("o:updatecheck"), string::npos);
+      EXPECT_EQ(post_str.find("updatecheck"), string::npos);
       EXPECT_EQ(post_str.find("previousversion"), string::npos);
     } else {
-      EXPECT_NE(post_str.find("o:updatecheck"), string::npos);
+      EXPECT_NE(post_str.find("updatecheck"), string::npos);
       EXPECT_NE(post_str.find("previousversion"), string::npos);
     }
   }
@@ -1096,7 +1121,7 @@ TEST(OmahaRequestActionTest, ActivePingTest) {
                       NULL,
                       &post_data));
   string post_str(&post_data[0], post_data.size());
-  EXPECT_NE(post_str.find("<o:ping active=\"1\" a=\"3\"></o:ping>"),
+  EXPECT_NE(post_str.find("<ping active=\"1\" a=\"3\"></ping>"),
             string::npos);
 }
 
@@ -1120,7 +1145,7 @@ TEST(OmahaRequestActionTest, RollCallPingTest) {
                       NULL,
                       &post_data));
   string post_str(&post_data[0], post_data.size());
-  EXPECT_NE(post_str.find("<o:ping active=\"1\" r=\"4\"></o:ping>\n"),
+  EXPECT_NE(post_str.find("<ping active=\"1\" r=\"4\"></ping>\n"),
             string::npos);
 }
 
@@ -1145,7 +1170,7 @@ TEST(OmahaRequestActionTest, NoPingTest) {
                       NULL,
                       &post_data));
   string post_str(&post_data[0], post_data.size());
-  EXPECT_EQ(post_str.find("o:ping"), string::npos);
+  EXPECT_EQ(post_str.find("ping"), string::npos);
 }
 
 TEST(OmahaRequestActionTest, IgnoreEmptyPingTest) {
@@ -1187,18 +1212,17 @@ TEST(OmahaRequestActionTest, BackInTimePingTest) {
   ASSERT_TRUE(
       TestUpdateCheck(&prefs,
                       kDefaultTestParams,
-                      "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gupdate "
-                      "xmlns=\"http://www.google.com/update2/response\" "
-                      "protocol=\"2.0\"><daystart elapsed_seconds=\"100\"/>"
+                      "<?xml version=\"1.0\" encoding=\"UTF-8\"?><response "
+                      "protocol=\"3.0\"><daystart elapsed_seconds=\"100\"/>"
                       "<app appid=\"foo\" status=\"ok\"><ping status=\"ok\"/>"
-                      "<updatecheck status=\"noupdate\"/></app></gupdate>",
+                      "<updatecheck status=\"noupdate\"/></app></response>",
                       -1,
                       false,  // ping_only
                       kActionCodeSuccess,
                       NULL,
                       &post_data));
   string post_str(&post_data[0], post_data.size());
-  EXPECT_EQ(post_str.find("o:ping"), string::npos);
+  EXPECT_EQ(post_str.find("ping"), string::npos);
 }
 
 TEST(OmahaRequestActionTest, LastPingDayUpdateTest) {
@@ -1220,11 +1244,10 @@ TEST(OmahaRequestActionTest, LastPingDayUpdateTest) {
   ASSERT_TRUE(
       TestUpdateCheck(&prefs,
                       kDefaultTestParams,
-                      "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gupdate "
-                      "xmlns=\"http://www.google.com/update2/response\" "
-                      "protocol=\"2.0\"><daystart elapsed_seconds=\"200\"/>"
+                      "<?xml version=\"1.0\" encoding=\"UTF-8\"?><response "
+                      "protocol=\"3.0\"><daystart elapsed_seconds=\"200\"/>"
                       "<app appid=\"foo\" status=\"ok\"><ping status=\"ok\"/>"
-                      "<updatecheck status=\"noupdate\"/></app></gupdate>",
+                      "<updatecheck status=\"noupdate\"/></app></response>",
                       -1,
                       false,  // ping_only
                       kActionCodeSuccess,
@@ -1239,11 +1262,10 @@ TEST(OmahaRequestActionTest, NoElapsedSecondsTest) {
   ASSERT_TRUE(
       TestUpdateCheck(&prefs,
                       kDefaultTestParams,
-                      "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gupdate "
-                      "xmlns=\"http://www.google.com/update2/response\" "
-                      "protocol=\"2.0\"><daystart blah=\"200\"/>"
+                      "<?xml version=\"1.0\" encoding=\"UTF-8\"?><response "
+                      "protocol=\"3.0\"><daystart blah=\"200\"/>"
                       "<app appid=\"foo\" status=\"ok\"><ping status=\"ok\"/>"
-                      "<updatecheck status=\"noupdate\"/></app></gupdate>",
+                      "<updatecheck status=\"noupdate\"/></app></response>",
                       -1,
                       false,  // ping_only
                       kActionCodeSuccess,
@@ -1258,11 +1280,10 @@ TEST(OmahaRequestActionTest, BadElapsedSecondsTest) {
   ASSERT_TRUE(
       TestUpdateCheck(&prefs,
                       kDefaultTestParams,
-                      "<?xml version=\"1.0\" encoding=\"UTF-8\"?><gupdate "
-                      "xmlns=\"http://www.google.com/update2/response\" "
-                      "protocol=\"2.0\"><daystart elapsed_seconds=\"x\"/>"
+                      "<?xml version=\"1.0\" encoding=\"UTF-8\"?><response "
+                      "protocol=\"3.0\"><daystart elapsed_seconds=\"x\"/>"
                       "<app appid=\"foo\" status=\"ok\"><ping status=\"ok\"/>"
-                      "<updatecheck status=\"noupdate\"/></app></gupdate>",
+                      "<updatecheck status=\"noupdate\"/></app></response>",
                       -1,
                       false,  // ping_only
                       kActionCodeSuccess,
@@ -1339,7 +1360,8 @@ TEST(OmahaRequestActionTest, TestUpdateFirstSeenAtGetsPersistedFirstTime) {
                                          "1.2.3.4",  // version
                                          "http://more/info",
                                          "true",  // prompt
-                                         "http://code/base",  // dl url
+                                         "http://code/base/",  // dl url
+                                         "file.signed", // file name
                                          "HASH1234=",  // checksum
                                          "false",  // needs admin
                                          "123",  // size
@@ -1385,7 +1407,8 @@ TEST(OmahaRequestActionTest, TestUpdateFirstSeenAtGetsUsedIfAlreadyPresent) {
                                          "1.2.3.4",  // version
                                          "http://more/info",
                                          "true",  // prompt
-                                         "http://code/base",  // dl url
+                                         "http://code/base/",  // dl url
+                                         "file.signed", // file name
                                          "HASH1234=",  // checksum
                                          "false",  // needs admin
                                          "123",  // size

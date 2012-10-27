@@ -85,7 +85,7 @@ string GetPingBody(int ping_active_days, int ping_roll_call_days) {
   string ping_active = GetPingAttribute("a", ping_active_days);
   string ping_roll_call = GetPingAttribute("r", ping_roll_call_days);
   if (!ping_active.empty() || !ping_roll_call.empty()) {
-    return StringPrintf("        <o:ping active=\"1\"%s%s></o:ping>\n",
+    return StringPrintf("        <ping active=\"1\"%s%s></ping>\n",
                         ping_active.c_str(),
                         ping_roll_call.c_str());
   }
@@ -108,9 +108,9 @@ string FormatRequest(const OmahaEvent* event,
       // the expected behavior when we move to Omaha v3.0 protocol, so it'll
       // be consistent.
       body += StringPrintf(
-          "        <o:updatecheck"
+          "        <updatecheck"
           " targetversionprefix=\"%s\""
-          "></o:updatecheck>\n",
+          "></updatecheck>\n",
           XmlEncode(params.target_version_prefix).c_str());
 
       // If this is the first update check after a reboot following a previous
@@ -126,8 +126,8 @@ string FormatRequest(const OmahaEvent* event,
       }
       if (!prev_version.empty()) {
         body += StringPrintf(
-            "        <o:event eventtype=\"%d\" eventresult=\"%d\" "
-            "previousversion=\"%s\"></o:event>\n",
+            "        <event eventtype=\"%d\" eventresult=\"%d\" "
+            "previousversion=\"%s\"></event>\n",
             OmahaEvent::kTypeUpdateComplete,
             OmahaEvent::kResultSuccessReboot,
             XmlEncode(prev_version).c_str());
@@ -143,26 +143,26 @@ string FormatRequest(const OmahaEvent* event,
       error_code = StringPrintf(" errorcode=\"%d\"", event->error_code);
     }
     body = StringPrintf(
-        "        <o:event eventtype=\"%d\" eventresult=\"%d\"%s></o:event>\n",
+        "        <event eventtype=\"%d\" eventresult=\"%d\"%s></event>\n",
         event->type, event->result, error_code.c_str());
   }
   return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-      "<o:gupdate xmlns:o=\"http://www.google.com/update2/request\" "
+      "<request protocol=\"3.0\" "
       "version=\"" + XmlEncode(kGupdateVersion) + "\" "
       "updaterversion=\"" + XmlEncode(kGupdateVersion) + "\" "
-      "protocol=\"2.0\" ismachine=\"1\">\n"
-      "    <o:os version=\"" + XmlEncode(params.os_version) + "\" platform=\"" +
+      "ismachine=\"1\">\n"
+      "    <os version=\"" + XmlEncode(params.os_version) + "\" platform=\"" +
       XmlEncode(params.os_platform) + "\" sp=\"" +
-      XmlEncode(params.os_sp) + "\"></o:os>\n"
-      "    <o:app appid=\"" + XmlEncode(params.app_id) + "\" version=\"" +
+      XmlEncode(params.os_sp) + "\"></os>\n"
+      "    <app appid=\"" + XmlEncode(params.app_id) + "\" version=\"" +
       XmlEncode(params.app_version) + "\" "
       "lang=\"" + XmlEncode(params.app_lang) + "\" track=\"" +
       XmlEncode(params.app_track) + "\" board=\"" +
       XmlEncode(params.os_board) + "\" hardware_class=\"" +
       XmlEncode(params.hardware_class) + "\" delta_okay=\"" +
       (params.delta_okay ? "true" : "false") + "\">\n" + body +
-      "    </o:app>\n"
-      "</o:gupdate>\n";
+      "    </app>\n"
+      "</request>\n";
 }
 
 }  // namespace {}
@@ -271,8 +271,7 @@ namespace {
 // on the returned object.
 // This code is roughly based on the libxml tutorial at:
 // http://xmlsoft.org/tutorial/apd.html
-xmlXPathObject* GetNodeSet(xmlDoc* doc, const xmlChar* xpath,
-                           const xmlChar* ns, const xmlChar* ns_url) {
+xmlXPathObject* GetNodeSet(xmlDoc* doc, const xmlChar* xpath) {
   xmlXPathObject* result = NULL;
 
   scoped_ptr_malloc<xmlXPathContext, ScopedPtrXmlXPathContextFree> context(
@@ -281,19 +280,14 @@ xmlXPathObject* GetNodeSet(xmlDoc* doc, const xmlChar* xpath,
     LOG(ERROR) << "xmlXPathNewContext() returned NULL";
     return NULL;
   }
-  if (xmlXPathRegisterNs(context.get(), ns, ns_url) < 0) {
-    LOG(ERROR) << "xmlXPathRegisterNs() returned error";
-    return NULL;
-  }
 
   result = xmlXPathEvalExpression(xpath, context.get());
-
   if (result == NULL) {
-    LOG(ERROR) << "xmlXPathEvalExpression returned error";
+    LOG(ERROR) << "Unable to find " << xpath << " in XML document";
     return NULL;
   }
   if(xmlXPathNodeSetIsEmpty(result->nodesetval)){
-    LOG(INFO) << "xpath not found in doc";
+    LOG(INFO) << "Nodeset is empty for " << xpath;
     xmlXPathFreeObject(result);
     return NULL;
   }
@@ -329,15 +323,10 @@ off_t ParseInt(const string& str) {
 // Update the last ping day preferences based on the server daystart
 // response. Returns true on success, false otherwise.
 bool UpdateLastPingDays(xmlDoc* doc, PrefsInterface* prefs) {
-  static const char kNamespace[] = "x";
-  static const char kDaystartNodeXpath[] = "/x:gupdate/x:daystart";
-  static const char kNsUrl[] = "http://www.google.com/update2/response";
+  static const char kDaystartNodeXpath[] = "/response/daystart";
 
   scoped_ptr_malloc<xmlXPathObject, ScopedPtrXmlXPathObjectFree>
-      xpath_nodeset(GetNodeSet(doc,
-                               ConstXMLStr(kDaystartNodeXpath),
-                               ConstXMLStr(kNamespace),
-                               ConstXMLStr(kNsUrl)));
+      xpath_nodeset(GetNodeSet(doc, ConstXMLStr(kDaystartNodeXpath)));
   TEST_AND_RETURN_FALSE(xpath_nodeset.get());
   xmlNodeSet* nodeset = xpath_nodeset->nodesetval;
   TEST_AND_RETURN_FALSE(nodeset && nodeset->nodeNr >= 1);
@@ -359,6 +348,233 @@ bool UpdateLastPingDays(xmlDoc* doc, PrefsInterface* prefs) {
   return true;
 }
 }  // namespace {}
+
+bool OmahaRequestAction::ParseResponse(xmlDoc* doc,
+                                       OmahaResponse* output_object,
+                                       ScopedActionCompleter* completer) {
+  static const char* kUpdatecheckNodeXpath("/response/app/updatecheck");
+
+  scoped_ptr_malloc<xmlXPathObject, ScopedPtrXmlXPathObjectFree>
+      xpath_nodeset(GetNodeSet(doc, ConstXMLStr(kUpdatecheckNodeXpath)));
+  if (!xpath_nodeset.get()) {
+    completer->set_code(kActionCodeOmahaResponseInvalid);
+    return false;
+  }
+
+  xmlNodeSet* nodeset = xpath_nodeset->nodesetval;
+  CHECK(nodeset) << "XPath missing UpdateCheck NodeSet";
+  CHECK_GE(nodeset->nodeNr, 1);
+  xmlNode* update_check_node = nodeset->nodeTab[0];
+
+  // TODO(jaysri): The PollInterval is not supported by Omaha server currently.
+  // But still keeping this existing code in case we ever decide to slow down
+  // the request rate from the server-side. Note that the PollInterval is not
+  // persisted, so it has to be sent by the server on every response to
+  // guarantee that the UpdateCheckScheduler uses this value (otherwise, if the
+  // device got rebooted after the last server-indicated value, it'll revert to
+  // the default value). Also kDefaultMaxUpdateChecks value for the scattering
+  // logic is based on the assumption that we perform an update check every
+  // hour so that the max value of 8 will roughly be equivalent to one work
+  // day. If we decide to use PollInterval permanently, we should update
+  // the max_update_checks_allowed to take PollInterval into account.  Note:
+  // The parsing for PollInterval happens even before parsing of the status
+  // because we may want to specify the PollInterval even when there's no
+  // update.
+  base::StringToInt(XmlGetProperty(update_check_node, "PollInterval"),
+                    &output_object->poll_interval);
+
+  if (!ParseStatus(update_check_node, output_object, completer))
+    return false;
+
+  if (!ParseUrls(doc, output_object, completer))
+    return false;
+
+  if (!ParsePackage(doc, output_object, completer))
+    return false;
+
+  if (!ParseParams(doc, output_object, completer))
+    return false;
+
+  return true;
+}
+
+bool OmahaRequestAction::ParseStatus(xmlNode* update_check_node,
+                                     OmahaResponse* output_object,
+                                     ScopedActionCompleter* completer) {
+  // Get status.
+  if (!xmlHasProp(update_check_node, ConstXMLStr("status"))) {
+    LOG(ERROR) << "Omaha Response missing status";
+    completer->set_code(kActionCodeOmahaResponseInvalid);
+    return false;
+  }
+
+  const string status(XmlGetProperty(update_check_node, "status"));
+  if (status == "noupdate") {
+    LOG(INFO) << "No update.";
+    output_object->update_exists = false;
+    SetOutputObject(*output_object);
+    completer->set_code(kActionCodeSuccess);
+    return false;
+  }
+
+  if (status != "ok") {
+    LOG(ERROR) << "Unknown Omaha response status: " << status;
+    completer->set_code(kActionCodeOmahaResponseInvalid);
+    return false;
+  }
+
+  return true;
+}
+
+bool OmahaRequestAction::ParseUrls(xmlDoc* doc,
+                                   OmahaResponse* output_object,
+                                   ScopedActionCompleter* completer) {
+  // Get the update URL.
+  static const char* kUpdateUrlNodeXPath("/response/app/updatecheck/urls/url");
+
+  scoped_ptr_malloc<xmlXPathObject, ScopedPtrXmlXPathObjectFree>
+      xpath_nodeset(GetNodeSet(doc, ConstXMLStr(kUpdateUrlNodeXPath)));
+  if (!xpath_nodeset.get()) {
+    completer->set_code(kActionCodeOmahaResponseInvalid);
+    return false;
+  }
+
+  xmlNodeSet* nodeset = xpath_nodeset->nodesetval;
+  CHECK(nodeset) << "XPath missing " << kUpdateUrlNodeXPath;
+  CHECK_GE(nodeset->nodeNr, 1);
+
+  // TODO(jaysri): For now, just process only the first URL. In subsequent
+  // check-ins, we'll add the support to honor multiples URLs.
+  LOG(INFO) << "Processing first of " << nodeset->nodeNr << " url(s)";
+  xmlNode* url_node = nodeset->nodeTab[0];
+
+  const string codebase(XmlGetProperty(url_node, "codebase"));
+  if (codebase.empty()) {
+    LOG(ERROR) << "Omaha Response URL has empty codebase";
+    completer->set_code(kActionCodeOmahaResponseInvalid);
+    return false;
+  }
+
+  output_object->codebase = codebase;
+  return true;
+}
+
+bool OmahaRequestAction::ParsePackage(xmlDoc* doc,
+                                      OmahaResponse* output_object,
+                                      ScopedActionCompleter* completer) {
+  // Get the package node.
+  static const char* kPackageNodeXPath(
+      "/response/app/updatecheck/manifest/packages/package");
+
+  scoped_ptr_malloc<xmlXPathObject, ScopedPtrXmlXPathObjectFree>
+      xpath_nodeset(GetNodeSet(doc, ConstXMLStr(kPackageNodeXPath)));
+  if (!xpath_nodeset.get()) {
+    completer->set_code(kActionCodeOmahaResponseInvalid);
+    return false;
+  }
+
+  xmlNodeSet* nodeset = xpath_nodeset->nodesetval;
+  CHECK(nodeset) << "XPath missing " << kPackageNodeXPath;
+  CHECK_GE(nodeset->nodeNr, 1);
+
+  // We only care about the first package.
+  LOG(INFO) << "Processing first of " << nodeset->nodeNr << " package(s)";
+  xmlNode* package_node = nodeset->nodeTab[0];
+
+  // Get package properties one by one.
+
+  // Parse the payload name to be appended to the Url codebase.
+  const string package_name(XmlGetProperty(package_node, "name"));
+  LOG(INFO) << "Omaha Response package name = " << package_name;
+  if (package_name.empty()) {
+    LOG(ERROR) << "Omaha Response has empty package name";
+    completer->set_code(kActionCodeOmahaResponseInvalid);
+    return false;
+  }
+  output_object->codebase += package_name;
+
+  // Parse the payload size.
+  off_t size = ParseInt(XmlGetProperty(package_node, "size"));
+  if (size <= 0) {
+    LOG(ERROR) << "Omaha Response has invalid payload size: " << size;
+    completer->set_code(kActionCodeOmahaResponseInvalid);
+    return false;
+  }
+  output_object->size = size;
+
+  LOG(INFO) << "Download URL = " << output_object->codebase
+            << ", Paylod size = " << output_object->size;
+
+  return true;
+}
+
+bool OmahaRequestAction::ParseParams(xmlDoc* doc,
+                                     OmahaResponse* output_object,
+                                     ScopedActionCompleter* completer) {
+  // Get the action node where parameters are present.
+  static const char* kActionNodeXPath(
+      "/response/app/updatecheck/manifest/actions/action");
+
+  scoped_ptr_malloc<xmlXPathObject, ScopedPtrXmlXPathObjectFree>
+      xpath_nodeset(GetNodeSet(doc, ConstXMLStr(kActionNodeXPath)));
+  if (!xpath_nodeset.get()) {
+    completer->set_code(kActionCodeOmahaResponseInvalid);
+    return false;
+  }
+
+  xmlNodeSet* nodeset = xpath_nodeset->nodesetval;
+  CHECK(nodeset) << "XPath missing " << kActionNodeXPath;
+
+  // We only care about the action that has event "postinall", because this is
+  // where Omaha puts all the generic name/value pairs in the rule.
+  LOG(INFO) << "Found " << nodeset->nodeNr
+            << " action(s). Processing the postinstall action.";
+
+  // pie_action_node holds the action node corresponding to the
+  // postinstall event action, if present.
+  xmlNode* pie_action_node = NULL;
+  for (int i = 0; i < nodeset->nodeNr; i++) {
+    xmlNode* action_node = nodeset->nodeTab[i];
+    if (XmlGetProperty(action_node, "event") == "postinstall") {
+      pie_action_node = action_node;
+      break;
+    }
+  }
+
+  if (!pie_action_node) {
+    LOG(ERROR) << "Omaha Response has no postinstall event action";
+    completer->set_code(kActionCodeOmahaResponseInvalid);
+    return false;
+  }
+
+  output_object->hash = XmlGetProperty(pie_action_node, "sha256");
+  if (output_object->hash.empty()) {
+    LOG(ERROR) << "Omaha Response has empty sha256 value";
+    completer->set_code(kActionCodeOmahaResponseInvalid);
+    return false;
+  }
+
+ // Get the optional properties one by one.
+  output_object->display_version =
+      XmlGetProperty(pie_action_node, "DisplayVersion");
+  output_object->more_info_url = XmlGetProperty(pie_action_node, "MoreInfo");
+  output_object->metadata_size =
+      ParseInt(XmlGetProperty(pie_action_node, "MetadataSize"));
+  output_object->metadata_signature =
+      XmlGetProperty(pie_action_node, "MetadataSignatureRsa");
+  output_object->needs_admin =
+      XmlGetProperty(pie_action_node, "needsadmin") == "true";
+  output_object->prompt = XmlGetProperty(pie_action_node, "Prompt") == "true";
+  output_object->deadline = XmlGetProperty(pie_action_node, "deadline");
+  output_object->max_days_to_scatter =
+      ParseInt(XmlGetProperty(pie_action_node, "MaxDaysToScatter"));
+
+  output_object->update_exists = true;
+  SetOutputObject(*output_object);
+  completer->set_code(kActionCodeSuccess);
+
+  return true;
+}
 
 // If the transfer was successful, this uses libxml2 to parse the response
 // and fill in the appropriate fields of the output object. Also, notifies
@@ -421,51 +637,13 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
     return;
   }
 
-  static const char* kNamespace("x");
-  static const char* kUpdatecheckNodeXpath("/x:gupdate/x:app/x:updatecheck");
-  static const char* kNsUrl("http://www.google.com/update2/response");
-
-  scoped_ptr_malloc<xmlXPathObject, ScopedPtrXmlXPathObjectFree>
-      xpath_nodeset(GetNodeSet(doc.get(),
-                               ConstXMLStr(kUpdatecheckNodeXpath),
-                               ConstXMLStr(kNamespace),
-                               ConstXMLStr(kNsUrl)));
-  if (!xpath_nodeset.get()) {
-    completer.set_code(kActionCodeOmahaRequestNoUpdateCheckNode);
-    return;
-  }
-  xmlNodeSet* nodeset = xpath_nodeset->nodesetval;
-  CHECK(nodeset) << "XPath missing NodeSet";
-  CHECK_GE(nodeset->nodeNr, 1);
-
-  xmlNode* updatecheck_node = nodeset->nodeTab[0];
-  // get status
-  if (!xmlHasProp(updatecheck_node, ConstXMLStr("status"))) {
-    LOG(ERROR) << "Response missing status";
-    completer.set_code(kActionCodeOmahaRequestNoUpdateCheckStatus);
-    return;
-  }
-
   OmahaResponse output_object;
-  base::StringToInt(XmlGetProperty(updatecheck_node, "PollInterval"),
-                    &output_object.poll_interval);
-  const string status(XmlGetProperty(updatecheck_node, "status"));
-  if (status == "noupdate") {
-    LOG(INFO) << "No update.";
-    output_object.update_exists = false;
-    SetOutputObject(output_object);
-    completer.set_code(kActionCodeSuccess);
+  if (!ParseResponse(doc.get(), &output_object, &completer))
     return;
-  }
-
-  if (status != "ok") {
-    LOG(ERROR) << "Unknown status: " << status;
-    completer.set_code(kActionCodeOmahaRequestBadUpdateCheckStatus);
-    return;
-  }
 
   if (params_->update_disabled) {
     LOG(INFO) << "Ignoring Omaha updates as updates are disabled by policy.";
+    output_object.update_exists = false;
     completer.set_code(kActionCodeOmahaUpdateIgnoredPerPolicy);
     // Note: We could technically delete the UpdateFirstSeenAt state here.
     // If we do, it'll mean a device has to restart the UpdateFirstSeenAt
@@ -477,35 +655,15 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
     return;
   }
 
-  if (ShouldDeferDownload(updatecheck_node)) {
+  if (ShouldDeferDownload(&output_object)) {
+    output_object.update_exists = false;
     LOG(INFO) << "Ignoring Omaha updates as updates are deferred by policy.";
     completer.set_code(kActionCodeOmahaUpdateDeferredPerPolicy);
     return;
   }
-
-  // In best-effort fashion, fetch the rest of the expected attributes
-  // from the updatecheck node, then return the object
-  output_object.update_exists = true;
-  completer.set_code(kActionCodeSuccess);
-
-  output_object.display_version =
-      XmlGetProperty(updatecheck_node, "DisplayVersion");
-  output_object.codebase = XmlGetProperty(updatecheck_node, "codebase");
-  output_object.more_info_url = XmlGetProperty(updatecheck_node, "MoreInfo");
-  output_object.hash = XmlGetProperty(updatecheck_node, "sha256");
-  output_object.size = ParseInt(XmlGetProperty(updatecheck_node, "size"));
-  output_object.metadata_size =
-      ParseInt(XmlGetProperty(updatecheck_node, "MetadataSize"));
-  output_object.metadata_signature =
-      XmlGetProperty(updatecheck_node, "MetadataSignatureRsa");
-  output_object.needs_admin =
-      XmlGetProperty(updatecheck_node, "needsadmin") == "true";
-  output_object.prompt = XmlGetProperty(updatecheck_node, "Prompt") == "true";
-  output_object.deadline = XmlGetProperty(updatecheck_node, "deadline");
-  SetOutputObject(output_object);
 }
 
-bool OmahaRequestAction::ShouldDeferDownload(xmlNode* updatecheck_node) {
+bool OmahaRequestAction::ShouldDeferDownload(OmahaResponse* output_object) {
   // We should defer the downloads only if we've first satisfied the
   // wall-clock-based-waiting period and then the update-check-based waiting
   // period, if required.
@@ -515,7 +673,7 @@ bool OmahaRequestAction::ShouldDeferDownload(xmlNode* updatecheck_node) {
     return false;
   }
 
-  switch (IsWallClockBasedWaitingSatisfied(updatecheck_node)) {
+  switch (IsWallClockBasedWaitingSatisfied(output_object)) {
     case kWallClockWaitNotSatisfied:
       // We haven't even satisfied the first condition, passing the
       // wall-clock-based waiting period, so we should defer the downloads
@@ -526,7 +684,7 @@ bool OmahaRequestAction::ShouldDeferDownload(xmlNode* updatecheck_node) {
     case kWallClockWaitDoneButUpdateCheckWaitRequired:
       LOG(INFO) << "wall-clock-based-wait satisfied and "
                 << "update-check-based-wait required.";
-      return !IsUpdateCheckCountBasedWaitingSatisfied(updatecheck_node);
+      return !IsUpdateCheckCountBasedWaitingSatisfied();
 
     case kWallClockWaitDoneAndUpdateCheckWaitNotRequired:
       // Wall-clock-based waiting period is satisfied, and it's determined
@@ -546,7 +704,7 @@ bool OmahaRequestAction::ShouldDeferDownload(xmlNode* updatecheck_node) {
 
 OmahaRequestAction::WallClockWaitResult
 OmahaRequestAction::IsWallClockBasedWaitingSatisfied(
-    xmlNode* updatecheck_node) {
+    OmahaResponse* output_object) {
   Time update_first_seen_at;
   int64 update_first_seen_at_int;
 
@@ -591,7 +749,7 @@ OmahaRequestAction::IsWallClockBasedWaitingSatisfied(
 
   TimeDelta elapsed_time = Time::Now() - update_first_seen_at;
   TimeDelta max_scatter_period = TimeDelta::FromDays(
-      ParseInt(XmlGetProperty(updatecheck_node, "MaxDaysToScatter")));
+      output_object->max_days_to_scatter);
 
   LOG(INFO) << "Waiting Period = "
             << utils::FormatSecs(params_->waiting_period.InSeconds())
@@ -600,7 +758,7 @@ OmahaRequestAction::IsWallClockBasedWaitingSatisfied(
             << ", MaxDaysToScatter = "
             << max_scatter_period.InDays();
 
-  if (!XmlGetProperty(updatecheck_node, "deadline").empty()) {
+  if (!output_object->deadline.empty()) {
     // The deadline is set for all rules which serve a delta update from a
     // previous FSI, which means this update will be applied mostly in OOBE
     // cases. For these cases, we shouldn't scatter so as to finish the OOBE
@@ -646,8 +804,7 @@ OmahaRequestAction::IsWallClockBasedWaitingSatisfied(
   return kWallClockWaitNotSatisfied;
 }
 
-bool OmahaRequestAction::IsUpdateCheckCountBasedWaitingSatisfied(
-    xmlNode* updatecheck_node) {
+bool OmahaRequestAction::IsUpdateCheckCountBasedWaitingSatisfied() {
   int64 update_check_count_value;
 
   if (prefs_->Exists(kPrefsUpdateCheckCount)) {
@@ -701,3 +858,5 @@ bool OmahaRequestAction::IsUpdateCheckCountBasedWaitingSatisfied(
 }
 
 }  // namespace chromeos_update_engine
+
+

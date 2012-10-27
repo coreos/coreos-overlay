@@ -55,16 +55,14 @@ enum ActionExitCode {
   kActionCodeDownloadOperationHashMismatch = 29,
   kActionCodeOmahaRequestEmptyResponseError = 30,
   kActionCodeOmahaRequestXMLParseError = 31,
-  kActionCodeOmahaRequestNoUpdateCheckNode = 32,
-  kActionCodeOmahaRequestNoUpdateCheckStatus = 33,
-  kActionCodeOmahaRequestBadUpdateCheckStatus = 34,
+  kActionCodeDownloadInvalidMetadataSize = 32,
+  kActionCodeDownloadInvalidMetadataSignature = 33,
+  kActionCodeOmahaResponseInvalid = 34,
   kActionCodeOmahaUpdateIgnoredPerPolicy = 35,
   kActionCodeOmahaUpdateDeferredPerPolicy = 36,
   kActionCodeOmahaErrorInHTTPResponse = 37,
   kActionCodeDownloadOperationHashMissingError = 38,
-  kActionCodeDownloadInvalidMetadataSize = 39,
-  kActionCodeDownloadInvalidMetadataSignature = 40,
-  kActionCodeDownloadMetadataSignatureMissingError = 41,
+  kActionCodeDownloadMetadataSignatureMissingError = 39,
 
   // Any code above this is sent to both Omaha and UMA as-is.
   // Codes/flags below this line is sent only to Omaha and not to UMA.

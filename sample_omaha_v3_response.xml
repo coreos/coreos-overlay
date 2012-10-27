@@ -1,0 +1,19 @@
+<response protocol="3.0" server="prod">
+  <daystart elapsed_seconds="56652"/>
+  <app appid="{90f229ce-83e2-4faf-8479-e368a34938b1}" status="ok">
+    <updatecheck status="ok">
+      <urls>
+        <url codebase="https://storage.googleapis.com/chromeos-releases-public/canary-channel/canary-channel/3095.0.0/"/>
+      </urls>
+      <manifest version="3095.0.0">
+        <packages>
+          <package hash="HVOmp67vBjPdvpWmOC2Uw4UDwsc=" name="chromeos_3095.0.0_x86-zgb_canary-channel_full_mp-v2.bin-df37843370ddf1e3819a2afeaa934faa.signed" required="true" size="400752559"/>
+        </packages>
+        <actions>
+          <action event="update" run="chromeos_3095.0.0_x86-zgb_canary-channel_full_mp-v2.bin-df37843370ddf1e3819a2afeaa934faa.signed"/>
+          <action ChromeOSVersion="3095.0.0" ChromeVersion="24.0.1307.0" IsDelta="true" MaxDaysToScatter="14" MetadataSignatureRsa="xXrO/LahHlKk3YmqEf1qE0PN587Sc2IJV+FN7J7x1h49waNQIy/QwYO4LaOySgETe5JZXtkAEzzqakfJwxQ2pVfzj1GkExwjd5LTn1He2GvA73B8fKbS4bfP7dbUFwD5039xCwf1U2gezFViOiOPiVURx/pEsdhv+Cqx/3HbjIuj5au2dooSyDxLC5AnODzAKyYfAcjMuiLON+9SqmctJW+VjzdY9SbJAnkH2qqVjFyBKAXsYT+hOTIJ3MJpg8OSVxMMtGB99PxbOJ52F37d2Y5Fws/AUkNnNEsan/WRJA1kuWoS6rpeR8JQYuVhLiK2u/KpOcvMVRw3Q2VUxtcAGw==" MetadataSize="58315" event="postinstall" sha256="DIAVxoI+8NpsudUawOA5U92VHlaxQBS3ejN4EPM6T2A="/>
+        </actions>
+      </manifest>
+    </updatecheck>
+  </app>
+</response>
