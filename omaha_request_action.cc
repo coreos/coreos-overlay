@@ -443,10 +443,10 @@ bool OmahaRequestAction::ParseUrls(xmlDoc* doc,
   CHECK(nodeset) << "XPath missing " << kUpdateUrlNodeXPath;
   CHECK_GE(nodeset->nodeNr, 1);
 
-  // TODO(jaysri): For now, just process only the first URL. In subsequent
+  // TODO(jaysri): For now, use the last URL. In subsequent
   // check-ins, we'll add the support to honor multiples URLs.
-  LOG(INFO) << "Processing first of " << nodeset->nodeNr << " url(s)";
-  xmlNode* url_node = nodeset->nodeTab[0];
+  LOG(INFO) << "Processing last of " << nodeset->nodeNr << " url(s)";
+  xmlNode* url_node = nodeset->nodeTab[nodeset->nodeNr - 1];
 
   const string codebase(XmlGetProperty(url_node, "codebase"));
   if (codebase.empty()) {
