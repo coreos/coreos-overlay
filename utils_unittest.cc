@@ -184,31 +184,15 @@ TEST(UtilsTest, PartitionNumberTest) {
   EXPECT_EQ("3", utils::PartitionNumber("/dev/mmc0p3"));
 }
 
-
-TEST(UtilsTest, RunAsRootSetProcessPriorityTest) {
-  // getpriority may return -1 on error so the getpriority logic needs to be
-  // enhanced if any of the pre-defined priority constants are changed to -1.
-  ASSERT_NE(-1, utils::kProcessPriorityLow);
-  ASSERT_NE(-1, utils::kProcessPriorityNormal);
-  ASSERT_NE(-1, utils::kProcessPriorityHigh);
-  EXPECT_EQ(utils::kProcessPriorityNormal, getpriority(PRIO_PROCESS, 0));
-  EXPECT_TRUE(utils::SetProcessPriority(utils::kProcessPriorityHigh));
-  EXPECT_EQ(utils::kProcessPriorityHigh, getpriority(PRIO_PROCESS, 0));
-  EXPECT_TRUE(utils::SetProcessPriority(utils::kProcessPriorityLow));
-  EXPECT_EQ(utils::kProcessPriorityLow, getpriority(PRIO_PROCESS, 0));
-  EXPECT_TRUE(utils::SetProcessPriority(utils::kProcessPriorityNormal));
-  EXPECT_EQ(utils::kProcessPriorityNormal, getpriority(PRIO_PROCESS, 0));
-}
-
-TEST(UtilsTest, ComparePrioritiesTest) {
-  EXPECT_LT(utils::ComparePriorities(utils::kProcessPriorityLow,
-                                     utils::kProcessPriorityNormal), 0);
-  EXPECT_GT(utils::ComparePriorities(utils::kProcessPriorityNormal,
-                                     utils::kProcessPriorityLow), 0);
-  EXPECT_EQ(utils::ComparePriorities(utils::kProcessPriorityNormal,
-                                     utils::kProcessPriorityNormal), 0);
-  EXPECT_GT(utils::ComparePriorities(utils::kProcessPriorityHigh,
-                                     utils::kProcessPriorityNormal), 0);
+TEST(UtilsTest, CompareCpuSharesTest) {
+  EXPECT_LT(utils::CompareCpuShares(utils::kCpuSharesLow,
+                                    utils::kCpuSharesNormal), 0);
+  EXPECT_GT(utils::CompareCpuShares(utils::kCpuSharesNormal,
+                                    utils::kCpuSharesLow), 0);
+  EXPECT_EQ(utils::CompareCpuShares(utils::kCpuSharesNormal,
+                                    utils::kCpuSharesNormal), 0);
+  EXPECT_GT(utils::CompareCpuShares(utils::kCpuSharesHigh,
+                                    utils::kCpuSharesNormal), 0);
 }
 
 TEST(UtilsTest, FuzzIntTest) {

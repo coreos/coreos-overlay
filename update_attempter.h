@@ -193,22 +193,22 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // otherwise.
   bool ScheduleErrorEventAction();
 
-  // Sets the process priority to |priority| and updates |priority_| if the new
-  // |priority| is different than the current |priority_|, otherwise simply
+  // Sets the cpu shares to |shares| and updates |shares_| if the new
+  // |shares| is different than the current |shares_|, otherwise simply
   // returns.
-  void SetPriority(utils::ProcessPriority priority);
+  void SetCpuShares(utils::CpuShares shares);
 
-  // Sets the process priority to low and sets up timeout events to increase it.
-  void SetupPriorityManagement();
+  // Sets the cpu shares to low and sets up timeout events to increase it.
+  void SetupCpuSharesManagement();
 
-  // Resets the process priority to normal and destroys any scheduled timeout
+  // Resets the cpu shares to normal and destroys any scheduled timeout
   // sources.
-  void CleanupPriorityManagement();
+  void CleanupCpuSharesManagement();
 
-  // The process priority timeout source callback sets the current priority to
+  // The cpu shares timeout source callback sets the current cpu shares to
   // normal. Returns false so that GLib destroys the timeout source.
-  static gboolean StaticManagePriorityCallback(gpointer data);
-  bool ManagePriorityCallback();
+  static gboolean StaticManageCpuSharesCallback(gpointer data);
+  bool ManageCpuSharesCallback();
 
   // Callback to start the action processor.
   static gboolean StaticStartProcessing(gpointer data);
@@ -300,11 +300,11 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // HTTP server response code from the last HTTP request action.
   int http_response_code_;
 
-  // Current process priority.
-  utils::ProcessPriority priority_;
+  // Current cpu shares.
+  utils::CpuShares shares_;
 
-  // The process priority management timeout source.
-  GSource* manage_priority_source_;
+  // The cpu shares management timeout source.
+  GSource* manage_shares_source_;
 
   // Set to true if an update download is active (and BytesReceived
   // will be called), set to false otherwise.

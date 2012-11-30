@@ -243,21 +243,24 @@ const std::string BootDevice();
 // Returns empty string on failure.
 const std::string BootKernelDevice(const std::string& boot_device);
 
-enum ProcessPriority {
-  kProcessPriorityHigh = -10,
-  kProcessPriorityNormal = 0,
-  kProcessPriorityLow = 10,
+// Cgroups cpu shares constants. 1024 is the default shares a standard process
+// gets and 2 is the minimum value. We set High as a value that gives the
+// update-engine 2x the cpu share of a standard process.
+enum CpuShares {
+  kCpuSharesHigh = 2048,
+  kCpuSharesNormal = 1024,
+  kCpuSharesLow = 2,
 };
 
-// Compares process priorities and returns an integer that is less
-// than, equal to or greater than 0 if |priority_lhs| is,
-// respectively, lower than, same as or higher than |priority_rhs|.
-int ComparePriorities(ProcessPriority priority_lhs,
-                      ProcessPriority priority_rhs);
+// Compares cpu shares and returns an integer that is less
+// than, equal to or greater than 0 if |shares_lhs| is,
+// respectively, lower than, same as or higher than |shares_rhs|.
+int CompareCpuShares(CpuShares shares_lhs,
+                     CpuShares shares_rhs);
 
-// Sets the current process priority to |priority|. Returns true on
+// Sets the current process shares to |shares|. Returns true on
 // success, false otherwise.
-bool SetProcessPriority(ProcessPriority priority);
+bool SetCpuShares(CpuShares shares);
 
 // Assumes data points to a Closure. Runs it and returns FALSE;
 gboolean GlibRunClosure(gpointer data);

@@ -117,8 +117,8 @@ UpdateAttempter::UpdateAttempter(PrefsInterface* prefs,
       update_check_scheduler_(NULL),
       fake_update_success_(false),
       http_response_code_(0),
-      priority_(utils::kProcessPriorityNormal),
-      manage_priority_source_(NULL),
+      shares_(utils::kCpuSharesNormal),
+      manage_shares_source_(NULL),
       download_active_(false),
       status_(UPDATE_STATUS_IDLE),
       download_progress_(0.0),
@@ -142,7 +142,7 @@ UpdateAttempter::UpdateAttempter(PrefsInterface* prefs,
 }
 
 UpdateAttempter::~UpdateAttempter() {
-  CleanupPriorityManagement();
+  CleanupCpuSharesManagement();
 }
 
 void UpdateAttempter::Update(const string& app_version,
@@ -551,8 +551,8 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
   LOG(INFO) << "Processing Done.";
   actions_.clear();
 
-  // Reset process priority back to normal.
-  CleanupPriorityManagement();
+  // Reset cpu shares back to normal.
+  CleanupCpuSharesManagement();
 
   if (status_ == UPDATE_STATUS_REPORTING_ERROR_EVENT) {
     LOG(INFO) << "Error event sent.";
@@ -617,8 +617,8 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
 }
 
 void UpdateAttempter::ProcessingStopped(const ActionProcessor* processor) {
-  // Reset process priority back to normal.
-  CleanupPriorityManagement();
+  // Reset cpu shares back to normal.
+  CleanupCpuSharesManagement();
   download_progress_ = 0.0;
   SetStatusAndNotify(UPDATE_STATUS_IDLE, kUpdateNoticeUnspecified);
   actions_.clear();
@@ -678,7 +678,7 @@ void UpdateAttempter::ActionCompleted(ActionProcessor* processor,
     new_version_ = "0.0.0.0";
     new_payload_size_ = plan.payload_size;
     SetupDownload();
-    SetupPriorityManagement();
+    SetupCpuSharesManagement();
     SetStatusAndNotify(UPDATE_STATUS_UPDATE_AVAILABLE,
                        kUpdateNoticeUnspecified);
   } else if (type == DownloadAction::StaticType()) {
@@ -897,41 +897,41 @@ bool UpdateAttempter::ScheduleErrorEventAction() {
   return true;
 }
 
-void UpdateAttempter::SetPriority(utils::ProcessPriority priority) {
-  if (priority_ == priority) {
+void UpdateAttempter::SetCpuShares(utils::CpuShares shares) {
+  if (shares_ == shares) {
     return;
   }
-  if (utils::SetProcessPriority(priority)) {
-    priority_ = priority;
-    LOG(INFO) << "Process priority = " << priority_;
+  if (utils::SetCpuShares(shares)) {
+    shares_ = shares;
+    LOG(INFO) << "CPU shares = " << shares_;
   }
 }
 
-void UpdateAttempter::SetupPriorityManagement() {
-  if (manage_priority_source_) {
-    LOG(ERROR) << "Process priority timeout source hasn't been destroyed.";
-    CleanupPriorityManagement();
+void UpdateAttempter::SetupCpuSharesManagement() {
+  if (manage_shares_source_) {
+    LOG(ERROR) << "Cpu shares timeout source hasn't been destroyed.";
+    CleanupCpuSharesManagement();
   }
-  const int kPriorityTimeout = 2 * 60 * 60;  // 2 hours
-  manage_priority_source_ = g_timeout_source_new_seconds(kPriorityTimeout);
-  g_source_set_callback(manage_priority_source_,
-                        StaticManagePriorityCallback,
+  const int kCpuSharesTimeout = 2 * 60 * 60;  // 2 hours
+  manage_shares_source_ = g_timeout_source_new_seconds(kCpuSharesTimeout);
+  g_source_set_callback(manage_shares_source_,
+                        StaticManageCpuSharesCallback,
                         this,
                         NULL);
-  g_source_attach(manage_priority_source_, NULL);
-  SetPriority(utils::kProcessPriorityLow);
+  g_source_attach(manage_shares_source_, NULL);
+  SetCpuShares(utils::kCpuSharesLow);
 }
 
-void UpdateAttempter::CleanupPriorityManagement() {
-  if (manage_priority_source_) {
-    g_source_destroy(manage_priority_source_);
-    manage_priority_source_ = NULL;
+void UpdateAttempter::CleanupCpuSharesManagement() {
+  if (manage_shares_source_) {
+    g_source_destroy(manage_shares_source_);
+    manage_shares_source_ = NULL;
   }
-  SetPriority(utils::kProcessPriorityNormal);
+  SetCpuShares(utils::kCpuSharesNormal);
 }
 
-gboolean UpdateAttempter::StaticManagePriorityCallback(gpointer data) {
-  return reinterpret_cast<UpdateAttempter*>(data)->ManagePriorityCallback();
+gboolean UpdateAttempter::StaticManageCpuSharesCallback(gpointer data) {
+  return reinterpret_cast<UpdateAttempter*>(data)->ManageCpuSharesCallback();
 }
 
 gboolean UpdateAttempter::StaticStartProcessing(gpointer data) {
@@ -945,9 +945,9 @@ void UpdateAttempter::ScheduleProcessingStart() {
   g_idle_add(&StaticStartProcessing, this);
 }
 
-bool UpdateAttempter::ManagePriorityCallback() {
-  SetPriority(utils::kProcessPriorityNormal);
-  manage_priority_source_ = NULL;
+bool UpdateAttempter::ManageCpuSharesCallback() {
+  SetCpuShares(utils::kCpuSharesNormal);
+  manage_shares_source_ = NULL;
   return false;  // Destroy the timeout source.
 }
 

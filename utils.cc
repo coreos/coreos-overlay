@@ -56,6 +56,10 @@ namespace utils {
 static const char kDevImageMarker[] = "/root/.dev_mode";
 const char* const kStatefulPartition = "/mnt/stateful_partition";
 
+// Cgroup container is created in update-engine's upstart script located at
+// /etc/init/update-engine.conf.
+static const char kCGroupDir[] = "/sys/fs/cgroup/cpu/update-engine";
+
 bool IsOfficialBuild() {
   return !file_util::PathExists(FilePath(kDevImageMarker));
 }
@@ -624,16 +628,23 @@ void ScheduleCrashReporterUpload() {
   g_idle_add(&TriggerCrashReporterUpload, NULL);
 }
 
-bool SetProcessPriority(ProcessPriority priority) {
-  int prio = static_cast<int>(priority);
-  LOG(INFO) << "Setting process priority to " << prio;
-  TEST_AND_RETURN_FALSE(setpriority(PRIO_PROCESS, 0, prio) == 0);
-  return true;
+bool SetCpuShares(CpuShares shares) {
+  string string_shares = base::IntToString(static_cast<int>(shares));
+  string cpu_shares_file = string(utils::kCGroupDir) + "/cpu.shares";
+  LOG(INFO) << "Setting cgroup cpu shares to  " << string_shares;
+  if(utils::WriteFile(cpu_shares_file.c_str(), string_shares.c_str(),
+                      string_shares.size())){
+    return true;
+  } else {
+    LOG(ERROR) << "Failed to change cgroup cpu shares to "<< string_shares
+               << " using " << cpu_shares_file;
+    return false;
+  }
 }
 
-int ComparePriorities(ProcessPriority priority_lhs,
-                      ProcessPriority priority_rhs) {
-  return static_cast<int>(priority_rhs) - static_cast<int>(priority_lhs);
+int CompareCpuShares(CpuShares shares_lhs,
+                     CpuShares shares_rhs) {
+  return static_cast<int>(shares_lhs) - static_cast<int>(shares_rhs);
 }
 
 int FuzzInt(int value, unsigned int range) {

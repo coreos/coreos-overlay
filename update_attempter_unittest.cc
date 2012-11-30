@@ -55,8 +55,8 @@ class UpdateAttempterTest : public ::testing::Test {
     EXPECT_EQ(NULL, attempter_.system_state_);
     EXPECT_EQ(NULL, attempter_.update_check_scheduler_);
     EXPECT_EQ(0, attempter_.http_response_code_);
-    EXPECT_EQ(utils::kProcessPriorityNormal, attempter_.priority_);
-    EXPECT_EQ(NULL, attempter_.manage_priority_source_);
+    EXPECT_EQ(utils::kCpuSharesNormal, attempter_.shares_);
+    EXPECT_EQ(NULL, attempter_.manage_shares_source_);
     EXPECT_FALSE(attempter_.download_active_);
     EXPECT_EQ(UPDATE_STATUS_IDLE, attempter_.status_);
     EXPECT_EQ(0.0, attempter_.download_progress_);
