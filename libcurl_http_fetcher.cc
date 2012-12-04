@@ -168,38 +168,58 @@ void LibcurlHttpFetcher::ResumeTransfer(const std::string& url) {
   CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_MAXREDIRS, kMaxRedirects),
            CURLE_OK);
 
-  // Security lock-down in official builds: makes sure that peer certificate
-  // verification is enabled, restricts the set of trusted certificates,
-  // restricts protocols to HTTPS, restricts ciphers to HIGH.
+  // If we are running in test mode or dev mode (the call to IsOfficialBuild is
+  // a misnomer that needs to be fixed), then lock down the appropriate curl
+  // options for HTTP or HTTPS depending on the url.
   if (!is_test_mode_ && IsOfficialBuild()) {
-    CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_SSL_VERIFYPEER, 1),
-             CURLE_OK);
-    CHECK_EQ(curl_easy_setopt(curl_handle_,
-                              CURLOPT_CAPATH,
-                              kCACertificatesPath),
-             CURLE_OK);
-    CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS),
-             CURLE_OK);
-    CHECK_EQ(curl_easy_setopt(curl_handle_,
-                              CURLOPT_REDIR_PROTOCOLS,
-                              CURLPROTO_HTTPS),
-             CURLE_OK);
-    CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_SSL_CIPHER_LIST,
-                              "HIGH:!ADH"),
-             CURLE_OK);
-    if (check_certificate_ != CertificateChecker::kNone) {
-      CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_SSL_CTX_DATA,
-                                &check_certificate_),
-               CURLE_OK);
-      CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_SSL_CTX_FUNCTION,
-                                CertificateChecker::ProcessSSLContext),
-               CURLE_OK);
-    }
+    if (url_to_use.find("http://") == 0)
+      SetCurlOptionsForHttp();
+    else
+      SetCurlOptionsForHttps();
+  } else {
+    LOG(INFO) << "Not setting http(s) curl options for test/dev mode";
   }
 
   CHECK_EQ(curl_multi_add_handle(curl_multi_handle_, curl_handle_), CURLM_OK);
   transfer_in_progress_ = true;
 }
+
+// Lock down only the protocol in case of HTTP.
+void LibcurlHttpFetcher::SetCurlOptionsForHttp() {
+  LOG(INFO) << "Setting up curl options for HTTP";
+  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_PROTOCOLS, CURLPROTO_HTTP),
+           CURLE_OK);
+  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_REDIR_PROTOCOLS,
+                            CURLPROTO_HTTP),
+           CURLE_OK);
+}
+
+// Security lock-down in official builds: makes sure that peer certificate
+// verification is enabled, restricts the set of trusted certificates,
+// restricts protocols to HTTPS, restricts ciphers to HIGH.
+void LibcurlHttpFetcher::SetCurlOptionsForHttps() {
+  LOG(INFO) << "Setting up curl options for HTTPS";
+  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_SSL_VERIFYPEER, 1),
+           CURLE_OK);
+  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_CAPATH, kCACertificatesPath),
+           CURLE_OK);
+  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS),
+           CURLE_OK);
+  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_REDIR_PROTOCOLS,
+                            CURLPROTO_HTTPS),
+           CURLE_OK);
+  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_SSL_CIPHER_LIST, "HIGH:!ADH"),
+           CURLE_OK);
+  if (check_certificate_ != CertificateChecker::kNone) {
+    CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_SSL_CTX_DATA,
+                              &check_certificate_),
+             CURLE_OK);
+    CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_SSL_CTX_FUNCTION,
+                              CertificateChecker::ProcessSSLContext),
+             CURLE_OK);
+  }
+}
+
 
 // Begins the transfer, which must not have already been started.
 void LibcurlHttpFetcher::BeginTransfer(const std::string& url) {

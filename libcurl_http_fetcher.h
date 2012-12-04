@@ -191,6 +191,12 @@ class LibcurlHttpFetcher : public HttpFetcher {
   // Returns whether or not the current build is official.
   bool IsOfficialBuild() const;
 
+  // Sets the curl options for HTTP URL.
+  void SetCurlOptionsForHttp();
+
+  // Sets the curl options for HTTPS URL.
+  void SetCurlOptionsForHttps();
+
   // Handles for the libcurl library
   CURLM *curl_multi_handle_;
   CURL *curl_handle_;
