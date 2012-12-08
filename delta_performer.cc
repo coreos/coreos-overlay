@@ -247,20 +247,14 @@ DeltaPerformer::MetadataParseResult DeltaPerformer::ParsePayloadMetadata(
   // even before waiting for that many number of bytes to be downloaded
   // in the payload. This will prevent any attack which relies on us downloading
   // data beyond the expected metadata size.
-  if (install_plan_->metadata_size > 0 &&
-      install_plan_->metadata_size != *metadata_size) {
-      LOG(ERROR) << "Invalid metadata size. Expected = "
-                 << install_plan_->metadata_size
-                 << "Actual = " << *metadata_size;
-      // Send a UMA Stat here to help with the decision to enforce
-      // this check in a future release, as mentioned below.
-      SendUmaStat(kActionCodeDownloadInvalidMetadataSize);
-
-      // TODO(jaysri): VALIDATION: Initially we don't want to make this a fatal
-      // error.  But in the next release, we should uncomment the lines below
-      // and remove the SendUmaStat call above.
-      // *error = kActionCodeDownloadInvalidManifest;
-      // return kMetadataParseError;
+  if (install_plan_->hash_checks_mandatory) {
+    if (install_plan_->metadata_size != *metadata_size) {
+      LOG(ERROR) << "Mandatory metadata size in Omaha response ("
+                 << install_plan_->metadata_size << ") is missing/incorrect."
+                 << ", Actual = " << *metadata_size;
+      *error = kActionCodeDownloadInvalidMetadataSize;
+      return kMetadataParseError;
+    }
   }
 
   // Now that we have validated the metadata size, we should wait for the full
@@ -273,23 +267,30 @@ DeltaPerformer::MetadataParseResult DeltaPerformer::ParsePayloadMetadata(
   // here. This is logged here (after we received the full metadata data) so
   // that we just log once (instead of logging n times) if it takes n
   // DeltaPerformer::Write calls to download the full manifest.
-  if (install_plan_->metadata_size == 0)
-    LOG(WARNING) << "No metadata size specified in Omaha. "
-                 << "Trusting metadata size in payload = " << *metadata_size;
-  else
+  if (install_plan_->metadata_size == *metadata_size) {
     LOG(INFO) << "Manifest size in payload matches expected value from Omaha";
+  } else {
+    // For mandatory-cases, we'd have already returned a kMetadataParseError
+    // above. We'll be here only for non-mandatory cases. Just send a UMA stat.
+    LOG(WARNING) << "Ignoring missing/incorrect metadata size ("
+                 << install_plan_->metadata_size
+                 << ") in Omaha response as validation is not mandatory. "
+                 << "Trusting metadata size in payload = " << *metadata_size;
+    SendUmaStat(kActionCodeDownloadInvalidMetadataSize);
+  }
 
   // We have the full metadata in |payload|. Verify its integrity
   // and authenticity based on the information we have in Omaha response.
   *error = ValidateMetadataSignature(&payload[0], *metadata_size);
   if (*error != kActionCodeSuccess) {
-    // Send a UMA Stat here to help with the decision to enforce
-    // this check in a future release, as mentioned below.
-    SendUmaStat(*error);
+    if (install_plan_->hash_checks_mandatory) {
+      LOG(ERROR) << "Mandatory metadata signature validation failed";
+      return kMetadataParseError;
+    }
 
-    // TODO(jaysri): VALIDATION: Initially we don't want to make this a fatal
-    // error.  But in the next release, we should remove the line below and
-    // return an error. We should also remove the SendUmaStat call above.
+    // For non-mandatory cases, just send a UMA stat.
+    LOG(WARNING) << "Ignoring metadata signature validation failures";
+    SendUmaStat(*error);
     *error = kActionCodeSuccess;
   }
 
@@ -359,25 +360,24 @@ bool DeltaPerformer::Write(const void* bytes, size_t count,
     // Validate the operation only if the metadata signature is present.
     // Otherwise, keep the old behavior. This serves as a knob to disable
     // the validation logic in case we find some regression after rollout.
+    // NOTE: If hash checks are mandatory and if metadata_signature is empty,
+    // we would have already failed in ParsePayloadMetadata method and thus not
+    // even be here. So no need to handle that case again here.
     if (!install_plan_->metadata_signature.empty()) {
       // Note: Validate must be called only if CanPerformInstallOperation is
       // called. Otherwise, we might be failing operations before even if there
       // isn't sufficient data to compute the proper hash.
       *error = ValidateOperationHash(op, should_log);
       if (*error != kActionCodeSuccess) {
-        // Cannot proceed further as operation hash is invalid.
-        // Higher level code will take care of retrying appropriately.
+        if (install_plan_->hash_checks_mandatory) {
+          LOG(ERROR) << "Mandatory operation hash check failed";
+          return false;
+        }
 
-        // Send a UMA stat to indicate that an operation hash failed to be
-        // validated as expected.
+        // For non-mandatory cases, just send a UMA stat.
+        LOG(WARNING) << "Ignoring operation validation errors";
         SendUmaStat(*error);
-
-        // TODO(jaysri): VALIDATION: For now, we don't treat this as fatal.
-        // But once we're confident that the new code works fine in the field,
-        // we should uncomment the line below. We should also remove the
-        // SendUmaStat call above.
-        // return false;
-        LOG(INFO) << "Ignoring operation validation errors for now";
+        *error = kActionCodeSuccess;
       }
     }
 
@@ -697,20 +697,14 @@ ActionExitCode DeltaPerformer::ValidateMetadataSignature(
     const char* metadata, uint64_t metadata_size) {
 
   if (install_plan_->metadata_signature.empty()) {
-    // TODO(jaysri): If this is not present, we cannot validate the manifest.
-    // This should never happen in normal circumstances, but this can be used
-    // as a release-knob to turn off the new code path that verify
-    // per-operation hashes. So, for now, we should not treat this as a
-    // failure. Once we are confident this path is bug-free, we should treat
-    // this as a failure so that we remain robust even if the connection to
-    // Omaha is subjected to any SSL attack. Once we make this an error, we
-    // should remove the SendUmaStat call below.
+    if (install_plan_->hash_checks_mandatory) {
+      LOG(ERROR) << "Missing mandatory metadata signature in Omaha response";
+      return kActionCodeDownloadMetadataSignatureMissingError;
+    }
+
+    // For non-mandatory cases, just send a UMA stat.
     LOG(WARNING) << "Cannot validate metadata as the signature is empty";
-
-    // Send a UMA stat here so we're aware of any man-in-the-middle attempts to
-    // bypass these checks.
     SendUmaStat(kActionCodeDownloadMetadataSignatureMissingError);
-
     return kActionCodeSuccess;
   }
 
@@ -766,20 +760,15 @@ ActionExitCode DeltaPerformer::ValidateOperationHash(
       // Operations that do not have any data blob won't have any operation hash
       // either. So, these operations are always considered validated since the
       // metadata that contains all the non-data-blob portions of the operation
-      // has already been validated.
+      // has already been validated. This is true for both HTTP and HTTPS cases.
       return kActionCodeSuccess;
     }
 
-    // Send a UMA stat here so we're aware of any man-in-the-middle attempts to
-    // bypass these checks.
-    SendUmaStat(kActionCodeDownloadOperationHashMissingError);
-
-    // TODO(jaysri): VALIDATION: no hash is present for the operation. This
-    // shouldn't happen normally for any client that has this code, because the
+    // No hash is present for an operation that has data blobs. This shouldn't
+    // happen normally for any client that has this code, because the
     // corresponding update should have been produced with the operation
-    // hashes. But if it happens it's likely that we've turned this feature off
-    // in Omaha rule for some reason. Once we make these hashes mandatory, we
-    // should return an error here. We should also remove the SendUmaStat call.
+    // hashes. So if it happens it means either we've turned operation hash
+    // generation off in DeltaDiffGenerator or it's a regression of some sort.
     // One caveat though: The last operation is a dummy signature operation
     // that doesn't have a hash at the time the manifest is created. So we
     // should not complaint about that operation. This operation can be
@@ -789,9 +778,16 @@ ActionExitCode DeltaPerformer::ValidateOperationHash(
       LOG(INFO) << "Skipping hash verification for signature operation "
                 << next_operation_num_ + 1;
     } else {
-      // TODO(jaysri): Uncomment this logging after fixing dev server
-      // LOG(WARNING) << "Cannot validate operation " << next_operation_num_ + 1
-      //             << " as no expected hash present";
+      if (install_plan_->hash_checks_mandatory) {
+        LOG(ERROR) << "Missing mandatory operation hash for operation "
+                   << next_operation_num_ + 1;
+        return kActionCodeDownloadOperationHashMissingError;
+      }
+
+      // For non-mandatory cases, just send a UMA stat.
+      LOG(WARNING) << "Cannot validate operation " << next_operation_num_ + 1
+                   << " as there's no operation hash in manifest";
+      SendUmaStat(kActionCodeDownloadOperationHashMissingError);
     }
     return kActionCodeSuccess;
   }

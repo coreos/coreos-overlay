@@ -75,11 +75,14 @@ class PayloadSigner {
   // and the raw |signatures| updates the payload to include the signature thus
   // turning it into a signed payload. The new payload is stored in
   // |signed_payload_path|. |payload_path| and |signed_payload_path| can point
-  // to the same file. Returns true on success, false otherwise.
+  // to the same file. Populates |out_metadata_size| with the size of the
+  // metadata after adding the signature operation in the manifest.Returns true
+  // on success, false otherwise.
   static bool AddSignatureToPayload(
       const std::string& payload_path,
       const std::vector<std::vector<char> >& signatures,
-      const std::string& signed_payload_path);
+      const std::string& signed_payload_path,
+      uint64_t* out_metadata_size);
 
   // Returns false if the payload signature can't be verified. Returns true
   // otherwise and sets |out_hash| to the signed payload hash.

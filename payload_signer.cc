@@ -80,10 +80,13 @@ bool ConvertSignatureToProtobufBlob(const vector<vector<char> >& signatures,
 
 // Given an unsigned payload under |payload_path| and the |signature_blob_size|
 // generates an updated payload that includes a dummy signature op in its
-// manifest. Returns true on success, false otherwise.
+// manifest. It populates |out_metadata_size| with the size of the final
+// manifest after adding the dummy signature operation.  Returns true on
+// success, false otherwise.
 bool AddSignatureOpToPayload(const string& payload_path,
                              int signature_blob_size,
-                             vector<char>* out_payload) {
+                             vector<char>* out_payload,
+                             uint64_t* out_metadata_size) {
   const int kProtobufOffset = 20;
   const int kProtobufSizeOffset = 12;
 
@@ -116,6 +119,7 @@ bool AddSignatureOpToPayload(const string& payload_path,
   memcpy(&payload[kProtobufSizeOffset], &size_be, sizeof(size_be));
   LOG(INFO) << "Updated payload size: " << payload.size();
   out_payload->swap(payload);
+  *out_metadata_size = serialized_manifest.size() + kProtobufOffset;
   return true;
 }
 }  // namespace {}
@@ -344,9 +348,11 @@ bool PayloadSigner::HashPayloadForSigning(const string& payload_path,
   TEST_AND_RETURN_FALSE(ConvertSignatureToProtobufBlob(signatures,
                                                        &signature_blob));
   vector<char> payload;
+  uint64_t final_metadata_size;
   TEST_AND_RETURN_FALSE(AddSignatureOpToPayload(payload_path,
                                                 signature_blob.size(),
-                                                &payload));
+                                                &payload,
+                                                &final_metadata_size));
   // Calculates the hash on the updated payload. Note that the payload includes
   // the signature op but doesn't include the signature blob at the end.
   TEST_AND_RETURN_FALSE(OmahaHashCalculator::RawHashOfData(payload,
@@ -373,7 +379,8 @@ bool PayloadSigner::HashMetadataForSigning(const string& payload_path,
 bool PayloadSigner::AddSignatureToPayload(
     const string& payload_path,
     const vector<vector<char> >& signatures,
-    const string& signed_payload_path) {
+    const string& signed_payload_path,
+    uint64_t *out_metadata_size) {
   // TODO(petkov): Reduce memory usage -- the payload is manipulated in memory.
 
   // Loads the payload and adds the signature op to it.
@@ -383,7 +390,8 @@ bool PayloadSigner::AddSignatureToPayload(
   vector<char> payload;
   TEST_AND_RETURN_FALSE(AddSignatureOpToPayload(payload_path,
                                                 signature_blob.size(),
-                                                &payload));
+                                                &payload,
+                                                out_metadata_size));
   // Appends the signature blob to the end of the payload and writes the new
   // payload.
   payload.insert(payload.end(), signature_blob.begin(), signature_blob.end());

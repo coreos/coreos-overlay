@@ -1321,7 +1321,8 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
     const string& old_kernel_part,
     const string& new_kernel_part,
     const string& output_path,
-    const string& private_key_path) {
+    const string& private_key_path,
+    uint64_t* metadata_size) {
   int old_image_block_count = 0, old_image_block_size = 0;
   int new_image_block_count = 0, new_image_block_size = 0;
   TEST_AND_RETURN_FALSE(utils::GetFilesystemSize(new_image,
@@ -1560,11 +1561,12 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
                                        signature_blob.size()));
   }
 
-  int64_t manifest_metadata_size =
+  *metadata_size =
       strlen(kDeltaMagic) + 2 * sizeof(uint64_t) + serialized_manifest.size();
-  ReportPayloadUsage(manifest, manifest_metadata_size, op_name_map);
+  ReportPayloadUsage(manifest, *metadata_size, op_name_map);
 
-  LOG(INFO) << "All done. Successfully created delta file.";
+  LOG(INFO) << "All done. Successfully created delta file with "
+            << "metadata size = " << *metadata_size;
   return true;
 }
 

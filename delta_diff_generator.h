@@ -61,7 +61,8 @@ class DeltaDiffGenerator {
   // private_key_path points to a private key used to sign the update.
   // Pass empty string to not sign the update.
   // output_path is the filename where the delta update should be written.
-  // Returns true on success.
+  // Returns true on success. Also writes the size of the metadata into
+  // |metadata_size|.
   static bool GenerateDeltaUpdateFile(const std::string& old_root,
                                       const std::string& old_image,
                                       const std::string& new_root,
@@ -69,7 +70,8 @@ class DeltaDiffGenerator {
                                       const std::string& old_kernel_part,
                                       const std::string& new_kernel_part,
                                       const std::string& output_path,
-                                      const std::string& private_key_path);
+                                      const std::string& private_key_path,
+                                      uint64_t* metadata_size);
 
   // These functions are public so that the unit tests can access them:
 
@@ -249,7 +251,7 @@ class DeltaDiffGenerator {
                              DeltaArchiveManifest* manifest);
 
  private:
-  // This should never be constructed
+ // This should never be constructed
   DISALLOW_IMPLICIT_CONSTRUCTORS(DeltaDiffGenerator);
 };
 

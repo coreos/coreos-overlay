@@ -33,8 +33,17 @@ struct InstallPlan {
         install_path(install_path),
         kernel_install_path(kernel_install_path),
         kernel_size(0),
-        rootfs_size(0) {}
-  InstallPlan() : is_resume(false), payload_size(0), metadata_size(0) {}
+        rootfs_size(0),
+        hash_checks_mandatory(false) {}
+
+  // Default constructor: Initialize all members which don't have a class
+  // initializer.
+  InstallPlan() : is_resume(false),
+                  payload_size(0),
+                  metadata_size(0),
+                  kernel_size(0),
+                  rootfs_size(0),
+                  hash_checks_mandatory(false) {}
 
   bool is_resume;
   std::string download_url;  // url to download from
@@ -62,6 +71,10 @@ struct InstallPlan {
   std::vector<char> kernel_hash;
   std::vector<char> rootfs_hash;
 
+  // True if payload hash checks are mandatory based on the system state and
+  // the Omaha response.
+  bool hash_checks_mandatory;
+
   bool operator==(const InstallPlan& that) const {
     return ((is_resume == that.is_resume) &&
             (download_url == that.download_url) &&
@@ -84,7 +97,8 @@ struct InstallPlan {
               << ", metadata size: " << metadata_size
               << ", metadata signature: " << metadata_signature
               << ", install_path: " << install_path
-              << ", kernel_install_path: " << kernel_install_path;
+              << ", kernel_install_path: " << kernel_install_path
+              << ", hash_checks_mandatory: " << hash_checks_mandatory;
   }
 };
 

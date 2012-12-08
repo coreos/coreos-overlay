@@ -171,4 +171,34 @@ TEST_F(OmahaResponseHandlerActionTest, NoUpdatesTest) {
   EXPECT_EQ("", install_plan.install_path);
 }
 
+TEST_F(OmahaResponseHandlerActionTest, HashChecksForHttpTest) {
+  OmahaResponse in;
+  in.update_exists = true;
+  in.display_version = "a.b.c.d";
+  in.codebase = "http://test.should/need/hash.checks.signed";
+  in.more_info_url = "http://more/info";
+  in.hash = "HASHj+";
+  in.size = 12;
+  InstallPlan install_plan;
+  EXPECT_TRUE(DoTest(in, "/dev/sda5", &install_plan));
+  EXPECT_EQ(in.codebase, install_plan.download_url);
+  EXPECT_EQ(in.hash, install_plan.payload_hash);
+  EXPECT_TRUE(install_plan.hash_checks_mandatory);
+}
+
+TEST_F(OmahaResponseHandlerActionTest, HashChecksForHttpsTest) {
+  OmahaResponse in;
+  in.update_exists = true;
+  in.display_version = "a.b.c.d";
+  in.codebase = "https://test.should.not/need/hash.checks.signed";
+  in.more_info_url = "http://more/info";
+  in.hash = "HASHj+";
+  in.size = 12;
+  InstallPlan install_plan;
+  EXPECT_TRUE(DoTest(in, "/dev/sda5", &install_plan));
+  EXPECT_EQ(in.codebase, install_plan.download_url);
+  EXPECT_EQ(in.hash, install_plan.payload_hash);
+  EXPECT_FALSE(install_plan.hash_checks_mandatory);
+}
+
 }  // namespace chromeos_update_engine

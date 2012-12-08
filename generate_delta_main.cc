@@ -153,9 +153,11 @@ void SignPayload() {
     CHECK(utils::ReadFile(*it, &signature));
     signatures.push_back(signature);
   }
+  uint64_t final_metadata_size;
   CHECK(PayloadSigner::AddSignatureToPayload(
-      FLAGS_in_file, signatures, FLAGS_out_file));
-  LOG(INFO) << "Done signing payload.";
+      FLAGS_in_file, signatures, FLAGS_out_file, &final_metadata_size));
+  LOG(INFO) << "Done signing payload. Final metadata size = "
+            << final_metadata_size;
 }
 
 void VerifySignedPayload() {
@@ -261,6 +263,7 @@ int Main(int argc, char** argv) {
       LOG(FATAL) << "old_dir or new_dir not directory";
     }
   }
+  uint64_t metadata_size;
   if (!DeltaDiffGenerator::GenerateDeltaUpdateFile(FLAGS_old_dir,
                                                    FLAGS_old_image,
                                                    FLAGS_new_dir,
@@ -268,7 +271,8 @@ int Main(int argc, char** argv) {
                                                    FLAGS_old_kernel,
                                                    FLAGS_new_kernel,
                                                    FLAGS_out_file,
-                                                   FLAGS_private_key)) {
+                                                   FLAGS_private_key,
+                                                   &metadata_size)) {
     return 1;
   }
   return 0;

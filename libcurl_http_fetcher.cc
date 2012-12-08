@@ -8,6 +8,7 @@
 #include <string>
 
 #include <base/logging.h>
+#include <base/string_util.h>
 #include <base/stringprintf.h>
 
 #include "update_engine/certificate_checker.h"
@@ -168,16 +169,16 @@ void LibcurlHttpFetcher::ResumeTransfer(const std::string& url) {
   CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_MAXREDIRS, kMaxRedirects),
            CURLE_OK);
 
-  // If we are running in test mode or dev mode (the call to IsOfficialBuild is
-  // a misnomer that needs to be fixed), then lock down the appropriate curl
-  // options for HTTP or HTTPS depending on the url.
+  // If we are running in test mode or using a dev/test build, then lock down
+  // the appropriate curl options for HTTP or HTTPS depending on the url.
   if (!is_test_mode_ && IsOfficialBuild()) {
-    if (url_to_use.find("http://") == 0)
+    if (StartsWithASCII(url_to_use, "http://", false))
       SetCurlOptionsForHttp();
     else
       SetCurlOptionsForHttps();
   } else {
-    LOG(INFO) << "Not setting http(s) curl options for test/dev mode";
+    LOG(INFO) << "Not setting http(s) curl options because we are in "
+              << "test mode or running a dev/test image";
   }
 
   CHECK_EQ(curl_multi_add_handle(curl_multi_handle_, curl_handle_), CURLM_OK);
