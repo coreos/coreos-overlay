@@ -166,7 +166,7 @@ class AnyHttpFetcherTest {
  public:
   AnyHttpFetcherTest()
       : mock_connection_manager_(&mock_system_state_) {
-    mock_system_state_.SetConnectionManager(&mock_connection_manager_);
+    mock_system_state_.set_connection_manager(&mock_connection_manager_);
   }
 
  virtual HttpFetcher* NewLargeFetcher(size_t num_proxies) = 0;
@@ -398,7 +398,7 @@ TYPED_TEST(HttpFetcherTest, SimpleTest) {
     fetcher->set_delegate(&delegate);
 
     MockConnectionManager* mock_cm = dynamic_cast<MockConnectionManager*>(
-        fetcher->GetSystemState()->GetConnectionManager());
+        fetcher->GetSystemState()->connection_manager());
     EXPECT_CALL(*mock_cm, GetConnectionType(_,_))
       .WillRepeatedly(DoAll(SetArgumentPointee<1>(kNetWifi), Return(true)));
     EXPECT_CALL(*mock_cm, IsUpdateAllowedOver(kNetWifi))
@@ -426,7 +426,7 @@ TYPED_TEST(HttpFetcherTest, SimpleBigTest) {
     fetcher->set_delegate(&delegate);
 
     MockConnectionManager* mock_cm = dynamic_cast<MockConnectionManager*>(
-        fetcher->GetSystemState()->GetConnectionManager());
+        fetcher->GetSystemState()->connection_manager());
     EXPECT_CALL(*mock_cm, GetConnectionType(_,_))
       .WillRepeatedly(DoAll(SetArgumentPointee<1>(kNetEthernet), Return(true)));
     EXPECT_CALL(*mock_cm, IsUpdateAllowedOver(kNetEthernet))
@@ -462,7 +462,7 @@ TYPED_TEST(HttpFetcherTest, ErrorTest) {
     fetcher->set_delegate(&delegate);
 
     MockConnectionManager* mock_cm = dynamic_cast<MockConnectionManager*>(
-        fetcher->GetSystemState()->GetConnectionManager());
+        fetcher->GetSystemState()->connection_manager());
     EXPECT_CALL(*mock_cm, GetConnectionType(_,_))
       .WillRepeatedly(DoAll(SetArgumentPointee<1>(kNetWimax), Return(true)));
     EXPECT_CALL(*mock_cm, IsUpdateAllowedOver(kNetWimax))
@@ -541,7 +541,7 @@ TYPED_TEST(HttpFetcherTest, PauseTest) {
     fetcher->set_delegate(&delegate);
 
     MockConnectionManager* mock_cm = dynamic_cast<MockConnectionManager*>(
-        fetcher->GetSystemState()->GetConnectionManager());
+        fetcher->GetSystemState()->connection_manager());
     EXPECT_CALL(*mock_cm, GetConnectionType(_,_))
       .WillRepeatedly(DoAll(SetArgumentPointee<1>(kNetCellular), Return(true)));
     EXPECT_CALL(*mock_cm, IsUpdateAllowedOver(kNetCellular))
@@ -617,7 +617,7 @@ TYPED_TEST(HttpFetcherTest, AbortTest) {
     delegate.fetcher_->set_delegate(&delegate);
 
     MockConnectionManager* mock_cm = dynamic_cast<MockConnectionManager*>(
-        delegate.fetcher_->GetSystemState()->GetConnectionManager());
+        delegate.fetcher_->GetSystemState()->connection_manager());
     EXPECT_CALL(*mock_cm, GetConnectionType(_,_))
       .WillRepeatedly(DoAll(SetArgumentPointee<1>(kNetWifi), Return(true)));
     EXPECT_CALL(*mock_cm, IsUpdateAllowedOver(kNetWifi))
@@ -675,7 +675,7 @@ TYPED_TEST(HttpFetcherTest, FlakyTest) {
     fetcher->set_delegate(&delegate);
 
     MockConnectionManager* mock_cm = dynamic_cast<MockConnectionManager*>(
-        fetcher->GetSystemState()->GetConnectionManager());
+        fetcher->GetSystemState()->connection_manager());
     EXPECT_CALL(*mock_cm, GetConnectionType(_,_))
       .WillRepeatedly(DoAll(SetArgumentPointee<1>(kNetWifi), Return(true)));
     EXPECT_CALL(*mock_cm, IsUpdateAllowedOver(kNetWifi))
@@ -757,7 +757,7 @@ TYPED_TEST(HttpFetcherTest, FailureTest) {
     fetcher->set_delegate(&delegate);
 
     MockConnectionManager* mock_cm = dynamic_cast<MockConnectionManager*>(
-        fetcher->GetSystemState()->GetConnectionManager());
+        fetcher->GetSystemState()->connection_manager());
     EXPECT_CALL(*mock_cm, GetConnectionType(_,_))
       .WillRepeatedly(DoAll(SetArgumentPointee<1>(kNetEthernet), Return(true)));
     EXPECT_CALL(*mock_cm, IsUpdateAllowedOver(kNetEthernet))
@@ -849,7 +849,7 @@ void RedirectTest(bool expected_successful,
     fetcher->set_delegate(&delegate);
 
     MockConnectionManager* mock_cm = dynamic_cast<MockConnectionManager*>(
-        fetcher->GetSystemState()->GetConnectionManager());
+        fetcher->GetSystemState()->connection_manager());
     EXPECT_CALL(*mock_cm, GetConnectionType(_,_))
       .WillRepeatedly(DoAll(SetArgumentPointee<1>(kNetEthernet), Return(true)));
     EXPECT_CALL(*mock_cm, IsUpdateAllowedOver(kNetEthernet))
@@ -967,7 +967,7 @@ void MultiTest(HttpFetcher* fetcher_in,
     delegate.fetcher_.reset(fetcher_in);
 
     MockConnectionManager* mock_cm = dynamic_cast<MockConnectionManager*>(
-        fetcher_in->GetSystemState()->GetConnectionManager());
+        fetcher_in->GetSystemState()->connection_manager());
     EXPECT_CALL(*mock_cm, GetConnectionType(_,_))
       .WillRepeatedly(DoAll(SetArgumentPointee<1>(kNetWifi), Return(true)));
     EXPECT_CALL(*mock_cm, IsUpdateAllowedOver(kNetWifi))
@@ -1163,7 +1163,7 @@ TYPED_TEST(HttpFetcherTest, BlockedTransferTest) {
       bool is_allowed = (i != 0);
       scoped_ptr<HttpFetcher> fetcher(this->test_.NewLargeFetcher());
       MockConnectionManager* mock_cm = dynamic_cast<MockConnectionManager*>(
-          fetcher->GetSystemState()->GetConnectionManager());
+          fetcher->GetSystemState()->connection_manager());
       EXPECT_CALL(*mock_cm, GetConnectionType(_,_))
         .WillRepeatedly(DoAll(SetArgumentPointee<1>(kNetWifi), Return(true)));
       EXPECT_CALL(*mock_cm, IsUpdateAllowedOver(kNetWifi))

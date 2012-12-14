@@ -157,7 +157,7 @@ bool ConnectionManager::IsUpdateAllowedOver(NetworkConnectionType type) const {
     case kNetCellular: {
       set<string> allowed_types;
       const policy::DevicePolicy* device_policy =
-          system_state_->GetDevicePolicy();
+          system_state_->device_policy();
       if (!device_policy) {
         LOG(INFO) << "Disabling updates over cellular connection as there's no "
                      "device policy object present";

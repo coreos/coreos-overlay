@@ -22,7 +22,6 @@
 #include "update_engine/dbus_interface.h"
 #include "update_engine/dbus_service.h"
 #include "update_engine/gpio_handler.h"
-#include "update_engine/prefs.h"
 #include "update_engine/subprocess.h"
 #include "update_engine/terminator.h"
 #include "update_engine/update_attempter.h"
@@ -168,19 +167,13 @@ int main(int argc, char** argv) {
   // Create the single GMainLoop
   GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
 
-  chromeos_update_engine::Prefs prefs;
-  LOG_IF(ERROR, !prefs.Init(FilePath("/var/lib/update_engine/prefs")))
-      << "Failed to initialize preferences.";
-
   chromeos_update_engine::RealSystemState real_system_state;
-
-  MetricsLibrary metrics_lib;
-  metrics_lib.Init();
-  real_system_state.set_metrics_lib(&metrics_lib);
+  LOG_IF(ERROR, !real_system_state.Initialize())
+      << "Failed to initialize system state.";
 
   // Sets static members for the certificate checker.
-  chromeos_update_engine::CertificateChecker::set_metrics_lib(&metrics_lib);
-  chromeos_update_engine::CertificateChecker::set_prefs(&prefs);
+  chromeos_update_engine::CertificateChecker::set_system_state(
+      &real_system_state);
   chromeos_update_engine::OpenSSLWrapper openssl_wrapper;
   chromeos_update_engine::CertificateChecker::set_openssl_wrapper(
       &openssl_wrapper);
@@ -196,10 +189,9 @@ int main(int argc, char** argv) {
 
   // Create the update attempter:
   chromeos_update_engine::ConcreteDbusGlib dbus;
-  chromeos_update_engine::UpdateAttempter update_attempter(&prefs,
+  chromeos_update_engine::UpdateAttempter update_attempter(&real_system_state,
                                                            &dbus,
-                                                           &gpio_handler,
-                                                           &real_system_state);
+                                                           &gpio_handler);
 
   // Create the dbus service object:
   dbus_g_object_type_install_info(UPDATE_ENGINE_TYPE_SERVICE,

@@ -41,7 +41,7 @@ class MockHttpFetcher : public HttpFetcher {
         fail_transfer_(false),
         never_use_(false),
         mock_connection_manager_(&mock_system_state_) {
-    mock_system_state_.SetConnectionManager(&mock_connection_manager_);
+    mock_system_state_.set_connection_manager(&mock_connection_manager_);
     data_.insert(data_.end(), data, data + size);
   }
 

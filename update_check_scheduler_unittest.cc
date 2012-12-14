@@ -30,19 +30,23 @@ void FuzzRange(int interval, int fuzz, int* interval_min, int* interval_max) {
 // GLib and utils in tests. There're explicit unit test for the wrapper methods.
 class UpdateCheckSchedulerUnderTest : public UpdateCheckScheduler {
  public:
-  UpdateCheckSchedulerUnderTest(UpdateAttempter* update_attempter)
-      : UpdateCheckScheduler(update_attempter, NULL, &mock_system_state_) {}
+  UpdateCheckSchedulerUnderTest(UpdateAttempter* update_attempter,
+                                MockSystemState* mock_system_state)
+      : UpdateCheckScheduler(update_attempter, NULL, mock_system_state),
+        mock_system_state_(mock_system_state) {}
 
   MOCK_METHOD2(GTimeoutAddSeconds, guint(guint seconds, GSourceFunc function));
   MOCK_METHOD0(IsBootDeviceRemovable, bool());
   MOCK_METHOD0(IsOfficialBuild, bool());
 
-  MockSystemState mock_system_state_;
+  MockSystemState* mock_system_state_;
 };
 
 class UpdateCheckSchedulerTest : public ::testing::Test {
  public:
-  UpdateCheckSchedulerTest() : scheduler_(&attempter_), attempter_(&dbus_) {}
+  UpdateCheckSchedulerTest()
+      : attempter_(&mock_system_state_, &dbus_),
+        scheduler_(&attempter_, &mock_system_state_) {}
 
  protected:
   virtual void SetUp() {
@@ -66,9 +70,10 @@ class UpdateCheckSchedulerTest : public ::testing::Test {
     return test_->source_callback_.Call(data);
   }
 
-  UpdateCheckSchedulerUnderTest scheduler_;
+  MockSystemState mock_system_state_;
   MockDbusGlib dbus_;
   UpdateAttempterMock attempter_;
+  UpdateCheckSchedulerUnderTest scheduler_;
   MockFunction<gboolean(gpointer data)> source_callback_;
   GMainLoop* loop_;
   static UpdateCheckSchedulerTest* test_;
@@ -273,7 +278,8 @@ TEST_F(UpdateCheckSchedulerTest, SetUpdateStatusNonIdleTest) {
 
 TEST_F(UpdateCheckSchedulerTest, StaticCheckOOBECompleteTest) {
   scheduler_.scheduled_ = true;
-  EXPECT_CALL(scheduler_.mock_system_state_,
+  EXPECT_TRUE(scheduler_.mock_system_state_ != NULL);
+  EXPECT_CALL(*scheduler_.mock_system_state_,
               IsOOBEComplete()).Times(1).WillOnce(Return(true));
   EXPECT_CALL(attempter_, Update("", "", false, false, false, false))
       .Times(1)
@@ -285,7 +291,7 @@ TEST_F(UpdateCheckSchedulerTest, StaticCheckOOBECompleteTest) {
 
 TEST_F(UpdateCheckSchedulerTest, StaticCheckOOBENotCompleteTest) {
   scheduler_.scheduled_ = true;
-  EXPECT_CALL(scheduler_.mock_system_state_,
+  EXPECT_CALL(*scheduler_.mock_system_state_,
               IsOOBEComplete()).Times(1).WillOnce(Return(false));
   EXPECT_CALL(attempter_, Update("", "", _, _, _,_)).Times(0);
   int interval_min, interval_max;

@@ -51,10 +51,7 @@ bool OpenSSLWrapper::GetCertificateDigest(X509_STORE_CTX* x509_ctx,
 }
 
 // static
-MetricsLibraryInterface* CertificateChecker::metrics_lib_ = NULL;
-
-// static
-PrefsInterface* CertificateChecker::prefs_ = NULL;
+SystemState* CertificateChecker::system_state_ = NULL;
 
 // static
 OpenSSLWrapper* CertificateChecker::openssl_wrapper_ = NULL;
@@ -105,13 +102,15 @@ bool CertificateChecker::CheckCertificateChange(
   static const char kUMAActionCertChanged[] =
       "Updater.ServerCertificateChanged";
   static const char kUMAActionCertFailed[] = "Updater.ServerCertificateFailed";
+  TEST_AND_RETURN_FALSE(system_state_ != NULL);
+  TEST_AND_RETURN_FALSE(system_state_->prefs() != NULL);
   TEST_AND_RETURN_FALSE(server_to_check != kNone);
 
   // If pre-verification failed, we are not interested in the current
   // certificate. We store a report to UMA and just propagate the fail result.
   if (!preverify_ok) {
-    LOG_IF(WARNING, !prefs_->SetString(kReportToSendKey[server_to_check],
-                                       kUMAActionCertFailed))
+    LOG_IF(WARNING, !system_state_->prefs()->SetString(
+        kReportToSendKey[server_to_check], kUMAActionCertFailed))
         << "Failed to store UMA report on a failure to validate "
         << "certificate from update server.";
     return false;
@@ -140,8 +139,9 @@ bool CertificateChecker::CheckCertificateChange(
                                     depth);
   string stored_digest;
   // If there's no stored certificate, we just store the current one and return.
-  if (!prefs_->GetString(storage_key, &stored_digest)) {
-    LOG_IF(WARNING, !prefs_->SetString(storage_key, digest_string))
+  if (!system_state_->prefs()->GetString(storage_key, &stored_digest)) {
+    LOG_IF(WARNING, !system_state_->prefs()->SetString(storage_key,
+                                                       digest_string))
         << "Failed to store server certificate on storage key " << storage_key;
     return true;
   }
@@ -149,11 +149,12 @@ bool CertificateChecker::CheckCertificateChange(
   // Certificate changed, we store a report to UMA and store the most recent
   // certificate.
   if (stored_digest != digest_string) {
-    LOG_IF(WARNING, !prefs_->SetString(kReportToSendKey[server_to_check],
-                                       kUMAActionCertChanged))
+    LOG_IF(WARNING, !system_state_->prefs()->SetString(
+        kReportToSendKey[server_to_check], kUMAActionCertChanged))
         << "Failed to store UMA report on a change on the "
         << "certificate from update server.";
-    LOG_IF(WARNING, !prefs_->SetString(storage_key, digest_string))
+    LOG_IF(WARNING, !system_state_->prefs()->SetString(storage_key,
+                                                       digest_string))
         << "Failed to store server certificate on storage key " << storage_key;
   }
 
@@ -164,20 +165,22 @@ bool CertificateChecker::CheckCertificateChange(
 // static
 void CertificateChecker::FlushReport() {
   // This check shouldn't be needed, but it is useful for testing.
-  TEST_AND_RETURN(metrics_lib_ && prefs_);
+  TEST_AND_RETURN(system_state_);
+  TEST_AND_RETURN(system_state_->metrics_lib());
+  TEST_AND_RETURN(system_state_->prefs());
 
   // We flush reports for both servers.
   for (size_t i = 0; i < arraysize(kReportToSendKey); i++) {
     string report_to_send;
-    if (prefs_->GetString(kReportToSendKey[i], &report_to_send) &&
-        !report_to_send.empty()) {
+    if (system_state_->prefs()->GetString(kReportToSendKey[i], &report_to_send)
+        && !report_to_send.empty()) {
       // There is a report to be sent. We send it and erase it.
-      LOG_IF(WARNING, !metrics_lib_->SendUserActionToUMA(report_to_send))
+      LOG(INFO) << "Found report #" << i << ". Sending it";
+      LOG_IF(WARNING, !system_state_->metrics_lib()->SendUserActionToUMA(
+          report_to_send))
           << "Failed to send server certificate report to UMA: "
           << report_to_send;
-      // Since prefs doesn't provide deletion, we just set it as an empty
-      // string.
-      LOG_IF(WARNING, !prefs_->SetString(kReportToSendKey[i], ""))
+      LOG_IF(WARNING, !system_state_->prefs()->Delete(kReportToSendKey[i]))
           << "Failed to erase server certificate report to be sent to UMA";
     }
   }

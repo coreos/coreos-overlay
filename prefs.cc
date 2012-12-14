@@ -37,6 +37,9 @@ const char kPrefsUpdateCheckCount[] = "update-check-count";
 const char kPrefsWallClockWaitPeriod[] = "wall-clock-wait-period";
 const char kPrefsUpdateFirstSeenAt[] = "update-first-seen-at";
 
+const char kPrefsCurrentResponse[] = "current-omaha-response";
+const char kPrefsCurrentUrlIndex[] = "current-url-index";
+
 bool Prefs::Init(const FilePath& prefs_dir) {
   prefs_dir_ = prefs_dir;
   return true;

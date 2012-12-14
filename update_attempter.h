@@ -60,10 +60,9 @@ class UpdateAttempter : public ActionProcessorDelegate,
  public:
   static const int kMaxDeltaUpdateFailures;
 
-  UpdateAttempter(PrefsInterface* prefs,
+  UpdateAttempter(SystemState* system_state,
                   DbusGlibInterface* dbus_iface,
-                  GpioHandler* gpio_handler,
-                  SystemState* system_state);
+                  GpioHandler* gpio_handler);
   virtual ~UpdateAttempter();
 
   // Checks for update and, if a newer version is available, attempts to update
@@ -275,6 +274,10 @@ class UpdateAttempter : public ActionProcessorDelegate,
   std::vector<std::tr1::shared_ptr<AbstractAction> > actions_;
   scoped_ptr<ActionProcessor> processor_;
 
+  // External state of the system outside the update_engine process
+  // carved out separately to mock out easily in unit tests.
+  SystemState* system_state_;
+
   // If non-null, this UpdateAttempter will send status updates over this
   // dbus service.
   UpdateEngineService* dbus_service_;
@@ -285,7 +288,9 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // Pointer to the DownloadAction in the actions_ vector.
   std::tr1::shared_ptr<DownloadAction> download_action_;
 
-  // Pointer to the preferences store interface.
+  // Pointer to the preferences store interface. This is just a cached
+  // copy of system_state->prefs() because it's used in many methods and
+  // is convenient this way.
   PrefsInterface* prefs_;
 
   // The current UpdateCheckScheduler to notify of state transitions.
@@ -359,10 +364,6 @@ class UpdateAttempter : public ActionProcessorDelegate,
 
   // The current scatter factor as found in the policy setting.
   base::TimeDelta scatter_factor_;
-
-  // External state of the system outside the update_engine process
-  // carved out separately to mock out easily in unit tests.
-  SystemState* system_state_;
 
   DISALLOW_COPY_AND_ASSIGN(UpdateAttempter);
 };

@@ -12,6 +12,7 @@
 #include "update_engine/action.h"
 #include "update_engine/install_plan.h"
 #include "update_engine/omaha_request_action.h"
+#include "update_engine/system_state.h"
 
 // This class reads in an Omaha response and converts what it sees into
 // an install plan which is passed out.
@@ -19,7 +20,6 @@
 namespace chromeos_update_engine {
 
 class OmahaResponseHandlerAction;
-class PrefsInterface;
 
 template<>
 class ActionTraits<OmahaResponseHandlerAction> {
@@ -32,7 +32,7 @@ class OmahaResponseHandlerAction : public Action<OmahaResponseHandlerAction> {
  public:
   static const char kDeadlineFile[];
 
-  OmahaResponseHandlerAction(PrefsInterface* prefs);
+  OmahaResponseHandlerAction(SystemState* system_state);
   typedef ActionTraits<OmahaResponseHandlerAction>::InputObjectType
       InputObjectType;
   typedef ActionTraits<OmahaResponseHandlerAction>::OutputObjectType
@@ -70,8 +70,8 @@ class OmahaResponseHandlerAction : public Action<OmahaResponseHandlerAction> {
   // of the system and the contents of the Omaha response. False otherwise.
   bool AreHashChecksMandatory(const OmahaResponse& response);
 
-  // Update Engine preference store.
-  PrefsInterface* prefs_;
+  // Global system context.
+  SystemState* system_state_;
 
   // set to non-empty in unit tests
   std::string boot_device_;

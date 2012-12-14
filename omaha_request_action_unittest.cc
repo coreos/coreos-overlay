@@ -17,7 +17,6 @@
 #include "update_engine/omaha_request_action.h"
 #include "update_engine/omaha_request_params.h"
 #include "update_engine/prefs.h"
-#include "update_engine/prefs_mock.h"
 #include "update_engine/test_utils.h"
 #include "update_engine/utils.h"
 
@@ -209,8 +208,10 @@ bool TestUpdateCheck(PrefsInterface* prefs,
   if (fail_http_response_code >= 0) {
     fetcher->FailTransfer(fail_http_response_code);
   }
-  NiceMock<PrefsMock> local_prefs;
-  OmahaRequestAction action(prefs ? prefs : &local_prefs,
+  MockSystemState mock_system_state;
+  if (prefs)
+    mock_system_state.set_prefs(prefs);
+  OmahaRequestAction action(&mock_system_state,
                             &params,
                             NULL,
                             fetcher,
@@ -248,8 +249,8 @@ void TestEvent(OmahaRequestParams params,
   MockHttpFetcher* fetcher = new MockHttpFetcher(http_response.data(),
                                                  http_response.size(),
                                                  NULL);
-  NiceMock<PrefsMock> prefs;
-  OmahaRequestAction action(&prefs, &params, event, fetcher, false);
+  MockSystemState mock_system_state;
+  OmahaRequestAction action(&mock_system_state, &params, event, fetcher, false);
   OmahaRequestActionTestProcessorDelegate delegate;
   delegate.loop_ = loop;
   ActionProcessor processor;
@@ -300,7 +301,7 @@ TEST(OmahaRequestActionTest, ValidUpdateTest) {
   EXPECT_TRUE(response.update_exists);
   EXPECT_TRUE(response.update_exists);
   EXPECT_EQ("1.2.3.4", response.display_version);
-  EXPECT_EQ("http://code/base/file.signed", response.codebase);
+  EXPECT_EQ("http://code/base/file.signed", response.payload_urls[0]);
   EXPECT_EQ("http://more/info", response.more_info_url);
   EXPECT_EQ("HASH1234=", response.hash);
   EXPECT_EQ(123, response.size);
@@ -615,9 +616,9 @@ TEST(OmahaRequestActionTest, NoOutputPipeTest) {
 
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
 
-  NiceMock<PrefsMock> prefs;
+  MockSystemState mock_system_state;
   OmahaRequestParams params = kDefaultTestParams;
-  OmahaRequestAction action(&prefs, &params, NULL,
+  OmahaRequestAction action(&mock_system_state, &params, NULL,
                             new MockHttpFetcher(http_response.data(),
                                                 http_response.size(),
                                                 NULL),
@@ -747,7 +748,7 @@ TEST(OmahaRequestActionTest, MissingFieldTest) {
                               NULL));
   EXPECT_TRUE(response.update_exists);
   EXPECT_EQ("10.2.3.4", response.display_version);
-  EXPECT_EQ("http://missing/field/test/f", response.codebase);
+  EXPECT_EQ("http://missing/field/test/f", response.payload_urls[0]);
   EXPECT_EQ("", response.more_info_url);
   EXPECT_EQ("lkq34j5345", response.hash);
   EXPECT_EQ(587, response.size);
@@ -779,9 +780,9 @@ TEST(OmahaRequestActionTest, TerminateTransferTest) {
   string http_response("doesn't matter");
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
 
-  NiceMock<PrefsMock> prefs;
+  MockSystemState mock_system_state;
   OmahaRequestParams params = kDefaultTestParams;
-  OmahaRequestAction action(&prefs, &params, NULL,
+  OmahaRequestAction action(&mock_system_state, &params, NULL,
                             new MockHttpFetcher(http_response.data(),
                                                 http_response.size(),
                                                 NULL),
@@ -864,7 +865,7 @@ TEST(OmahaRequestActionTest, XmlDecodeTest) {
                       NULL));
 
   EXPECT_EQ(response.more_info_url, "testthe<url");
-  EXPECT_EQ(response.codebase, "testthe&codebase/file.signed");
+  EXPECT_EQ(response.payload_urls[0], "testthe&codebase/file.signed");
   EXPECT_EQ(response.deadline, "<20110101");
 }
 
@@ -989,10 +990,10 @@ TEST(OmahaRequestActionTest, FormatErrorEventOutputTest) {
 
 TEST(OmahaRequestActionTest, IsEventTest) {
   string http_response("doesn't matter");
-  NiceMock<PrefsMock> prefs;
+  MockSystemState mock_system_state;
   OmahaRequestParams params = kDefaultTestParams;
   OmahaRequestAction update_check_action(
-      &prefs,
+      &mock_system_state,
       &params,
       NULL,
       new MockHttpFetcher(http_response.data(),
@@ -1003,7 +1004,7 @@ TEST(OmahaRequestActionTest, IsEventTest) {
 
   params = kDefaultTestParams;
   OmahaRequestAction event_action(
-      &prefs,
+      &mock_system_state,
       &params,
       new OmahaEvent(OmahaEvent::kTypeUpdateComplete),
       new MockHttpFetcher(http_response.data(),

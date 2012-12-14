@@ -10,6 +10,7 @@
 #include <fcntl.h>
 
 #include <string>
+#include <vector>
 
 #include <base/memory/scoped_ptr.h>
 #include <curl/curl.h>
@@ -46,7 +47,11 @@ struct OmahaResponse {
 
   // These are only valid if update_exists is true:
   std::string display_version;
-  std::string codebase;
+
+  // The ordered list of URLs in the Omaha response. Each item is a complete
+  // URL (i.e. in terms of Omaha XML, each value is a urlBase + packageName)
+  std::vector<std::string> payload_urls;
+
   std::string more_info_url;
   std::string hash;
   std::string metadata_signature;
@@ -142,7 +147,7 @@ class OmahaRequestAction : public Action<OmahaRequestAction>,
   // OmahaRequestAction(..., new OmahaEvent(...), new WhateverHttpFetcher);
   // or
   // OmahaRequestAction(..., NULL, new WhateverHttpFetcher);
-  OmahaRequestAction(PrefsInterface* prefs,
+  OmahaRequestAction(SystemState* system_state,
                      OmahaRequestParams* params,
                      OmahaEvent* event,
                      HttpFetcher* http_fetcher,
@@ -228,8 +233,8 @@ class OmahaRequestAction : public Action<OmahaRequestAction>,
                    OmahaResponse* output_object,
                    ScopedActionCompleter* completer);
 
-  // Access to the preferences store.
-  PrefsInterface* prefs_;
+  // Global system context.
+  SystemState* system_state_;
 
   // Contains state that is relevant in the processing of the Omaha request.
   OmahaRequestParams* params_;

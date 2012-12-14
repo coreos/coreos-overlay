@@ -20,8 +20,9 @@ namespace chromeos_update_engine {
 const char OmahaResponseHandlerAction::kDeadlineFile[] =
     "/tmp/update-check-response-deadline";
 
-OmahaResponseHandlerAction::OmahaResponseHandlerAction(PrefsInterface* prefs)
-    : prefs_(prefs),
+OmahaResponseHandlerAction::OmahaResponseHandlerAction(
+    SystemState* system_state)
+    : system_state_(system_state),
       got_no_update_response_(false),
       key_path_(DeltaPerformer::kUpdatePayloadPublicKeyPath) {}
 
@@ -34,19 +35,28 @@ void OmahaResponseHandlerAction::PerformAction() {
     LOG(INFO) << "There are no updates. Aborting.";
     return;
   }
-  install_plan_.download_url = response.codebase;
+
+  // All decisions as to which URL should be used have already been done. So,
+  // make the download URL as the payload URL at the current url index.
+  uint32_t url_index = system_state_->payload_state()->GetUrlIndex();
+  LOG(INFO) << "Using Url" << url_index << " as the download url this time";
+  CHECK(url_index < response.payload_urls.size());
+  install_plan_.download_url = response.payload_urls[url_index];
+
+  // Fill up the other properties based on the response.
   install_plan_.payload_size = response.size;
   install_plan_.payload_hash = response.hash;
   install_plan_.metadata_size = response.metadata_size;
   install_plan_.metadata_signature = response.metadata_signature;
   install_plan_.hash_checks_mandatory = AreHashChecksMandatory(response);
   install_plan_.is_resume =
-      DeltaPerformer::CanResumeUpdate(prefs_, response.hash);
+      DeltaPerformer::CanResumeUpdate(system_state_->prefs(), response.hash);
   if (!install_plan_.is_resume) {
-    LOG_IF(WARNING, !DeltaPerformer::ResetUpdateProgress(prefs_, false))
+    LOG_IF(WARNING, !DeltaPerformer::ResetUpdateProgress(
+        system_state_->prefs(), false))
         << "Unable to reset the update progress.";
-    LOG_IF(WARNING, !prefs_->SetString(kPrefsUpdateCheckResponseHash,
-                                       response.hash))
+    LOG_IF(WARNING, !system_state_->prefs()->SetString(
+        kPrefsUpdateCheckResponseHash, response.hash))
         << "Unable to save the update check response hash.";
   }
 
@@ -108,16 +118,22 @@ bool OmahaResponseHandlerAction::AreHashChecksMandatory(
   // checks for HTTPS until we have rolled out at least once and are confident
   // nothing breaks. chromium-os:37082 tracks turning this on for HTTPS
   // eventually.
-  if (StartsWithASCII(response.codebase, "https://", false)) {
-    LOG(INFO) << "Waiving payload hash checks since Omaha response "
-              << "only has HTTPS URL(s)";
-    return false;
+
+  // Even if there's a single non-HTTPS URL, make the hash checks as
+  // mandatory because we could be downloading the payload from any URL later
+  // on. It's really hard to do book-keeping based on each byte being
+  // downloaded to see whether we only used HTTPS throughout.
+  for (size_t i = 0; i < response.payload_urls.size(); i++) {
+    if (!StartsWithASCII(response.payload_urls[i], "https://", false)) {
+      LOG(INFO) << "Mandating payload hash checks since Omaha response "
+                << "contains non-HTTPS URL(s)";
+      return true;
+    }
   }
 
-  // No exceptions apply. So hash checks are mandatory, by default.
-  LOG(INFO) << "Mandating payload hash checks since Omaha response "
-            << "contains HTTP URL(s)";
-  return true;
+  LOG(INFO) << "Waiving payload hash checks since Omaha response "
+            << "only has HTTPS URL(s)";
+  return false;
 }
 
 }  // namespace chromeos_update_engine

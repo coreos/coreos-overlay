@@ -12,6 +12,7 @@
 
 #include "update_engine/certificate_checker.h"
 #include "update_engine/certificate_checker_mock.h"
+#include "update_engine/mock_system_state.h"
 #include "update_engine/prefs_mock.h"
 
 using ::testing::_;
@@ -45,15 +46,15 @@ class CertificateCheckerTest : public testing::Test {
                              depth_);
     kCertChanged = "Updater.ServerCertificateChanged";
     kCertFailed = "Updater.ServerCertificateFailed";
-    CertificateChecker::set_metrics_lib(&metrics_lib_);
-    CertificateChecker::set_prefs(&prefs_);
+    CertificateChecker::set_system_state(&mock_system_state_);
     CertificateChecker::set_openssl_wrapper(&openssl_wrapper_);
+    prefs_ = mock_system_state_.mock_prefs();
   }
 
   virtual void TearDown() {}
 
-  MetricsLibraryMock metrics_lib_;
-  PrefsMock prefs_;
+  MockSystemState mock_system_state_;
+  PrefsMock* prefs_; // shortcut to mock_system_state_.mock_prefs()
   OpenSSLWrapperMock openssl_wrapper_;
   // Parameters of our mock certificate digest.
   int depth_;
@@ -76,9 +77,9 @@ TEST_F(CertificateCheckerTest, NewCertificate) {
           SetArgumentPointee<2>(length_),
           SetArrayArgument<3>(digest_, digest_ + 4),
           Return(true)));
-  EXPECT_CALL(prefs_, GetString(cert_key_, _))
+  EXPECT_CALL(*prefs_, GetString(cert_key_, _))
       .WillOnce(Return(false));
-  EXPECT_CALL(prefs_, SetString(cert_key_, digest_hex_))
+  EXPECT_CALL(*prefs_, SetString(cert_key_, digest_hex_))
       .WillOnce(Return(true));
   ASSERT_TRUE(CertificateChecker::CheckCertificateChange(
       server_to_check_, 1, NULL));
@@ -92,11 +93,11 @@ TEST_F(CertificateCheckerTest, SameCertificate) {
           SetArgumentPointee<2>(length_),
           SetArrayArgument<3>(digest_, digest_ + 4),
           Return(true)));
-  EXPECT_CALL(prefs_, GetString(cert_key_, _))
+  EXPECT_CALL(*prefs_, GetString(cert_key_, _))
       .WillOnce(DoAll(
           SetArgumentPointee<1>(digest_hex_),
           Return(true)));
-  EXPECT_CALL(prefs_, SetString(_, _)).Times(0);
+  EXPECT_CALL(*prefs_, SetString(_, _)).Times(0);
   ASSERT_TRUE(CertificateChecker::CheckCertificateChange(
       server_to_check_, 1, NULL));
 }
@@ -109,14 +110,14 @@ TEST_F(CertificateCheckerTest, ChangedCertificate) {
           SetArgumentPointee<2>(length_),
           SetArrayArgument<3>(digest_, digest_ + 4),
           Return(true)));
-  EXPECT_CALL(prefs_, GetString(cert_key_, _))
+  EXPECT_CALL(*prefs_, GetString(cert_key_, _))
       .WillOnce(DoAll(
           SetArgumentPointee<1>(diff_digest_hex_),
           Return(true)));
-  EXPECT_CALL(prefs_, SetString(kPrefsCertificateReportToSendUpdate,
+  EXPECT_CALL(*prefs_, SetString(kPrefsCertificateReportToSendUpdate,
                                 kCertChanged))
       .WillOnce(Return(true));
-  EXPECT_CALL(prefs_, SetString(cert_key_, digest_hex_))
+  EXPECT_CALL(*prefs_, SetString(cert_key_, digest_hex_))
       .WillOnce(Return(true));
   ASSERT_TRUE(CertificateChecker::CheckCertificateChange(
       server_to_check_, 1, NULL));
@@ -124,10 +125,10 @@ TEST_F(CertificateCheckerTest, ChangedCertificate) {
 
 // check certificate change, failed
 TEST_F(CertificateCheckerTest, FailedCertificate) {
-  EXPECT_CALL(prefs_, SetString(kPrefsCertificateReportToSendUpdate,
+  EXPECT_CALL(*prefs_, SetString(kPrefsCertificateReportToSendUpdate,
                                 kCertFailed))
       .WillOnce(Return(true));
-  EXPECT_CALL(prefs_, GetString(_,_)).Times(0);
+  EXPECT_CALL(*prefs_, GetString(_,_)).Times(0);
   EXPECT_CALL(openssl_wrapper_, GetCertificateDigest(_,_,_,_)).Times(0);
   ASSERT_FALSE(CertificateChecker::CheckCertificateChange(
       server_to_check_, 0, NULL));
@@ -135,17 +136,18 @@ TEST_F(CertificateCheckerTest, FailedCertificate) {
 
 // flush send report
 TEST_F(CertificateCheckerTest, FlushReport) {
-  EXPECT_CALL(prefs_, GetString(kPrefsCertificateReportToSendUpdate, _))
+  EXPECT_CALL(*prefs_, GetString(kPrefsCertificateReportToSendUpdate, _))
       .WillOnce(DoAll(
           SetArgumentPointee<1>(kCertChanged),
           Return(true)));
-  EXPECT_CALL(prefs_, GetString(kPrefsCertificateReportToSendDownload, _))
+  EXPECT_CALL(*prefs_, GetString(kPrefsCertificateReportToSendDownload, _))
       .WillOnce(Return(false));
-  EXPECT_CALL(metrics_lib_, SendUserActionToUMA(kCertChanged))
+  EXPECT_CALL(*mock_system_state_.mock_metrics_lib(),
+              SendUserActionToUMA(kCertChanged))
       .WillOnce(Return(true));
-  EXPECT_CALL(prefs_, SetString(kPrefsCertificateReportToSendUpdate, ""))
+  EXPECT_CALL(*prefs_, Delete(kPrefsCertificateReportToSendUpdate))
       .WillOnce(Return(true));
-  EXPECT_CALL(prefs_, SetString(kPrefsCertificateReportToSendDownload, _))
+  EXPECT_CALL(*prefs_, SetString(kPrefsCertificateReportToSendDownload, _))
       .Times(0);
   CertificateChecker::FlushReport();
 }
@@ -153,14 +155,15 @@ TEST_F(CertificateCheckerTest, FlushReport) {
 // flush nothing to report
 TEST_F(CertificateCheckerTest, FlushNothingToReport) {
   string empty = "";
-  EXPECT_CALL(prefs_, GetString(kPrefsCertificateReportToSendUpdate, _))
+  EXPECT_CALL(*prefs_, GetString(kPrefsCertificateReportToSendUpdate, _))
       .WillOnce(DoAll(
           SetArgumentPointee<1>(empty),
           Return(true)));
-  EXPECT_CALL(prefs_, GetString(kPrefsCertificateReportToSendDownload, _))
+  EXPECT_CALL(*prefs_, GetString(kPrefsCertificateReportToSendDownload, _))
       .WillOnce(Return(false));
-  EXPECT_CALL(metrics_lib_, SendUserActionToUMA(_)).Times(0);
-  EXPECT_CALL(prefs_, SetString(_,_)).Times(0);
+  EXPECT_CALL(*mock_system_state_.mock_metrics_lib(),
+              SendUserActionToUMA(_)).Times(0);
+  EXPECT_CALL(*prefs_, SetString(_,_)).Times(0);
   CertificateChecker::FlushReport();
 }
 

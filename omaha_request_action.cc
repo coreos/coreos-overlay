@@ -183,12 +183,12 @@ string XmlEncode(const string& input) {
   return string(reinterpret_cast<const char *>(str.get()));
 }
 
-OmahaRequestAction::OmahaRequestAction(PrefsInterface* prefs,
+OmahaRequestAction::OmahaRequestAction(SystemState* system_state,
                                        OmahaRequestParams* params,
                                        OmahaEvent* event,
                                        HttpFetcher* http_fetcher,
                                        bool ping_only)
-    : prefs_(prefs),
+    : system_state_(system_state),
       params_(params),
       event_(event),
       http_fetcher_(http_fetcher),
@@ -202,7 +202,7 @@ OmahaRequestAction::~OmahaRequestAction() {}
 int OmahaRequestAction::CalculatePingDays(const string& key) {
   int days = kNeverPinged;
   int64_t last_ping = 0;
-  if (prefs_->GetInt64(key, &last_ping) && last_ping >= 0) {
+  if (system_state_->prefs()->GetInt64(key, &last_ping) && last_ping >= 0) {
     days = (Time::Now() - Time::FromInternalValue(last_ping)).InDays();
     if (days < 0) {
       // If |days| is negative, then the system clock must have jumped
@@ -244,7 +244,7 @@ void OmahaRequestAction::PerformAction() {
                                     ping_only_,
                                     ping_active_days_,
                                     ping_roll_call_days_,
-                                    prefs_));
+                                    system_state_->prefs()));
 
   http_fetcher_->SetPostData(request_post.data(), request_post.size(),
                              kHttpContentTypeTextXml);
@@ -366,26 +366,28 @@ bool OmahaRequestAction::ParseResponse(xmlDoc* doc,
   CHECK_GE(nodeset->nodeNr, 1);
   xmlNode* update_check_node = nodeset->nodeTab[0];
 
-  // TODO(jaysri): The PollInterval is not supported by Omaha server currently.
-  // But still keeping this existing code in case we ever decide to slow down
-  // the request rate from the server-side. Note that the PollInterval is not
-  // persisted, so it has to be sent by the server on every response to
-  // guarantee that the UpdateCheckScheduler uses this value (otherwise, if the
-  // device got rebooted after the last server-indicated value, it'll revert to
-  // the default value). Also kDefaultMaxUpdateChecks value for the scattering
-  // logic is based on the assumption that we perform an update check every
-  // hour so that the max value of 8 will roughly be equivalent to one work
-  // day. If we decide to use PollInterval permanently, we should update
-  // the max_update_checks_allowed to take PollInterval into account.  Note:
-  // The parsing for PollInterval happens even before parsing of the status
-  // because we may want to specify the PollInterval even when there's no
-  // update.
+  // chromium-os:37289: The PollInterval is not supported by Omaha server
+  // currently.  But still keeping this existing code in case we ever decide to
+  // slow down the request rate from the server-side. Note that the
+  // PollInterval is not persisted, so it has to be sent by the server on every
+  // response to guarantee that the UpdateCheckScheduler uses this value
+  // (otherwise, if the device got rebooted after the last server-indicated
+  // value, it'll revert to the default value). Also kDefaultMaxUpdateChecks
+  // value for the scattering logic is based on the assumption that we perform
+  // an update check every hour so that the max value of 8 will roughly be
+  // equivalent to one work day. If we decide to use PollInterval permanently,
+  // we should update the max_update_checks_allowed to take PollInterval into
+  // account.  Note: The parsing for PollInterval happens even before parsing
+  // of the status because we may want to specify the PollInterval even when
+  // there's no update.
   base::StringToInt(XmlGetProperty(update_check_node, "PollInterval"),
                     &output_object->poll_interval);
 
   if (!ParseStatus(update_check_node, output_object, completer))
     return false;
 
+  // Note: ParseUrls MUST be called before ParsePackage as ParsePackage
+  // appends the package name to the URLs populated in this method.
   if (!ParseUrls(doc, output_object, completer))
     return false;
 
@@ -394,6 +396,10 @@ bool OmahaRequestAction::ParseResponse(xmlDoc* doc,
 
   if (!ParseParams(doc, output_object, completer))
     return false;
+
+  output_object->update_exists = true;
+  SetOutputObject(*output_object);
+  completer->set_code(kActionCodeSuccess);
 
   return true;
 }
@@ -443,19 +449,20 @@ bool OmahaRequestAction::ParseUrls(xmlDoc* doc,
   CHECK(nodeset) << "XPath missing " << kUpdateUrlNodeXPath;
   CHECK_GE(nodeset->nodeNr, 1);
 
-  // TODO(jaysri): For now, use the last URL. In subsequent
-  // check-ins, we'll add the support to honor multiples URLs.
-  LOG(INFO) << "Processing last of " << nodeset->nodeNr << " url(s)";
-  xmlNode* url_node = nodeset->nodeTab[nodeset->nodeNr - 1];
+  LOG(INFO) << "Found " << nodeset->nodeNr << " url(s)";
+  output_object->payload_urls.clear();
+  for (int i = 0; i < nodeset->nodeNr; i++) {
+    xmlNode* url_node = nodeset->nodeTab[i];
 
-  const string codebase(XmlGetProperty(url_node, "codebase"));
-  if (codebase.empty()) {
-    LOG(ERROR) << "Omaha Response URL has empty codebase";
-    completer->set_code(kActionCodeOmahaResponseInvalid);
-    return false;
+    const string codebase(XmlGetProperty(url_node, "codebase"));
+    if (codebase.empty()) {
+      LOG(ERROR) << "Omaha Response URL has empty codebase";
+      completer->set_code(kActionCodeOmahaResponseInvalid);
+      return false;
+    }
+    output_object->payload_urls.push_back(codebase);
   }
 
-  output_object->codebase = codebase;
   return true;
 }
 
@@ -483,7 +490,7 @@ bool OmahaRequestAction::ParsePackage(xmlDoc* doc,
 
   // Get package properties one by one.
 
-  // Parse the payload name to be appended to the Url codebase.
+  // Parse the payload name to be appended to the base Url value.
   const string package_name(XmlGetProperty(package_node, "name"));
   LOG(INFO) << "Omaha Response package name = " << package_name;
   if (package_name.empty()) {
@@ -491,7 +498,14 @@ bool OmahaRequestAction::ParsePackage(xmlDoc* doc,
     completer->set_code(kActionCodeOmahaResponseInvalid);
     return false;
   }
-  output_object->codebase += package_name;
+
+  // Append the package name to each URL in our list so that we don't
+  // propagate the urlBase vs packageName distinctions beyond this point.
+  // From now on, we only need to use payload_urls.
+  for (size_t i = 0; i < output_object->payload_urls.size(); i++) {
+    output_object->payload_urls[i] += package_name;
+    LOG(INFO) << "Url" << i << ": " << output_object->payload_urls[i];
+  }
 
   // Parse the payload size.
   off_t size = ParseInt(XmlGetProperty(package_node, "size"));
@@ -502,8 +516,7 @@ bool OmahaRequestAction::ParsePackage(xmlDoc* doc,
   }
   output_object->size = size;
 
-  LOG(INFO) << "Download URL = " << output_object->codebase
-            << ", Paylod size = " << output_object->size;
+  LOG(INFO) << "Payload size = " << output_object->size << " bytes";
 
   return true;
 }
@@ -554,7 +567,7 @@ bool OmahaRequestAction::ParseParams(xmlDoc* doc,
     return false;
   }
 
- // Get the optional properties one by one.
+  // Get the optional properties one by one.
   output_object->display_version =
       XmlGetProperty(pie_action_node, "DisplayVersion");
   output_object->more_info_url = XmlGetProperty(pie_action_node, "MoreInfo");
@@ -569,10 +582,6 @@ bool OmahaRequestAction::ParseParams(xmlDoc* doc,
   output_object->max_days_to_scatter =
       ParseInt(XmlGetProperty(pie_action_node, "MaxDaysToScatter"));
 
-  output_object->update_exists = true;
-  SetOutputObject(*output_object);
-  completer->set_code(kActionCodeSuccess);
-
   return true;
 }
 
@@ -582,8 +591,8 @@ bool OmahaRequestAction::ParseParams(xmlDoc* doc,
 void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
                                           bool successful) {
   ScopedActionCompleter completer(processor_, this);
-  LOG(INFO) << "Omaha request response: " << string(response_buffer_.begin(),
-                                                    response_buffer_.end());
+  string current_response(response_buffer_.begin(), response_buffer_.end());
+  LOG(INFO) << "Omaha request response: " << current_response;
 
   // Events are best effort transactions -- assume they always succeed.
   if (IsEvent()) {
@@ -626,7 +635,7 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
       ShouldPing(ping_roll_call_days_) ||
       ping_active_days_ == kPingTimeJump ||
       ping_roll_call_days_ == kPingTimeJump) {
-    LOG_IF(ERROR, !UpdateLastPingDays(doc.get(), prefs_))
+    LOG_IF(ERROR, !UpdateLastPingDays(doc.get(), system_state_->prefs()))
         << "Failed to update the last ping day preferences!";
   }
 
@@ -661,6 +670,12 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
     completer.set_code(kActionCodeOmahaUpdateDeferredPerPolicy);
     return;
   }
+
+  // Update the payload state with the current response. The payload state
+  // will automatically reset all stale state if this response is different
+  // from what's stored already.
+  PayloadState* payload_state = system_state_->payload_state();
+  payload_state->SetResponse(output_object);
 }
 
 bool OmahaRequestAction::ShouldDeferDownload(OmahaResponse* output_object) {
@@ -708,8 +723,9 @@ OmahaRequestAction::IsWallClockBasedWaitingSatisfied(
   Time update_first_seen_at;
   int64 update_first_seen_at_int;
 
-  if (prefs_->Exists(kPrefsUpdateFirstSeenAt)) {
-    if (prefs_->GetInt64(kPrefsUpdateFirstSeenAt, &update_first_seen_at_int)) {
+  if (system_state_->prefs()->Exists(kPrefsUpdateFirstSeenAt)) {
+    if (system_state_->prefs()->GetInt64(kPrefsUpdateFirstSeenAt,
+                                         &update_first_seen_at_int)) {
       // Note: This timestamp could be that of ANY update we saw in the past
       // (not necessarily this particular update we're considering to apply)
       // but never got to apply because of some reason (e.g. stop AU policy,
@@ -732,7 +748,8 @@ OmahaRequestAction::IsWallClockBasedWaitingSatisfied(
   } else {
     update_first_seen_at = Time::Now();
     update_first_seen_at_int = update_first_seen_at.ToInternalValue();
-    if (prefs_->SetInt64(kPrefsUpdateFirstSeenAt, update_first_seen_at_int)) {
+    if (system_state_->prefs()->SetInt64(kPrefsUpdateFirstSeenAt,
+                                         update_first_seen_at_int)) {
       LOG(INFO) << "Persisted the new value for UpdateFirstSeenAt: "
                 << utils::ToString(update_first_seen_at);
     }
@@ -807,8 +824,9 @@ OmahaRequestAction::IsWallClockBasedWaitingSatisfied(
 bool OmahaRequestAction::IsUpdateCheckCountBasedWaitingSatisfied() {
   int64 update_check_count_value;
 
-  if (prefs_->Exists(kPrefsUpdateCheckCount)) {
-    if (!prefs_->GetInt64(kPrefsUpdateCheckCount, &update_check_count_value)) {
+  if (system_state_->prefs()->Exists(kPrefsUpdateCheckCount)) {
+    if (!system_state_->prefs()->GetInt64(kPrefsUpdateCheckCount,
+                                          &update_check_count_value)) {
       // We are unable to read the update check count from file for some reason.
       // So let's proceed anyway so as to not stall the update.
       LOG(ERROR) << "Unable to read update check count. "
@@ -826,7 +844,8 @@ bool OmahaRequestAction::IsUpdateCheckCountBasedWaitingSatisfied() {
               << update_check_count_value;
 
     // Write out the initial value of update_check_count_value.
-    if (!prefs_->SetInt64(kPrefsUpdateCheckCount, update_check_count_value)) {
+    if (!system_state_->prefs()->SetInt64(kPrefsUpdateCheckCount,
+                                          update_check_count_value)) {
       // We weren't able to write the update check count file for some reason.
       // So let's proceed anyway so as to not stall the update.
       LOG(ERROR) << "Unable to write update check count. "

@@ -10,11 +10,14 @@
 #include <policy/libpolicy.h>
 
 #include <update_engine/connection_manager.h>
+#include <update_engine/payload_state.h>
+#include <update_engine/prefs.h>
 
 namespace chromeos_update_engine {
 
 // An interface to global system context, including platform resources,
-// the current state of the system, high-level objects, system interfaces, etc.
+// the current state of the system, high-level objects whose lifetime is same
+// as main, system interfaces, etc.
 // Carved out separately so it can be mocked for unit tests.
 // Currently it has only one method, but we should start migrating other
 // methods to use this as and when needed to unit test them.
@@ -29,15 +32,20 @@ class SystemState {
   virtual bool IsOOBEComplete() = 0;
 
   // Sets or gets the latest device policy.
-  virtual void SetDevicePolicy(const policy::DevicePolicy* device_policy) = 0;
-  virtual const policy::DevicePolicy* GetDevicePolicy() const = 0;
+  virtual void set_device_policy(const policy::DevicePolicy* device_policy) = 0;
+  virtual const policy::DevicePolicy* device_policy() const = 0;
 
   // Gets the connection manager object.
-  virtual ConnectionManager* GetConnectionManager() = 0;
+  virtual ConnectionManager* connection_manager() = 0;
 
-  // Sets or gets the Metrics Library interface for reporting UMA stats.
-  virtual void set_metrics_lib(MetricsLibraryInterface* metrics_lib) = 0;
+  // Gets the Metrics Library interface for reporting UMA stats.
   virtual MetricsLibraryInterface* metrics_lib() = 0;
+
+  // Gets the interface object for persisted store.
+  virtual PrefsInterface* prefs() = 0;
+
+  // Gets the URL State object.
+  virtual PayloadState* payload_state() = 0;
 };
 
 // A real implementation of the SystemStateInterface which is
@@ -50,13 +58,20 @@ public:
 
   virtual bool IsOOBEComplete();
 
-  virtual void SetDevicePolicy(const policy::DevicePolicy* device_policy);
-  virtual const policy::DevicePolicy* GetDevicePolicy() const;
+  virtual void set_device_policy(const policy::DevicePolicy* device_policy);
+  virtual const policy::DevicePolicy* device_policy() const;
 
-  virtual ConnectionManager* GetConnectionManager();
+  virtual ConnectionManager* connection_manager();
 
-  virtual void set_metrics_lib(MetricsLibraryInterface* metrics_lib);
   virtual MetricsLibraryInterface* metrics_lib();
+
+  virtual PrefsInterface* prefs();
+
+  virtual PayloadState* payload_state();
+
+  // Initializs this concrete object. Other methods should be invoked only
+  // if the object has been initialized successfully.
+  bool Initialize();
 
 private:
   // The latest device policy object from the policy provider.
@@ -67,7 +82,14 @@ private:
   ConnectionManager connection_manager_;
 
   // The Metrics Library interface for reporting UMA stats.
-  MetricsLibraryInterface* metrics_lib_;
+  MetricsLibrary metrics_lib_;
+
+  // Interface for persisted store.
+  Prefs prefs_;
+
+  // All state pertaining to payload state such as
+  // response, URL, back-off states.
+  PayloadState payload_state_;
 };
 
 }  // namespace chromeos_update_engine

@@ -107,13 +107,12 @@ ActionExitCode GetErrorCodeForAction(AbstractAction* action,
   return code;
 }
 
-UpdateAttempter::UpdateAttempter(PrefsInterface* prefs,
+UpdateAttempter::UpdateAttempter(SystemState* system_state,
                                  DbusGlibInterface* dbus_iface,
-                                 GpioHandler* gpio_handler,
-                                 SystemState* system_state)
+                                 GpioHandler* gpio_handler)
     : processor_(new ActionProcessor()),
+      system_state_(system_state),
       dbus_service_(NULL),
-      prefs_(prefs),
       update_check_scheduler_(NULL),
       fake_update_success_(false),
       http_response_code_(0),
@@ -135,8 +134,8 @@ UpdateAttempter::UpdateAttempter(PrefsInterface* prefs,
       is_using_test_url_(false),
       is_test_mode_(false),
       is_test_update_attempted_(false),
-      gpio_handler_(gpio_handler),
-      system_state_(system_state) {
+      gpio_handler_(gpio_handler) {
+  prefs_ = system_state->prefs();
   if (utils::FileExists(kUpdateCompletedMarker))
     status_ = UPDATE_STATUS_UPDATED_NEED_REBOOT;
 }
@@ -151,6 +150,7 @@ void UpdateAttempter::Update(const string& app_version,
                              bool interactive,
                              bool is_test_mode,
                              bool is_user_initiated) {
+  LOG(INFO) << "Update called";
   chrome_proxy_resolver_.Init();
   fake_update_success_ = false;
   if (status_ == UPDATE_STATUS_UPDATED_NEED_REBOOT) {
@@ -184,6 +184,7 @@ void UpdateAttempter::Update(const string& app_version,
   // before any update processing starts.
   start_action_processor_ = true;
   UpdateBootFlags();
+  LOG(INFO) << "Update finished";
 }
 
 bool UpdateAttempter::CalculateUpdateParams(const string& app_version,
@@ -215,7 +216,7 @@ bool UpdateAttempter::CalculateUpdateParams(const string& app_version,
     device_policy.GetTargetVersionPrefix(
       &omaha_request_params_.target_version_prefix);
 
-    system_state_->SetDevicePolicy(&device_policy);
+    system_state_->set_device_policy(&device_policy);
 
     set<string> allowed_types;
     string allowed_types_str;
@@ -229,7 +230,7 @@ bool UpdateAttempter::CalculateUpdateParams(const string& app_version,
               << (allowed_types_str.empty() ? "all" : allowed_types_str);
   } else {
     LOG(INFO) << "No device policies present.";
-    system_state_->SetDevicePolicy(NULL);
+    system_state_->set_device_policy(NULL);
   }
 
   CalculateScatteringParams(is_user_initiated);
@@ -287,7 +288,7 @@ void UpdateAttempter::CalculateScatteringParams(bool is_user_initiated) {
   // Take a copy of the old scatter value before we update it, as
   // we need to update the waiting period if this value changes.
   TimeDelta old_scatter_factor = scatter_factor_;
-  const policy::DevicePolicy* device_policy = system_state_->GetDevicePolicy();
+  const policy::DevicePolicy* device_policy = system_state_->device_policy();
   if (device_policy) {
     int64 new_scatter_factor_in_secs = 0;
     device_policy->GetScatterFactorInSeconds(&new_scatter_factor_in_secs);
@@ -414,19 +415,19 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
   update_check_fetcher->set_no_network_max_retries(interactive ? 1 : 3);
   update_check_fetcher->set_check_certificate(CertificateChecker::kUpdate);
   shared_ptr<OmahaRequestAction> update_check_action(
-      new OmahaRequestAction(prefs_,
+      new OmahaRequestAction(system_state_,
                              &omaha_request_params_,
                              NULL,
                              update_check_fetcher,  // passes ownership
                              false));
   shared_ptr<OmahaResponseHandlerAction> response_handler_action(
-      new OmahaResponseHandlerAction(prefs_));
+      new OmahaResponseHandlerAction(system_state_));
   shared_ptr<FilesystemCopierAction> filesystem_copier_action(
       new FilesystemCopierAction(false, false));
   shared_ptr<FilesystemCopierAction> kernel_filesystem_copier_action(
       new FilesystemCopierAction(true, false));
   shared_ptr<OmahaRequestAction> download_started_action(
-      new OmahaRequestAction(prefs_,
+      new OmahaRequestAction(system_state_,
                              &omaha_request_params_,
                              new OmahaEvent(
                                  OmahaEvent::kTypeUpdateDownloadStarted),
@@ -443,7 +444,7 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
                          new MultiRangeHttpFetcher(
                              download_fetcher)));  // passes ownership
   shared_ptr<OmahaRequestAction> download_finished_action(
-      new OmahaRequestAction(prefs_,
+      new OmahaRequestAction(system_state_,
                              &omaha_request_params_,
                              new OmahaEvent(
                                  OmahaEvent::kTypeUpdateDownloadFinished),
@@ -458,7 +459,7 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
   shared_ptr<PostinstallRunnerAction> postinstall_runner_action(
       new PostinstallRunnerAction);
   shared_ptr<OmahaRequestAction> update_complete_action(
-      new OmahaRequestAction(prefs_,
+      new OmahaRequestAction(system_state_,
                              &omaha_request_params_,
                              new OmahaEvent(OmahaEvent::kTypeUpdateComplete),
                              new LibcurlHttpFetcher(GetProxyResolver(),
@@ -878,11 +879,14 @@ bool UpdateAttempter::ScheduleErrorEventAction() {
   if (error_event_.get() == NULL)
     return false;
 
-  LOG(INFO) << "Update failed -- reporting the error event.";
+  LOG(ERROR) << "Update failed.";
+  system_state_->payload_state()->UpdateFailed(error_event_->error_code);
+
+  LOG(INFO) << "Reporting the error event";
   utils::SendErrorCodeToUma(system_state_->metrics_lib(),
                             error_event_->error_code);
   shared_ptr<OmahaRequestAction> error_event_action(
-      new OmahaRequestAction(prefs_,
+      new OmahaRequestAction(system_state_,
                              &omaha_request_params_,
                              error_event_.release(),  // Pass ownership.
                              new LibcurlHttpFetcher(GetProxyResolver(),
@@ -998,7 +1002,7 @@ void UpdateAttempter::SetupDownload() {
 void UpdateAttempter::PingOmaha() {
   if (!processor_->IsRunning()) {
     shared_ptr<OmahaRequestAction> ping_action(
-        new OmahaRequestAction(prefs_,
+        new OmahaRequestAction(system_state_,
                                &omaha_request_params_,
                                NULL,
                                new LibcurlHttpFetcher(GetProxyResolver(),

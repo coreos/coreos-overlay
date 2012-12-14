@@ -7,7 +7,7 @@
 #include <gtest/gtest.h>
 
 #include "update_engine/omaha_response_handler_action.h"
-#include "update_engine/prefs_mock.h"
+#include "update_engine/mock_system_state.h"
 #include "update_engine/test_utils.h"
 #include "update_engine/utils.h"
 
@@ -65,12 +65,13 @@ bool OmahaResponseHandlerActionTest::DoTest(const OmahaResponse& in,
 
   ObjectFeederAction<OmahaResponse> feeder_action;
   feeder_action.set_obj(in);
-  NiceMock<PrefsMock> prefs;
+  MockSystemState mock_system_state;
   if (in.update_exists) {
-    EXPECT_CALL(prefs, SetString(kPrefsUpdateCheckResponseHash, in.hash))
+    EXPECT_CALL(*mock_system_state.mock_prefs(),
+                SetString(kPrefsUpdateCheckResponseHash, in.hash))
         .WillOnce(Return(true));
   }
-  OmahaResponseHandlerAction response_handler_action(&prefs);
+  OmahaResponseHandlerAction response_handler_action(&mock_system_state);
   response_handler_action.set_boot_device(boot_dev);
   BondActions(&feeder_action, &response_handler_action);
   ObjectCollectorAction<InstallPlan> collector_action;
@@ -94,7 +95,7 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     OmahaResponse in;
     in.update_exists = true;
     in.display_version = "a.b.c.d";
-    in.codebase = "http://foo/the_update_a.b.c.d.tgz";
+    in.payload_urls.push_back("http://foo/the_update_a.b.c.d.tgz");
     in.more_info_url = "http://more/info";
     in.hash = "HASH+";
     in.size = 12;
@@ -103,7 +104,7 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     in.deadline = "20101020";
     InstallPlan install_plan;
     EXPECT_TRUE(DoTest(in, "/dev/sda3", &install_plan));
-    EXPECT_EQ(in.codebase, install_plan.download_url);
+    EXPECT_EQ(in.payload_urls[0], install_plan.download_url);
     EXPECT_EQ(in.hash, install_plan.payload_hash);
     EXPECT_EQ("/dev/sda5", install_plan.install_path);
     string deadline;
@@ -121,7 +122,7 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     OmahaResponse in;
     in.update_exists = true;
     in.display_version = "a.b.c.d";
-    in.codebase = "http://foo/the_update_a.b.c.d.tgz";
+    in.payload_urls.push_back("http://foo/the_update_a.b.c.d.tgz");
     in.more_info_url = "http://more/info";
     in.hash = "HASHj+";
     in.size = 12;
@@ -129,7 +130,7 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     in.prompt = true;
     InstallPlan install_plan;
     EXPECT_TRUE(DoTest(in, "/dev/sda5", &install_plan));
-    EXPECT_EQ(in.codebase, install_plan.download_url);
+    EXPECT_EQ(in.payload_urls[0], install_plan.download_url);
     EXPECT_EQ(in.hash, install_plan.payload_hash);
     EXPECT_EQ("/dev/sda3", install_plan.install_path);
     string deadline;
@@ -141,7 +142,7 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     OmahaResponse in;
     in.update_exists = true;
     in.display_version = "a.b.c.d";
-    in.codebase = kLongName;
+    in.payload_urls.push_back(kLongName);
     in.more_info_url = "http://more/info";
     in.hash = "HASHj+";
     in.size = 12;
@@ -150,7 +151,7 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     in.deadline = "some-deadline";
     InstallPlan install_plan;
     EXPECT_TRUE(DoTest(in, "/dev/sda3", &install_plan));
-    EXPECT_EQ(in.codebase, install_plan.download_url);
+    EXPECT_EQ(in.payload_urls[0], install_plan.download_url);
     EXPECT_EQ(in.hash, install_plan.payload_hash);
     EXPECT_EQ("/dev/sda5", install_plan.install_path);
     string deadline;
@@ -175,13 +176,13 @@ TEST_F(OmahaResponseHandlerActionTest, HashChecksForHttpTest) {
   OmahaResponse in;
   in.update_exists = true;
   in.display_version = "a.b.c.d";
-  in.codebase = "http://test.should/need/hash.checks.signed";
+  in.payload_urls.push_back("http://test.should/need/hash.checks.signed");
   in.more_info_url = "http://more/info";
   in.hash = "HASHj+";
   in.size = 12;
   InstallPlan install_plan;
   EXPECT_TRUE(DoTest(in, "/dev/sda5", &install_plan));
-  EXPECT_EQ(in.codebase, install_plan.download_url);
+  EXPECT_EQ(in.payload_urls[0], install_plan.download_url);
   EXPECT_EQ(in.hash, install_plan.payload_hash);
   EXPECT_TRUE(install_plan.hash_checks_mandatory);
 }
@@ -190,15 +191,32 @@ TEST_F(OmahaResponseHandlerActionTest, HashChecksForHttpsTest) {
   OmahaResponse in;
   in.update_exists = true;
   in.display_version = "a.b.c.d";
-  in.codebase = "https://test.should.not/need/hash.checks.signed";
+  in.payload_urls.push_back("https://test.should.not/need/hash.checks.signed");
   in.more_info_url = "http://more/info";
   in.hash = "HASHj+";
   in.size = 12;
   InstallPlan install_plan;
   EXPECT_TRUE(DoTest(in, "/dev/sda5", &install_plan));
-  EXPECT_EQ(in.codebase, install_plan.download_url);
+  EXPECT_EQ(in.payload_urls[0], install_plan.download_url);
   EXPECT_EQ(in.hash, install_plan.payload_hash);
   EXPECT_FALSE(install_plan.hash_checks_mandatory);
 }
+
+TEST_F(OmahaResponseHandlerActionTest, HashChecksForBothHttpAndHttpsTest) {
+  OmahaResponse in;
+  in.update_exists = true;
+  in.display_version = "a.b.c.d";
+  in.payload_urls.push_back("http://test.should.still/need/hash.checks");
+  in.payload_urls.push_back("https://test.should.still/need/hash.checks");
+  in.more_info_url = "http://more/info";
+  in.hash = "HASHj+";
+  in.size = 12;
+  InstallPlan install_plan;
+  EXPECT_TRUE(DoTest(in, "/dev/sda5", &install_plan));
+  EXPECT_EQ(in.payload_urls[0], install_plan.download_url);
+  EXPECT_EQ(in.hash, install_plan.payload_hash);
+  EXPECT_TRUE(install_plan.hash_checks_mandatory);
+}
+
 
 }  // namespace chromeos_update_engine

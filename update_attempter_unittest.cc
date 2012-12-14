@@ -12,6 +12,7 @@
 #include "update_engine/filesystem_copier_action.h"
 #include "update_engine/mock_dbus_interface.h"
 #include "update_engine/mock_http_fetcher.h"
+#include "update_engine/mock_payload_state.h"
 #include "update_engine/mock_system_state.h"
 #include "update_engine/postinstall_runner_action.h"
 #include "update_engine/prefs.h"
@@ -37,22 +38,22 @@ namespace chromeos_update_engine {
 // methods.
 class UpdateAttempterUnderTest : public UpdateAttempter {
  public:
-  explicit UpdateAttempterUnderTest(MockDbusGlib* dbus)
-      : UpdateAttempter(NULL, dbus, NULL, NULL) {}
+  explicit UpdateAttempterUnderTest(MockSystemState* mock_system_state,
+                                    MockDbusGlib* dbus)
+      : UpdateAttempter(mock_system_state, dbus, NULL) {}
 };
 
 class UpdateAttempterTest : public ::testing::Test {
  protected:
   UpdateAttempterTest()
-      : attempter_(&dbus_),
+      : attempter_(&mock_system_state_, &dbus_),
         mock_connection_manager(&mock_system_state_),
         loop_(NULL) {
-    mock_system_state_.SetConnectionManager(&mock_connection_manager);
+    mock_system_state_.set_connection_manager(&mock_connection_manager);
   }
   virtual void SetUp() {
     EXPECT_EQ(NULL, attempter_.dbus_service_);
-    EXPECT_EQ(NULL, attempter_.prefs_);
-    EXPECT_EQ(NULL, attempter_.system_state_);
+    EXPECT_TRUE(attempter_.system_state_ != NULL);
     EXPECT_EQ(NULL, attempter_.update_check_scheduler_);
     EXPECT_EQ(0, attempter_.http_response_code_);
     EXPECT_EQ(utils::kCpuSharesNormal, attempter_.shares_);
@@ -65,8 +66,7 @@ class UpdateAttempterTest : public ::testing::Test {
     EXPECT_EQ(0, attempter_.new_payload_size_);
     processor_ = new ActionProcessorMock();
     attempter_.processor_.reset(processor_);  // Transfers ownership.
-    attempter_.prefs_ = &prefs_;
-    attempter_.system_state_ = &mock_system_state_;
+    prefs_ = mock_system_state_.mock_prefs();
   }
 
   void QuitMainLoop();
@@ -102,11 +102,11 @@ class UpdateAttempterTest : public ::testing::Test {
   static gboolean StaticNoScatteringDoneDuringManualUpdateTestStart(
       gpointer data);
 
+  MockSystemState mock_system_state_;
   MockDbusGlib dbus_;
   UpdateAttempterUnderTest attempter_;
   ActionProcessorMock* processor_;
-  NiceMock<PrefsMock> prefs_;
-  MockSystemState mock_system_state_;
+  NiceMock<PrefsMock>* prefs_; // shortcut to mock_system_state_->mock_prefs()
   MockConnectionManager mock_connection_manager;
   GMainLoop* loop_;
 };
@@ -114,8 +114,8 @@ class UpdateAttempterTest : public ::testing::Test {
 TEST_F(UpdateAttempterTest, ActionCompletedDownloadTest) {
   scoped_ptr<MockHttpFetcher> fetcher(new MockHttpFetcher("", 0, NULL));
   fetcher->FailTransfer(503);  // Sets the HTTP response code.
-  DownloadAction action(&prefs_, NULL, fetcher.release());
-  EXPECT_CALL(prefs_, GetInt64(kPrefsDeltaUpdateFailures, _)).Times(0);
+  DownloadAction action(prefs_, NULL, fetcher.release());
+  EXPECT_CALL(*prefs_, GetInt64(kPrefsDeltaUpdateFailures, _)).Times(0);
   attempter_.ActionCompleted(NULL, &action, kActionCodeSuccess);
   EXPECT_EQ(503, attempter_.http_response_code());
   EXPECT_EQ(UPDATE_STATUS_FINALIZING, attempter_.status());
@@ -126,7 +126,7 @@ TEST_F(UpdateAttempterTest, ActionCompletedErrorTest) {
   ActionMock action;
   EXPECT_CALL(action, Type()).WillRepeatedly(Return("ActionMock"));
   attempter_.status_ = UPDATE_STATUS_DOWNLOADING;
-  EXPECT_CALL(prefs_, GetInt64(kPrefsDeltaUpdateFailures, _))
+  EXPECT_CALL(*prefs_, GetInt64(kPrefsDeltaUpdateFailures, _))
       .WillOnce(Return(false));
   attempter_.ActionCompleted(NULL, &action, kActionCodeError);
   ASSERT_TRUE(attempter_.error_event_.get() != NULL);
@@ -136,7 +136,8 @@ TEST_F(UpdateAttempterTest, ActionCompletedOmahaRequestTest) {
   scoped_ptr<MockHttpFetcher> fetcher(new MockHttpFetcher("", 0, NULL));
   fetcher->FailTransfer(500);  // Sets the HTTP response code.
   OmahaRequestParams params;
-  OmahaRequestAction action(&prefs_, &params, NULL, fetcher.release(), false);
+  OmahaRequestAction action(&mock_system_state_, &params, NULL,
+                            fetcher.release(), false);
   ObjectCollectorAction<OmahaResponse> collector_action;
   BondActions(&action, &collector_action);
   OmahaResponse response;
@@ -144,7 +145,7 @@ TEST_F(UpdateAttempterTest, ActionCompletedOmahaRequestTest) {
   action.SetOutputObject(response);
   UpdateCheckScheduler scheduler(&attempter_, NULL, &mock_system_state_);
   attempter_.set_update_check_scheduler(&scheduler);
-  EXPECT_CALL(prefs_, GetInt64(kPrefsDeltaUpdateFailures, _)).Times(0);
+  EXPECT_CALL(*prefs_, GetInt64(kPrefsDeltaUpdateFailures, _)).Times(0);
   attempter_.ActionCompleted(NULL, &action, kActionCodeSuccess);
   EXPECT_EQ(500, attempter_.http_response_code());
   EXPECT_EQ(UPDATE_STATUS_IDLE, attempter_.status());
@@ -156,8 +157,7 @@ TEST_F(UpdateAttempterTest, RunAsRootConstructWithUpdatedMarkerTest) {
   extern const char* kUpdateCompletedMarker;
   const FilePath kMarker(kUpdateCompletedMarker);
   EXPECT_EQ(0, file_util::WriteFile(kMarker, "", 0));
-  MockDbusGlib dbus;
-  UpdateAttempterUnderTest attempter(&dbus);
+  UpdateAttempterUnderTest attempter(&mock_system_state_, &dbus_);
   EXPECT_EQ(UPDATE_STATUS_UPDATED_NEED_REBOOT, attempter.status());
   EXPECT_TRUE(file_util::Delete(kMarker, false));
 }
@@ -169,10 +169,12 @@ TEST_F(UpdateAttempterTest, GetErrorCodeForActionTest) {
             GetErrorCodeForAction(NULL, kActionCodeSuccess));
 
   OmahaRequestParams params;
-  OmahaRequestAction omaha_request_action(NULL, &params, NULL, NULL, false);
+  MockSystemState mock_system_state;
+  OmahaRequestAction omaha_request_action(&mock_system_state, &params, NULL,
+                                          NULL, false);
   EXPECT_EQ(kActionCodeOmahaRequestError,
             GetErrorCodeForAction(&omaha_request_action, kActionCodeError));
-  OmahaResponseHandlerAction omaha_response_handler_action(&prefs_);
+  OmahaResponseHandlerAction omaha_response_handler_action(&mock_system_state_);
   EXPECT_EQ(kActionCodeOmahaResponseHandlerError,
             GetErrorCodeForAction(&omaha_response_handler_action,
                                   kActionCodeError));
@@ -191,40 +193,40 @@ TEST_F(UpdateAttempterTest, GetErrorCodeForActionTest) {
 
 TEST_F(UpdateAttempterTest, DisableDeltaUpdateIfNeededTest) {
   attempter_.omaha_request_params_.delta_okay = true;
-  EXPECT_CALL(prefs_, GetInt64(kPrefsDeltaUpdateFailures, _))
+  EXPECT_CALL(*prefs_, GetInt64(kPrefsDeltaUpdateFailures, _))
       .WillOnce(Return(false));
   attempter_.DisableDeltaUpdateIfNeeded();
   EXPECT_TRUE(attempter_.omaha_request_params_.delta_okay);
-  EXPECT_CALL(prefs_, GetInt64(kPrefsDeltaUpdateFailures, _))
+  EXPECT_CALL(*prefs_, GetInt64(kPrefsDeltaUpdateFailures, _))
       .WillOnce(DoAll(
           SetArgumentPointee<1>(UpdateAttempter::kMaxDeltaUpdateFailures - 1),
           Return(true)));
   attempter_.DisableDeltaUpdateIfNeeded();
   EXPECT_TRUE(attempter_.omaha_request_params_.delta_okay);
-  EXPECT_CALL(prefs_, GetInt64(kPrefsDeltaUpdateFailures, _))
+  EXPECT_CALL(*prefs_, GetInt64(kPrefsDeltaUpdateFailures, _))
       .WillOnce(DoAll(
           SetArgumentPointee<1>(UpdateAttempter::kMaxDeltaUpdateFailures),
           Return(true)));
   attempter_.DisableDeltaUpdateIfNeeded();
   EXPECT_FALSE(attempter_.omaha_request_params_.delta_okay);
-  EXPECT_CALL(prefs_, GetInt64(_, _)).Times(0);
+  EXPECT_CALL(*prefs_, GetInt64(_, _)).Times(0);
   attempter_.DisableDeltaUpdateIfNeeded();
   EXPECT_FALSE(attempter_.omaha_request_params_.delta_okay);
 }
 
 TEST_F(UpdateAttempterTest, MarkDeltaUpdateFailureTest) {
-  EXPECT_CALL(prefs_, GetInt64(kPrefsDeltaUpdateFailures, _))
+  EXPECT_CALL(*prefs_, GetInt64(kPrefsDeltaUpdateFailures, _))
       .WillOnce(Return(false))
       .WillOnce(DoAll(SetArgumentPointee<1>(-1), Return(true)))
       .WillOnce(DoAll(SetArgumentPointee<1>(1), Return(true)))
       .WillOnce(DoAll(
           SetArgumentPointee<1>(UpdateAttempter::kMaxDeltaUpdateFailures),
           Return(true)));
-  EXPECT_CALL(prefs_, SetInt64(Ne(kPrefsDeltaUpdateFailures), _))
+  EXPECT_CALL(*prefs_, SetInt64(Ne(kPrefsDeltaUpdateFailures), _))
       .WillRepeatedly(Return(true));
-  EXPECT_CALL(prefs_, SetInt64(kPrefsDeltaUpdateFailures, 1)).Times(2);
-  EXPECT_CALL(prefs_, SetInt64(kPrefsDeltaUpdateFailures, 2)).Times(1);
-  EXPECT_CALL(prefs_, SetInt64(kPrefsDeltaUpdateFailures,
+  EXPECT_CALL(*prefs_, SetInt64(kPrefsDeltaUpdateFailures, 1)).Times(2);
+  EXPECT_CALL(*prefs_, SetInt64(kPrefsDeltaUpdateFailures, 2)).Times(1);
+  EXPECT_CALL(*prefs_, SetInt64(kPrefsDeltaUpdateFailures,
                                UpdateAttempter::kMaxDeltaUpdateFailures + 1))
       .Times(1);
   for (int i = 0; i < 4; i ++)
@@ -234,7 +236,14 @@ TEST_F(UpdateAttempterTest, MarkDeltaUpdateFailureTest) {
 TEST_F(UpdateAttempterTest, ScheduleErrorEventActionNoEventTest) {
   EXPECT_CALL(*processor_, EnqueueAction(_)).Times(0);
   EXPECT_CALL(*processor_, StartProcessing()).Times(0);
+  EXPECT_CALL(*mock_system_state_.mock_payload_state(), UpdateFailed(_))
+      .Times(0);
+  OmahaResponse response;
+  response.payload_urls.push_back("http://url");
+  response.payload_urls.push_back("https://url");
+  mock_system_state_.mock_payload_state()->SetResponse(response);
   attempter_.ScheduleErrorEventAction();
+  EXPECT_EQ(0, mock_system_state_.mock_payload_state()->GetUrlIndex());
 }
 
 TEST_F(UpdateAttempterTest, ScheduleErrorEventActionTest) {
@@ -243,10 +252,16 @@ TEST_F(UpdateAttempterTest, ScheduleErrorEventActionTest) {
                                      OmahaRequestAction::StaticType())))
       .Times(1);
   EXPECT_CALL(*processor_, StartProcessing()).Times(1);
+  OmahaResponse response;
+  response.payload_urls.push_back("http://url");
+  response.payload_urls.push_back("https://url");
+  mock_system_state_.mock_payload_state()->SetResponse(response);
+  ActionExitCode err = kActionCodeError;
   attempter_.error_event_.reset(new OmahaEvent(OmahaEvent::kTypeUpdateComplete,
                                                OmahaEvent::kResultError,
-                                               kActionCodeError));
+                                               err));
   attempter_.ScheduleErrorEventAction();
+  EXPECT_EQ(1, mock_system_state_.mock_payload_state()->GetUrlIndex());
   EXPECT_EQ(UPDATE_STATUS_REPORTING_ERROR_EVENT, attempter_.status());
 }
 
@@ -427,7 +442,7 @@ TEST_F(UpdateAttempterTest, CreatePendingErrorEventTest) {
 
 TEST_F(UpdateAttempterTest, CreatePendingErrorEventResumedTest) {
   OmahaResponseHandlerAction *response_action =
-      new OmahaResponseHandlerAction(&prefs_);
+      new OmahaResponseHandlerAction(&mock_system_state_);
   response_action->install_plan_.is_resume = true;
   attempter_.response_handler_action_.reset(response_action);
   ActionMock action;
@@ -545,7 +560,7 @@ void UpdateAttempterTest::ReadScatterFactorFromPolicyTestStart() {
   attempter_.policy_provider_.reset(new policy::PolicyProvider(device_policy));
 
   EXPECT_CALL(*device_policy, LoadPolicy()).WillRepeatedly(Return(true));
-  EXPECT_CALL(mock_system_state_, GetDevicePolicy()).WillRepeatedly(
+  EXPECT_CALL(mock_system_state_, device_policy()).WillRepeatedly(
       Return(device_policy));
 
   EXPECT_CALL(*device_policy, GetScatterFactorInSeconds(_))
@@ -592,7 +607,7 @@ void UpdateAttempterTest::DecrementUpdateCheckCountTestStart() {
   attempter_.policy_provider_.reset(new policy::PolicyProvider(device_policy));
 
   EXPECT_CALL(*device_policy, LoadPolicy()).WillRepeatedly(Return(true));
-  EXPECT_CALL(mock_system_state_, GetDevicePolicy()).WillRepeatedly(
+  EXPECT_CALL(mock_system_state_, device_policy()).WillRepeatedly(
       Return(device_policy));
 
   EXPECT_CALL(*device_policy, GetScatterFactorInSeconds(_))
@@ -659,7 +674,7 @@ void UpdateAttempterTest::NoScatteringDoneDuringManualUpdateTestStart() {
   attempter_.policy_provider_.reset(new policy::PolicyProvider(device_policy));
 
   EXPECT_CALL(*device_policy, LoadPolicy()).WillRepeatedly(Return(true));
-  EXPECT_CALL(mock_system_state_, GetDevicePolicy()).WillRepeatedly(
+  EXPECT_CALL(mock_system_state_, device_policy()).WillRepeatedly(
       Return(device_policy));
 
   EXPECT_CALL(*device_policy, GetScatterFactorInSeconds(_))

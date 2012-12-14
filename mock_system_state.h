@@ -10,6 +10,8 @@
 #include <metrics/metrics_library_mock.h>
 #include <policy/mock_device_policy.h>
 
+#include "update_engine/mock_payload_state.h"
+#include "update_engine/prefs_mock.h"
 #include "update_engine/system_state.h"
 
 namespace chromeos_update_engine {
@@ -18,37 +20,61 @@ namespace chromeos_update_engine {
 // OOBE is completed even when there's no such marker file, etc.
 class MockSystemState : public SystemState {
  public:
-  MockSystemState() {
-    // By default, provide a mock metrics library. If the caller wants,
-    // they can override this by using set_metrics_lib() method.
-    metrics_lib_ = &mock_metrics_lib_;
+  MockSystemState() : prefs_(&mock_prefs_) {
+    mock_payload_state_.Initialize(&mock_prefs_);
   }
   virtual ~MockSystemState() {}
 
   MOCK_METHOD0(IsOOBEComplete, bool());
-  MOCK_METHOD1(SetDevicePolicy, void(const policy::DevicePolicy*));
-  MOCK_CONST_METHOD0(GetDevicePolicy, const policy::DevicePolicy*());
+  MOCK_METHOD1(set_device_policy, void(const policy::DevicePolicy*));
+  MOCK_CONST_METHOD0(device_policy, const policy::DevicePolicy*());
 
-  void SetConnectionManager(ConnectionManager* connection_manager) {
-    connection_manager_ = connection_manager;
-  }
-
-  virtual ConnectionManager* GetConnectionManager() {
+  virtual ConnectionManager* connection_manager() {
     return connection_manager_;
   }
 
-  void set_metrics_lib(MetricsLibraryInterface* metrics_lib) {
-    metrics_lib_ = metrics_lib;
-  }
   virtual MetricsLibraryInterface* metrics_lib() {
-    return metrics_lib_;
+    return &mock_metrics_lib_;
   }
 
+  virtual PrefsInterface* prefs() {
+    return prefs_;
+  }
+
+  virtual PayloadState* payload_state() {
+    return &mock_payload_state_;
+  }
+
+  // MockSystemState-specific public method.
+  void set_connection_manager(ConnectionManager* connection_manager) {
+    connection_manager_ = connection_manager;
+  }
+
+  MetricsLibraryMock* mock_metrics_lib() {
+    return &mock_metrics_lib_;
+  }
+
+  void set_prefs(PrefsInterface* prefs) {
+    prefs_ = prefs;
+  }
+
+  testing::NiceMock<PrefsMock> *mock_prefs() {
+    return &mock_prefs_;
+  }
+
+  MockPayloadState* mock_payload_state() {
+    return &mock_payload_state_;
+  }
 
  private:
-  ConnectionManager* connection_manager_;
+  // These are Mock objects or objects we own.
   MetricsLibraryMock mock_metrics_lib_;
-  MetricsLibraryInterface* metrics_lib_;
+  testing::NiceMock<PrefsMock> mock_prefs_;
+  MockPayloadState mock_payload_state_;
+
+  // These are pointers to objects which caller can override.
+  PrefsInterface* prefs_;
+  ConnectionManager* connection_manager_;
 };
 
 } // namespeace chromeos_update_engine

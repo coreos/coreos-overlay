@@ -28,7 +28,7 @@ class ConnectionManagerTest : public ::testing::Test {
         kMockFlimFlamServiceProxy_(NULL),
         kServicePath_(NULL),
         cmut_(&mock_system_state_) {
-    mock_system_state_.SetConnectionManager(&cmut_);
+    mock_system_state_.set_connection_manager(&cmut_);
   }
 
  protected:
@@ -173,31 +173,31 @@ TEST_F(ConnectionManagerTest, UnknownTest) {
 }
 
 TEST_F(ConnectionManagerTest, AllowUpdatesOverEthernetTest) {
-  EXPECT_CALL(mock_system_state_, GetDevicePolicy()).Times(0);
+  EXPECT_CALL(mock_system_state_, device_policy()).Times(0);
 
   // Updates over Ethernet are allowed even if there's no policy.
   EXPECT_TRUE(cmut_.IsUpdateAllowedOver(kNetEthernet));
 }
 
 TEST_F(ConnectionManagerTest, AllowUpdatesOverWifiTest) {
-  EXPECT_CALL(mock_system_state_, GetDevicePolicy()).Times(0);
+  EXPECT_CALL(mock_system_state_, device_policy()).Times(0);
   EXPECT_TRUE(cmut_.IsUpdateAllowedOver(kNetWifi));
 }
 
 TEST_F(ConnectionManagerTest, AllowUpdatesOverWimaxTest) {
-  EXPECT_CALL(mock_system_state_, GetDevicePolicy()).Times(0);
+  EXPECT_CALL(mock_system_state_, device_policy()).Times(0);
   EXPECT_TRUE(cmut_.IsUpdateAllowedOver(kNetWimax));
 }
 
 TEST_F(ConnectionManagerTest, BlockUpdatesOverBluetoothTest) {
-  EXPECT_CALL(mock_system_state_, GetDevicePolicy()).Times(0);
+  EXPECT_CALL(mock_system_state_, device_policy()).Times(0);
   EXPECT_FALSE(cmut_.IsUpdateAllowedOver(kNetBluetooth));
 }
 
 TEST_F(ConnectionManagerTest, AllowUpdatesOnlyOver3GPerPolicyTest) {
   policy::MockDevicePolicy allow_3g_policy;
 
-  EXPECT_CALL(mock_system_state_, GetDevicePolicy())
+  EXPECT_CALL(mock_system_state_, device_policy())
       .Times(1)
       .WillOnce(Return(&allow_3g_policy));
 
@@ -215,7 +215,7 @@ TEST_F(ConnectionManagerTest, AllowUpdatesOnlyOver3GPerPolicyTest) {
 TEST_F(ConnectionManagerTest, AllowUpdatesOver3GAndOtherTypesPerPolicyTest) {
   policy::MockDevicePolicy allow_3g_policy;
 
-  EXPECT_CALL(mock_system_state_, GetDevicePolicy())
+  EXPECT_CALL(mock_system_state_, device_policy())
       .Times(1)
       .WillOnce(Return(&allow_3g_policy));
 
@@ -234,14 +234,14 @@ TEST_F(ConnectionManagerTest, AllowUpdatesOver3GAndOtherTypesPerPolicyTest) {
 }
 
 TEST_F(ConnectionManagerTest, BlockUpdatesOver3GByDefaultTest) {
-  EXPECT_CALL(mock_system_state_, GetDevicePolicy()).Times(1);
+  EXPECT_CALL(mock_system_state_, device_policy()).Times(1);
   EXPECT_FALSE(cmut_.IsUpdateAllowedOver(kNetCellular));
 }
 
 TEST_F(ConnectionManagerTest, BlockUpdatesOver3GPerPolicyTest) {
   policy::MockDevicePolicy block_3g_policy;
 
-  EXPECT_CALL(mock_system_state_, GetDevicePolicy())
+  EXPECT_CALL(mock_system_state_, device_policy())
       .Times(1)
       .WillOnce(Return(&block_3g_policy));
 
@@ -262,7 +262,7 @@ TEST_F(ConnectionManagerTest, BlockUpdatesOver3GPerPolicyTest) {
 TEST_F(ConnectionManagerTest, BlockUpdatesOver3GIfErrorInPolicyFetchTest) {
   policy::MockDevicePolicy allow_3g_policy;
 
-  EXPECT_CALL(mock_system_state_, GetDevicePolicy())
+  EXPECT_CALL(mock_system_state_, device_policy())
       .Times(1)
       .WillOnce(Return(&allow_3g_policy));
 

@@ -45,7 +45,7 @@ LibcurlHttpFetcher::~LibcurlHttpFetcher() {
 bool LibcurlHttpFetcher::IsUpdateAllowedOverCurrentConnection() const {
   NetworkConnectionType type;
   ConcreteDbusGlib dbus_iface;
-  ConnectionManager* connection_manager = system_state_->GetConnectionManager();
+  ConnectionManager* connection_manager = system_state_->connection_manager();
   TEST_AND_RETURN_FALSE(connection_manager->GetConnectionType(&dbus_iface,
                                                               &type));
   bool is_allowed = connection_manager->IsUpdateAllowedOver(type);

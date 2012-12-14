@@ -12,8 +12,7 @@
 #include <gtest/gtest_prod.h>  // for FRIEND_TEST
 #include <openssl/ssl.h>
 
-class MetricsLibraryInterface;
-namespace chromeos_update_engine { class PrefsInterface; }
+#include "update_engine/system_state.h"
 
 namespace chromeos_update_engine {
 
@@ -71,12 +70,8 @@ class CertificateChecker {
   static void FlushReport();
 
   // Setters.
-  static void set_metrics_lib(MetricsLibraryInterface* metrics_lib) {
-    metrics_lib_ = metrics_lib;
-  }
-
-  static void set_prefs(PrefsInterface* prefs) {
-    prefs_ = prefs;
+  static void set_system_state(SystemState* system_state) {
+    system_state_ = system_state;
   }
 
   static void set_openssl_wrapper(OpenSSLWrapper* openssl_wrapper) {
@@ -113,11 +108,8 @@ class CertificateChecker {
                                      int preverify_ok,
                                      X509_STORE_CTX* x509_ctx);
 
-  // Metrics library used to report to UMA.
-  static MetricsLibraryInterface* metrics_lib_;
-
-  // Prefs used to store certificates and UMA reports.
-  static PrefsInterface* prefs_;
+  // Global system context.
+  static SystemState* system_state_;
 
   // The wrapper for openssl operations.
   static OpenSSLWrapper* openssl_wrapper_;
