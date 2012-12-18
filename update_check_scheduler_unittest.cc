@@ -4,6 +4,8 @@
 
 #include <gtest/gtest.h>
 
+#include "update_engine/certificate_checker.h"
+#include "update_engine/certificate_checker_mock.h"
 #include "update_engine/mock_system_state.h"
 #include "update_engine/update_attempter_mock.h"
 #include "update_engine/update_check_scheduler.h"
@@ -57,6 +59,9 @@ class UpdateCheckSchedulerTest : public ::testing::Test {
     EXPECT_FALSE(scheduler_.scheduled_);
     EXPECT_EQ(0, scheduler_.last_interval_);
     EXPECT_EQ(0, scheduler_.poll_interval_);
+    // Make sure singleton CertificateChecker has its members properly setup.
+    CertificateChecker::set_system_state(&mock_system_state_);
+    CertificateChecker::set_openssl_wrapper(&openssl_wrapper_);
   }
 
   virtual void TearDown() {
@@ -72,6 +77,7 @@ class UpdateCheckSchedulerTest : public ::testing::Test {
 
   MockSystemState mock_system_state_;
   MockDbusGlib dbus_;
+  OpenSSLWrapperMock openssl_wrapper_;
   UpdateAttempterMock attempter_;
   UpdateCheckSchedulerUnderTest scheduler_;
   MockFunction<gboolean(gpointer data)> source_callback_;
