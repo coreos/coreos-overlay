@@ -34,29 +34,4 @@ bool RealSystemState::IsOOBEComplete() {
   return file_util::PathExists(FilePath(kOOBECompletedMarker));
 }
 
-void RealSystemState::set_device_policy(
-    const policy::DevicePolicy* device_policy) {
-  device_policy_ = device_policy;
-}
-
-const policy::DevicePolicy* RealSystemState::device_policy() const {
-  return device_policy_;
-}
-
-ConnectionManager* RealSystemState::connection_manager() {
-  return &connection_manager_;
-}
-
-MetricsLibraryInterface* RealSystemState::metrics_lib() {
-  return &metrics_lib_;
-}
-
-PrefsInterface* RealSystemState::prefs() {
-  return &prefs_;
-}
-
-PayloadState* RealSystemState::payload_state() {
-  return &payload_state_;
-}
-
 }  // namespace chromeos_update_engine

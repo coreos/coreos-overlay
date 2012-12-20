@@ -64,6 +64,10 @@ struct DeltaState {
 
   // The in-memory copy of delta file.
   vector<char> delta;
+
+  // The mock system state object with which we initialize the
+  // delta performer.
+  MockSystemState mock_system_state;
 };
 
 enum SignatureTest {
@@ -492,8 +496,9 @@ static void ApplyDeltaFile(bool full_kernel, bool full_rootfs, bool noop,
       &install_plan.metadata_signature));
   EXPECT_FALSE(install_plan.metadata_signature.empty());
 
-  MockSystemState mock_system_state;
-  *performer = new DeltaPerformer(&prefs, &mock_system_state, &install_plan);
+  *performer = new DeltaPerformer(&prefs,
+                                  &state->mock_system_state,
+                                  &install_plan);
   EXPECT_TRUE(utils::FileExists(kUnittestPublicKeyPath));
   (*performer)->set_public_key_path(kUnittestPublicKeyPath);
 
@@ -571,6 +576,10 @@ void VerifyPayloadResult(DeltaPerformer* performer,
     EXPECT_TRUE(!"Skipping payload verification since performer is NULL.");
     return;
   }
+
+  int expected_times = (expected_result == kActionCodeSuccess) ? 1 : 0;
+  EXPECT_CALL(*(state->mock_system_state.mock_payload_state()),
+              DownloadComplete()).Times(expected_times);
 
   LOG(INFO) << "Verifying payload for expected result "
             << expected_result;
@@ -754,8 +763,9 @@ void DoMetadataSignatureTest(MetadataSignatureTest metadata_signature_test,
 
   // Create the delta performer object.
   PrefsMock prefs;
-  MockSystemState mock_system_state;
-  DeltaPerformer delta_performer(&prefs, &mock_system_state, &install_plan);
+  DeltaPerformer delta_performer(&prefs,
+                                 &state.mock_system_state,
+                                 &install_plan);
 
   // Use the public key corresponding to the private key used above to
   // sign the metadata.
@@ -905,6 +915,25 @@ TEST(DeltaPerformerTest, IsIdempotentOperationTest) {
   EXPECT_TRUE(DeltaPerformer::IsIdempotentOperation(op));
   *(op.add_src_extents()) = ExtentForRange(19, 2);
   EXPECT_FALSE(DeltaPerformer::IsIdempotentOperation(op));
+}
+
+TEST(DeltaPerformerTest, WriteUpdatesPayloadState) {
+  PrefsMock prefs;
+  InstallPlan install_plan;
+  MockSystemState mock_system_state;
+  DeltaPerformer performer(&prefs, &mock_system_state, &install_plan);
+  EXPECT_EQ(0, performer.Open("/dev/null", 0, 0));
+  EXPECT_TRUE(performer.OpenKernel("/dev/null"));
+
+  EXPECT_CALL(*(mock_system_state.mock_payload_state()),
+              DownloadProgress(4)).Times(1);
+  EXPECT_CALL(*(mock_system_state.mock_payload_state()),
+              DownloadProgress(8)).Times(2);
+
+  EXPECT_TRUE(performer.Write("junk", 4));
+  EXPECT_TRUE(performer.Write("morejunk", 8));
+  EXPECT_FALSE(performer.Write("morejunk", 8));
+  EXPECT_LT(performer.Close(), 0);
 }
 
 TEST(DeltaPerformerTest, MissingMandatoryMetadataSizeTest) {

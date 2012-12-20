@@ -709,25 +709,33 @@ string ToString(const Time utc_time) {
                       exp_time.second);
 }
 
-void SendErrorCodeToUma(MetricsLibraryInterface* metrics_lib,
-                        ActionExitCode code)
-{
-  string metric = utils::IsNormalBootMode() ? "Installer.NormalErrorCodes" :
-                                              "Installer.DevModeErrorCodes";
-
+ActionExitCode GetBaseErrorCode(ActionExitCode code) {
   // Ignore the higher order bits in the code by applying the mask as
   // we want the enumerations to be in the small contiguous range
   // with values less than kActionCodeUmaReportedMax.
-  int reported_code = code & kActualCodeMask;
+  ActionExitCode base_code = static_cast<ActionExitCode>(
+      code & kActualCodeMask);
 
-  // Make additional adjustments required for UMA.
-  // TODO(jaysri): Move this logic to UeErrorCode.cc when we
-  // fix BUG 34369.
-  if (reported_code >= kActionCodeOmahaRequestHTTPResponseBase) {
+  // Make additional adjustments required for UMA and error classification.
+  // TODO(jaysri): Move this logic to UeErrorCode.cc when we fix
+  // chromium-os:34369.
+  if (base_code >= kActionCodeOmahaRequestHTTPResponseBase) {
     // Since we want to keep the enums to a small value, aggregate all HTTP
-    // errors into this one bucket for UMA purposes.
-    reported_code = kActionCodeOmahaErrorInHTTPResponse;
+    // errors into this one bucket for UMA and error classification purposes.
+    base_code = kActionCodeOmahaErrorInHTTPResponse;
   }
+
+  return base_code;
+}
+
+
+
+void SendErrorCodeToUma(MetricsLibraryInterface* metrics_lib,
+                        ActionExitCode code) {
+  string metric = utils::IsNormalBootMode() ? "Installer.NormalErrorCodes" :
+                                              "Installer.DevModeErrorCodes";
+
+  ActionExitCode reported_code = GetBaseErrorCode(code);
 
   LOG(INFO) << "Sending error code " << reported_code
             << " to UMA metric: " << metric;

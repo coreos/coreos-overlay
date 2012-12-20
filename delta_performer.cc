@@ -306,7 +306,7 @@ DeltaPerformer::MetadataParseResult DeltaPerformer::ParsePayloadMetadata(
 
 
 // Wrapper around write. Returns true if all requested bytes
-// were written, or false on any error, reguardless of progress
+// were written, or false on any error, regardless of progress
 // and stores an action exit code in |error|.
 bool DeltaPerformer::Write(const void* bytes, size_t count,
                            ActionExitCode *error) {
@@ -314,6 +314,7 @@ bool DeltaPerformer::Write(const void* bytes, size_t count,
 
   const char* c_bytes = reinterpret_cast<const char*>(bytes);
   buffer_.insert(buffer_.end(), c_bytes, c_bytes + count);
+  system_state_->payload_state()->DownloadProgress(count);
   if (!manifest_valid_) {
     MetadataParseResult result = ParsePayloadMetadata(buffer_,
                                                       &manifest_,
@@ -877,6 +878,14 @@ ActionExitCode DeltaPerformer::VerifyPayload(
     utils::HexDumpVector(hash_data);
     return kActionCodeDownloadPayloadPubKeyVerificationError;
   }
+
+  // At this point, we are guaranteed to have downloaded a full payload, i.e
+  // the one whose size matches the size mentioned in Omaha response. If any
+  // errors happen after this, it's likely a problem with the payload itself or
+  // the state of the system and not a problem with the URL or network.  So,
+  // indicate that to the payload state so that AU can back-off appropriately.
+  system_state_->payload_state()->DownloadComplete();
+
   return kActionCodeSuccess;
 }
 

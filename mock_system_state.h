@@ -41,7 +41,7 @@ class MockSystemState : public SystemState {
     return prefs_;
   }
 
-  virtual PayloadState* payload_state() {
+  virtual PayloadStateInterface* payload_state() {
     return &mock_payload_state_;
   }
 
@@ -70,7 +70,7 @@ class MockSystemState : public SystemState {
   // These are Mock objects or objects we own.
   MetricsLibraryMock mock_metrics_lib_;
   testing::NiceMock<PrefsMock> mock_prefs_;
-  MockPayloadState mock_payload_state_;
+  testing::NiceMock<MockPayloadState> mock_payload_state_;
 
   // These are pointers to objects which caller can override.
   PrefsInterface* prefs_;

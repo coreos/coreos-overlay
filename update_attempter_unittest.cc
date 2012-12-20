@@ -252,16 +252,12 @@ TEST_F(UpdateAttempterTest, ScheduleErrorEventActionTest) {
                                      OmahaRequestAction::StaticType())))
       .Times(1);
   EXPECT_CALL(*processor_, StartProcessing()).Times(1);
-  OmahaResponse response;
-  response.payload_urls.push_back("http://url");
-  response.payload_urls.push_back("https://url");
-  mock_system_state_.mock_payload_state()->SetResponse(response);
   ActionExitCode err = kActionCodeError;
+  EXPECT_CALL(*mock_system_state_.mock_payload_state(), UpdateFailed(err));
   attempter_.error_event_.reset(new OmahaEvent(OmahaEvent::kTypeUpdateComplete,
                                                OmahaEvent::kResultError,
                                                err));
   attempter_.ScheduleErrorEventAction();
-  EXPECT_EQ(1, mock_system_state_.mock_payload_state()->GetUrlIndex());
   EXPECT_EQ(UPDATE_STATUS_REPORTING_ERROR_EVENT, attempter_.status());
 }
 

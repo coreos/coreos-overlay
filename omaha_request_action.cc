@@ -29,6 +29,20 @@ using std::string;
 
 namespace chromeos_update_engine {
 
+// List of custom pair tags that we interpret in the Omaha Response:
+static const char* kTagDeadline = "deadline";
+static const char* kTagDisplayVersion = "DisplayVersion";
+static const char* kTagMaxFailureCountPerUrl = "MaxFailureCountPerUrl";
+static const char* kTagMaxDaysToScatter = "MaxDaysToScatter";
+// Deprecated: "ManifestSignatureRsa"
+// Deprecated: "ManifestSize"
+static const char* kTagMetadataSignatureRsa = "MetadataSignatureRsa";
+static const char* kTagMetadataSize = "MetadataSize";
+static const char* kTagMoreInfo = "MoreInfo";
+static const char* kTagNeedsAdmin = "needsadmin";
+static const char* kTagPrompt = "Prompt";
+static const char* kTagSha256 = "sha256";
+
 namespace {
 
 const string kGupdateVersion("ChromeOSUpdateEngine-0.1.0.0");
@@ -560,7 +574,7 @@ bool OmahaRequestAction::ParseParams(xmlDoc* doc,
     return false;
   }
 
-  output_object->hash = XmlGetProperty(pie_action_node, "sha256");
+  output_object->hash = XmlGetProperty(pie_action_node, kTagSha256);
   if (output_object->hash.empty()) {
     LOG(ERROR) << "Omaha Response has empty sha256 value";
     completer->set_code(kActionCodeOmahaResponseInvalid);
@@ -569,18 +583,22 @@ bool OmahaRequestAction::ParseParams(xmlDoc* doc,
 
   // Get the optional properties one by one.
   output_object->display_version =
-      XmlGetProperty(pie_action_node, "DisplayVersion");
-  output_object->more_info_url = XmlGetProperty(pie_action_node, "MoreInfo");
+      XmlGetProperty(pie_action_node, kTagDisplayVersion);
+  output_object->more_info_url = XmlGetProperty(pie_action_node, kTagMoreInfo);
   output_object->metadata_size =
-      ParseInt(XmlGetProperty(pie_action_node, "MetadataSize"));
+      ParseInt(XmlGetProperty(pie_action_node, kTagMetadataSize));
   output_object->metadata_signature =
-      XmlGetProperty(pie_action_node, "MetadataSignatureRsa");
+      XmlGetProperty(pie_action_node, kTagMetadataSignatureRsa);
   output_object->needs_admin =
-      XmlGetProperty(pie_action_node, "needsadmin") == "true";
-  output_object->prompt = XmlGetProperty(pie_action_node, "Prompt") == "true";
-  output_object->deadline = XmlGetProperty(pie_action_node, "deadline");
+      XmlGetProperty(pie_action_node, kTagNeedsAdmin) == "true";
+  output_object->prompt = XmlGetProperty(pie_action_node, kTagPrompt) == "true";
+  output_object->deadline = XmlGetProperty(pie_action_node, kTagDeadline);
   output_object->max_days_to_scatter =
-      ParseInt(XmlGetProperty(pie_action_node, "MaxDaysToScatter"));
+      ParseInt(XmlGetProperty(pie_action_node, kTagMaxDaysToScatter));
+
+  string max = XmlGetProperty(pie_action_node, kTagMaxFailureCountPerUrl);
+  if (!base::StringToInt(max, &output_object->max_failure_count_per_url))
+    output_object->max_failure_count_per_url = kDefaultMaxFailureCountPerUrl;
 
   return true;
 }
@@ -674,7 +692,7 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
   // Update the payload state with the current response. The payload state
   // will automatically reset all stale state if this response is different
   // from what's stored already.
-  PayloadState* payload_state = system_state_->payload_state();
+  PayloadStateInterface* payload_state = system_state_->payload_state();
   payload_state->SetResponse(output_object);
 }
 

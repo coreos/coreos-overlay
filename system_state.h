@@ -44,8 +44,8 @@ class SystemState {
   // Gets the interface object for persisted store.
   virtual PrefsInterface* prefs() = 0;
 
-  // Gets the URL State object.
-  virtual PayloadState* payload_state() = 0;
+  // Gets the interface for the payload state object.
+  virtual PayloadStateInterface* payload_state() = 0;
 };
 
 // A real implementation of the SystemStateInterface which is
@@ -58,16 +58,30 @@ public:
 
   virtual bool IsOOBEComplete();
 
-  virtual void set_device_policy(const policy::DevicePolicy* device_policy);
-  virtual const policy::DevicePolicy* device_policy() const;
+  virtual inline void set_device_policy(
+      const policy::DevicePolicy* device_policy) {
+    device_policy_ = device_policy;
+  }
 
-  virtual ConnectionManager* connection_manager();
+  virtual inline const policy::DevicePolicy* device_policy() const {
+    return device_policy_;
+  }
 
-  virtual MetricsLibraryInterface* metrics_lib();
+  virtual inline ConnectionManager* connection_manager() {
+    return &connection_manager_;
+  }
 
-  virtual PrefsInterface* prefs();
+  virtual inline MetricsLibraryInterface* metrics_lib() {
+    return &metrics_lib_;
+  }
 
-  virtual PayloadState* payload_state();
+  virtual inline PrefsInterface* prefs() {
+    return &prefs_;
+  }
+
+  virtual inline PayloadStateInterface* payload_state() {
+    return &payload_state_;
+  }
 
   // Initializs this concrete object. Other methods should be invoked only
   // if the object has been initialized successfully.

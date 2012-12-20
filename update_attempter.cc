@@ -150,7 +150,6 @@ void UpdateAttempter::Update(const string& app_version,
                              bool interactive,
                              bool is_test_mode,
                              bool is_user_initiated) {
-  LOG(INFO) << "Update called";
   chrome_proxy_resolver_.Init();
   fake_update_success_ = false;
   if (status_ == UPDATE_STATUS_UPDATED_NEED_REBOOT) {
@@ -184,7 +183,6 @@ void UpdateAttempter::Update(const string& app_version,
   // before any update processing starts.
   start_action_processor_ = true;
   UpdateBootFlags();
-  LOG(INFO) << "Update finished";
 }
 
 bool UpdateAttempter::CalculateUpdateParams(const string& app_version,

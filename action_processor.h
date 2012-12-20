@@ -64,7 +64,13 @@ enum ActionExitCode {
   kActionCodeDownloadOperationHashMissingError = 38,
   kActionCodeDownloadMetadataSignatureMissingError = 39,
 
-  // Any code above this is sent to both Omaha and UMA as-is.
+  // Note: When adding new error codes, please remember to add the
+  // error into one of the buckets in PayloadState::UpdateFailed method so
+  // that the retries across URLs and the payload back-off mechanism work
+  // correctly for those new error codes.
+
+  // Any code above this is sent to both Omaha and UMA as-is, except
+  // kActionCodeOmahaErrorInHTTPResponse (see error code 2000 for more details).
   // Codes/flags below this line is sent only to Omaha and not to UMA.
 
   // kActionCodeUmaReportedMax is not an error code per se, it's just the count

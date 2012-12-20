@@ -37,6 +37,7 @@ struct OmahaResponse {
         size(0),
         metadata_size(0),
         max_days_to_scatter(0),
+        max_failure_count_per_url(0),
         needs_admin(false),
         prompt(false) {}
   // True iff there is an update to be downloaded.
@@ -59,6 +60,10 @@ struct OmahaResponse {
   off_t size;
   off_t metadata_size;
   int max_days_to_scatter;
+  // The number of URL-related failures to tolerate before moving on to the
+  // next URL in the current pass. This is a configurable value from the
+  // Omaha Response attribute, if ever we need to fine tune the behavior.
+  int max_failure_count_per_url;
   bool needs_admin;
   bool prompt;
 };
@@ -124,6 +129,12 @@ class OmahaRequestAction : public Action<OmahaRequestAction>,
  public:
   static const int kNeverPinged = -1;
   static const int kPingTimeJump = -2;
+  // We choose this value of 10 as a heuristic for a work day in trying
+  // each URL, assuming we check roughly every 45 mins. This is a good time to
+  // wait - neither too long nor too little - so we don't give up the preferred
+  // URLs that appear earlier in list too quickly before moving on to the
+  // fallback ones.
+  static const int kDefaultMaxFailureCountPerUrl = 10;
 
   // These are the possible outcome upon checking whether we satisfied
   // the wall-clock-based-wait.

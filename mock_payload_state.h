@@ -6,13 +6,25 @@
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_MOCK_PAYLOAD_STATE_H__
 
 #include "gmock/gmock.h"
-#include "update_engine/payload_state.h"
+#include "update_engine/omaha_request_action.h"
+#include "update_engine/payload_state_interface.h"
 
 namespace chromeos_update_engine {
 
-class MockPayloadState: public PayloadState {
+class MockPayloadState: public PayloadStateInterface {
  public:
+  bool Initialize(PrefsInterface* prefs) {
+    return true;
+  }
+
+  MOCK_METHOD1(SetResponse, void(const OmahaResponse& response));
+  MOCK_METHOD0(DownloadComplete, void());
+  MOCK_METHOD1(DownloadProgress, void(size_t count));
   MOCK_METHOD1(UpdateFailed, void(ActionExitCode error));
+  MOCK_METHOD0(GetResponse, std::string());
+  MOCK_METHOD0(GetPayloadAttemptNumber, uint32_t());
+  MOCK_METHOD0(GetUrlIndex, uint32_t());
+  MOCK_METHOD0(GetUrlFailureCount, uint32_t());
 };
 
 }  // namespace chromeos_update_engine

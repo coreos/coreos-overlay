@@ -279,9 +279,16 @@ std::string FormatSecs(unsigned secs);
 // when applicable.
 std::string FormatTimeDelta(base::TimeDelta delta);
 
+// This method transforms the given error code to be suitable for UMA and
+// for error classification purposes by removing the higher order bits and
+// aggregating error codes beyond the enum range, etc. This method is
+// idempotent, i.e. if called with a value previously returned by this method,
+// it'll return the same value again.
+ActionExitCode GetBaseErrorCode(ActionExitCode code);
+
 // Sends the error code to the appropriate bucket in UMA using the metrics_lib
-// interface. This method also massages the error code to be suitable for UMA
-// purposes.
+// interface. This method uses GetBaseErrorCode to process the given code and
+// report only the base error code.
 void SendErrorCodeToUma(MetricsLibraryInterface* metrics_lib,
                         ActionExitCode code);
 }  // namespace utils
