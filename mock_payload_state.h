@@ -17,14 +17,19 @@ class MockPayloadState: public PayloadStateInterface {
     return true;
   }
 
+  // Significant methods.
   MOCK_METHOD1(SetResponse, void(const OmahaResponse& response));
   MOCK_METHOD0(DownloadComplete, void());
   MOCK_METHOD1(DownloadProgress, void(size_t count));
   MOCK_METHOD1(UpdateFailed, void(ActionExitCode error));
-  MOCK_METHOD0(GetResponse, std::string());
+  MOCK_METHOD0(ShouldBackoffDownload, bool());
+
+  // Getters.
+  MOCK_METHOD0(GetResponseSignature, std::string());
   MOCK_METHOD0(GetPayloadAttemptNumber, uint32_t());
   MOCK_METHOD0(GetUrlIndex, uint32_t());
   MOCK_METHOD0(GetUrlFailureCount, uint32_t());
+  MOCK_METHOD0(GetBackoffExpiryTime, base::Time());
 };
 
 }  // namespace chromeos_update_engine

@@ -5,27 +5,26 @@
 #ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_PAYLOAD_STATE_H__
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_PAYLOAD_STATE_H__
 
+#include <base/time.h>
+
 #include "update_engine/payload_state_interface.h"
 #include "update_engine/prefs_interface.h"
 
 namespace chromeos_update_engine {
 
 // Encapsulates all the payload state required for download. This includes the
-// state necessary for handling multiple URLs in Omaha response, the back-off
+// state necessary for handling multiple URLs in Omaha response, the backoff
 // state, etc. All state is persisted so that we use the most recently saved
 // value when resuming the update_engine process. All state is also cached in
 // memory so that we ensure we always make progress based on last known good
 // state even when there's any issue in reading/writing from the file system.
 class PayloadState : public PayloadStateInterface {
  public:
-
   PayloadState()
       : prefs_(NULL),
         payload_attempt_number_(0),
-        num_urls_(0),
         url_index_(0),
-        url_failure_count_(0),
-        max_failure_count_per_url_(0) {}
+        url_failure_count_(0) {}
 
   virtual ~PayloadState() {}
 
@@ -42,9 +41,10 @@ class PayloadState : public PayloadStateInterface {
   virtual void DownloadComplete();
   virtual void DownloadProgress(size_t count);
   virtual void UpdateFailed(ActionExitCode error);
+  virtual bool ShouldBackoffDownload();
 
-  virtual inline std::string GetResponse() {
-    return response_;
+  virtual inline std::string GetResponseSignature() {
+    return response_signature_;
   }
 
   virtual inline uint32_t GetPayloadAttemptNumber() {
@@ -59,11 +59,12 @@ class PayloadState : public PayloadStateInterface {
     return url_failure_count_;
   }
 
- private:
-  // Logs the current payload state.
-  void LogPayloadState();
+  virtual inline base::Time GetBackoffExpiryTime() {
+    return backoff_expiry_time_;
+  }
 
-  // Increments the payload attempt number which governs the back-off behavior
+ private:
+  // Increments the payload attempt number which governs the backoff behavior
   // at the time of the next update check.
   void IncrementPayloadAttemptNumber();
 
@@ -78,8 +79,26 @@ class PayloadState : public PayloadStateInterface {
   // to the next URL and resets the failure count for that URL.
   void IncrementFailureCount();
 
-  // Initializes the current response from the persisted state.
-  void LoadResponse();
+  // Updates the backoff expiry time exponentially based on the current
+  // payload attempt number.
+  void UpdateBackoffExpiryTime();
+
+  // Resets all the persisted state values which are maintained relative to the
+  // current response signature. The response signature itself is not reset.
+  void ResetPersistedState();
+
+  // Calculates the response "signature", which is basically a string composed
+  // of the subset of the fields in the current response that affect the
+  // behavior of the PayloadState.
+  std::string CalculateResponseSignature();
+
+  // Initializes the current response signature from the persisted state.
+  void LoadResponseSignature();
+
+  // Sets the response signature to the given value. Also persists the value
+  // being set so that we resume from the save value in case of a process
+  // restart.
+  void SetResponseSignature(std::string response_signature);
 
   // Initializes the payload attempt number from the persisted state.
   void LoadPayloadAttemptNumber();
@@ -105,14 +124,26 @@ class PayloadState : public PayloadStateInterface {
   // restart.
   void SetUrlFailureCount(uint32_t url_failure_count);
 
+  // Initializes the backoff expiry time from the persisted state.
+  void LoadBackoffExpiryTime();
+
+  // Sets the backoff expiry time to the given value. Also persists the value
+  // being set so that we resume from the same value in case of a process
+  // restart.
+  void SetBackoffExpiryTime(const base::Time& new_time);
+
   // Interface object with which we read/write persisted state. This must
   // be set by calling the Initialize method before calling any other method.
   PrefsInterface* prefs_;
 
-  // This stores a subset of the current response from Omaha.  Each update to
+  // This is the current response object from Omaha.
+  OmahaResponse response_;
+
+  // This stores a "signature" of the current response. The signature here
+  // refers to a subset of the current response from Omaha.  Each update to
   // this value is persisted so we resume from the same value in case of a
   // process restart.
-  std::string response_;
+  std::string response_signature_;
 
   // The number of times we've tried to download the payload in full. This is
   // incremented each time we download the payload in full successsfully or
@@ -120,10 +151,6 @@ class PayloadState : public PayloadStateInterface {
   // around back to the first URL.  Each update to this value is persisted so
   // we resume from the same value in case of a process restart.
   uint32_t payload_attempt_number_;
-
-  // The number of urls in the current response.  This value is not persisted,
-  // as we will always get a response from Omaha before we need this value.
-  uint32_t num_urls_;
 
   // The index of the current URL.  This type is different from the one in the
   // accessor methods because PrefsInterface supports only int64_t but we want
@@ -137,10 +164,16 @@ class PayloadState : public PayloadStateInterface {
   // persisted so we resume from the same value in case of a process restart.
   int64_t url_failure_count_;
 
-  // The max failure count per url configured in the current response.  This
-  // value is not persisted, as we will always get a response from Omaha before
-  // we need this value.
-  uint32_t max_failure_count_per_url_;
+  // The timestamp until which we've to wait before attempting to download the
+  // payload again, so as to backoff repeated downloads.
+  base::Time backoff_expiry_time_;
+
+  // Returns the number of URLs in the current response.
+  // Note: This value will be 0 if this method is called before we receive
+  // the first valid Omaha response in this process.
+  uint32_t GetNumUrls() {
+    return response_.payload_urls.size();
+  }
 
   DISALLOW_COPY_AND_ASSIGN(PayloadState);
 };

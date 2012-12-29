@@ -137,10 +137,10 @@ void UpdateCheckScheduler::ComputeNextIntervalAndFuzz(const int forced_interval,
     } else if ((http_response_code = update_attempter_->http_response_code()) ==
                kHttpResponseInternalServerError ||
                http_response_code == kHttpResponseServiceUnavailable) {
-      // Implements exponential back off on 500 (Internal Server Error) and 503
+      // Implements exponential backoff on 500 (Internal Server Error) and 503
       // (Service Unavailable) HTTP response codes.
       interval = 2 * last_interval_;
-      LOG(WARNING) << "Exponential back off due to HTTP response code ("
+      LOG(WARNING) << "Exponential backoff due to HTTP response code ("
                    << http_response_code << ")";
     }
 
@@ -149,7 +149,7 @@ void UpdateCheckScheduler::ComputeNextIntervalAndFuzz(const int forced_interval,
       interval = kTimeoutMaxBackoffInterval;
 
     // Ensures that under normal conditions the regular update check interval
-    // and fuzz are used. Also covers the case where back off is required based
+    // and fuzz are used. Also covers the case where backoff is required based
     // on the initial update check.
     if (interval < kTimeoutPeriodicInterval) {
       interval = kTimeoutPeriodicInterval;

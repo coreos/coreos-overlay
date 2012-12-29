@@ -38,9 +38,10 @@ const char kPrefsWallClockWaitPeriod[] = "wall-clock-wait-period";
 const char kPrefsUpdateFirstSeenAt[] = "update-first-seen-at";
 
 const char kPrefsPayloadAttemptNumber[] = "payload-attempt-number";
-const char kPrefsCurrentResponse[] = "current-omaha-response";
+const char kPrefsCurrentResponseSignature[] = "current-response-signature";
 const char kPrefsCurrentUrlIndex[] = "current-url-index";
 const char kPrefsCurrentUrlFailureCount[] = "current-url-failure-count";
+const char kPrefsBackoffExpiryTime[] = "backoff-expiry-time";
 
 bool Prefs::Init(const FilePath& prefs_dir) {
   prefs_dir_ = prefs_dir;

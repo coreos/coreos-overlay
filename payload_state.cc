@@ -4,74 +4,65 @@
 
 #include "update_engine/payload_state.h"
 
+#include <algorithm>
+
 #include <base/logging.h>
 #include <base/stringprintf.h>
 
-#include "update_engine/omaha_request_action.h"
 #include "update_engine/prefs.h"
 #include "update_engine/utils.h"
 
+using base::Time;
+using base::TimeDelta;
+using std::min;
 using std::string;
 
 namespace chromeos_update_engine {
 
-// Returns a string containing that subset of the fields from the OmahaResponse
-// which we're interested in persisting for the purpose of detecting whether
-// we should clear the rest of the payload state when we get a new
-// OmahaResponse.
-static string GetFilteredResponse(const OmahaResponse& response) {
-  string mini_response = StringPrintf("NumURLs = %d\n",
-                                      response.payload_urls.size());
+// We want to upperbound backoffs to 16 days
+static const uint32_t kMaxBackoffDays = 16;
 
-  for (size_t i = 0; i < response.payload_urls.size(); i++)
-    mini_response += StringPrintf("Url%d = %s\n",
-                                  i, response.payload_urls[i].c_str());
-
-  mini_response += StringPrintf("Payload Size = %llu\n"
-                                "Payload Sha256 Hash = %s\n"
-                                "Metadata Size = %llu\n"
-                                "Metadata Signature = %s\n",
-                                response.size,
-                                response.hash.c_str(),
-                                response.metadata_size,
-                                response.metadata_signature.c_str());
-  return mini_response;
-}
+// We want to randomize retry attempts after the backoff by +/- 6 hours.
+static const uint32_t kMaxBackoffFuzzMinutes = 12 * 60;
 
 bool PayloadState::Initialize(PrefsInterface* prefs) {
   CHECK(prefs);
   prefs_ = prefs;
-  LoadResponse();
+  LoadResponseSignature();
   LoadPayloadAttemptNumber();
   LoadUrlIndex();
   LoadUrlFailureCount();
-  LogPayloadState();
+  LoadBackoffExpiryTime();
   return true;
 }
 
 void PayloadState::SetResponse(const OmahaResponse& omaha_response) {
-  CHECK(prefs_);
-  num_urls_ = omaha_response.payload_urls.size();
-  max_failure_count_per_url_ = omaha_response.max_failure_count_per_url;
-  string new_response = GetFilteredResponse(omaha_response);
-  bool has_response_changed = (response_ != new_response);
-  response_ = new_response;
-  LOG(INFO) << "Stored Response = \n" << response_;
-  prefs_->SetString(kPrefsCurrentResponse, response_);
+  // Always store the latest response.
+  response_ = omaha_response;
 
-  bool should_reset = false;
+  // Check if the "signature" of this response (i.e. the fields we care about)
+  // has changed.
+  string new_response_signature = CalculateResponseSignature();
+  bool has_response_changed = (response_signature_ != new_response_signature);
+
+  // If the response has changed, we should persist the new signature and
+  // clear away all the existing state.
   if (has_response_changed) {
-    LOG(INFO) << "Resetting all payload state as this is a new response";
-    should_reset = true;
-  } else if (url_index_ >= num_urls_) {
-    LOG(INFO) << "Resetting all payload state as the persisted state "
-              << "seems to have been tampered with";
-    should_reset = true;
+    LOG(INFO) << "Resetting all persisted state as this is a new response";
+    SetResponseSignature(new_response_signature);
+    ResetPersistedState();
+    return;
   }
 
-  if (should_reset) {
-    SetPayloadAttemptNumber(0);
-    SetUrlIndex(0);
+  // This is the earliest point at which we can validate whether the URL index
+  // we loaded from the persisted state is a valid value. If the response
+  // hasn't changed but the URL index is invalid, it's indicative of some
+  // tampering of the persisted state.
+  if (url_index_ >= GetNumUrls()) {
+    LOG(INFO) << "Resetting all payload state as the url index seems to have "
+                 "been tampered with";
+    ResetPersistedState();
+    return;
   }
 }
 
@@ -105,11 +96,9 @@ void PayloadState::UpdateFailed(ActionExitCode error) {
   ActionExitCode base_error = utils::GetBaseErrorCode(error);
   LOG(INFO) << "Updating payload state for error code: " << base_error;
 
-  if (!num_urls_) {
-    // Since we don't persist num_urls_, it's possible that we get an error in
-    // our communication to Omaha before even OmahaRequestAction code had a
-    // chance to call SetResponse (which sets num_urls_). So we should not
-    // advance the url_index_ in such cases.
+  if (GetNumUrls() == 0) {
+    // This means we got this error even before we got a valid Omaha response.
+    // So we should not advance the url_index_ in such cases.
     LOG(INFO) << "Ignoring failures until we get a valid Omaha response.";
     return;
   }
@@ -163,7 +152,7 @@ void PayloadState::UpdateFailed(ActionExitCode error) {
     // regular retries at the next update check.
     // 2. We have successfully downloaded the payload: In this case, the
     // payload attempt number would have been incremented and would take care
-    // of the back-off at the next update check.
+    // of the backoff at the next update check.
     // In either case, there's no need to update URL index or failure count.
     case kActionCodeOmahaRequestError:
     case kActionCodeOmahaResponseHandlerError:
@@ -180,6 +169,7 @@ void PayloadState::UpdateFailed(ActionExitCode error) {
     case kActionCodeOmahaResponseInvalid:
     case kActionCodeOmahaUpdateIgnoredPerPolicy:
     case kActionCodeOmahaUpdateDeferredPerPolicy:
+    case kActionCodeOmahaUpdateDeferredForBackoff:
       LOG(INFO) << "Not incrementing URL index or failure count for this error";
       break;
 
@@ -201,38 +191,80 @@ void PayloadState::UpdateFailed(ActionExitCode error) {
   }
 }
 
-void PayloadState::LogPayloadState() {
-  LOG(INFO) << "Current Payload State:\n"
-            << "Current Response = \n" << response_
-            << "\nPayload Attempt Number = " << payload_attempt_number_
-            << "\nCurrent URL Index = " << url_index_
-            << "\nCurrent URL Failure Count = " << url_failure_count_;
+bool PayloadState::ShouldBackoffDownload() {
+  if (response_.disable_payload_backoff) {
+    LOG(INFO) << "Payload backoff logic is disabled. "
+                 "Can proceed with the download";
+    return false;
+  }
+
+  if (response_.is_delta_payload) {
+    // If delta payloads fail, we want to fallback quickly to full payloads as
+    // they are more likely to succeed. Exponential backoffs would greatly
+    // slow down the fallback to full payloads.  So we don't backoff for delta
+    // payloads.
+    LOG(INFO) << "No backoffs for delta payloads. "
+              << "Can proceed with the download";
+    return false;
+  }
+
+  if (!utils::IsOfficialBuild()) {
+    // Backoffs are needed only for official builds. We do not want any delays
+    // or update failures due to backoffs during testing or development.
+    LOG(INFO) << "No backoffs for test/dev images. "
+              << "Can proceed with the download";
+    return false;
+  }
+
+  if (backoff_expiry_time_.is_null()) {
+    LOG(INFO) << "No backoff expiry time has been set. "
+              << "Can proceed with the download";
+    return false;
+  }
+
+  if (backoff_expiry_time_ < Time::Now()) {
+    LOG(INFO) << "The backoff expiry time ("
+              << utils::ToString(backoff_expiry_time_)
+              << ") has elapsed. Can proceed with the download";
+    return false;
+  }
+
+  LOG(INFO) << "Cannot proceed with downloads as we need to backoff until "
+            << utils::ToString(backoff_expiry_time_);
+  return true;
 }
 
 void PayloadState::IncrementPayloadAttemptNumber() {
+  if (response_.is_delta_payload) {
+    LOG(INFO) << "Not incrementing payload attempt number for delta payloads";
+    return;
+  }
+
   LOG(INFO) << "Incrementing the payload attempt number";
   SetPayloadAttemptNumber(GetPayloadAttemptNumber() + 1);
-
-  // TODO(jaysri): chromium-os:36806: Implement the payload back-off logic
-  // that uses the payload attempt number.
+  UpdateBackoffExpiryTime();
 }
 
 void PayloadState::IncrementUrlIndex() {
   uint32_t next_url_index = GetUrlIndex() + 1;
-  if (next_url_index < num_urls_) {
+  if (next_url_index < GetNumUrls()) {
     LOG(INFO) << "Incrementing the URL index for next attempt";
     SetUrlIndex(next_url_index);
   } else {
     LOG(INFO) << "Resetting the current URL index (" << GetUrlIndex() << ") to "
-              << "0 as we only have " << num_urls_ << " URL(s)";
+              << "0 as we only have " << GetNumUrls() << " URL(s)";
     SetUrlIndex(0);
     IncrementPayloadAttemptNumber();
   }
+
+  // Whenever we update the URL index, we should also clear the URL failure
+  // count so we can start over fresh for the new URL.
+  SetUrlFailureCount(0);
 }
 
 void PayloadState::IncrementFailureCount() {
   uint32_t next_url_failure_count = GetUrlFailureCount() + 1;
-  if (next_url_failure_count < max_failure_count_per_url_) {
+  if (next_url_failure_count < response_.max_failure_count_per_url) {
     LOG(INFO) << "Incrementing the URL failure count";
     SetUrlFailureCount(next_url_failure_count);
   } else {
@@ -242,13 +274,88 @@ void PayloadState::IncrementFailureCount() {
   }
 }
 
-void PayloadState::LoadResponse() {
+void PayloadState::UpdateBackoffExpiryTime() {
+  if (response_.disable_payload_backoff) {
+    LOG(INFO) << "Resetting backoff expiry time as payload backoff is disabled";
+    SetBackoffExpiryTime(Time());
+    return;
+  }
+
+  if (GetPayloadAttemptNumber() == 0) {
+    SetBackoffExpiryTime(Time());
+    return;
+  }
+
+  // Since we're doing left-shift below, make sure we don't shift more
+  // than this. E.g. if uint32_t is 4-bytes, don't left-shift more than 30 bits,
+  // since we don't expect value of kMaxBackoffDays to be more than 100 anyway.
+  uint32_t num_days = 1; // the value to be shifted.
+  const uint32_t kMaxShifts = (sizeof(num_days) * 8) - 2;
+
+  // Normal backoff days is 2 raised to (payload_attempt_number - 1).
+  // E.g. if payload_attempt_number is over 30, limit power to 30.
+  uint32_t power = min(GetPayloadAttemptNumber() - 1, kMaxShifts);
+
+  // The number of days is the minimum of 2 raised to (payload_attempt_number
+  // - 1) or kMaxBackoffDays.
+  num_days = min(num_days << power, kMaxBackoffDays);
+
+  // We don't want all retries to happen exactly at the same time when
+  // retrying after backoff. So add some random minutes to fuzz.
+  int fuzz_minutes = utils::FuzzInt(0, kMaxBackoffFuzzMinutes);
+  TimeDelta next_backoff_interval = TimeDelta::FromDays(num_days) +
+                                    TimeDelta::FromMinutes(fuzz_minutes);
+  LOG(INFO) << "Incrementing the backoff expiry time by "
+            << utils::FormatTimeDelta(next_backoff_interval);
+  SetBackoffExpiryTime(Time::Now() + next_backoff_interval);
+}
+
+void PayloadState::ResetPersistedState() {
+  SetPayloadAttemptNumber(0);
+  SetUrlIndex(0);
+  SetUrlFailureCount(0);
+  UpdateBackoffExpiryTime(); // This will reset the backoff expiry time.
+}
+
+string PayloadState::CalculateResponseSignature() {
+  string response_sign = StringPrintf("NumURLs = %d\n",
+                                      response_.payload_urls.size());
+
+  for (size_t i = 0; i < response_.payload_urls.size(); i++)
+    response_sign += StringPrintf("Url%d = %s\n",
+                                  i, response_.payload_urls[i].c_str());
+
+  response_sign += StringPrintf("Payload Size = %llu\n"
+                                "Payload Sha256 Hash = %s\n"
+                                "Metadata Size = %llu\n"
+                                "Metadata Signature = %s\n"
+                                "Is Delta Payload = %d\n"
+                                "Max Failure Count Per Url = %d\n"
+                                "Disable Payload Backoff = %d\n",
+                                response_.size,
+                                response_.hash.c_str(),
+                                response_.metadata_size,
+                                response_.metadata_signature.c_str(),
+                                response_.is_delta_payload,
+                                response_.max_failure_count_per_url,
+                                response_.disable_payload_backoff);
+  return response_sign;
+}
+
+void PayloadState::LoadResponseSignature() {
   CHECK(prefs_);
   string stored_value;
-  if (prefs_->Exists(kPrefsCurrentResponse) &&
-      prefs_->GetString(kPrefsCurrentResponse, &stored_value)) {
-    response_ = stored_value;
+  if (prefs_->Exists(kPrefsCurrentResponseSignature) &&
+      prefs_->GetString(kPrefsCurrentResponseSignature, &stored_value)) {
+    SetResponseSignature(stored_value);
   }
+}
+
+void PayloadState::SetResponseSignature(string response_signature) {
+  CHECK(prefs_);
+  response_signature_ = response_signature;
+  LOG(INFO) << "Current Response Signature = \n" << response_signature_;
+  prefs_->SetString(kPrefsCurrentResponseSignature, response_signature_);
 }
 
 void PayloadState::LoadPayloadAttemptNumber() {
@@ -261,7 +368,7 @@ void PayloadState::LoadPayloadAttemptNumber() {
                  << ") in persisted state. Defaulting to 0";
       stored_value = 0;
     }
-    payload_attempt_number_ = stored_value;
+    SetPayloadAttemptNumber(stored_value);
   }
 }
 
@@ -277,12 +384,14 @@ void PayloadState::LoadUrlIndex() {
   int64_t stored_value;
   if (prefs_->Exists(kPrefsCurrentUrlIndex) &&
       prefs_->GetInt64(kPrefsCurrentUrlIndex, &stored_value)) {
+    // We only check for basic sanity value here. Detailed check will be
+    // done in SetResponse once the first response comes in.
     if (stored_value < 0) {
       LOG(ERROR) << "Invalid URL Index (" << stored_value
                  << ") in persisted state. Defaulting to 0";
       stored_value = 0;
     }
-    url_index_ = stored_value;
+    SetUrlIndex(stored_value);
   }
 }
 
@@ -291,11 +400,6 @@ void PayloadState::SetUrlIndex(uint32_t url_index) {
   url_index_ = url_index;
   LOG(INFO) << "Current URL Index = " << url_index_;
   prefs_->SetInt64(kPrefsCurrentUrlIndex, url_index_);
-
-  // Everytime we set the URL index, we should also reset its failure count.
-  // Otherwise, the URL will be tried only once, instead of
-  // max_failure_count_per_url times in the next round.
-  SetUrlFailureCount(0);
 }
 
 void PayloadState::LoadUrlFailureCount() {
@@ -308,7 +412,7 @@ void PayloadState::LoadUrlFailureCount() {
                  << ") in persisted state. Defaulting to 0";
       stored_value = 0;
     }
-    url_failure_count_ = stored_value;
+    SetUrlFailureCount(stored_value);
   }
 }
 
@@ -318,6 +422,34 @@ void PayloadState::SetUrlFailureCount(uint32_t url_failure_count) {
   LOG(INFO) << "Current URL (Url" << GetUrlIndex()
             << ")'s Failure Count = " << url_failure_count_;
   prefs_->SetInt64(kPrefsCurrentUrlFailureCount, url_failure_count_);
+}
+
+void PayloadState::LoadBackoffExpiryTime() {
+  CHECK(prefs_);
+  int64_t stored_value;
+  if (!prefs_->Exists(kPrefsBackoffExpiryTime))
+    return;
+
+  if (!prefs_->GetInt64(kPrefsBackoffExpiryTime, &stored_value))
+    return;
+
+  Time stored_time = Time::FromInternalValue(stored_value);
+  if (stored_time > Time::Now() + TimeDelta::FromDays(kMaxBackoffDays)) {
+    LOG(ERROR) << "Invalid backoff expiry time ("
+               << utils::ToString(stored_time)
+               << ") in persisted state. Resetting.";
+    stored_time = Time();
+  }
+  SetBackoffExpiryTime(stored_time);
+}
+
+void PayloadState::SetBackoffExpiryTime(const Time& new_time) {
+  CHECK(prefs_);
+  backoff_expiry_time_ = new_time;
+  LOG(INFO) << "Backoff Expiry Time = "
+            << utils::ToString(backoff_expiry_time_);
+  prefs_->SetInt64(kPrefsBackoffExpiryTime,
+                   backoff_expiry_time_.ToInternalValue());
 }
 
 }  // namespace chromeos_update_engine

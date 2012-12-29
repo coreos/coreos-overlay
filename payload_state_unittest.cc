@@ -14,6 +14,8 @@
 #include "update_engine/test_utils.h"
 #include "update_engine/utils.h"
 
+using base::Time;
+using base::TimeDelta;
 using std::string;
 using testing::_;
 using testing::NiceMock;
@@ -34,23 +36,29 @@ static void SetupPayloadStateWith2Urls(string hash,
   response->metadata_signature = "metasign";
   response->max_failure_count_per_url = 3;
   payload_state->SetResponse(*response);
-  string stored_response = payload_state->GetResponse();
-  string expected_response = StringPrintf(
+  string stored_response_sign = payload_state->GetResponseSignature();
+  string expected_response_sign = StringPrintf(
       "NumURLs = 2\n"
       "Url0 = http://test\n"
       "Url1 = https://test\n"
       "Payload Size = 523456789\n"
       "Payload Sha256 Hash = %s\n"
       "Metadata Size = 558123\n"
-      "Metadata Signature = metasign\n",
-      hash.c_str());
-  EXPECT_EQ(expected_response, stored_response);
+      "Metadata Signature = metasign\n"
+      "Is Delta Payload = %d\n"
+      "Max Failure Count Per Url = %d\n"
+      "Disable Payload Backoff = %d\n",
+      hash.c_str(),
+      response->is_delta_payload,
+      response->max_failure_count_per_url,
+      response->disable_payload_backoff);
+  EXPECT_EQ(expected_response_sign, stored_response_sign);
 }
 
 class PayloadStateTest : public ::testing::Test { };
 
 TEST(PayloadStateTest, DidYouAddANewActionExitCode) {
-  if (kActionCodeUmaReportedMax != 40) {
+  if (kActionCodeUmaReportedMax != 41) {
     LOG(ERROR) << "The following failure is intentional. If you added a new "
                << "ActionExitCode enum value, make sure to add it to the "
                << "PayloadState::UpdateFailed method and then update this test "
@@ -64,18 +72,22 @@ TEST(PayloadStateTest, SetResponseWorksWithEmptyResponse) {
   OmahaResponse response;
   NiceMock<PrefsMock> prefs;
   EXPECT_CALL(prefs, SetInt64(kPrefsPayloadAttemptNumber, 0));
+  EXPECT_CALL(prefs, SetInt64(kPrefsBackoffExpiryTime, 0));
   EXPECT_CALL(prefs, SetInt64(kPrefsCurrentUrlIndex, 0));
   EXPECT_CALL(prefs, SetInt64(kPrefsCurrentUrlFailureCount, 0));
   PayloadState payload_state;
   EXPECT_TRUE(payload_state.Initialize(&prefs));
   payload_state.SetResponse(response);
-  string stored_response = payload_state.GetResponse();
-  string expected_response = "NumURLs = 0\n"
-                             "Payload Size = 0\n"
-                             "Payload Sha256 Hash = \n"
-                             "Metadata Size = 0\n"
-                             "Metadata Signature = \n";
-  EXPECT_EQ(expected_response, stored_response);
+  string stored_response_sign = payload_state.GetResponseSignature();
+  string expected_response_sign = "NumURLs = 0\n"
+                                  "Payload Size = 0\n"
+                                  "Payload Sha256 Hash = \n"
+                                  "Metadata Size = 0\n"
+                                  "Metadata Signature = \n"
+                                  "Is Delta Payload = 0\n"
+                                  "Max Failure Count Per Url = 0\n"
+                                  "Disable Payload Backoff = 0\n";
+  EXPECT_EQ(expected_response_sign, stored_response_sign);
   EXPECT_EQ(0, payload_state.GetUrlIndex());
   EXPECT_EQ(0, payload_state.GetUrlFailureCount());
 }
@@ -89,19 +101,23 @@ TEST(PayloadStateTest, SetResponseWorksWithSingleUrl) {
   response.metadata_signature = "msign";
   NiceMock<PrefsMock> prefs;
   EXPECT_CALL(prefs, SetInt64(kPrefsPayloadAttemptNumber, 0));
+  EXPECT_CALL(prefs, SetInt64(kPrefsBackoffExpiryTime, 0));
   EXPECT_CALL(prefs, SetInt64(kPrefsCurrentUrlIndex, 0));
   EXPECT_CALL(prefs, SetInt64(kPrefsCurrentUrlFailureCount, 0));
   PayloadState payload_state;
   EXPECT_TRUE(payload_state.Initialize(&prefs));
   payload_state.SetResponse(response);
-  string stored_response = payload_state.GetResponse();
-  string expected_response = "NumURLs = 1\n"
-                             "Url0 = http://single.url.test\n"
-                             "Payload Size = 123456789\n"
-                             "Payload Sha256 Hash = hash\n"
-                             "Metadata Size = 58123\n"
-                             "Metadata Signature = msign\n";
-  EXPECT_EQ(expected_response, stored_response);
+  string stored_response_sign = payload_state.GetResponseSignature();
+  string expected_response_sign = "NumURLs = 1\n"
+                                  "Url0 = http://single.url.test\n"
+                                  "Payload Size = 123456789\n"
+                                  "Payload Sha256 Hash = hash\n"
+                                  "Metadata Size = 58123\n"
+                                  "Metadata Signature = msign\n"
+                                  "Is Delta Payload = 0\n"
+                                  "Max Failure Count Per Url = 0\n"
+                                  "Disable Payload Backoff = 0\n";
+  EXPECT_EQ(expected_response_sign, stored_response_sign);
   EXPECT_EQ(0, payload_state.GetUrlIndex());
   EXPECT_EQ(0, payload_state.GetUrlFailureCount());
 }
@@ -116,20 +132,24 @@ TEST(PayloadStateTest, SetResponseWorksWithMultipleUrls) {
   response.metadata_signature = "metasign";
   NiceMock<PrefsMock> prefs;
   EXPECT_CALL(prefs, SetInt64(kPrefsPayloadAttemptNumber, 0));
+  EXPECT_CALL(prefs, SetInt64(kPrefsBackoffExpiryTime, 0));
   EXPECT_CALL(prefs, SetInt64(kPrefsCurrentUrlIndex, 0));
   EXPECT_CALL(prefs, SetInt64(kPrefsCurrentUrlFailureCount, 0));
   PayloadState payload_state;
   EXPECT_TRUE(payload_state.Initialize(&prefs));
   payload_state.SetResponse(response);
-  string stored_response = payload_state.GetResponse();
-  string expected_response = "NumURLs = 2\n"
-                             "Url0 = http://multiple.url.test\n"
-                             "Url1 = https://multiple.url.test\n"
-                             "Payload Size = 523456789\n"
-                             "Payload Sha256 Hash = rhash\n"
-                             "Metadata Size = 558123\n"
-                             "Metadata Signature = metasign\n";
-  EXPECT_EQ(expected_response, stored_response);
+  string stored_response_sign = payload_state.GetResponseSignature();
+  string expected_response_sign = "NumURLs = 2\n"
+                                  "Url0 = http://multiple.url.test\n"
+                                  "Url1 = https://multiple.url.test\n"
+                                  "Payload Size = 523456789\n"
+                                  "Payload Sha256 Hash = rhash\n"
+                                  "Metadata Size = 558123\n"
+                                  "Metadata Signature = metasign\n"
+                                  "Is Delta Payload = 0\n"
+                                  "Max Failure Count Per Url = 0\n"
+                                  "Disable Payload Backoff = 0\n";
+  EXPECT_EQ(expected_response_sign, stored_response_sign);
   EXPECT_EQ(0, payload_state.GetUrlIndex());
   EXPECT_EQ(0, payload_state.GetUrlFailureCount());
 }
@@ -142,6 +162,7 @@ TEST(PayloadStateTest, CanAdvanceUrlIndexCorrectly) {
   // Payload attempt should start with 0 and then advance to 1.
   EXPECT_CALL(prefs, SetInt64(kPrefsPayloadAttemptNumber, 0)).Times(1);
   EXPECT_CALL(prefs, SetInt64(kPrefsPayloadAttemptNumber, 1)).Times(1);
+  EXPECT_CALL(prefs, SetInt64(kPrefsBackoffExpiryTime, _)).Times(2);
 
   // Url index should go from 0 to 1 twice.
   EXPECT_CALL(prefs, SetInt64(kPrefsCurrentUrlIndex, 0)).Times(2);
@@ -204,6 +225,8 @@ TEST(PayloadStateTest, AllCountersGetUpdatedProperlyOnErrorCodesAndEvents) {
   EXPECT_CALL(prefs, SetInt64(kPrefsPayloadAttemptNumber, 1)).Times(1);
   EXPECT_CALL(prefs, SetInt64(kPrefsPayloadAttemptNumber, 2)).Times(1);
 
+  EXPECT_CALL(prefs, SetInt64(kPrefsBackoffExpiryTime, _)).Times(4);
+
   EXPECT_CALL(prefs, SetInt64(kPrefsCurrentUrlIndex, 0)).Times(4);
   EXPECT_CALL(prefs, SetInt64(kPrefsCurrentUrlIndex, 1)).Times(2);
 
@@ -241,12 +264,14 @@ TEST(PayloadStateTest, AllCountersGetUpdatedProperlyOnErrorCodesAndEvents) {
   EXPECT_EQ(1, payload_state.GetPayloadAttemptNumber());
   EXPECT_EQ(0, payload_state.GetUrlIndex());
   EXPECT_EQ(0, payload_state.GetUrlFailureCount());
+  EXPECT_TRUE(payload_state.ShouldBackoffDownload());
 
   // This should advance the URL index.
   payload_state.UpdateFailed(kActionCodePayloadHashMismatchError);
   EXPECT_EQ(1, payload_state.GetPayloadAttemptNumber());
   EXPECT_EQ(1, payload_state.GetUrlIndex());
   EXPECT_EQ(0, payload_state.GetUrlFailureCount());
+  EXPECT_TRUE(payload_state.ShouldBackoffDownload());
 
   // This should advance the URL index and payload attempt number due to
   // wrap-around of URL index.
@@ -254,6 +279,7 @@ TEST(PayloadStateTest, AllCountersGetUpdatedProperlyOnErrorCodesAndEvents) {
   EXPECT_EQ(2, payload_state.GetPayloadAttemptNumber());
   EXPECT_EQ(0, payload_state.GetUrlIndex());
   EXPECT_EQ(0, payload_state.GetUrlFailureCount());
+  EXPECT_TRUE(payload_state.ShouldBackoffDownload());
 
   // This HTTP error code should only increase the failure count.
   payload_state.UpdateFailed(static_cast<ActionExitCode>(
@@ -261,6 +287,7 @@ TEST(PayloadStateTest, AllCountersGetUpdatedProperlyOnErrorCodesAndEvents) {
   EXPECT_EQ(2, payload_state.GetPayloadAttemptNumber());
   EXPECT_EQ(0, payload_state.GetUrlIndex());
   EXPECT_EQ(1, payload_state.GetUrlFailureCount());
+  EXPECT_TRUE(payload_state.ShouldBackoffDownload());
 
   // And that failure count should be reset when we download some bytes
   // afterwards.
@@ -268,6 +295,7 @@ TEST(PayloadStateTest, AllCountersGetUpdatedProperlyOnErrorCodesAndEvents) {
   EXPECT_EQ(2, payload_state.GetPayloadAttemptNumber());
   EXPECT_EQ(0, payload_state.GetUrlIndex());
   EXPECT_EQ(0, payload_state.GetUrlFailureCount());
+  EXPECT_TRUE(payload_state.ShouldBackoffDownload());
 
   // Now, slightly change the response and set it again.
   SetupPayloadStateWith2Urls("Hash8532", &payload_state, &response);
@@ -276,6 +304,7 @@ TEST(PayloadStateTest, AllCountersGetUpdatedProperlyOnErrorCodesAndEvents) {
   EXPECT_EQ(0, payload_state.GetPayloadAttemptNumber());
   EXPECT_EQ(0, payload_state.GetUrlIndex());
   EXPECT_EQ(0, payload_state.GetUrlFailureCount());
+  EXPECT_FALSE(payload_state.ShouldBackoffDownload());
 }
 
 TEST(PayloadStateTest, PayloadAttemptNumberIncreasesOnSuccessfulDownload) {
@@ -285,6 +314,8 @@ TEST(PayloadStateTest, PayloadAttemptNumberIncreasesOnSuccessfulDownload) {
 
   EXPECT_CALL(prefs, SetInt64(kPrefsPayloadAttemptNumber, 0)).Times(1);
   EXPECT_CALL(prefs, SetInt64(kPrefsPayloadAttemptNumber, 1)).Times(1);
+
+  EXPECT_CALL(prefs, SetInt64(kPrefsBackoffExpiryTime, _)).Times(2);
 
   EXPECT_CALL(prefs, SetInt64(kPrefsCurrentUrlIndex, 0)).Times(1);
   EXPECT_CALL(prefs, SetInt64(kPrefsCurrentUrlFailureCount, 0)).Times(1);
@@ -324,6 +355,7 @@ TEST(PayloadStateTest, SetResponseResetsInvalidUrlIndex) {
   NiceMock<PrefsMock> prefs2;
   EXPECT_CALL(prefs2, Exists(_)).WillRepeatedly(Return(true));
   EXPECT_CALL(prefs2, GetInt64(kPrefsPayloadAttemptNumber, _));
+  EXPECT_CALL(prefs2, GetInt64(kPrefsBackoffExpiryTime, _));
   EXPECT_CALL(prefs2, GetInt64(kPrefsCurrentUrlIndex, _))
       .WillOnce(DoAll(SetArgumentPointee<1>(2), Return(true)));
   EXPECT_CALL(prefs2, GetInt64(kPrefsCurrentUrlFailureCount, _));
@@ -341,4 +373,92 @@ TEST(PayloadStateTest, SetResponseResetsInvalidUrlIndex) {
   EXPECT_EQ(0, payload_state.GetUrlIndex());
   EXPECT_EQ(0, payload_state.GetUrlFailureCount());
 }
+
+TEST(PayloadStateTest, NoBackoffForDeltaPayloads) {
+  OmahaResponse response;
+  response.is_delta_payload = true;
+  PayloadState payload_state;
+  NiceMock<PrefsMock> prefs;
+
+  EXPECT_TRUE(payload_state.Initialize(&prefs));
+  SetupPayloadStateWith2Urls("Hash6437", &payload_state, &response);
+
+  // Simulate a successful download and see that we're ready to download
+  // again without any backoff as this is a delta payload.
+  payload_state.DownloadComplete();
+  EXPECT_EQ(0, payload_state.GetPayloadAttemptNumber());
+  EXPECT_FALSE(payload_state.ShouldBackoffDownload());
+
+  // Simulate two failures (enough to cause payload backoff) and check
+  // again that we're ready to re-download without any backoff as this is
+  // a delta payload.
+  payload_state.UpdateFailed(kActionCodeDownloadMetadataSignatureMismatch);
+  payload_state.UpdateFailed(kActionCodeDownloadMetadataSignatureMismatch);
+  EXPECT_EQ(0, payload_state.GetUrlIndex());
+  EXPECT_EQ(0, payload_state.GetPayloadAttemptNumber());
+  EXPECT_FALSE(payload_state.ShouldBackoffDownload());
+}
+
+static void CheckPayloadBackoffState(PayloadState* payload_state,
+                                     int expected_attempt_number,
+                                     TimeDelta expected_days) {
+  payload_state->DownloadComplete();
+  EXPECT_EQ(expected_attempt_number, payload_state->GetPayloadAttemptNumber());
+  EXPECT_TRUE(payload_state->ShouldBackoffDownload());
+  Time backoff_expiry_time = payload_state->GetBackoffExpiryTime();
+  // Add 1 hour extra to the 6 hour fuzz check to tolerate edge cases.
+  TimeDelta max_fuzz_delta = TimeDelta::FromHours(7);
+  Time expected_min_time = Time::Now() + expected_days - max_fuzz_delta;
+  Time expected_max_time = Time::Now() + expected_days + max_fuzz_delta;
+  EXPECT_LT(expected_min_time.ToInternalValue(),
+            backoff_expiry_time.ToInternalValue());
+  EXPECT_GT(expected_max_time.ToInternalValue(),
+            backoff_expiry_time.ToInternalValue());
+}
+
+TEST(PayloadStateTest, BackoffPeriodsAreInCorrectRange) {
+  OmahaResponse response;
+  response.is_delta_payload = false;
+  PayloadState payload_state;
+  NiceMock<PrefsMock> prefs;
+
+  EXPECT_TRUE(payload_state.Initialize(&prefs));
+  SetupPayloadStateWith2Urls("Hash8939", &payload_state, &response);
+
+  CheckPayloadBackoffState(&payload_state, 1,  TimeDelta::FromDays(1));
+  CheckPayloadBackoffState(&payload_state, 2,  TimeDelta::FromDays(2));
+  CheckPayloadBackoffState(&payload_state, 3,  TimeDelta::FromDays(4));
+  CheckPayloadBackoffState(&payload_state, 4,  TimeDelta::FromDays(8));
+  CheckPayloadBackoffState(&payload_state, 5,  TimeDelta::FromDays(16));
+  CheckPayloadBackoffState(&payload_state, 6,  TimeDelta::FromDays(16));
+  CheckPayloadBackoffState(&payload_state, 7,  TimeDelta::FromDays(16));
+  CheckPayloadBackoffState(&payload_state, 8,  TimeDelta::FromDays(16));
+  CheckPayloadBackoffState(&payload_state, 9,  TimeDelta::FromDays(16));
+  CheckPayloadBackoffState(&payload_state, 10,  TimeDelta::FromDays(16));
+}
+
+TEST(PayloadStateTest, BackoffLogicCanBeDisabled) {
+  OmahaResponse response;
+  response.disable_payload_backoff = true;
+  PayloadState payload_state;
+  NiceMock<PrefsMock> prefs;
+
+  EXPECT_TRUE(payload_state.Initialize(&prefs));
+  SetupPayloadStateWith2Urls("Hash8939", &payload_state, &response);
+
+  // Simulate a successful download and see that we are ready to download
+  // again without any backoff.
+  payload_state.DownloadComplete();
+  EXPECT_EQ(1, payload_state.GetPayloadAttemptNumber());
+  EXPECT_FALSE(payload_state.ShouldBackoffDownload());
+
+  // Test again, this time by simulating two errors that would cause
+  // the payload attempt number to increment due to wrap around. And
+  // check that we are still ready to re-download without any backoff.
+  payload_state.UpdateFailed(kActionCodeDownloadMetadataSignatureMismatch);
+  payload_state.UpdateFailed(kActionCodeDownloadMetadataSignatureMismatch);
+  EXPECT_EQ(2, payload_state.GetPayloadAttemptNumber());
+  EXPECT_FALSE(payload_state.ShouldBackoffDownload());
+}
+
 }

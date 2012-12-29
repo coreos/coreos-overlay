@@ -18,6 +18,7 @@
 
 #include "update_engine/action.h"
 #include "update_engine/http_fetcher.h"
+#include "update_engine/omaha_response.h"
 
 // The Omaha Request action makes a request to Omaha and can output
 // the response on the output ActionPipe.
@@ -27,47 +28,6 @@ namespace chromeos_update_engine {
 // Encodes XML entities in a given string with libxml2. input must be
 // UTF-8 formatted. Output will be UTF-8 formatted.
 std::string XmlEncode(const std::string& input);
-
-// This struct encapsulates the data Omaha's response for the request.
-// These strings in this struct are not XML escaped.
-struct OmahaResponse {
-  OmahaResponse()
-      : update_exists(false),
-        poll_interval(0),
-        size(0),
-        metadata_size(0),
-        max_days_to_scatter(0),
-        max_failure_count_per_url(0),
-        needs_admin(false),
-        prompt(false) {}
-  // True iff there is an update to be downloaded.
-  bool update_exists;
-
-  // If non-zero, server-dictated poll frequency in seconds.
-  int poll_interval;
-
-  // These are only valid if update_exists is true:
-  std::string display_version;
-
-  // The ordered list of URLs in the Omaha response. Each item is a complete
-  // URL (i.e. in terms of Omaha XML, each value is a urlBase + packageName)
-  std::vector<std::string> payload_urls;
-
-  std::string more_info_url;
-  std::string hash;
-  std::string metadata_signature;
-  std::string deadline;
-  off_t size;
-  off_t metadata_size;
-  int max_days_to_scatter;
-  // The number of URL-related failures to tolerate before moving on to the
-  // next URL in the current pass. This is a configurable value from the
-  // Omaha Response attribute, if ever we need to fine tune the behavior.
-  int max_failure_count_per_url;
-  bool needs_admin;
-  bool prompt;
-};
-COMPILE_ASSERT(sizeof(off_t) == 8, off_t_not_64bit);
 
 // This struct encapsulates the Omaha event information. For a
 // complete list of defined event types and results, see

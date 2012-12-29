@@ -102,7 +102,7 @@ private:
   Prefs prefs_;
 
   // All state pertaining to payload state such as
-  // response, URL, back-off states.
+  // response, URL, backoff states.
   PayloadState payload_state_;
 };
 

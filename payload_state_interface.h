@@ -8,12 +8,9 @@
 #include <string>
 
 #include "update_engine/action_processor.h"
+#include "update_engine/omaha_response.h"
 
 namespace chromeos_update_engine {
-
-// Forward declaration here because we get a circular dependency if
-// we include omaha_request_action.h directly.
-struct OmahaResponse;
 
 // Describes the methods that need to be implemented by the PayloadState class.
 // This interface has been carved out to support mocking of the PayloadState
@@ -47,8 +44,13 @@ class PayloadStateInterface {
   // depending on the type of the error that happened.
   virtual void UpdateFailed(ActionExitCode error) = 0;
 
-  // Returns the currently stored response.
-  virtual std::string GetResponse() = 0;
+  // Returns true if we should backoff the current download attempt.
+  // False otherwise.
+  virtual bool ShouldBackoffDownload() = 0;
+
+  // Returns the currently stored response "signature". The signature  is a
+  // subset of fields that are of interest to the PayloadState behavior.
+  virtual std::string GetResponseSignature() = 0;
 
   // Returns the payload attempt number.
   virtual uint32_t GetPayloadAttemptNumber() = 0;
@@ -58,6 +60,9 @@ class PayloadStateInterface {
 
   // Returns the current URL's failure count.
   virtual uint32_t GetUrlFailureCount() = 0;
+
+  // Returns the expiry time for the current backoff period.
+  virtual base::Time GetBackoffExpiryTime() = 0;
  };
 
 }  // namespace chromeos_update_engine

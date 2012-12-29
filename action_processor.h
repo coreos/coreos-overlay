@@ -63,10 +63,11 @@ enum ActionExitCode {
   kActionCodeOmahaErrorInHTTPResponse = 37,
   kActionCodeDownloadOperationHashMissingError = 38,
   kActionCodeDownloadMetadataSignatureMissingError = 39,
+  kActionCodeOmahaUpdateDeferredForBackoff = 40,
 
   // Note: When adding new error codes, please remember to add the
   // error into one of the buckets in PayloadState::UpdateFailed method so
-  // that the retries across URLs and the payload back-off mechanism work
+  // that the retries across URLs and the payload backoff mechanism work
   // correctly for those new error codes.
 
   // Any code above this is sent to both Omaha and UMA as-is, except

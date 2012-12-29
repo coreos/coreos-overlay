@@ -31,7 +31,9 @@ namespace chromeos_update_engine {
 
 // List of custom pair tags that we interpret in the Omaha Response:
 static const char* kTagDeadline = "deadline";
+static const char* kTagDisablePayloadBackoff = "DisablePayloadBackoff";
 static const char* kTagDisplayVersion = "DisplayVersion";
+static const char* kTagIsDeltaPayload = "IsDelta";
 static const char* kTagMaxFailureCountPerUrl = "MaxFailureCountPerUrl";
 static const char* kTagMaxDaysToScatter = "MaxDaysToScatter";
 // Deprecated: "ManifestSignatureRsa"
@@ -597,8 +599,14 @@ bool OmahaRequestAction::ParseParams(xmlDoc* doc,
       ParseInt(XmlGetProperty(pie_action_node, kTagMaxDaysToScatter));
 
   string max = XmlGetProperty(pie_action_node, kTagMaxFailureCountPerUrl);
-  if (!base::StringToInt(max, &output_object->max_failure_count_per_url))
+  if (!base::StringToUint(max, &output_object->max_failure_count_per_url))
     output_object->max_failure_count_per_url = kDefaultMaxFailureCountPerUrl;
+
+  output_object->is_delta_payload =
+      XmlGetProperty(pie_action_node, kTagIsDeltaPayload) == "true";
+
+  output_object->disable_payload_backoff =
+      XmlGetProperty(pie_action_node, kTagDisablePayloadBackoff) == "true";
 
   return true;
 }
@@ -691,9 +699,20 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
 
   // Update the payload state with the current response. The payload state
   // will automatically reset all stale state if this response is different
-  // from what's stored already.
+  // from what's stored already. We are updating the payload state as late
+  // as possible in this method so that if a new release gets pushed and then
+  // got pulled back due to some issues, we don't want to clear our internal
+  // state unnecessarily.
   PayloadStateInterface* payload_state = system_state_->payload_state();
   payload_state->SetResponse(output_object);
+
+  if (payload_state->ShouldBackoffDownload()) {
+    output_object.update_exists = false;
+    LOG(INFO) << "Ignoring Omaha updates in order to backoff our retry "
+                 "attempts";
+    completer.set_code(kActionCodeOmahaUpdateDeferredForBackoff);
+    return;
+  }
 }
 
 bool OmahaRequestAction::ShouldDeferDownload(OmahaResponse* output_object) {
