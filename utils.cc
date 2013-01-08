@@ -27,6 +27,7 @@
 #include <base/string_number_conversions.h>
 #include <base/string_util.h>
 #include <base/stringprintf.h>
+#include <glib.h>
 #include <google/protobuf/stubs/common.h>
 #include <rootdev/rootdev.h>
 
@@ -35,6 +36,7 @@
 #include "update_engine/subprocess.h"
 
 using base::Time;
+using base::TimeDelta;
 using std::min;
 using std::string;
 using std::vector;
@@ -517,7 +519,7 @@ bool UnmountFilesystem(const string& mountpoint) {
 
     TEST_AND_RETURN_FALSE_ERRNO(errno == EBUSY &&
                                 num_retries < kUnmountMaxNumOfRetries);
-    usleep(kUnmountRetryIntervalInMicroseconds);
+    g_usleep(kUnmountRetryIntervalInMicroseconds);
   }
   return true;
 }
@@ -661,19 +663,19 @@ gboolean GlibRunClosure(gpointer data) {
 }
 
 string FormatSecs(unsigned secs) {
-  return FormatTimeDelta(base::TimeDelta::FromSeconds(secs));
+  return FormatTimeDelta(TimeDelta::FromSeconds(secs));
 }
 
-string FormatTimeDelta(base::TimeDelta delta) {
+string FormatTimeDelta(TimeDelta delta) {
   // Canonicalize into days, hours, minutes, seconds and microseconds.
   unsigned days = delta.InDays();
-  delta -= base::TimeDelta::FromDays(days);
+  delta -= TimeDelta::FromDays(days);
   unsigned hours = delta.InHours();
-  delta -= base::TimeDelta::FromHours(hours);
+  delta -= TimeDelta::FromHours(hours);
   unsigned mins = delta.InMinutes();
-  delta -= base::TimeDelta::FromMinutes(mins);
+  delta -= TimeDelta::FromMinutes(mins);
   unsigned secs = delta.InSeconds();
-  delta -= base::TimeDelta::FromSeconds(secs);
+  delta -= TimeDelta::FromSeconds(secs);
   unsigned usecs = delta.InMicroseconds();
 
   // Construct and return string.

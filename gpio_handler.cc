@@ -7,6 +7,8 @@
 #include <base/memory/scoped_ptr.h>
 #include <base/string_util.h>
 #include <base/stringprintf.h>
+#include <base/time.h>
+#include <glib.h>
 
 #include "update_engine/file_descriptor.h"
 
@@ -530,7 +532,7 @@ bool StandardGpioHandler::DoTestModeSignalingProtocol() {
   }
 
   // Wait, giving the receiving end enough time to sense the fall.
-  sleep(kServoOutputResponseWaitInSecs);
+  g_usleep(kServoOutputResponseWaitInSecs * G_USEC_PER_SEC);
 
   // Flip the output signal.
   if (!SetGpioValue(kGpioIdDutflagb, kGpioValDown, false)) {
@@ -549,7 +551,7 @@ bool StandardGpioHandler::DoTestModeSignalingProtocol() {
     if (is_first_response_check)
       is_first_response_check = false;
     else
-      usleep(delay.InMicroseconds());
+      g_usleep(delay.InMicroseconds());
 
     // Read input GPIO.
     if (!GetGpioValue(kGpioIdDutflaga, &dutflaga_gpio_value, true)) {

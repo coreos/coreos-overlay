@@ -12,6 +12,7 @@
 #include <base/memory/scoped_ptr.h>
 #include <base/string_util.h>
 #include <base/stringprintf.h>
+#include <base/time.h>
 #include <chromeos/dbus/service_constants.h>
 #include <glib.h>
 #include <gtest/gtest.h>
@@ -31,6 +32,7 @@ using std::pair;
 using std::string;
 using std::vector;
 
+using base::TimeDelta;
 using testing::_;
 using testing::SetArgumentPointee;
 using testing::DoAll;
@@ -97,17 +99,14 @@ class PythonHttpServer : public HttpServer {
     }
     LOG(INFO) << "started http server with pid " << pid_;
     int rc = 1;
-    const uint64_t kMaxSleep = 60UL * 60UL * 1000UL * 1000UL;  // 60 min
-    uint64_t timeout = 15 * 1000;  // 15 ms
+    const TimeDelta kMaxSleep = TimeDelta::FromMinutes(60);
+    TimeDelta timeout = TimeDelta::FromMilliseconds(15);
     started_ = true;
     while (rc && timeout < kMaxSleep) {
       // Wait before the first attempt also as it takes a while for the
       // test_http_server to be ready.
-      LOG(INFO) << "waiting for " << timeout / 1000 << " ms";
-      if (timeout < (1000 * 1000))  // sub 1-second sleep, use usleep
-        usleep(static_cast<useconds_t>(timeout));
-      else
-        sleep(static_cast<unsigned int>(timeout / (1000 * 1000)));
+      LOG(INFO) << "waiting for " << utils::FormatTimeDelta(timeout);
+      g_usleep(timeout.InMicroseconds());
       timeout *= 2;
 
       LOG(INFO) << "running wget to start";

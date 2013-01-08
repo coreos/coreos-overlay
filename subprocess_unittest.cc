@@ -5,16 +5,21 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+
 #include <string>
 #include <vector>
-#include "base/string_util.h"
+
+#include <base/string_util.h>
 #include <base/stringprintf.h>
+#include <base/time.h>
 #include <glib.h>
 #include <gtest/gtest.h>
+
 #include "update_engine/subprocess.h"
 #include "update_engine/test_utils.h"
 #include "update_engine/utils.h"
 
+using base::TimeDelta;
 using std::string;
 using std::vector;
 
@@ -114,8 +119,9 @@ gboolean StartAndCancelInRunLoop(gpointer data) {
   cancel_test_data->spawned = true;
   printf("spawned\n");
   // Wait for server to be up and running
-  useconds_t total_wait_time = 0;
-  const useconds_t kMaxWaitTime = 3 * 1000000;  // 3 seconds
+  TimeDelta total_wait_time;
+  const TimeDelta kSleepTime = TimeDelta::FromMilliseconds(100);
+  const TimeDelta kMaxWaitTime = TimeDelta::FromSeconds(3);
   for (;;) {
     int status =
         System(StringPrintf("wget -O /dev/null http://127.0.0.1:%d/foo",
@@ -126,10 +132,9 @@ gboolean StartAndCancelInRunLoop(gpointer data) {
     if (0 == WEXITSTATUS(status))
       break;
 
-    const useconds_t kSleepTime = 100 * 1000;  // 100ms
-    usleep(kSleepTime);  // 100 ms
+    g_usleep(kSleepTime.InMicroseconds());
     total_wait_time += kSleepTime;
-    CHECK_LT(total_wait_time, kMaxWaitTime);
+    CHECK_LT(total_wait_time.InMicroseconds(), kMaxWaitTime.InMicroseconds());
   }
   Subprocess::Get().CancelExec(tag);
   return FALSE;

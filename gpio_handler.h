@@ -9,8 +9,6 @@
 
 #include <string>
 
-#include <base/time.h>
-
 #include "update_engine/file_descriptor.h"
 #include "update_engine/udev_interface.h"
 

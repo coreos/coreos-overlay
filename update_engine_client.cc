@@ -50,7 +50,7 @@ bool GetProxy(DBusGProxy** out_proxy) {
     if (i > 0) {
       LOG(INFO) << "Retrying to get dbus proxy. Try "
                 << (i + 1) << "/" << kTries;
-      sleep(kRetrySeconds);
+      g_usleep(kRetrySeconds * G_USEC_PER_SEC);
     }
     proxy = dbus_g_proxy_new_for_name_owner(bus,
                                             kUpdateEngineServiceName,
