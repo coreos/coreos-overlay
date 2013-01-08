@@ -108,8 +108,7 @@ ActionExitCode GetErrorCodeForAction(AbstractAction* action,
 }
 
 UpdateAttempter::UpdateAttempter(SystemState* system_state,
-                                 DbusGlibInterface* dbus_iface,
-                                 GpioHandler* gpio_handler)
+                                 DbusGlibInterface* dbus_iface)
     : processor_(new ActionProcessor()),
       system_state_(system_state),
       dbus_service_(NULL),
@@ -133,8 +132,7 @@ UpdateAttempter::UpdateAttempter(SystemState* system_state,
       policy_provider_(NULL),
       is_using_test_url_(false),
       is_test_mode_(false),
-      is_test_update_attempted_(false),
-      gpio_handler_(gpio_handler) {
+      is_test_update_attempted_(false) {
   prefs_ = system_state->prefs();
   if (utils::FileExists(kUpdateCompletedMarker))
     status_ = UPDATE_STATUS_UPDATED_NEED_REBOOT;
@@ -521,8 +519,8 @@ void UpdateAttempter::CheckForUpdate(const string& app_version,
   // Read GPIO signals and determine whether this is an automated test scenario.
   // For safety, we only allow a test update to be performed once; subsequent
   // update requests will be carried out normally.
-  bool is_test_mode = (!is_test_update_attempted_ && gpio_handler_ &&
-                       gpio_handler_->IsTestModeSignaled());
+  bool is_test_mode = (!is_test_update_attempted_ &&
+                       system_state_->gpio_handler()->IsTestModeSignaled());
   if (is_test_mode) {
     LOG(WARNING) << "this is a test mode update attempt!";
     is_test_update_attempted_ = true;

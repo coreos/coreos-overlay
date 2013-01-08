@@ -578,4 +578,11 @@ bool StandardGpioHandler::DoTestModeSignalingProtocol() {
   return is_handshake_completed_;
 }
 
+
+bool NoopGpioHandler::IsTestModeSignaled() {
+  LOG(INFO) << "GPIOs not engaged, defaulting to "
+            << (is_test_mode_ ? "test" : "normal") << " mode";
+  return is_test_mode_;
+}
+
 }  // namespace chromeos_update_engine

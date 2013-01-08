@@ -15,7 +15,7 @@ RealSystemState::RealSystemState()
     : device_policy_(NULL),
       connection_manager_(this) {}
 
-bool RealSystemState::Initialize() {
+bool RealSystemState::Initialize(bool enable_gpio) {
   metrics_lib_.Init();
 
   if (!prefs_.Init(FilePath(kPrefsDirectory))) {
@@ -25,6 +25,22 @@ bool RealSystemState::Initialize() {
 
   if (!payload_state_.Initialize(&prefs_))
     return false;
+
+  // Initialize the GPIO handler as instructed.
+  if (enable_gpio) {
+    // A real GPIO handler. Defer GPIO discovery to ensure the udev has ample
+    // time to export the devices. Also require that test mode is physically
+    // queried at most once and the result cached, for a more consistent update
+    // behavior.
+    udev_iface_.reset(new StandardUdevInterface());
+    file_descriptor_.reset(new EintrSafeFileDescriptor());
+    gpio_handler_.reset(new StandardGpioHandler(udev_iface_.get(),
+                                                file_descriptor_.get(),
+                                                true, true));
+  } else {
+    // A no-op GPIO handler, always indicating a non-test mode.
+    gpio_handler_.reset(new NoopGpioHandler(false));
+  }
 
   // All is well. Initialization successful.
   return true;

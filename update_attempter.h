@@ -18,7 +18,6 @@
 #include "update_engine/action_processor.h"
 #include "update_engine/chrome_browser_proxy_resolver.h"
 #include "update_engine/download_action.h"
-#include "update_engine/gpio_handler.h"
 #include "update_engine/omaha_request_params.h"
 #include "update_engine/omaha_response_handler_action.h"
 #include "update_engine/proxy_resolver.h"
@@ -61,8 +60,7 @@ class UpdateAttempter : public ActionProcessorDelegate,
   static const int kMaxDeltaUpdateFailures;
 
   UpdateAttempter(SystemState* system_state,
-                  DbusGlibInterface* dbus_iface,
-                  GpioHandler* gpio_handler);
+                  DbusGlibInterface* dbus_iface);
   virtual ~UpdateAttempter();
 
   // Checks for update and, if a newer version is available, attempts to update
@@ -358,9 +356,6 @@ class UpdateAttempter : public ActionProcessorDelegate,
 
   // A flag indicating whether a test update cycle was already attempted.
   bool is_test_update_attempted_;
-
-  // GPIO handler object.
-  GpioHandler* gpio_handler_;
 
   // The current scatter factor as found in the policy setting.
   base::TimeDelta scatter_factor_;

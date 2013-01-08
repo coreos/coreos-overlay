@@ -17,7 +17,7 @@ class UpdateAttempterMock : public UpdateAttempter {
  public:
   explicit UpdateAttempterMock(MockSystemState* mock_system_state,
                                MockDbusGlib* dbus)
-      : UpdateAttempter(mock_system_state, dbus, NULL) {}
+      : UpdateAttempter(mock_system_state, dbus) {}
 
   MOCK_METHOD6(Update, void(const std::string& app_version,
                             const std::string& omaha_url,

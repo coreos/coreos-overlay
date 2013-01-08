@@ -43,7 +43,6 @@ class UpdateCheckScheduler {
   static const int kTimeoutMaxBackoffInterval;
 
   UpdateCheckScheduler(UpdateAttempter* update_attempter,
-                       GpioHandler* gpio_handler,
                        SystemState* system_state);
   virtual ~UpdateCheckScheduler();
 
@@ -131,9 +130,6 @@ class UpdateCheckScheduler {
 
   // A flag indicating whether a test update cycle was already attempted.
   bool is_test_update_attempted_;
-
-  // GPIO handler object.
-  GpioHandler* gpio_handler_;
 
   // The external state of the system outside the update_engine process.
   SystemState* system_state_;

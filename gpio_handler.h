@@ -303,6 +303,26 @@ class StandardGpioHandler : public GpioHandler {
   DISALLOW_COPY_AND_ASSIGN(StandardGpioHandler);
 };
 
+
+// A "no-op" GPIO handler, initialized to return either test or normal mode
+// signal. This is useful for disabling the GPIO functionality in production
+// code.
+class NoopGpioHandler : public GpioHandler {
+ public:
+  // This constructor accepts a single argument, which is the value to be
+  // returned by repeated calls to IsTestModeSignaled().
+  NoopGpioHandler(bool is_test_mode) : is_test_mode_(is_test_mode) {}
+
+  // Returns the constant Boolean value handed to the constructor.
+  virtual bool IsTestModeSignaled();
+
+ private:
+  // Stores the constant value to return on subsequent test mode checks.
+  bool is_test_mode_;
+
+  DISALLOW_COPY_AND_ASSIGN(NoopGpioHandler);
+};
+
 }  // namespace chromeos_update_engine
 
 #endif  // CHROMEOS_PLATFORM_UPDATE_ENGINE_GPIO_HANDLER_H__

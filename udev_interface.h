@@ -22,6 +22,8 @@ namespace chromeos_update_engine {
 // more appropriate to an object-oriented setting...
 class UdevInterface {
  public:
+  virtual ~UdevInterface() {}
+
   // Interfaces for various udev closers. All of these are merely containers for
   // a single pointer to some udev handle, which invoke the provided interface's
   // unref method and nullify the handle upon destruction. It should suffice for
@@ -133,6 +135,8 @@ class UdevInterface {
 // Implementation of libudev interface using concrete udev calls.
 class StandardUdevInterface : public UdevInterface {
  public:
+  virtual ~StandardUdevInterface() {}
+
   // Concrete udev API wrappers utilizing the standard libudev calls.
   virtual const char* ListEntryGetName(struct udev_list_entry* list_entry) {
     return udev_list_entry_get_name(list_entry);

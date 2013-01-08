@@ -40,7 +40,7 @@ class UpdateAttempterUnderTest : public UpdateAttempter {
  public:
   explicit UpdateAttempterUnderTest(MockSystemState* mock_system_state,
                                     MockDbusGlib* dbus)
-      : UpdateAttempter(mock_system_state, dbus, NULL) {}
+      : UpdateAttempter(mock_system_state, dbus) {}
 };
 
 class UpdateAttempterTest : public ::testing::Test {
@@ -143,7 +143,7 @@ TEST_F(UpdateAttempterTest, ActionCompletedOmahaRequestTest) {
   OmahaResponse response;
   response.poll_interval = 234;
   action.SetOutputObject(response);
-  UpdateCheckScheduler scheduler(&attempter_, NULL, &mock_system_state_);
+  UpdateCheckScheduler scheduler(&attempter_, &mock_system_state_);
   attempter_.set_update_check_scheduler(&scheduler);
   EXPECT_CALL(*prefs_, GetInt64(kPrefsDeltaUpdateFailures, _)).Times(0);
   attempter_.ActionCompleted(NULL, &action, kActionCodeSuccess);
@@ -413,7 +413,7 @@ void UpdateAttempterTest::PingOmahaTestStart() {
 }
 
 TEST_F(UpdateAttempterTest, PingOmahaTest) {
-  UpdateCheckScheduler scheduler(&attempter_, NULL, &mock_system_state_);
+  UpdateCheckScheduler scheduler(&attempter_, &mock_system_state_);
   scheduler.enabled_ = true;
   EXPECT_FALSE(scheduler.scheduled_);
   attempter_.set_update_check_scheduler(&scheduler);

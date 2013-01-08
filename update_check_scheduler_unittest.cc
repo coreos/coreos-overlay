@@ -34,7 +34,7 @@ class UpdateCheckSchedulerUnderTest : public UpdateCheckScheduler {
  public:
   UpdateCheckSchedulerUnderTest(UpdateAttempter* update_attempter,
                                 MockSystemState* mock_system_state)
-      : UpdateCheckScheduler(update_attempter, NULL, mock_system_state),
+      : UpdateCheckScheduler(update_attempter, mock_system_state),
         mock_system_state_(mock_system_state) {}
 
   MOCK_METHOD2(GTimeoutAddSeconds, guint(guint seconds, GSourceFunc function));
