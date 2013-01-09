@@ -48,6 +48,10 @@ class GpioMockFileDescriptor : public FileDescriptor {
   // otherwise, will fail the current test.
   virtual bool ExpectAllGpiosRestoredToDefault();
 
+  // Returns true iff the number of open attempts equals the argument;
+  // otherwise, will fail the current test.
+  virtual bool ExpectNumOpenAttempted(unsigned count);
+
  protected:
   // A pair of write value and time at which it was written.
   struct MockGpioWriteEvent {
@@ -135,6 +139,9 @@ class GpioMockFileDescriptor : public FileDescriptor {
 
   // The identifier of the currently accessed GPIO sub-device.
   MockGpioSubdev gpio_subdev_;
+
+  // Counter for the number of files that were opened with this interface.
+  unsigned num_open_attempted_;
 };
 
 

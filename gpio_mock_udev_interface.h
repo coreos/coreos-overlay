@@ -129,6 +129,21 @@ class MultiChipGpioMockUdevInterface : public StandardGpioMockUdevInterface {
   MockDevice gpio_chip2_dev_;
 };
 
+// A udev mock that fails to provide constructs for proper GPIO initialization.
+class FailInitGpioMockUdevInterface : public StandardGpioMockUdevInterface {
+ public:
+  // Default constructor.
+  FailInitGpioMockUdevInterface() : num_init_attempts_(0) {}
+
+  virtual void ExpectNumInitAttempts(unsigned count) const;
+
+ protected:
+  virtual struct udev* New();
+
+ private:
+  unsigned num_init_attempts_;
+};
+
 }  // namespace chromeos_update_engine
 
 #endif  // CHROMEOS_PLATFORM_UPDATE_ENGINE_GPIO_MOCK_UDEV_INTERFACE_H__

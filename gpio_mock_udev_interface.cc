@@ -368,4 +368,15 @@ struct udev_list_entry* MultiChipGpioMockUdevInterface::EnumerateGetListEntry(
 }
 
 
+void FailInitGpioMockUdevInterface::ExpectNumInitAttempts(
+    unsigned count) const {
+  EXPECT_EQ(num_init_attempts_, count);
+}
+
+struct udev* FailInitGpioMockUdevInterface::New() {
+  // Increment udev init attempt counter, failing the first attempt.
+  num_init_attempts_++;
+  return num_init_attempts_ == 1 ? NULL : StandardGpioMockUdevInterface::New();
+}
+
 }  // namespace chromeos_update_engine

@@ -46,7 +46,8 @@ StandardGpioHandler::StandardGpioHandler(UdevInterface* udev_iface,
     : udev_iface_(udev_iface),
       fd_(fd),
       is_cache_test_mode_(is_cache_test_mode),
-      is_discovery_attempted_(false) {
+      is_discovery_attempted_(false),
+      is_discovery_successful_(false) {
   CHECK(udev_iface && fd);
 
   // Ensure there's only one instance of this class.
@@ -57,9 +58,8 @@ StandardGpioHandler::StandardGpioHandler(UdevInterface* udev_iface,
   ResetTestModeSignalingFlags();
 
   // If GPIO discovery not deferred, do it.
-  if (!(is_defer_discovery || DiscoverGpios())) {
-    LOG(WARNING) << "GPIO discovery failed";
-  }
+  if (!is_defer_discovery)
+    DiscoverGpios();
 }
 
 StandardGpioHandler::~StandardGpioHandler() {
@@ -67,19 +67,19 @@ StandardGpioHandler::~StandardGpioHandler() {
 }
 
 bool StandardGpioHandler::IsTestModeSignaled() {
-  // Attempt GPIO discovery.
-  if (!DiscoverGpios()) {
-    LOG(WARNING) << "GPIO discovery failed";
-  }
+  bool is_returning_cached = false;  // for logging purposes
 
-  // Force a check if so requested.
-  if (!is_cache_test_mode_)
-    ResetTestModeSignalingFlags();
+  // Attempt GPIO discovery first.
+  if (DiscoverGpios()) {
+    // Force a check if so requested.
+    if (!is_cache_test_mode_)
+      ResetTestModeSignalingFlags();
 
-  bool is_returning_cached = !is_first_check_;  // for logging purposes
-  if (is_first_check_) {
-    is_first_check_ = false;
-    DoTestModeSignalingProtocol();
+    is_returning_cached = !is_first_check_;  // for logging purposes
+    if (is_first_check_) {
+      is_first_check_ = false;
+      DoTestModeSignalingProtocol();
+    }
   }
 
   LOG(INFO) << "result: " << (is_test_mode_ ? "test" : "normal") << " mode"
@@ -255,14 +255,14 @@ void StandardGpioHandler::ResetTestModeSignalingFlags() {
 
 bool StandardGpioHandler::DiscoverGpios() {
   if (is_discovery_attempted_)
-    return true;
+    return is_discovery_successful_;
 
   is_discovery_attempted_ = true;
 
   // Obtain libudev instance and attach to a dedicated closer.
   struct udev* udev;
   if (!(udev = udev_iface_->New())) {
-    LOG(ERROR) << "failed to obtain libudev instance";
+    LOG(ERROR) << "failed to obtain libudev instance, aborting GPIO discovery";
     return false;
   }
   scoped_ptr<UdevInterface::UdevCloser>
@@ -284,6 +284,7 @@ bool StandardGpioHandler::DiscoverGpios() {
     }
   }
 
+  is_discovery_successful_ = true;
   return true;
 }
 
@@ -302,13 +303,14 @@ bool StandardGpioHandler::OpenGpioFd(StandardGpioHandler::GpioId id,
   string file_name = StringPrintf("%s/%s", gpios_[id].dev_path.c_str(),
                                   dev_name);
   if (!fd_->Open(file_name.c_str(), (is_write ? O_WRONLY : O_RDONLY))) {
-    const string err_str = StringPrintf("failed to open %s (%s) for %s",
-                                        file_name.c_str(), gpio_defs_[id].name,
-                                        (is_write ? "writing" : "reading"));
     if (fd_->IsSettingErrno()) {
-      PLOG(ERROR) << err_str;
+      PLOG(ERROR) << "failed to open " << file_name
+                  << " (" << gpio_defs_[id].name << ") for "
+                  << (is_write ? "writing" : "reading");
     } else {
-      LOG(ERROR) << err_str;
+      LOG(ERROR) << "failed to open " << file_name
+                 << " (" << gpio_defs_[id].name << ") for "
+                 << (is_write ? "writing" : "reading");
     }
     return false;
   }

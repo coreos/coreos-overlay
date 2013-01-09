@@ -216,7 +216,7 @@ class StandardGpioHandler : public GpioHandler {
   void ResetTestModeSignalingFlags();
 
   // Attempt GPIO discovery, at most once. Returns true if discovery process was
-  // successfully completed or already attempted, false otherwise.
+  // successfully completed, false otherwise.
   bool DiscoverGpios();
 
   // Assigns a copy of the device name of GPIO |id| to |dev_path_p|. Assumes
@@ -290,8 +290,10 @@ class StandardGpioHandler : public GpioHandler {
   // cached, or reestablished on each query.
   const bool is_cache_test_mode_;
 
-  // Indicates whether GPIO discovery was performed.
+  // Indicates whether GPIO discovery was performed, and whether it's been
+  // successful.
   bool is_discovery_attempted_;
+  bool is_discovery_successful_;
 
   // Persistent state of the test mode check.
   bool is_first_check_;

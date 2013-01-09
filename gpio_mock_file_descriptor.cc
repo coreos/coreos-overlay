@@ -49,7 +49,8 @@ const char* GpioMockFileDescriptor::gpio_dir_strings_[kMockGpioDirMax] = {
 
 GpioMockFileDescriptor::GpioMockFileDescriptor()
     : gpio_id_(kMockGpioIdMax),
-      gpio_subdev_(kMockGpioSubdevMax) {
+      gpio_subdev_(kMockGpioSubdevMax),
+      num_open_attempted_(0) {
   // All GPIOs are initially in the input direction, their read value is "up",
   // and they assume an initial write value of "up" with current (init) time.
   Time init_time = Time::Now();
@@ -67,6 +68,8 @@ GpioMockFileDescriptor::GpioMockFileDescriptor()
 }
 
 bool GpioMockFileDescriptor::Open(const char* path, int flags, mode_t mode) {
+  num_open_attempted_++;
+
   EXPECT_EQ(gpio_id_, kMockGpioIdMax);
   if (gpio_id_ != kMockGpioIdMax)
     return false;
@@ -263,6 +266,11 @@ bool GpioMockFileDescriptor::ExpectAllGpiosRestoredToDefault() {
         is_all_gpios_restored_to_default && (gpio_dirs_[i] == kMockGpioDirIn);
   }
   return is_all_gpios_restored_to_default;
+}
+
+bool GpioMockFileDescriptor::ExpectNumOpenAttempted(unsigned count) {
+  EXPECT_EQ(num_open_attempted_, count);
+  return (num_open_attempted_ == count);
 }
 
 size_t GpioMockFileDescriptor::DecodeGpioString(const char* buf,

@@ -23,6 +23,7 @@ TEST(StandardGpioHandlerTest, NormalInitTest) {
                                   false, false);
   mock_udev.ExpectAllResourcesDeallocated();
   mock_udev.ExpectDiscoverySuccess();
+  mock_file_descriptor.ExpectNumOpenAttempted(0);
 }
 
 TEST(StandardGpioHandlerTest, MultiGpioChipInitTest) {
@@ -35,6 +36,24 @@ TEST(StandardGpioHandlerTest, MultiGpioChipInitTest) {
                                    false, false);
   mock_udev.ExpectAllResourcesDeallocated();
   mock_udev.ExpectDiscoveryFail();
+  mock_file_descriptor.ExpectNumOpenAttempted(0);
+}
+
+TEST(StandardGpioHandlerTest, FailedFirstGpioInitTest) {
+  // Attempt GPIO discovery with a udev mock that fails the initialization on
+  // the first attempt, then check for test mode. Ensure that (a) discovery is
+  // not attempted a second time, and (b) test mode check returns false (the
+  // default) without attempting to use GPIO signals.
+  FailInitGpioMockUdevInterface mock_udev;
+  TestModeGpioMockFileDescriptor
+      mock_file_descriptor(base::TimeDelta::FromSeconds(1));
+  StandardGpioHandler gpio_handler(&mock_udev, &mock_file_descriptor,
+                                   false, false);
+  EXPECT_FALSE(gpio_handler.IsTestModeSignaled());
+  mock_udev.ExpectAllResourcesDeallocated();
+  mock_udev.ExpectDiscoveryFail();
+  mock_udev.ExpectNumInitAttempts(1);
+  mock_file_descriptor.ExpectNumOpenAttempted(0);
 }
 
 TEST(StandardGpioHandlerTest, TestModeGpioSignalingTest) {
