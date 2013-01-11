@@ -10,6 +10,7 @@
 #include "base/string_util.h"
 
 #include "update_engine/delta_performer.h"
+#include "update_engine/payload_state_interface.h"
 #include "update_engine/prefs_interface.h"
 #include "update_engine/utils.h"
 

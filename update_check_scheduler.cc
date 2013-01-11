@@ -6,6 +6,7 @@
 
 #include "update_engine/certificate_checker.h"
 #include "update_engine/http_common.h"
+#include "update_engine/gpio_handler.h"
 #include "update_engine/system_state.h"
 #include "update_engine/utils.h"
 

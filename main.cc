@@ -21,11 +21,11 @@
 #include "update_engine/dbus_constants.h"
 #include "update_engine/dbus_interface.h"
 #include "update_engine/dbus_service.h"
+#include "update_engine/real_system_state.h"
 #include "update_engine/subprocess.h"
 #include "update_engine/terminator.h"
 #include "update_engine/update_attempter.h"
 #include "update_engine/update_check_scheduler.h"
-#include "update_engine/system_state.h"
 #include "update_engine/utils.h"
 
 extern "C" {
@@ -171,6 +171,9 @@ int main(int argc, char** argv) {
   // protocol for testing of MP-signed images (chromium-os:25400).
   LOG_IF(ERROR, !real_system_state.Initialize(false))
       << "Failed to initialize system state.";
+  chromeos_update_engine::UpdateAttempter *update_attempter =
+      real_system_state.update_attempter();
+  CHECK(update_attempter);
 
   // Sets static members for the certificate checker.
   chromeos_update_engine::CertificateChecker::set_system_state(
@@ -179,40 +182,35 @@ int main(int argc, char** argv) {
   chromeos_update_engine::CertificateChecker::set_openssl_wrapper(
       &openssl_wrapper);
 
-  // Create the update attempter:
-  chromeos_update_engine::ConcreteDbusGlib dbus;
-  chromeos_update_engine::UpdateAttempter update_attempter(&real_system_state,
-                                                           &dbus);
-
   // Create the dbus service object:
   dbus_g_object_type_install_info(UPDATE_ENGINE_TYPE_SERVICE,
                                   &dbus_glib_update_engine_service_object_info);
   UpdateEngineService* service =
       UPDATE_ENGINE_SERVICE(g_object_new(UPDATE_ENGINE_TYPE_SERVICE, NULL));
-  service->update_attempter_ = &update_attempter;
-  update_attempter.set_dbus_service(service);
+  service->update_attempter_ = update_attempter;
+  update_attempter->set_dbus_service(service);
   chromeos_update_engine::SetupDbusService(service);
 
   // Schedule periodic update checks.
-  chromeos_update_engine::UpdateCheckScheduler scheduler(&update_attempter,
+  chromeos_update_engine::UpdateCheckScheduler scheduler(update_attempter,
                                                          &real_system_state);
   scheduler.Run();
 
   // Update boot flags after 45 seconds.
   g_timeout_add_seconds(45,
                         &chromeos_update_engine::UpdateBootFlags,
-                        &update_attempter);
+                        update_attempter);
 
   // Broadcast the update engine status on startup to ensure consistent system
   // state on crashes.
-  g_idle_add(&chromeos_update_engine::BroadcastStatus, &update_attempter);
+  g_idle_add(&chromeos_update_engine::BroadcastStatus, update_attempter);
 
   // Run the main loop until exit time:
   g_main_loop_run(loop);
 
   // Cleanup:
   g_main_loop_unref(loop);
-  update_attempter.set_dbus_service(NULL);
+  update_attempter->set_dbus_service(NULL);
   g_object_unref(G_OBJECT(service));
 
   LOG(INFO) << "Chrome OS Update Engine terminating";

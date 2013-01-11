@@ -314,6 +314,7 @@ unittest_sources = Split("""action_unittest.cc
                             http_fetcher_unittest.cc
                             metadata_unittest.cc
                             mock_http_fetcher.cc
+                            mock_system_state.cc
                             omaha_hash_calculator_unittest.cc
                             omaha_request_action_unittest.cc
                             omaha_request_params_unittest.cc

@@ -16,6 +16,9 @@
 
 namespace chromeos_update_engine {
 
+// The default "official" Omaha update URL.
+extern const char* const kProductionOmahaUrl;
+
 // This struct encapsulates the data Omaha gets for the request, along with
 // essential state needed for the processing of the request/response.
 // The strings in this struct should not be XML escaped.

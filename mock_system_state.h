@@ -10,6 +10,7 @@
 #include <metrics/metrics_library_mock.h>
 #include <policy/mock_device_policy.h>
 
+#include "update_engine/mock_dbus_interface.h"
 #include "update_engine/mock_gpio_handler.h"
 #include "update_engine/mock_payload_state.h"
 #include "update_engine/prefs_mock.h"
@@ -17,17 +18,15 @@
 
 namespace chromeos_update_engine {
 
+class UpdateAttempterMock;
+
 // Mock the SystemStateInterface so that we could lie that
 // OOBE is completed even when there's no such marker file, etc.
 class MockSystemState : public SystemState {
  public:
-  inline MockSystemState() : prefs_(&mock_prefs_) {
-    mock_payload_state_.Initialize(&mock_prefs_);
-    mock_gpio_handler_ = new testing::NiceMock<MockGpioHandler>();
-  }
-  inline virtual ~MockSystemState() {
-    delete mock_gpio_handler_;
-  }
+  MockSystemState();
+
+  virtual ~MockSystemState();
 
   MOCK_METHOD0(IsOOBEComplete, bool());
   MOCK_METHOD1(set_device_policy, void(const policy::DevicePolicy*));
@@ -53,6 +52,8 @@ class MockSystemState : public SystemState {
     return mock_gpio_handler_;
   }
 
+  virtual UpdateAttempter* update_attempter();
+
   // MockSystemState-specific public method.
   inline void set_connection_manager(ConnectionManager* connection_manager) {
     connection_manager_ = connection_manager;
@@ -76,10 +77,13 @@ class MockSystemState : public SystemState {
 
  private:
   // These are Mock objects or objects we own.
-  MetricsLibraryMock mock_metrics_lib_;
+  testing::NiceMock<MetricsLibraryMock> mock_metrics_lib_;
   testing::NiceMock<PrefsMock> mock_prefs_;
   testing::NiceMock<MockPayloadState> mock_payload_state_;
   testing::NiceMock<MockGpioHandler>* mock_gpio_handler_;
+  testing::NiceMock<UpdateAttempterMock>* mock_update_attempter_;
+
+  MockDbusGlib dbus_;
 
   // These are pointers to objects which caller can override.
   PrefsInterface* prefs_;

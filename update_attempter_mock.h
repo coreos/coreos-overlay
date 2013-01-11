@@ -13,6 +13,8 @@
 
 namespace chromeos_update_engine {
 
+class MockSystemState;
+
 class UpdateAttempterMock : public UpdateAttempter {
  public:
   explicit UpdateAttempterMock(MockSystemState* mock_system_state,

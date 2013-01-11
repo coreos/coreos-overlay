@@ -94,7 +94,8 @@ void PayloadState::DownloadProgress(size_t count) {
 
 void PayloadState::UpdateFailed(ActionExitCode error) {
   ActionExitCode base_error = utils::GetBaseErrorCode(error);
-  LOG(INFO) << "Updating payload state for error code: " << base_error;
+  LOG(INFO) << "Updating payload state for error code: " << base_error
+            << " (" << utils::CodeToString(base_error) << ")";
 
   if (GetNumUrls() == 0) {
     // This means we got this error even before we got a valid Omaha response.
@@ -177,9 +178,11 @@ void PayloadState::UpdateFailed(ActionExitCode error) {
     case kActionCodeSetBootableFlagError:               // unused
     case kActionCodeUmaReportedMax:                     // not an error code
     case kActionCodeOmahaRequestHTTPResponseBase:       // aggregated already
+    case kActionCodeDevModeFlag:                       // not an error code
     case kActionCodeResumedFlag:                        // not an error code
-    case kActionCodeBootModeFlag:                       // not an error code
-    case kActualCodeMask:                               // not an error code
+    case kActionCodeTestImageFlag:                      // not an error code
+    case kActionCodeTestOmahaUrlFlag:                   // not an error code
+    case kSpecialFlags:                                 // not an error code
       // These shouldn't happen. Enumerating these  explicitly here so that we
       // can let the compiler warn about new error codes that are added to
       // action_processor.h but not added here.

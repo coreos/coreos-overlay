@@ -176,7 +176,7 @@ bool OmahaHashCalculator::Finalize() {
                    &ctx_) == 1);
 
   // Convert raw_hash_ to base64 encoding and store it in hash_.
-  return Base64Encode(&raw_hash_[0], raw_hash_.size(), &hash_);;
+  return Base64Encode(&raw_hash_[0], raw_hash_.size(), &hash_);
 }
 
 bool OmahaHashCalculator::RawHashOfBytes(const char* data,

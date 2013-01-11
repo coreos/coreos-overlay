@@ -30,7 +30,7 @@ const char* const OmahaRequestParams::kAppId(
     "{87efface-864d-49a5-9bb3-4b050a7c227a}");
 const char* const OmahaRequestParams::kOsPlatform("Chrome OS");
 const char* const OmahaRequestParams::kOsVersion("Indy");
-const char* const OmahaRequestParams::kUpdateUrl(
+const char* const kProductionOmahaUrl(
     "https://tools.google.com/service/update2");
 
 const char OmahaRequestParams::kUpdateTrackKey[] = "CHROMEOS_RELEASE_TRACK";
@@ -95,7 +95,7 @@ bool OmahaRequestDeviceParams::Init(const std::string& in_app_version,
 
   update_url = in_update_url.empty() ?
       GetLsbValue("CHROMEOS_AUSERVER",
-                  OmahaRequestParams::kUpdateUrl,
+                  kProductionOmahaUrl,
                   NULL,
                   stateful_override) :
       in_update_url;

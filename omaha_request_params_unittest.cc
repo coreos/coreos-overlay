@@ -216,7 +216,7 @@ TEST_F(OmahaRequestDeviceParamsTest, MissingURLTest) {
   EXPECT_EQ("en-US", out.app_lang);
   EXPECT_TRUE(out.delta_okay);
   EXPECT_EQ("footrack", out.app_track);
-  EXPECT_EQ(OmahaRequestParams::kUpdateUrl, out.update_url);
+  EXPECT_EQ(kProductionOmahaUrl, out.update_url);
 }
 
 TEST_F(OmahaRequestDeviceParamsTest, NoDeltasTest) {

@@ -23,6 +23,7 @@
 #include "update_engine/extent_writer.h"
 #include "update_engine/graph_types.h"
 #include "update_engine/payload_signer.h"
+#include "update_engine/payload_state_interface.h"
 #include "update_engine/prefs_interface.h"
 #include "update_engine/subprocess.h"
 #include "update_engine/terminator.h"
@@ -1118,9 +1119,7 @@ bool DeltaPerformer::PrimeUpdateState() {
 }
 
 void DeltaPerformer::SendUmaStat(ActionExitCode code) {
-  if (system_state_) {
-    utils::SendErrorCodeToUma(system_state_->metrics_lib(), code);
-  }
+  utils::SendErrorCodeToUma(system_state_, code);
 }
 
 }  // namespace chromeos_update_engine

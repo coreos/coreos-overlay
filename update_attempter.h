@@ -154,6 +154,10 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // Broadcasts the current status over D-Bus.
   void BroadcastStatus();
 
+  // Returns the special flags to be added to ActionExitCode values based on the
+  // parameters used in the current update attempt.
+  uint32_t GetErrorCodeFlags();
+
  private:
   // Update server URL for automated lab test.
   static const char* const kTestUpdateUrl;

@@ -92,13 +92,26 @@ enum ActionExitCode {
   // TODO(jaysri): Move out all the bit masks into separate constants
   // outside the enum as part of fixing bug 34369.
   // Bit flags. Remember to update the mask below for new bits.
-  kActionCodeResumedFlag = 1 << 30,  // Set if resuming an interruped update.
-  kActionCodeBootModeFlag = 1 << 31,  // Set if boot mode not normal.
 
-  // Mask to be used to extract the actual code without the higher-order
-  // bit flags (for reporting to UMA which requires small contiguous
-  // enum values)
-  kActualCodeMask = ~(kActionCodeResumedFlag | kActionCodeBootModeFlag)
+  // Set if boot mode not normal.
+  kActionCodeDevModeFlag        = 1 << 31,
+
+  // Set if resuming an interruped update.
+  kActionCodeResumedFlag         = 1 << 30,
+
+  // Set if using a dev/test image as opposed to an MP-signed image.
+  kActionCodeTestImageFlag       = 1 << 29,
+
+  // Set if using devserver or Omaha sandbox (using crosh autest).
+  kActionCodeTestOmahaUrlFlag    = 1 << 28,
+
+  // Mask that indicates bit positions that are used to indicate special flags
+  // that are embedded in the error code to provide additional context about
+  // the system in which the error was encountered.
+  kSpecialFlags = (kActionCodeDevModeFlag |
+                   kActionCodeResumedFlag |
+                   kActionCodeTestImageFlag |
+                   kActionCodeTestOmahaUrlFlag)
 };
 
 class AbstractAction;

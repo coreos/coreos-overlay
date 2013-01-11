@@ -23,6 +23,8 @@
 
 namespace chromeos_update_engine {
 
+class SystemState;
+
 namespace utils {
 
 // Returns true if this is an official Chrome OS build, false otherwise.
@@ -286,11 +288,15 @@ std::string FormatTimeDelta(base::TimeDelta delta);
 // it'll return the same value again.
 ActionExitCode GetBaseErrorCode(ActionExitCode code);
 
-// Sends the error code to the appropriate bucket in UMA using the metrics_lib
-// interface. This method uses GetBaseErrorCode to process the given code and
-// report only the base error code.
-void SendErrorCodeToUma(MetricsLibraryInterface* metrics_lib,
-                        ActionExitCode code);
+// Sends the error code to UMA using the metrics interface object in the given
+// system state. It also uses the system state to determine the right UMA
+// bucket for the error code.
+void SendErrorCodeToUma(SystemState* system_state, ActionExitCode code);
+
+// Returns a string representation of the ActionExitCodes (either the base
+// error codes or the bit flags) for logging purposes.
+std::string CodeToString(ActionExitCode code);
+
 }  // namespace utils
 
 

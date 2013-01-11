@@ -4,7 +4,7 @@
 
 #include <base/file_util.h>
 
-#include "update_engine/system_state.h"
+#include "update_engine/real_system_state.h"
 
 namespace chromeos_update_engine {
 
@@ -41,6 +41,9 @@ bool RealSystemState::Initialize(bool enable_gpio) {
     // A no-op GPIO handler, always indicating a non-test mode.
     gpio_handler_.reset(new NoopGpioHandler(false));
   }
+
+  // Create the update attempter.
+  update_attempter_.reset(new UpdateAttempter(this, &dbus_));
 
   // All is well. Initialization successful.
   return true;

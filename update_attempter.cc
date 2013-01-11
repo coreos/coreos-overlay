@@ -25,11 +25,13 @@
 #include "update_engine/dbus_service.h"
 #include "update_engine/download_action.h"
 #include "update_engine/filesystem_copier_action.h"
+#include "update_engine/gpio_handler.h"
 #include "update_engine/libcurl_http_fetcher.h"
 #include "update_engine/multi_range_http_fetcher.h"
 #include "update_engine/omaha_request_action.h"
 #include "update_engine/omaha_request_params.h"
 #include "update_engine/omaha_response_handler_action.h"
+#include "update_engine/payload_state_interface.h"
 #include "update_engine/postinstall_runner_action.h"
 #include "update_engine/prefs_interface.h"
 #include "update_engine/subprocess.h"
@@ -602,7 +604,7 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
 
     // Also report the success code so that the percentiles can be
     // interpreted properly for the remaining error codes in UMA.
-    utils::SendErrorCodeToUma(system_state_->metrics_lib(), code);
+    utils::SendErrorCodeToUma(system_state_, code);
     return;
   }
 
@@ -811,6 +813,25 @@ void UpdateAttempter::BroadcastStatus() {
       new_payload_size_);
 }
 
+uint32_t UpdateAttempter::GetErrorCodeFlags()  {
+  uint32_t flags = 0;
+
+  if (!utils::IsNormalBootMode())
+    flags |= kActionCodeDevModeFlag;
+
+  if (response_handler_action_.get() &&
+      response_handler_action_->install_plan().is_resume)
+    flags |= kActionCodeResumedFlag;
+
+  if (!utils::IsOfficialBuild())
+    flags |= kActionCodeTestImageFlag;
+
+  if (omaha_request_params_.update_url != kProductionOmahaUrl)
+    flags |= kActionCodeTestOmahaUrlFlag;
+
+  return flags;
+}
+
 void UpdateAttempter::SetStatusAndNotify(UpdateStatus status,
                                          UpdateNotice notice) {
   status_ = status;
@@ -847,6 +868,7 @@ void UpdateAttempter::CreatePendingErrorEvent(AbstractAction* action,
   switch (code) {
     case kActionCodeOmahaUpdateIgnoredPerPolicy:
     case kActionCodeOmahaUpdateDeferredPerPolicy:
+    case kActionCodeOmahaUpdateDeferredForBackoff:
       event_result = OmahaEvent::kResultUpdateDeferred;
       break;
     default:
@@ -857,15 +879,8 @@ void UpdateAttempter::CreatePendingErrorEvent(AbstractAction* action,
   code = GetErrorCodeForAction(action, code);
   fake_update_success_ = code == kActionCodePostinstallBootedFromFirmwareB;
 
-  // Apply the bit modifiers to the error code.
-  if (!utils::IsNormalBootMode()) {
-    code = static_cast<ActionExitCode>(code | kActionCodeBootModeFlag);
-  }
-  if (response_handler_action_.get() &&
-      response_handler_action_->install_plan().is_resume) {
-    code = static_cast<ActionExitCode>(code | kActionCodeResumedFlag);
-  }
-
+  // Compute the final error code with all the bit flags to be sent to Omaha.
+  code = static_cast<ActionExitCode>(code | GetErrorCodeFlags());
   error_event_.reset(new OmahaEvent(OmahaEvent::kTypeUpdateComplete,
                                     event_result,
                                     code));
@@ -878,9 +893,11 @@ bool UpdateAttempter::ScheduleErrorEventAction() {
   LOG(ERROR) << "Update failed.";
   system_state_->payload_state()->UpdateFailed(error_event_->error_code);
 
+  // Send it to Uma.
   LOG(INFO) << "Reporting the error event";
-  utils::SendErrorCodeToUma(system_state_->metrics_lib(),
-                            error_event_->error_code);
+  utils::SendErrorCodeToUma(system_state_, error_event_->error_code);
+
+  // Send it to Omaha.
   shared_ptr<OmahaRequestAction> error_event_action(
       new OmahaRequestAction(system_state_,
                              &omaha_request_params_,

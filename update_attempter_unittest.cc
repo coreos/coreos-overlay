@@ -64,7 +64,7 @@ class UpdateAttempterTest : public ::testing::Test {
     EXPECT_EQ(0, attempter_.last_checked_time_);
     EXPECT_EQ("0.0.0.0", attempter_.new_version_);
     EXPECT_EQ(0, attempter_.new_payload_size_);
-    processor_ = new ActionProcessorMock();
+    processor_ = new NiceMock<ActionProcessorMock>();
     attempter_.processor_.reset(processor_);  // Transfers ownership.
     prefs_ = mock_system_state_.mock_prefs();
   }
@@ -102,12 +102,12 @@ class UpdateAttempterTest : public ::testing::Test {
   static gboolean StaticNoScatteringDoneDuringManualUpdateTestStart(
       gpointer data);
 
-  MockSystemState mock_system_state_;
-  MockDbusGlib dbus_;
+  NiceMock<MockSystemState> mock_system_state_;
+  NiceMock<MockDbusGlib> dbus_;
   UpdateAttempterUnderTest attempter_;
-  ActionProcessorMock* processor_;
+  NiceMock<ActionProcessorMock>* processor_;
   NiceMock<PrefsMock>* prefs_; // shortcut to mock_system_state_->mock_prefs()
-  MockConnectionManager mock_connection_manager;
+  NiceMock<MockConnectionManager> mock_connection_manager;
   GMainLoop* loop_;
 };
 
@@ -433,7 +433,8 @@ TEST_F(UpdateAttempterTest, CreatePendingErrorEventTest) {
   ASSERT_TRUE(attempter_.error_event_.get() != NULL);
   EXPECT_EQ(OmahaEvent::kTypeUpdateComplete, attempter_.error_event_->type);
   EXPECT_EQ(OmahaEvent::kResultError, attempter_.error_event_->result);
-  EXPECT_EQ(kCode, attempter_.error_event_->error_code);
+  EXPECT_EQ(kCode | kActionCodeTestOmahaUrlFlag,
+            attempter_.error_event_->error_code);
 }
 
 TEST_F(UpdateAttempterTest, CreatePendingErrorEventResumedTest) {
@@ -447,7 +448,7 @@ TEST_F(UpdateAttempterTest, CreatePendingErrorEventResumedTest) {
   ASSERT_TRUE(attempter_.error_event_.get() != NULL);
   EXPECT_EQ(OmahaEvent::kTypeUpdateComplete, attempter_.error_event_->type);
   EXPECT_EQ(OmahaEvent::kResultError, attempter_.error_event_->result);
-  EXPECT_EQ(kCode | kActionCodeResumedFlag,
+  EXPECT_EQ(kCode | kActionCodeResumedFlag | kActionCodeTestOmahaUrlFlag,
             attempter_.error_event_->error_code);
 }
 

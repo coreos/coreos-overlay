@@ -9,12 +9,16 @@
 #include <policy/device_policy.h>
 #include <policy/libpolicy.h>
 
-#include <update_engine/connection_manager.h>
-#include <update_engine/gpio_handler.h>
-#include <update_engine/payload_state.h>
-#include <update_engine/prefs.h>
-
 namespace chromeos_update_engine {
+
+// SystemState is the root class within the update engine. So we should avoid
+// any circular references in header file inclusion. Hence forward-declaring
+// the required classes.
+class ConnectionManager;
+class PrefsInterface;
+class PayloadStateInterface;
+class GpioHandler;
+class UpdateAttempter;
 
 // An interface to global system context, including platform resources,
 // the current state of the system, high-level objects whose lifetime is same
@@ -50,78 +54,11 @@ class SystemState {
 
   // Returns a pointer to the GPIO handler.
   virtual GpioHandler* gpio_handler() const = 0;
-};
 
-// A real implementation of the SystemStateInterface which is
-// used by the actual product code.
-class RealSystemState : public SystemState {
-public:
-  // Constructors and destructors.
-  RealSystemState();
-  virtual ~RealSystemState() {}
-
-  virtual bool IsOOBEComplete();
-
-  virtual inline void set_device_policy(
-      const policy::DevicePolicy* device_policy) {
-    device_policy_ = device_policy;
-  }
-
-  virtual inline const policy::DevicePolicy* device_policy() const {
-    return device_policy_;
-  }
-
-  virtual inline ConnectionManager* connection_manager() {
-    return &connection_manager_;
-  }
-
-  virtual inline MetricsLibraryInterface* metrics_lib() {
-    return &metrics_lib_;
-  }
-
-  virtual inline PrefsInterface* prefs() {
-    return &prefs_;
-  }
-
-  virtual inline PayloadStateInterface* payload_state() {
-    return &payload_state_;
-  }
-
-  // Returns a pointer to the GPIO handler.
-  virtual inline GpioHandler* gpio_handler() const {
-    return gpio_handler_.get();
-  }
-
-  // Initializs this concrete object. Other methods should be invoked only
-  // if the object has been initialized successfully.
-  bool Initialize(bool enable_gpio);
-
-private:
-  // The latest device policy object from the policy provider.
-  const policy::DevicePolicy* device_policy_;
-
-  // The connection manager object that makes download
-  // decisions depending on the current type of connection.
-  ConnectionManager connection_manager_;
-
-  // The Metrics Library interface for reporting UMA stats.
-  MetricsLibrary metrics_lib_;
-
-  // Interface for persisted store.
-  Prefs prefs_;
-
-  // All state pertaining to payload state such as
-  // response, URL, backoff states.
-  PayloadState payload_state_;
-
-  // Pointer to a GPIO handler and other needed modules (note that the order of
-  // declaration significant for destruction, as the latter depends on the
-  // former).
-  scoped_ptr<UdevInterface> udev_iface_;
-  scoped_ptr<FileDescriptor> file_descriptor_;
-  scoped_ptr<GpioHandler> gpio_handler_;
+  // Returns a pointer to the update attempter object.
+  virtual UpdateAttempter* update_attempter() = 0;
 };
 
 }  // namespace chromeos_update_engine
 
-#endif  // CHROMEOS_PLATFORM_UPDATE_ENGINE_UTILS_H_
+#endif  // CHROMEOS_PLATFORM_UPDATE_ENGINE_SYSTEM_STATE_H_
