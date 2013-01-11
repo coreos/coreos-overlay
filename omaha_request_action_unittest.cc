@@ -50,6 +50,7 @@ OmahaRequestParams kDefaultTestParams(
     "unittest",
     "OEM MODEL 09235 7471",
     false,  // delta okay
+    false,  // interactive
     "http://url",
     false, // update_disabled
     ""); // target_version_prefix);
@@ -820,6 +821,7 @@ TEST(OmahaRequestActionTest, XmlEncodeTest) {
                             "unittest_track&lt;",
                             "<OEM MODEL>",
                             false,  // delta okay
+                            false,  // interactive
                             "http://url",
                             false,   // update_disabled
                             "");  // target_version_prefix
@@ -1031,6 +1033,7 @@ TEST(OmahaRequestActionTest, FormatDeltaOkayOutputTest) {
                               "unittest_track",
                               "OEM MODEL REV 1234",
                               delta_okay,
+                              false,  // interactive
                               "http://url",
                               false, // update_disabled
                               "");   // target_version_prefix
@@ -1045,6 +1048,42 @@ TEST(OmahaRequestActionTest, FormatDeltaOkayOutputTest) {
     // convert post_data to string
     string post_str(&post_data[0], post_data.size());
     EXPECT_NE(post_str.find(StringPrintf(" delta_okay=\"%s\"", delta_okay_str)),
+              string::npos)
+        << "i = " << i;
+  }
+}
+
+TEST(OmahaRequestActionTest, FormatInteractiveOutputTest) {
+  for (int i = 0; i < 2; i++) {
+    bool interactive = i == 1;
+    const char* interactive_str = interactive ? "true" : "false";
+    vector<char> post_data;
+    OmahaRequestParams params(OmahaRequestParams::kOsPlatform,
+                              OmahaRequestParams::kOsVersion,
+                              "service_pack",
+                              "x86-generic",
+                              OmahaRequestParams::kAppId,
+                              "0.1.0.0",
+                              "en-US",
+                              "unittest_track",
+                              "OEM MODEL REV 1234",
+                              true,  // delta_okay
+                              interactive,
+                              "http://url",
+                              false, // update_disabled
+                              "");   // target_version_prefix
+    ASSERT_FALSE(TestUpdateCheck(NULL,  // prefs
+                                 params,
+                                 "invalid xml>",
+                                 -1,
+                                 false,  // ping_only
+                                 kActionCodeOmahaRequestXMLParseError,
+                                 NULL,
+                                 &post_data));
+    // convert post_data to string
+    string post_str(&post_data[0], post_data.size());
+    EXPECT_NE(post_str.find(StringPrintf(" userinitiated=\"%s\"",
+                                         interactive_str)),
               string::npos)
         << "i = " << i;
   }

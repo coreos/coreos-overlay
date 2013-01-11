@@ -242,7 +242,8 @@ bool UpdateAttempter::CalculateUpdateParams(const string& app_version,
 
   if (!omaha_request_params_.Init(app_version,
                                   omaha_url_to_use,
-                                  release_track)) {
+                                  release_track,
+                                  interactive)) {
     LOG(ERROR) << "Unable to initialize Omaha request device params.";
     return false;
   }

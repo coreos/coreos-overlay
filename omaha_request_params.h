@@ -31,6 +31,7 @@ struct OmahaRequestParams {
         os_version(kOsVersion),
         app_id(kAppId),
         delta_okay(true),
+        interactive(false),
         update_disabled(false),
         wall_clock_based_wait_enabled(false),
         update_check_count_wait_enabled(false),
@@ -47,6 +48,7 @@ struct OmahaRequestParams {
                      const std::string& in_app_track,
                      const std::string& in_hardware_class,
                      bool in_delta_okay,
+                     bool in_interactive,
                      const std::string& in_update_url,
                      bool in_update_disabled,
                      const std::string& in_target_version_prefix)
@@ -60,6 +62,7 @@ struct OmahaRequestParams {
         app_track(in_app_track),
         hardware_class(in_hardware_class),
         delta_okay(in_delta_okay),
+        interactive(in_interactive),
         update_url(in_update_url),
         update_disabled(in_update_disabled),
         target_version_prefix(in_target_version_prefix),
@@ -78,6 +81,7 @@ struct OmahaRequestParams {
   std::string app_track;
   std::string hardware_class;  // Hardware Qualification ID of the client
   bool delta_okay;  // If this client can accept a delta
+  bool interactive;   // Whether this is a user-initiated update check
 
   std::string update_url;
 
@@ -111,7 +115,8 @@ class OmahaRequestDeviceParams : public OmahaRequestParams {
   // of the parameter. Returns true on success, false otherwise.
   bool Init(const std::string& in_app_version,
             const std::string& in_update_url,
-            const std::string& in_release_track);
+            const std::string& in_release_track,
+            bool in_interactive);
 
   // Permanently changes the release track to |track|. Returns true on success,
   // false otherwise.

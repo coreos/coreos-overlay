@@ -41,7 +41,8 @@ OmahaRequestDeviceParams::OmahaRequestDeviceParams() :
 
 bool OmahaRequestDeviceParams::Init(const std::string& in_app_version,
                                     const std::string& in_update_url,
-                                    const std::string& in_release_track) {
+                                    const std::string& in_release_track,
+                                    bool in_interactive) {
   bool stateful_override = !ShouldLockDown();
   os_platform = OmahaRequestParams::kOsPlatform;
   os_version = OmahaRequestParams::kOsVersion;
@@ -99,6 +100,10 @@ bool OmahaRequestDeviceParams::Init(const std::string& in_app_version,
                   NULL,
                   stateful_override) :
       in_update_url;
+
+  // Set the interactive flag accordingly.
+  interactive = in_interactive;
+
   return true;
 }
 
@@ -122,7 +127,7 @@ bool OmahaRequestDeviceParams::SetTrack(const std::string& track) {
 
 bool OmahaRequestDeviceParams::SetDeviceTrack(const std::string& track) {
   OmahaRequestDeviceParams params;
-  TEST_AND_RETURN_FALSE(params.Init("", "", ""));
+  TEST_AND_RETURN_FALSE(params.Init("", "", "", false));
   return params.SetTrack(track);
 }
 
@@ -130,7 +135,7 @@ string OmahaRequestDeviceParams::GetDeviceTrack() {
   OmahaRequestDeviceParams params;
   // Note that params.app_track is an empty string if the value in
   // lsb-release file is invalid. See Init() for details.
-  return params.Init("", "", "") ? params.app_track : "";
+  return params.Init("", "", "", false) ? params.app_track : "";
 }
 
 string OmahaRequestDeviceParams::GetLsbValue(const string& key,

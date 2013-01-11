@@ -47,7 +47,7 @@ const string OmahaRequestDeviceParamsTest::kTestDir =
 bool OmahaRequestDeviceParamsTest::DoTest(OmahaRequestParams* out,
                                           const string& app_version,
                                           const string& omaha_url) {
-  bool success = params_.Init(app_version, omaha_url, "");
+  bool success = params_.Init(app_version, omaha_url, "", false);
   if (out)
     *out = params_;
   return success;
@@ -318,7 +318,7 @@ TEST_F(OmahaRequestDeviceParamsTest, SetTrackSimpleTest) {
     OmahaRequestDeviceParams params;
     params.set_root(string("./") + kTestDir);
     params.SetLockDown(false);
-    EXPECT_TRUE(params.Init("", "", ""));
+    EXPECT_TRUE(params.Init("", "", "", false));
     params.SetTrack("zootrack");
   }
   OmahaRequestParams out;
@@ -343,7 +343,7 @@ TEST_F(OmahaRequestDeviceParamsTest, SetTrackPreserveTest) {
     OmahaRequestDeviceParams params;
     params.set_root(string("./") + kTestDir);
     params.SetLockDown(false);
-    EXPECT_TRUE(params.Init("", "", ""));
+    EXPECT_TRUE(params.Init("", "", "", false));
     params.SetTrack("zootrack");
   }
   OmahaRequestParams out;
@@ -364,7 +364,7 @@ TEST_F(OmahaRequestDeviceParamsTest, SetTrackInvalidTest) {
     OmahaRequestDeviceParams params;
     params.set_root(string("./") + kTestDir);
     params.SetLockDown(true);
-    EXPECT_TRUE(params.Init("", "", ""));
+    EXPECT_TRUE(params.Init("", "", "", false));
     params.SetTrack("zootrack");
   }
   OmahaRequestParams out;
@@ -425,15 +425,15 @@ TEST_F(OmahaRequestDeviceParamsTest, ChannelSpecified) {
       "CHROMEOS_AUSERVER=http://www.google.com"));
   params_.SetLockDown(true);
   // Passed-in value for release channel should be used.
-  params_.Init("", "", "beta-channel");
+  params_.Init("", "", "beta-channel", false);
   EXPECT_EQ("beta-channel", params_.app_track);
 
   // When passed-in value is invalid, value from lsb-release should be used.
-  params_.Init("", "", "foo-channel");
+  params_.Init("", "", "foo-channel", false);
   EXPECT_EQ("dev-channel", params_.app_track);
 
   // When passed-in value is empty, value from lsb-release should be used.
-  params_.Init("", "", "");
+  params_.Init("", "", "", false);
   EXPECT_EQ("dev-channel", params_.app_track);
 }
 

@@ -178,7 +178,9 @@ string FormatRequest(const OmahaEvent* event,
       XmlEncode(params.app_track) + "\" board=\"" +
       XmlEncode(params.os_board) + "\" hardware_class=\"" +
       XmlEncode(params.hardware_class) + "\" delta_okay=\"" +
-      (params.delta_okay ? "true" : "false") + "\">\n" + body +
+      (params.delta_okay ? "true" : "false") +
+      "\" userinitiated=\"" + (params.interactive ? "true" : "false") +
+      "\">\n" + body +
       "    </app>\n"
       "</request>\n";
 }
