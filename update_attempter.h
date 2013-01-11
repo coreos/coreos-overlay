@@ -76,8 +76,7 @@ class UpdateAttempter : public ActionProcessorDelegate,
                       const std::string& omaha_url,
                       bool obey_proxies,
                       bool interactive,
-                      bool is_test_mode,
-                      bool is_user_initiated);
+                      bool is_test_mode);
 
   // ActionProcessorDelegate methods:
   void ProcessingDone(const ActionProcessor* processor, ActionExitCode code);
@@ -141,7 +140,7 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // This is called by the DBus implementation.
   void CheckForUpdate(const std::string& app_version,
                       const std::string& omaha_url,
-                      bool is_user_initiated);
+                      bool is_interactive);
 
   // Initiates a reboot if the current state is
   // UPDATED_NEED_REBOOT. Returns true on sucess, false otherwise.
@@ -246,14 +245,13 @@ class UpdateAttempter : public ActionProcessorDelegate,
                              const std::string& omaha_url,
                              bool obey_proxies,
                              bool interactive,
-                             bool is_test,
-                             bool is_user_initiated);
+                             bool is_test);
 
   // Calculates all the scattering related parameters (such as waiting period,
   // which type of scattering is enabled, etc.) and also updates/deletes
   // the corresponding prefs file used in scattering. Should be called
   // only after the device policy has been loaded and set in the system_state_.
-  void CalculateScatteringParams(bool is_user_initiated);
+  void CalculateScatteringParams(bool is_interactive);
 
   // Sets a random value for the omaha_request_params_.waiting_period
   // based on the current scatter_factor_ value.

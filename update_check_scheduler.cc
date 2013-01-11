@@ -102,7 +102,7 @@ gboolean UpdateCheckScheduler::StaticCheck(void* scheduler) {
 
     // Before updating, we flush any previously generated UMA reports.
     CertificateChecker::FlushReport();
-    me->update_attempter_->Update("", "", false, false, is_test_mode, false);
+    me->update_attempter_->Update("", "", false, false, is_test_mode);
   } else {
     // Skips all automatic update checks if the OOBE process is not complete and
     // schedules a new check as if it is the first one.

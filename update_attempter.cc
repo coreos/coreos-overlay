@@ -148,8 +148,7 @@ void UpdateAttempter::Update(const string& app_version,
                              const string& omaha_url,
                              bool obey_proxies,
                              bool interactive,
-                             bool is_test_mode,
-                             bool is_user_initiated) {
+                             bool is_test_mode) {
   chrome_proxy_resolver_.Init();
   fake_update_success_ = false;
   if (status_ == UPDATE_STATUS_UPDATED_NEED_REBOOT) {
@@ -169,8 +168,7 @@ void UpdateAttempter::Update(const string& app_version,
                              omaha_url,
                              obey_proxies,
                              interactive,
-                             is_test_mode,
-                             is_user_initiated)) {
+                             is_test_mode)) {
     return;
   }
 
@@ -189,8 +187,7 @@ bool UpdateAttempter::CalculateUpdateParams(const string& app_version,
                                             const string& omaha_url,
                                             bool obey_proxies,
                                             bool interactive,
-                                            bool is_test_mode,
-                                            bool is_user_initiated) {
+                                            bool is_test_mode) {
   http_response_code_ = 0;
 
   // Set the test mode flag for the current update attempt.
@@ -231,7 +228,7 @@ bool UpdateAttempter::CalculateUpdateParams(const string& app_version,
     system_state_->set_device_policy(NULL);
   }
 
-  CalculateScatteringParams(is_user_initiated);
+  CalculateScatteringParams(interactive);
 
   // Determine whether an alternative test address should be used.
   string omaha_url_to_use = omaha_url;
@@ -283,7 +280,7 @@ bool UpdateAttempter::CalculateUpdateParams(const string& app_version,
   return true;
 }
 
-void UpdateAttempter::CalculateScatteringParams(bool is_user_initiated) {
+void UpdateAttempter::CalculateScatteringParams(bool interactive) {
   // Take a copy of the old scatter value before we update it, as
   // we need to update the waiting period if this value changes.
   TimeDelta old_scatter_factor = scatter_factor_;
@@ -299,8 +296,8 @@ void UpdateAttempter::CalculateScatteringParams(bool is_user_initiated) {
   bool is_scatter_enabled = false;
   if (scatter_factor_.InSeconds() == 0) {
     LOG(INFO) << "Scattering disabled since scatter factor is set to 0";
-  } else if (is_user_initiated) {
-    LOG(INFO) << "Scattering disabled as this update check is user-initiated";
+  } else if (interactive) {
+    LOG(INFO) << "Scattering disabled as this is an interactive update check";
   } else if (!system_state_->IsOOBEComplete()) {
     LOG(INFO) << "Scattering disabled since OOBE is not complete yet";
   } else {
@@ -510,7 +507,7 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
 
 void UpdateAttempter::CheckForUpdate(const string& app_version,
                                      const string& omaha_url,
-                                     bool is_user_initiated) {
+                                     bool interactive) {
   LOG(INFO) << "New update check requested";
 
   if (status_ != UPDATE_STATUS_IDLE) {
@@ -529,9 +526,9 @@ void UpdateAttempter::CheckForUpdate(const string& app_version,
     is_test_update_attempted_ = true;
   }
 
-  // Passing true for is_user_initiated to indicate that this
-  // is not a scheduled update check.
-  Update(app_version, omaha_url, true, true, is_test_mode, is_user_initiated);
+  // Pass through the interactive flag, in case we want to simulate a scheduled
+  // test.
+  Update(app_version, omaha_url, true, interactive, is_test_mode);
 }
 
 bool UpdateAttempter::RebootIfNeeded() {

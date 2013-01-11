@@ -21,12 +21,11 @@ class UpdateAttempterMock : public UpdateAttempter {
                                MockDbusGlib* dbus)
       : UpdateAttempter(mock_system_state, dbus) {}
 
-  MOCK_METHOD6(Update, void(const std::string& app_version,
+  MOCK_METHOD5(Update, void(const std::string& app_version,
                             const std::string& omaha_url,
                             bool obey_proxies,
                             bool interactive,
-                            bool is_test,
-                            bool is_user_initiated));
+                            bool is_test));
 };
 
 }  // namespace chromeos_update_engine
