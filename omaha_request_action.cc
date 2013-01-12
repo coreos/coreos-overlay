@@ -34,7 +34,8 @@ namespace chromeos_update_engine {
 static const char* kTagDeadline = "deadline";
 static const char* kTagDisablePayloadBackoff = "DisablePayloadBackoff";
 static const char* kTagDisplayVersion = "DisplayVersion";
-static const char* kTagIsDeltaPayload = "IsDelta";
+// Deprecated: "IsDelta"
+static const char* kTagIsDeltaPayload = "IsDeltaPayload";
 static const char* kTagMaxFailureCountPerUrl = "MaxFailureCountPerUrl";
 static const char* kTagMaxDaysToScatter = "MaxDaysToScatter";
 // Deprecated: "ManifestSignatureRsa"

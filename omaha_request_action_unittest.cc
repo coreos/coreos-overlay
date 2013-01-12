@@ -88,6 +88,7 @@ string GetUpdateResponse2(const string& app_id,
       "ChromeOSVersion=\"" + display_version + "\" "
       "MoreInfo=\"" + more_info_url + "\" Prompt=\"" + prompt + "\" "
       "IsDelta=\"true\" "
+      "IsDeltaPayload=\"true\" "
       "MaxDaysToScatter=\"" + max_days_to_scatter + "\" "
       "sha256=\"" + hash + "\" "
       "needsadmin=\"" + needsadmin + "\" " +
@@ -732,6 +733,7 @@ TEST(OmahaRequestActionTest, MissingFieldTest) {
       "ChromeOSVersion=\"10.2.3.4\" "
       "Prompt=\"false\" "
       "IsDelta=\"true\" "
+      "IsDeltaPayload=\"false\" "
       "sha256=\"lkq34j5345\" "
       "needsadmin=\"true\" "
       "/></actions></manifest></updatecheck></app></response>";
