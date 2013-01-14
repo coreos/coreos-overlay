@@ -9,6 +9,8 @@
 #include <policy/device_policy.h>
 #include <policy/libpolicy.h>
 
+#include "update_engine/gpio_handler.h"
+
 namespace chromeos_update_engine {
 
 // SystemState is the root class within the update engine. So we should avoid
