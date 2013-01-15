@@ -9,6 +9,7 @@
 
 #include <vector>
 
+#include <base/time.h>
 #include <google/protobuf/repeated_field.h>
 #include <gtest/gtest_prod.h>  // for FRIEND_TEST
 
@@ -37,6 +38,19 @@ class DeltaPerformer : public FileWriter {
   static const uint64_t kDeltaManifestSizeSize;
   static const char kUpdatePayloadPublicKeyPath[];
 
+  // Defines the granularity of progress logging in terms of how many "completed
+  // chunks" we want to report at the most.
+  static const unsigned kProgressLogMaxChunks;
+  // Defines a timeout since the last progress was logged after which we want to
+  // force another log message (even if the current chunk was not completed).
+  static const unsigned kProgressLogTimeoutSeconds;
+  // These define the relative weights (0-100) we give to the different work
+  // components associated with an update when computing an overall progress.
+  // Currently they include the download progress and the number of completed
+  // operations. They must add up to one hundred (100).
+  static const unsigned kProgressDownloadWeight;
+  static const unsigned kProgressOperationsWeight;
+
   DeltaPerformer(PrefsInterface* prefs,
                  SystemState* system_state,
                  InstallPlan* install_plan)
@@ -51,7 +65,14 @@ class DeltaPerformer : public FileWriter {
         buffer_offset_(0),
         last_updated_buffer_offset_(kuint64max),
         block_size_(0),
-        public_key_path_(kUpdatePayloadPublicKeyPath) {}
+        public_key_path_(kUpdatePayloadPublicKeyPath),
+        total_bytes_received_(0),
+        num_rootfs_operations_(0),
+        num_total_operations_(0),
+        overall_progress_(0),
+        last_progress_chunk_(0),
+        forced_progress_log_wait_(
+            base::TimeDelta::FromSeconds(kProgressLogTimeoutSeconds)) {}
 
   // Opens the kernel. Should be called before or after Open(), but before
   // Write(). The kernel file will be close()d when Close() is called.
@@ -152,6 +173,12 @@ class DeltaPerformer : public FileWriter {
   friend class DeltaPerformerTest;
   FRIEND_TEST(DeltaPerformerTest, IsIdempotentOperationTest);
 
+  // Logs the progress of downloading/applying an update.
+  void LogProgress(const char* message_prefix);
+
+  // Update overall progress metrics, log as necessary.
+  void UpdateOverallProgress(bool force_log, const char* message_prefix);
+
   static bool IsIdempotentOperation(
       const DeltaArchiveManifest_InstallOperation& op);
 
@@ -170,7 +197,7 @@ class DeltaPerformer : public FileWriter {
   // matches what's specified in the manifest in the payload.
   // Returns kActionCodeSuccess on match or a suitable error code otherwise.
   ActionExitCode ValidateOperationHash(
-      const DeltaArchiveManifest_InstallOperation& operation, bool should_log);
+      const DeltaArchiveManifest_InstallOperation& operation);
 
   // Interprets the given |protobuf| as a DeltaArchiveManifest protocol buffer
   // of the given protobuf_length and verifies that the signed hash of the
@@ -242,7 +269,7 @@ class DeltaPerformer : public FileWriter {
   uint64_t manifest_metadata_size_;
 
   // Index of the next operation to perform in the manifest.
-  int next_operation_num_;
+  size_t next_operation_num_;
 
   // buffer_ is a window of the data that's been downloaded. At first,
   // it contains the beginning of the download, but after the protobuf
@@ -270,6 +297,25 @@ class DeltaPerformer : public FileWriter {
   // The public key to be used. Provided as a member so that tests can
   // override with test keys.
   std::string public_key_path_;
+
+  // The number of bytes received so far, used for progress tracking.
+  size_t total_bytes_received_;
+
+  // The number rootfs and total operations in a payload, once we know them.
+  size_t num_rootfs_operations_;
+  size_t num_total_operations_;
+
+  // An overall progress counter, which should reflect both download progress
+  // and the ratio of applied operations. Range is 0-100.
+  unsigned overall_progress_;
+
+  // The last progress chunk recorded.
+  unsigned last_progress_chunk_;
+
+  // The timeout after which we should force emitting a progress log (constant),
+  // and the actual point in time for the next forced log to be emitted.
+  const base::TimeDelta forced_progress_log_wait_;
+  base::Time forced_progress_log_time_;
 
   DISALLOW_COPY_AND_ASSIGN(DeltaPerformer);
 };
