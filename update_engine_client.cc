@@ -45,7 +45,10 @@ bool GetProxy(DBusGProxy** out_proxy) {
   const int kRetrySeconds = 10;
 
   bus = dbus_g_bus_get(DBUS_BUS_SYSTEM, &error);
-  LOG_IF(FATAL, !bus) << "Failed to get bus: " << GetAndFreeGError(&error);
+  if (bus == NULL) {
+    LOG(ERROR) << "Failed to get bus: " << GetAndFreeGError(&error);
+    exit(1);
+  }
   for (int i = 0; !proxy && i < kTries; ++i) {
     if (i > 0) {
       LOG(INFO) << "Retrying to get dbus proxy. Try "
@@ -61,8 +64,11 @@ bool GetProxy(DBusGProxy** out_proxy) {
                             << kUpdateEngineServiceName << ": "
                             << GetAndFreeGError(&error);
   }
-  LOG_IF(FATAL, !proxy) << "Giving up -- unable to get dbus proxy for "
-                        << kUpdateEngineServiceName;
+  if (proxy == NULL) {
+    LOG(ERROR) << "Giving up -- unable to get dbus proxy for "
+               << kUpdateEngineServiceName;
+    exit(1);
+  }
   *out_proxy = proxy;
   return true;
 }
