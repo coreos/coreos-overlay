@@ -128,8 +128,10 @@ string FormatRequest(const OmahaEvent* event,
       body += StringPrintf(
           "        <updatecheck"
           " targetversionprefix=\"%s\""
+          " userinitiated=\"%s\""
           "></updatecheck>\n",
-          XmlEncode(params.target_version_prefix).c_str());
+          XmlEncode(params.target_version_prefix).c_str(),
+          (params.interactive ? "true" : "false"));
 
       // If this is the first update check after a reboot following a previous
       // update, generate an event containing the previous version number. If
@@ -178,9 +180,7 @@ string FormatRequest(const OmahaEvent* event,
       XmlEncode(params.app_track) + "\" board=\"" +
       XmlEncode(params.os_board) + "\" hardware_class=\"" +
       XmlEncode(params.hardware_class) + "\" delta_okay=\"" +
-      (params.delta_okay ? "true" : "false") +
-      "\" userinitiated=\"" + (params.interactive ? "true" : "false") +
-      "\">\n" + body +
+      (params.delta_okay ? "true" : "false") + "\">\n" + body +
       "    </app>\n"
       "</request>\n";
 }

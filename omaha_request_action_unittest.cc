@@ -918,6 +918,7 @@ TEST(OmahaRequestActionTest, FormatUpdateCheckOutputTest) {
       "        <ping active=\"1\" a=\"-1\" r=\"-1\"></ping>\n"
       "        <updatecheck"
       " targetversionprefix=\"\""
+      " userinitiated=\"false\""
       "></updatecheck>\n"),
       string::npos);
   EXPECT_NE(post_str.find("hardware_class=\"OEM MODEL 09235 7471\""),
@@ -948,6 +949,7 @@ TEST(OmahaRequestActionTest, FormatTargetVersionPrefixTest) {
       "        <ping active=\"1\" a=\"-1\" r=\"-1\"></ping>\n"
       "        <updatecheck"
       " targetversionprefix=\"\""
+      " userinitiated=\"false\""
       "></updatecheck>\n"),
       string::npos);
   EXPECT_NE(post_str.find("hardware_class=\"OEM MODEL 09235 7471\""),
