@@ -918,7 +918,6 @@ TEST(OmahaRequestActionTest, FormatUpdateCheckOutputTest) {
       "        <ping active=\"1\" a=\"-1\" r=\"-1\"></ping>\n"
       "        <updatecheck"
       " targetversionprefix=\"\""
-      " userinitiated=\"false\""
       "></updatecheck>\n"),
       string::npos);
   EXPECT_NE(post_str.find("hardware_class=\"OEM MODEL 09235 7471\""),
@@ -949,7 +948,6 @@ TEST(OmahaRequestActionTest, FormatTargetVersionPrefixTest) {
       "        <ping active=\"1\" a=\"-1\" r=\"-1\"></ping>\n"
       "        <updatecheck"
       " targetversionprefix=\"\""
-      " userinitiated=\"false\""
       "></updatecheck>\n"),
       string::npos);
   EXPECT_NE(post_str.find("hardware_class=\"OEM MODEL 09235 7471\""),
@@ -1058,7 +1056,7 @@ TEST(OmahaRequestActionTest, FormatDeltaOkayOutputTest) {
 TEST(OmahaRequestActionTest, FormatInteractiveOutputTest) {
   for (int i = 0; i < 2; i++) {
     bool interactive = i == 1;
-    const char* interactive_str = interactive ? "true" : "false";
+    const char* interactive_str = interactive ? "ondemandupdate" : "scheduler";
     vector<char> post_data;
     OmahaRequestParams params(OmahaRequestParams::kOsPlatform,
                               OmahaRequestParams::kOsVersion,
@@ -1084,7 +1082,7 @@ TEST(OmahaRequestActionTest, FormatInteractiveOutputTest) {
                                  &post_data));
     // convert post_data to string
     string post_str(&post_data[0], post_data.size());
-    EXPECT_NE(post_str.find(StringPrintf(" userinitiated=\"%s\"",
+    EXPECT_NE(post_str.find(StringPrintf("installsource=\"%s\"",
                                          interactive_str)),
               string::npos)
         << "i = " << i;

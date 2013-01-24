@@ -128,10 +128,8 @@ string FormatRequest(const OmahaEvent* event,
       body += StringPrintf(
           "        <updatecheck"
           " targetversionprefix=\"%s\""
-          " userinitiated=\"%s\""
           "></updatecheck>\n",
-          XmlEncode(params.target_version_prefix).c_str(),
-          (params.interactive ? "true" : "false"));
+          XmlEncode(params.target_version_prefix).c_str());
 
       // If this is the first update check after a reboot following a previous
       // update, generate an event containing the previous version number. If
@@ -170,6 +168,8 @@ string FormatRequest(const OmahaEvent* event,
       "<request protocol=\"3.0\" "
       "version=\"" + XmlEncode(kGupdateVersion) + "\" "
       "updaterversion=\"" + XmlEncode(kGupdateVersion) + "\" "
+      "installsource=\"" +
+      (params.interactive ? "ondemandupdate" : "scheduler") + "\" "
       "ismachine=\"1\">\n"
       "    <os version=\"" + XmlEncode(params.os_version) + "\" platform=\"" +
       XmlEncode(params.os_platform) + "\" sp=\"" +
