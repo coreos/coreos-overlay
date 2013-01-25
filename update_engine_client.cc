@@ -278,7 +278,9 @@ int main(int argc, char** argv) {
       return 1;
     }
 
-    LOG(INFO) << "ResetStatus succeeded.";
+    LOG(INFO) << "ResetStatus succeeded; to undo partition table changes run:\n"
+                 "(D=$(rootdev -d) P=$(rootdev -s); cgpt p -i$(($(echo ${P#$D} "
+                 "| sed 's/^[^0-9]*//')-1)) $D;)";
     return 0;
   }
 
