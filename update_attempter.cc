@@ -194,11 +194,9 @@ bool UpdateAttempter::CalculateUpdateParams(const string& app_version,
   is_test_mode_ = is_test_mode;
 
   // Lazy initialize the policy provider, or reload the latest policy data.
-  if (!policy_provider_.get()) {
+  if (!policy_provider_.get())
     policy_provider_.reset(new policy::PolicyProvider());
-  } else {
-    policy_provider_->Reload();
-  }
+  policy_provider_->Reload();
 
   // If the release_track is specified by policy, that takes precedence.
   string release_track;
