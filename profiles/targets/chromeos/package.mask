@@ -36,10 +36,6 @@
 # Custom patches
 >=sys-boot/syslinux-3.84
 
-# chromeos-chrome-14.0.787.0_rc-1 causes test failures, so block it.
-# TODO(davidjames): Remove this once the bug is fixed.
-=chromeos-base/chromeos-chrome-14.0.787.0_rc-r1
-
 # This is unloved by mesa, and should never be pulled into the targets.
 # It is actually for clang and ASAN that we want to have edge versions.
 =sys-devel/llvm-3.2_pre*

@@ -23,7 +23,7 @@ app-shells
 app-text
 app-vim
 app-xemacs
-chromeos-base
+coreos-base
 dev-ada
 dev-cpp
 dev-db

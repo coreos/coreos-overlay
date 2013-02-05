@@ -58,9 +58,8 @@ PORTAGE_BINPKG_TAR_OPTS="--checkpoint=1000"
 # Since our portage comes from version control, we redirect distfiles.
 DISTDIR="/var/lib/portage/distfiles-target"
 
-# Our chromium mirror should be more stable since we won't discard packages.
-GENTOO_MIRRORS="https://commondatastorage.googleapis.com/chromeos-localmirror"
-GENTOO_MIRRORS="$GENTOO_MIRRORS https://commondatastorage.googleapis.com/chromeos-mirror/gentoo"
+# TODO: Our mirror should be more stable since we won't discard packages.
+GENTOO_MIRRORS="http://gentoo.osuosl.org/"
 
 # Username and home directory of the shared user.
 SHARED_USER_NAME="chronos"

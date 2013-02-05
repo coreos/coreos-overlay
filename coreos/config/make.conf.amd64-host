@@ -11,7 +11,7 @@ FEATURES="allow-missing-manifests buildpkg clean-logs -collision-protect
 # Since our portage comes from version control, we redirect distfiles
 DISTDIR="/var/lib/portage/distfiles"
 
-PORTDIR="/usr/local/portage/stable"
+PORTDIR="/usr/portage/"
 
 # We initialize PORTDIR_OVERLAY here to clobber any redefinitions elsewhere.
 # This has to be the first overlay so crossdev finds the correct gcc and 
@@ -42,8 +42,7 @@ PORTAGE_BINHOST="$PREFLIGHT_BINHOST $FULL_BINHOST"
 # expat needed for XML parsing in GDB, but enable globally as overhead is tiny.
 USE="${USE} -cups hardened cros_host multilib pic pie -introspection expat"
 
-GENTOO_MIRRORS="https://commondatastorage.googleapis.com/chromeos-localmirror"
-GENTOO_MIRRORS="$GENTOO_MIRRORS https://commondatastorage.googleapis.com/chromeos-mirror/gentoo"
+GENTOO_MIRRORS="http://gentoo.osuosl.org/"
 
 # Remove all .la files for non-plugin libraries.
 # Remove Gentoo init files since we use upstart.

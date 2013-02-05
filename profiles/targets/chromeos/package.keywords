@@ -113,13 +113,4 @@
 =x11-proto/xf86dgaproto-2.1	amd64 arm x86
 =x11-proto/xf86vidmodeproto-2.3	amd64 arm x86
 
-# TODO: Remove when we have a proper chrome package.
-=www-client/chromium-bin-4.0.222.4_p28661	amd64 arm x86
-
-# If a newer version of chrome causes flaky failure, you can add
-# something like below, which assumes 15.0.859.0_rc-r1 was the
-# last non-flaky version.
-# This pins Chrome to the version below by marking more recent versions as unstable.
-#>chromeos-base/chromeos-chrome-22.0.1229.1_rc-r1	-amd64 -arm -x86 ~amd64 ~arm ~x86
-
 =dev-embedded/openocd-0.4.0      amd64 x86
