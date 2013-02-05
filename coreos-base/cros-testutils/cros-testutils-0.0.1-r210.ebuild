@@ -18,10 +18,10 @@ KEYWORDS="amd64 arm x86"
 CROS_WORKON_LOCALNAME="crostestutils"
 
 
-RDEPEND="app-emulation/qemu-kvm
+RDEPEND="app-emulation/qemu
 	app-portage/gentoolkit
 	app-shells/bash
-	chromeos-base/cros-devutils
+	coreos-base/cros-devutils
 	dev-util/crosutils
 	"
 

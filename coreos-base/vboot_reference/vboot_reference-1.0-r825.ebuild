@@ -17,8 +17,8 @@ IUSE="32bit_au minimal rbtest tpmtests cros_host"
 
 LIBCHROME_VERS="125070"
 
+# TODO:  chromeos-base/libchrome:${LIBCHROME_VERS}[cros-debug=]
 RDEPEND="app-crypt/trousers
-	chromeos-base/libchrome:${LIBCHROME_VERS}[cros-debug=]
 	!minimal? ( dev-libs/libyaml )
 	dev-libs/glib
 	dev-libs/openssl
@@ -30,7 +30,7 @@ DEPEND="${RDEPEND}
 # We need the config in place before we run, but don't need to rebuild this
 # package every time.
 RDEPEND="${RDEPEND}
-	!cros_host? ( chromeos-base/vboot_reference-config )"
+	!cros_host? ( coreos-base/vboot_reference-config )"
 
 _src_compile_main() {
 	mkdir "${S}"/build-main

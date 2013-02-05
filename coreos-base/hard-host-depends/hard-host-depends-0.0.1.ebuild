@@ -22,13 +22,10 @@ RDEPEND="${RDEPEND}
 	app-arch/lzop
 	app-arch/pigz
 	app-admin/sudo
-	dev-embedded/cbootimage
-	dev-embedded/tegrarcm
 	dev-embedded/u-boot-tools
 	dev-util/ccache
 	dev-util/crosutils
 	>=sys-apps/dtc-1.3.0-r5
-	sys-boot/bootstub
 	sys-boot/grub
 	sys-boot/syslinux
 	sys-devel/crossdev
@@ -38,16 +35,14 @@ RDEPEND="${RDEPEND}
 # Host dependencies for building cross-compiled packages.
 # TODO: chromeos-base/chromeos-installer
 RDEPEND="${RDEPEND}
-	app-admin/eselect-opengl
-	app-admin/eselect-mesa
 	app-arch/cabextract
 	>=app-arch/pbzip2-1.1.1-r1
 	app-arch/rpm2targz
 	app-arch/sharutils
 	app-arch/unzip
-	app-crypt/nss
-	app-emulation/qemu-kvm
-	!app-emulation/qemu-user
+	sys-libs/nss-db
+	dev-libs/nss
+	app-emulation/qemu
 	app-i18n/ibus
 	app-text/texi2html
 	coreos-base/google-breakpad
@@ -78,7 +73,6 @@ RDEPEND="${RDEPEND}
 	dev-python/mako
 	dev-python/netifaces
 	dev-python/pygobject
-	dev-python/pygtk
 	dev-python/pyinotify
 	dev-python/pyopenssl
 	dev-python/python-daemon
@@ -91,14 +85,12 @@ RDEPEND="${RDEPEND}
 	dev-util/gdbus-codegen
 	dev-util/gperf
 	dev-util/gtk-doc
-	dev-util/hdctools
 	>=dev-util/gtk-doc-am-1.13
 	>=dev-util/intltool-0.30
 	dev-util/scons
 	>=dev-vcs/git-1.7.2
 	dev-vcs/subversion[-dso]
 	>=media-libs/freetype-2.2.1
-	media-libs/mesa
 	net-misc/gsutil
 	sys-apps/usbutils
 	!sys-apps/nih-dbus-tool
@@ -140,10 +132,9 @@ RDEPEND="${RDEPEND}
 	"
 
 # Host dependencies that are needed to create and sign images
+# TODO:	sys-apps/mosys
 RDEPEND="${RDEPEND}
-	>=coreos-base/vboot_reference-1.0-r174
 	coreos-base/verity
-	sys-apps/mosys
 	sys-fs/libfat
 	"
 
@@ -153,8 +144,8 @@ RDEPEND="${RDEPEND}
 	"
 
 # Host dependencies that are needed for delta_generator.
+# TODO: coreos-base/update_engine
 RDEPEND="${RDEPEND}
-	coreos-base/update_engine
 	"
 
 # Host dependencies to run unit tests within the chroot

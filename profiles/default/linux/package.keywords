@@ -47,3 +47,37 @@
 =dev-libs/nspr-4.9.2 -* ~arm ~x86 ~amd64
 =dev-libs/nss-3.14 -* ~arm ~x86 ~amd64
 =app-crypt/nss-3.14 -* ~arm ~x86 ~amd64
+
+#required by coreos-base/hard-host-depends-0.0.1-r145, required by coreos-base/hard-host-depends (argument)
+=dev-python/ws4py-0.2.4 ~amd64
+#required by coreos-base/hard-host-depends-0.0.1-r145, required by coreos-base/hard-host-depends (argument)
+=dev-libs/dbus-c++-0.9.0-r1 ~amd64
+#required by coreos-base/hard-host-depends-0.0.1-r145, required by coreos-base/hard-host-depends (argument)
+=dev-embedded/smdk-dltool-0.20-r3 ~amd64
+#required by coreos-base/hard-host-depends-0.0.1-r145, required by coreos-base/hard-host-depends (argument)
+=sys-fs/libfat-0.3a ~amd64
+#required by coreos-base/hard-host-depends-0.0.1-r145, required by coreos-base/hard-host-depends (argument)
+=dev-cpp/gflags-2.0 ~amd64
+#required by coreos-base/hard-host-depends-0.0.1-r145, required by coreos-base/hard-host-depends (argument)
+=sys-apps/dtc-9999 **
+#required by coreos-base/hard-host-depends-0.0.1-r145, required by coreos-base/hard-host-depends (argument)
+=dev-python/pyusb-1.0.0_alpha3 ~amd64
+#required by coreos-base/hard-host-depends-0.0.1-r145, required by coreos-base/hard-host-depends (argument)
+=sys-libs/libnih-1.0.3 ~amd64
+#required by coreos-base/hard-host-depends-0.0.1-r145, required by coreos-base/hard-host-depends (argument)
+=dev-lang/closure-compiler-bin-20120305 ~amd64
+#required by coreos-base/hard-host-depends-0.0.1-r145, required by coreos-base/hard-host-depends (argument)
+=sys-devel/clang-3.2 ~amd64
+#required by coreos-base/cros-devutils-0.0.1-r516, required by coreos-base/hard-host-depends-0.0.1-r145, required by coreos-base/hard-host-depends (argument)
+=dev-util/shflags-1.0.3 ~amd64
+#required by coreos-base/hard-host-depends-0.0.1-r145, required by coreos-base/hard-host-depends (argument)
+=net-misc/gsutil-3.21 ~amd64
+#required by coreos-base/hard-host-depends-0.0.1-r145, required by coreos-base/hard-host-depends (argument)
+=dev-util/perf-3.4 ~amd64
+#required by net-misc/gsutil-3.21, required by coreos-base/hard-host-depends-0.0.1-r145, required by coreos-base/hard-host-depends (argument)
+=dev-python/boto-2.7.0 ~amd64
+#required by coreos-base/hard-host-depends-0.0.1-r145, required by coreos-base/hard-host-depends (argument)
+=sys-devel/smatch-1.57-r1 ~amd64
+#required by sys-devel/clang-3.2, required by coreos-base/hard-host-depends-0.0.1-r145, required by coreos-base/hard-host-depends (argument)
+=sys-devel/llvm-3.2 ~amd64
+

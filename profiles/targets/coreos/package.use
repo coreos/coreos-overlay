@@ -21,7 +21,6 @@ dev-python/pyudev	pygobject
 dev-util/dialog		-unicode minimal
 dev-util/perf		-doc -demangle -tui -ncurses -perl -python
 dev-util/perf-next	-doc -demangle -tui -ncurses -perl -python
-coreos-base/vboot_reference minimal
 media-gfx/imagemagick   png
 media-libs/freeimage	png
 media-libs/libdvdread   -css

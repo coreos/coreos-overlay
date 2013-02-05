@@ -17,7 +17,7 @@ SLOT="0"
 KEYWORDS="amd64 arm x86"
 IUSE="cros_host test"
 
-RDEPEND="cros_host? ( app-emulation/qemu-kvm )
+RDEPEND="cros_host? ( app-emulation/qemu )
 	app-portage/gentoolkit
 	cros_host? ( app-shells/bash )
 	!cros_host? ( !chromeos-base/gmerge )
