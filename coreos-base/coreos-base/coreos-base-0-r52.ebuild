@@ -1,0 +1,1 @@
+coreos-base-0.ebuild

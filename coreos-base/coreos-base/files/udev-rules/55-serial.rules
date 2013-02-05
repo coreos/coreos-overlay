@@ -1,0 +1,9 @@
+# Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+KERNEL=="tty[A-Z]*[0-9]", GROUP="serial"
+# Don't allow access to serial interfaces on Gobi modems.
+KERNEL=="tty[A-Z]*[0-9]", ID_USB_DRIVER=="qcserial", GROUP="root"
+# Don't allow access to serial interfaces on Novatel modems.
+KERNEL=="tty[A-Z]*[0-9]", ID_USB_DRIVER=="option", GROUP="root"
