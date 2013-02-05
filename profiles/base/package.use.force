@@ -1,0 +1,13 @@
+# Copyright 1999-2009 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header: /var/cvsroot/gentoo-x86/profiles/base/package.use.force,v 1.8 2009/08/01 14:55:18 beandog Exp $
+
+# Peter Alfredsen <loki_val@gentoo.org> (11 Apr 2009)
+# Forcing w.r.t. bug 265336. When unicode use-flag is
+# turned off, ABI is broken without a .so bump.
+dev-libs/libpcre unicode
+
+# Samuli Suominen <ssuominen@gentoo.org> (10 May 2009)
+# USE X needs to be always enabled to force virtualx
+# eclass usage for Xeconf.
+media-sound/rubyripper X

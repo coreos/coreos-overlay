@@ -1,0 +1,7 @@
+# ncurses5_config needs to be set for cross compiling on arm
+# Version 1.0.26 should use pkg-config for ncurses, so we can
+# drop this workaround when we upgrade.
+cros_pre_src_configure_ncurses_config() {
+	[[ $(cros_target) != "board_sysroot" ]] && return 0
+	export ncurses5_config=${ROOT}usr/bin/ncurses5-config
+}

@@ -1,0 +1,156 @@
+# Unmask the flag which corresponds to ARCH.
+-arm
+
+# Raúl Porcel <armin76@gentoo.org>
+# I've been told xfs is broken on ARM
+xfs
+
+# Mart Raudsepp <leio@gentoo.org>
+# net-misc/networkmanager not keyworded
+networkmanager
+
+# Raúl Porcel <armin76@gentoo.org>
+# Fails to build/work
+openexr
+
+# Samuli Suominen <drac@gentoo.org>
+# media-libs/amrnb and media-libs/amrwb not tested.
+amr
+
+# Samuli Suominen <drac@gentoo.org>
+# sci-visualization/grace not tested.
+grace
+
+# Samuli Suominen <drac@gentoo.org>
+# media-gfx/gimp not tested.
+gimp
+
+# Saleem Abdulrasool <compnerd@gentoo.org>
+# With vapier's permission masking this.
+mozilla
+
+hardened
+
+# Krzysiek Pawlik <nelchael@gentoo.org>
+# With vapier's permission masking aoss:
+aoss
+
+# Paul de Vrieze <pauldv@gentoo.org>
+# There is no java in this profile (if there is it must be available). Without
+# this repoman will fail on apps like sys-libs/db
+java
+java-internal
+java-external
+
+# Stuff that doesn't make sense on this arch
+3dfx
+cpufreq
+dell
+laptop
+dmi
+
+# Stuff we don't want
+chicken
+clisp
+fuse
+R
+octave
+tracker
+xindy
+lyx
+mpi
+lasi
+fusion
+
+# havent tested yet
+cupsddk
+gphoto2
+mythtv
+dvb
+qt3
+arts
+kde
+afs
+mono
+pike
+lirc
+lm_sensors
+netjack
+beagle
+nvtv
+mzscheme
+xemacs
+scanner
+madwifi
+libupnp
+zvbi
+dvd
+fluidsynth
+gnomecd
+lapack
+cblas
+webkit
+prolog
+sid
+libmms
+mtp
+ieee1394
+
+# 2006/02/05 - Donnie Berkholz <dberkholz@gentoo.org>
+# Modular X: mask for architectures on which they aren't available
+video_cards_apm
+video_cards_ark
+video_cards_ast
+video_cards_ati
+video_cards_cirrus
+video_cards_chips
+video_cards_cyrix
+video_cards_glint
+video_cards_i128
+video_cards_i740
+video_cards_imstt
+video_cards_intel
+video_cards_mach64
+video_cards_mga
+video_cards_neomagic
+video_cards_newport
+video_cards_nsc
+video_cards_nv
+video_cards_r128
+video_cards_radeon
+video_cards_radeonhd
+video_cards_rendition
+video_cards_s3
+video_cards_s3virge
+video_cards_savage
+video_cards_siliconmotion
+video_cards_sis
+video_cards_tdfx
+video_cards_tga
+video_cards_trident
+video_cards_tseng
+video_cards_vesa
+video_cards_via
+video_cards_voodoo
+
+# 2006/03/07 - Donnie Berkholz <dberkholz@gentoo.org>
+# Modular X: mask for architectures lacking direct rendering      
+dri
+
+# Diego Pettenò <flameeyes@gentoo.org> (6 Dec 2006)
+# Unmask the ARM-specific ALSA drivers
+-alsa_cards_pxa2xx-i2sound
+-alsa_cards_pxa2xx-soc
+-alsa_cards_pxa2xx-soc-corgi
+-alsa_cards_pxa2xx-soc-poodle
+-alsa_cards_pxa2xx-soc-spitz
+-alsa_cards_pxa2xx-soc-tosa
+-alsa_cards_sa11xx-uda1341ts
+-alsa_cards_armaaci
+-alsa_cards_at91-soc
+-alsa_cards_at91-soc-eti-b1-wm8731
+
+# USE=audit masked prior to testing on alpha, arm, hppa, ppc64, s390, sh.
+# Bug #184563, 18 Sep 2007 
+# Robin H. Johnson <robbat2@gentoo.org>
+audit

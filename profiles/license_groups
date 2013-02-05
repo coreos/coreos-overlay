@@ -1,0 +1,7 @@
+# This lists groups of licenses by short names.  If you want to
+# modify the licenses that you accept, use the --accept_licenses
+# flag when running setup_board.
+
+# List of all the non-free licenses that we use in ChromeOS.
+# People building ChromiumOS have to accept these themselves.
+CHROMEOS Google-TOS NVIDIA NVIDIA-codecs

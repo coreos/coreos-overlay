@@ -1,0 +1,12 @@
+# Copyright 1999-2012 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header: /var/cvsroot/gentoo-x86/profiles/arch/amd64/x32/packages,v 1.7 2012/08/29 21:55:02 vapier Exp $
+
+# Min versions that included x32 support
+>=sys-apps/sandbox-2.6
+>=sys-devel/binutils-2.22
+>=sys-kernel/linux-headers-3.4
+>=sys-libs/glibc-2.16.0
+>=sys-devel/gcc-4.7.1
+>=sys-devel/gdb-7.5
+>=dev-util/strace-4.7

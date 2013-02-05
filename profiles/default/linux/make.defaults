@@ -1,0 +1,50 @@
+# Copyright 1999-2005 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header: /var/cvsroot/gentoo-x86/profiles/default/linux/make.defaults,v 1.3 2009/09/21 09:39:09 robbat2 Exp $
+#
+# System-wide defaults for the Portage system
+# See portage(5) manpage
+#
+# Please avoid enabling things by default in here if possible. Understand any 
+# implications with core packages.  For example, if "java" is in USE and db 
+# has a conditional dependency on java (which it does,) then a JDK will be 
+# pulled in during *emerge system*!
+
+# Default starting set of USE flags for all default/linux profiles.
+USE="crypt ipv6 ncurses nls python readline ssl zlib"
+
+# make sure toolchain has sane defaults <tooclhain@gentoo.org>
+USE="${USE} fortran mudflap openmp"
+
+# 2006/03/07 - Donnie Berkholz <dberkholz@gentoo.org>
+# Modular X: Support direct rendering by default
+USE="${USE} dri"
+
+# 2006/04/21 - Donnie Berkholz <dberkholz@gentoo.org>
+# Modular X: Build the Xorg X server by default
+USE="${USE} xorg"
+
+# 2006/10/28 - Luca Barbato <lu_zero@gentoo.org>
+# on glibc system you cannot turn it off
+USE="${USE} iconv"
+
+# 2006/06/30 - Donnie Berkholz <dberkholz@gentoo.org>
+# Sane defaults for input drivers
+INPUT_DEVICES="keyboard mouse evdev"
+
+# 2006/08/18 - Donnie Berkholz <dberkholz@gentoo.org>
+# Lowest common denominator defaults for video drivers,
+# except hppa, which lacks v4l so removes it in the hppa profile
+VIDEO_CARDS="dummy fbdev v4l"
+
+# 2008/07/09 - Doug Goldstein <cardoe@gentoo.org>
+# Adding LDFLAGS="-Wl,-O1 for all Linux profiles by default
+# after discussion on the gentoo-dev ML. As we bang out a clear
+# direction with how LDFLAGS will be set by default, this entry
+# may move.
+LDFLAGS="-Wl,-O1"
+
+# 2009/09/21 Robin H. Johnson <robbat2@gentoo.org>
+# http://archives.gentoo.org/gentoo-dev/msg_dc705dc2c1a45e18a85aa62e8fb17009.xml
+# Build kernel modules from linux-mod by default:
+USE="${USE} modules"

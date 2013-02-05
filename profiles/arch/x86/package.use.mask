@@ -1,0 +1,41 @@
+# Copyright 1999-2009 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header: /var/cvsroot/gentoo-x86/profiles/arch/x86/package.use.mask,v 1.20 2009/09/23 10:42:11 elvanor Exp $
+
+# This file requires >=portage-2.1.1
+
+# Jean-Noël Rivasseau <elvanor@gentoo.org> (23 Sep 2009)
+# X use flag only for amd64/x86, bug 285951.
+media-gfx/iscan -X
+
+# Tomáš Chvátal <scarabeus@gentoo.org> (10 Sep 2009)
+# quakeforge has video_cards_voodoo enabled only for x86
+games-fps/quakeforge -video_cards_tdfx
+
+# Raúl Porcel <armin76@gentoo.org> (02 Dec 2008)
+media-libs/realcodecs win32codecs
+
+# Tomas Chvatal <scarabeus@gentoo.org> (24 Nov 2008)
+# masked in base, unmaks for x86/amd64
+sci-misc/boinc -cuda
+
+# Robert Buchholz <rbu@gentoo.org> (16 Aug 2008)
+# masked in base, unmask for x86/amd64
+dev-python/kaa-base -tls
+
+# Serkan Kaba <serkan@gentoo.org> (20 Jul 2008)
+app-text/enchant -zemberek
+
+>=dev-java/sun-jdk-1.5 -nsplugin
+>=dev-java/sun-jre-bin-1.5 -nsplugin
+>=dev-java/ibm-jdk-bin-1.5 -nsplugin 
+>=dev-java/ibm-jre-bin-1.5 -nsplugin
+x11-terms/eterm sse2
+
+# Christian Faulhammer <opfer@gentoo.org> (14 Jan 2008)
+# only works on x86
+dev-java/ibm-jdk-bin -alsa
+dev-java/ibm-jre-bin -alsa
+
+# Steve Dibb <beandog@gentoo.org> (29 Sept 2008)
+media-video/mplayer -cpudetection -custom-cpuopts -win32codecs -bindist -vdpau

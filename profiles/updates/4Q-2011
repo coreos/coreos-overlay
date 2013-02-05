@@ -1,0 +1,7 @@
+move dev-python/pymox dev-python/mox
+move dev-util/cvs dev-vcs/cvs
+move dev-util/cvsps dev-vcs/cvsps
+move dev-util/subversion dev-vcs/subversion
+move dev-util/git dev-vcs/git
+move net-misc/neon net-libs/neon
+move app-editors/gentoo-editor app-misc/editor-wrapper

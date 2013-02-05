@@ -1,0 +1,10 @@
+# Copyright 1999-2012 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header: /var/cvsroot/gentoo-x86/profiles/arch/amd64/x32/package.use.mask,v 1.1 2012/10/07 17:58:28 phajdan.jr Exp $
+
+# This file requires >=portage-2.1.1
+
+# Pawel Hajdan jr <phajdan.jr@gentoo.org> (07 Oct 2012)
+# V8 upstream said they won't support x32, bug #423815
+# Masked V8 and reverse dependencies.
+dev-db/mongodb v8

@@ -1,0 +1,7 @@
+# Copyright 1999-2008 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header: /var/cvsroot/gentoo-x86/profiles/releases/make.defaults,v 1.2 2008/07/29 14:47:28 wolf31o2 Exp $
+
+# These USE flags are what is common between the various sub-profiles. Stages 2
+# and 3 are built against these, so be careful what you add.
+USE="acl nptl nptlonly sysfs unicode"

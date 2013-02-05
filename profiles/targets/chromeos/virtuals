@@ -1,0 +1,2 @@
+# Add virtual packages for this profile
+virtual/chromeos-bsp-dev	chromeos-base/chromeos-bsp-dev-null

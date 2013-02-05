@@ -1,0 +1,166 @@
+# Copyright 1999-2009 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header: /var/cvsroot/gentoo-x86/profiles/base/package.use.mask,v 1.97 2009/10/11 20:12:53 ssuominen Exp $
+
+# This file requires >=portage-2.1.1
+# New entries go on top.
+
+# Samuli Suominen <ssuominen@gentoo.org> (10 Oct 2009)
+# Not ready for stable. Remove this mask when KDE 4.3.2 is stable.
+<kde-base/kdeadmin-meta-4.3.2 cups
+<kde-base/kdeutils-meta-4.3.2 cups
+<kde-base/plasma-workspace-4.3.2 google-gadgets
+
+# Samuli Suominen <ssuominen@gentoo.org> (10 Oct 2009)
+# Fix deptree because kopete-facebook is missing KEYWORDS
+kde-base/kopete facebook
+
+# Samuli Suominen <ssuominen@gentoo.org> (09 Oct 2009)
+# log4cxx has known memory leaking issues wrt bug #287697,
+# unmask when log4cxx is fixed and stable.
+app-misc/strigi log
+
+# Jean-Noël Rivasseau <elvanor@gentoo.org> (23 Sep 2009)
+# X use flag only for amd64/x86, bug 285951.
+media-gfx/iscan X
+
+# Nirbheek Chauhan <nirbheek@gentoo.org> (22 Sep 2009)
+# Broken with KDE4, mask for now
+>=app-office/openoffice-3.1.1 kde
+
+# Alex Legler <a3li@gentoo.org> (16 Sep 2009)
+# Maintainer of the kolab patch is not available (wrobel).
+# Bump is needed for security bug 285052.
+>=www-apps/horde-webmail-1.2.4 kolab
+
+# Tomáš Chvátal <scarabeus@gentoo.org> (10 Sep 2009)
+# quakeforge has video_cards_tdfx enabled only for x86
+games-fps/quakeforge video_cards_tdfx
+
+# Marijn Schouten <hkBst@gentoo.org> (03 Aug 2009)
+# gcl is an old piece of crap that has a lot of problems
+sci-mathematics/maxima gcl
+
+# Jeremy Olexa <darkside@gentoo.org> (31 Jul 2009)
+# Mask the gnome USE flag globally for app-office/abiword-plugins-2.4.6 because
+# it depends on a GLSA affected atom. bug 271708
+=app-office/abiword-plugins-2.4.6 gnome
+
+# Petteri Räty <betelgeuse@gentoo.org> (14 Jul 2009)
+# Open source Java plugin development happens in IcedTea
+# these days.
+dev-java/gnu-classpath nsplugin
+
+# Tristan Heaven <nyhm@gentoo.org> (12 Jun 2009)
+# media-libs/freeimage is masked for bug #269516
+dev-games/cegui freeimage
+dev-games/ogre freeimage
+
+# Mounir Lamouri <volkmar@gentoo.org> (21 Apr 2009)
+# masking jingle because it's using an old ortp version
+# which is blocking stabilization of new ones, bug 206047
+=kde-base/kdenetwork-3* jingle
+=kde-base/kopete-3* jingle
+
+# Peter Alfredsen <loki_val@gentoo.org> (20 Jan 2008)
+# Pango is a Work-In-Progress for libgdiplus
+# Bug 255623
+dev-dotnet/libgdiplus pango
+
+# Tomas Chvatal <scarabeus@gentoo.org> (31 Jan 2009)
+# mask cuda for boinc. Works only on amd64 and x86
+sci-misc/boinc cuda
+
+# Robert Buchholz <rbu@gentoo.org> (16 Aug 2008)
+# TLS needs dev-libs/cryptlib, which is x86 only
+dev-python/kaa-base tls
+
+# Serkan Kaba <serkan@gentoo.org> (20 Jul 2008)
+# Java is not supported in most of the arches enchant is keyworded
+app-text/enchant zemberek
+
+# Thomas Anderson <gentoofan23@gentoo.org> (04 Jul 2008)
+# Mask ia32 USE flag on all architectures but amd64
+# as we're the only people who can make use of it.
+www-client/opera ia32
+
+# Peter Alfredsen <loki_val@gentoo.org> (25 Jun 2008)
+# Php module fails to build due to newer autotools.
+>=media-libs/ming-0.4.0_beta5 php
+
+# Ben de Groot <yngwin@gentoo.org> (22 Jun 2008)
+# does not work with ffmpeg new headers yet
+<www-plugins/gnash-0.8.3 ffmpeg
+
+# Markus Ullmann <jokey@gentoo.org> (21 Mar 2008)
+# still work in progress
+=net-irc/kvirc-3.4.0 qt4
+
+# Michael Sterrett <mr_bones_@gentoo.org> (09 Mar 2008)
+# tcl version necessary has been masked so mask this for now.
+~app-editors/nvi-1.81.6 tcl
+
+# Christian Faulhammer <opfer@gentoo.org> (03 Mar 2008) 
+# This feature is experimental and should be used by people willing to
+# test it
+app-portage/gatt libpaludis
+
+# Wulf Krueger <philantrop@gentoo.org> (28 Jan 2008)
+# Mask bluetooth for the KDE 3.5.8 stabilisation.
+app-pda/pilot-link bluetooth
+
+# Christian Hoffmann <hoffie@gentoo.org> (27 Dec 2007)
+# Missing dev-php5/php-java-bridge
+dev-lang/php java-external
+
+# Donnie Berkholz <dberkholz@gentoo.org> (12 Nov 2007)
+# freedesktop.org bug #7459 committed fix breaks 3D apps
+# but "fix" is only relevant on USE=nptl
+=media-libs/mesa-7.0* nptl
+
+# Robert Buchholz <rbu@gentoo.org> (29 Aug 2007)
+# PPTP Plugin doesn't work on amd64
+kde-misc/knetworkmanager pptp
+
+dev-java/sun-jdk nsplugin
+dev-java/sun-jre-bin nsplugin
+dev-java/ibm-jdk-bin nsplugin 
+dev-java/ibm-jre-bin nsplugin
+
+# Petteri Räty <betelgeuse@gentoo.org> (27 Apr 2007)
+# package.use.masked for security bug #161835
+# Not removed from ebuilds because this is the only 64 bit plugin
+# on amd64.
+dev-java/blackdown-jdk nsplugin
+dev-java/blackdown-jre nsplugin
+
+# These are for BSD only
+net-proxy/squid ipf-transparent pf-transparent
+app-admin/sshguard ipfilter
+
+# Linking against libnfsidmap requires libs in /usr #149472
+sys-apps/acl nfs
+
+# Christian Faulhammer <opfer@gentoo.org> (14 Jan 2008)
+# only works on x86, where this will be unmasked
+dev-java/ibm-jdk-bin alsa
+dev-java/ibm-jre-bin alsa
+
+# Raúl Porcel <armin76@gentoo.org> (09 Nov 2008)
+# CPU opts: This needs amd64, x86 and ppc on some of them
+# dvdnav: hard masked dependency
+# vdpau: availble on x86, amd64 only
+media-video/mplayer cpudetection custom-cpuopts bindist vdpau
+
+# Steve Dibb <beandog@gentoo.org> (26 Feb 2009)
+# Unmask internal real player codec support on newer mplayer
+>=media-video/mplayer-1.0_rc2_p20090226 -real
+
+# Alexis Ballier <aballier@gentoo.org> (07 Jul 2009)
+# The pda interface doesnt build, bug #277037
+>=media-video/vlc-1.0.0 pda
+
+# Samuli Suominen <ssuominen@gentoo.org> (31 Jul 2009)
+# Security issues wrt #190835
+games-fps/doom-data doomsday
+games-fps/freedoom doomsday

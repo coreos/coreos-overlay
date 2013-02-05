@@ -1,0 +1,11 @@
+# Oct 23th 2006; blubb@gentoo.org
+# upstream forces sse2 on regardless of what the use flag is
+dev-libs/openssl sse2
+media-libs/libsoundtouch sse
+
+# Gustavo Felisberto <humpback@gentoo.org> 19-06-2007
+net-im/skype qt-static
+
+# Santiago M. Mola <coldwind@gentoo.org> (17 Sep 2008)
+# x86emu is the only backend available for amd64 (bug #224987)
+sys-apps/v86d x86emu

@@ -1,0 +1,12 @@
+# Remove all the build-time helpers leaving just the libraries.
+# Not like we can execute them anyways for the target.
+if [[ $(cros_target) != "cros_host" ]] ; then
+	e2fsprogs_mask="
+		/usr/bin
+		/usr/share/et
+		/usr/share/ss
+	"
+	PKG_INSTALL_MASK+=" ${e2fsprogs_mask}"
+	INSTALL_MASK+=" ${e2fsprogs_mask}"
+	unset e2fsprogs_mask
+fi

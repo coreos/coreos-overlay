@@ -1,0 +1,7 @@
+# Apr 28, 2008 Sébastien Fabbro <bicatali@gentoo.org>
+# ifc masked
+sci-libs/acml ifc
+
+# Alexis Ballier <aballier@gentoo.org> (13 Aug 2009)
+# Requires wine
+media-sound/lmms vst

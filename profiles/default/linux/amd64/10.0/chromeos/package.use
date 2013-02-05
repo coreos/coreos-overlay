@@ -1,0 +1,14 @@
+# Need to undo arch/amd64/package.use because that
+# profile is shared between the cros sdk chroot and
+# amd64 target boards.
+
+app-arch/bzip2 -static-libs
+app-arch/pbzip2 -static
+app-arch/pigz -static
+
+chromeos-base/update_engine -delta_generator
+dev-embedded/openocd  -ftdi
+net-misc/openssh -kerberos
+sys-apps/flashrom -dediprog -ft2232_spi -serprog
+
+dev-libs/glib -static-libs

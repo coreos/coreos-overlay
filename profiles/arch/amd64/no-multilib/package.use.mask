@@ -1,0 +1,16 @@
+# Copyright 1999-2009 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header: /var/cvsroot/gentoo-x86/profiles/arch/amd64/no-multilib/package.use.mask,v 1.7 2009/08/01 17:03:49 ssuominen Exp $
+
+# Apr 28, 2008 Sébastien Fabbro <bicatali@gentoo.org>
+# ifc masked
+sci-libs/acml ifc
+
+# 10 Jul, 2008 Thomas Anderson <gentoofan23@gentoo.org>
+# Remask ia32 since parent unmasks it, and no-multilib
+# can't use this flag.
+www-client/opera ia32
+
+# Robert Buchholz <rbu@gentoo.org> (16 Aug 2008)
+# SNES applications are masked in multilib
+media-tv/freevo snes

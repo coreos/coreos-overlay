@@ -1,0 +1,4 @@
+# Upstream portage blocks portage-9999 with package.mask, so we need to unmask
+# it manually to allow us to build it. (It's still marked as unstable, so we
+# won't use it by default.)
+=sys-apps/portage-9999

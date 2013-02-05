@@ -1,0 +1,105 @@
+# Copyright 2004 Gentoo Foundation.
+# Distributed under the terms of the GNU General Public License, v2
+# $Header: /var/cvsroot/gentoo-x86/profiles/arch/x86/use.mask,v 1.11 2009/07/31 21:47:28 ssuominen Exp $
+
+# Unmask the flag which corresponds to ARCH.
+-x86
+
+# This file masks out USE flags that are simply NOT allowed in the default
+# x86 profile.  This works, for example, if another architecture's
+# profile have a USE flag associated with (such as altivec, mmx, etc).
+
+# pbbuttonsd and macbook for KDE and pbuttonsd it
+#-pbbuttonsd
+-macbook
+
+# Unmask x86 instruction sets
+-3dnow
+-3dnowext
+-lilo
+-mmx
+-mmxext
+-sse
+-sse2
+-ssse3
+-svga
+-kqemu
+-nvram
+
+# Unmask nvidia XvMC support
+-nvidia
+
+# Unmask dev-db/oracle-instantclient-basic support
+-oci8-instant-client
+
+# Unmask osp, used by asterisk; bug 115798
+-osp
+
+# Unmask yellownet, used by aqbanking (bug 149970)
+-yellownet
+
+# Modular X: unmask for architectures on which they are available
+-input_devices_synaptics
+-input_devices_virtualbox
+-input_devices_vmmouse
+-input_devices_wacom
+-video_cards_nvidia
+-video_cards_fglrx
+-video_cards_vmware
+-video_cards_geode
+-video_cards_vermilion
+-video_cards_via
+-video_cards_virtualbox
+-video_cards_xgi
+
+# Modular X: mask for architectures on which they aren't available
+video_cards_newport
+
+#codec support
+-win32codecs
+-x264
+
+# lvm2 cluster
+-clvm
+-gulm
+
+# psyco works on x86
+-psyco
+
+# Diego Pettenò <flameeyes@gentoo.org> (4 Jan 2007)
+# Unmask the flags for PHP that are available only on x86
+-fdftk
+-sybase-ct
+-ingres
+-birdstep
+-adabas
+-filepro
+-pfpro
+-informix
+-empress
+-empress-bcs
+-sybase
+-frontbase
+-dbmaker
+-esoob
+-solid
+# Shared with amd64
+-oci8
+-oracle7
+-firebird
+-db2
+
+# Robert Buchholz <rbu@gentoo.org> (03 Jun 2007)
+# Unmask as it works on x86
+-lcd_devices_svga
+-lcd_devices_luise
+
+# George Shapovalov <george@gentoo.org> (8 Apr 2007)
+# supported on x86
+-ada
+
+# tcc is x86 only
+-tcc
+
+# RealMagic Hollywood+/Creative DXR3 support
+-dxr3

@@ -1,0 +1,14 @@
+# Copyright 2004-2008 Gentoo Foundation.
+# Distributed under the terms of the GNU General Public License v2
+# $Header: /var/cvsroot/gentoo-x86/profiles/default/linux/use.mask,v 1.1 2008/04/01 17:40:05 wolf31o2 Exp $
+
+# This file masks out USE flags that are simply NOT allowed in the default
+# profile for any architecture.  This works, for example, if a non-default
+# profile (such as the selinux profiles) have a USE flag associated with
+# them.
+
+# amd64 only:
+emul-linux-x86
+
+# ppc and x86/amd64
+x264

@@ -1,0 +1,17 @@
+# Copyright (c) 2009 The Chromium OS Authors. All rights reserved.
+# Distributed under the terms of the GNU General Public License v2
+
+# Chrome cannot compile WebKit with gperf 3.0.4
+>dev-util/gperf-3.0.3
+
+# The following are here because we override the ebuilds from the
+# portage tree for a reason other than adding an ebuild from upstream
+# that wasn't yet in our portage tree. We want to keep using our
+# version of these packages even if a newer stable version becomes
+# available in portage:
+
+# Custom patches
+>=sys-boot/syslinux-3.84
+
+# libpng security vulnerability fix
+<media-libs/libpng-1.2.44

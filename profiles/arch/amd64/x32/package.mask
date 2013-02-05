@@ -1,0 +1,11 @@
+# Copyright 1999-2012 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header: /var/cvsroot/gentoo-x86/profiles/arch/amd64/x32/package.mask,v 1.1 2012/10/07 17:58:28 phajdan.jr Exp $
+
+# Pawel Hajdan jr <phajdan.jr@gentoo.org> (07 Oct 2012)
+# V8 upstream said they won't support x32, bug #423815
+# Masked V8 and reverse dependencies.
+dev-lang/v8
+dev-lang/v8cgi
+net-libs/nodejs
+www-client/chromium
