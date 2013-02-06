@@ -41,7 +41,7 @@ src_install() {
 	# This file has moved to openrc, but we don't want that.
 	# https://bugs.gentoo.org/373219
 	insinto /etc/init.d
-	doins "${FILESDIR}"/functions.sh || die
+	doinitd "${FILESDIR}"/functions.sh || die
 }
 
 pkg_postinst() {
