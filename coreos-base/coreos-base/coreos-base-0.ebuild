@@ -94,7 +94,7 @@ pkg_setup() {
 
 src_install() {
 	insinto /etc
-	doins "${FILESDIR}"/sysctl.conf || die
+	#doins "${FILESDIR}"/sysctl.conf || die
 
 	insinto /etc/profile.d
 	doins "${FILESDIR}"/xauthority.sh || die
@@ -111,20 +111,20 @@ src_install() {
 		dosym /var/lib/timezone/localtime /etc/localtime || die
 
 		# We use mawk in the target boards, not gawk.
-		dosym mawk /usr/bin/awk || die
+		#dosym mawk /usr/bin/awk || die
 
 		# We want dash as our main shell.
-		dosym dash /bin/sh
+		#dosym dash /bin/sh
 
 		# Avoid the wrapper and just link to the only editor we have.
-		dodir /usr/libexec
-		dosym /usr/bin/vim /usr/libexec/editor || die
-		dosym /bin/more /usr/libexec/pager || die
+		#dodir /usr/libexec
+		#dosym /usr/bin/vim /usr/libexec/editor || die
+		#dosym /bin/more /usr/libexec/pager || die
 
 		# Install our custom ssh config settings.
-		insinto /etc/ssh
-		doins "${FILESDIR}"/ssh{,d}_config
-		fperms 600 /etc/ssh/sshd_config
+		#insinto /etc/ssh
+		#doins "${FILESDIR}"/ssh{,d}_config
+		#fperms 600 /etc/ssh/sshd_config
 
 		# Custom login shell snippets.
 		insinto /etc/profile.d
