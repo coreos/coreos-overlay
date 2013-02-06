@@ -24,8 +24,8 @@ RDEPEND=""
 # coreos-installer for solving "lib/coreos-common.sh" symlink.
 # vboot_reference for binary programs (ex, cgpt).
 # TODO: coreos-base/coreos-installer[cros_host]
-DEPEND="
-        coreos-base/vboot_reference"
+#         coreos-base/vboot_reference
+DEPEND=""
 
 src_compile() {
     true

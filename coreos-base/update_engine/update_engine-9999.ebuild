@@ -17,12 +17,12 @@ IUSE="cros_host -delta_generator"
 
 LIBCHROME_VERS="125070"
 
+# TODO:  chromeos-base/vboot_reference
 RDEPEND="app-arch/bzip2
 	chromeos-base/chromeos-ca-certificates
 	chromeos-base/libchrome:${LIBCHROME_VERS}[cros-debug=]
 	chromeos-base/libchromeos
 	chromeos-base/metrics
-	chromeos-base/vboot_reference
 	chromeos-base/verity
 	dev-cpp/gflags
 	dev-libs/glib
