@@ -11,6 +11,10 @@ FEATURES="allow-missing-manifests buildpkg clean-logs -collision-protect
 # Since our portage comes from version control, we redirect distfiles
 DISTDIR="/var/lib/portage/distfiles"
 
+# Don't fool around with python3, might get bit
+USE_PYTHON="2.6"
+
+
 PORTDIR="/usr/portage/"
 
 # We initialize PORTDIR_OVERLAY here to clobber any redefinitions elsewhere.
