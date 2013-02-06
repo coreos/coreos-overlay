@@ -48,7 +48,8 @@ RDEPEND="${RDEPEND}
 	coreos-base/cros-devutils[cros_host]
 	coreos-base/cros-factoryutils
 	coreos-base/cros-testutils
-	dev-lang/python
+	=dev-lang/python-2*
+	dev-python/setuptools
 	dev-db/m17n-contrib
 	dev-db/m17n-db
 	dev-lang/closure-compiler-bin
