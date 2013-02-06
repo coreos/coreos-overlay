@@ -44,3 +44,29 @@ sys-apps/pciutils	static-libs
 # xz-utils includes liblzma, which is picked by bmpblk_utility (vboot_reference)
 # and may be executed outside chroot.
 app-arch/xz-utils	static-libs
+
+
+
+#required by dev-lang/python-2.7.3-r2[gdbm,-build], required by dev-python/pygobject-2.28.6-r52, required by dev-python/pyudev-0.15[pygobject], required by coreos-base/hard-host-depends-0.0.1-r145, required by coreos-base/hard-host-depends (argument)
+=sys-libs/gdbm-1.8.3-r4 berkdb
+#required by app-emulation/qemu-1.2.2-r2[seccomp,static], required by coreos-base/hard-host-depends-0.0.1-r145, required by coreos-base/hard-host-depends (argument)
+>=sys-libs/libseccomp-1.0.1 static-libs
+#required by net-print/cups-1.5.2-r4, required by dev-java/icedtea-bin-6.1.11.5-r1[cups], required by virtual/jdk-1.6.0-r1, required by virtual/jre-1.6.0, required by dev-lang/closure-compiler-bin-20120305, required by coreos-base/hard-host-depends-0.0.1-r145, required by coreos-base/hard-host-depends (argument)
+=app-text/ghostscript-gpl-9.05-r1 cups
+#required by coreos-base/hard-host-depends-0.0.1-r145, required by coreos-base/hard-host-depends (argument)
+=coreos-base/cros-devutils-0.0.1-r516 cros_host
+#required by app-emulation/qemu-1.2.2-r2[static,caps], required by coreos-base/hard-host-depends-0.0.1-r145, required by coreos-base/hard-host-depends (argument)
+=sys-libs/libcap-ng-0.6.6 static-libs
+#required by app-emulation/qemu-1.2.2-r2[ncurses,static], required by coreos-base/hard-host-depends-0.0.1-r145, required by coreos-base/hard-host-depends (argument)
+>=sys-libs/ncurses-5.9-r2 static-libs
+#required by virtual/jpeg-0, required by net-print/cups-1.5.2-r4, required by app-text/ghostscript-gpl-9.05-r1[cups], required by net-print/foomatic-filters-4.0.17
+>=media-libs/libjpeg-turbo-1.2.1 static-libs
+#required by net-misc/curl-7.26.0[ssl,curl_ssl_openssl], required by dev-util/cmake-2.8.9, required by coreos-base/hard-host-depends-0.0.1-r145, required by coreos-base/hard-host-depends (argument)
+>=dev-libs/openssl-1.0.1c static-libs
+#required by x11-libs/gtk+-2.24.12, required by dev-java/icedtea-bin-6.1.11.5-r1[X], required by virtual/jdk-1.6.0-r1, required by virtual/jre-1.6.0, required by dev-lang/closure-compiler-bin-20120305, required by coreos-base/hard-host-depends-0.0.1-r145, required by coreos-base/hard-host-depends (argument)
+=x11-libs/cairo-1.10.2-r3 X
+#required by app-emulation/qemu-1.2.2-r2[static,png], required by coreos-base/hard-host-depends-0.0.1-r145, required by coreos-base/hard-host-depends (argument)
+=media-libs/libpng-1.5.13-r1 static-libs
+#required by app-emulation/qemu-1.2.2-r2[static,jpeg], required by coreos-base/hard-host-depends-0.0.1-r145, required by coreos-base/hard-host-depends (argument)
+>=virtual/jpeg-0 static-libs
+

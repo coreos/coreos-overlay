@@ -39,4 +39,4 @@ sys-devel/patch
 virtual/editor
 virtual/libc
 virtual/os-headers
-virtual/portage
+#virtual/portage

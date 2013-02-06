@@ -40,10 +40,8 @@ RDEPEND="${RDEPEND}
 	app-arch/rpm2targz
 	app-arch/sharutils
 	app-arch/unzip
-	sys-libs/nss-db
 	dev-libs/nss
 	app-emulation/qemu
-	app-i18n/ibus
 	app-text/texi2html
 	coreos-base/google-breakpad
 	coreos-base/coreos-base

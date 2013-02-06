@@ -15,6 +15,7 @@ IUSE="cros_host pam"
 # We need to make sure timezone-data is merged before us.
 # See pkg_setup below as well as http://crosbug.com/27413
 # and friends.
+# TODO: !app-misc/editor-wrapper
 DEPEND=">=sys-apps/baselayout-2
 	!<sys-apps/baselayout-2.0.1-r227
 	!<sys-libs/timezone-data-2011d
@@ -24,7 +25,6 @@ DEPEND=">=sys-apps/baselayout-2
 	!<app-shells/dash-0.5.5
 	!<net-misc/openssh-5.2_p1-r8
 	!cros_host? (
-		!app-misc/editor-wrapper
 		sys-libs/timezone-data
 	)"
 RDEPEND="${DEPEND}"
