@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+<herd>chromium</herd>
+<maintainer>
+	<email>chromium-os-dev@chromium.org</email>
+	<description>Maintained by The Chromium OS Authors.</description>
+</maintainer>
+<longdescription>The Chromium OS base package pulls in dependencies to build a Chromium OS system.</longdescription>
+<use>
+	<flag name='X'>Enables dependencies on X.</flag>
+	<flag name='bluetooth'>Enables bluetooth dependencies.</flag>
+	<flag name='bootimage'>Enables firmware bootimage dependencies.</flag>
+	<flag name='coreboot'>Enables coreboot.</flag>
+	<flag name='cros_ec'>Enables CrOS Embedded Controller.</flag>
+	<flag name='gdmwimax'>Enables WiMax dependencies.</flag>
+	<flag name='bootchart'>Enables bootchart.</flag>
+	<flag name='opengles'>Enables OpenGL ES.</flag>
+</use>
+</pkgmetadata>

@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# Exit status is 0 if this is a "developer system", non-zero if not.
+# We define "developer system" as any of
+# - a release image on a system with the developer hardware switch set on,
+# - a developer or test image running on hardware or a VM, or
+# - a system with a shared user password set (meaning it's possible to log in
+#   on a VT console).
+crossystem "cros_debug?1" || grep -q '^chronos:[^*]' /etc/shadow
