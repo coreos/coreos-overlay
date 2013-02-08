@@ -1,0 +1,32 @@
+This patch is needed because this commit:
+http://gcc.gnu.org/viewcvs?view=revision&revision=173147
+changes the way the gcno files store function information.
+
+It should be removed once we upgrade to gcc-4.7 and grab the
+new lcov from upstream gentoo.
+--- lcov-1.9/bin/geninfo       2010-08-06 04:05:17.000000000 -0700
++++ lcov-1.9/bin/geninfo       2012-06-26 17:03:18.925545659 -0700
+@@ -63,6 +63,7 @@
+ our $gcov_tool		= "gcov";
+ our $tool_name		= basename($0);
+ 
++our $GCOV_VERSION_4_6_0	= 0x40600;
+ our $GCOV_VERSION_3_4_0	= 0x30400;
+ our $GCOV_VERSION_3_3_0	= 0x30300;
+ our $GCNO_FUNCTION_TAG	= 0x01000000;
+@@ -2897,12 +2898,14 @@
+ 	my ($handle, $bb, $fileorder, $base, $big_endian) = @_;
+ 	my $filename;
+ 	my $function;
++	my $checksum_length = ($gcov_version < $GCOV_VERSION_4_6_0) ? 4 : 8;
+ 	my $lineno;
+ 	my $lines;
+ 
+ 	graph_expect("function record");
+ 	# Skip ident and checksum
+-	graph_skip($handle, 8, "function ident and checksum") or return undef;
++	graph_skip($handle, 4 + $checksum_length,
++		   "function ident and checksum") or return undef;
+ 	# Read function name
+ 	graph_expect("function name");
+ 	$function = read_gcno_string($handle, $big_endian);

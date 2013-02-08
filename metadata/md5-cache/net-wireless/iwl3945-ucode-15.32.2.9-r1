@@ -1,0 +1,9 @@
+DEFINED_PHASES=compile install
+DEPEND=|| ( >=sys-fs/udev-096 >=sys-apps/hotplug-20040923 )
+DESCRIPTION=Intel (R) PRO/Wireless 3945ABG/BG Network Connection
+HOMEPAGE=http://intellinuxwireless.org/?p=iwlwifi
+KEYWORDS=amd64 x86
+LICENSE=ipw3945
+SLOT=0
+SRC_URI=http://intellinuxwireless.org/iwlwifi/downloads/iwlwifi-3945-ucode-15.32.2.9.tgz
+_md5_=fe623ff8b21dc78c96c5823960bbe6d4

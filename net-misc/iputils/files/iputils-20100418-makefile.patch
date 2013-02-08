@@ -1,0 +1,35 @@
+--- Makefile
++++ Makefile
+@@ -1,20 +1,17 @@
+ # Path to parent kernel include files directory
+ LIBC_INCLUDE=/usr/include
+ 
+-DEFINES= 
+-
+ #options if you have a bind>=4.9.4 libresolv (or, maybe, glibc)
+ LDLIBS=
+-ADDLIB=
+ 
+ #options if you compile with libc5, and without a bind>=4.9.4 libresolv
+ # NOT AVAILABLE. Please, use libresolv.
+ 
+-CC=gcc
+ # What a pity, all new gccs are buggy and -Werror does not work. Sigh.
+ #CCOPT=-D_GNU_SOURCE -O2 -Wstrict-prototypes -Wall -g -Werror
+-CCOPT=-D_GNU_SOURCE -O2 -Wstrict-prototypes -Wall -g
+-CFLAGS=$(CCOPT) $(GLIBCFIX) $(DEFINES) 
++CFLAGS ?= -O2 -g
++CFLAGS += -Wstrict-prototypes -Wall
++CPPFLAGS += -D_GNU_SOURCE
+ 
+ IPV4_TARGETS=tracepath ping clockdiff rdisc arping tftpd rarpd
+ IPV6_TARGETS=tracepath6 traceroute6 ping6
+@@ -35,7 +32,7 @@
+ rdisc_srv: rdisc_srv.o
+ 
+ rdisc_srv.o: rdisc.c
+-	$(CC) $(CFLAGS) -DRDISC_SERVER -o rdisc_srv.o rdisc.c
++	$(CC) $(CFLAGS) $(CPPFLAGS) -DRDISC_SERVER -o rdisc_srv.o rdisc.c
+ 
+ 
+ check-kernel:

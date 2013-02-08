@@ -1,0 +1,11 @@
+DEFINED_PHASES=install postinst setup
+DEPEND=>=sys-apps/baselayout-2 !<sys-apps/baselayout-2.0.1-r227 !<sys-libs/timezone-data-2011d !<=app-admin/sudo-1.8.2 !<sys-apps/mawk-1.3.4 !<app-shells/bash-4.1 !<app-shells/dash-0.5.5 !<net-misc/openssh-5.2_p1-r8 !cros_host? ( !app-misc/editor-wrapper sys-libs/timezone-data ) sys-apps/baselayout
+DESCRIPTION=ChromeOS specific system setup
+HOMEPAGE=http://src.chromium.org/
+IUSE=cros_host pam
+KEYWORDS=amd64 arm x86
+LICENSE=GPL-2
+RDEPEND=>=sys-apps/baselayout-2 !<sys-apps/baselayout-2.0.1-r227 !<sys-libs/timezone-data-2011d !<=app-admin/sudo-1.8.2 !<sys-apps/mawk-1.3.4 !<app-shells/bash-4.1 !<app-shells/dash-0.5.5 !<net-misc/openssh-5.2_p1-r8 !cros_host? ( !app-misc/editor-wrapper sys-libs/timezone-data ) sys-apps/baselayout
+SLOT=0
+_eclasses_=binutils-funcs	73669d0b20960c1cc54cf381a4b89e77	eutils	33ef77a15337022e05342d2c772a7a5a	flag-o-matic	01a8b1eb019305bc4b4a8bd0b04e4cd8	multilib	5f4ad6cf85e365e8f0c6050ddd21659e	pam	3f746974e1cc47cabe3bd488c08cdc8e	portability	0be430f759a631e692678ed796e09f5c	toolchain-funcs	64fc271a237429f84f36b91c9f4b9912	user	9e552f935106ff0bc92af16da64b4b29	useradd	fc85780d70dd069e45dbdfb10311d5d2
+_md5_=1e3263f4b4351be73c76077442bd01c3

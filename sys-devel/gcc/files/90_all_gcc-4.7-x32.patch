@@ -1,0 +1,2989 @@
+this patch was created from:
+
+git diff -p 475e5d65b13bfb798ff1f2c45ab46619ab050283^..remotes/origin/hjl/x32/gcc-4_7-branch
+
+hjlu's 4.7 branch is pretty much all backports from code in trunk
+
+--- a/boehm-gc/configure
++++ b/boehm-gc/configure
+@@ -6786,7 +6786,14 @@ s390*-*linux*|s390*-*tpf*|sparc*-*linux*)
+ 	    LD="${LD-ld} -m elf_i386_fbsd"
+ 	    ;;
+ 	  x86_64-*linux*)
+-	    LD="${LD-ld} -m elf_i386"
++	    case `/usr/bin/file conftest.o` in
++	      *x86-64*)
++		LD="${LD-ld} -m elf32_x86_64"
++		;;
++	      *)
++		LD="${LD-ld} -m elf_i386"
++		;;
++	    esac
+ 	    ;;
+ 	  ppc64-*linux*|powerpc64-*linux*)
+ 	    LD="${LD-ld} -m elf32ppclinux"
+--- a/boehm-gc/include/private/gcconfig.h
++++ b/boehm-gc/include/private/gcconfig.h
+@@ -1974,8 +1974,13 @@
+ 
+ # ifdef X86_64
+ #   define MACH_TYPE "X86_64"
+-#   define ALIGNMENT 8
+-#   define CPP_WORDSZ 64
++#   ifdef __ILP32__
++#     define ALIGNMENT 4
++#     define CPP_WORDSZ 32
++#   else
++#     define ALIGNMENT 8
++#     define CPP_WORDSZ 64
++#   endif
+ #   ifndef HBLKSIZE
+ #     define HBLKSIZE 4096
+ #   endif
+--- a/gcc/ada/gcc-interface/Makefile.in
++++ b/gcc/ada/gcc-interface/Makefile.in
+@@ -349,6 +349,10 @@ GNATMAKE_OBJS = a-except.o ali.o ali-util.o aspects.o s-casuti.o alloc.o \
+ ifeq ($(strip $(filter-out %x86_64, $(arch))),)
+   ifeq ($(strip $(MULTISUBDIR)),/32)
+     arch:=i686
++  else
++    ifeq ($(strip $(MULTISUBDIR)),/x32)
++      arch:=x32
++    endif
+   endif
+ endif
+ 
+@@ -2131,6 +2135,43 @@ ifeq ($(strip $(filter-out %x86_64 linux%,$(arch) $(osys))),)
+   LIBRARY_VERSION := $(LIB_VERSION)
+ endif
+ 
++ifeq ($(strip $(filter-out %x32 linux%,$(arch) $(osys))),)
++  LIBGNAT_TARGET_PAIRS = \
++  a-exetim.adb<a-exetim-posix.adb \
++  a-exetim.ads<a-exetim-default.ads \
++  a-intnam.ads<a-intnam-linux.ads \
++  a-synbar.adb<a-synbar-posix.adb \
++  a-synbar.ads<a-synbar-posix.ads \
++  s-inmaop.adb<s-inmaop-posix.adb \
++  s-intman.adb<s-intman-posix.adb \
++  s-linux.ads<s-linux.ads \
++  s-mudido.adb<s-mudido-affinity.adb \
++  s-osinte.ads<s-osinte-linux.ads \
++  s-osinte.adb<s-osinte-posix.adb \
++  s-osprim.adb<s-osprim-posix.adb \
++  s-taprop.adb<s-taprop-linux.adb \
++  s-tasinf.ads<s-tasinf-linux.ads \
++  s-tasinf.adb<s-tasinf-linux.adb \
++  s-tpopsp.adb<s-tpopsp-tls.adb \
++  s-taspri.ads<s-taspri-posix.ads \
++  g-sercom.adb<g-sercom-linux.adb \
++  $(ATOMICS_TARGET_PAIRS) \
++  $(X86_64_TARGET_PAIRS) \
++  system.ads<system-linux-x86.ads
++
++  TOOLS_TARGET_PAIRS =  \
++    mlib-tgt-specific.adb<mlib-tgt-specific-linux.adb \
++    indepsw.adb<indepsw-gnu.adb
++
++  EXTRA_GNATRTL_NONTASKING_OBJS=g-sse.o g-ssvety.o
++  EXTRA_GNATRTL_TASKING_OBJS=s-linux.o a-exetim.o
++  EH_MECHANISM=-gcc
++  THREADSLIB=-lpthread -lrt
++  GNATLIB_SHARED=gnatlib-shared-dual
++  GMEM_LIB = gmemlib
++  LIBRARY_VERSION := $(LIB_VERSION)
++endif
++
+ ifeq ($(strip $(filter-out darwin%,$(osys))),)
+   SO_OPTS = -shared-libgcc
+   LIBGNAT_TARGET_PAIRS = \
+--- a/gcc/ada/init.c
++++ b/gcc/ada/init.c
+@@ -615,9 +615,13 @@ __gnat_adjust_context_for_raise (int signo ATTRIBUTE_UNUSED, void *ucontext)
+   if (signo == SIGSEGV && pc && *pc == 0x00240c83)
+     mcontext->gregs[REG_ESP] += 4096 + 4 * sizeof (unsigned long);
+ #elif defined (__x86_64__)
+-  unsigned long *pc = (unsigned long *)mcontext->gregs[REG_RIP];
+-  /* The pattern is "orq $0x0,(%rsp)" for a probe in 64-bit mode.  */
+-  if (signo == SIGSEGV && pc && (*pc & 0xffffffffff) == 0x00240c8348)
++  unsigned long long *pc = (unsigned long long *)mcontext->gregs[REG_RIP];
++  if (signo == SIGSEGV && pc
++      /* The pattern is "orq $0x0,(%rsp)" for a probe in 64-bit mode.  */
++      && ((*pc & 0xffffffffffLL) == 0x00240c8348LL
++	  /* The pattern may also be "orl $0x0,(%esp)" for a probe in
++	     x32 mode.  */
++	  || (*pc & 0xffffffffLL) == 0x00240c83LL))
+     mcontext->gregs[REG_RSP] += 4096 + 4 * sizeof (unsigned long);
+ #elif defined (__ia64__)
+   /* ??? The IA-64 unwinder doesn't compensate for signals.  */
+--- a/gcc/ada/link.c
++++ b/gcc/ada/link.c
+@@ -187,7 +187,11 @@ unsigned char __gnat_using_gnu_linker = 1;
+ const char *__gnat_object_library_extension = ".a";
+ unsigned char __gnat_separate_run_path_options = 0;
+ #if defined (__x86_64)
++# if defined (__LP64__)
+ const char *__gnat_default_libgcc_subdir = "lib64";
++# else
++const char *__gnat_default_libgcc_subdir = "libx32";
++# endif
+ #else
+ const char *__gnat_default_libgcc_subdir = "lib";
+ #endif
+--- a/gcc/config.gcc
++++ b/gcc/config.gcc
+@@ -486,6 +486,10 @@ fi
+ 
+ case ${target} in
+ i[34567]86-*-*)
++	if test "x$with_abi" != x; then
++		echo "This target does not support --with-abi."
++		exit 1
++	fi
+ 	if test "x$enable_cld" = xyes; then
+ 		tm_defines="${tm_defines} USE_IX86_CLD=1"
+ 	fi
+@@ -495,7 +499,24 @@ i[34567]86-*-*)
+ 	tm_file="vxworks-dummy.h ${tm_file}"
+ 	;;
+ x86_64-*-*)
+-	tm_file="i386/biarch64.h ${tm_file}"
++	case ${with_abi} in
++	"")
++		if test "x$with_multilib_list" = xmx32; then
++			tm_file="i386/biarchx32.h ${tm_file}"
++		else
++			tm_file="i386/biarch64.h ${tm_file}"
++		fi
++		;;
++	64 | m64)
++		tm_file="i386/biarch64.h ${tm_file}"
++		;;
++	x32 | mx32)
++		tm_file="i386/biarchx32.h ${tm_file}"
++		;;
++	*)
++		echo "Unknown ABI used in --with-abi=$with_abi"
++		exit 1
++	esac
+ 	if test "x$enable_cld" = xyes; then
+ 		tm_defines="${tm_defines} USE_IX86_CLD=1"
+ 	fi
+@@ -3201,7 +3222,7 @@ case "${target}" in
+ 		;;
+ 
+ 	i[34567]86-*-* | x86_64-*-*)
+-		supported_defaults="arch arch_32 arch_64 cpu cpu_32 cpu_64 tune tune_32 tune_64"
++		supported_defaults="abi arch arch_32 arch_64 cpu cpu_32 cpu_64 tune tune_32 tune_64"
+ 		for which in arch arch_32 arch_64 cpu cpu_32 cpu_64 tune tune_32 tune_64; do
+ 			eval "val=\$with_$which"
+ 			case ${val} in
+--- a/gcc/config/arm/arm.opt
++++ b/gcc/config/arm/arm.opt
+@@ -59,7 +59,7 @@ Target Report Mask(ABORT_NORETURN)
+ Generate a call to abort if a noreturn function returns
+ 
+ mapcs
+-Target RejectNegative Mask(APCS_FRAME) MaskExists Undocumented
++Target RejectNegative Mask(APCS_FRAME) Undocumented
+ 
+ mapcs-float
+ Target Report Mask(APCS_FLOAT)
+--- a/gcc/config/cris/linux.opt
++++ b/gcc/config/cris/linux.opt
+@@ -23,7 +23,7 @@ mlinux
+ Target Report RejectNegative Undocumented
+ 
+ mno-gotplt
+-Target Report RejectNegative Mask(AVOID_GOTPLT) MaskExists
++Target Report RejectNegative Mask(AVOID_GOTPLT)
+ Together with -fpic and -fPIC, do not use GOTPLT references
+ 
+ ; There's a small added setup cost with using GOTPLT references
+--- a/gcc/config/host-linux.c
++++ b/gcc/config/host-linux.c
+@@ -68,8 +68,10 @@
+ # define TRY_EMPTY_VM_SPACE	0x10000000000
+ #elif defined(__ia64)
+ # define TRY_EMPTY_VM_SPACE	0x2000000100000000
+-#elif defined(__x86_64)
++#elif defined(__x86_64) && defined(__LP64__)
+ # define TRY_EMPTY_VM_SPACE	0x1000000000
++#elif defined(__x86_64)
++# define TRY_EMPTY_VM_SPACE	0x60000000
+ #elif defined(__i386)
+ # define TRY_EMPTY_VM_SPACE	0x60000000
+ #elif defined(__powerpc__)
+--- a/gcc/config/i386/biarch64.h
++++ b/gcc/config/i386/biarch64.h
+@@ -25,5 +25,5 @@ a copy of the GCC Runtime Library Exception along with this program;
+ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+ <http://www.gnu.org/licenses/>.  */
+ 
+-#define TARGET_64BIT_DEFAULT OPTION_MASK_ISA_64BIT
++#define TARGET_64BIT_DEFAULT (OPTION_MASK_ISA_64BIT | OPTION_MASK_ABI_64)
+ #define TARGET_BI_ARCH 1
+--- /dev/null
++++ b/gcc/config/i386/biarchx32.h
+@@ -0,0 +1,28 @@
++/* Make configure files to produce biarch compiler defaulting to x32 mode.
++   This file must be included very first, while the OS specific file later
++   to overwrite otherwise wrong defaults.
++   Copyright (C) 2012 Free Software Foundation, Inc.
++
++This file is part of GCC.
++
++GCC is free software; you can redistribute it and/or modify
++it under the terms of the GNU General Public License as published by
++the Free Software Foundation; either version 3, or (at your option)
++any later version.
++
++GCC is distributed in the hope that it will be useful,
++but WITHOUT ANY WARRANTY; without even the implied warranty of
++MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++GNU General Public License for more details.
++
++Under Section 7 of GPL version 3, you are granted additional
++permissions described in the GCC Runtime Library Exception, version
++3.1, as published by the Free Software Foundation.
++
++You should have received a copy of the GNU General Public License and
++a copy of the GCC Runtime Library Exception along with this program;
++see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
++<http://www.gnu.org/licenses/>.  */
++
++#define TARGET_64BIT_DEFAULT (OPTION_MASK_ISA_64BIT | OPTION_MASK_ABI_X32)
++#define TARGET_BI_ARCH 2
+--- a/gcc/config/i386/constraints.md
++++ b/gcc/config/i386/constraints.md
+@@ -18,7 +18,7 @@
+ ;; <http://www.gnu.org/licenses/>.
+ 
+ ;;; Unused letters:
+-;;;     B     H           T  W
++;;;     B     H           T
+ ;;;           h  k          v
+ 
+ ;; Integer register constraints.
+@@ -193,6 +193,16 @@
+    instructions)."
+   (match_operand 0 "x86_64_immediate_operand"))
+ 
++;; We use W prefix to denote any number of
++;; constant-or-symbol-reference constraints
++
++(define_constraint "Wz"
++  "32-bit unsigned integer constant, or a symbolic reference known
++   to fit that range (for zero-extending conversion operations that
++   require non-VOIDmode immediate operands)."
++  (and (match_operand 0 "x86_64_zext_immediate_operand")
++       (match_test "GET_MODE (op) != VOIDmode")))
++
+ (define_constraint "Z"
+   "32-bit unsigned integer constant, or a symbolic reference known
+    to fit that range (for immediate operands in zero-extending x86-64
+--- a/gcc/config/i386/gnu-user64.h
++++ b/gcc/config/i386/gnu-user64.h
+@@ -58,8 +58,13 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+ 
+ #if TARGET_64BIT_DEFAULT
+ #define SPEC_32 "m32"
++#if TARGET_BI_ARCH == 2
++#define SPEC_64 "m64"
++#define SPEC_X32 "m32|m64:;"
++#else
+ #define SPEC_64 "m32|mx32:;"
+ #define SPEC_X32 "mx32"
++#endif
+ #else
+ #define SPEC_32 "m64|mx32:;"
+ #define SPEC_64 "m64"
+@@ -95,7 +100,11 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+    %{shared|pie:crtendS.o%s;:crtend.o%s} crtn.o%s"
+ 
+ #if TARGET_64BIT_DEFAULT
++#if TARGET_BI_ARCH == 2
++#define MULTILIB_DEFAULTS { "mx32" }
++#else
+ #define MULTILIB_DEFAULTS { "m64" }
++#endif
+ #else
+ #define MULTILIB_DEFAULTS { "m32" }
+ #endif
+--- a/gcc/config/i386/i386-opts.h
++++ b/gcc/config/i386/i386-opts.h
+@@ -71,6 +71,11 @@ enum cmodel {
+   CM_LARGE_PIC	/* No assumptions.  */
+ };
+ 
++enum pmode {
++  PMODE_SI,	/* Pmode == SImode. */
++  PMODE_DI 	/* Pmode == DImode. */
++};
++
+ enum asm_dialect {
+   ASM_ATT,
+   ASM_INTEL
+--- a/gcc/config/i386/i386.c
++++ b/gcc/config/i386/i386.c
+@@ -2445,6 +2445,8 @@ static rtx (*ix86_gen_andsp) (rtx, rtx, rtx);
+ static rtx (*ix86_gen_allocate_stack_worker) (rtx, rtx);
+ static rtx (*ix86_gen_adjust_stack_and_probe) (rtx, rtx, rtx);
+ static rtx (*ix86_gen_probe_stack_range) (rtx, rtx, rtx);
++static rtx (*ix86_gen_tls_global_dynamic_64) (rtx, rtx, rtx);
++static rtx (*ix86_gen_tls_local_dynamic_base_64) (rtx, rtx);
+ 
+ /* Preferred alignment for stack boundary in bits.  */
+ unsigned int ix86_preferred_stack_boundary;
+@@ -2655,7 +2657,6 @@ ix86_target_string (HOST_WIDE_INT isa, int flags, const char *arch,
+      preceding options while match those first.  */
+   static struct ix86_target_opts isa_opts[] =
+   {
+-    { "-m64",		OPTION_MASK_ISA_64BIT },
+     { "-mfma4",		OPTION_MASK_ISA_FMA4 },
+     { "-mfma",		OPTION_MASK_ISA_FMA },
+     { "-mxop",		OPTION_MASK_ISA_XOP },
+@@ -2727,6 +2728,7 @@ ix86_target_string (HOST_WIDE_INT isa, int flags, const char *arch,
+   size_t len;
+   size_t line_len;
+   size_t sep_len;
++  const char *abi;
+ 
+   memset (opts, '\0', sizeof (opts));
+ 
+@@ -2744,6 +2746,21 @@ ix86_target_string (HOST_WIDE_INT isa, int flags, const char *arch,
+       opts[num++][1] = tune;
+     }
+ 
++  /* Add -m32/-m64/-mx32.  */
++  if ((isa & OPTION_MASK_ISA_64BIT) != 0)
++    {
++      if ((isa & OPTION_MASK_ABI_64) != 0)
++	abi = "-m64";
++      else
++	abi = "-mx32";
++      isa &= ~ (OPTION_MASK_ISA_64BIT
++		| OPTION_MASK_ABI_64
++		| OPTION_MASK_ABI_X32);
++    }
++  else
++    abi = "-m32";
++  opts[num++][0] = abi;
++
+   /* Pick out the options in isa options.  */
+   for (i = 0; i < ARRAY_SIZE (isa_opts); i++)
+     {
+@@ -3090,6 +3107,46 @@ ix86_option_override_internal (bool main_args_p)
+       sw = "attribute";
+     }
+ 
++  /* Turn off both OPTION_MASK_ABI_64 and OPTION_MASK_ABI_X32 if
++     TARGET_64BIT_DEFAULT is true and TARGET_64BIT is false.  */
++  if (TARGET_64BIT_DEFAULT && !TARGET_64BIT)
++    ix86_isa_flags &= ~(OPTION_MASK_ABI_64 | OPTION_MASK_ABI_X32);
++#ifdef TARGET_BI_ARCH
++  else
++    {
++#if TARGET_BI_ARCH == 1
++      /* When TARGET_BI_ARCH == 1, by default, OPTION_MASK_ABI_64
++	 is on and OPTION_MASK_ABI_X32 is off.  We turn off
++	 OPTION_MASK_ABI_64 if OPTION_MASK_ABI_X32 is turned on by
++	 -mx32.  */
++      if (TARGET_X32)
++	ix86_isa_flags &= ~OPTION_MASK_ABI_64;
++#else
++      /* When TARGET_BI_ARCH == 2, by default, OPTION_MASK_ABI_X32 is
++	 on and OPTION_MASK_ABI_64 is off.  We turn off
++	 OPTION_MASK_ABI_X32 if OPTION_MASK_ABI_64 is turned on by
++	 -m64.  */
++      if (TARGET_LP64)
++	ix86_isa_flags &= ~OPTION_MASK_ABI_X32;
++#endif
++    }
++#endif
++
++  if (TARGET_X32)
++    {
++      /* Always turn on OPTION_MASK_ISA_64BIT and turn off
++	 OPTION_MASK_ABI_64 for TARGET_X32.  */
++      ix86_isa_flags |= OPTION_MASK_ISA_64BIT;
++      ix86_isa_flags &= ~OPTION_MASK_ABI_64;
++    }
++  else if (TARGET_LP64)
++    {
++      /* Always turn on OPTION_MASK_ISA_64BIT and turn off
++	 OPTION_MASK_ABI_X32 for TARGET_LP64.  */
++      ix86_isa_flags |= OPTION_MASK_ISA_64BIT;
++      ix86_isa_flags &= ~OPTION_MASK_ABI_X32;
++    }
++
+ #ifdef SUBTARGET_OVERRIDE_OPTIONS
+   SUBTARGET_OVERRIDE_OPTIONS;
+ #endif
+@@ -3098,9 +3155,6 @@ ix86_option_override_internal (bool main_args_p)
+   SUBSUBTARGET_OVERRIDE_OPTIONS;
+ #endif
+ 
+-  if (TARGET_X32)
+-    ix86_isa_flags |= OPTION_MASK_ISA_64BIT;
+-
+   /* -fPIC is the default for x86_64.  */
+   if (TARGET_MACHO && TARGET_64BIT)
+     flag_pic = 2;
+@@ -3169,6 +3223,17 @@ ix86_option_override_internal (bool main_args_p)
+   else
+     ix86_arch_specified = 1;
+ 
++  if (global_options_set.x_ix86_pmode)
++    {
++      if ((TARGET_LP64 && ix86_pmode == PMODE_SI)
++	   || (!TARGET_64BIT && ix86_pmode == PMODE_DI))
++	error ("address mode %qs not supported in the %s bit mode",
++	       TARGET_64BIT ? "short" : "long",
++	       TARGET_64BIT ? "64" : "32");
++    }
++  else
++    ix86_pmode = TARGET_LP64 ? PMODE_DI : PMODE_SI;
++
+   if (!global_options_set.x_ix86_abi)
+     ix86_abi = DEFAULT_ABI;
+ 
+@@ -3743,11 +3808,33 @@ ix86_option_override_internal (bool main_args_p)
+   if (TARGET_64BIT)
+     {
+       ix86_gen_leave = gen_leave_rex64;
++      if (Pmode == DImode)
++	{
++	  ix86_gen_monitor = gen_sse3_monitor64_di;
++	  ix86_gen_tls_global_dynamic_64 = gen_tls_global_dynamic_64_di;
++	  ix86_gen_tls_local_dynamic_base_64
++	    = gen_tls_local_dynamic_base_64_di;
++	}
++      else
++	{
++	  ix86_gen_monitor = gen_sse3_monitor64_si;
++	  ix86_gen_tls_global_dynamic_64 = gen_tls_global_dynamic_64_si;
++	  ix86_gen_tls_local_dynamic_base_64
++	    = gen_tls_local_dynamic_base_64_si;
++	}
++    }
++  else
++    {
++      ix86_gen_leave = gen_leave;
++      ix86_gen_monitor = gen_sse3_monitor;
++    }
++
++  if (Pmode == DImode)
++    {
+       ix86_gen_add3 = gen_adddi3;
+       ix86_gen_sub3 = gen_subdi3;
+       ix86_gen_sub3_carry = gen_subdi3_carry;
+       ix86_gen_one_cmpl2 = gen_one_cmpldi2;
+-      ix86_gen_monitor = gen_sse3_monitor64;
+       ix86_gen_andsp = gen_anddi3;
+       ix86_gen_allocate_stack_worker = gen_allocate_stack_worker_probe_di;
+       ix86_gen_adjust_stack_and_probe = gen_adjust_stack_and_probedi;
+@@ -3755,12 +3842,10 @@ ix86_option_override_internal (bool main_args_p)
+     }
+   else
+     {
+-      ix86_gen_leave = gen_leave;
+       ix86_gen_add3 = gen_addsi3;
+       ix86_gen_sub3 = gen_subsi3;
+       ix86_gen_sub3_carry = gen_subsi3_carry;
+       ix86_gen_one_cmpl2 = gen_one_cmplsi2;
+-      ix86_gen_monitor = gen_sse3_monitor;
+       ix86_gen_andsp = gen_andsi3;
+       ix86_gen_allocate_stack_worker = gen_allocate_stack_worker_probe_si;
+       ix86_gen_adjust_stack_and_probe = gen_adjust_stack_and_probesi;
+@@ -7220,8 +7305,8 @@ function_value_64 (enum machine_mode orig_mode, enum machine_mode mode,
+     }
+   else if (POINTER_TYPE_P (valtype))
+     {
+-      /* Pointers are always returned in Pmode. */
+-      mode = Pmode;
++      /* Pointers are always returned in word_mode.  */
++      mode = word_mode;
+     }
+ 
+   ret = construct_container (mode, orig_mode, valtype, 1,
+@@ -7292,7 +7377,8 @@ ix86_function_value (const_tree valtype, const_tree fntype_or_decl,
+   return ix86_function_value_1 (valtype, fntype_or_decl, orig_mode, mode);
+ }
+ 
+-/* Pointer function arguments and return values are promoted to Pmode.  */
++/* Pointer function arguments and return values are promoted to
++   word_mode.  */
+ 
+ static enum machine_mode
+ ix86_promote_function_mode (const_tree type, enum machine_mode mode,
+@@ -7302,7 +7388,7 @@ ix86_promote_function_mode (const_tree type, enum machine_mode mode,
+   if (type != NULL_TREE && POINTER_TYPE_P (type))
+     {
+       *punsignedp = POINTERS_EXTEND_UNSIGNED;
+-      return Pmode;
++      return word_mode;
+     }
+   return default_promote_function_mode (type, mode, punsignedp, fntype,
+ 					for_return);
+@@ -7580,12 +7666,13 @@ setup_incoming_varargs_64 (CUMULATIVE_ARGS *cum)
+ 
+   for (i = cum->regno; i < max; i++)
+     {
+-      mem = gen_rtx_MEM (Pmode,
++      mem = gen_rtx_MEM (word_mode,
+ 			 plus_constant (save_area, i * UNITS_PER_WORD));
+       MEM_NOTRAP_P (mem) = 1;
+       set_mem_alias_set (mem, set);
+-      emit_move_insn (mem, gen_rtx_REG (Pmode,
+-					x86_64_int_parameter_registers[i]));
++      emit_move_insn (mem,
++		      gen_rtx_REG (word_mode,
++				   x86_64_int_parameter_registers[i]));
+     }
+ 
+   if (ix86_varargs_fpr_size)
+@@ -8640,8 +8727,11 @@ gen_push (rtx arg)
+     m->fs.cfa_offset += UNITS_PER_WORD;
+   m->fs.sp_offset += UNITS_PER_WORD;
+ 
++  if (REG_P (arg) && GET_MODE (arg) != word_mode)
++    arg = gen_rtx_REG (word_mode, REGNO (arg));
++
+   return gen_rtx_SET (VOIDmode,
+-		      gen_rtx_MEM (Pmode,
++		      gen_rtx_MEM (word_mode,
+ 				   gen_rtx_PRE_DEC (Pmode,
+ 						    stack_pointer_rtx)),
+ 		      arg);
+@@ -8652,9 +8742,12 @@ gen_push (rtx arg)
+ static rtx
+ gen_pop (rtx arg)
+ {
++  if (REG_P (arg) && GET_MODE (arg) != word_mode)
++    arg = gen_rtx_REG (word_mode, REGNO (arg));
++
+   return gen_rtx_SET (VOIDmode,
+ 		      arg,
+-		      gen_rtx_MEM (Pmode,
++		      gen_rtx_MEM (word_mode,
+ 				   gen_rtx_POST_INC (Pmode,
+ 						     stack_pointer_rtx)));
+ }
+@@ -9121,7 +9214,7 @@ ix86_emit_save_regs (void)
+   for (regno = FIRST_PSEUDO_REGISTER - 1; regno-- > 0; )
+     if (!SSE_REGNO_P (regno) && ix86_save_reg (regno, true))
+       {
+-	insn = emit_insn (gen_push (gen_rtx_REG (Pmode, regno)));
++	insn = emit_insn (gen_push (gen_rtx_REG (word_mode, regno)));
+ 	RTX_FRAME_RELATED_P (insn) = 1;
+       }
+ }
+@@ -9201,7 +9294,7 @@ ix86_emit_save_regs_using_mov (HOST_WIDE_INT cfa_offset)
+   for (regno = 0; regno < FIRST_PSEUDO_REGISTER; regno++)
+     if (!SSE_REGNO_P (regno) && ix86_save_reg (regno, true))
+       {
+-        ix86_emit_save_reg_using_mov (Pmode, regno, cfa_offset);
++        ix86_emit_save_reg_using_mov (word_mode, regno, cfa_offset);
+ 	cfa_offset -= UNITS_PER_WORD;
+       }
+ }
+@@ -9276,7 +9369,7 @@ pro_epilogue_adjust_stack (rtx dest, rtx src, rtx offset,
+   rtx insn;
+   bool add_frame_related_expr = false;
+ 
+-  if (! TARGET_64BIT)
++  if (Pmode == SImode)
+     insn = gen_pro_epilogue_adjust_stack_si_add (dest, src, offset);
+   else if (x86_64_immediate_operand (offset, DImode))
+     insn = gen_pro_epilogue_adjust_stack_di_add (dest, src, offset);
+@@ -10138,7 +10231,7 @@ ix86_expand_prologue (void)
+ 	 to implement macro RETURN_ADDR_RTX and intrinsic function
+ 	 expand_builtin_return_addr etc.  */
+       t = plus_constant (crtl->drap_reg, -UNITS_PER_WORD);
+-      t = gen_frame_mem (Pmode, t);
++      t = gen_frame_mem (word_mode, t);
+       insn = emit_insn (gen_push (t));
+       RTX_FRAME_RELATED_P (insn) = 1;
+ 
+@@ -10310,7 +10403,7 @@ ix86_expand_prologue (void)
+       emit_insn (ix86_gen_allocate_stack_worker (eax, eax));
+ 
+       /* Use the fact that AX still contains ALLOCATE.  */
+-      adjust_stack_insn = (TARGET_64BIT
++      adjust_stack_insn = (Pmode == DImode
+ 			   ? gen_pro_epilogue_adjust_stack_di_sub
+ 			   : gen_pro_epilogue_adjust_stack_si_sub);
+ 
+@@ -10335,14 +10428,18 @@ ix86_expand_prologue (void)
+       if (r10_live && eax_live)
+         {
+ 	  t = choose_baseaddr (m->fs.sp_offset - allocate);
+-	  emit_move_insn (r10, gen_frame_mem (Pmode, t));
++	  emit_move_insn (gen_rtx_REG (word_mode, R10_REG),
++			  gen_frame_mem (word_mode, t));
+ 	  t = choose_baseaddr (m->fs.sp_offset - allocate - UNITS_PER_WORD);
+-	  emit_move_insn (eax, gen_frame_mem (Pmode, t));
++	  emit_move_insn (gen_rtx_REG (word_mode, AX_REG),
++			  gen_frame_mem (word_mode, t));
+ 	}
+       else if (eax_live || r10_live)
+ 	{
+ 	  t = choose_baseaddr (m->fs.sp_offset - allocate);
+-	  emit_move_insn ((eax_live ? eax : r10), gen_frame_mem (Pmode, t));
++	  emit_move_insn (gen_rtx_REG (word_mode,
++				       (eax_live ? AX_REG : R10_REG)),
++			  gen_frame_mem (word_mode, t));
+ 	}
+     }
+   gcc_assert (m->fs.sp_offset == frame.stack_pointer_offset);
+@@ -10512,7 +10609,7 @@ ix86_emit_restore_regs_using_pop (void)
+ 
+   for (regno = 0; regno < FIRST_PSEUDO_REGISTER; regno++)
+     if (!SSE_REGNO_P (regno) && ix86_save_reg (regno, false))
+-      ix86_emit_restore_reg_using_pop (gen_rtx_REG (Pmode, regno));
++      ix86_emit_restore_reg_using_pop (gen_rtx_REG (word_mode, regno));
+ }
+ 
+ /* Emit code and notes for the LEAVE instruction.  */
+@@ -10555,11 +10652,11 @@ ix86_emit_restore_regs_using_mov (HOST_WIDE_INT cfa_offset,
+   for (regno = 0; regno < FIRST_PSEUDO_REGISTER; regno++)
+     if (!SSE_REGNO_P (regno) && ix86_save_reg (regno, maybe_eh_return))
+       {
+-	rtx reg = gen_rtx_REG (Pmode, regno);
++	rtx reg = gen_rtx_REG (word_mode, regno);
+ 	rtx insn, mem;
+ 
+ 	mem = choose_baseaddr (cfa_offset);
+-	mem = gen_frame_mem (Pmode, mem);
++	mem = gen_frame_mem (word_mode, mem);
+ 	insn = emit_move_insn (reg, mem);
+ 
+         if (m->fs.cfa_reg == crtl->drap_reg && regno == REGNO (crtl->drap_reg))
+@@ -11164,8 +11261,8 @@ ix86_expand_split_stack_prologue (void)
+ 	{
+ 	  rtx rax;
+ 
+-	  rax = gen_rtx_REG (Pmode, AX_REG);
+-	  emit_move_insn (rax, reg10);
++	  rax = gen_rtx_REG (word_mode, AX_REG);
++	  emit_move_insn (rax, gen_rtx_REG (word_mode, R10_REG));
+ 	  use_reg (&call_fusage, rax);
+ 	}
+ 
+@@ -11244,8 +11341,8 @@ ix86_expand_split_stack_prologue (void)
+   /* If we are in 64-bit mode and this function uses a static chain,
+      we saved %r10 in %rax before calling _morestack.  */
+   if (TARGET_64BIT && DECL_STATIC_CHAIN (cfun->decl))
+-    emit_move_insn (gen_rtx_REG (Pmode, R10_REG),
+-		    gen_rtx_REG (Pmode, AX_REG));
++    emit_move_insn (gen_rtx_REG (word_mode, R10_REG),
++		    gen_rtx_REG (word_mode, AX_REG));
+ 
+   /* If this function calls va_start, we need to store a pointer to
+      the arguments on the old stack, because they may not have been
+@@ -11375,10 +11472,14 @@ ix86_decompose_address (rtx addr, struct ix86_address *out)
+ 	{
+ 	  addr = XEXP (addr, 0);
+ 
+-	  /* Strip subreg.  */
++	  /* Adjust SUBREGs.  */
+ 	  if (GET_CODE (addr) == SUBREG
+ 	      && GET_MODE (SUBREG_REG (addr)) == SImode)
+ 	    addr = SUBREG_REG (addr);
++	  else if (GET_MODE (addr) == DImode)
++	    addr = gen_rtx_SUBREG (SImode, addr, 0);
++	  else if (GET_MODE (addr) != VOIDmode)
++	    return 0;
+ 	}
+     }
+ 
+@@ -11434,6 +11535,12 @@ ix86_decompose_address (rtx addr, struct ix86_address *out)
+ 	      scale = 1 << scale;
+ 	      break;
+ 
++	    case ZERO_EXTEND:
++	      op = XEXP (op, 0);
++	      if (GET_CODE (op) != UNSPEC)
++		return 0;
++	      /* FALLTHRU */
++
+ 	    case UNSPEC:
+ 	      if (XINT (op, 1) == UNSPEC_TP
+ 	          && TARGET_TLS_DIRECT_SEG_REFS
+@@ -11503,6 +11610,12 @@ ix86_decompose_address (rtx addr, struct ix86_address *out)
+ 	return 0;
+     }
+ 
++/* Address override works only on the (%reg) part of %fs:(%reg).  */
++  if (seg != SEG_DEFAULT
++      && ((base && GET_MODE (base) != word_mode)
++	  || (index && GET_MODE (index) != word_mode)))
++    return 0;
++
+   /* Extract the integral value of scale.  */
+   if (scale_rtx)
+     {
+@@ -12455,15 +12568,20 @@ legitimize_pic_address (rtx orig, rtx reg)
+ /* Load the thread pointer.  If TO_REG is true, force it into a register.  */
+ 
+ static rtx
+-get_thread_pointer (bool to_reg)
++get_thread_pointer (enum machine_mode tp_mode, bool to_reg)
+ {
+   rtx tp = gen_rtx_UNSPEC (ptr_mode, gen_rtvec (1, const0_rtx), UNSPEC_TP);
+ 
+-  if (GET_MODE (tp) != Pmode)
+-    tp = convert_to_mode (Pmode, tp, 1);
++  if (GET_MODE (tp) != tp_mode)
++    {
++      gcc_assert (GET_MODE (tp) == SImode);
++      gcc_assert (tp_mode == DImode);
++
++      tp = gen_rtx_ZERO_EXTEND (tp_mode, tp);
++    }
+ 
+   if (to_reg)
+-    tp = copy_addr_to_reg (tp);
++    tp = copy_to_mode_reg (tp_mode, tp);
+ 
+   return tp;
+ }
+@@ -12515,6 +12633,7 @@ legitimize_tls_address (rtx x, enum tls_model model, bool for_mov)
+ {
+   rtx dest, base, off;
+   rtx pic = NULL_RTX, tp = NULL_RTX;
++  enum machine_mode tp_mode = Pmode;
+   int type;
+ 
+   switch (model)
+@@ -12540,7 +12659,7 @@ legitimize_tls_address (rtx x, enum tls_model model, bool for_mov)
+ 	  else
+ 	    emit_insn (gen_tls_dynamic_gnu2_32 (dest, x, pic));
+ 
+-	  tp = get_thread_pointer (true);
++	  tp = get_thread_pointer (Pmode, true);
+ 	  dest = force_reg (Pmode, gen_rtx_PLUS (Pmode, tp, dest));
+ 
+ 	  set_unique_reg_note (get_last_insn (), REG_EQUAL, x);
+@@ -12554,7 +12673,8 @@ legitimize_tls_address (rtx x, enum tls_model model, bool for_mov)
+ 	      rtx rax = gen_rtx_REG (Pmode, AX_REG), insns;
+ 
+ 	      start_sequence ();
+-	      emit_call_insn (gen_tls_global_dynamic_64 (rax, x, caddr));
++	      emit_call_insn (ix86_gen_tls_global_dynamic_64 (rax, x,
++							      caddr));
+ 	      insns = get_insns ();
+ 	      end_sequence ();
+ 
+@@ -12589,7 +12709,7 @@ legitimize_tls_address (rtx x, enum tls_model model, bool for_mov)
+ 	  else
+ 	    emit_insn (gen_tls_dynamic_gnu2_32 (base, tmp, pic));
+ 
+-	  tp = get_thread_pointer (true);
++	  tp = get_thread_pointer (Pmode, true);
+ 	  set_unique_reg_note (get_last_insn (), REG_EQUAL,
+ 			       gen_rtx_MINUS (Pmode, tmp, tp));
+ 	}
+@@ -12602,7 +12722,8 @@ legitimize_tls_address (rtx x, enum tls_model model, bool for_mov)
+ 	      rtx rax = gen_rtx_REG (Pmode, AX_REG), insns, eqv;
+ 
+ 	      start_sequence ();
+-	      emit_call_insn (gen_tls_local_dynamic_base_64 (rax, caddr));
++	      emit_call_insn (ix86_gen_tls_local_dynamic_base_64 (rax,
++								  caddr));
+ 	      insns = get_insns ();
+ 	      end_sequence ();
+ 
+@@ -12645,6 +12766,9 @@ legitimize_tls_address (rtx x, enum tls_model model, bool for_mov)
+ 	      return dest;
+ 	    }
+ 
++	  /* Generate DImode references to avoid %fs:(%reg32)
++	     problems and linker IE->LE relaxation bug.  */
++	  tp_mode = DImode;
+ 	  pic = NULL;
+ 	  type = UNSPEC_GOTNTPOFF;
+ 	}
+@@ -12667,22 +12791,23 @@ legitimize_tls_address (rtx x, enum tls_model model, bool for_mov)
+ 	  type = UNSPEC_INDNTPOFF;
+ 	}
+ 
+-      off = gen_rtx_UNSPEC (Pmode, gen_rtvec (1, x), type);
+-      off = gen_rtx_CONST (Pmode, off);
++      off = gen_rtx_UNSPEC (tp_mode, gen_rtvec (1, x), type);
++      off = gen_rtx_CONST (tp_mode, off);
+       if (pic)
+-	off = gen_rtx_PLUS (Pmode, pic, off);
+-      off = gen_const_mem (Pmode, off);
++	off = gen_rtx_PLUS (tp_mode, pic, off);
++      off = gen_const_mem (tp_mode, off);
+       set_mem_alias_set (off, ix86_GOT_alias_set ());
+ 
+       if (TARGET_64BIT || TARGET_ANY_GNU_TLS)
+ 	{
+-          base = get_thread_pointer (for_mov || !TARGET_TLS_DIRECT_SEG_REFS);
+-	  off = force_reg (Pmode, off);
+-	  return gen_rtx_PLUS (Pmode, base, off);
++	  base = get_thread_pointer (tp_mode,
++				     for_mov || !TARGET_TLS_DIRECT_SEG_REFS);
++	  off = force_reg (tp_mode, off);
++	  return gen_rtx_PLUS (tp_mode, base, off);
+ 	}
+       else
+ 	{
+-	  base = get_thread_pointer (true);
++	  base = get_thread_pointer (Pmode, true);
+ 	  dest = gen_reg_rtx (Pmode);
+ 	  emit_insn (gen_subsi3 (dest, base, off));
+ 	}
+@@ -12696,12 +12821,13 @@ legitimize_tls_address (rtx x, enum tls_model model, bool for_mov)
+ 
+       if (TARGET_64BIT || TARGET_ANY_GNU_TLS)
+ 	{
+-	  base = get_thread_pointer (for_mov || !TARGET_TLS_DIRECT_SEG_REFS);
++	  base = get_thread_pointer (Pmode,
++				     for_mov || !TARGET_TLS_DIRECT_SEG_REFS);
+ 	  return gen_rtx_PLUS (Pmode, base, off);
+ 	}
+       else
+ 	{
+-	  base = get_thread_pointer (true);
++	  base = get_thread_pointer (Pmode, true);
+ 	  dest = gen_reg_rtx (Pmode);
+ 	  emit_insn (gen_subsi3 (dest, base, off));
+ 	}
+@@ -13756,6 +13882,7 @@ get_some_local_dynamic_name (void)
+    Z -- likewise, with special suffixes for x87 instructions.
+    * -- print a star (in certain assembler syntax)
+    A -- print an absolute memory reference.
++   E -- print address with DImode register names if TARGET_64BIT.
+    w -- print the operand as if it's a "word" (HImode) even if it isn't.
+    s -- print a shift double count, followed by the assemblers argument
+ 	delimiter.
+@@ -13780,6 +13907,7 @@ get_some_local_dynamic_name (void)
+    ; -- print a semicolon (after prefixes due to bug in older gas).
+    ~ -- print "i" if TARGET_AVX2, "f" otherwise.
+    @ -- print a segment register of thread base pointer load
++   ^ -- print addr32 prefix if TARGET_64BIT and Pmode != word_mode
+  */
+ 
+ void
+@@ -13831,7 +13959,14 @@ ix86_print_operand (FILE *file, rtx x, int code)
+ 	  ix86_print_operand (file, x, 0);
+ 	  return;
+ 
++	case 'E':
++	  /* Wrap address in an UNSPEC to declare special handling.  */
++	  if (TARGET_64BIT)
++	    x = gen_rtx_UNSPEC (DImode, gen_rtvec (1, x), UNSPEC_LEA_ADDR);
+ 
++	  output_address (x);
++	  return;
++	    
+ 	case 'L':
+ 	  if (ASSEMBLER_DIALECT == ASM_ATT)
+ 	    putc ('l', file);
+@@ -14283,6 +14418,11 @@ ix86_print_operand (FILE *file, rtx x, int code)
+ 	  putc (TARGET_AVX2 ? 'i' : 'f', file);
+ 	  return;
+ 
++	case '^':
++	  if (TARGET_64BIT && Pmode != word_mode)
++	    fputs ("addr32 ", file);
++	  return;
++
+ 	default:
+ 	    output_operand_lossage ("invalid operand code '%c'", code);
+ 	}
+@@ -14422,8 +14562,8 @@ ix86_print_operand (FILE *file, rtx x, int code)
+ static bool
+ ix86_print_operand_punct_valid_p (unsigned char code)
+ {
+-  return (code == '@' || code == '*' || code == '+'
+-	  || code == '&' || code == ';' || code == '~');
++  return (code == '@' || code == '*' || code == '+' || code == '&'
++	  || code == ';' || code == '~' || code == '^');
+ }
+ 
+ /* Print a memory operand whose address is ADDR.  */
+@@ -14436,6 +14576,7 @@ ix86_print_operand_address (FILE *file, rtx addr)
+   int scale;
+   int ok;
+   bool vsib = false;
++  int code = 0;
+ 
+   if (GET_CODE (addr) == UNSPEC && XINT (addr, 1) == UNSPEC_VSIBADDR)
+     {
+@@ -14446,6 +14587,12 @@ ix86_print_operand_address (FILE *file, rtx addr)
+       addr = XVECEXP (addr, 0, 0);
+       vsib = true;
+     }
++  else if (GET_CODE (addr) == UNSPEC && XINT (addr, 1) == UNSPEC_LEA_ADDR)
++    {
++      gcc_assert (TARGET_64BIT);
++      ok = ix86_decompose_address (XVECEXP (addr, 0, 0), &parts);
++      code = 'q';
++    }
+   else
+     ok = ix86_decompose_address (addr, &parts);
+ 
+@@ -14516,15 +14663,15 @@ ix86_print_operand_address (FILE *file, rtx addr)
+     }
+   else
+     {
+-      int code = 0;
+-
+-      /* Print SImode registers for zero-extended addresses to force
+-	 addr32 prefix.  Otherwise print DImode registers to avoid it.  */
+-      if (TARGET_64BIT)
+-	code = ((GET_CODE (addr) == ZERO_EXTEND
+-		 || GET_CODE (addr) == AND)
+-		? 'l'
+-		: 'q');
++      /* Print SImode register names for zero-extended
++	 addresses to force addr32 prefix.  */
++      if (TARGET_64BIT
++	  && (GET_CODE (addr) == ZERO_EXTEND
++	      || GET_CODE (addr) == AND))
++	{
++	  gcc_assert (!code);
++	  code = 'l';
++	}
+ 
+       if (ASSEMBLER_DIALECT == ASM_ATT)
+ 	{
+@@ -20299,7 +20446,7 @@ ix86_split_to_parts (rtx operand, rtx *parts, enum machine_mode mode)
+       gcc_assert (ok);
+ 
+       operand = copy_rtx (operand);
+-      PUT_MODE (operand, Pmode);
++      PUT_MODE (operand, word_mode);
+       parts[0] = parts[1] = parts[2] = parts[3] = operand;
+       return size;
+     }
+@@ -20452,7 +20599,7 @@ ix86_split_long_move (rtx operands[])
+       if (push_operand (operands[0], VOIDmode))
+ 	{
+ 	  operands[0] = copy_rtx (operands[0]);
+-	  PUT_MODE (operands[0], Pmode);
++	  PUT_MODE (operands[0], word_mode);
+ 	}
+       else
+         operands[0] = gen_lowpart (DImode, operands[0]);
+@@ -21007,14 +21154,9 @@ ix86_adjust_counter (rtx countreg, HOST_WIDE_INT value)
+ rtx
+ ix86_zero_extend_to_Pmode (rtx exp)
+ {
+-  rtx r;
+-  if (GET_MODE (exp) == VOIDmode)
+-    return force_reg (Pmode, exp);
+-  if (GET_MODE (exp) == Pmode)
+-    return copy_to_mode_reg (Pmode, exp);
+-  r = gen_reg_rtx (Pmode);
+-  emit_insn (gen_zero_extendsidi2 (r, exp));
+-  return r;
++  if (GET_MODE (exp) != Pmode)
++    exp = convert_to_mode (Pmode, exp, 1);
++  return force_reg (Pmode, exp);
+ }
+ 
+ /* Divide COUNTREG by SCALE.  */
+@@ -22042,11 +22184,11 @@ ix86_expand_movmem (rtx dst, rtx src, rtx count_exp, rtx align_exp,
+       gcc_unreachable ();
+     case loop:
+       need_zero_guard = true;
+-      size_needed = GET_MODE_SIZE (Pmode);
++      size_needed = GET_MODE_SIZE (word_mode);
+       break;
+     case unrolled_loop:
+       need_zero_guard = true;
+-      size_needed = GET_MODE_SIZE (Pmode) * (TARGET_64BIT ? 4 : 2);
++      size_needed = GET_MODE_SIZE (word_mode) * (TARGET_64BIT ? 4 : 2);
+       break;
+     case rep_prefix_8_byte:
+       size_needed = 8;
+@@ -22212,13 +22354,13 @@ ix86_expand_movmem (rtx dst, rtx src, rtx count_exp, rtx align_exp,
+       break;
+     case loop:
+       expand_set_or_movmem_via_loop (dst, src, destreg, srcreg, NULL,
+-				     count_exp, Pmode, 1, expected_size);
++				     count_exp, word_mode, 1, expected_size);
+       break;
+     case unrolled_loop:
+       /* Unroll only by factor of 2 in 32bit mode, since we don't have enough
+ 	 registers for 4 temporaries anyway.  */
+       expand_set_or_movmem_via_loop (dst, src, destreg, srcreg, NULL,
+-				     count_exp, Pmode, TARGET_64BIT ? 4 : 2,
++				     count_exp, word_mode, TARGET_64BIT ? 4 : 2,
+ 				     expected_size);
+       break;
+     case rep_prefix_8_byte:
+@@ -22430,11 +22572,11 @@ ix86_expand_setmem (rtx dst, rtx count_exp, rtx val_exp, rtx align_exp,
+       gcc_unreachable ();
+     case loop:
+       need_zero_guard = true;
+-      size_needed = GET_MODE_SIZE (Pmode);
++      size_needed = GET_MODE_SIZE (word_mode);
+       break;
+     case unrolled_loop:
+       need_zero_guard = true;
+-      size_needed = GET_MODE_SIZE (Pmode) * 4;
++      size_needed = GET_MODE_SIZE (word_mode) * 4;
+       break;
+     case rep_prefix_8_byte:
+       size_needed = 8;
+@@ -22605,11 +22747,11 @@ ix86_expand_setmem (rtx dst, rtx count_exp, rtx val_exp, rtx align_exp,
+       break;
+     case loop:
+       expand_set_or_movmem_via_loop (dst, NULL, destreg, NULL, promoted_val,
+-				     count_exp, Pmode, 1, expected_size);
++				     count_exp, word_mode, 1, expected_size);
+       break;
+     case unrolled_loop:
+       expand_set_or_movmem_via_loop (dst, NULL, destreg, NULL, promoted_val,
+-				     count_exp, Pmode, 4, expected_size);
++				     count_exp, word_mode, 4, expected_size);
+       break;
+     case rep_prefix_8_byte:
+       expand_setmem_via_rep_stos (dst, destreg, promoted_val, count_exp,
+@@ -22972,13 +23114,13 @@ ix86_expand_call (rtx retval, rtx fnaddr, rtx callarg1,
+       && !local_symbolic_operand (XEXP (fnaddr, 0), VOIDmode))
+     fnaddr = gen_rtx_MEM (QImode, construct_plt_address (XEXP (fnaddr, 0)));
+   else if (sibcall
+-	   ? !sibcall_insn_operand (XEXP (fnaddr, 0), Pmode)
+-	   : !call_insn_operand (XEXP (fnaddr, 0), Pmode))
++	   ? !sibcall_insn_operand (XEXP (fnaddr, 0), word_mode)
++	   : !call_insn_operand (XEXP (fnaddr, 0), word_mode))
+     {
+       fnaddr = XEXP (fnaddr, 0);
+-      if (GET_MODE (fnaddr) != Pmode)
+-	fnaddr = convert_to_mode (Pmode, fnaddr, 1);
+-      fnaddr = gen_rtx_MEM (QImode, copy_to_mode_reg (Pmode, fnaddr));
++      if (GET_MODE (fnaddr) != word_mode)
++	fnaddr = convert_to_mode (word_mode, fnaddr, 1);
++      fnaddr = gen_rtx_MEM (QImode, copy_to_mode_reg (word_mode, fnaddr));
+     }
+ 
+   vec_len = 0;
+@@ -24291,10 +24433,13 @@ ix86_trampoline_init (rtx m_tramp, tree fndecl, rtx chain_value)
+       /* Load the function address to r11.  Try to load address using
+ 	 the shorter movl instead of movabs.  We may want to support
+ 	 movq for kernel mode, but kernel does not use trampolines at
+-	 the moment.  */
+-      if (x86_64_zext_immediate_operand (fnaddr, VOIDmode))
++	 the moment.  FNADDR is a 32bit address and may not be in
++	 DImode when ptr_mode == SImode.  Always use movl in this
++	 case.  */
++      if (ptr_mode == SImode
++	  || x86_64_zext_immediate_operand (fnaddr, VOIDmode))
+ 	{
+-	  fnaddr = copy_to_mode_reg (DImode, fnaddr);
++	  fnaddr = copy_to_mode_reg (Pmode, fnaddr);
+ 
+ 	  mem = adjust_address (m_tramp, HImode, offset);
+ 	  emit_move_insn (mem, gen_int_mode (0xbb41, HImode));
+@@ -24313,9 +24458,9 @@ ix86_trampoline_init (rtx m_tramp, tree fndecl, rtx chain_value)
+ 	  offset += 10;
+ 	}
+ 
+-      /* Load static chain using movabs to r10.  Use the
+-	 shorter movl instead of movabs for x32.  */
+-      if (TARGET_X32)
++      /* Load static chain using movabs to r10.  Use the shorter movl
++         instead of movabs when ptr_mode == SImode.  */
++      if (ptr_mode == SImode)
+ 	{
+ 	  opcode = 0xba41;
+ 	  size = 6;
+@@ -31952,7 +32097,7 @@ x86_this_parameter (tree function)
+         parm_regs = x86_64_ms_abi_int_parameter_registers;
+       else
+         parm_regs = x86_64_int_parameter_registers;
+-      return gen_rtx_REG (DImode, parm_regs[aggr]);
++      return gen_rtx_REG (Pmode, parm_regs[aggr]);
+     }
+ 
+   nregs = ix86_function_regparm (type, function);
+--- a/gcc/config/i386/i386.h
++++ b/gcc/config/i386/i386.h
+@@ -42,7 +42,6 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+ /* Redefines for option macros.  */
+ 
+ #define TARGET_64BIT	OPTION_ISA_64BIT
+-#define TARGET_X32	OPTION_ISA_X32
+ #define TARGET_MMX	OPTION_ISA_MMX
+ #define TARGET_3DNOW	OPTION_ISA_3DNOW
+ #define TARGET_3DNOW_A	OPTION_ISA_3DNOW_A
+@@ -76,7 +75,8 @@ see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
+ #define TARGET_RDRND	OPTION_ISA_RDRND
+ #define TARGET_F16C	OPTION_ISA_F16C
+ 
+-#define TARGET_LP64	(TARGET_64BIT && !TARGET_X32)
++#define TARGET_LP64	OPTION_ABI_64
++#define TARGET_X32	OPTION_ABI_X32
+ 
+ /* SSE4.1 defines round instructions */
+ #define	OPTION_MASK_ISA_ROUND	OPTION_MASK_ISA_SSE4_1
+@@ -1760,7 +1760,7 @@ do {							\
+ /* Specify the machine mode that pointers have.
+    After generation of rtl, the compiler makes no further distinction
+    between pointers and any other objects of this machine mode.  */
+-#define Pmode (TARGET_64BIT ? DImode : SImode)
++#define Pmode (ix86_pmode == PMODE_DI ? DImode : SImode)
+ 
+ /* A C expression whose value is zero if pointers that need to be extended
+    from being `POINTER_SIZE' bits wide to `Pmode' are sign-extended and
+--- a/gcc/config/i386/i386.md
++++ b/gcc/config/i386/i386.md
+@@ -38,6 +38,7 @@
+ ;; Z -- likewise, with special suffixes for x87 instructions.
+ ;; * -- print a star (in certain assembler syntax)
+ ;; A -- print an absolute memory reference.
++;; E -- print address with DImode register names if TARGET_64BIT.
+ ;; w -- print the operand as if it's a "word" (HImode) even if it isn't.
+ ;; s -- print a shift double count, followed by the assemblers argument
+ ;;	delimiter.
+@@ -60,7 +61,9 @@
+ ;; Y -- print condition for XOP pcom* instruction.
+ ;; + -- print a branch hint as 'cs' or 'ds' prefix
+ ;; ; -- print a semicolon (after prefixes due to bug in older gas).
++;; ~ -- print "i" if TARGET_AVX2, "f" otherwise.
+ ;; @ -- print a segment register of thread base pointer load
++;; ^ -- print addr32 prefix if TARGET_64BIT and Pmode != word_mode
+ 
+ (define_c_enum "unspec" [
+   ;; Relocation specifiers
+@@ -109,6 +112,7 @@
+   UNSPEC_CALL_NEEDS_VZEROUPPER
+   UNSPEC_PAUSE
+   UNSPEC_XBEGIN_ABORT
++  UNSPEC_LEA_ADDR
+ 
+   ;; For SSE/MMX support:
+   UNSPEC_FIX_NOTRUNC
+@@ -892,6 +896,11 @@
+ ;; pointer-sized quantities.  Exactly one of the two alternatives will match.
+ (define_mode_iterator P [(SI "Pmode == SImode") (DI "Pmode == DImode")])
+ 
++;; This mode iterator allows :W to be used for patterns that operate on
++;; word_mode sized quantities.
++(define_mode_iterator W
++  [(SI "word_mode == SImode") (DI "word_mode == DImode")])
++
+ ;; This mode iterator allows :PTR to be used for patterns that operate on
+ ;; ptr_mode sized quantities.
+ (define_mode_iterator PTR
+@@ -1700,8 +1709,8 @@
+    (set_attr "mode" "SI")])
+ 
+ (define_insn "*push<mode>2_prologue"
+-  [(set (match_operand:P 0 "push_operand" "=<")
+-	(match_operand:P 1 "general_no_elim_operand" "r<i>*m"))
++  [(set (match_operand:W 0 "push_operand" "=<")
++	(match_operand:W 1 "general_no_elim_operand" "r<i>*m"))
+    (clobber (mem:BLK (scratch)))]
+   ""
+   "push{<imodesuffix>}\t%1"
+@@ -1709,16 +1718,16 @@
+    (set_attr "mode" "<MODE>")])
+ 
+ (define_insn "*pop<mode>1"
+-  [(set (match_operand:P 0 "nonimmediate_operand" "=r*m")
+-	(match_operand:P 1 "pop_operand" ">"))]
++  [(set (match_operand:W 0 "nonimmediate_operand" "=r*m")
++	(match_operand:W 1 "pop_operand" ">"))]
+   ""
+   "pop{<imodesuffix>}\t%0"
+   [(set_attr "type" "pop")
+    (set_attr "mode" "<MODE>")])
+ 
+ (define_insn "*pop<mode>1_epilogue"
+-  [(set (match_operand:P 0 "nonimmediate_operand" "=r*m")
+-	(match_operand:P 1 "pop_operand" ">"))
++  [(set (match_operand:W 0 "nonimmediate_operand" "=r*m")
++	(match_operand:W 1 "pop_operand" ">"))
+    (clobber (mem:BLK (scratch)))]
+   ""
+   "pop{<imodesuffix>}\t%0"
+@@ -1958,7 +1967,7 @@
+       return "#";
+ 
+     case TYPE_LEA:
+-      return "lea{q}\t{%a1, %0|%0, %a1}";
++      return "lea{q}\t{%E1, %0|%0, %E1}";
+ 
+     default:
+       gcc_assert (!flag_pic || LEGITIMATE_PIC_OPERAND_P (operands[1]));
+@@ -1967,7 +1976,7 @@
+       else if (which_alternative == 2)
+ 	return "movabs{q}\t{%1, %0|%0, %1}";
+       else if (ix86_use_lea_for_mov (insn, operands))
+-	return "lea{q}\t{%a1, %0|%0, %a1}";
++	return "lea{q}\t{%E1, %0|%0, %E1}";
+       else
+ 	return "mov{q}\t{%1, %0|%0, %1}";
+     }
+@@ -2199,12 +2208,12 @@
+       return "movd\t{%1, %0|%0, %1}";
+ 
+     case TYPE_LEA:
+-      return "lea{l}\t{%a1, %0|%0, %a1}";
++      return "lea{l}\t{%E1, %0|%0, %E1}";
+ 
+     default:
+       gcc_assert (!flag_pic || LEGITIMATE_PIC_OPERAND_P (operands[1]));
+       if (ix86_use_lea_for_mov (insn, operands))
+-	return "lea{l}\t{%a1, %0|%0, %a1}";
++	return "lea{l}\t{%E1, %0|%0, %E1}";
+       else
+ 	return "mov{l}\t{%1, %0|%0, %1}";
+     }
+@@ -3382,7 +3391,7 @@
+ 			"=r,o,?*Ym,?*y,?*Yi,?*x")
+ 	(zero_extend:DI
+ 	 (match_operand:SI 1 "nonimmediate_operand"
+-	        	"rm,0,r   ,m  ,r   ,m")))]
++	        	"rmWz,0,r   ,m  ,r   ,m")))]
+   "TARGET_64BIT"
+   "@
+    mov{l}\t{%1, %k0|%k0, %1}
+@@ -5437,7 +5446,7 @@
+   [(set (match_operand:SI 0 "register_operand" "=r")
+ 	(subreg:SI (match_operand:DI 1 "lea_address_operand" "p") 0))]
+   "TARGET_64BIT"
+-  "lea{l}\t{%a1, %0|%0, %a1}"
++  "lea{l}\t{%E1, %0|%0, %E1}"
+   "&& reload_completed && ix86_avoid_lea_for_addr (insn, operands)"
+   [(const_int 0)]
+ {
+@@ -5451,7 +5460,7 @@
+   [(set (match_operand:SWI48 0 "register_operand" "=r")
+ 	(match_operand:SWI48 1 "lea_address_operand" "p"))]
+   ""
+-  "lea{<imodesuffix>}\t{%a1, %0|%0, %a1}"
++  "lea{<imodesuffix>}\t{%E1, %0|%0, %E1}"
+   "reload_completed && ix86_avoid_lea_for_addr (insn, operands)"
+   [(const_int 0)]
+ {
+@@ -5466,7 +5475,7 @@
+ 	(zero_extend:DI
+ 	  (subreg:SI (match_operand:DI 1 "lea_address_operand" "j") 0)))]
+   "TARGET_64BIT"
+-  "lea{l}\t{%a1, %k0|%k0, %a1}"
++  "lea{l}\t{%E1, %k0|%k0, %E1}"
+   [(set_attr "type" "lea")
+    (set_attr "mode" "SI")])
+ 
+@@ -5475,7 +5484,7 @@
+ 	(zero_extend:DI
+ 	  (match_operand:SI 1 "lea_address_operand" "j")))]
+   "TARGET_64BIT"
+-  "lea{l}\t{%a1, %k0|%k0, %a1}"
++  "lea{l}\t{%E1, %k0|%k0, %E1}"
+   [(set_attr "type" "lea")
+    (set_attr "mode" "SI")])
+ 
+@@ -5485,7 +5494,7 @@
+ 	  (subreg:DI (match_operand:SI 1 "lea_address_operand" "p") 0)
+ 	  (match_operand:DI 2 "const_32bit_mask" "n")))]
+   "TARGET_64BIT"
+-  "lea{l}\t{%a1, %k0|%k0, %a1}"
++  "lea{l}\t{%E1, %k0|%k0, %E1}"
+   [(set_attr "type" "lea")
+    (set_attr "mode" "SI")])
+ 
+@@ -5495,7 +5504,7 @@
+ 	  (match_operand:DI 1 "lea_address_operand" "p")
+ 	  (match_operand:DI 2 "const_32bit_mask" "n")))]
+   "TARGET_64BIT"
+-  "lea{l}\t{%a1, %k0|%k0, %a1}"
++  "lea{l}\t{%E1, %k0|%k0, %E1}"
+   [(set_attr "type" "lea")
+    (set_attr "mode" "SI")])
+ 
+@@ -11130,10 +11139,15 @@
+    (set_attr "modrm" "0")])
+ 
+ (define_expand "indirect_jump"
+-  [(set (pc) (match_operand 0 "indirect_branch_operand" ""))])
++  [(set (pc) (match_operand 0 "indirect_branch_operand" ""))]
++  ""
++{
++  if (TARGET_X32)
++    operands[0] = convert_memory_address (word_mode, operands[0]);
++})
+ 
+ (define_insn "*indirect_jump"
+-  [(set (pc) (match_operand:P 0 "indirect_branch_operand" "rw"))]
++  [(set (pc) (match_operand:W 0 "indirect_branch_operand" "rw"))]
+   ""
+   "jmp\t%A0"
+   [(set_attr "type" "ibr")
+@@ -11175,12 +11189,13 @@
+       operands[0] = expand_simple_binop (Pmode, code, op0, op1, NULL_RTX, 0,
+ 					 OPTAB_DIRECT);
+     }
+-  else if (TARGET_X32)
+-    operands[0] = convert_memory_address (Pmode, operands[0]);
++
++  if (TARGET_X32)
++    operands[0] = convert_memory_address (word_mode, operands[0]);
+ })
+ 
+ (define_insn "*tablejump_1"
+-  [(set (pc) (match_operand:P 0 "indirect_branch_operand" "rw"))
++  [(set (pc) (match_operand:W 0 "indirect_branch_operand" "rw"))
+    (use (label_ref (match_operand 1 "" "")))]
+   ""
+   "jmp\t%A0"
+@@ -11268,7 +11283,7 @@
+ })
+ 
+ (define_insn_and_split "*call_vzeroupper"
+-  [(call (mem:QI (match_operand:P 0 "call_insn_operand" "<c>zw"))
++  [(call (mem:QI (match_operand:W 0 "call_insn_operand" "<c>zw"))
+ 	 (match_operand 1 "" ""))
+    (unspec [(match_operand 2 "const_int_operand" "")]
+    	   UNSPEC_CALL_NEEDS_VZEROUPPER)]
+@@ -11280,7 +11295,7 @@
+   [(set_attr "type" "call")])
+ 
+ (define_insn "*call"
+-  [(call (mem:QI (match_operand:P 0 "call_insn_operand" "<c>zw"))
++  [(call (mem:QI (match_operand:W 0 "call_insn_operand" "<c>zw"))
+ 	 (match_operand 1 "" ""))]
+   "!SIBLING_CALL_P (insn)"
+   "* return ix86_output_call_insn (insn, operands[0]);"
+@@ -11332,7 +11347,7 @@
+   [(set_attr "type" "call")])
+ 
+ (define_insn_and_split "*sibcall_vzeroupper"
+-  [(call (mem:QI (match_operand:P 0 "sibcall_insn_operand" "Uz"))
++  [(call (mem:QI (match_operand:W 0 "sibcall_insn_operand" "Uz"))
+ 	 (match_operand 1 "" ""))
+    (unspec [(match_operand 2 "const_int_operand" "")]
+    	   UNSPEC_CALL_NEEDS_VZEROUPPER)]
+@@ -11344,7 +11359,7 @@
+   [(set_attr "type" "call")])
+ 
+ (define_insn "*sibcall"
+-  [(call (mem:QI (match_operand:P 0 "sibcall_insn_operand" "Uz"))
++  [(call (mem:QI (match_operand:W 0 "sibcall_insn_operand" "Uz"))
+ 	 (match_operand 1 "" ""))]
+   "SIBLING_CALL_P (insn)"
+   "* return ix86_output_call_insn (insn, operands[0]);"
+@@ -11441,7 +11456,7 @@
+ 
+ (define_insn_and_split "*call_value_vzeroupper"
+   [(set (match_operand 0 "" "")
+-	(call (mem:QI (match_operand:P 1 "call_insn_operand" "<c>zw"))
++	(call (mem:QI (match_operand:W 1 "call_insn_operand" "<c>zw"))
+ 	      (match_operand 2 "" "")))
+    (unspec [(match_operand 3 "const_int_operand" "")]
+    	   UNSPEC_CALL_NEEDS_VZEROUPPER)]
+@@ -11454,7 +11469,7 @@
+ 
+ (define_insn "*call_value"
+   [(set (match_operand 0 "" "")
+-	(call (mem:QI (match_operand:P 1 "call_insn_operand" "<c>zw"))
++	(call (mem:QI (match_operand:W 1 "call_insn_operand" "<c>zw"))
+ 	      (match_operand 2 "" "")))]
+   "!SIBLING_CALL_P (insn)"
+   "* return ix86_output_call_insn (insn, operands[1]);"
+@@ -11462,7 +11477,7 @@
+ 
+ (define_insn_and_split "*sibcall_value_vzeroupper"
+   [(set (match_operand 0 "" "")
+-	(call (mem:QI (match_operand:P 1 "sibcall_insn_operand" "Uz"))
++	(call (mem:QI (match_operand:W 1 "sibcall_insn_operand" "Uz"))
+ 	      (match_operand 2 "" "")))
+    (unspec [(match_operand 3 "const_int_operand" "")]
+    	   UNSPEC_CALL_NEEDS_VZEROUPPER)]
+@@ -11475,7 +11490,7 @@
+ 
+ (define_insn "*sibcall_value"
+   [(set (match_operand 0 "" "")
+-	(call (mem:QI (match_operand:P 1 "sibcall_insn_operand" "Uz"))
++	(call (mem:QI (match_operand:W 1 "sibcall_insn_operand" "Uz"))
+ 	      (match_operand 2 "" "")))]
+   "SIBLING_CALL_P (insn)"
+   "* return ix86_output_call_insn (insn, operands[1]);"
+@@ -12580,7 +12595,7 @@
+   [(set (match_operand:SI 0 "register_operand" "=a")
+ 	(unspec:SI
+ 	 [(match_operand:SI 1 "register_operand" "b")
+-	  (match_operand:SI 2 "tls_symbolic_operand" "")
++	  (match_operand 2 "tls_symbolic_operand" "")
+ 	  (match_operand:SI 3 "constant_call_address_operand" "z")]
+ 	 UNSPEC_TLS_GD))
+    (clobber (match_scratch:SI 4 "=d"))
+@@ -12589,7 +12604,7 @@
+   "!TARGET_64BIT && TARGET_GNU_TLS"
+ {
+   output_asm_insn
+-    ("lea{l}\t{%a2@tlsgd(,%1,1), %0|%0, %a2@tlsgd[%1*1]}", operands);
++    ("lea{l}\t{%E2@tlsgd(,%1,1), %0|%0, %E2@tlsgd[%1*1]}", operands);
+   if (TARGET_SUN_TLS)
+ #ifdef HAVE_AS_IX86_TLSGDPLT
+     return "call\t%a2@tlsgdplt";
+@@ -12605,26 +12620,26 @@
+   [(parallel
+     [(set (match_operand:SI 0 "register_operand" "")
+ 	  (unspec:SI [(match_operand:SI 2 "register_operand" "")
+-		      (match_operand:SI 1 "tls_symbolic_operand" "")
++		      (match_operand 1 "tls_symbolic_operand" "")
+ 		      (match_operand:SI 3 "constant_call_address_operand" "")]
+ 		     UNSPEC_TLS_GD))
+      (clobber (match_scratch:SI 4 ""))
+      (clobber (match_scratch:SI 5 ""))
+      (clobber (reg:CC FLAGS_REG))])])
+ 
+-(define_insn "*tls_global_dynamic_64"
+-  [(set (match_operand:DI 0 "register_operand" "=a")
+-	(call:DI
+-	 (mem:QI (match_operand:DI 2 "constant_call_address_operand" "z"))
+-	 (match_operand:DI 3 "" "")))
+-   (unspec:DI [(match_operand 1 "tls_symbolic_operand" "")]
+-	      UNSPEC_TLS_GD)]
++(define_insn "*tls_global_dynamic_64_<mode>"
++  [(set (match_operand:P 0 "register_operand" "=a")
++	(call:P
++	 (mem:QI (match_operand:P 2 "constant_call_address_operand" "z"))
++	 (match_operand:P 3 "" "")))
++   (unspec:P [(match_operand 1 "tls_symbolic_operand" "")]
++	     UNSPEC_TLS_GD)]
+   "TARGET_64BIT"
+ {
+   if (!TARGET_X32)
+     fputs (ASM_BYTE "0x66\n", asm_out_file);
+   output_asm_insn
+-    ("lea{q}\t{%a1@tlsgd(%%rip), %%rdi|rdi, %a1@tlsgd[rip]}", operands);
++    ("lea{q}\t{%E1@tlsgd(%%rip), %%rdi|rdi, %E1@tlsgd[rip]}", operands);
+   fputs (ASM_SHORT "0x6666\n", asm_out_file);
+   fputs ("\trex64\n", asm_out_file);
+   if (TARGET_SUN_TLS)
+@@ -12635,14 +12650,15 @@
+    (set (attr "length")
+ 	(symbol_ref "TARGET_X32 ? 15 : 16"))])
+ 
+-(define_expand "tls_global_dynamic_64"
++(define_expand "tls_global_dynamic_64_<mode>"
+   [(parallel
+-    [(set (match_operand:DI 0 "register_operand" "")
+-	  (call:DI
+-	   (mem:QI (match_operand:DI 2 "constant_call_address_operand" ""))
++    [(set (match_operand:P 0 "register_operand" "")
++	  (call:P
++	   (mem:QI (match_operand:P 2 "constant_call_address_operand" ""))
+ 	   (const_int 0)))
+-     (unspec:DI [(match_operand 1 "tls_symbolic_operand" "")]
+-		UNSPEC_TLS_GD)])])
++     (unspec:P [(match_operand 1 "tls_symbolic_operand" "")]
++	       UNSPEC_TLS_GD)])]
++  "TARGET_64BIT")
+ 
+ (define_insn "*tls_local_dynamic_base_32_gnu"
+   [(set (match_operand:SI 0 "register_operand" "=a")
+@@ -12679,12 +12695,12 @@
+       (clobber (match_scratch:SI 4 ""))
+       (clobber (reg:CC FLAGS_REG))])])
+ 
+-(define_insn "*tls_local_dynamic_base_64"
+-  [(set (match_operand:DI 0 "register_operand" "=a")
+-	(call:DI
+-	 (mem:QI (match_operand:DI 1 "constant_call_address_operand" "z"))
+-	 (match_operand:DI 2 "" "")))
+-   (unspec:DI [(const_int 0)] UNSPEC_TLS_LD_BASE)]
++(define_insn "*tls_local_dynamic_base_64_<mode>"
++  [(set (match_operand:P 0 "register_operand" "=a")
++	(call:P
++	 (mem:QI (match_operand:P 1 "constant_call_address_operand" "z"))
++	 (match_operand:P 2 "" "")))
++   (unspec:P [(const_int 0)] UNSPEC_TLS_LD_BASE)]
+   "TARGET_64BIT"
+ {
+   output_asm_insn
+@@ -12696,13 +12712,14 @@
+   [(set_attr "type" "multi")
+    (set_attr "length" "12")])
+ 
+-(define_expand "tls_local_dynamic_base_64"
++(define_expand "tls_local_dynamic_base_64_<mode>"
+   [(parallel
+-     [(set (match_operand:DI 0 "register_operand" "")
+-	   (call:DI
+-	    (mem:QI (match_operand:DI 1 "constant_call_address_operand" ""))
++     [(set (match_operand:P 0 "register_operand" "")
++	   (call:P
++	    (mem:QI (match_operand:P 1 "constant_call_address_operand" ""))
+ 	    (const_int 0)))
+-      (unspec:DI [(const_int 0)] UNSPEC_TLS_LD_BASE)])])
++      (unspec:P [(const_int 0)] UNSPEC_TLS_LD_BASE)])]
++  "TARGET_64BIT")
+ 
+ ;; Local dynamic of a single variable is a lose.  Show combine how
+ ;; to convert that back to global dynamic.
+@@ -12714,7 +12731,7 @@
+ 		     (match_operand:SI 2 "constant_call_address_operand" "z")]
+ 		    UNSPEC_TLS_LD_BASE)
+ 	 (const:SI (unspec:SI
+-		    [(match_operand:SI 3 "tls_symbolic_operand" "")]
++		    [(match_operand 3 "tls_symbolic_operand" "")]
+ 		    UNSPEC_DTPOFF))))
+    (clobber (match_scratch:SI 4 "=d"))
+    (clobber (match_scratch:SI 5 "=c"))
+@@ -12812,7 +12829,7 @@
+ (define_insn "tls_initial_exec_64_sun"
+   [(set (match_operand:DI 0 "register_operand" "=a")
+ 	(unspec:DI
+-	 [(match_operand:DI 1 "tls_symbolic_operand" "")]
++	 [(match_operand 1 "tls_symbolic_operand" "")]
+ 	 UNSPEC_TLS_IE_SUN))
+    (clobber (reg:CC FLAGS_REG))]
+   "TARGET_64BIT && TARGET_SUN_TLS"
+@@ -12829,7 +12846,7 @@
+   [(set (match_dup 3)
+ 	(plus:SI (match_operand:SI 2 "register_operand" "")
+ 		 (const:SI
+-		  (unspec:SI [(match_operand:SI 1 "tls_symbolic_operand" "")]
++		  (unspec:SI [(match_operand 1 "tls_symbolic_operand" "")]
+ 			     UNSPEC_TLSDESC))))
+    (parallel
+     [(set (match_operand:SI 0 "register_operand" "")
+@@ -12847,10 +12864,10 @@
+   [(set (match_operand:SI 0 "register_operand" "=r")
+ 	(plus:SI (match_operand:SI 1 "register_operand" "b")
+ 		 (const:SI
+-		  (unspec:SI [(match_operand:SI 2 "tls_symbolic_operand" "")]
++		  (unspec:SI [(match_operand 2 "tls_symbolic_operand" "")]
+ 			      UNSPEC_TLSDESC))))]
+   "!TARGET_64BIT && TARGET_GNU2_TLS"
+-  "lea{l}\t{%a2@TLSDESC(%1), %0|%0, %a2@TLSDESC[%1]}"
++  "lea{l}\t{%E2@TLSDESC(%1), %0|%0, %E2@TLSDESC[%1]}"
+   [(set_attr "type" "lea")
+    (set_attr "mode" "SI")
+    (set_attr "length" "6")
+@@ -12858,7 +12875,7 @@
+ 
+ (define_insn "*tls_dynamic_gnu2_call_32"
+   [(set (match_operand:SI 0 "register_operand" "=a")
+-	(unspec:SI [(match_operand:SI 1 "tls_symbolic_operand" "")
++	(unspec:SI [(match_operand 1 "tls_symbolic_operand" "")
+ 		    (match_operand:SI 2 "register_operand" "0")
+ 		    ;; we have to make sure %ebx still points to the GOT
+ 		    (match_operand:SI 3 "register_operand" "b")
+@@ -12874,13 +12891,13 @@
+ (define_insn_and_split "*tls_dynamic_gnu2_combine_32"
+   [(set (match_operand:SI 0 "register_operand" "=&a")
+ 	(plus:SI
+-	 (unspec:SI [(match_operand:SI 3 "tls_modbase_operand" "")
++	 (unspec:SI [(match_operand 3 "tls_modbase_operand" "")
+ 		     (match_operand:SI 4 "" "")
+ 		     (match_operand:SI 2 "register_operand" "b")
+ 		     (reg:SI SP_REG)]
+ 		    UNSPEC_TLSDESC)
+ 	 (const:SI (unspec:SI
+-		    [(match_operand:SI 1 "tls_symbolic_operand" "")]
++		    [(match_operand 1 "tls_symbolic_operand" "")]
+ 		    UNSPEC_DTPOFF))))
+    (clobber (reg:CC FLAGS_REG))]
+   "!TARGET_64BIT && TARGET_GNU2_TLS"
+@@ -12912,7 +12929,7 @@
+ 	(unspec:DI [(match_operand 1 "tls_symbolic_operand" "")]
+ 		   UNSPEC_TLSDESC))]
+   "TARGET_64BIT && TARGET_GNU2_TLS"
+-  "lea{q}\t{%a1@TLSDESC(%%rip), %0|%0, %a1@TLSDESC[rip]}"
++  "lea{q}\t{%E1@TLSDESC(%%rip), %0|%0, %E1@TLSDESC[rip]}"
+   [(set_attr "type" "lea")
+    (set_attr "mode" "DI")
+    (set_attr "length" "7")
+@@ -12934,7 +12951,7 @@
+ (define_insn_and_split "*tls_dynamic_gnu2_combine_64"
+   [(set (match_operand:DI 0 "register_operand" "=&a")
+ 	(plus:DI
+-	 (unspec:DI [(match_operand:DI 2 "tls_modbase_operand" "")
++	 (unspec:DI [(match_operand 2 "tls_modbase_operand" "")
+ 		     (match_operand:DI 3 "" "")
+ 		     (reg:DI SP_REG)]
+ 		    UNSPEC_TLSDESC)
+@@ -15733,17 +15750,17 @@
+   "ix86_current_function_needs_cld = 1;")
+ 
+ (define_insn "*strmovdi_rex_1"
+-  [(set (mem:DI (match_operand:DI 2 "register_operand" "0"))
+-	(mem:DI (match_operand:DI 3 "register_operand" "1")))
+-   (set (match_operand:DI 0 "register_operand" "=D")
+-	(plus:DI (match_dup 2)
+-		 (const_int 8)))
+-   (set (match_operand:DI 1 "register_operand" "=S")
+-	(plus:DI (match_dup 3)
+-		 (const_int 8)))]
++  [(set (mem:DI (match_operand:P 2 "register_operand" "0"))
++	(mem:DI (match_operand:P 3 "register_operand" "1")))
++   (set (match_operand:P 0 "register_operand" "=D")
++	(plus:P (match_dup 2)
++		(const_int 8)))
++   (set (match_operand:P 1 "register_operand" "=S")
++	(plus:P (match_dup 3)
++		(const_int 8)))]
+   "TARGET_64BIT
+    && !(fixed_regs[SI_REG] || fixed_regs[DI_REG])"
+-  "movsq"
++  "%^movsq"
+   [(set_attr "type" "str")
+    (set_attr "memory" "both")
+    (set_attr "mode" "DI")])
+@@ -15758,7 +15775,7 @@
+ 	(plus:P (match_dup 3)
+ 		(const_int 4)))]
+   "!(fixed_regs[SI_REG] || fixed_regs[DI_REG])"
+-  "movs{l|d}"
++  "%^movs{l|d}"
+   [(set_attr "type" "str")
+    (set_attr "memory" "both")
+    (set_attr "mode" "SI")])
+@@ -15773,7 +15790,7 @@
+ 	(plus:P (match_dup 3)
+ 		(const_int 2)))]
+   "!(fixed_regs[SI_REG] || fixed_regs[DI_REG])"
+-  "movsw"
++  "%^movsw"
+   [(set_attr "type" "str")
+    (set_attr "memory" "both")
+    (set_attr "mode" "HI")])
+@@ -15788,7 +15805,7 @@
+ 	(plus:P (match_dup 3)
+ 		(const_int 1)))]
+   "!(fixed_regs[SI_REG] || fixed_regs[DI_REG])"
+-  "movsb"
++  "%^movsb"
+   [(set_attr "type" "str")
+    (set_attr "memory" "both")
+    (set (attr "prefix_rex")
+@@ -15811,20 +15828,20 @@
+   "ix86_current_function_needs_cld = 1;")
+ 
+ (define_insn "*rep_movdi_rex64"
+-  [(set (match_operand:DI 2 "register_operand" "=c") (const_int 0))
+-   (set (match_operand:DI 0 "register_operand" "=D")
+-        (plus:DI (ashift:DI (match_operand:DI 5 "register_operand" "2")
+-			    (const_int 3))
+-		 (match_operand:DI 3 "register_operand" "0")))
+-   (set (match_operand:DI 1 "register_operand" "=S")
+-        (plus:DI (ashift:DI (match_dup 5) (const_int 3))
+-		 (match_operand:DI 4 "register_operand" "1")))
++  [(set (match_operand:P 2 "register_operand" "=c") (const_int 0))
++   (set (match_operand:P 0 "register_operand" "=D")
++        (plus:P (ashift:P (match_operand:P 5 "register_operand" "2")
++			  (const_int 3))
++		(match_operand:P 3 "register_operand" "0")))
++   (set (match_operand:P 1 "register_operand" "=S")
++        (plus:P (ashift:P (match_dup 5) (const_int 3))
++		(match_operand:P 4 "register_operand" "1")))
+    (set (mem:BLK (match_dup 3))
+ 	(mem:BLK (match_dup 4)))
+    (use (match_dup 5))]
+   "TARGET_64BIT
+    && !(fixed_regs[CX_REG] || fixed_regs[SI_REG] || fixed_regs[DI_REG])"
+-  "rep{%;} movsq"
++  "%^rep{%;} movsq"
+   [(set_attr "type" "str")
+    (set_attr "prefix_rep" "1")
+    (set_attr "memory" "both")
+@@ -15843,7 +15860,7 @@
+ 	(mem:BLK (match_dup 4)))
+    (use (match_dup 5))]
+   "!(fixed_regs[CX_REG] || fixed_regs[SI_REG] || fixed_regs[DI_REG])"
+-  "rep{%;} movs{l|d}"
++  "%^rep{%;} movs{l|d}"
+   [(set_attr "type" "str")
+    (set_attr "prefix_rep" "1")
+    (set_attr "memory" "both")
+@@ -15860,7 +15877,7 @@
+ 	(mem:BLK (match_dup 4)))
+    (use (match_dup 5))]
+   "!(fixed_regs[CX_REG] || fixed_regs[SI_REG] || fixed_regs[DI_REG])"
+-  "rep{%;} movsb"
++  "%^rep{%;} movsb"
+   [(set_attr "type" "str")
+    (set_attr "prefix_rep" "1")
+    (set_attr "memory" "both")
+@@ -15921,14 +15938,14 @@
+   "ix86_current_function_needs_cld = 1;")
+ 
+ (define_insn "*strsetdi_rex_1"
+-  [(set (mem:DI (match_operand:DI 1 "register_operand" "0"))
++  [(set (mem:DI (match_operand:P 1 "register_operand" "0"))
+ 	(match_operand:DI 2 "register_operand" "a"))
+-   (set (match_operand:DI 0 "register_operand" "=D")
+-	(plus:DI (match_dup 1)
+-		 (const_int 8)))]
++   (set (match_operand:P 0 "register_operand" "=D")
++	(plus:P (match_dup 1)
++		(const_int 8)))]
+   "TARGET_64BIT
+    && !(fixed_regs[AX_REG] || fixed_regs[DI_REG])"
+-  "stosq"
++  "%^stosq"
+   [(set_attr "type" "str")
+    (set_attr "memory" "store")
+    (set_attr "mode" "DI")])
+@@ -15940,7 +15957,7 @@
+ 	(plus:P (match_dup 1)
+ 		(const_int 4)))]
+   "!(fixed_regs[AX_REG] || fixed_regs[DI_REG])"
+-  "stos{l|d}"
++  "%^stos{l|d}"
+   [(set_attr "type" "str")
+    (set_attr "memory" "store")
+    (set_attr "mode" "SI")])
+@@ -15952,7 +15969,7 @@
+ 	(plus:P (match_dup 1)
+ 		(const_int 2)))]
+   "!(fixed_regs[AX_REG] || fixed_regs[DI_REG])"
+-  "stosw"
++  "%^stosw"
+   [(set_attr "type" "str")
+    (set_attr "memory" "store")
+    (set_attr "mode" "HI")])
+@@ -15964,7 +15981,7 @@
+ 	(plus:P (match_dup 1)
+ 		(const_int 1)))]
+   "!(fixed_regs[AX_REG] || fixed_regs[DI_REG])"
+-  "stosb"
++  "%^stosb"
+   [(set_attr "type" "str")
+    (set_attr "memory" "store")
+    (set (attr "prefix_rex")
+@@ -15985,18 +16002,18 @@
+   "ix86_current_function_needs_cld = 1;")
+ 
+ (define_insn "*rep_stosdi_rex64"
+-  [(set (match_operand:DI 1 "register_operand" "=c") (const_int 0))
+-   (set (match_operand:DI 0 "register_operand" "=D")
+-        (plus:DI (ashift:DI (match_operand:DI 4 "register_operand" "1")
+-			    (const_int 3))
+-		 (match_operand:DI 3 "register_operand" "0")))
++  [(set (match_operand:P 1 "register_operand" "=c") (const_int 0))
++   (set (match_operand:P 0 "register_operand" "=D")
++        (plus:P (ashift:P (match_operand:P 4 "register_operand" "1")
++			  (const_int 3))
++		 (match_operand:P 3 "register_operand" "0")))
+    (set (mem:BLK (match_dup 3))
+ 	(const_int 0))
+    (use (match_operand:DI 2 "register_operand" "a"))
+    (use (match_dup 4))]
+   "TARGET_64BIT
+    && !(fixed_regs[AX_REG] || fixed_regs[CX_REG] || fixed_regs[DI_REG])"
+-  "rep{%;} stosq"
++  "%^rep{%;} stosq"
+   [(set_attr "type" "str")
+    (set_attr "prefix_rep" "1")
+    (set_attr "memory" "store")
+@@ -16013,7 +16030,7 @@
+    (use (match_operand:SI 2 "register_operand" "a"))
+    (use (match_dup 4))]
+   "!(fixed_regs[AX_REG] || fixed_regs[CX_REG] || fixed_regs[DI_REG])"
+-  "rep{%;} stos{l|d}"
++  "%^rep{%;} stos{l|d}"
+   [(set_attr "type" "str")
+    (set_attr "prefix_rep" "1")
+    (set_attr "memory" "store")
+@@ -16029,7 +16046,7 @@
+    (use (match_operand:QI 2 "register_operand" "a"))
+    (use (match_dup 4))]
+   "!(fixed_regs[AX_REG] || fixed_regs[CX_REG] || fixed_regs[DI_REG])"
+-  "rep{%;} stosb"
++  "%^rep{%;} stosb"
+   [(set_attr "type" "str")
+    (set_attr "prefix_rep" "1")
+    (set_attr "memory" "store")
+@@ -16150,7 +16167,7 @@
+    (clobber (match_operand:P 1 "register_operand" "=D"))
+    (clobber (match_operand:P 2 "register_operand" "=c"))]
+   "!(fixed_regs[CX_REG] || fixed_regs[SI_REG] || fixed_regs[DI_REG])"
+-  "repz{%;} cmpsb"
++  "%^repz{%;} cmpsb"
+   [(set_attr "type" "str")
+    (set_attr "mode" "QI")
+    (set (attr "prefix_rex")
+@@ -16190,7 +16207,7 @@
+    (clobber (match_operand:P 1 "register_operand" "=D"))
+    (clobber (match_operand:P 2 "register_operand" "=c"))]
+   "!(fixed_regs[CX_REG] || fixed_regs[SI_REG] || fixed_regs[DI_REG])"
+-  "repz{%;} cmpsb"
++  "%^repz{%;} cmpsb"
+   [(set_attr "type" "str")
+    (set_attr "mode" "QI")
+    (set (attr "prefix_rex")
+@@ -16231,7 +16248,7 @@
+    (clobber (match_operand:P 1 "register_operand" "=D"))
+    (clobber (reg:CC FLAGS_REG))]
+   "!(fixed_regs[AX_REG] || fixed_regs[CX_REG] || fixed_regs[DI_REG])"
+-  "repnz{%;} scasb"
++  "%^repnz{%;} scasb"
+   [(set_attr "type" "str")
+    (set_attr "mode" "QI")
+    (set (attr "prefix_rex")
+@@ -16663,7 +16680,7 @@
+ 
+     default:
+       operands[2] = SET_SRC (XVECEXP (PATTERN (insn), 0, 0));
+-      return "lea{<imodesuffix>}\t{%a2, %0|%0, %a2}";
++      return "lea{<imodesuffix>}\t{%E2, %0|%0, %E2}";
+     }
+ }
+   [(set (attr "type")
+@@ -17391,131 +17408,131 @@
+ ;; alternative when no register is available later.
+ 
+ (define_peephole2
+-  [(match_scratch:P 1 "r")
++  [(match_scratch:W 1 "r")
+    (parallel [(set (reg:P SP_REG)
+ 		   (plus:P (reg:P SP_REG)
+ 			   (match_operand:P 0 "const_int_operand" "")))
+ 	      (clobber (reg:CC FLAGS_REG))
+ 	      (clobber (mem:BLK (scratch)))])]
+   "(TARGET_SINGLE_PUSH || optimize_insn_for_size_p ())
+-   && INTVAL (operands[0]) == -GET_MODE_SIZE (Pmode)"
++   && INTVAL (operands[0]) == -GET_MODE_SIZE (word_mode)"
+   [(clobber (match_dup 1))
+-   (parallel [(set (mem:P (pre_dec:P (reg:P SP_REG))) (match_dup 1))
++   (parallel [(set (mem:W (pre_dec:P (reg:P SP_REG))) (match_dup 1))
+ 	      (clobber (mem:BLK (scratch)))])])
+ 
+ (define_peephole2
+-  [(match_scratch:P 1 "r")
++  [(match_scratch:W 1 "r")
+    (parallel [(set (reg:P SP_REG)
+ 		   (plus:P (reg:P SP_REG)
+ 			   (match_operand:P 0 "const_int_operand" "")))
+ 	      (clobber (reg:CC FLAGS_REG))
+ 	      (clobber (mem:BLK (scratch)))])]
+   "(TARGET_DOUBLE_PUSH || optimize_insn_for_size_p ())
+-   && INTVAL (operands[0]) == -2*GET_MODE_SIZE (Pmode)"
++   && INTVAL (operands[0]) == -2*GET_MODE_SIZE (word_mode)"
+   [(clobber (match_dup 1))
+-   (set (mem:P (pre_dec:P (reg:P SP_REG))) (match_dup 1))
+-   (parallel [(set (mem:P (pre_dec:P (reg:P SP_REG))) (match_dup 1))
++   (set (mem:W (pre_dec:P (reg:P SP_REG))) (match_dup 1))
++   (parallel [(set (mem:W (pre_dec:P (reg:P SP_REG))) (match_dup 1))
+ 	      (clobber (mem:BLK (scratch)))])])
+ 
+ ;; Convert esp subtractions to push.
+ (define_peephole2
+-  [(match_scratch:P 1 "r")
++  [(match_scratch:W 1 "r")
+    (parallel [(set (reg:P SP_REG)
+ 		   (plus:P (reg:P SP_REG)
+ 			   (match_operand:P 0 "const_int_operand" "")))
+ 	      (clobber (reg:CC FLAGS_REG))])]
+   "(TARGET_SINGLE_PUSH || optimize_insn_for_size_p ())
+-   && INTVAL (operands[0]) == -GET_MODE_SIZE (Pmode)"
++   && INTVAL (operands[0]) == -GET_MODE_SIZE (word_mode)"
+   [(clobber (match_dup 1))
+-   (set (mem:P (pre_dec:P (reg:P SP_REG))) (match_dup 1))])
++   (set (mem:W (pre_dec:P (reg:P SP_REG))) (match_dup 1))])
+ 
+ (define_peephole2
+-  [(match_scratch:P 1 "r")
++  [(match_scratch:W 1 "r")
+    (parallel [(set (reg:P SP_REG)
+ 		   (plus:P (reg:P SP_REG)
+ 			   (match_operand:P 0 "const_int_operand" "")))
+ 	      (clobber (reg:CC FLAGS_REG))])]
+   "(TARGET_DOUBLE_PUSH || optimize_insn_for_size_p ())
+-   && INTVAL (operands[0]) == -2*GET_MODE_SIZE (Pmode)"
++   && INTVAL (operands[0]) == -2*GET_MODE_SIZE (word_mode)"
+   [(clobber (match_dup 1))
+-   (set (mem:P (pre_dec:P (reg:P SP_REG))) (match_dup 1))
+-   (set (mem:P (pre_dec:P (reg:P SP_REG))) (match_dup 1))])
++   (set (mem:W (pre_dec:P (reg:P SP_REG))) (match_dup 1))
++   (set (mem:W (pre_dec:P (reg:P SP_REG))) (match_dup 1))])
+ 
+ ;; Convert epilogue deallocator to pop.
+ (define_peephole2
+-  [(match_scratch:P 1 "r")
++  [(match_scratch:W 1 "r")
+    (parallel [(set (reg:P SP_REG)
+ 		   (plus:P (reg:P SP_REG)
+ 			   (match_operand:P 0 "const_int_operand" "")))
+ 	      (clobber (reg:CC FLAGS_REG))
+ 	      (clobber (mem:BLK (scratch)))])]
+   "(TARGET_SINGLE_POP || optimize_insn_for_size_p ())
+-   && INTVAL (operands[0]) == GET_MODE_SIZE (Pmode)"
+-  [(parallel [(set (match_dup 1) (mem:P (post_inc:P (reg:P SP_REG))))
++   && INTVAL (operands[0]) == GET_MODE_SIZE (word_mode)"
++  [(parallel [(set (match_dup 1) (mem:W (post_inc:P (reg:P SP_REG))))
+ 	      (clobber (mem:BLK (scratch)))])])
+ 
+ ;; Two pops case is tricky, since pop causes dependency
+ ;; on destination register.  We use two registers if available.
+ (define_peephole2
+-  [(match_scratch:P 1 "r")
+-   (match_scratch:P 2 "r")
++  [(match_scratch:W 1 "r")
++   (match_scratch:W 2 "r")
+    (parallel [(set (reg:P SP_REG)
+ 		   (plus:P (reg:P SP_REG)
+ 			   (match_operand:P 0 "const_int_operand" "")))
+ 	      (clobber (reg:CC FLAGS_REG))
+ 	      (clobber (mem:BLK (scratch)))])]
+   "(TARGET_DOUBLE_POP || optimize_insn_for_size_p ())
+-   && INTVAL (operands[0]) == 2*GET_MODE_SIZE (Pmode)"
+-  [(parallel [(set (match_dup 1) (mem:P (post_inc:P (reg:P SP_REG))))
++   && INTVAL (operands[0]) == 2*GET_MODE_SIZE (word_mode)"
++  [(parallel [(set (match_dup 1) (mem:W (post_inc:P (reg:P SP_REG))))
+ 	      (clobber (mem:BLK (scratch)))])
+-   (set (match_dup 2) (mem:P (post_inc:P (reg:P SP_REG))))])
++   (set (match_dup 2) (mem:W (post_inc:P (reg:P SP_REG))))])
+ 
+ (define_peephole2
+-  [(match_scratch:P 1 "r")
++  [(match_scratch:W 1 "r")
+    (parallel [(set (reg:P SP_REG)
+ 		   (plus:P (reg:P SP_REG)
+ 			   (match_operand:P 0 "const_int_operand" "")))
+ 	      (clobber (reg:CC FLAGS_REG))
+ 	      (clobber (mem:BLK (scratch)))])]
+   "optimize_insn_for_size_p ()
+-   && INTVAL (operands[0]) == 2*GET_MODE_SIZE (Pmode)"
+-  [(parallel [(set (match_dup 1) (mem:P (post_inc:P (reg:P SP_REG))))
++   && INTVAL (operands[0]) == 2*GET_MODE_SIZE (word_mode)"
++  [(parallel [(set (match_dup 1) (mem:W (post_inc:P (reg:P SP_REG))))
+ 	      (clobber (mem:BLK (scratch)))])
+-   (set (match_dup 1) (mem:P (post_inc:P (reg:P SP_REG))))])
++   (set (match_dup 1) (mem:W (post_inc:P (reg:P SP_REG))))])
+ 
+ ;; Convert esp additions to pop.
+ (define_peephole2
+-  [(match_scratch:P 1 "r")
++  [(match_scratch:W 1 "r")
+    (parallel [(set (reg:P SP_REG)
+ 		   (plus:P (reg:P SP_REG)
+ 			   (match_operand:P 0 "const_int_operand" "")))
+ 	      (clobber (reg:CC FLAGS_REG))])]
+-  "INTVAL (operands[0]) == GET_MODE_SIZE (Pmode)"
+-  [(set (match_dup 1) (mem:P (post_inc:P (reg:P SP_REG))))])
++  "INTVAL (operands[0]) == GET_MODE_SIZE (word_mode)"
++  [(set (match_dup 1) (mem:W (post_inc:P (reg:P SP_REG))))])
+ 
+ ;; Two pops case is tricky, since pop causes dependency
+ ;; on destination register.  We use two registers if available.
+ (define_peephole2
+-  [(match_scratch:P 1 "r")
+-   (match_scratch:P 2 "r")
++  [(match_scratch:W 1 "r")
++   (match_scratch:W 2 "r")
+    (parallel [(set (reg:P SP_REG)
+ 		   (plus:P (reg:P SP_REG)
+ 			   (match_operand:P 0 "const_int_operand" "")))
+ 	      (clobber (reg:CC FLAGS_REG))])]
+-  "INTVAL (operands[0]) == 2*GET_MODE_SIZE (Pmode)"
+-  [(set (match_dup 1) (mem:P (post_inc:P (reg:P SP_REG))))
+-   (set (match_dup 2) (mem:P (post_inc:P (reg:P SP_REG))))])
++  "INTVAL (operands[0]) == 2*GET_MODE_SIZE (word_mode)"
++  [(set (match_dup 1) (mem:W (post_inc:P (reg:P SP_REG))))
++   (set (match_dup 2) (mem:W (post_inc:P (reg:P SP_REG))))])
+ 
+ (define_peephole2
+-  [(match_scratch:P 1 "r")
++  [(match_scratch:W 1 "r")
+    (parallel [(set (reg:P SP_REG)
+ 		   (plus:P (reg:P SP_REG)
+ 			   (match_operand:P 0 "const_int_operand" "")))
+ 	      (clobber (reg:CC FLAGS_REG))])]
+   "optimize_insn_for_size_p ()
+-   && INTVAL (operands[0]) == 2*GET_MODE_SIZE (Pmode)"
+-  [(set (match_dup 1) (mem:P (post_inc:P (reg:P SP_REG))))
+-   (set (match_dup 1) (mem:P (post_inc:P (reg:P SP_REG))))])
++   && INTVAL (operands[0]) == 2*GET_MODE_SIZE (word_mode)"
++  [(set (match_dup 1) (mem:W (post_inc:P (reg:P SP_REG))))
++   (set (match_dup 1) (mem:W (post_inc:P (reg:P SP_REG))))])
+ 
+ ;; Convert compares with 1 to shorter inc/dec operations when CF is not
+ ;; required and register dies.  Similarly for 128 to -128.
+@@ -17626,7 +17643,7 @@
+ ;;  leal    (%edx,%eax,4), %eax
+ 
+ (define_peephole2
+-  [(match_scratch:P 5 "r")
++  [(match_scratch:W 5 "r")
+    (parallel [(set (match_operand 0 "register_operand" "")
+ 		   (ashift (match_operand 1 "register_operand" "")
+ 			   (match_operand 2 "const_int_operand" "")))
+@@ -17652,16 +17669,16 @@
+   enum machine_mode op1mode = GET_MODE (operands[1]);
+   enum machine_mode mode = op1mode == DImode ? DImode : SImode;
+   int scale = 1 << INTVAL (operands[2]);
+-  rtx index = gen_lowpart (Pmode, operands[1]);
+-  rtx base = gen_lowpart (Pmode, operands[5]);
++  rtx index = gen_lowpart (word_mode, operands[1]);
++  rtx base = gen_lowpart (word_mode, operands[5]);
+   rtx dest = gen_lowpart (mode, operands[3]);
+ 
+-  operands[1] = gen_rtx_PLUS (Pmode, base,
+-  			      gen_rtx_MULT (Pmode, index, GEN_INT (scale)));
++  operands[1] = gen_rtx_PLUS (word_mode, base,
++			      gen_rtx_MULT (word_mode, index, GEN_INT (scale)));
+   operands[5] = base;
+-  if (mode != Pmode)
++  if (mode != word_mode)
+     operands[1] = gen_rtx_SUBREG (mode, operands[1], 0);
+-  if (op1mode != Pmode)
++  if (op1mode != word_mode)
+     operands[5] = gen_rtx_SUBREG (op1mode, operands[5], 0);
+   operands[0] = dest;
+ })
+@@ -18052,7 +18069,7 @@
+ {
+   rtx (*insn)(rtx);
+ 
+-  insn = (TARGET_64BIT
++  insn = (Pmode == DImode
+ 	  ? gen_lwp_slwpcbdi
+ 	  : gen_lwp_slwpcbsi);
+ 
+--- a/gcc/config/i386/i386.opt
++++ b/gcc/config/i386/i386.opt
+@@ -159,6 +159,20 @@ Enum(cmodel) String(32) Value(CM_32)
+ EnumValue
+ Enum(cmodel) String(kernel) Value(CM_KERNEL)
+ 
++maddress-mode=
++Target RejectNegative Joined Enum(pmode) Var(ix86_pmode) Init(PMODE_SI)
++Use given address mode
++
++Enum
++Name(pmode) Type(enum pmode)
++Known address mode (for use with the -maddress-mode= option):
++
++EnumValue
++Enum(pmode) String(short) Value(PMODE_SI)
++
++EnumValue
++Enum(pmode) String(long) Value(PMODE_DI)
++
+ mcpu=
+ Target RejectNegative Joined Undocumented Alias(mtune=) Warn(%<-mcpu=%> is deprecated; use %<-mtune=%> or %<-march=%> instead)
+ 
+@@ -204,7 +218,7 @@ EnumValue
+ Enum(fpmath_unit) String(both) Value({(enum fpmath_unit) (FPMATH_SSE | FPMATH_387)})
+ 
+ mhard-float
+-Target RejectNegative Mask(80387) MaskExists Save
++Target RejectNegative Mask(80387) Save
+ Use hardware fp
+ 
+ mieee-fp
+@@ -411,11 +425,11 @@ Target RejectNegative Negative(m64) Report InverseMask(ISA_64BIT) Var(ix86_isa_f
+ Generate 32bit i386 code
+ 
+ m64
+-Target RejectNegative Negative(mx32) Report Mask(ISA_64BIT) Var(ix86_isa_flags) Save
++Target RejectNegative Negative(mx32) Report Mask(ABI_64) Var(ix86_isa_flags) Save
+ Generate 64bit x86-64 code
+ 
+ mx32
+-Target RejectNegative Negative(m32) Report Mask(ISA_X32) Var(ix86_isa_flags) Save
++Target RejectNegative Negative(m32) Report Mask(ABI_X32) Var(ix86_isa_flags) Save
+ Generate 32bit x86-64 code
+ 
+ mmmx
+@@ -455,11 +469,11 @@ Target Report Mask(ISA_SSE4_2) Var(ix86_isa_flags) Save
+ Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1 and SSE4.2 built-in functions and code generation
+ 
+ msse4
+-Target RejectNegative Report Mask(ISA_SSE4_2) MaskExists Var(ix86_isa_flags) Save
++Target RejectNegative Report Mask(ISA_SSE4_2) Var(ix86_isa_flags) Save
+ Support MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1 and SSE4.2 built-in functions and code generation
+ 
+ mno-sse4
+-Target RejectNegative Report InverseMask(ISA_SSE4_1) MaskExists Var(ix86_isa_flags) Save
++Target RejectNegative Report InverseMask(ISA_SSE4_1) Var(ix86_isa_flags) Save
+ Do not support SSE4.1 and SSE4.2 built-in functions and code generation
+ 
+ msse5
+--- a/gcc/config/i386/predicates.md
++++ b/gcc/config/i386/predicates.md
+@@ -1,5 +1,5 @@
+ ;; Predicate definitions for IA-32 and x86-64.
+-;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011
++;; Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012
+ ;; Free Software Foundation, Inc.
+ ;;
+ ;; This file is part of GCC.
+@@ -341,6 +341,16 @@
+     (match_operand 0 "general_operand")))
+ 
+ ;; Return true if OP is general operand representable on x86_64
++;; as zero extended constant.  This predicate is used in zero-extending
++;; conversion operations that require non-VOIDmode immediate operands.
++(define_predicate "x86_64_zext_general_operand"
++  (if_then_else (match_test "TARGET_64BIT")
++    (ior (match_operand 0 "nonimmediate_operand")
++	 (and (match_operand 0 "x86_64_zext_immediate_operand")
++	      (match_test "GET_MODE (op) != VOIDmode")))
++    (match_operand 0 "general_operand")))
++
++;; Return true if OP is general operand representable on x86_64
+ ;; as either sign extended or zero extended constant.
+ (define_predicate "x86_64_szext_general_operand"
+   (if_then_else (match_test "TARGET_64BIT")
+@@ -483,11 +493,11 @@
+        (match_operand 0 "local_symbolic_operand")))
+ 
+ ;; Test for various thread-local symbols.
+-(define_predicate "tls_symbolic_operand"
++(define_special_predicate "tls_symbolic_operand"
+   (and (match_code "symbol_ref")
+        (match_test "SYMBOL_REF_TLS_MODEL (op)")))
+ 
+-(define_predicate "tls_modbase_operand"
++(define_special_predicate "tls_modbase_operand"
+   (and (match_code "symbol_ref")
+        (match_test "op == ix86_tls_module_base ()")))
+ 
+@@ -558,20 +568,23 @@
+ 
+ ;; Test for a valid operand for indirect branch.
+ (define_predicate "indirect_branch_operand"
+-  (if_then_else (match_test "TARGET_X32")
+-    (match_operand 0 "register_operand")
+-    (match_operand 0 "nonimmediate_operand")))
++  (ior (match_operand 0 "register_operand")
++       (and (not (match_test "TARGET_X32"))
++	    (match_operand 0 "memory_operand"))))
+ 
+ ;; Test for a valid operand for a call instruction.
+-(define_predicate "call_insn_operand"
+-  (ior (match_operand 0 "constant_call_address_operand")
++;; Allow constant call address operands in Pmode only.
++(define_special_predicate "call_insn_operand"
++  (ior (match_test "constant_call_address_operand
++		     (op, mode == VOIDmode ? mode : Pmode)")
+        (match_operand 0 "call_register_no_elim_operand")
+        (and (not (match_test "TARGET_X32"))
+ 	    (match_operand 0 "memory_operand"))))
+ 
+ ;; Similarly, but for tail calls, in which we cannot allow memory references.
+-(define_predicate "sibcall_insn_operand"
+-  (ior (match_operand 0 "constant_call_address_operand")
++(define_special_predicate "sibcall_insn_operand"
++  (ior (match_test "constant_call_address_operand
++		     (op, mode == VOIDmode ? mode : Pmode)")
+        (match_operand 0 "register_no_elim_operand")))
+ 
+ ;; Match exactly zero.
+--- a/gcc/config/i386/sse.md
++++ b/gcc/config/i386/sse.md
+@@ -8126,8 +8126,8 @@
+   "monitor\t%0, %1, %2"
+   [(set_attr "length" "3")])
+ 
+-(define_insn "sse3_monitor64"
+-  [(unspec_volatile [(match_operand:DI 0 "register_operand" "a")
++(define_insn "sse3_monitor64_<mode>"
++  [(unspec_volatile [(match_operand:P 0 "register_operand" "a")
+ 		     (match_operand:SI 1 "register_operand" "c")
+ 		     (match_operand:SI 2 "register_operand" "d")]
+ 		    UNSPECV_MONITOR)]
+--- a/gcc/config/m68k/m68k.opt
++++ b/gcc/config/m68k/m68k.opt
+@@ -136,7 +136,7 @@ Target RejectNegative
+ Generate code for a Fido A
+ 
+ mhard-float
+-Target RejectNegative Mask(HARD_FLOAT) MaskExists
++Target RejectNegative Mask(HARD_FLOAT)
+ Generate code which uses hardware floating point instructions
+ 
+ mid-shared-library
+--- a/gcc/config/mep/mep.opt
++++ b/gcc/config/mep/mep.opt
+@@ -55,7 +55,7 @@ Target Mask(COP)
+ Enable MeP Coprocessor
+ 
+ mcop32
+-Target Mask(COP) MaskExists RejectNegative
++Target Mask(COP) RejectNegative
+ Enable MeP Coprocessor with 32-bit registers
+ 
+ mcop64
+--- a/gcc/config/pa/pa-hpux.opt
++++ b/gcc/config/pa/pa-hpux.opt
+@@ -23,7 +23,7 @@ Variable
+ int flag_pa_unix = TARGET_HPUX_11_31 ? 2003 : TARGET_HPUX_11_11 ? 1998 : TARGET_HPUX_10_10 ? 1995 : 1993
+ 
+ msio
+-Target RejectNegative Mask(SIO) MaskExists
++Target RejectNegative Mask(SIO)
+ Generate cpp defines for server IO
+ 
+ munix=93
+--- a/gcc/config/pa/pa64-hpux.opt
++++ b/gcc/config/pa/pa64-hpux.opt
+@@ -19,7 +19,7 @@
+ ; <http://www.gnu.org/licenses/>.
+ 
+ mgnu-ld
+-Target RejectNegative Mask(GNU_LD) MaskExists
++Target RejectNegative Mask(GNU_LD)
+ Assume code will be linked by GNU ld
+ 
+ mhp-ld
+--- a/gcc/config/picochip/picochip.opt
++++ b/gcc/config/picochip/picochip.opt
+@@ -43,4 +43,4 @@ Target Mask(INEFFICIENT_WARNINGS)
+ Generate warnings when inefficient code is known to be generated.
+ 
+ minefficient
+-Target Mask(INEFFICIENT_WARNINGS) MaskExists Undocumented
++Target Mask(INEFFICIENT_WARNINGS) Undocumented
+--- a/gcc/config/rs6000/sysv4.opt
++++ b/gcc/config/rs6000/sysv4.opt
+@@ -66,7 +66,7 @@ Target Report RejectNegative Mask(LITTLE_ENDIAN)
+ Produce little endian code
+ 
+ mlittle
+-Target Report RejectNegative Mask(LITTLE_ENDIAN) MaskExists
++Target Report RejectNegative Mask(LITTLE_ENDIAN)
+ Produce little endian code
+ 
+ mbig-endian
+--- a/gcc/config/sh/sh.opt
++++ b/gcc/config/sh/sh.opt
+@@ -316,7 +316,7 @@ Target Report RejectNegative Mask(RELAX)
+ Shorten address references during linking
+ 
+ mrenesas
+-Target Mask(HITACHI) MaskExists
++Target Mask(HITACHI)
+ Follow Renesas (formerly Hitachi) / SuperH calling conventions
+ 
+ msoft-atomic
+--- a/gcc/config/sparc/long-double-switch.opt
++++ b/gcc/config/sparc/long-double-switch.opt
+@@ -19,7 +19,7 @@
+ ; <http://www.gnu.org/licenses/>.
+ 
+ mlong-double-128
+-Target Report RejectNegative Mask(LONG_DOUBLE_128) MaskExists
++Target Report RejectNegative Mask(LONG_DOUBLE_128)
+ Use 128-bit long double
+ 
+ mlong-double-64
+--- a/gcc/config/sparc/sparc.opt
++++ b/gcc/config/sparc/sparc.opt
+@@ -30,7 +30,7 @@ Target Report Mask(FPU)
+ Use hardware FP
+ 
+ mhard-float
+-Target RejectNegative Mask(FPU) MaskExists
++Target RejectNegative Mask(FPU)
+ Use hardware FP
+ 
+ msoft-float
+--- a/gcc/config/v850/v850.opt
++++ b/gcc/config/v850/v850.opt
+@@ -102,7 +102,7 @@ Target RejectNegative Mask(V850E1)
+ Compile for the v850e1 processor
+ 
+ mv850es
+-Target RejectNegative Mask(V850E1) MaskExists
++Target RejectNegative Mask(V850E1)
+ Compile for the v850es variant of the v850e1
+ 
+ mv850e2
+--- a/gcc/config/vax/vax.opt
++++ b/gcc/config/vax/vax.opt
+@@ -31,7 +31,7 @@ Target RejectNegative Mask(G_FLOAT)
+ Generate GFLOAT double precision code
+ 
+ mg-float
+-Target RejectNegative Mask(G_FLOAT) MaskExists
++Target RejectNegative Mask(G_FLOAT)
+ Generate GFLOAT double precision code
+ 
+ mgnu
+--- a/gcc/configure
++++ b/gcc/configure
+@@ -13756,7 +13756,14 @@ s390*-*linux*|s390*-*tpf*|sparc*-*linux*)
+ 	    LD="${LD-ld} -m elf_i386_fbsd"
+ 	    ;;
+ 	  x86_64-*linux*)
+-	    LD="${LD-ld} -m elf_i386"
++	    case `/usr/bin/file conftest.o` in
++	      *x86-64*)
++		LD="${LD-ld} -m elf32_x86_64"
++		;;
++	      *)
++		LD="${LD-ld} -m elf_i386"
++		;;
++	    esac
+ 	    ;;
+ 	  ppc64-*linux*|powerpc64-*linux*)
+ 	    LD="${LD-ld} -m elf32ppclinux"
+--- a/gcc/doc/invoke.texi
++++ b/gcc/doc/invoke.texi
+@@ -636,7 +636,7 @@ Objective-C and Objective-C++ Dialects}.
+ -mveclibabi=@var{type} -mvect8-ret-in-mem @gol
+ -mpc32 -mpc64 -mpc80 -mstackrealign @gol
+ -momit-leaf-frame-pointer  -mno-red-zone -mno-tls-direct-seg-refs @gol
+--mcmodel=@var{code-model} -mabi=@var{name} @gol
++-mcmodel=@var{code-model} -mabi=@var{name} -maddress-mode=@var{mode} @gol
+ -m32 -m64 -mx32 -mlarge-data-threshold=@var{num} @gol
+ -msse2avx -mfentry -m8bit-idiv @gol
+ -mavx256-split-unaligned-load -mavx256-split-unaligned-store}
+@@ -13763,6 +13763,18 @@ be statically or dynamically linked.
+ @opindex mcmodel=large
+ Generate code for the large model: This model makes no assumptions
+ about addresses and sizes of sections.
++
++@item -maddress-mode=long
++@opindex maddress-mode=long
++Generate code for long address mode.  This is only supported for 64-bit
++and x32 environments.  It is the default address mode for 64-bit
++environments.
++
++@item -maddress-mode=short
++@opindex maddress-mode=short
++Generate code for short address mode.  This is only supported for 32-bit
++and x32 environments.  It is the default address mode for 32-bit and
++x32 environments.
+ @end table
+ 
+ @node i386 and x86-64 Windows Options
+--- a/gcc/doc/options.texi
++++ b/gcc/doc/options.texi
+@@ -346,8 +346,6 @@ the value 1 when the option is active and 0 otherwise.  If you use @code{Var}
+ to attach the option to a different variable, the associated macros are
+ called @code{OPTION_MASK_@var{name}} and @code{OPTION_@var{name}} respectively.
+ 
+-You can disable automatic bit allocation using @code{MaskExists}.
+-
+ @item InverseMask(@var{othername})
+ @itemx InverseMask(@var{othername}, @var{thisname})
+ The option is the inverse of another option that has the
+@@ -355,15 +353,6 @@ The option is the inverse of another option that has the
+ the options-processing script will declare a @code{TARGET_@var{thisname}}
+ macro that is 1 when the option is active and 0 otherwise.
+ 
+-@item MaskExists
+-The mask specified by the @code{Mask} property already exists.
+-No @code{MASK} or @code{TARGET} definitions should be added to
+-@file{options.h} in response to this option record.
+-
+-The main purpose of this property is to support synonymous options.
+-The first option should use @samp{Mask(@var{name})} and the others
+-should use @samp{Mask(@var{name}) MaskExists}.
+-
+ @item Enum(@var{name})
+ The option's argument is a string from the set of strings associated
+ with the corresponding @samp{Enum} record.  The string is checked and
+--- a/gcc/dwarf2out.c
++++ b/gcc/dwarf2out.c
+@@ -10178,7 +10178,9 @@ dbx_reg_number (const_rtx rtl)
+     }
+ #endif
+ 
+-  return DBX_REGISTER_NUMBER (regno);
++  regno = DBX_REGISTER_NUMBER (regno);
++  gcc_assert (regno != INVALID_REGNUM);
++  return regno;
+ }
+ 
+ /* Optionally add a DW_OP_piece term to a location description expression.
+--- a/gcc/emit-rtl.c
++++ b/gcc/emit-rtl.c
+@@ -964,6 +964,22 @@ void
+ set_reg_attrs_from_value (rtx reg, rtx x)
+ {
+   int offset;
++  bool can_be_reg_pointer = true;
++
++  /* Don't call mark_reg_pointer for incompatible pointer sign
++     extension.  */
++  while (GET_CODE (x) == SIGN_EXTEND
++	 || GET_CODE (x) == ZERO_EXTEND
++	 || GET_CODE (x) == TRUNCATE
++	 || (GET_CODE (x) == SUBREG && subreg_lowpart_p (x)))
++    {
++#if defined(POINTERS_EXTEND_UNSIGNED) && !defined(HAVE_ptr_extend)
++      if ((GET_CODE (x) == SIGN_EXTEND && POINTERS_EXTEND_UNSIGNED)
++	  || (GET_CODE (x) != SIGN_EXTEND && ! POINTERS_EXTEND_UNSIGNED))
++	can_be_reg_pointer = false;
++#endif
++      x = XEXP (x, 0);
++    }
+ 
+   /* Hard registers can be reused for multiple purposes within the same
+      function, so setting REG_ATTRS, REG_POINTER and REG_POINTER_ALIGN
+@@ -977,14 +993,14 @@ set_reg_attrs_from_value (rtx reg, rtx x)
+       if (MEM_OFFSET_KNOWN_P (x))
+ 	REG_ATTRS (reg) = get_reg_attrs (MEM_EXPR (x),
+ 					 MEM_OFFSET (x) + offset);
+-      if (MEM_POINTER (x))
++      if (can_be_reg_pointer && MEM_POINTER (x))
+ 	mark_reg_pointer (reg, 0);
+     }
+   else if (REG_P (x))
+     {
+       if (REG_ATTRS (x))
+ 	update_reg_offset (reg, x, offset);
+-      if (REG_POINTER (x))
++      if (can_be_reg_pointer && REG_POINTER (x))
+ 	mark_reg_pointer (reg, REGNO_POINTER_ALIGN (REGNO (x)));
+     }
+ }
+--- a/gcc/opth-gen.awk
++++ b/gcc/opth-gen.awk
+@@ -298,16 +298,25 @@ print "";
+ 
+ for (i = 0; i < n_opts; i++) {
+ 	name = opt_args("Mask", flags[i])
+-	vname = var_name(flags[i])
+-	mask = "MASK_"
+-	mask_1 = "1"
+-	if (vname != "") {
+-		mask = "OPTION_MASK_"
+-		if (host_wide_int[vname] == "yes")
+-			mask_1 = "HOST_WIDE_INT_1"
++	if (name == "") {
++		opt = opt_args("InverseMask", flags[i])
++		if (opt ~ ",")
++			name = nth_arg(0, opt)
++		else
++			name = opt
+ 	}
+-	if (name != "" && !flag_set_p("MaskExists", flags[i]))
++	if (name != "" && mask_bits[name] == 0) {
++		mask_bits[name] = 1
++		vname = var_name(flags[i])
++		mask = "MASK_"
++		mask_1 = "1"
++		if (vname != "") {
++			mask = "OPTION_MASK_"
++			if (host_wide_int[vname] == "yes")
++				mask_1 = "HOST_WIDE_INT_1"
++		}
+ 		print "#define " mask name " (" mask_1 " << " masknum[vname]++ ")"
++	}
+ }
+ for (i = 0; i < n_extra_masks; i++) {
+ 	print "#define MASK_" extra_masks[i] " (1 << " masknum[""]++ ")"
+@@ -330,17 +339,26 @@ print ""
+ 
+ for (i = 0; i < n_opts; i++) {
+ 	name = opt_args("Mask", flags[i])
+-	vname = var_name(flags[i])
+-	macro = "OPTION_"
+-	mask = "OPTION_MASK_"
+-	if (vname == "") {
+-		vname = "target_flags"
+-		macro = "TARGET_"
+-		mask = "MASK_"
++	if (name == "") {
++		opt = opt_args("InverseMask", flags[i])
++		if (opt ~ ",")
++			name = nth_arg(0, opt)
++		else
++			name = opt
+ 	}
+-	if (name != "" && !flag_set_p("MaskExists", flags[i]))
++	if (name != "" && mask_macros[name] == 0) {
++		mask_macros[name] = 1
++		vname = var_name(flags[i])
++		macro = "OPTION_"
++		mask = "OPTION_MASK_"
++		if (vname == "") {
++			vname = "target_flags"
++			macro = "TARGET_"
++			mask = "MASK_"
++		}
+ 		print "#define " macro name \
+ 		      " ((" vname " & " mask name ") != 0)"
++	}
+ }
+ for (i = 0; i < n_extra_masks; i++) {
+ 	print "#define TARGET_" extra_masks[i] \
+--- a/gcc/reginfo.c
++++ b/gcc/reginfo.c
+@@ -1222,17 +1222,7 @@ reg_scan_mark_refs (rtx x, rtx insn)
+       /* If this is setting a register from a register or from a simple
+ 	 conversion of a register, propagate REG_EXPR.  */
+       if (REG_P (dest) && !REG_ATTRS (dest))
+-	{
+-	  rtx src = SET_SRC (x);
+-
+-	  while (GET_CODE (src) == SIGN_EXTEND
+-		 || GET_CODE (src) == ZERO_EXTEND
+-		 || GET_CODE (src) == TRUNCATE
+-		 || (GET_CODE (src) == SUBREG && subreg_lowpart_p (src)))
+-	    src = XEXP (src, 0);
+-
+-	  set_reg_attrs_from_value (dest, src);
+-	}
++	set_reg_attrs_from_value (dest, SET_SRC (x));
+ 
+       /* ... fall through ...  */
+ 
+--- /dev/null
++++ b/gcc/testsuite/gcc.dg/torture/pr52530.c
+@@ -0,0 +1,30 @@
++/* { dg-do run } */
++
++extern void abort (void);
++
++struct foo
++{
++ int *f;
++ int i;
++};
++
++int baz;
++
++void __attribute__ ((noinline))
++bar (struct foo x)
++{
++ *(x.f) = x.i;
++}
++
++int
++main ()
++{
++  struct foo x = { &baz, 0xdeadbeef };
++
++  bar (x);
++
++  if (baz != 0xdeadbeef)
++    abort ();
++
++  return 0;
++}
+--- a/gcc/testsuite/gcc.target/i386/pr52146.c
++++ b/gcc/testsuite/gcc.target/i386/pr52146.c
+@@ -15,4 +15,4 @@ test2 (void)
+   *apic_tpr_addr = 0;
+ }
+ 
+-/* { dg-final { scan-assembler-not "-18874240" } } */
++/* { dg-final { scan-assembler-not "\[,\\t \]+-18874240" } } */
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/i386/pr52876.c
+@@ -0,0 +1,25 @@
++/* { dg-do run { target { x32 } } } */
++/* { dg-options "-O2 -mx32 -maddress-mode=long" } */
++
++extern void abort (void);
++
++long long li;
++
++long long 
++__attribute__ ((noinline))
++testfunc (void* addr)
++{
++  li = (long long)(int)addr;
++  li &= 0xffffffff;
++  return li;
++}
++
++int main (void)
++{
++  volatile long long rv_test;
++  rv_test = testfunc((void*)0x87651234);
++  if (rv_test != 0x87651234ULL)
++    abort ();
++
++  return 0;
++}
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/i386/pr52882.c
+@@ -0,0 +1,19 @@
++/* { dg-do compile } */
++/* { dg-options "-O" } */
++
++struct S1 {
++  int f0;
++  int f1;
++};
++
++int fn1 ();
++void fn2 (struct S1);
++
++void
++fn3 () {
++  struct S1 a = { 1, 0 };
++  if (fn1 ())
++    fn2 (a);
++  for (; a.f1;) {
++  }
++}
+--- /dev/null
++++ b/gcc/testsuite/gcc.target/i386/pr52883.c
+@@ -0,0 +1,25 @@
++/* { dg-do compile } */
++/* { dg-options "-O" } */
++
++int a, b, d, e, f, i, j, k, l, m;
++unsigned c;
++int g[] = { }, h[0];
++
++int
++fn1 () {
++  return 0;
++}
++
++void
++fn2 () {
++  c = 0;
++  e = 0;
++  for (;; e = 0)
++    if (f > j) {
++      k = fn1 ();
++      l = (d || k) * b;
++      m = l * a;
++      h[0] = m <= i;
++    } else
++      i = g[c];
++}
+--- a/libffi/configure
++++ b/libffi/configure
+@@ -6282,7 +6282,14 @@ s390*-*linux*|s390*-*tpf*|sparc*-*linux*)
+ 	    LD="${LD-ld} -m elf_i386_fbsd"
+ 	    ;;
+ 	  x86_64-*linux*)
+-	    LD="${LD-ld} -m elf_i386"
++	    case `/usr/bin/file conftest.o` in
++	      *x86-64*)
++		LD="${LD-ld} -m elf32_x86_64"
++		;;
++	      *)
++		LD="${LD-ld} -m elf_i386"
++		;;
++	    esac
+ 	    ;;
+ 	  ppc64-*linux*|powerpc64-*linux*)
+ 	    LD="${LD-ld} -m elf32ppclinux"
+--- a/libffi/src/x86/ffi64.c
++++ b/libffi/src/x86/ffi64.c
+@@ -426,7 +426,7 @@ ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
+   /* If the return value is passed in memory, add the pointer as the
+      first integer argument.  */
+   if (ret_in_memory)
+-    reg_args->gpr[gprcount++] = (long) rvalue;
++    reg_args->gpr[gprcount++] = (unsigned long) rvalue;
+ 
+   avn = cif->nargs;
+   arg_types = cif->arg_types;
+@@ -501,9 +501,11 @@ ffi_prep_closure_loc (ffi_closure* closure,
+   tramp = (volatile unsigned short *) &closure->tramp[0];
+ 
+   tramp[0] = 0xbb49;		/* mov <code>, %r11	*/
+-  *(void * volatile *) &tramp[1] = ffi_closure_unix64;
++  *((unsigned long long * volatile) &tramp[1])
++    = (unsigned long) ffi_closure_unix64;
+   tramp[5] = 0xba49;		/* mov <data>, %r10	*/
+-  *(void * volatile *) &tramp[6] = codeloc;
++  *((unsigned long long * volatile) &tramp[6])
++    = (unsigned long) codeloc;
+ 
+   /* Set the carry bit iff the function uses any sse registers.
+      This is clc or stc, together with the first byte of the jmp.  */
+@@ -542,7 +544,7 @@ ffi_closure_unix64_inner(ffi_closure *closure, void *rvalue,
+ 	{
+ 	  /* The return value goes in memory.  Arrange for the closure
+ 	     return value to go directly back to the original caller.  */
+-	  rvalue = (void *) reg_args->gpr[gprcount++];
++	  rvalue = (void *) (unsigned long) reg_args->gpr[gprcount++];
+ 	  /* We don't have to do anything in asm for the return.  */
+ 	  ret = FFI_TYPE_VOID;
+ 	}
+--- a/libffi/src/x86/ffitarget.h
++++ b/libffi/src/x86/ffitarget.h
+@@ -53,9 +53,15 @@ typedef unsigned long long     ffi_arg;
+ typedef long long              ffi_sarg;
+ #endif
+ #else
++#if defined __x86_64__ && !defined __LP64__
++#define FFI_SIZEOF_ARG 8
++typedef unsigned long long     ffi_arg;
++typedef long long              ffi_sarg;
++#else
+ typedef unsigned long          ffi_arg;
+ typedef signed long            ffi_sarg;
+ #endif
++#endif
+ 
+ typedef enum ffi_abi {
+   FFI_FIRST_ABI = 0,
+--- a/libgcc/unwind-dw2.c
++++ b/libgcc/unwind-dw2.c
+@@ -294,7 +294,8 @@ _Unwind_SetGRValue (struct _Unwind_Context *context, int index,
+ {
+   index = DWARF_REG_TO_UNWIND_COLUMN (index);
+   gcc_assert (index < (int) sizeof(dwarf_reg_size_table));
+-  gcc_assert (dwarf_reg_size_table[index] == sizeof (_Unwind_Context_Reg_Val));
++  /* Return column size may be smaller than _Unwind_Context_Reg_Val.  */
++  gcc_assert (dwarf_reg_size_table[index] <= sizeof (_Unwind_Context_Reg_Val));
+ 
+   context->by_value[index] = 1;
+   context->reg[index] = _Unwind_Get_Unwind_Context_Reg_Val (val);
+--- a/libgfortran/configure
++++ b/libgfortran/configure
+@@ -8071,7 +8071,14 @@ s390*-*linux*|s390*-*tpf*|sparc*-*linux*)
+ 	    LD="${LD-ld} -m elf_i386_fbsd"
+ 	    ;;
+ 	  x86_64-*linux*)
+-	    LD="${LD-ld} -m elf_i386"
++	    case `/usr/bin/file conftest.o` in
++	      *x86-64*)
++		LD="${LD-ld} -m elf32_x86_64"
++		;;
++	      *)
++		LD="${LD-ld} -m elf_i386"
++		;;
++	    esac
+ 	    ;;
+ 	  ppc64-*linux*|powerpc64-*linux*)
+ 	    LD="${LD-ld} -m elf32ppclinux"
+--- a/libgomp/configure
++++ b/libgomp/configure
+@@ -6596,7 +6596,14 @@ s390*-*linux*|s390*-*tpf*|sparc*-*linux*)
+ 	    LD="${LD-ld} -m elf_i386_fbsd"
+ 	    ;;
+ 	  x86_64-*linux*)
+-	    LD="${LD-ld} -m elf_i386"
++	    case `/usr/bin/file conftest.o` in
++	      *x86-64*)
++		LD="${LD-ld} -m elf32_x86_64"
++		;;
++	      *)
++		LD="${LD-ld} -m elf_i386"
++		;;
++	    esac
+ 	    ;;
+ 	  ppc64-*linux*|powerpc64-*linux*)
+ 	    LD="${LD-ld} -m elf32ppclinux"
+--- a/libgomp/configure.tgt
++++ b/libgomp/configure.tgt
+@@ -59,7 +59,7 @@ if test $enable_linux_futex = yes; then
+     i[456]86-*-linux*)
+ 	config_path="linux/x86 linux posix"
+ 	case " ${CC} ${CFLAGS} " in
+-	  *" -m64 "*)
++	  *" -m64 "*|*" -mx32 "*)
+ 	    ;;
+ 	  *)
+ 	    if test -z "$with_arch"; then
+--- a/libitm/configure
++++ b/libitm/configure
+@@ -7285,7 +7285,14 @@ s390*-*linux*|s390*-*tpf*|sparc*-*linux*)
+ 	    LD="${LD-ld} -m elf_i386_fbsd"
+ 	    ;;
+ 	  x86_64-*linux*)
+-	    LD="${LD-ld} -m elf_i386"
++	    case `/usr/bin/file conftest.o` in
++	      *x86-64*)
++		LD="${LD-ld} -m elf32_x86_64"
++		;;
++	      *)
++		LD="${LD-ld} -m elf_i386"
++		;;
++	    esac
+ 	    ;;
+ 	  ppc64-*linux*|powerpc64-*linux*)
+ 	    LD="${LD-ld} -m elf32ppclinux"
+--- a/libitm/configure.tgt
++++ b/libitm/configure.tgt
+@@ -53,7 +53,7 @@ case "${target_cpu}" in
+ 
+   i[3456]86)
+ 	case " ${CC} ${CFLAGS} " in
+-	  *" -m64 "*)
++	  *" -m64 "*|*" -mx32 "*)
+ 	    ;;
+ 	  *)
+ 	    if test -z "$with_arch"; then
+--- a/libjava/classpath/configure
++++ b/libjava/classpath/configure
+@@ -7592,7 +7592,14 @@ s390*-*linux*|s390*-*tpf*|sparc*-*linux*)
+ 	    LD="${LD-ld} -m elf_i386_fbsd"
+ 	    ;;
+ 	  x86_64-*linux*)
+-	    LD="${LD-ld} -m elf_i386"
++	    case `/usr/bin/file conftest.o` in
++	      *x86-64*)
++		LD="${LD-ld} -m elf32_x86_64"
++		;;
++	      *)
++		LD="${LD-ld} -m elf_i386"
++		;;
++	    esac
+ 	    ;;
+ 	  ppc64-*linux*|powerpc64-*linux*)
+ 	    LD="${LD-ld} -m elf32ppclinux"
+--- a/libjava/configure
++++ b/libjava/configure
+@@ -8843,7 +8843,14 @@ s390*-*linux*|s390*-*tpf*|sparc*-*linux*)
+ 	    LD="${LD-ld} -m elf_i386_fbsd"
+ 	    ;;
+ 	  x86_64-*linux*)
+-	    LD="${LD-ld} -m elf_i386"
++	    case `/usr/bin/file conftest.o` in
++	      *x86-64*)
++		LD="${LD-ld} -m elf32_x86_64"
++		;;
++	      *)
++		LD="${LD-ld} -m elf_i386"
++		;;
++	    esac
+ 	    ;;
+ 	  ppc64-*linux*|powerpc64-*linux*)
+ 	    LD="${LD-ld} -m elf32ppclinux"
+--- a/libmudflap/configure
++++ b/libmudflap/configure
+@@ -6393,7 +6393,14 @@ s390*-*linux*|s390*-*tpf*|sparc*-*linux*)
+ 	    LD="${LD-ld} -m elf_i386_fbsd"
+ 	    ;;
+ 	  x86_64-*linux*)
+-	    LD="${LD-ld} -m elf_i386"
++	    case `/usr/bin/file conftest.o` in
++	      *x86-64*)
++		LD="${LD-ld} -m elf32_x86_64"
++		;;
++	      *)
++		LD="${LD-ld} -m elf_i386"
++		;;
++	    esac
+ 	    ;;
+ 	  ppc64-*linux*|powerpc64-*linux*)
+ 	    LD="${LD-ld} -m elf32ppclinux"
+--- a/libobjc/configure
++++ b/libobjc/configure
+@@ -6079,7 +6079,14 @@ s390*-*linux*|s390*-*tpf*|sparc*-*linux*)
+ 	    LD="${LD-ld} -m elf_i386_fbsd"
+ 	    ;;
+ 	  x86_64-*linux*)
+-	    LD="${LD-ld} -m elf_i386"
++	    case `/usr/bin/file conftest.o` in
++	      *x86-64*)
++		LD="${LD-ld} -m elf32_x86_64"
++		;;
++	      *)
++		LD="${LD-ld} -m elf_i386"
++		;;
++	    esac
+ 	    ;;
+ 	  ppc64-*linux*|powerpc64-*linux*)
+ 	    LD="${LD-ld} -m elf32ppclinux"
+--- a/libquadmath/configure
++++ b/libquadmath/configure
+@@ -6264,7 +6264,14 @@ s390*-*linux*|s390*-*tpf*|sparc*-*linux*)
+ 	    LD="${LD-ld} -m elf_i386_fbsd"
+ 	    ;;
+ 	  x86_64-*linux*)
+-	    LD="${LD-ld} -m elf_i386"
++	    case `/usr/bin/file conftest.o` in
++	      *x86-64*)
++		LD="${LD-ld} -m elf32_x86_64"
++		;;
++	      *)
++		LD="${LD-ld} -m elf_i386"
++		;;
++	    esac
+ 	    ;;
+ 	  ppc64-*linux*|powerpc64-*linux*)
+ 	    LD="${LD-ld} -m elf32ppclinux"
+--- a/libssp/configure
++++ b/libssp/configure
+@@ -6401,7 +6401,14 @@ s390*-*linux*|s390*-*tpf*|sparc*-*linux*)
+ 	    LD="${LD-ld} -m elf_i386_fbsd"
+ 	    ;;
+ 	  x86_64-*linux*)
+-	    LD="${LD-ld} -m elf_i386"
++	    case `/usr/bin/file conftest.o` in
++	      *x86-64*)
++		LD="${LD-ld} -m elf32_x86_64"
++		;;
++	      *)
++		LD="${LD-ld} -m elf_i386"
++		;;
++	    esac
+ 	    ;;
+ 	  ppc64-*linux*|powerpc64-*linux*)
+ 	    LD="${LD-ld} -m elf32ppclinux"
+--- a/libstdc++-v3/configure
++++ b/libstdc++-v3/configure
+@@ -7120,7 +7119,14 @@ s390*-*linux*|s390*-*tpf*|sparc*-*linux*)
+ 	    LD="${LD-ld} -m elf_i386_fbsd"
+ 	    ;;
+ 	  x86_64-*linux*)
+-	    LD="${LD-ld} -m elf_i386"
++	    case `/usr/bin/file conftest.o` in
++	      *x86-64*)
++		LD="${LD-ld} -m elf32_x86_64"
++		;;
++	      *)
++		LD="${LD-ld} -m elf_i386"
++		;;
++	    esac
+ 	    ;;
+ 	  ppc64-*linux*|powerpc64-*linux*)
+ 	    LD="${LD-ld} -m elf32ppclinux"
+--- a/libtool.m4
++++ b/libtool.m4
+@@ -1232,7 +1232,14 @@ s390*-*linux*|s390*-*tpf*|sparc*-*linux*)
+ 	    LD="${LD-ld} -m elf_i386_fbsd"
+ 	    ;;
+ 	  x86_64-*linux*)
+-	    LD="${LD-ld} -m elf_i386"
++	    case `/usr/bin/file conftest.o` in
++	      *x86-64*)
++		LD="${LD-ld} -m elf32_x86_64"
++		;;
++	      *)
++		LD="${LD-ld} -m elf_i386"
++		;;
++	    esac
+ 	    ;;
+ 	  ppc64-*linux*|powerpc64-*linux*)
+ 	    LD="${LD-ld} -m elf32ppclinux"
+--- a/lto-plugin/configure
++++ b/lto-plugin/configure
+@@ -6060,7 +6060,14 @@ s390*-*linux*|s390*-*tpf*|sparc*-*linux*)
+ 	    LD="${LD-ld} -m elf_i386_fbsd"
+ 	    ;;
+ 	  x86_64-*linux*)
+-	    LD="${LD-ld} -m elf_i386"
++	    case `/usr/bin/file conftest.o` in
++	      *x86-64*)
++		LD="${LD-ld} -m elf32_x86_64"
++		;;
++	      *)
++		LD="${LD-ld} -m elf_i386"
++		;;
++	    esac
+ 	    ;;
+ 	  ppc64-*linux*|powerpc64-*linux*)
+ 	    LD="${LD-ld} -m elf32ppclinux"
+--- a/zlib/configure
++++ b/zlib/configure
+@@ -5869,7 +5869,14 @@ s390*-*linux*|s390*-*tpf*|sparc*-*linux*)
+ 	    LD="${LD-ld} -m elf_i386_fbsd"
+ 	    ;;
+ 	  x86_64-*linux*)
+-	    LD="${LD-ld} -m elf_i386"
++	    case `/usr/bin/file conftest.o` in
++	      *x86-64*)
++		LD="${LD-ld} -m elf32_x86_64"
++		;;
++	      *)
++		LD="${LD-ld} -m elf_i386"
++		;;
++	    esac
+ 	    ;;
+ 	  ppc64-*linux*|powerpc64-*linux*)
+ 	    LD="${LD-ld} -m elf32ppclinux"

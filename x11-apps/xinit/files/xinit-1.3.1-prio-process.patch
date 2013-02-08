@@ -1,0 +1,14 @@
+diff --git a/xinit.c b/xinit.c
+index 42ff008..2ab817f 100644
+--- a/xinit.c
++++ b/xinit.c
+@@ -49,10 +49,8 @@ in this Software without prior written authorization from The Open Group.
+ #endif
+ 
+ /* For PRIO_PROCESS and setpriority() */
+-#ifdef __DragonFly__
+ #include <sys/time.h>
+ #include <sys/resource.h>
+-#endif /* __DragonFly__ */
+ 
+ #include <stdlib.h>

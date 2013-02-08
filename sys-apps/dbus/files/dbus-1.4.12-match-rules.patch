@@ -1,0 +1,10 @@
+--- a/bus/system.conf.in	2012-08-15 07:01:02.000000000 -0700
++++ b/bus/system.conf.in	2012-11-19 15:18:37.388906177 -0800
+@@ -80,4 +80,7 @@
+ 
+   <include if_selinux_enabled="yes" selinux_root_relative="yes">contexts/dbus_contexts</include>
+ 
++  <!-- Chromium talks to most services on the bus so needs a relatively
++       large number of match rules. -->
++  <limit name="max_match_rules_per_connection">4096</limit>
+ </busconfig>

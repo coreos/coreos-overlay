@@ -1,0 +1,292 @@
+#!/usr/bin/python
+
+# Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# This script is a meta-driver for the toolchain. It transforms the command
+# line to allow the following:
+# 1. This script ensures that '--sysroot' is passed to whatever it is wrapping.
+#
+# 2. It adds hardened flags to gcc invocation. The hardened flags are:
+#   -fstack-protector-strong
+#   -fPIE
+#   -pie
+#   -D_FORTIFY_SOURCE=2
+#
+# It can disable -fPIE -pie by checking if -nopie is passed to gcc. In this
+# case it removes -nopie as it is a non-standard flag.
+#
+# 3. Enable clang diagnostics with -clang option
+#
+# 4. Add new -print-cmdline option to print the command line before executon
+#
+# This is currently implemented as two loops on the list of arguments. The
+# first loop # identifies hardening flags, as well as determining if clang
+# invocation is specified. The second loop build command line for clang
+# invocation as well adjusting gcc command line.
+#
+# This implementation ensure compile time of default path remains mostly
+# the same.
+#
+# There is a similar hardening wrapper that wraps ld and adds -z now -z relro
+# to the link command line (see ldwrapper).
+#
+# To use:
+#   mv <tool> <tool>.real
+#   ln -s <path_to_sysroot_wrapper> <tool>
+
+import os
+import re
+import sys
+
+# Full hardening. Some/all of these may be discarded depending on
+# other flags.
+flags_to_add = set(['-fstack-protector-strong', '-fPIE', '-pie',
+  '-D_FORTIFY_SOURCE=2', '-frecord-gcc-switches'])
+disable_flags = set(['-mno-movbe', '-mno-ssse3'])
+
+# Only FORTIFY_SOURCE hardening flag is applicable for clang parser.
+clang_cmdline = ['-fsyntax-only', '-Qunused-arguments', '-D_FORTIFY_SOURCE=2']
+
+# If -clang is present.
+clang_compile_requested = 0
+
+# If -print-cmdline is present.
+print_cmdline = 0
+
+# If ccache should be used automatically.
+use_ccache = True # @CCACHE_DEFAULT@ Keep this comment for code.
+
+fstack = set(['-D__KERNEL__', '-fno-stack-protector', '-nodefaultlibs',
+              '-nostdlib'])
+fPIE = set(['-D__KERNEL__', '-fPIC', '-fPIE', '-fno-PIC', '-fno-PIE',
+  '-fno-pic', '-fno-pie', '-fpic', '-fpie', '-nopie', '-nostartfiles',
+  '-nostdlib', '-pie', '-static'])
+pie = set(['-D__KERNEL__', '-A', '-fno-PIC', '-fno-PIE', '-fno-pic', '-fno-pie',
+  '-nopie', '-nostartfiles', '-nostdlib', '-pie', '-r', '--shared', '-shared',
+  '-static'])
+sse = set(['-msse3', '-mssse3', '-msse4.1', '-msse4.2', '-msse4', '-msse4a'])
+wrapper_only_options = set(['-clang', '-print-cmdline', '-nopie', '-noccache'])
+
+myargs = sys.argv[1:]
+if fstack.intersection(myargs):
+  flags_to_add.remove('-fstack-protector-strong')
+  flags_to_add.add('-fno-stack-protector')
+if fPIE.intersection(myargs):
+  flags_to_add.remove('-fPIE')
+if pie.intersection(myargs):
+  flags_to_add.remove('-pie')
+if sse.intersection(myargs):
+  disable_flags.remove('-mno-ssse3')
+clang_compile_requested = '-clang' in myargs
+print_cmdline = '-print-cmdline' in myargs
+if '-noccache' in myargs:
+  # Only explicitly disable so we can set defaults up top.
+  use_ccache = False
+cmdline = [x for x in myargs if x not in wrapper_only_options]
+
+if not clang_compile_requested:
+  gcc_cmdline = cmdline
+else:
+  import subprocess
+  # Gcc flags to remove from the clang command line.
+  # TODO: Once clang supports gcc compatibility mode, remove
+  # these checks.
+  #
+  # Use of -Qunused-arguments allows this set to be small, just those
+  # that clang still warns about.
+  clang_unsupported = set(['-pass-exit-codes', '-Ofast', '-Wclobbered',
+    '-fvisibility=internal', '-Woverride-init', '-Wunsafe-loop-optimizations',
+    '-Wlogical-op', '-Wmissing-parameter-type', '-Wold-style-declaration'])
+  clang_unsupported_prefixes = ('-Wstrict-aliasing=')
+
+  # Clang may use different options for the same or similar functionality.
+  gcc_to_clang = {
+    '-Wno-error=unused-but-set-variable': '-Wno-error=unused-variable',
+    '-Wno-error=maybe-uninitialized': '-Wno-error=uninitialized',
+  }
+
+  # If these options are specified, do not run clang, even if -clang is
+  # specified.
+  # This is mainly for utilities that depend on compiler output.
+  skip_clang_prefixes = ('-print-', '-dump', '@')
+  skip_clang_set = set(['-', '-E', '-M', '-x'])
+
+  # Reset gcc cmdline too. Only change is to remove -Xclang-only
+  # options if specified.
+  gcc_cmdline = []
+
+  skip_clang = False
+  for flag in cmdline:
+    if flag.startswith(skip_clang_prefixes) or flag in skip_clang_set or flag.endswith('.S'):
+      skip_clang = True
+    elif not (flag in clang_unsupported or
+              flag.startswith(clang_unsupported_prefixes)):
+      # Strip off -Xclang-only= if present.
+      if flag.startswith('-Xclang-only='):
+        opt = flag.partition('=')[2]
+        clang_cmdline.append(opt)
+        # No need to add to gcc_cmdline.
+        continue
+      elif flag in gcc_to_clang.keys():
+        clang_cmdline.append(gcc_to_clang[flag])
+      else:
+        clang_cmdline.append(flag)
+    gcc_cmdline.append(flag)
+
+if re.match(r'i.86|x86_64', os.path.basename(sys.argv[0])):
+  gcc_cmdline.extend(disable_flags)
+
+
+def get_proc_cmdline(pid):
+  with open('/proc/%i/cmdline' % pid) as fp:
+    return fp.read().replace('\0', ' ')
+  return None
+
+
+def get_proc_status(pid, item):
+  with open('/proc/%i/status' % pid) as fp:
+    for line in fp:
+      m = re.match(r'%s:\s*(.*)' % re.escape(item), line)
+      if m:
+        return m.group(1)
+  return None
+
+
+def log_parent_process_tree(log, ppid):
+  depth = 0
+
+  while ppid > 1:
+    cmdline = get_proc_cmdline(ppid)
+    log.warning(' %*s {%5i}: %s' % (depth, '', ppid, cmdline))
+
+    ppid = get_proc_status(ppid, 'PPid')
+    if not ppid:
+      break
+    ppid = int(ppid)
+    depth += 2
+
+
+sysroot = os.environ.get('SYSROOT', '')
+if sysroot:
+  clang_cmdline.append('--sysroot=%s' % sysroot)
+  gcc_cmdline.append('--sysroot=%s' % sysroot)
+else:
+  import logging
+  import logging.handlers
+  import traceback
+
+  log_file = '/tmp/sysroot_wrapper.error'
+
+  log = logging.getLogger('sysroot_wrapper')
+  log.setLevel(logging.DEBUG)
+
+  handler = logging.handlers.RotatingFileHandler(log_file, maxBytes=0x20000000,
+                                                 backupCount=1)
+  formatter = logging.Formatter('%(asctime)s %(message)s')
+  handler.setFormatter(formatter)
+  log.addHandler(handler)
+
+  log.warning('Invocation with missing SYSROOT: %s' % ' '.join(sys.argv))
+  try:
+    log_parent_process_tree(log, os.getppid())
+  except IOError:
+    log.error('%s' % traceback.format_exc())
+
+  try:
+    # The logging module does not support setting permissions.
+    os.chmod(log_file, 0666)
+  except OSError:
+    pass
+
+if clang_compile_requested and not skip_clang:
+  clang_comp = os.environ.get('CLANG', '/usr/bin/clang')
+
+  # Specify the target for clang.
+  gcc_comp = os.path.basename(sys.argv[0])
+  arch = gcc_comp.split('-')[0]
+  if arch == 'i386' or arch == 'i486' or arch == 'i586' or arch == 'i686':
+    clang_cmdline.insert(0, '-m32')
+  elif arch == 'x86_64':
+    clang_cmdline.insert(0, '-m64')
+  elif arch.startswith('arm'):
+    clang_cmdline.insert(0, 'armv7a-cros-linux-gnueabi')
+    clang_cmdline.insert(0, '-target')
+
+  # Check for clang or clang++.
+  if sys.argv[0].endswith('++'):
+    clang_comp += '++'
+
+  if print_cmdline:
+    print '%s %s\n' % (clang_comp, ' '.join(clang_cmdline))
+
+  p = subprocess.Popen([clang_comp] + clang_cmdline)
+  p.wait()
+  if p.returncode != 0:
+    sys.exit(p.returncode)
+
+execargs = []
+real_gcc = '%s.real' % sys.argv[0]
+if use_ccache:
+  # Portage likes to set this for us when it has FEATURES=-ccache.
+  # The other vars we need to setup manually because of tools like
+  # scons that scrubs the env before we get executed.
+  os.environ.pop('CCACHE_DISABLE', None)
+
+  # We should be able to share the objects across compilers as
+  # the pre-processed output will differ.  This allows boards
+  # that share compiler flags (like x86 boards) to share caches.
+  ccache_dir = '/var/cache/distfiles/ccache'
+  os.environ['CCACHE_DIR'] = ccache_dir
+
+  # If RESTRICT=sandbox is enabled, then sandbox won't be setup,
+  # and the env vars won't be available for appending.
+  if 'SANDBOX_WRITE' in os.environ:
+    os.environ['SANDBOX_WRITE'] += ':%s' % ccache_dir
+
+  # We need to get ccache to make relative paths from within the
+  # sysroot.  This lets us share cached files across boards (if
+  # all other things are equal of course like CFLAGS) as well as
+  # across versions.  A quick test is something like:
+  #   $ export CFLAGS='-O2 -g -pipe' CXXFLAGS='-O2 -g -pipe'
+  #   $ BOARD=x86-alex
+  #   $ cros_workon-$BOARD stop cros-disks
+  #   $ emerge-$BOARD cros-disks
+  #   $ cros_workon-$BOARD start cros-disks
+  #   $ emerge-$BOARD cros-disks
+  #   $ BOARD=amd64-generic
+  #   $ cros_workon-$BOARD stop cros-disks
+  #   $ emerge-$BOARD cros-disks
+  #   $ cros_workon-$BOARD start cros-disks
+  #   $ emerge-$BOARD cros-disks
+  # All of those will get cache hits (ignoring the first one
+  # which will seed the cache) due to this setting.
+  if sysroot:
+    os.environ['CCACHE_BASEDIR'] = sysroot
+
+  # Minor speed up as we don't care about this in general.
+  #os.environ['CCACHE_NOSTATS'] = 'no'
+  # Useful for debugging.
+  #os.environ['CCACHE_LOG'] = '/dev/stderr'
+
+  # We take care of nuking the cache in the gcc ebuild whenever
+  # it revbumps in a way that matters, so disable ccache's check.
+  os.environ['CCACHE_COMPILERCHECK'] = 'none'
+
+  # Make sure we keep the cached files group writable.
+  os.environ['CCACHE_UMASK'] = '002'
+
+  argv0 = '/usr/bin/ccache'
+  execargs += ['ccache']
+  #gcc_cmdline += ['-noccache']
+else:
+  argv0 = real_gcc
+
+execargs += [real_gcc] + list(flags_to_add) + gcc_cmdline
+
+if print_cmdline:
+  print '[%s] %s' % (argv0, ' '.join(execargs))
+
+sys.stdout.flush()
+os.execv(argv0, execargs)

@@ -1,0 +1,38 @@
+From d53e6e02a2595ced1882f5fcd34d08ea039b3b85 Mon Sep 17 00:00:00 2001
+From: Peter Hutterer <peter.hutterer@who-t.net>
+Date: Thu, 16 Aug 2012 13:54:42 +1000
+Subject: [PATCH] mi: don't check for core events in miPointerSetPosition
+ (#53568)
+
+As of 81cfe44b1ed0de84ad1941fe2ca74bebef3fc58d, miPointerSetPosition now
+returns the screen pointer of the device. This broke floating slave devices,
+as soon as a motion event was submitted, miPointerSetPosition returned NULL,
+crashing the server.
+
+dev->coreEvents is only false if the device is a floating slave, in which
+case it has a sprite.
+
+X.Org Bug 53568 <http://bugs.freedesktop.org/show_bug.cgi?id=53568>
+
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+Reviewed-by: Keith Packard <keithp@keithp.com>
+---
+ mi/mipointer.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/mi/mipointer.c b/mi/mipointer.c
+index a56838e..4defaf5 100644
+--- a/mi/mipointer.c
++++ b/mi/mipointer.c
+@@ -575,7 +575,7 @@ miPointerSetPosition(DeviceIntPtr pDev, int mode, double *screenx,
+ 
+     miPointerPtr pPointer;
+ 
+-    if (!pDev || !pDev->coreEvents)
++    if (!pDev)
+         return NULL;
+ 
+     pPointer = MIPOINTER(pDev);
+-- 
+1.7.7.3
+

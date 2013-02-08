@@ -1,0 +1,20 @@
+--- curl-config.in.orig	2008-10-10 13:43:19.000000000 +0200
++++ curl-config.in	2008-10-10 13:43:56.000000000 +0200
+@@ -181,7 +181,7 @@
+ 	;;
+ 
+     --cflags)
+-       	if test "X@includedir@" = "X/usr/include"; then
++       	if test "X@includedir@" = "X@GENTOO_PORTAGE_EPREFIX@/usr/include"; then
+           echo ""
+         else
+           echo "-I@includedir@"
+@@ -189,7 +189,7 @@
+        	;;
+ 
+     --libs)
+-	if test "X@libdir@" != "X/usr/lib" -a "X@libdir@" != "X/usr/lib64"; then
++	if test "X@libdir@" != "X@GENTOO_PORTAGE_EPREFIX@/usr/lib" -a "X@libdir@" != "X@GENTOO_PORTAGE_EPREFIX@/usr/lib64"; then
+ 	   CURLLIBDIR="-L@libdir@ "
+ 	else
+ 	   CURLLIBDIR=""

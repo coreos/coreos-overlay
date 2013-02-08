@@ -1,0 +1,28 @@
+diff -ur glib-2.26.1.orig/gio/gdbusconnection.c glib-2.26.1/gio/gdbusconnection.c
+--- glib-2.26.1.orig/gio/gdbusconnection.c	2010-11-12 22:55:24.000000000 +0900
++++ glib-2.26.1/gio/gdbusconnection.c	2010-12-15 15:59:31.323159007 +0900
+@@ -1449,7 +1449,8 @@
+   if (out_serial != NULL)
+     *out_serial = serial_to_use;
+ 
+-  g_dbus_message_set_serial (message, serial_to_use);
++  if ((flags & G_DBUS_SEND_MESSAGE_FLAGS_PRESERVE_SERIAL) == 0)
++    g_dbus_message_set_serial (message, serial_to_use);
+ 
+   g_dbus_message_lock (message);
+   _g_dbus_worker_send_message (connection->worker,
+diff -ur glib-2.26.1.orig/gio/gdbusmethodinvocation.c glib-2.26.1/gio/gdbusmethodinvocation.c
+--- glib-2.26.1.orig/gio/gdbusmethodinvocation.c	2010-12-15 10:45:37.883158988 +0900
++++ glib-2.26.1/gio/gdbusmethodinvocation.c	2010-12-15 11:27:15.733159008 +0900
+@@ -403,8 +403,9 @@
+   error = NULL;
+   if (!g_dbus_connection_send_message (g_dbus_method_invocation_get_connection (invocation), reply, G_DBUS_SEND_MESSAGE_FLAGS_NONE, NULL, &error))
+     {
+-      g_warning (_("Error sending message: %s"), error->message);
+-      g_error_free (error);
++      g_warning (_("Error sending message: %s"), error ? error->message : "(null!)");
++      if (error)
++	g_error_free (error);
+     }
+   g_object_unref (reply);
+ 

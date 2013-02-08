@@ -1,0 +1,222 @@
+From: Michael Spang <spang@google.com>
+Date: Mon, 13 Aug 2012 11:35:32 -0400
+Subject: [PATCH] Add events debug log support
+
+This adds a new xinput property "Dump Debug Logs" that dumps the last
+64k input events to /var/log/evdev_input_events.dat.
+---
+ src/Makefile.am |    3 +-
+ src/debug.c     |  114 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ src/evdev.c     |   13 ++++++-
+ src/evdev.h     |   11 +++++
+ 4 files changed, 139 insertions(+), 2 deletions(-)
+ create mode 100644 src/debug.c
+
+diff --git a/src/Makefile.am b/src/Makefile.am
+--- a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -39,5 +39,6 @@ AM_CPPFLAGS =-I$(top_srcdir)/include
+                                emuThird.c \
+                                emuWheel.c \
+                                draglock.c \
+-                               apple.c
++                               apple.c \
++                               debug.c
+ 
+diff --git a/src/debug.c b/src/debug.c
+new file mode 100644
+--- /dev/null
++++ b/src/debug.c
+@@ -0,0 +1,114 @@
++// Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifdef HAVE_CONFIG_H
++#include "config.h"
++#endif
++
++#include <evdev.h>
++#include <evdev-properties.h>
++#include <errno.h>
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <fcntl.h>
++#include <unistd.h>
++
++#include <exevents.h>
++#include <xf86.h>
++#include <xf86Xinput.h>
++#include <X11/Xatom.h>
++
++#define XI_PROP_DUMP_DEBUG_LOG "Dump Debug Log"
++
++#define INPUT_EVENTS_LOG_FILE "/var/log/evdev_input_events.dat"
++
++static Atom dump_debug_log_prop;
++
++static void
++EvdevDumpLog(InputInfoPtr pInfo) {
++    EvdevPtr pEvdev = pInfo->private;
++    int i;
++
++    FILE *fp = fopen(INPUT_EVENTS_LOG_FILE, "w");
++    if (!fp) {
++        xf86IDrvMsg(pInfo, X_ERROR, "fopen: %s: %s\n",
++            INPUT_EVENTS_LOG_FILE, strerror(errno));
++        return;
++    }
++
++    fprintf(fp, "# device: %s\n", pInfo->name);
++
++    for (i = ABS_X; i <= ABS_MAX; i++) {
++        if (EvdevBitIsSet(pEvdev->abs_bitmask, i)) {
++            fprintf(fp, "# absinfo: %d %d %d %d %d %d\n",
++                /* event code (axis) */ i,
++                pEvdev->absinfo[i].minimum,
++                pEvdev->absinfo[i].maximum,
++                pEvdev->absinfo[i].fuzz,
++                pEvdev->absinfo[i].flat,
++                pEvdev->absinfo[i].resolution);
++        }
++    }
++
++    for (i = 0; i < DEBUG_BUF_SIZE; ++i) {
++        struct debug_event *de =
++            &pEvdev->debug_buf[(pEvdev->debug_buf_tail + i) % DEBUG_BUF_SIZE];
++        if (de->ev.time.tv_sec == 0 && de->ev.time.tv_usec == 0)
++            continue;
++        fprintf(fp, "E: %ld.%06ld %04x %04x %d %d\n",
++            de->ev.time.tv_sec,
++            de->ev.time.tv_usec,
++            de->ev.type,
++            de->ev.code,
++            de->ev.value,
++            de->slot);
++    }
++
++    fclose(fp);
++}
++
++static int
++EvdevDebugGetProperty(DeviceIntPtr dev, Atom property)
++{
++    return Success;
++}
++
++static int
++EvdevDebugSetProperty(DeviceIntPtr dev, Atom atom,
++                      XIPropertyValuePtr val, BOOL checkonly)
++{
++    InputInfoPtr pInfo = dev->public.devicePrivate;
++    CARD32 data;
++
++    if (atom == dump_debug_log_prop) {
++        if (val->type != XA_INTEGER || val->format != 32 || val->size != 1)
++            return BadMatch;
++
++        data = *(CARD32 *)val->data;
++
++        if (data != 1)
++            return BadValue;
++
++        if (!checkonly)
++            EvdevDumpLog(pInfo);
++    }
++
++    return Success;
++}
++
++void
++EvdevDebugInitProperty(DeviceIntPtr dev)
++{
++
++    dump_debug_log_prop = MakeAtom(XI_PROP_DUMP_DEBUG_LOG,
++        strlen(XI_PROP_DUMP_DEBUG_LOG), TRUE);
++    CARD32 prop_dump_debug_log_init = 0;
++
++    XIChangeDeviceProperty(dev, dump_debug_log_prop, XA_INTEGER,
++        /* format */ 32, PropModeReplace, /* size */ 1,
++        &prop_dump_debug_log_init, FALSE);
++    XISetDevicePropertyDeletable(dev, dump_debug_log_prop, FALSE);
++    XIRegisterPropertyHandler(dev, EvdevDebugSetProperty,
++        EvdevDebugGetProperty, NULL);
++}
+diff --git a/src/evdev.c b/src/evdev.c
+--- a/src/evdev.c
++++ b/src/evdev.c
+@@ -219,7 +219,7 @@ static size_t EvdevCountBits(unsigned long *array, size_t nlongs)
+     return count;
+ }
+ 
+-static inline int EvdevBitIsSet(const unsigned long *array, int bit)
++inline int EvdevBitIsSet(const unsigned long *array, int bit)
+ {
+     return !!(array[bit / LONG_BITS] & (1LL << (bit % LONG_BITS)));
+ }
+@@ -1208,6 +1208,16 @@ EvdevProcessEvent(InputInfoPtr pInfo, struct input_event *ev)
+             syn_dropped = EvdevProcessSyncEvent(pInfo, ev);
+             break;
+     }
++
++    // Add touch events to the debug log. Keypresses are not included.
++    if (ev->type == EV_ABS || ev->type == EV_SYN ||
++        (ev->type == EV_KEY && ev->code == BTN_TOUCH)) {
++      EvdevPtr pEvdev = pInfo->private;
++      pEvdev->debug_buf[pEvdev->debug_buf_tail].ev = *ev;
++      pEvdev->debug_buf[pEvdev->debug_buf_tail].slot = pEvdev->cur_slot;
++      pEvdev->debug_buf_tail++;
++      pEvdev->debug_buf_tail %= DEBUG_BUF_SIZE;
++    }
+     return syn_dropped;
+ }
+ 
+@@ -2308,6 +2318,7 @@ EvdevInit(DeviceIntPtr device)
+     EvdevWheelEmuInitProperty(device);
+     EvdevDragLockInitProperty(device);
+     EvdevAppleInitProperty(device);
++    EvdevDebugInitProperty(device);
+ 
+     return Success;
+ }
+diff --git a/src/evdev.h b/src/evdev.h
+--- a/src/evdev.h
++++ b/src/evdev.h
+@@ -101,6 +101,8 @@
+ /* Number of longs needed to hold the given number of bits */
+ #define NLONGS(x) (((x) + LONG_BITS - 1) / LONG_BITS)
+ 
++#define DEBUG_BUF_SIZE 65536
++
+ #define _ABS_MT_FIRST       ABS_MT_TOUCH_MAJOR
+ #define _ABS_MT_LAST        ABS_MT_DISTANCE
+ #define _ABS_MT_CNT         (_ABS_MT_LAST - _ABS_MT_FIRST + 1)
+@@ -268,6 +270,12 @@ typedef struct {
+     int                     num_queue;
+     EventQueueRec           queue[EVDEV_MAXQUEUE];
+ 
++    struct debug_event {
++      struct input_event ev;
++      int slot;
++    } debug_buf[DEBUG_BUF_SIZE];
++    size_t debug_buf_tail;
++
+     enum fkeymode           fkeymode;
+ 
+     /* Sync timestamps */
+@@ -329,9 +337,12 @@ BOOL EvdevWheelEmuFilterMotion(InputInfoPtr pInfo, struct input_event *pEv);
+ void EvdevDragLockPreInit(InputInfoPtr pInfo);
+ BOOL EvdevDragLockFilterEvent(InputInfoPtr pInfo, unsigned int button, int value);
+ 
++int EvdevBitIsSet(const unsigned long *array, int bit);
++
+ void EvdevMBEmuInitProperty(DeviceIntPtr);
+ void Evdev3BEmuInitProperty(DeviceIntPtr);
+ void EvdevWheelEmuInitProperty(DeviceIntPtr);
+ void EvdevDragLockInitProperty(DeviceIntPtr);
+ void EvdevAppleInitProperty(DeviceIntPtr);
++void EvdevDebugInitProperty(DeviceIntPtr);
+ #endif
+-- 
+1.7.7.3
+

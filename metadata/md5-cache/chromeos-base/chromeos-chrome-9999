@@ -1,0 +1,14 @@
+DEFINED_PHASES=compile configure install postinst prepare unpack
+DEPEND=app-arch/bzip2 >=app-i18n/ibus-1.4.99 arm? ( virtual/opengles ) dev-libs/atk dev-libs/glib dev-libs/nspr >=dev-libs/nss-3.12.2 dev-libs/libxml2 dev-libs/dbus-glib x11-libs/cairo drm? ( x11-libs/libxkbcommon ) x11-libs/libXScrnSaver x11-libs/pango >=media-libs/alsa-lib-1.0.19 media-libs/fontconfig media-libs/freetype media-libs/libpng media-libs/mesa >=media-sound/adhd-0.0.1-r310 net-misc/wget sys-fs/udev sys-libs/zlib x11-libs/libXcomposite x11-libs/libXcursor x11-libs/libXrandr x11-libs/libXScrnSaver chrome_remoting? ( x11-libs/libXtst ) x11-apps/setxkbmap !arm? ( x11-libs/libva ) arm? ( x11-drivers/opengles-headers ) chromeos-base/protofiles >=dev-util/gperf-3.0.3 >=dev-util/pkgconfig-0.23 net-wireless/bluez dev-vcs/git
+DESCRIPTION=Open-source version of Google Chrome web browser
+EAPI=2
+HOMEPAGE=http://www.chromium.org/
+IUSE=-asan +build_tests +chrome_remoting chrome_internal chrome_pdf +chrome_debug -chrome_debug_tests -chrome_media -clang -component_build -content_shell -drm +gold hardfp +highdpi +nacl neon -ninja -oem_wallpaper -pgo_use -pgo_generate +reorder +runhooks +verbose widevine_cdm +autotest +buildcheck autotest opengles
+KEYWORDS=~amd64 ~arm ~x86
+LICENSE=BSD
+RDEPEND=app-arch/bzip2 >=app-i18n/ibus-1.4.99 arm? ( virtual/opengles ) dev-libs/atk dev-libs/glib dev-libs/nspr >=dev-libs/nss-3.12.2 dev-libs/libxml2 dev-libs/dbus-glib x11-libs/cairo drm? ( x11-libs/libxkbcommon ) x11-libs/libXScrnSaver x11-libs/pango >=media-libs/alsa-lib-1.0.19 media-libs/fontconfig media-libs/freetype media-libs/libpng media-libs/mesa >=media-sound/adhd-0.0.1-r310 net-misc/wget sys-fs/udev sys-libs/zlib x11-libs/libXcomposite x11-libs/libXcursor x11-libs/libXrandr x11-libs/libXScrnSaver chrome_remoting? ( x11-libs/libXtst ) x11-apps/setxkbmap !arm? ( x11-libs/libva ) ( autotest? ( >=chromeos-base/autotest-0.0.1-r3 ) )
+RESTRICT=mirror
+SLOT=0
+SRC_URI=pgo_use? ( x86? ( gs://chromeos-prebuilt/pgo-job/canonicals/chromeos-chrome-x86-9999.pgo.tar.bz2 ) ) pgo_use? ( amd64? ( gs://chromeos-prebuilt/pgo-job/canonicals/chromeos-chrome-amd64-9999.pgo.tar.bz2 ) ) pgo_use? ( arm? ( gs://chromeos-prebuilt/pgo-job/canonicals/chromeos-chrome-arm-9999.pgo.tar.bz2 ) )
+_eclasses_=autotest	534125295770b6401a8180bb518da0e9	autotest-deponly	c768cc6b3a334584419444354d68ba8e	binutils-funcs	73669d0b20960c1cc54cf381a4b89e77	eutils	33ef77a15337022e05342d2c772a7a5a	flag-o-matic	01a8b1eb019305bc4b4a8bd0b04e4cd8	git-2	da60d6e85fa94cef4d510cab24e01e36	multilib	5f4ad6cf85e365e8f0c6050ddd21659e	portability	0be430f759a631e692678ed796e09f5c	toolchain-funcs	64fc271a237429f84f36b91c9f4b9912	user	9e552f935106ff0bc92af16da64b4b29
+_md5_=5d8fd20d46dfebaf5568998aa6e4daf1

@@ -1,0 +1,12 @@
+diff -rupN glib-2.30.0/configure.ac glib-2.30.0.patched/configure.ac
+--- glib-2.30.0/configure.ac	2011-09-27 17:03:02.456785498 -0700
++++ glib-2.30.0.patched/configure.ac	2011-09-27 16:58:29.346782462 -0700
+@@ -584,7 +584,7 @@ AC_CHECK_FUNCS(atexit on_exit timegm gmt
+ dnl don't use AC_CHECK_FUNCS here, otherwise HAVE_QSORT_R will
+ dnl be automatically defined, which we don't want to do
+ dnl until we have checked this function is actually usable
+-AC_CHECK_FUNC([qsort_r])
++# AC_CHECK_FUNC([qsort_r])
+ 
+ # BSD has a qsort_r with wrong argument order
+ if test x$ac_cv_func_qsort_r = xyes ; then

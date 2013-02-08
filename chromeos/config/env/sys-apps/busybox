@@ -1,0 +1,5 @@
+# savedconfig by default saves the currently generated config into
+# /etc/portage/savedconfig. However we want to avoid placing it here
+# so that every re-emerge will pick up the configs from
+# chromeos-base/busybox-config
+INSTALL_MASK+=" /etc/portage/savedconfig"

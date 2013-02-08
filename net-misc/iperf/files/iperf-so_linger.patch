@@ -1,0 +1,107 @@
+Set SO_LINGER on client sockets so that we don't stop timing a
+transfer until the server has acked our data.  Without this, we end up
+stopping timing while data is still in flight and, if there's enough
+data in flight, we overreport bandwidth.
+
+
+diff --git a/include/Client.hpp b/include/Client.hpp
+index 1309a00..e1ab11c 100644
+--- a/include/Client.hpp
++++ b/include/Client.hpp
+@@ -82,6 +82,9 @@ public:
+     // client connect
+     void Connect( );
+ 
++    // Closes underlying socket
++    void Close( );
++
+ protected:
+     thread_Settings *mSettings;
+     char* mBuf;
+diff --git a/src/Client.cpp b/src/Client.cpp
+index e0a6950..484a240 100644
+--- a/src/Client.cpp
++++ b/src/Client.cpp
+@@ -104,13 +104,18 @@ Client::Client( thread_Settings *inSettings ) {
+  * ------------------------------------------------------------------- */
+ 
+ Client::~Client() {
++    Close();
++    DELETE_ARRAY( mBuf );
++} // end ~Client
++
++void Client::Close() {
+     if ( mSettings->mSock != INVALID_SOCKET ) {
+         int rc = close( mSettings->mSock );
+         WARN_errno( rc == SOCKET_ERROR, "close" );
+         mSettings->mSock = INVALID_SOCKET;
+     }
+-    DELETE_ARRAY( mBuf );
+-} // end ~Client
++}
++
+ 
+ const double kSecs_to_usecs = 1e6; 
+ const int    kBytes_to_Bits = 8; 
+@@ -176,6 +181,8 @@ void Client::RunTCP( void ) {
+     } while ( ! (sInterupted  || 
+                    (!mMode_Time  &&  0 >= mSettings->mAmount)) && canRead ); 
+ 
++    Close();
++
+     // stop timing
+     gettimeofday( &(reportstruct->packetTime), NULL );
+ 
+@@ -193,7 +200,6 @@ void Client::RunTCP( void ) {
+ /* ------------------------------------------------------------------- 
+  * Send data using the connected UDP/TCP socket, 
+  * until a termination flag is reached. 
+- * Does not close the socket. 
+  * ------------------------------------------------------------------- */ 
+ 
+ void Client::Run( void ) {
+@@ -316,7 +322,9 @@ void Client::Run( void ) {
+     } while ( ! (sInterupted  || 
+                  (mMode_Time   &&  mEndTime.before( reportstruct->packetTime ))  || 
+                  (!mMode_Time  &&  0 >= mSettings->mAmount)) && canRead ); 
+-
++    if (! isUDP( mSettings)) {
++      Close();
++    }
+     // stop timing
+     gettimeofday( &(reportstruct->packetTime), NULL );
+     CloseReport( mSettings->reporthdr, reportstruct );
+@@ -422,6 +430,9 @@ void Client::write_UDP_FIN( ) {
+     fd_set readSet; 
+     struct timeval timeout; 
+ 
++    FAIL(mSettings->mSock == INVALID_SOCKET,
++         "Closed socket in write_UDP_FIN", mSettings);
++
+     int count = 0; 
+     while ( count < 10 ) {
+         count++; 
+diff --git a/src/PerfSocket.cpp b/src/PerfSocket.cpp
+index 3ecdbe0..0a9a27a 100644
+--- a/src/PerfSocket.cpp
++++ b/src/PerfSocket.cpp
+@@ -152,6 +152,19 @@ void SetSocketOptions( thread_Settings *inSettings ) {
+                                  (char*) &nodelay, len );
+             WARN_errno( rc == SOCKET_ERROR, "setsockopt TCP_NODELAY" );
+         }
++
++#ifdef SO_LINGER
++        {
++            // Set SO_LINGER so that we don't stop timing before the
++            // far end acks our data.
++            struct linger linger = {1, 360};  // { linger, seconds to linger for}
++            int rc = setsockopt(inSettings->mSock, SOL_SOCKET, SO_LINGER,
++                                &linger, sizeof(linger));
++            WARN_errno( rc == SOCKET_ERROR, "setsockopt SO_LINGER");
++        }
++#endif  // SO_LINGER
++
++
+ #endif
+     }
+ }

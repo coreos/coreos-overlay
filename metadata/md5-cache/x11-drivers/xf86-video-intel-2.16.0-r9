@@ -1,0 +1,13 @@
+DEFINED_PHASES=compile configure install postinst postrm prepare setup test unpack
+DEPEND=x11-libs/libXext x11-libs/libXfixes xvmc? ( x11-libs/libXvMC ) >=x11-libs/libxcb-1.5 >=x11-libs/libdrm-2.4.23[video_cards_intel] sna? ( >=x11-base/xorg-server-1.10 ) >=x11-proto/dri2proto-2.6 || ( >=sys-devel/automake-1.11.1:1.11 ) >=sys-devel/autoconf-2.68 sys-devel/libtool x86-interix? ( >=sys-devel/libtool-2.2.6a sys-devel/m4 >=x11-misc/util-macros-1.14.0 >=media-fonts/font-util-1.2.0 ) ppc-aix? ( >=sys-devel/libtool-2.2.6a sys-devel/m4 >=x11-misc/util-macros-1.14.0 >=media-fonts/font-util-1.2.0 ) x86-winnt? ( >=sys-devel/libtool-2.2.6a sys-devel/m4 >=x11-misc/util-macros-1.14.0 >=media-fonts/font-util-1.2.0 ) >=dev-util/pkgconfig-0.23 dri? ( x11-proto/xf86driproto x11-proto/glproto x11-proto/dri2proto ) x11-proto/fontsproto x11-proto/randrproto x11-proto/renderproto x11-proto/videoproto x11-proto/xextproto x11-proto/xineramaproto x11-proto/xproto dri? ( x11-base/xorg-server[-minimal] x11-libs/libdrm ) x11-base/xorg-server[xorg] x11-libs/libpciaccess
+DESCRIPTION=X.Org driver for Intel cards
+EAPI=4
+HOMEPAGE=http://xorg.freedesktop.org/
+IUSE=dri sna xvmc broken_partialswaps dri
+KEYWORDS=amd64 ~ia64 x86 -x86-fbsd
+LICENSE=MIT
+RDEPEND=x11-libs/libXext x11-libs/libXfixes xvmc? ( x11-libs/libXvMC ) >=x11-libs/libxcb-1.5 >=x11-libs/libdrm-2.4.23[video_cards_intel] sna? ( >=x11-base/xorg-server-1.10 ) dri? ( x11-base/xorg-server[-minimal] x11-libs/libdrm ) x11-base/xorg-server[xorg] x11-libs/libpciaccess
+SLOT=0
+SRC_URI=http://xorg.freedesktop.org/releases/individual/driver/xf86-video-intel-2.16.0.tar.bz2
+_eclasses_=autotools	addbdf6cce5024ac93ad2084ad5e1d2d	autotools-utils	966fed1f979132a778b0b48c74a16adb	base	fc89786f3f7e7bcf03334359bd5b639b	binutils-funcs	73669d0b20960c1cc54cf381a4b89e77	eutils	33ef77a15337022e05342d2c772a7a5a	flag-o-matic	01a8b1eb019305bc4b4a8bd0b04e4cd8	libtool	0fd90d183673bf1107465ec45849d1ea	linux-info	01b7a221ed254c010703fd454e011ea6	multilib	5f4ad6cf85e365e8f0c6050ddd21659e	portability	0be430f759a631e692678ed796e09f5c	toolchain-funcs	64fc271a237429f84f36b91c9f4b9912	user	9e552f935106ff0bc92af16da64b4b29	versionator	865bc8b2fc9fcfb6d520bdf5a110f5ed	xorg-2	b83efc910bb3ac2c64f89e2623f181f5
+_md5_=84828c443d7f2f2603fb2ab324282add

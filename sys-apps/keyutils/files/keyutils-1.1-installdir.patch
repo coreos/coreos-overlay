@@ -1,0 +1,22 @@
+diff -ruN keyutils-1.1/Makefile keyutils-1.1.new/Makefile
+--- keyutils-1.1/Makefile	2010-05-13 16:46:06.000000000 -0700
++++ keyutils-1.1.new/Makefile	2010-05-13 16:46:45.000000000 -0700
+@@ -11,7 +11,7 @@
+ ETCDIR		:= /etc
+ BINDIR		:= /bin
+ SBINDIR		:= /sbin
+-LIBDIR		:= /lib
++LIBDIR		:= /usr/lib
+ USRLIBDIR	:= /usr/lib
+ SHAREDIR	:= /usr/share/keyutils
+ INCLUDEDIR	:= /usr/include
+@@ -92,7 +92,7 @@
+ 	$(INSTALL) -D $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(LIBNAME)
+ 	$(LNS) $(LIBNAME) $(DESTDIR)$(LIBDIR)/$(SONAME)
+ 	mkdir -p $(DESTDIR)$(USRLIBDIR)
+-	$(LNS) $(LIBDIR)/$(SONAME) $(DESTDIR)$(USRLIBDIR)/$(DEVELLIB)
++	$(LNS) $(SONAME) $(DESTDIR)$(USRLIBDIR)/$(DEVELLIB)
+ 	$(INSTALL) -D keyctl $(DESTDIR)$(BINDIR)/keyctl
+ 	$(INSTALL) -D request-key $(DESTDIR)$(SBINDIR)/request-key
+ 	$(INSTALL) -D request-key-debug.sh $(DESTDIR)$(SHAREDIR)/request-key-debug.sh
+

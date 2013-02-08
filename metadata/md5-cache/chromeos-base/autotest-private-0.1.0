@@ -1,0 +1,8 @@
+DEFINED_PHASES=-
+DESCRIPTION=Private autotest tests
+EAPI=2
+HOMEPAGE=http://src.chromium.org
+KEYWORDS=amd64 arm x86
+LICENSE=GPL-2
+SLOT=0
+_md5_=08212cff8840561719518195efac6772

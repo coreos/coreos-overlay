@@ -1,0 +1,6 @@
+DEFINED_PHASES=-
+DESCRIPTION=Virtual for OpenGLES implementations
+KEYWORDS=alpha amd64 arm hppa ia64 mips ppc ppc64 sh sparc x86 ~x86-fbsd
+RDEPEND=x11-drivers/opengles
+SLOT=0
+_md5_=4ab96122f4cecb2ef387142dd1129351

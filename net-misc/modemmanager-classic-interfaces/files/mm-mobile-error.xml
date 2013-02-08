@@ -1,0 +1,318 @@
+<?xml version="1.0" ?>
+<tp:errors xmlns:tp="http://telepathy.freedesktop.org/wiki/DbusSpec#extensions-v0"
+           namespace="org.freedesktop.ModemManager.Modem.Gsm">
+  <tp:copyright>Copyright (C) 2008 Novell, Inc.</tp:copyright>
+
+  <tp:error name="PhoneFailure">
+    <tp:docstring>
+      A phone failure.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="NoConnection">
+    <tp:docstring>
+      No connection to phone.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="LinkReserved">
+    <tp:docstring>
+      Phone-adaptor link reserved.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="OperationNotAllowed">
+    <tp:docstring>
+      Operation not allowed.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="OperationNotSupported">
+    <tp:docstring>
+      Operation not supported.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="PhSimPinRequired">
+    <tp:docstring>
+      PH-SIM PIN required.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="PhFSimPinRequired">
+    <tp:docstring>
+      PH-FSIM PIN required.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="PhFSimPukRequired">
+    <tp:docstring>
+      PH-FSIM PUK required.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="SimNotInserted">
+    <tp:docstring>
+      SIM not inserted.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="SimPinRequired">
+    <tp:docstring>
+      SIM PIN required.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="SimPukRequired">
+    <tp:docstring>
+      SIM PUK required.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="SimFailure">
+    <tp:docstring>
+      SIM failure.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="SimBusy">
+    <tp:docstring>
+      SIM busy.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="SimWrong">
+    <tp:docstring>
+      SIM wrong.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="IncorrectPassword">
+    <tp:docstring>
+      Incorrect password.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="SimPin2Required">
+    <tp:docstring>
+      SIM PIN2 required.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="SimPuk2Required">
+    <tp:docstring>
+      SIM PUK2 required.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="MemoryFull">
+    <tp:docstring>
+      Memory full.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="InvalidIndex">
+    <tp:docstring>
+      Invalid index.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="NotFound">
+    <tp:docstring>
+      Not found.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="MemoryFailure">
+    <tp:docstring>
+      Memory failure.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="TextTooLong">
+    <tp:docstring>
+      Text string too long.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="InvalidChars">
+    <tp:docstring>
+      Invalid characters in text string.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="DialStringTooLong">
+    <tp:docstring>
+      Dial string too long.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="InvalidDialString">
+    <tp:docstring>
+      Invalid characters in dial string.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="NoNetwork">
+    <tp:docstring>
+      No network service.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="NetworkTimeout">
+    <tp:docstring>
+      Network timeout.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="NetworkNotAllowed">
+    <tp:docstring>
+      Network not allowed - emergency calls only.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="NetworkPinRequired">
+    <tp:docstring>
+      Network personalization PIN required.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="NetworkPukRequired">
+    <tp:docstring>
+      Network personalization PUK required.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="NetworkSubsetPinRequired">
+    <tp:docstring>
+      Network subset personalization PIN required.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="NetworkSubsetPukRequired">
+    <tp:docstring>
+      Network subset personalization PUK required.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="ServicePinRequired">
+    <tp:docstring>
+      Service provider personalization PIN required.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="ServicePukRequired">
+    <tp:docstring>
+      Service provider personalization PUK required.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="CorporatePinRequired">
+    <tp:docstring>
+      Corporate personalization PIN required.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="CorporatePukRequired">
+    <tp:docstring>
+      Corporate personalization PUK required.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="HiddenKeyRequired">
+    <tp:docstring>
+      Hidden key required. This key is required when accessing hidden phonebook entries.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="EapMethodNotSupported">
+    <tp:docstring>
+      EAP method not supported.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="IncorrectParams">
+    <tp:docstring>
+      Incorrect parameters.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="Unknown">
+    <tp:docstring>
+      An unknown error.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="GprsIllegalMs">
+    <tp:docstring>
+      Illegal MS.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="GprsIllegalMe">
+    <tp:docstring>
+      Illegal ME.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="GprsServiceNotAllowed">
+    <tp:docstring>
+      GPRS services not allowed.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="GprsPlmnNotAllowed">
+    <tp:docstring>
+      PLMN not allowed.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="GprsLocationNotAllowed">
+    <tp:docstring>
+      Location area not allowed.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="GprsRoamingNotAllowed">
+    <tp:docstring>
+      Roaming not allowed in this location area.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="GprsOptionNotSupported">
+    <tp:docstring>
+      Service option not supported.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="GprsNotSubscribed">
+    <tp:docstring>
+      Requested service option not subscribed.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="GprsOutOfOrder">
+    <tp:docstring>
+      Service option temporarily out of order.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="GprsPdpAuthFailure">
+    <tp:docstring>
+      PDP authentication failure.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="GprsUnspecified">
+    <tp:docstring>
+      Unspecified GPRS error
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="GprsInvalidClass">
+    <tp:docstring>
+      Invalid mobile class.
+    </tp:docstring>
+  </tp:error>
+
+</tp:errors>

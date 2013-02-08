@@ -1,0 +1,23 @@
+diff --git a/src/i965_drv_video.c b/src/i965_drv_video.c
+index 588961f..a35dacf 100644
+--- a/src/i965_drv_video.c
++++ b/src/i965_drv_video.c
+@@ -1470,14 +1470,10 @@ VAStatus
+ i965_SyncSurface(VADriverContextP ctx,
+                  VASurfaceID render_target)
+ {
+-    struct i965_driver_data *i965 = i965_driver_data(ctx); 
+-    struct object_surface *obj_surface = SURFACE(render_target);
+-
+-    assert(obj_surface);
+-
+-    if(obj_surface->bo)
+-        drm_intel_bo_wait_rendering(obj_surface->bo);
+-
++    /*
++     * No need to sync explicitly, as the driver will properly sync this
++     * surface before the next operation using it as its source begins.
++     */
+     return VA_STATUS_SUCCESS;
+ }
+ 

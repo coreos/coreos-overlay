@@ -1,0 +1,12 @@
+Taken from http://rt.openssl.org/Ticket/Display.html?id=2440
+
+--- crypto/sha/asm/sha512-x86_64.pl	2008-12-19 11:17:28.000000000 +0000
++++ crypto/sha/asm/sha512-x86_64.pl	2011-01-15 23:33:13.000000000 +0000
+@@ -51,6 +51,7 @@
+ ( $xlate="${dir}../../perlasm/x86_64-xlate.pl" and -f $xlate) or
+ die "can't locate x86_64-xlate.pl";
+ 
++close STDOUT;
+ open STDOUT,"| $^X $xlate $flavour $output";
+ 
+ if ($output =~ /512/) {

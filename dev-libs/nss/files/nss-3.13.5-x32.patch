@@ -1,0 +1,68 @@
+diff -8urN a/mozilla/security/coreconf/Linux.mk b/mozilla/security/coreconf/Linux.mk
+--- a/mozilla/security/coreconf/Linux.mk	2012-06-22 07:55:45.228234872 -0500
++++ b/mozilla/security/coreconf/Linux.mk	2012-06-22 07:56:30.171231815 -0500
+@@ -60,21 +60,28 @@
+ else
+ ifeq ($(OS_TEST),alpha)
+         OS_REL_CFLAGS   = -D_ALPHA_
+ 	CPU_ARCH	= alpha
+ else
+ ifeq ($(OS_TEST),x86_64)
+ ifeq ($(USE_64),1)
+ 	CPU_ARCH	= x86_64
++	ARCHFLAG	= -m64
++else
++ifeq ($(USE_x32),1)
++	OS_REL_CFLAGS	= -Di386
++	CPU_ARCH	= x86
++	ARCHFLAG	= -mx32
+ else
+ 	OS_REL_CFLAGS	= -Di386
+ 	CPU_ARCH	= x86
+ 	ARCHFLAG	= -m32
+ endif
++endif
+ else
+ ifeq ($(OS_TEST),sparc64)
+ 	CPU_ARCH        = sparc
+ else
+ ifeq (,$(filter-out arm% sa110,$(OS_TEST)))
+ 	CPU_ARCH        = arm
+ else
+ ifeq (,$(filter-out parisc%,$(OS_TEST)))
+diff -8urN a/mozilla/security/nss/lib/freebl/Makefile b/mozilla/security/nss/lib/freebl/Makefile
+--- a/mozilla/security/nss/lib/freebl/Makefile	2012-06-22 07:55:45.441234854 -0500
++++ b/mozilla/security/nss/lib/freebl/Makefile	2012-06-22 07:56:30.172231808 -0500
+@@ -210,22 +210,26 @@
+     DEFINES += -DMP_CHAR_STORE_SLOW -DMP_IS_LITTLE_ENDIAN
+ #   DEFINES += -DMPI_AMD64_ADD
+     # comment the next two lines to turn off intel HW accelleration
+     DEFINES += -DUSE_HW_AES
+     ASFILES += intel-aes.s
+     MPI_SRCS += mpi_amd64.c mp_comba.c
+ endif
+ ifeq ($(CPU_ARCH),x86)
+-    ASFILES  = mpi_x86.s
+-    DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE 
+-    DEFINES += -DMP_ASSEMBLY_DIV_2DX1D
+-    DEFINES += -DMP_CHAR_STORE_SLOW -DMP_IS_LITTLE_ENDIAN
+-    # The floating point ECC code doesn't work on Linux x86 (bug 311432).
+-    #ECL_USE_FP = 1
++    ifeq ($(USE_x32),1)
++        DEFINES += -DMP_CHAR_STORE_SLOW -DMP_IS_LITTLE_ENDIAN
++    else
++        ASFILES  = mpi_x86.s
++        DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE 
++        DEFINES += -DMP_ASSEMBLY_DIV_2DX1D
++        DEFINES += -DMP_CHAR_STORE_SLOW -DMP_IS_LITTLE_ENDIAN
++        # The floating point ECC code doesn't work on Linux x86 (bug 311432).
++        #ECL_USE_FP = 1
++    endif
+ endif
+ ifeq ($(CPU_ARCH),arm)
+     DEFINES += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE 
+     DEFINES += -DMP_USE_UINT_DIGIT
+     DEFINES += -DSHA_NO_LONG_LONG # avoid 64-bit arithmetic in SHA512
+     MPI_SRCS += mpi_arm.c
+ endif
+ endif # Linux

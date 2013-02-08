@@ -1,0 +1,46 @@
+--- a/mozilla/nsprpub/Makefile.in
++++ b/mozilla/nsprpub/Makefile.in
+@@ -40,18 +40,16 @@
+ 
+ MOD_DEPTH	= .
+ topsrcdir	= @top_srcdir@
+ srcdir		= @srcdir@
+ VPATH		= @srcdir@
+ 
+ include $(MOD_DEPTH)/config/autoconf.mk
+ 
+-MAKE := $(patsubst -j%,,$(MAKE)) -j1
+-
+ DIRS = config pr lib
+ 
+ ifdef MOZILLA_CLIENT
+ # Make nsinstall use absolute symlinks by default for Mozilla OSX builds
+ # http://bugzilla.mozilla.org/show_bug.cgi?id=193164
+ ifeq ($(OS_ARCH),Darwin)
+ ifndef NSDISTMODE
+ NSDISTMODE=absolute_symlink
+--- a/mozilla/nsprpub/pr/src/Makefile.in
++++ b/mozilla/nsprpub/pr/src/Makefile.in
+@@ -384,17 +384,20 @@ endif
+ #
+ 
+ 
+ #
+ # The Client build wants the shared libraries in $(dist_bindir)
+ # so we also install them there.
+ #
+ 
+-export:: $(TARGETS)
++export::
++	$(MAKE) -C . build
++
++build:: $(TARGETS)
+ 	$(INSTALL) -m 444 $(TARGETS) $(dist_libdir)
+ ifdef SHARED_LIBRARY
+ ifeq ($(OS_ARCH),HP-UX)
+ 	$(INSTALL) -m 755 $(SHARED_LIBRARY) $(dist_libdir)
+ 	$(INSTALL) -m 755 $(SHARED_LIBRARY) $(dist_bindir)
+ else
+ 	$(INSTALL) -m 444 $(SHARED_LIBRARY) $(dist_bindir)
+ endif
+

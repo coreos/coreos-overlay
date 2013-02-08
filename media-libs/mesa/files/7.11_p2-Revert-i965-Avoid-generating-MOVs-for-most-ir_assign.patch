@@ -1,0 +1,98 @@
+From 2d44f205007e0928ebf9a9b914c9308ae3dd2a12 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?St=C3=A9phane=20Marchesin?= <marcheu@chromium.org>
+Date: Wed, 19 Oct 2011 19:26:08 -0700
+Subject: [PATCH] Revert "i965: Avoid generating MOVs for most ir_assignment
+ handling."
+
+This reverts commit dc7f449d1ac53a66e6efb56ccf2a5953418a26ca.
+---
+ src/mesa/drivers/dri/i965/brw_fs.h           |    5 ---
+ src/mesa/drivers/dri/i965/brw_fs_visitor.cpp |   43 --------------------------
+ 2 files changed, 0 insertions(+), 48 deletions(-)
+
+diff --git a/src/mesa/drivers/dri/i965/brw_fs.h b/src/mesa/drivers/dri/i965/brw_fs.h
+index f344330..435ac98 100644
+--- a/src/mesa/drivers/dri/i965/brw_fs.h
++++ b/src/mesa/drivers/dri/i965/brw_fs.h
+@@ -528,11 +528,6 @@ public:
+ 
+    void emit_color_write(int index, int first_color_mrf, fs_reg color);
+    void emit_fb_writes();
+-   bool try_rewrite_rhs_to_dst(ir_assignment *ir,
+-			       fs_reg dst,
+-			       fs_reg src,
+-			       fs_inst *pre_rhs_inst,
+-			       fs_inst *last_rhs_inst);
+    void emit_assignment_writes(fs_reg &l, fs_reg &r,
+ 			       const glsl_type *type, bool predicated);
+ 
+diff --git a/src/mesa/drivers/dri/i965/brw_fs_visitor.cpp b/src/mesa/drivers/dri/i965/brw_fs_visitor.cpp
+index e523ae7..d328454 100644
+--- a/src/mesa/drivers/dri/i965/brw_fs_visitor.cpp
++++ b/src/mesa/drivers/dri/i965/brw_fs_visitor.cpp
+@@ -505,42 +505,6 @@ fs_visitor::emit_assignment_writes(fs_reg &l, fs_reg &r,
+    }
+ }
+ 
+-/* If the RHS processing resulted in an instruction generating a
+- * temporary value, and it would be easy to rewrite the instruction to
+- * generate its result right into the LHS instead, do so.  This ends
+- * up reliably removing instructions where it can be tricky to do so
+- * later without real UD chain information.
+- */
+-bool
+-fs_visitor::try_rewrite_rhs_to_dst(ir_assignment *ir,
+-                                   fs_reg dst,
+-                                   fs_reg src,
+-                                   fs_inst *pre_rhs_inst,
+-                                   fs_inst *last_rhs_inst)
+-{
+-   if (pre_rhs_inst == last_rhs_inst)
+-      return false; /* No instructions generated to work with. */
+-
+-   /* Only attempt if we're doing a direct assignment. */
+-   if (ir->condition ||
+-       !(ir->lhs->type->is_scalar() ||
+-        (ir->lhs->type->is_vector() &&
+-         ir->write_mask == (1 << ir->lhs->type->vector_elements) - 1)))
+-      return false;
+-
+-   /* Make sure the last instruction generated our source reg. */
+-   if (last_rhs_inst->predicated ||
+-       last_rhs_inst->force_uncompressed ||
+-       last_rhs_inst->force_sechalf ||
+-       !src.equals(&last_rhs_inst->dst))
+-      return false;
+-
+-   /* Success!  Rewrite the instruction. */
+-   last_rhs_inst->dst = dst;
+-
+-   return true;
+-}
+-
+ void
+ fs_visitor::visit(ir_assignment *ir)
+ {
+@@ -551,19 +515,12 @@ fs_visitor::visit(ir_assignment *ir)
+    ir->lhs->accept(this);
+    l = this->result;
+ 
+-   fs_inst *pre_rhs_inst = (fs_inst *) this->instructions.get_tail();
+-
+    ir->rhs->accept(this);
+    r = this->result;
+ 
+-   fs_inst *last_rhs_inst = (fs_inst *) this->instructions.get_tail();
+-
+    assert(l.file != BAD_FILE);
+    assert(r.file != BAD_FILE);
+ 
+-   if (try_rewrite_rhs_to_dst(ir, l, r, pre_rhs_inst, last_rhs_inst))
+-      return;
+-
+    if (ir->condition) {
+       emit_bool_to_cond_code(ir->condition);
+    }
+-- 
+1.7.5.3.367.ga9930
+

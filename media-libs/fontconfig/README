@@ -1,0 +1,8 @@
+chromiumos has different needs for fontconfig than is typical. Our list of
+fonts is the same for every user (there is only one linux user anyway).
+Also, the list can never change.
+
+We modify the fontconfig ebuild to support patching fonts.conf to have only one
+directory to search for fonts (/usr/share/fonts). We also output the caches to
+/usr/share/cache/fontconfig because /var isn't located on the readonly
+partition. In addition we remove the rescan directive.

@@ -1,0 +1,24 @@
+Patch-from: http://bugs.gentoo.org/show_bug.cgi?id=225879
+Gentoo-Bug: 225879
+Signed-off-by: Robin H. Johnson <robbat2@gentoo.org>
+
+Prevents an infinite loop if device is removed during usb_bulk_read or
+usb_bulk_write.
+
+diff -Naur libusb-0.1.12/linux.c libusb-0.1.12-new/linux.c
+--- libusb-0.1.12/linux.c	2006-03-04 04:52:46.000000000 +0200
++++ libusb-0.1.12-new/linux.c	2008-06-11 14:22:20.000000000 +0300
+@@ -220,6 +220,13 @@
+     waiting = 1;
+     context = NULL;
+     while (!urb.usercontext && ((ret = ioctl(dev->fd, IOCTL_USB_REAPURBNDELAY, &context)) == -1) && waiting) {
++      if (ret == -1)
++      {
++      	if (errno == ENODEV)
++	{
++	  return -ENODEV;
++	}
++      }
+       tv.tv_sec = 0;
+       tv.tv_usec = 1000; // 1 msec
+       select(dev->fd + 1, NULL, &writefds, NULL, &tv); //sub second wait

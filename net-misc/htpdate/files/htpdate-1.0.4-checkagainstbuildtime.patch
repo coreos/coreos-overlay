@@ -1,0 +1,78 @@
+diff -ruN htpdate/htpdate.c htpdate.new/htpdate.c
+--- htpdate/htpdate.c	2010-10-13 17:19:57.000000000 -0700
++++ new/htpdate.c	2010-10-13 17:16:06.000000000 -0700
+@@ -301,9 +301,23 @@ static long getHTTPdate( char *host, cha
+ 	  return 0;
+ }
+ 
++static int is_before_build_time(time_t time)
++{
++	time_t		build_time;
++	/* Is the given time before the build time? */
++	/* If no build date given, default to 0 (01 Jan 1970) */
++#ifdef BUILD_TIME_UTC
++	build_time = BUILD_TIME_UTC;
++#else
++	build_time = 0;
++#endif
++	return time < build_time;
++}
+ 
+ static int setclock( double timedelta, int setmode ) {
+-	struct timeval		timeofday;
++	struct timeval		timediff;	/* Change in time (case 1 */
++	struct timeval		timeofday;	/* Actual time of day (case 2) */
++	double			target_time;	/* Time to adjust clock to, in sec */
+ 
+ 	if ( timedelta == 0 ) {
+ 		printlog( 0, "No time correction needed" );
+@@ -317,8 +331,20 @@ static int setclock( double timedelta, i
+ 		return(0);
+ 
+ 	case 1:						/* Adjust time smoothly */
+-		timeofday.tv_sec  = (long)timedelta;	
+-		timeofday.tv_usec = (long)((timedelta - timeofday.tv_sec) * 1000000);	
++		timediff.tv_sec  = (long)timedelta;
++		timediff.tv_usec = (long)((timedelta - timediff.tv_sec) * 1000000);
++
++		/* Check against build time */
++		gettimeofday( &timeofday, NULL );
++		target_time = timedelta + (double)timeofday.tv_sec + 1e-6 * timeofday.tv_usec;
++
++		timeofday.tv_sec  = (long)target_time;
++		timeofday.tv_usec = (long)((target_time - timeofday.tv_sec) * 1000000);
++
++		if (is_before_build_time(timeofday.tv_sec)) {
++			printlog(1, "Cannot set time to be before build time.");
++			return (-1);
++		}
+ 
+ 		printlog( 0, "Adjusting %.3f seconds", timedelta );
+ 
+@@ -327,17 +353,22 @@ static int setclock( double timedelta, i
+ 			printlog( 1, "seteuid()" );
+ 			exit(1);
+ 		} else {
+-			return( adjtime(&timeofday, NULL) );
++			return( adjtime(&timediff, NULL) );
+ 		}
+ 
+ 	case 2:					/* Set time */
+ 		printlog( 0, "Setting %.3f seconds", timedelta );
+ 
+ 		gettimeofday( &timeofday, NULL );
+-		timedelta += ( timeofday.tv_sec + timeofday.tv_usec*1e-6 );
++		target_time = timedelta + (double)timeofday.tv_sec + 1e-6 * timeofday.tv_usec;
+ 
+-		timeofday.tv_sec  = (long)timedelta;	
+-		timeofday.tv_usec = (long)(timedelta - timeofday.tv_sec) * 1000000;	
++		timeofday.tv_sec  = (long)target_time;
++		timeofday.tv_usec = (long)((target_time - timeofday.tv_sec) * 1000000);
++
++		if (is_before_build_time(timeofday.tv_sec)) {
++			printlog(1, "Cannot set time to be before build time.");
++			return (-1);
++		}
+ 
+ 		printlog( 0, "Set: %s", asctime(localtime(&timeofday.tv_sec)) );
+ 

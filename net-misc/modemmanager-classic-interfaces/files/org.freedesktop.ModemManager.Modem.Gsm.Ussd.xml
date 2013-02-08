@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<node name="/" xmlns:tp="http://telepathy.freedesktop.org/wiki/DbusSpec#extensions-v0">
+
+  <interface name="org.freedesktop.ModemManager.Modem.Gsm.Ussd">
+    <method name="Initiate">
+      <tp:docstring>
+        Sends a USSD command string to the network initiating a USSD session.
+        When the request is handled by the network, the method returns the
+        response or an appropriate error.  The network may be awaiting further
+        response from the ME after returning from this method and no new command
+        can be initiated until this one is cancelled or ended.
+      </tp:docstring>
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <annotation name="org.freedesktop.DBus.GLib.CSymbol" value="impl_modem_gsm_ussd_initiate"/>
+      <arg name="command" type="s" direction="in">
+        <tp:docstring>
+          The command to start the USSD session with.
+        </tp:docstring>
+      </arg>
+      <arg name="reply" type="s" direction="out">
+        <tp:docstring>
+          The network response to the command which started the USSD session.
+        </tp:docstring>
+      </arg>
+    </method>
+
+    <method name="Respond">
+      <tp:docstring>
+        Respond to a USSD request that is either initiated by the mobile network,
+        or that is awaiting further input after Initiate() was called.
+      </tp:docstring>
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <annotation name="org.freedesktop.DBus.GLib.CSymbol" value="impl_modem_gsm_ussd_respond"/>
+      <arg name="response" type="s" direction="in">
+        <tp:docstring>
+          The response to network-initiated USSD command, or a response to a
+          request for further input.
+        </tp:docstring>
+      </arg>
+      <arg name="reply" type="s" direction="out">
+        <tp:docstring>
+          The network reply to this response to the network-initiated USSD
+          command.  The reply may require further responses.
+        </tp:docstring>
+      </arg>
+    </method>
+
+    <method name="Cancel">
+      <tp:docstring>
+        Cancel an ongoing USSD session, either mobile or network initiated.
+      </tp:docstring>
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <annotation name="org.freedesktop.DBus.GLib.CSymbol" value="impl_modem_gsm_ussd_cancel"/>
+    </method>
+
+    <property name="State" type="s" access="read">
+      <tp:docstring>
+        Indicates the state of any ongoing USSD session.  Values may be one of
+        the following: "idle" (no active session), "active" (a session is active
+        and the mobile is waiting for a response), "user-response" (the network
+        is waiting for the client's response, which must be sent using Respond()).
+      </tp:docstring>
+    </property>
+
+    <property name="NetworkNotification" type="s" access="read">
+      <tp:docstring>
+        Contains any network-initiated request to which no USSD response is
+        required.  When no USSD session is active, or when there is no network-
+        initiated request, this property will be a zero-length string.
+      </tp:docstring>
+    </property>
+
+    <property name="NetworkRequest" type="s" access="read">
+      <tp:docstring>
+        Contains any pending network-initiated request for a response.  Client
+        should call Respond() with the appropriate response to this request.
+        When no USSD session is active, or when there is no pending
+        network-initiated request, this property will be a zero-length string.
+      </tp:docstring>
+    </property>
+
+  </interface>
+</node>

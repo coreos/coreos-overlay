@@ -1,0 +1,20 @@
+--- pango/Makefile.am
++++ pango/Makefile.am
+@@ -16,6 +16,7 @@
+ 	-DPANGO_ENABLE_BACKEND				\
+ 	-DPANGO_ENABLE_ENGINE				\
+ 	-DSYSCONFDIR=\"$(sysconfdir)\"			\
++	-DHOST=\"$(host_triplet)\"			\
+ 	-DLIBDIR=\"$(libdir)\"				\
+ 	-DMODULE_VERSION=\"$(PANGO_MODULE_VERSION)\"	\
+ 	-DG_DISABLE_DEPRECATED				\
+--- pango/modules.c
++++ pango/modules.c
+@@ -353,6 +353,7 @@
+ 
+   if (!file_str)
+     file_str = g_build_filename (pango_get_sysconf_subdirectory (),
++				 HOST,
+ 				 "pango.modules",
+ 				 NULL);
+ 

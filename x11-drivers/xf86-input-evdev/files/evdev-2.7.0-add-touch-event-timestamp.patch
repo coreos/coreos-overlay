@@ -1,0 +1,200 @@
+From: Yufeng Shen <miletus@chromium.org>
+Date: Wed, 7 Mar 2012 20:39:09 +1000
+Subject: [PATCH] x11-drivers/xf86-input-evdev: Add kernel timestamp to touch
+ events
+
+This CL passes kernel timestamp for touch events to X (hence Chrome)
+as a valuator named "Touch Timestamp". The timestamp for all the X
+touch events generated within one evdev sync report is set to be the
+same as the last EV_SYN event's timestamp.
+
+BUG=chrome-os-partner:12187
+TEST=Run "xinput list 12" on Link and see something like
+	Class originated from: 12. Type: XIValuatorClass
+	Detail for Valuator 4:
+	  Label: Touch Timestamp
+	  Range: 0.000000 - 2147483647.000000
+	  Resolution: 1 units/m
+	  Mode: absolute
+	  Current value: 0.000000
+TEST=Run "xinput test-xi2" on Link and check that for each
+     touch event there is timestamp at the correct valuator:
+  EVENT type 6 (Motion)
+    device: 12 (12)
+    detail: 0
+    flags: emulated
+    ...
+    valuators:
+        0: 135.95
+        1: 116.93
+        2: 18.00
+        3: 100.00
+        4: 1348803480.46   <- Touch Timestamp
+  EVENT type 18 (TouchBegin)
+    device: 12 (12)
+    detail: 1
+    valuators:
+        0: 135.95
+        1: 116.93
+        2: 18.00
+        3: 100.00
+        4: 1348803480.46   <- Touch Timestamp
+TEST=Run "xinput test-xi2" on Link and check that for non-touch events
+     (ie USB mouse) there is no Touch Timestamp:
+  EVENT type 6 (Motion)
+      device: 2 (13)
+      ...
+      valuators:
+          0: 1.19
+---
+ src/evdev.c |   47 ++++++++++++++++++++++++++++++++++++++++++-----
+ src/evdev.h |    4 ++++
+ 2 files changed, 46 insertions(+), 5 deletions(-)
+
+diff --git a/src/evdev.c b/src/evdev.c
+--- a/src/evdev.c
++++ b/src/evdev.c
+@@ -102,6 +102,8 @@
+ #define AXIS_LABEL_PROP_ABS_DBL_START_TIME  "Abs Dbl Start Timestamp"
+ #define AXIS_LABEL_PROP_ABS_DBL_END_TIME    "Abs Dbl End Timestamp"
+ 
++#define AXIS_LABEL_PROP_TOUCH_TIME   "Touch Timestamp"
++
+ static const char *evdevDefaults[] = {
+     "XkbRules",     "evdev",
+     "XkbModel",     "evdev",
+@@ -1097,7 +1099,7 @@ EvdevPostProximityEvents(InputInfoPtr pInfo, int which, int num_v, int first_v,
+  * Post the queued key/button events.
+  */
+ static void EvdevPostQueuedEvents(InputInfoPtr pInfo, int num_v, int first_v,
+-                                  int v[MAX_VALUATORS])
++                                  int v[MAX_VALUATORS], struct input_event *ev)
+ {
+     int i;
+     EvdevPtr pEvdev = pInfo->private;
+@@ -1127,6 +1129,10 @@ static void EvdevPostQueuedEvents(InputInfoPtr pInfo, int num_v, int first_v,
+             break;
+ #ifdef MULTITOUCH
+         case EV_QUEUE_TOUCH:
++          if (pEvdev->touch_time_valuator_index >= 0)
++            valuator_mask_set_double(pEvdev->queue[i].touchMask,
++                                     pEvdev->touch_time_valuator_index,
++                                     TimevalToDouble(&ev->time));
+             xf86PostTouchEvent(pInfo->dev, pEvdev->queue[i].detail.touch,
+                                pEvdev->queue[i].val, 0,
+                                pEvdev->queue[i].touchMask);
+@@ -1161,7 +1167,7 @@ EvdevProcessSyncEvent(InputInfoPtr pInfo, struct input_event *ev)
+     EvdevPostProximityEvents(pInfo, TRUE, num_v, first_v, v);
+     EvdevPostRelativeMotionEvents(pInfo, num_v, first_v, v);
+     EvdevPostAbsoluteMotionEvents(pInfo, num_v, first_v, v);
+-    EvdevPostQueuedEvents(pInfo, num_v, first_v, v);
++    EvdevPostQueuedEvents(pInfo, num_v, first_v, v, ev);
+     EvdevPostProximityEvents(pInfo, FALSE, num_v, first_v, v);
+ 
+     memset(pEvdev->delta, 0, sizeof(pEvdev->delta));
+@@ -1723,6 +1729,8 @@ EvdevAddAbsValuatorClass(DeviceIntPtr device)
+     int num_mt_axes = 0, /* number of MT-only axes */
+         num_mt_axes_total = 0; /* total number of MT axes, including
+                                   double-counted ones, excluding blacklisted */
++    int num_ts_vals = 0; /* number of Timestamp valuators */
++    int num_valuators;
+     Atom *atoms;
+ 
+     pInfo = device->public.devicePrivate;
+@@ -1785,6 +1793,9 @@ EvdevAddAbsValuatorClass(DeviceIntPtr device)
+     }
+ #ifdef MULTITOUCH
+     if (num_mt_axes_total > 0) {
++        /* A Touch Timestamp is only appended to Touch events */
++        num_ts_vals = 1;
++
+         pEvdev->num_mt_vals = num_mt_axes_total;
+         pEvdev->mt_mask = valuator_mask_new(num_mt_axes_total);
+         if (!pEvdev->mt_mask) {
+@@ -1813,8 +1824,9 @@ EvdevAddAbsValuatorClass(DeviceIntPtr device)
+         }
+ 
+         for (i = 0; i < EVDEV_MAXQUEUE; i++) {
++            /* Touch Timestamp is appended directly to the touchMask */
+             pEvdev->queue[i].touchMask =
+-                valuator_mask_new(num_mt_axes_total);
++                valuator_mask_new(num_mt_axes_total + 1);
+             if (!pEvdev->queue[i].touchMask) {
+                 xf86Msg(X_ERROR, "%s: failed to allocate MT valuator masks for "
+                         "evdev event queue.\n", device->name);
+@@ -1823,7 +1835,10 @@ EvdevAddAbsValuatorClass(DeviceIntPtr device)
+         }
+     }
+ #endif
+-    atoms = malloc((pEvdev->num_vals + num_mt_axes) * sizeof(Atom));
++
++    num_valuators = num_axes + num_mt_axes + num_ts_vals;
++
++    atoms = malloc(num_valuators * sizeof(Atom));
+ 
+     i = 0;
+     for (axis = ABS_X; i < MAX_VALUATORS && axis <= ABS_MAX; axis++) {
+@@ -1853,9 +1868,22 @@ EvdevAddAbsValuatorClass(DeviceIntPtr device)
+             i++;
+     }
+ 
++    /* Note: touch timestamp, if present, is initialized separately */
+     EvdevInitAxesLabels(pEvdev, Absolute, pEvdev->num_vals + num_mt_axes, atoms);
+ 
+-    if (!InitValuatorClassDeviceStruct(device, num_axes + num_mt_axes, atoms,
++#ifdef MULTITOUCH
++    if (num_ts_vals > 0) {
++        /* Manually setup the atom for Touch Timestamp since it did not happen
++         * in EvdevInitAxesLabels().  It will always be the last valuator. */
++        pEvdev->touch_time_valuator_index = num_valuators - 1;
++        atoms[pEvdev->touch_time_valuator_index] =
++                        MakeAtom(AXIS_LABEL_PROP_TOUCH_TIME,
++                                 strlen(AXIS_LABEL_PROP_TOUCH_TIME),
++                                 TRUE);
++    }
++#endif
++
++    if (!InitValuatorClassDeviceStruct(device, num_valuators, atoms,
+                                        GetMotionHistorySize(), Absolute)) {
+         xf86IDrvMsg(pInfo, X_ERROR, "failed to initialize valuator class device.\n");
+         goto out;
+@@ -1945,6 +1973,14 @@ EvdevAddAbsValuatorClass(DeviceIntPtr device)
+                                    resolution, 0, resolution,
+                                    Absolute);
+     }
++
++    /* Manually configure touch_time axis */
++    if (num_ts_vals > 0) {
++        xf86InitValuatorAxisStruct(device, pEvdev->touch_time_valuator_index,
++                                   atoms[pEvdev->touch_time_valuator_index],
++                                   0, INT_MAX, 1, 0, 1, Absolute);
++    }
++
+ #endif
+ 
+     free(atoms);
+@@ -2279,6 +2315,7 @@ EvdevInit(DeviceIntPtr device)
+ 
+     pEvdev->start_time_valuator_index = -1;
+     pEvdev->end_time_valuator_index = -1;
++    pEvdev->touch_time_valuator_index = -1;
+ 
+     if (pEvdev->flags & EVDEV_KEYBOARD_EVENTS)
+ 	EvdevAddKeyClass(device);
+diff --git a/src/evdev.h b/src/evdev.h
+--- a/src/evdev.h
++++ b/src/evdev.h
+@@ -260,6 +260,10 @@ typedef struct {
+     unsigned long led_bitmask[NLONGS(LED_CNT)];
+     struct input_absinfo absinfo[ABS_CNT];
+ 
++    /* touch_time_valuator_index is the index for the "Touch Timestamp"
++     * property in the device valuator array. We will set it to be the
++     * last valuator in EvdevAddAbsValuatorClass(); */
++    int touch_time_valuator_index;
+     int start_time_valuator_index;
+     int end_time_valuator_index;
+ 
+-- 
+1.7.7.3
+

@@ -1,0 +1,10 @@
+DEFINED_PHASES=preinst
+DESCRIPTION=Chrome OS Fonts (meta package)
+EAPI=4
+HOMEPAGE=http://src.chromium.org
+IUSE=cros_host internal
+KEYWORDS=amd64 arm x86
+LICENSE=GPL-2
+RDEPEND=internal? ( chromeos-base/ja-motoyafonts !media-fonts/ja-ipafonts ) !internal? ( !chromeos-base/ja-motoyafonts media-fonts/ja-ipafonts ) !cros_host? ( chromeos-base/chromeos-assets ) media-fonts/croscorefonts media-fonts/notofonts media-fonts/dejavu media-fonts/droidfonts-cros media-fonts/ko-nanumfonts media-fonts/lohitfonts-cros media-fonts/ml-anjalioldlipi media-fonts/sil-abyssinica media-libs/fontconfig cros_host? ( sys-libs/glibc )
+SLOT=0
+_md5_=fa2a4492b0a84e9e72606300355ba2bc

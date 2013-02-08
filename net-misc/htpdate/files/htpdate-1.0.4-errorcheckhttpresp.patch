@@ -1,0 +1,33 @@
+--- htpdate/htpdate.c	2010-07-23 13:26:43.052392000 -0700
++++ new_htpdate/htpdate.c	2010-07-23 13:23:28.687877000 -0700
+@@ -157,7 +157,8 @@
+ 	char				remote_time[25] = { '\0' };
+ 	char				url[URLSIZE] = { '\0' };
+ 	char				*pdate = NULL;
+-
++	int 				error = -1; 	/* used when returning non-zero return values */
++	
+ 
+ 	/* Connect to web server via proxy server or directly */
+ 	memset( &hints, 0, sizeof(hints) );
+@@ -272,6 +273,7 @@
+ 				/* Web server timestamps are without daylight saving */
+ 				tm.tm_isdst = 0;
+ 				timevalue.tv_sec = mktime(&tm);
++				error = 0;
+ 			} else {
+ 				printlog( 1, "%s unknown time format", host );
+ 			}
+@@ -293,8 +295,10 @@
+ 	/* Return the time delta between web server time (timevalue)
+ 	   and system time (timeofday)
+ 	*/
+-	return( timevalue.tv_sec - timeofday.tv_sec + gmtoffset );
+-			
++	if (!error)
++	  return( timevalue.tv_sec - timeofday.tv_sec + gmtoffset );
++	else
++	  return 0;
+ }
+ 
+ 

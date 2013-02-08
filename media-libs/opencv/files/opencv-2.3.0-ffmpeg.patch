@@ -1,0 +1,156 @@
+diff -ruN OpenCV-2.3.0-0-vanilla/modules/highgui/src/cap_ffmpeg_impl.hpp OpenCV-2.3.0/modules/highgui/src/cap_ffmpeg_impl.hpp
+--- OpenCV-2.3.0-0-vanilla/modules/highgui/src/cap_ffmpeg_impl.hpp	2011-07-04 06:21:58.000000000 +0200
++++ OpenCV-2.3.0/modules/highgui/src/cap_ffmpeg_impl.hpp	2011-09-18 20:27:05.000000000 +0200
+@@ -489,7 +489,7 @@
+         AVCodecContext *enc = &ic->streams[i]->codec;
+ #endif
+ 
+-        if( CODEC_TYPE_VIDEO == enc->codec_type && video_stream < 0) {
++        if( AVMEDIA_TYPE_VIDEO == enc->codec_type && video_stream < 0) {
+             AVCodec *codec = avcodec_find_decoder(enc->codec_id);
+             if (!codec ||
+             avcodec_open(enc, codec) < 0)
+@@ -576,15 +576,27 @@
+ 		        continue;
+     		}
+ 
+-#if LIBAVFORMAT_BUILD > 4628
+-        avcodec_decode_video(video_st->codec,
+-                             picture, &got_picture,
+-                             packet.data, packet.size);
+-#else
+-        avcodec_decode_video(&video_st->codec,
+-                             picture, &got_picture,
+-                             packet.data, packet.size);
+-#endif
++
++		AVPacket avpkt;
++		av_init_packet(&avpkt);
++		avpkt.data = packet.data;
++		avpkt.size = packet.size;
++		//
++		// HACK for CorePNG to decode as normal PNG by default
++		// same method used by ffmpeg
++		avpkt.flags = AV_PKT_FLAG_KEY;
++		avcodec_decode_video2(video_st->codec,
++                              picture, &got_picture, &avpkt);
++//Functions Removed from ffmpeg on 4/19/11
++//#if LIBAVFORMAT_BUILD > 4628
++//        avcodec_decode_video(video_st->codec,
++//                             picture, &got_picture,
++//                             packet.data, packet.size);
++//#else
++//        avcodec_decode_video(&video_st->codec,
++//                             picture, &got_picture,
++//                             packet.data, packet.size);
++//#endif
+ 
+         if (got_picture) {
+             // we have a new picture, so memorize it
+@@ -822,24 +834,25 @@
+ #endif
+ };
+ 
+-static const char * icvFFMPEGErrStr(int err)
+-{
+-    switch(err) {
+-    case AVERROR_NUMEXPECTED:
+-		return "Incorrect filename syntax";
+-    case AVERROR_INVALIDDATA:
+-		return "Invalid data in header";
+-    case AVERROR_NOFMT:
+-		return "Unknown format";
+-    case AVERROR_IO:
+-		return "I/O error occurred";
+-    case AVERROR_NOMEM:
+-		return "Memory allocation error";
+-    default:
+-		break;
+-    }
+-  	return "Unspecified error";
+-}
++//Deprecated Errors, should be using AVERROR(EINVAL) to return error strings
++//static const char * icvFFMPEGErrStr(int err)
++//{
++//    switch(err) {
++//    case AVERROR_NUMEXPECTED:
++//		return "Incorrect filename syntax";
++//    case AVERROR_INVALIDDATA:
++//		return "Invalid data in header";
++//    case AVERROR_NOFMT:
++//		return "Unknown format";
++//    case AVERROR_IO:
++//		return "I/O error occurred";
++//    case AVERROR_NOMEM:
++//		return "Memory allocation error";
++//    default:
++//		break;
++//    }
++//  	return "Unspecified error";
++//}
+ 
+ /* function internal to FFMPEG (libavformat/riff.c) to lookup codec id by fourcc tag*/
+ extern "C" {
+@@ -918,7 +931,7 @@
+ #endif
+ 
+ #if LIBAVFORMAT_BUILD > 4621
+-	c->codec_id = av_guess_codec(oc->oformat, NULL, oc->filename, NULL, CODEC_TYPE_VIDEO);
++	c->codec_id = av_guess_codec(oc->oformat, NULL, oc->filename, NULL, AVMEDIA_TYPE_VIDEO);
+ #else
+ 	c->codec_id = oc->oformat->video_codec;
+ #endif
+@@ -930,7 +943,7 @@
+     //if(codec_tag) c->codec_tag=codec_tag;
+ 	codec = avcodec_find_encoder(c->codec_id);
+ 
+-	c->codec_type = CODEC_TYPE_VIDEO;
++	c->codec_type = AVMEDIA_TYPE_VIDEO;
+ 
+ 	/* put sample parameters */
+ 	c->bit_rate = bitrate;
+@@ -1015,7 +1028,7 @@
+         AVPacket pkt;
+         av_init_packet(&pkt);
+ 
+-        pkt.flags |= PKT_FLAG_KEY;
++        pkt.flags |= AV_PKT_FLAG_KEY;
+         pkt.stream_index= video_st->index;
+         pkt.data= (uint8_t *)picture;
+         pkt.size= sizeof(AVPicture);
+@@ -1035,7 +1048,7 @@
+ 			pkt.pts = c->coded_frame->pts;
+ #endif
+             if(c->coded_frame->key_frame)
+-                pkt.flags |= PKT_FLAG_KEY;
++                pkt.flags |= AV_PKT_FLAG_KEY;
+             pkt.stream_index= video_st->index;
+             pkt.data= outbuf;
+             pkt.size= out_size;
+@@ -1237,7 +1250,7 @@
+ 	av_register_all ();
+ 
+ 	/* auto detect the output format from the name and fourcc code. */
+-	fmt = guess_format(NULL, filename, NULL);
++	fmt = av_guess_format(NULL, filename, NULL);
+ 	if (!fmt)
+         return false;
+ 
+@@ -1260,7 +1273,7 @@
+ #endif
+ 
+     // alloc memory for context
+-	oc = av_alloc_format_context();
++	oc = avformat_alloc_context();
+ 	assert (oc);
+ 
+ 	/* set file name */
+@@ -1336,7 +1349,7 @@
+     /* open the codec */
+     if ( (err=avcodec_open(c, codec)) < 0) {
+ 		char errtext[256];
+-		sprintf(errtext, "Could not open codec '%s': %s", codec->name, icvFFMPEGErrStr(err));
++		sprintf(errtext, "Could not open codec '%s': %s", codec->name, AVERROR(EINVAL));
+ 		return false;
+     }
+ 

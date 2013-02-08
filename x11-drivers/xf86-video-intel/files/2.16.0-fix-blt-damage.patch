@@ -1,0 +1,45 @@
+From e1f718b600029d43bb2e2e4a6b50e5a990c6d08d Mon Sep 17 00:00:00 2001
+From: Chris Wolfe <cwolfe@chromium.org>
+Date: Mon, 5 Nov 2012 11:10:24 -0500
+Subject: [PATCH] xf86-video-intel: Avoid display corruption when unable to
+ flip.
+
+This replaces the previous patch to xorg-server for crosbug/33775.
+That change avoids calling ScheduleSwap when a flip would not be
+classically possible, so interferes with the upcoming per-crtc
+flip feature.
+
+BUG=chromium-os:35796
+TEST=Rapidly minimize/restore/tile window so that the animation spans
+     monitors, observe that none of the preview shadow is left behind.
+---
+ src/intel_dri.c |   12 +++++++++---
+ 1 files changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/src/intel_dri.c b/src/intel_dri.c
+index 1227dbb..938a022 100644
+--- a/src/intel_dri.c
++++ b/src/intel_dri.c
+@@ -1151,10 +1151,16 @@ I830DRI2ScheduleSwap(ClientPtr client, DrawablePtr draw, DRI2BufferPtr front,
+ 
+ 	/* Flips need to be submitted one frame before */
+ 	if (can_exchange(draw, front, back)) {
+-	    swap_type = DRI2_FLIP;
+-	    flip = 1;
++		swap_type = DRI2_FLIP;
++		flip = 1;
++	} else {
++		/* Using the DRI2_SWAP path defers the back-to-front blit until
++		 * the frame event handler. If another swap comes in before that
++		 * event executes, our two-frame damage tracking will copy from
++		 * the unfinished frame and cause corruption. To avoid this
++		 * problem we force an immediate blit here. */
++		goto blit_fallback;
+ 	}
+-
+ 	swap_info->type = swap_type;
+ 
+ 	/* Correct target_msc by 'flip' if swap_type == DRI2_FLIP.
+-- 
+1.7.7.3
+

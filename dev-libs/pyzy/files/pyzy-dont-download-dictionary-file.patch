@@ -1,0 +1,28 @@
+Don't download database file on make phrase.
+The database file will be downloaded by ebuild script instead.
+diff -urN pyzy-0.1.0.orig/data/db/open-phrase/Makefile.am pyzy-0.1.0/data/db/open-phrase/Makefile.am
+--- pyzy-0.1.0.orig/data/db/open-phrase/Makefile.am	2012-09-05 13:23:24.151736716 +0900
++++ pyzy-0.1.0/data/db/open-phrase/Makefile.am	2012-09-05 14:18:57.144553548 +0900
+@@ -30,9 +30,6 @@
+ DBTAR = pyzy-database-$(DBVER).tar.bz2
+ 
+ $(DBTAR):
+-	$(AM_V_GEN) \
+-	wget http://pyzy.googlecode.com/files/$(DBTAR) || \
+-	( $(RM) $@; exit 1)
+ 
+ stamp-db: $(DBTAR)
+ 	$(AM_V_GEN) \
+diff -urN pyzy-0.1.0.orig/data/db/open-phrase/Makefile.in pyzy-0.1.0/data/db/open-phrase/Makefile.in
+--- pyzy-0.1.0.orig/data/db/open-phrase/Makefile.in	2012-09-05 13:27:28.991201762 +0900
++++ pyzy-0.1.0/data/db/open-phrase/Makefile.in	2012-09-05 14:19:09.814528103 +0900
+@@ -491,9 +491,6 @@
+ 
+ 
+ @PYZY_BUILD_DB_OPEN_PHRASE_TRUE@$(DBTAR):
+-@PYZY_BUILD_DB_OPEN_PHRASE_TRUE@	$(AM_V_GEN) \
+-@PYZY_BUILD_DB_OPEN_PHRASE_TRUE@	wget http://pyzy.googlecode.com/files/$(DBTAR) || \
+-@PYZY_BUILD_DB_OPEN_PHRASE_TRUE@	( $(RM) $@; exit 1)
+ 
+ @PYZY_BUILD_DB_OPEN_PHRASE_TRUE@stamp-db: $(DBTAR)
+ @PYZY_BUILD_DB_OPEN_PHRASE_TRUE@	$(AM_V_GEN) \

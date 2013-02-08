@@ -1,0 +1,24 @@
+diff -Naur -b syslinux-3.83.orig/Makefile syslinux-3.83.new/Makefile
+--- syslinux-3.83.orig/Makefile	2009-10-05 15:06:06.000000000 -0700
++++ syslinux-3.83.new/Makefile	2010-04-27 13:57:38.000000000 -0700
+@@ -42,7 +42,7 @@
+ 	mbr/mbr_c.bin mbr/altmbr_c.bin mbr/gptmbr_c.bin \
+ 	mbr/mbr_f.bin mbr/altmbr_f.bin mbr/gptmbr_f.bin \
+ 	core/pxelinux.0 core/isolinux.bin core/isolinux-debug.bin \
+-	gpxe/gpxelinux.0 dos/syslinux.com win32/syslinux.exe \
++	gpxe/gpxelinux.0 dos/syslinux.com \
+ 	$(MODULES)
+ 
+ # BSUBDIRs build the on-target binary components.
+@@ -66,9 +66,9 @@
+ # Things to install in /usr/lib/syslinux
+ INSTALL_AUX   =	core/pxelinux.0 gpxe/gpxelinux.0 core/isolinux.bin \
+ 		core/isolinux-debug.bin \
+-		dos/syslinux.com dos/copybs.com win32/syslinux.exe \
++		dos/syslinux.com dos/copybs.com \
+ 		mbr/*.bin $(MODULES)
+-INSTALL_AUX_OPT = win32/syslinux.exe
++INSTALL_AUX_OPT = 
+ 
+ # These directories manage their own installables
+ INSTALLSUBDIRS = com32 utils

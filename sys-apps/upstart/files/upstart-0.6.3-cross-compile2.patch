@@ -1,0 +1,21 @@
+diff -Naur upstart-0.6.3.orig/nih-dbus-tool/Makefile.am upstart-0.6.3.new/nih-dbus-tool/Makefile.am
+--- upstart-0.6.3.orig/nih-dbus-tool/Makefile.am	2009-07-31 08:15:52.000000000 +0000
++++ upstart-0.6.3.new/nih-dbus-tool/Makefile.am	2009-10-14 21:53:52.000000000 +0000
+@@ -259,7 +259,7 @@
+ 	$(MKDIR_P) `echo "$@" | \
+ 		    sed '/\//!d;s,/[^/]*$$,,' | \
+                     sort -u`
+-	$(builddir)/nih-dbus-tool --mode=object --prefix=my --output=$@ $<
++	$(NIH_DBUS_TOOL) --mode=object --prefix=my --output=$@ $<
+ 
+ 
+ com_netsplit_Nih_Test_proxy_OUTPUTS = \
+@@ -273,7 +273,7 @@
+ 	$(MKDIR_P) `echo "$@" | \
+ 		    sed '/\//!d;s,/[^/]*$$,,' | \
+                     sort -u`
+-	$(builddir)/nih-dbus-tool --mode=proxy --prefix=proxy --output=$@ $<
++	$(NIH_DBUS_TOOL) --mode=proxy --prefix=proxy --output=$@ $<
+ 
+ 
+ # These have to be built sources because we can't compile test_*.o without

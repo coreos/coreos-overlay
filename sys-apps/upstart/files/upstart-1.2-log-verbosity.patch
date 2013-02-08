@@ -1,0 +1,11 @@
+=== modified file 'init/main.c'
+--- init/main.c	2010-12-13 18:15:24 +0000
++++ init/main.c	2011-02-07 22:08:27 +0000
+@@ -314,6 +315,7 @@
+ 	if (system_setup_console (CONSOLE_NONE, FALSE) < 0)
+ 		nih_free (nih_error_get ());
+
++	nih_log_set_priority (NIH_LOG_INFO);
+ 	nih_log_set_logger (logger_kmsg);
+ #endif /* DEBUG */
+ 

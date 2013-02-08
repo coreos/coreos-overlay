@@ -1,0 +1,8 @@
+# The layout here is a combination of
+# src/scripts/chromeos-common.sh:install_gpt and
+# src/scripts/build_image
+STATEFUL_IMG_SECTORS=2097152  # MIN=256M, default=1G
+KERNEL_IMG_SECTORS=32768  # 16M
+ROOTFS_IMG_SECTORS=4194304  # 2G
+OEM_IMG_SECTORS=32768  # 16M
+ESP_IMG_SECTORS=32768  # 16M

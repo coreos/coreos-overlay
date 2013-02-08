@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<node name="/" xmlns:tp="http://telepathy.freedesktop.org/wiki/DbusSpec#extensions-v0">
+  <interface name="org.freedesktop.ModemManager.Modem.Gsm.Hso">
+    <method name="Authenticate">
+      <tp:docstring>
+        Authenticate using the passed user name and password.
+      </tp:docstring>
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <annotation name="org.freedesktop.DBus.GLib.CSymbol" value="impl_hso_authenticate"/>
+      <arg name="username" type="s" direction="in">
+        The user name.
+      </arg>
+      <arg name="password" type="s" direction="in">
+        The password.
+      </arg>
+    </method>
+  </interface>
+</node>

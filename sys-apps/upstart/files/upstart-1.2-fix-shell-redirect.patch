@@ -1,0 +1,237 @@
+=== modified file 'init/job_process.c'
+--- init/job_process.c	2011-03-22 17:46:46 +0000
++++ init/job_process.c	2011-05-12 19:21:16 +0000
+@@ -145,7 +145,8 @@
+ 	nih_local char  *script = NULL;
+ 	char           **e;
+ 	size_t           argc, envc;
+-	int              error = FALSE, fds[2], trace = FALSE, shell = FALSE;
++	int              fds[2] = { -1, -1 };
++	int              error = FALSE, trace = FALSE, shell = FALSE;
+ 
+ 	nih_assert (job != NULL);
+ 
+@@ -208,12 +209,9 @@
+ 
+ 			shell = TRUE;
+ 
+-			/* FIXME actually always want it to be /proc/self/fd/3 and
+-			 * dup2() in the child to make it that way ... no way
+-			 * of passing that yet
+-			 */
+ 			cmd = NIH_MUST (nih_sprintf (argv, "%s/%d",
+-						     "/proc/self/fd", fds[0]));
++						     "/proc/self/fd",
++						     JOB_PROCESS_SCRIPT_FD));
+ 			NIH_MUST (nih_str_array_addp (&argv, NULL,
+ 						      &argc, cmd));
+ 		}
+@@ -259,7 +257,7 @@
+ 
+ 	/* Spawn the process, repeat until fork() works */
+ 	while ((job->pid[process] = job_process_spawn (job->class, argv,
+-						       env, trace)) < 0) {
++						       env, trace, fds[0])) < 0) {
+ 		NihError *err;
+ 
+ 		err = nih_error_get ();
+@@ -321,7 +319,8 @@
+ 		 * a path. Instruct the shell to close this extra fd and
+ 		 * not to leak it.
+ 		 */
+-		NIH_ZERO (nih_io_printf (io, "exec %d<&-\n", fds[0]));
++		NIH_ZERO (nih_io_printf (io, "exec %d<&-\n",
++					 JOB_PROCESS_SCRIPT_FD));
+ 
+ 		NIH_ZERO (nih_io_write (io, script, strlen (script)));
+ 		nih_io_shutdown (io);
+@@ -336,7 +335,8 @@
+  * @class: job class of process to be spawned,
+  * @argv: NULL-terminated list of arguments for the process,
+  * @env: NULL-terminated list of environment variables for the process,
+- * @trace: whether to trace this process.
++ * @trace: whether to trace this process,
++ * @script_fd: script file descriptor.
+  *
+  * This function spawns a new process using the @class details to set up the
+  * environment for it; the process is always a session and process group
+@@ -352,6 +352,9 @@
+  * wait for this and then may use it to set options before continuing the
+  * process.
+  *
++ * If @script_fd is not -1, this file descriptor is dup()d to the special fd 9
++ * (moving any other out of the way if necessary).
++ *
+  * This function only spawns the process, it is up to the caller to ensure
+  * that the information is saved into the job and that the process is watched,
+  * etc.
+@@ -367,7 +370,8 @@
+ job_process_spawn (JobClass     *class,
+ 		   char * const  argv[],
+ 		   char * const *env,
+-		   int           trace)
++		   int           trace,
++		   int           script_fd)
+ {
+ 	sigset_t  child_set, orig_set;
+ 	pid_t     pid;
+@@ -433,8 +437,26 @@
+ 	 * far because read() returned zero.
+ 	 */
+ 	close (fds[0]);
++	if (fds[1] == JOB_PROCESS_SCRIPT_FD) {
++		int tmp = dup2 (fds[1], fds[0]);
++		if (tmp < 0)
++			job_process_error_abort (fds[1], JOB_PROCESS_ERROR_DUP, 0);
++		close (fds[1]);
++		fds[1] = tmp;
++	}
+ 	nih_io_set_cloexec (fds[1]);
+ 
++	/* Move the script fd to special fd 9; the only gotcha is if that
++	 * would be our error descriptor, but that's handled above.
++	 */
++	if ((script_fd != -1) && (script_fd != JOB_PROCESS_SCRIPT_FD)) {
++		int tmp = dup2 (script_fd, JOB_PROCESS_SCRIPT_FD);
++		if (tmp < 0)
++			job_process_error_abort (fds[1], JOB_PROCESS_ERROR_DUP, 0);
++		close (script_fd);
++		script_fd = tmp;
++	}
++
+ 	/* Become the leader of a new session and process group, shedding
+ 	 * any controlling tty (which we shouldn't have had anyway).
+ 	 */
+@@ -664,6 +684,11 @@
+ 	err->error.number = JOB_PROCESS_ERROR;
+ 
+ 	switch (err->type) {
++	case JOB_PROCESS_ERROR_DUP:
++		err->error.message = NIH_MUST (nih_sprintf (
++				  err, _("unable to move script fd: %s"),
++				  strerror (err->errnum)));
++		break;
+ 	case JOB_PROCESS_ERROR_CONSOLE:
+ 		err->error.message = NIH_MUST (nih_sprintf (
+ 				  err, _("unable to open console: %s"),
+
+=== modified file 'init/job_process.h'
+--- init/job_process.h	2009-07-09 11:01:53 +0000
++++ init/job_process.h	2011-05-12 19:21:16 +0000
+@@ -1,5 +1,6 @@
+ /* upstart
+  *
++ * Copyright © 2011 Google Inc.
+  * Copyright © 2009 Canonical Ltd.
+  * Author: Scott James Remnant <scott@netsplit.com>.
+  *
+@@ -32,12 +33,23 @@
+ 
+ 
+ /**
++ * JOB_PROCESS_SCRIPT_FD:
++ *
++ * The special fd used to pass the script to the shell process, this can be
++ * anything from 3-9 (0-2 are stdin/out/err, 10 and above aren't guaranteed
++ * by POSIX).
++ **/
++#define JOB_PROCESS_SCRIPT_FD 9
++
++
++/**
+  * JobProcessErrorType:
+  *
+  * These constants represent the different steps of process spawning that
+  * can produce an error.
+  **/
+ typedef enum job_process_error_type {
++	JOB_PROCESS_ERROR_DUP,
+ 	JOB_PROCESS_ERROR_CONSOLE,
+ 	JOB_PROCESS_ERROR_RLIMIT,
+ 	JOB_PROCESS_ERROR_PRIORITY,
+@@ -80,7 +92,7 @@
+ int    job_process_run     (Job *job, ProcessType process);
+ 
+ pid_t  job_process_spawn   (JobClass *class, char * const argv[],
+-			    char * const *env, int trace)
++			    char * const *env, int trace, int script_fd)
+ 	__attribute__ ((warn_unused_result));
+ 
+ void   job_process_kill    (Job *job, ProcessType process);
+
+=== modified file 'init/tests/test_job_process.c'
+--- init/tests/test_job_process.c	2011-03-16 22:18:22 +0000
++++ init/tests/test_job_process.c	2011-05-12 19:21:16 +0000
+@@ -822,7 +822,7 @@
+ 
+ 	class = job_class_new (NULL, "test");
+ 
+-	pid = job_process_spawn (class, args, NULL, FALSE);
++	pid = job_process_spawn (class, args, NULL, FALSE, -1);
+ 	TEST_GT (pid, 0);
+ 
+ 	waitpid (pid, NULL, 0);
+@@ -860,7 +860,7 @@
+ 	class = job_class_new (NULL, "test");
+ 	class->console = CONSOLE_NONE;
+ 
+-	pid = job_process_spawn (class, args, NULL, FALSE);
++	pid = job_process_spawn (class, args, NULL, FALSE, -1);
+ 	TEST_GT (pid, 0);
+ 
+ 	waitpid (pid, NULL, 0);
+@@ -886,7 +886,7 @@
+ 	class = job_class_new (NULL, "test");
+ 	class->chdir = "/tmp";
+ 
+-	pid = job_process_spawn (class, args, NULL, FALSE);
++	pid = job_process_spawn (class, args, NULL, FALSE, -1);
+ 	TEST_GT (pid, 0);
+ 
+ 	waitpid (pid, NULL, 0);
+@@ -914,7 +914,7 @@
+ 
+ 	class = job_class_new (NULL, "test");
+ 
+-	pid = job_process_spawn (class, args, env, FALSE);
++	pid = job_process_spawn (class, args, env, FALSE, -1);
+ 	TEST_GT (pid, 0);
+ 
+ 	waitpid (pid, NULL, 0);
+@@ -939,7 +939,7 @@
+ 
+ 	class = job_class_new (NULL, "test");
+ 
+-	pid = job_process_spawn (class, args, NULL, FALSE);
++	pid = job_process_spawn (class, args, NULL, FALSE, -1);
+ 	TEST_GT (pid, 0);
+ 
+ 	assert0 (waitid (P_PID, pid, &info, WEXITED | WSTOPPED | WCONTINUED));
+@@ -959,7 +959,7 @@
+ 
+ 	class = job_class_new (NULL, "test");
+ 
+-	pid = job_process_spawn (class, args, NULL, TRUE);
++	pid = job_process_spawn (class, args, NULL, TRUE, -1);
+ 	TEST_GT (pid, 0);
+ 
+ 	assert0 (waitid (P_PID, pid, &info, WEXITED | WSTOPPED | WCONTINUED));
+@@ -988,7 +988,7 @@
+ 
+ 	class = job_class_new (NULL, "test");
+ 
+-	pid = job_process_spawn (class, args, NULL, FALSE);
++	pid = job_process_spawn (class, args, NULL, FALSE, -1);
+ 	TEST_LT (pid, 0);
+ 
+ 	err = nih_error_get ();
+@@ -1013,7 +1013,7 @@
+ 	args[1] = function;
+ 	args[2] = NULL;
+ 
+-	pid = job_process_spawn (class, args, NULL, FALSE);
++	pid = job_process_spawn (class, args, NULL, FALSE, -1);
+ 	TEST_GT (pid, 0);
+ 
+ 	/* Ensure process is still running after some period of time.
+

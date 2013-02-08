@@ -1,0 +1,12 @@
+diff -ru Mesa-7.5.1/progs/xdemos/Makefile Mesa-7.5.1.patched/progs/xdemos/Makefile
+--- Mesa-7.5.1/progs/xdemos/Makefile	2010-10-06 10:21:04.000000000 -0700
++++ Mesa-7.5.1.patched/progs/xdemos/Makefile	2010-10-06 10:20:31.000000000 -0700
+@@ -8,7 +8,7 @@
+ 
+ LIB_DEP = $(TOP)/$(LIB_DIR)/$(GL_LIB_NAME)
+ 
+-LIBS = -L$(TOP)/$(LIB_DIR) -l$(GL_LIB) $(APP_LIB_DEPS)
++LIBS = -L$(TOP)/$(LIB_DIR) -l$(GL_LIB) $(APP_LIB_DEPS) -lX11 -lpthread
+ 
+ PROGS = \
+ 	corender \

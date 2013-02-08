@@ -1,0 +1,25 @@
+From 740f7d8384049db24e3742f3cbe5f50d9cee0c7c Mon Sep 17 00:00:00 2001
+From: Jason Glasgow <jglasgow@chromium.org>
+Date: Wed, 30 Nov 2011 23:39:02 -0500
+Subject: [PATCH] CURLOPT_DNS_SERVERS: set name servers if possible (fix)
+
+Ensure that CURLE_OK is returned if setting the name servers is successfull.
+---
+ lib/asyn-ares.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/lib/asyn-ares.c b/lib/asyn-ares.c
+index 7c2c372..1a105c2 100644
+--- a/lib/asyn-ares.c
++++ b/lib/asyn-ares.c
+@@ -609,6 +609,7 @@ CURLcode Curl_set_dns_servers(struct SessionHandle *data,
+   int ares_result = ares_set_servers_csv(data->state.resolver, servers);
+   switch(ares_result) {
+   case ARES_SUCCESS:
++    result = CURLE_OK;
+     break;
+   case ARES_ENOMEM:
+     result = CURLE_OUT_OF_MEMORY;
+-- 
+1.7.3.1
+

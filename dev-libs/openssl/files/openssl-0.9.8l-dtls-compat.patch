@@ -1,0 +1,167 @@
+http://bugs.gentoo.org/280370
+
+fix from upstream
+
+Index: openssl/ssl/d1_clnt.c
+RCS File: /v/openssl/cvs/openssl/ssl/d1_clnt.c,v
+rcsdiff -q -kk '-r1.3.2.15' '-r1.3.2.16' -u '/v/openssl/cvs/openssl/ssl/d1_clnt.c,v' 2>/dev/null
+--- d1_clnt.c	2009/04/14 15:20:47	1.3.2.15
++++ d1_clnt.c	2009/04/19 18:08:11	1.3.2.16
+@@ -130,7 +130,7 @@
+ 
+ static SSL_METHOD *dtls1_get_client_method(int ver)
+ 	{
+-	if (ver == DTLS1_VERSION)
++	if (ver == DTLS1_VERSION || ver == DTLS1_BAD_VER)
+ 		return(DTLSv1_client_method());
+ 	else
+ 		return(NULL);
+@@ -181,7 +181,8 @@
+ 			s->server=0;
+ 			if (cb != NULL) cb(s,SSL_CB_HANDSHAKE_START,1);
+ 
+-			if ((s->version & 0xff00 ) != (DTLS1_VERSION & 0xff00))
++			if ((s->version & 0xff00 ) != (DTLS1_VERSION & 0xff00) &&
++			    (s->version & 0xff00 ) != (DTLS1_BAD_VER & 0xff00))
+ 				{
+ 				SSLerr(SSL_F_DTLS1_CONNECT, ERR_R_INTERNAL_ERROR);
+ 				ret = -1;
+Index: openssl/ssl/d1_lib.c
+RCS File: /v/openssl/cvs/openssl/ssl/d1_lib.c,v
+rcsdiff -q -kk '-r1.1.2.7' '-r1.1.2.8' -u '/v/openssl/cvs/openssl/ssl/d1_lib.c,v' 2>/dev/null
+--- d1_lib.c	2009/04/02 22:34:59	1.1.2.7
++++ d1_lib.c	2009/04/19 18:08:11	1.1.2.8
+@@ -198,7 +198,10 @@
+ void dtls1_clear(SSL *s)
+ 	{
+ 	ssl3_clear(s);
+-	s->version=DTLS1_VERSION;
++	if (s->options & SSL_OP_CISCO_ANYCONNECT)
++		s->version=DTLS1_BAD_VER;
++	else
++		s->version=DTLS1_VERSION;
+ 	}
+ 
+ /*
+Index: openssl/ssl/d1_pkt.c
+RCS File: /v/openssl/cvs/openssl/ssl/d1_pkt.c,v
+rcsdiff -q -kk '-r1.4.2.15' '-r1.4.2.16' -u '/v/openssl/cvs/openssl/ssl/d1_pkt.c,v' 2>/dev/null
+--- d1_pkt.c	2009/04/02 22:34:59	1.4.2.15
++++ d1_pkt.c	2009/04/19 18:08:12	1.4.2.16
+@@ -1024,15 +1024,17 @@
+ 	if (rr->type == SSL3_RT_CHANGE_CIPHER_SPEC)
+ 		{
+ 		struct ccs_header_st ccs_hdr;
++		int ccs_hdr_len = DTLS1_CCS_HEADER_LENGTH;
+ 
+ 		dtls1_get_ccs_header(rr->data, &ccs_hdr);
+ 
+ 		/* 'Change Cipher Spec' is just a single byte, so we know
+ 		 * exactly what the record payload has to look like */
+ 		/* XDTLS: check that epoch is consistent */
+-		if (	(s->client_version == DTLS1_BAD_VER && rr->length != 3) ||
+-			(s->client_version != DTLS1_BAD_VER && rr->length != DTLS1_CCS_HEADER_LENGTH) || 
+-			(rr->off != 0) || (rr->data[0] != SSL3_MT_CCS))
++		if (s->client_version == DTLS1_BAD_VER || s->version == DTLS1_BAD_VER)
++			ccs_hdr_len = 3;
++
++		if ((rr->length != ccs_hdr_len) || (rr->off != 0) || (rr->data[0] != SSL3_MT_CCS))
+ 			{
+ 			i=SSL_AD_ILLEGAL_PARAMETER;
+ 			SSLerr(SSL_F_DTLS1_READ_BYTES,SSL_R_BAD_CHANGE_CIPHER_SPEC);
+@@ -1358,7 +1360,7 @@
+ #if 0
+ 	/* 'create_empty_fragment' is true only when this function calls itself */
+ 	if (!clear && !create_empty_fragment && !s->s3->empty_fragment_done
+-		&& SSL_version(s) != DTLS1_VERSION)
++	    && SSL_version(s) != DTLS1_VERSION && SSL_version(s) != DTLS1_BAD_VER)
+ 		{
+ 		/* countermeasure against known-IV weakness in CBC ciphersuites
+ 		 * (see http://www.openssl.org/~bodo/tls-cbc.txt) 
+Index: openssl/ssl/s3_clnt.c
+RCS File: /v/openssl/cvs/openssl/ssl/s3_clnt.c,v
+rcsdiff -q -kk '-r1.88.2.21' '-r1.88.2.22' -u '/v/openssl/cvs/openssl/ssl/s3_clnt.c,v' 2>/dev/null
+--- s3_clnt.c	2009/02/14 21:50:14	1.88.2.21
++++ s3_clnt.c	2009/04/19 18:08:12	1.88.2.22
+@@ -708,7 +708,7 @@
+ 
+ 	if (!ok) return((int)n);
+ 
+-	if ( SSL_version(s) == DTLS1_VERSION)
++	if ( SSL_version(s) == DTLS1_VERSION || SSL_version(s) == DTLS1_BAD_VER)
+ 		{
+ 		if ( s->s3->tmp.message_type == DTLS1_MT_HELLO_VERIFY_REQUEST)
+ 			{
+Index: openssl/ssl/ssl.h
+RCS File: /v/openssl/cvs/openssl/ssl/ssl.h,v
+rcsdiff -q -kk '-r1.161.2.21' '-r1.161.2.22' -u '/v/openssl/cvs/openssl/ssl/ssl.h,v' 2>/dev/null
+--- ssl.h	2008/08/13 19:44:44	1.161.2.21
++++ ssl.h	2009/04/19 18:08:12	1.161.2.22
+@@ -510,6 +510,8 @@
+ #define SSL_OP_COOKIE_EXCHANGE              0x00002000L
+ /* Don't use RFC4507 ticket extension */
+ #define SSL_OP_NO_TICKET	            0x00004000L
++/* Use Cisco's "speshul" version of DTLS_BAD_VER (as client)  */
++#define SSL_OP_CISCO_ANYCONNECT		    0x00008000L
+ 
+ /* As server, disallow session resumption on renegotiation */
+ #define SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION	0x00010000L
+Index: openssl/ssl/ssl_lib.c
+RCS File: /v/openssl/cvs/openssl/ssl/ssl_lib.c,v
+rcsdiff -q -kk '-r1.133.2.16' '-r1.133.2.17' -u '/v/openssl/cvs/openssl/ssl/ssl_lib.c,v' 2>/dev/null
+--- ssl_lib.c	2009/02/23 16:02:47	1.133.2.16
++++ ssl_lib.c	2009/04/19 18:08:12	1.133.2.17
+@@ -995,7 +995,8 @@
+ 		s->max_cert_list=larg;
+ 		return(l);
+ 	case SSL_CTRL_SET_MTU:
+-		if (SSL_version(s) == DTLS1_VERSION)
++		if (SSL_version(s) == DTLS1_VERSION ||
++		    SSL_version(s) == DTLS1_BAD_VER)
+ 			{
+ 			s->d1->mtu = larg;
+ 			return larg;
+Index: openssl/ssl/ssl_sess.c
+RCS File: /v/openssl/cvs/openssl/ssl/ssl_sess.c,v
+rcsdiff -q -kk '-r1.51.2.9' '-r1.51.2.10' -u '/v/openssl/cvs/openssl/ssl/ssl_sess.c,v' 2>/dev/null
+--- ssl_sess.c	2008/06/04 18:35:27	1.51.2.9
++++ ssl_sess.c	2009/04/19 18:08:12	1.51.2.10
+@@ -211,6 +211,11 @@
+ 			ss->ssl_version=TLS1_VERSION;
+ 			ss->session_id_length=SSL3_SSL_SESSION_ID_LENGTH;
+ 			}
++		else if (s->version == DTLS1_BAD_VER)
++			{
++			ss->ssl_version=DTLS1_BAD_VER;
++			ss->session_id_length=SSL3_SSL_SESSION_ID_LENGTH;
++			}
+ 		else if (s->version == DTLS1_VERSION)
+ 			{
+ 			ss->ssl_version=DTLS1_VERSION;
+Index: openssl/ssl/t1_enc.c
+RCS File: /v/openssl/cvs/openssl/ssl/t1_enc.c,v
+rcsdiff -q -kk '-r1.35.2.8' '-r1.35.2.9' -u '/v/openssl/cvs/openssl/ssl/t1_enc.c,v' 2>/dev/null
+--- t1_enc.c	2009/01/05 14:43:07	1.35.2.8
++++ t1_enc.c	2009/04/19 18:08:12	1.35.2.9
+@@ -765,10 +765,10 @@
+ 	HMAC_CTX_init(&hmac);
+ 	HMAC_Init_ex(&hmac,mac_sec,EVP_MD_size(hash),hash,NULL);
+ 
+-	if (ssl->version == DTLS1_VERSION && ssl->client_version != DTLS1_BAD_VER)
++	if (ssl->version == DTLS1_BAD_VER ||
++	    (ssl->version == DTLS1_VERSION && ssl->client_version != DTLS1_BAD_VER))
+ 		{
+ 		unsigned char dtlsseq[8],*p=dtlsseq;
+-
+ 		s2n(send?ssl->d1->w_epoch:ssl->d1->r_epoch, p);
+ 		memcpy (p,&seq[2],6);
+ 
+@@ -793,7 +793,7 @@
+ {unsigned int z; for (z=0; z<rec->length; z++) printf("%02X ",buf[z]); printf("\n"); }
+ #endif
+ 
+-	if ( SSL_version(ssl) != DTLS1_VERSION)
++	if ( SSL_version(ssl) != DTLS1_VERSION && SSL_version(ssl) != DTLS1_BAD_VER)
+ 		{
+ 		for (i=7; i>=0; i--)
+ 			{

@@ -1,0 +1,9 @@
+DEFINED_PHASES=install
+DESCRIPTION=Performance testing endpoint for cellular performance tests
+EAPI=4
+HOMEPAGE=http://www.chromium.org/
+KEYWORDS=amd64 arm x86
+LICENSE=BSD
+RDEPEND=net-misc/iperf
+SLOT=0
+_md5_=319e6eafe425ac5e1b10c300e4c84184

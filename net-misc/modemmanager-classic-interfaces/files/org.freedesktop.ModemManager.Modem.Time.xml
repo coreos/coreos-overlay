@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<node name="/" xmlns:tp="http://telepathy.freedesktop.org/wiki/DbusSpec#extensions-v0">
+  <interface name="org.freedesktop.ModemManager.Modem.Time">
+    <tp:docstring>
+      This interface allows clients to receive network time and timezone
+      updates broadcast by mobile networks.
+    </tp:docstring>
+
+    <property name="NetworkTimezone" type="a{sv}" access="read">
+      <tp:docstring>
+        The timezone data provided by the network.  It may include one of more
+        of the following fields:
+
+        'offset': offset of the timezone from UTC, in minutes (including DST,
+                  if applicable).
+        'dst_offset': amount of 'offset' that is due to DST, in minutes.
+        'leap_seconds': number of leap seconds included in the network time.
+      </tp:docstring>
+    </property>
+
+    <method name="GetNetworkTime">
+      <tp:docstring>
+        Gets the current network time.
+
+        This method will only work if the modem tracks, or can request, the
+        current network time; it will not attempt to use previously-received
+        network time updates on the host to guess the current network time.
+      </tp:docstring>
+      <annotation name="org.freedesktop.DBus.GLib.CSymbol"
+                  value="impl_modem_time_get_network_time" />
+      <arg name="time" type="s" direction="out">
+        <tp:docstring>
+          If the network time is known, a string containing a date and time in
+          ISO 8601 format.
+
+          If the network time is unknown, the empty string.
+        </tp:docstring>
+      </arg>
+    </method>
+
+    <signal name="NetworkTimeChanged">
+      <tp:docstring>
+        Sent when the network time is updated.
+      </tp:docstring>
+      <arg name="time" type="s">
+        <tp:docstring>
+          If the network time is known, a string containing a date and time in
+          ISO 8601 format.
+
+          If the network time is unknown, the empty string.
+        </tp:docstring>
+      </arg>
+    </signal>
+  </interface>
+</node>

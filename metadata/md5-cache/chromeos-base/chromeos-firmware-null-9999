@@ -1,0 +1,8 @@
+DEFINED_PHASES=-
+DESCRIPTION=Chrome OS Firmware (null template)
+EAPI=2
+HOMEPAGE=http://www.chromium.org/
+KEYWORDS=~amd64 ~arm ~x86
+LICENSE=BSD
+SLOT=0
+_md5_=85ac30f82108f946cd8c4c08a86d7376

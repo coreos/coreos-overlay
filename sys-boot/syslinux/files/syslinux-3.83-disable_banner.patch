@@ -1,0 +1,155 @@
+diff -U5 -r syslinux-3.82-orig/core/diskstart.inc syslinux-3.82/core/diskstart.inc
+--- syslinux-3.82-orig/core/diskstart.inc	2009-06-09 10:19:25.000000000 -0700
++++ syslinux-3.82/core/diskstart.inc	2009-06-17 17:49:03.000000000 -0700
+@@ -506,12 +506,12 @@
+ 		sti		; In case of broken INT 13h BIOSes
+
+ ;
+ ; Tell the user we got this far
+ ;
+-		mov si,syslinux_banner
+-		call writestr_early
++		;mov si,syslinux_banner
++		;call writestr_early
+
+ ;
+ ; Tell the user if we're using EBIOS or CBIOS
+ ;
+ print_bios:
+@@ -519,11 +519,11 @@
+ 		cmp byte [getlinsec.jmp+1],(getlinsec_ebios-(getlinsec.jmp+2))
+ 		jne .cbios
+ 		mov si,ebios_name
+ .cbios:
+ 		mov [BIOSName],si
+-		call writestr_early
++		;call writestr_early
+
+ 		section .bss
+ %define	HAVE_BIOSNAME 1
+ BIOSName	resw 1
+
+@@ -659,12 +659,12 @@
+ all_read:
+ ;
+ ; Let the user (and programmer!) know we got this far.  This used to be
+ ; in Sector 1, but makes a lot more sense here.
+ ;
+-		mov si,copyright_str
+-		call writestr_early
++		;mov si,copyright_str
++		;call writestr_early
+
+
+ ;
+ ; Insane hack to expand the DOS superblock to dwords
+ ;
+diff -U5 -r syslinux-3.82-orig/core/isolinux.asm syslinux-3.82/core/isolinux.asm
+--- syslinux-3.82-orig/core/isolinux.asm	2009-06-09 10:19:25.000000000 -0700
++++ syslinux-3.82/core/isolinux.asm	2009-06-17 17:49:03.000000000 -0700
+@@ -284,18 +284,18 @@
+ 		mov [BIOSType],si
+ 		mov eax,[si]
+ 		mov [GetlinsecPtr],eax
+
+ 		; Show signs of life
+-		mov si,syslinux_banner
+-		call writestr_early
++		;mov si,syslinux_banner
++		;call writestr_early
+ %ifdef DEBUG_MESSAGES
+-		mov si,copyright_str
++		;mov si,copyright_str
+ %else
+-		mov si,[BIOSName]
++		;mov si,[BIOSName]
+ %endif
+-		call writestr_early
++		;call writestr_early
+
+ 		;
+ 		; Before modifying any memory, get the checksum of bytes
+ 		; 64-2048
+ 		;
+@@ -679,17 +679,17 @@
+ .norge:		jmp short .norge
+
+ 		; Information message (DS:SI) output
+ 		; Prefix with "isolinux: "
+ 		;
+-writemsg:	push ax
+-		push si
+-		mov si,isolinux_str
+-		call writestr_early
+-		pop si
+-		call writestr_early
+-		pop ax
++writemsg:	;push ax
++		;push si
++		;mov si,isolinux_str
++		;call writestr_early
++		;pop si
++		;call writestr_early
++		;pop ax
+ 		ret
+
+ ;
+ ; Write a character to the screen.  There is a more "sophisticated"
+ ; version of this in the subsequent code, so we patch the pointer
+diff -U5 -r syslinux-3.82-orig/core/localboot.inc syslinux-3.82/core/localboot.inc
+--- syslinux-3.82-orig/core/localboot.inc	2009-06-09 10:19:25.000000000 -0700
++++ syslinux-3.82/core/localboot.inc	2009-06-17 17:49:03.000000000 -0700
+@@ -27,13 +27,13 @@
+ local_boot:
+ 		call vgaclearmode
+ 		RESET_STACK_AND_SEGS dx		; dx <- 0
+ 		mov fs,dx
+ 		mov gs,dx
+-		mov si,localboot_msg
+-		call writestr
++		;mov si,localboot_msg
++		;call writestr
+		call cleanup_hardware
+ 		cmp ax,-1
+ 		je .int18
+
+ 		; Load boot sector from the specified BIOS device and jump to it.
+ 		mov dl,al
+diff -U5 -r syslinux-3.82-orig/core/ui.inc syslinux-3.82/core/ui.inc
+--- syslinux-3.82-orig/core/ui.inc	2009-06-09 10:19:25.000000000 -0700
++++ syslinux-3.82/core/ui.inc	2009-06-17 17:49:03.000000000 -0700
+@@ -240,28 +240,28 @@
+ 		call get_msg_file
+ 		jmp short fk_wrcmd
+
+ print_version:
+ 		push di				; Command line write pointer
+-		mov si,syslinux_banner
+-		call writestr
++		;mov si,syslinux_banner
++		;call writestr
+ %ifdef HAVE_BIOSNAME
+ 		mov si,[BIOSName]
+ 		call writestr
+ %endif
+-		mov si,copyright_str
+-		call writestr
++		;mov si,copyright_str
++		;call writestr
+
+ 		; ... fall through ...
+
+ 		; Write the boot prompt and command line again and
+ 		; wait for input.  Note that this expects the cursor
+ 		; to already have been CRLF'd, and that the old value
+ 		; of DI (the command line write pointer) is on the stack.
+ fk_wrcmd:
+-		mov si,boot_prompt
+-		call writestr
++		;mov si,boot_prompt
++		;call writestr
+ 		pop di				; Command line write pointer
+ 		push di
+ 		mov byte [di],0			; Null-terminate command line
+ 		mov si,command_line
+ 		call writestr			; Write command line so far

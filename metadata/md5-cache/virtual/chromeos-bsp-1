@@ -1,0 +1,10 @@
+DEFINED_PHASES=-
+DEPEND=!chromeos-base/chromeos-bsp-null amd64? ( net-wireless/iwl1000-ucode net-wireless/iwl2000-ucode net-wireless/iwl2030-ucode net-wireless/iwl3945-ucode net-wireless/iwl4965-ucode >=net-wireless/iwl5000-ucode-8.24.2.12 net-wireless/iwl6000-ucode net-wireless/iwl6005-ucode net-wireless/iwl6030-ucode net-wireless/iwl6050-ucode ) x86? ( net-wireless/iwl1000-ucode net-wireless/iwl2000-ucode net-wireless/iwl2030-ucode net-wireless/iwl3945-ucode net-wireless/iwl4965-ucode >=net-wireless/iwl5000-ucode-8.24.2.12 net-wireless/iwl6000-ucode net-wireless/iwl6005-ucode net-wireless/iwl6030-ucode net-wireless/iwl6050-ucode )
+DESCRIPTION=Generic ebuild which satisifies virtual/chromeos-bsp. This is a direct dependency of chromeos-base/chromeos, but is expected to be overridden in an overlay for each specialized board. A typical non-generic implementation will install any board-specific configuration files and drivers which are not suitable for inclusion in a generic board overlay.
+EAPI=4
+HOMEPAGE=http://src.chromium.org
+KEYWORDS=amd64 arm x86
+LICENSE=BSD
+RDEPEND=!chromeos-base/chromeos-bsp-null amd64? ( net-wireless/iwl1000-ucode net-wireless/iwl2000-ucode net-wireless/iwl2030-ucode net-wireless/iwl3945-ucode net-wireless/iwl4965-ucode >=net-wireless/iwl5000-ucode-8.24.2.12 net-wireless/iwl6000-ucode net-wireless/iwl6005-ucode net-wireless/iwl6030-ucode net-wireless/iwl6050-ucode ) x86? ( net-wireless/iwl1000-ucode net-wireless/iwl2000-ucode net-wireless/iwl2030-ucode net-wireless/iwl3945-ucode net-wireless/iwl4965-ucode >=net-wireless/iwl5000-ucode-8.24.2.12 net-wireless/iwl6000-ucode net-wireless/iwl6005-ucode net-wireless/iwl6030-ucode net-wireless/iwl6050-ucode )
+SLOT=0
+_md5_=fbcbe8a67ec9746e3590d05b4648880a

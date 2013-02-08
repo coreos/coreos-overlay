@@ -1,0 +1,11 @@
+--- Makefile.am
++++ Makefile.am
+@@ -102,7 +102,7 @@
+ 
+ libpng.sym: png.h pngconf.h
+ 	rm -f $@ $@.new
+-	$(CPP) @LIBPNG_DEFINES@ $(CPPFLAGS) -DPNG_BUILDSYMS $(srcdir)/png.h $(srcdir)/$@
++	$(CPP) @LIBPNG_DEFINES@ $(CPPFLAGS) -DPNG_BUILDSYMS $(srcdir)/png.h > $(srcdir)/$@
+ 	cat $(srcdir)/$@ | \
+ 		$(SED) -n -e \
+ 		's|^.*PNG_FUNCTION_EXPORT[ 	]*\([$(AN)]*\).*$$|$(SYMBOL_PREFIX)\1|p' \

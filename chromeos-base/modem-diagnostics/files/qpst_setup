@@ -1,0 +1,27 @@
+#!/bin/sh
+# Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# Quick helper script for cellular certification as the cert labs have
+# found use of modem-diagnostics cumbersome.  Don't want to massively
+# change modem-diagnostics so as to break anything that relies on the
+# defaults therein. IP configuration here matches documentation sent to
+# modem vendors and cert labs, where applicable.
+
+LOCAL_IP=192.168.1.11
+REMOTE_IP=192.168.1.10
+NETMASK=255.255.255.0
+LOCAL_INTERFACE=eth1
+MODEM_DIAG_PORT=/dev/ttyUSB1
+
+stop powerd
+sleep 3
+stop modemmanager
+sleep 3
+ifconfig $LOCAL_INTERFACE $LOCAL_IP netmask $NETMASK
+iptables -P INPUT ACCEPT
+iptables -P OUTPUT ACCEPT
+sleep 2
+modem-diagnostics --noconfigure_interface --export_interface \
+ $LOCAL_INTERFACE --export_device $MODEM_DIAG_PORT $REMOTE_IP

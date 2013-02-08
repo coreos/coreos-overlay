@@ -1,0 +1,8 @@
+# The libglade code is old and uses a pkg-config search which
+# does not respect --host, so force it ourselves.
+export ac_cv_path_PKG_CONFIG=${PKG_CONFIG}
+
+# The current version of pango is old and does not build w/out
+# the deprecated glib macros, so make sure we undo that when
+# building glade.
+export CPPFLAGS+=" -UG_DISABLE_DEPRECATED"

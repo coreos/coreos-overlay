@@ -1,0 +1,31 @@
+--- qemu-kvm-0.15.1.orig/configure	2011-11-14 12:59:21.757440947 -0800
++++ qemu-kvm-0.15.1/configure	2011-11-14 13:08:44.094348302 -0800
+@@ -561,6 +561,7 @@ for opt do
+   --static)
+     static="yes"
+     LDFLAGS="-static $LDFLAGS"
++    pkg_config="${pkg_config} --static"
+   ;;
+   --mandir=*) mandir="$optarg"
+   ;;
+@@ -1403,9 +1404,11 @@ fi
+ if $pkg_config sdl --modversion >/dev/null 2>&1; then
+   sdlconfig="$pkg_config sdl"
+   _sdlversion=`$sdlconfig --modversion 2>/dev/null | sed 's/[^0-9]//g'`
++  _sdlconfig_type="pkg-config"
+ elif has ${sdl_config}; then
+   sdlconfig="$sdl_config"
+   _sdlversion=`$sdlconfig --version | sed 's/[^0-9]//g'`
++  _sdlconfig_type="sdl-config"
+ else
+   if test "$sdl" = "yes" ; then
+     feature_not_found "sdl"
+@@ -1424,7 +1427,7 @@ if test "$sdl" != "no" ; then
+ int main( void ) { return SDL_Init (SDL_INIT_VIDEO); }
+ EOF
+   sdl_cflags=`$sdlconfig --cflags 2> /dev/null`
+-  if test "$static" = "yes" ; then
++  if test "$static" = "yes" && test "$_sdlconfig_type" = "sdl-config"; then
+     sdl_libs=`$sdlconfig --static-libs 2>/dev/null`
+   else
+     sdl_libs=`$sdlconfig --libs 2> /dev/null`

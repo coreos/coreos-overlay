@@ -1,0 +1,12 @@
+diff -urN xkeyboard-config-2.4.1.orig/symbols/gb xkeyboard-config-2.4.1/symbols/gb
+--- xkeyboard-config-2.4.1.orig/symbols/gb	2012-11-22 14:40:25.858449142 +0900
++++ xkeyboard-config-2.4.1/symbols/gb	2012-11-26 13:55:13.877729860 +0900
+@@ -75,7 +75,7 @@
+     name[Group1]="English (UK, extended WinKeys)";
+     
+     // Alphanumeric section
+-    key <TLDE> { [ dead_grave,    notsign,       brokenbar,    NoSymbol ] };
++    key <TLDE> { [ grave,    notsign,       brokenbar,    NoSymbol ] };
+     
+     key <AE02> { [     2,        quotedbl,  dead_diaeresis,     onehalf ] };
+     key <AE03> { [     3,        sterling,   threesuperior,    onethird ] };

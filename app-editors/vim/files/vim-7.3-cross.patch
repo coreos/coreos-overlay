@@ -1,0 +1,11 @@
+--- vim73/src/configure.in.orig	2010-08-13 08:15:17.000000000 -0600
++++ vim73/src/configure.in	2010-08-16 17:04:34.000000000 -0600
+@@ -3180,7 +3180,7 @@ main() {
+ }],
+ AC_MSG_RESULT(ok),
+ AC_MSG_ERROR([WRONG!  uint32_t not defined correctly.]),
+-AC_MSG_ERROR([could not compile program using uint32_t.]))
++AC_MSG_WARN([could not check when cross-compiling]))
+ 
+ dnl Check for memmove() before bcopy(), makes memmove() be used when both are
+ dnl present, fixes problem with incompatibility between Solaris 2.4 and 2.5.v

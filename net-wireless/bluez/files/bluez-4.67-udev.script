@@ -1,0 +1,21 @@
+#!/bin/sh
+#
+# bluetooth.sh: udev external RUN script
+#
+# Copyright:
+#	2005-2006 Henrik Brix Andersen <brix@gentoo.org>
+#	2007      Petteri Räty <betelgeuse@gentoo.org>
+#	2008      Tiziano Müller <dev-zero@gentoo.org>
+#	2011	  Pacho Ramos <pacho@gentoo.org> 
+# Distributed under the terms of the GNU General Public License v2
+
+# Find out where sysfs is mounted. Exit if not available
+sysfs=`grep -F sysfs /proc/mounts | awk '{print $2}'`
+if [ "$sysfs" = "" ]; then
+	echo "sysfs is required"
+	exit 1
+fi
+
+if [ ! -d $sysfs/class/bluetooth/hci[0-9]* -a ! -d $sysfs/bus/bluetooth/devices/hci[0-9]* ]; then
+	udevadm trigger --subsystem-match=bluetooth --action=add
+fi

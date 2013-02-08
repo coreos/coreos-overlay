@@ -1,0 +1,26 @@
+From e01a20ceb958a9a43383a2ef236524ba9f79b6d9 Mon Sep 17 00:00:00 2001
+From: Tor Lillqvist <tml@iki.fi>
+Date: Thu, 07 Oct 2010 09:04:52 +0000
+Subject: Don't call close() on -1
+
+Of course, a proper implementation of close() will just ignore an
+invalid parameter silently, and set errno. But apparently the "debug"
+version of the Microsoft C library generates some noise in this
+case. So avoid that. Thanks to John Emmas for reporting.
+---
+diff --git a/tests/testglib.c b/tests/testglib.c
+index 7625928..b4e29f0 100644
+--- a/tests/testglib.c
++++ b/tests/testglib.c
+@@ -886,7 +886,8 @@ test_file_functions (void)
+   fd = g_mkstemp (template);
+   if (g_test_verbose() && fd != -1)
+     g_print ("g_mkstemp works even if template doesn't end in XXXXXX\n");
+-  close (fd);
++  if (fd != -1)
++    close (fd);
+   strcpy (template, "fooXXXXXX");
+   fd = g_mkstemp (template);
+   if (fd == -1)
+--
+cgit v0.8.3.1

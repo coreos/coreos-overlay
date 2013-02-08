@@ -1,0 +1,179 @@
+Description: In support of the new finit_module syscall, keep the file
+ descriptor for the desired module around when loading. In the case where
+ a module is uncompressed and unstripped, attempt to load via the fd and
+ finit_module. If finit_module does not exist (ENOSYS), fall back to using
+ init_module with the blob read from the fd.
+Author: Kees Cook <keescook@chromium.org>
+
+diff -uNrp module-init-tools-3.16~/insmod.c module-init-tools-3.16/insmod.c
+--- module-init-tools-3.16~/insmod.c	2011-06-02 10:55:01.000000000 -0700
++++ module-init-tools-3.16/insmod.c	2012-09-11 15:42:26.976369988 -0700
+@@ -56,18 +56,18 @@ static const char *moderror(int err)
+ 	}
+ }
+ 
+-static void *grab_file(const char *filename, unsigned long *size)
++static void *grab_file(const char *filename, unsigned long *size, int *fd)
+ {
+ 	unsigned int max = 16384;
+-	int ret, fd, err_save;
++	int ret, err_save;
+ 	void *buffer;
+ 
+ 	if (streq(filename, "-"))
+-		fd = dup(STDIN_FILENO);
++		*fd = dup(STDIN_FILENO);
+ 	else
+-		fd = open(filename, O_RDONLY, 0);
++		*fd = open(filename, O_RDONLY, 0);
+ 
+-	if (fd < 0)
++	if (*fd < 0)
+ 		return NULL;
+ 
+ 	buffer = malloc(max);
+@@ -75,7 +75,7 @@ static void *grab_file(const char *filen
+ 		goto out_error;
+ 
+ 	*size = 0;
+-	while ((ret = read(fd, buffer + *size, max - *size)) > 0) {
++	while ((ret = read(*fd, buffer + *size, max - *size)) > 0) {
+ 		*size += ret;
+ 		if (*size == max) {
+ 			void *p;
+@@ -89,13 +89,12 @@ static void *grab_file(const char *filen
+ 	if (ret < 0)
+ 		goto out_error;
+ 
+-	close(fd);
+ 	return buffer;
+ 
+ out_error:
+ 	err_save = errno;
+ 	free(buffer);
+-	close(fd);
++	close(*fd);
+ 	errno = err_save;
+ 	return NULL;
+ }
+@@ -104,6 +103,7 @@ int main(int argc, char *argv[])
+ {
+ 	unsigned int i;
+ 	long int ret;
++	int fd;
+ 	unsigned long len;
+ 	void *file;
+ 	char *filename, *options = strdup("");
+@@ -149,18 +149,21 @@ int main(int argc, char *argv[])
+ 		strcat(options, " ");
+ 	}
+ 
+-	file = grab_file(filename, &len);
++	file = grab_file(filename, &len, &fd);
+ 	if (!file) {
+ 		fprintf(stderr, "insmod: can't read '%s': %s\n",
+ 			filename, strerror(errno));
+ 		exit(1);
+ 	}
+ 
+-	ret = init_module(file, len, options);
++	ret = finit_module(fd, options, 0);
++	if (ret != 0 && errno == ENOSYS)
++		ret = init_module(file, len, options);
+ 	if (ret != 0) {
+ 		fprintf(stderr, "insmod: error inserting '%s': %li %s\n",
+ 			filename, ret, moderror(errno));
+ 	}
++	close(fd);
+ 	free(file);
+ 
+ 	if (ret != 0)
+diff -uNrp module-init-tools-3.16~/modprobe.c module-init-tools-3.16/modprobe.c
+--- module-init-tools-3.16~/modprobe.c	2011-06-02 10:55:01.000000000 -0700
++++ module-init-tools-3.16/modprobe.c	2012-09-11 15:42:58.746370022 -0700
+@@ -1713,6 +1713,7 @@ static int insmod(struct list_head *list
+ 		   modprobe_flags_t flags)
+ {
+ 	int ret;
++	int fd;
+ 	struct elf_file *module;
+ 	const struct module_softdep *softdep;
+ 	const char *command;
+@@ -1778,10 +1779,17 @@ static int insmod(struct list_head *list
+ 				strerror(errno));
+ 		goto out;
+ 	}
+-	if (flags & mit_strip_modversion)
++	fd = open(mod->filename, O_RDONLY);
++	if (flags & mit_strip_modversion) {
+ 		module->ops->strip_section(module, "__versions");
+-	if (flags & mit_strip_vermagic)
++		close(fd);
++		fd = -1;
++	}
++	if (flags & mit_strip_vermagic) {
+ 		clear_magic(module);
++		close(fd);
++		fd = -1;
++	}
+ 
+ 	/* Config file might have given more options */
+ 	opts = add_extra_options(mod->modname, optstring, conf->options);
+@@ -1792,7 +1800,13 @@ static int insmod(struct list_head *list
+ 		goto out_elf_file;
+ 
+ 	/* request kernel linkage */
+-	ret = init_module(module->data, module->len, opts);
++	if (fd < 0)
++		ret = init_module(module->data, module->len, opts);
++	else {
++	    ret = finit_module(fd, opts, 0);
++	    if (ret != 0 && errno == ENOSYS)
++		    ret = init_module(module->data, module->len, opts);
++	}
+ 	if (ret != 0) {
+ 		if (errno == EEXIST) {
+ 			if (flags & mit_first_time)
+@@ -1810,6 +1820,7 @@ static int insmod(struct list_head *list
+ 	}
+  out_elf_file:
+ 	release_elf_file(module);
++	close(fd);
+ 	free(opts);
+  out:
+ 	free_module(mod);
+diff -uNrp module-init-tools-3.16~/util.h module-init-tools-3.16/util.h
+--- module-init-tools-3.16~/util.h	2011-06-02 10:55:01.000000000 -0700
++++ module-init-tools-3.16/util.h	2012-09-11 15:41:49.126370186 -0700
+@@ -3,6 +3,31 @@
+ 
+ #include <stdio.h>
+ 
++#include <unistd.h>
++#include <sys/syscall.h>
++#ifndef __NR_finit_module
++# if defined(__x86_64__)
++#  define __NR_finit_module 313
++# elif defined(__i386__)
++#  define __NR_finit_module 350
++# elif defined(__arm__)
++#  define __NR_finit_module 379
++# endif
++#endif
++
++#ifdef __NR_finit_module
++static inline int finit_module(int fd, const char *uargs, int flags)
++{
++	return syscall(__NR_finit_module, fd, uargs, flags);
++}
++#else
++static inline int finit_module(int fd, const char *uargs, int flags)
++{
++	errno = ENOSYS;
++	return -1;
++}
++#endif
++
+ struct string_table
+ {
+ 	unsigned int cnt;

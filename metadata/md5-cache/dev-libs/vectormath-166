@@ -1,0 +1,9 @@
+DEFINED_PHASES=install
+DESCRIPTION=Sony vector math library.
+EAPI=2
+HOMEPAGE=http://www.bulletphysics.com/Bullet/phpBB2/viewforum.php?f=18
+KEYWORDS=amd64 x86 arm
+LICENSE=BSD
+SLOT=0
+SRC_URI=http://commondatastorage.googleapis.com/chromeos-localmirror/distfiles/vectormath-svn-166.tar.gz
+_md5_=f10a44192a37b8607474101cd559d9d2

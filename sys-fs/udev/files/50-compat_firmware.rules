@@ -1,0 +1,2 @@
+# compat_firmware-class requests, copies files into the kernel
+SUBSYSTEM=="compat_firmware", ACTION=="add", RUN+="compat_firmware.sh"

@@ -1,0 +1,53 @@
+diff -ur iw-3.1-orig/nl80211.h iw-3.1/nl80211.h
+--- iw-3.1-orig/nl80211.h	2012-01-05 14:11:08.008100900 -0800
++++ iw-3.1/nl80211.h	2012-01-05 14:22:20.009073676 -0800
+@@ -1437,6 +1437,8 @@
+  * @NL80211_STA_INFO_BSS_PARAM: current station's view of BSS, nested attribute
+  *     containing info as possible, see &enum nl80211_sta_bss_param
+  * @NL80211_STA_INFO_CONNECTED_TIME: time since the station is last connected
++ * @NL80211_STA_INFO_STA_FLAGS: Contains a struct nl80211_sta_flag_update.
++ * @NL80211_STA_INFO_BEACON_LOSS: count of times beacon loss was detected (u32)
+  * @__NL80211_STA_INFO_AFTER_LAST: internal
+  * @NL80211_STA_INFO_MAX: highest possible station info attribute
+  */
+@@ -1458,6 +1460,8 @@
+ 	NL80211_STA_INFO_RX_BITRATE,
+ 	NL80211_STA_INFO_BSS_PARAM,
+ 	NL80211_STA_INFO_CONNECTED_TIME,
++	NL80211_STA_INFO_STA_FLAGS,
++	NL80211_STA_INFO_BEACON_LOSS,
+ 
+ 	/* keep last */
+ 	__NL80211_STA_INFO_AFTER_LAST,
+diff -ur iw-3.1-orig/station.c iw-3.1/station.c
+--- iw-3.1-orig/station.c	2011-09-05 03:21:59.000000000 -0700
++++ iw-3.1/station.c	2012-01-05 14:13:18.030228076 -0800
+@@ -50,6 +50,8 @@
+ 		[NL80211_STA_INFO_PLINK_STATE] = { .type = NLA_U8 },
+ 		[NL80211_STA_INFO_TX_RETRIES] = { .type = NLA_U32 },
+ 		[NL80211_STA_INFO_TX_FAILED] = { .type = NLA_U32 },
++		[NL80211_STA_INFO_CONNECTED_TIME] = { .type = NLA_U32 },
++		[NL80211_STA_INFO_BEACON_LOSS] = { .type = NLA_U32 },
+ 	};
+ 
+ 	static struct nla_policy rate_policy[NL80211_RATE_INFO_MAX + 1] = {
+@@ -83,6 +85,9 @@
+ 	if_indextoname(nla_get_u32(tb[NL80211_ATTR_IFINDEX]), dev);
+ 	printf("Station %s (on %s)", mac_addr, dev);
+ 
++	if (sinfo[NL80211_STA_INFO_CONNECTED_TIME])
++		printf("\n\tconnected time:\t%u",
++			nla_get_u32(sinfo[NL80211_STA_INFO_CONNECTED_TIME]));
+ 	if (sinfo[NL80211_STA_INFO_INACTIVE_TIME])
+ 		printf("\n\tinactive time:\t%u ms",
+ 			nla_get_u32(sinfo[NL80211_STA_INFO_INACTIVE_TIME]));
+@@ -104,6 +109,9 @@
+ 	if (sinfo[NL80211_STA_INFO_TX_FAILED])
+ 		printf("\n\ttx failed:\t%u",
+ 			nla_get_u32(sinfo[NL80211_STA_INFO_TX_FAILED]));
++	if (sinfo[NL80211_STA_INFO_BEACON_LOSS])
++		printf("\n\tbeacon loss:\t%u",
++			nla_get_u32(sinfo[NL80211_STA_INFO_BEACON_LOSS]));
+ 	if (sinfo[NL80211_STA_INFO_SIGNAL])
+ 		printf("\n\tsignal:  \t%d dBm",
+ 			(int8_t)nla_get_u8(sinfo[NL80211_STA_INFO_SIGNAL]));

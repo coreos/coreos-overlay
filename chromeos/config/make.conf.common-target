@@ -1,0 +1,94 @@
+# Copyright (c) 2009 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# NOTE: This assumes that the following have already been defined:
+#  { ROOT, ARCH, CHOST, [BOARD_OVERLAY] }
+
+# TODO: This will have to come from somewhere else when we support a 32-bit
+# build host environment.
+CBUILD=x86_64-pc-linux-gnu
+HOSTCC=x86_64-pc-linux-gnu-gcc
+
+LDFLAGS="-Wl,-O2 -Wl,--as-needed"
+
+ACCEPT_KEYWORDS="${ARCH}"
+USE="${ARCH} zlib bindist cros-debug -introspection cmt"
+
+# Be sure we don't overwrite pkgs from another sysroot.
+PKGDIR=${ROOT}packages/
+PORTAGE_TMPDIR=${ROOT}tmp/
+
+PORT_LOGDIR=${ROOT}tmp/portage/logs/
+
+FEATURES="allow-missing-manifests buildpkg clean-logs -collision-protect
+          -ebuild-locks force-mirror nodoc noinfo noman parallel-install
+          sandbox splitdebug -strict userfetch userpriv usersandbox
+          -unknown-features-warn"
+
+PORTAGE_WORKDIR_MODE="0755"
+PKG_CONFIG_PATH="${ROOT}usr/lib/pkgconfig/:${ROOT}usr/share/pkgconfig/"
+ELIBC="glibc"
+
+PORTDIR="/usr/local/portage/stable"
+
+PORTDIR_OVERLAY="
+  /usr/local/portage/chromiumos
+  ${BOARD_OVERLAY}
+"
+
+# Adding packages to the @world set causes people more trouble than it's
+# worth in our setup -- we rarely have people add custom packages outside
+# of the ChromiumOS set.  You can use "--select" to override this.
+EMERGE_DEFAULT_OPTS="--oneshot"
+
+# Use parallel bzip2 for portage if available
+PORTAGE_BZIP2_COMMAND="pbzip2"
+PORTAGE_BUNZIP2_COMMAND="pbunzip2 --ignore-trailing-garbage=1"
+
+FETCHCOMMAND_GS="bash -c 'BOTO_CONFIG=/home/\${PORTAGE_USERNAME}/.boto gsutil cp \"${URI}\" \"${DISTDIR}/${FILE}\"'"
+RESUMECOMMAND_GS="bash -c 'BOTO_CONFIG=/home/\${PORTAGE_USERNAME}/.boto gsutil cp \"${URI}\" \"${DISTDIR}/${FILE}\"'"
+
+FETCHCOMMAND='curl -y 30 -f --retry 9 -L --output \${DISTDIR}/\${FILE} \${URI}'
+RESUMECOMMAND='curl -y 30 -f -C - --retry 9 -L --output \${DISTDIR}/\${FILE} \${URI}'
+
+# Print a checkpoint message every 10MB while archiving.
+PORTAGE_BINPKG_TAR_OPTS="--checkpoint=1000"
+
+# Since our portage comes from version control, we redirect distfiles.
+DISTDIR="/var/lib/portage/distfiles-target"
+
+# Our chromium mirror should be more stable since we won't discard packages.
+GENTOO_MIRRORS="https://commondatastorage.googleapis.com/chromeos-localmirror"
+GENTOO_MIRRORS="$GENTOO_MIRRORS https://commondatastorage.googleapis.com/chromeos-mirror/gentoo"
+
+# Username and home directory of the shared user.
+SHARED_USER_NAME="chronos"
+SHARED_USER_HOME="/home/chronos/user"
+SHARED_USER_PASSWD_FILE="/etc/shared_user_passwd.txt"
+
+# the AC_FUNC_WAIT3 macro uses runtime-checks for the function, which
+# doesn't work when cross-compiling; we know that our targets have it,
+# so let's tell about it to autoconf. — Flameeyes
+ac_cv_func_wait3_rusage=yes
+
+# When building packages for the target, we need to search the target's
+# sysroot for additional m4 files.  The autotools.eclass uses this.
+AT_SYS_M4DIR="\${SYSROOT}/usr/share/aclocal"
+
+# Native language support is handled inside Chrome itself.
+LINGUAS="en"
+
+# Remove all .la files for non-plugin libraries.
+# Remove Gentoo init files since we use upstart.
+# Remove logrotate.d files since we don't use logrotate.
+# Remove sandbox files since we don't use that in the sysroot.
+# Remove bash-completion files as we don't install bash-completion.
+INSTALL_MASK="
+  /usr/lib*/*.la
+  /etc/init.d /etc/conf.d
+  /etc/logrotate.d
+  /etc/sandbox.d
+  /usr/share/bash-completion
+"
+PKG_INSTALL_MASK="${INSTALL_MASK}"

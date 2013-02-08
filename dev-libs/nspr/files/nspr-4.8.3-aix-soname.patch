@@ -1,0 +1,43 @@
+NSPR does not set the soname on any platform yet:
+https://bugzilla.mozilla.org/show_bug.cgi?id=452873
+
+Supporting something like "soname" on AIX is tricky:
+http://bugs.gentoo.org/show_bug.cgi?id=213277
+
+--- mozilla/nsprpub/config/rules.mk.orig	2010-02-23 15:55:00 +0100
++++ mozilla/nsprpub/config/rules.mk	2010-02-23 16:04:31 +0100
+@@ -132,14 +132,17 @@
+ else
+ ifdef MKSHLIB
+ SHARED_LIBRARY	= $(OBJDIR)/lib$(LIBRARY_NAME)$(LIBRARY_VERSION).$(DLL_SUFFIX)
++ifeq ($(OS_ARCH), AIX)
++IMPORT_LIBRARY	= $(OBJDIR)/lib$(LIBRARY_NAME).$(DLL_SUFFIX)
++endif
+ endif
+ endif
+ 
+ endif
+ endif
+ 
+ ifndef TARGETS
+-ifeq (,$(filter-out WINNT WINCE OS2,$(OS_ARCH)))
++ifeq (,$(filter-out WINNT WINCE OS2 AIX,$(OS_ARCH)))
+ TARGETS		= $(LIBRARY) $(SHARED_LIBRARY) $(IMPORT_LIBRARY)
+ ifndef BUILD_OPT
+ ifdef MSC_VER
+@@ -327,6 +330,15 @@
+ else
+ ifeq (,$(filter-out WIN95 WINCE,$(OS_TARGET)))
+ $(IMPORT_LIBRARY): $(SHARED_LIBRARY)
++else
++ifdef IMPORT_LIBRARY
++$(IMPORT_LIBRARY): $(SHARED_LIBRARY)
++	 ( echo '#! $(notdir $(SHARED_LIBRARY))' \
++	 ; dump -Tv $(SHARED_LIBRARY) \
++	 | awk '{ if ($$4 == "EXP" && $$6 != "SECdef") { print $$8 } }' \
++	 | sort -u \
++	 ) > $@
++endif
+ endif
+ endif
+ 

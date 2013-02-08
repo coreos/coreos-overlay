@@ -1,0 +1,20 @@
+diff -u old/update-ca-certificates new/update-ca-certificates
+--- old/usr/sbin/update-ca-certificates	2010-10-11 09:51:31.891223000 -0700
++++ new/usr/sbin/update-ca-certificates	2010-10-11 10:46:49.271140000 -0700
+@@ -46,6 +46,7 @@
+ LOCALCERTSDIR="$ROOT/usr/local/share/ca-certificates"
+ CERTBUNDLE=ca-certificates.crt
+ ETCCERTSDIR="$ROOT/etc/ssl/certs"
++ETCCERTS_TO_ROOT="../../.."
+ 
+ cleanup() {
+   rm -f "$TEMPBUNDLE"
+@@ -70,7 +71,7 @@
+                                                   -e 's/,/_/g').pem"
+   if ! test -e "$PEM" || [ "$(readlink "$PEM")" != "$CERT" ]
+   then
+-    ln -sf "${CERT#$ROOT}" "$PEM"
++    ln -sf "${ETCCERTS_TO_ROOT}${CERT#$ROOT}" "$PEM"
+     echo +$PEM >> "$ADDED"
+   fi
+   cat "$CERT" >> "$TEMPBUNDLE"

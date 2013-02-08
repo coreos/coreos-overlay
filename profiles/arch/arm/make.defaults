@@ -1,0 +1,13 @@
+# Main ARM profile
+
+ARCH="arm"
+ACCEPT_KEYWORDS="arm"
+
+CHOST="arm-unknown-linux-gnu"
+CFLAGS="-O2"
+CXXFLAGS="${CFLAGS}"
+
+# 2006/08/18 - Donnie Berkholz <dberkholz@gentoo.org>
+# Defaults for video drivers
+VIDEO_CARDS="fbdev glint mach64 mga nv r128 radeon savage sis tdfx trident \
+	vga voodoo"

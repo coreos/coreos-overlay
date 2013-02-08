@@ -1,0 +1,25 @@
+From 2a9b14c015a05cd8dc16a2c5bce2d531c76824c8 Mon Sep 17 00:00:00 2001
+From: Matthias Clasen <mclasen@redhat.com>
+Date: Thu, 30 Sep 2010 18:40:50 +0000
+Subject: message_to_write_data_free: Don't unref data->message if it is NULL
+
+After the recent changes to message filtering, it can happen that
+data->message is NULL when we get here.
+(cherry picked from commit fe1186a842458dcc647c5f9ab03f17c762354e95)
+---
+diff --git a/gio/gdbusprivate.c b/gio/gdbusprivate.c
+index 442d5e1..dd9d58a 100644
+--- a/gio/gdbusprivate.c
++++ b/gio/gdbusprivate.c
+@@ -876,7 +876,8 @@ static void
+ message_to_write_data_free (MessageToWriteData *data)
+ {
+   _g_dbus_worker_unref (data->worker);
+-  g_object_unref (data->message);
++  if (data->message)
++    g_object_unref (data->message);
+   g_free (data->blob);
+   g_free (data);
+ }
+--
+cgit v0.8.3.1

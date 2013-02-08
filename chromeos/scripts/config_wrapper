@@ -1,0 +1,50 @@
+#!/bin/bash
+# Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# Wrap all the old style config scripts.
+
+# We'll be working with the env:
+#   argv[0]: armv7a-cros-linux-gnueabi-ncurses5-config
+#   CHOST:   armv7a-cros-linux-gnueabi
+#   SYSROOT: /build/arm-generic
+# See if there's a wrapper in the SYSROOT for us to execute, let's do
+# that, and then filter the output for any -I/-L paths that'd screw us up.
+
+wrap=${0##*/}
+
+if [[ -z ${CHOST} ]] ; then
+  # Let's figure out the answer from $0.  Do it piece by piece as
+  # we cannot assume the number of components in the target tuple
+  # or in the config script name.  Tuples can have 1, 2, 3, or 4
+  # components, and config scripts can have as many as they want
+  # (although most of the time, it's just 2).
+  parts=( ${wrap//-/ } )
+  i=$(( ${#parts[@]} - 1 ))
+  cfg=${parts[${i}]}
+  while [[ $(( --i )) -ge 0 ]] ; do
+    cfg="${parts[${i}]}-${cfg}"
+    if [[ -e ${SYSROOT}/usr/bin/${cfg} ]] ; then
+      CHOST=${wrap%-${cfg}}
+      type -P ${CHOST}-gcc >/dev/null && break
+      unset CHOST
+    fi
+  done
+else
+  cfg=${wrap#${CHOST}-}
+fi
+
+if [[ -z ${CHOST} ]] || [[ -z ${SYSROOT} ]] ; then
+  echo "${wrap}: please set CHOST/SYSROOT in the env" 1>&2
+  exit 1
+fi
+
+PATH="${SYSROOT}/usr/bin:${PATH}"
+
+# Some wrappers will dynamically figure out where they're being run from,
+# and then output a full path -I/-L path based on that.  So we trim any
+# expanded sysroot paths that might be in the output already to avoid
+# having it be -L${SYSROOT}${SYSROOT}/usr/lib.
+set -o pipefail
+exec ${cfg} "$@" | sed -r "s:(-[IL])(${SYSROOT})?:\1${SYSROOT}:g"

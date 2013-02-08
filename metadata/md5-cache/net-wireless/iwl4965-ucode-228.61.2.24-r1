@@ -1,0 +1,9 @@
+DEFINED_PHASES=compile install
+DEPEND=|| ( >=sys-fs/udev-096 >=sys-apps/hotplug-20040923 )
+DESCRIPTION=Intel (R) Wireless WiFi 4965AGN ucode
+HOMEPAGE=http://intellinuxwireless.org/?p=iwlwifi
+KEYWORDS=amd64 x86
+LICENSE=ipw3945
+SLOT=0
+SRC_URI=http://intellinuxwireless.org/iwlwifi/downloads/iwlwifi-4965-ucode-228.61.2.24.tgz
+_md5_=3f69a332a1d5b1d6ae170cb235e8931d

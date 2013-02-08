@@ -1,0 +1,93 @@
+From e2e273e135bcdadde22c48cf2d70cbd22f268120 Mon Sep 17 00:00:00 2001
+From: Yuly Novikov <ynovikov@chromium.org>
+Date: Mon, 19 Nov 2012 21:04:57 -0500
+Subject: [PATCH] dix: Save touchpoint last coordinates before transform.
+ #49347
+
+DDXTouchPointInfoRec.valuators used to store axis values after transform.
+This resulted in Coordinate Transformation Matrix
+being applied multiple times to the last coordinates,
+in the case when only pressure changes in the last touch event.
+
+Changed DDXTouchPointInfoRec.valuators to store values before transform.
+
+Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=49347
+
+BUG=chromium-os:36115
+TEST=Follow the expected output in the bug desription.
+
+Signed-off-by: Yuly Novikov <ynovikov@chromium.org>
+Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+(cherry picked from commit 3b9f1c701787965246638c1a6fd99fb2b6078114)
+
+Conflicts:
+
+	dix/getevents.c
+---
+ dix/getevents.c    |   22 +++++++++-------------
+ include/inputstr.h |    2 +-
+ 2 files changed, 10 insertions(+), 14 deletions(-)
+
+diff --git a/dix/getevents.c b/dix/getevents.c
+index 7454cb4..f1e7491 100644
+--- a/dix/getevents.c
++++ b/dix/getevents.c
+@@ -1895,32 +1895,28 @@ GetTouchEvents(InternalEvent *events, DeviceIntPtr dev, uint32_t ddx_touchid,
+     default:
+         return 0;
+     }
+-    if (t->mode == XIDirectTouch && !(flags & TOUCH_CLIENT_ID)) {
+-        if (!valuator_mask_isset(&mask, 0))
+-            valuator_mask_set_double(&mask, 0,
+-                                     valuator_mask_get_double(touchpoint.ti->
+-                                                              valuators, 0));
+-        if (!valuator_mask_isset(&mask, 1))
+-            valuator_mask_set_double(&mask, 1,
+-                                     valuator_mask_get_double(touchpoint.ti->
+-                                                              valuators, 1));
+-    }
+ 
+     /* Get our screen event co-ordinates (root_x/root_y/event_x/event_y):
+      * these come from the touchpoint in Absolute mode, or the sprite in
+      * Relative. */
+     if (t->mode == XIDirectTouch) {
+-        transformAbsolute(dev, &mask);
+-
+         if (!(flags & TOUCH_CLIENT_ID)) {
+-            for (i = 0; i < valuator_mask_size(&mask); i++) {
++            for (i = 0; i < max(valuator_mask_size(&mask), 2); i++) {
+                 double val;
+ 
+                 if (valuator_mask_fetch_double(&mask, i, &val))
+                     valuator_mask_set_double(touchpoint.ti->valuators, i, val);
++                /* If the device doesn't post new X and Y axis values,
++                 * use the last values posted.
++                 */
++                else if (i < 2 &&
++                    valuator_mask_fetch_double(touchpoint.ti->valuators, i,
++                                               &val))
++                    valuator_mask_set_double(&mask, i, val);
+             }
+         }
+ 
++        transformAbsolute(dev, &mask);
+         clipAbsolute(dev, &mask);
+     }
+     else {
+diff --git a/include/inputstr.h b/include/inputstr.h
+index 841e805..bce46cb 100644
+--- a/include/inputstr.h
++++ b/include/inputstr.h
+@@ -331,7 +331,7 @@ typedef struct _DDXTouchPointInfo {
+     uint32_t ddx_id;            /* touch ID given by the DDX */
+     Bool emulate_pointer;
+ 
+-    ValuatorMask *valuators;    /* last recorded axis values */
++    ValuatorMask *valuators;    /* last axis values as posted, pre-transform */
+ } DDXTouchPointInfoRec;
+ 
+ typedef struct _TouchClassRec {
+-- 
+1.7.7.3
+

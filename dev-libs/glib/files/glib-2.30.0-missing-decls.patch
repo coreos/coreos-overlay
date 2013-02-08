@@ -1,0 +1,19 @@
+diff -rupN glib-2.30.0/glib/glib-unix.h glib-2.30.0.patched/glib/glib-unix.h
+--- glib-2.30.0/glib/glib-unix.h	2011-09-14 17:10:44.000000000 -0700
++++ glib-2.30.0_patched/glib/glib-unix.h	2011-11-10 17:08:02.621275643 -0800
+@@ -38,6 +38,8 @@
+ #error "This header may only be used on UNIX"
+ #endif
+
++G_BEGIN_DECLS
++
+ /**
+  * G_UNIX_ERROR:
+  *
+@@ -77,4 +79,6 @@ guint    g_unix_signal_add         (gint
+                                     GSourceFunc handler,
+                                     gpointer    user_data);
+
++G_END_DECLS
++
+ #endif

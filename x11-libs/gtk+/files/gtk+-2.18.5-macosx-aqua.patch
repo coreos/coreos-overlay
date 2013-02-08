@@ -1,0 +1,145 @@
+This patch touches both the Makefile.am files as well as the Makefile.in files because
+eautoreconf doesn't work properly on gtk+, for some reason.
+
+--- gtk+-2.18.5.orig/demos/gtk-demo/Makefile.am
++++ gtk+-2.18.5/demos/gtk-demo/Makefile.am
+@@ -83,6 +83,10 @@ gtk_demo_DEPENDENCIES = $(DEPS)
+ gtk_demo_LDADD = $(LDADDS)
+ gtk_demo_LDFLAGS = -export-dynamic
+ 
++if USE_QUARTZ
++gtk_demo_LDFLAGS += -framework AppKit -framework Carbon
++endif
++
+ IMAGEFILES=	alphatest.png		\
+ 	        apple-red.png		\
+ 		background.jpg		\
+--- gtk+-2.18.5.orig/demos/gtk-demo/Makefile.in
++++ gtk+-2.18.5/demos/gtk-demo/Makefile.in
+@@ -40,6 +40,7 @@ host_triplet = @host@
+ DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
+ 	$(srcdir)/geninclude.pl.in $(top_srcdir)/Makefile.decl
+ bin_PROGRAMS = gtk-demo$(EXEEXT)
++@USE_QUARTZ_TRUE@am__append_1 = -framework AppKit -framework Carbon
+ subdir = demos/gtk-demo
+ ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
+ am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
+@@ -460,7 +461,7 @@ gtk_demo_SOURCES = \
+ 
+ gtk_demo_DEPENDENCIES = $(DEPS)
+ gtk_demo_LDADD = $(LDADDS)
+-gtk_demo_LDFLAGS = -export-dynamic
++gtk_demo_LDFLAGS = -export-dynamic $(am__append_1)
+ IMAGEFILES = alphatest.png		\
+ 	        apple-red.png		\
+ 		background.jpg		\
+--- gtk+-2.18.5.orig/demos/Makefile.am
++++ gtk+-2.18.5/demos/Makefile.am
+@@ -28,6 +28,10 @@ noinst_PROGRAMS = 		\
+ 	testpixbuf-scale 	\
+ 	pixbuf-demo
+ 
++if USE_QUARTZ
++AM_LDFLAGS = -framework AppKit -framework Carbon
++endif
++
+ # Need to build test-inline-pixbufs.h for testpixbuf
+ if HAVE_PNG
+ noinst_PROGRAMS += testpixbuf
+--- gtk+-2.18.5.orig/demos/Makefile.in
++++ gtk+-2.18.5/demos/Makefile.in
+@@ -433,6 +433,7 @@ LDADDS = \
+ 	$(top_builddir)/gdk/$(gdktargetlib)        			\
+ 	$(top_builddir)/gtk/$(gtktargetlib)
+ 
++@USE_QUARTZ_TRUE@AM_LDFLAGS = -framework AppKit -framework Carbon
+ @HAVE_PNG_TRUE@BUILT_SOURCES = test-inline-pixbufs.h
+ @CROSS_COMPILING_FALSE@pixbuf_csource = GDK_PIXBUF_MODULE_FILE=$(top_builddir)/gdk-pixbuf/gdk-pixbuf.loaders $(top_builddir)/gdk-pixbuf/gdk-pixbuf-csource
+ @CROSS_COMPILING_TRUE@pixbuf_csource = $(GDK_PIXBUF_CSOURCE)
+--- gtk+-2.18.5.orig/gtk/Makefile.am
++++ gtk+-2.18.5/gtk/Makefile.am
+@@ -888,7 +888,7 @@ libgtk_directfb_2_0_la_SOURCES = $(gtk_c
+ 
+ libgtk_x11_2_0_la_LDFLAGS = $(libtool_opts)
+ libgtk_win32_2_0_la_LDFLAGS = $(libtool_opts) -Wl,-luuid
+-libgtk_quartz_2_0_la_LDFLAGS = $(libtool_opts)
++libgtk_quartz_2_0_la_LDFLAGS = $(libtool_opts) -framework AppKit -framework Carbon
+ libgtk_directfb_2_0_la_LDFLAGS = $(libtool_opts)
+ 
+ libgtk_x11_2_0_la_LIBADD = $(libadd)
+@@ -901,6 +901,10 @@ libgtk_win32_2_0_la_DEPENDENCIES = $(gtk
+ libgtk_quartz_2_0_la_DEPENDENCIES = $(deps)
+ libgtk_directfb_2_0_la_DEPENDENCIES = $(deps)
+ 
++if USE_QUARTZ
++AM_LDFLAGS = -framework AppKit -framework Carbon
++endif
++
+ if USE_WIN32
+ libgtk_target_ldflags = $(gtk_win32_res_ldflag) $(gtk_win32_symbols)
+ endif
+--- gtk+-2.18.5.orig/gtk/Makefile.in
++++ gtk+-2.18.5/gtk/Makefile.in
+@@ -1294,7 +1294,7 @@ libgtk_quartz_2_0_la_SOURCES = $(gtk_c_s
+ libgtk_directfb_2_0_la_SOURCES = $(gtk_c_sources)
+ libgtk_x11_2_0_la_LDFLAGS = $(libtool_opts)
+ libgtk_win32_2_0_la_LDFLAGS = $(libtool_opts) -Wl,-luuid
+-libgtk_quartz_2_0_la_LDFLAGS = $(libtool_opts)
++libgtk_quartz_2_0_la_LDFLAGS = $(libtool_opts) -framework AppKit -framework Carbon
+ libgtk_directfb_2_0_la_LDFLAGS = $(libtool_opts)
+ libgtk_x11_2_0_la_LIBADD = $(libadd)
+ libgtk_win32_2_0_la_LIBADD = $(libadd) -lole32 -lgdi32 -lcomdlg32 -lwinspool -lcomctl32
+@@ -1304,6 +1304,7 @@ libgtk_x11_2_0_la_DEPENDENCIES = $(deps)
+ libgtk_win32_2_0_la_DEPENDENCIES = $(gtk_def) $(gtk_win32_res) $(deps)
+ libgtk_quartz_2_0_la_DEPENDENCIES = $(deps)
+ libgtk_directfb_2_0_la_DEPENDENCIES = $(deps)
++@USE_QUARTZ_TRUE@AM_LDFLAGS = -framework AppKit -framework Carbon
+ @USE_WIN32_TRUE@libgtk_target_ldflags = $(gtk_win32_res_ldflag) $(gtk_win32_symbols)
+ EXTRA_LTLIBRARIES = libgtk-x11-2.0.la libgtk-win32-2.0.la libgtk-quartz-2.0.la libgtk-directfb-2.0.la
+ DEPS = $(gtktargetlib) $(top_builddir)/gdk-pixbuf/libgdk_pixbuf-$(GTK_API_VERSION).la $(top_builddir)/gdk/$(gdktargetlib)
+--- gtk+-2.18.5.orig/perf/Makefile.am
++++ gtk+-2.18.5/perf/Makefile.am
+@@ -20,6 +20,10 @@ LDADDS =								\
+ 	$(top_builddir)/gdk/$(gdktargetlib)				\
+ 	$(top_builddir)/gtk/$(gtktargetlib)
+ 
++if USE_QUARTZ
++AM_LDFLAGS = -framework AppKit -framework Carbon
++endif
++
+ noinst_PROGRAMS	= 	\
+ 	testperf
+ 
+--- gtk+-2.18.5.orig/perf/Makefile.in
++++ gtk+-2.18.5/perf/Makefile.in
+@@ -373,6 +373,7 @@ LDADDS = \
+ 	$(top_builddir)/gdk/$(gdktargetlib)				\
+ 	$(top_builddir)/gtk/$(gtktargetlib)
+ 
++@USE_QUARTZ_TRUE@AM_LDFLAGS = -framework AppKit -framework Carbon
+ testperf_DEPENDENCIES = $(TEST_DEPS)
+ testperf_LDADD = $(LDADDS)
+ testperf_SOURCES = \
+--- gtk+-2.18.5.orig/tests/Makefile.am
++++ gtk+-2.18.5/tests/Makefile.am
+@@ -20,6 +20,10 @@ LDADDS =								\
+ 	$(top_builddir)/gdk/$(gdktargetlib)				\
+ 	$(top_builddir)/gtk/$(gtktargetlib)
+ 
++if USE_QUARTZ
++AM_LDFLAGS = -framework AppKit -framework Carbon
++endif
++
+ if USE_X11
+ testsocket_programs = testsocket testsocket_child
+ endif
+--- gtk+-2.18.5.orig/tests/Makefile.in
++++ gtk+-2.18.5/tests/Makefile.in
+@@ -639,6 +639,7 @@ LDADDS = \
+ 	$(top_builddir)/gdk/$(gdktargetlib)				\
+ 	$(top_builddir)/gtk/$(gtktargetlib)
+ 
++@USE_QUARTZ_TRUE@AM_LDFLAGS = -framework AppKit -framework Carbon
+ @USE_X11_TRUE@testsocket_programs = testsocket testsocket_child
+ @HAVE_CXX_TRUE@autotestkeywords_SOURCES = autotestkeywords.cc
+ @HAVE_CXX_TRUE@autotestkeywords_CPPFLAGS = -I$(srcdir)/dummy-headers \

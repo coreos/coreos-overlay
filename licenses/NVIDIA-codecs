@@ -1,0 +1,965 @@
+NVIDIA(r) Tegra(r) Software License Agreement - Tegra Linux Driver Package
+
+BY DOWNLOADING, INSTALLING, COPYING, ACCESSING, OR USING THE SOFTWARE
+(AS DEFINED BELOW) THE END USER OF THE LICENSED MATERIALS ("YOU" OR
+"LICENSEE") AGREE TO THE TERMS OF THIS AGREEMENT. IF YOU ARE ACCEPTING
+THESE TERMS ON BEHALF OF ANOTHER PERSON OR A COMPANY OR OTHER LEGAL
+ENTITY, YOU REPRESENT AND WARRANT THAT YOU HAVE FULL AUTHORITY TO BIND
+THAT PERSON, COMPANY, OR LEGAL ENTITY TO THESE TERMS. IF YOU DO NOT
+AGREE TO THESE TERMS,
+
+    * DO NOT (A) DOWNLOAD, INSTALL, COPY THE SOFTWARE; OR (B) ACCESS
+      OR USE THE LICENSED MATERIALS;  AND
+    * PROMPTLY DESTROY THE LICENSED MATERIALS, OR RETURN THEM TO
+      THE PARTY FROM WHOM YOU ACQUIRED IT.
+
+NVIDIA Tegra Software License Agreement- Tegra Linux Driver Package
+(the "Agreement") is entered into by and between NVIDIA Corporation, a
+Delaware corporation, having its principal place of business at 2701
+San Tomas Expressway, Santa Clara, CA 95050 ("NVIDIA") and the
+individual person or single legal entity ("Licensee" or "You") who
+acknowledges and agrees to fully abide the terms and conditions of
+this Agreement.
+
+1.  DEFINITIONS.
+
+    1.1 "Affiliate" means any company or legal entity that at various
+times controls, is controlled by, or is under common control with
+Licensee. Only for the purposes of this definition, "Control" means
+(a) direct or indirect ownership of at least fifty percent (50%) of
+the voting power of the shares or other securities for election of
+directors (or other managing authority) of the controlled or commonly
+controlled entity; (b) holding, directly or indirectly, the power to
+exercise more than fifty percent (50%) of the entity's voting rights;
+or (c) holding, directly or indirectly, the power to appoint the
+majority of the members of the entity's board of directors (or similar
+governing body), or in each case, the maximum percentage permitted
+where a lesser percentage is required in a jurisdiction. The parties
+shall be fully responsible for the actions / inactions of their
+Affiliates under this Agreement.
+
+    1.2 "Competitors" shall mean any company that develops,
+manufactures, produces, sells, distributes or licenses application
+processors, computers-on-chips, systems-on-chips, CPUs, DSPs or GPU
+technology.
+
+    1.3 "Confidential Information" shall mean (a) the Licensed
+Materials; (b) either parties' technology, ideas, know-how,
+documentation, processes, algorithms and trade secrets embodied in the
+Licensed Materials; (c) any other information disclosed by either
+party to the other that is (i) identified as "confidential,"
+"proprietary" or with a similar legend at the time of disclosure, or
+(ii) if unmarked or disclosed orally or visually, are identified as
+confidential at the time of disclosure and confirmed by a written
+memorandum sent to the receiving party within thirty (30) calendar
+days of disclosure summarizing the confidential information
+sufficiently for identification; and (d) the terms and conditions of
+this Agreement.
+
+    Confidential Information shall not include any information which
+is (e) published or otherwise available to the public other than by
+breach of this Agreement by the receiving party; (f) rightfully
+received by the receiving party from a third party without
+confidentiality limitations; (g) independently developed by the
+receiving party or its Affiliates as evidenced by appropriate records;
+(h) known to the receiving party prior to its first receipt of same
+from the disclosing party as evidenced by appropriate records; (i)
+hereinafter disclosed by the disclosing party to a third party without
+restriction on disclosure; or (j) approved for public release by
+written authorization of the disclosing party.
+
+    1.4 "Contractor" shall mean any third party company or
+individuals, including but not limited to original device
+manufacturers, who Licensee engages for the purpose of such third
+party performing services for the benefit of Licensee in connection
+with this Agreement.
+
+    1.5 "Derivative Work(s)" means derivatives or modifications of the
+Licensed Materials created by Licensee or NVIDIA, or a third party on
+behalf of Licensee or NVIDIA respectively, which term shall include:
+(i) for copyrightable or copyrighted material, any translation,
+abridgement, revision or other form in which an existing work may be
+recast, transformed or adapted; (ii) for work protected by topography
+or mask right, any translation, abridgement, revision or other form in
+which an existing work may be recast, transformed or adapted; (iii)
+for patentable or patented material, any improvement; and (iv) for
+material protected by trade secret, any new material derived from or
+employing such existing trade secret.
+
+    1.6 "Excluded License" means any license that requires as a
+condition of use, modification and/or distribution of software subject
+to the Excluded License, that such software or other software
+distributed and/or combined with such software be (i) disclosed or
+distributed in source code form, (ii) licensed for the purpose of
+making derivative works, or (iii) redistributable at no charge.
+
+    1.7 "Intellectual Property Rights" shall mean all proprietary
+rights, including all patents, trademarks, copyrights, know-how, trade
+secrets, mask works, including all applications and registrations
+thereto, and any other similar protected rights in any country.
+
+    1.8 "Licensed Materials" shall mean the Software, related
+documentation, Tegra development hardware (if applicable), and other
+materials as NVIDIA may deliver hereunder from time to time.
+
+    1.9 "Licensee Products" shall mean Licensee's devices that have or
+will contain NVIDIA's family of graphics, or media and communication,
+or applications processors and related Software (as defined below)
+supplied directly or indirectly by NVIDIA.
+
+    1.10 "Software" shall mean the NVIDIA Tegra Linux Driver Package,
+full or partial copies thereof, and any Derivative Work(s) thereto
+owned by NVIDIA.
+
+2.  LICENSE.
+
+    2.1 Grant.  Subject to the terms and conditions of this Agreement,
+including applicable Exhibits, NVIDIA grants to Licensee and its
+Affiliates a personal, nonexclusive, worldwide, nonsublicensable,
+nontransferable, nonassignable and royalty-free right and license:
+
+        (a) to execute, compile, reproduce, display, perform, modify,
+            and to prepare and have prepared Derivative Work(s) of the
+            Software (in source code form as provided by NVIDIA)
+            solely to develop and customize Licensee Products for
+            Licensee's internal development purposes only;
+
+        (b) to reproduce, transmit, transfer, distribute and
+            sublicense object code forms of the Software and/or
+            Derivative Work(s) and related documentation incorporated
+            into Licensee Products with a form of end user license
+            agreement that is as protective of NVIDIA's Intellectual
+            Property Rights as this Agreement;
+
+        (c) for Contractors to exercise the foregoing rights of
+            Section 2.1 of this Agreement solely on behalf of
+            Licensee; and
+
+        (d) NVIDIA may, in its sole discretion, require Licensee to
+            accept, distribute, and/or incorporate certain
+            modifications, updates, fixes, changes, or revisions to
+            the Licensed Materials used in Licensee Products in a
+            timely manner.
+
+    2.2 Reservation of Rights.  NVIDIA reserves all rights not
+expressly granted to Licensee in Section 2.1 herein.
+
+    2.3 License Grant Back.  Licensee hereby grants to NVIDIA and its
+Affiliates an exclusive, worldwide, irrevocable, perpetual,
+sublicensable (through multiple tiers of sublicensees), royalty-free
+right, fully paid-up right and license to the Derivative Work(s) (in
+source and object code form) created by Licensee's employees,
+Affiliates or Contractors so that NVIDIA may copy, modify, create
+Derivative Works thereof, to use, have used, import, make, have made,
+sell, offer to sell, sublicense (through multiple tiers of
+sublicensees), distribute (through multiple tiers of distributors)
+such Derivative Work(s) on a stand-alone basis or as incorporated into
+the Software or other NVIDIA products.  For the sake of clarity,
+NVIDIA is not prohibited or otherwise restricted from independently
+developing new features or functionality with respect to the Licensed
+Materials.
+
+    2.4 Delivery Obligation of Derivative Work(s) Licensee shall
+deliver, upon NVIDIA's request, the Derivative Work(s) created by
+Licensee or on behalf of Licensee to NVIDIA pursuant to Section 2.3 of
+this Agreement.
+
+3.  LIMITATIONS; OBLIGATIONS.
+
+    3.1 Restrictions.  Except as expressly permitted by this
+Agreement, Licensee shall not:
+
+        (a) use the Software and/or the Derivative Work(s) created by
+            Licensee or on behalf of Licensee on any non-NVIDIA
+            application processors ("External Systems"), except on
+            External Systems for the sole purpose of programming,
+            configuration or performing diagnostics on an NVIDIA
+            application processor;
+
+        (b) reverse engineer, decompile, disassemble, modify or create
+            derivative works of any portion of the Licensed Materials
+            (in object code form) or allow any third party (including
+            Licensee's Affiliates or Contractors) to do any of the
+            foregoing;
+
+        (c) sublicense, rent, lease, loan, timeshare, sell,
+            distribute, disclose, publish, assign or transfer any
+            rights, grant a security interest in, or transfer
+            possession of the Licensed Materials to any third party
+            without NVIDIA's express prior written consent;
+
+        (d) distribute the Licensed Materials on a standalone basis;
+            or
+
+        (e) under any circumstances allow the Software to be used,
+            pursuant to this Agreement, on NVIDIA's Competitors'
+            software operating and/or hardware platforms.
+
+    3.2 No Implied Licenses.  Nothing in this Agreement shall be
+construed as granting to Licensee by implication, estoppel or
+otherwise, (a) a license to any NVIDIA technology other than the
+Licensed Materials; or (b) any additional license rights for the
+Licensed Materials other than the licenses expressly granted in this
+Agreement.
+
+    3.3 Additional Licensing Obligations.  Licensee acknowledges and
+agrees that it is Licensee's sole responsibility to obtain any,
+additional, third party licenses required to make, have made, use,
+have used, sell, import, and offer for sale Licensee Products that
+include or incorporate any third party technology such as operating
+systems, audio and/or video encoders and decoders or any technology
+from, including but not limited to, Microsoft, Thomson, Fraunhofer
+IIS, Sisvel S.p.A., MPEG-LA, and Coding Technologies ("Third Party
+Components").  Licensee acknowledges and agrees that NVIDIA has not
+granted to Licensee under this Agreement any necessary patent rights
+with respect to those Third Party Components identified in the
+exhibits of this Agreement ("Third Party Licensing Terms and
+Notices").  As such, Licensee's use of the Third Party Components may
+be subject to further restrictions and terms and conditions described
+in the Third Party Licensing Terms and Notices. Licensee acknowledges
+and agrees that Licensee is solely and exclusively responsible for
+obtaining any and all authorizations and licenses required for the
+distribution and/or incorporation of the Third Party Components
+specified in the Third Party Licensing Terms and Notices.
+
+For the avoidance of doubt, except as expressly authorized by a
+separate written agreement by and between Licensee and Adobe Systems,
+Inc. ("Adobe"), Licensee has no right to distribute, sublicense, or
+otherwise commercialize Adobe's Third Party Components identified in
+Exhibit A-2.
+
+Excluding Section 9.5 of this Agreement, Licensee acknowledges and
+agrees that NVIDIA may at various times update the Third Party
+Licensing Terms and Notices without any advance written notice to
+Licensee.  Licensee agrees to be bound by such Third Party Licensing
+Terms and Notices as they may be updated. In the event that NVIDIA's
+license rights to the Third Party Components are terminated and/or
+expired, Licensee agrees NVIDIA shall no longer have the obligation to
+deliver such Third Party Components to Licensee affected by such
+termination and/or expiration.
+
+    Licensee shall, at its own expense fully indemnify, hold harmless,
+defend, and settle any claim, suit or proceeding that is instituted by
+a third party against NVIDIA and its officers, employees or agents, to
+the extent such claim, suit or proceeding is based on (a) a breach by
+Licensee of any of the representations and warranties in Section 7
+("Warranties") of this Agreement; or (b) Licensee's failure to fully
+satisfy and/or comply with the third party licensing obligations
+expressly contained in the Third Party Licensing Terms and Notices (a
+"Claim").
+
+    In the event of a Claim, NVIDIA agrees to:
+
+        (a) promptly inform Licensee and furnish Licensee a copy of
+            the Claim;
+
+        (b) make commercially reasonable efforts to give such evidence
+            in NVIDIA's possession, custody or control as is
+            reasonable to Licensee, at Licensee's request and expense,
+            specifically and reasonably applicable to the Claim;
+
+        (c) provide Licensee commercially reasonable assistance in the
+            defense thereof, at Licensee's expense; and
+
+        (d) give Licensee sole control of the defense thereof and all
+            negotiations for its settlement and compromise, which
+            shall not be finalized without the prior written consent
+            of NVIDIA.
+
+    NVIDIA's failure to promptly notify Licensee shall not relieve
+Licensee of any liability or obligations that it has to NVIDIA, except
+to the extent Licensee demonstrates that the defense of such action is
+prejudiced by the failure or delay in giving notice.  If NVIDIA
+retains counsel, it will be at NVIDIA's own expense.
+
+    In the event of a Claim, Licensee agrees to:
+
+        (a) pay all damages finally awarded against NVIDIA or agreed
+            upon in settlement by Licensee, which shall not be
+            finalized without the prior written consent of NVIDIA,
+            (including other reasonable costs incurred by NVIDIA,
+            including reasonable attorneys fees, in connection with
+            enforcing this paragraph);
+
+        (b) reimburse NVIDIA for any licensing fees and/or penalties
+            incurred by NVIDIA in connection with a Claim; and
+
+        (c) immediately procure/satisfy the third party licensing
+            obligations expressly contained in the Third Party
+            Licensing Terms and Notices.
+
+    3.4 Proprietary Rights Notices.  Licensee shall not remove, alter
+or obscure any copyright, trademark, patent notices or other
+proprietary rights notices that appear on the Licensed Materials.
+Licensee shall use commercially reasonable efforts to require its
+channel entities to comply with the provisions of this Section 3.4.
+
+    3.5 No Excluded Licenses.  The licenses granted in Section 2.1 do
+not include the right to, and Licensee shall not: (a) create
+Derivative Work(s) of the Licensed Materials in any manner that would
+cause the Licensed Materials, in whole or in part, to become subject
+to the terms of an Excluded License; or (b) distribute the Licensed
+Materials (or Derivative Works thereof) in any manner that would cause
+the Licensed Materials, or any component thereof, to become subject to
+the terms of an Excluded License.
+
+    3.6 Source Code Protection.  In addition to Licensee's
+restrictions and obligations in connection with the Licensed Materials
+set forth in this Agreement, Licensee agrees that source code to the
+Licensed Materials constitutes highly Confidential Information and
+proprietary trade secrets of NVIDIA and shall be protected by (a) the
+confidentiality obligations set forth in Section 5.1; and (b) any
+applicable non-disclosure agreement ("NDA").  In addition to the
+confidentiality obligations set forth in Section 5.1 and the NDA,
+Licensee agrees to the following:
+
+        (a) Licensee shall only allow its employees, Contractors, and
+            its Affiliates' employees and Contractors who have a need
+            to know basis to use the source code to the Software in
+            order for Licensee or its Affiliates to exercise their
+            license rights under this Agreement, provided that any
+            breach of this Agreement by such parties is considered
+            Licensee's breach of this Agreement and Licensee shall be
+            liable for such breach to the same extent as if it
+            committed the breach itself.  Upon NVIDIA's request,
+            Licensee shall provide NVIDIA a list of all employees
+            (including employees of Affiliates), and Contractors who
+            have been granted source code access to the Licensed
+            Materials and update and maintain the accuracy of this
+            list at all times;
+
+        (b) Licensee shall protect the source code of the Licensed
+            Materials to the same degree as Licensee protects its own
+            Confidential Information;
+
+        (c) Licensee shall not grant third parties, excluding
+            Affiliates or Contractors, access to the source code of
+            the Licensed Materials;
+
+        (d) Licensee shall restrict disclosure and access to and use
+            of the Licensed Materials (in source code form) to those
+            employees (including those of its Affiliates and/or
+            Contractors) who have agreed to be bound by a written
+            confidentiality agreement which incorporates the
+            protections and restrictions no less protective than those
+            set forth in this Agreement with respect to the Licensed
+            Materials;
+
+        (e) Licensee shall secure the source code to the Software and
+            Licensed Materials in a secure location at all times;
+
+        (f) Licensee shall not use the Licensed Materials and/or
+            Derivative Work(s) created by Licensee to compete against
+            NVIDIA or shall not use the Licensed Materials and/or
+            Derivative Work(s) in litigation against NVIDIA; and
+
+        (g) Licensee's employees, Affiliates, or Contractors who have
+            been exposed to source code of the Licensed Materials
+            shall not be permitted to use any ideas, techniques or
+            know-how obtained from their respective use of the
+            Licensed Materials for any engagement, including but not
+            limited to services or product development (hardware or
+            software) work for the benefit of NVIDIA's Competitors.
+
+    3.7 Defensive Suspension.  If Licensee and/or its Affiliates
+commence or participates in any legal proceeding against NVIDIA, then
+NVIDIA may, in its sole discretion, suspend or terminate all license
+grants and any other rights provided under this Agreement during the
+pendency of such legal proceedings.
+
+4.  OWNERSHIP; FEEDBACK.
+
+    4.1 By NVIDIA.  Except as expressly licensed to Licensee under
+this Agreement, NVIDIA reserves all right, title and interest,
+including but not limited to all Intellectual Property Rights, in and
+to the Licensed Materials and any Derivative Work(s) made thereto by
+or on behalf of NVIDIA.
+
+    4.2 Feedback by Licensee.  Licensee may, but is not obligated to,
+provide to NVIDIA any suggestions, comments and feedback regarding the
+Licensed Materials that are delivered by NVIDIA to Licensee under this
+Agreement (collectively, "Licensee Feedback").  NVIDIA may use and
+include any Licensee Feedback that Licensee voluntarily provides to
+improve the Licensed Materials or other related NVIDIA technologies.
+Accordingly, if Licensee provides Licensee Feedback, Licensee grants
+NVIDIA and its licensees a perpetual, irrevocable, worldwide,
+royalty-free, fully paid-up license grant to freely use, have used,
+sell, modify, reproduce, transmit, license, sublicense (through
+multiple tiers of sublicensees), distribute (through multiple tiers of
+distributors), and otherwise commercialize the Licensee Feedback in
+the Licensed Materials or other related technologies.
+
+5.  CONFIDENTIAL INFORMATION; ACCESS TO SOFTWARE.
+
+    5.1 Protection of Confidential Information.  The parties shall not
+use or disclose any Confidential Information received from the other
+party, except as expressly authorized by this Agreement, and shall
+protect all such Confidential Information using the same degree of
+care which the receiving party uses with respect to its own
+proprietary information, but in no event with safeguards less than a
+reasonably prudent business would exercise under similar
+circumstances.  The parties shall not use the Confidential Information
+for purposes other than those necessary to directly further the
+purposes of this Agreement.  Except as expressly provided in this
+Agreement, no ownership or license rights are granted in any
+Confidential Information.  The parties shall use commercially
+reasonable efforts to prevent any actual or threatened unauthorized
+copying, use or disclosure of Confidential Information, and shall
+promptly notify the other party of any such actual or threatened
+unauthorized disclosure or use.  If any Confidential Information must
+be disclosed to any third party by reason of legal, accounting or
+regulatory requirements beyond the reasonable control of the
+disclosing party, the disclosing party shall promptly notify the other
+party of the order or request and permit the other party (at its own
+expense) to seek an appropriate protective order.
+
+    For the sake of clarity, the parties agree that, notwithstanding
+the preceding paragraph, any and all information identified as
+Confidential Information (as defined in the NDA) by the disclosing
+party in connection with this Agreement shall also be protected under
+the NDA; provided, however, that in the event of any conflict between
+the confidentiality obligations pursuant to this Agreement and the
+obligations pursuant to the NDA with regard to any Confidential
+Information (as defined in the NDA) in connection with this Agreement,
+including, without limitation, the source code to the Licensed
+Materials, the terms of this Agreement shall prevail.
+
+6.  TERM; TERMINATION
+
+    6.1 Term.  This Agreement and the licenses granted hereunder shall
+be effective as of the date Licensee first uses the Licensed Materials
+("Effective Date") and continue for a period of one (1) year (the
+"Initial Term"), unless terminated in accordance with Section 6.2.
+Unless either party notifies the other party of its intent to
+terminate this Agreement at least one (1) month prior to the end of
+the Initial Term or the applicable renewal period ("Renewal
+Period(s)"), this Agreement will be automatically renewed for one (1)
+year Renewal Periods, provided however that this Agreement will
+automatically expire at such time when Licensee no longer intends to
+use the Licensed Materials for the authorized purposes described in
+this Agreement, at this time Licensee will comply with the termination
+provisions in Section 6.2 below.
+
+    6.2 Termination.  Either party may terminate this Agreement
+immediately upon written notice for the material breach of the other
+party, which material breach is curable and has remained uncured for a
+period of thirty (30) days from the date of delivery of written notice
+thereof to the other party.  Upon the termination or expiration of
+this Agreement,
+
+        (a) Licensee shall (i) immediately cease using the Licensed
+            Materials for any purpose whatsoever; (ii) immediately
+            destroy or return to NVIDIA all materials belonging to
+            NVIDIA, including without limitation all copies of the
+            Software and NVIDIA Confidential Information then in
+            Licensee's possession or control; and (iii) certify to
+            NVIDIA in writing that it has done so; and
+
+        (b) NVIDIA shall (i) immediately destroy or return to Licensee
+            all materials belonging to Licensee that were provided to
+            NVIDIA pursuant to this Agreement, including without
+            limitation, Licensee's Confidential Information then in
+            NVIDIA's possession or control; and (ii) certify to
+            Licensee in writing that it has done so.  These remedies
+            shall be cumulative and in addition to any other remedies
+            available to NVIDIA.
+
+    6.3 Survival.  Those provisions in this Agreement, which by their
+nature need to survive the termination or expiration of this
+Agreement, The following Sections shall survive termination or
+expiration of the Agreement, including but not limited to Sections 1,
+2.2, 2.3, 2.4, 3, 4, 5, 6.2 , 6.3, 7, 8, 9 and Exhibit A.
+
+7.  WARRANTIES
+
+    THE LICENSED MATERIALS ARE LICENSED FOR LICENSEE'S USE "AS IS" AND
+NVIDIA AND ITS LICENSORS DISCLAIM ALL WARRANTIES, EXPRESS, IMPLIED AND
+STATUTORY INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT
+OF THIRD PARTY RIGHTS.  NVIDIA DOES NOT REPRESENT OR WARRANT THAT THE
+LICENSED MATERIALS WILL MEET LICENSEE'S REQUIREMENTS OR THAT THE
+OPERATION OF THE SOFTWARE CONTAINED THEREIN OR RESULTING THEREFROM
+WILL BE UNINTERRUPTED OR ERROR-FREE.  NO INFORMATION OR ADVICE GIVEN
+BY NVIDIA, ITS REPRESENTATIVES, AGENTS OR EMPLOYEES SHALL IN ANY WAY
+INCREASE THE SCOPE OF THIS WARRANTY.
+
+    (A) Licensee represents and warrants that it has, or will have
+prior to the commercial release of the Licensee Products, a valid and
+current license to all the Third Party Components referenced in the
+exhibits of this Agreement, for use in connection with Licensed
+Materials provided pursuant to this Agreement and Licensee Products.
+
+
+8.  LIMITATION OF LIABILITY
+
+    IN NO EVENT SHALL:
+
+    (A) NVIDIA BE LIABLE FOR ANY CONSEQUENTIAL, INDIRECT, INCIDENTAL,
+PUNITIVE OR SPECIAL DAMAGES, OF ANY KIND OR CHARACTER, INCLUDING LOST
+PROFITS, LOST REVENUE, FAILURE TO REALIZE SAVINGS OR OTHER BENEFITS,
+LOSS OF DATA OR USE, AND CLAIMS BY ANY THIRD PARTY, ARISING OUT OF OR
+RELATED TO THE SUBJECT MATTER OF THIS AGREEMENT; AND
+
+    (B) NVIDIA'S AGGREGATE LIABILITY ARISING OUT OF THIS AGREEMENT
+EXCEED THE AMOUNT PAID BY LICENSEE FOR USE OF THE LICENSED MATERIALS.
+THE FOREGOING EXCLUSION AND LIABILITY LIMITATIONS APPLY EVEN IF SUCH
+PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.  THIS
+EXCLUSION AND LIABILITY LIMITATION SHALL APPLY EVEN IF ANY REMEDY
+FAILS OF ITS ESSENTIAL PURPOSE.
+
+9.  GENERAL
+
+    9.2 Governing Law.  This Agreement shall be governed in all
+respects by the laws of the United States and of the State of
+Delaware, without regard to the conflicts of laws principles thereof.
+
+    9.3 Jurisdiction.  The state and/or federal courts residing in
+Santa Clara County, California shall have exclusive jurisdiction over
+any dispute or claim arising out of this Agreement.
+
+    9.4 Severability.  If for any reason a court of competent
+jurisdiction finds any provision of this Agreement, or portion
+thereof, to be unenforceable, that provision of the Agreement will be
+enforced to the maximum extent permissible so as to affect the intent
+of the parties, and the remainder of this Agreement will continue in
+full force and effect. This Agreement has been negotiated by the
+parties and their respective counsel and will be interpreted fairly in
+accordance with its terms and without any strict construction in favor
+of or against either party.
+
+    9.5 Amendments.  The Agreement shall not be modified except by a
+written agreement that names this Agreement and any provision to be
+modified, is dated subsequent to the Effective Date, and is signed by
+duly authorized representatives of both parties.
+
+    9.6 No Waiver.  No failure or delay on the part of either party in
+the exercise of any right, power or remedy under this Agreement or
+under law, or to insist upon or enforce performance by the other party
+of any of the provisions of this Agreement or under law, shall operate
+as a waiver thereof, nor shall any single or partial exercise of any
+right, power or remedy preclude other or further exercise thereof, or
+the exercise of any other right, power or remedy; rather the
+provision, right, or remedy shall be and remain in full force and
+effect.
+
+    9.7 No Assignment. This Agreement, and each party's rights and
+obligations herein, may not be assigned, subcontracted, delegated, or
+otherwise transferred by either party without the other party's prior
+written consent, and any attempted assignment, subcontract,
+delegation, or transfer in violation of the foregoing will be null and
+void.  The terms of this Agreement shall be binding upon assignees.
+
+    9.8 Independent Contractors.  NVIDIA's relationship to Licensee is
+that of an independent Contractor, and neither party is an agent or
+partner of the other.  Neither party will have, and will not represent
+to any third party that it has, any authority to act on behalf of the
+other party.
+
+    9.9 Export Restrictions.  The parties acknowledge that the
+Licensed Materials are subject to U.S. export control laws and
+regulations.  The parties agree to comply with all applicable
+international and national laws that apply to the Licensed Materials,
+including the U.S. Export Administration Regulations, as well as
+end-user, end-use and destination restrictions issued by U.S. and
+other governments.
+
+    9.10 U.S. Government Legend.  If Licensee is a branch or agency of
+the United States Government, the following provision applies.  Any
+software provided under this Agreement, including any releases are
+comprised of "commercial computer software" and "commercial computer
+software documentation" as such terms are used in 48 C.F.R. 12.212 and
+are provided to the Government (i) for acquisition by or on behalf of
+civilian agencies, consistent with the policy set forth in 48
+C.F.R. 12.212; or (ii) for acquisition by or on behalf of units of the
+Department of Defense, consistent with the policies set forth in 48
+C.F.R. 227.7202-1 and 227.7202-3.
+
+    9.11 Headings.  The headings in this Agreement are for the sole
+purpose of convenience of reference and shall not in any way limit or
+affect the meaning or interpretation of any of the terms or provisions
+of this Agreement.
+
+    9.12 Counterparts.  This Agreement may be executed in
+counterparts, each of which shall be deemed an original, and all of
+which together shall constitute one instrument.
+
+    9.13 No Third Party Beneficiaries.  This Agreement is solely
+between NVIDIA and Licensee.  There are no third party beneficiaries,
+express or implied, to this Agreement.
+
+    9.14 Entire Agreement.  This Agreement constitutes the entire
+agreement between the parties with respect to the subject matter
+contemplated herein, and merges all prior and contemporaneous
+communications.
+
+
+
+Exhibit A
+
+
+1. Coding Technologies/AAC+
+
+    Licensee shall be solely responsible for either obtaining a proper
+patent license under the Essential Patents for end products or to
+notify Licensee's respective customers of their obligations to obtain
+a proper patent license under the Essential Patents for end products
+in which the NVIDIA application processor(s) and/or the NVIDIA
+software package may be used.  For the purpose of this paragraph,
+"Essential Patents" means patents which are infringed by the
+manufacture, offer for sale, sale (or other form of
+commercialization), use or import of products (hardware or software)
+implementing, incorporating, containing or using AACPLUSV2 or by the
+application of processes involving AACPLUSV2, including those which
+are infringed by any source code provided as part of any specification
+characterizing AACPLUSV2.
+
+2. Thomson Multimedia/MP3
+
+    Supply of the Licensed Materials does not convey a license under
+the relevant intellectual property of Thomson Multimedia and/or
+Fraunhofer Gesellschaft nor imply any right to use the Licensed
+Materials in any finished end user or ready-to-use final product.  An
+independent license for such use is required.  For details, please
+visit http://www.mp3licensing.com
+
+3. MPEG L.A., L.L.C./MPEG-2
+
+    USE OF THE APPLICABLE NVIDIA SOFTWARE PACKAGE IN ANY MANNER THAT
+COMPLIES WITH THE MPEG-2 STANDARD IS EXPRESSLY PROHIBITED WITHOUT A
+LICENSE UNDER APPLICABLE PATENTS IN THE MPEG-2 PATENT PORTFOLIO, WHICH
+LICENSE IS AVAILABLE FROM MPEG LA, L.L.C., 250 STREELE STREET, SUITE
+300, DENVER, COLORADO 80206.  NO LICENSE IS GRANTED HEREIN, BY
+IMPLICATION OR OTHERWISE, TO LICENSEE TO USE MPEG 2 INTERMEDIATE
+PRODUCTS MANUFACTURED OR SOLD BY LICENSEE.
+
+4. MPEG-2 AAC
+
+    Licensee shall be solely responsible for either obtaining a valid
+and current license from AT&T Corp., Dolby Laboratories Licensing
+Corporation, Fraunhofer-Gesellscaft, and Sony Corporation for the
+applicable version of MPEG-2 AAC.
+
+5. Fraunhofer-Gesellschaft MPEG-4 HE-AAC
+
+    Licensee understands and accepts that (a) it may be necessary to
+execute a patent license with the appropriate licensing entities in
+order to obtain all rights necessary to create Licensee's products;
+and (b) Licensee will contact the appropriate licensing entities,
+e.g. Via Licensing, and negotiate in good faith the adequate
+contracts, if any. In addition, it is hereby understood that in the
+event that, besides the Fraunhofer-Gesellschaft patents licensed
+through such appropriate licensing entities, any further
+Fraunhofer-Gesellschaft patent shall be required in order to use the
+Licensed Materials, Fraunhofer-Gesellschaft shall not request from
+Licensee any additional payment in order to receive a license to such
+further Fraunhofer-Gesellschaft patent, as long as Licensee remains a
+valid licensee of such appropriate licensing entity.
+
+6. Microsoft Windows Media
+
+    Licensee acknowledges that Microsoft Windows Media is provided in
+object code form only, solely for the Licensee's own internal
+evaluation and testing purposes.
+
+
+    Licensee further acknowledges the following notice: "This product
+includes technology owned by Microsoft Corporation and cannot be used
+or further distributed without a license from Microsoft or a Microsoft
+affiliate."
+
+7. Microsoft PlayReady or WMDRM technology
+
+    Licensee acknowledges that the Licensed Materials (i) contain a
+certain version of Microsoft PlayReady or WMDRM technology ("PlayReady
+Technology"); and (ii) are subject to certain intellectual property
+rights of Microsoft and cannot be used or distributed further without
+the appropriate license(s) from Microsoft.
+
+    Licensee represents and warrants that (i) Licensee holds a current
+and valid license under a PlayReady Device Agreement and Intermediated
+Product Distribution License, a PlayReady Final Product Distribution
+License, or a like agreement, with Microsoft or a Microsoft affiliate;
+and (ii) Licensee will use the PlayReady Technology provided under
+this Agreement in Licensees' software, hardware product, or service
+offering that (a) is intended for distribution to and/or use by end
+users; and (b) is in a final form with Licensee-owned brand and/or
+logo most prominently displayed brand in a fully functional user
+interface.
+
+8.  Ogg Vorbis Legal Information
+
+Copyright (c) 2002, Xiph.org Foundation
+
+    Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+
+    * Redistributions in binary form must reproduce the above
+      copyright notice, this list of conditions and the following
+      disclaimer in the documentation and/or other materials provided
+      with the distribution.
+
+    * Neither the name of the Xiph.org Foundation nor the names of its
+      contributors may be used to endorse or promote products derived
+      from this software without specific prior written permission.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
+CONTRIBUTORS ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES,
+INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+EXHIBIT A-2
+
+Adobe Flash Demonstration and Evaluation License ("Adobe License")
+Terms and Conditions
+
+    1. Software License. NVIDIA hereby grants to Licensee a
+non-exclusive, non-transferable, royalty free right to use, install,
+evaluate, test, demonstrate, publicly perform and display object code
+versions of the Adobe Software together with Licensee's product.  For
+the avoidance of doubt, Licensee has no right to distribute,
+sublicense, or otherwise commercialize the Adobe Software, unless and
+until Adobe confirms in writing that Licensee has entered into an
+appropriate license agreement with Adobe.
+
+    "Adobe Software" means the Adobe Flash Player software version 10
+as modified by NVIDIA, in object code form as delivered by NVIDIA
+hereunder.  NVIDIA may update the Adobe Software from time to time, in
+its sole discretion.
+
+    2. Period. Licensee's limited license hereunder shall commence on
+the Effective Date and remain in effect until terminated by NVIDIA
+upon five (5) days written notice.
+
+    3. Rights. Licensee agrees that it shall take no action in
+furtherance of seeking any patent rights or other intellectual
+property rights to the Adobe Software. The Software shall be returned
+to NVIDIA within fifteen (15) days of the end of the Evaluation
+Period. Licensee shall have no rights to sublicense or distribute the
+Software.
+
+    4. Fees. There shall be no fees owed by either party under this
+Adobe License.
+
+    5. Delivery. NVIDIA shall deliver the Adobe Software to Licensee
+shortly after execution of this Adobe License.
+
+    6. Restrictions. Licensee does not have any rights to make use of
+the Adobe Software, or in any manner, copy, disseminate, or in any way
+circulate the Adobe Software other than as permitted under Section 1
+above. Licensee shall limit access to the Adobe Software to its
+employees who need to know such information and who have agreed,
+either as a condition to employment or prior to obtaining the Adobe
+Software, to be bound by terms and conditions of confidentiality. The
+rights herein do not entitle Licensee to use the Adobe Software, or
+any technology or intellectual property contained within it, as
+reference or inspiration for developing or creating another product in
+any way based upon the Adobe Software. Licensee agrees not to
+decompile, reverse engineer, reverse assemble, disassemble, or
+otherwise reverse engineer or reduce the Adobe Software provided in
+object code form to a human-perceivable form.
+
+    7. Ownership. All right, title, and interest in the Adobe
+Software, shall be owned by Adobe. Except as set forth in Section 1
+above, Licensee acquires no license to any NVIDIA or Adobe
+intellectual property rights pursuant to this Adobe License. The Adobe
+Software, and any partial or whole copies thereof, and all copyright,
+patent, trade secret and other intellectual property rights therein,
+are and remain the property of Adobe and NVIDIA. The provisions of
+this paragraph shall survive expiration or earlier termination of this
+Adobe License. NVIDIA does not directly or indirectly grant, or
+purport to grant, to Licensee any rights or immunities under Adobe's
+intellectual property rights that will subject such intellectual
+property rights to an open source license or scheme in which there is
+or could be interpreted to be a requirement that as a condition of
+use, modification and/or distribution, the Adobe Software be: (i)
+disclosed or distributed in source code form; (ii) licensed for the
+purpose of making derivative works; or (iii) redistributable at no
+charge.
+
+
+    8. Effect of Termination. Upon termination, the rights granted
+hereunder shall cease and all materials furnished to Licensee by
+NVIDIA hereunder relating to the Adobe Software shall be returned to
+it promptly, together with any copies thereof.
+
+    9. Disclaimer. NVIDIA PROVIDES THE ADOBE SOFTWARE "AS IS" AND
+WITHOUT ANY WARRANTIES. THE ENTIRE RISK AS TO THE RESULTS AND
+PERFORMANCE OF THE ADOBE SOFTWARE IS ASSUMED BY LICENSEE. NVIDIA
+DISCLAIMS ALL WARRANTIES, EXPRESS, IMPLIED OR STATUTORY, WITH REGARD
+TO THE ADOBE SOFTWARE OR ANY OTHER INFORMATION PROVIDED HEREUNDER,
+INCLUDING, BUT NOT LIMITED TO, ANY IMPLIED WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT
+OF THIRD PARTY RIGHTS.
+
+    10. Limitation on Liability. NOTWITHSTANDING ANY PROVISION IN THIS
+AGREEMENT, NEITHER NVIDIA NOR ADOBE SHALL BE LIABLE TO LICENSEE OR ANY
+THIRD PARTY FOR ANY SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL
+DAMAGES, ARISING OUT OF OR RELATED TO THIS AGREEMENT, INCLUDING,
+WITHOUT LIMITATION, DAMAGES RESULTING FROM LOSS OF PROFITS, DATA,
+BUSINESS, OR GOODWILL, HOWEVER CAUSED AND ON WHATEVER THEORY, WHETHER
+BASED ON BREACH OF CONTRACT OR WARRANTY, TORT (INCLUDING NEGLIGENCE),
+THE FAILURE OR ASSERTED FAILURE OF NVIDIA TO PERFORM ITS OBLIGATIONS
+HEREUNDER, OR OTHERWISE, AND WHETHER OR NOT NVIDIA HAS BEEN ADVISED OR
+IS AWARE OF THE POSSIBILITY OF SUCH DAMAGES. NVIDIA's aggregate
+liability to Licensee or any third party arising out of or in
+connection with this Adobe License or any collateral agreement,
+whether in contract, tort (including negligence), or otherwise, shall
+be limited to fifty dollars (US$50).
+
+    11. Relief. As the unauthorized distribution of the Adobe Software
+may diminish the value to NVIDIA or Adobe of the proprietary interests
+that are the subject of this Adobe License, if Licensee breaches any
+of its obligations under this Adobe License, NVIDIA or Adobe shall be
+entitled to seek equitable relief to protect its interests therein,
+including but not limited to injunctive relief, as well as money
+damages.
+
+    12. Export Restrictions.  The parties acknowledge that the Adobe
+Software is subject to U.S. export control laws and regulations.  The
+parties agree to comply with all applicable international and national
+laws that apply to the Adobe Software, including the U.S. Export
+Administration Regulations and the United States Department of
+Commerce, as well as end-user, end-use and destination restrictions
+issued by U.S. and other governments.
+
+    13.  Evaluation Feedback.
+
+    13.1 Feedback by Licensee.  You must provide to NVIDIA any
+suggestions, comments and feedback regarding the Adobe Software
+("Licensee Feedback").  NVIDIA and Adobe may use and include any
+Licensee Feedback that you provide to improve the Software or other
+technologies and / or products.  Accordingly, you grant to NVIDIA, its
+subsidiaries, its affiliates and its licensees a perpetual,
+irrevocable, worldwide, royalty-free, fully paid-up license to freely
+use, have used, sell, modify, reproduce, transmit, license, sublicense
+(through multiple tiers of sublicensees, including to Adobe),
+distribute (through multiple tiers of distributors), and otherwise
+commercialize the Licensee Feedback in the Adobe Software or other
+NVIDIA or Adobe technologies and/or products.
+
+    13.2 Confidential Information.  Licensee Feedback is considered
+Adobe's confidential information ("Adobe Confidential Information").
+You shall not use or disclose any Adobe Confidential Information
+except as expressly authorized herein, and you shall protect all such
+Adobe Confidential Information using the same degree of care you use
+with respect to your own proprietary information, but in no event with
+safeguards less than a reasonably prudent business would exercise
+under similar circumstances.  You agree to take prompt and appropriate
+action to prevent unauthorized use or disclosure of any Adobe
+Confidential Information.
+
+
+
+
+Exhibit E
+
+(Open Source Portions)
+
+    Licensee agrees that the following terms and conditions shall
+apply to its use of certain portions (as referenced below) of the
+applicable software packages selected by the Licensee in connection
+with this Agreement. For the sake of clarity, Licensee agrees that the
+terms and conditions of the Agreement shall continue to govern
+Licensee's use of the Software and Licensed Materials. The parties
+agree that the capitalized terms used in this exhibit shall have the
+same meaning ascribed to such term in the Agreement or any amendment
+thereto.
+
+    1. NVIDIA agrees that the open source portions expressly licensed
+under terms and conditions of Excluded Licenses (collectively the
+"Open Source Portions"), shall not be subject to the restrictions set
+forth in the following section ("No Excluded Licenses") of the
+Agreement (or substantially similar provision in the Agreement signed
+by Licensee):
+
+    "3.5 No Excluded Licenses.  The licenses granted in Section 2.1 do
+not include the right to, and Licensee shall not: (a) create
+Derivative Work(s) of the Licensed Materials in any manner that would
+cause the Licensed Materials, in whole or in part, to become subject
+to the terms of an Excluded License; or (b) distribute the Licensed
+Materials (or Derivative Works thereof) in any manner that would cause
+the Licensed Materials, or any component thereof, to become subject to
+the terms of an Excluded License."
+
+    2. Licensee agrees that it shall not externally distribute,
+license or otherwise disclose in any manner the Open Source Portions
+until the later of (a) the Licensee Products (as defined in the
+Agreement), that incorporates the Open Source Portions, in whole or in
+part, is commercialized and made generally available for sale; or (b)
+NVIDIA makes generally available to the public the Open Source
+Portions in source code form.
+
+    3. Except as noted otherwise in this Exhibit E, the terms and
+conditions of this Exhibit E will supercede any conflicting terms and
+conditions between Exhibit E and the Agreement.
+
+
+
+EXHIBIT F
+
+Licensee acknowledges and agrees with this following third party
+licensing obligations and/or notices in connection with its use of (a)
+Tegra Linux Driver Package; and (b) Chromium:
+
+
+1. GNU General Public License 2.0
+
+    (For notice purposes only)
+
+    This product includes copyrighted third-party software licensed
+under the terms of the GNU General Public License. All third-party
+software packages are copyright by their respective authors. GNU
+General Public License is hereby incorporated into the Agreement by
+this reference.
+
+    http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
+
+2. Apache License v2.0
+
+    (For notice purposes only)
+
+    This product includes copyrighted third-party software licensed
+under the terms of the Apache License. All third-party software
+packages are copyright by their respective authors. Apache License is
+hereby incorporated into the Agreement by this reference.
+
+    http://www.apache.org/licenses/LICENSE-2.0.html
+
+3. BSD License
+
+    (For notice purposes only)
+
+    This product includes copyrighted third-party software licensed
+under the terms of the BSD License. All third-party software packages
+are copyright by their respective authors. BSD License is incorporated
+into the Agreement by this reference.
+
+    http://www.opensource.org/licenses/bsd-license.php
+
+4. MIT License
+
+    (For notice purposes only)
+
+    This product includes copyrighted third-party software licensed
+under the terms of the MIT License. All third-party software packages
+are copyright by their respective authors.  MIT License is hereby
+incorporated into the Agreement by this reference
+
+    http://www.opensource.org/licenses/mit-license.php
+
+
+REV. 02.28.2012
+
+

@@ -1,0 +1,13 @@
+DEFINED_PHASES=compile configure install postinst postrm preinst prepare setup unpack
+DEPEND=>=dev-libs/glib-2.24:2 >=media-libs/fontconfig-2.5.0:1.0 media-libs/freetype:2 >=x11-libs/cairo-1.7.6[X?] X? ( x11-libs/libXrender x11-libs/libX11 x11-libs/libXft ) >=dev-util/pkgconfig-0.9 >=dev-util/gtk-doc-am-1.13 doc? ( >=dev-util/gtk-doc-1.13 ~app-text/docbook-xml-dtd-4.1.2 x11-libs/libXft ) introspection? ( >=dev-libs/gobject-introspection-0.9.5 ) test? ( >=dev-util/gtk-doc-1.13 ~app-text/docbook-xml-dtd-4.1.2 x11-libs/libXft ) X? ( x11-proto/xproto ) || ( >=sys-devel/automake-1.11.1:1.11 ) >=sys-devel/autoconf-2.68 sys-devel/libtool >=sys-apps/sed-4
+DESCRIPTION=Internationalized text layout and rendering library
+EAPI=3
+HOMEPAGE=http://www.pango.org/
+IUSE=X doc introspection test debug
+KEYWORDS=amd64 arm x86
+LICENSE=LGPL-2 FTL
+RDEPEND=>=dev-libs/glib-2.24:2 >=media-libs/fontconfig-2.5.0:1.0 media-libs/freetype:2 >=x11-libs/cairo-1.7.6[X?] X? ( x11-libs/libXrender x11-libs/libX11 x11-libs/libXft )
+SLOT=0
+SRC_URI=mirror://gnome/sources/pango/1.28/pango-1.28.4.tar.bz2
+_eclasses_=autotools	addbdf6cce5024ac93ad2084ad5e1d2d	binutils-funcs	73669d0b20960c1cc54cf381a4b89e77	eutils	33ef77a15337022e05342d2c772a7a5a	fdo-mime	9c46e30acd923ff12e325dbe96bb98b9	gnome.org	8fef8f967214f56e08fa92d61163d891	gnome2	e766f648c9d51ea0afabaf25bddb1ad9	gnome2-utils	0067e2e4dc66e2ff223a9c527e329407	libtool	0fd90d183673bf1107465ec45849d1ea	multilib	5f4ad6cf85e365e8f0c6050ddd21659e	portability	0be430f759a631e692678ed796e09f5c	toolchain-funcs	64fc271a237429f84f36b91c9f4b9912	user	9e552f935106ff0bc92af16da64b4b29	versionator	865bc8b2fc9fcfb6d520bdf5a110f5ed
+_md5_=e910bba8f04a9558bd3a2d94ea1297c0

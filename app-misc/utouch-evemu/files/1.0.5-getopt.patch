@@ -1,0 +1,106 @@
+diff --git a/tools/evemu-play.c b/tools/evemu-play.c
+index c2aef3e..9c868a2 100644
+--- a/tools/evemu-play.c
++++ b/tools/evemu-play.c
+@@ -45,43 +45,77 @@
+ #include <fcntl.h>
+ #include <string.h>
+ #include <unistd.h>
++#include <getopt.h>
++
++void usage(char *program_name) {
++	fprintf(stderr, "Usage: %s [--insert-slot0] [--output output_file] <device>\n", program_name);
++	fprintf(stderr, "\n");
++	fprintf(stderr, "--insert-slot0: insert a slot 0 event if missing in the very first packet.\n");
++	fprintf(stderr, "--output: specify the output file name.\n");
++	fprintf(stderr, "Note: event data is read from standard input.\n");
++}
+ 
+ int main(int argc, char *argv[])
+ {
+ 	int fd;
++	int c;
++	int flag_slot0 = 0;
+ 	FILE *fp_time = NULL;
+ 	char *output_filename = NULL;
+-	int flag_slot0 = 0;
+-	if (argc < 2 || argc > 4) {
+-		fprintf(stderr, "Usage: %s <device> [--insert-slot0] [output_file]\n", argv[0]);
+-		fprintf(stderr, "\n");
+-		fprintf(stderr, "--insert-slot0: insert a slot 0 event if missing in the very first packet.\n");
+-		fprintf(stderr, "Event data is read from standard input.\n");
++	char *device_name = NULL;
++
++	/* Get options */
++	while (1) {
++		static struct option long_options[] = {
++			{"insert-slot0", no_argument, 0, 'i'},
++			{"output", required_argument, 0, 'o'},
++			{0, 0, 0, 0}
++		};
++		int option_index = 0;
++		c = getopt_long(argc, argv, "io:", long_options, &option_index);
++		if (c == -1)
++			break;
++		switch (c) {
++			case 0:
++				break;
++			case 'i':
++				flag_slot0 = 1;
++				break;
++			case 'o':
++				output_filename = optarg;
++				break;
++			case '?':
++			default:
++				usage(argv[0]);
++				return -1;
++		}
++	}
++
++	/* Get command line argument: device */
++	if (optind >= argc) {
++		fprintf(stderr, "You need to supply the <device>.\n");
++		usage(argv[0]);
+ 		return -1;
+ 	}
+-	fd = open(argv[1], O_WRONLY);
++	device_name = argv[optind];
++
++	/* Open the event device */
++	fd = open(device_name, O_WRONLY);
+ 	if (fd < 0) {
+-		fprintf(stderr, "error: could not open device\n");
++		fprintf(stderr, "Error: fail to open device %s\n", device_name);
+ 		return -1;
+ 	}
+-	if (argc >= 3) {
+-		if (strcmp(argv[2], "--insert-slot0") == 0) {
+-			flag_slot0 = 1;
+-			if (argc == 4) {
+-				output_filename = argv[3];
+-			}
+-		} else {
+-			output_filename = argv[2];
+-		}
+-		if (output_filename != NULL) {
+-			fp_time = fopen(output_filename, "w");
+-			if (fp_time == NULL) {
+-				fprintf(stderr, "error: could not open output file %s.\n",
+-					output_filename);
+-				return -1;
+-			}
++
++	/* Open the optional output file */
++	if (output_filename != NULL) {
++		fp_time = fopen(output_filename, "w");
++		if (fp_time == NULL) {
++			fprintf(stderr, "Error: fail to open output file %s.\n",
++				output_filename);
++			return -1;
+ 		}
+ 	}
++
+ 	if (evemu_play(stdin, fd, fp_time, flag_slot0)) {
+ 		fprintf(stderr, "error: could not describe device\n");
+ 	}

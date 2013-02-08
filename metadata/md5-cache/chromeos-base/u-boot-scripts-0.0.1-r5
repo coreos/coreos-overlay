@@ -1,0 +1,7 @@
+DEFINED_PHASES=compile install
+DESCRIPTION=Tegra2 boot scripts
+EAPI=2
+KEYWORDS=arm
+LICENSE=BCD
+SLOT=0
+_md5_=8b575e2d6a2b9ef13dc0ef81b2025662

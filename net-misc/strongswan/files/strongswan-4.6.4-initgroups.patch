@@ -1,0 +1,14 @@
+diff -rupN strongswan-4.6.4/src/pluto/plutomain.c strongswan-4.6.4.patched/src/pluto/plutomain.c
+--- strongswan-4.6.4/src/pluto/plutomain.c	2012-02-06 09:05:46.000000000 -0800
++++ strongswan-4.6.4.patched/src/pluto/plutomain.c	2012-06-05 22:24:41.335822876 -0700
+@@ -726,7 +726,9 @@ int main(int argc, char **argv)
+ 		char buf[1024];
+ 
+ 		if (getpwnam_r(IPSEC_USER, &passwd, buf, sizeof(buf), &pwp) != 0 ||
+-			pwp == NULL || setuid(pwp->pw_uid) != 0)
++				pwp == NULL ||
++				initgroups(pwp->pw_name, pwp->pw_gid) != 0 ||
++				setuid(pwp->pw_uid) != 0)
+ 		{
+ 			plog("unable to change daemon user");
+ 			abort();

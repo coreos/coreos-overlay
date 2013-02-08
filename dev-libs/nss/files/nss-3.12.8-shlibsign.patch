@@ -1,0 +1,23 @@
+--- mozilla/security/nss/cmd/shlibsign/Makefile-old	2009-10-21 01:48:57.000000000 +0000
++++ mozilla/security/nss/cmd/shlibsign/Makefile	2009-10-21 01:55:08.000000000 +0@@ -105,6 +105,7 @@
+ include ../platrules.mk
+ 
+ SRCDIR = $(call core_abspath,.)
++SHLIBSIGN =
+ 
+ %.chk: %.$(DLL_SUFFIX) 
+ ifeq ($(OS_TARGET), OS2)
+@@ -112,9 +113,13 @@
+ 	$(call core_abspath,$(OBJDIR)) $(OS_TARGET) \
+ 	$(call core_abspath,$(NSPR_LIB_DIR)) $(call core_abspath,$<)
+ else
++ifeq ($(SHLIBSIGN),)
+ 	cd $(OBJDIR) ; sh $(SRCDIR)/sign.sh $(call core_abspath,$(DIST)) \
+ 	$(call core_abspath,$(OBJDIR)) $(OS_TARGET) \
+ 	$(call core_abspath,$(NSPR_LIB_DIR)) $(call core_abspath,$<)
++else
++	cd $(OBJDIR) ; $(SHLIBSIGN) -v -i $(call core_abspath,$<)
++endif
+ endif
+ 
+ libs install :: $(CHECKLOC)

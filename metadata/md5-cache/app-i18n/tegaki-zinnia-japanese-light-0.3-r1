@@ -1,0 +1,10 @@
+DEFINED_PHASES=install
+DESCRIPTION=Zinnia learning data for Japanese
+EAPI=3
+HOMEPAGE=http://tegaki.org/
+KEYWORDS=amd64 x86 arm
+LICENSE=LGPL
+RDEPEND=app-i18n/zinnia
+SLOT=0
+SRC_URI=http://commondatastorage.googleapis.com/chromeos-localmirror/distfiles/tegaki-zinnia-japanese-light-0.3.zip
+_md5_=8c92163c58dd1f2f96ba4bb1362bf095

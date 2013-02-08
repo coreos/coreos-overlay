@@ -1,0 +1,111 @@
+diff --git a/syslinux-3.83/MCONFIG.embedded b/syslinux-3.83.patch/MCONFIG.embedded
+index 3237cd7..4451929 100644
+--- a/syslinux-3.83/MCONFIG.embedded
++++ b/syslinux-3.83.patch/MCONFIG.embedded
+@@ -28,6 +28,7 @@ GCCOPT    := $(call gcc_ok,-m32,) \
+ LIBGCC    := $(shell $(CC) $(GCCOPT) --print-libgcc)
+ 
+ LD        += -m elf_i386
++LDOPTS     = -m elf_i386
+ CFLAGS     = $(GCCOPT) -fno-pic -g -W -Wall -Wno-sign-compare $(OPTFLAGS) $(INCLUDES)
+ SFLAGS     = $(CFLAGS) -D__ASSEMBLY__
+ 
+diff --git a/syslinux-3.83/core/Makefile b/syslinux-3.83.patch/core/Makefile
+index 65418c4..1d11bd1 100644
+--- a/syslinux-3.83/core/Makefile
++++ b/syslinux-3.83.patch/core/Makefile
+@@ -78,7 +78,7 @@ iso%.bin: iso%.elf checksumiso.pl
+ 		-l $(@:.o=.lsr) -o $@ $<
+ 
+ %.elf: %.o syslinux.ld
+-	$(LD) $(LDFLAGS) -T syslinux.ld -M -o $@ $< > $(@:.elf=.map)
++	$(LD) $(LDOPTS) $(LDFLAGS) -T syslinux.ld -M -o $@ $< > $(@:.elf=.map)
+ 	$(OBJDUMP) -h $@ > $(@:.elf=.sec)
+ 	$(PERL) lstadjust.pl $(@:.elf=.lsr) $(@:.elf=.sec) $(@:.elf=.lst)
+ 
+diff --git a/syslinux-3.83/dos/Makefile b/syslinux-3.83.patch/dos/Makefile
+index fa2ed0a..225a6d3 100644
+--- a/syslinux-3.83/dos/Makefile
++++ b/syslinux-3.83.patch/dos/Makefile
+@@ -49,7 +49,7 @@ spotless: clean
+ installer:
+ 
+ syslinux.elf: $(OBJS) libcom.a
+-	$(LD) $(LDFLAGS) -o $@ $^
++	$(LD) $(LDOPTS) $(LDFLAGS) -o $@ $^
+ 
+ libcom.a: $(LIBOBJS)
+ 	-rm -f $@
+diff --git a/syslinux-3.83/mbr/Makefile b/syslinux-3.83.patch/mbr/Makefile
+index c3eb97a..01d50cc 100644
+--- a/syslinux-3.83/mbr/Makefile
++++ b/syslinux-3.83.patch/mbr/Makefile
+@@ -33,7 +33,7 @@ all:	mbr.bin   altmbr.bin   gptmbr.bin   isohdpfx.bin   isohdppx.bin \
+ 
+ .PRECIOUS: %.elf
+ %.elf: %.o mbr.ld
+-	$(LD) $(LDFLAGS) -T mbr.ld -e _start -o $@ $<
++	$(LD) $(LDOPTS) $(LDFLAGS) -T mbr.ld -e _start -o $@ $<
+ 
+ %.bin: %.elf checksize.pl
+ 	$(OBJCOPY) -O binary $< $@
+diff --git a/syslinux-3.83/memdisk/Makefile b/syslinux-3.83.patch/memdisk/Makefile
+index d185d87..2bf477d 100644
+--- a/syslinux-3.83/memdisk/Makefile
++++ b/syslinux-3.83.patch/memdisk/Makefile
+@@ -72,13 +72,13 @@ memdisk16.o: memdisk16.asm
+ 	$(NASM) -f bin $(NASMOPT) $(NFLAGS) $(NINCLUDE) -o $@ -l $*.lst $<
+ 
+ memdisk_%.o: memdisk_%.bin
+-	$(LD) -r -b binary -o $@ $<
++	$(LD) $(LDOPTS) -r -b binary -o $@ $<
+ 
+ memdisk16.elf: $(OBJS16)
+-	$(LD) -Ttext 0 -o $@ $^
++	$(LD) $(LDOPTS) -Ttext 0 -o $@ $^
+ 
+ memdisk32.elf: memdisk.ld $(OBJS32)
+-	$(LD) -o $@ -T $^
++	$(LD) $(LDOPTS) -o $@ -T $^
+ 
+ %.bin: %.elf
+ 	$(OBJCOPY) -O binary $< $@
+diff --git a/syslinux-3.83/memdump/Makefile b/syslinux-3.83.patch/memdump/Makefile
+index 05f2638..a324dc7 100644
+--- a/syslinux-3.83/memdump/Makefile
++++ b/syslinux-3.83.patch/memdump/Makefile
+@@ -43,7 +43,7 @@ spotless: clean
+ installer:
+ 
+ memdump.elf: $(OBJS) libcom.a
+-	$(LD) $(LDFLAGS) -o $@ $^
++	$(LD) $(LDOPTS) $(LDFLAGS) -o $@ $^
+ 
+ libcom.a: $(LIBOBJS)
+ 	-rm -f $@
+diff --git a/syslinux-3.83/modules/Makefile b/syslinux-3.83.patch/modules/Makefile
+index 77020ea..a380aa2 100644
+--- a/syslinux-3.83/modules/Makefile
++++ b/syslinux-3.83.patch/modules/Makefile
+@@ -27,7 +27,7 @@ all: $(BINS)
+ 
+ .PRECIOUS: %.elf
+ %.elf: c32entry.o %.o $(LIB)
+-	$(LD) -Ttext 0x101000 -e _start -o $@ $^
++	$(LD) $(LDOPTS) -Ttext 0x101000 -e _start -o $@ $^
+ 
+ %.c32: %.elf
+ 	$(OBJCOPY) -O binary $< $@
+diff --git a/syslinux-3.83/sample/Makefile b/syslinux-3.83.patch/sample/Makefile
+index 9fa21c2..e6b4544 100644
+--- a/syslinux-3.83/sample/Makefile
++++ b/syslinux-3.83.patch/sample/Makefile
+@@ -36,7 +36,7 @@ all: syslogo.lss comecho.com hello.c32 hello2.c32 filetest.c32 c32echo.c32 \
+ 
+ .PRECIOUS: %.elf
+ %.elf: c32entry.o %.o $(LIB)
+-	$(LD) -Ttext 0x101000 -e _start -o $@ $^
++	$(LD) $(LDOPTS) -Ttext 0x101000 -e _start -o $@ $^
+ 
+ %.c32: %.elf
+ 	$(OBJCOPY) -O binary $< $@

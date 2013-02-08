@@ -1,0 +1,24 @@
+# ChangeLog for sys-apps/flashrom
+# Copyright 1999-2010 Gentoo Foundation; Distributed under the GPL v2
+# $Header: /var/cvsroot/gentoo-x86/sys-apps/flashrom/ChangeLog,v 1.3 2010/01/28 20:04:28 idl0r Exp $
+
+*flashrom-0.9.1 (28 Jan 2010)
+
+  28 Jan 2010; Christian Ruppert <idl0r@gentoo.org> -flashrom-0.9.0.ebuild,
+  +flashrom-0.9.1.ebuild, metadata.xml:
+  Version bump, bug 284543.
+  Add ftdi and serprog useflag.
+  Update longdesc in metadata.xml.
+
+  08 May 2009; Mart Raudsepp <leio@gentoo.org> flashrom-0.9.0.ebuild:
+  Fix homepage, pointed out by Anton Bolshakov
+
+*flashrom-0.9.0 (05 May 2009)
+
+  05 May 2009; Mart Raudsepp <leio@gentoo.org> +metadata.xml,
+  +flashrom-0.9.0.ebuild:
+  Initial import of flashrom - a utility for reading, writing, verifying and
+  erasing flash ROM chips. It's used to flash BIOS/coreboot/firmware images.
+  Roughly based on ebuilds from Peter Stuge and Christian Ruppert. Closes bug
+  196945
+

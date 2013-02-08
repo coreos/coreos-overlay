@@ -1,0 +1,12 @@
+diff -ruN OpenCV-2.3.0-1-s2o/CMakeLists.txt OpenCV-2.3.0/CMakeLists.txt
+--- OpenCV-2.3.0-1-s2o/CMakeLists.txt	2011-09-18 18:40:04.000000000 +0200
++++ OpenCV-2.3.0/CMakeLists.txt	2011-09-18 18:55:47.000000000 +0200
+@@ -1240,7 +1240,7 @@
+ if(UNIX)
+     # For a command "FIND_PACKAGE(FOO)", CMake will look at the directory /usr/share|lib/cmake/FOO/FOOConfig.cmake, so:
+     install(FILES ${CMAKE_BINARY_DIR}/unix-install/OpenCVConfig.cmake DESTINATION share/opencv/)
+-    install(CODE "exec_program(ln ARGS -sf \"${CMAKE_INSTALL_PREFIX}/share/opencv\" \"${CMAKE_INSTALL_PREFIX}/share/OpenCV\")")
++    install(CODE "exec_program(ln ARGS -sf \"${CMAKE_INSTALL_PREFIX}/share/opencv\" \"$ENV{D}/${CMAKE_INSTALL_PREFIX}/share/OpenCV\")")
+ endif()
+ 
+ # --------------------------------------------------------------------------------------------

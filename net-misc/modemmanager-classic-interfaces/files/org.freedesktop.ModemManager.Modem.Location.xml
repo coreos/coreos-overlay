@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<node name="/" xmlns:tp="http://telepathy.freedesktop.org/wiki/DbusSpec#extensions-v0">
+  <interface name="org.freedesktop.ModemManager.Modem.Location">
+    <tp:docstring>
+      This interface allows devices to provide location information to client
+      applications.  Not all devices can provide this information, or even if
+      they do, they may not be able to provide it while a data session is
+      active.
+    </tp:docstring>
+
+    <property name="Capabilities" type="u" access="read" tp:type="MM_MODEM_LOCATION_CAPABILITIES">
+      <tp:docstring>
+        Location capabilities of the device.
+      </tp:docstring>
+    </property>
+
+    <property name="Enabled" type="b" access="read">
+      <tp:docstring>
+        TRUE if location information gathering is enabled for this device, FALSE
+        if it is disabled. When disabled, the device will not provide location
+        information.
+      </tp:docstring>
+    </property>
+
+    <method name="Enable">
+      <tp:docstring>
+        Enable or disable location information gathering.  This method may
+        require the client to authenticate itself.  This method may also cause
+        any necessary functionality of the mobile be be turned on, including
+        enabling the modem device itself.
+      </tp:docstring>
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <annotation name="org.freedesktop.DBus.GLib.CSymbol" value="impl_modem_location_enable"/>
+      <arg name="enable" type="b" direction="in">
+        <tp:docstring>
+          TRUE to enable location information gathering, FALSE to disable.
+        </tp:docstring>
+      </arg>
+      <arg name="signal_location" type="b" direction="in">
+        <tp:docstring>
+          When enabling location information gathering, this argument controls
+          whether the device emits signals with new location information or not.
+          When signals are emitted, any client application (including malicious
+          ones!) can listen for location updates unless D-Bus permissions
+          restrict these signals from certain users.  If further security is
+          desired, this argument can be set to FALSE to disable location
+          updates via D-Bus signals and require applications to call
+          authenticated APIs (like GetLocation) to get location information.
+          This argument is ignored when disabling location information
+          gathering.
+        </tp:docstring>
+      </arg>
+    </method>
+
+    <method name="GetLocation">
+      <tp:docstring>
+        Return current location information, if any.  This method may require
+        the client to authenticate itself.
+      </tp:docstring>
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <annotation name="org.freedesktop.DBus.GLib.CSymbol" value="impl_modem_location_get_location"/>
+      <arg name="Location" type="a{uv}" direction="out" tp:type="Location_Information_Map">
+        <tp:docstring>
+          Dict of available location information when location information
+          gathering is enabled.  If the modem supports multiple location types
+          it may return more than one here.
+        </tp:docstring>
+      </arg>
+    </method>
+
+    <property name="SignalsLocation" type="b" access="read">
+      <tp:docstring>
+        TRUE if location updates will be emitted via D-Bus signals, FALSE
+        if location updates will not be emitted.  See the Enable method for
+        more information.
+      </tp:docstring>
+    </property>
+
+    <property name="Location" type="a{uv}" access="read" tp:type="Location_Information_Map">
+      <tp:docstring>
+        Dict of available location information when location information
+        gathering is enabled.  If the modem supports multiple location types
+        it may return more than one here.  Note that if the device was told
+        not to emit updated location information when location information
+        gathering was initially enabled, this property may not return
+        any location information for security reasons.
+      </tp:docstring>
+    </property>
+
+    <tp:mapping name="Location_Information_Map">
+      <tp:docstring>
+        A mapping from location type to type-specific location information.
+      </tp:docstring>
+      <tp:member type="u" name="Type" tp:type="MM_MODEM_LOCATION_CAPABILITIES">
+        <tp:docstring>
+          Identifies the type and format of the associated location information.
+          Contrary to the value description, this is not a bitfield but uses the
+          same values as the MM_MODEM_LOCATION_CAPABILITIES bitfield.
+        </tp:docstring>
+      </tp:member>
+      <tp:member type="v" name="Data">
+        <tp:docstring>
+          Contains type-specific location information.  See the documentation for
+          each type for a description of its data format.
+        </tp:docstring>
+      </tp:member>
+    </tp:mapping>
+
+    <tp:flags name="MM_MODEM_LOCATION_CAPABILITIES" value-prefix="MM_MODEM_LOCATION_CAPABILITY" type="u">
+      <tp:flag suffix="UNKNOWN" value="0x0">
+        <tp:docstring><p>Unknown or no capabilties.</p></tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="GPS_NMEA" value="0x1">
+        <tp:docstring>
+          <p>For capability reporting, indicates the device is capable of
+            providing GPS NMEA-format location information.</p>
+
+          <p>For location reporting, devices supporting this capability return
+            a string containing one or more NMEA sentences (D-Bus signature 's').
+            The manager will cache the most recent NMEA sentence of each type for
+            a period of time not less than 30 seconds.  When reporting multiple
+            NMEA sentences, sentences shall be separated by an ASCII Carriage
+            Return and Line Feed (&lt;CR&gt;&lt;LF&gt;) sequence.
+          </p>
+          <p>
+            For example, if the device sends a $GPRMC sentence immediately
+            followed by a $GPGGA sentence, the reported location string would be
+            (where of course the &lt;CR&gt;&lt;LF&gt; is replaced with the actual
+            ASCII CR (0x0D) and LF (0x0A) control characters):
+            <pre>
+              $GPRMC,134523.92,V,,,,,,,030136,,,N*73&lt;CR&gt;&lt;LF&gt;$GPGGA,,,,,,0,00,0.5,,M,0.0001999,M,0.0000099,0000*45
+            </pre>
+            If the device sends a new $GPRMC three seconds later, the new $GPRMC
+            replaces the previously received $GPRMC sentence, and the updated
+            string would be:
+            <pre>
+              $GPRMC,134526.92,V,,,,,,,030136,,,N*76&lt;CR&gt;&lt;LF&gt;$GPGGA,,,,,,0,00,0.5,,M,0.0001999,M,0.0000099,0000*45
+            </pre>
+            If the device then sends a $GPGSA sentence about 5 seconds later, the
+            $GPGSA sentence is added to the string (since no $GPGSA sentence was
+            previously received in this session), the updated string would be:
+            <pre>
+              $GPRMC,134526.92,V,,,,,,,030136,,,N*76&lt;CR&gt;&lt;LF&gt;$GPGGA,,,,,,0,00,0.5,,M,0.0001999,M,0.0000099,0000*45&lt;CR&gt;&lt;LF&gt;$GPGSA,A,1,,,,,,,,,,,,,1.1,0.5,1.0*34
+            </pre>
+            The manager may discard any cached sentences older than 30 seconds.
+          </p>
+          <p>This allows clients to read the latest positioning data as soon as
+            possible after they start, even if the device is not providing
+            frequent location data updates.
+          </p>
+        </tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="GSM_LAC_CI" value="0x2">
+        <tp:docstring>
+          <p>For capability reporting, indicates the device is capable of
+            providing GSM Location Area Code/Cell ID location information.</p>
+
+          <p>For location reporting, devices supporting this
+            capability return a string in the format "MCC,MNC,LAC,CI" (without the
+            quotes of course) where the following applies:</p>
+          <ul>
+            <li>
+              MCC is the three-digit ITU E.212 Mobile Country Code of the
+              network provider to which the mobile is currently registered.
+              This value should be the same MCC as reported by the
+              org.freedesktop.Modem.Gsm.Network.GetRegistrationInfo() method's
+              returned "operator code" argument.
+              e.g. "310"
+            </li>
+            <li>
+              MNC is the two- or three-digit GSM Mobile Network Code of the
+              network provider to which the mobile is currently registered.
+              This value should be the same MCC as reported by the
+              org.freedesktop.Modem.Gsm.Network.GetRegistrationInfo() method's
+              returned "operator code" argument.
+              e.g. "26" or "260"
+            </li>
+            <li>
+              LAC is the two-byte Location Area Code of the base station with
+              which the mobile is registered, in upper-case hexadecimal format
+              without leading zeros, as specified in 3GPP TS 27.007 section
+              10.1.19.  e.g. "84CD".
+            </li>
+            <li>
+              CI is the two- or four-byte Cell Identifier with which the mobile
+              is registered, in upper-case hexadecimal format without leading
+              zeros, as specified in 3GPP TS 27.007.  e.g. "2BAF" or "D30156".
+            </li>
+          </ul>
+          <p>The entire string may only be composed of the ASCII digits [0-9],
+            the alphabetical characters [A-F], and the comma (,) character.  No
+            other characters are allowed.  For example: "310,260,8BE3,2BAF" or
+            "250,40,CE00,1CEAD8F0".</p>
+
+          <p>If any of these four items (MCC,MNC,LAC,CI) is unknown or the
+            mobile is not registered with a network, then the GSM_LAC_CI location
+            information item should not be provided as a returned value from the
+            GetLocation() method or in the Location property.</p>
+        </tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="GPS_RAW" value="0x4">
+        <tp:docstring>
+          <p>For capability reporting, indicates the device is capable of
+            providing raw GPS information using a series of defined key/value
+            pairs.</p>
+
+          <p>For location reporting, devices supporting this
+            capability return a D-Bus dict (signature a{sv}) mapping well-known
+            keys to values with defined formats.  The allowed key/value pairs
+            and their formats are:</p>
+          <table>
+            <tr><th>Key</th><th>Value Type</th><th>Value contents</th><th>Example</th></tr>
+            <tr>
+              <td>latitude</td>
+              <td>d</td>
+              <td>Latitude in Decimal Degrees (positive numbers mean N quadrasphere, negative mean S quadrasphere)</td>
+              <td>38.889722 (ie, 38d 53' 22" N)</td>
+            </tr>
+            <tr>
+              <td>longitude</td>
+              <td>d</td>
+              <td>Longitude in Decimal Degrees (positive numbers mean E quadrasphere, negative mean W quadrasphere)</td>
+              <td>-77.008889 (ie, 77d 0' 32" W)</td>
+            </tr>
+            <tr>
+              <td>altitude</td>
+              <td>d</td>
+              <td>Altitude above sea level in meters</td>
+              <td>33.5</td>
+            </tr>
+            <tr>
+              <td>horiz-velocity</td>
+              <td>d</td>
+              <td>Horizontal velocity in meters-per-second</td>
+              <td>.5</td>
+            </tr>
+            <tr>
+              <td>vert-velocity</td>
+              <td>d</td>
+              <td>Vertical velocity in meters-per-second</td>
+              <td>.01</td>
+            </tr>
+          </table>
+          <p>The 'latitude' and 'longitude' keys are required; other keys are
+            optional.</p>
+        </tp:docstring>
+      </tp:flag>
+    </tp:flags>
+
+  </interface>
+</node>
+

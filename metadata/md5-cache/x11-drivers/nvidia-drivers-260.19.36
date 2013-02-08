@@ -1,0 +1,15 @@
+DEFINED_PHASES=compile install postinst postrm preinst prepare setup unpack
+DEPEND=<x11-base/xorg-server-1.9.99 kernel_linux? ( >=sys-libs/glibc-2.6.1 ) multilib? ( app-emulation/emul-linux-x86-xlibs ) >=app-admin/eselect-opengl-1.0.9 !<media-video/nvidia-settings-256.52 kernel_linux? ( virtual/linux-sources ) kernel_linux? ( virtual/modutils ) sys-apps/sed kernel_linux? ( virtual/linux-sources ) sys-apps/pciutils
+DESCRIPTION=NVIDIA X11 driver and GLX libraries
+EAPI=2
+HOMEPAGE=http://www.nvidia.com/
+IUSE=acpi custom-cflags gtk multilib kernel_linux kernel_linux
+KEYWORDS=-* ~amd64 ~x86 ~x86-fbsd
+LICENSE=NVIDIA
+PDEPEND=>=x11-libs/libvdpau-0.3-r1 gtk? ( media-video/nvidia-settings )
+RDEPEND=<x11-base/xorg-server-1.9.99 kernel_linux? ( >=sys-libs/glibc-2.6.1 ) multilib? ( app-emulation/emul-linux-x86-xlibs ) >=app-admin/eselect-opengl-1.0.9 !<media-video/nvidia-settings-256.52 x11-libs/libXvMC kernel_linux? ( virtual/modutils ) acpi? ( sys-power/acpid ) kernel_linux? ( virtual/modutils )
+RESTRICT=strip
+SLOT=0
+SRC_URI=x86? ( http://us.download.nvidia.com/XFree86/Linux-x86/260.19.36/NVIDIA-Linux-x86-260.19.36.run ) amd64? ( http://us.download.nvidia.com/XFree86/Linux-x86_64/260.19.36/NVIDIA-Linux-x86_64-260.19.36.run ) x86-fbsd? ( http://us.download.nvidia.com/XFree86/FreeBSD-x86/260.19.36/NVIDIA-FreeBSD-x86-260.19.36.tar.gz )
+_eclasses_=binutils-funcs	73669d0b20960c1cc54cf381a4b89e77	eutils	33ef77a15337022e05342d2c772a7a5a	flag-o-matic	01a8b1eb019305bc4b4a8bd0b04e4cd8	linux-info	01b7a221ed254c010703fd454e011ea6	linux-mod	07a3d250a1268d811d3e8730e5741394	multilib	5f4ad6cf85e365e8f0c6050ddd21659e	nvidia-driver	f195f64263551aa3c4a9aff69ed97059	portability	0be430f759a631e692678ed796e09f5c	toolchain-funcs	64fc271a237429f84f36b91c9f4b9912	user	9e552f935106ff0bc92af16da64b4b29	versionator	865bc8b2fc9fcfb6d520bdf5a110f5ed
+_md5_=eb8b68ad54621db9e4c589760db8ff53

@@ -1,0 +1,62 @@
+From 6ccd3b91c18d8b13bc468ef962a9ef9dfc6c4515 Mon Sep 17 00:00:00 2001
+From: Mike Frysinger <vapier@gentoo.org>
+Date: Sat, 14 Aug 2010 01:16:42 -0400
+Subject: [PATCH] tracepath: re-use printf return in print_host
+
+The printf funcs take an int for field widths, not a size_t.  Also, since
+the printf funcs already return the length of chars displayed, use that
+value instead of re-calculating the length with strlen.
+
+Signed-off-by: Mike Frysinger <vapier@gentoo.org>
+---
+ tracepath.c  |   11 ++++-------
+ tracepath6.c |   11 ++++-------
+ 2 files changed, 8 insertions(+), 14 deletions(-)
+
+diff --git a/tracepath.c b/tracepath.c
+index 81c22e9..ca84a69 100644
+--- a/tracepath.c
++++ b/tracepath.c
+@@ -68,13 +68,10 @@ void data_wait(int fd)
+ 
+ void print_host(const char *a, const char *b, int both)
+ {
+-	size_t plen = 0;
+-	printf("%s", a);
+-	plen = strlen(a);
+-	if (both) {
+-		printf(" (%s)", b);
+-		plen += strlen(b) + 3;
+-	}
++	int plen;
++	plen = printf("%s", a);
++	if (both)
++		plen += printf(" (%s)", b);
+ 	if (plen >= HOST_COLUMN_SIZE)
+ 		plen = HOST_COLUMN_SIZE - 1;
+ 	printf("%*s", HOST_COLUMN_SIZE - plen, "");
+diff --git a/tracepath6.c b/tracepath6.c
+index 5cc7424..5c2db8f 100644
+--- a/tracepath6.c
++++ b/tracepath6.c
+@@ -80,13 +80,10 @@ void data_wait(int fd)
+ 
+ void print_host(const char *a, const char *b, int both)
+ {
+-	size_t plen = 0;
+-	printf("%s", a);
+-	plen = strlen(a);
+-	if (both) {
+-		printf(" (%s)", b);
+-		plen += strlen(b) + 3;
+-	}
++	int plen;
++	plen = printf("%s", a);
++	if (both)
++		plen += printf(" (%s)", b);
+ 	if (plen >= HOST_COLUMN_SIZE)
+ 		plen = HOST_COLUMN_SIZE - 1;
+ 	printf("%*s", HOST_COLUMN_SIZE - plen, "");
+-- 
+1.7.1.1
+

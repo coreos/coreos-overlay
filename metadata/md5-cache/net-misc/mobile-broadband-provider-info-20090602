@@ -1,0 +1,8 @@
+DEFINED_PHASES=install
+DESCRIPTION=Database of mobile broadband service providers
+HOMEPAGE=http://live.gnome.org/NetworkManager/MobileBroadband/ServiceProviders
+KEYWORDS=~arm ~amd64 ~x86
+LICENSE=CC-PD
+SLOT=0
+SRC_URI=http://dev.gentoo.org/~dagger/files/mobile-broadband-provider-info-20090602.tar.bz2
+_md5_=1bf03635dd575bf31942dea3bf172a48

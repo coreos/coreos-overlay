@@ -1,0 +1,178 @@
+diff --git a/include/evemu.h b/include/evemu.h
+index e4ce667..05cef0f 100644
+--- a/include/evemu.h
++++ b/include/evemu.h
+@@ -282,10 +282,25 @@ int evemu_read_event_realtime(FILE *fp, struct input_event *ev,
+ int evemu_record(FILE *fp, int fd, int ms);
+ 
+ /**
++ * insert_slot0() - insert a slot0 event
++ * @fp: file pointer to read the event from
++ * @ev: pointer to the kernel event to be filled
++ * @evtime: pointer to a timeval struct
++ *
++ * Read events until an EV_SYN/SYN_REPORT event is reached, and insert a slot0
++ * event. However, if a slot0 event exists already, do not insert anything.
++ *
++ * Returns 1 if a slot0 event is created and inserted, 0 if a slot0 event
++ * exists already.
++ */
++int insert_slot0(FILE *fp, struct input_event *ev, struct timeval *evtime);
++
++/**
+  * evemu_play() - replay events from file to kernel device in realtime
+  * @fp: file pointer to read the events from
+  * @fd: file descriptor of kernel device to write to
+  * @fp_time: file descriptor for keeping playback timing information
++ * @flag_slot0: flag indicating whether to insert a slot 0 event or not
+  *
+  * Contiuously reads events from the file and writes them to the
+  * kernel device, in realtime. The function terminates when end of
+@@ -293,7 +308,7 @@ int evemu_record(FILE *fp, int fd, int ms);
+  *
+  * Returns zero if successful, negative error otherwise.
+  */
+-int evemu_play(FILE *fp, int fd, FILE *fp_time);
++int evemu_play(FILE *fp, int fd, FILE *fp_time, int flag_slot0);
+ 
+ /**
+  * evemu_create() - create a kernel device from the evemu configuration
+diff --git a/src/evemu.c b/src/evemu.c
+index 02377f1..9d34101 100644
+--- a/src/evemu.c
++++ b/src/evemu.c
+@@ -65,6 +65,14 @@
+ 
+ #define SYSCALL(call) while (((call) == -1) && (errno == EINTR))
+ 
++/* To determine if this is a synchronization event */
++#define EVENT_SYN(type, code, value) \
++	(type == EV_SYN && code == SYN_REPORT && value == 0)
++
++/* To determine if this is a slot n event */
++#define EVENT_SLOT(type, code, value, n) \
++	(type == EV_ABS && code == ABS_MT_SLOT && value == n)
++
+ static void copy_bits(unsigned char *mask, const unsigned long *bits, int bytes)
+ {
+ 	int i;
+@@ -378,16 +386,57 @@ int evemu_read_event_realtime(FILE *fp, struct input_event *ev,
+ 	return ret;
+ }
+ 
+-int evemu_play(FILE *fp, int fd, FILE *fp_time)
++int insert_slot0(FILE *fp, struct input_event *ev, struct timeval *evtime)
++{
++	int flag_ev0_time = 1;
++
++	while (evemu_read_event(fp, ev) > 0) {
++		if (flag_ev0_time) {
++			*evtime = ev->time;
++			flag_ev0_time = 0;
++		}
++		if (EVENT_SLOT(ev->type, ev->code, ev->value, 0)) {
++			rewind(fp);
++			return 0;
++		} else if (EVENT_SYN(ev->type, ev->code, ev->value)) {
++			break;
++		}
++	}
++
++	if (evtime->tv_usec > 0) {
++		evtime->tv_usec--;
++	} else if (evtime->tv_sec > 0) {
++		evtime->tv_usec = 999999;
++		evtime->tv_sec--;
++	} else {
++		evtime->tv_usec = 0;
++		evtime->tv_sec = 0;
++	}
++	ev->time = *evtime;
++	ev->type = EV_ABS;
++	ev->code = ABS_MT_SLOT;
++	ev->value = 0;
++	rewind(fp);
++
++	return 1;
++}
++
++int evemu_play(FILE *fp, int fd, FILE *fp_time, int flag_slot0)
+ {
+ 	struct input_event ev;
+ 	struct timeval evtime;
+ 	struct timespec curr_tp;
+ 	int ret;
++	int flag_slot0_inserted = 0;
+ 	char *time_format = "E: %lu.%06u %04x %04x %-4d -- playback %lu.%09u\n";
+ 
+ 	memset(&evtime, 0, sizeof(evtime));
+-	while (evemu_read_event_realtime(fp, &ev, &evtime) > 0) {
++	if (flag_slot0) {
++		flag_slot0_inserted = insert_slot0(fp, &ev, &evtime);
++	}
++
++	while (flag_slot0_inserted ||
++		evemu_read_event_realtime(fp, &ev, &evtime) > 0) {
+ 		if (fp_time != NULL) {
+ 			clock_gettime(CLOCK_MONOTONIC, &curr_tp);
+ 			fprintf(fp_time, time_format,
+@@ -396,6 +445,7 @@ int evemu_play(FILE *fp, int fd, FILE *fp_time)
+ 				curr_tp.tv_sec, curr_tp.tv_nsec);
+ 		}
+ 		SYSCALL(ret = write(fd, &ev, sizeof(ev)));
++		flag_slot0_inserted = 0;
+ 	}
+ 
+ 	return 0;
+diff --git a/tools/evemu-play.c b/tools/evemu-play.c
+index f66275e..c2aef3e 100644
+--- a/tools/evemu-play.c
++++ b/tools/evemu-play.c
+@@ -50,9 +50,12 @@ int main(int argc, char *argv[])
+ {
+ 	int fd;
+ 	FILE *fp_time = NULL;
+-	if (argc < 2 || argc > 3) {
+-		fprintf(stderr, "Usage: %s <device> [output_file]\n", argv[0]);
++	char *output_filename = NULL;
++	int flag_slot0 = 0;
++	if (argc < 2 || argc > 4) {
++		fprintf(stderr, "Usage: %s <device> [--insert-slot0] [output_file]\n", argv[0]);
+ 		fprintf(stderr, "\n");
++		fprintf(stderr, "--insert-slot0: insert a slot 0 event if missing in the very first packet.\n");
+ 		fprintf(stderr, "Event data is read from standard input.\n");
+ 		return -1;
+ 	}
+@@ -61,15 +64,25 @@ int main(int argc, char *argv[])
+ 		fprintf(stderr, "error: could not open device\n");
+ 		return -1;
+ 	}
+-	if (argc == 3) {
+-		fp_time = fopen(argv[2], "w");
+-		if (fp_time == NULL) {
+-			fprintf(stderr, "error: could not open output file %s.\n",
+-				argv[2]);
+-			return -1;
++	if (argc >= 3) {
++		if (strcmp(argv[2], "--insert-slot0") == 0) {
++			flag_slot0 = 1;
++			if (argc == 4) {
++				output_filename = argv[3];
++			}
++		} else {
++			output_filename = argv[2];
++		}
++		if (output_filename != NULL) {
++			fp_time = fopen(output_filename, "w");
++			if (fp_time == NULL) {
++				fprintf(stderr, "error: could not open output file %s.\n",
++					output_filename);
++				return -1;
++			}
+ 		}
+ 	}
+-	if (evemu_play(stdin, fd, fp_time)) {
++	if (evemu_play(stdin, fd, fp_time, flag_slot0)) {
+ 		fprintf(stderr, "error: could not describe device\n");
+ 	}
+ 	if (fp_time != NULL) {

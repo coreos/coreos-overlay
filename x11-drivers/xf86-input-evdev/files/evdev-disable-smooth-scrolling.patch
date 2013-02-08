@@ -1,0 +1,32 @@
+From: Daniel Erat <derat@chromium.org>
+Date: Wed, 21 Mar 2012 10:44:51 -0700
+Subject: [PATCH] Disable smooth scrolling in xf86-input-evdev.
+
+This caused additional valuator-containing motion events to
+be sent on behalf of the scrollwheel, which Chrome treated
+identically to touchpad scroll events, resulting in the
+scrollwheel being unusable.
+
+BUG=chromium:118608
+TEST=manual: we scroll 106 pixels for each scrollwheel click on stumpy
+---
+ src/evdev.h |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/src/evdev.h b/src/evdev.h
+--- a/src/evdev.h
++++ b/src/evdev.h
+@@ -67,6 +67,10 @@
+ #define HAVE_SMOOTH_SCROLLING 1
+ #endif
+ 
++/* Smooth scrolling results in the mousewheel generating motion events with
++ * valuators that confuse Chrome: http://crosbug.com/118608 */
++#undef HAVE_SMOOTH_SCROLLING
++
+ #define EVDEV_MAXBUTTONS 32
+ #define EVDEV_MAXQUEUE 32
+ 
+-- 
+1.7.7.3
+

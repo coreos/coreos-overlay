@@ -1,0 +1,54 @@
+From d81f5ea3e0a5f9a532fcf685898e041fafa93a5b Mon Sep 17 00:00:00 2001
+From: Daniel Stenberg <daniel@haxx.se>
+Date: Fri, 2 Dec 2011 21:10:28 +0100
+Subject: [PATCH] multi interface: only use non-NULL function pointer!
+
+If the socket callback function pointer hasn't been set, we must not
+attempt to use it. Commit adc88ca20 made it more likely to occur.
+---
+ lib/multi.c |   22 ++++++++++++----------
+ 1 files changed, 12 insertions(+), 10 deletions(-)
+
+diff --git a/lib/multi.c b/lib/multi.c
+index 3059e49..f3b892c 100644
+--- a/lib/multi.c
++++ b/lib/multi.c
+@@ -1940,11 +1940,12 @@ static void singlesocket(struct Curl_multi *multi,
+     }
+ 
+     /* we know (entry != NULL) at this point, see the logic above */
+-    multi->socket_cb(easy->easy_handle,
+-                     s,
+-                     action,
+-                     multi->socket_userp,
+-                     entry->socketp);
++    if(multi->socket_cb)
++      multi->socket_cb(easy->easy_handle,
++                       s,
++                       action,
++                       multi->socket_userp,
++                       entry->socketp);
+ 
+     entry->action = action; /* store the current action state */
+   }
+@@ -2019,11 +2020,12 @@ static void singlesocket(struct Curl_multi *multi,
+         remove_sock_from_hash = FALSE;
+ 
+       if(remove_sock_from_hash) {
+-        multi->socket_cb(easy->easy_handle,
+-                         s,
+-                         CURL_POLL_REMOVE,
+-                         multi->socket_userp,
+-                         entry ? entry->socketp : NULL);
++        if(multi->socket_cb)
++          multi->socket_cb(easy->easy_handle,
++                           s,
++                           CURL_POLL_REMOVE,
++                           multi->socket_userp,
++                           entry ? entry->socketp : NULL);
+         sh_delentry(multi->sockhash, s);
+       }
+ 
+-- 
+1.7.3.1
+

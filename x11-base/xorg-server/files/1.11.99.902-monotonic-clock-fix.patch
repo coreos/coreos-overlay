@@ -1,0 +1,54 @@
+From f1c50bbaf22a272b44d36441811ef9d8483838ca Mon Sep 17 00:00:00 2001
+From: David James <davidjames@google.com>
+Date: Wed, 19 May 2010 09:24:39 -0700
+Subject: [PATCH] Discover monotonic clock using compile-time check.
+
+When xorg-xserver is being cross-compiled, there is currently no way
+for us to detect whether the monotonic clock is available on the
+target system, because we aren't able to run a test program. Currently, in
+this situation, we default to not use the monotonic clock. One problem
+with this situation is that the user will be treated as idle when the date
+is updated.
+
+To fix this situation, we now use a compile-time check to detect whether the
+monotonic clock is available. This check can run just fine when we are
+cross-compiling.
+
+Signed-off-by: David James <davidjames@google.com>
+---
+ configure.ac |   14 ++++++--------
+ 1 files changed, 6 insertions(+), 8 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index 1c7875e..36f7bdd 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -935,19 +935,17 @@ if ! test "x$have_clock_gettime" = xno; then
+         CPPFLAGS="$CPPFLAGS -D_POSIX_C_SOURCE=200112L"
+     fi
+ 
+-    AC_RUN_IFELSE([AC_LANG_SOURCE([
++    AC_COMPILE_IFELSE([AC_LANG_SOURCE([
+ #include <time.h>
++#include <unistd.h>
+ 
+ int main(int argc, char *argv[[]]) {
+-    struct timespec tp;
+-
+-    if (clock_gettime(CLOCK_MONOTONIC, &tp) == 0)
++#if !(defined(_POSIX_MONOTONIC_CLOCK) && _POSIX_MONOTONIC_CLOCK >= 0 && defined(CLOCK_MONOTONIC))
++        #error No monotonic clock
++#endif
+         return 0;
+-    else
+-        return 1;
+ }
+-    ])], [MONOTONIC_CLOCK=yes], [MONOTONIC_CLOCK=no],
+-       [MONOTONIC_CLOCK="cross compiling"])
++    ])], [MONOTONIC_CLOCK=yes], [MONOTONIC_CLOCK=no])
+ 
+     LIBS="$LIBS_SAVE"
+     CPPFLAGS="$CPPFLAGS_SAVE"
+-- 
+1.7.7.3
+

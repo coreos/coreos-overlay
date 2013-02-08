@@ -1,0 +1,13 @@
+DEFINED_PHASES=compile configure install postinst prepare test unpack
+DEPEND=sys-libs/zlib bzip2? ( app-arch/bzip2 ) X? ( x11-libs/libX11 x11-libs/libXau x11-libs/libXdmcp ) || ( >=sys-devel/automake-1.11.1:1.11 ) >=sys-devel/autoconf-2.68 sys-devel/libtool
+DESCRIPTION=A high-quality and portable font engine
+EAPI=4
+HOMEPAGE=http://www.freetype.org/
+IUSE=X auto-hinter bindist bzip2 debug doc fontforge static-libs utils
+KEYWORDS=~alpha amd64 arm ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc x86 ~sparc-fbsd ~x86-fbsd ~ppc-aix ~x64-freebsd ~x86-freebsd ~x86-interix ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~m68k-mint ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris ~x86-winnt
+LICENSE=FTL GPL-2
+RDEPEND=sys-libs/zlib bzip2? ( app-arch/bzip2 ) X? ( x11-libs/libX11 x11-libs/libXau x11-libs/libXdmcp )
+SLOT=2
+SRC_URI=mirror://sourceforge/freetype/freetype-2.4.11.tar.bz2 utils? ( mirror://sourceforge/freetype/ft2demos-2.4.11.tar.bz2 ) doc? ( mirror://sourceforge/freetype/freetype-doc-2.4.11.tar.bz2 )
+_eclasses_=autotools	addbdf6cce5024ac93ad2084ad5e1d2d	autotools-utils	966fed1f979132a778b0b48c74a16adb	base	fc89786f3f7e7bcf03334359bd5b639b	binutils-funcs	73669d0b20960c1cc54cf381a4b89e77	eutils	33ef77a15337022e05342d2c772a7a5a	flag-o-matic	01a8b1eb019305bc4b4a8bd0b04e4cd8	libtool	0fd90d183673bf1107465ec45849d1ea	multilib	5f4ad6cf85e365e8f0c6050ddd21659e	portability	0be430f759a631e692678ed796e09f5c	toolchain-funcs	64fc271a237429f84f36b91c9f4b9912	user	9e552f935106ff0bc92af16da64b4b29
+_md5_=7bfc11a059ecad55b13f45e94e881cf7

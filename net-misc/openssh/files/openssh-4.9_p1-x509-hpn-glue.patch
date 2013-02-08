@@ -1,0 +1,91 @@
+move things around so hpn applies cleanly when using X509
+
+--- servconf.c
++++ servconf.c
+@@ -106,6 +106,17 @@
+ 	options->log_level = SYSLOG_LEVEL_NOT_SET;
+ 	options->rhosts_rsa_authentication = -1;
+ 	options->hostbased_authentication = -1;
++	options->hostbased_algorithms = NULL;
++	options->pubkey_algorithms = NULL;
++	ssh_x509flags_initialize(&options->x509flags, 1);
++#ifndef SSH_X509STORE_DISABLED
++	ssh_x509store_initialize(&options->ca);
++#endif /*ndef SSH_X509STORE_DISABLED*/
++#ifdef SSH_OCSP_ENABLED
++	options->va.type = -1;
++	options->va.certificate_file = NULL;
++	options->va.responder_url = NULL;
++#endif /*def SSH_OCSP_ENABLED*/
+ 	options->hostbased_uses_name_from_packet_only = -1;
+ 	options->rsa_authentication = -1;
+ 	options->pubkey_authentication = -1;
+@@ -147,18 +158,6 @@
+ 	options->num_permitted_opens = -1;
+ 	options->adm_forced_command = NULL;
+ 	options->chroot_directory = NULL;
+-
+-	options->hostbased_algorithms = NULL;
+-	options->pubkey_algorithms = NULL;
+-	ssh_x509flags_initialize(&options->x509flags, 1);
+-#ifndef SSH_X509STORE_DISABLED
+-	ssh_x509store_initialize(&options->ca);
+-#endif /*ndef SSH_X509STORE_DISABLED*/
+-#ifdef SSH_OCSP_ENABLED
+-	options->va.type = -1;
+-	options->va.certificate_file = NULL;
+-	options->va.responder_url = NULL;
+-#endif /*def SSH_OCSP_ENABLED*/
+ }
+ 
+ void
+@@ -329,6 +329,16 @@
+ 	/* Portable-specific options */
+ 	sUsePAM,
+ 	/* Standard Options */
++	sHostbasedAlgorithms,
++	sPubkeyAlgorithms,
++	sX509KeyAlgorithm,
++	sAllowedClientCertPurpose,
++	sKeyAllowSelfIssued, sMandatoryCRL,
++	sCACertificateFile, sCACertificatePath,
++	sCARevocationFile, sCARevocationPath,
++	sCAldapVersion, sCAldapURL,
++	sVAType, sVACertificateFile,
++	sVAOCSPResponderURL,
+ 	sPort, sHostKeyFile, sServerKeyBits, sLoginGraceTime, sKeyRegenerationTime,
+ 	sPermitRootLogin, sLogFacility, sLogLevel,
+ 	sRhostsRSAAuthentication, sRSAAuthentication,
+@@ -351,16 +361,6 @@
+ 	sGssAuthentication, sGssCleanupCreds, sAcceptEnv, sPermitTunnel,
+ 	sMatch, sPermitOpen, sForceCommand,
+ 	sUsePrivilegeSeparation,
+-	sHostbasedAlgorithms,
+-	sPubkeyAlgorithms,
+-	sX509KeyAlgorithm,
+-	sAllowedClientCertPurpose,
+-	sKeyAllowSelfIssued, sMandatoryCRL,
+-	sCACertificateFile, sCACertificatePath,
+-	sCARevocationFile, sCARevocationPath,
+-	sCAldapVersion, sCAldapURL,
+-	sVAType, sVACertificateFile,
+-	sVAOCSPResponderURL,
+ 	sDeprecated, sUnsupported
+ } ServerOpCodes;
+ 
+--- Makefile.in
++++ Makefile.in
+@@ -44,11 +44,12 @@
+ CC=@CC@
+ LD=@LD@
+ CFLAGS=@CFLAGS@
+-CPPFLAGS=-I. -I$(srcdir) @CPPFLAGS@ @LDAP_CPPFLAGS@ $(PATHS) @DEFS@
++CPPFLAGS=-I. -I$(srcdir) @CPPFLAGS@ $(PATHS) @DEFS@
+ LIBS=@LIBS@
+ SSHDLIBS=@SSHDLIBS@
+ LIBEDIT=@LIBEDIT@
+ LIBLDAP=@LDAP_LDFLAGS@ @LDAP_LIBS@
++CPPFLAGS += @LDAP_CPPFLAGS@
+ AR=@AR@
+ AWK=@AWK@
+ RANLIB=@RANLIB@

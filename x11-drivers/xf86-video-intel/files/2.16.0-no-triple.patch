@@ -1,0 +1,12 @@
+diff --git a/src/intel_driver.c b/src/intel_driver.c
+index 9d1c4e8..3e4f664 100644
+--- a/src/intel_driver.c
++++ b/src/intel_driver.c
+@@ -677,6 +677,7 @@ static Bool I830PreInit(ScrnInfoPtr scrn, int flags)
+ 		xf86ReturnOptValBool(intel->Options,
+ 				     OPTION_TRIPLE_BUFFER,
+ 				     TRUE);
++	intel->use_triple_buffer = FALSE;
+ 	xf86DrvMsg(scrn->scrnIndex, X_CONFIG, "Triple buffering? %s\n",
+ 		   intel->use_triple_buffer ? "enabled" : "disabled");
+ 

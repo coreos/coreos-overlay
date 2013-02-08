@@ -1,0 +1,14 @@
+diff --git a/src/m17nutil.c b/src/m17nutil.c
+index 42aa8f6..dd10bbd 100644
+--- a/src/m17nutil.c
++++ b/src/m17nutil.c
+@@ -11,7 +11,9 @@
+ 
+ static MConverter *utf8_converter = NULL;
+ 
++#ifndef DEFAULT_XML
+ #define DEFAULT_XML (SETUPDIR "/default.xml")
++#endif
+ 
+ struct _IBusM17NEngineConfigNode {
+     gchar *name;

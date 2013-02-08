@@ -1,0 +1,21 @@
+diff --exclude-from=/home/dang/.scripts/diffrc -up -ruN glib-2.12.12.orig/gmodule/gmodule-dl.c glib-2.12.12/gmodule/gmodule-dl.c
+--- glib-2.12.12.orig/gmodule/gmodule-dl.c	2007-05-01 19:12:40.000000000 -0400
++++ glib-2.12.12/gmodule/gmodule-dl.c	2007-07-05 20:10:51.000000000 -0400
+@@ -106,6 +106,7 @@ _g_module_open (const gchar *file_name,
+ static gpointer
+ _g_module_self (void)
+ {
++#ifndef __FreeBSD__
+   gpointer handle;
+   
+   /* to query symbols from the program itself, special link options
+@@ -117,6 +118,9 @@ _g_module_self (void)
+     g_module_set_error (fetch_dlerror (TRUE));
+   
+   return handle;
++#else
++  return RTLD_DEFAULT;
++#endif
+ }
+ 
+ static void

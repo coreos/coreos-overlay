@@ -1,0 +1,7 @@
+DEFINED_PHASES=-
+DESCRIPTION=Board specific factory test image resources
+EAPI=2
+KEYWORDS=amd64 arm x86
+LICENSE=BSD
+SLOT=0
+_md5_=e7fab82da6007655756e7b41ce003962

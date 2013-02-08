@@ -1,0 +1,46 @@
+#!/usr/bin/env python
+
+# Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import dbus
+import sys
+
+bus = dbus.SystemBus()
+
+bluez = bus.get_object('org.bluez', '/')
+
+adapter_path = bluez.DefaultAdapter(dbus_interface='org.bluez.Manager')
+adapter = bus.get_object('org.bluez', adapter_path)
+
+all_the_things = """\
+                                .
+       ,                 =     ,
+       ,,                   .,,
+        ,,.   ,  ..    ,, .,,,
+        ,,,,  ,. ,,   ,,.:,,,.
+        ,,,,, ,,.,, .,,,,i,,,
+         ,,,,,,,YtY,,,+,,R,,
+   ,     ,,,,,,V.. tY# =,I,.
+    ,,.  ,,,,,,,V    W R,;,
+     .,,. ,,,,: Y R=YW  +,,
+ I;   ,,,,,,,,: Y:####  =,
+i..,   ,,,,,,,,iX#####,  , .,    ,,
+....t ,,,,,,,,,: :####X V,,,   ,,,
+i....  ,,,,,,,,,t I###+ X,,..,,,.
+ I..,   ,,,,,,,,V =##Y, YR,,,,,
+    Xt .,,,,,,+,,R  ,  BYV,,,,
+    ,X:,,,,,,=,,,,R. ,RYYY,,,
+  ,. :X,,,,V,,,,,,RYYYYYYY,,,,,,,,.
+  ,,,,tX,t,,,,,,,,,YYYYYYYX,,,,,,,,,.
+   ,,,,BB,,,,,,,,,,YYYYYYYV,,,,,,,
+   ,,,,,BB,,,,,,,,,XYYYYYYY,,,.
+    ,,,,,XI,,,,,,,,YYYYYYYY,,
+     ,,,,,X:,,,,,,,YYYYYYYY,,.        """
+print all_the_things
+
+for device_path in adapter.ListDevices(dbus_interface='org.bluez.Adapter'):
+  device = bus.get_object('org.bluez', device_path)
+
+  adapter.RemoveDevice(device, dbus_interface='org.bluez.Adapter')

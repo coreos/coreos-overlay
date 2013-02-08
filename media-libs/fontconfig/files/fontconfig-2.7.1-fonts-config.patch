@@ -1,0 +1,32 @@
+--- fonts.conf.in-orig	2010-04-14 11:52:02.000000000 -0700
++++ fonts.conf.in	2010-04-14 11:52:25.000000000 -0700
+@@ -24,8 +24,6 @@
+ <!-- Font directory list -->
+ 
+ 	<dir>@FC_DEFAULT_FONTS@</dir>
+-	@FC_FONTPATH@
+-	<dir>~/.fonts</dir>
+ 
+ <!--
+   Accept deprecated 'mono' alias, replacing it with 'monospace'
+@@ -71,7 +69,6 @@
+ <!-- Font cache directory list -->
+ 
+ 	<cachedir>@FC_CACHEDIR@</cachedir>
+-	<cachedir>~/.fontconfig</cachedir>
+ 
+ 	<config>
+ <!--
+@@ -140,12 +137,6 @@
+ 			<int>0xFFFA</int>	<!-- INTERLINEAR ANNOTATION SEPARATOR -->
+ 			<int>0xFFFB</int>	<!-- INTERLINEAR ANNOTATION TERMINATOR -->
+ 		</blank>
+-<!--
+-  Rescan configuration every 30 seconds when FcFontSetList is called
+- -->
+-		<rescan>
+-			<int>30</int>
+-		</rescan>
+ 	</config>
+ 
+ </fontconfig>

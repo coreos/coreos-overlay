@@ -1,0 +1,15 @@
+diff --git a/configure.ac b/configure.ac
+index 2693ce7..ac752fc 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -1620,7 +1620,6 @@ if test "x$XORG" = xyes; then
+ 		  	linux_alpha=yes
+ 			;;
+ 		  i*86|amd64*|x86_64*|ia64*)
+-			linux_acpi="yes"
+ 			;;
+ 		  *)
+ 			;;
+-- 
+1.7.7.3
+

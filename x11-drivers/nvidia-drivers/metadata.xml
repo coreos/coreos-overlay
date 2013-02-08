@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+<herd>no-herd</herd>
+<maintainer>
+  <email>cardoe@gentoo.org</email>
+  <description>General maintainer and POC with NVIDIA</description>
+</maintainer>
+<maintainer>
+  <email>jer@gentoo.org</email>
+</maintainer>
+<maintainer>
+  <email>spock@gentoo.org</email>
+  <description>Focused on CUDA and new kernel support</description>
+</maintainer>
+<longdescription>NVIDIA X11 driver and GLX libraries</longdescription>
+</pkgmetadata>

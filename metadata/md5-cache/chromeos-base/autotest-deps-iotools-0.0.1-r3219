@@ -1,0 +1,13 @@
+DEFINED_PHASES=compile info install postinst prepare setup unpack
+DEPEND=dev-vcs/git !!<=chromeos-base/autotest-deps-0.0.1-r321
+DESCRIPTION=Autotest iotools dep
+EAPI=2
+HOMEPAGE=http://www.chromium.org/
+IUSE=+autotest cros_workon_tree_fb8c4062f8c8ed9467124d53053e7c108d1eab34 +buildcheck autotest opengles
+KEYWORDS=x86 arm amd64
+LICENSE=GPL-2
+PDEPEND=|| ( >chromeos-base/autotest-deps-0.0.1-r321 !!<=chromeos-base/autotest-deps-0.0.1-r321 )
+RDEPEND=( autotest? ( >=chromeos-base/autotest-0.0.1-r3 ) ) !!<=chromeos-base/autotest-deps-0.0.1-r321
+SLOT=0
+_eclasses_=autotest	534125295770b6401a8180bb518da0e9	autotest-deponly	c768cc6b3a334584419444354d68ba8e	binutils-funcs	73669d0b20960c1cc54cf381a4b89e77	conflict	974274f61683fa68a5c5fae14d38e018	cros-workon	5f2f8a42fa8e9e59f25015d9167f93a4	eutils	33ef77a15337022e05342d2c772a7a5a	flag-o-matic	01a8b1eb019305bc4b4a8bd0b04e4cd8	git-2	da60d6e85fa94cef4d510cab24e01e36	multilib	5f4ad6cf85e365e8f0c6050ddd21659e	portability	0be430f759a631e692678ed796e09f5c	toolchain-funcs	64fc271a237429f84f36b91c9f4b9912	user	9e552f935106ff0bc92af16da64b4b29
+_md5_=e6e42ba623b1788a5d15c0630269dc5b

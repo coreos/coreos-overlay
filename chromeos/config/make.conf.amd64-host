@@ -1,0 +1,63 @@
+# See "man make.conf" for the available options.
+
+ACCEPT_KEYWORDS="amd64"
+CHOST="x86_64-pc-linux-gnu"
+CFLAGS="-O2 -pipe"
+LDFLAGS="-Wl,-O2 -Wl,--as-needed"
+FEATURES="allow-missing-manifests buildpkg clean-logs -collision-protect
+          -ebuild-locks parallel-install sandbox -strict userfetch userpriv
+          usersandbox -unknown-features-warn"
+
+# Since our portage comes from version control, we redirect distfiles
+DISTDIR="/var/lib/portage/distfiles"
+
+PORTDIR="/usr/local/portage/stable"
+
+# We initialize PORTDIR_OVERLAY here to clobber any redefinitions elsewhere.
+# This has to be the first overlay so crossdev finds the correct gcc and 
+# glibc ebuilds.
+PORTDIR_OVERLAY="
+  /usr/local/portage/crossdev
+  /usr/local/portage/chromiumos
+"
+
+# Adding packages to the @world set causes people more trouble than it's
+# worth in our setup -- we rarely have people add custom packages outside
+# of the ChromiumOS set.  You can use "--select" to override this.
+EMERGE_DEFAULT_OPTS="--oneshot"
+
+# Use parallel bzip2 for portage if available
+PORTAGE_BZIP2_COMMAND="pbzip2"
+PORTAGE_BUNZIP2_COMMAND="pbunzip2 --ignore-trailing-garbage=1"
+
+# Where to store built packages.
+PKGDIR="/var/lib/portage/pkgs"
+
+PORT_LOGDIR="/var/log/portage"
+
+source /usr/local/portage/chromiumos/chromeos/binhost/host/amd64-PREFLIGHT_BINHOST.conf
+FULL_BINHOST="https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2013.02.04.030956/packages/"
+PORTAGE_BINHOST="$PREFLIGHT_BINHOST $FULL_BINHOST"
+
+# expat needed for XML parsing in GDB, but enable globally as overhead is tiny.
+USE="${USE} -cups hardened cros_host multilib pic pie -introspection expat"
+
+GENTOO_MIRRORS="https://commondatastorage.googleapis.com/chromeos-localmirror"
+GENTOO_MIRRORS="$GENTOO_MIRRORS https://commondatastorage.googleapis.com/chromeos-mirror/gentoo"
+
+# Remove all .la files for non-plugin libraries.
+# Remove Gentoo init files since we use upstart.
+# Remove logrotate.d files since we don't use logrotate.
+INSTALL_MASK="
+  /usr/lib*/*.la
+  /etc/init.d /etc/conf.d
+  /etc/logrotate.d
+"
+PKG_INSTALL_MASK="${INSTALL_MASK}"
+
+# This is used by profiles/base/profile.bashrc to figure out that we
+# are targeting the cros-sdk (in all its various modes).  It should
+# be utilized nowhere else!
+CROS_SDK_HOST="cros-sdk-host"
+
+source make.conf.host_setup

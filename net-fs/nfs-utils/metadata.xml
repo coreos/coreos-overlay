@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+<herd>net-fs</herd>
+	<longdescription>NFS client and server daemons</longdescription>
+	<use>
+		<flag name='nfsv3'>Enable support for NFSv3</flag>
+		<flag name='nfsv4'>Enable support for NFSv4</flag>
+		<flag name='nonfsv4'>Disable support for NFSv4</flag>
+	</use>
+</pkgmetadata>

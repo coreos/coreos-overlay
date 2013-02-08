@@ -1,0 +1,203 @@
+# ChangeLog for dev-libs/dbus-glib
+# Copyright 1999-2010 Gentoo Foundation; Distributed under the GPL v2
+# $Header: /var/cvsroot/gentoo-x86/dev-libs/dbus-glib/ChangeLog,v 1.52 2010/01/22 07:39:51 eva Exp $
+
+*dbus-glib-0.82-r1 (22 Jan 2010)
+
+  22 Jan 2010; Gilles Dartiguelongue <eva@gentoo.org>
+  +dbus-glib-0.82-r1.ebuild:
+  Version bump. Do not use static dbus instrospection file. Enable checks
+  always just like for every other glib-based program.
+
+*dbus-glib-0.82 (07 Nov 2009)
+
+  07 Nov 2009; Gilles Dartiguelongue <eva@gentoo.org>
+  -files/dbus-glib-0.73-namespaces.patch, -dbus-glib-0.74.ebuild,
+  -dbus-glib-0.74-r1.ebuild, -dbus-glib-0.78.ebuild,
+  -files/dbus-glib-0.78-as-needed.patch,
+  -files/dbus-glib-0.78-fix-building-tests.patch, +dbus-glib-0.82.ebuild:
+  Version bump.
+
+  30 Mar 2009; Raúl Porcel <armin76@gentoo.org> dbus-glib-0.76.ebuild:
+  arm/ia64/s390/sh stable wrt #250289
+
+*dbus-glib-0.80 (08 Mar 2009)
+
+  08 Mar 2009; Gilles Dartiguelongue <eva@gentoo.org>
+  -dbus-glib-0.73.ebuild, +dbus-glib-0.80.ebuild:
+  Bump to 0.80. Various fixes and notably testsuite.
+
+  06 Feb 2009; Jeroen Roovers <jer@gentoo.org> dbus-glib-0.76.ebuild:
+  Stable for HPPA (bug #250289).
+
+  18 Jan 2009; Gilles Dartiguelongue <eva@gentoo.org> dbus-glib-0.78.ebuild:
+  Clean up econf per bug #253596 and add missing deps.
+
+  13 Jan 2009; Doug Goldstein <cardoe@gentoo.org> metadata.xml:
+  gentopia is becoming freedesktop
+
+  30 Dec 2008; Doug Goldstein <cardoe@gentoo.org>
+  files/dbus-glib-0.78-as-needed.patch,
+  +files/dbus-glib-0.78-fix-building-tests.patch, dbus-glib-0.78.ebuild:
+  fix building tests in parallel make situations. upstream bug #19325.
+  Update --as-needed patch to follow upstream's patch.
+
+  27 Dec 2008; Doug Goldstein <cardoe@gentoo.org> dbus-glib-0.78.ebuild:
+  add gtk-doc-am to DEPEND so that automake successfully runs
+
+*dbus-glib-0.78 (23 Dec 2008)
+
+  23 Dec 2008; Doug Goldstein <cardoe@gentoo.org>
+  +files/dbus-glib-0.78-as-needed.patch, +dbus-glib-0.78.ebuild:
+  version bump. ebuild from Santiago M. Mola <coldwind@gentoo.org> with
+  additional changes for fixing tests and correcting depends by me
+
+  15 Dec 2008; Tobias Klausmann <klausman@gentoo.org> dbus-glib-0.76.ebuild:
+  Stable on alpha, bug #250289
+
+  14 Dec 2008; nixnut <nixnut@gentoo.org> dbus-glib-0.76.ebuild:
+  Stable on ppc wrt bug 250289
+
+  10 Dec 2008; Markus Meier <maekke@gentoo.org> dbus-glib-0.76.ebuild:
+  amd64/x86 stable, bug #250289
+
+  08 Dec 2008; Brent Baude <ranger@gentoo.org> dbus-glib-0.76.ebuild:
+  stable ppc64, bug 250289
+
+  08 Dec 2008; Ferris McCormick <fmccor@gentoo.org> dbus-glib-0.76.ebuild:
+  Sparc stable, Bug #250289.
+
+*dbus-glib-0.76 (15 Aug 2008)
+
+  15 Aug 2008; Doug Goldstein <cardoe@gentoo.org> -dbus-glib-0.72.ebuild,
+  +dbus-glib-0.76.ebuild:
+  remove old version. add new version.
+  http://lists.freedesktop.org/archives/dbus/2008-June/009898.html
+
+*dbus-glib-0.74-r1 (22 Apr 2008)
+
+  22 Apr 2008; Saleem Abdulrasool <compnerd@gentoo.org>
+  +files/dbus-glib-0.73-namespaces.patch, +dbus-glib-0.74-r1.ebuild:
+  Add patch for namespace support in dbus-binding-tool
+
+  29 Feb 2008; Jeroen Roovers <jer@gentoo.org> dbus-glib-0.74.ebuild:
+  Stable for HPPA (bug #208917).
+
+  29 Feb 2008; Brent Baude <ranger@gentoo.org> dbus-glib-0.74.ebuild:
+  stable ppc64, bug 208917
+
+  28 Feb 2008; Santiago M. Mola <coldwind@gentoo.org> dbus-glib-0.74.ebuild:
+  amd64 stable wrt bug #208917
+
+  28 Feb 2008; Raúl Porcel <armin76@gentoo.org> dbus-glib-0.74.ebuild:
+  alpha/ia64 stable wrt #208917
+
+  28 Feb 2008; nixnut <nixnut@gentoo.org> dbus-glib-0.74.ebuild:
+  Stable on ppc wrt bug 208917
+
+  28 Feb 2008; Christian Faulhammer <opfer@gentoo.org>
+  dbus-glib-0.74.ebuild:
+  stable x86, bug 208917
+
+  27 Feb 2008; Ferris McCormick <fmccor@gentoo.org> dbus-glib-0.74.ebuild:
+  Sparc stable --- Bug #208917 --- around over 5 months and all tests pass.
+
+*dbus-glib-0.74 (06 Sep 2007)
+
+  06 Sep 2007; Doug Goldstein <cardoe@gentoo.org> +dbus-glib-0.74.ebuild:
+  ver bump
+
+  13 May 2007; Joshua Kinard <kumba@gentoo.org> dbus-glib-0.73.ebuild:
+  Stable on mips, per #174808.
+
+  22 Apr 2007; Tobias Scherbaum <dertobi123@gentoo.org>
+  dbus-glib-0.73.ebuild:
+  ppc stable, bug #174808
+
+  18 Apr 2007; Alexander H. Færøy <eroyf@gentoo.org>
+  dbus-glib-0.73.ebuild:
+  Marked ~mips.
+
+  18 Apr 2007; Christian Faulhammer <opfer@gentoo.org>
+  dbus-glib-0.73.ebuild:
+  stable x86, bug 174808
+
+  18 Apr 2007; Daniel Gryniewicz <dang@gentoo.org> dbus-glib-0.73.ebuild:
+  Marked stable on amd64 for bug #174808
+
+  17 Apr 2007; Jeroen Roovers <jer@gentoo.org> dbus-glib-0.73.ebuild:
+  Stable for HPPA (bug #174808).
+
+  17 Apr 2007; Gustavo Zacarias <gustavoz@gentoo.org> dbus-glib-0.73.ebuild:
+  Stable on sparc wrt #174808
+
+  17 Apr 2007; Markus Rothe <corsair@gentoo.org> dbus-glib-0.73.ebuild:
+  Stable on ppc64; bug #174808
+
+  16 Apr 2007; Bryan Østergaard <kloeri@gentoo.org> dbus-glib-0.73.ebuild:
+  Stable on Alpha, bug 174808.
+
+  16 Apr 2007; Raúl Porcel <armin76@gentoo.org> dbus-glib-0.73.ebuild:
+  ia64 stable wrt bug 174808
+
+  04 Apr 2007; Bryan Østergaard <kloeri@gentoo.org> dbus-glib-0.72.ebuild:
+  Stable on Alpha.
+
+*dbus-glib-0.73 (13 Feb 2007)
+
+  13 Feb 2007; Doug Goldstein <cardoe@gentoo.org> +dbus-glib-0.73.ebuild:
+  rev bump
+
+  29 Jan 2007; Gustavo Zacarias <gustavoz@gentoo.org> dbus-glib-0.72.ebuild:
+  Stable on sparc wrt #162877
+
+  23 Jan 2007; Jeroen Roovers <jer@gentoo.org> dbus-glib-0.72.ebuild:
+  Stable for HPPA (bug #162877).
+
+  22 Jan 2007; Olivier Crête <tester@gentoo.org> dbus-glib-0.72.ebuild:
+  stable on amd64 per bug #162877
+
+  21 Jan 2007; Andrej Kacian <ticho@gentoo.org> dbus-glib-0.72.ebuild:
+  Stable on x86, bug 162877.
+
+  21 Jan 2007; Markus Rothe <corsair@gentoo.org> dbus-glib-0.72.ebuild:
+  Stable on ppc64; bug #162877
+
+  21 Jan 2007; nixnut <nixnut@gentoo.org> dbus-glib-0.72.ebuild:
+  Stable on ppc wrt bug 162877
+
+  16 Jan 2007; Roy Marples <uberlord@gentoo.org> dbus-glib-0.72.ebuild:
+  Added ~x86-fbsd keyword.
+
+  05 Jan 2007; Diego Pettenò <flameeyes@gentoo.org> dbus-glib-0.72.ebuild:
+  Remove debug.eclass usage.
+
+  02 Dec 2006; Doug Goldstein <cardoe@gentoo.org> dbus-glib-0.72.ebuild:
+  Fixed glib depend
+
+  30 Oct 2006; Steev Klimaszewski <steev@gentoo.org> -dbus-glib-0.71.ebuild,
+  dbus-glib-0.72.ebuild:
+  Remove dbus-glib .71 and update the dependency to reflect dbus instead of
+  dbus-core.
+
+  28 Oct 2006; Steev Klimaszewski <steev@gentoo.org> dbus-glib-0.72.ebuild:
+  dbus-glib .72 requires dbus-core .94 or better.
+
+*dbus-glib-0.72 (27 Oct 2006)
+
+  27 Oct 2006; Steev Klimaszewski <steev@gentoo.org> +dbus-glib-0.72.ebuild:
+  New upstream release, quite a few changes, if you program anything and use
+  these bindings, PLEASE read the ChangeLog.
+
+  21 Aug 2006; Steev Klimaszewski <steev@gentoo.org>
+  files/dbus-glib-introspection.patch:
+  Fix the patch to apply the xml file properly to not try to connect to the D-Bus
+  daemon.
+
+*dbus-glib-0.71 (18 Aug 2006)
+
+  18 Aug 2006; Steev Klimaszewski <steev@gentoo.org>
+  +files/dbus-glib-introspection.patch, +metadata.xml,
+  +dbus-glib-0.71.ebuild:
+  Glib bindings for dbus.  Initial import
+

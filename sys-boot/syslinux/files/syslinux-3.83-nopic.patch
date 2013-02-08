@@ -1,0 +1,36 @@
+diff -ur syslinux-3.83/MCONFIG.embedded syslinux-3.83.good/MCONFIG.embedded
+--- syslinux-3.83/MCONFIG.embedded	2009-10-05 15:06:06.000000000 -0700
++++ syslinux-3.83.good/MCONFIG.embedded	2010-06-24 15:55:42.000000000 -0700
+@@ -28,7 +28,7 @@
+ LIBGCC    := $(shell $(CC) $(GCCOPT) --print-libgcc)
+ 
+ LD        += -m elf_i386
+-CFLAGS     = $(GCCOPT) -g -W -Wall -Wno-sign-compare $(OPTFLAGS) $(INCLUDES)
++CFLAGS     = $(GCCOPT) -fno-pic -g -W -Wall -Wno-sign-compare $(OPTFLAGS) $(INCLUDES)
+ SFLAGS     = $(CFLAGS) -D__ASSEMBLY__
+ 
+ .SUFFIXES: .c .o .S .s .i .elf .com .bin .asm .lst .c32 .lss
+diff -ur syslinux-3.83/com32/lib/MCONFIG syslinux-3.83.good/com32/lib/MCONFIG
+--- syslinux-3.83/com32/lib/MCONFIG	2009-10-05 15:06:06.000000000 -0700
++++ syslinux-3.83.good/com32/lib/MCONFIG	2010-06-24 15:48:04.000000000 -0700
+@@ -26,7 +26,7 @@
+ 	    -falign-labels=0 -ffast-math -fomit-frame-pointer
+ WARNFLAGS = -W -Wall -Wpointer-arith -Wwrite-strings -Wstrict-prototypes -Winline
+ 
+-CFLAGS  = $(OPTFLAGS) $(REQFLAGS) $(WARNFLAGS) $(LIBFLAGS)
++CFLAGS  = -fno-pic $(OPTFLAGS) $(REQFLAGS) $(WARNFLAGS) $(LIBFLAGS)
+ LDFLAGS	= -m elf32_i386
+ 
+ .SUFFIXES: .c .o .a .so .lo .i .S .s .ls .ss .lss
+diff -ur syslinux-3.83/gpxe/src/Makefile syslinux-3.83.good/gpxe/src/Makefile
+--- syslinux-3.83/gpxe/src/Makefile	2009-10-05 15:06:06.000000000 -0700
++++ syslinux-3.83.good/gpxe/src/Makefile	2010-06-24 15:54:31.000000000 -0700
+@@ -4,7 +4,7 @@
+ #
+ 
+ CLEANUP		:=
+-CFLAGS		:=
++CFLAGS		:= -fno-pic
+ ASFLAGS		:=
+ LDFLAGS		:=
+ MAKEDEPS	:= Makefile

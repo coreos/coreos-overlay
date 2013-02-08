@@ -1,0 +1,45 @@
+# Copyright (c) 2009 The Chromium OS Authors. All rights reserved.
+# Distributed under the terms of the GNU General Public License v2
+
+# TODO: ARM is temporarily stuck on mesa-7.5.1-r1 but x86 uses a newer
+# version so we mask out only mesa-7.5.2 here. This is a temporary measure
+# until we can get per-board cascading profile support.
+=media-libs/mesa-7.5.2
+
+# TODO: Fix lsof to cross compile on ARM
+>sys-process/lsof-4.81-r2
+
+# libpng security vulnerability fix
+<media-libs/libpng-1.2.44
+
+# The following are here because we override the ebuilds from the
+# portage tree for a reason other than adding an ebuild from upstream
+# that wasn't yet in our portage tree. We want to keep using our
+# version of these packages even if a newer stable version becomes
+# available in portage:
+
+# Required patch; pending work to upstream.
+>net-dialup/ppp-2.4.5-r3
+
+# Cross compile fix in the ebuild (Icedtea -> cups -> libgcrypt).
+>dev-libs/libgcrypt-1.4.6
+
+# Masked all upstream ebuilds, unupstreamable work in local copy
+>=net-misc/dhcpcd-5.1.5
+
+# Masked all upstream ebuilds
+>=net-wireless/wpa_supplicant-0.7.3
+
+# Masked old packages that had old ${PV} numbering scheme
+>=app-i18n/ibus-mozc-29
+
+# Custom patches
+>=sys-boot/syslinux-3.84
+
+# chromeos-chrome-14.0.787.0_rc-1 causes test failures, so block it.
+# TODO(davidjames): Remove this once the bug is fixed.
+=chromeos-base/chromeos-chrome-14.0.787.0_rc-r1
+
+# This is unloved by mesa, and should never be pulled into the targets.
+# It is actually for clang and ASAN that we want to have edge versions.
+=sys-devel/llvm-3.2_pre*

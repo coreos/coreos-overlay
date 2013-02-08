@@ -1,0 +1,57 @@
+diff -ruN htpdate/htpdate.c htpdate.new/htpdate.c
+--- htpdate/htpdate.c	2010-05-19 11:27:53.000000000 -0700
++++ htpdate.new/htpdate.c	2010-05-19 11:32:51.000000000 -0700
+@@ -75,6 +75,9 @@
+ static int		logmode = 0;
+ static time_t	gmtoffset;
+ 
++/* By default do not wait for valid http response to turn off settime */
++static int              waitfornw = 0;
++static int              recvdvalidresp = 0;
+ 
+ /* Insertion sort is more efficient (and smaller) than qsort for small lists */
+ static void insertsort( int a[], int length ) {
+@@ -263,6 +266,7 @@
+ 		/* Look for the line that contains Date: */
+ 		if ( (pdate = strstr(buffer, "Date: ")) != NULL ) {
+ 			strncpy(remote_time, pdate + 11, 24);
++			recvdvalidresp = 1;
+ 
+ 			if ( strptime( remote_time, "%d %b %Y %T", &tm) != NULL) {
+ 				/* Web server timestamps are without daylight saving */
+@@ -406,6 +410,7 @@
+   -s    set time\n\
+   -t    turn off sanity time check\n\
+   -u    run daemon as user\n\
++  -w    wait for at least one valid http response before turning off set time\n\
+   -x    adjust kernel clock\n\
+   host  web server hostname or ip address (maximum of 16)\n\
+   port  port number (default 80 and 8080 for proxy server)\n");
+@@ -510,7 +515,7 @@
+ 
+ 
+ 	/* Parse the command line switches and arguments */
+-	while ( (param = getopt(argc, argv, "046abdhi:lm:p:qstu:xDM:P:") ) != -1)
++	while ( (param = getopt(argc, argv, "046abdhi:lm:p:qstu:wxDM:P:") ) != -1)
+ 	switch( param ) {
+ 
+ 		case '0':			/* HTTP/1.0 */
+@@ -586,6 +591,9 @@
+ 				}
+ 			}
+ 			break;
++	        case 'w':
++			waitfornw = 1;
++			break;
+ 		case 'x':			/* adjust time and "kernel" */
+ 			setmode = 3;
+ 			break;
+@@ -815,7 +823,7 @@
+ 	}
+ 
+ 	/* After first poll cycle do not step through time, only adjust */
+-	if ( setmode != 3 ) {
++	if ( setmode != 3 && (!waitfornw || ( waitfornw && recvdvalidresp ))) {
+ 		setmode = 1;
+ 	}
+ 

@@ -1,0 +1,36 @@
+<?xml version="1.0" ?>
+<tp:errors xmlns:tp="http://telepathy.freedesktop.org/wiki/DbusSpec#extensions-v0"
+           namespace="org.freedesktop.ModemManager.Modem">
+  <tp:copyright>Copyright (C) 2008 Novell, Inc.</tp:copyright>
+
+  <tp:error name="General">
+    <tp:docstring>
+      A generic error. An example of a generic error is ModemManager not being able to parse the response from modem.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="OperationNotSupported">
+    <tp:docstring>
+      Operation not implemented by modem.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="Connected">
+    <tp:docstring>
+      Operation could not be performed while the modem is connected.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="Disconnected">
+    <tp:docstring>
+      Operation could not be performed while the modem is disconnected.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="OperationInProgress">
+    <tp:docstring>
+      Operation could not be performed because it is already in progress.
+    </tp:docstring>
+  </tp:error>
+
+</tp:errors>

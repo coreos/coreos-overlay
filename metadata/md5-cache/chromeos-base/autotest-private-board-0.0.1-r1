@@ -1,0 +1,7 @@
+DEFINED_PHASES=-
+DESCRIPTION=Board specific autotests
+EAPI=2
+KEYWORDS=amd64 arm x86
+LICENSE=BSD
+SLOT=0
+_md5_=b96d309286be052334a5d408d7ecaade

@@ -1,0 +1,59 @@
+#!/bin/sh
+
+# Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# This is used by the NFS init scripts to parse /etc/fstab, /etc/exports and
+# work out which daemons we need to run. It makes more sense to have this
+# common code in one place.
+
+# Variables set up by this script, each set to 'yes' if needed
+# NEED_IDMAPD
+# NEED_GSSD
+# NEED_STATD
+
+# read in the options
+DEFAULTFILE=/etc/conf.d/nfs
+if [ -f "$DEFAULTFILE" ]; then
+  . "$DEFAULTFILE"
+fi
+
+# Parse the fstab file, and determine whether we need idmapd and gssd.
+# (The /etc/defaults settings, if any, will override our
+# autodetection.)  This code is partially adapted from the mountnfs.sh
+# script in the sysvinit package.
+if [ -f /etc/fstab ]; then
+  exec 9<&0 </etc/fstab
+
+  while read DEV MTPT FSTYPE OPTS REST; do
+    if [ "$FSTYPE" = "nfs4" ]; then
+      NEED_IDMAPD=yes
+    fi
+    case "$OPTS" in
+      sec=krb5|*,sec=krb5|sec=krb5,*|*,sec=krb5,*|sec=krb5i|*,sec=krb5i|sec=krb5i,*|*,sec=krb5i,*|sec=krb5p|*,sec=krb5p|sec=krb5p,*|*,sec=krb5p,*)
+        NEED_GSSD=yes
+          ;;
+    esac
+  done
+
+  exec 0<&9 9<&-
+fi
+
+# We also need idmapd if we run an NFSv4 server. It's fairly difficult
+# to autodetect whether there are NFSv4 exports or not, and idmapd is not a
+# particularily heavy daemon, so we auto-enable it if we find an /etc/exports
+# file. This does not mean that there are NFSv4 or other mounts active (or
+# even that nfs-kernel-server is installed), but it matches what the "start"
+# condition in nfs-kernel-server's init script does, which has a value in
+# itself.
+if [ -f /etc/exports ] && grep -q '^[[:space:]]*[^#]*/' /etc/exports; then
+  NEED_IDMAPD=yes
+fi
+
+# See if there is an override in the config file
+# For now, avoid =~ to be friendly to dash
+echo "$NFS_NEEDED_SERVICES" | grep -qs "rpc.idmapd" && NEED_IDMAPD=yes
+echo "$NFS_NEEDED_SERVICES" | grep -qs "rpc.gssd" && NEED_GSSD=yes
+echo "$NFS_NEEDED_SERVICES" | grep -qs "rpc.statd" && NEED_STATD=yes
+

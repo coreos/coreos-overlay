@@ -1,0 +1,26 @@
+This patch decreases the inteval time between calls to ik_process_eq_callback()
+from 1 second to 1 millisecond, as 1 second is too long for interactive
+programs to get notified about file changes.
+
+The performance impact of the patch should be negligible:
+
+1. The code is used only when GFileMonotor is in use.
+2. ik_process_eq_callback(), which is called from the glib main loop
+   periodically to process inotify events, is deleted from the main loop,
+   once the last event is processed.
+
+See crosbug.com/6375 and https://bugzilla.gnome.org/show_bug.cgi?id=627285
+for details.
+
+diff -ur glib-2.22.4.orig/gio/inotify/inotify-kernel.c glib-2.22.4/gio/inotify/inotify-kernel.c
+--- glib-2.22.4.orig/gio/inotify/inotify-kernel.c	2009-09-24 23:25:53.000000000 +0900
++++ glib-2.22.4/gio/inotify/inotify-kernel.c	2010-09-07 15:55:48.893073025 +0900
+@@ -32,7 +32,7 @@
+ #include <sys/inotify.h>
+ 
+ /* Timings for pairing MOVED_TO / MOVED_FROM events */
+-#define PROCESS_EVENTS_TIME 1000 /* milliseconds (1 hz) */
++#define PROCESS_EVENTS_TIME 1 /* milliseconds (1000 hz) */
+ #define DEFAULT_HOLD_UNTIL_TIME 0 /* 0 millisecond */
+ #define MOVE_HOLD_UNTIL_TIME 0 /* 0 milliseconds */
+ 

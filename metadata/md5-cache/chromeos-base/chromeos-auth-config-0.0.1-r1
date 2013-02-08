@@ -1,0 +1,10 @@
+DEFINED_PHASES=install postinst
+DEPEND=>=sys-auth/pambase-20090620.1-r7 chromeos-base/vboot_reference
+DESCRIPTION=ChromiumOS-specific configuration files for pambase
+EAPI=2
+HOMEPAGE=http://www.chromium.org
+KEYWORDS=amd64 arm x86
+LICENSE=GPL-2
+RDEPEND=>=sys-auth/pambase-20090620.1-r7 chromeos-base/vboot_reference
+SLOT=0
+_md5_=e09263291619381d4fbad646e8fdcc31

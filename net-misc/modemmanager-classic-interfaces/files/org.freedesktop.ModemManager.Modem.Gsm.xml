@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<node name="/" xmlns:tp="http://telepathy.freedesktop.org/wiki/DbusSpec#extensions-v0">
+  <interface name="org.freedesktop.ModemManager.Modem.Gsm">
+    <tp:flags name="MM_MODEM_GSM_MODE" value-prefix="MM_MODEM_GSM_MODE" type="u">
+      <tp:docstring>
+        A bitfield describing the specific access modes and technologies
+        supported by a device and the access technology in-use when connected to
+        a mobile network.
+      </tp:docstring>
+      <tp:flag suffix="UNKNOWN" value="0x0">
+        <tp:docstring>Unknown or invalid mode.</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="ANY" value="0x1">
+        <tp:docstring>For certain operations, allow the modem to pick any available mode.</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="GPRS" value="0x2">
+        <tp:docstring>GPRS</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="EDGE" value="0x4">
+        <tp:docstring>EDGE</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="UMTS" value="0x8">
+        <tp:docstring>UMTS (3G)</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="HSDPA" value="0x10">
+        <tp:docstring>HSDPA (3G)</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="2G_PREFERRED" value="0x20">
+        <tp:docstring>Prefer 2G (GPRS or EDGE)</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="3G_PREFERRED" value="0x40">
+        <tp:docstring>Prefer 3G (UMTS/HSDPA/HSUPA/HSPA)</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="2G_ONLY" value="0x80">
+        <tp:docstring>Use only 2G (GPRS or EDGE)</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="3G_ONLY" value="0x100">
+        <tp:docstring>Use only 3G (UMTS/HSDPA/HSUPA/HSPA)</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="HSUPA" value="0x200">
+        <tp:docstring>HSUPA (3G)</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="HSPA" value="0x400">
+        <tp:docstring>HSPA (3G)</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="GSM" value="0x800">
+        <tp:docstring>GSM</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="GSM_COMPACT" value="0x1000">
+        <tp:docstring>GSM Compact</tp:docstring>
+      </tp:flag>
+    </tp:flags>
+
+    <tp:flags name="MM_MODEM_GSM_BAND" value-prefix="MM_MODEM_GSM_BAND" type="u">
+      <tp:docstring>
+        A bitfield describing the specific radio bands supported by the device
+        and the radio bands the device is allowed to use when connecting to a
+        mobile network.
+      </tp:docstring>
+      <tp:flag suffix="UNKNOWN" value="0x0">
+        <tp:docstring>Unknown or invalid band</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="ANY" value="0x1">
+        <tp:docstring>For certain operations, allow the modem to select a band automatically.</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="EGSM" value="0x2">
+        <tp:docstring>GSM/GPRS/EDGE 900 MHz</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="DCS" value="0x4">
+        <tp:docstring>GSM/GPRS/EDGE 1800 MHz</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="PCS" value="0x8">
+        <tp:docstring>GSM/GPRS/EDGE 1900 MHz</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="G850" value="0x10">
+        <tp:docstring>GSM/GPRS/EDGE 850 MHz</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="U2100" value="0x20">
+        <tp:docstring>WCDMA 2100 MHz (Class I)</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="U1800" value="0x40">
+        <tp:docstring>WCDMA 3GPP 1800 MHz (Class III)</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="U17IV" value="0x80">
+        <tp:docstring>WCDMA 3GPP AWS 1700/2100 MHz (Class IV)</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="U800" value="0x100">
+        <tp:docstring>WCDMA 3GPP UMTS 800 MHz (Class VI)</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="U850" value="0x200">
+        <tp:docstring>WCDMA 3GPP UMTS 850 MHz (Class V)</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="U900" value="0x400">
+        <tp:docstring>WCDMA 3GPP UMTS 900 MHz (Class VIII)</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="U17IX" value="0x800">
+        <tp:docstring>WCDMA 3GPP UMTS 1700 MHz (Class IX)</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="U1900" value="0x1000">
+        <tp:docstring>WCDMA 3GPP UMTS 1900 MHz (Class II)</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="U2600" value="0x2000">
+        <tp:docstring>WCDMA 3GPP UMTS 2600 MHz (Class VII, internal)</tp:docstring>
+      </tp:flag>
+    </tp:flags>
+
+    <tp:enum name="MM_MODEM_GSM_ALLOWED_MODE" type="u">
+      <tp:docstring>
+        Describes the device's current access mode preference; ie the specific
+        technology preferences the device is allowed to use when connecting to
+        a mobile network.
+      </tp:docstring>
+      <tp:enumvalue suffix="ANY" value="0">
+        <tp:docstring>Any mode can be used</tp:docstring>
+      </tp:enumvalue>
+      <tp:enumvalue suffix="2G_PREFERRED" value="1">
+        <tp:docstring>Prefer 2G (GPRS or EDGE)</tp:docstring>
+      </tp:enumvalue>
+      <tp:enumvalue suffix="3G_PREFERRED" value="2">
+        <tp:docstring>Prefer 3G (UMTS or HSxPA)</tp:docstring>
+      </tp:enumvalue>
+      <tp:enumvalue suffix="2G_ONLY" value="3">
+        <tp:docstring>Use only 2G (GPRS or EDGE)</tp:docstring>
+      </tp:enumvalue>
+      <tp:enumvalue suffix="3G_ONLY" value="4">
+        <tp:docstring>Use only 3G (UMTS or HSxPA)</tp:docstring>
+      </tp:enumvalue>
+    </tp:enum>
+
+    <tp:enum name="MM_MODEM_GSM_ACCESS_TECH" type="u">
+      <tp:docstring>
+        Describes various access technologies that a device uses when connected
+        to a mobile network.
+      </tp:docstring>
+      <tp:enumvalue suffix="UNKNOWN" value="0">
+        <tp:docstring>The access technology used is unknown</tp:docstring>
+      </tp:enumvalue>
+      <tp:enumvalue suffix="GSM" value="1">
+        <tp:docstring>GSM</tp:docstring>
+      </tp:enumvalue>
+      <tp:enumvalue suffix="GSM_COMPACT" value="2">
+        <tp:docstring>Compact GSM</tp:docstring>
+      </tp:enumvalue>
+      <tp:enumvalue suffix="GPRS" value="3">
+        <tp:docstring>GPRS</tp:docstring>
+      </tp:enumvalue>
+      <tp:enumvalue suffix="EDGE" value="4">
+        <tp:docstring>EDGE (ETSI 27.007: "GSM w/EGPRS")</tp:docstring>
+      </tp:enumvalue>
+      <tp:enumvalue suffix="UMTS" value="5">
+        <tp:docstring>UMTS (ETSI 27.007: "UTRAN")</tp:docstring>
+      </tp:enumvalue>
+      <tp:enumvalue suffix="HSDPA" value="6">
+        <tp:docstring>HSDPA (ETSI 27.007: "UTRAN w/HSDPA")</tp:docstring>
+      </tp:enumvalue>
+      <tp:enumvalue suffix="HSUPA" value="7">
+        <tp:docstring>HSUPA (ETSI 27.007: "UTRAN w/HSUPA")</tp:docstring>
+      </tp:enumvalue>
+      <tp:enumvalue suffix="HSPA" value="8">
+        <tp:docstring>HSPA (ETSI 27.007: "UTRAN w/HSDPA and HSUPA")</tp:docstring>
+      </tp:enumvalue>
+      <tp:enumvalue suffix="HSPA_PLUS" value="9">
+        <tp:docstring>HSPA+ (ETSI 27.007: "UTRAN w/HSPA+")</tp:docstring>
+      </tp:enumvalue>
+    </tp:enum>
+
+    <tp:flags name="MM_MODEM_GSM_FACILITY" value-prefix="MM_MODEM_GSM_FACILITY" type="u">
+      <tp:docstring>
+        A bitfield describing which facilities have a lock enabled, i.e.,
+        requires a pin or unlock code. The facilities include the
+        personalizations (device locks) described in 3GPP spec TS 22.022,
+        and the PIN and PIN2 locks, which are SIM locks.
+      </tp:docstring>
+      <tp:flag suffix="NONE" value="0x0">
+        <tp:docstring>No facility</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="SIM" value="0x1">
+        <tp:docstring>SIM lock</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="FIXED_DIALING" value="0x2">
+        <tp:docstring>Fixed dialing (PIN2) SIM lock</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="PH_SIM" value="0x4">
+        <tp:docstring>Device is locked to a specific SIM</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="PH_FSIM" value="0x8">
+        <tp:docstring>Device is locked to first SIM inserted</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="NET_PERS" value="0x10">
+        <tp:docstring>Network personalization</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="NET_SUB_PERS" value="0x20">
+        <tp:docstring>Network subset personalization</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="PROVIDER_PERS" value="0x40">
+        <tp:docstring>Service provider personalization</tp:docstring>
+      </tp:flag>
+      <tp:flag suffix="CORP_PERS" value="0x80">
+        <tp:docstring>Corporate personalization</tp:docstring>
+      </tp:flag>
+    </tp:flags>
+  </interface>
+</node>
+

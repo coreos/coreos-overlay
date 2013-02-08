@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<herd>mobile</herd>
+	<herd>pda</herd>
+	<maintainer>
+		<email>dev-zero@gentoo.org</email>
+	</maintainer>
+	<maintainer>
+		<email>betelgeuse@gentoo.org</email>
+	</maintainer>
+	<maintainer>
+		<email>pacho@gentoo.org</email>
+		<description>
+			Taking care of this until Petteri and Tiziano have
+			enough time for maintaing bluez.
+		</description>
+	</maintainer>
+	<use>
+		<flag name='consolekit'>Use <pkg>sys-auth/pambase[consolekit]</pkg> to
+			determine access to bluetooth devices based on whether a user is
+			logged in locally or remotely</flag>
+		<flag name='old-daemons'>Install old daemons like hidd and sdpd that are
+			deprecated by the new Service framework</flag>
+		<flag name='test-programs'>Install tools for testing of
+			various Bluetooth functions</flag>
+	</use>
+</pkgmetadata>

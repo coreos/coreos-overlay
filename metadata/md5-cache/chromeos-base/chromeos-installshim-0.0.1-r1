@@ -1,0 +1,9 @@
+DEFINED_PHASES=-
+DESCRIPTION=Chrome OS Install Shim (meta package)
+EAPI=4
+HOMEPAGE=http://src.chromium.org
+KEYWORDS=amd64 arm x86
+LICENSE=GPL-2
+RDEPEND=x86? ( sys-boot/syslinux ) amd64? ( sys-boot/syslinux ) arm? ( chromeos-base/u-boot-scripts ) app-arch/sharutils app-crypt/trousers app-shells/bash app-shells/dash chromeos-base/board-devices chromeos-base/chromeos-auth-config chromeos-base/chromeos-base chromeos-base/chromeos-factoryinstall chromeos-base/chromeos-init chromeos-base/dev-install chromeos-base/shill chromeos-base/vboot_reference net-firewall/iptables net-misc/tlsdate >=sys-apps/baselayout-2.0.0 sys-apps/coreutils sys-apps/dbus sys-apps/flashrom sys-apps/grep sys-apps/mawk sys-apps/module-init-tools sys-apps/mosys sys-apps/net-tools sys-apps/pv sys-apps/rootdev sys-apps/sed sys-apps/shadow sys-apps/upstart sys-apps/util-linux sys-apps/which sys-auth/pam_pwdfile sys-fs/e2fsprogs sys-fs/udev sys-process/lsof sys-process/procps virtual/chromeos-bsp
+SLOT=0
+_md5_=f988928d6aa558c1faaaf003830d7d21

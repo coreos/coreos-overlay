@@ -1,0 +1,35 @@
+make openssl optional
+
+https://bugs.gentoo.org/335436
+
+--- ping6.c
++++ ping6.c
+@@ -161,7 +161,9 @@
+ 
+ static int icmp_sock;
+ 
++#ifdef HAVE_OPENSSL
+ #include <openssl/md5.h>
++#endif
+ 
+ /* Node Information query */
+ int ni_query = -1;
+@@ -478,6 +480,7 @@
+ 
+ char *ni_groupaddr(const char *name)
+ {
++#ifdef HAVE_OPENSSL
+ 	MD5_CTX ctxt;
+ 	__u8 digest[16];
+ 	static char nigroup_buf[INET6_ADDRSTRLEN + 1 + IFNAMSIZ];
+@@ -518,6 +521,10 @@
+ 	if (q)
+ 		strcat(nigroup_buf, q);
+ 	return nigroup_buf;
++#else
++	fprintf(stderr, "ping6: function not available; openssl disabled\n");
++	exit(1);
++#endif
+ }
+ 
+ int main(int argc, char *argv[])

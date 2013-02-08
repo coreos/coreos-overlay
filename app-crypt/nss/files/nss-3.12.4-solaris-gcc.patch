@@ -1,0 +1,33 @@
+--- mozilla/security/coreconf/SunOS5.mk.orig	2009-10-02 10:51:26.617090950 +0200
++++ mozilla/security/coreconf/SunOS5.mk	2009-10-02 10:53:39.756260510 +0200
+@@ -37,6 +37,9 @@
+ 
+ include $(CORE_DEPTH)/coreconf/UNIX.mk
+ 
++NS_USE_GCC = 1
++GCC_USE_GNU_LD = 1
++
+ #
+ # Temporary define for the Client; to be removed when binary release is used
+ #
+@@ -104,7 +107,7 @@
+ 	endif
+ endif
+ 
+-INCLUDES   += -I/usr/dt/include -I/usr/openwin/include
++#INCLUDES   += -I/usr/dt/include -I/usr/openwin/include
+ 
+ RANLIB      = echo
+ CPU_ARCH    = sparc
+@@ -114,11 +117,6 @@
+ NOMD_OS_CFLAGS += $(DSO_CFLAGS) $(OS_DEFINES) $(SOL_CFLAGS)
+ 
+ MKSHLIB  = $(CC) $(DSO_LDOPTS) $(RPATH)
+-ifdef NS_USE_GCC
+-ifeq (GNU,$(findstring GNU,$(shell `$(CC) -print-prog-name=ld` -v 2>&1)))
+-	GCC_USE_GNU_LD = 1
+-endif
+-endif
+ ifdef MAPFILE
+ ifdef NS_USE_GCC
+ ifdef GCC_USE_GNU_LD

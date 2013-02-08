@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+<herd>base-system</herd>
+<use>
+	<flag name='audit'>Enable support for <pkg>sys-process/audit</pkg></flag>
+	<flag name='nousuid'>When nousuid is enabled only su from the shadow package
+		will be installed with the setuid bit (mainly for single user
+		systems)</flag>
+</use>
+</pkgmetadata>

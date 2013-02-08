@@ -1,0 +1,198 @@
+diff --git a/Makefile.am b/Makefile.am
+index ba359c2..c611a14 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -12,7 +12,7 @@ dist_man_MANS = xtrace.1
+ 
+ MAINTAINERCLEANFILES = $(srcdir)/Makefile.in $(srcdir)/configure $(srcdir)/stamp-h.in $(srcdir)/aclocal.m4 $(srcdir)/config.h.in
+ 
+-dist_pkgdata_DATA = all.proto bigfont.proto bigrequest.proto damage.proto dpms.proto errors.proto events.proto fixes.proto glx.proto mitshm.proto randr.proto render.proto requests.proto saver.proto setup.proto shape.proto vidmode.proto xinerama.proto xinput.proto xkb.proto
++dist_pkgdata_DATA = all.proto bigfont.proto bigrequest.proto damage.proto dpms.proto errors.proto events.proto fixes.proto glx.proto mitshm.proto randr.proto render.proto requests.proto saver.proto setup.proto shape.proto sync.proto vidmode.proto xinerama.proto xinput.proto xkb.proto
+ 
+ distclean-local:
+ 	-rm -rf $(srcdir)/autom4te.cache
+diff --git a/Makefile.in b/Makefile.in
+index 6f41217..a611645 100644
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -204,7 +204,7 @@ xtrace_LDFLAGS = -Wl,-z,defs
+ noinst_HEADERS = xtrace.h parse.h stringlist.h translate.h
+ dist_man_MANS = xtrace.1
+ MAINTAINERCLEANFILES = $(srcdir)/Makefile.in $(srcdir)/configure $(srcdir)/stamp-h.in $(srcdir)/aclocal.m4 $(srcdir)/config.h.in
+-dist_pkgdata_DATA = all.proto bigfont.proto bigrequest.proto damage.proto dpms.proto errors.proto events.proto fixes.proto glx.proto mitshm.proto randr.proto render.proto requests.proto saver.proto setup.proto shape.proto vidmode.proto xinerama.proto xinput.proto xkb.proto
++dist_pkgdata_DATA = all.proto bigfont.proto bigrequest.proto damage.proto dpms.proto errors.proto events.proto fixes.proto glx.proto mitshm.proto randr.proto render.proto requests.proto saver.proto setup.proto shape.proto sync.proto vidmode.proto xinerama.proto xinput.proto xkb.proto
+ all: config.h
+ 	$(MAKE) $(AM_MAKEFLAGS) all-am
+ 
+diff --git a/all.proto b/all.proto
+index b2fd22d..23d873d 100644
+--- a/all.proto
++++ b/all.proto
+@@ -14,6 +14,7 @@ NEEDS "randr.proto"
+ NEEDS "render.proto"
+ NEEDS "saver.proto"
+ NEEDS "shape.proto"
++NEEDS "sync.proto"
+ NEEDS "vidmode.proto"
+ NEEDS "xinerama.proto"
+ NEEDS "xinput.proto"
+diff --git a/sync.proto b/sync.proto
+new file mode 100644
+index 0000000..e593c18
+--- /dev/null
++++ b/sync.proto
+@@ -0,0 +1,154 @@
++EXTENSION "SYNC" Sync
++USE core
++
++REQUESTS
++Initialize RESPONDS
++ListSystemCounters RESPONDS
++CreateCounter
++SetCounter
++ChangeCounter
++QueryCounter RESPONDS
++DestroyCounter
++Await
++CreateAlarm
++ChangeAlarm
++QueryAlarm RESPONDS
++DestroyAlarm
++SetPriority
++GetPriority RESPONDS
++END
++
++EVENTS
++CounterNotify
++AlarmNotify
++END
++
++ERRORS
++BadCounter
++BadAlarm
++END
++
++CONSTANTS alarm_state
++0	Active
++1	Inactive
++2	Destroyed
++END
++TYPE ALARM_STATE	ENUM8	alarm_state
++
++CONSTANTS test_type
++0	PositiveTransition
++1	NegativeTransition
++2	PositiveComparison
++3	NegativeComparison
++END
++TYPE TEST_TYPE	ENUM32	test_type
++
++REQUEST Initialize
++ 4	major-version	UINT8
++ 5	minor-version	UINT8
++END
++RESPONSE Initialize
++ 8	major-version	UINT16
++ 9	minor-version	UINT16
++END
++
++REQUEST ListSystemCounters ALIASES Empty
++RESPONSE ListSystemCounters
++ 8	num-counters	INT32
++END
++
++REQUEST CreateCounter
++ 4	counter	UINT32
++ 8	initial-value-high	INT32
++12	initial-value-low	UINT32
++END
++
++REQUEST SetCounter
++ 4	counter	UINT32
++ 8	initial-value-high	INT32
++12	initial-value-low	UINT32
++END
++
++REQUEST ChangeCounter
++ 4	counter	UINT32
++ 8	initial-value-high	INT32
++12	initial-value-low	UINT32
++END
++
++REQUEST QueryCounter
++ 4	counter	UINT32
++END
++RESPONSE QueryCounter
++ 8	value-high	INT32
++12	value-low	UINT32
++END
++
++REQUEST DestroyCounter
++ 4	counter	UINT32
++END
++
++REQUEST Await ALIASES Empty
++
++REQUEST CreateAlarm
++ 4	alarm	UINT32
++ 8	value-mask	UINT32
++END
++
++REQUEST ChangeAlarm
++ 4	alarm	UINT32
++ 8	value-mask	UINT32
++END
++
++REQUEST QueryAlarm
++ 4	alarm	UINT32
++END
++RESPONSE QueryAlarm
++ 8	counter	UINT32
++12	value-type	UINT32
++16	wait-value-high	INT32
++20	wait-value-low	UINT32
++24	test-type	TEST_TYPE
++28	delta-high	INT32
++32	delta-low	UINT32
++36	events	BOOL
++37	state	ALARM_STATE
++END
++
++REQUEST DestroyAlarm
++ 4	alarm	UINT32
++END
++
++REQUEST SetPriority
++ 4	id	UINT32
++ 8	priority	INT32
++END
++
++REQUEST GetPriority
++ 4	id	UINT32
++END
++RESPONSE GetPriority
++ 8	priority	INT32
++END
++
++EVENT CounterNotify
++ 4	counter	UINT32
++ 8	wait-value-high	INT32
++12	wait-value-low	UINT32
++16	counter-value-high	INT32
++20	counter-value-low	UINT32
++24	time	TIMESTAMP
++28	count	INT16
++30	destroyed	BOOL
++END
++
++EVENT AlarmNotify
++ 4	alarm	UINT32
++ 8	counter-value-high	INT32
++12	counter-value-low	UINT32
++16	alarm-value-high	INT32
++20	alarm-value-low	UINT32
++24	time	TIMESTAMP
++28	state	ALARM_STATE
++END
++
++EOF

@@ -1,0 +1,120 @@
+From: Chung-yih Wang <cywang@chromium.org>
+Date: Thu, 6 Dec 2012 17:43:04 +0800
+Subject: [PATCH] Add block reading support
+
+    This patch adds a new xinput property "Block Event Reading" that blocks
+    event reading by skipping read() calls in ReadInput() in order to
+    generate the SYN_DROPPED event for testing the SYN_DROPPED handling.
+---
+ src/debug.c |   37 +++++++++++++++++++++++++++++++++++++
+ src/evdev.c |    6 +++++-
+ src/evdev.h |    6 ++++++
+ 3 files changed, 48 insertions(+), 1 deletions(-)
+
+diff --git a/src/debug.c b/src/debug.c
+--- a/src/debug.c
++++ b/src/debug.c
+@@ -19,10 +19,12 @@
+ #include <xf86Xinput.h>
+ #include <X11/Xatom.h>
+ 
++#define XI_PROP_BLOCK_READ_INPUT "Block Event Reading"
+ #define XI_PROP_DUMP_DEBUG_LOG "Dump Debug Log"
+ 
+ #define INPUT_EVENTS_LOG_FILE "/var/log/evdev_input_events.dat"
+ 
++static Atom block_read_prop;
+ static Atom dump_debug_log_prop;
+ 
+ static void
+@@ -112,3 +114,38 @@ EvdevDebugInitProperty(DeviceIntPtr dev)
+     XIRegisterPropertyHandler(dev, EvdevDebugSetProperty,
+         EvdevDebugGetProperty, NULL);
+ }
++
++static int
++EvdevBlockSetProperty(DeviceIntPtr dev, Atom atom,
++                      XIPropertyValuePtr val, BOOL checkonly)
++{
++    InputInfoPtr pInfo = dev->public.devicePrivate;
++    EvdevPtr pEvdev = pInfo->private;
++
++    if (atom == block_read_prop) {
++        if (val->type != XA_INTEGER || val->format != 8 || val->size != 1)
++            return BadMatch;
++
++        if (!checkonly)
++            pEvdev->block_input = *(BOOL *)val->data;
++    }
++    return Success;
++}
++
++void
++EvdevBlockInitProperty(DeviceIntPtr dev)
++{
++    InputInfoPtr pInfo = dev->public.devicePrivate;
++    EvdevPtr pEvdev = pInfo->private;
++
++    block_read_prop = MakeAtom(XI_PROP_BLOCK_READ_INPUT,
++        strlen(XI_PROP_BLOCK_READ_INPUT), TRUE);
++
++    pEvdev->block_input = FALSE;
++
++    XIChangeDeviceProperty(dev, block_read_prop, XA_INTEGER,
++        /* format */ 8, PropModeReplace, /* size */ 1,
++        &pEvdev->block_input, FALSE);
++    XISetDevicePropertyDeletable(dev, block_read_prop, FALSE);
++    XIRegisterPropertyHandler(dev, EvdevBlockSetProperty, NULL, NULL);
++}
+diff --git a/src/evdev.c b/src/evdev.c
+--- a/src/evdev.c
++++ b/src/evdev.c
+@@ -1569,11 +1569,14 @@ EvdevReadInput(InputInfoPtr pInfo)
+     struct input_event ev[NUM_EVENTS];
+     int i, len = sizeof(ev);
+     BOOL sync_evdev_state = FALSE;
++    EvdevPtr pEvdev = pInfo->private;
++
++    if (pEvdev->block_input)
++        return;
+ 
+     while (len == sizeof(ev))
+     {
+ #ifdef MULTITOUCH
+-        EvdevPtr pEvdev = pInfo->private;
+ 
+         if (pEvdev->mtdev)
+             len = mtdev_get(pEvdev->mtdev, pInfo->fd, ev, NUM_EVENTS) *
+@@ -2361,6 +2364,7 @@ EvdevInit(DeviceIntPtr device)
+     EvdevDragLockInitProperty(device);
+     EvdevAppleInitProperty(device);
+     EvdevDebugInitProperty(device);
++    EvdevBlockInitProperty(device);
+ 
+     return Success;
+ }
+diff --git a/src/evdev.h b/src/evdev.h
+--- a/src/evdev.h
++++ b/src/evdev.h
+@@ -291,6 +291,8 @@ typedef struct {
+     BOOL                    scroll_axes;
+     EvdevRelWheelRec        wheel;       /* scroll state for REL_WHEEL */
+     EvdevRelWheelRec        hwheel;      /* scroll state for REL_HWHEEL */
++
++    BOOL                    block_input; /* block read for SYN_DROPPED test */
+ } EvdevRec, *EvdevPtr;
+ 
+ typedef struct {
+@@ -352,5 +354,9 @@ void Evdev3BEmuInitProperty(DeviceIntPtr);
+ void EvdevWheelEmuInitProperty(DeviceIntPtr);
+ void EvdevDragLockInitProperty(DeviceIntPtr);
+ void EvdevAppleInitProperty(DeviceIntPtr);
++
++/* For debugging and testing */
+ void EvdevDebugInitProperty(DeviceIntPtr);
++void EvdevBlockInitProperty(DeviceIntPtr);
++
+ #endif
+-- 
+1.7.7.3
+

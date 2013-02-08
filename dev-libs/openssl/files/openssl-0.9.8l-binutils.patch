@@ -1,0 +1,67 @@
+fix from upstream for building with newer binutils
+
+http://bugs.gentoo.org/289130
+
+Index: crypto/md5/asm/md5-x86_64.pl
+===================================================================
+RCS file: /usr/local/src/openssl/CVSROOT/openssl/crypto/md5/asm/md5-x86_64.pl,v
+retrieving revision 1.2.2.1
+retrieving revision 1.2.2.2
+diff -u -p -r1.2.2.1 -r1.2.2.2
+--- openssl/crypto/md5/asm/md5-x86_64.pl	11 Nov 2007 13:34:06 -0000	1.2.2.1
++++ openssl/crypto/md5/asm/md5-x86_64.pl	13 Nov 2009 14:14:46 -0000	1.2.2.2
+@@ -19,6 +19,7 @@ my $code;
+ sub round1_step
+ {
+     my ($pos, $dst, $x, $y, $z, $k_next, $T_i, $s) = @_;
++    $T_i = unpack("l",pack("l", hex($T_i))); # convert to 32-bit signed decimal
+     $code .= " mov	0*4(%rsi),	%r10d		/* (NEXT STEP) X[0] */\n" if ($pos == -1);
+     $code .= " mov	%edx,		%r11d		/* (NEXT STEP) z' = %edx */\n" if ($pos == -1);
+     $code .= <<EOF;
+@@ -42,6 +43,7 @@ EOF
+ sub round2_step
+ {
+     my ($pos, $dst, $x, $y, $z, $k_next, $T_i, $s) = @_;
++    $T_i = unpack("l",pack("l", hex($T_i))); # convert to 32-bit signed decimal
+     $code .= " mov	1*4(%rsi),	%r10d		/* (NEXT STEP) X[1] */\n" if ($pos == -1);
+     $code .= " mov	%ecx,		%r11d		/* (NEXT STEP) y' = %ecx */\n" if ($pos == -1);
+     $code .= <<EOF;
+@@ -65,6 +67,7 @@ EOF
+ sub round3_step
+ {
+     my ($pos, $dst, $x, $y, $z, $k_next, $T_i, $s) = @_;
++    $T_i = unpack("l",pack("l", hex($T_i))); # convert to 32-bit signed decimal
+     $code .= " mov	5*4(%rsi),	%r10d		/* (NEXT STEP) X[5] */\n" if ($pos == -1);
+     $code .= " mov	%ecx,		%r11d		/* (NEXT STEP) y' = %ecx */\n" if ($pos == -1);
+     $code .= <<EOF;
+@@ -87,6 +90,7 @@ EOF
+ sub round4_step
+ {
+     my ($pos, $dst, $x, $y, $z, $k_next, $T_i, $s) = @_;
++    $T_i = unpack("l",pack("l", hex($T_i))); # convert to 32-bit signed decimal
+     $code .= " mov	0*4(%rsi),	%r10d		/* (NEXT STEP) X[0] */\n" if ($pos == -1);
+     $code .= " mov	\$0xffffffff,	%r11d\n" if ($pos == -1);
+     $code .= " xor	%edx,		%r11d		/* (NEXT STEP) not z' = not %edx*/\n"
+
+Ripped from Fedora
+
+--- openssl-1.0.0-beta4/crypto/sha/asm/sha1-x86_64.pl.binutils	2009-11-12 15:17:29.000000000 +0100
++++ openssl-1.0.0-beta4/crypto/sha/asm/sha1-x86_64.pl	2009-11-12 17:24:18.000000000 +0100
+@@ -150,7 +150,7 @@ ___
+ sub BODY_20_39 {
+ my ($i,$a,$b,$c,$d,$e,$f)=@_;
+ my $j=$i+1;
+-my $K=($i<40)?0x6ed9eba1:0xca62c1d6;
++my $K=($i<40)?0x6ed9eba1:-0x359d3e2a;
+ $code.=<<___ if ($i<79);
+ 	lea	$K($xi,$e),$f
+ 	mov	`4*($j%16)`(%rsp),$xi
+@@ -187,7 +187,7 @@ sub BODY_40_59 {
+ my ($i,$a,$b,$c,$d,$e,$f)=@_;
+ my $j=$i+1;
+ $code.=<<___;
+-	lea	0x8f1bbcdc($xi,$e),$f
++	lea	-0x70e44324($xi,$e),$f
+ 	mov	`4*($j%16)`(%rsp),$xi
+ 	mov	$b,$t0
+ 	mov	$b,$t1

@@ -1,0 +1,12 @@
+diff -uNr glib-2.26.1/gio/inotify/inotify-kernel.c glib-2.26.1.mod/gio/inotify/inotify-kernel.c
+--- glib-2.26.1/gio/inotify/inotify-kernel.c	2010-08-17 03:43:54.000000000 +0900
++++ glib-2.26.1.mod/gio/inotify/inotify-kernel.c	2010-11-29 14:55:09.031045372 +0900
+@@ -32,7 +32,7 @@
+ #include <sys/inotify.h>
+ 
+ /* Timings for pairing MOVED_TO / MOVED_FROM events */
+-#define PROCESS_EVENTS_TIME 1000 /* 1000 milliseconds (1 hz) */
++#define PROCESS_EVENTS_TIME 1 /* 1 milliseconds (1000 hz) */
+ #define DEFAULT_HOLD_UNTIL_TIME 0 /* 0 millisecond */
+ #define MOVE_HOLD_UNTIL_TIME 500 /* 500 microseconds or 0.5 milliseconds */
+ 

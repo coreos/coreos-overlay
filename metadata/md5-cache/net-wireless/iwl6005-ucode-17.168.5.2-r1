@@ -1,0 +1,9 @@
+DEFINED_PHASES=compile install
+DEPEND=|| ( >=sys-fs/udev-096 >=sys-apps/hotplug-20040923 )
+DESCRIPTION=Intel (R) Wireless WiFi Advanced N 6000 ucode
+HOMEPAGE=http://intellinuxwireless.org/?p=iwlwifi
+KEYWORDS=amd64 x86
+LICENSE=ipw3945
+SLOT=0
+SRC_URI=http://intellinuxwireless.org/iwlwifi/downloads/iwlwifi-6000g2a-ucode-17.168.5.2.tgz
+_md5_=3bd9e9f81c495ccb9544cd064fe1f61b

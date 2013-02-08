@@ -1,0 +1,33 @@
+diff --git a/tools/dbus-send.c b/tools/dbus-send.c
+index cde0bb7..0a6f79a 100644
+--- a/tools/dbus-send.c
++++ b/tools/dbus-send.c
+@@ -67,6 +67,7 @@ append_arg (DBusMessageIter *iter, int type, const char *value)
+   double d;
+   unsigned char byte;
+   dbus_bool_t v_BOOLEAN;
++  int _int;
+   
+   /* FIXME - we are ignoring OOM returns on all these functions */
+   switch (type)
+@@ -137,6 +138,11 @@ append_arg (DBusMessageIter *iter, int type, const char *value)
+ 	}
+       break;
+ 
++    case DBUS_TYPE_UNIX_FD:
++      _int = strtoul (value, NULL, 0);
++      dbus_message_iter_append_basic (iter, DBUS_TYPE_UNIX_FD, &_int);
++      break;
++
+     default:
+       fprintf (stderr, "%s: Unsupported data type %c\n", appname, (char) type);
+       exit (1);
+@@ -215,6 +221,8 @@ type_from_name (const char *arg)
+     type = DBUS_TYPE_BOOLEAN;
+   else if (!strcmp (arg, "objpath"))
+     type = DBUS_TYPE_OBJECT_PATH;
++  else if (!strcmp (arg, "fd"))
++    type = DBUS_TYPE_UNIX_FD;
+   else
+     {
+       fprintf (stderr, "%s: Unknown type \"%s\"\n", appname, arg);

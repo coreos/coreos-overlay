@@ -1,0 +1,343 @@
+--- bsdiff-4.3/bspatch.c	2005-08-16 15:14:00.000000000 -0700
++++ bsdiff-4.3-new/bspatch.c	2010-10-12 13:57:08.000000000 -0700
+@@ -3,7 +3,7 @@
+  * All rights reserved
+  *
+  * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted providing that the following conditions 
++ * modification, are permitted providing that the following conditions
+  * are met:
+  * 1. Redistributions of source code must retain the above copyright
+  *    notice, this list of conditions and the following disclaimer.
+@@ -29,6 +29,9 @@
+ #endif
+ 
+ #include <bzlib.h>
++#include <errno.h>
++#include <inttypes.h>
++#include <stdint.h>
+ #include <stdlib.h>
+ #include <stdio.h>
+ #include <string.h>
+@@ -36,6 +39,264 @@
+ #include <unistd.h>
+ #include <fcntl.h>
+ 
++#define JOIN(a, b) __JOIN(a, b)
++#define __JOIN(a, b) a ## b
++#define COMPILE_ASSERT(expr, message) \
++	typedef char JOIN(message, JOIN(_, __LINE__)) [(expr) ? 1 : -1]
++
++COMPILE_ASSERT(sizeof(int64_t) == 8, int64_t_64_bit);
++COMPILE_ASSERT(sizeof(off_t) == 8, off_t_64_bit);
++
++#define MIN(a, b) \
++	((a) < (b) ? (a) : (b))
++
++static const char kFdFilePrefix[] = "/dev/fd/";
++
++// Reads next int from *ints. The int should be terminated with a comma
++// or NULL char. *ints will be updated to the space right after the comma
++// or set to NULL if this was the last number. This assumes the input is
++// a valid string, as validated with PositionsStringIsValid().
++// Returns 1 on success.
++int NextInt64(const char** ints, int64_t *out) {
++	if (!ints[0])
++		return 0;
++	int r = sscanf(*ints, "%" PRIi64, out);
++	if (r == 1) {
++		const char* next_comma = strchr(*ints, ',');
++		const char* next_colon = strchr(*ints, ':');
++		if (!next_comma && !next_colon)
++			*ints = NULL;
++		else if (!next_comma)
++			*ints = next_colon + 1;
++		else if (!next_colon)
++			*ints = next_comma + 1;
++		else
++			*ints = MIN(next_comma, next_colon) + 1;
++		return 1;
++	}
++	return 0;
++}
++
++COMPILE_ASSERT(sizeof(intmax_t) == 8, intmax_t_not_64_bit);
++
++// Returns 1 if str can be converted to int64_t without over/underflowing.
++// str is assumed to point to an optional negative sign followed by numbers,
++// optionally followed by non-numeric characters, followed by '\0'.
++int IsValidInt64(const char* str) {
++	char* end_ptr = 0;
++	errno = 0;
++	intmax_t result = strtoimax(str, &end_ptr, /* base: */ 10);
++	return errno == 0;
++}
++
++// Input validator. Make sure the positions string is well formatted.
++// All numerical values are checked to make sure they don't over/underflow
++// int64_t. Returns 1 if valid.
++int PositionsStringIsValid(const char* positions) {
++	if (positions == NULL)
++		errx(1, "bad string");
++
++	// Special case: empty string is valid
++	if (!positions[0])
++		return 1;
++
++	// Use a state machine to determine if the string is valid.
++	// Key: (s): state, ((s)) valid end state.
++	// n (negative_valid) is a boolean that starts out as true.
++	// If n is true, ':' is the delimiter, otherwise ','.
++	//
++	//         .--------------------------.
++	//         |                          | n ? ':' : ',' ; n = !n
++	//         V  '-'&&n           0-9    |
++	// start->(0)------------->(1)----->((2))---.
++	//           `--------------------->     <--' 0-9
++	//              0-9
++	int state = 0;
++	int negative_valid = 1;
++	const char* number_start = positions;
++	for (;; positions++) {
++		char c = *positions;
++		switch (state) {
++			case 0:
++				if (c == '-' && negative_valid) {
++					state = 1;
++					continue;
++				}
++				if (isdigit(c)) {
++					state = 2;
++					continue;
++				}
++				return 0;
++			case 1:
++				if (isdigit(c)) {
++					state = 2;
++					continue;
++				}
++				return 0;
++			case 2:
++				if (isdigit(c))
++					continue;
++				// number_start must point to a valid number
++				if (!IsValidInt64(number_start)) {
++					return 0;
++				}
++				if ((negative_valid && c == ':') ||
++				    (!negative_valid && c == ',')) {
++					state = 0;
++					number_start = positions + 1;
++					negative_valid = !negative_valid;
++					continue;
++				}
++				return (c == '\0');
++		}
++	}
++}
++
++static const int64_t kMaxLength = sizeof(size_t) > 4 ? INT64_MAX : SIZE_MAX;
++
++// Reads into a buffer a series of byte ranges from filename.
++// Each range is a pair of comma-separated ints from positions.
++// -1 as an offset means a sparse-hole.
++// E.g. If positions were "1,5:23,4:-1,8:3,7", then we would return a buffer
++// consisting of 5 bytes from offset 1 of the file, followed by
++// 4 bytes from offset 23, then 8 bytes of all zeros, then 7 bytes from
++// offset 3 in the file.
++// Returns NULL on error.
++static char* PositionedRead(const char* filename,
++                            const char* positions,
++                            ssize_t* old_size) {
++	if (!PositionsStringIsValid(positions)) {
++		errx(1, "invalid positions string for read\n");
++	}
++
++	// Get length
++	const char* p = positions;
++	int64_t length = 0;
++	for (;;) {
++		int64_t value;
++		if (0 == NextInt64(&p, &value)) {
++			break;
++		}
++		int r = NextInt64(&p, &value);
++		if (r == 0) {
++			errx(1, "bad length parse\n");
++		}
++		if (value < 0) {
++			errx(1, "length can't be negative\n");
++		}
++		length += value;
++	}
++
++	// Malloc
++	if (length > 0x40000000) {  // 1 GiB; sanity check
++		errx(1, "Read length too long (exceeds 1 GiB)");
++	}
++	// Following bsdiff convention, allocate length + 1 to avoid malloc(0)
++	char* buf = malloc(length + 1);
++	if (buf == NULL) {
++		errx(1, "malloc failed\n");
++	}
++	char* buf_tail = buf;
++
++	int fd = -1;
++	int should_close = 1;
++	if (strlen(filename) > strlen(kFdFilePrefix) &&
++		!strncmp(filename, kFdFilePrefix, strlen(kFdFilePrefix))) {
++		sscanf(filename + strlen(kFdFilePrefix), "%d", &fd);
++		should_close = 0;
++	} else {
++		fd = open(filename, O_RDONLY);
++	}
++	if (fd < 0) {
++		errx(1, "open failed for read\n");
++	}
++
++	// Read bytes
++	p = positions;
++	for (;;) {
++		int64_t offset, read_length;
++		if (NextInt64(&p, &offset) == 0) {
++			break;
++		}
++		if (offset < 0) {
++			errx(1, "no support for sparse positions "
++			     "yet during read\n");
++		}
++		if (NextInt64(&p, &read_length) == 0) {
++			errx(1, "bad length parse (should never happen)\n");
++		}
++		if (read_length < 0) {
++			errx(1, "length can't be negative "
++			     "(should never happen)\n");
++		}
++		if (read_length > kMaxLength) {
++			errx(1, "read length too large\n");
++		}
++		ssize_t rc = pread(fd, buf_tail, (size_t)read_length, (off_t)offset);
++		if (rc != read_length) {
++			errx(1, "read failed\n");
++		}
++		buf_tail += rc;
++	}
++	if (should_close)
++		close(fd);
++	*old_size = length;
++	return buf;
++}
++
++static void PositionedWrite(const char* filename,
++                            const char* positions,
++                            const char* buf,
++                            ssize_t new_size) {
++	if (!PositionsStringIsValid(positions)) {
++		errx(1, "invalid positions string for write\n");
++	}
++	int fd = -1;
++	int should_close = 1;
++	if (strlen(filename) > strlen(kFdFilePrefix) &&
++		!strncmp(filename, kFdFilePrefix, strlen(kFdFilePrefix))) {
++		sscanf(filename + strlen(kFdFilePrefix), "%d", &fd);
++		should_close = 0;
++	} else {
++		fd = open(filename, O_WRONLY | O_CREAT, 0666);
++	}
++	if (fd < 0) {
++		errx(1, "open failed for write\n");
++	}
++
++	for (;;) {
++		int64_t offset, length;
++		if (NextInt64(&positions, &offset) == 0) {
++			break;
++		}
++		if (NextInt64(&positions, &length) == 0) {
++			errx(1, "bad length parse for write\n");
++		}
++		if (length < 0) {
++			errx(1, "length can't be negative for write\n");
++		}
++		if (length > kMaxLength) {
++			errx(1, "write length too large\n");
++		}
++
++		if (offset < 0) {
++			// Sparse hole. Skip.
++		} else {
++			ssize_t rc = pwrite(fd, buf, (size_t)length, (off_t)offset);
++			if (rc != length) {
++				errx(1, "write failed\n");
++			}
++		}
++		buf += length;
++		new_size -= length;
++	}
++	if (new_size != 0) {
++		errx(1, "output position length doesn't match new size\n");
++	}
++	if (should_close)
++		close(fd);
++}
++
+ static off_t offtin(u_char *buf)
+ {
+ 	off_t y;
+@@ -69,7 +330,13 @@
+ 	off_t lenread;
+ 	off_t i;
+ 
+-	if(argc!=4) errx(1,"usage: %s oldfile newfile patchfile\n",argv[0]);
++	if ((argc != 6) && (argc != 4)) {
++		errx(1,"usage: %s oldfile newfile patchfile \\\n"
++			"  [in_offset,in_length,in_offset,in_length,... \\\n"
++			"  out_offset,out_length,"
++			"out_offset,out_length,...]\n",argv[0]);
++	}
++	int using_positioning = (argc == 6);
+ 
+ 	/* Open patch file */
+ 	if ((f = fopen(argv[3], "r")) == NULL)
+@@ -132,12 +399,18 @@
+ 	if ((epfbz2 = BZ2_bzReadOpen(&ebz2err, epf, 0, 0, NULL, 0)) == NULL)
+ 		errx(1, "BZ2_bzReadOpen, bz2err = %d", ebz2err);
+ 
+-	if(((fd=open(argv[1],O_RDONLY,0))<0) ||
+-		((oldsize=lseek(fd,0,SEEK_END))==-1) ||
+-		((old=malloc(oldsize+1))==NULL) ||
+-		(lseek(fd,0,SEEK_SET)!=0) ||
+-		(read(fd,old,oldsize)!=oldsize) ||
+-		(close(fd)==-1)) err(1,"%s",argv[1]);
++	// Read
++
++	if (!using_positioning) {
++		if(((fd=open(argv[1],O_RDONLY,0))<0) ||
++			((oldsize=lseek(fd,0,SEEK_END))==-1) ||
++			((old=malloc(oldsize+1))==NULL) ||
++			(lseek(fd,0,SEEK_SET)!=0) ||
++			(read(fd,old,oldsize)!=oldsize) ||
++			(close(fd)==-1)) err(1,"%s",argv[1]);
++	} else {
++		old = PositionedRead(argv[1], argv[4], &oldsize);
++	}
+ 	if((new=malloc(newsize+1))==NULL) err(1,NULL);
+ 
+ 	oldpos=0;newpos=0;
+@@ -193,9 +466,13 @@
+ 		err(1, "fclose(%s)", argv[3]);
+ 
+ 	/* Write the new file */
+-	if(((fd=open(argv[2],O_CREAT|O_TRUNC|O_WRONLY,0666))<0) ||
+-		(write(fd,new,newsize)!=newsize) || (close(fd)==-1))
+-		err(1,"%s",argv[2]);
++	if (!using_positioning) {
++		if(((fd=open(argv[2],O_CREAT|O_TRUNC|O_WRONLY,0666))<0) ||
++			(write(fd,new,newsize)!=newsize) || (close(fd)==-1))
++			err(1,"%s",argv[2]);
++	} else {
++		PositionedWrite(argv[2], argv[5], new, newsize);
++	}
+ 
+ 	free(new);
+ 	free(old);

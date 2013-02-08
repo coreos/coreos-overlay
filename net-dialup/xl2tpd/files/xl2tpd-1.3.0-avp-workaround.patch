@@ -1,0 +1,56 @@
+diff -rupN xl2tpd-1.3.0/avpsend.c xl2tpd-1.3.0.patched/avpsend.c
+--- xl2tpd-1.3.0/avpsend.c	2011-07-23 17:13:59.000000000 -0700
++++ xl2tpd-1.3.0.patched/avpsend.c	2011-11-01 17:02:17.149552006 -0700
+@@ -18,6 +18,13 @@
+ #include <sys/utsname.h>
+ #include "l2tp.h"
+ 
++/*
++ * Several AVPs seem to be rejected by some VPN servers such as Check Point VPN.
++ * This macro is defined to exclude those AVPs from L2TP control packets as a
++ * workaround.
++ */
++#define XL2TPD_WORK_AROUND_AVP_ISSUES
++
+ struct half_words {
+ 	_u16 s0;
+ 	_u16 s1;
+@@ -81,10 +88,12 @@ int add_bearer_caps_avp (struct buffer *
+ 
+ int add_firmware_avp (struct buffer *buf)
+ {
++#ifndef XL2TPD_WORK_AROUND_AVP_ISSUES
+     struct half_words *ptr = (struct half_words *) (buf->start + buf->len + sizeof(struct avp_hdr));
+     add_header(buf, 0x8, 0x6);
+     ptr->s0 = htons (FIRMWARE_REV);
+     buf->len += 0x8;
++#endif  /* XL2TPD_WORK_AROUND_AVP_ISSUES */
+     return 0;
+ }
+ 
+@@ -103,9 +112,11 @@ int add_hostname_avp (struct buffer *buf
+ 
+ int add_vendor_avp (struct buffer *buf)
+ {
++#ifndef XL2TPD_WORK_AROUND_AVP_ISSUES
+     add_header(buf, 0x6 + strlen (VENDOR_NAME), 0x8);
+     strcpy ((char *) (buf->start + buf->len + sizeof(struct avp_hdr)), VENDOR_NAME);
+     buf->len += 0x6 + strlen (VENDOR_NAME);
++#endif  /* XL2TPD_WORK_AROUND_AVP_ISSUES */
+     return 0;
+ }
+ 
+@@ -227,11 +238,13 @@ int add_txspeed_avp (struct buffer *buf,
+ 
+ int add_rxspeed_avp (struct buffer *buf, int speed)
+ {
++#ifndef XL2TPD_WORK_AROUND_AVP_ISSUES
+     struct half_words *ptr = (struct half_words *) (buf->start + buf->len + sizeof(struct avp_hdr));
+     add_header(buf, 0xA, 0x26);
+     ptr->s0 = htons ((speed >> 16) & 0xFFFF);
+     ptr->s1 = htons (speed & 0xFFFF);
+     buf->len += 0xA;
++#endif  /* XL2TPD_WORK_AROUND_AVP_ISSUES */
+     return 0;
+ }
+ 

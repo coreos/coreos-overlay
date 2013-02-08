@@ -1,0 +1,145 @@
+diff -u openvpn-2.1.12.orig/pkcs11.c openvpn-2.1.12/pkcs11.c
+--- openvpn-2.1.12.orig/pkcs11.c	2011-03-17 12:57:45.000000000 -0700
++++ openvpn-2.1.12/pkcs11.c	2011-10-10 09:36:55.000000000 -0700
+@@ -602,6 +602,115 @@
+ 	return success;
+ }
+ 
++static CK_RV
++_hexToBinary(
++	unsigned char * const target,
++	const char * const source,
++	size_t * const p_target_size
++) {
++	size_t target_max_size = *p_target_size;
++	const char *p;
++	char buf[3] = { 0, 0, 0 };
++	int i;
++
++	i = 0;
++	*p_target_size = 0;
++	for (p = source; *p != '\0' && *p_target_size < target_max_size; p++) {
++		if (!isxdigit (*p))
++			continue;
++		buf[i%2] = *p;
++		if ((i%2) == 1) {
++			unsigned v;
++			if (sscanf (buf, "%x", &v) != 1)
++				v = 0;
++			target[*p_target_size] = v & 0xff;
++			(*p_target_size)++;
++		}
++		i++;
++	}
++	return (*p == '\0' ? CKR_OK : CKR_ATTRIBUTE_VALUE_INVALID);
++}
++
++static CK_RV
++get_certificate_id(
++	pkcs11h_certificate_id_t *p_certificate_id,
++	const char * const pkcs11_id
++) {
++	pkcs11h_certificate_id_list_t user_certificates = NULL;
++	pkcs11h_certificate_id_list_t current = NULL;
++	char *cka_id = NULL;
++	size_t cka_id_size;
++	CK_RV rv;
++
++	rv = pkcs11h_certificate_deserializeCertificateId (
++		p_certificate_id,
++		pkcs11_id
++	);
++	if (rv == CKR_OK)
++		return rv;
++	if (rv != CKR_ATTRIBUTE_VALUE_INVALID) {
++		msg (M_WARN, "PKCS#11: Cannot deserialize id %ld-'%s'", rv, pkcs11h_getMessage (rv));
++		return rv;
++	}
++
++	/*
++	 * The specified certificate id lacks the token id, search the
++	 * cert list for first matching id.
++	 */
++	cka_id_size = strlen(pkcs11_id)/2;
++	if (
++		(cka_id = (char *)malloc (cka_id_size)) == NULL ||
++		(rv = _hexToBinary (cka_id, pkcs11_id, &cka_id_size)) != CKR_OK
++	) {
++		msg (M_FATAL, "PKCS#11: get_certificate_id: Cannot convert id %ld-'%s'", rv, pkcs11h_getMessage (rv));
++		goto cleanup;
++	}
++
++	if (
++		(rv = pkcs11h_certificate_enumCertificateIds (
++			PKCS11H_ENUM_METHOD_CACHE_EXIST,
++			NULL,
++			PKCS11H_PROMPT_MASK_ALLOW_ALL,
++			NULL,
++			&user_certificates
++		)) != CKR_OK
++	) {
++		msg (M_FATAL, "PKCS#11: get_certificate_id: Cannot enumerate certificates %ld-'%s'", rv, pkcs11h_getMessage (rv));
++		goto cleanup;
++	}
++
++	rv = CKR_ATTRIBUTE_VALUE_INVALID;
++	for (current = user_certificates;current != NULL; current = current->next) {
++		pkcs11h_certificate_id_t cid = current->certificate_id;
++
++		if (
++			cka_id_size == cid->attrCKA_ID_size &&
++			memcmp(
++				cka_id,
++				cid->attrCKA_ID,
++				cid->attrCKA_ID_size
++			) == 0
++		) {
++			rv = pkcs11h_certificate_duplicateCertificateId(
++				p_certificate_id,
++				cid
++			);
++			break;
++		}
++	}
++
++cleanup:
++	if (user_certificates != NULL) {
++		pkcs11h_certificate_freeCertificateIdList (user_certificates);
++		user_certificates = NULL;
++	}
++	if (cka_id != NULL) {
++		free (cka_id);
++		cka_id = NULL;
++	}
++	return rv;
++}
++
+ int
+ SSL_CTX_use_pkcs11 (
+ 	SSL_CTX * const ssl_ctx,
+@@ -653,23 +762,21 @@
+ 		}
+ 
+ 		if (
+-			(rv = pkcs11h_certificate_deserializeCertificateId (
++			(rv = get_certificate_id (
+ 				&certificate_id,
+ 				id_resp.password
+ 			)) != CKR_OK
+ 		) {
+-			msg (M_WARN, "PKCS#11: Cannot deserialize id %ld-'%s'", rv, pkcs11h_getMessage (rv));
+ 			goto cleanup;
+ 		}
+ 	}
+ 	else {
+ 		if (
+-			(rv = pkcs11h_certificate_deserializeCertificateId (
++			(rv = get_certificate_id (
+ 				&certificate_id,
+ 				pkcs11_id
+ 			)) != CKR_OK
+ 		) {
+-			msg (M_WARN, "PKCS#11: Cannot deserialize id %ld-'%s'", rv, pkcs11h_getMessage (rv));
+ 			goto cleanup;
+ 		}
+ 	}

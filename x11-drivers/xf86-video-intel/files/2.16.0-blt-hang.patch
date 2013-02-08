@@ -1,0 +1,72 @@
+commit 46f97127c22ea42bc8fdae59d2a133e4b8b6c997
+Author: Chris Wilson <chris@chris-wilson.co.uk>
+Date:   Sun Oct 16 21:40:15 2011 +0100
+
+    snb,ivb: Workaround unknown blitter death
+    
+    The first workaround was a performance killing MI_FLUSH_DW after every
+    op. This workaround appears to be a stable compromise instead, only
+    requiring a redundant command after every BLT command with little
+    impact on throughput.
+    
+    Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=27892
+    Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=39524
+    Tested-by: Daniel Vetter <daniel.vetter@ffwll.ch>
+    Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+
+diff --git a/src/intel_uxa.c b/src/intel_uxa.c
+index 30717d0..9e58c69 100644
+--- a/src/intel_uxa.c
++++ b/src/intel_uxa.c
+@@ -340,13 +340,6 @@ static void intel_uxa_solid(PixmapPtr pixmap, int x1, int y1, int x2, int y2)
+ 	}
+ }
+ 
+-static void intel_uxa_done_solid(PixmapPtr pixmap)
+-{
+-	ScrnInfoPtr scrn = xf86Screens[pixmap->drawable.pScreen->myNum];
+-
+-	intel_debug_flush(scrn);
+-}
+-
+ /**
+  * TODO:
+  *   - support planemask using FULL_BLT_CMD?
+@@ -501,9 +494,19 @@ intel_uxa_copy(PixmapPtr dest, int src_x1, int src_y1, int dst_x1,
+ 	}
+ }
+ 
+-static void intel_uxa_done_copy(PixmapPtr dest)
++static void intel_uxa_done(PixmapPtr pixmap)
+ {
+-	ScrnInfoPtr scrn = xf86Screens[dest->drawable.pScreen->myNum];
++	ScrnInfoPtr scrn = xf86Screens[pixmap->drawable.pScreen->myNum];
++	intel_screen_private *intel = intel_get_screen_private(scrn);
++
++	if (IS_GEN6(intel) || IS_GEN7(intel)) {
++		/* workaround a random BLT hang */
++		BEGIN_BATCH_BLT(3);
++		OUT_BATCH(XY_SETUP_CLIP_BLT_CMD);
++		OUT_BATCH(0);
++		OUT_BATCH(0);
++		ADVANCE_BATCH();
++	}
+ 
+ 	intel_debug_flush(scrn);
+ }
+@@ -1225,13 +1228,13 @@ Bool intel_uxa_init(ScreenPtr screen)
+ 	intel->uxa_driver->check_solid = intel_uxa_check_solid;
+ 	intel->uxa_driver->prepare_solid = intel_uxa_prepare_solid;
+ 	intel->uxa_driver->solid = intel_uxa_solid;
+-	intel->uxa_driver->done_solid = intel_uxa_done_solid;
++	intel->uxa_driver->done_solid = intel_uxa_done;
+ 
+ 	/* Copy */
+ 	intel->uxa_driver->check_copy = intel_uxa_check_copy;
+ 	intel->uxa_driver->prepare_copy = intel_uxa_prepare_copy;
+ 	intel->uxa_driver->copy = intel_uxa_copy;
+-	intel->uxa_driver->done_copy = intel_uxa_done_copy;
++	intel->uxa_driver->done_copy = intel_uxa_done;
+ 
+ 	/* Composite */
+ 	if (IS_GEN2(intel)) {

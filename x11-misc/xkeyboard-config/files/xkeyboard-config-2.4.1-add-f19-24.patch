@@ -1,0 +1,16 @@
+diff -ur xkb.orig/symbols/inet xkb/symbols/inet
+--- xkb.orig/symbols/inet	2012-10-22 10:33:09.099377948 -0700
++++ xkb/symbols/inet	2012-10-22 10:46:28.635298140 -0700
+@@ -225,6 +225,12 @@
+     key <FK16>   {      [ XF86Launch7       ]       };
+     key <FK17>   {      [ XF86Launch8       ]       };
+     key <FK18>   {      [ XF86Launch9       ]       };
++    key <FK19>   {      [ F19       ]       };
++    key <FK20>   {      [ F20       ]       };
++    key <FK21>   {      [ F21       ]       };
++    key <FK22>   {      [ F22       ]       };
++    key <FK23>   {      [ F23       ]       };
++    key <FK24>   {      [ F24       ]       };
+ };
+ 
+ 

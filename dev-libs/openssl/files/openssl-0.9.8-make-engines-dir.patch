@@ -1,0 +1,12 @@
+http://rt.openssl.org/Ticket/Display.html?id=2082
+
+--- openssl-0.9.8/engines/Makefile
++++ openssl-0.9.8.az/engines/Makefile
+@@ -88,6 +88,7 @@
+ 	@[ -n "$(INSTALLTOP)" ] # should be set by top Makefile...
+ 	@if [ -n "$(SHARED_LIBS)" ]; then \
+ 		set -e; \
++		$(PERL) $(TOP)/util/mkdir-p.pl $(INSTALL_PREFIX)$(INSTALLTOP)/lib/engines; \
+ 		for l in $(LIBNAMES); do \
+ 			( echo installing $$l; \
+ 			  if [ "$(PLATFORM)" != "Cygwin" ]; then \

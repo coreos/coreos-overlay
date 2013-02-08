@@ -1,0 +1,2 @@
+setenv kernelpart ${KERNEL_PART}
+setenv rootpart ${ROOT_PART}

@@ -1,0 +1,31 @@
+diff --git syslinux-3.82-orig/core/diskstart.inc syslinux-3.82-new/core/diskstart.inc
+index f7ae1da..25b7131 100644
+--- syslinux-3.82-orig/core/diskstart.inc
++++ syslinux-3.82-new/core/diskstart.inc
+@@ -510,6 +510,7 @@ ldlinux_ent:
+ ;
+ 		;mov si,syslinux_banner
+ 		;call writestr_early
++                call disable_cursor
+
+ ;
+ ; Tell the user if we're using EBIOS or CBIOS
+@@ -593,6 +594,18 @@ verify_checksum:
+
+ ;
+ ;
++; disable_cursor: Disable cursor emulation.
++;	    This assumes we're on page 0.
++;
++disable_cursor:
++                pushad
++                mov ch, 020h            ; Set bit 5 to disable cursor
++                mov ah, 01h             ; Set text-mode cursor shape
++                int 10h                 ; Video BIOS services
++                popad
++                ret
++
++;
+ ; writestr_early: write a null-terminated string to the console
+ ;	    This assumes we're on page 0.  This is only used for early
+ ;           messages, so it should be OK.

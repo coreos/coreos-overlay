@@ -1,0 +1,16 @@
+Index: smsc.c
+===================================================================
+--- smsc.c	(revision 5690)
++++ smsc.c	(working copy)
+@@ -655,9 +655,11 @@
+ 		{EOT}}},
+ 	{0x83, "SCH5514D", {	/* From sensors-detect */
+ 		{EOT}}},
++#if 0
+ 	{0x85, "SCH5317", {	/* From sensors-detect */
+ 		/* The SCH5317 can have either 0x85 or 0x8c as device ID. */
+ 		{EOT}}},
++#endif
+ 	{0x86, "SCH5127", {	/* From sensors-detect */
+ 		{EOT}}},
+ 	{0x89, "SCH5027", {	/* From sensors-detect (no public datasheet) */

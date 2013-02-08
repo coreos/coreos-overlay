@@ -1,0 +1,12 @@
+--- a/libudev/libudev.pc.in	2009-10-24 23:46:04.000000000 +0000
++++ b/libudev/libudev.pc.in	2009-10-24 23:46:30.000000000 +0000
+@@ -1,7 +1,7 @@
+ prefix=@prefix@
+-exec_prefix=@prefix@
++exec_prefix=@exec_prefix@
+ libdir=@libdir@
+-includedir=@prefix@/include
++includedir=@includedir@
+ 
+ Name: libudev
+ Description: Library to access udev device information

@@ -1,0 +1,98 @@
+# bcm94329sdagb board
+# $Copyright (C) 2008 Broadcom Corporation$
+# $id$
+# Azurewave Release 2010/12/13
+# NH610
+
+sromrev=3
+vendid=0x14e4
+devid=0x432e
+boardtype=0x57e
+
+# board revision 1.1
+boardrev=0x11
+
+# boardflags
+boardflags=0x0200
+boardflags2=0x00400000
+
+xtalfreq=37400
+
+aa2g=1
+aa5g=1
+
+ag0=0x0
+ag1=0x0
+
+# 11g paparams
+#pa0b0=0x13cf
+#pa0b1=0xfb34
+#pa0b2=0xfe9e
+pa0itssit=62
+pa0maxpwr=74
+ofdmpo=0x44444444
+mcs2gpo0=0x2222
+mcs2gpo1=0x2222
+
+# sel = 1 : 20% evm  sel = 2 : 27% evm  sel = 3 : 16% evm
+cckdigfilttype=4
+
+
+# 11a paparams lowband ch36~ch64
+#pa1lob0=0x148e
+#pa1lob1=0xfaee
+#pa1lob2=0xfe95
+# 11a paparams midband ch100~ch140
+#pa1b0=0x147a
+#pa1b1=0xfaee
+#pa1b2=0xfe95
+# 11a paparams highband ch149~ch165
+#pa1hib0=0x1478
+#pa1hib1=0xfaee
+#pa1hib2=0xfe95
+
+
+pa1itssit=62
+pa1maxpwr=60
+opo=0
+mcs5gpo=0x22222222
+
+# 11g rssi params
+rssismf2g=0xa
+rssismc2g=0xb
+rssisav2g=0x3
+bxa2g=0
+
+# 11a rssi params
+rssismf5g=0xa
+rssismc5g=0xa
+rssisav5g=0x3
+bxa5g=0
+
+# country code
+ccode=ALL
+cctl=0x0
+
+rxpo2g=2
+rxpo5g=0
+
+# Channel gain adjustments 
+5g_cga=0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0
+
+boardnum=2048
+#macaddr=00:11:22:33:44:55
+nocrc=1
+#nvram_override=1
+
+#for mfgc
+otpimagesize=182
+
+# sdio extra configs
+hwhdr=0x05ffff031030031003100000
+
+#This generates empty F1, F2 and F3 tuple chains, and may be used if the host SDIO stack does not require the standard tuples.
+RAW1=80 02 fe ff
+
+#This includes the standard FUNCID and FUNCE tuples in the F1, F2, F3 and common CIS.
+#RAW1=80 32 fe 21 02 0c 00 22 2a 01 01 00 00 c5 0 e6 00 00 00 00 00 40 00 00 ff ff 80 00 00 00 00 00 00 00 00 00 00 c8 00 00 00 00 00 00 00 00 00 00 00 00 00 ff 20 04 D0 2 29 43 21 02 0c 00 22 04 00 20 00 5A
+nvramver=4.218.203.0

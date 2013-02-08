@@ -1,0 +1,54 @@
+allow ldap and hpn patches to play nice
+
+--- servconf.c
++++ servconf.c
+@@ -116,24 +116,6 @@
+ 	options->num_allow_groups = 0;
+ 	options->num_deny_groups = 0;
+ 	options->ciphers = NULL;
+-	options->macs = NULL;
+-	options->protocol = SSH_PROTO_UNKNOWN;
+-	options->gateway_ports = -1;
+-	options->num_subsystems = 0;
+-	options->max_startups_begin = -1;
+-	options->max_startups_rate = -1;
+-	options->max_startups = -1;
+-	options->max_authtries = -1;
+-	options->banner = NULL;
+-	options->use_dns = -1;
+-	options->client_alive_interval = -1;
+-	options->client_alive_count_max = -1;
+-	options->authorized_keys_file = NULL;
+-	options->authorized_keys_file2 = NULL;
+-	options->num_accept_env = 0;
+-	options->permit_tun = -1;
+-	options->num_permitted_opens = -1;
+-	options->adm_forced_command = NULL;
+ #ifdef WITH_LDAP_PUBKEY
+ 	/* XXX dirty */
+ 	options->lpk.ld = NULL;
+@@ -152,6 +134,24 @@
+ 	options->lpk.flags = FLAG_EMPTY;
+ #endif
+ 
++	options->macs = NULL;
++	options->protocol = SSH_PROTO_UNKNOWN;
++	options->gateway_ports = -1;
++	options->num_subsystems = 0;
++	options->max_startups_begin = -1;
++	options->max_startups_rate = -1;
++	options->max_startups = -1;
++	options->max_authtries = -1;
++	options->banner = NULL;
++	options->use_dns = -1;
++	options->client_alive_interval = -1;
++	options->client_alive_count_max = -1;
++	options->authorized_keys_file = NULL;
++	options->authorized_keys_file2 = NULL;
++	options->num_accept_env = 0;
++	options->permit_tun = -1;
++	options->num_permitted_opens = -1;
++	options->adm_forced_command = NULL;
+ }
+ 
+ void

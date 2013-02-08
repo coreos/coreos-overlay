@@ -1,0 +1,85 @@
+From d09984016e41b602885e25b17582a0f563384e16 Mon Sep 17 00:00:00 2001
+From: Andrew de los Reyes <adlr@chromium.org>
+Date: Tue, 28 Aug 2012 14:33:45 -0700
+Subject: [PATCH] config/config.c: Workaround for handling udev REMOVED
+ messages.
+
+Details at http://code.google.com/p/chromium-os/issues/detail?id=33813 .
+
+The result of the bug is that sometimes a path will have the non-/sys part
+of the prefix missing. For example,
+'/sys/devices/pci0000:00/0000:00:1d.3/usb5/5-1/5-1:1.0/bluetooth/hci0/hci0:21/input32'
+may come in as '/sys/hci0/hci0:21/input32'. This CL will look at the
+suffixes to determine if there is a match.
+
+BUG=chromium-os:33813
+TEST=Reproduced error on ZGB. Saw log message appear and mouse
+function.
+---
+ config/config.c |   39 +++++++++++++++++++++++++++++++++++++--
+ 1 files changed, 37 insertions(+), 2 deletions(-)
+
+diff --git a/config/config.c b/config/config.c
+index 0dae3ad..636abb8 100644
+--- a/config/config.c
++++ b/config/config.c
+@@ -90,6 +90,41 @@ remove_device(const char *backend, DeviceIntPtr dev)
+     OsReleaseSignals();
+ }
+ 
++/**
++ * This is a workaround for
++ * http://code.google.com/p/chromium-os/issues/detail?id=33813 .
++ * We strip a prefix from the two strings we get, and if input_dev
++ * is a suffix of existing_dev, we consider it a match.
++ */
++static Bool
++dev_same_suffix(const char* existing_dev, const char* input_dev)
++{
++    const char PREFIX[] = "udev:/sys/";
++    const size_t PREFIX_LEN = strlen(PREFIX);
++    size_t existing_len, input_len;
++
++    if (strcmp(existing_dev, input_dev) == 0)
++        return TRUE;
++    /* If either doesn't have the magic prefix, abort */
++    if (strncmp(existing_dev, PREFIX, PREFIX_LEN) != 0 ||
++        strncmp(input_dev, PREFIX, PREFIX_LEN) != 0)
++        return FALSE;
++    existing_dev += PREFIX_LEN;
++    input_dev += PREFIX_LEN;
++    /* If input_dev is the suffix of existing_dev, return TRUE, else FALSE. */
++    existing_len = strlen(existing_dev);
++    input_len = strlen(input_dev);
++    if (input_len > existing_len)
++        return FALSE;
++    if (strcmp(existing_dev + existing_len - input_len, input_dev) == 0) {
++        LogMessage(X_INFO,
++                   "devices_same_suffix: matching %s with existing device %s\n",
++                   input_dev, existing_dev);
++        return TRUE;
++    }
++    return FALSE;
++}
++
+ void
+ remove_devices(const char *backend, const char *config_info)
+ {
+@@ -97,12 +132,12 @@ remove_devices(const char *backend, const char *config_info)
+ 
+     for (dev = inputInfo.devices; dev; dev = next) {
+         next = dev->next;
+-        if (dev->config_info && strcmp(dev->config_info, config_info) == 0)
++        if (dev->config_info && dev_same_suffix(dev->config_info, config_info))
+             remove_device(backend, dev);
+     }
+     for (dev = inputInfo.off_devices; dev; dev = next) {
+         next = dev->next;
+-        if (dev->config_info && strcmp(dev->config_info, config_info) == 0)
++        if (dev->config_info && dev_same_suffix(dev->config_info, config_info))
+             remove_device(backend, dev);
+     }
+ }
+-- 
+1.7.7.3
+

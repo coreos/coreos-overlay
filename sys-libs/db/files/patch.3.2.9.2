@@ -1,0 +1,21 @@
+*** log/log_rec.c.orig	2001/01/25 18:22:56	11.49
+--- log/log_rec.c	2001/02/07 22:17:46
+***************
+*** 404,410 ****
+  				TAILQ_INIT(&logp->dbentry[i].dblist);
+  			else
+  				TAILQ_REINSERT_HEAD(
+! 				    &logp->dbentry[i].dblist, dbp, links);
+  		}
+  
+  		/* Initialize the new entries. */
+--- 404,410 ----
+  				TAILQ_INIT(&logp->dbentry[i].dblist);
+  			else
+  				TAILQ_REINSERT_HEAD(
+! 				    &logp->dbentry[i].dblist, dbtmp, links);
+  		}
+  
+  		/* Initialize the new entries. */
+
+

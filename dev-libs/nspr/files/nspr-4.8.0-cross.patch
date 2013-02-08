@@ -1,0 +1,43 @@
+--- mozilla/nsprpub/configure.orig	2009-09-29 03:06:05.000000000 +0000
++++ mozilla/nsprpub/configure	2009-09-29 03:07:19.000000000 +0000
+@@ -1129,16 +1129,16 @@
+ fi
+ 
+ if test -z "$SKIP_COMPILER_CHECKS"; then
+-if test "$target" != "$host"; then
+-    echo "cross compiling from $host to $target"
++if test "$target" != "$build"; then
++    echo "cross compiling from $build to $target"
+     cross_compiling=yes
+ 
+     _SAVE_CC="$CC"
+     _SAVE_CFLAGS="$CFLAGS"
+     _SAVE_LDFLAGS="$LDFLAGS"
+ 
+-    echo $ac_n "checking for $host compiler""... $ac_c" 1>&6
+-echo "configure:1142: checking for $host compiler" >&5
++    echo $ac_n "checking for $build compiler""... $ac_c" 1>&6
++echo "configure:1142: checking for $build compiler" >&5
+     for ac_prog in $HOST_CC gcc cc /usr/ucb/cc
+ do
+ # Extract the first word of "$ac_prog", so it can be a program name with args.
+@@ -1189,8 +1189,8 @@
+     CFLAGS="$HOST_CFLAGS"
+     LDFLAGS="$HOST_LDFLAGS"
+ 
+-    echo $ac_n "checking whether the $host compiler ($HOST_CC $HOST_CFLAGS $HOST_LDFLAGS) works""... $ac_c" 1>&6
+-echo "configure:1194: checking whether the $host compiler ($HOST_CC $HOST_CFLAGS $HOST_LDFLAGS) works" >&5
++    echo $ac_n "checking whether the $build compiler ($HOST_CC $HOST_CFLAGS $HOST_LDFLAGS) works""... $ac_c" 1>&6
++echo "configure:1194: checking whether the $build compiler ($HOST_CC $HOST_CFLAGS $HOST_LDFLAGS) works" >&5
+     cat > conftest.$ac_ext <<EOF
+ #line 1196 "configure"
+ #include "confdefs.h"
+@@ -1206,7 +1206,7 @@
+   echo "configure: failed program was:" >&5
+   cat conftest.$ac_ext >&5
+   rm -rf conftest*
+-  { echo "configure: error: installation or configuration problem: $host compiler $HOST_CC cannot create executables." 1>&2; exit 1; } 
++  { echo "configure: error: installation or configuration problem: $build compiler $HOST_CC cannot create executables." 1>&2; exit 1; } 
+ fi
+ rm -f conftest*
+ 

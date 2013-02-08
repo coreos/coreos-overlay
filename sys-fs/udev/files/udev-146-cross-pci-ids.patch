@@ -1,0 +1,20 @@
+--- a/configure.ac	2010-01-25 21:47:32.000000000 -0800
++++ b/configure.ac	2010-01-25 21:50:24.000000000 -0800
+@@ -69,13 +69,13 @@
+ 	PKG_CHECK_MODULES(USBUTILS, usbutils >= 0.82)
+ 	AC_SUBST([USB_DATABASE], [$($PKG_CONFIG --variable=usbids usbutils)])
+ 
+-	AC_CHECK_FILES([/usr/share/pci.ids], [pciids=/usr/share/pci.ids])
+-	AC_CHECK_FILES([/usr/share/hwdata/pci.ids], [pciids=/usr/share/hwdata/pci.ids])
+-	AC_CHECK_FILES([/usr/share/misc/pci.ids], [pciids=/usr/share/misc/pci.ids])
+ 	AC_ARG_WITH(pci-ids-path,
+ 		AS_HELP_STRING([--pci-ids-path=DIR], [Path to pci.ids file]),
+ 		[PCI_DATABASE=${withval}],
+-		[if test -n "$pciids" ; then
++		[AC_CHECK_FILES([/usr/share/pci.ids], [pciids=/usr/share/pci.ids])
++		AC_CHECK_FILES([/usr/share/hwdata/pci.ids], [pciids=/usr/share/hwdata/pci.ids])
++		AC_CHECK_FILES([/usr/share/misc/pci.ids], [pciids=/usr/share/misc/pci.ids])
++		if test -n "$pciids" ; then
+ 			PCI_DATABASE="$pciids"
+ 		else
+ 			AC_MSG_ERROR([pci.ids not found, try --with-pci-ids-path=])

@@ -1,0 +1,32 @@
+#%PAM-1.0
+
+auth       sufficient	pam_rootok.so
+
+# If you want to restrict users begin allowed to su even more,
+# create /etc/security/suauth.allow (or to that matter) that is only
+# writable by root, and add users that are allowed to su to that
+# file, one per line.
+#auth       required     pam_listfile.so item=ruser sense=allow onerr=fail file=/etc/security/suauth.allow
+
+# Uncomment this to allow users in the wheel group to su without
+# entering a passwd.
+#auth       sufficient   pam_wheel.so use_uid trust
+
+# Alternatively to above, you can implement a list of users that do
+# not need to supply a passwd with a list.
+#auth       sufficient   pam_listfile.so item=ruser sense=allow onerr=fail file=/etc/security/suauth.nopass
+
+# Comment this to allow any user, even those not in the 'wheel'
+# group to su
+auth       required     pam_wheel.so use_uid
+
+auth       include		system-auth
+
+account    include		system-auth
+
+password   include		system-auth
+
+session    include		system-auth
+session    required     pam_env.so
+session    optional		pam_xauth.so
+

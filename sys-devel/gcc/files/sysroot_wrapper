@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Copyright (c) 2009 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# This script ensures that "--sysroot" is passed to whatever it is wrapping.
+# To use:
+#   mv <tool> <tool>.real
+#   ln -s <path_to_sysroot_wrapper> <tool>
+
+SYSROOT_WRAPPER_LOG=/tmp/sysroot_wrapper.error
+if [ -n "$SYSROOT" ] ; then
+  exec "${0}.real" --sysroot="$SYSROOT" "$@"
+else
+  if [[ ! -f $SYSROOT_WRAPPER_LOG ]]; then
+    touch $SYSROOT_WRAPPER_LOG
+    chmod a+w $SYSROOT_WRAPPER_LOG
+  fi
+  echo "Invocation with missing SYSROOT: ${0} $@" >> $SYSROOT_WRAPPER_LOG
+  exec "${0}.real" "$@"
+fi

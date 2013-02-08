@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<node name="/" xmlns:tp="http://telepathy.freedesktop.org/wiki/DbusSpec#extensions-v0">
+  <interface name="org.freedesktop.ModemManager.Modem.Gsm.SMS">
+    <method name="Delete">
+      <tp:docstring>
+        Delete an SMS message.
+      </tp:docstring>
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <annotation name="org.freedesktop.DBus.GLib.CSymbol" value="impl_gsm_modem_sms_delete"/>
+      <arg name="index" type="u" direction="in">
+        <tp:docstring>
+          The index of the SMS.
+        </tp:docstring>
+      </arg>
+    </method>
+
+    <method name="Get">
+      <tp:docstring>
+        Retrieve an SMS from the SIM card.
+      </tp:docstring>
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <annotation name="org.freedesktop.DBus.GLib.CSymbol" value="impl_gsm_modem_sms_get"/>
+      <arg name="index" type="u" direction="in">
+        <tp:docstring>
+          The index of the SMS.
+        </tp:docstring>
+      </arg>
+      <arg name="sms" type="a{sv}" direction="out">
+        <tp:docstring>
+          A dictionary containing SMS properties of the SMS specified by the given index.  This dictionary may contain the following key/value pairs:
+
+          number   : string - Phone number (mandatory)
+          text     : string - SMS text (mandatory, empty if data cannot be decoded)
+          data     : byte array - SMS user data (TP-UD) (mandatory)
+          data-coding-scheme: uint (0..255) - SMS user data coding scheme (TP-DCS) (mandatory)
+          smsc     : string - SMS service center number (optional)
+          validity : uint (0..255) - Specifies when the SMS expires in SMSC (optional)
+          class    : uint (0..3) - Message importance and location (optional)
+          completed: boolean - Whether all message parts have been received or not (optional)
+          index    : uint - Index of message (for Get and Delete) (optional)
+        </tp:docstring>
+      </arg>
+    </method>
+
+    <method name="GetFormat">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <annotation name="org.freedesktop.DBus.GLib.CSymbol" value="impl_gsm_modem_sms_get_format"/>
+      <arg name="result" type="u" direction="out"/>
+    </method>
+
+    <method name="SetFormat">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <annotation name="org.freedesktop.DBus.GLib.CSymbol" value="impl_gsm_modem_sms_set_format"/>
+      <arg name="format" type="u" direction="in"/>
+    </method>
+
+    <method name="GetSmsc">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <annotation name="org.freedesktop.DBus.GLib.CSymbol" value="impl_gsm_modem_sms_get_smsc"/>
+      <arg name="result" type="s" direction="out"/>
+    </method>
+
+    <method name="SetSmsc">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <annotation name="org.freedesktop.DBus.GLib.CSymbol" value="impl_gsm_modem_sms_set_smsc"/>
+      <arg name="smsc" type="s" direction="in"/>
+    </method>
+
+    <method name="List">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <annotation name="org.freedesktop.DBus.GLib.CSymbol" value="impl_gsm_modem_sms_list"/>
+      <arg name="result" type="aa{sv}" direction="out"/>
+    </method>
+
+    <method name="Save">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <annotation name="org.freedesktop.DBus.GLib.CSymbol" value="impl_gsm_modem_sms_save"/>
+      <arg name="properties" type="a{sv}" direction="in">
+        <tp:docstring>
+          SMS properties to save with the following key values:
+
+          number   : string - Phone number (mandatory)
+          text     : string - SMS text (mandatory)
+          smsc     : string - SMS service center number (optional)
+          validity : uint (0..255) - Specifies when the SMS expires in SMSC (optional)
+          class    : uint (0..3) - Message importance and location (optional)
+        </tp:docstring>
+      </arg>
+      <arg name="index" type="au" direction="out"/>
+    </method>
+
+    <method name="Send">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <annotation name="org.freedesktop.DBus.GLib.CSymbol" value="impl_gsm_modem_sms_send"/>
+      <arg name="properties" type="a{sv}" direction="in">
+        <tp:docstring>
+          SMS properties to save with the following key values:
+
+          number   : string - Phone number (mandatory)
+          text     : string - SMS text (mandatory)
+          smsc     : string - SMS service center number (optional)
+          validity : uint (0..255) - Specifies when the SMS expires in SMSC (optional)
+          class    : uint (0..3) - Message importance and location (optional)
+        </tp:docstring>
+      </arg>
+      <arg name="result" type="au" direction="out"/>
+    </method>
+
+    <method name="SendFromStorage">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <annotation name="org.freedesktop.DBus.GLib.CSymbol" value="impl_gsm_modem_sms_send_from_storage"/>
+      <arg name="index" type="u" direction="in"/>
+    </method>
+
+    <method name="SetIndication">
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <annotation name="org.freedesktop.DBus.GLib.CSymbol" value="impl_gsm_modem_sms_set_indication"/>
+      <arg name="mode" type="u" direction="in"/>
+      <arg name="mt" type="u" direction="in"/>
+      <arg name="bm" type="u" direction="in"/>
+      <arg name="ds" type="u" direction="in"/>
+      <arg name="bfr" type="u" direction="in"/>
+    </method>
+
+    <signal name="SmsReceived">
+      <tp:docstring>
+        Emitted when any part of a new SMS has been received (but not for subsequent parts, if any).  Not all parts may have been received and the message may not be complete; if it is, the 'complete' argument will be TRUE.
+      </tp:docstring>
+      <arg name="index" type="u">
+        <tp:docstring>
+          Index of the new SMS.
+        </tp:docstring>
+      </arg>
+      <arg name="complete" type="b">
+        <tp:docstring>
+          TRUE if all message parts have been received, otherwise FALSE.
+        </tp:docstring>
+      </arg>
+    </signal>
+
+    <signal name="Completed">
+      <tp:docstring>
+        Emitted when the complete-ness status of an SMS message changes.  An SMS may not necessarily be complete when the first part is received; this signal will be emitted when all parts have been received, even for single-part messages.
+      </tp:docstring>
+      <arg name="index" type="u">
+        <tp:docstring>
+          The index of the SMS.
+        </tp:docstring>
+      </arg>
+      <arg name="completed" type="b">
+        <tp:docstring>
+          TRUE if all message parts have been received, otherwise FALSE.
+        </tp:docstring>
+      </arg>
+    </signal>
+
+  </interface>
+</node>

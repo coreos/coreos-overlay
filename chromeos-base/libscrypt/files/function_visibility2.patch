@@ -1,0 +1,10 @@
+--- src.orig/lib/crypto/crypto_scrypt.h	2012-03-08 10:45:35.002167384 -0800
++++ src/lib/crypto/crypto_scrypt.h	2012-03-08 10:46:39.194396363 -0800
+@@ -40,6 +40,7 @@
+  *
+  * Return 0 on success; or -1 on error.
+  */
++__attribute__ ((visibility("default")))
+ int crypto_scrypt(const uint8_t *, size_t, const uint8_t *, size_t, uint64_t,
+     uint32_t, uint32_t, uint8_t *, size_t);
+ 

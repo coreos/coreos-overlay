@@ -1,0 +1,9 @@
+getopts.patch:
+- bugfix to allow programming of devices with default FTDI id:0x0403/0x6001
+  to a new vid/pid.  Previously, ftdi_eeprom assumed that the vid/pid in the
+  config file otherwise.  In addition, added ability to override serial number
+  in config file on command line.
+
+  Now to program board for first time:
+  ftdi_eeprom -v 0x403 -p 0x6001 -s 000-001 /usr/share/ftdi_eeprom/mini-servo.conf
+     where: inside mini-servo.conf vid/pid is 0x18d1/0x5000

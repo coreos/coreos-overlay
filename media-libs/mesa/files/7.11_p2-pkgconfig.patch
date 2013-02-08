@@ -1,0 +1,13 @@
+diff --git a/configs/default b/configs/default
+index 2b1bf9b..2c3d827 100644
+--- a/configs/default
++++ b/configs/default
+@@ -40,7 +40,7 @@ MKDEP_OPTIONS = -fdepend
+ MAKE = make
+ FLEX = flex
+ BISON = bison
+-PKG_CONFIG = pkg-config
++#PKG_CONFIG = pkg-config
+ 
+ # Use MINSTALL for installing libraries, INSTALL for everything else
+ MINSTALL = $(SHELL) $(TOP)/bin/minstall

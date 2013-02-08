@@ -1,0 +1,21 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+ "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<!-- From http://dbus.freedesktop.org/doc/dbus-specification.html -->
+<node>
+  <interface name="org.freedesktop.DBus.Properties">
+    <method name="Get">
+      <arg name="interface" direction="in" type="s" />
+      <arg name="name" direction="in" type="s" />
+      <arg name="value" direction="out" type="v" />
+    </method>
+    <method name="Set">
+      <arg name="interface" direction="in" type="s" />
+      <arg name="name" direction="in" type="s" />
+      <arg name="value" direction="in" type="v" />
+    </method>
+    <method name="GetAll">
+      <arg name="interface" direction="in" type="s" />
+      <arg name="properties" direction="out" type="a{sv}" />
+    </method>
+  </interface>
+</node>

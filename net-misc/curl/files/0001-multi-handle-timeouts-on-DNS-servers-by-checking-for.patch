@@ -1,0 +1,78 @@
+From 595f2e5385c3ca8d1216327eff8f0a635c198008 Mon Sep 17 00:00:00 2001
+From: Jason Glasgow <jglasgow@chromium.org>
+Date: Wed, 30 Nov 2011 15:23:44 -0500
+Subject: [PATCH] multi: handle timeouts on DNS servers by checking for new sockets
+
+If the first name server is not available, the multi interface does
+not invoke the socket_cb when the DNS request to the first name server
+timesout.  Ensure that the list of sockets are always updated after
+calling Curl_resolver_is_resolved.
+
+This bug can be reproduced if Curl is complied with --enable_ares and
+your code uses the multi socket interfaces and the
+CURLMOPT_SOCKETFUNCTION option.  To test try:
+  iptables -I INPUT \
+           -s $(sed -n -e '/name/{s/.* //p;q}' /etc/resolv.conf)/32 \
+           -j REJECT
+and then run a program which uses the multi-interface.
+---
+ lib/asyn-ares.c |    9 +++++----
+ lib/multi.c     |   13 ++++++++-----
+ 2 files changed, 13 insertions(+), 9 deletions(-)
+
+diff --git a/lib/asyn-ares.c b/lib/asyn-ares.c
+index 7c2c372..0b45484 100644
+--- a/lib/asyn-ares.c
++++ b/lib/asyn-ares.c
+@@ -227,18 +227,19 @@ int Curl_resolver_getsock(struct connectdata *conn,
+   struct timeval maxtime;
+   struct timeval timebuf;
+   struct timeval *timeout;
++  long milli;
+   int max = ares_getsock((ares_channel)conn->data->state.resolver,
+                          (ares_socket_t *)socks, numsocks);
+ 
+-
+   maxtime.tv_sec = CURL_TIMEOUT_RESOLVE;
+   maxtime.tv_usec = 0;
+ 
+   timeout = ares_timeout((ares_channel)conn->data->state.resolver, &maxtime,
+                          &timebuf);
+-
+-  Curl_expire(conn->data,
+-              (timeout->tv_sec * 1000) + (timeout->tv_usec/1000));
++  milli = (timeout->tv_sec * 1000) + (timeout->tv_usec/1000);
++  if(milli == 0)
++    milli += 10;
++  Curl_expire(conn->data, milli);
+ 
+   return max;
+ }
+diff --git a/lib/multi.c b/lib/multi.c
+index ae70851..3059e49 100644
+--- a/lib/multi.c
++++ b/lib/multi.c
+@@ -1085,12 +1085,15 @@ static CURLMcode multi_runsingle(struct Curl_multi *multi,
+       /* check if we have the name resolved by now */
+       easy->result = Curl_resolver_is_resolved(easy->easy_conn, &dns);
+ 
+-      if(dns) {
+-        /* Update sockets here. Mainly because the socket(s) may have been
+-           closed and the application thus needs to be told, even if it is
+-           likely that the same socket(s) will again be used further down. */
+-        singlesocket(multi, easy);
++      /* Update sockets here, because the socket(s) may have been
++         closed and the application thus needs to be told, even if it
++         is likely that the same socket(s) will again be used further
++         down.  If the name has not yet been resolved, it is likely
++         that new sockets have been opened in an attempt to contact
++         another resolver. */
++      singlesocket(multi, easy);
+ 
++      if(dns) {
+         /* Perform the next step in the connection phase, and then move on
+            to the WAITCONNECT state */
+         easy->result = Curl_async_resolved(easy->easy_conn,
+-- 
+1.7.3.1
+

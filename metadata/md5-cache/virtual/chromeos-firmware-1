@@ -1,0 +1,9 @@
+DEFINED_PHASES=-
+DESCRIPTION=Chrome OS Firmware virtual package
+EAPI=2
+HOMEPAGE=http://src.chromium.org
+KEYWORDS=amd64 arm x86
+LICENSE=BSD
+RDEPEND=chromeos-base/chromeos-firmware-null
+SLOT=0
+_md5_=b7784a0867a3eb7e22bf48a9cdc19dca

@@ -1,0 +1,50 @@
+From eb12f7626253e47c8a3394bd07c8460d4775eae7 Mon Sep 17 00:00:00 2001
+From: Sean Paul <seanpaul@chromium.org>
+Date: Wed, 20 Jun 2012 11:39:22 -0400
+Subject: [PATCH] v4l: Add DMABUF as a memory type
+
+Adds DMABUF memory type to v4l framework. Also adds the related file
+descriptor in v4l2_plane and v4l2_buffer.
+
+Change-Id: If6b8d3e16bf487d87352008f9ac5d3bdad5ab732
+Signed-off-by: Tomasz Stanislawski <t.stanislaws@samsung.com>
+[original work in the PoC for buffer sharing]
+Signed-off-by: Sumit Semwal <sumit.semwal@ti.com>
+Signed-off-by: Sumit Semwal <sumit.semwal@linaro.org>
+Acked-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Signed-off-by: Sean Paul <seanpaul@chromium.org>
+---
+ include/linux/videodev2.h |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/include/linux/videodev2.h b/include/linux/videodev2.h
+index 7915525..92a495d 100644
+--- a/include/linux/videodev2.h
++++ b/include/linux/videodev2.h
+@@ -185,6 +185,7 @@ enum v4l2_memory {
+ 	V4L2_MEMORY_MMAP             = 1,
+ 	V4L2_MEMORY_USERPTR          = 2,
+ 	V4L2_MEMORY_OVERLAY          = 3,
++	V4L2_MEMORY_DMABUF           = 4,
+ };
+ 
+ /* see also http://vektor.theorem.ca/graphics/ycbcr/ */
+@@ -617,6 +618,7 @@ struct v4l2_plane {
+ 	union {
+ 		__u32		mem_offset;
+ 		unsigned long	userptr;
++		int		fd;
+ 	} m;
+ 	__u32			data_offset;
+ 	__u32			reserved[11];
+@@ -667,6 +669,7 @@ struct v4l2_buffer {
+ 		__u32           offset;
+ 		unsigned long   userptr;
+ 		struct v4l2_plane *planes;
++		int		fd;
+ 	} m;
+ 	__u32			length;
+ 	__u32			input;
+-- 
+1.7.7.3
+

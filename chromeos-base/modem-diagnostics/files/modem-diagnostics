@@ -1,0 +1,55 @@
+#!/bin/sh
+# Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+. /usr/share/misc/shflags
+
+DEFAULT_IF=eth0
+DEFAULT_IF_IP=169.254.18.10
+DEFAULT_DEV=/dev/ttyUSB0
+
+DEFINE_boolean 'configure_interface' true\
+  'Configure an interface to export data over'
+DEFINE_string 'export_interface' $DEFAULT_IF 'Interface to configure'
+DEFINE_string 'export_interface_ip' $DEFAULT_IF_IP \
+  'IP address to configure export_interface to'
+DEFINE_string 'export_device' $DEFAULT_DEV 'Device to export'
+
+FLAGS "$@" || exit $?
+eval set -- "${FLAGS_ARGV}"
+
+set -e
+if [ -z "$1" -o "$1" = "--help" -o "$1" = "help" ] ; then
+  cat 2>&1 <<EOF
+$0: Connect a modem to a debug server running on a remote machine.
+
+As a convenience, configures the ethernet interface to an
+AUTOIP address so that the interface can connect with a device hooked
+directly to it over an ethernet cable.
+
+  Examples:
+  $0 169.254.54.76
+      Configures ${DEFAULT_IF}'s IP address to $DEFAULT_IF_IP and connects to
+      169.254.54.76
+  $0 169.254.54.76 --noconfigure_interface
+      Just connects; does not configure the interface.  Use this if
+      you are not using a direct ethernet connection
+
+If the connection is working, you will see hex dump data flying by.
+
+EOF
+  flags_help
+  exit 1
+fi
+
+if [ $FLAGS_configure_interface = $FLAGS_TRUE ] ; then
+  echo 2>&1 Configuring $FLAGS_export_interface to $FLAGS_export_interface_ip
+  sudo /sbin/ifconfig $FLAGS_export_interface $FLAGS_export_interface_ip
+fi
+
+REMOTE_IP="$1"
+
+echo 2>&1 Connecting $FLAGS_export_device to $REMOTE_IP
+sudo stty -F $FLAGS_export_device raw
+sudo socat -xdd TCP:$REMOTE_IP:2500 GOPEN:$FLAGS_export_device

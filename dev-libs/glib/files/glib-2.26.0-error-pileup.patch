@@ -1,0 +1,30 @@
+From 1c6fd63f60ffa24aa9ea29d2ac13bb0b2b5b9d4e Mon Sep 17 00:00:00 2001
+From: Matthias Clasen <mclasen@redhat.com>
+Date: Sun, 17 Oct 2010 03:30:30 +0000
+Subject: Prevent error pileup
+
+---
+diff --git a/gio/glib-compile-schemas.c b/gio/glib-compile-schemas.c
+index c2725b4..22681d0 100644
+--- a/gio/glib-compile-schemas.c
++++ b/gio/glib-compile-schemas.c
+@@ -497,8 +497,7 @@ key_state_start_aliases (KeyState  *state,
+     g_set_error_literal (error, G_MARKUP_ERROR,
+                          G_MARKUP_ERROR_INVALID_CONTENT,
+                          "<aliases> already specified for this key");
+-
+-  if (!state->is_flags && !state->is_enum && !state->has_choices)
++  else if (!state->is_flags && !state->is_enum && !state->has_choices)
+     g_set_error_literal (error, G_MARKUP_ERROR,
+                          G_MARKUP_ERROR_INVALID_CONTENT,
+                          "<aliases> can only be specified for keys with "
+@@ -1634,6 +1633,7 @@ parse_gschema_files (gchar    **files,
+ 
+           /* let them know */
+           fprintf (stderr, "%s: %s.  ", filename, error->message);
++          g_clear_error (&error);
+ 
+           if (strict)
+             {
+--
+cgit v0.8.3.1

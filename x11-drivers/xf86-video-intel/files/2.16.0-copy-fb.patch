@@ -1,0 +1,156 @@
+diff --git a/src/intel.h b/src/intel.h
+index 42afaf4..22527df 100644
+--- a/src/intel.h
++++ b/src/intel.h
+@@ -465,6 +465,7 @@ extern void intel_mode_fini(intel_screen_private *intel);
+ extern int intel_get_pipe_from_crtc_id(drm_intel_bufmgr *bufmgr, xf86CrtcPtr crtc);
+ extern int intel_crtc_id(xf86CrtcPtr crtc);
+ extern int intel_output_dpms_status(xf86OutputPtr output);
++extern void intel_copy_fb(ScrnInfoPtr pScrn);
+ 
+ enum DRI2FrameEventType {
+ 	DRI2_SWAP,
+diff --git a/src/intel_display.c b/src/intel_display.c
+index 84c7c08..e52ca67 100644
+--- a/src/intel_display.c
++++ b/src/intel_display.c
+@@ -30,6 +30,7 @@
+ #endif
+ 
+ #include <sys/types.h>
++#include <sys/ioctl.h>
+ #include <sys/stat.h>
+ #include <fcntl.h>
+ #include <unistd.h>
+@@ -1435,6 +1436,109 @@ fail:
+ 	return FALSE;
+ }
+ 
++static PixmapPtr
++intel_create_pixmap_for_fbcon(ScrnInfoPtr pScrn)
++{
++	xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
++	ScreenPtr pScreen = screenInfo.screens[pScrn->scrnIndex];
++	drmModeFBPtr fbcon = NULL;
++	PixmapPtr pixmap = NULL;
++	struct drm_gem_flink flink;
++	drm_intel_bo *bo;
++
++	struct intel_crtc *intel_crtc = xf86_config->crtc[0]->driver_private;
++	struct intel_mode *intel_mode = intel_crtc->mode;
++	intel_screen_private *intel = intel_get_screen_private(pScrn);
++	int i;
++
++	for (i = 0; i < intel_mode->mode_res->count_crtcs; i++) {
++		intel_crtc = xf86_config->crtc[i]->driver_private;
++
++		fbcon = drmModeGetFB(intel_mode->fd, intel_crtc->mode_crtc->buffer_id);
++		if (fbcon != NULL) break;
++	}
++	if (fbcon == NULL) {
++		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
++				"Couldn't find an fbcon\n.");
++		return NULL;
++	}
++	flink.handle = fbcon->handle;
++	if (ioctl(intel_mode->fd, DRM_IOCTL_GEM_FLINK, &flink) < 0) {
++		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
++				"Couldn't flink fbcon handle\n");
++		return NULL;
++	}
++	bo = drm_intel_bo_gem_create_from_name(intel->bufmgr,
++			"fbcon", flink.name);
++
++	if (bo == NULL) {
++		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
++				"Couldn't allocate bo for fbcon handle\n");
++		return NULL;
++	}
++
++	pixmap = GetScratchPixmapHeader(pScreen,
++			fbcon->width, fbcon->height,
++			fbcon->depth, fbcon->bpp,
++			fbcon->pitch, NULL);
++	if (pixmap == NULL) {
++		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
++				"Couldn't allocate pixmap fbcon contents\n");
++		return NULL;
++	}
++
++	intel_set_pixmap_bo(pixmap, bo);
++	drm_intel_bo_unreference(bo);
++	drmModeFreeFB(fbcon);
++
++	return pixmap;
++}
++
++void intel_copy_fb(ScrnInfoPtr pScrn)
++{
++	ScreenPtr pScreen = screenInfo.screens[pScrn->scrnIndex];
++	intel_screen_private *intel = intel_get_screen_private(pScrn);
++	PixmapPtr src, dst;
++	unsigned int pitch = pScrn->displayWidth * intel->cpp;
++	int savePMSize;
++	int pixmap_size;
++
++	/* Ugly: this runs before CreateScratchPixmap() which normally calculates
++	   this number :(
++	 */
++	pixmap_size = sizeof(PixmapRec) + dixPrivatesSize(PRIVATE_PIXMAP);
++	savePMSize = pScreen->totalPixmapSize;
++	pScreen->totalPixmapSize = BitmapBytePad(pixmap_size * 8);
++
++	src = intel_create_pixmap_for_fbcon(pScrn);
++	if (src == NULL) {
++		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
++				"Couldn't create pixmap for fbcon\n");
++		pScreen->totalPixmapSize = savePMSize;
++		return;
++	}
++
++	/* We dont have a screen Pixmap yet */
++	dst = GetScratchPixmapHeader(pScreen,
++			pScrn->virtualX, pScrn->virtualY,
++			pScrn->depth, pScrn->bitsPerPixel,
++			pitch,
++			NULL);
++	pScreen->totalPixmapSize = savePMSize;
++	intel_set_pixmap_bo(dst,intel->front_buffer);
++	intel->uxa_driver->prepare_copy(src, dst, -1, -1, GXcopy, FB_ALLONES);
++
++	intel->uxa_driver->copy(dst, 0, 0, 0, 0,
++			pScrn->virtualX, pScrn->virtualY);
++	intel->uxa_driver->done_copy(dst);
++
++	intel_batch_submit(pScrn);
++
++	(*pScreen->DestroyPixmap)(src);
++	(*pScreen->DestroyPixmap)(dst);
++
++}
++
+ Bool
+ intel_do_pageflip(intel_screen_private *intel,
+ 		  dri_bo *new_front,
+@@ -1584,6 +1688,8 @@ Bool intel_mode_pre_init(ScrnInfoPtr scrn, int fd, int cpp)
+ 	unsigned int i;
+ 	int has_flipping;
+ 
++	scrn->canDoBGNoneRoot = TRUE;
++
+ 	mode = calloc(1, sizeof *mode);
+ 	if (!mode)
+ 		return FALSE;
+diff --git a/src/intel_driver.c b/src/intel_driver.c
+index 7fc1c1a..40ff396 100644
+--- a/src/intel_driver.c
++++ b/src/intel_driver.c
+@@ -1154,6 +1154,8 @@ static Bool I830EnterVT(int scrnIndex, int flags)
+ 
+ 	intel_set_gem_max_sizes(scrn);
+ 
++	intel_copy_fb(scrn);
++
+ 	if (!xf86SetDesiredModes(scrn))
+ 		return FALSE;
+ 

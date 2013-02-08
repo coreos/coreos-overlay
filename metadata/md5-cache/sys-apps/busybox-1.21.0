@@ -1,0 +1,14 @@
+DEFINED_PHASES=compile configure install postinst preinst prepare
+DEPEND=!static? ( selinux? ( sys-libs/libselinux ) ) pam? ( sys-libs/pam ) savedconfig? ( chromeos-base/busybox-config ) static? ( selinux? ( sys-libs/libselinux[static-libs(+)] ) ) >=sys-kernel/linux-headers-2.6.39
+DESCRIPTION=Utilities for rescue and embedded systems
+EAPI=4
+HOMEPAGE=http://www.busybox.net/
+IUSE=ipv6 livecd make-symlinks math mdev -pam selinux sep-usr +static systemd savedconfig
+KEYWORDS=~alpha amd64 arm ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc x86 ~amd64-linux ~x86-linux
+LICENSE=GPL-2
+RDEPEND=!static? ( selinux? ( sys-libs/libselinux ) ) pam? ( sys-libs/pam )
+RESTRICT=test
+SLOT=0
+SRC_URI=http://www.busybox.net/downloads/busybox-1.21.0.tar.bz2
+_eclasses_=binutils-funcs	73669d0b20960c1cc54cf381a4b89e77	eutils	33ef77a15337022e05342d2c772a7a5a	flag-o-matic	01a8b1eb019305bc4b4a8bd0b04e4cd8	multilib	5f4ad6cf85e365e8f0c6050ddd21659e	portability	0be430f759a631e692678ed796e09f5c	savedconfig	973a6df1a0949eba28a185eac79de815	toolchain-funcs	64fc271a237429f84f36b91c9f4b9912	user	9e552f935106ff0bc92af16da64b4b29
+_md5_=b7466e930753156bbfddd7552f138eb0

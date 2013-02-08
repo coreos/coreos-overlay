@@ -1,0 +1,24 @@
+<?xml version="1.0" ?>
+<tp:errors xmlns:tp="http://telepathy.freedesktop.org/wiki/DbusSpec#extensions-v0"
+           namespace="org.freedesktop.ModemManager.Modem">
+  <tp:copyright>Copyright (C) 2008 Novell, Inc.</tp:copyright>
+
+  <tp:error name="SerialOpenFailed">
+    <tp:docstring>
+      Could not open serial device.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="SerialSendFailed">
+    <tp:docstring>
+      Could not write to the serial device.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="SerialResponseTimeout">
+    <tp:docstring>
+      A response was not received in time.
+    </tp:docstring>
+  </tp:error>
+
+</tp:errors>

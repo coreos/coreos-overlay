@@ -1,0 +1,22 @@
+diff -ur xkeyboard-config-2.4.1.orig/symbols/de xkeyboard-config-2.4.1/symbols/de
+--- xkeyboard-config-2.4.1.orig/symbols/de	2011-10-05 07:19:54.000000000 +0900
++++ xkeyboard-config-2.4.1/symbols/de	2012-02-14 19:28:04.752942409 +0900
+@@ -383,6 +383,7 @@
+ 
+     include "shift(both_capslock)"
+     include "level3(caps_switch)"
++    include "level3(lwin_switch)"
+     include "level3(bksl_switch)"
+     include "level5(lsgt_switch)"
+     include "level5(ralt_switch)"
+diff -ur xkeyboard-config-2.4.1.orig/symbols/us xkeyboard-config-2.4.1/symbols/us
+--- xkeyboard-config-2.4.1.orig/symbols/us	2011-10-05 07:19:54.000000000 +0900
++++ xkeyboard-config-2.4.1/symbols/us	2012-02-14 19:28:54.812726287 +0900
+@@ -789,6 +789,7 @@
+     key <AB10> { [        slash,     question,    questiondown,       asciitilde ] };
+ 
+     key <CAPS> { [    BackSpace,    BackSpace,       BackSpace,        BackSpace ] };
++    key <LWIN> { [    BackSpace,    BackSpace,       BackSpace,        BackSpace ] };
+     key <LSGT> { [        minus,   underscore,          endash,           emdash ] };
+     key <SPCE> { [        space,        space,           space,     nobreakspace ] };
+ 

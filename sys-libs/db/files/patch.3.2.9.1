@@ -1,0 +1,104 @@
+*** include/log.h.orig	2001/01/25 18:22:51	11.20
+--- include/log.h	2001/02/06 05:02:28	11.21
+***************
+*** 198,203 ****
+--- 198,204 ----
+   */
+  typedef enum {
+  	DB_LV_INCOMPLETE,
++ 	DB_LV_NONEXISTENT,
+  	DB_LV_NORMAL,
+  	DB_LV_OLD_READABLE,
+  	DB_LV_OLD_UNREADABLE
+*** log/log.c.orig	2001/01/25 18:22:55	11.43
+--- log/log.c	2001/02/06 05:02:28	11.44
+***************
+*** 309,321 ****
+  	int find_first, *valp;
+  	logfile_validity *statusp;
+  {
+! 	logfile_validity clv_status, status;
+  	u_int32_t clv, logval;
+  	int cnt, fcnt, ret;
+  	const char *dir;
+  	char **names, *p, *q, savech;
+  
+! 	clv_status = status = DB_LV_NORMAL;
+  
+  	/* Return a value of 0 as the log file number on failure. */
+  	*valp = 0;
+--- 309,321 ----
+  	int find_first, *valp;
+  	logfile_validity *statusp;
+  {
+! 	logfile_validity logval_status, status;
+  	u_int32_t clv, logval;
+  	int cnt, fcnt, ret;
+  	const char *dir;
+  	char **names, *p, *q, savech;
+  
+! 	logval_status = status = DB_LV_NONEXISTENT;
+  
+  	/* Return a value of 0 as the log file number on failure. */
+  	*valp = 0;
+***************
+*** 385,394 ****
+  			 * as a valid log file.
+  			 */
+  			break;
+  		case DB_LV_NORMAL:
+  		case DB_LV_OLD_READABLE:
+  			logval = clv;
+! 			clv_status = status;
+  			break;
+  		case DB_LV_OLD_UNREADABLE:
+  			/*
+--- 385,398 ----
+  			 * as a valid log file.
+  			 */
+  			break;
++ 		case DB_LV_NONEXISTENT:
++ 			/* Should never happen. */
++ 			DB_ASSERT(0);
++ 			break;
+  		case DB_LV_NORMAL:
+  		case DB_LV_OLD_READABLE:
+  			logval = clv;
+! 			logval_status = status;
+  			break;
+  		case DB_LV_OLD_UNREADABLE:
+  			/*
+***************
+*** 410,416 ****
+  			 */
+  			if (!find_first) {
+  				logval = clv;
+! 				clv_status = status;
+  			}
+  			break;
+  		}
+--- 414,420 ----
+  			 */
+  			if (!find_first) {
+  				logval = clv;
+! 				logval_status = status;
+  			}
+  			break;
+  		}
+***************
+*** 420,426 ****
+  
+  err:	__os_dirfree(names, fcnt);
+  	__os_freestr(p);
+! 	*statusp = clv_status;
+  
+  	return (ret);
+  }
+--- 424,430 ----
+  
+  err:	__os_dirfree(names, fcnt);
+  	__os_freestr(p);
+! 	*statusp = logval_status;
+  
+  	return (ret);
+  }

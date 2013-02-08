@@ -1,0 +1,30 @@
+<?xml version="1.0" ?>
+<tp:errors xmlns:tp="http://telepathy.freedesktop.org/wiki/DbusSpec#extensions-v0"
+           namespace="org.freedesktop.ModemManager.Modem">
+  <tp:copyright>Copyright (C) 2008 Novell, Inc.</tp:copyright>
+
+  <tp:error name="NoCarrier">
+    <tp:docstring>
+      No carrier.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="NoDialtone">
+    <tp:docstring>
+      No dialtone.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="Busy">
+    <tp:docstring>
+      Busy.
+    </tp:docstring>
+  </tp:error>
+
+  <tp:error name="NoAnswer">
+    <tp:docstring>
+      No answer.
+    </tp:docstring>
+  </tp:error>
+
+</tp:errors>

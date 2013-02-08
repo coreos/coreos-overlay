@@ -1,0 +1,17 @@
+diff -Naurp protobuf-2.0.3-orig/python/google/protobuf/internal/decoder_test.py protobuf-2.0.3/python/google/protobuf/internal/decoder_test.py
+--- protobuf-2.0.3-orig/python/google/protobuf/internal/decoder_test.py	2008-12-05 19:07:15.000000000 +0100
++++ protobuf-2.0.3/python/google/protobuf/internal/decoder_test.py	2008-12-06 22:11:48.000000000 +0100
+@@ -106,6 +106,13 @@ class DecoderTest(unittest.TestCase):
+     self.mox.ReplayAll()
+     result = decoder_method(d)
+     self.assertEqual(expected_result, result)
++    # HACK: Convert all ints to longs so that different behavior
++    # between 32-bit and 64-bit systems does not impact the result
++    # of the test.
++    if isinstance(result, int):
++      result = long(result)
++    if isinstance(expected_result, int):
++      expected_result = long(expected_result)
+     self.assert_(isinstance(result, type(expected_result)))
+     self.mox.VerifyAll()
+     self.mox.ResetAll()

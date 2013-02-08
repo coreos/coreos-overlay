@@ -1,0 +1,11 @@
+# We install these with our chromeos-base package.
+if [[ $(cros_target) != "cros_host" ]] ; then
+	openssh_mask="
+		/etc/ssh/ssh_config
+		/etc/ssh/sshd_config
+		/usr/lib*/misc/ssh-keysign
+	"
+	PKG_INSTALL_MASK+=" ${openssh_mask}"
+	INSTALL_MASK+=" ${openssh_mask}"
+	unset openssh_mask
+fi

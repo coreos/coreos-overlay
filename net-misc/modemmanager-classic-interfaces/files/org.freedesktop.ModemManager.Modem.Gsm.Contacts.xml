@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<node name="/" xmlns:tp="http://telepathy.freedesktop.org/wiki/DbusSpec#extensions-v0">
+  <interface name="org.freedesktop.ModemManager.Modem.Gsm.Contacts">
+    <method name="Add">
+      <tp:docstring>
+        Add a new contact to the SIM card.
+      </tp:docstring>
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <annotation name="org.freedesktop.DBus.GLib.CSymbol" value="impl_gsm_modem_contacts_add"/>
+      <arg name="name" type="s" direction="in">
+        <tp:docstring>
+          The name of the contact.
+        </tp:docstring>
+      </arg>
+      <arg name="number" type="s" direction="in">
+        <tp:docstring>
+          The phone number of the contact.
+        </tp:docstring>
+      </arg>
+      <arg name="index" type="u" direction="out">
+        <tp:docstring>
+          The index of the new contact.
+        </tp:docstring>
+      </arg>
+    </method>
+
+    <method name="Delete">
+      <tp:docstring>
+        Delete a contact from the SIM card.
+      </tp:docstring>
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <annotation name="org.freedesktop.DBus.GLib.CSymbol" value="impl_gsm_modem_contacts_delete"/>
+      <arg name="index" type="u" direction="in">
+        <tp:docstring>
+          The index of the contact.
+        </tp:docstring>
+      </arg>
+    </method>
+
+    <method name="Get">
+      <tp:docstring>
+        Retrieve a contact from the SIM card.
+      </tp:docstring>
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <annotation name="org.freedesktop.DBus.GLib.CSymbol" value="impl_gsm_modem_contacts_get"/>
+      <arg name="index" type="u" direction="in">
+        <tp:docstring>
+          The index of the contact.
+        </tp:docstring>
+      </arg>
+      <arg name="contact" type="(uss)" direction="out">
+        <tp:docstring>
+          The contact structure containing index, name, and number.
+        </tp:docstring>
+      </arg>
+    </method>
+
+    <method name="List">
+      <tp:docstring>
+        List all contacts on the SIM card.
+      </tp:docstring>
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <annotation name="org.freedesktop.DBus.GLib.CSymbol" value="impl_gsm_modem_contacts_list"/>
+      <arg name="results" type="a(uss)" direction="out">
+        <tp:docstring>
+          The list of contacts where each contact has an index, name, and number.
+        </tp:docstring>
+      </arg>
+    </method>
+
+    <method name="Find">
+      <tp:docstring>
+        Find a contact from the SIM card.
+      </tp:docstring>
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <annotation name="org.freedesktop.DBus.GLib.CSymbol" value="impl_gsm_modem_contacts_find"/>
+      <arg name="pattern" type="s" direction="in">
+        <tp:docstring>
+          The pattern to search for.
+        </tp:docstring>
+      </arg>
+      <arg name="results" type="a(uss)" direction="out">
+        <tp:docstring>
+          The list of matching contacts where a contact has an index, name, and number.
+        </tp:docstring>
+      </arg>
+    </method>
+
+    <method name="GetCount">
+      <tp:docstring>
+        Get the number of contacts stored on the SIM card.
+      </tp:docstring>
+      <annotation name="org.freedesktop.DBus.GLib.Async" value=""/>
+      <annotation name="org.freedesktop.DBus.GLib.CSymbol" value="impl_gsm_modem_contacts_count"/>
+      <arg name="count" type="u" direction="out">
+        <tp:docstring>
+          The number of contacts.
+        </tp:docstring>
+      </arg>
+    </method>
+
+  </interface>
+</node>

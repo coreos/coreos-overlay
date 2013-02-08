@@ -1,0 +1,13 @@
+DEFINED_PHASES=compile configure info install postinst postrm prepare setup test unpack
+DEPEND=>=x11-base/xorg-server-1.9 || ( >=sys-devel/automake-1.11.1:1.11 ) >=sys-devel/autoconf-2.68 sys-devel/libtool x86-interix? ( >=sys-devel/libtool-2.2.6a sys-devel/m4 >=x11-misc/util-macros-1.14.0 >=media-fonts/font-util-1.2.0 ) ppc-aix? ( >=sys-devel/libtool-2.2.6a sys-devel/m4 >=x11-misc/util-macros-1.14.0 >=media-fonts/font-util-1.2.0 ) x86-winnt? ( >=sys-devel/libtool-2.2.6a sys-devel/m4 >=x11-misc/util-macros-1.14.0 >=media-fonts/font-util-1.2.0 ) >=sys-devel/libtool-2.2.6a sys-devel/m4 >=x11-misc/util-macros-1.14.0 >=media-fonts/font-util-1.2.0 >=dev-util/pkgconfig-0.23 x11-proto/xf86driproto x11-proto/glproto x11-proto/dri2proto x11-proto/fontsproto x11-proto/randrproto x11-proto/renderproto x11-proto/videoproto x11-proto/xextproto x11-proto/xineramaproto x11-proto/xproto x11-base/xorg-server[-minimal] x11-libs/libdrm x11-base/xorg-server[xorg] x11-libs/libpciaccess dev-vcs/git
+DESCRIPTION=X.Org driver for ARM devices
+EAPI=4
+HOMEPAGE=http://xorg.freedesktop.org/
+IUSE=cros_workon_tree_0d2d6cd5e23e84585ebe72df251360086c8408bf
+KEYWORDS=-* arm
+LICENSE=MIT
+RDEPEND=>=x11-base/xorg-server-1.9 x11-base/xorg-server[-minimal] x11-libs/libdrm x11-base/xorg-server[xorg] x11-libs/libpciaccess
+SLOT=0
+SRC_URI=http://xorg.freedesktop.org/releases/individual/driver/xf86-video-armsoc-0.0.1.tar.bz2
+_eclasses_=autotools	addbdf6cce5024ac93ad2084ad5e1d2d	autotools-utils	966fed1f979132a778b0b48c74a16adb	base	fc89786f3f7e7bcf03334359bd5b639b	binutils-funcs	73669d0b20960c1cc54cf381a4b89e77	cros-workon	5f2f8a42fa8e9e59f25015d9167f93a4	eutils	33ef77a15337022e05342d2c772a7a5a	flag-o-matic	01a8b1eb019305bc4b4a8bd0b04e4cd8	git-2	da60d6e85fa94cef4d510cab24e01e36	libtool	0fd90d183673bf1107465ec45849d1ea	multilib	5f4ad6cf85e365e8f0c6050ddd21659e	portability	0be430f759a631e692678ed796e09f5c	toolchain-funcs	64fc271a237429f84f36b91c9f4b9912	user	9e552f935106ff0bc92af16da64b4b29	xorg-2	b83efc910bb3ac2c64f89e2623f181f5
+_md5_=76626a63ead6a130a7b910ce5e45c597

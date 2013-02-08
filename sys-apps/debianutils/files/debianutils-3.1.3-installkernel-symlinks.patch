@@ -1,0 +1,29 @@
+--- a/installkernel	2010-02-12 04:39:49.000000000 +0000
++++ b/installkernel	2010-02-12 05:38:40.000000000 +0000
+@@ -41,11 +41,7 @@
+ 
+   cat "$2" > "$dir/$1-$ver"
+ 
+-  # This section is for backwards compatibility only
+   if test -f "$dir/$1" ; then
+-    # The presence of "$dir/$1" is unusual in modern intallations, and
+-    # the results are mostly unused.  So only recreate them if they
+-    # already existed.
+     if test -L "$dir/$1" ; then
+         # If we were using links, continue to use links, updating if
+         # we need to.
+@@ -55,12 +51,12 @@
+         else
+             mv "$dir/$1" "$dir/$1.old"
+         fi
+-        ln -sf "$1-$ver" "$dir/$1"
+     else                        # No links
+         mv "$dir/$1" "$dir/$1.old"
+-        cat "$2" > "$dir/$1"
+     fi
+   fi
++
++  ln -sf "$1-$ver" "$dir/$1"
+ }
+ 
+ if [ "$(basename $img)" = "vmlinux" ] ; then

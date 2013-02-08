@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+<herd>base-system</herd>
+<maintainer restrict="&gt;=sys-libs/db-3.2.9-r5">
+  <!-- I'm currently working on making db 4 work with gentoo, but am not
+        maintaining general db -->
+  <email>pauldv@gentoo.org</email>
+  <name>Paul de Vrieze</name>
+  <description>Making db4 work with gentoo</description>
+</maintainer>
+<maintainer restrict="&gt;=sys-libs/db-3.2.9-r5">
+  <!-- Helping to maintain db 4, especially the newer versions -->
+  <email>caleb@gentoo.org</email>
+  <name>Caleb Tennis</name>
+</maintainer>
+
+
+<longdescription>The Berkeley Database (Berkeley DB) is a programmatic toolkit
+that provides embedded database support for both traditional and client/server
+applications. Berkeley DB includes b+tree, queue, extended linear hashing,
+fixed, and variable-length record access methods, transactions, locking,
+logging, shared memory caching and database recovery. DB supports C, C++, Java,
+and Perl APIs. DB is available for a wide variety of UNIX platforms as well as
+Windows NT and Windows '95 (MSVC 4, 5 and 6).</longdescription>
+<longdescription lang="nl">De Berkeley Database is een programmatische toolkit
+die embedded database support verzorg voor en traditionele en client/server
+applicaties. Berkeley DB bevat b+tree, rij, uitgebreide lineaire hashing, vaste
+en variabele lengte record toegangsmethoden, transacties, locking, logging,
+gedeeld geheugen caching en database herstel. DB ondersteund C, C++, Java en
+Perl API's. DB is beschikbaar voor veel UNIX platformen en
+Windows.</longdescription>
+</pkgmetadata>
+

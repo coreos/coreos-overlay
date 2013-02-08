@@ -1,0 +1,13 @@
+DEFINED_PHASES=compile configure install postinst prepare
+DEPEND=sys-devel/flex >=dev-util/pkgconfig-0.20 alsa? ( media-libs/alsa-lib[alsa_pcm_plugins_extplug,alsa_pcm_plugins_ioplug] ) caps? ( >=sys-libs/libcap-ng-0.6.2 ) gstreamer? ( >=media-libs/gstreamer-0.10 >=media-libs/gst-plugins-base-0.10 ) usb? ( dev-libs/libusb ) cups? ( net-print/cups ) sys-fs/udev dev-libs/glib sys-apps/dbus media-libs/libsndfile >=dev-libs/libnl-1.1 !net-wireless/bluez-libs !net-wireless/bluez-utils || ( >=sys-devel/automake-1.11.1:1.11 ) >=sys-devel/autoconf-2.68 sys-devel/libtool
+DESCRIPTION=Bluetooth Tools and System Daemons for Linux
+EAPI=2
+HOMEPAGE=http://bluez.sourceforge.net/
+IUSE=alsa caps +consolekit cups debug gstreamer old-daemons pcmcia test-programs usb
+KEYWORDS=amd64 arm x86
+LICENSE=GPL-2 LGPL-2.1
+RDEPEND=alsa? ( media-libs/alsa-lib[alsa_pcm_plugins_extplug,alsa_pcm_plugins_ioplug] ) caps? ( >=sys-libs/libcap-ng-0.6.2 ) gstreamer? ( >=media-libs/gstreamer-0.10 >=media-libs/gst-plugins-base-0.10 ) usb? ( dev-libs/libusb ) cups? ( net-print/cups ) sys-fs/udev dev-libs/glib sys-apps/dbus media-libs/libsndfile >=dev-libs/libnl-1.1 !net-wireless/bluez-libs !net-wireless/bluez-utils consolekit? ( sys-auth/pambase[consolekit] ) test-programs? ( dev-python/dbus-python dev-python/pygobject )
+SLOT=0
+SRC_URI=mirror://kernel/linux/bluetooth/bluez-4.62.tar.gz
+_eclasses_=autotools	addbdf6cce5024ac93ad2084ad5e1d2d	binutils-funcs	73669d0b20960c1cc54cf381a4b89e77	eutils	33ef77a15337022e05342d2c772a7a5a	libtool	0fd90d183673bf1107465ec45849d1ea	multilib	5f4ad6cf85e365e8f0c6050ddd21659e	portability	0be430f759a631e692678ed796e09f5c	toolchain-funcs	64fc271a237429f84f36b91c9f4b9912	user	9e552f935106ff0bc92af16da64b4b29
+_md5_=fbe76b1f95a29c416cd2ba8b36211e87

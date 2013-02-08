@@ -1,0 +1,99 @@
+From f5e6e228207e82f1ff69f1d4d04f9ad53d3dfc02 Mon Sep 17 00:00:00 2001
+From: Andrew de los Reyes <adlr@chromium.org>
+Date: Mon, 20 Feb 2012 17:29:57 -0800
+Subject: [PATCH 2/3] Select keystrokes from all windows, not just root.
+
+To do this, we create a new function XSelectAll, that calls
+XSelectInput on a tree of windows. Also, watch for CreateNotify
+events, which indicate a new window is created, and when that happens,
+call XSelectAll on it to get key events.
+---
+ unclutter.c |   41 +++++++++++++++++++++++++++++++++++++++--
+ 1 files changed, 39 insertions(+), 2 deletions(-)
+
+diff --git a/unclutter.c b/unclutter.c
+index ab4e039..009bad5 100644
+--- a/unclutter.c
++++ b/unclutter.c
+@@ -66,6 +66,26 @@ XErrorEvent *error;
+ 	(*defaulthandler)(display,error);
+ }
+ 
++void XSelectAll(display, window, type)
++Display *display;
++Window window;
++unsigned long type;
++{
++    Window parent;
++    Window *children;
++    unsigned int nchildren;
++    int status, i;
++    XSelectInput(display, window, type);
++
++    status = XQueryTree(display, window, &window,
++			&parent, &children, &nchildren);
++    if (status == 0 || nchildren == 0)
++	return;
++    for (i = 0; i < nchildren; i++)
++	XSelectAll(display, children[i], type);
++    XFree((char *)children);
++}
++
+ char **names;	/* -> argv list of names to avoid */
+ 
+ /*
+@@ -180,7 +200,8 @@ main(argc,argv)char **argv;{
+ 	    realroot[screen] = XRootWindow(display,screen);
+ 	    cursor[screen] = createnullcursor(display,realroot[screen]);
+ 	    if(idletime<0)
+-		XSelectInput(display,realroot[screen],KeyPressMask);
++		XSelectAll(display, realroot[screen],
++			   KeyPressMask|SubstructureNotifyMask);
+ 	}
+     screen = DefaultScreen(display);
+     root = VirtualRootWindow(display,screen);
+@@ -209,6 +230,11 @@ main(argc,argv)char **argv;{
+ 		XEvent event;
+ 		do{
+ 		    XNextEvent(display,&event);
++		    if (event.type == CreateNotify) {
++			XSelectAll(display, event.xcreatewindow.parent,
++				   KeyPressMask|SubstructureNotifyMask);
++			continue;
++		    }
+ 		}while(event.type != KeyPress ||
+ 		       (event.xkey.state & ANYBUTTON));
+ 		oldx = event.xkey.x_root;
+@@ -265,10 +291,16 @@ main(argc,argv)char **argv;{
+ 		XEvent event;
+ 		do{
+ 		    XNextEvent(display,&event);
++		    if (event.type == CreateNotify) {
++			XSelectAll(display, event.xcreatewindow.parent,
++				   KeyPressMask|SubstructureNotifyMask);
++			continue;
++		    }
+ 		}while(event.type==KeyPress ||
+ 		       (event.type==MotionNotify &&
+ 			ALMOSTEQUAL(rootx,event.xmotion.x) &&
+-			ALMOSTEQUAL(rooty,event.xmotion.y)));
++			ALMOSTEQUAL(rooty,event.xmotion.y)) ||
++		       (event.type!=KeyPress && event.type!=MotionNotify));
+ 		XUngrabPointer(display, CurrentTime);
+ 	    }
+ 	}else{
+@@ -333,6 +365,11 @@ main(argc,argv)char **argv;{
+ 		/* wait till pointer leaves window */
+ 		do{
+ 		    XNextEvent(display,&event);
++		    if (event.type == CreateNotify) {
++			XSelectAll(display, event.xcreatewindow.parent,
++			KeyPressMask|SubstructureNotifyMask);
++			continue;
++		    }
+ 		}while(event.type!=LeaveNotify &&
+ 		       event.type!=FocusOut &&
+ 		       event.type!=UnmapNotify &&
+-- 
+1.7.7.3
+

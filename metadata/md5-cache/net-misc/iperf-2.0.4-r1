@@ -1,0 +1,10 @@
+DEFINED_PHASES=compile install postinst unpack
+DESCRIPTION=tool to measure IP bandwidth using UDP or TCP
+HOMEPAGE=http://iperf.sourceforge.net/
+IUSE=ipv6 threads debug
+KEYWORDS=amd64 arm hppa ppc ppc64 sparc x86 ~x86-fbsd ~x86-freebsd ~amd64-linux ~x86-linux ~ppc-macos ~x86-macos ~m68k-mint
+LICENSE=as-is
+SLOT=0
+SRC_URI=mirror://sourceforge/iperf/iperf-2.0.4.tar.gz
+_eclasses_=binutils-funcs	73669d0b20960c1cc54cf381a4b89e77	eutils	33ef77a15337022e05342d2c772a7a5a	multilib	5f4ad6cf85e365e8f0c6050ddd21659e	portability	0be430f759a631e692678ed796e09f5c	toolchain-funcs	64fc271a237429f84f36b91c9f4b9912	user	9e552f935106ff0bc92af16da64b4b29
+_md5_=61c951b23b2f549a3d864c68cd637e39

@@ -1,0 +1,33 @@
+diff --git a/Makefile b/Makefile
+index 9398f72..a9b7716 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,6 +1,7 @@
+-CC	:= gcc
+-CFLAGS	:= -O2 -Wall -Wextra -Wno-missing-field-initializers -Wno-unused-parameter -g2
+-LDFLAGS := -lrt
++CFLAGS ?= -O2 -g2
++CFLAGS += -Wall -Wextra -Wno-missing-field-initializers -Wno-unused-parameter
++
++LDLIBS += -lrt
+ 
+ all: flashbench erase
+ 
+@@ -9,10 +10,15 @@ vm.o: vm.c vm.h dev.h
+ flashbench.o: flashbench.c vm.h dev.h
+ 
+ flashbench: flashbench.o dev.o vm.o
+-	$(CC) -o $@ flashbench.o dev.o vm.o $(LDFLAGS)
+-
++	 $(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+ 
+ erase: erase.o
+ 
++install:	all
++	mkdir -p $(DESTDIR)/usr/bin
++	install -m 755 -D flashbench erase $(DESTDIR)/usr/bin/
++
+ clean:
+ 	rm -f flashbench flashbench.o erase erase.o dev.o vm.o
++
++.PHONY: all clean

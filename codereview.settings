@@ -1,0 +1,12 @@
+# This file is used by gcl to get repository specific information.
+CODE_REVIEW_SERVER: codereview.chromium.org
+VIEW_VC: http://chrome-svn/viewvc/chromeos?view=rev&revision=
+STATUS: http://chromiumos-status.appspot.com/status
+CC_LIST: chromium-os-reviews@chromium.org
+GITCL_PREUPLOAD: http://src.chromium.org/viewvc/trunk/tools/depot_tools/git-cl-upload-hook?revision=HEAD&root=chrome
+GITCL_PREDCOMMIT: http://src.chromium.org/viewvc/trunk/tools/depot_tools/git-cl-upload-hook?revision=HEAD&root=chrome
+TRYSERVER_HTTP_HOST: chrome-tryserver
+TRYSERVER_HTTP_PORT: 8018
+TRYSERVER_SVN_URL: svn://svn.chromium.org/chrome-try/try
+PUSH_URL_CONFIG: url.ssh://gitrw.chromium.org.pushinsteadof
+ORIGIN_URL_CONFIG: http://git.chromium.org/git

@@ -1,0 +1,97 @@
+Index: libusb-0.1.12/configure.in
+===================================================================
+--- libusb-0.1.12.orig/configure.in
++++ libusb-0.1.12/configure.in
+@@ -90,6 +90,8 @@ LINUX_API=0
+ DARWIN_API=0
+ BSD_API=0
+ 
++DEFINE_USB_HID_DESCRIPTOR=1
++
+ AC_MSG_CHECKING(for what USB OS support)
+ case $host in
+   *-linux*)
+@@ -101,13 +103,40 @@ case $host in
+     AC_MSG_RESULT(Linux)
+     OSLIBS=""
+     ;;
+-  *-freebsd*|*-kfreebsd*-gnu|*-openbsd*|*-netbsd*)
++  *-freebsd*)
++    AC_DEFINE(BSD_API, 1)
++    AC_DEFINE(LINUX_API, 0)
++    AC_DEFINE(DARWIN_API, 0)
++    BSD_API=1
++    os_support=bsd
++    AC_MSG_RESULT(FreeBSD)
++    OSLIBS=""
++    AC_CHECK_HEADERS([dev/usb/usbhid.h])
++    if test "x$ac_cv_header_dev_usb_hisbhid_h" = "xyes"; then
++    	AC_MSG_CHECKING([for usb_hid_descriptor])
++	have_usb_hid_descriptor=no
++	AC_TRY_COMPILE([
++	  #include <sys/types.h>
++	  #include <dev/usb/usb.h>
++	  #include <dev/usb/usbhid.h>
++	], [
++	  struct usb_hid_descriptor descr;
++	], [
++	  have_usb_hid_descriptor=yes
++	])
++	AC_MSG_RESULT([$have_usb_hid_descriptor])
++	if test "x$have_usb_hid_descriptor" = "xyes"; then
++	  DEFINE_USB_HID_DESCRIPTOR=0
++	fi
++    fi
++    ;;
++  *-dragonfly*|*-kfreebsd*-gnu|*-openbsd*|*-netbsd*)
+     AC_DEFINE(BSD_API, 1)
+     AC_DEFINE(LINUX_API, 0)
+     AC_DEFINE(DARWIN_API, 0)
+     BSD_API=1
+     os_support=bsd
+-    AC_MSG_RESULT(FreeBSD, OpenBSD and/or NetBSD)
++    AC_MSG_RESULT(DragonFly, OpenBSD and/or NetBSD)
+     OSLIBS=""
+     ;;
+   *-darwin*)
+@@ -128,6 +157,7 @@ esac
+ AC_SUBST(DARWIN_API)
+ AC_SUBST(LINUX_API)
+ AC_SUBST(BSD_API)
++AC_SUBST(DEFINE_USB_HID_DESCRIPTOR)
+ 
+ AM_CONDITIONAL(LINUX_API, test "$os_support" = "linux")
+ AM_CONDITIONAL(BSD_API, test "$os_support" = "bsd")
+Index: libusb-0.1.12/usb.h.in
+===================================================================
+--- libusb-0.1.12.orig/usb.h.in
++++ libusb-0.1.12/usb.h.in
+@@ -17,6 +17,12 @@
+ 
+ #include <dirent.h>
+ 
++#if ! @DEFINE_USB_HID_DESCRIPTOR@ && defined(__FreeBSD__)
++#include <sys/types.h>
++#include <dev/usb/usb.h>
++#include <dev/usb/usbhid.h>
++#endif
++
+ /*
+  * USB spec information
+  *
+@@ -75,6 +81,7 @@ struct usb_string_descriptor {
+ 	u_int16_t wData[1];
+ };
+ 
++#if ! @DEFINE_USB_HID_DESCRIPTOR@ && defined(__FreeBSD__)
+ /* HID descriptor */
+ struct usb_hid_descriptor {
+ 	u_int8_t  bLength;
+@@ -86,6 +93,7 @@ struct usb_hid_descriptor {
+ 	/* u_int16_t wDescriptorLength; */
+ 	/* ... */
+ };
++#endif
+ 
+ /* Endpoint descriptor */
+ #define USB_MAXENDPOINTS	32

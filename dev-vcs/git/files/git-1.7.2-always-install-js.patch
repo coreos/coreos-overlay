@@ -1,0 +1,31 @@
+diff -Nuar --exclude '*.rej' --exclude '*.orig' git-1.7.2.orig/Makefile git-1.7.2/Makefile
+--- git-1.7.2.orig/Makefile	2010-07-21 21:35:25.000000000 +0000
++++ git-1.7.2/Makefile	2010-07-22 16:52:22.994872806 +0000
+@@ -1650,17 +1650,16 @@
+ 	$(QUIET_SUBDIR0)gitweb $(QUIET_SUBDIR1) all
+ 
+ ifdef JSMIN
+-GITWEB_PROGRAMS += gitweb/static/gitweb.min.js
+ GITWEB_JS = gitweb/static/gitweb.min.js
+ else
+ GITWEB_JS = gitweb/static/gitweb.js
+ endif
+ ifdef CSSMIN
+-GITWEB_PROGRAMS += gitweb/static/gitweb.min.css
+ GITWEB_CSS = gitweb/static/gitweb.min.css
+ else
+ GITWEB_CSS = gitweb/static/gitweb.css
+ endif
++GITWEB_PROGRAMS += $(GITWEB_JS) $(GITWEB_CSS)
+ OTHER_PROGRAMS +=  gitweb/gitweb.cgi  $(GITWEB_PROGRAMS)
+ gitweb/gitweb.cgi: gitweb/gitweb.perl $(GITWEB_PROGRAMS)
+ 	$(QUIET_SUBDIR0)gitweb $(QUIET_SUBDIR1) $(patsubst gitweb/%,%,$@)
+@@ -1675,7 +1674,7 @@
+ endif # CSSMIN
+ 
+ 
+-git-instaweb: git-instaweb.sh gitweb/gitweb.cgi gitweb/static/gitweb.css gitweb/static/gitweb.js
++git-instaweb: git-instaweb.sh gitweb/gitweb.cgi $(GITWEB_CSS) $(GITWEB_JS)
+ 	$(QUIET_GEN)$(RM) $@ $@+ && \
+ 	sed -e '1s|#!.*/sh|#!$(SHELL_PATH_SQ)|' \
+ 	    -e 's/@@GIT_VERSION@@/$(GIT_VERSION)/g' \

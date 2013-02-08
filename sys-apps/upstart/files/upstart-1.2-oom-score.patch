@@ -1,0 +1,744 @@
+=== modified file 'init/errors.h'
+--- init/errors.h	2009-06-23 09:29:35 +0000
++++ init/errors.h	2011-08-11 20:56:28 +0000
+@@ -62,7 +62,8 @@
+ #define PARSE_ILLEGAL_EXIT_STR		N_("Illegal exit status, expected integer")
+ #define PARSE_ILLEGAL_UMASK_STR		N_("Illegal file creation mask, expected octal integer")
+ #define PARSE_ILLEGAL_NICE_STR		N_("Illegal nice value, expected -20 to 19")
+-#define PARSE_ILLEGAL_OOM_STR		N_("Illegal oom adjustment, expected -16 to 15 or never")
++#define PARSE_ILLEGAL_OOM_STR		N_("Illegal oom adjustment, expected -16 to 15 or 'never'")
++#define PARSE_ILLEGAL_OOM_SCORE_STR	N_("Illegal oom score adjustment, expected -999 to 1000 or 'never'")
+ #define PARSE_ILLEGAL_LIMIT_STR		N_("Illegal limit, expected 'unlimited' or integer")
+ #define PARSE_EXPECTED_EVENT_STR	N_("Expected event")
+ #define PARSE_EXPECTED_OPERATOR_STR	N_("Expected operator")
+
+=== modified file 'init/job_class.c'
+--- init/job_class.c	2010-12-14 15:30:06 +0000
++++ init/job_class.c	2011-08-11 21:00:44 +0000
+@@ -2,7 +2,7 @@
+  *
+  * job_class.c - job class definition handling
+  *
+- * Copyright © 2010 Canonical Ltd.
++ * Copyright © 2011 Canonical Ltd.
+  * Author: Scott James Remnant <scott@netsplit.com>.
+  *
+  * This program is free software; you can redistribute it and/or modify
+@@ -55,48 +55,6 @@
+ #include "com.ubuntu.Upstart.Job.h"
+ 
+ 
+-/**
+- * JOB_DEFAULT_KILL_TIMEOUT:
+- *
+- * The default length of time to wait after sending a process the TERM
+- * signal before sending the KILL signal if it hasn't terminated.
+- **/
+-#define JOB_DEFAULT_KILL_TIMEOUT 5
+-
+-/**
+- * JOB_DEFAULT_RESPAWN_LIMIT:
+- *
+- * The default number of times in JOB_DEFAULT_RESPAWN_INTERVAL seconds that
+- * we permit a process to respawn before stoping it
+- **/
+-#define JOB_DEFAULT_RESPAWN_LIMIT 10
+-
+-/**
+- * JOB_DEFAULT_RESPAWN_INTERVAL:
+- *
+- * The default number of seconds before resetting the respawn timer.
+- **/
+-#define JOB_DEFAULT_RESPAWN_INTERVAL 5
+-
+-/**
+- * JOB_DEFAULT_UMASK:
+- *
+- * The default file creation mark for processes.
+- **/
+-#define JOB_DEFAULT_UMASK 022
+-
+-/**
+- * JOB_DEFAULT_ENVIRONMENT:
+- *
+- * Environment variables to always copy from our own environment, these
+- * can be overriden in the job definition or by events since they have the
+- * lowest priority.
+- **/
+-#define JOB_DEFAULT_ENVIRONMENT \
+-	"PATH",			\
+-	"TERM"
+-
+-
+ /* Prototypes for static functions */
+ static void job_class_add    (JobClass *class);
+ static int  job_class_remove (JobClass *class);
+@@ -210,8 +168,8 @@
+ 	class->console = CONSOLE_NONE;
+ 
+ 	class->umask = JOB_DEFAULT_UMASK;
+-	class->nice = 0;
+-	class->oom_adj = 0;
++	class->nice = JOB_DEFAULT_NICE;
++	class->oom_score_adj = JOB_DEFAULT_OOM_SCORE_ADJ;
+ 
+ 	for (i = 0; i < RLIMIT_NLIMITS; i++)
+ 		class->limits[i] = NULL;
+
+=== modified file 'init/job_class.h'
+--- init/job_class.h	2010-12-14 15:30:06 +0000
++++ init/job_class.h	2011-08-11 20:59:46 +0000
+@@ -1,6 +1,6 @@
+ /* upstart
+  *
+- * Copyright © 2010 Canonical Ltd.
++ * Copyright © 2011 Canonical Ltd.
+  * Author: Scott James Remnant <scott@netsplit.com>.
+  *
+  * This program is free software; you can redistribute it and/or modify
+@@ -67,6 +67,62 @@
+ 
+ 
+ /**
++ * JOB_DEFAULT_KILL_TIMEOUT:
++ *
++ * The default length of time to wait after sending a process the TERM
++ * signal before sending the KILL signal if it hasn't terminated.
++ **/
++#define JOB_DEFAULT_KILL_TIMEOUT 5
++
++/**
++ * JOB_DEFAULT_RESPAWN_LIMIT:
++ *
++ * The default number of times in JOB_DEFAULT_RESPAWN_INTERVAL seconds that
++ * we permit a process to respawn before stoping it
++ **/
++#define JOB_DEFAULT_RESPAWN_LIMIT 10
++
++/**
++ * JOB_DEFAULT_RESPAWN_INTERVAL:
++ *
++ * The default number of seconds before resetting the respawn timer.
++ **/
++#define JOB_DEFAULT_RESPAWN_INTERVAL 5
++
++/**
++ * JOB_DEFAULT_UMASK:
++ *
++ * The default file creation mark for processes.
++ **/
++#define JOB_DEFAULT_UMASK 022
++
++/**
++ * JOB_DEFAULT_NICE:
++ *
++ * The default nice level for processes.
++ **/
++#define JOB_DEFAULT_NICE 0
++
++/**
++ * JOB_DEFAULT_OOM_SCORE_ADJ:
++ *
++ * The default OOM score adjustment for processes.
++ **/
++#define JOB_DEFAULT_OOM_SCORE_ADJ 0
++
++/**
++ * JOB_DEFAULT_ENVIRONMENT:
++ *
++ * Environment variables to always copy from our own environment, these
++ * can be overriden in the job definition or by events since they have the
++ * lowest priority.
++ **/
++#define JOB_DEFAULT_ENVIRONMENT \
++	"PATH",			\
++	"TERM"
++
++
++/**
+  * JobClass:
+  * @entry: list header,
+  * @name: unique name,
+@@ -93,7 +149,7 @@
+  * @console: how to arrange processes' stdin/out/err file descriptors,
+  * @umask: file mode creation mask,
+  * @nice: process priority,
+- * @oom_adj: OOM killer adjustment,
++ * @oom_score_adj: OOM killer score adjustment,
+  * @limits: resource limits indexed by resource,
+  * @chroot: root directory of process (implies @chdir if not set),
+  * @chdir: working directory of process,
+@@ -141,7 +197,7 @@
+ 
+ 	mode_t          umask;
+ 	int             nice;
+-	int             oom_adj;
++	int             oom_score_adj;
+ 	struct rlimit  *limits[RLIMIT_NLIMITS];
+ 	char           *chroot;
+ 	char           *chdir;
+
+=== modified file 'init/job_process.c'
+--- init/job_process.c	2011-08-11 20:55:33 +0000
++++ init/job_process.c	2011-08-11 21:00:11 +0000
+@@ -513,16 +513,24 @@
+ 
+ 	/* Adjust the process OOM killer priority.
+ 	 */
+-	if (class->oom_adj) {
++	if (class->oom_score_adj != JOB_DEFAULT_OOM_SCORE_ADJ) {
++		int oom_value;
+ 		snprintf (filename, sizeof (filename),
+-			  "/proc/%d/oom_adj", getpid ());
+-
++			  "/proc/%d/oom_score_adj", getpid ());
++		oom_value = class->oom_score_adj;
+ 		fd = fopen (filename, "w");
++		if ((! fd) && (errno == ENOENT)) {
++			snprintf (filename, sizeof (filename),
++				  "/proc/%d/oom_adj", getpid ());
++			oom_value = (class->oom_score_adj
++				     * ((class->oom_score_adj < 0) ? 17 : 15)) / 1000;
++			fd = fopen (filename, "w");
++		}
+ 		if (! fd) {
+ 			nih_error_raise_system ();
+ 			job_process_error_abort (fds[1], JOB_PROCESS_ERROR_OOM_ADJ, 0);
+ 		} else {
+-			fprintf (fd, "%d\n", class->oom_adj);
++			fprintf (fd, "%d\n", oom_value);
+ 
+ 			if (fclose (fd)) {
+ 				nih_error_raise_system ();
+
+=== modified file 'init/main.c'
+--- init/main.c	2011-08-11 20:55:33 +0000
++++ init/main.c	2011-08-11 21:00:11 +0000
+@@ -32,6 +32,7 @@
+ 
+ #include <errno.h>
+ #include <stdio.h>
++#include <limits.h>
+ #include <signal.h>
+ #include <stdlib.h>
+ #include <string.h>
+@@ -54,6 +55,7 @@
+ #include "paths.h"
+ #include "events.h"
+ #include "system.h"
++#include "job_class.h"
+ #include "job_process.h"
+ #include "event.h"
+ #include "conf.h"
+@@ -292,6 +294,38 @@
+ 					  NULL));
+ 
+ 
++	/* Adjust our OOM priority to the default, which will be inherited
++	 * by all jobs.
++	 */
++	if (JOB_DEFAULT_OOM_SCORE_ADJ) {
++		char  filename[PATH_MAX];
++		int   oom_value;
++		FILE *fd;
++
++		snprintf (filename, sizeof (filename),
++			  "/proc/%d/oom_score_adj", getpid ());
++		oom_value = JOB_DEFAULT_OOM_SCORE_ADJ;
++		fd = fopen (filename, "w");
++		if ((! fd) && (errno == ENOENT)) {
++			snprintf (filename, sizeof (filename),
++				  "/proc/%d/oom_adj", getpid ());
++			oom_value = (JOB_DEFAULT_OOM_SCORE_ADJ
++				     * ((JOB_DEFAULT_OOM_SCORE_ADJ < 0) ? 17 : 15)) / 1000;
++			fd = fopen (filename, "w");
++		}
++		if (! fd) {
++			nih_warn ("%s: %s", _("Unable to set default oom score"),
++				  strerror (errno));
++		} else {
++			fprintf (fd, "%d\n", oom_value);
++
++			if (fclose (fd))
++				nih_warn ("%s: %s", _("Unable to set default oom score"),
++					  strerror (errno));
++		}
++	}
++
++
+ 	/* Read configuration */
+ 	NIH_MUST (conf_source_new (NULL, CONFFILE, CONF_FILE));
+ 	NIH_MUST (conf_source_new (NULL, CONFDIR, CONF_JOB_DIR));
+
+=== modified file 'init/man/init.5'
+--- init/man/init.5	2011-03-15 18:36:57 +0000
++++ init/man/init.5	2011-08-11 20:56:28 +0000
+@@ -1,4 +1,4 @@
+-.TH init 5 2010-12-14 "Upstart"
++.TH init 5 2011-05-12 "Upstart"
+ .\"
+ .SH NAME
+ init \- Upstart init daemon job configuration
+@@ -500,15 +500,15 @@
+ for more details.
+ .\"
+ .TP
+-.B oom \fIADJUSTMENT\fR|\fBnever
++.B oom score \fIADJUSTMENT\fR|\fBnever
+ Normally the OOM killer regards all processes equally, this stanza
+ advises the kernel to treat this job differently.
+ 
+ .I ADJUSTMENT
+ may be an integer value from
+-.I -16
++.I -999
+ (very unlikely to be killed by the OOM killer) up to
+-.I 14
++.I 1000
+ (very likely to be killed by the OOM killer).  It may also be the special
+ value
+ .B never
+
+=== modified file 'init/parse_job.c'
+--- init/parse_job.c	2011-01-17 16:37:54 +0000
++++ init/parse_job.c	2011-08-11 20:56:28 +0000
+@@ -2233,6 +2233,7 @@
+ 	nih_local char *arg = NULL;
+ 	char           *endptr;
+ 	size_t          a_pos, a_lineno;
++	int		oom_adj;
+ 	int             ret = -1;
+ 
+ 	nih_assert (class != NULL);
+@@ -2247,12 +2248,37 @@
+ 	if (! arg)
+ 		goto finish;
+ 
+-	if (! strcmp (arg, "never")) {
+-		class->oom_adj = -17;
++	if (! strcmp (arg, "score")) {
++		nih_local char *scorearg = NULL;
++
++		/* Update error position to the score value */
++		*pos = a_pos;
++		if (lineno)
++			*lineno = a_lineno;
++
++		scorearg = nih_config_next_arg (NULL, file, len,
++						&a_pos, &a_lineno);
++		if (! scorearg)
++			goto finish;
++
++		if (! strcmp (scorearg, "never")) {
++			class->oom_score_adj = -1000;
++		} else {
++			errno = 0;
++			class->oom_score_adj = (int)strtol (scorearg, &endptr, 10);
++			if (errno || *endptr ||
++			    (class->oom_score_adj < -1000) ||
++			    (class->oom_score_adj > 1000))
++				nih_return_error (-1, PARSE_ILLEGAL_OOM,
++						  _(PARSE_ILLEGAL_OOM_SCORE_STR));
++		}
++	} else if (! strcmp (arg, "never")) {
++		class->oom_score_adj = -1000;
+ 	} else {
+ 		errno = 0;
+-		class->oom_adj = (int)strtol (arg, &endptr, 10);
+-		if (errno || *endptr || (class->oom_adj < -17) || (class->oom_adj > 15))
++		oom_adj = (int)strtol (arg, &endptr, 10);
++		class->oom_score_adj = (oom_adj * 1000) / ((oom_adj < 0) ? 17 : 15);
++		if (errno || *endptr || (oom_adj < -17) || (oom_adj > 15))
+ 			nih_return_error (-1, PARSE_ILLEGAL_OOM,
+ 					  _(PARSE_ILLEGAL_OOM_STR));
+ 	}
+
+=== modified file 'init/tests/test_job_class.c'
+--- init/tests/test_job_class.c	2011-03-16 22:42:48 +0000
++++ init/tests/test_job_class.c	2011-08-11 20:56:28 +0000
+@@ -133,7 +133,7 @@
+ 
+ 		TEST_EQ (class->umask, 022);
+ 		TEST_EQ (class->nice, 0);
+-		TEST_EQ (class->oom_adj, 0);
++		TEST_EQ (class->oom_score_adj, 0);
+ 
+ 		for (i = 0; i < RLIMIT_NLIMITS; i++)
+ 			TEST_EQ_P (class->limits[i], NULL);
+
+=== modified file 'init/tests/test_parse_job.c'
+--- init/tests/test_parse_job.c	2010-12-14 16:20:38 +0000
++++ init/tests/test_parse_job.c	2011-08-11 20:56:28 +0000
+@@ -6161,6 +6161,8 @@
+ 	nih_free (err);
+ }
+ 
++#define ADJ_TO_SCORE(x) ((x * 1000) / ((x < 0) ? 17 : 15))
++
+ void
+ test_stanza_oom (void)
+ {
+@@ -6198,11 +6200,39 @@
+ 
+ 		TEST_ALLOC_SIZE (job, sizeof (JobClass));
+ 
+-		TEST_EQ (job->oom_adj, 10);
+-
+-		nih_free (job);
+-	}
+-
++		TEST_EQ (job->oom_score_adj, ADJ_TO_SCORE(10));
++
++		nih_free (job);
++	}
++
++	TEST_FEATURE ("with positive score argument");
++	strcpy (buf, "oom score 100\n");
++
++	TEST_ALLOC_FAIL {
++		pos = 0;
++		lineno = 1;
++		job = parse_job (NULL, "test", buf, strlen (buf),
++				 &pos, &lineno);
++
++		if (test_alloc_failed) {
++			TEST_EQ_P (job, NULL);
++
++			err = nih_error_get ();
++			TEST_EQ (err->number, ENOMEM);
++			nih_free (err);
++
++			continue;
++		}
++
++		TEST_EQ (pos, strlen (buf));
++		TEST_EQ (lineno, 2);
++
++		TEST_ALLOC_SIZE (job, sizeof (JobClass));
++
++		TEST_EQ (job->oom_score_adj, 100);
++
++		nih_free (job);
++	}
+ 
+ 	/* Check that an oom stanza with a negative timeout results
+ 	 * in it being stored in the job.
+@@ -6231,7 +6261,36 @@
+ 
+ 		TEST_ALLOC_SIZE (job, sizeof (JobClass));
+ 
+-		TEST_EQ (job->oom_adj, -10);
++		TEST_EQ (job->oom_score_adj, ADJ_TO_SCORE(-10));
++
++		nih_free (job);
++	}
++
++	TEST_FEATURE ("with negative score argument");
++	strcpy (buf, "oom score -100\n");
++
++	TEST_ALLOC_FAIL {
++		pos = 0;
++		lineno = 1;
++		job = parse_job (NULL, "test", buf, strlen (buf),
++				 &pos, &lineno);
++
++		if (test_alloc_failed) {
++			TEST_EQ_P (job, NULL);
++
++			err = nih_error_get ();
++			TEST_EQ (err->number, ENOMEM);
++			nih_free (err);
++
++			continue;
++		}
++
++		TEST_EQ (pos, strlen (buf));
++		TEST_EQ (lineno, 2);
++
++		TEST_ALLOC_SIZE (job, sizeof (JobClass));
++
++		TEST_EQ (job->oom_score_adj, -100);
+ 
+ 		nih_free (job);
+ 	}
+@@ -6264,7 +6323,40 @@
+ 
+ 		TEST_ALLOC_SIZE (job, sizeof (JobClass));
+ 
+-		TEST_EQ (job->oom_adj, -17);
++		TEST_EQ (job->oom_score_adj, ADJ_TO_SCORE(-17));
++
++		nih_free (job);
++	}
++
++
++	/* Check that an oom score stanza may have the special never
++	 *  argument which stores -1000 in the job.
++	 */
++	TEST_FEATURE ("with never score argument");
++	strcpy (buf, "oom score never\n");
++
++	TEST_ALLOC_FAIL {
++		pos = 0;
++		lineno = 1;
++		job = parse_job (NULL, "test", buf, strlen (buf),
++				 &pos, &lineno);
++
++		if (test_alloc_failed) {
++			TEST_EQ_P (job, NULL);
++
++			err = nih_error_get ();
++			TEST_EQ (err->number, ENOMEM);
++			nih_free (err);
++
++			continue;
++		}
++
++		TEST_EQ (pos, strlen (buf));
++		TEST_EQ (lineno, 2);
++
++		TEST_ALLOC_SIZE (job, sizeof (JobClass));
++
++		TEST_EQ (job->oom_score_adj, -1000);
+ 
+ 		nih_free (job);
+ 	}
+@@ -6297,7 +6389,100 @@
+ 
+ 		TEST_ALLOC_SIZE (job, sizeof (JobClass));
+ 
+-		TEST_EQ (job->oom_adj, 10);
++		TEST_EQ (job->oom_score_adj, ADJ_TO_SCORE(10));
++
++		nih_free (job);
++	}
++
++	TEST_FEATURE ("with multiple score stanzas");
++	strcpy (buf, "oom score -500\n");
++	strcat (buf, "oom score 500\n");
++
++	TEST_ALLOC_FAIL {
++		pos = 0;
++		lineno = 1;
++		job = parse_job (NULL, "test", buf, strlen (buf),
++				 &pos, &lineno);
++
++		if (test_alloc_failed) {
++			TEST_EQ_P (job, NULL);
++
++			err = nih_error_get ();
++			TEST_EQ (err->number, ENOMEM);
++			nih_free (err);
++
++			continue;
++		}
++
++		TEST_EQ (pos, strlen (buf));
++		TEST_EQ (lineno, 3);
++
++		TEST_ALLOC_SIZE (job, sizeof (JobClass));
++
++		TEST_EQ (job->oom_score_adj, 500);
++
++		nih_free (job);
++	}
++
++	/* Check that the last of multiple distinct oom stanzas is
++	 * used.
++	 */
++	TEST_FEATURE ("with an oom overriding an oom score stanza");
++	strcpy (buf, "oom score -10\n");
++	strcat (buf, "oom 10\n");
++
++	TEST_ALLOC_FAIL {
++		pos = 0;
++		lineno = 1;
++		job = parse_job (NULL, "test", buf, strlen (buf),
++				 &pos, &lineno);
++
++		if (test_alloc_failed) {
++			TEST_EQ_P (job, NULL);
++
++			err = nih_error_get ();
++			TEST_EQ (err->number, ENOMEM);
++			nih_free (err);
++
++			continue;
++		}
++
++		TEST_EQ (pos, strlen (buf));
++		TEST_EQ (lineno, 3);
++
++		TEST_ALLOC_SIZE (job, sizeof (JobClass));
++
++		TEST_EQ (job->oom_score_adj, ADJ_TO_SCORE(10));
++
++		nih_free (job);
++	}
++
++	TEST_FEATURE ("with an oom score overriding an oom stanza");
++	strcpy (buf, "oom -10\n");
++	strcat (buf, "oom score 10\n");
++
++	TEST_ALLOC_FAIL {
++		pos = 0;
++		lineno = 1;
++		job = parse_job (NULL, "test", buf, strlen (buf),
++				 &pos, &lineno);
++
++		if (test_alloc_failed) {
++			TEST_EQ_P (job, NULL);
++
++			err = nih_error_get ();
++			TEST_EQ (err->number, ENOMEM);
++			nih_free (err);
++
++			continue;
++		}
++
++		TEST_EQ (pos, strlen (buf));
++		TEST_EQ (lineno, 3);
++
++		TEST_ALLOC_SIZE (job, sizeof (JobClass));
++
++		TEST_EQ (job->oom_score_adj, 10);
+ 
+ 		nih_free (job);
+ 	}
+@@ -6322,6 +6507,25 @@
+ 	nih_free (err);
+ 
+ 
++	/* Check that an oom score stanza without an argument results in a
++	 * syntax error.
++	 */
++	TEST_FEATURE ("with missing score argument");
++	strcpy (buf, "oom score\n");
++
++	pos = 0;
++	lineno = 1;
++	job = parse_job (NULL, "test", buf, strlen (buf), &pos, &lineno);
++
++	TEST_EQ_P (job, NULL);
++
++	err = nih_error_get ();
++	TEST_EQ (err->number, NIH_CONFIG_EXPECTED_TOKEN);
++	TEST_EQ (pos, 9);
++	TEST_EQ (lineno, 1);
++	nih_free (err);
++
++
+ 	/* Check that an oom stanza with an overly large argument results
+ 	 * in a syntax error.
+ 	 */
+@@ -6340,6 +6544,21 @@
+ 	TEST_EQ (lineno, 1);
+ 	nih_free (err);
+ 
++	TEST_FEATURE ("with overly large score argument");
++	strcpy (buf, "oom score 1200\n");
++
++	pos = 0;
++	lineno = 1;
++	job = parse_job (NULL, "test", buf, strlen (buf), &pos, &lineno);
++
++	TEST_EQ_P (job, NULL);
++
++	err = nih_error_get ();
++	TEST_EQ (err->number, PARSE_ILLEGAL_OOM);
++	TEST_EQ (pos, 10);
++	TEST_EQ (lineno, 1);
++	nih_free (err);
++
+ 
+ 	/* Check that an oom stanza with an overly small argument results
+ 	 * in a syntax error.
+@@ -6359,6 +6578,21 @@
+ 	TEST_EQ (lineno, 1);
+ 	nih_free (err);
+ 
++	TEST_FEATURE ("with overly small score argument");
++	strcpy (buf, "oom score -1200\n");
++
++	pos = 0;
++	lineno = 1;
++	job = parse_job (NULL, "test", buf, strlen (buf), &pos, &lineno);
++
++	TEST_EQ_P (job, NULL);
++
++	err = nih_error_get ();
++	TEST_EQ (err->number, PARSE_ILLEGAL_OOM);
++	TEST_EQ (pos, 10);
++	TEST_EQ (lineno, 1);
++	nih_free (err);
++
+ 
+ 	/* Check that an oom stanza with a non-integer argument results
+ 	 * in a syntax error.
+@@ -6378,6 +6612,21 @@
+ 	TEST_EQ (lineno, 1);
+ 	nih_free (err);
+ 
++	TEST_FEATURE ("with non-integer score argument");
++	strcpy (buf, "oom score foo\n");
++
++	pos = 0;
++	lineno = 1;
++	job = parse_job (NULL, "test", buf, strlen (buf), &pos, &lineno);
++
++	TEST_EQ_P (job, NULL);
++
++	err = nih_error_get ();
++	TEST_EQ (err->number, PARSE_ILLEGAL_OOM);
++	TEST_EQ (pos, 10);
++	TEST_EQ (lineno, 1);
++	nih_free (err);
++
+ 
+ 	/* Check that an oom stanza with a partially numeric argument
+ 	 * results in a syntax error.
+@@ -6397,6 +6646,21 @@
+ 	TEST_EQ (lineno, 1);
+ 	nih_free (err);
+ 
++	TEST_FEATURE ("with alphanumeric score argument");
++	strcpy (buf, "oom score 12foo\n");
++
++	pos = 0;
++	lineno = 1;
++	job = parse_job (NULL, "test", buf, strlen (buf), &pos, &lineno);
++
++	TEST_EQ_P (job, NULL);
++
++	err = nih_error_get ();
++	TEST_EQ (err->number, PARSE_ILLEGAL_OOM);
++	TEST_EQ (pos, 10);
++	TEST_EQ (lineno, 1);
++	nih_free (err);
++
+ 
+ 	/* Check that an oom stanza with a priority but with an extra
+ 	 * argument afterwards results in a syntax error.
+@@ -6415,6 +6679,21 @@
+ 	TEST_EQ (pos, 7);
+ 	TEST_EQ (lineno, 1);
+ 	nih_free (err);
++
++	TEST_FEATURE ("with extra score argument");
++	strcpy (buf, "oom score 500 foo\n");
++
++	pos = 0;
++	lineno = 1;
++	job = parse_job (NULL, "test", buf, strlen (buf), &pos, &lineno);
++
++	TEST_EQ_P (job, NULL);
++
++	err = nih_error_get ();
++	TEST_EQ (err->number, NIH_CONFIG_UNEXPECTED_TOKEN);
++	TEST_EQ (pos, 14);
++	TEST_EQ (lineno, 1);
++	nih_free (err);
+ }
+ 
+ void
+
