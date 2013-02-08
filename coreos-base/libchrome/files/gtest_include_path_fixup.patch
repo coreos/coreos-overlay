@@ -1,0 +1,12 @@
+diff -Naur libchrome-55729-orig/files/base/gtest_prod_util.h libchrome-55729/files/base/gtest_prod_util.h
+--- libchrome-55729-orig/files/base/gtest_prod_util.h	2010-08-11 13:51:24.000000000 -0700
++++ libchrome-55729/files/base/gtest_prod_util.h	2010-08-11 14:08:20.000000000 -0700
+@@ -6,7 +6,7 @@
+ #define BASE_GTEST_PROD_UTIL_H_
+ #pragma once
+ 
+-#include "testing/gtest/include/gtest/gtest_prod.h"
++#include "gtest/gtest_prod.h"
+ 
+ // This is a wrapper for gtest's FRIEND_TEST macro that friends
+ // test with all possible prefixes. This is very helpful when changing the test

@@ -64,3 +64,9 @@
 =sys-libs/libnih-1.0.3 ~amd64
 =sys-devel/llvm-3.2 ~amd64
 =dev-python/pyusb-1.0.0_alpha3 ~amd64
+
+=sys-apps/systemd-197-r1 ~amd64
+=sys-apps/dbus-1.6.8-r1 ~amd64
+=sys-apps/systemd-sysv-utils-194 ~amd64
+=sys-auth/pam_pwdfile-0.99-r1 ~amd64
+=net-misc/tlsdate-0.0.5 ~amd64

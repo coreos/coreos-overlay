@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+  <herd>no-herd</herd>
+  <maintainer>
+    <email>taysom@google.com</email>
+    <name>Paul Taysom</name>
+  </maintainer>
+  <longdescription>
+    Bootcache runs after the system has booted to create
+    the store for the boot cache. It reads information
+    colleced by dm-bootcache device-mapper to create a
+    store of coalesced blocks read during boot.
+  </longdescription>
+</pkgmetadata>

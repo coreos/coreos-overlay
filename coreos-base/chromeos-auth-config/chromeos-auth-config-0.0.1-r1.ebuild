@@ -11,8 +11,8 @@ SLOT="0"
 KEYWORDS="amd64 arm x86"
 
 RDEPEND="
-	>=sys-auth/pambase-20090620.1-r7
-	chromeos-base/vboot_reference"
+	>=sys-auth/pambase-20090620.1-r7"
+#TODO:	chromeos-base/vboot_reference"
 DEPEND="${RDEPEND}"
 
 src_install() {

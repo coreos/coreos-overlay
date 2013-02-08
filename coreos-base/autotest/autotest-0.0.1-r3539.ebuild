@@ -16,8 +16,7 @@ SLOT="0"
 KEYWORDS="x86 arm amd64"
 
 RDEPEND="
-	!<chromeos-base/autotest-chrome-0.0.1-r1788
-	!<chromeos-base/autotest-tests-0.0.1-r3291
+	!<coreos-base/autotest-tests-0.0.1-r3291
 "
 
 # We don't want Python on the base image, however, there're several base

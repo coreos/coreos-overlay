@@ -7,7 +7,7 @@ LDFLAGS="-Wl,-O2 -Wl,--as-needed"
 FEATURES="allow-missing-manifests buildpkg clean-logs -collision-protect
           -ebuild-locks parallel-install sandbox -strict userfetch userpriv
           usersandbox -unknown-features-warn"
-
+USE="-openrc"
 # Since our portage comes from version control, we redirect distfiles
 DISTDIR="/var/lib/portage/distfiles"
 
@@ -15,7 +15,7 @@ DISTDIR="/var/lib/portage/distfiles"
 USE_PYTHON="2.6"
 
 
-PORTDIR="/usr/portage/"
+PORTDIR="/usr/local/portage/stable"
 
 # We initialize PORTDIR_OVERLAY here to clobber any redefinitions elsewhere.
 # This has to be the first overlay so crossdev finds the correct gcc and 

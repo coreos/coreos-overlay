@@ -35,6 +35,7 @@ PORTDIR="/usr/local/portage/stable"
 PORTDIR_OVERLAY="
   /usr/local/portage/coreos
   ${BOARD_OVERLAY}
+  ${PORTDIR}
 "
 
 # Adding packages to the @world set causes people more trouble than it's

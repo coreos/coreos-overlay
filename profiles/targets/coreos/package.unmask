@@ -2,3 +2,5 @@
 # Distributed under the terms of the GNU General Public License v2
 
 >=net-misc/dhcp-4.2.2-r1
+=sys-process/lsof-4.87
+

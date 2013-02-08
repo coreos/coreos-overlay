@@ -16,8 +16,7 @@ IUSE="cros_host pam"
 # See pkg_setup below as well as http://crosbug.com/27413
 # and friends.
 # TODO: !app-misc/editor-wrapper
-DEPEND=">=sys-apps/baselayout-2
-	!<sys-apps/baselayout-2.0.1-r227
+DEPEND="=sys-apps/baselayout-2.0.1-r228
 	!<sys-libs/timezone-data-2011d
 	!<=app-admin/sudo-1.8.2
 	!<sys-apps/mawk-1.3.4

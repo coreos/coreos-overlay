@@ -11,14 +11,14 @@ SLOT=0
 KEYWORDS="amd64 arm x86"
 IUSE=""
 
-RDEPEND="
-	chromeos-base/autotest-tests
-	chromeos-base/autotest-tests-ltp
-	chromeos-base/autotest-tests-ownershipapi
-	chromeos-base/autotest-chrome
-	chromeos-base/autotest-factory
-	chromeos-base/autotest-private
-"
+# TODO
+#RDEPEND="
+#	coreos-base/autotest-tests
+#	coreos-base/autotest-tests-ltp
+#	coreos-base/autotest-tests-ownershipapi
+#	coreos-base/autotest-factory
+#	coreos-base/autotest-private
+#"
 
 DEPEND="${RDEPEND}"
 

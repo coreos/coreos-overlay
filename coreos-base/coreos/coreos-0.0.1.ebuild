@@ -9,7 +9,7 @@ HOMEPAGE="http://src.chromium.org"
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="amd64 arm x86"
-IUSE="bluetooth bootimage coreboot cros_ec gdmwimax X bootchart opengles"
+IUSE="bootimage coreboot cros_ec bootchart"
 
 
 ################################################################################
@@ -72,13 +72,15 @@ RDEPEND="${RDEPEND} amd64? ( ${X86_DEPEND} )"
 
 RDEPEND="${RDEPEND}
 	arm? (
-		chromeos-base/u-boot-scripts
+		coreos-base/u-boot-scripts
 	)
 	"
 
 RDEPEND="${RDEPEND}
 	virtual/linux-sources
 	"
+
+RDEPEND="${RDEPEND} >=sys-apps/baselayout-2.0.0"
 
 # Specifically include the editor we want to appear in chromeos images, so that
 # it is deterministic which editor is chosen by 'virtual/editor' dependencies
@@ -96,8 +98,17 @@ RDEPEND="${RDEPEND}
 # We depend on dash for the /bin/sh shell for runtime speeds, but we also
 # depend on bash to make the dev mode experience better.  We do not enable
 # things like line editing in dash, so its interactive mode is very bare.
-# TODO 
-#	chromeos-base/update_engine
+# TODO: coreos-base/update_engine
+#	coreos-base/crash-reporter
+#	coreos-base/chromeos-debugd
+#	coreos-base/chromeos-init
+#	coreos-base/cros-disks
+#	coreos-base/shill
+#	coreos-base/userfeedback
+#	coreos-base/metrics
+#	sys-apps/systemd-sysv-utils
+#	coreos-base/root-certificates
+
 RDEPEND="${RDEPEND}
 	app-admin/rsyslog
 	app-arch/sharutils
@@ -106,71 +117,28 @@ RDEPEND="${RDEPEND}
 		app-benchmarks/bootchart
 	)
 	app-crypt/trousers
-	app-i18n/ibus-english-m
-	app-i18n/ibus-m17n
-	app-i18n/ibus-mozc
-	app-i18n/ibus-mozc-chewing
-	app-i18n/ibus-mozc-hangul
-	app-i18n/ibus-mozc-pinyin
-	app-laptop/laptop-mode-tools
 	app-shells/bash
 	app-shells/dash
-	coreos-base/audioconfig
-	coreos-base/board-devices
 	coreos-base/bootstat
-	coreos-base/chromeos-assets
-	coreos-base/chromeos-assets-split
 	coreos-base/chromeos-auth-config
 	coreos-base/chromeos-base
-	coreos-base/chromeos-debugd
-	coreos-base/chromeos-init
-	coreos-base/crash-reporter
-	coreos-base/cromo
-	coreos-base/cros-disks
 	coreos-base/cros_boot_mode
-	coreos-base/crosh
 	coreos-base/dev-install
 	coreos-base/internal
-	coreos-base/metrics
-	coreos-base/root-certificates
-	coreos-base/shill
-	coreos-base/userfeedback
-	media-gfx/ply-image
-	media-plugins/alsa-plugins
-	!arm? ( media-plugins/o3d )
-	arm? (
-		opengles? ( media-plugins/o3d )
-	)
-	media-sound/alsa-utils
-	media-sound/adhd
 	net-firewall/iptables
 	net-misc/tlsdate
-	net-wireless/ath3k
-	net-wireless/ath6k
-	net-wireless/crda
-	gdmwimax? (
-		net-wireless/gdmwimax
-	)
-	net-wireless/marvell_sd8787
-	bluetooth? (
-		net-wireless/bluez
-	)
-	>=sys-apps/baselayout-2.0.0
 	sys-apps/bootcache
 	sys-apps/coreutils
 	sys-apps/dbus
-	sys-apps/eject
 	sys-apps/flashrom
 	sys-apps/grep
 	sys-apps/mawk
-	sys-apps/module-init-tools
-	sys-apps/mosys
 	sys-apps/net-tools
 	sys-apps/pv
 	sys-apps/rootdev
 	sys-apps/sed
 	sys-apps/shadow
-	sys-apps/upstart
+	sys-apps/systemd
 	sys-apps/ureadahead
 	sys-apps/util-linux
 	sys-auth/pam_pwdfile
@@ -179,7 +147,6 @@ RDEPEND="${RDEPEND}
 	sys-libs/timezone-data
 	sys-process/lsof
 	sys-process/procps
-	virtual/modemmanager
 	"
 
 # TODO(dianders):
@@ -211,9 +178,4 @@ DEPEND="${RDEPEND}
 # profiling on ChromiumOS on live systems.
 RDEPEND="${RDEPEND}
 	dev-util/quipper
-"
-
-# USB / WiFi Firmware
-RDEPEND="${RDEPEND}
-	net-wireless/realtek-rt2800-firmware
 "

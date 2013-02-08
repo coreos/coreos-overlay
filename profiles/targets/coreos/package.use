@@ -71,3 +71,4 @@ x11-base/xorg-server -suid
 x11-libs/libdrm		libkms
 x11-libs/libdrm-tests	libkms
 sys-libs/gdbm		berkdb
+dev-libs/libxml2	python
