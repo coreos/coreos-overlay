@@ -24,7 +24,7 @@ net-misc/curl		ares static-libs
 sci-geosciences/gpsd	-cxx
 # verity and other packages link statically with libuuid.
 sys-apps/util-linux	-perl static-libs
-sys-boot/grub-static       grub_platforms_pc grub_platforms_efi-64 grub_platforms_coreboot static
+sys-boot/grub       grub_platforms_pc grub_platforms_efi-64 grub_platforms_coreboot static
 sys-devel/gettext	-git
 # Build emulation statically so that we can execute it within a chroot and
 # still find the shared libraries.
