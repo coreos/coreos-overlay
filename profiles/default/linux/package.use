@@ -58,3 +58,4 @@ app-arch/xz-utils	static-libs
 =x11-libs/cairo-1.10.2-r3 X
 =media-libs/libpng-1.5.13-r1 static-libs
 >=virtual/jpeg-0 static-libs
+>=media-libs/libjpeg-turbo-1.2.0-r1 static-libs
