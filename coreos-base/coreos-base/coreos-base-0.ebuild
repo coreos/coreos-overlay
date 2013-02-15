@@ -1,7 +1,7 @@
 # Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
-inherit useradd pam
+inherit useradd
 
 DESCRIPTION="ChromeOS specific system setup"
 HOMEPAGE="http://src.chromium.org/"
@@ -10,13 +10,13 @@ SRC_URI=""
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="amd64 arm x86"
-IUSE="cros_host pam"
+IUSE="cros_host"
 
 # We need to make sure timezone-data is merged before us.
 # See pkg_setup below as well as http://crosbug.com/27413
 # and friends.
 # TODO: !app-misc/editor-wrapper
-DEPEND="=sys-apps/baselayout-2.0.1-r228
+DEPEND="sys-apps/baselayout
 	!<sys-libs/timezone-data-2011d
 	!<=app-admin/sudo-1.8.2
 	!<sys-apps/mawk-1.3.4
@@ -128,17 +128,6 @@ src_install() {
 		# Custom login shell snippets.
 		insinto /etc/profile.d
 		doins "${FILESDIR}"/cursor.sh
-	fi
-
-	# Add our little bit of sudo glue.
-	newpamd "${FILESDIR}"/include-coreos-auth sudo
-	# This one line comes from the sudo ebuild.
-	pamd_mimic system-auth sudo auth account session
-	if [[ -n ${SHARED_USER_NAME} ]] ; then
-		insinto /etc/sudoers.d
-		echo "${SHARED_USER_NAME} ALL=(ALL) ALL" > 95_cros_base
-		insopts -m 440
-		doins 95_cros_base || die
 	fi
 }
 

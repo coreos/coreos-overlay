@@ -3,8 +3,8 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-# Filter out all the packages that are already in chromeos.
-cros_pkgs = set(open('chromeos.packages', 'r').readlines())
+# Filter out all the packages that are already in coreos.
+cros_pkgs = set(open('coreos.packages', 'r').readlines())
 port_pkgs = set(open('portage.packages', 'r').readlines())
 
 boot_pkgs = port_pkgs - cros_pkgs
@@ -20,9 +20,10 @@ f.write(''.join(prov_pkgs))
 f.close()
 
 # Make a list of the packages that can be installed.  Those packages
-# are in chromeos-dev or chromeos-test and not chromeos.
-dev_pkgs = set(open('chromeos-dev.packages', 'r').readlines())
-test_pkgs = set(open('chromeos-test.packages', 'r').readlines())
+# are in coreos-dev or coreos-test and not coreos.
+dev_pkgs = set(open('coreos-dev.packages', 'r').readlines())
+#test_pkgs = set(open('coreos-test.packages', 'r').readlines())
+test_pkgs = set()
 inst_pkgs = (dev_pkgs | test_pkgs) - cros_pkgs
 f = open('package.installable', 'w')
 f.write(''.join(inst_pkgs))

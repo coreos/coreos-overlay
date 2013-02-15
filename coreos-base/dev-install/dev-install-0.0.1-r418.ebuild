@@ -44,14 +44,14 @@ src_unpack() {
 	pkgs=(
 		# Generate a list of packages that go into the base image. These
 		# packages will be assumed to be installed by emerge in the target.
-		chromeos
+		coreos
 
 		# Get the list of the packages needed to bootstrap emerge.
 		portage
 
 		# Get the list of dev and test packages.
 		coreos-dev
-		#coreos-test
+		coreos-test
 	)
 	einfo "Ignore warnings below related to LD_PRELOAD/libsandbox.so"
 	for pkg in ${pkgs[@]} ; do
@@ -63,7 +63,7 @@ src_unpack() {
 	done
 	wait
 	# No virtual packages in package.provided.
-	grep -v "virtual/" chromeos.packages > package.provided
+	grep -v "virtual/" coreos.packages > package.provided
 
 	python "${FILESDIR}"/filter.py || die
 

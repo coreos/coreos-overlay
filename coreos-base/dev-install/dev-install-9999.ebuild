@@ -42,14 +42,14 @@ src_unpack() {
 	pkgs=(
 		# Generate a list of packages that go into the base image. These
 		# packages will be assumed to be installed by emerge in the target.
-		chromeos
+		coreos
 
 		# Get the list of the packages needed to bootstrap emerge.
 		portage
 
 		# Get the list of dev and test packages.
-		chromeos-dev
-		chromeos-test
+		coreos-dev
+		coreos-test
 	)
 	einfo "Ignore warnings below related to LD_PRELOAD/libsandbox.so"
 	for pkg in ${pkgs[@]} ; do
@@ -61,7 +61,7 @@ src_unpack() {
 	done
 	wait
 	# No virtual packages in package.provided.
-	grep -v "virtual/" chromeos.packages > package.provided
+	grep -v "virtual/" coreos.packages > package.provided
 
 	python "${FILESDIR}"/filter.py || die
 
@@ -71,8 +71,8 @@ src_unpack() {
 	# Add dhcp to the list of packages installed since its installation will not
 	# complete (can not add dhcp group since /etc is not writeable). Bootstrap it
 	# instead.
-	grep "net-misc/dhcp-" chromeos-dev.packages >> package.provided
-	grep "net-misc/dhcp-" chromeos-dev.packages >> bootstrap.packages
+	grep "net-misc/dhcp-" coreos-dev.packages >> package.provided
+	grep "net-misc/dhcp-" coreos-dev.packages >> bootstrap.packages
 }
 
 src_install() {

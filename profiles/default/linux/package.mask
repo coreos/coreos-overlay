@@ -7,8 +7,5 @@
 # version of these packages even if a newer stable version becomes
 # available in portage:
 
-# Custom patches
->=sys-boot/syslinux-3.84
-
 # libpng security vulnerability fix
 <media-libs/libpng-1.2.44
