@@ -31,7 +31,6 @@ RDEPEND="
 	chromeos-base/chromeos-factoryinstall
 	chromeos-base/chromeos-init
 	chromeos-base/dev-install
-	chromeos-base/shill
 	chromeos-base/vboot_reference
 	net-firewall/iptables
 	net-misc/tlsdate
