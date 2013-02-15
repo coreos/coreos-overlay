@@ -23,6 +23,7 @@ app-shells
 app-text
 app-vim
 app-xemacs
+chromeos-base
 coreos-base
 dev-ada
 dev-cpp
@@ -127,6 +128,7 @@ sys-block
 sys-boot
 sys-cluster
 sys-devel
+sys-firmware
 sys-freebsd
 sys-fs
 sys-kernel
