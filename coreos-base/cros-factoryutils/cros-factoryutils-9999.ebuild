@@ -21,9 +21,8 @@ RDEPEND=""
 
 # chromeos-installer for solving "lib/chromeos-common.sh" symlink.
 # vboot_reference for binary programs (ex, cgpt).
-# TODO         chromeos-base/vboot_reference"
-DEPEND="chromeos-base/chromeos-installer[cros_host]
-"
+DEPEND="coreos-base/coreos-installer[cros_host]
+        coreos-base/vboot_reference"
 
 src_compile() {
     true

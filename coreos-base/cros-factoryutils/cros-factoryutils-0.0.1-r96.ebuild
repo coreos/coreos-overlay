@@ -21,10 +21,11 @@ IUSE="cros_factory_bundle"
 CROS_WORKON_LOCALNAME="factory-utils"
 RDEPEND=""
 
-# coreos-installer for solving "lib/coreos-common.sh" symlink.
+# chromeos-installer for solving "lib/chromeos-common.sh" symlink.
 # vboot_reference for binary programs (ex, cgpt).
-# TODO: coreos-base/coreos-installer[cros_host]
-#         coreos-base/vboot_reference
+DEPEND="coreos-base/coreos-installer[cros_host]
+        coreos-base/vboot_reference"
+
 DEPEND=""
 
 src_compile() {
