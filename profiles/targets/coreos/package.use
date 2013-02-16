@@ -72,3 +72,6 @@ x11-libs/libdrm		libkms
 x11-libs/libdrm-tests	libkms
 sys-libs/gdbm		berkdb
 dev-libs/libxml2	python
+
+x11-libs/cairo		X
+sys-boot/syslinux       -custom-cflags
