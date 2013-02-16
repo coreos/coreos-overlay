@@ -98,7 +98,7 @@ RDEPEND="${RDEPEND}
 # We depend on dash for the /bin/sh shell for runtime speeds, but we also
 # depend on bash to make the dev mode experience better.  We do not enable
 # things like line editing in dash, so its interactive mode is very bare.
-# TODO: coreos-base/update_engine
+# TODO(ifup): coreos-base/update_engine
 #	coreos-base/crash-reporter
 #	coreos-base/chromeos-debugd
 #	coreos-base/chromeos-init
@@ -108,6 +108,10 @@ RDEPEND="${RDEPEND}
 #	coreos-base/metrics
 #	sys-apps/systemd-sysv-utils
 #	coreos-base/root-certificates
+#	coreos-base/chromeos-base
+#	sys-apps/ureadahead
+#	coreos-base/bootstat
+#	coreos-base/dev-install
 
 RDEPEND="${RDEPEND}
 	app-admin/rsyslog
@@ -119,12 +123,11 @@ RDEPEND="${RDEPEND}
 	app-crypt/trousers
 	app-shells/bash
 	app-shells/dash
-	coreos-base/bootstat
 	coreos-base/chromeos-auth-config
-	coreos-base/chromeos-base
+	coreos-base/coreos-base
 	coreos-base/cros_boot_mode
-	coreos-base/dev-install
 	coreos-base/internal
+	coreos-base/vboot_reference
 	net-firewall/iptables
 	net-misc/tlsdate
 	sys-apps/bootcache
@@ -139,7 +142,6 @@ RDEPEND="${RDEPEND}
 	sys-apps/sed
 	sys-apps/shadow
 	sys-apps/systemd
-	sys-apps/ureadahead
 	sys-apps/util-linux
 	sys-auth/pam_pwdfile
 	sys-fs/e2fsprogs
@@ -176,6 +178,6 @@ DEPEND="${RDEPEND}
 
 # Add dev-util/quipper to the image. This is needed to do
 # profiling on ChromiumOS on live systems.
-RDEPEND="${RDEPEND}
-	dev-util/quipper
-"
+#RDEPEND="${RDEPEND}
+#	dev-util/quipper
+#"
