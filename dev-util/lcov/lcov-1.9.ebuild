@@ -2,9 +2,9 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/dev-util/lcov/lcov-1.9.ebuild,v 1.3 2012/05/21 12:29:34 johu Exp $
 
-inherit eutils
+EAPI="4"
 
-EAPI="2"
+inherit eutils
 
 DESCRIPTION="A graphical front-end for GCC's coverage testing tool gcov"
 HOMEPAGE="http://ltp.sourceforge.net/coverage/lcov.php"
