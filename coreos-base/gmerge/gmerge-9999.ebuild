@@ -21,7 +21,7 @@ RDEPEND="app-shells/bash
 	sys-apps/portage"
 DEPEND="${RDEPEND}"
 
-CHROMEOS_PROFILE="/usr/local/portage/chromiumos/profiles/targets/chromeos"
+CHROMEOS_PROFILE="/usr/local/portage/coreos/profiles/targets/coreos"
 
 src_install() {
 	# Install tools from platform/dev into /usr/local/bin
@@ -37,5 +37,5 @@ src_install() {
 	#   want to install to the device.
 	insinto /usr/local/etc/make.profile/package.provided
 	newins "${SYSROOT}"/etc/portage/profile/package.provided compiler
-	newins "${CHROMEOS_PROFILE}"/package.provided chromeos
+	newins "${CHROMEOS_PROFILE}"/package.provided coreos
 }
