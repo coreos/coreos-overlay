@@ -129,6 +129,14 @@ src_install() {
 		insinto /etc/profile.d
 		doins "${FILESDIR}"/cursor.sh
 	fi
+
+	# Add a sudo file for the core use
+	if [[ -n ${SHARED_USER_NAME} ]] ; then
+		insinto /etc/sudoers.d
+		echo "${SHARED_USER_NAME} ALL=(ALL) ALL" > 95_cros_base
+		insopts -m 440
+		doins 95_cros_base || die
+	fi
 }
 
 pkg_postinst() {
