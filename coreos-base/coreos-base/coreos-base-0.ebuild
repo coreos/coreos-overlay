@@ -144,13 +144,13 @@ pkg_postinst() {
 	# We solve this by having baselayout install in both the build and
 	# target and pre-create all needed users. In order to support existing
 	# build roots we copy over the user entries if they already exist.
-	local system_user="chronos"
+	local system_user="core"
 	local system_id="1000"
 	local system_home="/home/${system_user}/user"
 	# Add a chronos-access group to provide non-chronos users,
 	# mostly system daemons running as a non-chronos user, group permissions
 	# to access files/directories owned by chronos.
-	local system_access_user="chronos-access"
+	local system_access_user="core-access"
 	local system_access_id="1001"
 
 	local crypted_password='*'
