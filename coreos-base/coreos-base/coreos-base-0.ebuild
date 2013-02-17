@@ -92,8 +92,6 @@ pkg_setup() {
 }
 
 src_install() {
-	dosym /usr/lib/systemd/systemd /sbin/init || die
-
 	insinto /etc
 	#doins "${FILESDIR}"/sysctl.conf || die
 

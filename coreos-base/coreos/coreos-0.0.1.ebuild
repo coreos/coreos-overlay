@@ -142,6 +142,7 @@ RDEPEND="${RDEPEND}
 	sys-apps/sed
 	sys-apps/shadow
 	sys-apps/systemd
+	sys-apps/systemd-sysv-utils
 	sys-apps/util-linux
 	sys-auth/pam_pwdfile
 	sys-fs/e2fsprogs
