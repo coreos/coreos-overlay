@@ -17,8 +17,8 @@ IUSE="32bit_au minimal rbtest tpmtests cros_host"
 
 LIBCHROME_VERS="125070"
 
-# TODO:  chromeos-base/libchrome:${LIBCHROME_VERS}[cros-debug=]
 RDEPEND="app-crypt/trousers
+	coreos-base/libchrome:${LIBCHROME_VERS}[cros-debug=]
 	!minimal? ( dev-libs/libyaml )
 	dev-libs/glib
 	dev-libs/openssl
