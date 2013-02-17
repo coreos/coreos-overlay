@@ -113,6 +113,8 @@ RDEPEND="${RDEPEND}
 #	coreos-base/dev-install
 
 RDEPEND="${RDEPEND}
+	sys-apps/findutils
+	app-admin/sudo
 	app-admin/rsyslog
 	app-arch/sharutils
 	app-arch/tar
