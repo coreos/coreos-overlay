@@ -75,4 +75,4 @@
 =app-benchmarks/i7z-0.27-r1 ~amd64
 =sys-apps/util-linux-2.22.2 ~amd64
 =dev-libs/opencryptoki-2.4.2 ~amd64
-
+=dev-lang/go-1.0.3 ~amd64
