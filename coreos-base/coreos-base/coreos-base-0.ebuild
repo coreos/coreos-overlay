@@ -112,6 +112,9 @@ src_install() {
 		insinto /etc
 		doins "${FILESDIR}"/motd
 
+		# Enable dhcpcd by default
+		systemd_enable_service multi-user.target dhcpcd.service
+
 		# Symlink /etc/localtime to something on the stateful partition, which we
 		# can then change around at runtime.
 		dosym /var/lib/timezone/localtime /etc/localtime || die
