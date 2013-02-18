@@ -108,6 +108,10 @@ src_install() {
 		# Make mount work in the way systemd prescribes
 		dosym /proc/mounts /etc/mtab
 
+		# Insert a cool motd ;)
+		insinto /etc
+		doins "${FILESDIR}"/motd
+
 		# Symlink /etc/localtime to something on the stateful partition, which we
 		# can then change around at runtime.
 		dosym /var/lib/timezone/localtime /etc/localtime || die
