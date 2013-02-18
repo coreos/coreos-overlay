@@ -44,6 +44,7 @@ RDEPEND="${RDEPEND}
 	coreos-base/gmerge
 	dev-lang/python
 	dev-python/dbus-python
+	dev-python/argparse
 	dev-util/strace
 	net-analyzer/netperf
 	net-analyzer/tcpdump
