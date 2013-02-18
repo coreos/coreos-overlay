@@ -105,6 +105,9 @@ src_install() {
 	if ! use cros_host ; then
 		dodir /bin /usr/bin
 
+		# Make mount work in the way systemd prescribes
+		dosym /etc/mtab /proc/mounts
+
 		# Symlink /etc/localtime to something on the stateful partition, which we
 		# can then change around at runtime.
 		dosym /var/lib/timezone/localtime /etc/localtime || die
@@ -133,9 +136,9 @@ src_install() {
 	# Add a sudo file for the core use
 	if [[ -n ${SHARED_USER_NAME} ]] ; then
 		insinto /etc/sudoers.d
-		echo "${SHARED_USER_NAME} ALL=(ALL) ALL" > 95_cros_base
+		echo "${SHARED_USER_NAME} ALL=(ALL) ALL" > 95_core_base
 		insopts -m 440
-		doins 95_cros_base || die
+		doins 95_core_base || die
 	fi
 }
 
