@@ -128,6 +128,7 @@ RDEPEND="${RDEPEND}
 	coreos-base/cros_boot_mode
 	coreos-base/internal
 	coreos-base/vboot_reference
+	net-misc/dhcpcd
 	net-firewall/iptables
 	net-misc/tlsdate
 	sys-apps/bootcache
