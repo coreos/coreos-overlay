@@ -106,7 +106,7 @@ src_install() {
 		dodir /bin /usr/bin
 
 		# Make mount work in the way systemd prescribes
-		dosym /etc/mtab /proc/mounts
+		dosym /proc/mounts /etc/mtab
 
 		# Symlink /etc/localtime to something on the stateful partition, which we
 		# can then change around at runtime.
