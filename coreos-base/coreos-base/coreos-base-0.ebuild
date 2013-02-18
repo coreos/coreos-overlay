@@ -113,7 +113,10 @@ src_install() {
 		doins "${FILESDIR}"/motd
 
 		# Enable dhcpcd by default
-		systemd_enable_service multi-user.target dhcpcd.service
+		# TODO(ifup): this doesn't work
+		# systemd_enable_service multi-user.target dhcpcd.service
+		dodir /usr/lib/systemd/system/
+		dosym ../dhcpcd.service /usr/lib/systemd/system/multi-user.target.wants/dhcpcd.service
 
 		# Symlink /etc/localtime to something on the stateful partition, which we
 		# can then change around at runtime.
