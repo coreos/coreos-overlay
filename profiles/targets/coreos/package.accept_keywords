@@ -130,3 +130,4 @@
 =net-dialup/ppp-2.4.5-r3 ~amd64
 =dev-libs/boost ~amd64
 =dev-util/boost-build ~amd64
+=app-admin/systemd-rest-9999 ~x86
