@@ -58,7 +58,7 @@ sys-apps/smartmontools	minimal
 sys-auth/consolekit	policykit
 sys-auth/polkit         -introspection
 sys-block/parted        device-mapper
-sys-fs/lvm2		-lvm1 -readline -static
+sys-fs/lvm2		-lvm1 -readline -static -thin
 sys-fs/ntfs3g		-crypt -external-fuse ntfsprogs suid
 sys-fs/udev		-devfs-compat -rule_generator hwdb acl gudev
 sys-fs/squashfs         lzo
