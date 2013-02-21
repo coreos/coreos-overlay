@@ -131,4 +131,4 @@
 =dev-libs/boost ~amd64
 =dev-util/boost-build ~amd64
 =app-admin/systemd-rest-9999	~amd64 ~x86
-=app-admin/motd-http-9999	~amd64 ~x86
+=coreos-base/motd-http-9999	~amd64 ~x86
