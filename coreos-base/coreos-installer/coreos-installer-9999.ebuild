@@ -25,7 +25,6 @@ DEPEND="
 RDEPEND="
 	app-admin/sudo
 	coreos-base/vboot_reference
-	coreos-base/vpd
 	dev-util/shflags
 	sys-apps/coreutils
 	sys-apps/flashrom

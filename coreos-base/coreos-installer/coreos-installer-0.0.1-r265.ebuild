@@ -26,6 +26,7 @@ DEPEND="
 # TODO(adlr): remove coreutils dep if we move to busybox
 RDEPEND="
 	app-admin/sudo
+	coreos-base/vboot_reference
 	dev-util/shflags
 	sys-apps/coreutils
 	sys-apps/flashrom
