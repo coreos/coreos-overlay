@@ -45,6 +45,7 @@ RDEPEND="${RDEPEND}
 	app-text/texi2html
 	coreos-base/google-breakpad
 	coreos-base/coreos-base
+	coreos-base/coreos-installer
 	coreos-base/cros-devutils[cros_host]
 	coreos-base/cros-factoryutils
 	coreos-base/cros-testutils
