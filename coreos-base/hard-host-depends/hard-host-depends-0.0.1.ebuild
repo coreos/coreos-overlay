@@ -26,6 +26,7 @@ RDEPEND="${RDEPEND}
 	dev-util/ccache
 	dev-util/crosutils
 	>=sys-apps/dtc-1.3.0-r5
+	sys-boot/bootstub
 	sys-boot/grub
 	sys-boot/syslinux
 	sys-devel/crossdev
