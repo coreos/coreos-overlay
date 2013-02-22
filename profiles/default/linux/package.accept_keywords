@@ -65,9 +65,12 @@
 =sys-devel/llvm-3.2 ~amd64
 =dev-python/pyusb-1.0.0_alpha3 ~amd64
 
+# Accept the unstable nature of systemd
 =sys-apps/systemd-197-r1 ~amd64
-=sys-apps/dbus-1.6.8-r1 ~amd64
 =sys-apps/systemd-sysv-utils-194 ~amd64
+=sys-apps/dbus-1.6.8-r1 ~amd64
+
+# Get updated core code
 =sys-auth/pam_pwdfile-0.99-r1 ~amd64
 =net-misc/tlsdate-0.0.5 ~amd64
 =dev-libs/libgpg-error-1.10-r1 ~amd64
@@ -75,4 +78,9 @@
 =app-benchmarks/i7z-0.27-r1 ~amd64
 =sys-apps/util-linux-2.22.2 ~amd64
 =dev-libs/opencryptoki-2.4.2 ~amd64
+
+# Go is masked but we need it.
 =dev-lang/go-1.0.3 ~amd64
+
+# Replace the function.sh script in baselayout
+=coreos-base/efunctions-9999 ~amd64 ~x86
