@@ -1,9 +1,0 @@
-# Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
-# Distributed under the terms of the GNU General Public License v2
-
-USE="acpi bluetooth cairo opengl usb X pam"
-
-USE="${USE} -acl -cracklib -gpm -ipv6 -openmp -python -sha512"
-USE="${USE} -fortran -abiword -perl -cups -poppler-data -nls"
-
-CONFIG_PROTECT="/etc/make.globals"
