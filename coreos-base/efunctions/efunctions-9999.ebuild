@@ -4,10 +4,10 @@
 # $Header:$
 #
 
-EAPI=2
+EAPI=3
 CROS_WORKON_PROJECT="coreos/efunctions"
 CROS_WORKON_LOCALNAME="efunctions"
-inherit toolchain-funcs cros-workon
+inherit eutils cros-workon
 
 DESCRIPTION="standalone replacement for functions.sh"
 HOMEPAGE="https://bitbucket.org/coreos/efunctions"
@@ -19,8 +19,21 @@ KEYWORDS="~amd64 ~arm ~x86"
 IUSE=""
 
 src_install() {
-	into "/usr/lib/${PN}"
-	dodir "${S}/efunctions"
-	doins "functions.sh"
-	dosym /usr/lib/${PN}/functions.sh /etc/init.d/functions.sh
+	emake DESTDIR="${D}" install || die
+
+	# make functions.sh available in /etc/init.d
+	# Note: we cannot replace the symlink with a file here, or Portage will
+	# config-protect it, and etc-update can't handle symlink to file updates
+	dodir etc/init.d
+	dosym ../../usr/lib/efunctions/functions.sh /etc/init.d/functions.sh
+
+    local dst_dir=/usr/lib/${PN}
+	dodir $dst_dir || die
+	insinto $dst_dir
+
+	doins ${S}/functions.sh
+	doins -r ${S}/efunctions
+
+	fperms -R +x $dst_dir
+
 }
