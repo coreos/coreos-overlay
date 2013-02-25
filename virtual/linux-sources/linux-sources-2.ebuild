@@ -3,7 +3,7 @@
 
 EAPI=2
 
-DESCRIPTION="Chrome OS Kernel virtual package"
+DESCRIPTION="Core OS Kernel virtual package"
 HOMEPAGE="http://src.chromium.org"
 
 LICENSE="GPL-2"
@@ -12,6 +12,6 @@ KEYWORDS="amd64 arm x86"
 IUSE="-kernel_next -kernel_sources"
 
 RDEPEND="
-	kernel_next? ( sys-kernel/chromeos-kernel-next[kernel_sources=] )
-	!kernel_next? ( sys-kernel/chromeos-kernel[kernel_sources=] )
+	kernel_next? ( sys-kernel/coreos-kernel-next[kernel_sources=] )
+	!kernel_next? ( sys-kernel/coreos-kernel[kernel_sources=] )
 "
