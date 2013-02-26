@@ -23,7 +23,7 @@ GOROOT="${ED}usr/$(get_libdir)/go"
 GOPKG="${PN}"
 
 src_compile() {
-	GOPATH="${S}" go build ${PN}
+	GOPATH="${S}" go build ${PN} || die
 }
 
 src_install() {
