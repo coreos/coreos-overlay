@@ -57,6 +57,7 @@ RDEPEND="${RDEPEND}
 	dev-lang/nasm
 	dev-lang/swig
 	dev-lang/yasm
+	dev-lang/go
 	dev-libs/dbus-c++
 	dev-libs/dbus-glib
 	>=dev-libs/glib-2.26.1
