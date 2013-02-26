@@ -16,7 +16,7 @@
 if [[ ${___ECLASS_ONCE_TOOLCHAIN_FUNCS} != "recur -_+^+_- spank" ]] ; then
 ___ECLASS_ONCE_TOOLCHAIN_FUNCS="recur -_+^+_- spank"
 
-inherit multilib
+inherit multilib binutils-funcs
 
 # tc-getPROG <VAR [search vars]> <default> [tuple]
 _tc-getPROG() {
@@ -721,6 +721,62 @@ gen_usr_ldscript() {
 		esac
 		fperms a+x "/usr/${libdir}/${lib}" || die "could not change perms on ${lib}"
 	done
+}
+
+#
+# ChromiumOS extensions below here.
+#
+
+# Returns true if gcc builds PIEs
+# For ARM, readelf -h | grep Type always has REL instead of EXEC.
+# That is why we have to read the flags one by one and check them instead
+# of test-compiling a small program.
+gcc-pie() {
+	for flag in $(echo "void f(){char a[100];}" | \
+	${CTARGET}-gcc -v -xc -c -o /dev/null - 2>&1 | \
+	grep cc1 | \
+	tr " " "\n" | \
+	tac)
+	do
+		if [[ $flag == "-fPIE" || $flag == "-fPIC" ]]
+		then
+			return 0
+		elif [[ $flag == "-fno-PIE" || $flag == "-fno-PIC" ]]
+		then
+			return 1
+		fi
+	done
+	return 1
+}
+
+# Returns true if gcc builds with the stack protector
+gcc-ssp() {
+	local obj=$(mktemp)
+	echo "void f(){char a[100];}" | ${CTARGET}-gcc -xc -c -o ${obj} -
+	return $(${CTARGET}-readelf -sW ${obj} | grep -q stack_chk_fail)
+}
+
+# Sets up environment variables required to build with Clang
+# This should be replaced with a sysroot wrapper ala GCC if/when
+# we get serious about building with Clang.
+clang-setup-env() {
+	use clang || return 0
+	case ${ARCH} in
+	amd64|x86)
+		export CC="clang" CXX="clang++"
+		append-flags --sysroot="${SYSROOT}"
+		append-flags -B$(get_binutils_path_gold)
+
+		# Some boards use optimizations (e.g. -mfpmath=sse) that
+		# clang does not support.
+		append-flags -Qunused-arguments
+		;;
+	*) die "Clang is not yet supported for ${ARCH}"
+	esac
+
+	if use asan; then
+		append-flags -fsanitize=address -fno-omit-frame-pointer
+	fi
 }
 
 fi
