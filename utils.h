@@ -12,7 +12,7 @@
 #include <unistd.h>
 #include <vector>
 
-#include <base/eintr_wrapper.h>
+#include <base/posix/eintr_wrapper.h>
 #include <base/time.h>
 #include <ext2fs/ext2fs.h>
 #include <glib.h>

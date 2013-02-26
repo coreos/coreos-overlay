@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#include <base/eintr_wrapper.h>
+#include <base/posix/eintr_wrapper.h>
 #include <base/string_util.h>
 #include <base/stringprintf.h>
 #include <glib.h>

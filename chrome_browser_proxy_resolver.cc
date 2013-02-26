@@ -7,8 +7,8 @@
 #include <map>
 #include <string>
 
-#include <base/string_tokenizer.h>
 #include <base/string_util.h>
+#include <base/strings/string_tokenizer.h>
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
 #include <google/protobuf/stubs/common.h>
@@ -18,6 +18,7 @@
 
 namespace chromeos_update_engine {
 
+using base::StringTokenizer;
 using google::protobuf::Closure;
 using google::protobuf::NewCallback;
 using std::deque;

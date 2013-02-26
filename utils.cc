@@ -19,10 +19,10 @@
 
 #include <algorithm>
 
-#include <base/eintr_wrapper.h>
 #include <base/file_path.h>
 #include <base/file_util.h>
 #include <base/logging.h>
+#include <base/posix/eintr_wrapper.h>
 #include <base/rand_util.h>
 #include <base/string_number_conversions.h>
 #include <base/string_util.h>

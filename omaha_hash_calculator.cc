@@ -6,8 +6,8 @@
 
 #include <fcntl.h>
 
-#include <base/eintr_wrapper.h>
 #include <base/logging.h>
+#include <base/posix/eintr_wrapper.h>
 #include <openssl/bio.h>
 #include <openssl/buffer.h>
 #include <openssl/evp.h>

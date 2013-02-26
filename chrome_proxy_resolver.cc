@@ -111,10 +111,7 @@ bool ChromeProxyResolver::GetProxiesForUrlWithSettings(
     std::deque<std::string>* out_proxies) {
   base::JSONReader parser;
 
-  scoped_ptr<Value> root(
-      parser.JsonToValue(json_settings,
-                         true,  // check root is obj/arr
-                         false));  // false = disallow trailing comma
+  scoped_ptr<Value> root(parser.ReadToValue(json_settings));
   if (!root.get()) {
     LOG(ERROR) << "Unable to parse \"" << json_settings << "\": "
                << parser.GetErrorMessage();
