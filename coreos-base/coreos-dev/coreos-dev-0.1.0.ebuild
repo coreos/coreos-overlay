@@ -45,6 +45,7 @@ RDEPEND="${RDEPEND}
 	dev-lang/python
 	dev-python/dbus-python
 	dev-python/argparse
+	dev-python/pygobject
 	dev-util/strace
 	net-analyzer/netperf
 	net-analyzer/tcpdump

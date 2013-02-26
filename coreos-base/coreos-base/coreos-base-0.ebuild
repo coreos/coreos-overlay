@@ -112,6 +112,9 @@ src_install() {
 		insinto /etc
 		doins "${FILESDIR}"/motd
 
+		# Insert empty fstab
+		doins "${FILESDIR}"/fstab
+
 		# Enable dhcpcd by default
 		# TODO(ifup): this doesn't work
 		# systemd_enable_service multi-user.target dhcpcd.service
