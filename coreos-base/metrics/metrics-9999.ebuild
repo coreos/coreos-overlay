@@ -17,8 +17,8 @@ IUSE=""
 
 LIBCHROME_VERS="125070"
 
-RDEPEND="chromeos-base/libchrome:${LIBCHROME_VERS}[cros-debug=]
-	chromeos-base/libchromeos
+RDEPEND="coreos-base/libchrome:${LIBCHROME_VERS}[cros-debug=]
+	coreos-base/libchromeos
 	dev-cpp/gflags
 	dev-libs/dbus-glib
 	>=dev-libs/glib-2.0

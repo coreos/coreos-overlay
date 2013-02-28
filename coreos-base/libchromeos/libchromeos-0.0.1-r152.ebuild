@@ -22,7 +22,7 @@ IUSE="cros_host test"
 
 LIBCHROME_DEPEND=$(
 	printf \
-		'chromeos-base/libchrome:%s[cros-debug=] ' \
+		'coreos-base/libchrome:%s[cros-debug=] ' \
 		${LIBCHROME_VERS[@]}
 )
 RDEPEND="${LIBCHROME_DEPEND}

@@ -4,7 +4,7 @@
 EAPI="4"
 CROS_WORKON_COMMIT="50c6063bf22ea1776579fda55402ce34b4c21daa"
 CROS_WORKON_TREE="bb8510cb7d96ac37c6e2407ce9b4b3006a11b0f4"
-CROS_WORKON_PROJECT="chromiumos/platform/update_engine"
+CROS_WORKON_PROJECT="coreos/platform/update_engine"
 
 inherit toolchain-funcs cros-debug cros-workon scons-utils
 
@@ -20,12 +20,12 @@ IUSE="cros_host -delta_generator"
 LIBCHROME_VERS="125070"
 
 RDEPEND="app-arch/bzip2
-	chromeos-base/chromeos-ca-certificates
-	chromeos-base/libchrome:${LIBCHROME_VERS}[cros-debug=]
-	chromeos-base/libchromeos
-	chromeos-base/metrics
-	chromeos-base/vboot_reference
-	chromeos-base/verity
+	coreos-base/chromeos-ca-certificates
+	coreos-base/libchrome:${LIBCHROME_VERS}[cros-debug=]
+	coreos-base/libchromeos
+	coreos-base/metrics
+	coreos-base/vboot_reference
+	coreos-base/verity
 	dev-cpp/gflags
 	dev-libs/glib
 	dev-libs/libpcre
