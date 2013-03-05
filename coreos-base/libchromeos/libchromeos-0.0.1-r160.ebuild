@@ -2,6 +2,8 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="4"
+CROS_WORKON_COMMIT="6e8f24e5f10aeba2feb9d72a49f276fc0f2ed7de"
+CROS_WORKON_TREE="4677180b651268e80a28763a89399281ec778d46"
 CROS_WORKON_PROJECT="chromiumos/platform/libchromeos"
 
 LIBCHROME_VERS=( 180609 )
@@ -14,7 +16,7 @@ SRC_URI=""
 
 LICENSE="BSD"
 SLOT="0"
-KEYWORDS="~amd64 ~arm ~x86"
+KEYWORDS="amd64 arm x86"
 IUSE="cros_host test"
 
 LIBCHROME_DEPEND=$(
