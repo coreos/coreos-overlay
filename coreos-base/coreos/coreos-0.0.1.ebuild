@@ -98,7 +98,7 @@ RDEPEND="${RDEPEND}
 # We depend on dash for the /bin/sh shell for runtime speeds, but we also
 # depend on bash to make the dev mode experience better.  We do not enable
 # things like line editing in dash, so its interactive mode is very bare.
-# TODO(ifup): coreos-base/update_engine
+# TODO(ifup): 
 #	coreos-base/crash-reporter
 #	coreos-base/chromeos-debugd
 #	coreos-base/chromeos-init
@@ -128,6 +128,7 @@ RDEPEND="${RDEPEND}
 	coreos-base/cros_boot_mode
 	coreos-base/internal
 	coreos-base/vboot_reference
+	coreos-base/update_engine
 	net-misc/dhcpcd
 	net-firewall/iptables
 	net-misc/tlsdate
