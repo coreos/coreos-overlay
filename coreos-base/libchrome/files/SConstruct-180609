@@ -17,10 +17,12 @@ base_libs = [
   {
     'name' : 'core',
     'sources' : """
+                allocator/type_profiler_control.cc
                 at_exit.cc
                 atomicops_internals_x86_gcc.cc
                 base_switches.cc
                 callback_internal.cc
+                chromeos/chromeos_version.cc
                 command_line.cc
                 debug/alias.cc
                 debug/debugger.cc
@@ -28,10 +30,13 @@ base_libs = [
                 debug/stack_trace.cc
                 debug/stack_trace_posix.cc
                 environment.cc
-                file_descriptor_shuffle.cc
                 file_path.cc
+                file_util.cc
+                file_util_posix.cc
+                json/json_parser.cc
                 json/json_reader.cc
                 json/json_writer.cc
+                json/json_string_value_serializer.cc
                 json/string_escape.cc
                 lazy_instance.cc
                 location.cc
@@ -42,10 +47,22 @@ base_libs = [
                 memory/weak_ptr.cc
                 message_pump.cc
                 message_pump_default.cc
+                metrics/bucket_ranges.cc
                 metrics/histogram.cc
+                metrics/histogram_base.cc
+                metrics/histogram_samples.cc
+                metrics/sample_map.cc
+                metrics/sample_vector.cc
+                metrics/sparse_histogram.cc
+                metrics/statistics_recorder.cc
                 pickle.cc
                 platform_file.cc
                 platform_file_posix.cc
+                posix/file_descriptor_shuffle.cc
+                process_posix.cc
+                process_util.cc
+                process_util_linux.cc
+                process_util_posix.cc
                 profiler/alternate_timer.cc
                 profiler/tracked_time.cc
                 safe_strerror_posix.cc
@@ -70,6 +87,7 @@ base_libs = [
                 threading/platform_thread_posix.cc
                 threading/thread_checker_impl.cc
                 threading/thread_collision_warner.cc
+                threading/thread_id_name_manager.cc
                 threading/thread_local_posix.cc
                 threading/thread_local_storage_posix.cc
                 threading/thread_restrictions.cc
@@ -82,23 +100,16 @@ base_libs = [
                 vlog.cc
                 """,
     'libs' : 'pthread rt',
-    'pc_libs' : '',
+    'pc_libs' : 'glib-2.0',
   },
   {
     'name' : 'glib',
     'sources' : """
-                debug/trace_event.cc
                 debug/trace_event_impl.cc
-                file_util.cc
-                file_util_posix.cc
+                files/scoped_temp_dir.cc
                 message_pump_glib.cc
-                process_posix.cc
-                process_util.cc
-                process_util_linux.cc
-                process_util_posix.cc
                 rand_util.cc
                 rand_util_posix.cc
-                scoped_temp_dir.cc
                 """,
     'libs' : '',
     'pc_libs' : 'glib-2.0',
@@ -111,7 +122,9 @@ base_libs = [
                 message_loop_proxy_impl.cc
                 message_pump_libevent.cc
                 pending_task.cc
+                run_loop.cc
                 task_runner.cc
+                thread_task_runner_handle.cc
                 threading/post_task_and_reply_impl.cc
                 threading/thread.cc
                 tracking_info.cc
@@ -147,10 +160,10 @@ env['CCFLAGS'] += ['-fPIC',
                    '-fno-exceptions',
                    '-Wall',
                    '-Werror',
+                   '-Wno-psabi',
                    '-DOS_CHROMEOS=1',
                    '-DTOOLKIT_VIEWS=1',
                    '-DUSE_AURA=1',
-                   '-DUSE_SYSTEM_LIBEVENT=1',
                    '-I..']
 
 # Fix issue with scons not passing some vars through the environment.
