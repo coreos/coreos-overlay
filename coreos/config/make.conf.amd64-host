@@ -46,7 +46,10 @@ PORTAGE_BINHOST="$PREFLIGHT_BINHOST $FULL_BINHOST"
 # expat needed for XML parsing in GDB, but enable globally as overhead is tiny.
 USE="${USE} -cups hardened cros_host multilib pic pie -introspection expat"
 
-GENTOO_MIRRORS="http://gentoo.osuosl.org/"
+GENTOO_MIRRORS="
+	http://gentoo.osuosl.org/
+	https://commondatastorage.googleapis.com/chromeos-mirror/gentoo
+"
 
 # Remove all .la files for non-plugin libraries.
 # Remove Gentoo init files since we use upstart.

@@ -60,7 +60,10 @@ PORTAGE_BINPKG_TAR_OPTS="--checkpoint=1000"
 DISTDIR="/var/lib/portage/distfiles-target"
 
 # TODO: Our mirror should be more stable since we won't discard packages.
-GENTOO_MIRRORS="http://gentoo.osuosl.org/"
+GENTOO_MIRRORS="
+	http://gentoo.osuosl.org/
+	https://commondatastorage.googleapis.com/chromeos-mirror/gentoo
+"
 
 # Username and home directory of the shared user.
 SHARED_USER_NAME="core"
