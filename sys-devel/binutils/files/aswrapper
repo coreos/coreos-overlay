@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# This files wraps as.
+# In addition, it adds --allow-incbin to the command line before invoking as.
+# This flag is necessary on link commands that use the .incbin directive.
+
+exec "$(readlink -f "${0}").real" --allow-incbin "$@"
