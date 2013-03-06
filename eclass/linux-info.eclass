@@ -1,6 +1,6 @@
-# Copyright 1999-2013 Gentoo Foundation
+# Copyright 1999-2011 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/eclass/linux-info.eclass,v 1.96 2013/01/24 20:47:23 vapier Exp $
+# $Header: /var/cvsroot/gentoo-x86/eclass/linux-info.eclass,v 1.90 2011/08/22 04:46:32 vapier Exp $
 
 # @ECLASS: linux-info.eclass
 # @MAINTAINER:
@@ -18,14 +18,6 @@
 # "kernel config" in this file means:
 # The .config of the currently installed sources is used as the first
 # preference, with a fall-back to bundled config (/proc/config.gz) if available.
-#
-# Before using any of the config-handling functions in this eclass, you must
-# ensure that one of the following functions has been called (in order of
-# preference), otherwise you will get bugs like #364041):
-# linux-info_pkg_setup
-# linux-info_get_any_version
-# get_version
-# get_running_version
 
 # A Couple of env vars are available to effect usage of this eclass
 # These are as follows:
@@ -167,7 +159,7 @@ qeerror() { qout eerror "${@}" ; }
 # done by including the configfile, and printing the variable with Make.
 # It WILL break if your makefile has missing dependencies!
 getfilevar() {
-	local ERROR basefname basedname myARCH="${ARCH}"
+local	ERROR basefname basedname myARCH="${ARCH}"
 	ERROR=0
 
 	[ -z "${1}" ] && ERROR=1
@@ -198,7 +190,7 @@ getfilevar() {
 # This is done with sed matching an expression only. If the variable is defined,
 # you will run into problems. See getfilevar for those cases.
 getfilevar_noexec() {
-	local ERROR basefname basedname mycat myARCH="${ARCH}"
+	local	ERROR basefname basedname mycat myARCH="${ARCH}"
 	ERROR=0
 	mycat='cat'
 
@@ -291,7 +283,8 @@ require_configured_kernel() {
 # MUST call linux_config_exists first.
 linux_chkconfig_present() {
 	linux_config_qa_check linux_chkconfig_present
-	local RESULT config
+	local	RESULT
+	local config
 	config="${KV_OUT_DIR}/.config"
 	[ ! -f "${config}" ] && config="/proc/config.gz"
 	RESULT="$(getfilevar_noexec CONFIG_${1} "${config}")"
@@ -307,7 +300,8 @@ linux_chkconfig_present() {
 # MUST call linux_config_exists first.
 linux_chkconfig_module() {
 	linux_config_qa_check linux_chkconfig_module
-	local RESULT config
+	local	RESULT
+	local config
 	config="${KV_OUT_DIR}/.config"
 	[ ! -f "${config}" ] && config="/proc/config.gz"
 	RESULT="$(getfilevar_noexec CONFIG_${1} "${config}")"
@@ -323,7 +317,8 @@ linux_chkconfig_module() {
 # MUST call linux_config_exists first.
 linux_chkconfig_builtin() {
 	linux_config_qa_check linux_chkconfig_builtin
-	local RESULT config
+	local	RESULT
+	local config
 	config="${KV_OUT_DIR}/.config"
 	[ ! -f "${config}" ] && config="/proc/config.gz"
 	RESULT="$(getfilevar_noexec CONFIG_${1} "${config}")"
@@ -364,27 +359,40 @@ linux_chkconfig_string() {
 # kernel_is 2 6 9 returns true
 # @CODE
 
-# Note: duplicated in kernel-2.eclass
+# got the jist yet?
+
 kernel_is() {
 	# if we haven't determined the version yet, we need to.
 	linux-info_get_any_version
 
-	# Now we can continue
-	local operator test value
+	local operator testagainst value x=0 y=0 z=0
 
-	case ${1#-} in
-	  lt) operator="-lt"; shift;;
-	  gt) operator="-gt"; shift;;
-	  le) operator="-le"; shift;;
-	  ge) operator="-ge"; shift;;
-	  eq) operator="-eq"; shift;;
-	   *) operator="-eq";;
+	case ${1} in
+	  -lt|lt) operator="-lt"; shift;;
+	  -gt|gt) operator="-gt"; shift;;
+	  -le|le) operator="-le"; shift;;
+	  -ge|ge) operator="-ge"; shift;;
+	  -eq|eq) operator="-eq"; shift;;
+	       *) operator="-eq";;
 	esac
-	[[ $# -gt 3 ]] && die "Error in kernel-2_kernel_is(): too many parameters"
 
-	: $(( test = (KV_MAJOR << 16) + (KV_MINOR << 8) + KV_PATCH ))
-	: $(( value = (${1:-${KV_MAJOR}} << 16) + (${2:-${KV_MINOR}} << 8) + ${3:-${KV_PATCH}} ))
-	[ ${test} ${operator} ${value} ]
+	for x in ${@}; do
+		for((y=0; y<$((3 - ${#x})); y++)); do value="${value}0"; done
+		value="${value}${x}"
+		z=$((${z} + 1))
+
+		case ${z} in
+		  1) for((y=0; y<$((3 - ${#KV_MAJOR})); y++)); do testagainst="${testagainst}0"; done;
+		     testagainst="${testagainst}${KV_MAJOR}";;
+		  2) for((y=0; y<$((3 - ${#KV_MINOR})); y++)); do testagainst="${testagainst}0"; done;
+		     testagainst="${testagainst}${KV_MINOR}";;
+		  3) for((y=0; y<$((3 - ${#KV_PATCH})); y++)); do testagainst="${testagainst}0"; done;
+		     testagainst="${testagainst}${KV_PATCH}";;
+		  *) die "Error in kernel-2_kernel_is(): Too many parameters.";;
+		esac
+	done
+
+	[ "${testagainst}" ${operator} "${value}" ] && return 0 || return 1
 }
 
 get_localversion() {
@@ -493,7 +501,9 @@ get_version() {
 
 	# And if we didn't pass it, we can take a nosey in the Makefile
 	kbuild_output="$(${mkfunc} KBUILD_OUTPUT ${KERNEL_MAKEFILE})"
-	OUTPUT_DIR="${OUTPUT_DIR:-${kbuild_output}}"
+	if [ -e "${kbuild_output}" ]; then
+		OUTPUT_DIR="${OUTPUT_DIR:-${kbuild_output}}"
+	fi
 
 	# And contrary to existing functions I feel we shouldn't trust the
 	# directory name to find version information as this seems insane.
@@ -517,7 +527,7 @@ get_version() {
 	# but before we do this, we need to find if we use a different object directory.
 	# This *WILL* break if the user is using localversions, but we assume it was
 	# caught before this if they are.
-	OUTPUT_DIR="${OUTPUT_DIR:-/lib/modules/${KV_MAJOR}.${KV_MINOR}.${KV_PATCH}${KV_EXTRA}/build}"
+	OUTPUT_DIR="${OUTPUT_DIR:-${ROOT}/lib/modules/${KV_MAJOR}.${KV_MINOR}.${KV_PATCH}${KV_EXTRA}/build}"
 
 	[ -h "${OUTPUT_DIR}" ] && KV_OUT_DIR="$(readlink -f ${OUTPUT_DIR})"
 	[ -d "${OUTPUT_DIR}" ] && KV_OUT_DIR="${OUTPUT_DIR}"
@@ -586,14 +596,11 @@ get_running_version() {
 		get_version
 		return $?
 	else
-		# This handles a variety of weird kernel versions.  Make sure to update
-		# tests/linux-info:get_running_version.sh if you want to change this.
-		local kv_full=${KV_FULL//[-+_]*}
-		KV_MAJOR=$(get_version_component_range 1 ${kv_full})
-		KV_MINOR=$(get_version_component_range 2 ${kv_full})
-		KV_PATCH=$(get_version_component_range 3 ${kv_full})
-		KV_EXTRA="${KV_FULL#${KV_MAJOR}.${KV_MINOR}${KV_PATCH:+.${KV_PATCH}}}"
-		: ${KV_PATCH:=0}
+		KV_MAJOR=$(get_version_component_range 1 ${KV_FULL})
+		KV_MINOR=$(get_version_component_range 2 ${KV_FULL})
+		KV_PATCH=$(get_version_component_range 3 ${KV_FULL})
+		KV_PATCH=${KV_PATCH//-*}
+		KV_EXTRA="${KV_FULL#${KV_MAJOR}.${KV_MINOR}.${KV_PATCH}}"
 	fi
 	return 0
 }
@@ -625,14 +632,7 @@ check_kernel_built() {
 	require_configured_kernel
 	get_version
 
-	local versionh_path
-	if kernel_is -ge 3 7; then
-		versionh_path="include/generated/uapi/linux/version.h"
-	else
-		versionh_path="include/linux/version.h"
-	fi
-
-	if [ ! -f "${KV_OUT_DIR}/${versionh_path}" ]
+	if [ ! -f "${KV_OUT_DIR}/include/linux/version.h" ]
 	then
 		eerror "These sources have not yet been prepared."
 		eerror "We cannot build against an unprepared tree."
@@ -655,7 +655,8 @@ check_modules_supported() {
 	require_configured_kernel
 	get_version
 
-	if ! linux_chkconfig_builtin "MODULES"; then
+	if ! linux_chkconfig_builtin "MODULES"
+	then
 		eerror "These sources do not support loading external modules."
 		eerror "to be able to use this module please enable \"Loadable modules support\""
 		eerror "in your kernel, recompile and then try merging this module again."
@@ -668,19 +669,20 @@ check_modules_supported() {
 # It checks the kernel config options specified by CONFIG_CHECK. It dies only when a required config option (i.e.
 # the prefix ~ is not used) doesn't satisfy the directive.
 check_extra_config() {
-	local config negate die error reworkmodulenames
-	local soft_errors_count=0 hard_errors_count=0 config_required=0
+	local	config negate die error reworkmodulenames
+	local	soft_errors_count=0 hard_errors_count=0 config_required=0
 	# store the value of the QA check, because otherwise we won't catch usages
 	# after if check_extra_config is called AND other direct calls are done
 	# later.
-	local old_LINUX_CONFIG_EXISTS_DONE="${_LINUX_CONFIG_EXISTS_DONE}"
+	local   old_LINUX_CONFIG_EXISTS_DONE="${_LINUX_CONFIG_EXISTS_DONE}"
 
 	# if we haven't determined the version yet, we need to
 	linux-info_get_any_version
 
 	# Determine if we really need a .config. The only time when we don't need
 	# one is when all of the CONFIG_CHECK options are prefixed with "~".
-	for config in ${CONFIG_CHECK}; do
+	for config in ${CONFIG_CHECK}
+	do
 		if [[ "${config:0:1}" != "~" ]]; then
 			config_required=1
 			break

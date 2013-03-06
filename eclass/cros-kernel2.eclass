@@ -10,7 +10,8 @@ LICENSE="GPL-2"
 SLOT="0"
 
 DEPEND="sys-apps/debianutils
-	initramfs? ( chromeos-base/chromeos-initramfs )
+	initramfs? ( coreos-base/chromeos-initramfs )
+	netboot_ramfs? ( coreos-base/chromeos-initramfs )
 "
 
 IUSE="-device_tree -kernel_sources"
@@ -39,6 +40,7 @@ CONFIG_FRAGMENTS=(
 	i2cdev
 	initramfs
 	kvm
+	netboot_ramfs
 	nfs
 	pcserial
 	qmi
@@ -47,6 +49,7 @@ CONFIG_FRAGMENTS=(
 	systemtap
 	tpm
 	vfat
+	x32
 )
 
 blkdevram_desc="ram block device"
@@ -105,11 +108,17 @@ CONFIG_TCG_TPM=y
 CONFIG_TCG_TIS=y
 "
 
-initramfs_desc="initramfs"
-initramfs_config="
-CONFIG_INITRAMFS_SOURCE=\"%ROOT%/var/lib/misc/initramfs.cpio.xz\"
+initramfs_desc="Initramfs for factory install shim and recovery image"
+initramfs_config='
+CONFIG_INITRAMFS_SOURCE="%ROOT%/var/lib/misc/initramfs.cpio.xz"
 CONFIG_INITRAMFS_COMPRESSION_XZ=y
-"
+'
+
+netboot_ramfs_desc="Network boot install initramfs"
+netboot_ramfs_config='
+CONFIG_INITRAMFS_SOURCE="%ROOT%/var/lib/misc/netboot_ramfs.cpio.xz"
+CONFIG_INITRAMFS_COMPRESSION_XZ=y
+'
 
 vfat_desc="vfat"
 vfat_config="
@@ -196,8 +205,20 @@ CONFIG_KPROBES=y
 CONFIG_DEBUG_INFO=y
 "
 
+x32_desc="x32 ABI support"
+x32_config="
+CONFIG_X86_X32=y
+"
+
 # Add all config fragments as off by default
 IUSE="${IUSE} ${CONFIG_FRAGMENTS[@]}"
+REQUIRED_USE="
+	initramfs? ( !netboot_ramfs )
+	netboot_ramfs? ( !initramfs )
+	initramfs? ( i2cdev tpm )
+	netboot_ramfs? ( i2cdev tpm )
+	x32? ( amd64 )
+"
 
 # If an overlay has eclass overrides, but doesn't actually override this
 # eclass, we'll have ECLASSDIR pointing to the active overlay's
@@ -638,10 +659,14 @@ cros-kernel2_src_install() {
 	fi
 
 	# Check the size of kernel image and issue warning when image size is near
-	# the limit.
+	# the limit. For factory install initramfs, we don't care about kernel
+	# size limit as the image is downloaded over network.
 	local kernel_image_size=$(stat -c '%s' -L "${D}"/boot/vmlinuz)
 	einfo "Kernel image size is ${kernel_image_size} bytes."
-	if [[ ${kernel_image_size} -gt $((8 * 1024 * 1024)) ]]; then
+	if use netboot_ramfs; then
+		# No need to check kernel image size.
+		true
+	elif [[ ${kernel_image_size} -gt $((8 * 1024 * 1024)) ]]; then
 		die "Kernel image is larger than 8 MB."
 	elif [[ ${kernel_image_size} -gt $((7 * 1024 * 1024)) ]]; then
 		ewarn "Kernel image is larger than 7 MB. Limit is 8 MB."

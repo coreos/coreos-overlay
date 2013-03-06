@@ -42,13 +42,14 @@ ALL_BOARDS=(
 	daisy-drm
 	daisy_spring
 	daisy_snow
+	dalmore
 	emeraldlake2
 	eureka
 	fb1
-	haswell
-	haswell_baskingridge
-	haswell_wtm1
-	haswell_wtm2
+	fox
+	fox_baskingridge
+	fox_wtm1
+	fox_wtm2
 	ironhide
 	kiev
 	klang
@@ -58,6 +59,7 @@ ALL_BOARDS=(
 	parrot
 	puppy
 	raspberrypi
+	ricochet
 	stout
 	stumpy
 	tegra2

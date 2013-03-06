@@ -764,8 +764,13 @@ clang-setup-env() {
 	case ${ARCH} in
 	amd64|x86)
 		export CC="clang" CXX="clang++"
-		append-flags --sysroot="${SYSROOT}"
-		append-flags -B$(get_binutils_path_gold)
+
+		local clang_flags=(
+			--sysroot="${SYSROOT}"
+			-B$(get_binutils_path_gold)
+			$(usex x86 -m32 '')
+		)
+		append-flags "${clang_flags[@]}"
 
 		# Some boards use optimizations (e.g. -mfpmath=sse) that
 		# clang does not support.

@@ -76,6 +76,7 @@ IUSE="bootimage cros_ec"
 # don't write RDEPEND=$DEPEND. RDEPEND should have an explicit list of what it
 # needs to extract and execute the updater.
 DEPEND="
+	>=coreos-base/vboot_reference-1.0-r230
 	coreos-base/vpd
 	dev-util/shflags
 	>=sys-apps/flashrom-0.9.3-r36
@@ -102,6 +103,7 @@ RDEPEND="
 	app-arch/gzip
 	app-arch/sharutils
 	app-arch/tar
+	coreos-base/vboot_reference
 	sys-apps/util-linux"
 
 # Check for EAPI 2+
@@ -130,6 +132,7 @@ _is_in_files() {
 # Parameters: URI of file "bcs://filename.tbz2", checksum of file.
 # Returns: Nothing
 _bcs_fetch() {
+	${CROS_BINARY_FETCH_REQUIRED} || return 0
 	local filename="${1##*://}"
 	local checksum="$2"
 
@@ -174,7 +177,11 @@ _src_unpack() {
 # Returns: Location of unpacked firmware as $RETURN_VALUE
 _bcs_src_unpack() {
 	local filename="${1##*://}"
-	_src_unpack "${CROS_BINARY_STORE_DIR}/${filename}"
+	if ${CROS_BINARY_FETCH_REQUIRED}; then
+		_src_unpack "${CROS_BINARY_STORE_DIR}/${filename}"
+	else
+		_src_unpack "${DISTDIR}/${filename}"
+	fi
 	RETURN_VALUE="${RETURN_VALUE}"
 }
 

@@ -119,7 +119,7 @@ ARRAY_VARIABLES=( CROS_WORKON_{SUBDIR,REPO,PROJECT,LOCALNAME,DESTDIR,COMMIT,TREE
 
 # Join the tree commits to produce a unique identifier
 CROS_WORKON_TREE_COMPOSITE=$(IFS="_"; echo "${CROS_WORKON_TREE[*]}")
-IUSE="cros_workon_tree_$CROS_WORKON_TREE_COMPOSITE"
+IUSE="cros_workon_tree_$CROS_WORKON_TREE_COMPOSITE profiling"
 
 inherit git-2 flag-o-matic toolchain-funcs
 
@@ -248,8 +248,25 @@ get_rev() {
 	GIT_DIR="$1" git rev-parse HEAD
 }
 
+using_common_mk() {
+	[[ -n $(find "${S}" -name common.mk -exec grep -l common-mk.git {} +) ]]
+}
+
 cros-workon_src_unpack() {
 	local fetch_method # local|git
+
+	# Sanity check.  We cannot have S set to WORKDIR because if/when we try
+	# to check out repos, git will die if it tries to check out into a dir
+	# that already exists.  Some packages might try this when out-of-tree
+	# builds are enabled, and they'll work fine most of the time because
+	# they'll be using a full manifest and will just re-use the existing
+	# checkout in src/platform/*.  But if the code detects that it has to
+	# make its own checkout, things fall apart.  For out-of-tree builds,
+	# the initial $S doesn't even matter because it resets it below to the
+	# repo in src/platform/.
+	if [[ ${S} == "${WORKDIR}" ]]; then
+		die "Sorry, but \$S cannot be set to \$WORKDIR"
+	fi
 
 	# Set the default of CROS_WORKON_DESTDIR. This is done here because S is
 	# sometimes overridden in ebuilds and we cannot rely on the global state
@@ -392,7 +409,10 @@ cros-workon_src_unpack() {
 			EGIT_SOURCEDIR="${destdir[i]}"
 			EGIT_COMMIT="${CROS_WORKON_COMMIT[i]}"
 			# Clones to /var, copies src tree to the /build/<board>/tmp.
-			git-2_src_unpack
+			# Make sure git-2 does not run `unpack` for us automatically.
+			# The normal cros-workon flow above doesn't do it, so don't
+			# let git-2 do it either.  http://crosbug.com/38342
+			EGIT_NOUNPACK=true git-2_src_unpack
 			# TODO(zbehan): Support multiple projects for vcsid?
 		done
 		set_vcsid "${CROS_WORKON_COMMIT[0]}"
@@ -446,21 +466,21 @@ cros-workon_src_prepare() {
 	local out="$(cros-workon_get_build_dir)"
 	[[ ${CROS_WORKON_INCREMENTAL_BUILD} != "1" ]] && mkdir -p "${out}"
 
-	if [[ -e ${S}/common.mk ]] ; then
+	if using_common_mk ; then
 		: ${OUT=${out}}
 		export OUT
 	fi
 }
 
 cros-workon_src_configure() {
-	if [[ -e ${S}/common.mk ]] ; then
+	if using_common_mk ; then
 		# We somewhat overshoot here, but it isn't harmful,
 		# and catches all the packages we care about.
 		tc-export CC CXX AR RANLIB LD NM PKG_CONFIG
 
 		# Portage takes care of this for us.
 		export SPLITDEBUG=0
-
+		export MODE=$(usex profiling profiling opt)
 		if [[ $(type -t cros-debug-add-NDEBUG) == "function" ]] ; then
 			# Only run this if we've inherited cros-debug.eclass.
 			cros-debug-add-NDEBUG
@@ -504,7 +524,7 @@ cw_emake() {
 }
 
 cros-workon_src_compile() {
-	if [[ -e ${S}/common.mk ]] ; then
+	if using_common_mk ; then
 		cw_emake
 	else
 		default
@@ -512,10 +532,36 @@ cros-workon_src_compile() {
 }
 
 cros-workon_src_test() {
-	if [[ -e ${S}/common.mk ]] ; then
+	if using_common_mk ; then
 		emake \
 			VALGRIND=$(use_if_iuse valgrind && echo 1) \
 			tests
+	else
+		default
+	fi
+}
+
+cros-workon_src_install() {
+	# common.mk supports coverage analysis, but only generates data when
+	# the tests have been run as part of the build process. Thus this code
+	# needs to test of the analysis output is present before trying to
+	# install it.
+	if using_common_mk ; then
+		if use profiling; then
+			LCOV_DIR=$(find "${WORKDIR}" -name "lcov-html")
+			if [[ $(echo "${LCOV_DIR}" | wc -l) -gt 1 ]] ; then
+				die "More then one instance of lcov-html " \
+				    "found! The instances are ${LCOV_DIR}. " \
+				    "It is unclear which version to use, " \
+				    "failing install."
+			fi
+			if [[ -d "${LCOV_DIR}" ]] ; then
+				local dir="${PN}"
+				[[ ${SLOT} != "0" ]] && dir+=":${SLOT}"
+				insinto "/usr/share/profiling/${dir}/lcov"
+				doins -r "${LCOV_DIR}"/*
+			fi
+		fi
 	else
 		default
 	fi
