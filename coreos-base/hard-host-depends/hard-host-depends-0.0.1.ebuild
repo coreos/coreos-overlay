@@ -22,6 +22,7 @@ RDEPEND="${RDEPEND}
 	app-arch/lzop
 	app-arch/pigz
 	app-admin/sudo
+	sys-apps/less
 	dev-embedded/u-boot-tools
 	dev-util/ccache
 	dev-util/crosutils
