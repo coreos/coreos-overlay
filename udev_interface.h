@@ -158,7 +158,7 @@ class StandardUdevInterface : public UdevInterface {
     return udev_device_get_syspath(udev_device);
   }
   virtual void DeviceUnref(struct udev_device* udev_device) {
-    return udev_device_unref(udev_device);
+    udev_device_unref(udev_device);
   }
 
   virtual struct udev_enumerate* EnumerateNew(struct udev* udev) {
@@ -180,14 +180,14 @@ class StandardUdevInterface : public UdevInterface {
     return udev_enumerate_get_list_entry(udev_enum);
   }
   virtual void EnumerateUnref(struct udev_enumerate* udev_enum) {
-    return udev_enumerate_unref(udev_enum);
+    udev_enumerate_unref(udev_enum);
   }
 
   virtual struct udev* New() {
     return udev_new();
   }
   virtual void Unref(struct udev* udev) {
-    return udev_unref(udev);
+    udev_unref(udev);
   }
 };
 
