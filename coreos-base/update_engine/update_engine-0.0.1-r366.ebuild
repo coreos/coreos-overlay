@@ -2,9 +2,9 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="4"
-CROS_WORKON_COMMIT="50c6063bf22ea1776579fda55402ce34b4c21daa"
-CROS_WORKON_TREE="bb8510cb7d96ac37c6e2407ce9b4b3006a11b0f4"
-CROS_WORKON_PROJECT="coreos/platform/update_engine"
+CROS_WORKON_COMMIT="fc661a18c07822f1700b870d8435189d5d809f3b"
+CROS_WORKON_TREE="2d28524c2004c79495d6f37fac51d3458a1ace3b"
+CROS_WORKON_PROJECT="chromiumos/platform/update_engine"
 
 inherit toolchain-funcs cros-debug cros-workon scons-utils
 
@@ -17,16 +17,16 @@ SLOT="0"
 KEYWORDS="amd64 arm x86"
 IUSE="cros_host -delta_generator"
 
-LIBCHROME_VERS="125070"
+LIBCHROME_VERS="180609"
 
 RDEPEND="app-arch/bzip2
 	coreos-base/chromeos-ca-certificates
 	coreos-base/libchrome:${LIBCHROME_VERS}[cros-debug=]
 	coreos-base/libchromeos
 	coreos-base/metrics
-	coreos-base/vboot_reference
 	coreos-base/verity
 	dev-cpp/gflags
+	dev-libs/dbus-glib
 	dev-libs/glib
 	dev-libs/libpcre
 	dev-libs/libxml2
@@ -36,13 +36,10 @@ RDEPEND="app-arch/bzip2
 	net-misc/curl
 	sys-apps/rootdev
 	sys-fs/e2fsprogs
-	sys-libs/e2fsprogs-libs"
-DEPEND="chromeos-base/system_api
-	dev-cpp/gmock
+	sys-fs/udev"
+DEPEND="dev-cpp/gmock
 	dev-cpp/gtest
-	dev-libs/dbus-glib
 	cros_host? ( dev-util/scons )
-	sys-fs/udev
 	${RDEPEND}"
 
 src_compile() {
