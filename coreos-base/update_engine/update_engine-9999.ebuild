@@ -22,9 +22,9 @@ RDEPEND="app-arch/bzip2
 	coreos-base/libchrome:${LIBCHROME_VERS}[cros-debug=]
 	coreos-base/libchromeos
 	coreos-base/metrics
-	coreos-base/vboot_reference
 	coreos-base/verity
 	dev-cpp/gflags
+	dev-libs/dbus-glib
 	dev-libs/glib
 	dev-libs/libpcre
 	dev-libs/libxml2
@@ -34,13 +34,10 @@ RDEPEND="app-arch/bzip2
 	net-misc/curl
 	sys-apps/rootdev
 	sys-fs/e2fsprogs
-	sys-libs/e2fsprogs-libs"
-DEPEND="chromeos-base/system_api
-	dev-cpp/gmock
+	sys-fs/udev"
+DEPEND="dev-cpp/gmock
 	dev-cpp/gtest
-	dev-libs/dbus-glib
 	cros_host? ( dev-util/scons )
-	sys-fs/udev
 	${RDEPEND}"
 
 src_compile() {
