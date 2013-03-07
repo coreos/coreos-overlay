@@ -147,6 +147,7 @@ RDEPEND="${RDEPEND}
 	sys-apps/systemd-sysv-utils
 	app-admin/systemd-rest
 	coreos-base/motd-http
+	coreos-base/crosh
 	sys-apps/util-linux
 	sys-auth/pam_pwdfile
 	sys-fs/e2fsprogs
