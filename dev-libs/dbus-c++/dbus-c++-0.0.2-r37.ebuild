@@ -27,6 +27,7 @@ DEPEND="${DEPEND}
 	dev-util/pkgconfig"
 
 src_prepare() {
+	epatch "${FILESDIR}/${PN}-hack-Makefile.am-explicit-lpthread-to-fix-pthread.patch"
 	./bootstrap || die "failed to bootstrap autotools"
 }
 
@@ -38,6 +39,7 @@ src_configure() {
 }
 
 src_compile() {
+	append-flags -fPIC 
 	emake || die "failed to compile dbus-c++"
 }
 
