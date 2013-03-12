@@ -103,11 +103,10 @@ bool DeltaReadFile(Graph* graph,
   string old_path = (old_root == kNonexistentPath) ? kNonexistentPath :
       old_root + path;
 
-  // TODO(dgarrett): chromium-os:15274 Wire up this file all of the way to
-  // command line.
+  // If bsdiff breaks again, blacklist the problem file by using:
+  //   bsdiff_allowed = (path != "/foo/bar")
   //
-  // To hardcode for now, use the following instead of true.
-  //   (path != "/opt/google/chrome/pepper/libnetflixidd.so");
+  // TODO(dgarrett): chromium-os:15274 connect this test to the command line.
   bool bsdiff_allowed = true;
 
   if (!bsdiff_allowed)
