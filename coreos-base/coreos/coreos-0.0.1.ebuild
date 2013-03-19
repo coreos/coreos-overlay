@@ -130,6 +130,7 @@ RDEPEND="${RDEPEND}
 	coreos-base/update_engine
 	coreos-base/coreos-installer
 	coreos-base/dev-install
+	coreos-base/coreos-init
 	net-misc/dhcpcd
 	net-firewall/iptables
 	net-misc/tlsdate
