@@ -109,7 +109,6 @@ RDEPEND="${RDEPEND}
 #	coreos-base/root-certificates
 #	sys-apps/ureadahead
 #	coreos-base/bootstat
-#	coreos-base/dev-install
 
 RDEPEND="${RDEPEND}
 	sys-apps/findutils
@@ -129,6 +128,8 @@ RDEPEND="${RDEPEND}
 	coreos-base/internal
 	coreos-base/vboot_reference
 	coreos-base/update_engine
+	coreos-base/coreos-installer
+	coreos-base/dev-install
 	net-misc/dhcpcd
 	net-firewall/iptables
 	net-misc/tlsdate

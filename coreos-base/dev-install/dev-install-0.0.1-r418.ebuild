@@ -90,8 +90,5 @@ src_install() {
 
 	insinto /etc/env.d
 	doins 99devinstall
-
-	# Python will be installed in /usr/local after running dev_install.
-	dosym "/usr/local/bin/python2.6" "/usr/bin/python"
 }
 
