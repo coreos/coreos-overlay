@@ -94,16 +94,16 @@ gboolean update_engine_service_attempt_update(UpdateEngineService* self,
   LOG(INFO) << "Attempt update: app_version=\"" << update_app_version << "\" "
             << "omaha_url=\"" << update_omaha_url << "\" "
             << "interactive=" << (interactive? "yes" : "no");
-  self->update_attempter_->CheckForUpdate(update_app_version,
-                                          update_omaha_url,
-                                          interactive);
+  self->system_state_->update_attempter()->CheckForUpdate(update_app_version,
+                                                          update_omaha_url,
+                                                          interactive);
   return TRUE;
 }
 
 gboolean update_engine_service_reset_status(UpdateEngineService* self,
                                             GError **error) {
   *error = NULL;
-  return self->update_attempter_->ResetStatus();
+  return self->system_state_->update_attempter()->ResetStatus();
 }
 
 
@@ -117,11 +117,11 @@ gboolean update_engine_service_get_status(UpdateEngineService* self,
   string current_op;
   string new_version_str;
 
-  CHECK(self->update_attempter_->GetStatus(last_checked_time,
-                                           progress,
-                                           &current_op,
-                                           &new_version_str,
-                                           new_size));
+  CHECK(self->system_state_->update_attempter()->GetStatus(last_checked_time,
+                                                           progress,
+                                                           &current_op,
+                                                           &new_version_str,
+                                                           new_size));
 
   *current_operation = g_strdup(current_op.c_str());
   *new_version = g_strdup(new_version_str.c_str());
@@ -132,18 +132,9 @@ gboolean update_engine_service_get_status(UpdateEngineService* self,
   return TRUE;
 }
 
-gboolean update_engine_service_get_track(UpdateEngineService* self,
-                                         gchar** track,
-                                         GError **error) {
-  string track_str =
-      chromeos_update_engine::OmahaRequestDeviceParams::GetDeviceTrack();
-  *track = g_strdup(track_str.c_str());
-  return TRUE;
-}
-
 gboolean update_engine_service_reboot_if_needed(UpdateEngineService* self,
                                                 GError **error) {
-  if (!self->update_attempter_->RebootIfNeeded()) {
+  if (!self->system_state_->update_attempter()->RebootIfNeeded()) {
     *error = NULL;
     return FALSE;
   }
@@ -153,14 +144,62 @@ gboolean update_engine_service_reboot_if_needed(UpdateEngineService* self,
 gboolean update_engine_service_set_track(UpdateEngineService* self,
                                          gchar* track,
                                          GError **error) {
-  if (track) {
-    LOG(INFO) << "Setting track to: " << track;
-    if (!chromeos_update_engine::OmahaRequestDeviceParams::SetDeviceTrack(
-            track)) {
-      *error = NULL;
-      return FALSE;
-    }
+  // track == target channel.
+  return update_engine_service_set_channel(self, track, false, error);
+}
+
+gboolean update_engine_service_get_track(UpdateEngineService* self,
+                                         gchar** track,
+                                         GError **error) {
+  // track == target channel.
+  return update_engine_service_get_channel(self, false, track, error);
+}
+
+gboolean update_engine_service_set_channel(UpdateEngineService* self,
+                                           gchar* target_channel,
+                                           bool is_powerwash_allowed,
+                                           GError **error) {
+  if (!target_channel)
+    return FALSE;
+
+  if (!self->system_state_->device_policy()) {
+    LOG(INFO) << "Cannot set target channel until device policy/settings are "
+                 "known";
+    return FALSE;
   }
+
+  bool delegated = false;
+  self->system_state_->device_policy()->GetReleaseChannelDelegated(&delegated);
+  if (!delegated) {
+    // Note: This message will appear in UE logs with the current UI code
+    // because UI hasn't been modified to call this method only if
+    // delegated is set to true. chromium-os:219292 tracks this work item.
+    LOG(INFO) << "Cannot set target channel explicitly when channel "
+                 "policy/settings is not delegated";
+    return FALSE;
+  }
+
+  LOG(INFO) << "Setting destination channel to: " << target_channel;
+  if (!self->system_state_->request_params()->SetTargetChannel(
+          target_channel, is_powerwash_allowed)) {
+    *error = NULL;
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+gboolean update_engine_service_get_channel(UpdateEngineService* self,
+                                           bool get_current_channel,
+                                           gchar** channel,
+                                           GError **error) {
+  chromeos_update_engine::OmahaRequestParams* rp =
+      self->system_state_->request_params();
+
+  string channel_str = get_current_channel ?
+      rp->current_channel() : rp->target_channel();
+
+  *channel = g_strdup(channel_str.c_str());
   return TRUE;
 }
 

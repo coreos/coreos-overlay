@@ -187,7 +187,7 @@ int main(int argc, char** argv) {
                                   &dbus_glib_update_engine_service_object_info);
   UpdateEngineService* service =
       UPDATE_ENGINE_SERVICE(g_object_new(UPDATE_ENGINE_TYPE_SERVICE, NULL));
-  service->update_attempter_ = update_attempter;
+  service->system_state_ = &real_system_state;
   update_attempter->set_dbus_service(service);
   chromeos_update_engine::SetupDbusService(service);
 

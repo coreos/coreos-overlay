@@ -99,7 +99,7 @@ string GetPingAttribute(const string& name, int ping_days) {
 
 // Returns an XML ping element if any of the elapsed days need to be
 // sent, or an empty string otherwise.
-string GetPingBody(int ping_active_days, int ping_roll_call_days) {
+string GetPingXml(int ping_active_days, int ping_roll_call_days) {
   string ping_active = GetPingAttribute("a", ping_active_days);
   string ping_roll_call = GetPingAttribute("r", ping_roll_call_days);
   if (!ping_active.empty() || !ping_roll_call.empty()) {
@@ -110,26 +110,27 @@ string GetPingBody(int ping_active_days, int ping_roll_call_days) {
   return "";
 }
 
-string FormatRequest(const OmahaEvent* event,
-                     const OmahaRequestParams& params,
-                     bool ping_only,
-                     int ping_active_days,
-                     int ping_roll_call_days,
-                     PrefsInterface* prefs) {
-  string body;
+// Returns an XML that goes into the body of the <app> element of the Omaha
+// request based on the given parameters.
+string GetAppBody(const OmahaEvent* event,
+                  const OmahaRequestParams& params,
+                  bool ping_only,
+                  int ping_active_days,
+                  int ping_roll_call_days,
+                  PrefsInterface* prefs) {
+  string app_body;
   if (event == NULL) {
-    body = GetPingBody(ping_active_days, ping_roll_call_days);
+    app_body = GetPingXml(ping_active_days, ping_roll_call_days);
     if (!ping_only) {
       // not passing update_disabled to Omaha because we want to
       // get the update and report with UpdateDeferred result so that
       // borgmon charts show up updates that are deferred. This is also
       // the expected behavior when we move to Omaha v3.0 protocol, so it'll
       // be consistent.
-      body += StringPrintf(
-          "        <updatecheck"
-          " targetversionprefix=\"%s\""
+      app_body += StringPrintf(
+          "        <updatecheck targetversionprefix=\"%s\""
           "></updatecheck>\n",
-          XmlEncode(params.target_version_prefix).c_str());
+          XmlEncode(params.target_version_prefix()).c_str());
 
       // If this is the first update check after a reboot following a previous
       // update, generate an event containing the previous version number. If
@@ -142,16 +143,15 @@ string FormatRequest(const OmahaEvent* event,
       if (!prefs->GetString(kPrefsPreviousVersion, &prev_version)) {
         prev_version = "0.0.0.0";
       }
-      if (!prev_version.empty()) {
-        body += StringPrintf(
-            "        <event eventtype=\"%d\" eventresult=\"%d\" "
-            "previousversion=\"%s\"></event>\n",
-            OmahaEvent::kTypeUpdateComplete,
-            OmahaEvent::kResultSuccessReboot,
-            XmlEncode(prev_version).c_str());
-        LOG_IF(WARNING, !prefs->SetString(kPrefsPreviousVersion, ""))
-            << "Unable to reset the previous version.";
-      }
+
+      app_body += StringPrintf(
+          "        <event eventtype=\"%d\" eventresult=\"%d\" "
+          "previousversion=\"%s\"></event>\n",
+          OmahaEvent::kTypeUpdateComplete,
+          OmahaEvent::kResultSuccessReboot,
+          XmlEncode(prev_version).c_str());
+      LOG_IF(WARNING, !prefs->SetString(kPrefsPreviousVersion, ""))
+          << "Unable to reset the previous version.";
     }
   } else {
     // The error code is an optional attribute so append it only if the result
@@ -160,29 +160,103 @@ string FormatRequest(const OmahaEvent* event,
     if (event->result != OmahaEvent::kResultSuccess) {
       error_code = StringPrintf(" errorcode=\"%d\"", event->error_code);
     }
-    body = StringPrintf(
+    app_body = StringPrintf(
         "        <event eventtype=\"%d\" eventresult=\"%d\"%s></event>\n",
         event->type, event->result, error_code.c_str());
   }
-  return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+
+  return app_body;
+}
+
+// Returns an XML that corresponds to the entire <app> node of the Omaha
+// request based on the given parameters.
+string GetAppXml(const OmahaEvent* event,
+                 const OmahaRequestParams& params,
+                 bool ping_only,
+                 int ping_active_days,
+                 int ping_roll_call_days,
+                 SystemState* system_state) {
+  string app_body = GetAppBody(event, params, ping_only, ping_active_days,
+                               ping_roll_call_days, system_state->prefs());
+  string app_versions;
+
+  // If we are upgrading to a more stable channel and we are allowed to do
+  // powerwash, then pass 0.0.0.0 as the version. This is needed to get the
+  // highest-versioned payload on the destination channel.
+  if (params.to_more_stable_channel() && params.is_powerwash_allowed()) {
+    LOG(INFO) << "Passing OS version as 0.0.0.0 as we are set to powerwash "
+              << "on downgrading to the version in the more stable channel";
+    app_versions = "version=\"0.0.0.0\" from_version=\"" +
+      XmlEncode(params.app_version()) + "\" ";
+  } else {
+    app_versions = "version=\"" + XmlEncode(params.app_version()) + "\" ";
+  }
+
+  string app_channels = "track=\"" + XmlEncode(params.target_channel()) + "\" ";
+  if (params.current_channel() != params.target_channel())
+     app_channels +=
+       "from_track=\"" + XmlEncode(params.current_channel()) + "\" ";
+
+  string delta_okay_str = params.delta_okay() ? "true" : "false";
+
+  // Use the default app_id only if we're asking for an update on the
+  // canary-channel. Otherwise, use the board's app_id.
+  string request_app_id =
+      (params.target_channel() == "canary-channel" ?
+       params.app_id() : params.board_app_id());
+  string app_xml =
+      "    <app appid=\"" + XmlEncode(request_app_id) + "\" " +
+                app_versions +
+                app_channels +
+                "lang=\"" + XmlEncode(params.app_lang()) + "\" " +
+                "board=\"" + XmlEncode(params.os_board()) + "\" " +
+                "hardware_class=\"" + XmlEncode(params.hwid()) + "\" " +
+                "delta_okay=\"" + delta_okay_str + "\" "
+                ">\n" +
+                   app_body +
+      "    </app>\n";
+
+  return app_xml;
+}
+
+// Returns an XML that corresponds to the entire <os> node of the Omaha
+// request based on the given parameters.
+string GetOsXml(const OmahaRequestParams& params) {
+  string os_xml =
+      "    <os version=\"" + XmlEncode(params.os_version()) + "\" " +
+               "platform=\"" + XmlEncode(params.os_platform()) + "\" " +
+               "sp=\"" + XmlEncode(params.os_sp()) + "\">"
+          "</os>\n";
+  return os_xml;
+}
+
+// Returns an XML that corresponds to the entire Omaha request based on the
+// given parameters.
+string GetRequestXml(const OmahaEvent* event,
+                     const OmahaRequestParams& params,
+                     bool ping_only,
+                     int ping_active_days,
+                     int ping_roll_call_days,
+                     SystemState* system_state) {
+  string os_xml = GetOsXml(params);
+  string app_xml = GetAppXml(event, params, ping_only, ping_active_days,
+                             ping_roll_call_days, system_state);
+
+  string install_source = StringPrintf("installsource=\"%s\" ",
+      (params.interactive() ? "ondemandupdate" : "scheduler"));
+
+  string request_xml =
+      "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
       "<request protocol=\"3.0\" "
-      "version=\"" + XmlEncode(kGupdateVersion) + "\" "
-      "updaterversion=\"" + XmlEncode(kGupdateVersion) + "\" "
-      "installsource=\"" +
-      (params.interactive ? "ondemandupdate" : "scheduler") + "\" "
-      "ismachine=\"1\">\n"
-      "    <os version=\"" + XmlEncode(params.os_version) + "\" platform=\"" +
-      XmlEncode(params.os_platform) + "\" sp=\"" +
-      XmlEncode(params.os_sp) + "\"></os>\n"
-      "    <app appid=\"" + XmlEncode(params.app_id) + "\" version=\"" +
-      XmlEncode(params.app_version) + "\" "
-      "lang=\"" + XmlEncode(params.app_lang) + "\" track=\"" +
-      XmlEncode(params.app_track) + "\" board=\"" +
-      XmlEncode(params.os_board) + "\" hardware_class=\"" +
-      XmlEncode(params.hardware_class) + "\" delta_okay=\"" +
-      (params.delta_okay ? "true" : "false") + "\">\n" + body +
-      "    </app>\n"
+                "version=\"" + XmlEncode(kGupdateVersion) + "\" "
+                "updaterversion=\"" + XmlEncode(kGupdateVersion) + "\" " +
+                install_source +
+                "ismachine=\"1\">\n" +
+                  os_xml +
+                  app_xml +
       "</request>\n";
+
+  return request_xml;
 }
 
 }  // namespace {}
@@ -204,17 +278,17 @@ string XmlEncode(const string& input) {
 }
 
 OmahaRequestAction::OmahaRequestAction(SystemState* system_state,
-                                       OmahaRequestParams* params,
                                        OmahaEvent* event,
                                        HttpFetcher* http_fetcher,
                                        bool ping_only)
     : system_state_(system_state),
-      params_(params),
       event_(event),
       http_fetcher_(http_fetcher),
       ping_only_(ping_only),
       ping_active_days_(0),
-      ping_roll_call_days_(0) {}
+      ping_roll_call_days_(0) {
+  params_ = system_state->request_params();
+}
 
 OmahaRequestAction::~OmahaRequestAction() {}
 
@@ -259,18 +333,18 @@ void OmahaRequestAction::PerformAction() {
     processor_->ActionComplete(this, kActionCodeSuccess);
     return;
   }
-  string request_post(FormatRequest(event_.get(),
+  string request_post(GetRequestXml(event_.get(),
                                     *params_,
                                     ping_only_,
                                     ping_active_days_,
                                     ping_roll_call_days_,
-                                    system_state_->prefs()));
+                                    system_state_));
 
   http_fetcher_->SetPostData(request_post.data(), request_post.size(),
                              kHttpContentTypeTextXml);
-  LOG(INFO) << "Posting an Omaha request to " << params_->update_url;
+  LOG(INFO) << "Posting an Omaha request to " << params_->update_url();
   LOG(INFO) << "Request: " << request_post;
-  http_fetcher_->BeginTransfer(params_->update_url);
+  http_fetcher_->BeginTransfer(params_->update_url());
 }
 
 void OmahaRequestAction::TerminateProcessing() {
@@ -680,7 +754,7 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
   if (!ParseResponse(doc.get(), &output_object, &completer))
     return;
 
-  if (params_->update_disabled) {
+  if (params_->update_disabled()) {
     LOG(INFO) << "Ignoring Omaha updates as updates are disabled by policy.";
     output_object.update_exists = false;
     completer.set_code(kActionCodeOmahaUpdateIgnoredPerPolicy);
@@ -724,7 +798,7 @@ bool OmahaRequestAction::ShouldDeferDownload(OmahaResponse* output_object) {
   // wall-clock-based-waiting period and then the update-check-based waiting
   // period, if required.
 
-  if (!params_->wall_clock_based_wait_enabled) {
+  if (!params_->wall_clock_based_wait_enabled()) {
     // Wall-clock-based waiting period is not enabled, so no scattering needed.
     return false;
   }
@@ -810,7 +884,7 @@ OmahaRequestAction::IsWallClockBasedWaitingSatisfied(
       output_object->max_days_to_scatter);
 
   LOG(INFO) << "Waiting Period = "
-            << utils::FormatSecs(params_->waiting_period.InSeconds())
+            << utils::FormatSecs(params_->waiting_period().InSeconds())
             << ", Time Elapsed = "
             << utils::FormatSecs(elapsed_time.InSeconds())
             << ", MaxDaysToScatter = "
@@ -842,14 +916,14 @@ OmahaRequestAction::IsWallClockBasedWaitingSatisfied(
 
   // This means we are required to participate in scattering.
   // See if our turn has arrived now.
-  TimeDelta remaining_wait_time = params_->waiting_period - elapsed_time;
+  TimeDelta remaining_wait_time = params_->waiting_period() - elapsed_time;
   if (remaining_wait_time.InSeconds() <= 0) {
     // Yes, it's our turn now.
     LOG(INFO) << "Successfully passed the wall-clock-based-wait.";
 
     // But we can't download until the update-check-count-based wait is also
     // satisfied, so mark it as required now if update checks are enabled.
-    return params_->update_check_count_wait_enabled ?
+    return params_->update_check_count_wait_enabled() ?
               kWallClockWaitDoneButUpdateCheckWaitRequired :
               kWallClockWaitDoneAndUpdateCheckWaitNotRequired;
   }
@@ -878,8 +952,8 @@ bool OmahaRequestAction::IsUpdateCheckCountBasedWaitingSatisfied() {
     // This file does not exist. This means we haven't started our update
     // check count down yet, so this is the right time to start the count down.
     update_check_count_value = base::RandInt(
-      params_->min_update_checks_needed,
-      params_->max_update_checks_allowed);
+      params_->min_update_checks_needed(),
+      params_->max_update_checks_allowed());
 
     LOG(INFO) << "Randomly picked update check count value = "
               << update_check_count_value;
@@ -901,7 +975,7 @@ bool OmahaRequestAction::IsUpdateCheckCountBasedWaitingSatisfied() {
   }
 
   if (update_check_count_value < 0 ||
-      update_check_count_value > params_->max_update_checks_allowed) {
+      update_check_count_value > params_->max_update_checks_allowed()) {
     // We err on the side of skipping scattering logic instead of stalling
     // a machine from receiving any updates in case of any unexpected state.
     LOG(ERROR) << "Invalid value for update check count detected. "

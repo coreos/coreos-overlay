@@ -21,6 +21,10 @@ class OmahaResponseHandlerActionTest : public ::testing::Test {
  public:
   // Return true iff the OmahaResponseHandlerAction succeeded.
   // If out is non-NULL, it's set w/ the response from the action.
+  bool DoTestCommon(MockSystemState* mock_system_state,
+                    const OmahaResponse& in,
+                    const string& boot_dev,
+                    InstallPlan* out);
   bool DoTest(const OmahaResponse& in,
               const string& boot_dev,
               InstallPlan* out);
@@ -56,22 +60,23 @@ const string kLongName =
     "-the_update_a.b.c.d_DELTA_.tgz";
 }  // namespace {}
 
-bool OmahaResponseHandlerActionTest::DoTest(const OmahaResponse& in,
-                                            const string& boot_dev,
-                                            InstallPlan* out) {
+bool OmahaResponseHandlerActionTest::DoTestCommon(
+    MockSystemState* mock_system_state,
+    const OmahaResponse& in,
+    const string& boot_dev,
+    InstallPlan* out) {
   ActionProcessor processor;
   OmahaResponseHandlerActionProcessorDelegate delegate;
   processor.set_delegate(&delegate);
 
   ObjectFeederAction<OmahaResponse> feeder_action;
   feeder_action.set_obj(in);
-  MockSystemState mock_system_state;
   if (in.update_exists) {
-    EXPECT_CALL(*mock_system_state.mock_prefs(),
+    EXPECT_CALL(*(mock_system_state->mock_prefs()),
                 SetString(kPrefsUpdateCheckResponseHash, in.hash))
         .WillOnce(Return(true));
   }
-  OmahaResponseHandlerAction response_handler_action(&mock_system_state);
+  OmahaResponseHandlerAction response_handler_action(mock_system_state);
   response_handler_action.set_boot_device(boot_dev);
   BondActions(&feeder_action, &response_handler_action);
   ObjectCollectorAction<InstallPlan> collector_action;
@@ -86,6 +91,13 @@ bool OmahaResponseHandlerActionTest::DoTest(const OmahaResponse& in,
     *out = collector_action.object();
   EXPECT_TRUE(delegate.code_set_);
   return delegate.code_ == kActionCodeSuccess;
+}
+
+bool OmahaResponseHandlerActionTest::DoTest(const OmahaResponse& in,
+                                            const string& boot_dev,
+                                            InstallPlan* out) {
+  MockSystemState mock_system_state;
+  return DoTestCommon(&mock_system_state, in, boot_dev, out);
 }
 
 TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
@@ -218,5 +230,78 @@ TEST_F(OmahaResponseHandlerActionTest, HashChecksForBothHttpAndHttpsTest) {
   EXPECT_TRUE(install_plan.hash_checks_mandatory);
 }
 
+TEST_F(OmahaResponseHandlerActionTest, ChangeToMoreStableChannelTest) {
+  OmahaResponse in;
+  in.update_exists = true;
+  in.display_version = "a.b.c.d";
+  in.payload_urls.push_back("https://MoreStableChannelTest");
+  in.more_info_url = "http://more/info";
+  in.hash = "HASHjk";
+  in.size = 15;
+
+  const string kTestDir = "omaha_response_handler_action-test";
+  ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir + "/etc"));
+  ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir +
+                        utils::kStatefulPartition + "/etc"));
+  ASSERT_TRUE(WriteFileString(
+      kTestDir + "/etc/lsb-release",
+      "CHROMEOS_RELEASE_TRACK=canary-channel\n"));
+  ASSERT_TRUE(WriteFileString(
+      kTestDir + utils::kStatefulPartition + "/etc/lsb-release",
+      "CHROMEOS_IS_POWERWASH_ALLOWED=true\n"
+      "CHROMEOS_RELEASE_TRACK=stable-channel\n"));
+
+  MockSystemState mock_system_state;
+  OmahaRequestParams params(&mock_system_state);
+  params.set_root(string("./") + kTestDir);
+  params.SetLockDown(false);
+  params.Init("1.2.3.4", "", 0);
+  EXPECT_EQ("canary-channel", params.current_channel());
+  EXPECT_EQ("stable-channel", params.target_channel());
+  EXPECT_TRUE(params.to_more_stable_channel());
+  EXPECT_TRUE(params.is_powerwash_allowed());
+
+  mock_system_state.set_request_params(&params);
+  InstallPlan install_plan;
+  EXPECT_TRUE(DoTestCommon(&mock_system_state, in, "/dev/sda5", &install_plan));
+  EXPECT_TRUE(install_plan.powerwash_required);
+}
+
+TEST_F(OmahaResponseHandlerActionTest, ChangeToLessStableChannelTest) {
+  OmahaResponse in;
+  in.update_exists = true;
+  in.display_version = "a.b.c.d";
+  in.payload_urls.push_back("https://LessStableChannelTest");
+  in.more_info_url = "http://more/info";
+  in.hash = "HASHjk";
+  in.size = 15;
+
+  const string kTestDir = "omaha_response_handler_action-test";
+  ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir + "/etc"));
+  ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir +
+                        utils::kStatefulPartition + "/etc"));
+  ASSERT_TRUE(WriteFileString(
+      kTestDir + "/etc/lsb-release",
+      "CHROMEOS_RELEASE_TRACK=stable-channel\n"));
+  ASSERT_TRUE(WriteFileString(
+      kTestDir + utils::kStatefulPartition + "/etc/lsb-release",
+      "CHROMEOS_RELEASE_TRACK=canary-channel\n"));
+
+  MockSystemState mock_system_state;
+  OmahaRequestParams params(&mock_system_state);
+  params.set_root(string("./") + kTestDir);
+  params.SetLockDown(false);
+  params.Init("5.6.7.8", "", 0);
+  EXPECT_EQ("stable-channel", params.current_channel());
+  params.SetTargetChannel("canary-channel", false);
+  EXPECT_EQ("canary-channel", params.target_channel());
+  EXPECT_FALSE(params.to_more_stable_channel());
+  EXPECT_FALSE(params.is_powerwash_allowed());
+
+  mock_system_state.set_request_params(&params);
+  InstallPlan install_plan;
+  EXPECT_TRUE(DoTestCommon(&mock_system_state, in, "/dev/sda5", &install_plan));
+  EXPECT_FALSE(install_plan.powerwash_required);
+}
 
 }  // namespace chromeos_update_engine

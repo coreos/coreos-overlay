@@ -148,6 +148,9 @@ bool GetFilesystemSizeFromFD(int fd,
 // such as "11/14/2011 14:05:30 GMT".
 std::string ToString(const base::Time utc_time);
 
+// Returns true or false depending on the value of b.
+std::string ToString(bool b);
+
 enum BootLoader {
   BootLoader_SYSLINUX = 0,
   BootLoader_CHROME_FIRMWARE = 1

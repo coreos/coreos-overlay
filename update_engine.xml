@@ -20,13 +20,22 @@
       <arg type="s" name="new_version" direction="out" />
       <arg type="x" name="new_size" direction="out" />
     </method>
+    <method name="RebootIfNeeded">
+    </method>
+    <!-- Deprecate GetTrack and SetTrack after updating the clients -->
     <method name="GetTrack">
       <arg type="s" name="track" direction="out" />
     </method>
-    <method name="RebootIfNeeded">
-    </method>
     <method name="SetTrack">
       <arg type="s" name="track" />
+    </method>
+    <method name="SetChannel">
+      <arg type="s" name="target_channel" />
+      <arg type="b" name="is_powerwash_allowed" />
+    </method>
+    <method name="GetChannel">
+      <arg type="b" name="get_current_channel" />
+      <arg type="s" name="channel" direction="out" />
     </method>
     <signal name="StatusUpdate">
       <arg type="x" name="last_checked_time" />

@@ -10,6 +10,7 @@
 #include <policy/libpolicy.h>
 
 #include "update_engine/gpio_handler.h"
+#include "update_engine/omaha_request_params.h"
 
 namespace chromeos_update_engine {
 
@@ -59,6 +60,10 @@ class SystemState {
 
   // Returns a pointer to the update attempter object.
   virtual UpdateAttempter* update_attempter() = 0;
+
+  // Returns a pointer to the object that stores the parameters that are
+  // common to all Omaha requests.
+  virtual OmahaRequestParams* request_params() = 0;
 };
 
 }  // namespace chromeos_update_engine

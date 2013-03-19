@@ -253,8 +253,9 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // only after the device policy has been loaded and set in the system_state_.
   void CalculateScatteringParams(bool is_interactive);
 
-  // Sets a random value for the omaha_request_params_.waiting_period
-  // based on the current scatter_factor_ value.
+  // Sets a random value for the waiting period to wait for before downloading
+  // an update, if one available. This value will be upperbounded by the
+  // scatter factor value specified from policy.
   void GenerateNewWaitingPeriod();
 
   // Helper method of Update() to construct the sequence of actions to
@@ -322,8 +323,8 @@ class UpdateAttempter : public ActionProcessorDelegate,
   std::string new_version_;
   int64_t new_payload_size_;
 
-  // Device paramaters common to all Omaha requests.
-  OmahaRequestDeviceParams omaha_request_params_;
+  // Common parameters for all Omaha requests.
+  OmahaRequestParams* omaha_request_params_;
 
   // Number of consecutive manual update checks we've had where we obeyed
   // Chrome's proxy settings.

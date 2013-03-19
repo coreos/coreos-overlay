@@ -58,6 +58,12 @@ public:
     return update_attempter_.get();
   }
 
+  // Returns a pointer to the object that stores the parameters that are
+  // common to all Omaha requests.
+  virtual inline OmahaRequestParams* request_params() {
+    return &request_params_;
+  }
+
   // Initializes this concrete object. Other methods should be invoked only
   // if the object has been initialized successfully.
   bool Initialize(bool enable_gpio);
@@ -92,6 +98,9 @@ private:
 
   // Pointer to the update attempter object.
   scoped_ptr<UpdateAttempter> update_attempter_;
+
+  // Common parameters for all Omaha requests.
+  OmahaRequestParams request_params_;
 };
 
 }  // namespace chromeos_update_engine

@@ -8,11 +8,10 @@
 #include <string>
 #include <vector>
 
-#include "base/logging.h"
+#include <base/basictypes.h>
 
 // InstallPlan is a simple struct that contains relevant info for many
 // parts of the update system about the install that should happen.
-
 namespace chromeos_update_engine {
 
 struct InstallPlan {
@@ -23,27 +22,16 @@ struct InstallPlan {
               uint64_t metadata_size,
               const std::string& metadata_signature,
               const std::string& install_path,
-              const std::string& kernel_install_path)
-      : is_resume(is_resume),
-        download_url(url),
-        payload_size(payload_size),
-        payload_hash(payload_hash),
-        metadata_size(metadata_size),
-        metadata_signature(metadata_signature),
-        install_path(install_path),
-        kernel_install_path(kernel_install_path),
-        kernel_size(0),
-        rootfs_size(0),
-        hash_checks_mandatory(false) {}
+              const std::string& kernel_install_path);
 
   // Default constructor: Initialize all members which don't have a class
   // initializer.
-  InstallPlan() : is_resume(false),
-                  payload_size(0),
-                  metadata_size(0),
-                  kernel_size(0),
-                  rootfs_size(0),
-                  hash_checks_mandatory(false) {}
+  InstallPlan();
+
+  bool operator==(const InstallPlan& that) const;
+  bool operator!=(const InstallPlan& that) const;
+
+  void Dump() const;
 
   bool is_resume;
   std::string download_url;  // url to download from
@@ -75,31 +63,9 @@ struct InstallPlan {
   // the Omaha response.
   bool hash_checks_mandatory;
 
-  bool operator==(const InstallPlan& that) const {
-    return ((is_resume == that.is_resume) &&
-            (download_url == that.download_url) &&
-            (payload_size == that.payload_size) &&
-            (payload_hash == that.payload_hash) &&
-            (metadata_size == that.metadata_size) &&
-            (metadata_signature == that.metadata_signature) &&
-            (install_path == that.install_path) &&
-            (kernel_install_path == that.kernel_install_path));
-  }
-  bool operator!=(const InstallPlan& that) const {
-    return !((*this) == that);
-  }
-  void Dump() const {
-    LOG(INFO) << "InstallPlan: "
-              << (is_resume ? ", resume" : ", new_update")
-              << ", url: " << download_url
-              << ", payload size: " << payload_size
-              << ", payload hash: " << payload_hash
-              << ", metadata size: " << metadata_size
-              << ", metadata signature: " << metadata_signature
-              << ", install_path: " << install_path
-              << ", kernel_install_path: " << kernel_install_path
-              << ", hash_checks_mandatory: " << hash_checks_mandatory;
-  }
+  // True if Powerwash is required on reboot after applying the payload.
+  // False otherwise.
+  bool powerwash_required;
 };
 
 }  // namespace chromeos_update_engine

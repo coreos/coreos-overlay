@@ -80,8 +80,8 @@ class UpdateAttempterTest : public ::testing::Test {
   void PingOmahaTestStart();
   static gboolean StaticPingOmahaTestStart(gpointer data);
 
-  void ReadTrackFromPolicyTestStart();
-  static gboolean StaticReadTrackFromPolicyTestStart(gpointer data);
+  void ReadChannelFromPolicyTestStart();
+  static gboolean StaticReadChannelFromPolicyTestStart(gpointer data);
 
   void ReadUpdateDisabledFromPolicyTestStart();
   static gboolean StaticReadUpdateDisabledFromPolicyTestStart(gpointer data);
@@ -135,8 +135,7 @@ TEST_F(UpdateAttempterTest, ActionCompletedErrorTest) {
 TEST_F(UpdateAttempterTest, ActionCompletedOmahaRequestTest) {
   scoped_ptr<MockHttpFetcher> fetcher(new MockHttpFetcher("", 0, NULL));
   fetcher->FailTransfer(500);  // Sets the HTTP response code.
-  OmahaRequestParams params;
-  OmahaRequestAction action(&mock_system_state_, &params, NULL,
+  OmahaRequestAction action(&mock_system_state_, NULL,
                             fetcher.release(), false);
   ObjectCollectorAction<OmahaResponse> collector_action;
   BondActions(&action, &collector_action);
@@ -168,9 +167,8 @@ TEST_F(UpdateAttempterTest, GetErrorCodeForActionTest) {
   EXPECT_EQ(kActionCodeSuccess,
             GetErrorCodeForAction(NULL, kActionCodeSuccess));
 
-  OmahaRequestParams params;
   MockSystemState mock_system_state;
-  OmahaRequestAction omaha_request_action(&mock_system_state, &params, NULL,
+  OmahaRequestAction omaha_request_action(&mock_system_state, NULL,
                                           NULL, false);
   EXPECT_EQ(kActionCodeOmahaRequestError,
             GetErrorCodeForAction(&omaha_request_action, kActionCodeError));
@@ -192,26 +190,26 @@ TEST_F(UpdateAttempterTest, GetErrorCodeForActionTest) {
 }
 
 TEST_F(UpdateAttempterTest, DisableDeltaUpdateIfNeededTest) {
-  attempter_.omaha_request_params_.delta_okay = true;
+  attempter_.omaha_request_params_->set_delta_okay(true);
   EXPECT_CALL(*prefs_, GetInt64(kPrefsDeltaUpdateFailures, _))
       .WillOnce(Return(false));
   attempter_.DisableDeltaUpdateIfNeeded();
-  EXPECT_TRUE(attempter_.omaha_request_params_.delta_okay);
+  EXPECT_TRUE(attempter_.omaha_request_params_->delta_okay());
   EXPECT_CALL(*prefs_, GetInt64(kPrefsDeltaUpdateFailures, _))
       .WillOnce(DoAll(
           SetArgumentPointee<1>(UpdateAttempter::kMaxDeltaUpdateFailures - 1),
           Return(true)));
   attempter_.DisableDeltaUpdateIfNeeded();
-  EXPECT_TRUE(attempter_.omaha_request_params_.delta_okay);
+  EXPECT_TRUE(attempter_.omaha_request_params_->delta_okay());
   EXPECT_CALL(*prefs_, GetInt64(kPrefsDeltaUpdateFailures, _))
       .WillOnce(DoAll(
           SetArgumentPointee<1>(UpdateAttempter::kMaxDeltaUpdateFailures),
           Return(true)));
   attempter_.DisableDeltaUpdateIfNeeded();
-  EXPECT_FALSE(attempter_.omaha_request_params_.delta_okay);
+  EXPECT_FALSE(attempter_.omaha_request_params_->delta_okay());
   EXPECT_CALL(*prefs_, GetInt64(_, _)).Times(0);
   attempter_.DisableDeltaUpdateIfNeeded();
-  EXPECT_FALSE(attempter_.omaha_request_params_.delta_okay);
+  EXPECT_FALSE(attempter_.omaha_request_params_->delta_okay());
 }
 
 TEST_F(UpdateAttempterTest, MarkDeltaUpdateFailureTest) {
@@ -306,9 +304,10 @@ gboolean UpdateAttempterTest::StaticPingOmahaTestStart(gpointer data) {
   return FALSE;
 }
 
-gboolean UpdateAttempterTest::StaticReadTrackFromPolicyTestStart(
+gboolean UpdateAttempterTest::StaticReadChannelFromPolicyTestStart(
     gpointer data) {
-  reinterpret_cast<UpdateAttempterTest*>(data)->ReadTrackFromPolicyTestStart();
+  UpdateAttempterTest* ua_test = reinterpret_cast<UpdateAttempterTest*>(data);
+  ua_test->ReadChannelFromPolicyTestStart();
   return FALSE;
 }
 
@@ -452,30 +451,37 @@ TEST_F(UpdateAttempterTest, CreatePendingErrorEventResumedTest) {
             attempter_.error_event_->error_code);
 }
 
-TEST_F(UpdateAttempterTest, ReadTrackFromPolicy) {
+TEST_F(UpdateAttempterTest, ReadChannelFromPolicy) {
   loop_ = g_main_loop_new(g_main_context_default(), FALSE);
-  g_idle_add(&StaticReadTrackFromPolicyTestStart, this);
+  g_idle_add(&StaticReadChannelFromPolicyTestStart, this);
   g_main_loop_run(loop_);
   g_main_loop_unref(loop_);
   loop_ = NULL;
 }
 
-void UpdateAttempterTest::ReadTrackFromPolicyTestStart() {
-  // Tests that the update track (aka release channel) is properly fetched
+void UpdateAttempterTest::ReadChannelFromPolicyTestStart() {
+  // Tests that the update channel (aka release channel) is properly fetched
   // from the device policy.
 
   policy::MockDevicePolicy* device_policy = new policy::MockDevicePolicy();
   attempter_.policy_provider_.reset(new policy::PolicyProvider(device_policy));
 
   EXPECT_CALL(*device_policy, LoadPolicy()).WillRepeatedly(Return(true));
+  EXPECT_CALL(mock_system_state_, device_policy()).WillRepeatedly(
+      Return(device_policy));
 
-  EXPECT_CALL(*device_policy, GetReleaseChannel(_))
-      .WillRepeatedly(DoAll(
-          SetArgumentPointee<0>(std::string("canary-channel")),
-          Return(true)));
+  EXPECT_CALL(*device_policy, GetReleaseChannelDelegated(_)).WillRepeatedly(
+      DoAll(SetArgumentPointee<0>(bool(false)),
+      Return(true)));
 
+  EXPECT_CALL(*device_policy, GetReleaseChannel(_)).WillRepeatedly(
+      DoAll(SetArgumentPointee<0>(std::string("beta-channel")),
+      Return(true)));
+
+  attempter_.omaha_request_params_->set_root("./UpdateAttempterTest");
   attempter_.Update("", "", false, false, false);
-  EXPECT_EQ("canary-channel", attempter_.omaha_request_params_.app_track);
+  EXPECT_EQ("beta-channel",
+            attempter_.omaha_request_params_->target_channel());
 
   g_idle_add(&StaticQuitMainLoop, this);
 }
@@ -496,6 +502,8 @@ void UpdateAttempterTest::ReadUpdateDisabledFromPolicyTestStart() {
   attempter_.policy_provider_.reset(new policy::PolicyProvider(device_policy));
 
   EXPECT_CALL(*device_policy, LoadPolicy()).WillRepeatedly(Return(true));
+  EXPECT_CALL(mock_system_state_, device_policy()).WillRepeatedly(
+      Return(device_policy));
 
   EXPECT_CALL(*device_policy, GetUpdateDisabled(_))
       .WillRepeatedly(DoAll(
@@ -503,7 +511,7 @@ void UpdateAttempterTest::ReadUpdateDisabledFromPolicyTestStart() {
           Return(true)));
 
   attempter_.Update("", "", false, false, false);
-  EXPECT_TRUE(attempter_.omaha_request_params_.update_disabled);
+  EXPECT_TRUE(attempter_.omaha_request_params_->update_disabled());
 
   g_idle_add(&StaticQuitMainLoop, this);
 }
@@ -526,6 +534,8 @@ void UpdateAttempterTest::ReadTargetVersionPrefixFromPolicyTestStart() {
   attempter_.policy_provider_.reset(new policy::PolicyProvider(device_policy));
 
   EXPECT_CALL(*device_policy, LoadPolicy()).WillRepeatedly(Return(true));
+  EXPECT_CALL(mock_system_state_, device_policy()).WillRepeatedly(
+      Return(device_policy));
 
   EXPECT_CALL(*device_policy, GetTargetVersionPrefix(_))
       .WillRepeatedly(DoAll(
@@ -534,7 +544,7 @@ void UpdateAttempterTest::ReadTargetVersionPrefixFromPolicyTestStart() {
 
   attempter_.Update("", "", false, false, false);
   EXPECT_EQ(target_version_prefix.c_str(),
-            attempter_.omaha_request_params_.target_version_prefix);
+            attempter_.omaha_request_params_->target_version_prefix());
 
   g_idle_add(&StaticQuitMainLoop, this);
 }
@@ -622,7 +632,8 @@ void UpdateAttempterTest::DecrementUpdateCheckCountTestStart() {
   EXPECT_TRUE(prefs.GetInt64(kPrefsUpdateCheckCount, &new_value));
   EXPECT_EQ(initial_value - 1, new_value);
 
-  EXPECT_TRUE(attempter_.omaha_request_params_.update_check_count_wait_enabled);
+  EXPECT_TRUE(
+      attempter_.omaha_request_params_->update_check_count_wait_enabled());
 
   // However, if the count is already 0, it's not decremented. Test that.
   initial_value = 0;
@@ -685,11 +696,12 @@ void UpdateAttempterTest::NoScatteringDoneDuringManualUpdateTestStart() {
 
   // Make sure scattering is disabled for manual (i.e. user initiated) update
   // checks and all artifacts are removed.
-  EXPECT_FALSE(attempter_.omaha_request_params_.wall_clock_based_wait_enabled);
+  EXPECT_FALSE(
+      attempter_.omaha_request_params_->wall_clock_based_wait_enabled());
   EXPECT_FALSE(prefs.Exists(kPrefsWallClockWaitPeriod));
-  EXPECT_TRUE(attempter_.omaha_request_params_.waiting_period.InSeconds() == 0);
-  EXPECT_FALSE(attempter_.omaha_request_params_.
-                 update_check_count_wait_enabled);
+  EXPECT_EQ(0, attempter_.omaha_request_params_->waiting_period().InSeconds());
+  EXPECT_FALSE(
+      attempter_.omaha_request_params_->update_check_count_wait_enabled());
   EXPECT_FALSE(prefs.Exists(kPrefsUpdateCheckCount));
 
   g_idle_add(&StaticQuitMainLoop, this);

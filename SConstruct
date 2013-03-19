@@ -263,6 +263,7 @@ sources = Split("""action_processor.cc
                    graph_utils.cc
                    http_common.cc
                    http_fetcher.cc
+                   install_plan.cc
                    libcurl_http_fetcher.cc
                    marshal.glibmarshal.c
                    metadata.cc

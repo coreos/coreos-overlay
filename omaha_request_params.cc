@@ -16,6 +16,7 @@
 #include <policy/device_policy.h>
 
 #include "update_engine/simple_key_value_store.h"
+#include "update_engine/system_state.h"
 #include "update_engine/utils.h"
 
 #define CALL_MEMBER_FN(object, member) ((object).*(member))
@@ -33,115 +34,193 @@ const char* const OmahaRequestParams::kOsVersion("Indy");
 const char* const kProductionOmahaUrl(
     "https://tools.google.com/service/update2");
 
-const char OmahaRequestParams::kUpdateTrackKey[] = "CHROMEOS_RELEASE_TRACK";
+const char* const OmahaRequestParams::kUpdateChannelKey(
+    "CHROMEOS_RELEASE_TRACK");
+const char* const OmahaRequestParams::kIsPowerwashAllowedKey(
+    "CHROMEOS_IS_POWERWASH_ALLOWED");
 
-OmahaRequestDeviceParams::OmahaRequestDeviceParams() :
-    force_lock_down_(false),
-    forced_lock_down_(false) {}
+const char* kChannelsByStability[] = {
+    // This list has to be sorted from least stable to most stable channel.
+    "canary-channel",
+    "dev-channel",
+    "beta-channel",
+    "stable-channel",
+};
 
-bool OmahaRequestDeviceParams::Init(const std::string& in_app_version,
-                                    const std::string& in_update_url,
-                                    const std::string& in_release_track,
-                                    bool in_interactive) {
+bool OmahaRequestParams::Init(const std::string& in_app_version,
+                              const std::string& in_update_url,
+                              bool in_interactive) {
+  InitFromLsbValue();
   bool stateful_override = !ShouldLockDown();
-  os_platform = OmahaRequestParams::kOsPlatform;
-  os_version = OmahaRequestParams::kOsVersion;
-  app_version = in_app_version.empty() ?
+  os_platform_ = OmahaRequestParams::kOsPlatform;
+  os_version_ = OmahaRequestParams::kOsVersion;
+  app_version_ = in_app_version.empty() ?
       GetLsbValue("CHROMEOS_RELEASE_VERSION", "", NULL, stateful_override) :
       in_app_version;
-  os_sp = app_version + "_" + GetMachineType();
-  os_board = GetLsbValue("CHROMEOS_RELEASE_BOARD", "", NULL, stateful_override);
-  app_id = GetLsbValue("CHROMEOS_RELEASE_APPID",
-                       OmahaRequestParams::kAppId,
-                       NULL,
-                       stateful_override);
-  app_lang = "en-US";
+  os_sp_ = app_version_ + "_" + GetMachineType();
+  os_board_ = GetLsbValue("CHROMEOS_RELEASE_BOARD",
+                          "",
+                          NULL,
+                          stateful_override);
+  app_id_ = GetLsbValue("CHROMEOS_RELEASE_APPID",
+                        OmahaRequestParams::kAppId,
+                        NULL,
+                        stateful_override);
+  board_app_id_ = GetLsbValue("CHROMEOS_BOARD_APPID",
+                              app_id_,
+                              NULL,
+                              stateful_override);
+  app_lang_ = "en-US";
+  hwid_ = utils::GetHardwareClass();
 
-  // Determine the release track if it wasn't specified by the caller.
-  if (in_release_track.empty() || !IsValidTrack(in_release_track)) {
-    app_track = GetLsbValue(
-        kUpdateTrackKey,
-        "",
-        &chromeos_update_engine::OmahaRequestDeviceParams::IsValidTrack,
-        true);  // stateful_override
+  if (current_channel_ == target_channel_) {
+    // deltas are only okay if the /.nodelta file does not exist.  if we don't
+    // know (i.e. stat() returns some unexpected error), then err on the side of
+    // caution and say deltas are not okay.
+    struct stat stbuf;
+    delta_okay_ = (stat((root_ + "/.nodelta").c_str(), &stbuf) < 0) &&
+                  (errno == ENOENT);
+
   } else {
-    app_track = in_release_track;
+    LOG(INFO) << "Disabling deltas as a channel change is pending";
+    // For now, disable delta updates if the current channel is different from
+    // the channel that we're sending to the update server because such updates
+    // are destined to fail -- the current rootfs hash will be different than
+    // the expected hash due to the different channel in /etc/lsb-release.
+    delta_okay_ = false;
   }
 
-  hardware_class = utils::GetHardwareClass();
-  struct stat stbuf;
-
-  // Deltas are only okay if the /.nodelta file does not exist.  If we don't
-  // know (i.e. stat() returns some unexpected error), then err on the side of
-  // caution and say deltas are not okay.
-  delta_okay = (stat((root_ + "/.nodelta").c_str(), &stbuf) < 0) &&
-               (errno == ENOENT);
-
-  // For now, disable delta updates if the rootfs track is different than the
-  // track that we're sending to the update server because such updates are
-  // destined to fail -- the source rootfs hash will be different than the
-  // expected hash due to the different track in /etc/lsb-release.
-  //
-  // Longer term we should consider an alternative: (a) clients can send
-  // (current_version, current_channel, new_channel) information, or (b) the
-  // build process can make sure releases on separate tracks are identical (i.e,
-  // by not stamping the release with the channel), or (c) the release process
-  // can ensure that different channels get different version numbers.
-  const string rootfs_track = GetLsbValue(
-      kUpdateTrackKey,
-      "",
-      NULL,  // No need to validate the read-only rootfs track.
-      false);  // stateful_override
-  delta_okay = delta_okay && rootfs_track == app_track;
-
-  update_url = in_update_url.empty() ?
-      GetLsbValue("CHROMEOS_AUSERVER",
-                  kProductionOmahaUrl,
-                  NULL,
-                  stateful_override) :
-      in_update_url;
+  if (in_update_url.empty())
+    update_url_ = GetLsbValue("CHROMEOS_AUSERVER", kProductionOmahaUrl, NULL,
+                              stateful_override);
+  else
+    update_url_ = in_update_url;
 
   // Set the interactive flag accordingly.
-  interactive = in_interactive;
-
+  interactive_ = in_interactive;
   return true;
 }
 
-bool OmahaRequestDeviceParams::SetTrack(const std::string& track) {
-  TEST_AND_RETURN_FALSE(IsValidTrack(track));
+bool OmahaRequestParams::SetTargetChannel(const std::string& new_target_channel,
+                                          bool is_powerwash_allowed) {
+  LOG(INFO) << "SetTargetChannel called with " << new_target_channel
+            << ". Is Powerwash Allowed = "
+            << utils::ToString(is_powerwash_allowed);
+
+  // Ignore duplicate calls so we can make the method succeed and be
+  // idempotent so as not to surface unnecessary errors to the UI.
+  if (new_target_channel == target_channel_ &&
+      is_powerwash_allowed == is_powerwash_allowed_) {
+    if (new_target_channel == current_channel_) {
+      // Return true to make such calls no-op and idempotent.
+      LOG(INFO) << "SetTargetChannel: Already on " << current_channel_;
+      return true;
+    }
+
+    LOG(INFO) << "SetTargetChannel: Target channel has already been set";
+    return true;
+  }
+
+  // See if there's a channel change already in progress. If so, don't honor
+  // a new channel change until the existing request is fulfilled.
+  if (current_channel_ != target_channel_) {
+    // Avoid dealing with multiple pending channels as they cause a lot of
+    // edge cases that's not worth adding the complexity for.
+    LOG(ERROR) << "Cannot change to " << new_target_channel
+               << " now as we're currently in " << current_channel_
+               << " and the request to change to " << target_channel_
+               << " is pending";
+    return false;
+  }
+
+  if (current_channel_ == "canary-channel") {
+    // TODO(jaysri): chromium-os:39751: We don't have the UI warnings yet. So,
+    // enable the powerwash-on-changing-to-more-stable-channel behavior for now
+    // only on canary-channel devices.
+    is_powerwash_allowed = true;
+    LOG(INFO) << "Is Powerwash Allowed set to true as we are in canary-channel";
+  } else if (!utils::IsOfficialBuild() &&
+             current_channel_ == "testimage-channel") {
+    // Also, allow test builds to have the powerwash behavior so we can always
+    // test channel changing behavior on them, without having to first get them
+    // on an official channel.
+    is_powerwash_allowed = true;
+    LOG(INFO) << "Is Powerwash Allowed set to true as we are running an "
+                 "unofficial build";
+  }
+
+  TEST_AND_RETURN_FALSE(IsValidChannel(new_target_channel));
   FilePath kFile(root_ + utils::kStatefulPartition + "/etc/lsb-release");
   string file_data;
   map<string, string> data;
   if (file_util::ReadFileToString(kFile, &file_data)) {
     data = simple_key_value_store::ParseString(file_data);
   }
-  data[kUpdateTrackKey] = track;
+  data[kUpdateChannelKey] = new_target_channel;
+  data[kIsPowerwashAllowedKey] = is_powerwash_allowed ? "true" : "false";
   file_data = simple_key_value_store::AssembleString(data);
   TEST_AND_RETURN_FALSE(file_util::CreateDirectory(kFile.DirName()));
   TEST_AND_RETURN_FALSE(
       file_util::WriteFile(kFile, file_data.data(), file_data.size()) ==
       static_cast<int>(file_data.size()));
-  app_track = track;
+  target_channel_ = new_target_channel;
+  is_powerwash_allowed_ = is_powerwash_allowed;
   return true;
 }
 
-bool OmahaRequestDeviceParams::SetDeviceTrack(const std::string& track) {
-  OmahaRequestDeviceParams params;
-  TEST_AND_RETURN_FALSE(params.Init("", "", "", false));
-  return params.SetTrack(track);
+void OmahaRequestParams::SetTargetChannelFromLsbValue() {
+  string target_channel_new_value = GetLsbValue(
+      kUpdateChannelKey,
+      "",
+      &chromeos_update_engine::OmahaRequestParams::IsValidChannel,
+      true);  // stateful_override
+
+  if (target_channel_ != target_channel_new_value) {
+    target_channel_ = target_channel_new_value;
+    LOG(INFO) << "Target Channel set to " << target_channel_
+              << " from LSB file";
+  }
 }
 
-string OmahaRequestDeviceParams::GetDeviceTrack() {
-  OmahaRequestDeviceParams params;
-  // Note that params.app_track is an empty string if the value in
-  // lsb-release file is invalid. See Init() for details.
-  return params.Init("", "", "", false) ? params.app_track : "";
+void OmahaRequestParams::SetCurrentChannelFromLsbValue() {
+  string current_channel_new_value = GetLsbValue(
+      kUpdateChannelKey,
+      "",
+      NULL,  // No need to validate the read-only rootfs channel.
+      false);  // stateful_override is false so we get the current channel.
+
+  if (current_channel_ != current_channel_new_value) {
+    current_channel_ = current_channel_new_value;
+    LOG(INFO) << "Current Channel set to " << current_channel_
+              << " from LSB file in rootfs";
+  }
 }
 
-string OmahaRequestDeviceParams::GetLsbValue(const string& key,
-                                             const string& default_value,
-                                             ValueValidator validator,
-                                             bool stateful_override) const {
+void OmahaRequestParams::SetIsPowerwashAllowedFromLsbValue() {
+  string is_powerwash_allowed_str = GetLsbValue(
+      kIsPowerwashAllowedKey,
+      "false",
+      NULL, // no need to validate
+      true); // always get it from stateful, as that's the only place it'll be
+  bool is_powerwash_allowed_new_value = (is_powerwash_allowed_str == "true");
+  if (is_powerwash_allowed_ != is_powerwash_allowed_new_value) {
+    is_powerwash_allowed_ = is_powerwash_allowed_new_value;
+    LOG(INFO) << "Powerwash Allowed set to "
+              << utils::ToString(is_powerwash_allowed_)
+              << " from LSB file in stateful";
+  }
+}
+
+void OmahaRequestParams::InitFromLsbValue() {
+  SetTargetChannelFromLsbValue();
+  SetCurrentChannelFromLsbValue();
+  SetIsPowerwashAllowedFromLsbValue();
+}
+
+string OmahaRequestParams::GetLsbValue(const string& key,
+                                       const string& default_value,
+                                       ValueValidator validator,
+                                       bool stateful_override) const {
   vector<string> files;
   if (stateful_override) {
     files.push_back(string(utils::kStatefulPartition) + "/etc/lsb-release");
@@ -168,7 +247,7 @@ string OmahaRequestDeviceParams::GetLsbValue(const string& key,
   return default_value;
 }
 
-string OmahaRequestDeviceParams::GetMachineType() const {
+string OmahaRequestParams::GetMachineType() const {
   struct utsname buf;
   string ret;
   if (uname(&buf) == 0)
@@ -176,35 +255,40 @@ string OmahaRequestDeviceParams::GetMachineType() const {
   return ret;
 }
 
-bool OmahaRequestDeviceParams::ShouldLockDown() const {
+bool OmahaRequestParams::ShouldLockDown() const {
   if (force_lock_down_) {
     return forced_lock_down_;
   }
   return utils::IsOfficialBuild() && utils::IsNormalBootMode();
 }
 
-bool OmahaRequestDeviceParams::IsValidTrack(const std::string& track) const {
-  static const char* kValidTracks[] = {
-    "beta-channel",
-    "canary-channel",
-    "dev-channel",
-    "dogfood-channel",
-    "stable-channel",
-  };
-  if (!ShouldLockDown()) {
-    return true;
-  }
-  for (size_t t = 0; t < arraysize(kValidTracks); ++t) {
-    if (track == kValidTracks[t]) {
-      return true;
-    }
-  }
-  return false;
+bool OmahaRequestParams::IsValidChannel(const std::string& channel) const {
+  return GetChannelIndex(channel) >= 0;
 }
 
-void OmahaRequestDeviceParams::SetLockDown(bool lock) {
+void OmahaRequestParams::set_root(const std::string& root) {
+  root_ = root;
+  InitFromLsbValue();
+}
+
+void OmahaRequestParams::SetLockDown(bool lock) {
   force_lock_down_ = true;
   forced_lock_down_ = lock;
+}
+
+int OmahaRequestParams::GetChannelIndex(const std::string& channel) const {
+  for (size_t t = 0; t < arraysize(kChannelsByStability); ++t)
+    if (channel == kChannelsByStability[t])
+      return t;
+
+  return -1;
+}
+
+bool OmahaRequestParams::to_more_stable_channel() const {
+  int current_channel_index = GetChannelIndex(current_channel_);
+  int target_channel_index = GetChannelIndex(target_channel_);
+
+  return target_channel_index > current_channel_index;
 }
 
 }  // namespace chromeos_update_engine

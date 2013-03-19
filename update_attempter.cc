@@ -136,6 +136,7 @@ UpdateAttempter::UpdateAttempter(SystemState* system_state,
       is_test_mode_(false),
       is_test_update_attempted_(false) {
   prefs_ = system_state->prefs();
+  omaha_request_params_ = system_state->request_params();
   if (utils::FileExists(kUpdateCompletedMarker))
     status_ = UPDATE_STATUS_UPDATED_NEED_REBOOT;
 }
@@ -198,16 +199,19 @@ bool UpdateAttempter::CalculateUpdateParams(const string& app_version,
     policy_provider_.reset(new policy::PolicyProvider());
   policy_provider_->Reload();
 
-  // If the release_track is specified by policy, that takes precedence.
-  string release_track;
-
   if (policy_provider_->device_policy_is_loaded()) {
+    LOG(INFO) << "Device policies/settings present";
+
     const policy::DevicePolicy& device_policy =
                                 policy_provider_->GetDevicePolicy();
-    device_policy.GetReleaseChannel(&release_track);
-    device_policy.GetUpdateDisabled(&omaha_request_params_.update_disabled);
-    device_policy.GetTargetVersionPrefix(
-      &omaha_request_params_.target_version_prefix);
+
+    bool update_disabled;
+    device_policy.GetUpdateDisabled(&update_disabled);
+    omaha_request_params_->set_update_disabled(update_disabled);
+
+    string target_version_prefix;
+    device_policy.GetTargetVersionPrefix(&target_version_prefix);
+    omaha_request_params_->set_target_version_prefix(target_version_prefix);
 
     system_state_->set_device_policy(&device_policy);
 
@@ -222,7 +226,7 @@ bool UpdateAttempter::CalculateUpdateParams(const string& app_version,
     LOG(INFO) << "Networks over which updates are allowed per policy : "
               << (allowed_types_str.empty() ? "all" : allowed_types_str);
   } else {
-    LOG(INFO) << "No device policies present.";
+    LOG(INFO) << "No device policies/settings present.";
     system_state_->set_device_policy(NULL);
   }
 
@@ -235,27 +239,51 @@ bool UpdateAttempter::CalculateUpdateParams(const string& app_version,
     LOG(INFO) << "using alternative server address: " << omaha_url_to_use;
   }
 
-  if (!omaha_request_params_.Init(app_version,
-                                  omaha_url_to_use,
-                                  release_track,
-                                  interactive)) {
+  if (!omaha_request_params_->Init(app_version,
+                                   omaha_url_to_use,
+                                   interactive)) {
     LOG(ERROR) << "Unable to initialize Omaha request device params.";
     return false;
   }
 
+  // Set the target channel iff ReleaseChannelDelegated policy is set to
+  // false and a non-empty ReleaseChannel policy is present. If delegated
+  // is true, we'll ignore ReleaseChannel policy value.
+  if (system_state_->device_policy()) {
+    bool delegated = false;
+    system_state_->device_policy()->GetReleaseChannelDelegated(&delegated);
+    if (delegated) {
+      LOG(INFO) << "Channel settings are delegated to user by policy. "
+                   "Ignoring ReleaseChannel policy value";
+    }
+    else {
+      LOG(INFO) << "Channel settings are not delegated to the user by policy";
+      string target_channel;
+      system_state_->device_policy()->GetReleaseChannel(&target_channel);
+      if (target_channel.empty()) {
+        LOG(INFO) << "No ReleaseChannel specified in policy";
+      } else {
+        // Pass in false for powerwash_allowed until we add it to the policy
+        // protobuf.
+        LOG(INFO) << "Setting target channel from ReleaseChannel policy value";
+        omaha_request_params_->SetTargetChannel(target_channel, false);
+      }
+    }
+  }
+
   LOG(INFO) << "update_disabled = "
-            << (omaha_request_params_.update_disabled ? "true" : "false")
+            << utils::ToString(omaha_request_params_->update_disabled())
             << ", target_version_prefix = "
-            << omaha_request_params_.target_version_prefix
+            << omaha_request_params_->target_version_prefix()
             << ", scatter_factor_in_seconds = "
             << utils::FormatSecs(scatter_factor_.InSeconds());
 
   LOG(INFO) << "Wall Clock Based Wait Enabled = "
-            << omaha_request_params_.wall_clock_based_wait_enabled
+            << omaha_request_params_->wall_clock_based_wait_enabled()
             << ", Update Check Count Wait Enabled = "
-            << omaha_request_params_.update_check_count_wait_enabled
+            << omaha_request_params_->update_check_count_wait_enabled()
             << ", Waiting Period = " << utils::FormatSecs(
-               omaha_request_params_.waiting_period.InSeconds());
+               omaha_request_params_->waiting_period().InSeconds());
 
   obeying_proxies_ = true;
   if (obey_proxies || proxy_manual_checks_ == 0) {
@@ -308,11 +336,11 @@ void UpdateAttempter::CalculateScatteringParams(bool interactive) {
     // Now check if we need to update the waiting period. The two cases
     // in which we'd need to update the waiting period are:
     // 1. First time in process or a scheduled check after a user-initiated one.
-    //    (omaha_request_params_.waiting_period will be zero in this case).
+    //    (omaha_request_params_->waiting_period will be zero in this case).
     // 2. Admin has changed the scattering policy value.
     //    (new scattering value will be different from old one in this case).
     int64 wait_period_in_secs = 0;
-    if (omaha_request_params_.waiting_period.InSeconds() == 0) {
+    if (omaha_request_params_->waiting_period().InSeconds() == 0) {
       // First case. Check if we have a suitable value to set for
       // the waiting period.
       if (prefs_->GetInt64(kPrefsWallClockWaitPeriod, &wait_period_in_secs) &&
@@ -324,10 +352,11 @@ void UpdateAttempter::CalculateScatteringParams(bool interactive) {
         // So, in this case, we should reuse the persisted value instead of
         // generating a new random value to improve the chances of a good
         // distribution for scattering.
-        omaha_request_params_.waiting_period =
-          TimeDelta::FromSeconds(wait_period_in_secs);
+        omaha_request_params_->set_waiting_period(
+          TimeDelta::FromSeconds(wait_period_in_secs));
         LOG(INFO) << "Using persisted wall-clock waiting period: " <<
-            utils::FormatSecs(omaha_request_params_.waiting_period.InSeconds());
+            utils::FormatSecs(
+                omaha_request_params_->waiting_period().InSeconds());
       }
       else {
         // This means there's no persisted value for the waiting period
@@ -349,30 +378,32 @@ void UpdateAttempter::CalculateScatteringParams(bool interactive) {
       // Neither the first time scattering is enabled nor the scattering value
       // changed. Nothing to do.
       LOG(INFO) << "Keeping current wall-clock waiting period: " <<
-          utils::FormatSecs(omaha_request_params_.waiting_period.InSeconds());
+          utils::FormatSecs(
+              omaha_request_params_->waiting_period().InSeconds());
     }
 
-    // The invariant at this point is that omaha_request_params_.waiting_period
+    // The invariant at this point is that omaha_request_params_->waiting_period
     // is non-zero no matter which path we took above.
-    LOG_IF(ERROR, omaha_request_params_.waiting_period.InSeconds() == 0)
+    LOG_IF(ERROR, omaha_request_params_->waiting_period().InSeconds() == 0)
         << "Waiting Period should NOT be zero at this point!!!";
 
     // Since scattering is enabled, wall clock based wait will always be
     // enabled.
-    omaha_request_params_.wall_clock_based_wait_enabled = true;
+    omaha_request_params_->set_wall_clock_based_wait_enabled(true);
 
     // If we don't have any issues in accessing the file system to update
     // the update check count value, we'll turn that on as well.
     bool decrement_succeeded = DecrementUpdateCheckCount();
-    omaha_request_params_.update_check_count_wait_enabled = decrement_succeeded;
+    omaha_request_params_->set_update_check_count_wait_enabled(
+      decrement_succeeded);
   } else {
     // This means the scattering feature is turned off or disabled for
     // this particular update check. Make sure to disable
     // all the knobs and artifacts so that we don't invoke any scattering
     // related code.
-    omaha_request_params_.wall_clock_based_wait_enabled = false;
-    omaha_request_params_.update_check_count_wait_enabled = false;
-    omaha_request_params_.waiting_period = TimeDelta::FromSeconds(0);
+    omaha_request_params_->set_wall_clock_based_wait_enabled(false);
+    omaha_request_params_->set_update_check_count_wait_enabled(false);
+    omaha_request_params_->set_waiting_period(TimeDelta::FromSeconds(0));
     prefs_->Delete(kPrefsWallClockWaitPeriod);
     prefs_->Delete(kPrefsUpdateCheckCount);
     // Don't delete the UpdateFirstSeenAt file as we don't want manual checks
@@ -383,18 +414,18 @@ void UpdateAttempter::CalculateScatteringParams(bool interactive) {
 }
 
 void UpdateAttempter::GenerateNewWaitingPeriod() {
-  omaha_request_params_.waiting_period = TimeDelta::FromSeconds(
-      base::RandInt(1, scatter_factor_.InSeconds()));
+  omaha_request_params_->set_waiting_period(TimeDelta::FromSeconds(
+      base::RandInt(1, scatter_factor_.InSeconds())));
 
   LOG(INFO) << "Generated new wall-clock waiting period: " << utils::FormatSecs(
-                omaha_request_params_.waiting_period.InSeconds());
+                omaha_request_params_->waiting_period().InSeconds());
 
   // Do a best-effort to persist this in all cases. Even if the persistence
   // fails, we'll still be able to scatter based on our in-memory value.
   // The persistence only helps in ensuring a good overall distribution
   // across multiple devices if they tend to reboot too often.
   prefs_->SetInt64(kPrefsWallClockWaitPeriod,
-                   omaha_request_params_.waiting_period.InSeconds());
+                   omaha_request_params_->waiting_period().InSeconds());
 }
 
 void UpdateAttempter::BuildUpdateActions(bool interactive) {
@@ -410,7 +441,6 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
   update_check_fetcher->set_check_certificate(CertificateChecker::kUpdate);
   shared_ptr<OmahaRequestAction> update_check_action(
       new OmahaRequestAction(system_state_,
-                             &omaha_request_params_,
                              NULL,
                              update_check_fetcher,  // passes ownership
                              false));
@@ -422,7 +452,6 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
       new FilesystemCopierAction(true, false));
   shared_ptr<OmahaRequestAction> download_started_action(
       new OmahaRequestAction(system_state_,
-                             &omaha_request_params_,
                              new OmahaEvent(
                                  OmahaEvent::kTypeUpdateDownloadStarted),
                              new LibcurlHttpFetcher(GetProxyResolver(),
@@ -439,7 +468,6 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
                              download_fetcher)));  // passes ownership
   shared_ptr<OmahaRequestAction> download_finished_action(
       new OmahaRequestAction(system_state_,
-                             &omaha_request_params_,
                              new OmahaEvent(
                                  OmahaEvent::kTypeUpdateDownloadFinished),
                              new LibcurlHttpFetcher(GetProxyResolver(),
@@ -454,7 +482,6 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
       new PostinstallRunnerAction);
   shared_ptr<OmahaRequestAction> update_complete_action(
       new OmahaRequestAction(system_state_,
-                             &omaha_request_params_,
                              new OmahaEvent(OmahaEvent::kTypeUpdateComplete),
                              new LibcurlHttpFetcher(GetProxyResolver(),
                                                     system_state_,
@@ -568,7 +595,8 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
   if (code == kActionCodeSuccess) {
     utils::WriteFile(kUpdateCompletedMarker, "", 0);
     prefs_->SetInt64(kPrefsDeltaUpdateFailures, 0);
-    prefs_->SetString(kPrefsPreviousVersion, omaha_request_params_.app_version);
+    prefs_->SetString(kPrefsPreviousVersion,
+                      omaha_request_params_->app_version());
     DeltaPerformer::ResetUpdateProgress(prefs_, false);
 
     // Since we're done with scattering fully at this point, this is the
@@ -822,7 +850,7 @@ uint32_t UpdateAttempter::GetErrorCodeFlags()  {
   if (!utils::IsOfficialBuild())
     flags |= kActionCodeTestImageFlag;
 
-  if (omaha_request_params_.update_url != kProductionOmahaUrl)
+  if (omaha_request_params_->update_url() != kProductionOmahaUrl)
     flags |= kActionCodeTestOmahaUrlFlag;
 
   return flags;
@@ -896,7 +924,6 @@ bool UpdateAttempter::ScheduleErrorEventAction() {
   // Send it to Omaha.
   shared_ptr<OmahaRequestAction> error_event_action(
       new OmahaRequestAction(system_state_,
-                             &omaha_request_params_,
                              error_event_.release(),  // Pass ownership.
                              new LibcurlHttpFetcher(GetProxyResolver(),
                                                     system_state_,
@@ -966,11 +993,11 @@ bool UpdateAttempter::ManageCpuSharesCallback() {
 
 void UpdateAttempter::DisableDeltaUpdateIfNeeded() {
   int64_t delta_failures;
-  if (omaha_request_params_.delta_okay &&
+  if (omaha_request_params_->delta_okay() &&
       prefs_->GetInt64(kPrefsDeltaUpdateFailures, &delta_failures) &&
       delta_failures >= kMaxDeltaUpdateFailures) {
     LOG(WARNING) << "Too many delta update failures, forcing full update.";
-    omaha_request_params_.delta_okay = false;
+    omaha_request_params_->set_delta_okay(false);
   }
 }
 
@@ -1012,7 +1039,6 @@ void UpdateAttempter::PingOmaha() {
   if (!processor_->IsRunning()) {
     shared_ptr<OmahaRequestAction> ping_action(
         new OmahaRequestAction(system_state_,
-                               &omaha_request_params_,
                                NULL,
                                new LibcurlHttpFetcher(GetProxyResolver(),
                                                       system_state_,

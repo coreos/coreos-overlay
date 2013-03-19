@@ -119,7 +119,6 @@ class OmahaRequestAction : public Action<OmahaRequestAction>,
   // or
   // OmahaRequestAction(..., NULL, new WhateverHttpFetcher);
   OmahaRequestAction(SystemState* system_state,
-                     OmahaRequestParams* params,
                      OmahaEvent* event,
                      HttpFetcher* http_fetcher,
                      bool ping_only);

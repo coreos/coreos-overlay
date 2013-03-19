@@ -16,6 +16,9 @@ using std::vector;
 
 namespace {
 const char kPostinstallScript[] = "/postinst";
+const char kPowerwashMarkerFile[] =
+  "/mnt/stateful_partition/factory_install_reset";
+const char kPowerwashCommand[] = "safe fast\n";
 }
 
 void PostinstallRunnerAction::PerformAction() {
@@ -75,10 +78,26 @@ void PostinstallRunnerAction::CompletePostinstall(int return_code) {
     }
     return;
   }
-  if (HasOutputPipe()) {
-    CHECK(HasInputObject());
-    SetOutputObject(GetInputObject());
+
+  LOG(INFO) << "Postinst command succeeded";
+  CHECK(HasInputObject());
+  const InstallPlan install_plan = GetInputObject();
+
+  if (install_plan.powerwash_required) {
+    if (utils::WriteFile(kPowerwashMarkerFile,
+                         kPowerwashCommand,
+                         strlen(kPowerwashCommand))) {
+      LOG(INFO) << "Configured clobber-state to do powerwash on next reboot";
+    } else {
+      LOG(ERROR) << "Error in configuring clobber-state to do powerwash";
+      completer.set_code(kActionCodePostinstallPowerwashError);
+      return;
+    }
   }
+
+  if (HasOutputPipe())
+    SetOutputObject(install_plan);
+
   completer.set_code(kActionCodeSuccess);
 }
 

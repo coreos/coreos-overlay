@@ -713,6 +713,10 @@ string ToString(const Time utc_time) {
                       exp_time.second);
 }
 
+string ToString(bool b) {
+  return (b ? "true" : "false");
+}
+
 ActionExitCode GetBaseErrorCode(ActionExitCode code) {
   // Ignore the higher order bits in the code by applying the mask as
   // we want the enumerations to be in the small contiguous range
@@ -867,6 +871,8 @@ string CodeToString(ActionExitCode code) {
       return "kActionCodeDownloadMetadataSignatureMissingError";
     case kActionCodeOmahaUpdateDeferredForBackoff:
       return "kActionCodeOmahaUpdateDeferredForBackoff";
+    case kActionCodePostinstallPowerwashError:
+      return "kActionCodePostinstallPowerwashError";
     case kActionCodeUmaReportedMax:
       return "kActionCodeUmaReportedMax";
     case kActionCodeOmahaRequestHTTPResponseBase:

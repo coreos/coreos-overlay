@@ -64,6 +64,7 @@ enum ActionExitCode {
   kActionCodeDownloadOperationHashMissingError = 38,
   kActionCodeDownloadMetadataSignatureMissingError = 39,
   kActionCodeOmahaUpdateDeferredForBackoff = 40,
+  kActionCodePostinstallPowerwashError = 41,
 
   // Note: When adding new error codes, please remember to add the
   // error into one of the buckets in PayloadState::UpdateFailed method so

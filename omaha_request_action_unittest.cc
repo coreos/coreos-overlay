@@ -35,11 +35,13 @@ using testing::SetArgumentPointee;
 
 namespace chromeos_update_engine {
 
-class OmahaRequestActionTest : public ::testing::Test { };
+class OmahaRequestActionTest : public ::testing::Test {};
 
 namespace {
 
+MockSystemState mock_system_state;
 OmahaRequestParams kDefaultTestParams(
+    &mock_system_state,
     OmahaRequestParams::kOsPlatform,
     OmahaRequestParams::kOsVersion,
     "service_pack",
@@ -213,8 +215,8 @@ bool TestUpdateCheck(PrefsInterface* prefs,
   MockSystemState mock_system_state;
   if (prefs)
     mock_system_state.set_prefs(prefs);
+  mock_system_state.set_request_params(&params);
   OmahaRequestAction action(&mock_system_state,
-                            &params,
                             NULL,
                             fetcher,
                             ping_only);
@@ -252,7 +254,8 @@ void TestEvent(OmahaRequestParams params,
                                                  http_response.size(),
                                                  NULL);
   MockSystemState mock_system_state;
-  OmahaRequestAction action(&mock_system_state, &params, event, fetcher, false);
+  mock_system_state.set_request_params(&params);
+  OmahaRequestAction action(&mock_system_state, event, fetcher, false);
   OmahaRequestActionTestProcessorDelegate delegate;
   delegate.loop_ = loop;
   ActionProcessor processor;
@@ -315,7 +318,7 @@ TEST(OmahaRequestActionTest, ValidUpdateTest) {
 TEST(OmahaRequestActionTest, ValidUpdateBlockedByPolicyTest) {
   OmahaResponse response;
   OmahaRequestParams params = kDefaultTestParams;
-  params.update_disabled = true;
+  params.set_update_disabled(true);
   ASSERT_FALSE(
       TestUpdateCheck(NULL,  // prefs
                       params,
@@ -340,7 +343,7 @@ TEST(OmahaRequestActionTest, ValidUpdateBlockedByPolicyTest) {
 TEST(OmahaRequestActionTest, NoUpdatesSentWhenBlockedByPolicyTest) {
   OmahaResponse response;
   OmahaRequestParams params = kDefaultTestParams;
-  params.update_disabled = true;
+  params.set_update_disabled(true);
   ASSERT_TRUE(
       TestUpdateCheck(NULL,  // prefs
                       params,
@@ -356,9 +359,9 @@ TEST(OmahaRequestActionTest, NoUpdatesSentWhenBlockedByPolicyTest) {
 TEST(OmahaRequestActionTest, WallClockBasedWaitAloneCausesScattering) {
   OmahaResponse response;
   OmahaRequestParams params = kDefaultTestParams;
-  params.wall_clock_based_wait_enabled = true;
-  params.update_check_count_wait_enabled = false;
-  params.waiting_period = TimeDelta::FromDays(2);
+  params.set_wall_clock_based_wait_enabled(true);
+  params.set_update_check_count_wait_enabled(false);
+  params.set_waiting_period(TimeDelta::FromDays(2));
 
   string prefs_dir;
   EXPECT_TRUE(utils::MakeTempDirectory("/tmp/ue_ut_prefs.XXXXXX",
@@ -394,12 +397,12 @@ TEST(OmahaRequestActionTest, WallClockBasedWaitAloneCausesScattering) {
 TEST(OmahaRequestActionTest, NoWallClockBasedWaitCausesNoScattering) {
   OmahaResponse response;
   OmahaRequestParams params = kDefaultTestParams;
-  params.wall_clock_based_wait_enabled = false;
-  params.waiting_period = TimeDelta::FromDays(2);
+  params.set_wall_clock_based_wait_enabled(false);
+  params.set_waiting_period(TimeDelta::FromDays(2));
 
-  params.update_check_count_wait_enabled = true;
-  params.min_update_checks_needed = 1;
-  params.max_update_checks_allowed = 8;
+  params.set_update_check_count_wait_enabled(true);
+  params.set_min_update_checks_needed(1);
+  params.set_max_update_checks_allowed(8);
 
   string prefs_dir;
   EXPECT_TRUE(utils::MakeTempDirectory("/tmp/ue_ut_prefs.XXXXXX",
@@ -435,12 +438,12 @@ TEST(OmahaRequestActionTest, NoWallClockBasedWaitCausesNoScattering) {
 TEST(OmahaRequestActionTest, ZeroMaxDaysToScatterCausesNoScattering) {
   OmahaResponse response;
   OmahaRequestParams params = kDefaultTestParams;
-  params.wall_clock_based_wait_enabled = true;
-  params.waiting_period = TimeDelta::FromDays(2);
+  params.set_wall_clock_based_wait_enabled(true);
+  params.set_waiting_period(TimeDelta::FromDays(2));
 
-  params.update_check_count_wait_enabled = true;
-  params.min_update_checks_needed = 1;
-  params.max_update_checks_allowed = 8;
+  params.set_update_check_count_wait_enabled(true);
+  params.set_min_update_checks_needed(1);
+  params.set_max_update_checks_allowed(8);
 
   string prefs_dir;
   EXPECT_TRUE(utils::MakeTempDirectory("/tmp/ue_ut_prefs.XXXXXX",
@@ -477,12 +480,12 @@ TEST(OmahaRequestActionTest, ZeroMaxDaysToScatterCausesNoScattering) {
 TEST(OmahaRequestActionTest, ZeroUpdateCheckCountCausesNoScattering) {
   OmahaResponse response;
   OmahaRequestParams params = kDefaultTestParams;
-  params.wall_clock_based_wait_enabled = true;
-  params.waiting_period = TimeDelta();
+  params.set_wall_clock_based_wait_enabled(true);
+  params.set_waiting_period(TimeDelta());
 
-  params.update_check_count_wait_enabled = true;
-  params.min_update_checks_needed = 0;
-  params.max_update_checks_allowed = 0;
+  params.set_update_check_count_wait_enabled(true);
+  params.set_min_update_checks_needed(0);
+  params.set_max_update_checks_allowed(0);
 
   string prefs_dir;
   EXPECT_TRUE(utils::MakeTempDirectory("/tmp/ue_ut_prefs.XXXXXX",
@@ -522,12 +525,12 @@ TEST(OmahaRequestActionTest, ZeroUpdateCheckCountCausesNoScattering) {
 TEST(OmahaRequestActionTest, NonZeroUpdateCheckCountCausesScattering) {
   OmahaResponse response;
   OmahaRequestParams params = kDefaultTestParams;
-  params.wall_clock_based_wait_enabled = true;
-  params.waiting_period = TimeDelta();
+  params.set_wall_clock_based_wait_enabled(true);
+  params.set_waiting_period(TimeDelta());
 
-  params.update_check_count_wait_enabled = true;
-  params.min_update_checks_needed = 1;
-  params.max_update_checks_allowed = 8;
+  params.set_update_check_count_wait_enabled(true);
+  params.set_min_update_checks_needed(1);
+  params.set_max_update_checks_allowed(8);
 
   string prefs_dir;
   EXPECT_TRUE(utils::MakeTempDirectory("/tmp/ue_ut_prefs.XXXXXX",
@@ -567,12 +570,12 @@ TEST(OmahaRequestActionTest, NonZeroUpdateCheckCountCausesScattering) {
 TEST(OmahaRequestActionTest, ExistingUpdateCheckCountCausesScattering) {
   OmahaResponse response;
   OmahaRequestParams params = kDefaultTestParams;
-  params.wall_clock_based_wait_enabled = true;
-  params.waiting_period = TimeDelta();
+  params.set_wall_clock_based_wait_enabled(true);
+  params.set_waiting_period(TimeDelta());
 
-  params.update_check_count_wait_enabled = true;
-  params.min_update_checks_needed = 1;
-  params.max_update_checks_allowed = 8;
+  params.set_update_check_count_wait_enabled(true);
+  params.set_min_update_checks_needed(1);
+  params.set_max_update_checks_allowed(8);
 
   string prefs_dir;
   EXPECT_TRUE(utils::MakeTempDirectory("/tmp/ue_ut_prefs.XXXXXX",
@@ -620,7 +623,8 @@ TEST(OmahaRequestActionTest, NoOutputPipeTest) {
 
   MockSystemState mock_system_state;
   OmahaRequestParams params = kDefaultTestParams;
-  OmahaRequestAction action(&mock_system_state, &params, NULL,
+  mock_system_state.set_request_params(&params);
+  OmahaRequestAction action(&mock_system_state, NULL,
                             new MockHttpFetcher(http_response.data(),
                                                 http_response.size(),
                                                 NULL),
@@ -785,7 +789,8 @@ TEST(OmahaRequestActionTest, TerminateTransferTest) {
 
   MockSystemState mock_system_state;
   OmahaRequestParams params = kDefaultTestParams;
-  OmahaRequestAction action(&mock_system_state, &params, NULL,
+  mock_system_state.set_request_params(&params);
+  OmahaRequestAction action(&mock_system_state, NULL,
                             new MockHttpFetcher(http_response.data(),
                                                 http_response.size(),
                                                 NULL),
@@ -811,7 +816,9 @@ TEST(OmahaRequestActionTest, XmlEncodeTest) {
   vector<char> post_data;
 
   // Make sure XML Encode is being called on the params
-  OmahaRequestParams params(OmahaRequestParams::kOsPlatform,
+  MockSystemState mock_system_state;
+  OmahaRequestParams params(&mock_system_state,
+                            OmahaRequestParams::kOsPlatform,
                             OmahaRequestParams::kOsVersion,
                             "testtheservice_pack>",
                             "x86 generic<id",
@@ -903,7 +910,7 @@ TEST(OmahaRequestActionTest, FormatUpdateCheckOutputTest) {
   NiceMock<PrefsMock> prefs;
   EXPECT_CALL(prefs, GetString(kPrefsPreviousVersion, _))
       .WillOnce(DoAll(SetArgumentPointee<1>(string("")), Return(true)));
-  EXPECT_CALL(prefs, SetString(kPrefsPreviousVersion, _)).Times(0);
+  EXPECT_CALL(prefs, SetString(kPrefsPreviousVersion, _)).Times(1);
   ASSERT_FALSE(TestUpdateCheck(&prefs,
                                kDefaultTestParams,
                                "invalid xml>",
@@ -916,24 +923,21 @@ TEST(OmahaRequestActionTest, FormatUpdateCheckOutputTest) {
   string post_str(&post_data[0], post_data.size());
   EXPECT_NE(post_str.find(
       "        <ping active=\"1\" a=\"-1\" r=\"-1\"></ping>\n"
-      "        <updatecheck"
-      " targetversionprefix=\"\""
-      "></updatecheck>\n"),
+      "        <updatecheck targetversionprefix=\"\"></updatecheck>\n"),
       string::npos);
   EXPECT_NE(post_str.find("hardware_class=\"OEM MODEL 09235 7471\""),
             string::npos);
-  EXPECT_EQ(post_str.find("event"), string::npos);
 }
 
 
-TEST(OmahaRequestActionTest, FormatTargetVersionPrefixTest) {
+TEST(OmahaRequestActionTest, FormatUpdateDisabledOutputTest) {
   vector<char> post_data;
   NiceMock<PrefsMock> prefs;
   EXPECT_CALL(prefs, GetString(kPrefsPreviousVersion, _))
       .WillOnce(DoAll(SetArgumentPointee<1>(string("")), Return(true)));
-  EXPECT_CALL(prefs, SetString(kPrefsPreviousVersion, _)).Times(0);
+  EXPECT_CALL(prefs, SetString(kPrefsPreviousVersion, _)).Times(1);
   OmahaRequestParams params = kDefaultTestParams;
-  params.update_disabled = true;
+  params.set_update_disabled(true);
   ASSERT_FALSE(TestUpdateCheck(&prefs,
                                params,
                                "invalid xml>",
@@ -946,13 +950,10 @@ TEST(OmahaRequestActionTest, FormatTargetVersionPrefixTest) {
   string post_str(&post_data[0], post_data.size());
   EXPECT_NE(post_str.find(
       "        <ping active=\"1\" a=\"-1\" r=\"-1\"></ping>\n"
-      "        <updatecheck"
-      " targetversionprefix=\"\""
-      "></updatecheck>\n"),
+      "        <updatecheck targetversionprefix=\"\"></updatecheck>\n"),
       string::npos);
   EXPECT_NE(post_str.find("hardware_class=\"OEM MODEL 09235 7471\""),
             string::npos);
-  EXPECT_EQ(post_str.find("event"), string::npos);
 }
 
 TEST(OmahaRequestActionTest, FormatSuccessEventOutputTest) {
@@ -996,9 +997,9 @@ TEST(OmahaRequestActionTest, IsEventTest) {
   string http_response("doesn't matter");
   MockSystemState mock_system_state;
   OmahaRequestParams params = kDefaultTestParams;
+  mock_system_state.set_request_params(&params);
   OmahaRequestAction update_check_action(
       &mock_system_state,
-      &params,
       NULL,
       new MockHttpFetcher(http_response.data(),
                           http_response.size(),
@@ -1007,9 +1008,9 @@ TEST(OmahaRequestActionTest, IsEventTest) {
   EXPECT_FALSE(update_check_action.IsEvent());
 
   params = kDefaultTestParams;
+  mock_system_state.set_request_params(&params);
   OmahaRequestAction event_action(
       &mock_system_state,
-      &params,
       new OmahaEvent(OmahaEvent::kTypeUpdateComplete),
       new MockHttpFetcher(http_response.data(),
                           http_response.size(),
@@ -1023,7 +1024,9 @@ TEST(OmahaRequestActionTest, FormatDeltaOkayOutputTest) {
     bool delta_okay = i == 1;
     const char* delta_okay_str = delta_okay ? "true" : "false";
     vector<char> post_data;
-    OmahaRequestParams params(OmahaRequestParams::kOsPlatform,
+    MockSystemState mock_system_state;
+    OmahaRequestParams params(&mock_system_state,
+                              OmahaRequestParams::kOsPlatform,
                               OmahaRequestParams::kOsVersion,
                               "service_pack",
                               "x86-generic",
@@ -1058,7 +1061,9 @@ TEST(OmahaRequestActionTest, FormatInteractiveOutputTest) {
     bool interactive = i == 1;
     const char* interactive_str = interactive ? "ondemandupdate" : "scheduler";
     vector<char> post_data;
-    OmahaRequestParams params(OmahaRequestParams::kOsPlatform,
+    MockSystemState mock_system_state;
+    OmahaRequestParams params(&mock_system_state,
+                              OmahaRequestParams::kOsPlatform,
                               OmahaRequestParams::kOsVersion,
                               "service_pack",
                               "x86-generic",
@@ -1382,9 +1387,9 @@ TEST(OmahaRequestActionTest, NetworkFailureBadHTTPCodeTest) {
 TEST(OmahaRequestActionTest, TestUpdateFirstSeenAtGetsPersistedFirstTime) {
   OmahaResponse response;
   OmahaRequestParams params = kDefaultTestParams;
-  params.wall_clock_based_wait_enabled = true;
-  params.waiting_period = TimeDelta().FromDays(1);
-  params.update_check_count_wait_enabled = false;
+  params.set_wall_clock_based_wait_enabled(true);
+  params.set_waiting_period(TimeDelta().FromDays(1));
+  params.set_update_check_count_wait_enabled(false);
 
   string prefs_dir;
   EXPECT_TRUE(utils::MakeTempDirectory("/tmp/ue_ut_prefs.XXXXXX",
@@ -1424,9 +1429,9 @@ TEST(OmahaRequestActionTest, TestUpdateFirstSeenAtGetsPersistedFirstTime) {
 TEST(OmahaRequestActionTest, TestUpdateFirstSeenAtGetsUsedIfAlreadyPresent) {
   OmahaResponse response;
   OmahaRequestParams params = kDefaultTestParams;
-  params.wall_clock_based_wait_enabled = true;
-  params.waiting_period = TimeDelta().FromDays(1);
-  params.update_check_count_wait_enabled = false;
+  params.set_wall_clock_based_wait_enabled(true);
+  params.set_waiting_period(TimeDelta().FromDays(1));
+  params.set_update_check_count_wait_enabled(false);
 
   string prefs_dir;
   EXPECT_TRUE(utils::MakeTempDirectory("/tmp/ue_ut_prefs.XXXXXX",
@@ -1468,6 +1473,86 @@ TEST(OmahaRequestActionTest, TestUpdateFirstSeenAtGetsUsedIfAlreadyPresent) {
   int64 timestamp = 0;
   ASSERT_TRUE(prefs.GetInt64(kPrefsUpdateFirstSeenAt, &timestamp));
   ASSERT_TRUE(timestamp == t1.ToInternalValue());
+}
+
+TEST(OmahaRequestActionTest, TestChangingToMoreStableChannel) {
+  const string kTestDir = "omaha_request_action-test";
+  ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir + "/etc"));
+  ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir +
+                        utils::kStatefulPartition + "/etc"));
+  vector<char> post_data;
+  NiceMock<PrefsMock> prefs;
+  ASSERT_TRUE(WriteFileString(
+      kTestDir + "/etc/lsb-release",
+      "CHROMEOS_RELEASE_APPID={11111111-1111-1111-1111-111111111111}\n"
+      "CHROMEOS_BOARD_APPID={22222222-2222-2222-2222-222222222222}\n"
+      "CHROMEOS_RELEASE_TRACK=canary-channel\n"));
+  ASSERT_TRUE(WriteFileString(
+      kTestDir + utils::kStatefulPartition + "/etc/lsb-release",
+      "CHROMEOS_IS_POWERWASH_ALLOWED=true\n"
+      "CHROMEOS_RELEASE_TRACK=stable-channel\n"));
+  OmahaRequestParams params = kDefaultTestParams;
+  params.set_root(string("./") + kTestDir);
+  params.SetLockDown(false);
+  params.Init("1.2.3.4", "", 0);
+  EXPECT_EQ("canary-channel", params.current_channel());
+  EXPECT_EQ("stable-channel", params.target_channel());
+  EXPECT_TRUE(params.to_more_stable_channel());
+  EXPECT_TRUE(params.is_powerwash_allowed());
+  ASSERT_FALSE(TestUpdateCheck(&prefs,
+                               params,
+                               "invalid xml>",
+                               -1,
+                               false,  // ping_only
+                               kActionCodeOmahaRequestXMLParseError,
+                               NULL,  // response
+                               &post_data));
+  // convert post_data to string
+  string post_str(&post_data[0], post_data.size());
+  EXPECT_NE(string::npos, post_str.find(
+      "appid=\"{22222222-2222-2222-2222-222222222222}\" "
+      "version=\"0.0.0.0\" from_version=\"1.2.3.4\" "
+      "track=\"stable-channel\" from_track=\"canary-channel\" "));
+}
+
+TEST(OmahaRequestActionTest, TestChangingToLessStableChannel) {
+  const string kTestDir = "omaha_request_action-test";
+  ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir + "/etc"));
+  ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir +
+                        utils::kStatefulPartition + "/etc"));
+  vector<char> post_data;
+  NiceMock<PrefsMock> prefs;
+  ASSERT_TRUE(WriteFileString(
+      kTestDir + "/etc/lsb-release",
+      "CHROMEOS_RELEASE_APPID={11111111-1111-1111-1111-111111111111}\n"
+      "CHROMEOS_BOARD_APPID={22222222-2222-2222-2222-222222222222}\n"
+      "CHROMEOS_RELEASE_TRACK=stable-channel\n"));
+  ASSERT_TRUE(WriteFileString(
+      kTestDir + utils::kStatefulPartition + "/etc/lsb-release",
+      "CHROMEOS_RELEASE_TRACK=canary-channel\n"));
+  OmahaRequestParams params = kDefaultTestParams;
+  params.set_root(string("./") + kTestDir);
+  params.SetLockDown(false);
+  params.Init("5.6.7.8", "", 0);
+  EXPECT_EQ("stable-channel", params.current_channel());
+  EXPECT_EQ("canary-channel", params.target_channel());
+  EXPECT_FALSE(params.to_more_stable_channel());
+  EXPECT_FALSE(params.is_powerwash_allowed());
+  ASSERT_FALSE(TestUpdateCheck(&prefs,
+                               params,
+                               "invalid xml>",
+                               -1,
+                               false,  // ping_only
+                               kActionCodeOmahaRequestXMLParseError,
+                               NULL,  // response
+                               &post_data));
+  // convert post_data to string
+  string post_str(&post_data[0], post_data.size());
+  EXPECT_NE(string::npos, post_str.find(
+      "appid=\"{11111111-1111-1111-1111-111111111111}\" "
+      "version=\"5.6.7.8\" "
+      "track=\"canary-channel\" from_track=\"stable-channel\""));
+  EXPECT_EQ(string::npos, post_str.find( "from_version"));
 }
 
 }  // namespace chromeos_update_engine

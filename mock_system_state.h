@@ -29,6 +29,7 @@ class MockSystemState : public SystemState {
   virtual ~MockSystemState();
 
   MOCK_METHOD0(IsOOBEComplete, bool());
+
   MOCK_METHOD1(set_device_policy, void(const policy::DevicePolicy*));
   MOCK_CONST_METHOD0(device_policy, const policy::DevicePolicy*());
 
@@ -54,6 +55,10 @@ class MockSystemState : public SystemState {
 
   virtual UpdateAttempter* update_attempter();
 
+  inline virtual OmahaRequestParams* request_params() {
+    return request_params_;
+  }
+
   // MockSystemState-specific public method.
   inline void set_connection_manager(ConnectionManager* connection_manager) {
     connection_manager_ = connection_manager;
@@ -75,6 +80,10 @@ class MockSystemState : public SystemState {
     return &mock_payload_state_;
   }
 
+  inline void set_request_params(OmahaRequestParams* params) {
+    request_params_ = params;
+  }
+
  private:
   // These are Mock objects or objects we own.
   testing::NiceMock<MetricsLibraryMock> mock_metrics_lib_;
@@ -82,12 +91,15 @@ class MockSystemState : public SystemState {
   testing::NiceMock<MockPayloadState> mock_payload_state_;
   testing::NiceMock<MockGpioHandler>* mock_gpio_handler_;
   testing::NiceMock<UpdateAttempterMock>* mock_update_attempter_;
-
   MockDbusGlib dbus_;
+
+  // These are the other object we own.
+  OmahaRequestParams default_request_params_;
 
   // These are pointers to objects which caller can override.
   PrefsInterface* prefs_;
   ConnectionManager* connection_manager_;
+  OmahaRequestParams* request_params_;
 };
 
 } // namespeace chromeos_update_engine

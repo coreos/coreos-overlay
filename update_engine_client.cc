@@ -26,10 +26,12 @@ DEFINE_string(app_version, "", "Force the current app version.");
 DEFINE_bool(check_for_update, false, "Initiate check for updates.");
 DEFINE_string(omaha_url, "", "The URL of the Omaha update server.");
 DEFINE_bool(reboot, false, "Initiate a reboot if needed.");
-DEFINE_bool(show_track, false, "Show the update track.");
+DEFINE_bool(show_channel, false, "Show the current and target channels.");
 DEFINE_bool(status, false, "Print the status to stdout.");
 DEFINE_bool(reset_status, false, "Sets the status in update_engine to idle.");
-DEFINE_string(track, "", "Permanently change the update track.");
+DEFINE_string(channel, "",
+    "Set the target channel. The device will be powerwashed if the target "
+    "channel is more stable than the current channel.");
 DEFINE_bool(update, false, "Forces an update and waits for its completion. "
             "Exit status is 0 if the update succeeded, and 1 otherwise.");
 DEFINE_bool(watch_for_updates, false,
@@ -205,35 +207,38 @@ bool RebootIfNeeded() {
   return true;
 }
 
-void SetTrack(const string& track) {
+void SetTargetChannel(const string& target_channel) {
   DBusGProxy* proxy;
   GError* error = NULL;
 
   CHECK(GetProxy(&proxy));
 
   gboolean rc =
-      org_chromium_UpdateEngineInterface_set_track(proxy,
-                                                   track.c_str(),
-                                                   &error);
-  CHECK_EQ(rc, true) << "Error setting the track: "
+      org_chromium_UpdateEngineInterface_set_channel(proxy,
+                                                     target_channel.c_str(),
+                                                     true, // OK to Powerwash
+                                                     &error);
+  CHECK_EQ(rc, true) << "Error setting the channel: "
                      << GetAndFreeGError(&error);
-  LOG(INFO) << "Track permanently set to: " << track;
+  LOG(INFO) << "Channel permanently set to: " << target_channel;
 }
 
-string GetTrack() {
+string GetChannel(bool get_current_channel) {
   DBusGProxy* proxy;
   GError* error = NULL;
 
   CHECK(GetProxy(&proxy));
 
-  char* track = NULL;
+  char* channel = NULL;
   gboolean rc =
-      org_chromium_UpdateEngineInterface_get_track(proxy,
-                                                   &track,
-                                                   &error);
-  CHECK_EQ(rc, true) << "Error getting the track: " << GetAndFreeGError(&error);
-  string output = track;
-  g_free(track);
+      org_chromium_UpdateEngineInterface_get_channel(proxy,
+                                                     get_current_channel,
+                                                     &channel,
+                                                     &error);
+  CHECK_EQ(rc, true) << "Error getting the channel: "
+                     << GetAndFreeGError(&error);
+  string output = channel;
+  g_free(channel);
   return output;
 }
 
@@ -294,14 +299,18 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  // First, update the track if requested.
-  if (!FLAGS_track.empty()) {
-    SetTrack(FLAGS_track);
-  }
+  // First, update the target channel if requested.
+  if (!FLAGS_channel.empty())
+    SetTargetChannel(FLAGS_channel);
 
-  // Show the track if requested.
-  if (FLAGS_show_track) {
-    LOG(INFO) << "Track: " << GetTrack();
+  // Show the current and target channels if requested.
+  if (FLAGS_show_channel) {
+    string current_channel = GetChannel(true);
+    LOG(INFO) << "Current Channel: " << current_channel;
+
+    string target_channel = GetChannel(false);
+    if (!target_channel.empty())
+      LOG(INFO) << "Target Channel (pending update): " << target_channel;
   }
 
   // Initiate an update check, if necessary.
