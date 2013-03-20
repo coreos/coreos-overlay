@@ -205,7 +205,7 @@ bool UpdateAttempter::CalculateUpdateParams(const string& app_version,
     const policy::DevicePolicy& device_policy =
                                 policy_provider_->GetDevicePolicy();
 
-    bool update_disabled;
+    bool update_disabled = false;
     device_policy.GetUpdateDisabled(&update_disabled);
     omaha_request_params_->set_update_disabled(update_disabled);
 
