@@ -137,8 +137,8 @@ RDEPEND="${RDEPEND}
 	sys-apps/bootcache
 	sys-apps/coreutils
 	sys-apps/dbus
-	sys-apps/flashrom
 	sys-apps/grep
+	net-misc/wget
 	sys-apps/mawk
 	sys-apps/net-tools
 	sys-apps/pv
