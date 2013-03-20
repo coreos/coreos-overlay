@@ -9,6 +9,8 @@
 # modifying the root filesystem.
 
 EAPI="4"
+CROS_WORKON_COMMIT="597ca1198129fab4b870618c74ae4d51b6b85e4a"
+CROS_WORKON_TREE="ae6f2543c17e05c66b249852d15090e66a96c45f"
 CROS_WORKON_PROJECT="chromiumos/platform/dev-util"
 CROS_WORKON_LOCALNAME="dev"
 CROS_WORKON_OUTOFTREE_BUILD="1"
@@ -20,7 +22,7 @@ HOMEPAGE="http://www.chromium.org/chromium-os"
 
 LICENSE="BSD"
 SLOT="0"
-KEYWORDS="~amd64 ~arm ~x86"
+KEYWORDS="amd64 arm x86"
 IUSE="cros-debug"
 
 DEPEND="app-arch/tar
@@ -85,7 +87,7 @@ src_compile() {
 	done
 	multijob_finish
 	# No virtual packages in package.provided. We store packages for
-	# package.provided in file chromeos-base.packages as package.provided is a
+	# package.provided in file coreos-base.packages as package.provided is a
 	# directory.
 	grep -v "virtual/" coreos.packages > coreos-base.packages
 
