@@ -1,18 +1,28 @@
 # Copyright 1999-2013 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-apps/portage/portage-2.2.0_alpha161.ebuild,v 1.2 2013/01/27 22:04:14 zmedico Exp $
+# $Header: /var/cvsroot/gentoo-x86/sys-apps/portage/portage-2.1.11.58.ebuild,v 1.1 2013/03/22 02:41:18 zmedico Exp $
 
 # Require EAPI 2 since we now require at least python-2.6 (for python 3
 # syntax support) which also requires EAPI 2.
-EAPI=3
+EAPI=2
+PYTHON_COMPAT=(
+	pypy1_9 pypy2_0
+	python3_1 python3_2 python3_3 python3_4
+	python2_6 python2_7
+)
 inherit eutils python
 
 DESCRIPTION="Portage is the package management and distribution system for Gentoo"
 HOMEPAGE="http://www.gentoo.org/proj/en/portage/index.xml"
 LICENSE="GPL-2"
-KEYWORDS="~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
+KEYWORDS="alpha amd64 arm hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~sparc-fbsd ~x86-fbsd"
 SLOT="0"
 IUSE="build doc epydoc +ipc linguas_pl linguas_ru pypy2_0 python2 python3 selinux xattr"
+
+for _pyimpl in ${PYTHON_COMPAT[@]} ; do
+	IUSE+=" python_targets_${_pyimpl}"
+done
+unset _pyimpl
 
 # Import of the io module in python-2.6 raises ImportError for the
 # thread module if threading is disabled.
@@ -26,8 +36,21 @@ python_dep="${python_dep_ssl//\[ssl\]}"
 python_dep="${python_dep//,ssl}"
 python_dep="${python_dep//ssl,}"
 
+python_dep="${python_dep}
+	python_targets_pypy1_9? ( dev-python/pypy:1.9 )
+	python_targets_pypy2_0? ( dev-python/pypy:2.0 )
+	python_targets_python2_6? ( dev-lang/python:2.6 )
+	python_targets_python2_7? ( dev-lang/python:2.7 )
+	python_targets_python3_1? ( dev-lang/python:3.1 )
+	python_targets_python3_2? ( dev-lang/python:3.2 )
+	python_targets_python3_3? ( dev-lang/python:3.3 )
+	python_targets_python3_4? ( dev-lang/python:3.4 )
+"
+
 # The pysqlite blocker is for bug #282760.
+# make-3.82 is for bug #455858
 DEPEND="${python_dep}
+	>=sys-devel/make-3.82
 	>=sys-apps/sed-4.0.5 sys-devel/patch
 	doc? ( app-text/xmlto ~app-text/docbook-xml-dtd-4.4 )
 	epydoc? ( >=dev-python/epydoc-2.0 !<=dev-python/pysqlite-2.4.1 )"
@@ -73,7 +96,7 @@ prefix_src_archives() {
 
 PV_PL="2.1.2"
 PATCHVER_PL=""
-TARBALL_PV=2.2.0_alpha160
+TARBALL_PV=$PV
 SRC_URI="mirror://gentoo/${PN}-${TARBALL_PV}.tar.bz2
 	$(prefix_src_archives ${PN}-${TARBALL_PV}.tar.bz2)
 	linguas_pl? ( mirror://gentoo/${PN}-man-pl-${PV_PL}.tar.bz2
@@ -90,12 +113,12 @@ S="${WORKDIR}"/${PN}-${TARBALL_PV}
 S_PL="${WORKDIR}"/${PN}-${PV_PL}
 
 compatible_python_is_selected() {
-	[[ $("${EPREFIX}/usr/bin/python" -c 'import sys ; sys.stdout.write(sys.hexversion >= 0x2060000 and "good" or "bad")') = good ]]
+	[[ $(/usr/bin/python -c 'import sys ; sys.stdout.write(sys.hexversion >= 0x2060000 and "good" or "bad")') = good ]]
 }
 
 current_python_has_xattr() {
-	[[ $("${EPREFIX}/usr/bin/python" -c 'import sys ; sys.stdout.write(sys.hexversion >= 0x3030000 and "yes" or "no")') = yes ]] || \
-	"${EPREFIX}/usr/bin/python" -c 'import xattr' 2>/dev/null
+	[[ $(/usr/bin/python -c 'import sys ; sys.stdout.write(sys.hexversion >= 0x3030000 and "yes" or "no")') = yes ]] || \
+	/usr/bin/python -c 'import xattr' 2>/dev/null
 }
 
 pkg_setup() {
@@ -181,41 +204,6 @@ src_prepare() {
 		python_convert_shebangs -r 2.7-pypy-2.0 .
 	fi
 
-	if [[ -n ${EPREFIX} ]] ; then
-		einfo "Setting portage.const.EPREFIX ..."
-		sed -e "s|^\(SANDBOX_BINARY[[:space:]]*=[[:space:]]*\"\)\(/usr/bin/sandbox\"\)|\\1${EPREFIX}\\2|" \
-			-e "s|^\(FAKEROOT_BINARY[[:space:]]*=[[:space:]]*\"\)\(/usr/bin/fakeroot\"\)|\\1${EPREFIX}\\2|" \
-			-e "s|^\(BASH_BINARY[[:space:]]*=[[:space:]]*\"\)\(/bin/bash\"\)|\\1${EPREFIX}\\2|" \
-			-e "s|^\(MOVE_BINARY[[:space:]]*=[[:space:]]*\"\)\(/bin/mv\"\)|\\1${EPREFIX}\\2|" \
-			-e "s|^\(PRELINK_BINARY[[:space:]]*=[[:space:]]*\"\)\(/usr/sbin/prelink\"\)|\\1${EPREFIX}\\2|" \
-			-e "s|^\(EPREFIX[[:space:]]*=[[:space:]]*\"\).*|\\1${EPREFIX}\"|" \
-			-i pym/portage/const.py || \
-			die "Failed to patch portage.const.EPREFIX"
-
-		einfo "Prefixing shebangs ..."
-		find . -type f -print0 | \
-		while read -r -d $'\0' ; do
-			local shebang=$(head -n1 "$REPLY")
-			if [[ ${shebang} == "#!"* && ! ${shebang} == "#!${EPREFIX}/"* ]] ; then
-				sed -i -e "1s:.*:#!${EPREFIX}${shebang:2}:" "$REPLY" || \
-					die "sed failed"
-			fi
-		done
-
-		einfo "Adjusting make.globals ..."
-		sed -e 's|^SYNC=.*|SYNC="rsync://rsync.prefix.freens.org/gentoo-portage-prefix"|' \
-			-e "s|^\(PORTDIR=\)\(/usr/portage\)|\\1\"${EPREFIX}\\2\"|" \
-			-e "s|^\(PORTAGE_TMPDIR=\)\(/var/tmp\)|\\1\"${EPREFIX}\\2\"|" \
-			-i cnf/make.globals || die "sed failed"
-
-		einfo "Adding FEATURES=force-prefix to make.globals ..."
-		echo -e '\nFEATURES="${FEATURES} force-prefix"' >> cnf/make.globals \
-			|| die "failed to append to make.globals"
-	fi
-
-	echo -e '\nFEATURES="${FEATURES} preserve-libs"' >> cnf/make.globals \
-		|| die "failed to append to make.globals"
-
 	cd "${S}/cnf" || die
 	if [ -f "make.conf.${ARCH}".diff ]; then
 		patch make.conf "make.conf.${ARCH}".diff || \
@@ -240,16 +228,17 @@ src_compile() {
 }
 
 src_test() {
-	# make files executable, in case they were created by patch
-	find bin -type f | xargs chmod +x
 	emake test || die
 }
 
 src_install() {
 	emake DESTDIR="${D}" \
-		sysconfdir="${EPREFIX}/etc" \
-		prefix="${EPREFIX}/usr" \
+		sysconfdir="/etc" \
+		prefix="/usr" \
 		install || die
+
+	# Extended set config is currently disabled in portage-2.1.x.
+	rm -rf "${D}/usr/share/portage/config/sets" || die
 
 	# Use dodoc for compression, since the Makefile doesn't do that.
 	dodoc "${S}"/{ChangeLog,NEWS,RELEASE-NOTES} || die
@@ -259,18 +248,54 @@ src_install() {
 		doman -i18n=pl_PL.UTF-8 "${S_PL}"/man/pl_PL.UTF-8/*.[0-9] || die
 	fi
 
-	# Set PYTHONPATH for portage API consumers. This way we don't have
-	# to rely on patched python having the correct path, since it has
-	# been known to incorrectly add /usr/libx32/portage/pym to sys.path.
-	echo "PYTHONPATH=\"${EPREFIX}/usr/lib/portage/pym\"" > \
-		"${T}/05portage" || die
-	doenvd "${T}/05portage" || die
+	# Allow external portage API consumers to import portage python modules
+	# (this used to be done with PYTHONPATH setting in /etc/env.d).
+	# For each of PYTHON_TARGETS, install a tree of *.py symlinks in
+	# site-packages, and compile with the corresponding interpreter.
+	local impl files mod_dir dest_mod_dir python relative_path files x
+	for impl in "${PYTHON_COMPAT[@]}" ; do
+		use "python_targets_${impl}" || continue
+		while read -r mod_dir ; do
+			cd "${S}/pym/${mod_dir}" || die
+			files=$(echo *.py)
+			if [ -z "${files}" ] || [ "${files}" = "*.py" ]; then
+				# __pycache__ directories contain no py files
+				continue
+			fi
+			dest_mod_dir=/usr/$(get_libdir)/${impl/_/.}/site-packages/${mod_dir}
+			dodir "${dest_mod_dir}" || die
+			relative_path=../../../lib/portage/pym/${mod_dir}
+			x=/${mod_dir}
+			while [ -n "${x}" ] ; do
+				relative_path=../${relative_path}
+				x=${x%/*}
+			done
+			for x in ${files} ; do
+				dosym "${relative_path}/${x}" \
+					"${dest_mod_dir}/${x}" || die
+			done
+		done < <(cd "${S}"/pym || die ; find * -type d ! -path "portage/tests*")
+		dest_mod_dir=/usr/$(get_libdir)/${impl/_/.}/site-packages
+		case "${impl}" in
+			python*)
+				python=${impl/_/.}
+				python=/usr/bin/${python}
+				"${python}" -m compileall -q -f -d "${dest_mod_dir}" "${D}${dest_mod_dir#/}" || die
+				"${python}" -OO -m compileall -q -f -d "${dest_mod_dir}" "${D}${dest_mod_dir#/}" || die
+				;;
+			pypy*)
+				python=${impl/_/.}
+				python=/usr/bin/${python/pypy/pypy-c}
+				"${python}" -m compileall -q -f -d "${dest_mod_dir}" "${D}${dest_mod_dir#/}" || die
+				;;
+		esac
+	done
 }
 
 pkg_preinst() {
 	if [[ $ROOT == / ]] ; then
 		# Run some minimal tests as a sanity check.
-		local test_runner=$(find "$ED" -name runTests)
+		local test_runner=$(find "$D" -name runTests)
 		if [[ -n $test_runner && -x $test_runner ]] ; then
 			einfo "Running preinst sanity tests..."
 			"$test_runner" || die "preinst sanity tests failed"
@@ -283,47 +308,21 @@ pkg_preinst() {
 		ewarn "enable USE=python3 for $CATEGORY/$PN."
 	fi
 
-	has_version "<=${CATEGORY}/${PN}-2.2_pre5" \
-		&& WORLD_MIGRATION_UPGRADE=true || WORLD_MIGRATION_UPGRADE=false
-
-	# If portage-2.1.6 is installed and the preserved_libs_registry exists,
-	# assume that the NEEDED.ELF.2 files have already been generated.
-	has_version "<=${CATEGORY}/${PN}-2.2_pre7" && \
-		! ( [ -e "${EROOT}"var/lib/portage/preserved_libs_registry ] && \
-		has_version ">=${CATEGORY}/${PN}-2.1.6_rc" ) \
-		&& NEEDED_REBUILD_UPGRADE=true || NEEDED_REBUILD_UPGRADE=false
-}
-
-pkg_postinst() {
-	# Compile all source files recursively. Any orphans
-	# will be identified and removed in postrm.
-	python_mod_optimize /usr/lib/portage/pym
-
-	if $WORLD_MIGRATION_UPGRADE && \
-		grep -q "^@" "${EROOT}/var/lib/portage/world"; then
-		einfo "moving set references from the worldfile into world_sets"
-		cd "${EROOT}/var/lib/portage/"
-		grep "^@" world >> world_sets
-		sed -i -e '/^@/d' world
+	if [[ -d ${ROOT}var/log/portage && \
+		$(ls -ld "${ROOT}var/log/portage") != *" portage portage "* ]] && \
+		has_version '<sys-apps/portage-2.1.10.11' ; then
+		# Initialize permissions for bug #378451 and bug #377177, since older
+		# portage does not create /var/log/portage with the desired default
+		# permissions.
+		einfo "Applying portage group permission to ${ROOT}var/log/portage for bug #378451"
+		chown portage:portage "${ROOT}var/log/portage"
+		chmod g+ws "${ROOT}var/log/portage"
 	fi
 
-	if $NEEDED_REBUILD_UPGRADE ; then
-		einfo "rebuilding NEEDED.ELF.2 files"
-		for cpv in "${EROOT}/var/db/pkg"/*/*; do
-			if [ -f "${cpv}/NEEDED" ]; then
-				rm -f "${cpv}/NEEDED.ELF.2"
-				while read line; do
-					filename=${line% *}
-					needed=${line#* }
-					needed=${needed//+/++}
-					needed=${needed//#/##}
-					needed=${needed//%/%%}
-					newline=$(scanelf -BF "%a;%F;%S;%r;${needed}" $filename)
-					newline=${newline//  -  }
-					echo "${newline:3}" >> "${cpv}/NEEDED.ELF.2"
-				done < "${cpv}/NEEDED"
-			fi
-		done
+	if has_version '<sys-apps/portage-2.1.10.61' ; then
+		ewarn "FEATURES=config-protect-if-modified is now enabled by default."
+		ewarn "This causes the CONFIG_PROTECT behavior to be skipped for"
+		ewarn "files that have not been modified since they were installed."
 	fi
 }
 
