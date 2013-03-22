@@ -1,2 +1,2 @@
 Host *
-	UserKnownHostsFile /home/chronos/user/.ssh/known_hosts
+	UserKnownHostsFile /home/core/user/.ssh/known_hosts

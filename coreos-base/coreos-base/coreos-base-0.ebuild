@@ -137,9 +137,9 @@ src_install() {
 		#dosym /bin/more /usr/libexec/pager || die
 
 		# Install our custom ssh config settings.
-		#insinto /etc/ssh
-		#doins "${FILESDIR}"/ssh{,d}_config
-		#fperms 600 /etc/ssh/sshd_config
+		insinto /etc/ssh
+		doins "${FILESDIR}"/ssh{,d}_config
+		fperms 600 /etc/ssh/sshd_config
 
 		# Custom login shell snippets.
 		insinto /etc/profile.d
