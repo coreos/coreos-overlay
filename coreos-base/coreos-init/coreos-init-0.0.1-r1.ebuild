@@ -29,4 +29,7 @@ src_install() {
 
 	systemd_dounit coreos-startup.service
 	systemd_enable_service basic.target coreos-startup.service
+
+	systemd_dounit update-engine.service
+	systemd_enable_service multi-user.target update-engine.service
 }
