@@ -32,4 +32,6 @@ src_install() {
 
 	systemd_dounit update-engine.service
 	systemd_enable_service multi-user.target update-engine.service
+
+	systemd_enable_service multi-user.target sshd.socket
 }
