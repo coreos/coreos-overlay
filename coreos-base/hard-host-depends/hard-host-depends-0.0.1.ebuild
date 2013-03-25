@@ -146,8 +146,8 @@ RDEPEND="${RDEPEND}
 	"
 
 # Host dependencies that are needed for delta_generator.
-# TODO: coreos-base/update_engine
 RDEPEND="${RDEPEND}
+	coreos-base/update_engine
 	"
 
 # Host dependencies to run unit tests within the chroot
