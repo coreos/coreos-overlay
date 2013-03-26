@@ -165,7 +165,7 @@ bool ChromeBrowserProxyResolver::GetProxiesForUrl(const string& url,
       dbus_got_error = false;
 
       if (dbus_success) {
-        LOG(INFO) << "dbug_g_proxy_call succeeded!";
+        LOG(INFO) << "dbus_g_proxy_call succeeded!";
       } else {
         if (error) {
           // Register the fact that we did receive an error, as it is nullified
@@ -175,14 +175,14 @@ bool ChromeBrowserProxyResolver::GetProxiesForUrl(const string& url,
                        << utils::GetAndFreeGError(&error)
                        << " Continuing with no proxy.";
         } else {
-          LOG(WARNING) << "dbug_g_proxy_call failed with no error string, "
+          LOG(WARNING) << "dbus_g_proxy_call failed with no error string, "
                           "continuing with no proxy.";
         }
         timeout = 0;
       }
     } while (!(dbus_success || dbus_got_error || dbus_reinit));
   } else {
-    LOG(WARNING) << "dbug proxy object missing, continuing with no proxy.";
+    LOG(WARNING) << "dbus proxy object missing, continuing with no proxy.";
     timeout = 0;
   }
 
