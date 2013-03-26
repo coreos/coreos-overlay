@@ -13,10 +13,9 @@ static const char kPrefsDirectory[] = "/var/lib/update_engine/prefs";
 
 RealSystemState::RealSystemState()
     : device_policy_(NULL),
-      connection_manager_(this),
       request_params_(this) {}
 
-bool RealSystemState::Initialize(bool enable_gpio) {
+bool RealSystemState::Initialize(bool enable_gpio, bool enable_connection_manager) {
   metrics_lib_.Init();
 
   if (!prefs_.Init(FilePath(kPrefsDirectory))) {
@@ -26,6 +25,12 @@ bool RealSystemState::Initialize(bool enable_gpio) {
 
   if (!payload_state_.Initialize(&prefs_))
     return false;
+
+  if (enable_connection_manager) {
+    connection_manager_ = new ConnectionManager(this);
+  } else {
+    connection_manager_ = new NoopConnectionManager(this);
+  }
 
   // Initialize the GPIO handler as instructed.
   if (enable_gpio) {

@@ -52,6 +52,31 @@ class ConnectionManager {
   DISALLOW_COPY_AND_ASSIGN(ConnectionManager);
 };
 
+class NoopConnectionManager : public ConnectionManager {
+ public:
+  NoopConnectionManager(SystemState *system_state)
+    : ConnectionManager(system_state) {
+    return;
+  }
+
+  virtual bool GetConnectionType(
+      DbusGlibInterface* dbus_iface,
+      NetworkConnectionType* out_type) const {
+    *out_type = kNetEthernet;
+    return true;
+  }
+
+  virtual const char* StringForConnectionType(
+      NetworkConnectionType type) const {
+    return "Ethernet";
+  }
+
+  virtual bool IsUpdateAllowedOver(NetworkConnectionType type) const {
+    return true;
+  }
+};
+
+
 }  // namespace chromeos_update_engine
 
 #endif  // CHROMEOS_PLATFORM_UPDATE_ENGINE_CONNECTION_MANAGER_H_

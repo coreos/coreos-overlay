@@ -34,8 +34,13 @@ public:
     return device_policy_;
   }
 
+  virtual inline void set_connection_manager(
+      ConnectionManager* connection_manager) {
+    connection_manager_ = connection_manager;
+  }
+
   virtual inline ConnectionManager* connection_manager() {
-    return &connection_manager_;
+    return connection_manager_;
   }
 
   virtual inline MetricsLibraryInterface* metrics_lib() {
@@ -66,7 +71,7 @@ public:
 
   // Initializes this concrete object. Other methods should be invoked only
   // if the object has been initialized successfully.
-  bool Initialize(bool enable_gpio);
+  bool Initialize(bool enable_gpio, bool enable_connection_manager);
 
 private:
   // The latest device policy object from the policy provider.
@@ -74,7 +79,7 @@ private:
 
   // The connection manager object that makes download
   // decisions depending on the current type of connection.
-  ConnectionManager connection_manager_;
+  ConnectionManager* connection_manager_;
 
   // The Metrics Library interface for reporting UMA stats.
   MetricsLibrary metrics_lib_;

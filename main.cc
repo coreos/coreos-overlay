@@ -36,6 +36,8 @@ DEFINE_bool(logtostderr, false,
             "Write logs to stderr instead of to a file in log_dir.");
 DEFINE_bool(foreground, false,
             "Don't daemon()ize; run in foreground.");
+DEFINE_bool(no_connection_manager, false,
+            "Don't use a connection manager.");
 
 using std::string;
 using std::vector;
@@ -169,7 +171,8 @@ int main(int argc, char** argv) {
   chromeos_update_engine::RealSystemState real_system_state;
   // TODO(garnold) s/false/true/ once we decide to activate actual GPIO-based
   // protocol for testing of MP-signed images (chromium-os:25400).
-  LOG_IF(ERROR, !real_system_state.Initialize(false))
+  LOG_IF(ERROR, !real_system_state.Initialize(false,
+                                              !FLAGS_no_connection_manager))
       << "Failed to initialize system state.";
   chromeos_update_engine::UpdateAttempter *update_attempter =
       real_system_state.update_attempter();
