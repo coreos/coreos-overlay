@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+  <herd>virtualization</herd>
+  <maintainer>
+    <email>flameeyes@gentoo.org</email>
+  </maintainer>
+  <maintainer>
+    <email>dev-zero@gentoo.org</email>
+  </maintainer>
+
+  <use>
+    <flag name="vanilla">
+      Avoid adding Gentoo Linux-specific modifications, which include
+      the custom init script. This is present as a flag to avoid
+      forcing dependencies over users that might not want have them
+      around as they use LXC in contexts where the init script is not
+      useful.
+    </flag>
+  </use>
+</pkgmetadata>

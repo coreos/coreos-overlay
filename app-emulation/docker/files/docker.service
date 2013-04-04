@@ -1,0 +1,5 @@
+[Service]
+ExecStart=/usr/bin/docker -d
+
+[Install]
+WantedBy=multi-user.target
