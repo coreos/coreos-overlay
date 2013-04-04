@@ -1,5 +1,9 @@
 [Service]
+ExecStartPre=/sbin/brctl addbr lxcbr0
+ExecStartPre=/bin/ifconfig lxcbr0 10.65.41.1
 ExecStart=/usr/bin/docker -d
+ExecStopPost=/bin/ifconfig lxcbr0 down
+ExecStopPost=/sbin/brctl delbr lxcbr0
 
 [Install]
 WantedBy=multi-user.target
