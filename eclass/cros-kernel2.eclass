@@ -29,13 +29,11 @@ STRIP_MASK="/usr/lib/debug/boot/vmlinux"
 #   %ROOT% => ${ROOT}
 
 CONFIG_FRAGMENTS=(
+	aufs
 	blkdevram
-	ca0132
 	cifs
 	debug
 	fbconsole
-	gdmwimax
-	gobi
 	highmem
 	i2cdev
 	initramfs
@@ -43,26 +41,21 @@ CONFIG_FRAGMENTS=(
 	netboot_ramfs
 	nfs
 	pcserial
-	qmi
-	realtekpstor
-	samsung_serial
 	systemtap
 	tpm
 	vfat
-	x32
 )
+
+aufs_desc="aufs3"
+aufs_config="
+CONFIG_AUFS_FS=y
+"
 
 blkdevram_desc="ram block device"
 blkdevram_config="
 CONFIG_BLK_DEV_RAM=y
 CONFIG_BLK_DEV_RAM_COUNT=16
 CONFIG_BLK_DEV_RAM_SIZE=16384
-"
-
-ca0132_desc="CA0132 ALSA codec"
-ca0132_config="
-CONFIG_SND_HDA_CODEC_CA0132=y
-CONFIG_SND_HDA_DSP_LOADER=y
 "
 
 cifs_desc="Samba/CIFS Support"
@@ -85,11 +78,6 @@ gdmwimax_config="
 CONFIG_WIMAX_GDM72XX=m
 CONFIG_WIMAX_GDM72XX_USB=y
 CONFIG_WIMAX_GDM72XX_USB_PM=y
-"
-
-gobi_desc="Qualcomm Gobi modem driver"
-gobi_config="
-CONFIG_USB_NET_GOBI=m
 "
 
 highmem_desc="highmem"
@@ -183,41 +171,23 @@ CONFIG_PARPORT_PC=y
 CONFIG_PARPORT_SERIAL=y
 "
 
-qmi_desc="QMI WWAN driver"
-qmi_config="
-CONFIG_USB_NET_QMI_WWAN=m
-"
-
-samsung_serial_desc="Samsung serialport"
-samsung_serial_config="
-CONFIG_SERIAL_SAMSUNG=y
-CONFIG_SERIAL_SAMSUNG_CONSOLE=y
-"
-
-realtekpstor_desc="Realtek PCI card reader"
-realtekpstor_config="
-CONFIG_RTS_PSTOR=m
-"
-
 systemtap_desc="systemtap support"
 systemtap_config="
 CONFIG_KPROBES=y
 CONFIG_DEBUG_INFO=y
 "
 
-x32_desc="x32 ABI support"
-x32_config="
-CONFIG_X86_X32=y
-"
-
 # Add all config fragments as off by default
 IUSE="${IUSE} ${CONFIG_FRAGMENTS[@]}"
+
+# CoreOS always wants aufs... for now
+IUSE="${IUSE} +aufs"
+
 REQUIRED_USE="
 	initramfs? ( !netboot_ramfs )
 	netboot_ramfs? ( !initramfs )
 	initramfs? ( i2cdev tpm )
 	netboot_ramfs? ( i2cdev tpm )
-	x32? ( amd64 )
 "
 
 # If an overlay has eclass overrides, but doesn't actually override this
