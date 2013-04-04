@@ -18,7 +18,10 @@ KEYWORDS="~amd64 ~arm ~x86"
 IUSE=""
 
 DEPEND=">=dev-lang/go-1.0.2"
-RDEPEND="app-emulation/lxc"
+RDEPEND="
+	app-emulation/lxc
+	net-misc/bridge-utils
+"
 
 src_compile() {
 	emake
