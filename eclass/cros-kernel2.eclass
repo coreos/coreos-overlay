@@ -30,6 +30,7 @@ STRIP_MASK="/usr/lib/debug/boot/vmlinux"
 
 CONFIG_FRAGMENTS=(
 	aufs
+	bridge
 	blkdevram
 	cifs
 	debug
@@ -49,6 +50,11 @@ CONFIG_FRAGMENTS=(
 aufs_desc="aufs3"
 aufs_config="
 CONFIG_AUFS_FS=y
+"
+
+bridge_desc="bridge"
+bridge_config="
+CONFIG_BRIDGE=y
 "
 
 blkdevram_desc="ram block device"
@@ -179,9 +185,6 @@ CONFIG_DEBUG_INFO=y
 
 # Add all config fragments as off by default
 IUSE="${IUSE} ${CONFIG_FRAGMENTS[@]}"
-
-# CoreOS always wants aufs... for now
-IUSE="${IUSE} +aufs"
 
 REQUIRED_USE="
 	initramfs? ( !netboot_ramfs )
