@@ -208,7 +208,7 @@ defconfig_dir() {
 # Returns the current compiled kernel version.
 # Note: Only valid after src_configure has finished running.
 kernelversion() {
-	kmake -s --no-print-directory kernelversion
+	kmake -s --no-print-directory kernelrelease
 }
 
 # @FUNCTION: install_kernel_sources
