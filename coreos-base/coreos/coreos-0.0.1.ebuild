@@ -158,6 +158,7 @@ RDEPEND="${RDEPEND}
 	sys-process/lsof
 	sys-process/procps
 	app-emulation/docker
+	app-misc/ca-certificates
 	"
 
 # TODO(dianders):
