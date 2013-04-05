@@ -106,7 +106,6 @@ RDEPEND="${RDEPEND}
 #	coreos-base/shill
 #	coreos-base/userfeedback
 #	coreos-base/metrics
-#	coreos-base/root-certificates
 #	sys-apps/ureadahead
 #	coreos-base/bootstat
 
