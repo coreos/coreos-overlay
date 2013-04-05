@@ -21,6 +21,8 @@ DEPEND=">=dev-lang/go-1.0.2"
 RDEPEND="
 	app-emulation/lxc
 	net-misc/bridge-utils
+	app-arch/libarchive
+	net-misc/curl
 "
 
 src_compile() {
