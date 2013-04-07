@@ -2,7 +2,7 @@
 ExecStartPre=/bin/mount --make-rprivate /
 ExecStartPre=/sbin/brctl addbr lxcbr0
 ExecStartPre=/bin/ifconfig lxcbr0 10.65.41.1
-ExecStart=/usr/bin/docker -d
+ExecStart=/usr/bin/docker -d -D -b lxcbr0
 ExecStopPost=/bin/ifconfig lxcbr0 down
 ExecStopPost=/sbin/brctl delbr lxcbr0
 
