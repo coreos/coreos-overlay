@@ -117,6 +117,16 @@ ARRAY_VARIABLES=( CROS_WORKON_{SUBDIR,REPO,PROJECT,LOCALNAME,DESTDIR,COMMIT,TREE
 # like normal.
 : ${CROS_WORKON_INCREMENTAL_BUILD:=}
 
+# @ECLASS-VARIABLE: CROS_WORKON_BLACKLIST
+# @DESCRIPTION:
+# If set to "1", the cros-workon uprev system on the bots will not automatically
+# revbump your package when changes are made.  This is useful if you want more
+# direct control over when updates to the source git repo make it into the
+# ebuild, or if the git repo you're using is not part of the official manifest.
+# e.g. If you set CROS_WORKON_REPO or EGIT_REPO_URI to an external (to Google)
+# site, set this to "1".
+: ${CROS_WORKON_BLACKLIST:=}
+
 # Join the tree commits to produce a unique identifier
 CROS_WORKON_TREE_COMPOSITE=$(IFS="_"; echo "${CROS_WORKON_TREE[*]}")
 IUSE="cros_workon_tree_$CROS_WORKON_TREE_COMPOSITE profiling"
@@ -169,7 +179,7 @@ get_paths() {
 	else
 		# HACK: Figure out the missing legacy path for now
 		# this only happens in amd64 chroot with sudo emerge.
-		pathbase="/home/${SUDO_USER}/trunk"
+		pathbase="/mnt/host/source"
 	fi
 
 	if [[ "${CATEGORY}" == "chromeos-base" ]] ; then
@@ -249,7 +259,7 @@ get_rev() {
 }
 
 using_common_mk() {
-	[[ -n $(find "${S}" -name common.mk -exec grep -l common-mk.git {} +) ]]
+	[[ -n $(find -H "${S}" -name common.mk -exec grep -l common-mk.git {} +) ]]
 }
 
 cros-workon_src_unpack() {
@@ -492,6 +502,13 @@ cros-workon_src_configure() {
 	else
 		default
 	fi
+	local p
+	for p in "${CROS_WORKON_PROJECT[@]}"; do
+		if [[ ${p} == chromiumos/platform/* ]]; then
+			append-flags -clang
+			break
+		fi
+	done
 }
 
 cw_emake() {
@@ -499,7 +516,9 @@ cw_emake() {
 
 	# Clean up a previous build dir if it exists.  Use sudo in case some
 	# files happened to be owned by root or are otherwise marked a-w.
-	sudo rm -rf "${dir}%failed" &
+	# Grep out the sandbox related preload error to avoid confusing devs.
+	(sudo rm -rf "${dir}%failed" 2>&1 | \
+		grep -v 'LD_PRELOAD cannot be preloaded: ignored') &
 
 	if ! nonfatal emake "$@" ; then
 		# If things failed, move the incremental dir out of the way --
