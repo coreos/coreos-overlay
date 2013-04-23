@@ -47,6 +47,7 @@ src_test() {
 }
 
 src_install() {
+	cros-workon_src_install
 	dolib.a "${OUT}"/libdm-bht.a
 	insinto /usr/include/verity
 	doins dm-bht.h dm-bht-userspace.h

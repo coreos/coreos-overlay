@@ -2,8 +2,8 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="4"
-CROS_WORKON_COMMIT="3933b7af319b131d958803261fd318ab1964b9a1"
-CROS_WORKON_TREE="e5c05be79112b34348527a8b17d8b287d91a9140"
+CROS_WORKON_COMMIT="55c7a5332cac5036828da00f805840007f05d233"
+CROS_WORKON_TREE="c1f1cde876600249df5ff4a7db0e9623da7fe1d7"
 CROS_WORKON_PROJECT="chromiumos/platform/installer"
 CROS_WORKON_LOCALNAME="installer"
 CROS_WORKON_OUTOFTREE_BUILD=1
@@ -45,6 +45,8 @@ src_prepare() {
 src_configure() {
 	# need this to get the verity headers working
 	append-cxxflags -I"${SYSROOT}"/usr/include/verity/
+	append-cxxflags -I"${SYSROOT}"/usr/include/vboot
+	append-ldflags -L"${SYSROOT}"/usr/lib/vboot32
 
 	use 32bit_au && board_setup_32bit_au_env
 
@@ -64,6 +66,7 @@ src_test() {
 }
 
 src_install() {
+	cros-workon_src_install
 	local path
 	if use cros_host ; then
 		# Copy chromeos-* scripts to /usr/lib/installer/ on host.

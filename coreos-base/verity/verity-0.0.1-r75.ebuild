@@ -2,8 +2,8 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="4"
-CROS_WORKON_COMMIT="e5627e7a2506fdd93f3b6edf48c76b68bfe75326"
-CROS_WORKON_TREE="8f459ef16b87c47cb26400078c2ae353cb41455b"
+CROS_WORKON_COMMIT="658d35ef6f15cb7763ce4bdd03161837452de7cd"
+CROS_WORKON_TREE="a54ff06d13ee681a7cb660ed14c51dcd8ef5ffdf"
 CROS_WORKON_PROJECT="chromiumos/platform/dm-verity"
 CROS_WORKON_OUTOFTREE_BUILD=1
 
@@ -49,6 +49,7 @@ src_test() {
 }
 
 src_install() {
+	cros-workon_src_install
 	dolib.a "${OUT}"/libdm-bht.a
 	insinto /usr/include/verity
 	doins dm-bht.h dm-bht-userspace.h

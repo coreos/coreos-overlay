@@ -43,6 +43,8 @@ src_prepare() {
 src_configure() {
 	# need this to get the verity headers working
 	append-cxxflags -I"${SYSROOT}"/usr/include/verity/
+	append-cxxflags -I"${SYSROOT}"/usr/include/vboot
+	append-ldflags -L"${SYSROOT}"/usr/lib/vboot32
 
 	use 32bit_au && board_setup_32bit_au_env
 
@@ -62,6 +64,7 @@ src_test() {
 }
 
 src_install() {
+	cros-workon_src_install
 	local path
 	if use cros_host ; then
 		# Copy chromeos-* scripts to /usr/lib/installer/ on host.
