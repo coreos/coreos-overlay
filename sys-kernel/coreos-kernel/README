@@ -1,0 +1,44 @@
+The kernel tree is managed in git and is essentially the stable kernel + aufs.
+
+To bump to a new version do the following:
+
+1) Setup a checkout of github.com/coreos/linux
+
+2) Edit the .git/config to look like this:
+
+```
+[core]
+	repositoryformatversion = 0
+	filemode = true
+	bare = false
+	logallrefupdates = true
+[remote "origin"]
+	url = git@github.com:coreos/linux.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "master"]
+	remote = origin
+	merge = refs/heads/master
+[remote "linus"]
+	url = git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git
+	fetch = +refs/heads/*:refs/remotes/linus/*
+[remote "stable"]
+	url = https://kernel.googlesource.com/pub/scm/linux/kernel/git/stable/linux-stable
+	fetch = +refs/heads/*:refs/remotes/stable/*
+[remote "aufs"]
+	url = http://git.code.sf.net/p/aufs/aufs3-linux
+	fetch = +refs/heads/*:refs/remotes/aufs/*
+```
+
+3) git fetch --all
+
+3) git checkout -b 'coreos/v3.8.8'
+
+4) git reset --hard v3.8.8
+
+5) git pull . aufs/aufs-3.8
+
+6) git push origin coreos/v3.8.8
+
+7) git checkout coreos/master && git reset --hard coreos/v3.8.8 && git push -f origin coreos/master
+
+Then you can bump the hash in the ebuild and move it to the new version here.
