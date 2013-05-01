@@ -150,6 +150,11 @@ RDEPEND="${RDEPEND}
 	coreos-base/update_engine
 	"
 
+# Needed for uploading to the update.core-os.net servers
+RDEPEND="${RDEPEND}
+	coreos-base/core-admin
+	"
+
 # Host dependencies to run unit tests within the chroot
 RDEPEND="${RDEPEND}
 	dev-cpp/gflags

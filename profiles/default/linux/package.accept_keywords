@@ -87,3 +87,6 @@
 
 # Projects we are actively hacking on in coreos
 =coreos-base/update_engine-9999 ~amd64 ~x86
+
+# Used on the host
+=coreos-base/core-admin-9999	~amd64 ~x86
