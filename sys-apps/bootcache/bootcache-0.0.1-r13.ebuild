@@ -3,8 +3,8 @@
 
 EAPI="4"
 
-CROS_WORKON_COMMIT="e74f0cc320636b12f42c9a12ea58cfcb0b243e9e"
-CROS_WORKON_TREE="41f576bc111ad5a24b71216c652c3e09c5cf2a87"
+CROS_WORKON_COMMIT="77bbd6bb17ef926dbc3465a697be527a8c6e0941"
+CROS_WORKON_TREE="933dc61ef690ca77ad5557123455b289bced1865"
 CROS_WORKON_PROJECT="chromiumos/platform/bootcache"
 CROS_WORKON_LOCALNAME="../platform/bootcache"
 CROS_WORKON_OUTOFTREE_BUILD=1
@@ -32,6 +32,7 @@ src_compile() {
 }
 
 src_install() {
+	cros-workon_src_install
 	dosbin "${OUT}"/bootcache
 
 	insinto /etc/init
