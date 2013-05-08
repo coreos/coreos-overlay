@@ -20,6 +20,8 @@ namespace chromeos_update_engine {
 bool ExtentRanges::ExtentsOverlapOrTouch(const Extent& a, const Extent& b) {
   if (a.start_block() == b.start_block())
     return true;
+  if (a.start_block() == kSparseHole || b.start_block() == kSparseHole)
+    return false;
   if (a.start_block() < b.start_block()) {
     return a.start_block() + a.num_blocks() >= b.start_block();
   } else {
@@ -30,6 +32,8 @@ bool ExtentRanges::ExtentsOverlapOrTouch(const Extent& a, const Extent& b) {
 bool ExtentRanges::ExtentsOverlap(const Extent& a, const Extent& b) {
   if (a.start_block() == b.start_block())
     return true;
+  if (a.start_block() == kSparseHole || b.start_block() == kSparseHole)
+    return false;
   if (a.start_block() < b.start_block()) {
     return a.start_block() + a.num_blocks() > b.start_block();
   } else {
@@ -48,16 +52,18 @@ void ExtentRanges::SubtractBlock(uint64_t block) {
 namespace {
 
 Extent UnionOverlappingExtents(const Extent& first, const Extent& second) {
+  CHECK_NE(kSparseHole, first.start_block());
+  CHECK_NE(kSparseHole, second.start_block());
   uint64_t start = min(first.start_block(), second.start_block());
   uint64_t end = max(first.start_block() + first.num_blocks(),
                      second.start_block() + second.num_blocks());
   return ExtentForRange(start, end - start);
 }
-  
+
 }  // namespace {}
 
 void ExtentRanges::AddExtent(Extent extent) {
-  if (extent.num_blocks() == 0)
+  if (extent.start_block() == kSparseHole || extent.num_blocks() == 0)
     return;
 
   ExtentSet::iterator begin_del = extent_set_.end();
@@ -100,7 +106,7 @@ ExtentRanges::ExtentSet SubtractOverlappingExtents(const Extent& base,
 }  // namespace {}
 
 void ExtentRanges::SubtractExtent(const Extent& extent) {
-  if (extent.num_blocks() == 0)
+  if (extent.start_block() == kSparseHole || extent.num_blocks() == 0)
     return;
 
   ExtentSet::iterator begin_del = extent_set_.end();
@@ -111,12 +117,12 @@ void ExtentRanges::SubtractExtent(const Extent& extent) {
        it != e; ++it) {
     if (!ExtentsOverlap(*it, extent))
       continue;
-    
+
     if (begin_del == extent_set_.end())
       begin_del = it;
     end_del = it;
     ++end_del;
-    
+
     del_blocks += it->num_blocks();
 
     ExtentSet subtraction = SubtractOverlappingExtents(*it, extent);

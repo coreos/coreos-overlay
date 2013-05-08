@@ -17,7 +17,7 @@ class ExtentRangesTest : public ::testing::Test {};
 
 namespace {
 void ExpectRangeEq(const ExtentRanges& ranges,
-                   uint64_t* expected,
+                   const uint64_t* expected,
                    size_t sz,
                    int line) {
   uint64_t blocks = 0;
@@ -113,39 +113,50 @@ TEST(ExtentRangesTest, ExtentsOverlapTest) {
   ExpectFalseRangesOverlapOrTouch(10, 20, 35, 10);
   ExpectFalseRangesOverlap(10, 20, 30, 10);
   ExpectRangesOverlap(12, 4, 12, 3);
+
+  ExpectRangesOverlapOrTouch(kSparseHole, 2, kSparseHole, 3);
+  ExpectRangesOverlap(kSparseHole, 2, kSparseHole, 3);
+  ExpectFalseRangesOverlapOrTouch(kSparseHole, 2, 10, 3);
+  ExpectFalseRangesOverlapOrTouch(10, 2, kSparseHole, 3);
+  ExpectFalseRangesOverlap(kSparseHole, 2, 10, 3);
+  ExpectFalseRangesOverlap(10, 2, kSparseHole, 3);
 }
 
 TEST(ExtentRangesTest, SimpleTest) {
   ExtentRanges ranges;
   {
-    uint64_t expected[] = {};
+    static const uint64_t expected[] = {};
     // Can't use arraysize() on 0-length arrays:
     ExpectRangeEq(ranges, expected, 0, __LINE__);
   }
   ranges.SubtractBlock(2);
   {
-    uint64_t expected[] = {};
+    static const uint64_t expected[] = {};
     // Can't use arraysize() on 0-length arrays:
     ExpectRangeEq(ranges, expected, 0, __LINE__);
   }
-  
+
   ranges.AddBlock(0);
   ranges.Dump();
   ranges.AddBlock(1);
   ranges.AddBlock(3);
-  
+
   {
-    uint64_t expected[] = {0, 2, 3, 1};
+    static const uint64_t expected[] = {0, 2, 3, 1};
     EXPECT_RANGE_EQ(ranges, expected);
   }
   ranges.AddBlock(2);
   {
-    uint64_t expected[] = {0, 4};
+    static const uint64_t expected[] = {0, 4};
+    EXPECT_RANGE_EQ(ranges, expected);
+    ranges.AddBlock(kSparseHole);
+    EXPECT_RANGE_EQ(ranges, expected);
+    ranges.SubtractBlock(kSparseHole);
     EXPECT_RANGE_EQ(ranges, expected);
   }
   ranges.SubtractBlock(2);
   {
-    uint64_t expected[] = {0, 2, 3, 1};
+    static const uint64_t expected[] = {0, 2, 3, 1};
     EXPECT_RANGE_EQ(ranges, expected);
   }
 
@@ -153,27 +164,35 @@ TEST(ExtentRangesTest, SimpleTest) {
     ranges.AddExtent(ExtentForRange(i, 50));
   }
   {
-    uint64_t expected[] = {0, 2, 3, 1, 100, 50, 200, 50, 300, 50, 400, 50,
-                           500, 50, 600, 50, 700, 50, 800, 50, 900, 50};
+    static const uint64_t expected[] = {
+      0, 2, 3, 1, 100, 50, 200, 50, 300, 50, 400, 50,
+      500, 50, 600, 50, 700, 50, 800, 50, 900, 50
+    };
     EXPECT_RANGE_EQ(ranges, expected);
   }
 
   ranges.SubtractExtent(ExtentForRange(210, 410 - 210));
   {
-    uint64_t expected[] = {0, 2, 3, 1, 100, 50, 200, 10, 410, 40, 500, 50,
-                           600, 50, 700, 50, 800, 50, 900, 50};
+    static const uint64_t expected[] = {
+      0, 2, 3, 1, 100, 50, 200, 10, 410, 40, 500, 50,
+      600, 50, 700, 50, 800, 50, 900, 50
+    };
     EXPECT_RANGE_EQ(ranges, expected);
   }
   ranges.AddExtent(ExtentForRange(100000, 0));
   {
-    uint64_t expected[] = {0, 2, 3, 1, 100, 50, 200, 10, 410, 40, 500, 50,
-                           600, 50, 700, 50, 800, 50, 900, 50};
+    static const uint64_t expected[] = {
+      0, 2, 3, 1, 100, 50, 200, 10, 410, 40, 500, 50,
+      600, 50, 700, 50, 800, 50, 900, 50
+    };
     EXPECT_RANGE_EQ(ranges, expected);
   }
   ranges.SubtractExtent(ExtentForRange(3, 0));
   {
-    uint64_t expected[] = {0, 2, 3, 1, 100, 50, 200, 10, 410, 40, 500, 50,
-                           600, 50, 700, 50, 800, 50, 900, 50};
+    static const uint64_t expected[] = {
+      0, 2, 3, 1, 100, 50, 200, 10, 410, 40, 500, 50,
+      600, 50, 700, 50, 800, 50, 900, 50
+    };
     EXPECT_RANGE_EQ(ranges, expected);
   }
 }

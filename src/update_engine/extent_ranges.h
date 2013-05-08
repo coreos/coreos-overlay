@@ -15,9 +15,12 @@
 #include "update_engine/graph_types.h"
 #include "update_engine/update_metadata.pb.h"
 
-// An ExtentRanges object represents an unordered collection of extents
-// (and therefore blocks). Such an object may be modified by adding or
-// subtracting blocks (think: set addition or set subtraction).
+// An ExtentRanges object represents an unordered collection of extents (and
+// therefore blocks). Such an object may be modified by adding or subtracting
+// blocks (think: set addition or set subtraction). Note that ExtentRanges
+// ignores sparse hole extents mostly to avoid confusion between extending a
+// sparse hole range vs. set addition but also to ensure that the delta
+// generator doesn't use sparse holes as scratch space.
 
 namespace chromeos_update_engine {
 
@@ -52,7 +55,7 @@ class ExtentRanges {
 
   // Dumps contents to the log file. Useful for debugging.
   void Dump() const;
-  
+
   uint64_t blocks() const { return blocks_; }
   const ExtentSet& extent_set() const { return extent_set_; }
 
