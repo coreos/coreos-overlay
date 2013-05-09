@@ -111,6 +111,7 @@ RDEPEND="${RDEPEND}
 
 RDEPEND="${RDEPEND}
 	sys-apps/findutils
+	sys-apps/kexec-tools
 	app-admin/sudo
 	app-admin/rsyslog
 	app-arch/sharutils
