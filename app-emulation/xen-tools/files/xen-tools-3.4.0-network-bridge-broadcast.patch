@@ -1,0 +1,11 @@
+--- xen-3.4.0/tools/hotplug/Linux/network-bridge.orig	2009-05-18 15:05:38.000000000 +0400
++++ xen-3.4.0/tools/hotplug/Linux/network-bridge	2009-06-09 23:16:05.000000000 +0400
+@@ -101,7 +101,7 @@
+ tdev=tmpbridge
+ 
+ get_ip_info() {
+-    addr_pfx=`ip addr show dev $1 | egrep '^ *inet' | sed -e 's/ *inet //' -e 's/ .*//'`
++    addr_pfx=`ip addr show dev $1 | egrep '^ *inet ' | sed -e 's/ *inet //' -e "s/$1//"`
+     gateway=`ip route show dev $1 | fgrep default | sed 's/default via //'`
+ }
+     

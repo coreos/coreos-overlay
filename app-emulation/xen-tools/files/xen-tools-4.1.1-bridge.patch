@@ -1,0 +1,12 @@
+diff -ur xen-4.1.1.orig//tools/hotplug/Linux/network-bridge xen-4.1.1/tools/hotplug/Linux/network-bridge
+--- xen-4.1.1.orig//tools/hotplug/Linux/network-bridge	2011-10-14 02:28:43.481714285 +0800
++++ xen-4.1.1/tools/hotplug/Linux/network-bridge	2011-10-16 01:06:11.226673108 +0800
+@@ -216,7 +216,7 @@
+ 	return
+     fi
+ 
+-    if [ `brctl show | wc -l` != 1 ]; then
++    if [ `brctl show | grep $netdev | wc -l` != 0 ]; then
+         return
+     fi
+ 
