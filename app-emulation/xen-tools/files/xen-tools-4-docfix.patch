@@ -1,0 +1,12 @@
+diff -ur xen-4.2.0.orig/tools/qemu-xen-traditional/Makefile xen-4.2.0/tools/qemu-xen-traditional/Makefile
+--- xen-4.2.0.orig/tools/qemu-xen-traditional/Makefile	2012-09-07 00:05:30.000000000 +0800
++++ xen-4.2.0/tools/qemu-xen-traditional/Makefile	2013-01-29 11:12:20.502989453 +0800
+@@ -275,7 +275,7 @@
+ 
+ # documentation
+ %.html: %.texi
+-	texi2html -monolithic -number $<
++	texi2html -monolithic $<
+ 
+ %.info: %.texi
+ 	makeinfo $< -o $@

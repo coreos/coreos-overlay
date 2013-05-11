@@ -1,0 +1,10 @@
+[Unit]
+Description=Rackspace Nova Agent
+
+[Service]
+ExecStartPre=/bin/mount -t xenfs none /proc/xen
+ExecStart=/usr/sbin/nova-agent -n -o - -l info /usr/share/nova-agent/nova-agent.py
+ExecReload=/bin/kill -HUP $MAINPID
+
+[Install]
+WantedBy=network.target

@@ -49,6 +49,7 @@ sys-apps/pciutils	static-libs
 # and may be executed outside chroot.
 app-arch/xz-utils	static-libs
 
+app-emulation/xen-tools -ocaml -hvm -xend -pygrub -qemu -flask -screen -doc amd64
 
 =sys-libs/gdbm-1.8.3-r4 berkdb
 >=sys-libs/libseccomp-1.0.1 static-libs

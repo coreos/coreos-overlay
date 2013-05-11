@@ -1,0 +1,37 @@
+diff -ur xen-4.2.0.orig/tools/qemu-xen-traditional/Makefile xen-4.2.0/tools/qemu-xen-traditional/Makefile
+--- tools/qemu-xen-traditional/Makefile	2012-09-07 00:05:30.000000000 +0800
++++ tools/qemu-xen-traditional/Makefile	2012-11-22 06:12:29.433599695 +0800
+@@ -243,7 +243,7 @@
+ install: all $(if $(BUILD_DOCS),install-doc)
+ 	mkdir -p "$(DESTDIR)$(bindir)"
+ ifneq ($(TOOLS),)
+-	$(INSTALL) -m 755 -s $(TOOLS) "$(DESTDIR)$(bindir)"
++	$(INSTALL) -m 755 $(TOOLS) "$(DESTDIR)$(bindir)"
+ endif
+ ifneq ($(BLOBS),)
+ 	mkdir -p "$(DESTDIR)$(datadir)"
+diff -ur xen-4.2.0.orig/tools/qemu-xen-traditional/Makefile.target xen-4.2.0/tools/qemu-xen-traditional/Makefile.target
+--- tools/qemu-xen-traditional/Makefile.target	2012-09-07 00:05:30.000000000 +0800
++++ tools/qemu-xen-traditional/Makefile.target	2012-11-22 06:26:45.302521231 +0800
+@@ -755,7 +755,7 @@
+ 
+ install: all install-hook
+ ifneq ($(PROGS),)
+-	$(INSTALL) -m 755 -s $(PROGS) "$(DESTDIR)$(bindir)"
++	$(INSTALL) -m 755 $(PROGS) "$(DESTDIR)$(bindir)"
+ endif
+ 
+ # Include automatically generated dependency files
+diff -ur xen-4.2.0.orig/tools/qemu-xen/Makefile.target xen-4.2.0/tools/qemu-xen/Makefile.target
+--- tools/qemu-xen/Makefile.target	2012-09-11 02:10:52.000000000 +0800
++++ tools/qemu-xen/Makefile.target	2012-11-22 07:13:38.894263291 +0800
+@@ -437,9 +437,6 @@
+ install: all
+ ifneq ($(PROGS),)
+ 	$(INSTALL) -m 755 $(PROGS) "$(DESTDIR)$(bindir)"
+-ifneq ($(STRIP),)
+-	$(STRIP) $(patsubst %,"$(DESTDIR)$(bindir)/%",$(PROGS))
+-endif
+ endif
+ ifdef CONFIG_TRACE_SYSTEMTAP
+ ifdef CONFIG_TRACE_SYSTEMTAP

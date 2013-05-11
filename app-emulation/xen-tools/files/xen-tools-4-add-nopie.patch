@@ -1,0 +1,15 @@
+2011-10-22      Ralf Glauberman <ralfglauberman@gmx.de>
+
+                #360805 Don't compile ipxe with pie on hardened.
+                * /tools/firmware/etherboot/patches/ipxe-nopie.patche           New patch
+Reconstituted patch; Tue Jan 29 14:35:13 WST 2013
+
+diff -ur xen-4.2.0.orig/tools/firmware/etherboot/patches/series xen-4.2.0/tools/firmware/etherboot/patches/series
+--- tools/firmware/etherboot/patches/series	2013-01-29 14:34:10.773520921 +0800
++++ tools/firmware/etherboot/patches/series	2013-01-29 14:33:31.781519209 +0800
+@@ -2,3 +2,4 @@
+ build_fix_1.patch
+ build_fix_2.patch
+ build_fix_3.patch
++ipxe-nopie.patch
+
