@@ -30,7 +30,7 @@ namespace chromeos_update_engine {
 const char* const OmahaRequestParams::kAppId(
     "{e96281a6-d1af-4bde-9a0a-97b76e56dc57}");
 const char* const OmahaRequestParams::kOsPlatform("CoreOS");
-const char* const OmahaRequestParams::kOsVersion("Indy");
+const char* const OmahaRequestParams::kOsVersion("Chateau");
 const char* const kProductionOmahaUrl(
     "https://update.coreos.com/");
 
