@@ -252,7 +252,6 @@ int Main(int argc, char** argv) {
   }
   CHECK(!FLAGS_new_image.empty());
   CHECK(!FLAGS_out_file.empty());
-  CHECK(!FLAGS_new_kernel.empty());
   if (FLAGS_old_image.empty()) {
     LOG(INFO) << "Generating full update";
   } else {

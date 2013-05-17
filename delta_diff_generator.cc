@@ -624,10 +624,12 @@ bool InitializePartitionInfos(const string& old_kernel,
         old_kernel,
         manifest->mutable_old_kernel_info()));
   }
-  TEST_AND_RETURN_FALSE(DeltaDiffGenerator::InitializePartitionInfo(
-      true,
-      new_kernel,
-      manifest->mutable_new_kernel_info()));
+  if (!new_kernel.empty()) {
+    TEST_AND_RETURN_FALSE(DeltaDiffGenerator::InitializePartitionInfo(
+        true,
+        new_kernel,
+        manifest->mutable_new_kernel_info()));
+  }
   if (!old_rootfs.empty()) {
     TEST_AND_RETURN_FALSE(DeltaDiffGenerator::InitializePartitionInfo(
         false,
@@ -1335,8 +1337,11 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
     LOG_IF(WARNING, old_image_block_count != new_image_block_count)
         << "Old and new images have different block counts.";
   }
-  // Sanity check kernel partition arg
-  TEST_AND_RETURN_FALSE(utils::FileSize(new_kernel_part) >= 0);
+
+  if (!new_kernel_part.empty()) {
+    // Sanity check kernel partition arg
+    TEST_AND_RETURN_FALSE(utils::FileSize(new_kernel_part) >= 0);
+  }
 
   vector<Block> blocks(max(old_image_block_count, new_image_block_count));
   LOG(INFO) << "Invalid block index: " << Vertex::kInvalidIndex;
@@ -1404,14 +1409,16 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
                           &graph.back());
       }
 
-      // Read kernel partition
-      TEST_AND_RETURN_FALSE(DeltaCompressKernelPartition(old_kernel_part,
+      if (!new_kernel_part.empty()) {
+        // Read kernel partition
+        TEST_AND_RETURN_FALSE(DeltaCompressKernelPartition(old_kernel_part,
                                                          new_kernel_part,
                                                          &kernel_ops,
                                                          fd,
                                                          &data_file_size));
+        LOG(INFO) << "done reading kernel";
+      }
 
-      LOG(INFO) << "done reading kernel";
       CheckGraph(graph);
 
       LOG(INFO) << "Creating edges...";

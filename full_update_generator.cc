@@ -125,13 +125,19 @@ bool FullUpdateGenerator::Run(
   // passed us bad paths.
   TEST_AND_RETURN_FALSE(image_size >= 0 &&
                         image_size <= utils::FileSize(new_image));
-  const off_t kernel_size = utils::FileSize(new_kernel_part);
-  TEST_AND_RETURN_FALSE(kernel_size >= 0);
+  // Always do the root image, the kernel may not be used in all cases
+  int partitions = 1;
+
+  off_t kernel_size = 0;
+  if (!new_kernel_part.empty()) {
+    kernel_size = utils::FileSize(new_kernel_part);
+    partitions++;
+  }
 
   off_t part_sizes[] = { image_size, kernel_size };
   string paths[] = { new_image, new_kernel_part };
 
-  for (int partition = 0; partition < 2; ++partition) {
+  for (int partition = 0; partition < partitions; ++partition) {
     const string& path = paths[partition];
     LOG(INFO) << "compressing " << path;
     int in_fd = open(path.c_str(), O_RDONLY, 0);
