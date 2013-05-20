@@ -99,8 +99,9 @@ bool OmahaResponseHandlerAction::GetInstallDev(const std::string& boot_dev,
   string ret(boot_dev);
   string::reverse_iterator it = ret.rbegin();  // last character in string
   // Right now, we just switch '3' and '5' partition numbers.
-  TEST_AND_RETURN_FALSE((*it == '3') || (*it == '5'));
-  *it = (*it == '3') ? '5' : '3';
+  // TODOBP: Make this read in the partition table and do it from there
+  TEST_AND_RETURN_FALSE((*it == '3') || (*it == '4'));
+  *it = (*it == '3') ? '4' : '3';
   *install_dev = ret;
   return true;
 }

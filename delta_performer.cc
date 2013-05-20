@@ -250,10 +250,7 @@ bool DeltaPerformer::OpenKernel(const char* kernel_path) {
 
 int DeltaPerformer::Close() {
   int err = 0;
-  if (close(kernel_fd_) == -1) {
-    err = errno;
-    PLOG(ERROR) << "Unable to close kernel fd:";
-  }
+
   if (close(fd_) == -1) {
     err = errno;
     PLOG(ERROR) << "Unable to close rootfs fd:";
@@ -998,16 +995,20 @@ bool DeltaPerformer::GetNewPartitionInfo(uint64_t* kernel_size,
                                          uint64_t* rootfs_size,
                                          vector<char>* rootfs_hash) {
   TEST_AND_RETURN_FALSE(manifest_valid_ &&
-                        manifest_.has_new_kernel_info() &&
                         manifest_.has_new_rootfs_info());
-  *kernel_size = manifest_.new_kernel_info().size();
+
   *rootfs_size = manifest_.new_rootfs_info().size();
-  vector<char> new_kernel_hash(manifest_.new_kernel_info().hash().begin(),
-                               manifest_.new_kernel_info().hash().end());
   vector<char> new_rootfs_hash(manifest_.new_rootfs_info().hash().begin(),
                                manifest_.new_rootfs_info().hash().end());
-  kernel_hash->swap(new_kernel_hash);
   rootfs_hash->swap(new_rootfs_hash);
+
+  if (manifest_.has_new_kernel_info()) {
+    *kernel_size = manifest_.new_kernel_info().size();
+    vector<char> new_kernel_hash(manifest_.new_kernel_info().hash().begin(),
+                               manifest_.new_kernel_info().hash().end());
+    kernel_hash->swap(new_kernel_hash);
+  }
+
   return true;
 }
 
