@@ -7,6 +7,7 @@ CROS_WORKON_TREE="6de051af53074e2253d89fbb5a808bcea591267c"
 CROS_WORKON_PROJECT="coreos/installer"
 CROS_WORKON_LOCALNAME="installer"
 CROS_WORKON_OUTOFTREE_BUILD=1
+CROS_WORKON_REPO="git://github.com"
 
 inherit cros-workon cros-debug cros-au
 
