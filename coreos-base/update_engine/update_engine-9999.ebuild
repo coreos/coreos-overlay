@@ -2,7 +2,8 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="4"
-CROS_WORKON_PROJECT="coreos/platform/update_engine"
+CROS_WORKON_PROJECT="coreos/update_engine"
+CROS_WORKON_REPO="git://github.com"
 
 inherit toolchain-funcs cros-debug cros-workon scons-utils
 
