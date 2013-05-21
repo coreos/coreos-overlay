@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="4"
-CROS_WORKON_COMMIT="6de051af53074e2253d89fbb5a808bcea591267c"
+CROS_WORKON_COMMIT="0aa57d238f41ea3e57287c93fb5a6792799e1c04"
 CROS_WORKON_TREE="6de051af53074e2253d89fbb5a808bcea591267c"
 CROS_WORKON_PROJECT="coreos/installer"
 CROS_WORKON_LOCALNAME="installer"
