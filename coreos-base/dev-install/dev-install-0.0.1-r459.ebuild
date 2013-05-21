@@ -28,6 +28,7 @@ IUSE="cros-debug"
 DEPEND="app-arch/tar
 	sys-apps/coreutils
 	sys-apps/grep
+	dev-util/strace
 	sys-apps/portage
 	sys-apps/sed"
 # TODO(arkaitzr): remove dependency on tar if it's gonna be removed from the
