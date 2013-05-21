@@ -7,10 +7,11 @@
 EAPI=2
 CROS_WORKON_PROJECT="coreos/systemd-rest"
 CROS_WORKON_LOCALNAME="systemd-rest"
+CROS_WORKON_REPO="git://github.com"
 inherit toolchain-funcs cros-workon systemd
 
 DESCRIPTION="systemd over rest"
-HOMEPAGE="https://bitbucket.org/coreos/go-systemd"
+HOMEPAGE="https://github.com/coreos/systemd-rest"
 SRC_URI=""
 
 LICENSE="MIT"
@@ -23,7 +24,7 @@ GOROOT="${ED}usr/$(get_libdir)/go"
 GOPKG="${PN}"
 
 src_compile() {
-	GOPATH="${S}" go build ${PN} || die
+	GOPATH="${S}" go build -o ${PN} || die
 }
 
 src_install() {
