@@ -9,6 +9,10 @@ CROS_WORKON_REPO="git://github.com"
 CROS_WORKON_PROJECT="coreos/linux"
 inherit cros-workon cros-kernel2
 
+DEPEND="
+	sys-devel/bc
+"
+
 DESCRIPTION="CoreOS kernel"
 HOMEPAGE="http://www.kernel.org"
 SRC_URI="${KERNEL_URI}"

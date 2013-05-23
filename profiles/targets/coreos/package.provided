@@ -66,7 +66,6 @@ sys-apps/texinfo-4.13
 
 sys-devel/autoconf-2.63-r1
 sys-devel/automake-1.10.2
-sys-devel/bc-1.06.95
 sys-devel/bison-2.3
 sys-devel/gettext-0.18.1-r1
 sys-devel/gnuconfig-20090203
