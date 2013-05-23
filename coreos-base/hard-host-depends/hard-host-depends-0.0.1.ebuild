@@ -82,6 +82,7 @@ RDEPEND="${RDEPEND}
 	dev-python/pyusb
 	dev-python/setproctitle
 	dev-python/ws4py
+	sys-devel/bc
 	dev-util/cmake
 	dev-util/gob
 	dev-util/gdbus-codegen
