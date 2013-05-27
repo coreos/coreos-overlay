@@ -92,6 +92,7 @@ RDEPEND="${RDEPEND}
 	>=dev-util/intltool-0.30
 	dev-util/scons
 	>=dev-vcs/git-1.7.2
+	dev-vcs/mercurial
 	dev-vcs/subversion[-dso]
 	>=media-libs/freetype-2.2.1
 	net-misc/gsutil
