@@ -6,7 +6,7 @@
 #
 
 EAPI=2
-CROS_WORKON_PROJECT="xiangli-cmu/etcd"
+CROS_WORKON_PROJECT="coreos/etcd"
 CROS_WORKON_LOCALNAME="etcd"
 CROS_WORKON_REPO="git://github.com"
 inherit toolchain-funcs cros-workon systemd
@@ -26,12 +26,12 @@ GOPKG="${PN}"
 
 src_compile() {
 	export GOPATH="${S}"
-	go install "${PN}"
+	go get
+	go build -o ${PN}
 }
 
 src_install() {
-	dosbin ${S}/etcd
+	dosbin ${S}/${PN}
 	systemd_dounit "${FILESDIR}"/${PN}.service
 	systemd_enable_service multi-user.target ${PN}.service
 }
-

@@ -6,7 +6,7 @@
 #
 
 EAPI=2
-CROS_WORKON_PROJECT="xiangli-cmu/etcd-client"
+CROS_WORKON_PROJECT="coreos/etcd-client"
 CROS_WORKON_LOCALNAME="etcd-client"
 CROS_WORKON_REPO="git://github.com"
 inherit toolchain-funcs cros-workon systemd
@@ -26,10 +26,10 @@ GOPKG="${PN}"
 
 src_compile() {
 	export GOPATH="${S}"
-	go install "${PN}"
+	go get
+	go build -o ${PN} || die
 }
 
 src_install() {
-	dobin ${S}/etcd-client
+	dobin ${S}/${PN} || die
 }
-
