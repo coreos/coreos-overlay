@@ -1,5 +1,6 @@
 #
 # Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
+# Copyright (c) 2013 CoreOS, Inc.. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 # $Header:$
 #
