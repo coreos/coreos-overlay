@@ -19,12 +19,10 @@ KEYWORDS="~amd64 ~arm ~x86"
 IUSE=""
 
 DEPEND=">=dev-lang/go-1.0.2"
-GOROOT="${ED}usr/$(get_libdir)/go"
-GOPKG="${PN}"
 
 src_compile() {
 	export GOPATH="${S}"
-	go get || die
+	go get
 	go build -o ${PN} || die
 }
 
