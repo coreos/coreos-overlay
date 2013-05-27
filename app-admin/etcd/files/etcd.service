@@ -1,0 +1,5 @@
+[Service]
+ExecStart=/usr/sbin/etcd
+
+[Install]
+WantedBy=multi-user.target
