@@ -1,1 +1,1 @@
-coreos-init-0.0.1-r1.ebuild
+coreos-init-0.0.1-r2.ebuild
