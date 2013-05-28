@@ -9,7 +9,7 @@ EGIT_REPO_SERVER="https://bitbucket.org"
 EGIT_REPO_URI="${EGIT_REPO_SERVER}/coreos/etcd-lib.git"
 EGIT_BRANCHEGIT_BRANCH="master"
 
-inherit git
+inherit git systemd
 
 DESCRIPTION="Experiments in using etcd"
 HOMEPAGE="https://bitbucket.org/coreos/etcd-libs"
@@ -30,5 +30,6 @@ IUSE=""
 src_install() {
 	systemd_dounit "${S}"/etcd@.service
 	dodir /usr/lib/etcd/
-	cp -R "${S}/*" "${D}/usr/lib/etcd/"
+	insinto /usr/lib/etcd/
+	doins -r "${S}"/*
 }
