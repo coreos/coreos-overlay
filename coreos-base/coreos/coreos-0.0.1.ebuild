@@ -150,6 +150,7 @@ RDEPEND="${RDEPEND}
 	app-admin/systemd-rest
 	app-admin/etcd
 	app-admin/etcd-client
+	coreos-base/etcd-lib
 	coreos-base/motd-http
 	coreos-base/crosh
 	sys-apps/util-linux
