@@ -9,6 +9,7 @@ EAPI=2
 CROS_WORKON_PROJECT="coreos/etcd"
 CROS_WORKON_LOCALNAME="etcd"
 CROS_WORKON_REPO="git://github.com"
+CROS_WORKON_COMMIT="f4301f994c995d7e91214e082fa18312899b4131"
 inherit toolchain-funcs cros-workon systemd
 
 DESCRIPTION="etcd"
@@ -17,7 +18,7 @@ SRC_URI=""
 
 LICENSE="MIT"
 SLOT="0"
-KEYWORDS="~amd64 ~arm ~x86"
+KEYWORDS="amd64 arm x86"
 IUSE=""
 
 DEPEND=">=dev-lang/go-1.0.2"

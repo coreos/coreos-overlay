@@ -17,7 +17,7 @@ SRC_URI=""
 
 LICENSE="MIT"
 SLOT="0"
-KEYWORDS="amd64 arm x86"
+KEYWORDS="~amd64 ~arm ~x86"
 IUSE=""
 
 DEPEND=">=dev-lang/go-1.0.2"
