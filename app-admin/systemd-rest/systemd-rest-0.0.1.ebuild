@@ -8,7 +8,7 @@ EAPI=2
 CROS_WORKON_PROJECT="coreos/systemd-rest"
 CROS_WORKON_LOCALNAME="systemd-rest"
 CROS_WORKON_REPO="git://github.com"
-CROS_WORKON_COMMIT="41af8892337ca0a95c6d1e8964019bfae85d640c"
+CROS_WORKON_COMMIT="3eb21f4f355fa3f8049fe18fce9d2b9530deaf63"
 inherit toolchain-funcs cros-workon systemd
 
 DESCRIPTION="systemd over rest"
