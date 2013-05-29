@@ -32,4 +32,10 @@ src_install() {
 	dodir /usr/lib/etcd/
 	insinto /usr/lib/etcd/
 	doins -r "${S}"/*
+
+	# TODO(philips): fix this up in core once we finish the final layout
+	dodir /mnt/stateful_partition/containers
+	dodir /mnt/stateful_partition/systemd-rest
+	dosym /mnt/stateful_partition/containers /var/lib/containers
+	dosym /mnt/stateful_partition/systemd-rest /var/lib/systemd-rest
 }
