@@ -1,5 +1,6 @@
 [Service]
 ExecStart=/usr/lib/etcd/host/doozerd/configure.sh
+ExecStart=/usr/lib/etcd/host/riak/configure.sh
 Before=etcd.service
 
 [Install]
