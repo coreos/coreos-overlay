@@ -1,5 +1,5 @@
 [Service]
-ExecStart=/usr/sbin/etcd
+ExecStart=/usr/sbin/etcd -a doozer:?ca=1.d.core-os.net:8046
 
 [Install]
 WantedBy=multi-user.target
