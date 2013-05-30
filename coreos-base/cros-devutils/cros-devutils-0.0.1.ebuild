@@ -3,7 +3,8 @@
 
 EAPI="4"
 CROS_WORKON_COMMIT="6637138caa93696a2d623a384d181ae1a89806a8"
-CROS_WORKON_PROJECT="chromiumos/platform/dev-util"
+CROS_WORKON_PROJECT="coreos/dev-util"
+CROS_WORKON_REPO="git://github.com"
 CROS_WORKON_LOCALNAME="dev"
 
 inherit cros-workon multilib python
