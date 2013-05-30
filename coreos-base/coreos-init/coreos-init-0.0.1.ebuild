@@ -3,7 +3,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="4"
-CROS_WORKON_COMMIT="42a2dc50a0d170611bb5681948a454a81f455573"
+CROS_WORKON_COMMIT="1a02594160810ace0059ad3c9a7bcfae00ebe934"
 CROS_WORKON_PROJECT="coreos/init"
 CROS_WORKON_LOCALNAME="init"
 

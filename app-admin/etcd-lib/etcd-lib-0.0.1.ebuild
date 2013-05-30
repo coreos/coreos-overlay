@@ -31,11 +31,8 @@ src_install() {
 	systemd_dounit "${S}"/etcd@.service
 	dodir /usr/lib/etcd/
 	insinto /usr/lib/etcd/
-	doins -r "${S}"/*
+	cp -Ra "${S}"/* ${D}/usr/lib/etcd/
 
-	# TODO(philips): fix this up in core once we finish the final layout
-	dodir /mnt/stateful_partition/containers
-	dodir /mnt/stateful_partition/systemd-rest
-	dosym /mnt/stateful_partition/containers /var/lib/containers
-	dosym /mnt/stateful_partition/systemd-rest /var/lib/systemd-rest
+	dodir /var/lib/containers
+	dodir /var/lib/systemd-rest
 }

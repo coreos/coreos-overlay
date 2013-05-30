@@ -150,7 +150,7 @@ RDEPEND="${RDEPEND}
 	app-admin/systemd-rest
 	app-admin/etcd
 	app-admin/etcd-client
-	coreos-base/etcd-lib
+	app-admin/etcd-lib
 	coreos-base/crosh
 	sys-apps/util-linux
 	sys-auth/pam_pwdfile
