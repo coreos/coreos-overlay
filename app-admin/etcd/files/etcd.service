@@ -1,5 +1,7 @@
 [Service]
-ExecStart=/usr/sbin/etcd -a doozer:?ca=1.d.core-os.net:8046
+ExecStart=/usr/sbin/etcd -a doozer:?ca=${DOOZERD_MASTER}:8046
+EnvironmentFile=/var/run/etcd/doozerd/EnvironmentFile
 
 [Install]
 WantedBy=multi-user.target
+

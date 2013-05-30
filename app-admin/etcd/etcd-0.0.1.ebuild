@@ -35,4 +35,7 @@ src_install() {
 	dosbin ${S}/${PN}
 	systemd_dounit "${FILESDIR}"/${PN}.service
 	systemd_enable_service multi-user.target ${PN}.service
+
+	systemd_dounit "${FILESDIR}"/${PN}-bootstrap.service
+	systemd_enable_service multi-user.target ${PN}-bootstrap.service
 }

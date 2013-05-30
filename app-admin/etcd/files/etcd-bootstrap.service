@@ -1,0 +1,7 @@
+[Service]
+ExecStart=/usr/lib/etcd/host/doozerd/configure.sh
+Before=etcd.service
+
+[Install]
+WantedBy=multi-user.target
+
