@@ -25,6 +25,7 @@ DEPEND="sys-apps/baselayout
 	!<net-misc/openssh-5.2_p1-r8
 	!cros_host? (
 		sys-libs/timezone-data
+		!sys-apps/gawk
 	)"
 RDEPEND="${DEPEND}"
 
@@ -126,7 +127,7 @@ src_install() {
 		dosym /var/lib/timezone/localtime /etc/localtime || die
 
 		# We use mawk in the target boards, not gawk.
-		#dosym mawk /usr/bin/awk || die
+		dosym mawk /usr/bin/awk || die
 
 		# We want dash as our main shell.
 		#dosym dash /bin/sh
