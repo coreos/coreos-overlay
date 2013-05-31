@@ -63,3 +63,4 @@ app-emulation/xen-tools -ocaml -hvm -xend -pygrub -qemu -flask -screen -doc amd6
 =media-libs/libpng-1.5.13-r1 static-libs
 >=virtual/jpeg-0 static-libs
 >=media-libs/libjpeg-turbo-1.2.0-r1 static-libs
+sys-apps/gptfdisk -icu
