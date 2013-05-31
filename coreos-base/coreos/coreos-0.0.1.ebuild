@@ -114,6 +114,7 @@ RDEPEND="${RDEPEND}
 	sys-apps/kexec-tools
 	app-admin/sudo
 	app-admin/rsyslog
+	app-arch/gzip
 	app-arch/sharutils
 	app-arch/tar
 	bootchart? (
@@ -134,11 +135,12 @@ RDEPEND="${RDEPEND}
 	net-misc/dhcpcd
 	net-firewall/iptables
 	net-misc/tlsdate
+	net-misc/wget
 	sys-apps/bootcache
 	sys-apps/coreutils
 	sys-apps/dbus
 	sys-apps/grep
-	net-misc/wget
+	sys-apps/less
 	sys-apps/mawk
 	sys-apps/net-tools
 	sys-apps/pv
