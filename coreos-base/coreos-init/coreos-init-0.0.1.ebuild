@@ -3,7 +3,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="4"
-CROS_WORKON_COMMIT="1a02594160810ace0059ad3c9a7bcfae00ebe934"
+CROS_WORKON_COMMIT="9b03ebb14f931b132963088a11dd41d7425e7b2f"
 CROS_WORKON_PROJECT="coreos/init"
 CROS_WORKON_LOCALNAME="init"
 
@@ -19,7 +19,11 @@ KEYWORDS="amd64 arm x86"
 IUSE="nfs"
 
 DEPEND=""
-RDEPEND="sys-apps/systemd"
+RDEPEND="
+    sys-block/parted
+    sys-apps/gptfdisk
+    sys-apps/systemd
+    "
 
 src_install() {
 	into /	# We want /sbin, not /usr/sbin, etc.
