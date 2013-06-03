@@ -13,4 +13,3 @@
 
 # <fs>			<mountpoint>	<type>		<opts>		<dump/pass>
 /dev/ROOT		/		ext3		defaults	0	0
-tmpfs			/var/run	tmpfs		defaults	0	0
