@@ -18,18 +18,25 @@ KEYWORDS="~amd64 ~arm ~x86"
 IUSE="nfs"
 
 DEPEND=""
-RDEPEND="sys-apps/systemd"
+RDEPEND="
+	sys-block/parted
+	sys-apps/gptfdisk
+	sys-apps/systemd
+	"
 
 src_install() {
-	into /	# We want /sbin, not /usr/sbin, etc.
+	# Install our boot scripts along side systemd in /usr/lib
+	exeinto /usr/lib/coreos
+	for script in scripts/*; do
+		doexe "${script}"
+	done
 
-	dosbin coreos_startup
+	# Install all units, enable the higher-level services
+	for unit in systemd/*; do
+		systemd_dounit "${unit}"
+	done
 
-	systemd_dounit coreos-startup.service
 	systemd_enable_service basic.target coreos-startup.service
-
-	systemd_dounit update-engine.service
 	systemd_enable_service multi-user.target update-engine.service
-
 	systemd_enable_service multi-user.target sshd.socket
 }

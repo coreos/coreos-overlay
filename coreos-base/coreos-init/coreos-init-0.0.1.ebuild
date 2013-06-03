@@ -3,7 +3,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="4"
-CROS_WORKON_COMMIT="9b03ebb14f931b132963088a11dd41d7425e7b2f"
+CROS_WORKON_COMMIT="ad419999ea478bb60867e9e14f01197b928a5c73"
 CROS_WORKON_PROJECT="coreos/init"
 CROS_WORKON_LOCALNAME="init"
 
@@ -20,21 +20,24 @@ IUSE="nfs"
 
 DEPEND=""
 RDEPEND="
-    sys-block/parted
-    sys-apps/gptfdisk
-    sys-apps/systemd
-    "
+	sys-block/parted
+	sys-apps/gptfdisk
+	sys-apps/systemd
+	"
 
 src_install() {
-	into /	# We want /sbin, not /usr/sbin, etc.
+	# Install our boot scripts along side systemd in /usr/lib
+	exeinto /usr/lib/coreos
+	for script in scripts/*; do
+		doexe "${script}"
+	done
 
-	dosbin coreos_startup
+	# Install all units, enable the higher-level services
+	for unit in systemd/*; do
+		systemd_dounit "${unit}"
+	done
 
-	systemd_dounit coreos-startup.service
 	systemd_enable_service basic.target coreos-startup.service
-
-	systemd_dounit update-engine.service
 	systemd_enable_service multi-user.target update-engine.service
-
 	systemd_enable_service multi-user.target sshd.socket
 }
