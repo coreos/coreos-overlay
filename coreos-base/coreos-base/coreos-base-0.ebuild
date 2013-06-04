@@ -118,12 +118,6 @@ src_install() {
 		# Insert empty fstab
 		doins "${FILESDIR}"/fstab
 
-		# Enable dhcpcd by default
-		# TODO(ifup): this doesn't work
-		# systemd_enable_service multi-user.target dhcpcd.service
-		dodir /usr/lib/systemd/system/
-		dosym ../dhcpcd.service /usr/lib/systemd/system/multi-user.target.wants/dhcpcd.service
-
 		# Symlink /etc/localtime to something on the stateful partition, which we
 		# can then change around at runtime.
 		dosym /var/lib/timezone/localtime /etc/localtime || die
@@ -138,11 +132,6 @@ src_install() {
 		#dodir /usr/libexec
 		#dosym /usr/bin/vim /usr/libexec/editor || die
 		#dosym /bin/more /usr/libexec/pager || die
-
-		# Install our custom ssh config settings.
-		insinto /etc/ssh
-		doins "${FILESDIR}"/ssh{,d}_config
-		fperms 600 /etc/ssh/sshd_config
 
 		# Custom login shell snippets.
 		insinto /etc/profile.d
