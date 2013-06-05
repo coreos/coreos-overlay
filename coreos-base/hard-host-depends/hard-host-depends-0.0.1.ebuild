@@ -101,9 +101,9 @@ RDEPEND="${RDEPEND}
 	=sys-devel/automake-1.10*
 	sys-devel/clang
 	sys-fs/sshfs-fuse
-	sys-fs/udev
 	sys-libs/libnih
 	sys-power/iasl
+	virtual/udev
 	"
 
 # Host dependencies that create usernames/groups we need to pull over to target.

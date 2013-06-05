@@ -56,7 +56,7 @@ RDEPEND="
 
 RDEPEND="${RDEPEND}
   tests_platform_RootPartitionsNotMounted? ( sys-apps/rootdev )
-  tests_platform_RootPartitionsNotMounted? ( sys-fs/udev )
+  tests_platform_RootPartitionsNotMounted? ( virtual/udev )
   tests_hardware_TPMFirmware? ( chromeos-base/tpm_lite )
 "
 

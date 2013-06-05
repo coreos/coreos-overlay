@@ -157,12 +157,12 @@ RDEPEND="${RDEPEND}
 	sys-apps/util-linux
 	sys-auth/pam_pwdfile
 	sys-fs/e2fsprogs
-	sys-fs/udev
 	sys-libs/timezone-data
 	sys-process/lsof
 	sys-process/procps
 	app-emulation/docker
 	app-misc/ca-certificates
+	virtual/udev
 	"
 
 # TODO(dianders):

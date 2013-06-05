@@ -5,3 +5,7 @@
 # even a simple mta (like ssmtp).  http://crosbug.com/5777
 mail-mta/ssmtp-2.64
 net-mail/mailbase-1
+
+# Ideally baselayout should have a use flag to select between openrc
+# and systemd but this works in the mean time.
+sys-apps/openrc-9999

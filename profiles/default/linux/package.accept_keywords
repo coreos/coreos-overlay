@@ -67,6 +67,7 @@
 
 # Accept the unstable nature of systemd
 =sys-apps/systemd-197-r1 ~amd64
+=sys-apps/systemd-204 ~amd64
 =sys-apps/systemd-sysv-utils-194 ~amd64
 =sys-apps/dbus-1.6.8-r1 ~amd64
 
