@@ -34,7 +34,7 @@ RDEPEND="
 	sys-fs/avfs
 	sys-fs/fuse-exfat
 	sys-fs/ntfs3g
-	sys-fs/udev
+	virtual/udev
 "
 
 DEPEND="${RDEPEND}

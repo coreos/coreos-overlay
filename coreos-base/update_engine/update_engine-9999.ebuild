@@ -35,7 +35,7 @@ RDEPEND="app-arch/bzip2
 	net-misc/curl
 	sys-apps/rootdev
 	sys-fs/e2fsprogs
-	sys-fs/udev"
+	virtual/udev"
 DEPEND="coreos-base/system_api
 	dev-cpp/gmock
 	dev-cpp/gtest
