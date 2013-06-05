@@ -27,7 +27,9 @@ DEPEND="sys-apps/baselayout
 		sys-libs/timezone-data
 		!sys-apps/gawk
 	)"
-RDEPEND="${DEPEND}"
+RDEPEND="${DEPEND}
+	sys-apps/systemd
+	"
 
 # Remove entry from /etc/group
 #

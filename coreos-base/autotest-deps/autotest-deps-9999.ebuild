@@ -57,7 +57,7 @@ RDEPEND="${RDEPEND}
 
 # deps/fakegudev
 RDEPEND="${RDEPEND}
-  sys-fs/udev[gudev]
+  virtual/udev[gudev]
 "
 
 # deps/fakemodem

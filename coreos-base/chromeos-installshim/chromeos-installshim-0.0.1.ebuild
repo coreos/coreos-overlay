@@ -52,10 +52,10 @@ RDEPEND="
 	sys-apps/which
 	sys-auth/pam_pwdfile
 	sys-fs/e2fsprogs
-	sys-fs/udev
 	sys-process/lsof
 	sys-process/procps
 	virtual/chromeos-bsp
+	virtual/udev
 "
 
 S=${WORKDIR}
