@@ -50,4 +50,5 @@ src_install() {
 	systemd_enable_service multi-user.target dhcpcd.service
 	systemd_enable_service multi-user.target sshd.socket
 	systemd_enable_service multi-user.target update-engine.service
+	systemd_enable_service sshd.socket sshd-keygen.service
 }

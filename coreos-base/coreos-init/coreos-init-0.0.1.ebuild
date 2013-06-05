@@ -3,7 +3,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="4"
-CROS_WORKON_COMMIT="340361e54109536b235948dd8929768513feba30"
+CROS_WORKON_COMMIT="c66322975a726f06036070c78883995612f3dfa0"
 CROS_WORKON_PROJECT="coreos/init"
 CROS_WORKON_LOCALNAME="init"
 
@@ -51,4 +51,5 @@ src_install() {
 	systemd_enable_service multi-user.target dhcpcd.service
 	systemd_enable_service multi-user.target sshd.socket
 	systemd_enable_service multi-user.target update-engine.service
+	systemd_enable_service sshd.socket sshd-keygen.service
 }
