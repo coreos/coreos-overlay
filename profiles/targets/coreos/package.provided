@@ -81,4 +81,3 @@ media-fonts/encodings-1.0.3
 
 # Our chromeos-base package takes care of this.
 app-misc/editor-wrapper-4
-sys-apps/openrc-0.11.8
