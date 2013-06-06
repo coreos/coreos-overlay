@@ -41,14 +41,14 @@ src_install() {
 	doins configs/ssh{,d}_config
 	fperms 600 /etc/ssh/sshd_config
 
+	# List of directories that should be recreated as needed
+	insinto /usr/lib/tmpfiles.d
+	newins configs/tmpfiles.conf zz-${PN}.conf
+
 	# Install all units, enable the higher-level services
 	for unit in systemd/*; do
 		systemd_dounit "${unit}"
 	done
 
-	systemd_enable_service basic.target coreos-startup.service
-	systemd_enable_service multi-user.target dhcpcd.service
-	systemd_enable_service multi-user.target sshd.socket
-	systemd_enable_service multi-user.target update-engine.service
-	systemd_enable_service sshd.socket sshd-keygen.service
+	systemd_enable_service multi-user.target coreos-startup.target
 }

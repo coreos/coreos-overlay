@@ -3,7 +3,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="4"
-CROS_WORKON_COMMIT="c66322975a726f06036070c78883995612f3dfa0"
+CROS_WORKON_COMMIT="723ce96cfbc156f665a9dde63567ea4f427da9da"
 CROS_WORKON_PROJECT="coreos/init"
 CROS_WORKON_LOCALNAME="init"
 
@@ -42,14 +42,14 @@ src_install() {
 	doins configs/ssh{,d}_config
 	fperms 600 /etc/ssh/sshd_config
 
+	# List of directories that should be recreated as needed
+	insinto /usr/lib/tmpfiles.d
+	newins configs/tmpfiles.conf zz-${PN}.conf
+
 	# Install all units, enable the higher-level services
 	for unit in systemd/*; do
 		systemd_dounit "${unit}"
 	done
 
-	systemd_enable_service basic.target coreos-startup.service
-	systemd_enable_service multi-user.target dhcpcd.service
-	systemd_enable_service multi-user.target sshd.socket
-	systemd_enable_service multi-user.target update-engine.service
-	systemd_enable_service sshd.socket sshd-keygen.service
+	systemd_enable_service multi-user.target coreos-startup.target
 }
