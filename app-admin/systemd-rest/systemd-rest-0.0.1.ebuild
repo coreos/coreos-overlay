@@ -32,6 +32,7 @@ src_compile() {
 
 src_install() {
 	dosbin ${S}/systemd-rest
+	keepdir /var/lib/${PN}
 	systemd_dounit "${FILESDIR}"/${PN}.service
 	systemd_enable_service multi-user.target ${PN}.service
 }

@@ -32,9 +32,8 @@ src_compile() {
 
 src_install() {
 	dobin ${S}/bin/${PN}
-	dodir /var/lib/docker
-	dodir /var/lib/docker/graph
-	dodir /var/lib/docker/containers
+	keepdir /var/lib/${PN}/graph
+	keepdir /var/lib/${PN}/containers
 	systemd_dounit "${FILESDIR}"/${PN}.service
 	systemd_enable_service multi-user.target ${PN}.service
 }
