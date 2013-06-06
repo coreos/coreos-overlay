@@ -3,7 +3,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="4"
-CROS_WORKON_COMMIT="ad419999ea478bb60867e9e14f01197b928a5c73"
+CROS_WORKON_COMMIT="a7bd1042de90900b32b5fdbcb0a9562f152ae822"
 CROS_WORKON_PROJECT="coreos/init"
 CROS_WORKON_LOCALNAME="init"
 
@@ -18,8 +18,13 @@ SLOT="0"
 KEYWORDS="amd64 arm x86"
 IUSE="nfs"
 
-DEPEND=""
-RDEPEND="
+# Daemons we enable here must installed during build/install in addition to
+# during runtime so the systemd unit enable step works.
+DEPEND="
+	net-misc/dhcpcd
+	net-misc/openssh
+	"
+RDEPEND="${DEPEND}
 	sys-block/parted
 	sys-apps/gptfdisk
 	sys-apps/systemd
@@ -32,12 +37,19 @@ src_install() {
 		doexe "${script}"
 	done
 
+	# Install our custom ssh config settings.
+	insinto /etc/ssh
+	doins configs/ssh{,d}_config
+	fperms 600 /etc/ssh/sshd_config
+
+	# List of directories that should be recreated as needed
+	insinto /usr/lib/tmpfiles.d
+	newins configs/tmpfiles.conf zz-${PN}.conf
+
 	# Install all units, enable the higher-level services
 	for unit in systemd/*; do
 		systemd_dounit "${unit}"
 	done
 
-	systemd_enable_service basic.target coreos-startup.service
-	systemd_enable_service multi-user.target update-engine.service
-	systemd_enable_service multi-user.target sshd.socket
+	systemd_enable_service multi-user.target coreos-startup.target
 }

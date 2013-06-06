@@ -1,2 +1,0 @@
-Host *
-	UserKnownHostsFile /home/core/user/.ssh/known_hosts
