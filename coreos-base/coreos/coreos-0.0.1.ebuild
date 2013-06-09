@@ -161,6 +161,7 @@ RDEPEND="${RDEPEND}
 	sys-process/lsof
 	sys-process/procps
 	app-emulation/docker
+	sys-process/criu
 	app-misc/ca-certificates
 	virtual/udev
 	"

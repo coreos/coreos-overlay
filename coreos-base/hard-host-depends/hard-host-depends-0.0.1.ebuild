@@ -104,6 +104,9 @@ RDEPEND="${RDEPEND}
 	sys-libs/libnih
 	sys-power/iasl
 	virtual/udev
+	dev-libs/protobuf-c
+	app-text/asciidoc
+	app-text/xmlto
 	"
 
 # Host dependencies that create usernames/groups we need to pull over to target.
