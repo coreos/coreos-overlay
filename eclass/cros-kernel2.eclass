@@ -10,8 +10,6 @@ LICENSE="GPL-2"
 SLOT="0"
 
 DEPEND="sys-apps/debianutils
-	initramfs? ( coreos-base/chromeos-initramfs )
-	netboot_ramfs? ( coreos-base/chromeos-initramfs )
 "
 
 IUSE="-device_tree -kernel_sources"
@@ -22,180 +20,6 @@ STRIP_MASK="/usr/lib/debug/boot/vmlinux"
 : ${CROS_WORKON_OUTOFTREE_BUILD:=1}
 : ${CROS_WORKON_INCREMENTAL_BUILD:=1}
 
-# Config fragments selected by USE flags
-# ...fragments will have the following variables substitutions
-# applied later (needs to be done later since these values
-# aren't reliable when used in a global context like this):
-#   %ROOT% => ${ROOT}
-
-CONFIG_FRAGMENTS=(
-	aufs
-	bridge
-	blkdevram
-	cifs
-	debug
-	fbconsole
-	highmem
-	i2cdev
-	initramfs
-	kvm
-	netboot_ramfs
-	nfs
-	pcserial
-	systemtap
-	tpm
-	vfat
-)
-
-aufs_desc="aufs3"
-aufs_config="
-CONFIG_AUFS_FS=y
-"
-
-bridge_desc="bridge"
-bridge_config="
-CONFIG_BRIDGE=y
-"
-
-blkdevram_desc="ram block device"
-blkdevram_config="
-CONFIG_BLK_DEV_RAM=y
-CONFIG_BLK_DEV_RAM_COUNT=16
-CONFIG_BLK_DEV_RAM_SIZE=16384
-"
-
-cifs_desc="Samba/CIFS Support"
-cifs_config="
-CONFIG_CIFS=m
-"
-
-debug_desc="debug settings"
-debug_config="
-CONFIG_DEBUG_INFO=y
-"
-
-fbconsole_desc="framebuffer console"
-fbconsole_config="
-CONFIG_FRAMEBUFFER_CONSOLE=y
-"
-
-gdmwimax_desc="GCT GDM72xx WiMAX support"
-gdmwimax_config="
-CONFIG_WIMAX_GDM72XX=m
-CONFIG_WIMAX_GDM72XX_USB=y
-CONFIG_WIMAX_GDM72XX_USB_PM=y
-"
-
-highmem_desc="highmem"
-highmem_config="
-CONFIG_HIGHMEM64G=y
-"
-
-i2cdev_desc="I2C device interface"
-i2cdev_config="
-CONFIG_I2C_CHARDEV=y
-"
-
-tpm_desc="TPM support"
-tpm_config="
-CONFIG_TCG_TPM=y
-CONFIG_TCG_TIS=y
-"
-
-initramfs_desc="Initramfs for factory install shim and recovery image"
-initramfs_config='
-CONFIG_INITRAMFS_SOURCE="%ROOT%/var/lib/misc/initramfs.cpio.xz"
-CONFIG_INITRAMFS_COMPRESSION_XZ=y
-'
-
-netboot_ramfs_desc="Network boot install initramfs"
-netboot_ramfs_config='
-CONFIG_INITRAMFS_SOURCE="%ROOT%/var/lib/misc/netboot_ramfs.cpio.xz"
-CONFIG_INITRAMFS_COMPRESSION_XZ=y
-'
-
-vfat_desc="vfat"
-vfat_config="
-CONFIG_NLS_CODEPAGE_437=y
-CONFIG_NLS_ISO8859_1=y
-CONFIG_FAT_FS=y
-CONFIG_VFAT_FS=y
-"
-
-kvm_desc="KVM"
-kvm_config="
-CONFIG_HAVE_KVM=y
-CONFIG_HAVE_KVM_IRQCHIP=y
-CONFIG_HAVE_KVM_EVENTFD=y
-CONFIG_KVM_APIC_ARCHITECTURE=y
-CONFIG_KVM_MMIO=y
-CONFIG_KVM_ASYNC_PF=y
-CONFIG_KVM=m
-CONFIG_KVM_INTEL=m
-# CONFIG_KVM_AMD is not set
-# CONFIG_KVM_MMU_AUDIT is not set
-CONFIG_VIRTIO=m
-CONFIG_VIRTIO_BLK=m
-CONFIG_VIRTIO_NET=m
-CONFIG_VIRTIO_CONSOLE=m
-CONFIG_VIRTIO_RING=m
-CONFIG_VIRTIO_PCI=m
-"
-
-nfs_desc="NFS"
-nfs_config="
-CONFIG_USB_NET_AX8817X=y
-CONFIG_DNOTIFY=y
-CONFIG_DNS_RESOLVER=y
-CONFIG_LOCKD=y
-CONFIG_LOCKD_V4=y
-CONFIG_NETWORK_FILESYSTEMS=y
-CONFIG_NFSD=m
-CONFIG_NFSD_V3=y
-CONFIG_NFSD_V4=y
-CONFIG_NFS_COMMON=y
-CONFIG_NFS_FS=y
-CONFIG_NFS_USE_KERNEL_DNS=y
-CONFIG_NFS_V3=y
-CONFIG_NFS_V4=y
-CONFIG_ROOT_NFS=y
-CONFIG_RPCSEC_GSS_KRB5=y
-CONFIG_SUNRPC=y
-CONFIG_SUNRPC_GSS=y
-CONFIG_USB_USBNET=y
-CONFIG_IP_PNP=y
-CONFIG_IP_PNP_DHCP=y
-"
-
-pcserial_desc="PC serial"
-pcserial_config="
-CONFIG_SERIAL_8250=y
-CONFIG_SERIAL_8250_CONSOLE=y
-CONFIG_FIX_EARLYCON_MEM=y
-CONFIG_SERIAL_8250_PCI=y
-CONFIG_SERIAL_8250_NR_UARTS=32
-CONFIG_SERIAL_8250_RUNTIME_UARTS=4
-CONFIG_SERIAL_8250_EXTENDED=y
-CONFIG_SERIAL_8250_SHARE_IRQ=y
-CONFIG_SERIAL_CORE_CONSOLE=y
-CONFIG_CONSOLE_POLL=y
-"
-
-systemtap_desc="systemtap support"
-systemtap_config="
-CONFIG_KPROBES=y
-CONFIG_DEBUG_INFO=y
-"
-
-# Add all config fragments as off by default
-IUSE="${IUSE} ${CONFIG_FRAGMENTS[@]}"
-
-REQUIRED_USE="
-	initramfs? ( !netboot_ramfs )
-	netboot_ramfs? ( !initramfs )
-	initramfs? ( i2cdev tpm )
-	netboot_ramfs? ( i2cdev tpm )
-"
 
 # If an overlay has eclass overrides, but doesn't actually override this
 # eclass, we'll have ECLASSDIR pointing to the active overlay's
@@ -439,19 +263,6 @@ cros-kernel2_src_configure() {
 			cp "${config}" "$(get_build_cfg)" || die
 		fi
 	fi
-
-	local fragment
-	for fragment in ${CONFIG_FRAGMENTS[@]}; do
-		use ${fragment} || continue
-
-		local msg="${fragment}_desc"
-		local config="${fragment}_config"
-		elog "   - adding ${!msg} config"
-
-		echo "${!config}" | \
-			sed -e "s|%ROOT%|${ROOT}|g" \
-			>> "$(get_build_cfg)" || die
-	done
 
 	# Use default for any options not explitly set in splitconfig
 	yes "" | kmake oldconfig
