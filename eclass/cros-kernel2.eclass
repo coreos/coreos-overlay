@@ -408,7 +408,6 @@ cros-kernel2_src_install() {
 	if cros_chkconfig_present MODULES; then
 		kmake INSTALL_MOD_PATH="${D}" modules_install
 	fi
-	kmake INSTALL_MOD_PATH="${D}" firmware_install
 
 	local version=$(kernelversion)
 	if use arm; then

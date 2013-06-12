@@ -1,0 +1,37 @@
+From: Greg Kroah-Hartman <greg@kroah.com>
+Subject: [PATCH] firmware: disable the firmware path entirely
+
+We really don't want to build firmware images into the kernel package at
+all, so rip out all references to the firmware directory that we can
+fine.
+
+
+diff --git a/Makefile b/Makefile
+index 8818c95..0beba841 100644
+--- a/Makefile
++++ b/Makefile
+@@ -519,7 +519,7 @@ scripts: scripts_basic include/config/auto.conf include/config/tristate.conf \
+ 
+ # Objects we will link into vmlinux / subdirs we need to visit
+ init-y		:= init/
+-drivers-y	:= drivers/ sound/ firmware/
++drivers-y	:= drivers/ sound/
+ net-y		:= net/
+ libs-y		:= lib/
+ core-y		:= usr/
+@@ -944,7 +944,6 @@ modules: $(vmlinux-dirs) $(if $(KBUILD_BUILTIN),vmlinux) modules.builtin
+ 	$(Q)$(AWK) '!x[$$0]++' $(vmlinux-dirs:%=$(objtree)/%/modules.order) > $(objtree)/modules.order
+ 	@$(kecho) '  Building modules, stage 2.';
+ 	$(Q)$(MAKE) -f $(srctree)/scripts/Makefile.modpost
+-	$(Q)$(MAKE) -f $(srctree)/scripts/Makefile.fwinst obj=firmware __fw_modbuild
+ 
+ modules.builtin: $(vmlinux-dirs:%=%/modules.builtin)
+ 	$(Q)$(AWK) '!x[$$0]++' $^ > $(objtree)/modules.builtin
+@@ -980,7 +979,6 @@ _modinst_:
+ # boot script depmod is the master version.
+ PHONY += _modinst_post
+ _modinst_post: _modinst_
+-	$(Q)$(MAKE) -f $(srctree)/scripts/Makefile.fwinst obj=firmware __fw_modinst
+ 	$(call cmd,depmod)
+ 
+ ifeq ($(CONFIG_MODULE_SIG), y)
