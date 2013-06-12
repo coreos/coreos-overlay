@@ -1,0 +1,409 @@
+From 86152848ed452bf1a01d0bea25c47ea54884a4fd Mon Sep 17 00:00:00 2001
+From: Harald Hoyer <harald@redhat.com>
+Date: Mon, 11 Mar 2013 16:32:16 +0100
+Subject: [PATCH 5/5] make host_fs_types a hashmap
+
+This requires bash >= 4, but hash maps are so much more comfortable
+---
+ dracut-functions.sh                | 14 +++---------
+ dracut.sh                          | 23 +++++++++----------
+ modules.d/90btrfs/module-setup.sh  |  6 ++---
+ modules.d/90crypt/module-setup.sh  | 39 +++++++++++++++++++--------------
+ modules.d/90dmraid/module-setup.sh | 34 ++++++++++++++++------------
+ modules.d/90lvm/module-setup.sh    | 36 +++++++++++++++++-------------
+ modules.d/90mdraid/module-setup.sh | 45 +++++++++++++++++++++-----------------
+ modules.d/95cifs/module-setup.sh   |  2 +-
+ modules.d/95nfs/module-setup.sh    |  6 ++---
+ modules.d/95virtfs/module-setup.sh |  4 ++--
+ 10 files changed, 112 insertions(+), 97 deletions(-)
+
+diff --git a/dracut-functions.sh b/dracut-functions.sh
+index a6a609c..52a1781 100755
+--- a/dracut-functions.sh
++++ b/dracut-functions.sh
+@@ -450,23 +450,15 @@ find_mp_fstype() {
+ find_root_block_device() { find_block_device /; }
+ 
+ # for_each_host_dev_fs <func>
+-# Execute "<func> <dev> <filesystem>" for every "<dev>|<fs>" pair found
++# Execute "<func> <dev> <filesystem>" for every "<dev> <fs>" pair found
+ # in ${host_fs_types[@]}
+ for_each_host_dev_fs()
+ {
+     local _func="$1"
+     local _dev
+-    local _fs
+     local _ret=1
+-    for f in ${host_fs_types[@]}; do
+-        OLDIFS="$IFS"
+-        IFS="|"
+-        set -- $f
+-        IFS="$OLDIFS"
+-        _dev="$1"
+-        [[ -b "$_dev" ]] || continue
+-        _fs="$2"
+-        $_func $_dev $_fs && _ret=0
++    for _dev in "${!host_fs_types[@]}"; do
++        $_func "$_dev" "${host_fs_types[$_dev]}" && _ret=0
+     done
+     return $_ret
+ }
+diff --git a/dracut.sh b/dracut.sh
+index 28ed4f1..15e66f3 100755
+--- a/dracut.sh
++++ b/dracut.sh
+@@ -744,11 +744,13 @@ trap 'exit 1;' SIGINT
+ # Need to be able to have non-root users read stuff (rpcbind etc)
+ chmod 755 "$initdir"
+ 
++declare -A host_fs_types
++
+ for line in "${fstab_lines[@]}"; do
+     set -- $line
+     #dev mp fs fsopts
+     push host_devs "$1"
+-    push host_fs_types "$1|$3"
++    host_fs_types["$1"]="$3"
+ done
+ 
+ for f in $add_fstab; do
+@@ -791,28 +793,27 @@ fi
+ _get_fs_type() (
+     [[ $1 ]] || return
+     if [[ -b $1 ]] && get_fs_env $1; then
+-        echo "$(readlink -f $1)|$ID_FS_TYPE"
++        echo "$(readlink -f $1) $ID_FS_TYPE"
+         return 1
+     fi
+     if [[ -b /dev/block/$1 ]] && get_fs_env /dev/block/$1; then
+-        echo "$(readlink -f /dev/block/$1)|$ID_FS_TYPE"
++        echo "$(readlink -f /dev/block/$1) $ID_FS_TYPE"
+         return 1
+     fi
+     if fstype=$(find_dev_fstype $1); then
+-        echo "$1|$fstype"
++        echo "$1 $fstype"
+         return 1
+     fi
+     return 1
+ )
+ 
+ for dev in "${host_devs[@]}"; do
+-    unset fs_type
+-    for fstype in $(_get_fs_type $dev) \
+-        $(check_block_and_slaves _get_fs_type $(get_maj_min $dev)); do
+-        if ! strstr " ${host_fs_types[*]} " " $fstype ";then
+-            push host_fs_types "$fstype"
+-        fi
+-    done
++    while read key val; do
++        host_fs_types["$key"]="$val"
++    done < <(
++        _get_fs_type $dev
++        check_block_and_slaves_all _get_fs_type $(get_maj_min $dev)
++    )
+ done
+ 
+ [[ -d $udevdir ]] \
+diff --git a/modules.d/90btrfs/module-setup.sh b/modules.d/90btrfs/module-setup.sh
+index 0f79f5e..4a7c01d 100755
+--- a/modules.d/90btrfs/module-setup.sh
++++ b/modules.d/90btrfs/module-setup.sh
+@@ -9,12 +9,10 @@ check() {
+     type -P btrfs >/dev/null || return 1
+ 
+     [[ $hostonly ]] || [[ $mount_needs ]] && {
+-        local _found
+         for fs in ${host_fs_types[@]}; do
+-            strstr "$fs" "\|btrfs" && _found="1"
++            [[ "$fs" == "btrfs" ]] && return 0
+         done
+-        [[ $_found ]] || return 1
+-        unset _found
++        return 255
+     }
+ 
+     return 0
+diff --git a/modules.d/90crypt/module-setup.sh b/modules.d/90crypt/module-setup.sh
+index 2b4456b..b76f6ae 100755
+--- a/modules.d/90crypt/module-setup.sh
++++ b/modules.d/90crypt/module-setup.sh
+@@ -7,8 +7,30 @@ check() {
+     # if cryptsetup is not installed, then we cannot support encrypted devices.
+     type -P cryptsetup >/dev/null || return 1
+ 
++    [[ $hostonly ]] || [[ $mount_needs ]] && {
++        for fs in "${host_fs_types[@]}"; do
++            [[ $fs = "crypto_LUKS" ]] && return 0
++        done
++        return 255
++    }
++
++    return 0
++}
++
++depends() {
++    echo dm rootfs-block
++    return 0
++}
++
++installkernel() {
++    instmods dm_crypt =crypto
++}
++
++install() {
++
+     check_crypt() {
+         local dev=$1 fs=$2
++
+         [[ $fs = "crypto_LUKS" ]] || return 1
+         ID_FS_UUID=$(udevadm info --query=property --name=$dev \
+             | while read line; do
+@@ -24,23 +46,8 @@ check() {
+         return 0
+     }
+ 
+-    [[ $hostonly ]] || [[ $mount_needs ]] && {
+-        for_each_host_dev_and_slaves_all check_crypt || return 1
+-    }
+-
+-    return 0
+-}
+-
+-depends() {
+-    echo dm rootfs-block
+-    return 0
+-}
+-
+-installkernel() {
+-    instmods dm_crypt =crypto
+-}
++    for_each_host_dev_fs check_crypt
+ 
+-install() {
+     dracut_install cryptsetup rmdir readlink umount
+     inst_script "$moddir"/cryptroot-ask.sh /sbin/cryptroot-ask
+     inst_script "$moddir"/probe-keydev.sh /sbin/probe-keydev
+diff --git a/modules.d/90dmraid/module-setup.sh b/modules.d/90dmraid/module-setup.sh
+index c315961..76daa4a 100755
+--- a/modules.d/90dmraid/module-setup.sh
++++ b/modules.d/90dmraid/module-setup.sh
+@@ -8,9 +8,27 @@ check() {
+     # in trying to support it in the initramfs.
+     type -P dmraid >/dev/null || return 1
+ 
++    [[ $hostonly ]] || [[ $mount_needs ]] && {
++        for fs in "${host_fs_types[@]}"; do
++            [[ $fs = *_raid_member ]] && return 0
++        done
++        return 255
++    }
++
++    return 0
++}
++
++depends() {
++    echo dm rootfs-block
++    return 0
++}
++
++install() {
++    local _i
++
+     check_dmraid() {
+         local dev=$1 fs=$2 holder DEVPATH DM_NAME
+-        [[ "$fs" = "${fs%%_raid_member}" ]] && return 1
++        [[ "$fs" != *_raid_member ]] && return 1
+ 
+         DEVPATH=$(udevadm info --query=property --name=$dev \
+             | while read line; do
+@@ -37,20 +55,8 @@ check() {
+         return 0
+     }
+ 
+-    [[ $hostonly ]] || [[ $mount_needs ]] && {
+-        for_each_host_dev_and_slaves_all check_dmraid || return 1
+-    }
++    for_each_host_dev_fs check_dmraid
+ 
+-    return 0
+-}
+-
+-depends() {
+-    echo dm rootfs-block
+-    return 0
+-}
+-
+-install() {
+-    local _i
+     dracut_install dmraid
+     dracut_install -o kpartx
+     inst $(command -v partx) /sbin/partx
+diff --git a/modules.d/90lvm/module-setup.sh b/modules.d/90lvm/module-setup.sh
+index e0e4043..22186f4 100755
+--- a/modules.d/90lvm/module-setup.sh
++++ b/modules.d/90lvm/module-setup.sh
+@@ -7,22 +7,11 @@ check() {
+     # No point trying to support lvm if the binaries are missing
+     type -P lvm >/dev/null || return 1
+ 
+-    check_lvm() {
+-        local DM_VG_NAME DM_LV_NAME DM_UDEV_DISABLE_DISK_RULES_FLAG
+-        eval $(udevadm info --query=property --name=/dev/block/$1|egrep '(DM_VG_NAME|DM_LV_NAME|DM_UDEV_DISABLE_DISK_RULES_FLAG)=')
+-        [[ "$DM_UDEV_DISABLE_DISK_RULES_FLAG" = "1" ]] && return 1
+-        [[ ${DM_VG_NAME} ]] && [[ ${DM_LV_NAME} ]] || return 1
+-        if ! strstr " ${_activated[*]} " " ${DM_VG_NAME}/${DM_LV_NAME} "; then
+-            if ! [[ $kernel_only ]]; then
+-                echo " rd.lvm.lv=${DM_VG_NAME}/${DM_LV_NAME} " >> "${initdir}/etc/cmdline.d/90lvm.conf"
+-            fi
+-            push _activated "${DM_VG_NAME}/${DM_LV_NAME}"
+-        fi
+-        return 0
+-    }
+-
+     [[ $hostonly ]] || [[ $mount_needs ]] && {
+-        for_each_host_dev_and_slaves_all check_lvm || return 1
++        for fs in "${host_fs_types[@]}"; do
++            [[ $fs = LVM*_member ]] && return 0
++        done
++        return 255
+     }
+ 
+     return 0
+@@ -38,6 +27,23 @@ install() {
+     local _i
+     inst lvm
+ 
++    check_lvm() {
++        local DM_VG_NAME DM_LV_NAME DM_UDEV_DISABLE_DISK_RULES_FLAG
++
++        eval $(udevadm info --query=property --name=$1 | egrep '(DM_VG_NAME|DM_LV_NAME|DM_UDEV_DISABLE_DISK_RULES_FLAG)=')
++        [[ "$DM_UDEV_DISABLE_DISK_RULES_FLAG" = "1" ]] && return 1
++        [[ ${DM_VG_NAME} ]] && [[ ${DM_LV_NAME} ]] || return 1
++        if ! strstr " ${_activated[*]} " " ${DM_VG_NAME}/${DM_LV_NAME} "; then
++            if ! [[ $kernel_only ]]; then
++                echo " rd.lvm.lv=${DM_VG_NAME}/${DM_LV_NAME} " >> "${initdir}/etc/cmdline.d/90lvm.conf"
++            fi
++            push _activated "${DM_VG_NAME}/${DM_LV_NAME}"
++        fi
++        return 0
++    }
++
++    for_each_host_dev_fs check_lvm
++
+     inst_rules "$moddir/64-lvm.rules"
+ 
+     if [[ $hostonly ]] || [[ $lvmconf = "yes" ]]; then
+diff --git a/modules.d/90mdraid/module-setup.sh b/modules.d/90mdraid/module-setup.sh
+index 0efffbb..70c27dd 100755
+--- a/modules.d/90mdraid/module-setup.sh
++++ b/modules.d/90mdraid/module-setup.sh
+@@ -7,27 +7,11 @@ check() {
+     # No mdadm?  No mdraid support.
+     type -P mdadm >/dev/null || return 1
+ 
+-    check_mdraid() {
+-        local dev=$1 fs=$2 holder DEVPATH MD_UUID
+-        [[ "$fs" = "${fs%%_raid_member}" ]] && return 1
+-
+-        MD_UUID=$(/sbin/mdadm --examine --export $dev \
+-            | while read line; do
+-                [[ ${line#MD_UUID} = $line ]] && continue
+-                eval "$line"
+-                echo $MD_UUID
+-                break
+-                done)
+-
+-        [[ ${MD_UUID} ]] || return 1
+-        if ! [[ $kernel_only ]]; then
+-            echo " rd.md.uuid=${MD_UUID} " >> "${initdir}/etc/cmdline.d/90mdraid.conf"
+-        fi
+-        return 0
+-    }
+-
+     [[ $hostonly ]] || [[ $mount_needs ]] && {
+-        for_each_host_dev_and_slaves_all check_mdraid || return 1
++        for fs in "${host_fs_types[@]}"; do
++            [[ "$fs" == *_raid_member ]] && return 0
++        done
++        return 255
+     }
+ 
+     return 0
+@@ -48,6 +32,27 @@ install() {
+     inst $(command -v partx) /sbin/partx
+     inst $(command -v mdadm) /sbin/mdadm
+ 
++    check_mdraid() {
++        local dev=$1 fs=$2 holder DEVPATH MD_UUID
++        [[ "$fs" != *_raid_member ]] && return 1
++
++        MD_UUID=$(/sbin/mdadm --examine --export $dev \
++            | while read line; do
++                [[ ${line#MD_UUID} = $line ]] && continue
++                eval "$line"
++                echo $MD_UUID
++                break
++                done)
++
++        [[ ${MD_UUID} ]] || return 1
++        if ! [[ $kernel_only ]]; then
++            echo " rd.md.uuid=${MD_UUID} " >> "${initdir}/etc/cmdline.d/90mdraid.conf"
++        fi
++        return 0
++    }
++
++    for_each_host_dev_fs check_mdraid
++
+     inst_rules 64-md-raid.rules
+     # remove incremental assembly from stock rules, so they don't shadow
+     # 65-md-inc*.rules and its fine-grained controls, or cause other problems
+diff --git a/modules.d/95cifs/module-setup.sh b/modules.d/95cifs/module-setup.sh
+index 1c7d0be..bf0eddf 100755
+--- a/modules.d/95cifs/module-setup.sh
++++ b/modules.d/95cifs/module-setup.sh
+@@ -8,7 +8,7 @@ check() {
+ 
+     [[ $hostonly ]] || [[ $mount_needs ]] && {
+         for fs in ${host_fs_types[@]}; do
+-            strstr "$fs" "\|cifs"  && return 0
++            [[ "$fs" == "cifs" ]] && return 0
+         done
+         return 255
+     }
+diff --git a/modules.d/95nfs/module-setup.sh b/modules.d/95nfs/module-setup.sh
+index 38ee5d7..7c3a64d 100755
+--- a/modules.d/95nfs/module-setup.sh
++++ b/modules.d/95nfs/module-setup.sh
+@@ -9,9 +9,9 @@ check() {
+ 
+     [[ $hostonly ]] || [[ $mount_needs ]] && {
+         for fs in ${host_fs_types[@]}; do
+-            strstr "$fs" "\|nfs"  && return 0
+-            strstr "$fs" "\|nfs3" && return 0
+-            strstr "$fs" "\|nfs4" && return 0
++            [[ "$fs" == "nfs" ]] && return 0
++            [[ "$fs" == "nfs3" ]] && return 0
++            [[ "$fs" == "nfs4" ]] && return 0
+         done
+         return 255
+     }
+diff --git a/modules.d/95virtfs/module-setup.sh b/modules.d/95virtfs/module-setup.sh
+index 0b961a8..12bd354 100755
+--- a/modules.d/95virtfs/module-setup.sh
++++ b/modules.d/95virtfs/module-setup.sh
+@@ -5,9 +5,9 @@
+ check() {
+     [[ $hostonly ]] || [[ $mount_needs ]] && {
+         for fs in ${host_fs_types[@]}; do
+-            strstr "$fs" "\|9p" && return 0
++            [[ "$fs" == "9p" ]] && return 0
+         done
+-        return 1
++        return 255
+     }
+ 
+     if type -P systemd-detect-virt >/dev/null 2>&1; then
+-- 
+1.8.1.4
+

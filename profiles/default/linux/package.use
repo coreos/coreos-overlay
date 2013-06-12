@@ -64,3 +64,4 @@ app-emulation/xen-tools -ocaml -hvm -xend -pygrub -qemu -flask -screen -doc amd6
 >=virtual/jpeg-0 static-libs
 >=media-libs/libjpeg-turbo-1.2.0-r1 static-libs
 sys-apps/gptfdisk -icu
+sys-kernel/dracut dracut_modules_systemd

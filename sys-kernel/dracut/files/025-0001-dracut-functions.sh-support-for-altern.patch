@@ -1,0 +1,37 @@
+From fcb28882b1eaaa20ad9d831857ecf176dd0e3006 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Amadeusz=20=C5=BBo=C5=82nowski?= <aidecoe@aidecoe.name>
+Date: Sun, 6 Jan 2013 13:35:01 +0100
+Subject: [PATCH 1/5] dracut-functions.sh: support for alternative udev dirs -
+ udevaltdirs
+
+It is required for Gentoo which moves udev from / to /usr and supports
+both /lib/udev and /usr/lib/udev for compatibility with other packages.
+
+Credits go to Alexander Tsoy <alexander@tsoy.me>.
+---
+ dracut-functions.sh | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/dracut-functions.sh b/dracut-functions.sh
+index e23db76..812ea2b 100755
+--- a/dracut-functions.sh
++++ b/dracut-functions.sh
+@@ -941,6 +941,15 @@ inst_rules() {
+     inst_dir "$_target"
+     for _rule in "$@"; do
+         if [ "${_rule#/}" = "$_rule" ]; then
++            for r in ${udevaltdirs}; do
++                [[ "$r" = "${udevdir}" ]] && continue
++                if [[ -f $r/rules.d/$_rule ]]; then
++                    _found="$r/rules.d/$_rule"
++                    inst_rule_programs "$_found"
++                    inst_rule_group_owner "$_found"
++                    inst_simple "$_found" "${udevdir}/rules.d/${_found##*/}"
++                fi
++            done
+             for r in ${udevdir}/rules.d /etc/udev/rules.d; do
+                 if [[ -f $r/$_rule ]]; then
+                     _found="$r/$_rule"
+-- 
+1.8.1.4
+

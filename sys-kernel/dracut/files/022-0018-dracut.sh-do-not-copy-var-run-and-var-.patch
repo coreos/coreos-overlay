@@ -1,0 +1,31 @@
+From f5e10c1e3911a1cdc928fa0e4ab9bf775e9bac30 Mon Sep 17 00:00:00 2001
+From: Harald Hoyer <harald@redhat.com>
+Date: Tue, 31 Jul 2012 11:44:40 +0200
+Subject: [PATCH 18/19] dracut.sh: do not copy /var/run and /var/lock from the
+ system
+
+https://bugs.gentoo.org/show_bug.cgi?id=428142
+
+If /var/run and /var/lock are real directories, we would end up with:
+var/lock/lock -> /run/lock
+var/run/run -> /run
+---
+ dracut.sh |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/dracut.sh b/dracut.sh
+index 2235e9a..91e510c 100755
+--- a/dracut.sh
++++ b/dracut.sh
+@@ -810,7 +810,7 @@ if [[ $prefix ]]; then
+ fi
+ 
+ if [[ $kernel_only != yes ]]; then
+-    for d in usr/bin usr/sbin bin etc lib sbin tmp usr var var/log var/run var/lock $libdirs; do
++    for d in usr/bin usr/sbin bin etc lib sbin tmp usr var var/log $libdirs; do
+         [[ -e "${initdir}${prefix}/$d" ]] && continue
+         if [ -L "/$d" ]; then
+             inst_symlink "/$d" "${prefix}/$d"
+-- 
+1.7.8.6
+

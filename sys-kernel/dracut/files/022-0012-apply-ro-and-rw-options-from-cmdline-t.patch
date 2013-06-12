@@ -1,0 +1,111 @@
+From 6e9f7b09e4316b1337642f876092dcc429efaa52 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Amadeusz=20=C5=BBo=C5=82nowski?= <aidecoe@aidecoe.name>
+Date: Thu, 26 Jul 2012 13:17:05 +0200
+Subject: [PATCH 12/14] apply "ro" and "rw" options from cmdline to / mount
+
+rflags is no longer guaranteed to be non empty.  / is mounted according
+to rootflags parameter but forced ro at first.  Later it is remounted
+according to /etc/fstab + rootflags parameter and "ro"/"rw".  If
+parameters are still the same as for first mount, / isn't remounted.
+
+Conflicts:
+
+    modules.d/95rootfs-block/mount-root.sh
+    modules.d/99base/parse-root-opts.sh
+---
+ modules.d/95rootfs-block/mount-root.sh |   35 +++++++------------------------
+ modules.d/99base/parse-root-opts.sh    |   11 +++------
+ 2 files changed, 12 insertions(+), 34 deletions(-)
+
+diff --git a/modules.d/95rootfs-block/mount-root.sh b/modules.d/95rootfs-block/mount-root.sh
+index 8259ff9..b5d45c4 100755
+--- a/modules.d/95rootfs-block/mount-root.sh
++++ b/modules.d/95rootfs-block/mount-root.sh
+@@ -5,32 +5,13 @@
+ type getarg >/dev/null 2>&1 || . /lib/dracut-lib.sh
+ type det_fs >/dev/null 2>&1 || . /lib/fs-lib.sh
+ 
+-filter_rootopts() {
+-    rootopts=$1
+-    # strip ro and rw options
+-    local OLDIFS="$IFS"
+-    IFS=,
+-    set -- $rootopts
+-    IFS="$OLDIFS"
+-    local v
+-    while [ $# -gt 0 ]; do
+-        case $1 in
+-            defaults);;
+-            *)
+-                v="$v,${1}";;
+-        esac
+-        shift
+-    done
+-    rootopts=${v#,}
+-    echo $rootopts
+-}
+-
+ mount_root() {
+     local _ret
++    local _rflags_ro="$rflags,ro"
+     # sanity - determine/fix fstype
+     rootfs=$(det_fs "${root#block:}" "$fstype")
+-    while ! mount -t ${rootfs} -o "$rflags",ro "${root#block:}" "$NEWROOT"; do
+-        warn "Failed to mount -t ${rootfs} -o $rflags,ro ${root#block:} $NEWROOT"
++    while ! mount -t ${rootfs} -o "$_rflags_ro" "${root#block:}" "$NEWROOT"; do
++        warn "Failed to mount -t ${rootfs} -o $_rflags_ro ${root#block:} $NEWROOT"
+         fsck_ask_err
+     done
+ 
+@@ -96,13 +77,13 @@ mount_root() {
+                 break
+             fi
+         done < "$NEWROOT/etc/fstab"
+-
+-        rootopts=$(filter_rootopts $rootopts)
+     fi
+ 
+     # we want rootflags (rflags) to take precedence so prepend rootopts to
+-    # them; rflags is guaranteed to not be empty
+-    rflags="${rootopts:+${rootopts},}${rflags}"
++    # them
++    rflags="${rootopts},${rflags}"
++    rflags="${rflags#,}"
++    rflags="${rflags%,}"
+ 
+     # backslashes are treated as escape character in fstab
+     # esc_root=$(echo ${root#block:} | sed 's,\\,\\\\,g')
+@@ -125,7 +106,7 @@ mount_root() {
+     if ! ismounted "$NEWROOT"; then
+         info "Mounting ${root#block:} with -o ${rflags}"
+         mount "$NEWROOT" 2>&1 | vinfo
+-    else
++    elif ! are_lists_eq , "$rflags" "$_rflags_ro" defaults; then
+         info "Remounting ${root#block:} with -o ${rflags}"
+         mount -o remount "$NEWROOT" 2>&1 | vinfo
+     fi
+diff --git a/modules.d/99base/parse-root-opts.sh b/modules.d/99base/parse-root-opts.sh
+index 44dcc09..7b0b758 100755
+--- a/modules.d/99base/parse-root-opts.sh
++++ b/modules.d/99base/parse-root-opts.sh
+@@ -4,13 +4,10 @@
+ 
+ root=$(getarg root=)
+ 
+-if rflags="$(getarg rootflags=)"; then
+-    getarg rw && rflags="${rflags},rw"
+-    getarg ro && rflags="${rflags},ro"
+-else
+-    getarg rw && rflags=rw
+-    getarg ro && rflags=ro
+-fi
++rflags="$(getarg rootflags=)"
++getargbool 0 rw && rflags="${rflags},rw"
++getargbool 0 ro && rflags="${rflags},ro"
++rflags="${rflags#,}"
+ 
+ fstype="$(getarg rootfstype=)"
+ if [ -z "$fstype" ]; then
+-- 
+1.7.8.6
+
