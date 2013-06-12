@@ -1,0 +1,73 @@
+From e72c3bf925e277f43d1c412f6a6bc9115a2257d5 Mon Sep 17 00:00:00 2001
+From: Harald Hoyer <harald@redhat.com>
+Date: Wed, 25 Jul 2012 16:03:49 +0200
+Subject: [PATCH 01/14] qemu*/module-setup.sh: provide alternative for
+ systemd-detect-virt
+
+---
+ modules.d/90qemu-net/module-setup.sh |   19 +++++++++++++++----
+ modules.d/90qemu/module-setup.sh     |   18 ++++++++++++++----
+ 2 files changed, 29 insertions(+), 8 deletions(-)
+
+diff --git a/modules.d/90qemu-net/module-setup.sh b/modules.d/90qemu-net/module-setup.sh
+index 35c8f0f..e617230 100755
+--- a/modules.d/90qemu-net/module-setup.sh
++++ b/modules.d/90qemu-net/module-setup.sh
+@@ -3,10 +3,21 @@
+ # ex: ts=8 sw=4 sts=4 et filetype=sh
+ 
+ check() {
+-    vm=$(systemd-detect-virt --vm &>/dev/null)
+-    (($? != 0)) && return 255
+-    [[ $vm = "qemu" ]] && return 0
+-    [[ $vm = "kvm" ]] && return 0
++    if type -P systemd-detect-virt &>/dev/null; then
++        vm=$(systemd-detect-virt --vm &>/dev/null)
++        (($? != 0)) && return 255
++        [[ $vm = "qemu" ]] && return 0
++        [[ $vm = "kvm" ]] && return 0
++        [[ $vm = "bochs" ]] && return 0
++    fi
++
++    for i in /sys/class/dmi/id/*_vendor; do
++        [[ -f $i ]] || continue
++        read vendor < $i
++        [[  "$vendor" == "QEMU" ]] && return 0
++        [[  "$vendor" == "Bochs" ]] && return 0
++    done
++
+     return 255
+ }
+ 
+diff --git a/modules.d/90qemu/module-setup.sh b/modules.d/90qemu/module-setup.sh
+index 3e55f23..fc258ac 100755
+--- a/modules.d/90qemu/module-setup.sh
++++ b/modules.d/90qemu/module-setup.sh
+@@ -3,10 +3,20 @@
+ # ex: ts=8 sw=4 sts=4 et filetype=sh
+ 
+ check() {
+-    vm=$(systemd-detect-virt --vm &>/dev/null)
+-    (($? != 0)) && return 255
+-    [[ $vm = "qemu" ]] && return 0
+-    [[ $vm = "kvm" ]] && return 0
++    if type -P systemd-detect-virt &>/dev/null; then
++        vm=$(systemd-detect-virt --vm &>/dev/null)
++        (($? != 0)) && return 255
++        [[ $vm = "qemu" ]] && return 0
++        [[ $vm = "kvm" ]] && return 0
++        [[ $vm = "bochs" ]] && return 0
++    fi
++
++    for i in /sys/class/dmi/id/*_vendor; do
++        [[ -f $i ]] || continue
++        read vendor < $i
++        [[  "$vendor" == "QEMU" ]] && return 0
++        [[  "$vendor" == "Bochs" ]] && return 0
++    done
+     return 255
+ }
+ 
+-- 
+1.7.8.6
+

@@ -1,0 +1,29 @@
+From 418f79110e8df91cec5bdc23dd123555515c3e86 Mon Sep 17 00:00:00 2001
+From: Harald Hoyer <harald@redhat.com>
+Date: Mon, 23 Jul 2012 15:40:20 +0200
+Subject: [PATCH 03/14] kernel-modules/module-setup.sh: just optionally
+ install all modprobe.d
+
+Conflicts:
+
+	modules.d/90kernel-modules/module-setup.sh
+---
+ modules.d/90kernel-modules/module-setup.sh |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/modules.d/90kernel-modules/module-setup.sh b/modules.d/90kernel-modules/module-setup.sh
+index f309de8..1632367 100755
+--- a/modules.d/90kernel-modules/module-setup.sh
++++ b/modules.d/90kernel-modules/module-setup.sh
+@@ -77,7 +77,7 @@ installkernel() {
+ install() {
+     local _f i
+     [ -f /etc/modprobe.conf ] && dracut_install /etc/modprobe.conf
+-    dracut_install $(find -L /{etc,lib}/modprobe.d/ -maxdepth 1 -type f -name '*.conf')
++    dracut_install -o /{etc,lib}/modprobe.d/*.conf
+     inst_hook cmdline 01 "$moddir/parse-kernel.sh"
+     inst_simple "$moddir/insmodpost.sh" /sbin/insmodpost.sh
+ }
+-- 
+1.7.8.6
+
