@@ -1,0 +1,29 @@
+From 6cf23a82629409c25d5d36ca71a02171075705ab Mon Sep 17 00:00:00 2001
+From: Harald Hoyer <harald@redhat.com>
+Date: Wed, 23 Jan 2013 16:23:07 +0100
+Subject: [PATCH 3/5] rootfs-block/mount-root.sh: fixup for 8b6bf0ef5
+
+not only fix the warning message, but the real mount arguments, too
+---
+ modules.d/95rootfs-block/mount-root.sh | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/modules.d/95rootfs-block/mount-root.sh b/modules.d/95rootfs-block/mount-root.sh
+index 54d5012..c7626c3 100755
+--- a/modules.d/95rootfs-block/mount-root.sh
++++ b/modules.d/95rootfs-block/mount-root.sh
+@@ -26,9 +26,10 @@ mount_root() {
+     fi
+ 
+     _rflags_ro="$rflags,ro"
++    _rflags_ro="${_rflags_ro##,}"
+ 
+     while ! mount -t ${rootfs} -o "$_rflags_ro" "${root#block:}" "$NEWROOT"; do
+-        warn "Failed to mount -t ${rootfs} -o ${_rflags_ro##,} ${root#block:} $NEWROOT"
++        warn "Failed to mount -t ${rootfs} -o $_rflags_ro ${root#block:} $NEWROOT"
+         fsck_ask_err
+     done
+ 
+-- 
+1.8.1.4
+

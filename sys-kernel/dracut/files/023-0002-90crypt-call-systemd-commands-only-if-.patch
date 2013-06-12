@@ -1,0 +1,31 @@
+From df079b0cc8f5f0e564078c89513412f37ab58771 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Amadeusz=20=C5=BBo=C5=82nowski?= <aidecoe@aidecoe.name>
+Date: Sun, 7 Oct 2012 15:00:22 +0200
+Subject: [PATCH 2/2] 90crypt: call systemd commands only if systemd binaries
+ are there
+
+---
+ modules.d/90crypt/crypt-run-generator.sh | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/modules.d/90crypt/crypt-run-generator.sh b/modules.d/90crypt/crypt-run-generator.sh
+index f2f2da1..aed2f20 100755
+--- a/modules.d/90crypt/crypt-run-generator.sh
++++ b/modules.d/90crypt/crypt-run-generator.sh
+@@ -12,7 +12,10 @@ if [ -f /etc/crypttab ]; then
+ fi
+ 
+ echo "$luks $dev" >> /etc/crypttab
+-/lib/systemd/system-generators/systemd-cryptsetup-generator
+-systemctl daemon-reload
+-systemctl start cryptsetup.target
++if [ -x /lib/systemd/system-generators/systemd-cryptsetup-generator ] &&
++        command -v systemctl >/dev/null; then
++    /lib/systemd/system-generators/systemd-cryptsetup-generator
++    systemctl daemon-reload
++    systemctl start cryptsetup.target
++fi
+ exit 0
+-- 
+1.7.12
+

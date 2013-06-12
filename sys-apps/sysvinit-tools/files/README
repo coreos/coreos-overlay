@@ -1,0 +1,13 @@
+This is a stripped down version of sysvinit which only
+installs the following programs:
+
+/usr/bin/last
+/usr/bin/mesg
+/usr/bin/wall
+/usr/bin/lastb
+/sbin/killall5
+/sbin/fstab-decode
+/bin/pidof
+
+It is made with the only purpose of having a system
+with only systemd installed. Use at your own risk.
