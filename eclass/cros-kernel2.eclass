@@ -408,7 +408,6 @@ cros-kernel2_src_install() {
 	if cros_chkconfig_present MODULES; then
 		kmake INSTALL_MOD_PATH="${D}" modules_install
 	fi
-	kmake INSTALL_MOD_PATH="${D}" firmware_install
 
 	local version=$(kernelversion)
 	if use arm; then
@@ -461,7 +460,7 @@ cros-kernel2_src_install() {
 	fi
 
 	# Install uncompressed kernel for debugging purposes.
-	insinto /usr/lib/debug/boot
+	insinto /usr/lib/debug/boot/${version}/
 	doins "$(cros-workon_get_build_dir)/vmlinux"
 
 	if use kernel_sources; then
