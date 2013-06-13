@@ -85,6 +85,14 @@ get_build_cfg() {
 	echo "$(cros-workon_get_build_dir)/.config"
 }
 
+get_boot_kernel() {
+	if [[ "${PN}" =~ boot ]] ; then
+		echo "true"
+	else
+		echo "false"
+	fi
+}
+
 get_build_arch() {
 	if [ "${ARCH}" = "arm" ] ; then
 		case "${CHROMEOS_KERNEL_SPLITCONFIG}" in
@@ -232,6 +240,12 @@ cros-kernel2_src_configure() {
 	local config
 	local cfgarch="$(get_build_arch)"
 
+	if [ "$(get_boot_kernel)" = "true" ] ; then
+		boot="_boot"
+	else
+		boot=""
+	fi
+
 	if [ -n "${CHROMEOS_KERNEL_CONFIG}" ]; then
 		config="${S}/${CHROMEOS_KERNEL_CONFIG}"
 	else
@@ -257,7 +271,7 @@ cros-kernel2_src_configure() {
 			chromeos/scripts/prepareconfig ${config} \
 				"$(get_build_cfg)" || die
 		else
-			config="$(defconfig_dir)/${cfgarch}_defconfig"
+			config="$(defconfig_dir)/${cfgarch}_defconfig${boot}"
 			ewarn "Can't prepareconfig, falling back to default " \
 				"${config}"
 			cp "${config}" "$(get_build_cfg)" || die
@@ -442,7 +456,9 @@ cros-kernel2_src_install() {
 		ln -sf $(basename "${zimage_bin}") zImage || die
 	fi
 	if [ ! -e "${D}/boot/vmlinuz" ]; then
-		ln -sf "vmlinuz-${version}" "${D}/boot/vmlinuz" || die
+		if [ "$(get_boot_kernel)" = "false" ]; then
+			ln -sf "vmlinuz-${version}" "${D}/boot/vmlinuz" || die
+		fi
 	fi
 
 	# Check the size of kernel image and issue warning when image size is near

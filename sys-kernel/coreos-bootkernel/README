@@ -1,0 +1,3 @@
+Go read the README in coreos-kernel for more information on how to setup the
+git tree, this one is identical to that (for the kernel source), but it uses a
+different kernel configuration.
