@@ -22,7 +22,7 @@ PORTAGE_TMPDIR=${ROOT}tmp/
 PORT_LOGDIR=${ROOT}tmp/portage/logs/
 
 FEATURES="allow-missing-manifests buildpkg clean-logs -collision-protect
-          -ebuild-locks force-mirror nodoc noinfo noman parallel-install
+          -ebuild-locks -force-mirror nodoc noinfo noman parallel-install
           sandbox splitdebug -strict userfetch userpriv usersandbox
           -unknown-features-warn"
 
