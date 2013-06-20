@@ -120,7 +120,8 @@ PYTHONDONTWRITEBYTECODE="1"
 # Jorge Manuel B. S. Vicetto <jmbsvicetto@gentoo.org> (16 Nov 2011)
 # Add default USE value for bootstrap and rename it from STAGE1_USE to BOOTSTRAP_USE
 # threads is included to work around a use dep issue in our old python ebuilds
-BOOTSTRAP_USE="cxx unicode threads"
+# curl is included to let stage2 fetch toolchains from git
+BOOTSTRAP_USE="cxx unicode threads curl"
 
 # Mike Gilbert <floppym@gentoo.org> (15 May 2012)
 # Default target(s) for python-r1.eclass
