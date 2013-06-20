@@ -1,6 +1,9 @@
 [Service]
 Type=forking
 ExecStartPre=/bin/mount --make-rprivate /
+# Enable forwarding to allow NAT to work
+# TODO: Move this to sysctl.conf
+ExecStartPre=/sbin/sysctl -w net.ipv4.ip_forward=1
 
 # HACK: for some reason docker is crashing when exiting a container when being
 # supervised by systemd. Fork out for now. Real solution should be:
