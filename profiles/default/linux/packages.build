@@ -20,6 +20,7 @@ sys-devel/libtool
 sys-apps/baselayout
 sys-apps/coreutils
 sys-apps/diffutils
+sys-apps/efunctions
 sys-apps/file
 sys-apps/findutils
 sys-apps/gawk
