@@ -136,6 +136,10 @@ PYTHON_SINGLE_TARGET="python2_6"
 USE_EXPAND="${USE_EXPAND} BOARD_USE CROS_WORKON_TREE TESTS U_BOOT_CONFIG_USE U_BOOT_FDT_USE"
 USE_EXPAND_HIDDEN="${USE_EXPAND_HIDDEN} CROS_WORKON_TREE"
 
+# Extra use flags for Core OS SDK (and possibly targets)
+# Previously defined in make.conf
+USE="${USE} hardened cros_host pic pie expat -introspection -cups -openrc"
+
 # Default licenses that are accepted for ChromiumOS builds.
 # If you want to accept more, use the --accept_licenses flag
 # when running setup_board.

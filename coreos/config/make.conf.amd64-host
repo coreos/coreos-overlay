@@ -7,7 +7,7 @@ LDFLAGS="-Wl,-O2 -Wl,--as-needed"
 FEATURES="allow-missing-manifests buildpkg clean-logs -collision-protect
           -ebuild-locks parallel-install sandbox -strict userfetch userpriv
           usersandbox -unknown-features-warn"
-USE="-openrc"
+
 # Since our portage comes from version control, we redirect distfiles
 DISTDIR="/var/lib/portage/distfiles"
 
@@ -42,9 +42,6 @@ PORT_LOGDIR="/var/log/portage"
 source /usr/local/portage/coreos/coreos/binhost/host/amd64-PREFLIGHT_BINHOST.conf
 FULL_BINHOST="https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2013.02.04.090227/packages/"
 PORTAGE_BINHOST="$PREFLIGHT_BINHOST $FULL_BINHOST"
-
-# expat needed for XML parsing in GDB, but enable globally as overhead is tiny.
-USE="${USE} -cups hardened cros_host multilib pic pie -introspection expat"
 
 GENTOO_MIRRORS="
 	http://gentoo.osuosl.org/
