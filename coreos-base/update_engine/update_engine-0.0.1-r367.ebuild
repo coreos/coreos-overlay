@@ -38,7 +38,8 @@ RDEPEND="app-arch/bzip2
 	sys-apps/rootdev
 	sys-fs/e2fsprogs
 	virtual/udev"
-DEPEND="dev-cpp/gmock
+DEPEND="coreos-base/system_api
+	dev-cpp/gmock
 	dev-cpp/gtest
 	cros_host? ( dev-util/scons )
 	${RDEPEND}"
