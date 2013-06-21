@@ -39,9 +39,13 @@ PKGDIR="/var/lib/portage/pkgs"
 
 PORT_LOGDIR="/var/log/portage"
 
-source /usr/local/portage/coreos/coreos/binhost/host/amd64-PREFLIGHT_BINHOST.conf
-FULL_BINHOST="https://commondatastorage.googleapis.com/chromeos-prebuilt/host/amd64/amd64-host/chroot-2013.02.04.090227/packages/"
-PORTAGE_BINHOST="$PREFLIGHT_BINHOST $FULL_BINHOST"
+# Our first round of binary packages!
+# legacy contains the old x86_64-cros-linux-gnu toolchain since I haven't
+# rebuilt it yet. 20130621235834 contains everything built by bootstrap_sdk
+PORTAGE_BINHOST="
+    http://commondatastorage.googleapis.com/storage.core-os.net/coreos/sdk/experimental/legacy/pkgs/
+    http://commondatastorage.googleapis.com/storage.core-os.net/coreos/sdk/experimental/20130621235834/pkgs/
+"
 
 GENTOO_MIRRORS="
 	http://gentoo.osuosl.org/
