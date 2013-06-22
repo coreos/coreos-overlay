@@ -13,7 +13,6 @@ HOSTCC=x86_64-pc-linux-gnu-gcc
 LDFLAGS="-Wl,-O2 -Wl,--as-needed"
 
 ACCEPT_KEYWORDS="${ARCH}"
-USE="${ARCH} zlib bindist cros-debug -introspection cmt"
 
 # Be sure we don't overwrite pkgs from another sysroot.
 PKGDIR=${ROOT}packages/

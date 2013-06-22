@@ -13,3 +13,6 @@
 
 # libpng security vulnerability fix
 <media-libs/libpng-1.2.44
+
+# Replaced by sys-apps/efunctions
+coreos-base/efunctions

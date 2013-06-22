@@ -43,7 +43,7 @@
 *sys-apps/gawk
 *sys-apps/grep
 *sys-apps/net-tools
-#*>=sys-apps/portage-2.0.51.22
+*sys-apps/portage
 *sys-process/procps
 *sys-process/psmisc
 *sys-apps/sed
@@ -71,5 +71,4 @@
 *virtual/modutils
 *virtual/os-headers
 *virtual/pager
-*virtual/portage
 *virtual/ssh
