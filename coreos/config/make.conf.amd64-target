@@ -10,11 +10,16 @@ ACCEPT_KEYWORDS="amd64"
 # Common settings across all board targets.
 source make.conf.common
 
+PORTAGE_BINHOST="
+    http://storage.core-os.net/coreos/amd64-generic/experimental/20130622/pkgs
+"
+
 # Recommended MARCH_TUNE, CFLAGS, etc.
-MARCH_TUNE=""
+# We assume that our 64bit baseline CPU supports at least
+# MMX, SSE, SSE2, and SSE3.
+MARCH_TUNE="-march=x86-64 -msse3"
 
 # Allow a board to override or define additional settings.
-source make.conf.board
 CFLAGS="-O2 -pipe ${MARCH_TUNE} -g"
 CXXFLAGS="${CFLAGS}"
 
