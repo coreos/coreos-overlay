@@ -43,8 +43,8 @@ PORT_LOGDIR="/var/log/portage"
 # legacy contains the old x86_64-cros-linux-gnu toolchain since I haven't
 # rebuilt it yet. 20130621235834 contains everything built by bootstrap_sdk
 PORTAGE_BINHOST="
-    http://commondatastorage.googleapis.com/storage.core-os.net/coreos/sdk/experimental/legacy/pkgs/
-    http://commondatastorage.googleapis.com/storage.core-os.net/coreos/sdk/experimental/20130621235834/pkgs/
+    http://storage.core-os.net/coreos/sdk/experimental/legacy/pkgs/
+    http://storage.core-os.net/coreos/sdk/experimental/20130621235834/pkgs/
 "
 
 GENTOO_MIRRORS="
