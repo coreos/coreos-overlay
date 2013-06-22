@@ -10,9 +10,6 @@ ACCEPT_KEYWORDS="amd64"
 # Common settings across all board targets.
 source make.conf.common
 
-# Recommended x86-specific USE flags.
-USE="${USE} mmx sse sse2 dri hardened"
-
 # Recommended MARCH_TUNE, CFLAGS, etc.
 MARCH_TUNE=""
 

@@ -84,13 +84,7 @@
 =dev-lang/go-1.1 ~amd64
 
 # Replace the function.sh script in baselayout
-=coreos-base/efunctions-9999 ~amd64 ~x86
-
-# Projects we are actively hacking on in coreos
-=coreos-base/update_engine-9999 ~amd64 ~x86
-
-# Used on the host
-=coreos-base/core-admin-9999	~amd64 ~x86
+=sys-apps/efunctions-1 ~amd64 ~x86
 
 #=dev-libs/libxml2-2.9.0-r1 ~amd64
 
