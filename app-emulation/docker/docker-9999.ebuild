@@ -24,6 +24,7 @@ RDEPEND="
 	sys-apps/iproute2
 	app-arch/libarchive
 	net-misc/curl
+	sys-fs/aufs-util
 "
 
 src_compile() {
