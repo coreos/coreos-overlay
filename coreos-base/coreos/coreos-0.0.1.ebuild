@@ -149,10 +149,6 @@ RDEPEND="${RDEPEND}
 	sys-apps/shadow
 	sys-apps/systemd
 	sys-apps/systemd-sysv-utils
-	app-admin/systemd-rest
-	app-admin/etcd
-	app-admin/etcd-client
-	app-admin/etcd-lib
 	coreos-base/crosh
 	sys-apps/util-linux
 	sys-auth/pam_pwdfile
