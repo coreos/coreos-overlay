@@ -3,8 +3,8 @@
 
 EAPI=2
 
-DESCRIPTION="Chrome OS (meta package)"
-HOMEPAGE="http://src.chromium.org"
+DESCRIPTION="CoreOS (meta package)"
+HOMEPAGE="http://coreos.com"
 
 LICENSE="GPL-2"
 SLOT="0"
@@ -149,10 +149,6 @@ RDEPEND="${RDEPEND}
 	sys-apps/shadow
 	sys-apps/systemd
 	sys-apps/systemd-sysv-utils
-	app-admin/systemd-rest
-	app-admin/etcd
-	app-admin/etcd-client
-	app-admin/etcd-lib
 	coreos-base/crosh
 	sys-apps/util-linux
 	sys-auth/pam_pwdfile
