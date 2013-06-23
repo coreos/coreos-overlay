@@ -3,8 +3,8 @@
 
 EAPI=2
 
-DESCRIPTION="Chrome OS (meta package)"
-HOMEPAGE="http://src.chromium.org"
+DESCRIPTION="CoreOS (meta package)"
+HOMEPAGE="http://coreos.com"
 
 LICENSE="GPL-2"
 SLOT="0"
