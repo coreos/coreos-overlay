@@ -2,9 +2,9 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-inherit confutils
-
 EAPI="2"
+
+inherit confutils
 
 DESCRIPTION="NVRAM image for the brcmfmac driver"
 HOMEPAGE="http://src.chromium.org"
