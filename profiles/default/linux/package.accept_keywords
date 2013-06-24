@@ -90,8 +90,6 @@
 
 =sys-apps/util-linux-2.23 ~amd64 
 
-=sys-apps/portage-2.1.12* ~amd64
-
 # CRIU dependencies
 =dev-libs/protobuf-c-0.15 ~amd64
 =sys-process/criu-0.5 ~amd64
