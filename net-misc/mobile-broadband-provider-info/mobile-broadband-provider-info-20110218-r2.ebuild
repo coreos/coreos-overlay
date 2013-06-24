@@ -8,8 +8,6 @@ inherit eutils gnome.org
 
 DESCRIPTION="Database of mobile broadband service providers"
 HOMEPAGE="http://live.gnome.org/NetworkManager/MobileBroadband/ServiceProviders"
-# Weird bug in gnome.org causes a dot to be added in uri
-SRC_URI="${SRC_URI/${PV}./${PV}}"
 
 LICENSE="CC-PD"
 SLOT="0"

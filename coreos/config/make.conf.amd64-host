@@ -47,9 +47,10 @@ PORTAGE_BINHOST="
     http://storage.core-os.net/coreos/sdk/experimental/20130621235834/pkgs/
 "
 
+	#http://gentoo.osuosl.org/
 GENTOO_MIRRORS="
-	http://gentoo.osuosl.org/
 	https://commondatastorage.googleapis.com/chromeos-mirror/gentoo
+    http://gsdview.appspot.com/chromeos-localmirror
 "
 
 # Remove all .la files for non-plugin libraries.
