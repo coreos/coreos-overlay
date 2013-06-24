@@ -214,7 +214,6 @@ void ApplyDelta() {
 }
 
 int Main(int argc, char** argv) {
-  g_thread_init(NULL);
   google::ParseCommandLineFlags(&argc, &argv, true);
   CommandLine::Init(argc, argv);
   Terminator::Init();

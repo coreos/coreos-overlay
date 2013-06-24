@@ -19,8 +19,7 @@
 int main(int argc, char **argv) {
   LOG(INFO) << "started";
   ::g_type_init();
-  g_thread_init(NULL);
-  dbus_g_thread_init();
+  dbus_threads_init_default();
   base::AtExitManager exit_manager;
   // TODO(garnold) temporarily cause the unittest binary to exit with status
   // code 2 upon catching a SIGTERM. This will help diagnose why the unittest

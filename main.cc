@@ -145,8 +145,7 @@ void SetupLogging() {
 
 int main(int argc, char** argv) {
   ::g_type_init();
-  g_thread_init(NULL);
-  dbus_g_thread_init();
+  dbus_threads_init_default();
   base::AtExitManager exit_manager;  // Required for base/rand_util.h.
   chromeos_update_engine::Terminator::Init();
   chromeos_update_engine::Subprocess::Init();

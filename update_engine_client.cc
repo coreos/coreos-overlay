@@ -4,6 +4,7 @@
 
 #include <string>
 
+#include <dbus/dbus.h>
 #include <gflags/gflags.h>
 #include <glib.h>
 
@@ -212,8 +213,7 @@ void CompleteUpdate() {
 int main(int argc, char** argv) {
   // Boilerplate init commands.
   g_type_init();
-  g_thread_init(NULL);
-  dbus_g_thread_init();
+  dbus_threads_init_default();
   chromeos_update_engine::Subprocess::Init();
   google::ParseCommandLineFlags(&argc, &argv, true);
 
