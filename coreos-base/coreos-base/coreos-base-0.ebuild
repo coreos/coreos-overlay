@@ -111,6 +111,9 @@ src_install() {
 		# Make mount work in the way systemd prescribes
 		dosym /proc/mounts /etc/mtab
 
+		# Put resolv.conf in /var/run so root can be read-only
+		dosym /var/run/resolv.conf /etc/resolv.conf
+
 		# Insert a cool motd ;)
 		insinto /etc
 		doins "${FILESDIR}"/motd
