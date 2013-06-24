@@ -58,10 +58,10 @@ PORTAGE_BINPKG_TAR_OPTS="--checkpoint=1000"
 # Since our portage comes from version control, we redirect distfiles.
 DISTDIR="/var/lib/portage/distfiles-target"
 
-# TODO: Our mirror should be more stable since we won't discard packages.
 GENTOO_MIRRORS="
-	http://gentoo.osuosl.org/
-	https://commondatastorage.googleapis.com/chromeos-mirror/gentoo
+    http://storage.core-os.net/mirror/portage-stable/
+    http://storage.core-os.net/mirror/coreos/
+    http://distfiles.gentoo.org/
 "
 
 # Username and home directory of the shared user.
