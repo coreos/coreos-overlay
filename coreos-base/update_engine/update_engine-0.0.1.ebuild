@@ -2,8 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="4"
-CROS_WORKON_COMMIT="193c41ed66d25ba76e828b0715f7f80ae88eb226"
-CROS_WORKON_TREE="4e09ef237374751d99122f8225bc14a71de2c968"
+CROS_WORKON_COMMIT="08a60bd76c1a4ad8e59cf3e29b43a11c857e1bcd"
 CROS_WORKON_PROJECT="coreos/update_engine"
 CROS_WORKON_REPO="git://github.com"
 
@@ -21,7 +20,7 @@ IUSE="cros_host -delta_generator"
 LIBCHROME_VERS="180609"
 
 RDEPEND="app-arch/bzip2
-	coreos-base/chromeos-ca-certificates
+	coreos-base/coreos-ca-certificates
 	coreos-base/libchrome:${LIBCHROME_VERS}[cros-debug=]
 	coreos-base/libchromeos
 	coreos-base/metrics
