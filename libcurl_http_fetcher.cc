@@ -28,7 +28,7 @@ namespace chromeos_update_engine {
 
 namespace {
 const int kNoNetworkRetrySeconds = 10;
-const char kCACertificatesPath[] = "/usr/share/chromeos-ca-certificates";
+const char kCACertificatesPath[] = "/usr/share/coreos-ca-certificates";
 }  // namespace {}
 
 const int LibcurlHttpFetcher::kMaxRedirects = 10;

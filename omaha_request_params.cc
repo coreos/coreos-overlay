@@ -31,9 +31,8 @@ const char* const OmahaRequestParams::kAppId(
     "{e96281a6-d1af-4bde-9a0a-97b76e56dc57}");
 const char* const OmahaRequestParams::kOsPlatform("CoreOS");
 const char* const OmahaRequestParams::kOsVersion("Chateau");
-// TODOBP: Move to https://update.core-os.net/ once we have the SSL cert
 const char* const kProductionOmahaUrl(
-    "https://core-update.appspot.com/");
+    "https://api.core-os.net/update/");
 
 const char* const OmahaRequestParams::kUpdateChannelKey(
     "CHROMEOS_RELEASE_TRACK");
