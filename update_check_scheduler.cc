@@ -89,26 +89,10 @@ gboolean UpdateCheckScheduler::StaticCheck(void* scheduler) {
   CHECK(me->scheduled_);
   me->scheduled_ = false;
 
-  bool is_test_mode = false;
-  GpioHandler* gpio_handler = me->system_state_->gpio_handler();
-  if (me->system_state_->IsOOBEComplete() ||
-      (is_test_mode = (!me->is_test_update_attempted_ &&
-                       gpio_handler->IsTestModeSignaled()))) {
-    if (is_test_mode) {
-      LOG(WARNING)
-          << "test mode signaled, allowing update check prior to OOBE complete";
-      me->is_test_update_attempted_ = true;
-    }
+  // Before updating, we flush any previously generated UMA reports.
+  CertificateChecker::FlushReport();
+  me->update_attempter_->Update("", "", false, false, false);
 
-    // Before updating, we flush any previously generated UMA reports.
-    CertificateChecker::FlushReport();
-    me->update_attempter_->Update("", "", false, false, is_test_mode);
-  } else {
-    // Skips all automatic update checks if the OOBE process is not complete and
-    // schedules a new check as if it is the first one.
-    LOG(WARNING) << "Skipping update check because OOBE is not complete.";
-    me->ScheduleCheck(kTimeoutInitialInterval, kTimeoutRegularFuzz);
-  }
   // This check ensures that future update checks will be or are already
   // scheduled. The check should never fail. A check failure means that there's
   // a bug that will most likely prevent further automatic update checks. It
