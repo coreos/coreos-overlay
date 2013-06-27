@@ -1,15 +1,15 @@
 [Service]
-Type=forking
+Type=simple
 ExecStartPre=/bin/mount --make-rprivate /
 # Enable forwarding to allow NAT to work
 # TODO: Move this to sysctl.conf
 ExecStartPre=/sbin/sysctl -w net.ipv4.ip_forward=1
 
-# HACK: for some reason docker is crashing when exiting a container when being
-# supervised by systemd. Fork out for now. Real solution should be:
-# ExecStart=/usr/bin/docker -d -D
+# Try to use this alternate way of starting docker if docker crashes for you:
+# ExecStart=/bin/bash -c "/usr/bin/nohup /usr/bin/docker -d -D &"
+# You also need to update Type above to: Type=forking
 
-ExecStart=/bin/bash -c "/usr/bin/nohup /usr/bin/docker -d -D &"
+ExecStart=/usr/bin/docker -d -D
 
 [Install]
 WantedBy=multi-user.target
