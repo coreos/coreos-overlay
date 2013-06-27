@@ -11,6 +11,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <iostream>
 
 #include <base/command_line.h>
 #include <base/logging.h>
@@ -42,6 +43,7 @@ DEFINE_string(in_file, "",
 DEFINE_string(out_file, "", "Path to output delta payload file");
 DEFINE_string(out_hash_file, "", "Path to output hash file");
 DEFINE_string(out_metadata_hash_file, "", "Path to output metadata hash file");
+DEFINE_string(out_metadata, "", "Path to output metadata size and signature");
 DEFINE_string(private_key, "", "Path to private key in .pem format");
 DEFINE_string(public_key, "", "Path to public key in .pem format");
 DEFINE_int32(public_key_version,
@@ -171,6 +173,37 @@ void VerifySignedPayload() {
   LOG(INFO) << "Done verifying signed payload.";
 }
 
+void GetMetadataSignature() {
+  LOG(INFO) << "Getting metadata RSA information.";
+  LOG_IF(FATAL, FLAGS_in_file.empty())
+      << "Must pass --in_file to get metadata payload.";
+  LOG_IF(FATAL, FLAGS_private_key.empty())
+      << "Must pass --private_key to get metadata payload.";
+
+  vector<char> payload;
+  DeltaArchiveManifest manifest;
+  uint64_t metadata_size;
+  CHECK(PayloadSigner::LoadPayload(
+      FLAGS_in_file, &payload, &manifest, &metadata_size));
+
+  string outsig;
+  char *metadata = (char *)(&payload[0]);
+  CHECK(PayloadSigner::GetMetadataSignature(
+       metadata, metadata_size, FLAGS_private_key, &outsig));
+
+  // Remove the newlines from the signature
+  outsig.erase(std::remove(outsig.begin(), outsig.end(), '\n'), outsig.end());
+
+  std::ostringstream outstream;
+  bool result;
+  outstream << "{ 'metadata_size': " << metadata_size << ", 'metadata_signature_rsa': '" << outsig << "' }";
+  std::string out = outstream.str();
+  result = utils::WriteFile(FLAGS_out_metadata.c_str(), out.c_str(),
+                            out.size());
+  CHECK(result);
+  LOG(INFO) << "Done calculating payload hash for signing.";
+}
+
 void ApplyDelta() {
   LOG(INFO) << "Applying delta.";
   LOG_IF(FATAL, FLAGS_old_image.empty())
@@ -244,6 +277,10 @@ int Main(int argc, char** argv) {
   }
   if (!FLAGS_public_key.empty()) {
     VerifySignedPayload();
+    return 0;
+  }
+  if (!FLAGS_out_metadata.empty()) {
+    GetMetadataSignature();
     return 0;
   }
   if (!FLAGS_in_file.empty()) {
