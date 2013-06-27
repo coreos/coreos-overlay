@@ -196,7 +196,7 @@ void GetMetadataSignature() {
 
   std::ostringstream outstream;
   bool result;
-  outstream << "{ 'metadata_size': " << metadata_size << ", 'metadata_signature_rsa': '" << outsig << "' }";
+  outstream << "{ \"metadata_size\": \"" << metadata_size << "\", \"metadata_signature_rsa\": \"" << outsig << "\" }";
   std::string out = outstream.str();
   result = utils::WriteFile(FLAGS_out_metadata.c_str(), out.c_str(),
                             out.size());
