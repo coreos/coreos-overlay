@@ -1,8 +1,0 @@
-DEFINED_PHASES=install
-DESCRIPTION=Convenience script for testing attached cell modems
-EAPI=4
-KEYWORDS=amd64 arm x86
-LICENSE=BSD
-RDEPEND=dev-util/shflags net-misc/socat
-SLOT=0
-_md5_=5b43adce046edc858842b575925defa6

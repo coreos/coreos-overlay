@@ -19,7 +19,7 @@ IUSE="cros_host -delta_generator"
 LIBCHROME_VERS="180609"
 
 RDEPEND="app-arch/bzip2
-	coreos-base/chromeos-ca-certificates
+	coreos-base/coreos-ca-certificates
 	coreos-base/libchrome:${LIBCHROME_VERS}[cros-debug=]
 	coreos-base/libchromeos
 	coreos-base/metrics

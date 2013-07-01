@@ -1,2 +1,0 @@
-PKG_INSTALL_MASK+=" /etc/pam.d/sudo"
-INSTALL_MASK+=" /etc/pam.d/sudo"
