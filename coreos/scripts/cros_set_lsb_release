@@ -30,20 +30,20 @@ ROOT_FS_DIR="$FLAGS_root"
 [ -d "$ROOT_FS_DIR" ] || die "Root FS does not exist? ($ROOT_FS_DIR)"
 [ -n "${CHROMEOS_VERSION_STRING}" ] || die "chromeos_version.sh isn't sourced."
 
-CHROMEOS_VERSION_NAME="Chromium OS"
+CHROMEOS_VERSION_NAME="CoreOS"
 CHROMEOS_VERSION_AUSERVER=\
 ${CHROMEOS_VERSION_AUSERVER:-"http://$(hostname --fqdn):8080/update"}
 CHROMEOS_VERSION_DEVSERVER=\
 ${CHROMEOS_VERSION_DEVSERVER:-"http://$(hostname --fqdn):8080"}
 
-# Official builds must set CHROMEOS_OFFICIAL=1.
-if [ ${CHROMEOS_OFFICIAL:-0} = 1 ]; then
+# Official builds must set COREOS_OFFICIAL=1.
+if [ ${COREOS_OFFICIAL:-0} = 1 ]; then
   # Official builds (i.e., buildbot)
   CHROMEOS_VERSION_TRACK="dev-channel"
-  CHROMEOS_VERSION_NAME="Chrome OS"
+  CHROMEOS_VERSION_NAME="CoreOS"
   CHROMEOS_VERSION_DESCRIPTION="${CHROMEOS_VERSION_STRING} (Official Build) \
 ${CHROMEOS_VERSION_TRACK} $FLAGS_board test"
-  CHROMEOS_VERSION_AUSERVER="https://tools.google.com/service/update2"
+  CHROMEOS_VERSION_AUSERVER="https://api.core-os.net/v1/update/"
   CHROMEOS_VERSION_DEVSERVER=""
 elif [ "$USER" = "chrome-bot" ]; then
   # Continuous builder
