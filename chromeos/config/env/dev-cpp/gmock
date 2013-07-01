@@ -1,6 +1,0 @@
-# The autoconf code needs to be migrated from AC_PATH_PROG to
-# AC_PATH_TOOL.  http://code.google.com/p/googlemock/issues/detail?id=150
-cros_pre_src_configure_gtest_config() {
-	[[ $(cros_target) != "board_sysroot" ]] && return 0
-	export ac_cv_path_GTEST_CONFIG=${CROS_BUILD_BOARD_BIN}/${CHOST}-gtest-config
-}

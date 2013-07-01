@@ -1,8 +1,0 @@
-DEFINED_PHASES=install
-DESCRIPTION=Chrome OS restricted set of certificates.
-EAPI=2
-HOMEPAGE=http://src.chromium.org
-KEYWORDS=amd64 arm x86
-LICENSE=BSD
-SLOT=0
-_md5_=383d04fe843c1f44f73c56c164e0669f

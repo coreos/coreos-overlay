@@ -1,7 +1,0 @@
-DEFINED_PHASES=install
-DESCRIPTION=CrOS specific busybox configuration file.
-EAPI=4
-KEYWORDS=amd64 arm x86
-LICENSE=BSD
-SLOT=0
-_md5_=20d73b73a67e1a5549681dec03ec47ed

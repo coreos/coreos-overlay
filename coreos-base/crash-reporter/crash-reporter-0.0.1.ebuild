@@ -2,6 +2,8 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="4"
+CROS_WORKON_COMMIT="640113066b0a717955004e702a2afefe051d36a2"
+CROS_WORKON_TREE="7e911e28b8bcde9bbdf4cff52eec7ac57adc3980"
 CROS_WORKON_PROJECT="chromiumos/platform/crash-reporter"
 CROS_WORKON_OUTOFTREE_BUILD=1
 
@@ -13,7 +15,7 @@ SRC_URI=""
 
 LICENSE="BSD"
 SLOT="0"
-KEYWORDS="~amd64 ~arm ~x86"
+KEYWORDS="amd64 arm x86"
 IUSE="test"
 
 LIBCHROME_VERS="125070"
