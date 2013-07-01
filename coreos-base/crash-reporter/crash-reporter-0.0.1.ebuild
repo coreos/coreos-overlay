@@ -25,7 +25,7 @@ RDEPEND="coreos-base/google-breakpad
          coreos-base/libchrome:${LIBCHROME_VERS}[cros-debug=]
          coreos-base/libchromeos
          coreos-base/metrics
-         coreos-base/chromeos-ca-certificates
+         coreos-base/coreos-ca-certificates
          dev-cpp/gflags
          dev-libs/libpcre
          test? ( dev-cpp/gtest )

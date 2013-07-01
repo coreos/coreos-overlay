@@ -19,11 +19,11 @@ IUSE="test"
 LIBCHROME_VERS="125070"
 
 # crash_sender uses sys-apps/findutils (for /usr/bin/find).
-RDEPEND="chromeos-base/google-breakpad
-         chromeos-base/libchrome:${LIBCHROME_VERS}[cros-debug=]
-         chromeos-base/libchromeos
-         chromeos-base/metrics
-         chromeos-base/chromeos-ca-certificates
+RDEPEND="coreos-base/google-breakpad
+         coreos-base/libchrome:${LIBCHROME_VERS}[cros-debug=]
+         coreos-base/libchromeos
+         coreos-base/metrics
+         coreos-base/coreos-ca-certificates
          dev-cpp/gflags
          dev-libs/libpcre
          test? ( dev-cpp/gtest )
