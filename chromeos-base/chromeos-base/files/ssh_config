@@ -1,2 +1,0 @@
-Host *
-	UserKnownHostsFile /home/chronos/user/.ssh/known_hosts
