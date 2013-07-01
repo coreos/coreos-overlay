@@ -91,7 +91,6 @@
 
 # CRIU dependencies
 =dev-libs/protobuf-c-0.15 ~amd64
-=sys-process/criu-0.5 ~amd64
 
 # Everything needed for the boot engine
 =sys-apps/kexec-tools-2.0.4-r1 ~amd64
