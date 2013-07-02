@@ -32,7 +32,7 @@ const char* const OmahaRequestParams::kAppId(
 const char* const OmahaRequestParams::kOsPlatform("CoreOS");
 const char* const OmahaRequestParams::kOsVersion("Chateau");
 const char* const kProductionOmahaUrl(
-    "https://api.core-os.net/update/");
+    "https://api.core-os.net/v1/update/");
 
 const char* const OmahaRequestParams::kUpdateChannelKey(
     "CHROMEOS_RELEASE_TRACK");
