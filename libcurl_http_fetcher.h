@@ -261,6 +261,9 @@ class LibcurlHttpFetcher : public HttpFetcher {
   // if we get a terminate request, queue it until we can handle it.
   bool terminate_requested_;
 
+  // Buffer for curl to dump useful information into
+  char curl_error_buffer_[CURL_ERROR_SIZE] ;
+
   // Represents which server certificate to be checked against this
   // connection's certificate. If no certificate check needs to be performed,
   // this should be kNone.
