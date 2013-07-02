@@ -5,7 +5,7 @@ EAPI="4"
 CROS_WORKON_PROJECT="coreos/update_engine"
 CROS_WORKON_REPO="git://github.com"
 
-inherit toolchain-funcs cros-debug cros-workon scons-utils
+inherit toolchain-funcs cros-debug cros-workon scons-utils systemd
 
 DESCRIPTION="Chrome OS Update Engine"
 HOMEPAGE="http://www.chromium.org/"
@@ -78,6 +78,8 @@ src_install() {
 	dobin update_engine_client
 
 	use delta_generator && dobin delta_generator
+
+	systemd_dounit "${FILESDIR}"/update-engine.service
 
 	insinto /usr/share/dbus-1/services
 	doins org.chromium.UpdateEngine.service
