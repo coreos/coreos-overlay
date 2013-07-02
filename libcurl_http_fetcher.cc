@@ -69,6 +69,10 @@ void LibcurlHttpFetcher::ResumeTransfer(const std::string& url) {
   curl_handle_ = curl_easy_init();
   CHECK(curl_handle_);
 
+  CHECK_EQ(curl_easy_setopt(curl_handle_,
+                            CURLOPT_ERRORBUFFER,
+                            &curl_error_buffer_), CURLE_OK);
+
   CHECK(HasProxy());
   bool is_direct = (GetCurrentProxy() == kNoProxy);
   LOG(INFO) << "Using proxy: " << (is_direct ? "no" : "yes");
@@ -286,7 +290,7 @@ void LibcurlHttpFetcher::CurlPerformOnce() {
       LOG(INFO) << "HTTP response code: " << http_response_code_;
       no_network_retry_count_ = 0;
     } else {
-      LOG(ERROR) << "Unable to get http response code.";
+      LOG(ERROR) << "Unable to get http response code: " << curl_error_buffer_;
     }
 
     // we're done!
