@@ -1,19 +1,15 @@
 # See "man make.conf" for the available options.
 
-ACCEPT_KEYWORDS="amd64"
-CHOST="x86_64-pc-linux-gnu"
-CFLAGS="-O2 -pipe"
-LDFLAGS="-Wl,-O2 -Wl,--as-needed"
+# Get the current SDK version, useful for fetching the latest packages
+source "/mnt/host/source/.repo/manifests/version.txt"
+COREOS_VERSION_STRING="${COREOS_BUILD}.${COREOS_BRANCH}.${COREOS_PATCH}"
+
 FEATURES="allow-missing-manifests buildpkg clean-logs -collision-protect
           -ebuild-locks parallel-install sandbox -strict userfetch userpriv
           usersandbox -unknown-features-warn"
 
 # Since our portage comes from version control, we redirect distfiles
 DISTDIR="/var/lib/portage/distfiles"
-
-# Don't fool around with python3, might get bit
-USE_PYTHON="2.6"
-
 
 PORTDIR="/usr/local/portage/stable"
 
@@ -44,7 +40,7 @@ PORT_LOGDIR="/var/log/portage"
 # rebuilt it yet. 20130621235834 contains everything built by bootstrap_sdk
 PORTAGE_BINHOST="
     http://storage.core-os.net/coreos/sdk/experimental/legacy/pkgs/
-    http://storage.core-os.net/coreos/sdk/experimental/20130621235834/pkgs/
+    http://storage.core-os.net/coreos/sdk/${ARCH}/${COREOS_VERSION_STRING}/pkgs/
 "
 
 GENTOO_MIRRORS="

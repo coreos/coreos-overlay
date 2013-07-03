@@ -10,10 +10,6 @@
 CBUILD=x86_64-pc-linux-gnu
 HOSTCC=x86_64-pc-linux-gnu-gcc
 
-LDFLAGS="-Wl,-O2 -Wl,--as-needed"
-
-ACCEPT_KEYWORDS="${ARCH}"
-
 # Be sure we don't overwrite pkgs from another sysroot.
 PKGDIR=${ROOT}packages/
 PORTAGE_TMPDIR=${ROOT}tmp/
@@ -27,7 +23,6 @@ FEATURES="allow-missing-manifests buildpkg clean-logs -collision-protect
 
 PORTAGE_WORKDIR_MODE="0755"
 PKG_CONFIG_PATH="${ROOT}usr/lib/pkgconfig/:${ROOT}usr/share/pkgconfig/"
-ELIBC="glibc"
 
 PORTDIR="/usr/local/portage/stable"
 
