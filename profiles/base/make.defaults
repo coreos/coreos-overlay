@@ -142,6 +142,9 @@ USE_EXPAND_HIDDEN="${USE_EXPAND_HIDDEN} CROS_WORKON_TREE"
 # Previously defined in make.conf
 USE="${USE} hardened cros_host pic pie expat -introspection -cups -openrc"
 
+# Enable bindist for both SDK and targets
+USE="${USE} bindist"
+
 # Default licenses that are accepted for ChromiumOS builds.
 # If you want to accept more, use the --accept_licenses flag
 # when running setup_board.
