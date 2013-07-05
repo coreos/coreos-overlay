@@ -75,6 +75,10 @@ src_test() {
 }
 
 src_install() {
+	dosbin "${FILESDIR}"/update_engine_reboot_manager
+	systemd_dounit "${FILESDIR}"/update-engine-reboot-manager.service
+	systemd_enable_service multi-user.target update-engine-reboot-manager.service
+
 	dosbin update_engine
 	dobin update_engine_client
 
