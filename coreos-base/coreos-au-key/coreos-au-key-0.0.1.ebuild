@@ -16,5 +16,5 @@ KEYWORDS="amd64 arm x86"
 src_install() {
 	KEY_DIR=/usr/share/update_engine/
 	insinto "${KEY_DIR}"
-	doins "${FILESDIR}"/*.pub
+	doins "${FILESDIR}"/update-payload-key.pub.pem
 }
