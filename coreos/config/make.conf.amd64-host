@@ -26,7 +26,8 @@ PORTDIR_OVERLAY="
 # of the ChromiumOS set.  You can use "--select" to override this.
 EMERGE_DEFAULT_OPTS="--oneshot"
 
-# Use parallel bzip2 for portage if available
+# Use parallel bzip2 for portage
+# TODO(marineam): switch to lbzip2
 PORTAGE_BZIP2_COMMAND="pbzip2"
 PORTAGE_BUNZIP2_COMMAND="pbunzip2 --ignore-trailing-garbage=1"
 
