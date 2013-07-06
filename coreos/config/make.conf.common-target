@@ -37,9 +37,9 @@ PORTDIR_OVERLAY="
 # of the ChromiumOS set.  You can use "--select" to override this.
 EMERGE_DEFAULT_OPTS="--oneshot"
 
-# Use parallel bzip2 for portage if available
-PORTAGE_BZIP2_COMMAND="pbzip2"
-PORTAGE_BUNZIP2_COMMAND="pbunzip2 --ignore-trailing-garbage=1"
+# Use parallel bzip2 for portage
+PORTAGE_BZIP2_COMMAND="lbzip2"
+PORTAGE_BUNZIP2_COMMAND="lbunzip2"
 
 FETCHCOMMAND_GS="bash -c 'BOTO_CONFIG=/home/\${PORTAGE_USERNAME}/.boto gsutil cp \"${URI}\" \"${DISTDIR}/${FILE}\"'"
 RESUMECOMMAND_GS="bash -c 'BOTO_CONFIG=/home/\${PORTAGE_USERNAME}/.boto gsutil cp \"${URI}\" \"${DISTDIR}/${FILE}\"'"
