@@ -53,8 +53,6 @@ RDEPEND="${RDEPEND}
 	coreos-base/cros-testutils
 	=dev-lang/python-2*
 	dev-python/setuptools
-	dev-db/m17n-contrib
-	dev-db/m17n-db
 	dev-lang/nasm
 	dev-lang/swig
 	dev-lang/yasm
@@ -65,7 +63,6 @@ RDEPEND="${RDEPEND}
 	dev-libs/libgcrypt
 	dev-libs/libxslt
 	dev-libs/libyaml
-	dev-libs/m17n-lib
 	dev-libs/protobuf
 	dev-python/cherrypy
 	dev-python/ctypesgen
