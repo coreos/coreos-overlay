@@ -149,7 +149,6 @@ RDEPEND="${RDEPEND}
 	sys-apps/shadow
 	sys-apps/systemd
 	sys-apps/systemd-sysv-utils
-	coreos-base/crosh
 	sys-apps/util-linux
 	sys-auth/pam_pwdfile
 	sys-fs/e2fsprogs
