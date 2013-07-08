@@ -100,14 +100,7 @@ RDEPEND="${RDEPEND}
 # things like line editing in dash, so its interactive mode is very bare.
 # TODO(ifup): 
 #	coreos-base/crash-reporter
-#	coreos-base/chromeos-debugd
-#	coreos-base/chromeos-init
-#	coreos-base/cros-disks
-#	coreos-base/shill
-#	coreos-base/userfeedback
 #	coreos-base/metrics
-#	sys-apps/ureadahead
-#	coreos-base/bootstat
 
 RDEPEND="${RDEPEND}
 	sys-apps/findutils

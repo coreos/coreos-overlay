@@ -1,9 +1,0 @@
-DEFINED_PHASES=compile install
-DESCRIPTION=Binary regulatory database for CRDA
-HOMEPAGE=http://wireless.kernel.org/en/developers/Regulatory
-KEYWORDS=amd64 arm ppc x86 ~amd64-linux ~x86-linux
-LICENSE=as-is
-SLOT=0
-SRC_URI=http://wireless.kernel.org/download/wireless-regdb/wireless-regdb-2010.11.24.tar.bz2
-_eclasses_=binutils-funcs	73669d0b20960c1cc54cf381a4b89e77	multilib	5f4ad6cf85e365e8f0c6050ddd21659e	toolchain-funcs	64fc271a237429f84f36b91c9f4b9912
-_md5_=67ed208f197385a2f392006d4e39cfb8

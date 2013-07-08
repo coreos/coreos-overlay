@@ -1,5 +1,0 @@
-# Start/Stop bluetooth service on device insertion. Gentoo specific.
-SUBSYSTEM=="bluetooth", KERNEL=="hci[0-9]*", RUN+="bluetooth.sh"
-
-# So that normal users can dial out.
-SUBSYSTEM=="tty", SUBSYSTEMS=="bluetooth", GROUP="uucp"
