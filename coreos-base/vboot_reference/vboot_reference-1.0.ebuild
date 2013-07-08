@@ -3,7 +3,8 @@
 
 EAPI="4"
 CROS_WORKON_COMMIT="28f202d45b4c33efed64e4af906a95b26e7785b4"
-CROS_WORKON_PROJECT="chromiumos/platform/vboot_reference"
+CROS_WORKON_PROJECT="coreos/vboot_reference"
+CROS_WORKON_REPO="git://github.com"
 
 inherit cros-debug cros-workon cros-au
 
