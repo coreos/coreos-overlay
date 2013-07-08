@@ -1,1 +1,0 @@
-pango-1.28.4.ebuild
