@@ -149,3 +149,10 @@ USE="${USE} bindist"
 # If you want to accept more, use the --accept_licenses flag
 # when running setup_board.
 ACCEPT_LICENSE="* -@EULA -@CHROMEOS"
+
+# Favor our own mirrors over Gentoo's
+GENTOO_MIRRORS="
+    http://storage.core-os.net/mirror/portage-stable/
+    http://storage.core-os.net/mirror/coreos/
+    http://distfiles.gentoo.org/
+"

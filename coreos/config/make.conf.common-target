@@ -53,12 +53,6 @@ PORTAGE_BINPKG_TAR_OPTS="--checkpoint=1000"
 # Since our portage comes from version control, we redirect distfiles.
 DISTDIR="/var/lib/portage/distfiles-target"
 
-GENTOO_MIRRORS="
-    http://storage.core-os.net/mirror/portage-stable/
-    http://storage.core-os.net/mirror/coreos/
-    http://distfiles.gentoo.org/
-"
-
 # Username and home directory of the shared user.
 SHARED_USER_NAME="core"
 SHARED_USER_HOME="/home/core/user"

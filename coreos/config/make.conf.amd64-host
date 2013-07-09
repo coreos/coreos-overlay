@@ -44,12 +44,6 @@ PORTAGE_BINHOST="
     http://storage.core-os.net/coreos/sdk/${ARCH}/${COREOS_VERSION_STRING}/pkgs/
 "
 
-GENTOO_MIRRORS="
-    http://storage.core-os.net/mirror/portage-stable/
-    http://storage.core-os.net/mirror/coreos/
-    http://distfiles.gentoo.org/
-"
-
 # Remove all .la files for non-plugin libraries.
 # Remove Gentoo init files since we use upstart.
 # Remove logrotate.d files since we don't use logrotate.
