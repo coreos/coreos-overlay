@@ -20,7 +20,7 @@
 # - one item as default for all
 # - no items as the cros-workon default
 # The exception is CROS_WORKON_PROJECT which has to have all items specified.
-ARRAY_VARIABLES=( CROS_WORKON_{SUBDIR,REPO,PROJECT,LOCALNAME,DESTDIR,COMMIT,TREE} )
+ARRAY_VARIABLES=( CROS_WORKON_{SUBDIR,REPO,PROJECT,LOCALDIR,LOCALNAME,DESTDIR,COMMIT,TREE} )
 
 # @ECLASS-VARIABLE: CROS_WORKON_SUBDIR
 # @DESCRIPTION:
@@ -37,9 +37,15 @@ ARRAY_VARIABLES=( CROS_WORKON_{SUBDIR,REPO,PROJECT,LOCALNAME,DESTDIR,COMMIT,TREE
 # Git project name which is suffixed to CROS_WORKON_REPO
 : ${CROS_WORKON_PROJECT:=${PN}}
 
+# @ECLASS-VARIABLE: CROS_WORKON_LOCALDIR
+# @DESCRIPTION:
+# Repo checkout directory which is prefixed to CROS_WORKON_LOCALNAME
+# Generally is either src/third_party or src/platform
+: ${CROS_WORKON_LOCALDIR:=src/third_party}
+
 # @ECLASS-VARIABLE: CROS_WORKON_LOCALNAME
 # @DESCRIPTION:
-# Temporary local name in third_party
+# Directory name which is suffixed to CROS_WORKON_LOCALDIR
 : ${CROS_WORKON_LOCALNAME:=${PN}}
 
 # @ECLASS-VARIABLE: CROS_WORKON_DESTDIR
@@ -182,16 +188,11 @@ get_paths() {
 		pathbase="/mnt/host/source"
 	fi
 
-	if [[ "${CATEGORY}" == "chromeos-base" ]] ; then
-		pathbase+=/src/platform
-	else
-		pathbase+=/src/third_party
-	fi
-
 	path=()
 	local pathelement i
 	for (( i = 0; i < project_count; ++i )); do
-		pathelement="${pathbase}/${CROS_WORKON_LOCALNAME[i]}"
+		pathelement="${pathbase}/${CROS_WORKON_LOCALDIR[i]}"
+		pathelement+="/${CROS_WORKON_LOCALNAME[i]}"
 		if [[ -n "${CROS_WORKON_SUBDIR[i]}" ]]; then
 			pathelement+="/${CROS_WORKON_SUBDIR[i]}"
 		fi

@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="4"
-CROS_WORKON_COMMIT="08a60bd76c1a4ad8e59cf3e29b43a11c857e1bcd"
+CROS_WORKON_COMMIT="ad72179b09afc085d51c7c0723a125c0f398e2b9"
 CROS_WORKON_PROJECT="coreos/update_engine"
 CROS_WORKON_REPO="git://github.com"
 
