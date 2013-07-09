@@ -49,7 +49,7 @@ static const char* kTagSha256 = "sha256";
 
 namespace {
 
-const string kGupdateVersion("ChromeOSUpdateEngine-0.1.0.0");
+const string kGupdateVersion("CoreOSUpdateEngine-0.1.0.0");
 
 // This is handy for passing strings into libxml2
 #define ConstXMLStr(x) (reinterpret_cast<const xmlChar*>(x))
