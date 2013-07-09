@@ -57,6 +57,7 @@ const int kUnmountRetryIntervalInMicroseconds = 200 * 1000;  // 200 ms
 
 namespace utils {
 
+static const char kBootId[] = "/proc/sys/kernel/random/boot_id";
 static const char kDevImageMarker[] = "/root/.dev_mode";
 const char* const kStatefulPartition = "/mnt/stateful_partition";
 
@@ -98,6 +99,22 @@ string GetHardwareClass() {
   }
   LOG(ERROR) << "Unable to read HWID (" << exit_code << ") " << hwid;
   return "";
+}
+
+string GetBootId() {
+  string id;
+  string guid;
+  if (!file_util::ReadFileToString(FilePath(kBootId), &id)) {
+    LOG(ERROR) << "Unable to read boot_id";
+    return "";
+  }
+  TrimWhitespaceASCII(id, TRIM_ALL, &id);
+
+  // Make it look like the other UUIDs in the payload
+  guid.append(1, '{');
+  guid.append(id);
+  guid.append(1, '}');
+  return guid;
 }
 
 bool WriteFile(const char* path, const char* data, int data_len) {

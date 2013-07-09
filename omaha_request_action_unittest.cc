@@ -51,6 +51,7 @@ OmahaRequestParams kDefaultTestParams(
     "en-US",
     "unittest",
     "OEM MODEL 09235 7471",
+    "{8DA4B84F-2864-447D-84B7-C2D9B72924E7}",
     false,  // delta okay
     false,  // interactive
     "http://url",
@@ -827,6 +828,7 @@ TEST(OmahaRequestActionTest, XmlEncodeTest) {
                             "en-US",
                             "unittest_track&lt;",
                             "<OEM MODEL>",
+                            "{8DA4B84F-2864-447D-84B7-C2D9B72924E7}",
                             false,  // delta okay
                             false,  // interactive
                             "http://url",
@@ -852,6 +854,7 @@ TEST(OmahaRequestActionTest, XmlEncodeTest) {
   EXPECT_EQ(post_str.find("unittest_track&lt;"), string::npos);
   EXPECT_NE(post_str.find("&lt;OEM MODEL&gt;"), string::npos);
   EXPECT_EQ(post_str.find("<OEM MODEL>"), string::npos);
+  EXPECT_EQ(post_str.find("{8DA4B84F-2864-447D-84B7-C2D9B72924E7}"), string::npos);
 }
 
 TEST(OmahaRequestActionTest, XmlDecodeTest) {
@@ -927,6 +930,8 @@ TEST(OmahaRequestActionTest, FormatUpdateCheckOutputTest) {
       string::npos);
   EXPECT_NE(post_str.find("hardware_class=\"OEM MODEL 09235 7471\""),
             string::npos);
+  EXPECT_NE(post_str.find("bootid=\"{8DA4B84F-2864-447D-84B7-C2D9B72924E7}\""),
+            string::npos);
 }
 
 
@@ -953,6 +958,8 @@ TEST(OmahaRequestActionTest, FormatUpdateDisabledOutputTest) {
       "        <updatecheck targetversionprefix=\"\"></updatecheck>\n"),
       string::npos);
   EXPECT_NE(post_str.find("hardware_class=\"OEM MODEL 09235 7471\""),
+            string::npos);
+  EXPECT_NE(post_str.find("bootid=\"{8DA4B84F-2864-447D-84B7-C2D9B72924E7}\""),
             string::npos);
 }
 
@@ -1035,6 +1042,7 @@ TEST(OmahaRequestActionTest, FormatDeltaOkayOutputTest) {
                               "en-US",
                               "unittest_track",
                               "OEM MODEL REV 1234",
+                              "{88DC1453-ABB2-45F5-A622-1808F18E1B61}",
                               delta_okay,
                               false,  // interactive
                               "http://url",
@@ -1072,6 +1080,7 @@ TEST(OmahaRequestActionTest, FormatInteractiveOutputTest) {
                               "en-US",
                               "unittest_track",
                               "OEM MODEL REV 1234",
+                              "{88DC1453-ABB2-45F5-A622-1808F18E1B61}",
                               true,  // delta_okay
                               interactive,
                               "http://url",

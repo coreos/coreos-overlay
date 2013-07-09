@@ -72,6 +72,7 @@ bool OmahaRequestParams::Init(const std::string& in_app_version,
                               stateful_override);
   app_lang_ = "en-US";
   hwid_ = utils::GetHardwareClass();
+  bootid_ = utils::GetBootId();
 
   if (current_channel_ == target_channel_) {
     // deltas are only okay if the /.nodelta file does not exist.  if we don't
