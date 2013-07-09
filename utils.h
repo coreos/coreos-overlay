@@ -37,6 +37,9 @@ bool IsNormalBootMode();
 // Returns the HWID or an empty string on error.
 std::string GetHardwareClass();
 
+// Returns the boot_id or an empty string on error.
+std::string GetBootId();
+
 // Writes the data passed to path. The file at path will be overwritten if it
 // exists. Returns true on success, false otherwise.
 bool WriteFile(const char* path, const char* data, int data_len);
