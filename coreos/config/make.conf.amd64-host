@@ -36,11 +36,7 @@ PKGDIR="/var/lib/portage/pkgs"
 
 PORT_LOGDIR="/var/log/portage"
 
-# Our first round of binary packages!
-# legacy contains the old x86_64-cros-linux-gnu toolchain since I haven't
-# rebuilt it yet. 20130621235834 contains everything built by bootstrap_sdk
 PORTAGE_BINHOST="
-    http://storage.core-os.net/coreos/sdk/experimental/legacy/pkgs/
     http://storage.core-os.net/coreos/sdk/${ARCH}/${COREOS_VERSION_STRING}/pkgs/
 "
 
