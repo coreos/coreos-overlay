@@ -5,37 +5,31 @@
 # $Header:$
 #
 
-EAPI=2
+EAPI=4
 CROS_WORKON_PROJECT="coreos/etcd"
 CROS_WORKON_LOCALNAME="etcd"
 CROS_WORKON_REPO="git://github.com"
-CROS_WORKON_COMMIT="f4301f994c995d7e91214e082fa18312899b4131"
 inherit toolchain-funcs cros-workon systemd
 
 DESCRIPTION="etcd"
-HOMEPAGE="https://github.com/xiangli-cmu/etcd"
+HOMEPAGE="https://github.com/coreos/etcd"
 SRC_URI=""
 
-LICENSE="MIT"
+LICENSE="Apache-2.0"
 SLOT="0"
-KEYWORDS="amd64 arm x86"
+KEYWORDS="~amd64"
 IUSE=""
 
-DEPEND=">=dev-lang/go-1.0.2"
+DEPEND=">=dev-lang/go-1.1"
 GOROOT="${ED}usr/$(get_libdir)/go"
 GOPKG="${PN}"
 
 src_compile() {
-	export GOPATH="${S}"
-	go get
-	go build -o ${PN}
+	./build
 }
 
 src_install() {
 	dosbin ${S}/${PN}
 	systemd_dounit "${FILESDIR}"/${PN}.service
 	systemd_enable_service multi-user.target ${PN}.service
-
-	systemd_dounit "${FILESDIR}"/${PN}-bootstrap.service
-	systemd_enable_service multi-user.target ${PN}-bootstrap.service
 }
