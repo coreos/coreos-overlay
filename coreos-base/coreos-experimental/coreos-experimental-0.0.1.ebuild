@@ -15,7 +15,5 @@ IUSE=""
 DEPEND=""
 RDEPEND="
 	app-admin/systemd-rest
-	app-admin/etcd
-	app-admin/etcd-client
-	app-admin/etcd-lib
+	dev-db/etcd
 "

@@ -1,0 +1,5 @@
+[Service]
+ExecStart=/usr/bin/etcd-bootstrap
+
+[Install]
+WantedBy=multi-user.target
