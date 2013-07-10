@@ -74,6 +74,7 @@ RDEPEND="${RDEPEND}
 	sys-process/psmisc
 	sys-process/time
 	virtual/perf
+	coreos-base/coreos-experimental
 	"
 
 # TODO:  sys-apps/iotools
