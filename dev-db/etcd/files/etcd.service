@@ -1,4 +1,6 @@
 [Service]
+ExecStartPre=-/bin/mkdir -p /var/run/etcd
+ExecStartPre=/usr/bin/coreos-c10n
 ExecStart=/usr/bin/etcd-bootstrap
 
 [Install]

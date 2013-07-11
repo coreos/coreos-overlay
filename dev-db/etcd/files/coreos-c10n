@@ -32,4 +32,4 @@ for IP4 in `curl -s $META_URL/meta-data/ | grep ipv4`; do
         fi
 done
 
-curl $C10N_ENDPOINT -d "c10n_url=$URL" -d"ip_list=$IP_LIST"
+curl $C10N_ENDPOINT -d "c10n_url=$URL" -d"ip_list=$IP_LIST" > /var/run/etcd/bootstrap.config
