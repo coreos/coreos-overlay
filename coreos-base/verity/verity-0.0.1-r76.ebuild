@@ -7,7 +7,7 @@ CROS_WORKON_TREE="a54ff06d13ee681a7cb660ed14c51dcd8ef5ffdf"
 CROS_WORKON_PROJECT="chromiumos/platform/dm-verity"
 CROS_WORKON_OUTOFTREE_BUILD=1
 
-inherit cros-workon cros-au
+inherit cros-workon cros-au eutils
 
 DESCRIPTION="File system integrity image generator for Chromium OS"
 HOMEPAGE="http://www.chromium.org/"
@@ -33,6 +33,9 @@ DEPEND="${RDEPEND}
 
 src_prepare() {
 	cros-workon_src_prepare
+	# temporary fix for gcc 4.6 compatibility
+	# we don't use verity (yet) so don't bother forking the git repo yet...
+	epatch "${FILESDIR}/dm-verity-gcc-4.6-stack-protector.patch"
 }
 
 src_configure() {
