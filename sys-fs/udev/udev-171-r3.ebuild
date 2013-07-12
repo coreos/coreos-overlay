@@ -1,1 +1,0 @@
-udev-171.ebuild
