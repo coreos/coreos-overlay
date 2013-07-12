@@ -1,3 +1,0 @@
-# Workaround the fact that udev 146 does not save udevdb entries for
-# network devices that are not to be renamed. chromium-os:12387
-SUBSYSTEM=="net", NAME="%k"
