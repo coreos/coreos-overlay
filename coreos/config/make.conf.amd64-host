@@ -38,6 +38,7 @@ PORT_LOGDIR="/var/log/portage"
 
 PORTAGE_BINHOST="
     http://storage.core-os.net/coreos/sdk/${ARCH}/${COREOS_VERSION_STRING}/pkgs/
+    http://storage.core-os.net/coreos/sdk/${ARCH}/${COREOS_SDK_VERSION}/pkgs/
 "
 
 # Remove all .la files for non-plugin libraries.
