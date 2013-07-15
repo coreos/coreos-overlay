@@ -106,7 +106,7 @@ class UpdateAttempter : public ActionProcessorDelegate,
                  std::string* new_version,
                  int64_t* new_size);
 
-  // Runs chromeos-setgoodkernel, whose responsibility it is to mark the
+  // Runs coreos-setgootroot, whose responsibility it is to mark the
   // currently booted partition has high priority/permanent/etc. The execution
   // is asynchronous. On completion, the action processor may be started
   // depending on the |start_action_processor_| field. Note that every update
