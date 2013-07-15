@@ -9,8 +9,7 @@ CROS_WORKON_REPO="git://github.com"
 
 inherit cros-workon cros-debug cros-au
 
-DESCRIPTION="Chrome OS Installer"
-HOMEPAGE="http://www.chromium.org/"
+DESCRIPTION="CoreOS Installer"
 SRC_URI=""
 
 LICENSE="BSD"
