@@ -18,7 +18,7 @@ KEYWORDS="~amd64 ~arm ~x86"
 IUSE="32bit_au cros_host"
 
 DEPEND="
-	chromeos-base/verity
+	coreos-base/verity
 	dev-cpp/gmock"
 
 # TODO(adlr): remove coreutils dep if we move to busybox
