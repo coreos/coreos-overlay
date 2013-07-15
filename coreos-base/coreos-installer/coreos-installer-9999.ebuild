@@ -77,4 +77,5 @@ src_install() {
 
 	exeinto /${path}
 	doexe chromeos-*
+	doexe coreos-*
 }
