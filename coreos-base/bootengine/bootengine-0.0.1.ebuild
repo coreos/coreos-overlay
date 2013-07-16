@@ -24,8 +24,11 @@ src_install() {
 	insinto /usr/lib/dracut/modules.d/
 	doins -r ${S}/dracut/80gptprio $modules_dir
 
-	chroot /build/amd64-generic dracut --no-kernel --fstab --no-compress /tmp/bootengine.cpio
+	chroot ${ROOT} dracut --force --no-kernel --fstab --no-compress /tmp/bootengine.cpio
+
+	cpio=${ROOT}/tmp/bootengine.cpio
 
 	insinto /usr/share/bootengine/
-	doins /build/amd64-generic/tmp/bootengine.cpio
+	doins ${cpio}
+	rm ${cpio}
 }
