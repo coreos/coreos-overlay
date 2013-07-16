@@ -1,0 +1,13 @@
+#/bin/bash
+
+API_URL="http://api.core-os.net/v1/update/"
+
+CURL_CMD="curl --connect-timeout 1 -s -I $API_URL"
+RET=1
+while [ $RET -ne 0 ]; do
+	$CURL_CMD > /dev/null
+	RET=$?
+	if [ $RET -ne 0 ]; then
+		sleep 1
+	fi	
+done

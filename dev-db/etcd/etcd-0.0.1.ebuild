@@ -9,7 +9,7 @@ EAPI=4
 CROS_WORKON_PROJECT="coreos/etcd"
 CROS_WORKON_LOCALNAME="etcd"
 CROS_WORKON_REPO="git://github.com"
-CROS_WORKON_COMMIT="01e5d41f91da0251a8ed9dbba79df70a9dd6a237"
+CROS_WORKON_COMMIT="780e9f5f127668e5c217390841140df837f160a1"
 inherit toolchain-funcs cros-workon systemd
 
 DESCRIPTION="etcd"
@@ -33,6 +33,7 @@ src_install() {
 	dobin ${S}/${PN}
 	dobin ${FILESDIR}/coreos-c10n
 	dobin ${FILESDIR}/etcd-bootstrap
+	dobin ${FILESDIR}/coreos-api-wait
 
 	systemd_dounit "${FILESDIR}"/${PN}.service
 	systemd_enable_service multi-user.target ${PN}.service
