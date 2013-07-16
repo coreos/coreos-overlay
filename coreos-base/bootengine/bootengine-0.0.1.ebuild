@@ -18,10 +18,17 @@ SLOT="0"
 KEYWORDS="amd64 x86"
 
 DEPEND="
-	sys-kernel/dracut"
+	sys-kernel/dracut
+	sys-kernel/coreos-bootkernel"
 
 src_install() {
 	modules_dir=${D}/usr/lib/dracut/modules.d/
 	mkdir -p $modules_dir
 	cp -R dracut/80gptprio $modules_dir
+
+	mkdir ${D}/boot
+	for i in /boot/vmlinuz-*boot_kernel*; do
+		ver=${i##*vmlinuz-}
+		dracut --kver ${ver} ${D}/boot/initramfs-${ver}.img
+	done
 }
