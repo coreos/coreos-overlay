@@ -15,7 +15,6 @@ SRC_URI=""
 LICENSE="BSD"
 SLOT="0"
 KEYWORDS="~amd64 ~arm ~x86"
-IUSE="32bit_au cros_host"
 
 DEPEND="
 	sys-kernel/dracut"
@@ -26,8 +25,9 @@ src_install() {
 	cp -R dracut/80gptprio $modules_dir
 
 	mkdir ${D}/boot
-	for i in /boot/vmlinuz-*boot_kernel*; do
+	for i in `ls /build/amd64-generic/boot/vmlinuz-*boot_kernel*`; do
 		ver=${i##*vmlinuz-}
-		dracut --kver ${ver} ${D}/boot/initramfs-${ver}.img
+		chroot /build/amd64-generic dracut --force --fstab --kver ${ver} /tmp/initramfs-${ver}.img
+		cp /build/amd64-generic/tmp/initramfs-${ver}.img ${D}/boot/
 	done
 }

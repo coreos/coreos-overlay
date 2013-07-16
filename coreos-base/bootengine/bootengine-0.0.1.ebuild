@@ -27,8 +27,9 @@ src_install() {
 	cp -R dracut/80gptprio $modules_dir
 
 	mkdir ${D}/boot
-	for i in /boot/vmlinuz-*boot_kernel*; do
+	for i in `ls /build/amd64-generic/boot/vmlinuz-*boot_kernel*`; do
 		ver=${i##*vmlinuz-}
-		dracut --kver ${ver} ${D}/boot/initramfs-${ver}.img
+		chroot /build/amd64-generic dracut --force --fstab --kver ${ver} /tmp/initramfs-${ver}.img
+		cp /build/amd64-generic/tmp/initramfs-${ver}.img ${D}/boot/
 	done
 }
