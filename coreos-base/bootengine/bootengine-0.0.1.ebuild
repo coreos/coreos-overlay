@@ -18,18 +18,14 @@ SLOT="0"
 KEYWORDS="amd64 x86"
 
 DEPEND="
-	sys-kernel/dracut
-	sys-kernel/coreos-bootkernel"
+	sys-kernel/dracut"
 
 src_install() {
-	modules_dir=${D}/usr/lib/dracut/modules.d/
-	mkdir -p $modules_dir
-	cp -R dracut/80gptprio $modules_dir
+	insinto /usr/lib/dracut/modules.d/
+	doins -r ${S}/dracut/80gptprio $modules_dir
 
-	mkdir ${D}/boot
-	for i in `ls /build/amd64-generic/boot/vmlinuz-*boot_kernel*`; do
-		ver=${i##*vmlinuz-}
-		chroot /build/amd64-generic dracut --force --fstab --kver ${ver} /tmp/initramfs-${ver}.img
-		cp /build/amd64-generic/tmp/initramfs-${ver}.img ${D}/boot/
-	done
+	chroot /build/amd64-generic dracut --no-kernel --fstab --no-compress /tmp/bootengine.cpio
+
+	insinto /usr/share/bootengine/
+	doins /build/amd64-generic/tmp/bootengine.cpio
 }
