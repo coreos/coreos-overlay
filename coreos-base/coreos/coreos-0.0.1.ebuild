@@ -152,6 +152,7 @@ RDEPEND="${RDEPEND}
 	sys-process/criu
 	app-misc/ca-certificates
 	virtual/udev
+	coreos-base/oem-service
 	"
 
 # TODO(dianders):

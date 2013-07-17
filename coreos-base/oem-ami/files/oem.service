@@ -1,0 +1,3 @@
+[service]
+Type=oneshot
+ExecStart=/usr/share/oem/bin/install-ec2-key.sh
