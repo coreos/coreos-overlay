@@ -1,10 +1,10 @@
-# Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
+# Copyright (c) 2012 The CoreOS Authors. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=2
 
-DESCRIPTION="Core OS Kernel virtual package"
-HOMEPAGE="http://src.chromium.org"
+DESCRIPTION="CoreOS Kernel virtual package"
+HOMEPAGE="http://www.coreos.com"
 
 LICENSE="GPL-2"
 SLOT="0"
