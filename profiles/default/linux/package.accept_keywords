@@ -94,7 +94,7 @@
 
 # Everything needed for the boot engine
 =sys-apps/kexec-tools-2.0.4-r1 ~amd64
-=sys-kernel/dracut-027-r3 ~amd64
+>=sys-kernel/dracut-027-r3 ~amd64
 =sys-apps/sysvinit-tools-2.88-r4 ~amd64
 
 # Needed for docker
