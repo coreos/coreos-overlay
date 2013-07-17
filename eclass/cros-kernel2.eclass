@@ -278,6 +278,12 @@ cros-kernel2_src_configure() {
 		fi
 	fi
 
+	# if this is the boot kernel, copy the cpio initrd to the output build
+	# directory so we can tack it onto the kernel image itself.
+	if [ "$(get_boot_kernel)" = "true" ]; then
+		cp "${ROOT}"/usr/share/bootengine/bootengine.cpio "$(cros-workon_get_build_dir)" || die "copy of dracut cpio failed."
+	fi
+
 	# Use default for any options not explitly set in splitconfig
 	yes "" | kmake oldconfig
 
