@@ -7,7 +7,7 @@ CROS_WORKON_TREE="b21faacf6a9940571ef122363c19a1ac02595b4b"
 CROS_WORKON_PROJECT="chromiumos/platform/cros_boot_mode"
 CROS_WORKON_OUTOFTREE_BUILD=1
 
-inherit toolchain-funcs cros-debug cros-workon
+inherit eutils toolchain-funcs cros-debug cros-workon
 
 DESCRIPTION="Chrome OS platform boot mode utility"
 HOMEPAGE="http://www.chromium.org/"
@@ -31,6 +31,7 @@ DEPEND="${RDEPEND}
 
 src_prepare() {
 	cros-workon_src_prepare
+    epatch "${FILESDIR}/${P}-fix-fstack-protector.patch"
 }
 
 src_configure() {
