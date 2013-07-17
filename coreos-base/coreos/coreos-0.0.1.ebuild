@@ -104,7 +104,7 @@ RDEPEND="${RDEPEND}
 
 RDEPEND="${RDEPEND}
 	sys-apps/findutils
-	sys-apps/kexec-tools
+	sys-kernel/coreos-bootkernel
 	app-admin/sudo
 	app-admin/rsyslog
 	app-arch/gzip

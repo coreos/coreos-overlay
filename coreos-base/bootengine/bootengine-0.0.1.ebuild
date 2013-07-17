@@ -18,6 +18,7 @@ SLOT="0"
 KEYWORDS="amd64 x86"
 
 DEPEND="
+	sys-apps/kexec-tools
 	sys-kernel/dracut"
 
 src_install() {
