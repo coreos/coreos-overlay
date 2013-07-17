@@ -31,6 +31,7 @@ RDEPEND="${RDEPEND}
 	sys-boot/grub
 	sys-boot/syslinux
 	sys-devel/crossdev
+	sys-devel/sysroot-wrappers
 	sys-fs/dosfstools
 	"
 
