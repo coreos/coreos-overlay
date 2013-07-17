@@ -112,3 +112,9 @@ cros_pre_src_unpack_python_multilib_setup() {
 cros_pre_pkg_setup_sysroot_build_bin_dir() {
 	PATH+=":${CROS_BUILD_BOARD_BIN}"
 }
+
+# Insert our sysroot wrappers into the path
+SYSROOT_WRAPPERS_BIN="/usr/lib/sysroot-wrappers/bin"
+if [[ "$PATH" != *"$SYSROOT_WRAPPERS_BIN"* ]]; then
+    export PATH="$SYSROOT_WRAPPERS_BIN:$PATH"
+fi
