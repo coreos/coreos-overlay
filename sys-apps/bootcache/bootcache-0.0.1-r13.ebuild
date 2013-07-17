@@ -8,7 +8,7 @@ CROS_WORKON_TREE="933dc61ef690ca77ad5557123455b289bced1865"
 CROS_WORKON_PROJECT="chromiumos/platform/bootcache"
 CROS_WORKON_LOCALNAME="../platform/bootcache"
 CROS_WORKON_OUTOFTREE_BUILD=1
-inherit cros-workon
+inherit eutils cros-workon
 
 DESCRIPTION="Utility for creating store for boot cache"
 HOMEPAGE="http://git.chromium.org/gitweb/?s=bootcache"
@@ -21,6 +21,7 @@ IUSE=""
 
 src_prepare() {
 	cros-workon_src_prepare
+    epatch "${FILESDIR}/${P}-fix-fstack-protector.patch"
 }
 
 src_configure() {

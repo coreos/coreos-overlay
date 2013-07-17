@@ -167,7 +167,7 @@ env['CCFLAGS'] += ['-fPIC',
                    '-I..']
 
 # Fix issue with scons not passing some vars through the environment.
-for key in Split('PKG_CONFIG SYSROOT'):
+for key in Split('PATH PKG_CONFIG SYSROOT'):
   if os.environ.has_key(key):
     env['ENV'][key] = os.environ[key]
 
