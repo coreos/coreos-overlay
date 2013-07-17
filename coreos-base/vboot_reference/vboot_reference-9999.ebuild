@@ -11,7 +11,7 @@ DESCRIPTION="Chrome OS verified boot tools"
 
 LICENSE="BSD"
 SLOT="0"
-KEYWORDS="amd64 arm x86"
+KEYWORDS="~amd64 ~arm ~x86"
 IUSE="cros_host"
 
 RDEPEND="dev-libs/libyaml
