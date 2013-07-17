@@ -278,10 +278,10 @@ cros-kernel2_src_configure() {
 		fi
 	fi
 
-	# if this is the boot kernel, set up the initrd location
+	# if this is the boot kernel, copy the cpio initrd to the output build
+	# directory so we can tack it onto the kernel image itself.
 	if [ "$(get_boot_kernel)" = "true" ]; then
-		cp "${ROOT}"/usr/share/bootengine/bootengine.cpio "${S}" || die "copy of dracut cpio failed."
-		sed -i -e 's/XXXXX/\/build\/amd64-generic\/usr\/share\/bootengine\/bootengine\.cpio/g' "$(get_build_cfg)" || die "sed failed"
+		cp "${ROOT}"/usr/share/bootengine/bootengine.cpio "$(cros-workon_get_build_dir)" || die "copy of dracut cpio failed."
 	fi
 
 	# Use default for any options not explitly set in splitconfig
