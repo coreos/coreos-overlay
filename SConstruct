@@ -167,7 +167,7 @@ for key in Split('CFLAGS CCFLAGS CPPPATH LIBPATH'):
   if value != None:
     env[key] = Split(value)
 
-for key in Split('PKG_CONFIG_LIBDIR PKG_CONFIG_PATH SYSROOT'):
+for key in Split('PATH PKG_CONFIG_LIBDIR PKG_CONFIG_PATH SYSROOT'):
   if os.environ.has_key(key):
     env['ENV'][key] = os.environ[key]
 
