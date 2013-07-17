@@ -155,11 +155,8 @@ rm_module() {
 #
 
 src_prepare() {
-	epatch "${FILESDIR}/${PV}-0000-fix-version-print.patch"
 	epatch "${FILESDIR}/${PV}-0001-dracut-functions.sh-support-for-altern.patch"
 	epatch "${FILESDIR}/${PV}-0002-gentoo.conf-let-udevdir-be-handled-by-.patch"
-	epatch "${FILESDIR}/${PV}-0003-Do-not-call-plymouth-with-full-path.patch"
-	epatch "${FILESDIR}/${PV}-0004-plymouth-plymouth-pretrigger.sh-fixup-.patch"
 
 	if use dracut_modules_systemd; then
 		local systemdutildir="$(systemd_get_utildir)"
