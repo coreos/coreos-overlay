@@ -8,7 +8,7 @@ CROS_WORKON_PROJECT="chromiumos/platform/libchromeos"
 
 LIBCHROME_VERS=( 180609 )
 
-inherit toolchain-funcs cros-debug cros-workon scons-utils
+inherit eutils toolchain-funcs cros-debug cros-workon scons-utils
 
 DESCRIPTION="Chrome OS base library."
 HOMEPAGE="http://www.chromium.org/"
@@ -38,6 +38,10 @@ DEPEND="${RDEPEND}
 cr_scons() {
 	local v=$1; shift
 	BASE_VER=${v} escons -C ${v} -Y "${S}" "$@"
+}
+
+src_prepare() {
+    epatch "${FILESDIR}/${P}-preserve-path.patch"
 }
 
 src_compile() {
