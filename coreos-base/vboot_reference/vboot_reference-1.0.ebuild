@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="4"
-CROS_WORKON_COMMIT="28f202d45b4c33efed64e4af906a95b26e7785b4"
+CROS_WORKON_COMMIT="be2dd216d9a4181eff0d1b68842c1deb016fb95f"
 CROS_WORKON_PROJECT="coreos/vboot_reference"
 CROS_WORKON_REPO="git://github.com"
 
