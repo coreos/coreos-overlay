@@ -3,14 +3,14 @@
 # $Header: /var/cvsroot/gentoo-x86/sys-kernel/vanilla-sources/vanilla-sources-3.7.5.ebuild,v 1.1 2013/01/28 13:18:54 ago Exp $
 
 EAPI=4
-CROS_WORKON_COMMIT="da3093ad9f44ba53c3f254b4392f3c742dee41d3"
-CROS_WORKON_TREE="0ff44b050e7f57e7d3743a44af2c9211da30bdb4"
+CROS_WORKON_COMMIT="60757f78d6dbd86e935b4de43d61547174228cb7"
 CROS_WORKON_REPO="git://github.com"
 CROS_WORKON_PROJECT="coreos/linux"
 inherit cros-workon cros-kernel2
 
 DEPEND="
 	sys-devel/bc
+	coreos-base/bootengine
 "
 
 DESCRIPTION="CoreOS kernel"
