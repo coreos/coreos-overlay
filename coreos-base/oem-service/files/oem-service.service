@@ -1,0 +1,6 @@
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/run-oem.sh
+
+[Install]
+WantedBy=multi-user.target
