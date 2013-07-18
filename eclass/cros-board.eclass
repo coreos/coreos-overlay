@@ -30,69 +30,7 @@
 BOARD_USE_PREFIX="board_use_"
 ALL_BOARDS=(
 	amd64-generic
-	amd64-corei7
-	amd64-drm
 	amd64-host
-	aries
-	arm-generic
-	beaglebone
-	butterfly
-	chronos
-	daisy
-	daisy-drm
-	daisy_spring
-	daisy_snow
-	dalmore
-	emeraldlake2
-	eureka
-	fb1
-	fox
-	fox_baskingridge
-	fox_wtm1
-	fox_wtm2
-	ironhide
-	kiev
-	klang
-	link
-	lumpy
-	panda
-	parrot
-	puppy
-	raspberrypi
-	ricochet
-	stout
-	stumpy
-	tegra2
-	tegra2_aebl
-	tegra2_arthur
-	tegra2_asymptote
-	tegra2_dev-board
-	tegra2_dev-board-opengl
-	tegra2_kaen
-	tegra2_seaboard
-	tegra2_wario
-	tegra3-generic
-	waluigi
-	cardhu
-	x32-generic
-	x86-agz
-	x86-alex
-	x86-alex_he
-	x86-alex_hubble
-	x86-alex32
-	x86-alex32_he
-	x86-dogfood
-	x86-drm
-	x86-fruitloop
-	x86-generic
-	x86-mario
-	x86-mario64
-	x86-pineview
-	x86-wayland
-	x86-zgb
-	x86-zgb_he
-	x86-zgb32
-	x86-zgb32_he
 )
 
 # Add BOARD_USE_PREFIX to each board in ALL_BOARDS to create IUSE.
