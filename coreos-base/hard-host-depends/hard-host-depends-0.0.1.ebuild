@@ -106,6 +106,7 @@ RDEPEND="${RDEPEND}
 	dev-libs/protobuf-c
 	app-text/asciidoc
 	app-text/xmlto
+	sys-apps/gptfdisk
 	"
 
 # Host dependencies that create usernames/groups we need to pull over to target.
