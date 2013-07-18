@@ -49,8 +49,8 @@ pkg_postinst() {
 	# as we are not in src_install() insinto and doins do not work here, so
 	# manually copy the file around
 	cpio=${ROOT}/tmp/bootengine.cpio
-	chmod 644 ${cpio}
+	chmod 644 ${cpio} || die
 	mkdir ${ROOT}/usr/share/bootengine/
-	cp ${cpio} ${ROOT}/usr/share/bootengine/
+	cp ${cpio} ${ROOT}/usr/share/bootengine/ || die
 	rm ${cpio}
 }
