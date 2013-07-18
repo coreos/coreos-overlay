@@ -16,3 +16,7 @@
 
 # Replaced by sys-apps/efunctions
 coreos-base/efunctions
+
+# There is a "new" sdk toolchain, which can properly build kexec-tools,
+# so mask the "binary" ebuild.
+sys-apps/kexec-tools-2.0.99
