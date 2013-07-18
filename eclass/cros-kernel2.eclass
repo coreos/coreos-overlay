@@ -464,6 +464,8 @@ cros-kernel2_src_install() {
 	if [ ! -e "${D}/boot/vmlinuz" ]; then
 		if [ "$(get_boot_kernel)" = "false" ]; then
 			ln -sf "vmlinuz-${version}" "${D}/boot/vmlinuz" || die
+		else
+			ln -sf "vmlinuz-${version}" "${D}/boot/vmlinuz-boot_kernel" || die
 		fi
 	fi
 
