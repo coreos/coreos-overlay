@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="4"
-CROS_WORKON_COMMIT="23bf5d73f71886743cee0c05f6f9f707877b9883"
+CROS_WORKON_COMMIT="226fa7710b9439a236574f4cd5baa71f56d649f7"
 CROS_WORKON_PROJECT="coreos/bootengine"
 CROS_WORKON_LOCALNAME="bootengine"
 CROS_WORKON_OUTOFTREE_BUILD=1
@@ -40,17 +40,16 @@ pkg_postinst() {
 	# need to figure out how to remove someday.
 	chroot ${ROOT} dracut --host-only --force --no-kernel --fstab --no-compress /tmp/bootengine.cpio
 
-	umount ${ROOT}/proc
-	umount ${ROOT}/dev/pts	# trust me, it's there, unmount it.
-	umount ${ROOT}/dev
-	umount ${ROOT}/sys
-	umount ${ROOT}/run
+	umount --recursive ${ROOT}/proc
+	umount --recursive ${ROOT}/dev
+	umount --recursive ${ROOT}/sys
+	umount --recursive ${ROOT}/run
 
 	# as we are not in src_install() insinto and doins do not work here, so
 	# manually copy the file around
 	cpio=${ROOT}/tmp/bootengine.cpio
 	chmod 644 ${cpio} || die
-	mkdir ${ROOT}/usr/share/bootengine/
+	mkdir -p ${ROOT}/usr/share/bootengine/
 	cp ${cpio} ${ROOT}/usr/share/bootengine/ || die
 	rm ${cpio}
 }
