@@ -39,17 +39,16 @@ pkg_postinst() {
 	# need to figure out how to remove someday.
 	chroot ${ROOT} dracut --host-only --force --no-kernel --fstab --no-compress /tmp/bootengine.cpio
 
-	umount ${ROOT}/proc
-	umount ${ROOT}/dev/pts	# trust me, it's there, unmount it.
-	umount ${ROOT}/dev
-	umount ${ROOT}/sys
-	umount ${ROOT}/run
+	umount --recursive ${ROOT}/proc
+	umount --recursive ${ROOT}/dev
+	umount --recursive ${ROOT}/sys
+	umount --recursive ${ROOT}/run
 
 	# as we are not in src_install() insinto and doins do not work here, so
 	# manually copy the file around
 	cpio=${ROOT}/tmp/bootengine.cpio
-	chmod 644 ${cpio}
-	mkdir ${ROOT}/usr/share/bootengine/
-	cp ${cpio} ${ROOT}/usr/share/bootengine/
+	chmod 644 ${cpio} || die
+	mkdir -p ${ROOT}/usr/share/bootengine/
+	cp ${cpio} ${ROOT}/usr/share/bootengine/ || die
 	rm ${cpio}
 }
