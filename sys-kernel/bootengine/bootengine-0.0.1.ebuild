@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="4"
-CROS_WORKON_COMMIT="226fa7710b9439a236574f4cd5baa71f56d649f7"
+CROS_WORKON_COMMIT="adea6485a0326889163dcacaf6f9d83e084721c8"
 CROS_WORKON_PROJECT="coreos/bootengine"
 CROS_WORKON_LOCALNAME="bootengine"
 CROS_WORKON_OUTOFTREE_BUILD=1
@@ -35,10 +35,9 @@ pkg_postinst() {
 	mount --rbind /sys ${ROOT}/sys
 	mount --rbind /run ${ROOT}/run
 
-	# --host-only "should" mean that we only include the stuff that this build
-	# root needs.  The keyboard tables are all still being included, which we
-	# need to figure out how to remove someday.
-	chroot ${ROOT} dracut --host-only --force --no-kernel --fstab --no-compress /tmp/bootengine.cpio
+	# The keyboard tables are all still being included, which we need to
+	# figure out how to remove someday.
+	chroot ${ROOT} dracut --force --no-kernel --fstab --no-compress /tmp/bootengine.cpio
 
 	umount --recursive ${ROOT}/proc
 	umount --recursive ${ROOT}/dev

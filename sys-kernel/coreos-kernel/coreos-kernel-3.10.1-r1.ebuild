@@ -10,7 +10,7 @@ inherit cros-workon cros-kernel2
 
 DEPEND="
 	sys-devel/bc
-	coreos-base/bootengine
+	sys-kernel/bootengine
 "
 
 DESCRIPTION="CoreOS kernel"

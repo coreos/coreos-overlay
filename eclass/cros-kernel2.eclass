@@ -240,12 +240,6 @@ cros-kernel2_src_configure() {
 	local config
 	local cfgarch="$(get_build_arch)"
 
-	if [ "$(get_boot_kernel)" = "true" ] ; then
-		boot="_boot"
-	else
-		boot=""
-	fi
-
 	if [ -n "${CHROMEOS_KERNEL_CONFIG}" ]; then
 		config="${S}/${CHROMEOS_KERNEL_CONFIG}"
 	else
@@ -271,18 +265,16 @@ cros-kernel2_src_configure() {
 			chromeos/scripts/prepareconfig ${config} \
 				"$(get_build_cfg)" || die
 		else
-			config="$(defconfig_dir)/${cfgarch}_defconfig${boot}"
+			config="$(defconfig_dir)/${cfgarch}_defconfig"
 			ewarn "Can't prepareconfig, falling back to default " \
 				"${config}"
 			cp "${config}" "$(get_build_cfg)" || die
 		fi
 	fi
 
-	# if this is the boot kernel, copy the cpio initrd to the output build
-	# directory so we can tack it onto the kernel image itself.
-	if [ "$(get_boot_kernel)" = "true" ]; then
-		cp "${ROOT}"/usr/share/bootengine/bootengine.cpio "$(cros-workon_get_build_dir)" || die "copy of dracut cpio failed."
-	fi
+	# copy the cpio initrd to the output build directory so we can tack it
+	# onto the kernel image itself.
+	cp "${ROOT}"/usr/share/bootengine/bootengine.cpio "$(cros-workon_get_build_dir)" || die "copy of dracut cpio failed."
 
 	# Use default for any options not explitly set in splitconfig
 	yes "" | kmake oldconfig
@@ -462,11 +454,7 @@ cros-kernel2_src_install() {
 		ln -sf $(basename "${zimage_bin}") zImage || die
 	fi
 	if [ ! -e "${D}/boot/vmlinuz" ]; then
-		if [ "$(get_boot_kernel)" = "false" ]; then
-			ln -sf "vmlinuz-${version}" "${D}/boot/vmlinuz" || die
-		else
-			ln -sf "vmlinuz-${version}" "${D}/boot/vmlinuz-boot_kernel" || die
-		fi
+		ln -sf "vmlinuz-${version}" "${D}/boot/vmlinuz" || die
 	fi
 
 	# Check the size of kernel image and issue warning when image size is near
