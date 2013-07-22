@@ -9,6 +9,7 @@
 #include <base/stringprintf.h>
 #include <base/time.h>
 #include <glib.h>
+#include <fcntl.h>
 
 #include "update_engine/file_descriptor.h"
 
