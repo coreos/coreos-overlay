@@ -7,6 +7,7 @@ CROS_WORKON_COMMIT="7b9ce275ba971f101e88ba7c3710f0fd32a370a8"
 CROS_WORKON_TREE="0ff44b050e7f57e7d3743a44af2c9211da30bdb4"
 CROS_WORKON_REPO="git://github.com"
 CROS_WORKON_PROJECT="coreos/linux"
+CROS_WORKON_LOCALNAME="linux"
 inherit cros-workon cros-kernel2
 
 DEPEND="

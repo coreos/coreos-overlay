@@ -12,11 +12,11 @@ To bump to a new version do the following:
 	filemode = true
 	bare = false
 	logallrefupdates = true
-[remote "origin"]
+[remote "github"]
 	url = git@github.com:coreos/linux.git
-	fetch = +refs/heads/*:refs/remotes/origin/*
+	fetch = +refs/heads/*:refs/remotes/github/*
 [branch "master"]
-	remote = origin
+	remote = github
 	merge = refs/heads/master
 [remote "linus"]
 	url = git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git
@@ -37,8 +37,8 @@ To bump to a new version do the following:
 
 5) git pull . aufs/aufs-3.8
 
-6) git push origin coreos/v3.8.8
+6) git push github coreos/v3.8.8
 
-7) git checkout coreos/master && git reset --hard coreos/v3.8.8 && git push -f origin coreos/master
+7) git checkout coreos/master && git reset --hard coreos/v3.8.8 && git push -f github coreos/master
 
 Then you can bump the hash in the ebuild and move it to the new version here.
