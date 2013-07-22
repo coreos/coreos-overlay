@@ -14,7 +14,7 @@ SRC_URI=""
 
 LICENSE="BSD"
 SLOT="0"
-KEYWORDS="~amd64 ~arm ~x86"
+KEYWORDS="~amd64 ~x86"
 
 DEPEND="
 	sys-apps/kexec-tools
@@ -29,26 +29,26 @@ src_install() {
 # cpio image in pkg_postinst() where we are free to mount filesystems, chroot,
 # and other fun stuff.
 pkg_postinst() {
-	mount -t proc proc ${ROOT}/proc
-	mount --rbind /dev ${ROOT}/dev
-	mount --rbind /sys ${ROOT}/sys
-	mount --rbind /run ${ROOT}/run
+	mount -t proc proc ${ROOT}/proc || die
+	mount --rbind /dev ${ROOT}/dev || die
+	mount --rbind /sys ${ROOT}/sys || die
+	mount --rbind /run ${ROOT}/run || die
 
-	# --host-only "should" mean that we only include the stuff that this build
-	# root needs.  The keyboard tables are all still being included, which we
-	# need to figure out how to remove someday.
-	chroot ${ROOT} dracut --force --no-kernel --nofscks --fstab --no-compress /tmp/bootengine.cpio
+	# The keyboard tables are all still being included, which we need to
+	# figure out how to remove someday.
+	chroot ${ROOT} dracut --force --no-kernel --nofscks \
+		--fstab --no-compress /tmp/bootengine.cpio || die
 
-	umount --recursive ${ROOT}/proc
-	umount --recursive ${ROOT}/dev
-	umount --recursive ${ROOT}/sys
-	umount --recursive ${ROOT}/run
+	umount --recursive ${ROOT}/proc || die
+	umount --recursive ${ROOT}/dev || die
+	umount --recursive ${ROOT}/sys || die
+	umount --recursive ${ROOT}/run || die
 
 	# as we are not in src_install() insinto and doins do not work here, so
 	# manually copy the file around
 	cpio=${ROOT}/tmp/bootengine.cpio
 	chmod 644 ${cpio} || die
-	mkdir -p ${ROOT}/usr/share/bootengine/
+	mkdir -p ${ROOT}/usr/share/bootengine/ || die
 	cp ${cpio} ${ROOT}/usr/share/bootengine/ || die
-	rm ${cpio}
+	rm ${cpio} || die
 }
