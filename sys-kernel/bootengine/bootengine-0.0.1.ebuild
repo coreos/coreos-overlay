@@ -37,7 +37,7 @@ pkg_postinst() {
 
 	# The keyboard tables are all still being included, which we need to
 	# figure out how to remove someday.
-	chroot ${ROOT} dracut --force --no-kernel --fstab --no-compress /tmp/bootengine.cpio
+	chroot ${ROOT} dracut --force --no-kernel --nofscks --fstab --no-compress /tmp/bootengine.cpio
 
 	umount --recursive ${ROOT}/proc
 	umount --recursive ${ROOT}/dev
