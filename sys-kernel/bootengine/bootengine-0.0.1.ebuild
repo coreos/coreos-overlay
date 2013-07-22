@@ -32,18 +32,18 @@ src_install() {
 pkg_postinst() {
 	mount -t proc proc ${ROOT}/proc || die
 	mount --bind /dev ${ROOT}/dev || die
-	mount --rbind /sys ${ROOT}/sys || die
-	mount --rbind /run ${ROOT}/run || die
+	mount --bind /sys ${ROOT}/sys || die
+	mount --bind /run ${ROOT}/run || die
 
 	# The keyboard tables are all still being included, which we need to
 	# figure out how to remove someday.
 	chroot ${ROOT} dracut --force --no-kernel --nofscks \
 		--fstab --no-compress /tmp/bootengine.cpio || die
 
-	umount --recursive ${ROOT}/proc || die
+	umount ${ROOT}/proc || die
 	umount ${ROOT}/dev || die
-	umount --recursive ${ROOT}/sys || die
-	umount --recursive ${ROOT}/run || die
+	umount ${ROOT}/sys || die
+	umount ${ROOT}/run || die
 
 	# as we are not in src_install() insinto and doins do not work here, so
 	# manually copy the file around
