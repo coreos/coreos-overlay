@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="4"
-CROS_WORKON_COMMIT="adea6485a0326889163dcacaf6f9d83e084721c8"
+CROS_WORKON_COMMIT="54c9130e08fcae8918d88b56a01b3e3d49d08531"
 CROS_WORKON_PROJECT="coreos/bootengine"
 CROS_WORKON_LOCALNAME="bootengine"
 CROS_WORKON_OUTOFTREE_BUILD=1
@@ -37,7 +37,7 @@ pkg_postinst() {
 
 	# The keyboard tables are all still being included, which we need to
 	# figure out how to remove someday.
-	chroot ${ROOT} dracut --force --no-kernel --fstab --no-compress /tmp/bootengine.cpio
+	chroot ${ROOT} dracut --force --no-kernel --nofscks --fstab --no-compress /tmp/bootengine.cpio
 
 	umount --recursive ${ROOT}/proc
 	umount --recursive ${ROOT}/dev
