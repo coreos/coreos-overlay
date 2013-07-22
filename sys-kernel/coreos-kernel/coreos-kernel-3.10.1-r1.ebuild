@@ -6,6 +6,7 @@ EAPI=4
 CROS_WORKON_COMMIT="60757f78d6dbd86e935b4de43d61547174228cb7"
 CROS_WORKON_REPO="git://github.com"
 CROS_WORKON_PROJECT="coreos/linux"
+CROS_WORKON_LOCALNAME="linux"
 inherit cros-workon cros-kernel2
 
 DEPEND="
