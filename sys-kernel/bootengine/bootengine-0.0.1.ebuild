@@ -31,7 +31,7 @@ src_install() {
 # and other fun stuff.
 pkg_postinst() {
 	mount -t proc proc ${ROOT}/proc || die
-	mount --rbind /dev ${ROOT}/dev || die
+	mount --bind /dev ${ROOT}/dev || die
 	mount --rbind /sys ${ROOT}/sys || die
 	mount --rbind /run ${ROOT}/run || die
 
@@ -41,7 +41,7 @@ pkg_postinst() {
 		--fstab --no-compress /tmp/bootengine.cpio || die
 
 	umount --recursive ${ROOT}/proc || die
-	umount --recursive ${ROOT}/dev || die
+	umount ${ROOT}/dev || die
 	umount --recursive ${ROOT}/sys || die
 	umount --recursive ${ROOT}/run || die
 
