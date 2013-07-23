@@ -18,8 +18,22 @@ SLOT="0"
 KEYWORDS="amd64 x86"
 
 DEPEND="
+	app-arch/gzip
+	app-shells/bash
+	sys-apps/coreutils
+	sys-apps/findutils
+	sys-apps/grep
+	sys-apps/kbd
 	sys-apps/kexec-tools
-	sys-kernel/dracut"
+	sys-apps/less
+	sys-apps/sed
+	sys-apps/systemd
+	sys-apps/systemd-sysv-utils
+	sys-apps/util-linux
+	sys-kernel/dracut
+	virtual/udev
+	"
+RDEPEND="${DEPEND}"
 
 src_install() {
 	insinto /usr/lib/dracut/modules.d/
