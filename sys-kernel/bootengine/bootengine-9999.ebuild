@@ -36,33 +36,17 @@ RDEPEND="${DEPEND}"
 
 src_install() {
 	insinto /usr/lib/dracut/modules.d/
-	doins -r ${S}/dracut/80gptprio $modules_dir
+	doins -r dracut/80gptprio
+	dosbin update-bootengine
 }
 
 # We are bad, we want to get around the sandbox.  So do the creation of the
 # cpio image in pkg_postinst() where we are free to mount filesystems, chroot,
 # and other fun stuff.
 pkg_postinst() {
-	mount -t proc proc ${ROOT}/proc || die
-	mount --rbind /dev ${ROOT}/dev || die
-	mount --rbind /sys ${ROOT}/sys || die
-	mount --rbind /run ${ROOT}/run || die
-
-	# The keyboard tables are all still being included, which we need to
-	# figure out how to remove someday.
-	chroot ${ROOT} dracut --force --no-kernel --nofscks \
-		--fstab --no-compress /tmp/bootengine.cpio || die
-
-	umount --recursive ${ROOT}/proc || die
-	umount --recursive ${ROOT}/dev || die
-	umount --recursive ${ROOT}/sys || die
-	umount --recursive ${ROOT}/run || die
-
-	# as we are not in src_install() insinto and doins do not work here, so
-	# manually copy the file around
-	cpio=${ROOT}/tmp/bootengine.cpio
-	chmod 644 ${cpio} || die
-	mkdir -p ${ROOT}/usr/share/bootengine/ || die
-	cp ${cpio} ${ROOT}/usr/share/bootengine/ || die
-	rm ${cpio} || die
+	if [[ -n "${ROOT}" ]]; then
+		${ROOT}/usr/sbin/update-bootengine -m -c ${ROOT} || die
+	else
+		update-bootengine || die
+	fi
 }
