@@ -130,5 +130,4 @@
 =net-dialup/ppp-2.4.5-r3 ~amd64
 =dev-python/pyxenstore-9999	~amd64 ~x86
 =coreos-base/motd-http-9999	~amd64 ~x86
-=app-emulation/docker-9999	~amd64 ~x86
 =app-emulation/lxc-0.8.0-r1	~amd64 ~x86
