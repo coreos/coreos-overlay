@@ -19,6 +19,7 @@ KEYWORDS="~amd64 ~x86"
 DEPEND="
 	app-arch/gzip
 	app-shells/bash
+	coreos-base/vboot_reference
 	sys-apps/coreutils
 	sys-apps/findutils
 	sys-apps/grep
