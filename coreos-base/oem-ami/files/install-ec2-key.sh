@@ -1,5 +1,7 @@
 #!/bin/bash
 
+/usr/bin/block-until-url http://169.254.169.254/
+
 USER_DIR="/home/core/user"
 
 if [ ! -d ${USER_DIR}/.ssh ] ; then
