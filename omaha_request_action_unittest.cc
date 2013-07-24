@@ -1493,13 +1493,13 @@ TEST(OmahaRequestActionTest, TestChangingToMoreStableChannel) {
   NiceMock<PrefsMock> prefs;
   ASSERT_TRUE(WriteFileString(
       kTestDir + "/etc/lsb-release",
-      "CHROMEOS_RELEASE_APPID={11111111-1111-1111-1111-111111111111}\n"
+      "COREOS_RELEASE_APPID={11111111-1111-1111-1111-111111111111}\n"
       "CHROMEOS_BOARD_APPID={22222222-2222-2222-2222-222222222222}\n"
-      "CHROMEOS_RELEASE_TRACK=canary-channel\n"));
+      "COREOS_RELEASE_TRACK=canary-channel\n"));
   ASSERT_TRUE(WriteFileString(
       kTestDir + utils::kStatefulPartition + "/etc/lsb-release",
       "CHROMEOS_IS_POWERWASH_ALLOWED=true\n"
-      "CHROMEOS_RELEASE_TRACK=stable-channel\n"));
+      "COREOS_RELEASE_TRACK=stable-channel\n"));
   OmahaRequestParams params = kDefaultTestParams;
   params.set_root(string("./") + kTestDir);
   params.SetLockDown(false);
@@ -1533,12 +1533,12 @@ TEST(OmahaRequestActionTest, TestChangingToLessStableChannel) {
   NiceMock<PrefsMock> prefs;
   ASSERT_TRUE(WriteFileString(
       kTestDir + "/etc/lsb-release",
-      "CHROMEOS_RELEASE_APPID={11111111-1111-1111-1111-111111111111}\n"
+      "COREOS_RELEASE_APPID={11111111-1111-1111-1111-111111111111}\n"
       "CHROMEOS_BOARD_APPID={22222222-2222-2222-2222-222222222222}\n"
-      "CHROMEOS_RELEASE_TRACK=stable-channel\n"));
+      "COREOS_RELEASE_TRACK=stable-channel\n"));
   ASSERT_TRUE(WriteFileString(
       kTestDir + utils::kStatefulPartition + "/etc/lsb-release",
-      "CHROMEOS_RELEASE_TRACK=canary-channel\n"));
+      "COREOS_RELEASE_TRACK=canary-channel\n"));
   OmahaRequestParams params = kDefaultTestParams;
   params.set_root(string("./") + kTestDir);
   params.SetLockDown(false);
