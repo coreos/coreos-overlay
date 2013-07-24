@@ -33,6 +33,7 @@ src_install() {
 	dobin ${S}/${PN}
 	dobin ${FILESDIR}/coreos-c10n
 	dobin ${FILESDIR}/etcd-bootstrap
+	dobin ${FILESDIR}/block-until-url
 
 	systemd_dounit "${FILESDIR}"/${PN}.service
 	systemd_enable_service multi-user.target ${PN}.service
