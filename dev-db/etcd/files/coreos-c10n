@@ -3,7 +3,7 @@
 C10N_ENDPOINT=https://core-api.appspot.com/v1/c10n/group
 META_URL="http://169.254.169.254/latest"
 
-ETCD_BOOTSTRAP="/var/run/etcd/bootstrap.config" 
+ETCD_BOOTSTRAP="/var/run/etcd/bootstrap.config"
 [ ! -e "/var/run/etcd/" ] && mkdir "/var/run/etcd/"
 
 /usr/bin/block-until-url $C10N_ENDPOINT
@@ -11,24 +11,25 @@ ETCD_BOOTSTRAP="/var/run/etcd/bootstrap.config"
 
 USER_DATA=$(curl -s $META_URL/user-data)
 if [ $? -eq 0 ] && [ ! -z "$USER_DATA" ]; then
-	URL=$USER_DATA
+        URL=$USER_DATA
 
-	echo $URL | grep -q '^https://' || (echo Coordination URL requires valid SSL; exit 1)
+        echo $URL | grep -q '^https://' || (echo Coordination URL requires valid SSL; exit 1)
 
-	TMP=`mktemp`
+        TMP=`mktemp`
 
-	curl -s "$USER_DATA/raw" > $TMP
+        curl -s "$USER_DATA/raw" > $TMP
 
-	# validate ssh key
-	ssh-keygen -l -f $TMP > /dev/null 2>&1
-	if [ $? -eq 0 ]; then
-		cat $TMP >> $HOME/.ssh/authorized_keys
-		echo "SSH key updated"
-	else
-		echo "Not a valid ssh key"
-	fi
+        # validate ssh key
+        ssh-keygen -l -f $TMP > /dev/null 2>&1
+        if [ $? -eq 0 ]; then
+                cat $TMP >> /home/core/user/.ssh/authorized_keys
+                echo "SSH key updated"
+                chown -R core: /home/core/user/.ssh/
+        else
+                echo "Not a valid ssh key"
+        fi
 fi
 
-IP=$(curl -s $META_URL/meta-data/local-ipv4) 
-curl $C10N_ENDPOINT -d "c10n_url=$URL" -d"ip_list=$IP_LIST" > $ETCD_BOOTSTRAP.tmp
+IP=$(curl -s $META_URL/meta-data/local-ipv4)
+curl -s $C10N_ENDPOINT -d "c10n_url=$URL" -d"ip_list=$IP" > $ETCD_BOOTSTRAP.tmp
 cat $ETCD_BOOTSTRAP.tmp | grep -v $IP > $ETCD_BOOTSTRAP
