@@ -2,17 +2,20 @@
 
 /usr/bin/coreos-c10n
 
+META_URL="http://169.254.169.254/latest"
+MY_IP=$(curl -s $META_URL/meta-data/local-ipv4)
 BOOTSTRAP="/var/run/etcd/bootstrap.config"
 
 [ ! -e $BOOTSTRAP ] && echo bootstrap config missing && exit 1
 
-MY_IP=$(curl -s $META_URL/meta-data/local-ipv4) 
+# strip blank lines
+IPS=$(grep -v $MY_IP $BOOTSTRAP|grep -v '^\n$' |sed 's/$/:7001/'|tr '\n' ','|sed 's/^,//'|sed 's/,$//')
 
 if [ -z "$IPS" ]; then
-	echo "becoming master..."
-	exec /usr/bin/etcd 
+        echo "becoming master..."
+        exec /usr/bin/etcd -v -h $MY_IP
 else
-	IPS=$(cat $BOOTSTRAP|tr '\n' ',')
-	echo "trying $IPS"
-	exec /usr/bin/etcd -C "$IPS"
+        echo "trying $IPS"
+        set -x
+        exec /usr/bin/etcd -v -h $MY_IP -C "$IPS"
 fi
