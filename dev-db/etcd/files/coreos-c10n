@@ -6,7 +6,7 @@ META_URL="http://169.254.169.254/latest"
 ETCD_BOOTSTRAP="/var/run/etcd/bootstrap.config" 
 [ ! -e "/var/run/etcd/" ] && mkdir "/var/run/etcd/"
 
-/usr/bin/block-until-url $C10_ENDPOINT
+/usr/bin/block-until-url $C10N_ENDPOINT
 /usr/bin/block-until-url $META_URL
 
 USER_DATA=$(curl -s $META_URL/user-data)
