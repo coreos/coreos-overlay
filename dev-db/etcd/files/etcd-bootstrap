@@ -24,20 +24,31 @@ function valid_ip()
     return $stat
 }
 
+
+# this is the function that waits for networking to come up
+# will timeout after 30s and fail
+/usr/bin/timeout 30 /usr/bin/coreos-api-wait
+if [ $? -ne 0 ]; then
+	echo could not reach API via coreos-api-wait
+	exit 1
+fi
+
+/usr/bin/coreos-c10n
+
 BOOTSTRAP="/var/run/etcd/bootstrap.config"
+MY_IP=`curl -s http://169.254.169.254/latest/meta-data/local-ipv4`
 for HOSTS in `[ -e $BOOTSTRAP ] && cat $BOOTSTRAP`; do
         for IP in `echo $HOSTS | sed 's/,/\'$'\n/g' `; do
-                echo $IP
                 LEADER=`curl --connect-timeout 1 -s $IP:7001/leader`
                 if [ $? -eq 0 ]; then
                         LEADER_IP=`echo $LEADER | cut -d':' -f1`
                         LEADER_PORT=`echo $LEADER | cut -d':' -f2`
                         if valid_ip $LEADER_IP; then
                                 echo GOT LEADER $LEADER
-                                exec /usr/bin/etcd -i -C $LEADER
+                                exec /usr/bin/etcd -i -v -a "$MY_IP" -C $LEADER
                         fi
                 fi
         done
 done
 echo "Not able to connect to a leader, just starting..."
-exec /usr/bin/etcd -i
+exec /usr/bin/etcd -i -v -a "$MY_IP"

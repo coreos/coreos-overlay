@@ -36,5 +36,5 @@ src_install() {
 	keepdir /var/lib/${PN}/graph
 	keepdir /var/lib/${PN}/containers
 	systemd_dounit "${FILESDIR}"/${PN}.service
-	systemd_enable_service multi-user.target ${PN}.service
+	#systemd_enable_service multi-user.target ${PN}.service
 }
