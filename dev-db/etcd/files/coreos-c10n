@@ -31,5 +31,4 @@ if [ $? -eq 0 ] && [ ! -z "$USER_DATA" ]; then
 fi
 
 IP=$(curl -s $META_URL/meta-data/local-ipv4)
-curl -s $C10N_ENDPOINT -d "c10n_url=$URL" -d"ip_list=$IP" > $ETCD_BOOTSTRAP.tmp
-cat $ETCD_BOOTSTRAP.tmp | grep -v $IP > $ETCD_BOOTSTRAP
+curl -s $C10N_ENDPOINT -d "c10n_url=$URL" -d"ip_list=$IP" > $ETCD_BOOTSTRAP
