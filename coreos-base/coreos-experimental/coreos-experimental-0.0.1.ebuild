@@ -15,5 +15,4 @@ IUSE=""
 DEPEND=""
 RDEPEND="
 	app-admin/systemd-rest
-	dev-db/etcd
 "
