@@ -145,6 +145,10 @@ USE="${USE} hardened cros_host pic pie expat -introspection -cups -openrc"
 # Enable bindist for both SDK and targets
 USE="${USE} bindist"
 
+# No need for zeroconf, that's a desktop world thing.
+# Namely dhcpcd shoudln't make up random ipv4 addresses using ipv4ll
+USE="${USE} -zeroconf"
+
 # Default licenses that are accepted for ChromiumOS builds.
 # If you want to accept more, use the --accept_licenses flag
 # when running setup_board.
