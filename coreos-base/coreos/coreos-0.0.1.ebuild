@@ -151,6 +151,7 @@ RDEPEND="${RDEPEND}
 	app-misc/ca-certificates
 	virtual/udev
 	coreos-base/oem-service
+	dev-db/etcd
 	"
 
 # TODO(dianders):
