@@ -144,7 +144,7 @@ src_install() {
 	# Add a sudo file for the core use
 	if [[ -n ${SHARED_USER_NAME} ]] ; then
 		insinto /etc/sudoers.d
-		echo "${SHARED_USER_NAME} ALL=(ALL) ALL" > 95_core_base
+		echo "${SHARED_USER_NAME} ALL=(ALL) NOPASSWD: ALL" > 95_core_base
 		insopts -m 440
 		doins 95_core_base || die
 	fi
