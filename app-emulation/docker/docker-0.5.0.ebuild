@@ -39,5 +39,5 @@ src_install() {
 	keepdir /var/lib/${PN}/containers
 	systemd_dounit "${FILESDIR}"/${PN}.service
 	# not enabling by default because it messes up the EC2 169. meta url routing
-	#systemd_enable_service multi-user.target ${PN}.service
+	systemd_enable_service multi-user.target ${PN}.service
 }
