@@ -1,6 +1,6 @@
 #
 # Automatically generated file; DO NOT EDIT.
-# Linux/x86 3.10.0 Kernel Configuration
+# Linux/x86 3.10.1 Kernel Configuration
 #
 CONFIG_64BIT=y
 CONFIG_X86_64=y
@@ -1069,7 +1069,7 @@ CONFIG_BLK_DEV_LOOP_MIN_COUNT=8
 # CONFIG_CDROM_PKTCDVD is not set
 # CONFIG_ATA_OVER_ETH is not set
 CONFIG_XEN_BLKDEV_FRONTEND=y
-# CONFIG_VIRTIO_BLK is not set
+CONFIG_VIRTIO_BLK=y
 # CONFIG_BLK_DEV_HD is not set
 # CONFIG_BLK_DEV_RBD is not set
 # CONFIG_BLK_DEV_RSXX is not set
@@ -1223,7 +1223,7 @@ CONFIG_HYPERV_STORAGE=m
 # CONFIG_SCSI_PM8001 is not set
 # CONFIG_SCSI_SRP is not set
 # CONFIG_SCSI_BFA_FC is not set
-# CONFIG_SCSI_VIRTIO is not set
+CONFIG_SCSI_VIRTIO=m
 # CONFIG_SCSI_CHELSIO_FCOE is not set
 CONFIG_SCSI_DH=y
 # CONFIG_SCSI_DH_RDAC is not set
