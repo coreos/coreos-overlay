@@ -35,7 +35,7 @@ const char* const kProductionOmahaUrl(
     "https://api.core-os.net/v1/update/");
 
 const char* const OmahaRequestParams::kUpdateChannelKey(
-    "CHROMEOS_RELEASE_TRACK");
+    "COREOS_RELEASE_TRACK");
 const char* const OmahaRequestParams::kIsPowerwashAllowedKey(
     "CHROMEOS_IS_POWERWASH_ALLOWED");
 
@@ -55,14 +55,14 @@ bool OmahaRequestParams::Init(const std::string& in_app_version,
   os_platform_ = OmahaRequestParams::kOsPlatform;
   os_version_ = OmahaRequestParams::kOsVersion;
   app_version_ = in_app_version.empty() ?
-      GetLsbValue("CHROMEOS_RELEASE_VERSION", "", NULL, stateful_override) :
+      GetLsbValue("COREOS_RELEASE_VERSION", "", NULL, stateful_override) :
       in_app_version;
   os_sp_ = app_version_ + "_" + GetMachineType();
-  os_board_ = GetLsbValue("CHROMEOS_RELEASE_BOARD",
+  os_board_ = GetLsbValue("COREOS_RELEASE_BOARD",
                           "",
                           NULL,
                           stateful_override);
-  app_id_ = GetLsbValue("CHROMEOS_RELEASE_APPID",
+  app_id_ = GetLsbValue("COREOS_RELEASE_APPID",
                         OmahaRequestParams::kAppId,
                         NULL,
                         stateful_override);
@@ -92,7 +92,7 @@ bool OmahaRequestParams::Init(const std::string& in_app_version,
   }
 
   if (in_update_url.empty())
-    update_url_ = GetLsbValue("CHROMEOS_AUSERVER", kProductionOmahaUrl, NULL,
+    update_url_ = GetLsbValue("COREOS_AUSERVER", kProductionOmahaUrl, NULL,
                               stateful_override);
   else
     update_url_ = in_update_url;

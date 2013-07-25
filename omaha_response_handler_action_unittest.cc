@@ -245,11 +245,11 @@ TEST_F(OmahaResponseHandlerActionTest, ChangeToMoreStableChannelTest) {
                         utils::kStatefulPartition + "/etc"));
   ASSERT_TRUE(WriteFileString(
       kTestDir + "/etc/lsb-release",
-      "CHROMEOS_RELEASE_TRACK=canary-channel\n"));
+      "COREOS_RELEASE_TRACK=canary-channel\n"));
   ASSERT_TRUE(WriteFileString(
       kTestDir + utils::kStatefulPartition + "/etc/lsb-release",
       "CHROMEOS_IS_POWERWASH_ALLOWED=true\n"
-      "CHROMEOS_RELEASE_TRACK=stable-channel\n"));
+      "COREOS_RELEASE_TRACK=stable-channel\n"));
 
   MockSystemState mock_system_state;
   OmahaRequestParams params(&mock_system_state);
@@ -282,10 +282,10 @@ TEST_F(OmahaResponseHandlerActionTest, ChangeToLessStableChannelTest) {
                         utils::kStatefulPartition + "/etc"));
   ASSERT_TRUE(WriteFileString(
       kTestDir + "/etc/lsb-release",
-      "CHROMEOS_RELEASE_TRACK=stable-channel\n"));
+      "COREOS_RELEASE_TRACK=stable-channel\n"));
   ASSERT_TRUE(WriteFileString(
       kTestDir + utils::kStatefulPartition + "/etc/lsb-release",
-      "CHROMEOS_RELEASE_TRACK=canary-channel\n"));
+      "COREOS_RELEASE_TRACK=canary-channel\n"));
 
   MockSystemState mock_system_state;
   OmahaRequestParams params(&mock_system_state);
