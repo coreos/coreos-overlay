@@ -1,0 +1,30 @@
+Fixes building on FreeBSD.
+https://bugs.gentoo.org/show_bug.cgi?id=438942
+
+From upstream:
+http://roy.marples.name/projects/dhcpcd/changeset/4d6bbabd08d1a1696f5db67af60c9883c4c367f4
+
+git-committer: Roy Marples <roy@marples.name> (10/24/12 13:59:20)
+Message: Fix compile fr systems without RTF_CLONING such as FreeBSD-8
+
+
+Index: if-bsd.c
+===================================================================
+--- if-bsd.c	(revision 84ad87e1287453ca05a7cbd5775322374e07a7ee)
++++ if-bsd.c	(revision 4d6bbabd08d1a1696f5db67af60c9883c4c367f4)
+@@ -363,6 +363,8 @@
+ 	    IN6_IS_ADDR_UNSPECIFIED(&rt->net))
+ 		rtm.hdr.rtm_flags |= RTF_GATEWAY;
++#ifdef RTF_CLONING
+ 	else
+ 		rtm.hdr.rtm_flags |= RTF_CLONING;
++#endif
+ 
+ 	rtm.hdr.rtm_addrs = RTA_DST | RTA_GATEWAY | RTA_NETMASK;
+@@ -371,5 +373,5 @@
+ 
+ 	ADDADDR(&rt->dest);
+-	if (rtm.hdr.rtm_flags & (RTF_HOST | RTF_CLONING)) {
++	if (!(rtm.hdr.rtm_flags & RTF_GATEWAY)) {
+ 		/* Make us a link layer socket for the host gateway */
+ 		memset(&su, 0, sizeof(su));
