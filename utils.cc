@@ -59,7 +59,7 @@ namespace utils {
 
 static const char kBootId[] = "/proc/sys/kernel/random/boot_id";
 static const char kDevImageMarker[] = "/root/.dev_mode";
-const char* const kStatefulPartition = "/mnt/stateful_partition";
+const char* const kStatefulPartition = "/media/state";
 
 // Cgroup container is created in update-engine's upstart script located at
 // /etc/init/update-engine.conf.
