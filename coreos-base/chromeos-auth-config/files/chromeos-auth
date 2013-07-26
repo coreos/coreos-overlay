@@ -4,11 +4,11 @@ auth [success=ignore default=3] pam_exec.so \
 
 # Check if a custom devmode password file exists and prefer it.
 auth [success=ignore default=1] pam_exec.so \
-  quiet /usr/bin/test -f /mnt/stateful_partition/etc/devmode.passwd
+  quiet /usr/bin/test -f /media/state/etc/devmode.passwd
 
 # If we get to pwdfile, use it or bypass the password-less login.
 auth [success=done default=1] pam_pwdfile.so \
-  pwdfile /mnt/stateful_partition/etc/devmode.passwd
+  pwdfile /media/state/etc/devmode.passwd
 
 # If we get here, allow password-less access
 auth sufficient pam_exec.so quiet /usr/bin/crossystem cros_debug?1

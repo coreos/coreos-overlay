@@ -284,7 +284,7 @@ pkg_postinst() {
 	# Some default directories. These are created here rather than at
 	# install because some of them may already exist and have mounts.
 	for x in /dev /home /media \
-		/mnt/stateful_partition /proc /root /sys /var/lock; do
+		/proc /root /sys /var/lock; do
 		[ -d "${ROOT}/$x" ] && continue
 		install -d --mode=0755 --owner=root --group=root "${ROOT}/$x"
 	done
