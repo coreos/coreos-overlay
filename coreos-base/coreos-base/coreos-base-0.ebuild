@@ -106,6 +106,10 @@ src_install() {
 
 	# target-specific fun
 	if ! use cros_host ; then
+		# Add a /srv directory for mounting into later
+		dodir /srv
+		keepdir /srv
+
 		dodir /bin /usr/bin
 
 		# Make mount work in the way systemd prescribes
@@ -165,7 +169,7 @@ pkg_postinst() {
 	# build roots we copy over the user entries if they already exist.
 	local system_user="core"
 	local system_id="1000"
-	local system_home="/home/${system_user}/user"
+	local system_home="/home/${system_user}"
 	# Add a chronos-access group to provide non-chronos users,
 	# mostly system daemons running as a non-chronos user, group permissions
 	# to access files/directories owned by chronos.
@@ -284,7 +288,7 @@ pkg_postinst() {
 	# Some default directories. These are created here rather than at
 	# install because some of them may already exist and have mounts.
 	for x in /dev /home /media \
-		/mnt/stateful_partition /proc /root /sys /var/lock; do
+		/proc /root /sys /var/lock; do
 		[ -d "${ROOT}/$x" ] && continue
 		install -d --mode=0755 --owner=root --group=root "${ROOT}/$x"
 	done
