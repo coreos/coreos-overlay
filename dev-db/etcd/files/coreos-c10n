@@ -22,9 +22,9 @@ if [ $? -eq 0 ] && [ ! -z "$USER_DATA" ]; then
         # validate ssh key
         ssh-keygen -l -f $TMP > /dev/null 2>&1
         if [ $? -eq 0 ]; then
-                cat $TMP >> /home/core/user/.ssh/authorized_keys
+                cat $TMP >> /home/core/.ssh/authorized_keys
                 echo "SSH key updated"
-                chown -R core: /home/core/user/.ssh/
+                chown -R core: /home/core/.ssh/
         else
                 echo "Not a valid ssh key"
         fi
