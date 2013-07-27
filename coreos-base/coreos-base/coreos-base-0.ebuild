@@ -125,6 +125,9 @@ src_install() {
 		# Insert empty fstab
 		doins "${FILESDIR}"/fstab
 
+		# Insert glibc's nsswitch.conf since that is installed weirdly
+		doins "${FILESDIR}"/nsswitch.conf
+
 		# Symlink /etc/localtime to something on the stateful partition, which we
 		# can then change around at runtime.
 		dosym /var/lib/timezone/localtime /etc/localtime || die
