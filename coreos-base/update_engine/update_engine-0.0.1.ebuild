@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="4"
-CROS_WORKON_COMMIT="0db9ec826cd605fd9cc5dd576ecddeba0d3ec3e5"
+CROS_WORKON_COMMIT="a71fdb93c89d6f716f36c30ff79b7089f4a3f3f5"
 CROS_WORKON_PROJECT="coreos/update_engine"
 CROS_WORKON_REPO="git://github.com"
 
@@ -85,6 +85,7 @@ src_install() {
 	use delta_generator && dobin delta_generator
 
 	systemd_dounit "${FILESDIR}"/update-engine.service
+	systemd_enable_service multi-user.target update-engine.service
 
 	insinto /usr/share/dbus-1/services
 	doins org.chromium.UpdateEngine.service

@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="4"
-CROS_WORKON_COMMIT="c13826733534ba1e42671ca42bec56b1f6ba6ba0"
+CROS_WORKON_COMMIT="e4a8c87fabfb33ab735da0c84edb4990e69fe921"
 CROS_WORKON_PROJECT="coreos/dev-util"
 CROS_WORKON_REPO="git://github.com"
 CROS_WORKON_LOCALNAME="dev"
@@ -10,8 +10,8 @@ CROS_WORKON_LOCALDIR="src/platform"
 
 inherit cros-workon multilib python
 
-DESCRIPTION="Development utilities for ChromiumOS"
-HOMEPAGE="http://www.chromium.org/"
+DESCRIPTION="Development utilities for CoreOS"
+HOMEPAGE="http://coreos.com"
 
 LICENSE="GPL-2"
 SLOT="0"

@@ -37,10 +37,6 @@ PORTDIR_OVERLAY="
 # of the ChromiumOS set.  You can use "--select" to override this.
 EMERGE_DEFAULT_OPTS="--oneshot"
 
-# Use parallel bzip2 for portage
-PORTAGE_BZIP2_COMMAND="lbzip2"
-PORTAGE_BUNZIP2_COMMAND="lbunzip2"
-
 FETCHCOMMAND_GS="bash -c 'BOTO_CONFIG=/home/\${PORTAGE_USERNAME}/.boto gsutil cp \"${URI}\" \"${DISTDIR}/${FILE}\"'"
 RESUMECOMMAND_GS="bash -c 'BOTO_CONFIG=/home/\${PORTAGE_USERNAME}/.boto gsutil cp \"${URI}\" \"${DISTDIR}/${FILE}\"'"
 
@@ -55,7 +51,7 @@ DISTDIR="/var/lib/portage/distfiles-target"
 
 # Username and home directory of the shared user.
 SHARED_USER_NAME="core"
-SHARED_USER_HOME="/home/core/user"
+SHARED_USER_HOME="/home/core"
 SHARED_USER_PASSWD_FILE="/etc/shared_user_passwd.txt"
 
 # the AC_FUNC_WAIT3 macro uses runtime-checks for the function, which

@@ -7,7 +7,7 @@ MY_IP=$(curl -s $META_URL/meta-data/local-ipv4)
 BOOTSTRAP="/var/run/etcd/bootstrap.config"
 
 # for etcd
-STATE=/mnt/stateful_partition/etcd
+STATE=/media/state/etcd
 mkdir -p $STATE
 
 [ ! -e $BOOTSTRAP ] && echo bootstrap config missing && exit 1

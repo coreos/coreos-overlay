@@ -106,6 +106,10 @@ src_install() {
 
 	# target-specific fun
 	if ! use cros_host ; then
+		# Add a /srv directory for mounting into later
+		dodir /srv
+		keepdir /srv
+
 		dodir /bin /usr/bin
 
 		# Make mount work in the way systemd prescribes
@@ -120,6 +124,9 @@ src_install() {
 
 		# Insert empty fstab
 		doins "${FILESDIR}"/fstab
+
+		# Insert glibc's nsswitch.conf since that is installed weirdly
+		doins "${FILESDIR}"/nsswitch.conf
 
 		# Symlink /etc/localtime to something on the stateful partition, which we
 		# can then change around at runtime.
@@ -144,7 +151,7 @@ src_install() {
 	# Add a sudo file for the core use
 	if [[ -n ${SHARED_USER_NAME} ]] ; then
 		insinto /etc/sudoers.d
-		echo "${SHARED_USER_NAME} ALL=(ALL) ALL" > 95_core_base
+		echo "${SHARED_USER_NAME} ALL=(ALL) NOPASSWD: ALL" > 95_core_base
 		insopts -m 440
 		doins 95_core_base || die
 	fi
@@ -165,7 +172,7 @@ pkg_postinst() {
 	# build roots we copy over the user entries if they already exist.
 	local system_user="core"
 	local system_id="1000"
-	local system_home="/home/${system_user}/user"
+	local system_home="/home/${system_user}"
 	# Add a chronos-access group to provide non-chronos users,
 	# mostly system daemons running as a non-chronos user, group permissions
 	# to access files/directories owned by chronos.
@@ -284,7 +291,7 @@ pkg_postinst() {
 	# Some default directories. These are created here rather than at
 	# install because some of them may already exist and have mounts.
 	for x in /dev /home /media \
-		/mnt/stateful_partition /proc /root /sys /var/lock; do
+		/proc /root /sys /var/lock; do
 		[ -d "${ROOT}/$x" ] && continue
 		install -d --mode=0755 --owner=root --group=root "${ROOT}/$x"
 	done

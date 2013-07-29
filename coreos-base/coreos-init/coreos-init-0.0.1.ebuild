@@ -3,7 +3,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="4"
-CROS_WORKON_COMMIT="1f2cd73df612360c8c1910f6e9ca7bd3732c2dec"
+CROS_WORKON_COMMIT="bd43c06a3b0eb14ed6d5f93af2a9dfafe060d8bc"
 CROS_WORKON_PROJECT="coreos/init"
 CROS_WORKON_LOCALNAME="init"
 
@@ -51,5 +51,14 @@ src_install() {
 		systemd_dounit "${unit}"
 	done
 
-	systemd_enable_service multi-user.target coreos-startup.target
+	# Set the default target to multi-user not graphical, this is CoreOS!
+	dosym /usr/lib/systemd/system/multi-user.target /etc/systemd/system/default.target
+
+	systemd_enable_service basic.target coreos-startup.target
+
+	# Services!
+	systemd_enable_service default.target local-enable.service
+	systemd_enable_service default.target dhcpcd.service
+	systemd_enable_service default.target sshd-keygen.service
+	systemd_enable_service default.target sshd.socket
 }
