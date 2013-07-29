@@ -84,6 +84,7 @@ src_install() {
 	use delta_generator && dobin delta_generator
 
 	systemd_dounit "${FILESDIR}"/update-engine.service
+	systemd_enable_service multi-user.target update-engine.service
 
 	insinto /usr/share/dbus-1/services
 	doins org.chromium.UpdateEngine.service
