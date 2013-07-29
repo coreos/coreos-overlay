@@ -1,0 +1,7 @@
+[Unit]
+Description=CoreOS Rackspace OEM Target
+Wants=nova-agent.service
+Wants=setup-networking.service
+
+[Install]
+WantedBy=multi-user.target

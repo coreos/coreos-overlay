@@ -8,7 +8,7 @@
 EAPI=5
 inherit git-2
 
-DESCRIPTION="oem suite for ami images"
+DESCRIPTION="oem suite for rackspace images"
 HOMEPAGE=""
 SRC_URI=""
 
@@ -21,7 +21,9 @@ EGIT_REPO_URI="https://github.com/coreos/nova-agent-container.git"
 
 src_install() {
 	rsync --exclude=".git" -aq ${S}/ ${D}/nova-agent/
+	rsync -aq ${FILESDIR}/systemd/ ${D}/system/
 	dobin "${FILESDIR}"/ifconfig.sh
+	dobin "${FILESDIR}"/net.sh
 
 	exeinto "/"
 	doexe ${FILESDIR}/run.sh
