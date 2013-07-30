@@ -9,7 +9,7 @@ ETCD_BOOTSTRAP="/var/run/etcd/bootstrap.config"
 /usr/bin/block-until-url $C10N_ENDPOINT
 /usr/bin/block-until-url $META_URL
 
-USER_DATA=$(curl -s $META_URL/user-data)
+USER_DATA=$(curl -s --fail $META_URL/user-data)
 if [ $? -eq 0 ] && [ ! -z "$USER_DATA" ]; then
         URL=$USER_DATA
 
