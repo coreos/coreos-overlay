@@ -112,7 +112,6 @@ RDEPEND="${RDEPEND}
 	bootchart? (
 		app-benchmarks/bootchart
 	)
-	app-crypt/trousers
 	app-shells/bash
 	app-shells/dash
 	coreos-base/chromeos-auth-config
