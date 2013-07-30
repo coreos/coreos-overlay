@@ -4,7 +4,7 @@
 EAPI=5
 PYTHON_COMPAT=( python{2_6,2_7} )
 
-CROS_WORKON_COMMIT="f52f87d06afa1b1eb8e350f6bdea153b2a7c74cb"
+CROS_WORKON_COMMIT="3e4b20f67839aa541839eca6b4b7274d5ad1932c"
 CROS_WORKON_PROJECT="coreos/coreos-buildbot"
 
 inherit cros-workon distutils-r1
