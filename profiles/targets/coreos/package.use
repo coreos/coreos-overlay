@@ -75,3 +75,6 @@ dev-libs/libxml2	python
 
 x11-libs/cairo		X
 sys-boot/syslinux       -custom-cflags
+
+# only needed on build hosts
+dev-lang/python -sqlite
