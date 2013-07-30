@@ -197,7 +197,7 @@ pkg_postinst() {
 	copy_or_add_daemon_user "polkituser" 206  # For policykit
 #	copy_or_add_daemon_user "tss" 207         # For trousers (TSS/TPM)
 	copy_or_add_daemon_user "pkcs11" 208      # For pkcs11 clients
-	copy_or_add_daemon_user "qdlservice" 209  # for QDLService
+#	copy_or_add_daemon_user "qdlservice" 209  # for QDLService
 #	copy_or_add_daemon_user "cromo" 210       # For cromo (modem manager)
 #	copy_or_add_daemon_user "cashew" 211      # Deprecated, do not reuse
 	copy_or_add_daemon_user "ipsec" 212       # For strongswan/ipsec VPN
@@ -220,6 +220,7 @@ pkg_postinst() {
 #	copy_or_add_daemon_user "watchdog" 229    # For daisydog
 #	copy_or_add_daemon_user "devbroker" 230   # For permission_broker
 #	copy_or_add_daemon_user "xorg" 231        # For Xorg
+	copy_or_add_daemon_user "etcd" 232        # For etcd
 	# Reserve some UIDs/GIDs between 300 and 349 for sandboxing FUSE-based
 	# filesystem daemons.
 #	copy_or_add_daemon_user "ntfs-3g" 300     # For ntfs-3g prcoess
