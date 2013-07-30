@@ -10,5 +10,5 @@ if [ -d /media/state/etcd ]; then
   chown -R etcd:etcd ${STATE}
 fi
 
-mkdir /var/run/etcd
+mkdir -p /var/run/etcd
 chown etcd:etcd /var/run/etcd
