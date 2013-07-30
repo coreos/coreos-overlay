@@ -25,6 +25,7 @@ app-vim
 app-xemacs
 chromeos-base
 coreos-base
+coreos-devel
 dev-ada
 dev-cpp
 dev-db
