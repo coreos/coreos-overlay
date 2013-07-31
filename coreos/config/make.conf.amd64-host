@@ -51,4 +51,4 @@ PKG_INSTALL_MASK="${INSTALL_MASK}"
 # be utilized nowhere else!
 CROS_SDK_HOST="cros-sdk-host"
 
-source make.conf.host_setup
+source /etc/portage/make.conf.host_setup
