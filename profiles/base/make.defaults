@@ -149,6 +149,10 @@ USE="${USE} bindist"
 # Namely dhcpcd shoudln't make up random ipv4 addresses using ipv4ll
 USE="${USE} -zeroconf"
 
+# Set python here in base instead of its previous home in default/linux
+# so package.use in default/linux can override it, it doesn't otherwise.
+USE="${USE} python"
+
 # Default licenses that are accepted for ChromiumOS builds.
 # If you want to accept more, use the --accept_licenses flag
 # when running setup_board.

@@ -1,11 +1,10 @@
 # Copyright 1999-2013 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/app-emulation/virtualbox/virtualbox-4.2.16.ebuild,v 1.1 2013/07/08 14:51:21 polynomial-c Exp $
 
 EAPI=5
 
 PYTHON_COMPAT=( python2_7 )
-inherit eutils fdo-mime flag-o-matic linux-info multilib pax-utils python-single-r1 qt4-r2 toolchain-funcs java-pkg-opt-2 udev
+inherit eutils fdo-mime flag-o-matic linux-info multilib pax-utils python-single-r1 qt4-r2 toolchain-funcs java-pkg-opt-2 udev user
 
 MY_PV="${PV/beta/BETA}"
 MY_PV="${MY_PV/rc/RC}"
@@ -23,7 +22,6 @@ KEYWORDS="~amd64 ~x86"
 IUSE="+additions alsa doc extensions headless java pam pulseaudio +opengl python +qt4 +sdk vboxwebsrv vnc"
 
 RDEPEND="!app-emulation/virtualbox-bin
-	~app-emulation/virtualbox-modules-${PV}
 	dev-libs/libIDL
 	>=dev-libs/libxslt-1.1.19
 	net-misc/curl
@@ -136,6 +134,10 @@ pkg_setup() {
 	fi
 	java-pkg-opt-2_pkg_setup
 	python-single-r1_pkg_setup
+
+	# Add the vboxusers group before src_install
+	# see (bug #184504)
+	enewgroup vboxusers
 }
 
 src_prepare() {

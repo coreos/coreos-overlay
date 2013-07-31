@@ -4,7 +4,7 @@
 
 EAPI=4
 
-inherit eutils fdo-mime flag-o-matic linux-info multilib pax-utils python qt4-r2 toolchain-funcs java-pkg-opt-2 udev
+inherit eutils fdo-mime flag-o-matic linux-info multilib pax-utils python qt4-r2 toolchain-funcs java-pkg-opt-2 udev user
 
 if [[ ${PV} == "9999" ]] ; then
 	# XXX: should finish merging the -9999 ebuild into this one ...
@@ -27,7 +27,6 @@ KEYWORDS="amd64 x86"
 IUSE="+additions alsa doc extensions headless java pam pulseaudio +opengl python +qt4 +sdk vboxwebsrv vnc"
 
 RDEPEND="!app-emulation/virtualbox-bin
-	~app-emulation/virtualbox-modules-${PV}
 	dev-libs/libIDL
 	>=dev-libs/libxslt-1.1.19
 	net-misc/curl
@@ -133,6 +132,10 @@ pkg_setup() {
 	java-pkg-opt-2_pkg_setup
 	python_set_active_version 2
 	python_pkg_setup
+
+	# Add the vboxusers group before src_install
+	# see (bug #184504)
+	enewgroup vboxusers
 }
 
 src_prepare() {
