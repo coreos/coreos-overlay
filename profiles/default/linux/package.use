@@ -71,3 +71,6 @@ dev-lang/python sqlite
 
 # we just want to create images but not run them, minimize the features
 app-emulation/virtualbox headless -additions -alsa -doc -extensions -java -opengl -pam -pulseaudio -python -qt4 -sdk -vboxwebsrv -vnc
+
+# vagrant's dependency tree ndeeds ruby w/ threads
+dev-lang/ruby threads
