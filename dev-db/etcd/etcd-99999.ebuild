@@ -21,8 +21,8 @@ KEYWORDS="~amd64"
 IUSE=""
 
 DEPEND=">=dev-lang/go-1.1"
-GOROOT="${ED}usr/$(get_libdir)/go"
-GOPKG="${PN}"
+
+ETCD_PACKAGE="github.com/coreos/etcd"
 
 src_compile() {
 	./build
@@ -32,6 +32,11 @@ src_install() {
 	dobin ${S}/${PN}
 	dobin ${FILESDIR}/coreos-c10n
 	dobin ${FILESDIR}/etcd-bootstrap
+	dobin ${FILESDIR}/etcd-pre-exec
+	dobin ${FILESDIR}/block-until-url
+
+	keepdir /var/lib/${PN}
+	fowners etcd:etcd /var/lib/${PN}
 
 	systemd_dounit "${FILESDIR}"/${PN}.service
 	systemd_enable_service multi-user.target ${PN}.service
