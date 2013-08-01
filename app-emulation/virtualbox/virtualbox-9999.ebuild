@@ -119,7 +119,7 @@ src_install() {
 	exeinto /usr/lib/${PN}
 	newexe "${FILESDIR}/${PN}-ose-3-wrapper" "VBox" || die
 	fowners root:vboxusers /usr/lib/${PN}/VBox
-	fperms 0750 /usr/lib/${PN}/VBox
+	fperms 0755 /usr/lib/${PN}/VBox
 
 	dosym /usr/lib/${PN}/VBox /usr/bin/VBoxManage
 	dosym /usr/lib/${PN}/VBox /usr/bin/VBoxVRDP
@@ -137,13 +137,13 @@ src_install() {
 	for each in VBox{Manage,SVC,XPCOMIPCD,Tunctl} *so *r0 *gc ; do
 		doins $each
 		fowners root:vboxusers /usr/lib/${PN}/${each}
-		fperms 0750 /usr/lib/${PN}/${each}
+		fperms 0755 /usr/lib/${PN}/${each}
 	done
 
 	if use amd64; then
 		doins VBoxREM2.rel
 		fowners root:vboxusers /usr/lib/${PN}/VBoxREM2.rel
-		fperms 0750 /usr/lib/${PN}/VBoxREM2.rel
+		fperms 0755 /usr/lib/${PN}/VBoxREM2.rel
 	fi
 
 	if ! use headless; then

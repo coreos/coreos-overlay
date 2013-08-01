@@ -241,7 +241,7 @@ src_install() {
 	exeinto /usr/$(get_libdir)/${PN}
 	newexe "${FILESDIR}/${PN}-ose-3-wrapper" "VBox" || die
 	fowners root:vboxusers /usr/$(get_libdir)/${PN}/VBox
-	fperms 0750 /usr/$(get_libdir)/${PN}/VBox
+	fperms 0755 /usr/$(get_libdir)/${PN}/VBox
 
 	dosym /usr/$(get_libdir)/${PN}/VBox /usr/bin/VBoxManage
 	dosym /usr/$(get_libdir)/${PN}/VBox /usr/bin/VBoxVRDP
@@ -259,7 +259,7 @@ src_install() {
 	if use vboxwebsrv ; then
 		doins vboxwebsrv || die
 		fowners root:vboxusers /usr/$(get_libdir)/${PN}/vboxwebsrv
-		fperms 0750 /usr/$(get_libdir)/${PN}/vboxwebsrv
+		fperms 0755 /usr/$(get_libdir)/${PN}/vboxwebsrv
 		dosym /usr/$(get_libdir)/${PN}/VBox /usr/bin/vboxwebsrv
 		newinitd "${FILESDIR}"/vboxwebsrv-initd vboxwebsrv
 		newconfd "${FILESDIR}"/vboxwebsrv-confd vboxwebsrv
@@ -268,7 +268,7 @@ src_install() {
 	for each in VBox{Manage,SVC,XPCOMIPCD,Tunctl,NetAdpCtl,NetDHCP,ExtPackHelperApp} *so *r0 *gc ; do
 		doins $each || die
 		fowners root:vboxusers /usr/$(get_libdir)/${PN}/${each}
-		fperms 0750 /usr/$(get_libdir)/${PN}/${each}
+		fperms 0755 /usr/$(get_libdir)/${PN}/${each}
 	done
 	# VBoxNetAdpCtl and VBoxNetDHCP binaries need to be suid root in any case..
 	fperms 4750 /usr/$(get_libdir)/${PN}/VBoxNetAdpCtl
@@ -288,7 +288,7 @@ src_install() {
 		if use opengl && use qt4 ; then
 			doins VBoxTestOGL || die
 			fowners root:vboxusers /usr/$(get_libdir)/${PN}/VBoxTestOGL
-			fperms 0750 /usr/$(get_libdir)/${PN}/VBoxTestOGL
+			fperms 0755 /usr/$(get_libdir)/${PN}/VBoxTestOGL
 		fi
 
 		dosym /usr/$(get_libdir)/${PN}/VBox /usr/bin/VBoxSDL
@@ -331,7 +331,7 @@ src_install() {
 	insinto ${udevdir}
 	doins VBoxCreateUSBNode.sh
 	fowners root:vboxusers ${udevdir}/VBoxCreateUSBNode.sh
-	fperms 0750 ${udevdir}/VBoxCreateUSBNode.sh
+	fperms 0755 ${udevdir}/VBoxCreateUSBNode.sh
 	insinto ${udevdir}/rules.d
 	doins "${FILESDIR}"/10-virtualbox.rules
 	sed "s@%UDEVDIR%@${udevdir}@" \
