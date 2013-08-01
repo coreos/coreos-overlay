@@ -1,4 +1,7 @@
 [Service]
+User=etcd
+PermissionsStartOnly=true
+ExecStartPre=/usr/bin/etcd-pre-exec
 ExecStart=/usr/bin/etcd-bootstrap
 
 [Install]
