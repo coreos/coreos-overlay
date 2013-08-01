@@ -12,6 +12,9 @@ SLOT="0"
 KEYWORDS="amd64"
 IUSE=""
 
+# no source directory
+S="${WORKDIR}"
+
 src_install() {
 	insinto "/"
 	doins "${FILESDIR}/vagrant.pub"
