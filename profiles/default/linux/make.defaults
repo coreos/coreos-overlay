@@ -11,7 +11,7 @@
 # pulled in during *emerge system*!
 
 # Default starting set of USE flags for all default/linux profiles.
-USE="crypt ipv6 ncurses nls python readline ssl zlib"
+USE="crypt ipv6 ncurses nls readline ssl zlib"
 
 # make sure toolchain has sane defaults <tooclhain@gentoo.org>
 USE="${USE} fortran mudflap openmp"
