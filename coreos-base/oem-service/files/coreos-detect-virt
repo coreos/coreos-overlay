@@ -1,0 +1,13 @@
+#!/bin/bash
+
+OEM_RELEASE="/usr/share/oem/oem-release"
+
+VIRT=
+
+if [ -e "${OEM_RELEASE}" ]; then
+	VIRT=$(cat ${OEM_RELEASE})	
+else
+	VIRT=$(systemd-detect-virt)
+fi
+
+echo $VIRT

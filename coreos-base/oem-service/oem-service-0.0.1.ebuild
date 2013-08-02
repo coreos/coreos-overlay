@@ -19,6 +19,7 @@ IUSE=""
 
 src_install() {
 	dobin ${FILESDIR}/run-oem.sh
+	dobin ${FILESDIR}/coreos-detect-virt
 
 	systemd_dounit "${FILESDIR}"/${PN}.service
 	systemd_enable_service multi-user.target ${PN}.service
