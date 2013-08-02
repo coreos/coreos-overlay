@@ -1,14 +1,21 @@
 #!/bin/bash
 
+STATE=/var/lib/etcd
+mkdir -p $STATE
+
+VIRT=$(coreos-detect-virt)
+
+if [ "${VIRT}" != "ec2" ]; then
+	echo "Detected environment \"${VIRT}\", just starting solo master..."
+        exec /usr/bin/etcd -v -d $STATE
+fi
+
 /usr/bin/coreos-c10n
 
 META_URL="http://169.254.169.254/latest"
 MY_IP=$(curl -s $META_URL/meta-data/local-ipv4)
 BOOTSTRAP="/var/run/etcd/bootstrap.config"
 
-# for etcd
-STATE=/var/lib/etcd
-mkdir -p $STATE
 
 [ ! -e $BOOTSTRAP ] && echo bootstrap config missing && exit 1
 
