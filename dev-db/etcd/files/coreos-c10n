@@ -1,5 +1,12 @@
 #!/bin/bash
 
+VIRT=$(coreos-detect-virt)
+
+if [ "${VIRT}" != "ec2" ]; then
+	# all of this is currently dependent on ec2, we'll refactor as we add more images
+	exit 0
+fi
+
 C10N_ENDPOINT=https://core-api.appspot.com/v1/c10n/group
 META_URL="http://169.254.169.254/latest"
 

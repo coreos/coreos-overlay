@@ -20,4 +20,7 @@ src_install() {
 
 	exeinto "/"
 	doexe ${FILESDIR}/run.sh
+
+	insinto "/"
+	doins ${FILESDIR}/oem-release
 }
