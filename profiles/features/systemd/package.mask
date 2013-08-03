@@ -1,0 +1,4 @@
+# Mask sysvinit+openrc and runit+openrc in favor of systemd
+sys-apps/sysvinit
+sys-apps/openrc
+sys-process/runit
