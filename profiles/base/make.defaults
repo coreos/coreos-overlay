@@ -140,7 +140,7 @@ USE_EXPAND_HIDDEN="${USE_EXPAND_HIDDEN} CROS_WORKON_TREE"
 
 # Extra use flags for Core OS SDK (and possibly targets)
 # Previously defined in make.conf
-USE="${USE} hardened cros_host pic pie expat -introspection -cups -openrc"
+USE="${USE} hardened cros_host pic pie expat -introspection -cups"
 
 # Enable bindist for both SDK and targets
 USE="${USE} bindist"
