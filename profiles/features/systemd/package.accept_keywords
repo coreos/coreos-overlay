@@ -1,0 +1,9 @@
+sys-apps/systemd                ~amd64 ~x86
+sys-apps/systemd-ui             ~amd64 ~x86
+sys-apps/systemd-sysv-utils     ~amd64 ~x86
+sys-apps/efunctions             ~amd64 ~x86
+
+# Various dependencies that also need to be up-to-date
+sys-apps/hwids                  ~amd64 ~x86
+sys-apps/kmod                   ~amd64 ~x86
+virtual/udev                    ~amd64 ~x86
