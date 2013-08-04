@@ -50,7 +50,7 @@ net-wireless/bluez-test	alsa -consolekit -readline test-programs
 net-wireless/wpa_supplicant	dbus debug -readline ssl
 sci-geosciences/gpsd -python -ntp -X dbus garmin minimal ocean tntc usb -sockets
 sys-apps/busybox	-pam -selinux
-sys-apps/dbus		-X
+sys-apps/dbus		-X -systemd
 sys-apps/iproute2	ipv6
 # mosys: crosbug.com/p/11630
 sys-apps/mosys          static
