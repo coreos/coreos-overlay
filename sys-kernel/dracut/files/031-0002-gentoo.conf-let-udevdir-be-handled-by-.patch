@@ -1,4 +1,4 @@
-From 624a97d4e2b548889b5f758ed6a908a1495b44be Mon Sep 17 00:00:00 2001
+From fc2bb603bc17e67c66ffcf53a282aa6fb6a6261c Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Amadeusz=20=C5=BBo=C5=82nowski?= <aidecoe@aidecoe.name>
 Date: Sun, 16 Dec 2012 20:02:48 +0100
 Subject: [PATCH 2/2] gentoo.conf: let udevdir= be handled by pkg-config and
@@ -12,7 +12,7 @@ in old and new locations.
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/dracut.conf.d/gentoo.conf.example b/dracut.conf.d/gentoo.conf.example
-index 1361a30..b78e5c6 100644
+index 26e7314..f9617f0 100644
 --- a/dracut.conf.d/gentoo.conf.example
 +++ b/dracut.conf.d/gentoo.conf.example
 @@ -1,7 +1,8 @@
@@ -26,5 +26,5 @@ index 1361a30..b78e5c6 100644
  
  #
 -- 
-1.8.1.5
+1.8.3.2
 
