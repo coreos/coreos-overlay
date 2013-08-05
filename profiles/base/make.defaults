@@ -125,8 +125,8 @@ BOOTSTRAP_USE="cxx unicode threads curl"
 
 # Mike Gilbert <floppym@gentoo.org> (15 May 2012)
 # Default target(s) for python-r1.eclass
-PYTHON_TARGETS="python2_6 python2_7"
-PYTHON_SINGLE_TARGET="python2_6"
+PYTHON_TARGETS="python2_7"
+PYTHON_SINGLE_TARGET="python2_7"
 
 # ChromeOS-specific: BOARD_USE for accessing board value in cros-board.eclass
 #                    CROS_WORKON_TREE for cros-workon
