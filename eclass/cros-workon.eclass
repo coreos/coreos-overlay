@@ -413,9 +413,7 @@ cros-workon_src_unpack() {
 		# Hack around this by using empty branch. This will cause git fetch to
 		# pull all branches instead. Note that the branch has to be a space,
 		# rather than empty, for this trick to work.
-		if [[ -z ${EGIT_BRANCH} ]] ; then
-		  EGIT_BRANCH=" "
-		fi
+		EGIT_BRANCH=" "
 		for (( i = 0; i < project_count; ++i )); do
 			EGIT_REPO_URI="${repo[i]}/${project[i]}.git"
 			EGIT_PROJECT="${project[i]}${CROS_WORKON_GIT_SUFFIX}"
