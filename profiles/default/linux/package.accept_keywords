@@ -97,3 +97,6 @@
 =dev-python/httplib2-0.8 ~amd64
 =dev-python/crcmod-1.7-r1 ~amd64
 =dev-python/boto-2.9.6 ~amd64
+
+# Fixes XML validation failure and python eclass usage
+=dev-lang/yasm-1.2.0-r1

@@ -44,7 +44,6 @@ RDEPEND="${RDEPEND}
 	coreos-base/gmerge
 	dev-lang/python
 	dev-python/dbus-python
-	dev-python/argparse
 	dev-python/pygobject
 	dev-util/strace
 	net-analyzer/netperf
@@ -74,6 +73,7 @@ RDEPEND="${RDEPEND}
 	sys-process/psmisc
 	sys-process/time
 	virtual/perf
+	virtual/python-argparse
 	coreos-base/coreos-experimental
 	"
 
