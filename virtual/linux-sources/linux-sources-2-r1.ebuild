@@ -9,9 +9,8 @@ HOMEPAGE="http://www.coreos.com"
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="amd64 arm x86"
-IUSE="-kernel_next -kernel_sources"
+IUSE="cros_host"
 
 RDEPEND="
-	kernel_next? ( sys-kernel/coreos-kernel-next[kernel_sources=] )
-	!kernel_next? ( sys-kernel/coreos-kernel[kernel_sources=] )
+	!cros_host? ( sys-kernel/coreos-kernel )
 "
