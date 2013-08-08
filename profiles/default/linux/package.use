@@ -36,7 +36,7 @@ net-misc/dhcpcd -crash
 # this comment was here:
 # build kvm with X and sdl so we have an option of running it with local
 # display without VNC
-app-emulation/qemu	aio caps curl jpeg ncurses png python seccomp threads uuid vhost-net vnc qemu_softmmu_targets_x86_64
+app-emulation/qemu	aio caps curl jpeg ncurses png python seccomp threads uuid vhost-net virtfs vnc xattr qemu_softmmu_targets_x86_64
 dev-libs/libaio		static-libs
 cross-armv7a-cros-linux-gnueabi/gcc   hardfp
 cross-armv6j-cros-linux-gnueabi/gcc   hardfp -thumb
