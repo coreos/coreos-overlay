@@ -15,13 +15,15 @@ SRC_URI=""
 LICENSE="BSD"
 SLOT="0"
 KEYWORDS="~amd64 ~arm ~x86"
-IUSE="nfs"
+IUSE="test"
 
 # Daemons we enable here must installed during build/install in addition to
 # during runtime so the systemd unit enable step works.
 DEPEND="
 	net-misc/dhcpcd
 	net-misc/openssh
+	!<dev-db/etcd-0.0.1-r6
+	test? ( dev-lang/python:2.7 )
 	"
 RDEPEND="${DEPEND}
 	sys-block/parted
@@ -30,25 +32,7 @@ RDEPEND="${DEPEND}
 	"
 
 src_install() {
-	# Install our boot scripts along side systemd in /usr/lib
-	exeinto /usr/lib/coreos
-	for script in scripts/*; do
-		doexe "${script}"
-	done
-
-	# Install our custom ssh config settings.
-	insinto /etc/ssh
-	doins configs/ssh{,d}_config
-	fperms 600 /etc/ssh/sshd_config
-
-	# List of directories that should be recreated as needed
-	insinto /usr/lib/tmpfiles.d
-	newins configs/tmpfiles.conf zz-${PN}.conf
-
-	# Install all units, enable the higher-level services
-	for unit in systemd/*; do
-		systemd_dounit "${unit}"
-	done
+	default
 
 	# Set the default target to multi-user not graphical, this is CoreOS!
 	dosym /usr/lib/systemd/system/multi-user.target /etc/systemd/system/default.target
@@ -56,6 +40,7 @@ src_install() {
 	systemd_enable_service basic.target coreos-startup.target
 
 	# Services!
+	systemd_enable_service default.target coreos-c10n.service
 	systemd_enable_service default.target local-enable.service
 	systemd_enable_service default.target dhcpcd.service
 	systemd_enable_service default.target sshd-keygen.service
