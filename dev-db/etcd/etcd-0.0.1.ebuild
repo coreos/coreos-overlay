@@ -31,10 +31,8 @@ src_compile() {
 
 src_install() {
 	dobin ${S}/${PN}
-	dobin ${FILESDIR}/coreos-c10n
 	dobin ${FILESDIR}/etcd-bootstrap
 	dobin ${FILESDIR}/etcd-pre-exec
-	dobin ${FILESDIR}/block-until-url
 
 	keepdir /var/lib/${PN}
 	fowners etcd:etcd /var/lib/${PN}
