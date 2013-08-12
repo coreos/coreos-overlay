@@ -10,8 +10,6 @@ if [ "${VIRT}" != "ec2" ]; then
         exec /usr/bin/etcd -v -d $STATE
 fi
 
-/usr/bin/coreos-c10n
-
 META_URL="http://169.254.169.254/latest"
 MY_IP=$(curl -s $META_URL/meta-data/local-ipv4)
 BOOTSTRAP="/var/run/etcd/bootstrap.config"
