@@ -1,0 +1,18 @@
+" Minimal configuration file for Vim on CoreOS
+"
+" The vim package is installed with USE=minimal to avoid installing lots of
+" extra files but that doesn't mean we like vim acting as if it were vi.
+
+" General settings from Gentoo's default vimrc:
+set nocompatible        " Use Vim defaults (much better!)
+set bs=2                " Allow backspacing over everything in insert mode
+set ruler               " Show the cursor position all the time
+set nomodeline          " We don't allow modelines by default
+
+" Read vimrc from the state partition if it exists.
+if filereadable("/media/state/etc/vim/vimrc")
+  source /etc/vim/vimrc
+endif
+if filereadable("/media/state/etc/vim/vimrc.local")
+  source /etc/vim/vimrc.local
+endif
