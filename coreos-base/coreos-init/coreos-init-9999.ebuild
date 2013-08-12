@@ -23,6 +23,7 @@ DEPEND="
 	net-misc/dhcpcd
 	net-misc/openssh
 	!<dev-db/etcd-0.0.1-r6
+	!coreos-base/oem-service
 	test? ( dev-lang/python:2.7 )
 	"
 RDEPEND="${DEPEND}

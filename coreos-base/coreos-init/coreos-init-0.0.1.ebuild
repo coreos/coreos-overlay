@@ -3,7 +3,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="4"
-CROS_WORKON_COMMIT="84b679b9525db179a3bf78e9e67ab5553d0cc636"
+CROS_WORKON_COMMIT="4146847b48b7d692f6b8ce50be07c886e7a85fc9"
 CROS_WORKON_PROJECT="coreos/init"
 CROS_WORKON_LOCALNAME="init"
 
@@ -24,6 +24,7 @@ DEPEND="
 	net-misc/dhcpcd
 	net-misc/openssh
 	!<dev-db/etcd-0.0.1-r6
+	!coreos-base/oem-service
 	test? ( dev-lang/python:2.7 )
 	"
 RDEPEND="${DEPEND}
