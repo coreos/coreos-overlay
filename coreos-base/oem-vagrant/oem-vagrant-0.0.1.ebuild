@@ -17,8 +17,5 @@ S="${WORKDIR}"
 
 src_install() {
 	insinto "/"
-	doins "${FILESDIR}/vagrant.pub"
-
-	exeinto "/"
-	doexe ${FILESDIR}/run.sh
+	doins "${FILESDIR}/authorized_keys"
 }
