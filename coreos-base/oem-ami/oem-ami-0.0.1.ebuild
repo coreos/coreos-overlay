@@ -16,10 +16,8 @@ IUSE=""
 S="${WORKDIR}"
 
 src_install() {
-	dobin "${FILESDIR}"/install-ec2-key.sh
-
 	exeinto "/"
-	doexe ${FILESDIR}/run.sh
+	doexe ${FILESDIR}/run
 
 	insinto "/"
 	doins ${FILESDIR}/oem-release

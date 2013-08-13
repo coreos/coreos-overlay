@@ -59,7 +59,6 @@
 =sys-devel/clang-3.2 ~amd64
 =dev-util/shflags-1.0.3 ~amd64
 =dev-util/perf-3.4 ~amd64
-=dev-python/boto-2.7.0 ~amd64
 =sys-libs/libnih-1.0.3 ~amd64
 =sys-devel/llvm-3.2 ~amd64
 =dev-python/pyusb-1.0.0_alpha3 ~amd64
@@ -93,10 +92,10 @@
 # Needed for docker
 =sys-fs/aufs-util-3.7.6 ~amd64
 
-# Needed by gsutil-3.31
+# Needed by gsutil-3.34
 =dev-python/httplib2-0.8 ~amd64
 =dev-python/crcmod-1.7-r1 ~amd64
-=dev-python/boto-2.9.6 ~amd64
+=dev-python/boto-2.9.8 ~amd64
 
 # Fixes XML validation failure and python eclass usage
 =dev-lang/yasm-1.2.0-r1
