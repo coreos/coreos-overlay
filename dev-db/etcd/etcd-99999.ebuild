@@ -33,9 +33,7 @@ src_install() {
 	dobin ${FILESDIR}/etcd-bootstrap
 	dobin ${FILESDIR}/etcd-pre-exec
 
-	keepdir /var/lib/${PN}
-	fowners etcd:etcd /var/lib/${PN}
-
 	systemd_dounit "${FILESDIR}"/${PN}.service
 	systemd_enable_service multi-user.target ${PN}.service
+	systemd_dotmpfilesd "${FILESDIR}"/${PN}.conf
 }
