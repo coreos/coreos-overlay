@@ -9,6 +9,3 @@ if [ -d /media/state/etcd ]; then
   rm -R ${OLD_STATE}
   chown -R etcd:etcd ${STATE}
 fi
-
-mkdir -p /var/run/etcd
-chown etcd:etcd /var/run/etcd
