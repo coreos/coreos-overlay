@@ -11,5 +11,8 @@ ExecStartPre=/sbin/sysctl -w net.ipv4.ip_forward=1
 
 ExecStart=/usr/bin/docker -d -D
 
+Restart=always
+RestartSec=1
+
 [Install]
 WantedBy=multi-user.target
