@@ -150,6 +150,7 @@ RDEPEND="${RDEPEND}
 	app-misc/ca-certificates
 	virtual/udev
 	dev-db/etcd
+	dev-db/etcdctl
 	"
 
 # TODO(dianders):
