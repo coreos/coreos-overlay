@@ -9,5 +9,10 @@ PermissionsStartOnly=true
 ExecStartPre=/usr/bin/etcd-pre-exec
 ExecStart=/usr/bin/etcd-bootstrap
 
+Restart=always
+# Set a longish timeout in case this machine isn't behaving
+# nicely and bothering the rest of the cluster
+RestartSec=10s
+
 [Install]
 WantedBy=multi-user.target

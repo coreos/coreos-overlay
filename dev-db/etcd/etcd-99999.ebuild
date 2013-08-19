@@ -22,8 +22,6 @@ IUSE=""
 
 DEPEND=">=dev-lang/go-1.1"
 
-ETCD_PACKAGE="github.com/coreos/etcd"
-
 src_compile() {
 	./build
 }
