@@ -2,7 +2,7 @@
 
 VIRT=$(coreos-detect-virt)
 STATE=/var/lib/etcd
-DEFAULT_ARGS="-v -d $STATE -f"
+DEFAULT_ARGS="-d $STATE -f"
 
 if [ "${VIRT}" != "ec2" ]; then
 	echo "Detected environment \"${VIRT}\", just starting solo master..."
