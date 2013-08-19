@@ -2,10 +2,11 @@
 
 VIRT=$(coreos-detect-virt)
 STATE=/var/lib/etcd
+DEFAULT_ARGS="-v -d $STATE -f"
 
 if [ "${VIRT}" != "ec2" ]; then
 	echo "Detected environment \"${VIRT}\", just starting solo master..."
-        exec /usr/bin/etcd -v -d $STATE
+        exec /usr/bin/etcd ${DEFAULT_ARGS}
 fi
 
 META_URL="http://169.254.169.254/latest"
@@ -20,9 +21,9 @@ IPS=$(grep -v $MY_IP $BOOTSTRAP|grep -v '^\n$' |sed 's/$/:7001/'|tr '\n' ','|sed
 
 if [ -z "$IPS" ]; then
         echo "becoming master..."
-        exec /usr/bin/etcd -v -h $MY_IP -d $STATE
+        exec /usr/bin/etcd ${DEFAULT_ARGS} -h $MY_IP
 else
         echo "trying $IPS"
         set -x
-        exec /usr/bin/etcd -v -h $MY_IP -C "$IPS" -d $STATE
+        exec /usr/bin/etcd ${DEFAULT_ARGS} -h $MY_IP -C "$IPS"
 fi
