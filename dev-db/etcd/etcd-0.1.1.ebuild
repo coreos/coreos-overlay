@@ -9,7 +9,7 @@ EAPI=4
 CROS_WORKON_PROJECT="coreos/etcd"
 CROS_WORKON_LOCALNAME="etcd"
 CROS_WORKON_REPO="git://github.com"
-CROS_WORKON_COMMIT="7b289043c7beced434be4334fb909ba0b16b57b1"
+CROS_WORKON_COMMIT="7b289043c7beced434be4334fb909ba0b16b57b1" # hash for tag v0.1.1
 inherit toolchain-funcs cros-workon systemd
 
 DESCRIPTION="etcd"
