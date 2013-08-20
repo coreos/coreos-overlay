@@ -3,6 +3,8 @@
 
 EAPI=5
 
+inherit systemd
+
 DESCRIPTION="Docker container management"
 HOMEPAGE="http://docker.io"
 SRC_URI="https://github.com/dotcloud/docker/archive/v${PV}.tar.gz -> ${P}.tar.gz"
@@ -26,6 +28,6 @@ src_install() {
 	dobin ${S}/bin/${PN}
 	keepdir /var/lib/${PN}/graph
 	keepdir /var/lib/${PN}/containers
-	systemd_dounit "${FILESDIR}"/${PN}.service
-	systemd_enable_service multi-user.target ${PN}.service
+	systemd_dounit "${FILESDIR}"/${PN}.service || die
+	systemd_enable_service multi-user.target ${PN}.service || die
 }
