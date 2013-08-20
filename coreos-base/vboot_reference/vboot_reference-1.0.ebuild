@@ -2,9 +2,10 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="4"
-CROS_WORKON_COMMIT="db08bec32eb103072824a3c98070306511ff868b"
+CROS_WORKON_COMMIT="2e5fcc7ad84260592e97f81deaa66052e36659d6"
 CROS_WORKON_PROJECT="coreos/vboot_reference"
 CROS_WORKON_REPO="git://github.com"
+CROS_WORKON_LOCALDIR="src/platform"
 
 inherit cros-debug cros-workon cros-au
 
