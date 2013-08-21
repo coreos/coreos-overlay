@@ -4,6 +4,7 @@
 EAPI="4"
 CROS_WORKON_PROJECT="coreos/vboot_reference"
 CROS_WORKON_REPO="git://github.com"
+CROS_WORKON_LOCALDIR="src/platform"
 
 inherit cros-debug cros-workon cros-au
 
