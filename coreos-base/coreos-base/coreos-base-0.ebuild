@@ -167,7 +167,7 @@ pkg_postinst() {
 		crypted_password=$(cat "${SHARED_USER_PASSWD_FILE}")
 	remove_user "${system_user}"
 	add_user "${system_user}" "x" "${system_id}" \
-		"${system_id}" "system_user" "${system_home}" /bin/sh
+		"${system_id}" "system_user" "${system_home}" /bin/bash
 	remove_shadow "${system_user}"
 	add_shadow "${system_user}" "${crypted_password}"
 
