@@ -215,12 +215,4 @@ pkg_postinst() {
 	# Give the core user access to some system tools
 	add_users_to_group "docker" "${system_user}"
 	add_users_to_group "systemd-journal" "${system_user}"
-
-	# Some default directories. These are created here rather than at
-	# install because some of them may already exist and have mounts.
-	for x in /dev /home /media \
-		/proc /root /sys /var/lock; do
-		[ -d "${ROOT}/$x" ] && continue
-		install -d --mode=0755 --owner=root --group=root "${ROOT}/$x"
-	done
 }
