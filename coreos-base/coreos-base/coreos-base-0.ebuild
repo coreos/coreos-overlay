@@ -15,7 +15,6 @@ IUSE="cros_host"
 # We need to make sure timezone-data is merged before us.
 # See pkg_setup below as well as http://crosbug.com/27413
 # and friends.
-# TODO: !app-misc/editor-wrapper
 DEPEND="sys-apps/baselayout
 	!<sys-libs/timezone-data-2011d
 	!<=app-admin/sudo-1.8.2
@@ -98,19 +97,11 @@ src_install() {
 	insinto /etc
 	#doins "${FILESDIR}"/sysctl.conf || die
 
-	insinto /etc/profile.d
-	doins "${FILESDIR}"/xauthority.sh || die
-
-	insinto /lib/udev/rules.d
-	doins "${FILESDIR}"/udev-rules/*.rules || die
-
 	# target-specific fun
 	if ! use cros_host ; then
 		# Add a /srv directory for mounting into later
 		dodir /srv
 		keepdir /srv
-
-		dodir /bin /usr/bin
 
 		# Make mount work in the way systemd prescribes
 		dosym /proc/mounts /etc/mtab
@@ -138,18 +129,6 @@ src_install() {
 
 		# We use mawk in the target boards, not gawk.
 		dosym mawk /usr/bin/awk || die
-
-		# We want dash as our main shell.
-		#dosym dash /bin/sh
-
-		# Avoid the wrapper and just link to the only editor we have.
-		#dodir /usr/libexec
-		#dosym /usr/bin/vim /usr/libexec/editor || die
-		#dosym /bin/more /usr/libexec/pager || die
-
-		# Custom login shell snippets.
-		insinto /etc/profile.d
-		doins "${FILESDIR}"/cursor.sh
 	fi
 
 	# Add a sudo file for the core use
