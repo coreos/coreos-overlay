@@ -1,6 +1,8 @@
 # Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
+EAPI=5
+
 inherit useradd
 
 DESCRIPTION="ChromeOS specific system setup"
@@ -29,6 +31,9 @@ DEPEND="sys-apps/baselayout
 RDEPEND="${DEPEND}
 	sys-apps/systemd
 	"
+
+# no source directory
+S="${WORKDIR}"
 
 # Remove entry from /etc/group
 #
@@ -94,15 +99,16 @@ pkg_setup() {
 }
 
 src_install() {
-	insinto /etc
-	#doins "${FILESDIR}"/sysctl.conf || die
+	dodir /usr/lib/sysctl.d
+	insinto /usr/lib/sysctl.d
+	newins "${FILESDIR}"/sysctl.conf ${PN}.conf
+
+	# Add a /srv directory for mounting into later
+	dodir /srv
+	keepdir /srv
 
 	# target-specific fun
 	if ! use cros_host ; then
-		# Add a /srv directory for mounting into later
-		dodir /srv
-		keepdir /srv
-
 		# Make mount work in the way systemd prescribes
 		dosym /proc/mounts /etc/mtab
 
@@ -123,8 +129,8 @@ src_install() {
 		insinto /etc/vim
 		doins "${FILESDIR}"/vimrc
 
-		# Symlink /etc/localtime to something on the stateful partition, which we
-		# can then change around at runtime.
+		# Symlink /etc/localtime to something on the stateful partition,
+		# which we can then change around at runtime.
 		dosym /var/lib/timezone/localtime /etc/localtime || die
 
 		# We use mawk in the target boards, not gawk.
