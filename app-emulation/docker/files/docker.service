@@ -1,9 +1,6 @@
 [Service]
 Type=simple
 ExecStartPre=/bin/mount --make-rprivate /
-# Enable forwarding to allow NAT to work
-# TODO: Move this to sysctl.conf
-ExecStartPre=/sbin/sysctl -w net.ipv4.ip_forward=1
 
 # Try to use this alternate way of starting docker if docker crashes for you:
 # ExecStart=/bin/bash -c "/usr/bin/nohup /usr/bin/docker -d -D &"
