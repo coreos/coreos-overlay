@@ -1,6 +1,8 @@
 # Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
+EAPI=5
+
 inherit useradd
 
 DESCRIPTION="ChromeOS specific system setup"
@@ -15,7 +17,6 @@ IUSE="cros_host"
 # We need to make sure timezone-data is merged before us.
 # See pkg_setup below as well as http://crosbug.com/27413
 # and friends.
-# TODO: !app-misc/editor-wrapper
 DEPEND="sys-apps/baselayout
 	!<sys-libs/timezone-data-2011d
 	!<=app-admin/sudo-1.8.2
@@ -30,6 +31,9 @@ DEPEND="sys-apps/baselayout
 RDEPEND="${DEPEND}
 	sys-apps/systemd
 	"
+
+# no source directory
+S="${WORKDIR}"
 
 # Remove entry from /etc/group
 #
@@ -95,23 +99,16 @@ pkg_setup() {
 }
 
 src_install() {
-	insinto /etc
-	#doins "${FILESDIR}"/sysctl.conf || die
+	dodir /usr/lib/sysctl.d
+	insinto /usr/lib/sysctl.d
+	newins "${FILESDIR}"/sysctl.conf ${PN}.conf
 
-	insinto /etc/profile.d
-	doins "${FILESDIR}"/xauthority.sh || die
-
-	insinto /lib/udev/rules.d
-	doins "${FILESDIR}"/udev-rules/*.rules || die
+	# Add a /srv directory for mounting into later
+	dodir /srv
+	keepdir /srv
 
 	# target-specific fun
 	if ! use cros_host ; then
-		# Add a /srv directory for mounting into later
-		dodir /srv
-		keepdir /srv
-
-		dodir /bin /usr/bin
-
 		# Make mount work in the way systemd prescribes
 		dosym /proc/mounts /etc/mtab
 
@@ -132,24 +129,12 @@ src_install() {
 		insinto /etc/vim
 		doins "${FILESDIR}"/vimrc
 
-		# Symlink /etc/localtime to something on the stateful partition, which we
-		# can then change around at runtime.
+		# Symlink /etc/localtime to something on the stateful partition,
+		# which we can then change around at runtime.
 		dosym /var/lib/timezone/localtime /etc/localtime || die
 
 		# We use mawk in the target boards, not gawk.
 		dosym mawk /usr/bin/awk || die
-
-		# We want dash as our main shell.
-		#dosym dash /bin/sh
-
-		# Avoid the wrapper and just link to the only editor we have.
-		#dodir /usr/libexec
-		#dosym /usr/bin/vim /usr/libexec/editor || die
-		#dosym /bin/more /usr/libexec/pager || die
-
-		# Custom login shell snippets.
-		insinto /etc/profile.d
-		doins "${FILESDIR}"/cursor.sh
 	fi
 
 	# Add a sudo file for the core use
@@ -180,41 +165,41 @@ pkg_postinst() {
 	# Add a chronos-access group to provide non-chronos users,
 	# mostly system daemons running as a non-chronos user, group permissions
 	# to access files/directories owned by chronos.
-	local system_access_user="core-access"
-	local system_access_id="1001"
+#	local system_access_user="core-access"
+#	local system_access_id="1001"
 
 	local crypted_password='*'
 	[ -r "${SHARED_USER_PASSWD_FILE}" ] &&
 		crypted_password=$(cat "${SHARED_USER_PASSWD_FILE}")
 	remove_user "${system_user}"
 	add_user "${system_user}" "x" "${system_id}" \
-		"${system_id}" "system_user" "${system_home}" /bin/sh
+		"${system_id}" "system_user" "${system_home}" /bin/bash
 	remove_shadow "${system_user}"
 	add_shadow "${system_user}" "${crypted_password}"
 
 	copy_or_add_group "${system_user}" "${system_id}"
-	copy_or_add_daemon_user "${system_access_user}" "${system_access_id}"
+#	copy_or_add_daemon_user "${system_access_user}" "${system_access_id}"
 	copy_or_add_daemon_user "messagebus" 201  # For dbus
 	copy_or_add_daemon_user "syslog" 202      # For rsyslog
 	copy_or_add_daemon_user "ntp" 203
 	copy_or_add_daemon_user "sshd" 204
-	copy_or_add_daemon_user "polkituser" 206  # For policykit
+#	copy_or_add_daemon_user "polkituser" 206  # For policykit
 #	copy_or_add_daemon_user "tss" 207         # For trousers (TSS/TPM)
-	copy_or_add_daemon_user "pkcs11" 208      # For pkcs11 clients
+#	copy_or_add_daemon_user "pkcs11" 208      # For pkcs11 clients
 #	copy_or_add_daemon_user "qdlservice" 209  # for QDLService
 #	copy_or_add_daemon_user "cromo" 210       # For cromo (modem manager)
 #	copy_or_add_daemon_user "cashew" 211      # Deprecated, do not reuse
-	copy_or_add_daemon_user "ipsec" 212       # For strongswan/ipsec VPN
+#	copy_or_add_daemon_user "ipsec" 212       # For strongswan/ipsec VPN
 #	copy_or_add_daemon_user "cros-disks" 213  # For cros-disks
-	copy_or_add_daemon_user "tor" 214         # For tor (anonymity service)
-	copy_or_add_daemon_user "tcpdump" 215     # For tcpdump --with-user
-	copy_or_add_daemon_user "debugd" 216      # For debugd
-	copy_or_add_daemon_user "openvpn" 217     # For openvpn
+#	copy_or_add_daemon_user "tor" 214         # For tor (anonymity service)
+#	copy_or_add_daemon_user "tcpdump" 215     # For tcpdump --with-user
+#	copy_or_add_daemon_user "debugd" 216      # For debugd
+#	copy_or_add_daemon_user "openvpn" 217     # For openvpn
 #	copy_or_add_daemon_user "bluetooth" 218   # For bluez
 #	copy_or_add_daemon_user "wpa" 219         # For wpa_supplicant
 #	copy_or_add_daemon_user "cras" 220        # For cras (audio)
 #	copy_or_add_daemon_user "gavd" 221        # For gavd (audio) (deprecated)
-	copy_or_add_daemon_user "input" 222       # For /dev/input/event access
+#	copy_or_add_daemon_user "input" 222       # For /dev/input/event access
 #	copy_or_add_daemon_user "chaps" 223       # For chaps (pkcs11)
 	copy_or_add_daemon_user "dhcp" 224        # For dhcpcd (DHCP client)
 #	copy_or_add_daemon_user "tpmd" 225        # For tpmd
@@ -225,33 +210,15 @@ pkg_postinst() {
 #	copy_or_add_daemon_user "devbroker" 230   # For permission_broker
 #	copy_or_add_daemon_user "xorg" 231        # For Xorg
 	copy_or_add_daemon_user "etcd" 232        # For etcd
-	# Reserve some UIDs/GIDs between 300 and 349 for sandboxing FUSE-based
-	# filesystem daemons.
+	copy_or_add_daemon_user "docker" 233      # For docker
+	copy_or_add_group "systemd-journal" 248   # For journalctl access
+	copy_or_add_group "dialout" 249           # For udev rules
 #	copy_or_add_daemon_user "ntfs-3g" 300     # For ntfs-3g prcoess
 #	copy_or_add_daemon_user "avfs" 301        # For avfs process
 #	copy_or_add_daemon_user "fuse-exfat" 302  # For exfat-fuse prcoess
+#	copy_or_add_group "serial" 402
 
-	# Users which require access to PKCS #11 cryptographic services must be
-	# in the pkcs11 group.
-	remove_all_users_from_group pkcs11
-	add_users_to_group pkcs11 root ipsec "${system_user}"
-
-	# All users accessing opencryptoki database files and all users for
-	# sandboxing FUSE-based filesystem daemons need to be in the
-	# ${system_access_user} group.
-	remove_all_users_from_group "${system_access_user}"
-	add_users_to_group "${system_access_user}" root ipsec "${system_user}" \
-
-	# Dedicated group for owning access to serial devices.
-	copy_or_add_group "serial" 402
-	add_users_to_group "serial" "${system_user}"
-	add_users_to_group "serial" "uucp"
-
-	# Some default directories. These are created here rather than at
-	# install because some of them may already exist and have mounts.
-	for x in /dev /home /media \
-		/proc /root /sys /var/lock; do
-		[ -d "${ROOT}/$x" ] && continue
-		install -d --mode=0755 --owner=root --group=root "${ROOT}/$x"
-	done
+	# Give the core user access to some system tools
+	add_users_to_group "docker" "${system_user}"
+	add_users_to_group "systemd-journal" "${system_user}"
 }
