@@ -16,7 +16,7 @@ BOOTSTRAP="/var/run/etcd/bootstrap.config"
 
 [ ! -e $BOOTSTRAP ] && echo bootstrap config missing && exit 1
 
-CLUSTER_ARGS="-n $MY_IP -c 0.0.0.0:4001 -s 0.0.0.0:7001"
+CLUSTER_ARGS="-n $MY_IP -c $MY_IP:4001 -cl 0.0.0.0 -s $MY_IP:7001 -sl 0.0.0.0"
 
 # strip blank lines
 IPS=$(grep -v $MY_IP $BOOTSTRAP|grep -v '^\n$' |sed 's/$/:7001/'|tr '\n' ','|sed 's/^,//'|sed 's/,$//')
