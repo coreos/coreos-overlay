@@ -3,7 +3,6 @@
 
 app-admin/rsyslog	-ssl
 app-benchmarks/i7z      -X
-app-crypt/tpm-tools     pkcs11
 app-i18n/zinnia	    	-perl
 app-editors/qemacs	-X
 app-editors/vim		minimal
@@ -13,7 +12,6 @@ dev-libs/dbus-glib	tools
 dev-libs/elfutils	-utils
 dev-libs/glib		-doc
 dev-libs/nss		-utils
-dev-libs/opencryptoki	tpmtok
 dev-libs/opensc		ssl -pcsc-lite
 dev-libs/openssl	pkcs11
 dev-libs/protobuf	python
