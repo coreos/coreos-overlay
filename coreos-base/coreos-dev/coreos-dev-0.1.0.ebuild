@@ -37,7 +37,6 @@ RDEPEND="${RDEPEND}
 	app-arch/gzip
 	app-arch/tar
 	dev-libs/nss
-	app-crypt/tpm-tools
 	app-editors/vim
 	app-misc/evtest
 	app-shells/bash
