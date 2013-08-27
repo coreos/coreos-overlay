@@ -3,11 +3,15 @@
 
 EAPI=5
 
-inherit systemd
+inherit systemd git
 
 DESCRIPTION="Docker container management"
 HOMEPAGE="http://docker.io"
-SRC_URI="https://github.com/dotcloud/docker/archive/v${PV}.tar.gz -> ${P}.tar.gz"
+
+EGIT_REPO_SERVER="https://github.com"
+EGIT_REPO_URI="${EGIT_REPO_SERVER}/philips/docker.git"
+EGIT_BRANCH="fd045c1038690372a656d45929bfb5e54975a229" # 0.6.1 with Brandon's build system
+
 
 LICENSE="Apache-2.0"
 SLOT="0"
@@ -23,6 +27,11 @@ RDEPEND="
 	net-misc/curl
 	sys-fs/aufs-util
 "
+
+src_compile() {
+	./vendor.sh || die
+	./hack/release/make-without-docker.sh || die
+}
 
 src_install() {
 	dobin ${S}/bin/${PN}
