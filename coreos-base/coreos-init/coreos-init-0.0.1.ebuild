@@ -3,7 +3,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="4"
-CROS_WORKON_COMMIT="f9a49b44b9bc5e998d52205cc4b92085e4bf5828"
+CROS_WORKON_COMMIT="63640b036616414c707a8f8e76a661192b90df44"
 CROS_WORKON_PROJECT="coreos/init"
 CROS_WORKON_LOCALNAME="init"
 
@@ -47,4 +47,5 @@ src_install() {
 	systemd_enable_service default.target dhcpcd.service
 	systemd_enable_service default.target sshd-keygen.service
 	systemd_enable_service default.target sshd.socket
+	systemd_enable_service default.target ssh-key-proc-cmdline.service
 }
