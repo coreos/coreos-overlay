@@ -18,6 +18,7 @@ IUSE="cros_host"
 # See pkg_setup below as well as http://crosbug.com/27413
 # and friends.
 DEPEND="sys-apps/baselayout
+	sys-apps/efunctions
 	!<sys-libs/timezone-data-2011d
 	!<=app-admin/sudo-1.8.2
 	!<sys-apps/mawk-1.3.4
