@@ -1,8 +1,7 @@
 # Copyright 1999-2013 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-apps/baselayout/baselayout-2.2.ebuild,v 1.14 2013/05/20 17:56:20 ago Exp $
+# $Header: /var/cvsroot/gentoo-x86/sys-apps/baselayout/baselayout-2.2.ebuild,v 1.16 2013/07/27 22:56:21 williamh Exp $
 
-EAPI=1
 inherit eutils multilib
 
 DESCRIPTION="Filesystem baselayout and init scripts"
@@ -12,11 +11,10 @@ SRC_URI="mirror://gentoo/${P}.tar.bz2
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="alpha amd64 arm hppa ia64 ~m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
-IUSE="build kernel_linux +openrc"
+KEYWORDS="alpha amd64 arm hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
+IUSE="build cros_host kernel_linux"
 
-PDEPEND="openrc? ( sys-apps/openrc )
-	!openrc? ( sys-apps/efunctions )"
+RDEPEND="cros_host? ( !coreos-base/coreos-init )"
 
 pkg_setup() {
 	multilib_layout
@@ -174,11 +172,13 @@ src_install() {
 	done
 	echo "LDPATH='${ldpaths#:}'" >> "${D}"/etc/env.d/00basic
 
-	# override our CoreOS specific files
 	# rc-scripts version for testing of features that *should* be present
-	echo "CoreOS Base System release ${PV}" > "${D}"/etc/gentoo-release
-	cp "${FILESDIR}/os-release" "${D}"/etc/
-	#cp "${FILESDIR}/gentoo-release" "${D}"/etc/
+	echo "Gentoo Base System release ${PV}" > "${D}"/etc/gentoo-release
+
+	if use !cros_host; then
+		# Don't install /etc/issue since it is handled by coreos-init
+		rm "${D}"/etc/issue
+	fi
 }
 
 pkg_postinst() {
