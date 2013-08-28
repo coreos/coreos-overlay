@@ -1,5 +1,0 @@
-NAME=CoreOS
-ID=coreos
-PRETTY_NAME="CoreOS Linux"
-ANSI_COLOR="1;32"
-HOME_URL="http://www.coreos.com/"
