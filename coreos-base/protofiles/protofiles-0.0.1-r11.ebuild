@@ -8,7 +8,7 @@ EAPI="2"
 # project. It is not cros-work-able if changes to the protobufs are needed
 # these should be done in the Chromium repository.
 
-EGIT_REPO_SERVER="http://git.chromium.org"
+EGIT_REPO_SERVER="https://chromium.googlesource.com"
 EGIT_REPO_URI="${EGIT_REPO_SERVER}/chromium/src/chrome/browser/policy/proto.git"
 EGIT_PROJECT="proto"
 EGIT_COMMIT="18f481b411ea0a861f0879af2065effce0e1fe6c"
