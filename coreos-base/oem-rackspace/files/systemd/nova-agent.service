@@ -1,0 +1,5 @@
+[Service]
+ExecStart=/usr/bin/systemd-nspawn -D /usr/share/oem/nova-agent/ /bin/sh -c "HOME=/root mount -t xenfs none /proc/xen; /usr/share/nova-agent/0.0.1.37/sbin/nova-agent -o - -n -l info /usr/share/nova-agent/nova-agent.py resetnetwork" 
+
+[Install]
+WantedBy=multi-user.target

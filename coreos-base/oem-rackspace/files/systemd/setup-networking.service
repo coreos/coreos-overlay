@@ -1,0 +1,6 @@
+[Service]
+Type=oneshot
+ExecStart=/usr/share/oem/usr/bin/net.sh
+
+[Install]
+WantedBy=multi-user.target
