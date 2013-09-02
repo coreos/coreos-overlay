@@ -151,6 +151,7 @@ RDEPEND="${RDEPEND}
 	virtual/udev
 	dev-db/etcd
 	dev-db/etcdctl
+	net-fs/nfs-utils
 	"
 
 # TODO(dianders):
