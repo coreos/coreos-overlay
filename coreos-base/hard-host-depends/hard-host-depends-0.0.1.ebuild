@@ -107,6 +107,7 @@ RDEPEND="${RDEPEND}
 	app-text/asciidoc
 	app-text/xmlto
 	sys-apps/gptfdisk
+	net-libs/libtirpc
 	"
 
 # Host dependencies that create usernames/groups we need to pull over to target.
