@@ -4,6 +4,7 @@
 EAPI="4"
 CROS_WORKON_PROJECT="coreos/installer"
 CROS_WORKON_LOCALNAME="installer"
+CROS_WORKON_LOCALDIR="src/platform"
 CROS_WORKON_OUTOFTREE_BUILD=1
 CROS_WORKON_REPO="git://github.com"
 
