@@ -162,7 +162,7 @@ for key in Split('CC CXX AR RANLIB LD NM'):
   value = os.environ.get(key)
   if value != None:
     env[key] = value
-for key in Split('CFLAGS CCFLAGS CPPPATH LIBPATH'):
+for key in Split('CFLAGS CCFLAGS LDFLAGS CPPPATH LIBPATH'):
   value = os.environ.get(key)
   if value != None:
     env[key] = Split(value)
@@ -172,6 +172,7 @@ for key in Split('PATH PKG_CONFIG_LIBDIR PKG_CONFIG_PATH SYSROOT'):
     env['ENV'][key] = os.environ[key]
 
 
+env['LINKFLAGS'] = env['LDFLAGS']
 env['CCFLAGS'] = ' '.join("""-g
                              -fno-exceptions
                              -fno-strict-aliasing
