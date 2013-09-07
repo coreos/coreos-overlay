@@ -1,6 +1,9 @@
 [Unit]
 Description=Update Engine
 ConditionVirtualization=!container
+ConditionKernelCommandLine=!coreos.diskless
+ConditionKernelCommandLine=!coreos.statediskonly
+Wants=update-engine-reboot-manager.service
 
 [Service]
 Type=dbus

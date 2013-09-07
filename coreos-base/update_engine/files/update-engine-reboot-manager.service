@@ -1,10 +1,7 @@
 [Unit]
-Description=Update Engine
-ConditionVirtualization=!container
+PartOf=update-engine.service
+Description=Update Engine Reboot Manager
 
 [Service]
 ExecStart=/usr/sbin/update_engine_reboot_manager
 Restart=always
-
-[Install]
-WantedBy=multi-user.target
