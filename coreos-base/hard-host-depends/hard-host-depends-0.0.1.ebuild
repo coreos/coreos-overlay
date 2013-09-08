@@ -144,6 +144,7 @@ RDEPEND="${RDEPEND}
 RDEPEND="${RDEPEND}
 	coreos-base/verity
 	sys-fs/libfat
+	sys-fs/squashfs-tools
 	"
 
 # Host dependency used by the chromeos-base/root-certificates ebuild
