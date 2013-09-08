@@ -38,7 +38,7 @@ RDEPEND="${DEPEND}"
 
 src_install() {
 	insinto /usr/lib/dracut/modules.d/
-	doins -r dracut/80gptprio
+	doins -r dracut/.
 	dosbin update-bootengine
 }
 
