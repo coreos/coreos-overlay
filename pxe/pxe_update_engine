@@ -1,0 +1,31 @@
+#!/bin/bash
+# Copyright (c) 2013 The CoreOS Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# This is a simple check-in update_engine for PXE. Since the real update_engine
+# can't run on rootless machines run this instead for now. This will be replaced
+# by a new Go application that does kexec in place.
+
+set -e -o pipefail
+
+source /etc/lsb-release
+
+BOOT_ID=$(</proc/sys/kernel/random/boot_id)
+
+VERSION="${COREOS_RELEASE_VERSION}"
+TRACK="${COREOS_RELEASE_VERSION}"
+AUSERVER="${COREOS_AUSERVER}"
+BOARD="${COREOS_RELEASE_BOARD}"
+
+BODY="<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<request protocol=\"3.0\" version=\"CoreOSUpdateEngine-0.1.0.0\" updaterversion=\"CoreOSUpdateEngine-0.1.0.0\" installsource=\"scheduler\" ismachine=\"1\">
+<os version=\"Chateau\" platform=\"CoreOS\" sp=\"${VERSION}\"></os>
+<app appid=\"{e96281a6-d1af-4bde-9a0a-97b76e56dc57}\" oem=\"pxe\" version=\"${VERSION}\" track=\"${TRACK}\" bootid=\"{${BOOT_ID}}\" lang=\"en-US\" board=\"${BOARD}\" hardware_class=\"\" delta_okay=\"false\" >
+<event eventtype=\"3\" eventresult=\"2\" previousversion=\"\"></event>
+</app>
+</request>"
+
+echo Request: "${BODY}"
+
+curl -H "text/xml" --capath /usr/share/coreos-ca-certificates -X POST -d "${BODY}" "${AUSERVER}"
