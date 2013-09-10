@@ -148,6 +148,7 @@ RDEPEND="${RDEPEND}
 	sys-process/procps
 	app-emulation/docker
 	app-misc/ca-certificates
+	app-crypt/gnupg
 	virtual/udev
 	dev-db/etcd
 	dev-db/etcdctl
