@@ -1,0 +1,12 @@
+[Unit]
+ConditionKernelCommandLine=|root=squashfs:
+ConditionKernelCommandLine=|root=squashfs
+ConditionVirtualization=!container
+
+[Timer]
+OnBootSec=7minutes
+OnActiveSec=41minutes
+Unit=pxe-update-engine.service
+
+[Install]
+WantedBy=default.target
