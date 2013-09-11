@@ -102,6 +102,17 @@ src_prepare() {
 	epatch "${FILESDIR}/${P}-re_unsigned_ptrdiff.patch" #476426
 	epatch "${FILESDIR}/CVE-2013-4238_py27.patch"
 
+	#
+	# START: ChromiumOS specific changes
+	#
+	epatch "${FILESDIR}"/python-2.7.5-cross-distutils.patch
+
+	sed -i -e "s:sys.exec_prefix]:sys.exec_prefix, '/usr/local']:g" \
+		Lib/site.py || die "sed failed to add /usr/local to prefixes"
+	#
+	# END: ChromiumOS specific changes
+	#
+
 	sed -i -e "s:@@GENTOO_LIBDIR@@:$(get_libdir):g" \
 		Lib/distutils/command/install.py \
 		Lib/distutils/sysconfig.py \
@@ -183,6 +194,10 @@ src_configure() {
 		# The configure script assumes it's buggy when cross-compiling.
 		export ac_cv_buggy_getaddrinfo=no
 		export ac_cv_have_long_long_format=yes
+
+		# The configure script requires this to be explicit
+		export ac_cv_file__dev_ptmx=yes
+		export ac_cv_file__dev_ptc=no
 	fi
 
 	# Export CXX so it ends up in /usr/lib/python2.X/config/Makefile.
