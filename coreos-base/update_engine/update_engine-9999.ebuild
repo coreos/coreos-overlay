@@ -100,8 +100,8 @@ src_install() {
 	doins update_engine.dbusclient.h
 
 	# PXE
-	insinto /usr/lib/coreos/
-	doins "${S}"/pxe/pxe_update_engine
+	exeinto /usr/lib/coreos/
+	doexe "${S}"/pxe/pxe_update_engine
 	systemd_dounit "${S}"/pxe/pxe-update-engine.service
 	systemd_dounit "${S}"/pxe/pxe-update-engine.timer
 	systemd_enable_service default.target pxe-update-engine.timer
