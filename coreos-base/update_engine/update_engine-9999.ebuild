@@ -98,4 +98,11 @@ src_install() {
 	insinto /usr/include/chromeos/update_engine
 	doins update_engine.dbusserver.h
 	doins update_engine.dbusclient.h
+
+	# PXE
+	exeinto /usr/lib/coreos/
+	doexe "${S}"/pxe/pxe_update_engine
+	systemd_dounit "${S}"/pxe/pxe-update-engine.service
+	systemd_dounit "${S}"/pxe/pxe-update-engine.timer
+	systemd_enable_service default.target pxe-update-engine.timer
 }
