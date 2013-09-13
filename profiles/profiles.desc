@@ -1,2 +1,4 @@
+amd64   coreos/amd64/generic                dev
+amd64   coreos/amd64/sdk                    dev
 amd64   default/linux/amd64/10.0            dev
 amd64   default/linux/amd64/10.0/coreos     dev
