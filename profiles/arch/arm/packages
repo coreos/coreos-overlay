@@ -1,7 +1,0 @@
-# Copyright 2001-2004 Gentoo Foundation.
-# Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/profiles/arch/arm/packages,v 1.1 2008/04/01 17:39:55 wolf31o2 Exp $
-
->=sys-devel/binutils-2.13.90.0.4
->=sys-devel/gcc-3.2
->=sys-libs/glibc-2.2.5

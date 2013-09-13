@@ -1,2 +1,0 @@
-# These USE flags are needed so that glmark2 can run on 32/32 machines.
-media-libs/mesa egl gbm shared-glapi
