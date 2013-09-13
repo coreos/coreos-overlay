@@ -1,0 +1,3 @@
+# for profile migration
+dev-lang/perl -gdbm
+dev-libs/apr-util -gdbm
