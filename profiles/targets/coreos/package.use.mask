@@ -1,21 +1,5 @@
 # Copyright (c) 2010 The Chromium OS Authors. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
-# Jungshik Shin <jshin@chromium.org) (31 August 2010)
-# We don't want to generate fonts.scale when installing fonts with font.eclass
-# ( http://sources.gentoo.org/cgi-bin/viewvc.cgi/gentoo-x86/eclass/font.eclass?revision=1.50&view=markup )
-media-fonts/croscorefonts X
-media-fonts/lohitfonts-cros X
-media-fonts/droidfonts-cros X
-media-fonts/ja-ipafonts X
-media-fonts/ko-nanumfonts X
-media-fonts/ml-anjalioldlipi X
-media-fonts/notofonts X
-
-# David James <davidjames@chromium.org> (14 Feb 2011)
-# ACPI support is currently disabled in laptop-mode-tools.
-# TODO(davidjames): Should it be enabled?
-app-laptop/laptop-mode-tools acpi
-
 # Allow hardened glibc on the target.
 sys-libs/glibc -hardened

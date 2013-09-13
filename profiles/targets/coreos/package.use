@@ -2,75 +2,35 @@
 # Distributed under the terms of the GNU General Public License v2
 
 app-admin/rsyslog	-ssl
-app-benchmarks/i7z      -X
-app-i18n/zinnia	    	-perl
-app-editors/qemacs	-X
 app-editors/vim		minimal
-dev-cpp/glog		gflags
 dev-lang/python		-berkdb gdbm
 dev-libs/dbus-glib	tools
 dev-libs/elfutils	-utils
-dev-libs/glib		-doc
 dev-libs/nss		-utils
-dev-libs/opensc		ssl -pcsc-lite
 dev-libs/openssl	pkcs11
 dev-libs/protobuf	python
 dev-python/pyudev	pygobject
-dev-util/dialog		-unicode minimal
 dev-util/perf		-doc -demangle -tui -ncurses -perl -python
 dev-util/perf-next	-doc -demangle -tui -ncurses -perl -python
-media-gfx/imagemagick   png
-media-libs/freeimage	png
-media-libs/libdvdread   -css
-media-libs/libsndfile	minimal
-# disabled in profiles/default/linux/package.use
-media-libs/mesa		llvm gallium classic
-media-libs/opencv	gtk python png jpeg tiff v4l
-media-sound/pulseaudio	bluetooth dbus -esd
-media-video/mplayer	cpudetection fbcon -encode -ass -a52 -cdio -dirac -dts -dv -dvd -dvdnav -enca -faac -faad -live -quicktime -mp3 -rar -real -speex -schroedinger -theora -tremor -toolame -twolame -vorbis -xscreensaver -x264 -xv -xvid
 net-analyzer/tcpdump	-chroot
 net-firewall/iptables	ipv6
-net-libs/libsoup	-ssl
-# for curl-7.19.6 turning on ipv6 use flag will turn off ares
-net-misc/curl		ares
-net-misc/dhcpcd crash
 net-misc/dhcp		ipv6 -server
 net-misc/iperf		threads
 net-misc/iputils	ipv6
 net-misc/ntp            caps
-net-misc/openssh	-X
-net-misc/openvpn	pkcs11
-net-misc/strongswan	cisco nat-transport
-net-nds/openldap	minimal
-net-proxy/tsocks	tordns
-net-wireless/bluez	alsa -consolekit -readline
-net-wireless/bluez-test	alsa -consolekit -readline test-programs
-net-wireless/wpa_supplicant	dbus debug -readline ssl
-sci-geosciences/gpsd -python -ntp -X dbus garmin minimal ocean tntc usb -sockets
 sys-apps/busybox	-pam -selinux
 sys-apps/dbus		-X -systemd
 sys-apps/iproute2	ipv6
-# mosys: crosbug.com/p/11630
-sys-apps/mosys          static
 sys-apps/smartmontools	minimal
-sys-auth/consolekit	policykit
-sys-auth/polkit         -introspection
 sys-block/parted        device-mapper
 sys-fs/lvm2		-lvm1 -readline -static -thin
-sys-fs/ntfs3g		-crypt -external-fuse ntfsprogs suid
 sys-fs/squashfs         lzo
-sys-libs/gdbm		-berkdb
 sys-libs/ncurses	minimal
 sys-libs/pam        -berkdb
 sys-libs/zlib		static-libs
-x11-apps/xinit          minimal
-x11-base/xorg-server -suid
-x11-libs/libdrm		libkms
-x11-libs/libdrm-tests	libkms
 sys-libs/gdbm		berkdb
 dev-libs/libxml2	python
 
-x11-libs/cairo		X
 sys-boot/syslinux       -custom-cflags
 
 # only needed on build hosts
