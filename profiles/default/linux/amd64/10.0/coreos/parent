@@ -1,2 +1,2 @@
 ../no-multilib
-../../../../../targets/coreos
+coreos:coreos/targets/generic
