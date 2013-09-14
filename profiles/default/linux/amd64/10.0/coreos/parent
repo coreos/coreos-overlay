@@ -1,2 +1,1 @@
-../no-multilib
-../../../../../targets/coreos
+coreos:coreos/amd64/generic

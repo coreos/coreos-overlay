@@ -1,0 +1,3 @@
+Profile to apply to all CoreOS "board" images. Other variants that are
+not architecture specific should inherit this profile.
+This excludes the SDK.

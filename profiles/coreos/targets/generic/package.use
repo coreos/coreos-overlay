@@ -1,0 +1,37 @@
+# Copyright (c) 2009 The Chromium OS Authors. All rights reserved.
+# Distributed under the terms of the GNU General Public License v2
+
+app-admin/rsyslog	-ssl
+app-editors/vim		minimal
+dev-lang/python		-berkdb gdbm
+dev-libs/dbus-glib	tools
+dev-libs/elfutils	-utils
+dev-libs/nss		-utils
+dev-libs/openssl	pkcs11
+dev-libs/protobuf	python
+dev-python/pyudev	pygobject
+dev-util/perf		-doc -demangle -tui -ncurses -perl -python
+dev-util/perf-next	-doc -demangle -tui -ncurses -perl -python
+net-analyzer/tcpdump	-chroot
+net-firewall/iptables	ipv6
+net-misc/dhcp		ipv6 -server
+net-misc/iperf		threads
+net-misc/iputils	ipv6
+net-misc/ntp            caps
+sys-apps/busybox	-pam -selinux
+sys-apps/dbus		-X -systemd
+sys-apps/iproute2	ipv6
+sys-apps/smartmontools	minimal
+sys-block/parted        device-mapper
+sys-fs/lvm2		-lvm1 -readline -static -thin
+sys-fs/squashfs         lzo
+sys-libs/ncurses	minimal
+sys-libs/pam        -berkdb
+sys-libs/zlib		static-libs
+sys-libs/gdbm		berkdb
+dev-libs/libxml2	python
+
+sys-boot/syslinux       -custom-cflags
+
+# only needed on build hosts
+dev-lang/python -sqlite

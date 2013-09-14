@@ -1,2 +1,2 @@
-../base
-../../features/multilib/lib32
+portage-stable:arch/base
+portage-stable:features/multilib/lib32
