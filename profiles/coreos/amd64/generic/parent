@@ -1,1 +1,2 @@
-:default/linux/amd64/10.0/coreos
+coreos:default/linux/amd64/10.0/no-multilib
+coreos:coreos/targets/generic
