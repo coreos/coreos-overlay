@@ -23,7 +23,7 @@ RDEPEND="app-shells/bash
 	sys-apps/portage"
 DEPEND="${RDEPEND}"
 
-CHROMEOS_PROFILE="/usr/local/portage/coreos/profiles/targets/coreos"
+CHROMEOS_PROFILE="/usr/local/portage/coreos/profiles/coreos/targets/generic"
 
 src_install() {
 	# Install tools from platform/dev into /usr/local/bin
