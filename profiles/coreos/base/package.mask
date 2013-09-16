@@ -10,13 +10,3 @@
 # Use the 3.* series of syslinux, seems to work correctly with the
 # chromeos build system for now
 >=sys-boot/syslinux-3.90
-
-# libpng security vulnerability fix
-<media-libs/libpng-1.2.44
-
-# Replaced by sys-apps/efunctions
-coreos-base/efunctions
-
-# There is a "new" sdk toolchain, which can properly build kexec-tools,
-# so mask the "binary" ebuild.
-=sys-apps/kexec-tools-2.0.99

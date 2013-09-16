@@ -1,6 +1,9 @@
 # Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
+# Basic stuff we do/don't want
+USE="-tcpd -pcre -berkdb"
+
 # The following files are modified by make_chroot, and we do not want to
 # clobber them.  All other config files should not be protected, so we
 # remove all existing protection (via the -*).
@@ -11,3 +14,7 @@ CONFIG_PROTECT="
 	/etc/localtime
 	/etc/make.conf
 "
+
+# Use parallel bzip2 for binary packages
+PORTAGE_BZIP2_COMMAND="lbzip2"
+PORTAGE_BUNZIP2_COMMAND="lbunzip2"
