@@ -73,3 +73,6 @@ dev-lang/python sqlite
 dev-lang/perl -gdbm
 dev-libs/apr-util -gdbm
 sys-libs/gdbm berkdb
+
+# TODO: disable most static things
+sys-libs/zlib static-libs
