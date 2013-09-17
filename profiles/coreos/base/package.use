@@ -76,3 +76,5 @@ sys-libs/gdbm berkdb
 
 # TODO: disable most static things
 sys-libs/zlib static-libs
+
+sys-kernel/dracut dracut_modules_systemd
