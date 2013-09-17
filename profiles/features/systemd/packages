@@ -1,2 +1,4 @@
 # Add systemd to the 'system' set
+*sys-apps/efunctions
 *sys-apps/systemd
+-*sys-apps/openrc

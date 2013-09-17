@@ -1,6 +1,41 @@
 # Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
+# ChromeOS-specific: BOARD_USE for accessing board value in cros-board.eclass
+#                    CROS_WORKON_TREE for cros-workon
+#                    TESTS USE_EXPAND for autotest
+#                    U_BOOT_CONFIG_USE for selecting U-Boot config
+#                    U_BOOT_FDT_USE for selecting U-Boot device tree
+USE_EXPAND="${USE_EXPAND} BOARD_USE CROS_WORKON_TREE TESTS U_BOOT_CONFIG_USE U_BOOT_FDT_USE"
+USE_EXPAND_HIDDEN="${USE_EXPAND_HIDDEN} CROS_WORKON_TREE"
+
+# Extra use flags for CoreOS SDK
+USE="${USE} hardened cros_host pic pie expat -introspection -cups -tcpd -pcre -berkdb"
+
+# Enable bindist for both SDK and targets
+USE="${USE} bindist"
+
+# No need for zeroconf, that's a desktop world thing.
+# Namely dhcpcd shoudln't make up random ipv4 addresses using ipv4ll
+USE="${USE} -zeroconf"
+
+# Override upstream's python settings
+USE="$USE python_targets_python2_7 python_single_target_python2_7"
+USE="$USE -python_targets_python3_2 -python_single_target_python3_2"
+BOOTSTRAP_USE="$BOOTSTRAP_USE -python_targets_python3_2"
+
+# Default licenses that are accepted for ChromiumOS builds.
+# If you want to accept more, use the --accept_licenses flag
+# when running setup_board.
+ACCEPT_LICENSE="* -@EULA -@CHROMEOS"
+
+# Favor our own mirrors over Gentoo's
+GENTOO_MIRRORS="
+    http://storage.core-os.net/mirror/portage-stable/
+    http://storage.core-os.net/mirror/coreos/
+    http://distfiles.gentoo.org/
+"
+
 # The following files are modified by make_chroot, and we do not want to
 # clobber them.  All other config files should not be protected, so we
 # remove all existing protection (via the -*).
@@ -11,3 +46,7 @@ CONFIG_PROTECT="
 	/etc/localtime
 	/etc/make.conf
 "
+
+# Use parallel bzip2 for binary packages
+PORTAGE_BZIP2_COMMAND="lbzip2"
+PORTAGE_BUNZIP2_COMMAND="lbunzip2"

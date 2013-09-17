@@ -1,3 +1,0 @@
-..
-# Need to clobber amd64 pulling in lib32 on us.
-portage-stable:features/multilib

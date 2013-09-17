@@ -1,22 +1,3 @@
-# Copyright 2006 Gentoo Foundation
-# Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/profiles/base/profile.bashrc,v 1.3 2009/07/21 00:08:05 zmedico Exp $
-
-# Set LANG=C globally because it speeds up build times, and we don't need
-# localized messages inside of our builds.
-export LANG=C
-
-# Since unittests on the buildbots don't automatically get access to an
-# X server, don't let local dev stations get access either.  If a test
-# really needs an X server, they should launch their own with Xvfb.
-unset DISPLAY
-
-if ! declare -F elog >/dev/null ; then
-	elog() {
-		einfo "$@"
-	}
-fi
-
 # Dumping ground for build-time helpers to utilize since SYSROOT/tmp/
 # can be nuked at any time.
 CROS_BUILD_BOARD_TREE="${SYSROOT}/build"
