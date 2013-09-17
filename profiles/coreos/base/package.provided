@@ -5,3 +5,5 @@
 # even a simple mta (like ssmtp).  http://crosbug.com/5777
 mail-mta/ssmtp-2.64
 net-mail/mailbase-1
+# sysvinit stuff is usually added for no good reason
+sys-apps/sysvinit-9999
