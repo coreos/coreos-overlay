@@ -1,1 +1,2 @@
 USE="systemd"
+BOOTSTRAP_USE="$BOOTSTRAP_USE udev"

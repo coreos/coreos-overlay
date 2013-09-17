@@ -1,2 +1,3 @@
 sys-apps/dbus
 sys-apps/efunctions
+-sys-apps/openrc

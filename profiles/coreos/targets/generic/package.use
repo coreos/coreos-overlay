@@ -35,3 +35,5 @@ sys-boot/syslinux       -custom-cflags
 
 # only needed on build hosts
 dev-lang/python -sqlite
+
+sys-apps/flashrom -dediprog -ft2232_spi -serprog
