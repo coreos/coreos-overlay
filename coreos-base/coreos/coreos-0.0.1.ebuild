@@ -99,7 +99,6 @@ RDEPEND="${RDEPEND}
 	app-admin/sudo
 	app-admin/rsyslog
 	app-arch/gzip
-	app-arch/sharutils
 	app-arch/tar
 	app-shells/bash
 	coreos-base/chromeos-auth-config
