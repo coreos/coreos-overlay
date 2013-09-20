@@ -102,7 +102,6 @@ RDEPEND="${RDEPEND}
 	app-arch/sharutils
 	app-arch/tar
 	app-shells/bash
-	app-shells/dash
 	coreos-base/chromeos-auth-config
 	coreos-base/coreos-base
 	coreos-base/cros_boot_mode
