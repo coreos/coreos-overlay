@@ -119,7 +119,6 @@ RDEPEND="${RDEPEND}
 	sys-apps/less
 	sys-apps/mawk
 	sys-apps/net-tools
-	sys-apps/pv
 	sys-apps/rootdev
 	sys-apps/sed
 	sys-apps/shadow
