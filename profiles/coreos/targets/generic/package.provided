@@ -16,6 +16,7 @@ app-admin/eselect-esd-20060719
 app-admin/eselect-fontconfig-1.0
 app-admin/eselect-opengl-1.0.8-r1
 app-admin/eselect-mesa-0.0.8
+app-admin/eselect-pinentry-0.3
 app-admin/eselect-vi-1.1.5
 
 app-arch/cabextract-1.2-r1
