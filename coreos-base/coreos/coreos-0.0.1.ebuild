@@ -112,6 +112,7 @@ RDEPEND="${RDEPEND}
 	net-misc/dhcpcd
 	net-firewall/iptables
 	net-misc/rsync
+	net-misc/tlsdate
 	net-misc/wget
 	sys-apps/coreutils
 	sys-apps/dbus
