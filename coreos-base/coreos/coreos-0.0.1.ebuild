@@ -9,7 +9,7 @@ HOMEPAGE="http://coreos.com"
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="amd64 arm x86"
-IUSE="bootimage coreboot cros_ec bootchart"
+IUSE=""
 
 
 ################################################################################
@@ -89,35 +89,21 @@ RDEPEND="${RDEPEND}
 	app-editors/vim
 	"
 
-# TODO(micahc): Remove board-devices from RDEPEND in lieu of
-#               virtual/chromeos-bsp
-
-# Note that o3d works with opengl on x86 and opengles on ARM, but not ARM
-# opengl.
-
-# We depend on dash for the /bin/sh shell for runtime speeds, but we also
-# depend on bash to make the dev mode experience better.  We do not enable
-# things like line editing in dash, so its interactive mode is very bare.
 # TODO(ifup): 
 #	coreos-base/crash-reporter
 #	coreos-base/metrics
 
 RDEPEND="${RDEPEND}
 	sys-apps/findutils
+	sys-apps/which
 	app-admin/sudo
 	app-admin/rsyslog
 	app-arch/gzip
-	app-arch/sharutils
 	app-arch/tar
-	bootchart? (
-		app-benchmarks/bootchart
-	)
 	app-shells/bash
-	app-shells/dash
 	coreos-base/chromeos-auth-config
 	coreos-base/coreos-base
 	coreos-base/cros_boot_mode
-	coreos-base/internal
 	coreos-base/vboot_reference
 	coreos-base/update_engine
 	coreos-base/coreos-installer
@@ -125,16 +111,15 @@ RDEPEND="${RDEPEND}
 	coreos-base/coreos-init
 	net-misc/dhcpcd
 	net-firewall/iptables
+	net-misc/rsync
 	net-misc/tlsdate
 	net-misc/wget
-	sys-apps/bootcache
 	sys-apps/coreutils
 	sys-apps/dbus
 	sys-apps/grep
 	sys-apps/less
 	sys-apps/mawk
 	sys-apps/net-tools
-	sys-apps/pv
 	sys-apps/rootdev
 	sys-apps/sed
 	sys-apps/shadow
@@ -155,34 +140,3 @@ RDEPEND="${RDEPEND}
 	net-fs/nfs-utils
 	net-misc/iputils
 	"
-
-# TODO(dianders):
-# In gentoo, the 'which' command is part of 'system'.  That means that packages
-# assume that it's there and don't list it as an explicit dependency.  At the
-# moment, we don't emerge 'system', but we really should at least emerge the
-# embedded profile system.  Until then, we'll list it as a dependency here.
-#
-# Note that even gentoo's 'embedded' profile effectively has 'which' in its
-# implicit dependencies, since it depepends on busybox and the default busybox
-# config from gentoo provides which.
-#
-# See http://crosbug.com/8144
-RDEPEND="${RDEPEND}
-	coreboot? ( virtual/chromeos-coreboot )
-	sys-apps/which
-	"
-
-
-# In addition to RDEPEND components, DEPEND in certain cases includes packages
-# which do not need to be installed on the target, but need to be included for
-# testing/compilation sanity check purposes.
-DEPEND="${RDEPEND}
-	bootimage? ( sys-boot/chromeos-bootimage )
-	cros_ec? ( coreos-base/chromeos-ec )
-"
-
-# Add dev-util/quipper to the image. This is needed to do
-# profiling on ChromiumOS on live systems.
-#RDEPEND="${RDEPEND}
-#	dev-util/quipper
-#"

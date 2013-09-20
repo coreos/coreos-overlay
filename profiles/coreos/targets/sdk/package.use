@@ -10,3 +10,7 @@ sys-apps/flashrom dediprog ft2232_spi serprog
 
 dev-vcs/git pcre
 dev-lang/ruby berkdb
+
+dev-util/catalyst ccache
+dev-lang/python sqlite
+
