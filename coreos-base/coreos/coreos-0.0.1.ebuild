@@ -111,6 +111,7 @@ RDEPEND="${RDEPEND}
 	coreos-base/coreos-init
 	net-misc/dhcpcd
 	net-firewall/iptables
+	net-misc/rsync
 	net-misc/wget
 	sys-apps/coreutils
 	sys-apps/dbus
