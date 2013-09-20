@@ -104,7 +104,6 @@ RDEPEND="${RDEPEND}
 	coreos-base/chromeos-auth-config
 	coreos-base/coreos-base
 	coreos-base/cros_boot_mode
-	coreos-base/internal
 	coreos-base/vboot_reference
 	coreos-base/update_engine
 	coreos-base/coreos-installer
