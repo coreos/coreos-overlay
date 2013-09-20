@@ -9,7 +9,7 @@ HOMEPAGE="http://coreos.com"
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="amd64 arm x86"
-IUSE="bootimage coreboot cros_ec bootchart"
+IUSE="bootimage coreboot cros_ec"
 
 
 ################################################################################
@@ -109,9 +109,6 @@ RDEPEND="${RDEPEND}
 	app-arch/gzip
 	app-arch/sharutils
 	app-arch/tar
-	bootchart? (
-		app-benchmarks/bootchart
-	)
 	app-shells/bash
 	app-shells/dash
 	coreos-base/chromeos-auth-config
