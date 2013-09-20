@@ -8,7 +8,6 @@ dev-libs/dbus-glib	tools
 dev-libs/elfutils	-utils
 dev-libs/nss		-utils
 dev-libs/openssl	pkcs11
-dev-libs/protobuf	python
 dev-python/pyudev	pygobject
 dev-util/perf		-doc -demangle -tui -ncurses -perl -python
 dev-util/perf-next	-doc -demangle -tui -ncurses -perl -python
@@ -29,11 +28,7 @@ sys-libs/ncurses	minimal
 sys-libs/pam        -berkdb
 sys-libs/zlib		static-libs
 sys-libs/gdbm		berkdb
-dev-libs/libxml2	python
 
 sys-boot/syslinux       -custom-cflags
-
-# only needed on build hosts
-dev-lang/python -sqlite
 
 sys-apps/flashrom -dediprog -ft2232_spi -serprog

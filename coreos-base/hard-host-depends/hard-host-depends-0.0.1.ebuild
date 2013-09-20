@@ -11,12 +11,6 @@ SLOT="0"
 KEYWORDS="amd64 x86"
 IUSE=""
 
-# Pull in any site-specific or private-overlay-specific packages needed on the
-# host.
-RDEPEND="${RDEPEND}
-	virtual/hard-host-depends-bsp
-	"
-
 # Needed to run setup crossdev, run build scripts, and make a bootable image.
 RDEPEND="${RDEPEND}
 	app-arch/lzop
@@ -27,8 +21,6 @@ RDEPEND="${RDEPEND}
 	dev-util/ccache
 	dev-util/crosutils
 	>=sys-apps/dtc-1.3.0-r5
-	sys-boot/bootstub
-	sys-boot/grub
 	sys-boot/syslinux
 	sys-devel/crossdev
 	sys-devel/sysroot-wrappers

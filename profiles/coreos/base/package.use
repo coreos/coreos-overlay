@@ -65,10 +65,6 @@ app-emulation/xen-tools -ocaml -hvm -xend -pygrub -qemu -flask -screen -doc amd6
 >=media-libs/libjpeg-turbo-1.2.0-r1 static-libs
 sys-apps/gptfdisk -icu
 
-# for build hosts
-dev-util/catalyst ccache
-dev-lang/python sqlite
-
 # for profile migration
 dev-lang/perl -gdbm
 dev-libs/apr-util -gdbm
