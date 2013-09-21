@@ -116,9 +116,9 @@ RDEPEND="${RDEPEND}
 	net-misc/wget
 	sys-apps/coreutils
 	sys-apps/dbus
+	sys-apps/gawk
 	sys-apps/grep
 	sys-apps/less
-	sys-apps/mawk
 	sys-apps/net-tools
 	sys-apps/rootdev
 	sys-apps/sed
