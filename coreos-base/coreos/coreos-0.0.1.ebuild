@@ -107,7 +107,6 @@ RDEPEND="${RDEPEND}
 	coreos-base/vboot_reference
 	coreos-base/update_engine
 	coreos-base/coreos-installer
-	coreos-base/dev-install
 	coreos-base/coreos-init
 	net-misc/dhcpcd
 	net-firewall/iptables
@@ -116,9 +115,9 @@ RDEPEND="${RDEPEND}
 	net-misc/wget
 	sys-apps/coreutils
 	sys-apps/dbus
+	sys-apps/gawk
 	sys-apps/grep
 	sys-apps/less
-	sys-apps/mawk
 	sys-apps/net-tools
 	sys-apps/rootdev
 	sys-apps/sed

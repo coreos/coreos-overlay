@@ -39,6 +39,7 @@ RDEPEND="${RDEPEND}
 	dev-libs/nss
 	app-editors/vim
 	app-misc/evtest
+	app-portage/gentoolkit
 	app-shells/bash
 	coreos-base/gmerge
 	dev-lang/python
@@ -60,6 +61,7 @@ RDEPEND="${RDEPEND}
 	sys-apps/i2c-tools
 	sys-apps/kbd
 	sys-apps/less
+	sys-apps/portage
 	sys-apps/smartmontools
 	sys-apps/usbutils
 	sys-apps/which
