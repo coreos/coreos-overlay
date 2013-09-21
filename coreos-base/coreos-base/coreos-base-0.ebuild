@@ -27,7 +27,6 @@ DEPEND="sys-apps/baselayout
 	!<net-misc/openssh-5.2_p1-r8
 	!cros_host? (
 		sys-libs/timezone-data
-		!sys-apps/gawk
 	)"
 RDEPEND="${DEPEND}
 	sys-apps/systemd
@@ -133,9 +132,6 @@ src_install() {
 		# Symlink /etc/localtime to something on the stateful partition,
 		# which we can then change around at runtime.
 		dosym /var/lib/timezone/localtime /etc/localtime || die
-
-		# We use mawk in the target boards, not gawk.
-		dosym mawk /usr/bin/awk || die
 	fi
 
 	# Add a sudo file for the core use
