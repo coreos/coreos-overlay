@@ -107,7 +107,6 @@ RDEPEND="${RDEPEND}
 	coreos-base/vboot_reference
 	coreos-base/update_engine
 	coreos-base/coreos-installer
-	coreos-base/dev-install
 	coreos-base/coreos-init
 	net-misc/dhcpcd
 	net-firewall/iptables
