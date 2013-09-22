@@ -5,3 +5,4 @@
 # even a simple mta (like ssmtp).  http://crosbug.com/5777
 mail-mta/ssmtp-2.64
 net-mail/mailbase-1
+sys-fs/aufs3-9999
