@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<longdescription>
+		Docker is an open-source project to easily create lightweight,
+		portable, self-sufficient containers from any application. The same
+		container that a developer builds and tests on a laptop can run at
+		scale, in production, on VMs, bare metal, OpenStack clusters, public
+		clouds and more.
+	</longdescription>
+	<maintainer>
+		<email>admwiggin@gmail.com</email>
+		<name>Tianon</name>
+	</maintainer>
+</pkgmetadata>

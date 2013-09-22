@@ -1,15 +1,13 @@
+[Unit]
+Description=Docker - The Linux Container Engine
+Requires=network.target
+After=multi-user.target
+
 [Service]
 Type=simple
 ExecStartPre=/bin/mount --make-rprivate /
-
-# Try to use this alternate way of starting docker if docker crashes for you:
-# ExecStart=/bin/bash -c "/usr/bin/nohup /usr/bin/docker -d -D &"
-# You also need to update Type above to: Type=forking
-
-ExecStart=/usr/bin/docker -d -D
-
-Restart=always
-RestartSec=1
+ExecStart=/usr/bin/docker -d
+TimeoutSec=60
 
 [Install]
 WantedBy=multi-user.target
