@@ -65,3 +65,6 @@
 
 # Fixes euse: https://bugs.gentoo.org/show_bug.cgi?id=473760
 =app-portage/gentoolkit-0.3.0.8
+
+# Docker is masked upstream but we need it
+=app-emulation/docker-0.6* ~amd64
