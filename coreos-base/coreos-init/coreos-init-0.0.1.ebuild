@@ -21,6 +21,7 @@ IUSE="test"
 # Daemons we enable here must installed during build/install in addition to
 # during runtime so the systemd unit enable step works.
 DEPEND="
+	app-emulation/docker
 	net-misc/dhcpcd
 	net-misc/openssh
 	!<dev-db/etcd-0.0.1-r6
@@ -48,4 +49,5 @@ src_install() {
 	systemd_enable_service default.target sshd-keygen.service
 	systemd_enable_service default.target sshd.socket
 	systemd_enable_service default.target ssh-key-proc-cmdline.service
+	systemd_enable_service default.target docker.service
 }
