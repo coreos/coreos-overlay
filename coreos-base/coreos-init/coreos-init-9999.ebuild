@@ -47,4 +47,5 @@ src_install() {
 	systemd_enable_service default.target sshd-keygen.service
 	systemd_enable_service default.target sshd.socket
 	systemd_enable_service default.target ssh-key-proc-cmdline.service
+	systemd_enable_service default.target docker.service
 }
