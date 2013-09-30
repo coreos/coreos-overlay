@@ -72,3 +72,5 @@ sys-libs/gdbm berkdb
 
 # TODO: disable most static things
 sys-libs/zlib static-libs
+
+dev-vcs/git -perl -iconv
