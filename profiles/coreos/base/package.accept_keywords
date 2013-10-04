@@ -15,11 +15,9 @@
 =sys-apps/dtc-9999 **
 =sys-devel/smatch-1.57-r1 ~amd64
 =dev-lang/closure-compiler-bin-20120305 ~amd64
-=sys-devel/clang-3.2 ~amd64
 =dev-util/shflags-1.0.3 ~amd64
 =dev-util/perf-3.4 ~amd64
 =sys-libs/libnih-1.0.3 ~amd64
-=sys-devel/llvm-3.2 ~amd64
 =dev-python/pyusb-1.0.0_alpha3 ~amd64
 
 # Get updated core code
