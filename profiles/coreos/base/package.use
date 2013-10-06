@@ -20,7 +20,6 @@ media-libs/freeimage	-cxx
 media-libs/gd           png
 media-libs/libmtp       -crypt
 # We don't want any driver/hw rendering on the host
-media-libs/mesa         -llvm -gallium -classic
 media-sound/alsa-utils	-libsamplerate minimal
 net-misc/curl		ares static-libs
 sci-geosciences/gpsd	-cxx
