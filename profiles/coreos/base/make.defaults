@@ -51,6 +51,9 @@ CONFIG_PROTECT="
 PORTAGE_BZIP2_COMMAND="lbzip2"
 PORTAGE_BUNZIP2_COMMAND="lbunzip2"
 
+# 2.5G seems to be roughly enough to cache a full CoreOS build.
+CCACHE_SIZE="2.5G"
+
 # Always build binary packages, remove old build logs, avoid running as root.
-FEATURES="buildpkg clean-logs compressdebug parallel-install splitdebug
+FEATURES="buildpkg ccache clean-logs compressdebug parallel-install splitdebug
           userfetch userpriv usersandbox"
