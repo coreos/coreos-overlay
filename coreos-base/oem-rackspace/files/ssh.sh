@@ -7,9 +7,4 @@ while [ ! -e ${SSH_CONF} ]; do
         sleep .1
 done
 
-SSH_HOME="/home/core/.ssh"
-SSH_FILE="${SSH_HOME}/authorized_keys"
-mkdir -p ${SSH_HOME}
-cp ${SSH_CONF} ${SSH_FILE}
-chown -R core:core ${SSH_HOME}
-
+/bin/grep ssh- ${SSH_CONF}  | /usr/bin/update-ssh-keys -u core 
