@@ -30,7 +30,3 @@ for if in eth0 eth1; do
                 ip route add $route dev $if
         done
 done
-for ns in $dns_servers_eth0; do
-        echo nameserver $ns >> /var/run/resolv.conf
-done
-
