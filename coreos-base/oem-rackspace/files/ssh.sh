@@ -7,4 +7,4 @@ while [ ! -e ${SSH_CONF} ]; do
         sleep .1
 done
 
-/bin/grep ssh- ${SSH_CONF}  | /usr/bin/update-ssh-keys -u core 
+/usr/bin/update-ssh-keys -a nova-agent /usr/share/oem/nova-agent/root/.ssh/authorized_keys
