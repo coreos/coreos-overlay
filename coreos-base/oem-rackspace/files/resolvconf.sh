@@ -2,7 +2,7 @@
 
 OEM_DIR="/usr/share/oem"
 CONF=$OEM_DIR/nova-agent/etc/resolv.conf
-while [ ! -e ${SSH_CONF} ]; do
+while [ ! -e ${CONF} ]; do
         echo waiting...
         sleep .1
 done
