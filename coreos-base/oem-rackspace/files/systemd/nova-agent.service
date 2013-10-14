@@ -1,0 +1,5 @@
+[Service]
+ExecStart=/usr/share/oem/usr/bin/run-nova-agent.sh
+
+[Install]
+WantedBy=multi-user.target
