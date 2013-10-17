@@ -66,3 +66,5 @@
 
 # Docker is masked upstream but we need it
 =app-emulation/docker-0.6* ~amd64
+=sys-fs/aufs-util-3* ~amd64
+=sys-fs/aufs-headers-3* ~amd64
