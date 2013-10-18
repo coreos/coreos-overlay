@@ -3,7 +3,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="4"
-CROS_WORKON_COMMIT="7230ac6beeff157da8877ca1c798c03914db1b20"
+CROS_WORKON_COMMIT="260ee57ebd52eb4b57eeb9d41fd6f712ff6f5e1f"
 CROS_WORKON_PROJECT="coreos/init"
 CROS_WORKON_LOCALNAME="init"
 
@@ -50,4 +50,5 @@ src_install() {
 	systemd_enable_service default.target sshd.socket
 	systemd_enable_service default.target ssh-key-proc-cmdline.service
 	systemd_enable_service default.target docker.service
+	systemd_enable_service default.target tlsdate.service
 }
