@@ -208,6 +208,7 @@ pkg_postinst() {
 #	copy_or_add_daemon_user "xorg" 231        # For Xorg
 	copy_or_add_daemon_user "etcd" 232        # For etcd
 	copy_or_add_daemon_user "docker" 233      # For docker
+	copy_or_add_daemon_user "tlsdate" 234      # For tlsdate
 	copy_or_add_group "systemd-journal" 248   # For journalctl access
 	copy_or_add_group "dialout" 249           # For udev rules
 #	copy_or_add_daemon_user "ntfs-3g" 300     # For ntfs-3g prcoess
