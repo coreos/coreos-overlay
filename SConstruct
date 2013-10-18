@@ -172,7 +172,7 @@ for key in Split('PATH PKG_CONFIG_LIBDIR PKG_CONFIG_PATH SYSROOT'):
     env['ENV'][key] = os.environ[key]
 
 
-env['LINKFLAGS'] = env['LDFLAGS']
+env['LINKFLAGS'] = env.get('LDFLAGS', '')
 env['CCFLAGS'] = ' '.join("""-g
                              -fno-exceptions
                              -fno-strict-aliasing
