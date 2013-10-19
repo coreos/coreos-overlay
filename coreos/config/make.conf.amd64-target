@@ -15,6 +15,7 @@ source make.conf.common
 # TODO: set $BOARD in make.conf.board_setup and use it
 PORTAGE_BINHOST="
     http://storage.core-os.net/coreos/amd64-generic/${COREOS_VERSION_STRING}/pkgs/
+    http://storage.core-os.net/coreos/amd64-generic/${COREOS_SDK_VERSION}/pkgs/
 "
 
 # Recommended MARCH_TUNE, CFLAGS, etc.
