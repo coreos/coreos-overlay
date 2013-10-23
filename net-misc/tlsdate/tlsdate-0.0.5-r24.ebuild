@@ -25,7 +25,7 @@ src_prepare() {
 }
 
 src_configure() {
-	# Our unprivileged group is called "nobody"
+	# Our unprivileged group is called "tlsdate"
 	econf \
 		$(use_enable dbus) \
 		--with-unpriv-user=tlsdate \
