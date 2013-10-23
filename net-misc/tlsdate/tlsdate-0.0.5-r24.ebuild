@@ -45,4 +45,7 @@ src_install() {
 	doins "${FILESDIR}/tlsdated.conf"
 	insinto /etc/dbus-1/system.d
 	doins "${FILESDIR}/org.torproject.tlsdate.conf"
+
+	systemd_dounit "${FILESDIR}/tlsdate.service"
+	systemd_enable_service default.target tlsdate.service
 }

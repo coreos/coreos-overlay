@@ -3,6 +3,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="4"
+EGIT_REPO_URI="https://github.com/coreos/init"
 CROS_WORKON_PROJECT="coreos/init"
 CROS_WORKON_LOCALNAME="init"
 
@@ -48,5 +49,4 @@ src_install() {
 	systemd_enable_service default.target sshd.socket
 	systemd_enable_service default.target ssh-key-proc-cmdline.service
 	systemd_enable_service default.target docker.service
-	systemd_enable_service default.target tlsdate.service
 }
