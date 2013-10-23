@@ -4,7 +4,7 @@
 EAPI="4"
 CROS_WORKON_PROJECT="chromiumos/third_party/tlsdate"
 
-inherit autotools flag-o-matic toolchain-funcs cros-workon
+inherit autotools flag-o-matic toolchain-funcs cros-workon systemd
 
 DESCRIPTION="Update local time over HTTPS"
 HOMEPAGE="https://github.com/ioerror/tlsdate"
