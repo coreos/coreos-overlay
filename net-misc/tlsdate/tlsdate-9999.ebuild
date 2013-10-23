@@ -23,7 +23,7 @@ src_prepare() {
 }
 
 src_configure() {
-	# Our unprivileged group is called "nobody"
+	# Our unprivileged group is called "tlsdate"
 	econf \
 		$(use_enable dbus) \
 		--with-unpriv-user=tlsdate \
@@ -43,4 +43,8 @@ src_install() {
 	doins "${FILESDIR}/tlsdated.conf"
 	insinto /etc/dbus-1/system.d
 	doins "${FILESDIR}/org.torproject.tlsdate.conf"
+
+	systemd_dounit "${FILESDIR}/tlsdate.service"
+	systemd_enable_service default.target tlsdate.service
+
 }
