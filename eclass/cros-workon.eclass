@@ -503,13 +503,6 @@ cros-workon_src_configure() {
 	else
 		default
 	fi
-	local p
-	for p in "${CROS_WORKON_PROJECT[@]}"; do
-		if [[ ${p} == chromiumos/platform/* ]]; then
-			append-flags -clang
-			break
-		fi
-	done
 }
 
 cw_emake() {
