@@ -21,17 +21,27 @@ STRIP_MASK="/usr/lib/debug/boot/vmlinux"
 : ${CROS_WORKON_INCREMENTAL_BUILD:=1}
 
 
-# If an overlay has eclass overrides, but doesn't actually override this
-# eclass, we'll have ECLASSDIR pointing to the active overlay's
-# eclass/ dir, but this eclass is still in the main chromiumos tree.  So
-# add a check to locate the cros-kernel/ regardless of what's going on.
-ECLASSDIR_LOCAL=${BASH_SOURCE[0]%/*}
-defconfig_dir() {
-        local d="${ECLASSDIR}/cros-kernel"
-        if [[ ! -d ${d} ]] ; then
-                d="${ECLASSDIR_LOCAL}/cros-kernel"
-        fi
-        echo "${d}"
+# Search for an apropriate defconfig in ${FILESDIR}. The config should reflect
+# the kernel version but partial matching is allowed if the config is
+# applicalbe to multiple ebuilds, such as different -r revisions or stable
+# kernel releases. For an amd64 ebuild with version 3.12.4-r2 the order is:
+#  - x86_64_defconfig-3.12.4-r2
+#  - x86_64_defconfig-3.12.4
+#  - x86_64_defconfig-3.12
+#  - x86_64_defconfig
+# The first matching config is used, die otherwise.
+find_defconfig() {
+	local base_path="${FILESDIR}/$(tc-arch-kernel)_defconfig"
+	local try_suffix try_path
+	for try_suffix in "-${PVR}" "-${PV}" "-${PV%.*}" ""; do
+		try_path="${base_path}${try_suffix}"
+		if [[ -f "${try_path}" ]]; then
+			echo "${try_path}"
+			return
+		fi
+	done
+
+	die "No defconfig found for $(tc-arch-kernel) and ${PVR} in ${FILESDIR}"
 }
 
 # @FUNCTION: kernelversion
@@ -200,8 +210,7 @@ emit_its_script() {
 }
 
 kmake() {
-	# Allow override of kernel arch.
-	local kernel_arch=${CHROMEOS_KERNEL_ARCH:-$(tc-arch-kernel)}
+	local kernel_arch=$(tc-arch-kernel)
 
 	local cross=${CHOST}-
 	# Hack for using 64-bit kernel with 32-bit user-space
@@ -232,57 +241,17 @@ cros-kernel2_src_prepare() {
 }
 
 cros-kernel2_src_configure() {
-	# Use a single or split kernel config as specified in the board or variant
-	# make.conf overlay. Default to the arch specific split config if an
-	# overlay or variant does not set either CHROMEOS_KERNEL_CONFIG or
-	# CHROMEOS_KERNEL_SPLITCONFIG. CHROMEOS_KERNEL_CONFIG is set relative
-	# to the root of the kernel source tree.
-	local config
-	local cfgarch="$(get_build_arch)"
-
-	if [ -n "${CHROMEOS_KERNEL_CONFIG}" ]; then
-		config="${S}/${CHROMEOS_KERNEL_CONFIG}"
-	else
-		config=${CHROMEOS_KERNEL_SPLITCONFIG:-"chromiumos-${cfgarch}"}
-	fi
+	local config="$(find_defconfig)"
 
 	elog "Using kernel config: ${config}"
-
-	# Keep a handle on the old .config in case it hasn't changed.  This way
-	# we can keep the old timestamp which will avoid regenerating stuff that
-	# hasn't actually changed.
-	local temp_config="${T}/old-kernel-config"
-	if [[ -e $(get_build_cfg) ]] ; then
-		cp -a "$(get_build_cfg)" "${temp_config}"
-	else
-		rm -f "${temp_config}"
-	fi
-
-	if [ -n "${CHROMEOS_KERNEL_CONFIG}" ]; then
-		cp -f "${config}" "$(get_build_cfg)" || die
-	else
-		if [ -e chromeos/scripts/prepareconfig ] ; then
-			chromeos/scripts/prepareconfig ${config} \
-				"$(get_build_cfg)" || die
-		else
-			config="$(defconfig_dir)/${cfgarch}_defconfig"
-			ewarn "Can't prepareconfig, falling back to default " \
-				"${config}"
-			cp "${config}" "$(get_build_cfg)" || die
-		fi
-	fi
+	cp -f "${config}" "$(get_build_cfg)" || die
 
 	# copy the cpio initrd to the output build directory so we can tack it
 	# onto the kernel image itself.
 	cp "${ROOT}"/usr/share/bootengine/bootengine.cpio "$(cros-workon_get_build_dir)" || die "copy of dracut cpio failed."
 
-	# Use default for any options not explitly set in splitconfig
+	# Use default for any options not explitly set in defconfig
 	yes "" | kmake oldconfig
-
-	# Restore the old config if it is unchanged.
-	if cmp -s "$(get_build_cfg)" "${temp_config}" ; then
-		touch -r "${temp_config}" "$(get_build_cfg)"
-	fi
 }
 
 # @FUNCTION: get_dtb_name
@@ -353,7 +322,6 @@ cros-kernel2_src_compile() {
 	fi
 
 	local src_dir="$(cros-workon_get_build_dir)/source"
-	local kernel_arch=${CHROMEOS_KERNEL_ARCH:-$(tc-arch-kernel)}
 	SMATCH_ERROR_FILE="${src_dir}/chromeos/check/smatch_errors.log"
 
 	if use test && [[ -e "${SMATCH_ERROR_FILE}" ]]; then
