@@ -12,7 +12,7 @@ SLOT="0"
 DEPEND="sys-apps/debianutils
 "
 
-IUSE="-kernel_sources"
+IUSE="-source"
 STRIP_MASK="/usr/lib/debug/boot/vmlinux"
 
 # Build out-of-tree and incremental by default, but allow an ebuild inheriting
@@ -144,7 +144,7 @@ cros-kernel2_src_install() {
 	insinto /usr/lib/debug/boot/${version}/
 	doins "$(cros-workon_get_build_dir)/vmlinux"
 
-	if use kernel_sources; then
+	if use source; then
 		install_kernel_sources
 	fi
 }
