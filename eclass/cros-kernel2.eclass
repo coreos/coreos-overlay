@@ -91,6 +91,26 @@ install_kernel_sources() {
 		"${D}/${dest_build_dir}/Makefile" || die
 }
 
+# @FUNCTION: update_bootengine_cpio
+# @DESCRIPTION:
+# Append files in the given directory to the bootengine cpio.
+# Allows us to stick kernel modules into the initramfs built into bzImage.
+update_bootengine_cpio() {
+	local extra_root="$1"
+	local cpio_path="$(cros-workon_get_build_dir)/bootengine.cpio"
+	local cpio_args=(--create --append --null
+		# dracut uses the 'newc' cpio format
+		--format=newc
+		# squash file ownership to root for new files.
+		--owner=root:root
+	)
+
+	echo "Updating bootengine.cpio"
+	(cd "${extra_root}" && \
+		find -depth -print0 | cpio "${cpio_args[@]}" -F "${cpio_path}" || \
+		die "cpio update failed!")
+}
+
 kmake() {
 	local kernel_arch=$(tc-arch-kernel)
 
@@ -127,6 +147,17 @@ cros-kernel2_src_configure() {
 }
 
 cros-kernel2_src_compile() {
+	# Build both vmlinux and modules (moddep checks symbols in vmlinux)
+	kmake vmlinux modules
+
+	# Install modules and add them to the initramfs image
+	local bootengine_root="${T}/bootengine"
+	kmake INSTALL_MOD_PATH="${bootengine_root}" \
+		  INSTALL_MOD_STRIP="--strip-unneeded" \
+		  modules_install
+	update_bootengine_cpio "${bootengine_root}"
+
+	# Build the final kernel image (bzImage)
 	kmake
 }
 
