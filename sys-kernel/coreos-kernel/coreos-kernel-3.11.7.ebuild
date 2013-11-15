@@ -19,8 +19,8 @@ DESCRIPTION="CoreOS kernel"
 HOMEPAGE="http://www.kernel.org"
 SRC_URI="${KERNEL_URI}"
 
-KEYWORDS="amd64 arm x86"
-IUSE="deblob"
+KEYWORDS="amd64 x86"
+IUSE=""
 
 src_prepare() {
 	epatch "${FILESDIR}"/no_firmware.patch
