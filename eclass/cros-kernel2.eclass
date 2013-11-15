@@ -146,6 +146,9 @@ cros-kernel2_src_install() {
 
 	if use source; then
 		install_kernel_sources
+	else
+		# Remove invalid symlinks when source isn't installed
+		rm -f "${D}/lib/modules/${version}/"{build,source}
 	fi
 }
 
