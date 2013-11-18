@@ -9,11 +9,6 @@ CROS_WORKON_PROJECT="coreos/linux"
 CROS_WORKON_LOCALNAME="linux"
 inherit cros-workon cros-kernel2
 
-DEPEND="
-	sys-devel/bc
-	sys-kernel/bootengine
-"
-
 DESCRIPTION="CoreOS kernel"
 HOMEPAGE="http://www.kernel.org"
 SRC_URI=""

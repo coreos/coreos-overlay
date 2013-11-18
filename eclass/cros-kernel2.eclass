@@ -10,6 +10,8 @@ LICENSE="GPL-2"
 SLOT="0"
 
 DEPEND="sys-apps/debianutils
+		sys-devel/bc
+		sys-kernel/bootengine
 "
 
 IUSE="-source"
