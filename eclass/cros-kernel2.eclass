@@ -13,7 +13,8 @@ DEPEND="sys-apps/debianutils
 "
 
 IUSE="-source"
-STRIP_MASK="/usr/lib/debug/boot/vmlinux"
+RESTRICT="binchecks"
+STRIP_MASK="/usr/lib/debug/lib/modules/*/vmlinux"
 
 # Build out-of-tree and incremental by default, but allow an ebuild inheriting
 # this eclass to explicitly build in-tree.
