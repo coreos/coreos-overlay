@@ -129,6 +129,14 @@ kmake() {
 }
 
 cros-kernel2_src_unpack() {
+	local srclocal="${CROS_WORKON_LOCALDIR[0]}/${CROS_WORKON_LOCALNAME[0]}"
+	local srcpath="${CROS_WORKON_SRCROOT}/${srclocal}"
+	if [[ -f "${srcpath}/.config" || -d "${srcpath}/include/config" ]]; then
+		ewarn "Local kernel source is not clean, disabling OUTOFTREE_BUILD"
+		elog "Please run 'make mrproper' in ${srclocal}"
+		CROS_WORKON_OUTOFTREE_BUILD=0
+	fi
+
 	cros-workon_src_unpack
 
 	local config="$(find_defconfig)"
