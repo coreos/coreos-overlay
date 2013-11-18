@@ -7,16 +7,11 @@ CROS_WORKON_COMMIT="0507eb5ef5a83ab746677b7f19d6e3a19906c995"
 CROS_WORKON_REPO="git://github.com"
 CROS_WORKON_PROJECT="coreos/linux"
 CROS_WORKON_LOCALNAME="linux"
-CROS_WORKON_OUTOFTREE_BUILD=0
 inherit cros-workon cros-kernel2
 
 DESCRIPTION="CoreOS kernel"
 HOMEPAGE="http://www.kernel.org"
-SRC_URI="${KERNEL_URI}"
+SRC_URI=""
 
-KEYWORDS="amd64 x86"
+KEYWORDS="~amd64"
 IUSE=""
-
-src_prepare() {
-	epatch "${FILESDIR}"/no_firmware.patch
-}
