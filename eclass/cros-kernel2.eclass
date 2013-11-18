@@ -157,8 +157,8 @@ cros-kernel2_src_compile() {
 		  modules_install
 	update_bootengine_cpio "${bootengine_root}"
 
-	# Build the final kernel image (bzImage)
-	kmake
+	# Build the final kernel image
+	kmake bzImage
 }
 
 cros-kernel2_src_install() {
