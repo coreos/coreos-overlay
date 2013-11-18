@@ -172,7 +172,7 @@ cros-kernel2_src_install() {
 	fi
 
 	# Install uncompressed kernel for debugging purposes.
-	insinto /usr/lib/debug/boot/${version}/
+	insinto /usr/lib/debug/lib/modules/${version}/
 	doins "$(cros-workon_get_build_dir)/vmlinux"
 
 	if use source; then
