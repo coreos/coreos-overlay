@@ -94,6 +94,21 @@ install_kernel_sources() {
 		"${D}/${dest_build_dir}/Makefile" || die
 }
 
+# @FUNCTION: get_bootengine_lib
+# @DESCRIPTION:
+# Check if /lib is a symlink in the current cpio. If so we need to use
+# the target path (usually lib64) instead when adding new things.
+# When extracting with GNU cpio the first entry (the symlink) wins but
+# in the kernel the second entry (as a directory) definition wins.
+# As if using cpio isn't bad enough already.
+# If lib doesn't exist or isn't a symlink then nothing is returned.
+get_bootengine_lib() {
+	local cpio_path="$(cros-workon_get_build_dir)/bootengine.cpio"
+	cpio -itv --quiet < "${cpio_path}" | \
+		awk '$1 ~ /^l/ && $9 == "lib" { print $11 }'
+	assert
+}
+
 # @FUNCTION: update_bootengine_cpio
 # @DESCRIPTION:
 # Append files in the given directory to the bootengine cpio.
@@ -110,8 +125,8 @@ update_bootengine_cpio() {
 
 	echo "Updating bootengine.cpio"
 	(cd "${extra_root}" && \
-		find -depth -print0 | cpio "${cpio_args[@]}" -F "${cpio_path}" || \
-		die "cpio update failed!")
+		find . -print0 | cpio "${cpio_args[@]}" -F "${cpio_path}") || \
+		die "cpio update failed!"
 }
 
 kmake() {
@@ -166,6 +181,11 @@ cros-kernel2_src_compile() {
 	kmake INSTALL_MOD_PATH="${bootengine_root}" \
 		  INSTALL_MOD_STRIP="--strip-unneeded" \
 		  modules_install
+
+	local bootengine_lib=$(get_bootengine_lib)
+	if [[ -n "${bootengine_lib}" ]]; then
+		mv "${bootengine_root}/lib" "${bootengine_root}/${bootengine_lib}"
+	fi
 	update_bootengine_cpio "${bootengine_root}"
 
 	# Build the final kernel image
