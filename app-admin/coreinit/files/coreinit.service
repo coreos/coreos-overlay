@@ -1,0 +1,8 @@
+[Unit]
+Description=coreinit
+
+[Service]
+ExecStart=/usr/bin/coreinit
+
+[Install]
+WantedBy=multi-user.target
