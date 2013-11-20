@@ -4,10 +4,5 @@ Description=coreinit
 [Service]
 ExecStart=/usr/bin/coreinit
 
-Restart=always
-# Set a longish timeout in case this machine isn't behaving
-# nicely and bothering the rest of the cluster
-RestartSec=10s
-
 [Install]
 WantedBy=multi-user.target
