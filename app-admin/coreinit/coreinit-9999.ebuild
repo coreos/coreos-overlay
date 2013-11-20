@@ -27,7 +27,8 @@ src_compile() {
 }
 
 src_install() {
-	dobin ${S}/${PN}
+	dobin ${S}/coreinit
+	dobin ${S}/corectl
 
 	systemd_dounit "${FILESDIR}"/${PN}.service
 	systemd_enable_service multi-user.target ${PN}.service
