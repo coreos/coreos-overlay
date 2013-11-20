@@ -14,5 +14,5 @@ IUSE=""
 
 DEPEND=""
 RDEPEND="
-	app-admin/systemd-rest
+	app-admin/coreinit
 "
