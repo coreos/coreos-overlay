@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="4"
-CROS_WORKON_COMMIT="a9e261a8efe3bd1e3aea210bd7582dbd339da51d"
+CROS_WORKON_COMMIT="7a7c6735152c9c6bd1b873d4730440de51748c0b"
 CROS_WORKON_PROJECT="coreos/bootengine"
 CROS_WORKON_LOCALNAME="bootengine"
 CROS_WORKON_OUTOFTREE_BUILD=1
