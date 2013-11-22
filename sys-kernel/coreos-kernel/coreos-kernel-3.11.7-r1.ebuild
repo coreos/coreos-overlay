@@ -13,5 +13,5 @@ DESCRIPTION="CoreOS kernel"
 HOMEPAGE="http://www.kernel.org"
 SRC_URI=""
 
-KEYWORDS="~amd64"
+KEYWORDS="amd64"
 IUSE=""
