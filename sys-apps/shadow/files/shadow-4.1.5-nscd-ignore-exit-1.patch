@@ -1,0 +1,30 @@
+From 357ff92218a68f2ea74b9d08867c662571012bbe Mon Sep 17 00:00:00 2001
+From: Mike Frysinger <vapier@gentoo.org>
+Date: Sun, 12 Feb 2012 23:37:04 -0500
+Subject: [PATCH 3/3] nscd: ignore exit 1 code
+
+If nscd is installed but not in use, then running `nscd -i` will exit(1).
+We shouldn't warn in this case since this is not abnormal behavior.
+
+Signed-off-by: Mike Frysinger <vapier@gentoo.org>
+---
+ lib/nscd.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/lib/nscd.c b/lib/nscd.c
+index ea1dc55..7adb58f 100644
+--- a/lib/nscd.c
++++ b/lib/nscd.c
+@@ -39,6 +39,9 @@ int nscd_flush_cache (const char *service)
+ 		/* nscd is not installed, or it is installed but uses an
+ 		   interpreter that is missing.  Probably the former. */
+ 		return 0;
++	} else if (code == 1) {
++		/* nscd is installed, but it isn't active. */
++		return 0;
+ 	} else if (code != 0) {
+ 		(void) fprintf (stderr, _("%s: nscd exited with status %d\n"),
+ 		                Prog, code);
+-- 
+1.7.8.4
+

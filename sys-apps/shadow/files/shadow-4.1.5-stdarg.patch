@@ -1,0 +1,37 @@
+From 04d19a920ea0cf74f977006e3f8241bf77cbc16b Mon Sep 17 00:00:00 2001
+From: Mike Frysinger <vapier@gentoo.org>
+Date: Sun, 12 Feb 2012 22:41:05 -0500
+Subject: [PATCH] copydir: include stdarg.h for va_* funcs
+
+Building on newer systems fails due to using stdargs but not including
+the header file:
+
+copydir.c: In function 'error_acl':
+copydir.c:126:2: warning: implicit declaration of function 'va_start' [-Wimplicit-function-declaration]
+copydir.c:132:2: warning: implicit declaration of function 'va_end' [-Wimplicit-function-declaration]
+...
+libmisc/copydir.c:126: undefined reference to 'va_start'
+libmisc/copydir.c:132: undefined reference to 'va_end'
+...
+make[2]: *** [useradd] Error 1
+
+Signed-off-by: Mike Frysinger <vapier@gentoo.org>
+---
+ libmisc/copydir.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/libmisc/copydir.c b/libmisc/copydir.c
+index 7cb5f56..c6cbe6b 100644
+--- a/libmisc/copydir.c
++++ b/libmisc/copydir.c
+@@ -40,6 +40,7 @@
+ #include <sys/time.h>
+ #include <fcntl.h>
+ #include <stdio.h>
++#include <stdarg.h>
+ #include "prototypes.h"
+ #include "defines.h"
+ #ifdef WITH_SELINUX
+-- 
+1.7.8.4
+

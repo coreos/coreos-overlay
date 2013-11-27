@@ -21,17 +21,15 @@ RDEPEND="!sys-apps/sysvinit
 S=${WORKDIR}/${MY_P}/man
 
 src_install() {
-	local sym_prefix
+	local prefix=""
 	if use symlink-usr ; then
-		sym_prefix=".."
-	else
-		sym_prefix="../usr"
+		prefix="/usr"
 	fi
 	for app in halt poweroff reboot runlevel shutdown telinit; do
 		doman ${app}.8
-		dosym ${sym_prefix}/bin/systemctl /sbin/${app}
+		dosym /usr/bin/systemctl ${prefix}/sbin/${app}
 	done
 
 	newman init.1 init.8
-	dosym ${sym_prefix}/lib/systemd/systemd /sbin/init
+	dosym /usr/lib/systemd/systemd ${prefix}/sbin/init
 }
