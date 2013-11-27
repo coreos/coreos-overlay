@@ -1,0 +1,27 @@
+http://bugs.debian.org/569899
+http://bugs.gentoo.org/327605
+
+buf is not an array, it's a static pointer, so we have to use buflen
+
+--- lib/gshadow.c
++++ lib/gshadow.c
+@@ -222,6 +222,7 @@
+ 		if (NULL == buf) {
+ 			return NULL;
+ 		}
++		buflen = BUFSIZ;
+ 	}
+ 
+ 	if (NULL == fp) {
+@@ -229,9 +230,9 @@
+ 	}
+ 
+ #ifdef	USE_NIS
+-	while (fgetsx (buf, (int) sizeof buf, fp) == buf)
++	while (fgetsx (buf, buflen, fp) == buf)
+ #else
+-	if (fgetsx (buf, (int) sizeof buf, fp) == buf)
++	if (fgetsx (buf, buflen, fp) == buf)
+ #endif
+ 	{
+ 		while (   ((cp = strrchr (buf, '\n')) == NULL)

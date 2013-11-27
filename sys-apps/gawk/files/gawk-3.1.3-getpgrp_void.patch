@@ -1,0 +1,47 @@
+Ripped from Fedora.
+
+--- gawk-3.1.3/main.c.getpgrp_void	2004-01-26 12:08:26.000000000 +0100
++++ gawk-3.1.3/main.c	2004-01-26 12:15:22.000000000 +0100
+@@ -874,14 +874,11 @@
+ 
+ 	PROCINFO_node = install("PROCINFO",
+ 			node((NODE *) NULL, Node_var_array, (NODE *) NULL));
+-
+ #ifdef GETPGRP_VOID
+-#define getpgrp_arg() /* nothing */
++	value = getpgrp();
+ #else
+-#define getpgrp_arg() getpid()
++	value = getpgrp(getpid());
+ #endif
+-
+-	value = getpgrp(getpgrp_arg());
+ 	aptr = assoc_lookup(PROCINFO_node, tmp_string("pgrpid", 6), FALSE);
+ 	*aptr = make_number(value);
+ 
+--- gawk-3.1.3/io.c.getpgrp_void	2004-01-26 12:08:36.000000000 +0100
++++ gawk-3.1.3/io.c	2004-01-26 12:16:04.000000000 +0100
+@@ -1422,11 +1422,6 @@
+ 	return 0;
+ }
+ 
+-#ifdef GETPGRP_VOID
+-#define getpgrp_arg() /* nothing */
+-#else
+-#define getpgrp_arg() getpid()
+-#endif
+ 
+ /* pidopen --- "open" /dev/pid, /dev/ppid, and /dev/pgrpid */
+ 
+@@ -1440,7 +1435,11 @@
+ 	warning(_("use `PROCINFO[\"%s\"]' instead of `%s'"), cp, name);
+ 
+ 	if (name[6] == 'g')
++#ifdef GETPGRP_VOID
++		sprintf(tbuf, "%d\n", (int) getpgrp());
++#else
+ 		sprintf(tbuf, "%d\n", (int) getpgrp(getpgrp_arg()));
++#endif
+ 	else if (name[6] == 'i')
+ 		sprintf(tbuf, "%d\n", (int) getpid());
+ 	else
