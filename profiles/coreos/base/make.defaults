@@ -47,6 +47,19 @@ CONFIG_PROTECT="
 	/etc/make.conf
 "
 
+# Remove libtool .la files for non-plugin libraries.
+# Remove Gentoo init files since we use systemd.
+# Remove logrotate.d files since we don't use logrotate.
+INSTALL_MASK="
+  /usr/lib*/*.la
+  /etc/init.d /etc/conf.d
+  /etc/logrotate.d
+"
+
+# Keep the default languages small.
+# (not many things respect this though)
+LINGUAS="en"
+
 # Use parallel bzip2 for binary packages
 PORTAGE_BZIP2_COMMAND="lbzip2"
 PORTAGE_BUNZIP2_COMMAND="lbunzip2"

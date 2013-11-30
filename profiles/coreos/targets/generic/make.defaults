@@ -8,3 +8,13 @@ USE="${USE} -fortran -abiword -perl -cups -poppler-data -nls"
 
 # Exclude documentation
 FEATURES="nodoc noinfo noman"
+
+# Remove sandbox files since we don't use that in the sysroot.
+# Remove bash-completion files as we don't install bash-completion.
+# Remove alternate locales, we only need the standard LANG=C
+INSTALL_MASK="${INSTALL_MASK}
+  /etc/sandbox.d
+  /usr/share/bash-completion
+  /usr/share/i18n
+  /usr/share/locale
+"
