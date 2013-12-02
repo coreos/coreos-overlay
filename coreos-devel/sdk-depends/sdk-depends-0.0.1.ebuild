@@ -22,5 +22,6 @@ DEPEND="
 	dev-python/setuptools
 	net-misc/curl
 	sys-devel/crossdev
+	dev-util/boost-build
 	"
 RDEPEND="${DEPEND}"
