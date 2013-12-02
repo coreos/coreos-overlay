@@ -37,16 +37,6 @@ PORTAGE_BINHOST="
     http://storage.core-os.net/coreos/sdk/${ARCH}/${COREOS_SDK_VERSION}/toolchain/
 "
 
-# Remove all .la files for non-plugin libraries.
-# Remove Gentoo init files since we use upstart.
-# Remove logrotate.d files since we don't use logrotate.
-INSTALL_MASK="
-  /usr/lib*/*.la
-  /etc/init.d /etc/conf.d
-  /etc/logrotate.d
-"
-PKG_INSTALL_MASK="${INSTALL_MASK}"
-
 # This is used by profiles/base/profile.bashrc to figure out that we
 # are targeting the cros-sdk (in all its various modes).  It should
 # be utilized nowhere else!

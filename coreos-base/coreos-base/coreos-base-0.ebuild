@@ -122,9 +122,6 @@ src_install() {
 		# Insert empty fstab
 		doins "${FILESDIR}"/fstab
 
-		# Insert glibc's nsswitch.conf since that is installed weirdly
-		doins "${FILESDIR}"/nsswitch.conf
-
 		# Insert a mini vimrc to avoid driving everyone insane
 		insinto /etc/vim
 		doins "${FILESDIR}"/vimrc
