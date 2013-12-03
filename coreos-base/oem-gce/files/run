@@ -11,7 +11,6 @@ update_keys() {
     # The key may have a username: prerix which must be stripped
     local keys=$(curl --fail -s "$url" | sed -re 's/^\w*://')
     if [[ -n "$keys" ]]; then
-echo "$keys"
         update-ssh-keys -a "gce-$id" <<<"$keys"
     fi
 }
