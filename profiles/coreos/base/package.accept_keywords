@@ -68,3 +68,4 @@
 =app-emulation/docker-0.7* ~amd64
 =sys-fs/aufs-util-3* ~amd64
 =sys-fs/aufs-headers-3* ~amd64
+=dev-util/boost-build-1.52.0-r1 ~amd64
