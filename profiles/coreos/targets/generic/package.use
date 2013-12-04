@@ -22,7 +22,7 @@ sys-apps/dbus		-X -systemd
 sys-apps/iproute2	ipv6
 sys-apps/smartmontools	minimal
 sys-block/parted        device-mapper
-sys-fs/lvm2		-lvm1 -readline -static -thin
+sys-fs/lvm2		-lvm1 -readline -static
 sys-fs/squashfs         lzo
 sys-libs/ncurses	minimal
 sys-libs/pam        -berkdb
