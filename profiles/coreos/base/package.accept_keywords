@@ -69,3 +69,6 @@
 =sys-fs/aufs-util-3* ~amd64
 =sys-fs/aufs-headers-3* ~amd64
 =dev-util/boost-build-1.52.0-r1 ~amd64
+
+# Fixes ruby dependency
+=sys-block/thin-provisioning-tools-0.2.8-r1 ~amd64
