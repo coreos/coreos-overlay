@@ -119,7 +119,7 @@ src_install() {
 	newinitd contrib/init/openrc/docker.initd docker
 	newconfd contrib/init/openrc/docker.confd docker
 
-	systemd_dounit contrib/init/systemd/docker.service
+	systemd_dounit "${FILESDIR}/docker.service"
 
 	dodoc AUTHORS CONTRIBUTING.md CHANGELOG.md NOTICE README.md
 	if use doc; then
