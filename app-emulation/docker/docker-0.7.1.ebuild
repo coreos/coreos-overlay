@@ -1,6 +1,6 @@
 # Copyright 1999-2013 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: $
+# $Header: /var/cvsroot/gentoo-x86/app-emulation/docker/docker-0.7.0.ebuild,v 1.1 2013/11/26 15:17:48 gregkh Exp $
 
 EAPI=5
 
@@ -20,9 +20,16 @@ inherit bash-completion-r1 git-2 linux-info systemd user
 
 LICENSE="Apache-2.0"
 SLOT="0"
-IUSE="doc vim-syntax"
+IUSE="aufs +device-mapper doc vim-syntax"
 
+CDEPEND="
+	>=dev-db/sqlite-3.7.9:3
+	device-mapper? (
+		sys-fs/lvm2[thin]
+	)
+"
 DEPEND="
+	${CDEPEND}
 	>=dev-lang/go-1.1.2
 	dev-vcs/git
 	dev-vcs/mercurial
@@ -32,28 +39,49 @@ DEPEND="
 	)
 "
 RDEPEND="
-	!app-emulation/lxc-docker-bin
+	${CDEPEND}
+	!app-emulation/docker-bin
 	>=app-arch/tar-1.26
 	>=sys-apps/iproute2-3.5
 	>=net-firewall/iptables-1.4
 	>=app-emulation/lxc-0.8
 	>=dev-vcs/git-1.7
 	>=app-arch/xz-utils-4.9
-	|| (
-		sys-fs/aufs3
-		sys-kernel/aufs-sources
+	aufs? (
+		|| (
+			sys-fs/aufs3
+			sys-kernel/aufs-sources
+		)
 	)
 "
 
 RESTRICT="strip"
 
-# TODO AUFS will be replaced with device-mapper (sys-fs/lvm2[static-libs]) in 0.7
-ERROR_AUFS_FS="AUFS_FS is required to be set if and only if aufs-sources are used"
-
-ERROR_MEMCG_SWAP="MEMCG_SWAP is required if you wish to limit swap usage of containers"
-
 pkg_setup() {
-	CONFIG_CHECK+=" ~AUFS_FS ~BRIDGE ~MEMCG_SWAP ~NETFILTER_XT_MATCH_ADDRTYPE ~NF_NAT ~NF_NAT_NEEDED"
+	CONFIG_CHECK+="
+		~BRIDGE
+		~MEMCG_SWAP
+		~NETFILTER_XT_MATCH_ADDRTYPE
+		~NF_NAT
+		~NF_NAT_NEEDED
+	"
+	ERROR_MEMCG_SWAP="MEMCG_SWAP is required if you wish to limit swap usage of containers"
+
+	if use aufs; then
+		CONFIG_CHECK+="
+			~AUFS_FS
+		"
+		ERROR_AUFS_FS="AUFS_FS is required to be set if and only if aufs-sources are used"
+	fi
+
+	if use device-mapper; then
+		CONFIG_CHECK+="
+			~BLK_DEV_DM
+			~DM_THIN_PROVISIONING
+			~EXT4_FS
+		"
+	fi
+
 	check_extra_config
 }
 
@@ -62,19 +90,8 @@ src_unpack() {
 }
 
 src_compile() {
-	export CGO_ENABLED=0 # we need static linking!
-
 	export GOPATH="${WORKDIR}/gopath"
 	mkdir -p "$GOPATH" || die
-
-	# copy GOROOT so we can build it without cgo and not modify anything in the REAL_GOROOT
-	REAL_GOROOT="$(go env GOROOT)"
-	export GOROOT="${WORKDIR}/goroot"
-	rm -rf "$GOROOT" || die
-	cp -R "$REAL_GOROOT" "$GOROOT" || die
-
-	# recompile GOROOT to be cgo-less and thus static-able (especially net package)
-	go install -a -v std || die
 
 	# make sure docker itself is in our shiny new GOPATH
 	mkdir -p "${GOPATH}/src/github.com/dotcloud" || die
@@ -84,12 +101,9 @@ src_compile() {
 	export GOPATH="$GOPATH:$(pwd -P)/vendor"
 
 	# time to build!
-	./hack/make.sh binary || die
-
-	# now copy the binary to a consistent location that doesn't involve the current version number
-	mkdir -p bin || die
-	VERSION=$(cat ./VERSION)
-	cp -v bundles/$VERSION/binary/docker-$VERSION bin/docker || die
+	export CGO_CFLAGS="-I${ROOT}/usr/include"
+	export CGO_LDFLAGS="-L${ROOT}/usr/lib"
+	./hack/make.sh dynbinary || die
 
 	if use doc; then
 		emake -C docs docs man || die
@@ -97,18 +111,17 @@ src_compile() {
 }
 
 src_install() {
-	dobin bin/docker
-	dodoc AUTHORS CONTRIBUTING.md CHANGELOG.md MAINTAINERS NOTICE README.md
+	VERSION=$(cat VERSION)
+	newbin bundles/$VERSION/dynbinary/docker-$VERSION docker
+	exeinto /usr/libexec/docker
+	newexe bundles/$VERSION/dynbinary/dockerinit-$VERSION dockerinit
 
-	newinitd "${FILESDIR}/docker-r3.initd" docker
-	newconfd "${FILESDIR}/docker-r3.confd" docker
+	newinitd contrib/init/openrc/docker.initd docker
+	newconfd contrib/init/openrc/docker.confd docker
 
 	systemd_dounit "${FILESDIR}/docker.service"
 
-	insinto /usr/share/${P}/contrib
-	doins contrib/README
-	cp -R "${S}/contrib"/* "${D}/usr/share/${P}/contrib/"
-
+	dodoc AUTHORS CONTRIBUTING.md CHANGELOG.md NOTICE README.md
 	if use doc; then
 		dohtml -r docs/_build/html/*
 		doman docs/_build/man/*
@@ -124,6 +137,10 @@ src_install() {
 		doins -r contrib/vim-syntax/ftdetect
 		doins -r contrib/vim-syntax/syntax
 	fi
+
+	insinto /usr/share/${P}/contrib
+	doins contrib/README
+	cp -R "${S}/contrib"/* "${D}/usr/share/${P}/contrib/"
 }
 
 pkg_postinst() {

@@ -1,12 +1,13 @@
 [Unit]
-Description=Easily create lightweight, portable, self-sufficient containers from any application!
-Requires=network.target
-After=multi-user.target
+Description=Docker Application Container Engine 
+Documentation=http://docs.docker.io
+After=network.target
 
 [Service]
-Type=simple
 ExecStartPre=/bin/mount --make-rprivate /
-ExecStart=/usr/bin/docker -d
+# Run docker but don't have docker automatically restart
+# containers. This is a job for systemd and unit files.
+ExecStart=/usr/bin/docker -d -r=false
 
 [Install]
 WantedBy=multi-user.target
