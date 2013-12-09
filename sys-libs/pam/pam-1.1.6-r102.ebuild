@@ -142,15 +142,6 @@ src_install() {
 	# Need to be suid
 	fperms u+s /sbin/unix_chkpwd
 
-	gen_usr_ldscript -a pam pamc pam_misc
-
-	# create extra symlinks just in case something depends on them...
-	for lib in pam pamc pam_misc; do
-		if ! [[ -f "${ED}"/$(get_libdir)/lib${lib}$(get_libname) ]]; then
-			dosym lib${lib}$(get_libname 0) /$(get_libdir)/lib${lib}$(get_libname)
-		fi
-	done
-
 	dodoc CHANGELOG ChangeLog README AUTHORS Copyright NEWS
 
 	docinto modules
