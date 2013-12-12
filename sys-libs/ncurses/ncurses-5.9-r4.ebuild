@@ -15,7 +15,7 @@ SRC_URI="mirror://gnu/ncurses/${MY_P}.tar.gz"
 LICENSE="MIT"
 SLOT="5"
 KEYWORDS="alpha amd64 arm arm64 hppa ia64 ~m68k ~mips ppc ppc64 s390 ~sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
-IUSE="ada +cxx debug doc gpm minimal profile static-libs tinfo trace unicode"
+IUSE="ada +cxx debug doc gpm minimal profile static-libs symlink-usr tinfo trace unicode"
 
 DEPEND="gpm? ( sys-libs/gpm )"
 #	berkdb? ( sys-libs/db )"
@@ -32,6 +32,10 @@ PDEPEND="gpm? ( sys-libs/gpm[${MULTILIB_USEDEP}] )"
 
 S=${WORKDIR}/${MY_P}
 HOSTTIC_DIR=${WORKDIR}/${P}-host
+
+MINIMAL_TERMINFO=(ansi console dumb linux rxvt rxvt-256color rxvt-unicode \
+				  screen screen-256color sun vt{52,100,102,200,220} \
+				  xterm xterm-color xterm-256color xterm-xfree86)
 
 src_prepare() {
 	[[ -n ${PV_SNAP} ]] && epatch "${WORKDIR}"/${MY_P}-${PV_SNAP}-patch.sh
@@ -193,12 +197,10 @@ multilib_src_install() {
 }
 
 multilib_src_install_all() {
-#	if ! use berkdb ; then
+	if ! use symlink-usr ; then
 		# We need the basic terminfo files in /etc, bug #37026
 		einfo "Installing basic terminfo files in /etc..."
-		for x in ansi console dumb linux rxvt rxvt-unicode screen sun vt{52,100,102,200,220} \
-				 xterm xterm-color xterm-xfree86
-		do
+		for x in "${MINIMAL_TERMINFO[@]}" ; do
 			local termfile=$(find "${ED}"/usr/share/terminfo/ -name "${x}" 2>/dev/null)
 			local basedir=$(basename $(dirname "${termfile}"))
 
@@ -209,14 +211,20 @@ multilib_src_install_all() {
 					/usr/share/terminfo/${basedir}/${x}
 			fi
 		done
-#	fi
 
-	echo "CONFIG_PROTECT_MASK=\"/etc/terminfo\"" > "${T}"/50ncurses
-	doenvd "${T}"/50ncurses
+		echo "CONFIG_PROTECT_MASK=\"/etc/terminfo\"" > "${T}"/50ncurses
+		doenvd "${T}"/50ncurses
 
-	use minimal && rm -r "${ED}"/usr/share/terminfo*
-	# Because ncurses5-config --terminfo returns the directory we keep it
-	keepdir /usr/share/terminfo #245374
+		use minimal && rm -r "${D}"/usr/share/terminfo*
+		# Because ncurses5-config --terminfo returns the directory we keep it
+		keepdir /usr/share/terminfo #245374
+	elif use minimal; then
+		# prune all files and symlinks not listed in MINIMAL_TERMINFO
+		find "${D}"/usr/share/terminfo ! -type d \
+			${MINIMAL_TERMINFO[@]/#/! -name } \
+			-delete || die
+		find "${D}"/usr/share/terminfo -type d -empty -delete || die
+	fi
 
 	cd "${S}"
 	dodoc ANNOUNCE MANIFEST NEWS README* TO-DO doc/*.doc
