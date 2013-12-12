@@ -97,7 +97,6 @@ RDEPEND="${RDEPEND}
 	sys-apps/findutils
 	sys-apps/which
 	app-admin/sudo
-	app-admin/rsyslog
 	app-arch/gzip
 	app-arch/tar
 	app-shells/bash
