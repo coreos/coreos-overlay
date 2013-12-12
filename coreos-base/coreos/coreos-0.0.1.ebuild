@@ -100,7 +100,6 @@ RDEPEND="${RDEPEND}
 	app-arch/gzip
 	app-arch/tar
 	app-shells/bash
-	coreos-base/chromeos-auth-config
 	coreos-base/coreos-base
 	coreos-base/cros_boot_mode
 	coreos-base/vboot_reference
@@ -125,7 +124,6 @@ RDEPEND="${RDEPEND}
 	sys-apps/systemd
 	sys-apps/systemd-sysv-utils
 	sys-apps/util-linux
-	sys-auth/pam_pwdfile
 	sys-fs/e2fsprogs
 	sys-fs/aufs-util
 	sys-libs/timezone-data
