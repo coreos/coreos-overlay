@@ -1,36 +1,40 @@
 # Copyright 1999-2013 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/app-emulation/docker/docker-0.7.0.ebuild,v 1.1 2013/11/26 15:17:48 gregkh Exp $
+# $Header: $
 
 EAPI=5
 
 DESCRIPTION="Docker complements LXC with a high-level API which operates at the process level."
 HOMEPAGE="http://www.docker.io/"
-SRC_URI=""
 
-EGIT_REPO_URI="git://github.com/dotcloud/docker.git"
+GITHUB_URI="github.com/dotcloud/docker"
+
 if [[ ${PV} == *9999 ]]; then
+	SRC_URI=""
+	EGIT_REPO_URI="git://${GITHUB_URI}.git"
+	inherit git-2
 	KEYWORDS=""
 else
-	EGIT_COMMIT="v${PV}"
+	SRC_URI="https://${GITHUB_URI}/archive/v${PV}.zip -> ${P}.zip"
+	DOCKER_GITCOMMIT="28b162e"
 	KEYWORDS="~amd64"
+	[ "$DOCKER_GITCOMMIT" ] || die "DOCKER_GITCOMMIT must be added manually for each bump!"
 fi
 
-inherit bash-completion-r1 git-2 linux-info systemd user
+inherit bash-completion-r1 linux-info systemd udev user
 
 LICENSE="Apache-2.0"
 SLOT="0"
 IUSE="aufs +device-mapper doc vim-syntax"
 
+# TODO work with upstream to allow us to build without lvm2 installed if we have -device-mapper
 CDEPEND="
 	>=dev-db/sqlite-3.7.9:3
-	device-mapper? (
-		sys-fs/lvm2[thin]
-	)
+	sys-fs/lvm2[thin]
 "
 DEPEND="
 	${CDEPEND}
-	>=dev-lang/go-1.1.2
+	>=dev-lang/go-1.2
 	dev-vcs/git
 	dev-vcs/mercurial
 	doc? (
@@ -60,6 +64,7 @@ RESTRICT="strip"
 pkg_setup() {
 	CONFIG_CHECK+="
 		~BRIDGE
+		~IP_NF_TARGET_MASQUERADE
 		~MEMCG_SWAP
 		~NETFILTER_XT_MATCH_ADDRTYPE
 		~NF_NAT
@@ -85,11 +90,9 @@ pkg_setup() {
 	check_extra_config
 }
 
-src_unpack() {
-	git-2_src_unpack
-}
-
 src_compile() {
+	# eventually, perhaps Gentoo will include a "go" eclass to do some of this
+
 	export GOPATH="${WORKDIR}/gopath"
 	mkdir -p "$GOPATH" || die
 
@@ -100,9 +103,15 @@ src_compile() {
 	# we need our vendored deps, too
 	export GOPATH="$GOPATH:$(pwd -P)/vendor"
 
-	# time to build!
+	# setup CFLAGS and LDFLAGS for separate build target
+	# see https://github.com/tianon/docker-overlay/pull/10
 	export CGO_CFLAGS="-I${ROOT}/usr/include"
 	export CGO_LDFLAGS="-L${ROOT}/usr/lib"
+
+	# if we're building from a zip, we need the GITCOMMIT value
+	[ "$DOCKER_GITCOMMIT" ] && export DOCKER_GITCOMMIT
+
+	# time to build!
 	./hack/make.sh dynbinary || die
 
 	if use doc; then
@@ -120,6 +129,8 @@ src_install() {
 	newconfd contrib/init/openrc/docker.confd docker
 
 	systemd_dounit "${FILESDIR}/docker.service"
+
+	udev_dorules contrib/udev/*.rules
 
 	dodoc AUTHORS CONTRIBUTING.md CHANGELOG.md NOTICE README.md
 	if use doc; then
@@ -144,6 +155,8 @@ src_install() {
 }
 
 pkg_postinst() {
+	udev_reload
+
 	elog ""
 	elog "To use docker, the docker daemon must be running as root. To automatically"
 	elog "start the docker daemon at boot, add docker to the default runlevel:"
