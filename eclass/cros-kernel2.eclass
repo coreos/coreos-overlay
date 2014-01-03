@@ -1,13 +1,13 @@
 # Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
-[[ ${EAPI} != "4" ]] && die "Only EAPI=4 is supported"
+[[ ${EAPI} != "5" ]] && die "Only EAPI=5 is supported"
 
 inherit cros-workon toolchain-funcs
 
 HOMEPAGE="http://www.chromium.org/"
 LICENSE="GPL-2"
-SLOT="0"
+SLOT="0/${PVR}"
 
 DEPEND="sys-apps/debianutils
 		sys-devel/bc
@@ -195,7 +195,9 @@ cros-kernel2_src_compile() {
 cros-kernel2_src_install() {
 	dodir /boot
 	kmake INSTALL_PATH="${D}/boot" install
-	kmake INSTALL_MOD_PATH="${D}" modules_install
+	# Install firmware to a temporary (bogus) location.
+	# The linux-firmware package will be used instead.
+	kmake INSTALL_MOD_PATH="${D}" INSTALL_FW_PATH="${T}/fw" modules_install
 
 	local version=$(kernelversion)
 	if [ ! -e "${D}/boot/vmlinuz" ]; then
