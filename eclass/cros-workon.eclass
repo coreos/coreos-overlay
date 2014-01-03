@@ -455,9 +455,11 @@ cros-workon_src_unpack() {
 
 cros-workon_get_build_dir() {
 	local dir
+	# strip subslot, for EAPI=5
+	local slot="${SLOT%/*}"
 	if [[ ${CROS_WORKON_INCREMENTAL_BUILD} == "1" ]]; then
 		dir="${SYSROOT}/var/cache/portage/${CATEGORY}/${PN}"
-		[[ ${SLOT:-0} != "0" ]] && dir+=":${SLOT}"
+		[[ ${slot:-0} != "0" ]] && dir+=":${slot}"
 	else
 		dir="${WORKDIR}/build"
 	fi
@@ -570,7 +572,9 @@ cros-workon_src_install() {
 			fi
 			if [[ -d "${LCOV_DIR}" ]] ; then
 				local dir="${PN}"
-				[[ ${SLOT} != "0" ]] && dir+=":${SLOT}"
+				# strip subslot, for EAPI=5
+				local slot="${SLOT%/*}"
+				[[ ${slot} != "0" ]] && dir+=":${slot}"
 				insinto "/usr/share/profiling/${dir}/lcov"
 				doins -r "${LCOV_DIR}"/*
 			fi
