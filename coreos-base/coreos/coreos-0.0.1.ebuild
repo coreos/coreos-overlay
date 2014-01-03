@@ -126,6 +126,8 @@ RDEPEND="${RDEPEND}
 	sys-apps/util-linux
 	sys-fs/e2fsprogs
 	sys-fs/aufs-util
+	sys-kernel/coreos-firmware
+	sys-kernel/coreos-kernel
 	sys-libs/timezone-data
 	sys-process/lsof
 	sys-process/procps
