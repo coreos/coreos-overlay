@@ -36,3 +36,6 @@ PROD_INSTALL_MASK="${INSTALL_MASK}
   /usr/share/readline
   /usr/src
 "
+
+# No suffix for 'generic' (use base, not base-usr)
+COREOS_DISK_LAYOUT_SUFFIX=""
