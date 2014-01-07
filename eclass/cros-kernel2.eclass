@@ -184,7 +184,9 @@ cros-kernel2_src_compile() {
 
 	local bootengine_lib=$(get_bootengine_lib)
 	if [[ -n "${bootengine_lib}" ]]; then
-		mv "${bootengine_root}/lib" "${bootengine_root}/${bootengine_lib}"
+		mkdir -p "${bootengine_root}/${bootengine_lib%/*}" || die
+		mv "${bootengine_root}/lib" \
+			"${bootengine_root}/${bootengine_lib}" || die
 	fi
 	update_bootengine_cpio "${bootengine_root}"
 
