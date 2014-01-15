@@ -3,7 +3,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="4"
-CROS_WORKON_COMMIT="8c14083fd2c53798a84c470b7bb3ecaabb17d940"
+CROS_WORKON_COMMIT="3bc9aad424c62af50c5df7b32351bf96b2750ec6"
 CROS_WORKON_PROJECT="coreos/init"
 CROS_WORKON_LOCALNAME="init"
 EGIT_REPO_URI="https://github.com/coreos/init"
@@ -17,7 +17,7 @@ SRC_URI=""
 LICENSE="BSD"
 SLOT="0"
 KEYWORDS="amd64 arm x86"
-IUSE="test"
+IUSE="test symlink-usr"
 
 # Daemons we enable here must installed during build/install in addition to
 # during runtime so the systemd unit enable step works.
@@ -36,7 +36,11 @@ RDEPEND="${DEPEND}
 	"
 
 src_install() {
-	default
+	if use symlink-usr ; then
+		emake DESTDIR="${D}" install-usr
+	else
+		emake DESTDIR="${D}" install
+	fi
 
 	# Set the default target to multi-user not graphical, this is CoreOS!
 	dosym /usr/lib/systemd/system/multi-user.target /etc/systemd/system/default.target

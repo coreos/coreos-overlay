@@ -16,7 +16,7 @@ SRC_URI=""
 LICENSE="BSD"
 SLOT="0"
 KEYWORDS="~amd64 ~arm ~x86"
-IUSE="test"
+IUSE="test symlink-usr"
 
 # Daemons we enable here must installed during build/install in addition to
 # during runtime so the systemd unit enable step works.
@@ -34,7 +34,11 @@ RDEPEND="${DEPEND}
 	"
 
 src_install() {
-	default
+	if use symlink-usr ; then
+		emake DESTDIR="${D}" install-usr
+	else
+		emake DESTDIR="${D}" install
+	fi
 
 	# Set the default target to multi-user not graphical, this is CoreOS!
 	dosym /usr/lib/systemd/system/multi-user.target /etc/systemd/system/default.target
