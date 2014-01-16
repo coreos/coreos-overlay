@@ -33,6 +33,6 @@ src_install() {
 	# Setup package.provided so that gmerge will know what packages to ignore.
 	# - $CHROMEOS_PROFILE/package.provided contains packages that we don't
 	#   want to install to the device.
-	insinto /usr/local/etc/make.profile/package.provided
+	insinto /etc/make.profile/package.provided
 	newins "${CHROMEOS_PROFILE}"/package.provided coreos
 }
