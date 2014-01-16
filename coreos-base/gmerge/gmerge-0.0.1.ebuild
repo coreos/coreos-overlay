@@ -27,7 +27,6 @@ DEPEND="${RDEPEND}"
 CHROMEOS_PROFILE="/usr/local/portage/coreos/profiles/coreos/targets/generic"
 
 src_install() {
-	# Install tools from platform/dev into /usr/local/bin
 	into /usr
 	dobin gmerge stateful_update crdev
 
