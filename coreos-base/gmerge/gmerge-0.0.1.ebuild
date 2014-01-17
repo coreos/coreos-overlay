@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="4"
-CROS_WORKON_COMMIT="47a360f8cd5288f6b38720ca7af5f910c80fcb67"
+CROS_WORKON_COMMIT="0ec0fd256a173c31af2f51e52e5c6f6b9a569cae"
 CROS_WORKON_PROJECT="coreos/dev-util"
 CROS_WORKON_REPO="git://github.com"
 CROS_WORKON_LOCALNAME="dev"
