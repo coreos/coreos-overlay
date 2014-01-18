@@ -38,6 +38,7 @@ RDEPEND="${DEPEND}
 src_install() {
 	if use symlink-usr ; then
 		emake DESTDIR="${D}" install-usr
+		systemd_enable_service local-fs.target remount-root.service
 	else
 		emake DESTDIR="${D}" install
 	fi
