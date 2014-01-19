@@ -1,0 +1,43 @@
+http://bugs.gentoo.org/276055
+
+<alanh@fairlite.co.uk>:
+The configure test program links against libblkid to test. This works
+fine on shared library systems as libblkid automatically depends on
+libuuid. But on static systems it needs explicit linking.
+
+
+--- configure.in
++++ configure.in
+@@ -398,8 +398,8 @@
+ 	fi
+ 
+ 	AC_CHECK_LIB(blkid, blkid_get_cache,
+-		[LIBBLKID=`$PKG_CONFIG --libs blkid`;
+-		 STATIC_LIBBLKID=`$PKG_CONFIG --static --libs blkid`],
++		[LIBBLKID=`$PKG_CONFIG --libs blkid --libs uuid`;
++		 STATIC_LIBBLKID=`$PKG_CONFIG --static --libs blkid --libs uuid`],
+ 		[AC_MSG_ERROR([external blkid library not found])],
+ 		[$LIBBLKID])
+ 	BLKID_CMT=#
+--- configure.old	2011-01-01 14:20:07.000000000 +0000
++++ configure	2011-01-01 14:22:01.000000000 +0000
+@@ -5228,7 +5228,7 @@
+   $as_echo_n "(cached) " >&6
+ else
+   ac_check_lib_save_LIBS=$LIBS
+-LIBS="-lblkid $LIBBLKID $LIBS"
++LIBS="-lblkid -luuid $LIBBLKID $LIBS"
+ cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
+@@ -5259,8 +5259,8 @@
+ { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_blkid_blkid_get_cache" >&5
+ $as_echo "$ac_cv_lib_blkid_blkid_get_cache" >&6; }
+ if test "x$ac_cv_lib_blkid_blkid_get_cache" = x""yes; then :
+-  LIBBLKID=`$PKG_CONFIG --libs blkid`;
+-		 STATIC_LIBBLKID=`$PKG_CONFIG --static --libs blkid`
++  LIBBLKID=`$PKG_CONFIG --libs blkid --libs uuid`;
++                 STATIC_LIBBLKID=`$PKG_CONFIG --static --libs blkid --libs uuid`
+ else
+   as_fn_error "external blkid library not found" "$LINENO" 5
+ fi
