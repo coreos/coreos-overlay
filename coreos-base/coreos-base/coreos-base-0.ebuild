@@ -123,7 +123,7 @@ src_install() {
 		doins "${FILESDIR}"/fstab
 
 		# Insert a mini vimrc to avoid driving everyone insane
-		insinto /etc/vim
+		insinto /usr/share/vim
 		doins "${FILESDIR}"/vimrc
 
 		# Symlink /etc/localtime to something on the stateful partition,
