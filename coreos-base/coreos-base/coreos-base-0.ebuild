@@ -125,10 +125,6 @@ src_install() {
 		# Insert a mini vimrc to avoid driving everyone insane
 		insinto /usr/share/vim
 		doins "${FILESDIR}"/vimrc
-
-		# Symlink /etc/localtime to something on the stateful partition,
-		# which we can then change around at runtime.
-		dosym /var/lib/timezone/localtime /etc/localtime || die
 	fi
 
 	# Add a sudo file for the core use
