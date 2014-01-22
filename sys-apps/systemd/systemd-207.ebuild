@@ -115,6 +115,8 @@ pkg_setup() {
 
 multilib_src_configure() {
 	local myeconfargs=(
+		--with-pamconfdir=/usr/share/pam.d
+		--with-dbuspolicydir=/usr/share/dbus-1/system.d
 		--localstatedir=/var
 		--with-pamlibdir=$(getpam_mod_dir)
 		# avoid bash-completion dep
@@ -191,7 +193,6 @@ multilib_src_configure() {
 			--disable-python-devel
 		)
 	fi
-
 	# Work around bug 463846.
 	tc-export CC
 

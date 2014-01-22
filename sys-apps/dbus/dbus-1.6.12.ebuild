@@ -77,6 +77,7 @@ src_configure() {
 	# libaudit is *only* used in DBus wrt SELinux support, so disable it, if
 	# not on an SELinux profile.
 	myconf=(
+		--sysconfdir=/usr/share
 		--disable-silent-rules
 		--localstatedir="${EPREFIX}/var"
 		--docdir="${EPREFIX}/usr/share/doc/${PF}"
@@ -155,7 +156,6 @@ src_install() {
 
 	# needs to exist for dbus sessions to launch
 	keepdir /usr/share/dbus-1/services
-	keepdir /etc/dbus-1/{session,system}.d
 	# machine-id symlink from pkg_postinst()
 	keepdir /var/lib/dbus
 
