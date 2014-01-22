@@ -88,7 +88,7 @@ src_install() {
 		DESTDIR="${D}" \
 		LIBDIR="${EPREFIX}"/$(get_libdir) \
 		SBINDIR="${EPREFIX}"/sbin \
-		CONFDIR="${EPREFIX}"/etc/iproute2 \
+		CONFDIR="${EPREFIX}"/usr/share/iproute2 \
 		DOCDIR="${EPREFIX}"/usr/share/doc/${PF} \
 		MANDIR="${EPREFIX}"/usr/share/man \
 		ARPDDIR="${EPREFIX}"/var/lib/arpd \
