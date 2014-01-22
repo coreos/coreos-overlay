@@ -43,7 +43,7 @@ src_install() {
 	default
 	insinto /etc/tlsdate
 	doins "${FILESDIR}/tlsdated.conf"
-	insinto /etc/dbus-1/system.d
+	insinto /usr/share/dbus-1/system.d
 	doins "${FILESDIR}/org.torproject.tlsdate.conf"
 
 	systemd_dounit "${FILESDIR}/tlsdate.service"
