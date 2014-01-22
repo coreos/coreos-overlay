@@ -1,0 +1,871 @@
+# ChangeLog for sys-apps/systemd
+# Copyright 1999-2013 Gentoo Foundation; Distributed under the GPL v2
+# $Header: /var/cvsroot/gentoo-x86/sys-apps/systemd/ChangeLog,v 1.174 2013/09/14 18:44:05 floppym Exp $
+
+  14 Sep 2013; Mike Gilbert <floppym@gentoo.org> systemd-207.ebuild,
+  systemd-9999-r1.ebuild:
+  Replace --without-python with --disable-python-devel for non-native abis, bug
+  484934.
+
+*systemd-207 (14 Sep 2013)
+
+  14 Sep 2013; Michał Górny <mgorny@gentoo.org> +systemd-207.ebuild,
+  systemd-9999-r1.ebuild:
+  Version bump. Update kernel checks. Do not check for HOTPLUG on 3.7+ wrt bug
+  #476464. Run tests for native ABI only.
+
+*systemd-206-r5 (14 Sep 2013)
+
+  14 Sep 2013; Pacho Ramos <pacho@gentoo.org>
+  +files/206-0006-allow-tabs-in-configuration-files.patch,
+  +files/206-0007-allow-tabs-in-configuration-files2.patch,
+  +systemd-206-r5.ebuild:
+  Allow tabs in environment files (#481554 by dolphinling)
+
+  13 Sep 2013; Michał Górny <mgorny@gentoo.org> systemd-9999-r1.ebuild:
+  Sync the live ebuild with latest changes.
+
+*systemd-206-r4 (11 Sep 2013)
+
+  11 Sep 2013; Michał Górny <mgorny@gentoo.org> +systemd-206-r4.ebuild:
+  Introduce -r4 that uses separate sys-apps/gentoo-systemd-integration.
+  Introduces local.d generator.
+
+  06 Sep 2013; Pacho Ramos <pacho@gentoo.org> systemd-204.ebuild,
+  systemd-206-r3.ebuild:
+  Check for TMPFS_POSIX_ACL when needed (#482336#c24 by Alexander Tsoy)
+
+  28 Aug 2013; Pacho Ramos <pacho@gentoo.org> systemd-204.ebuild,
+  systemd-206-r3.ebuild:
+  Update message about /etc/mtab link (#482786), show message about systemd-ui
+  only when package is not installed (#480606)
+
+  11 Aug 2013; Mike Gilbert <floppym@gentoo.org> systemd-206-r3.ebuild,
+  systemd-9999-r1.ebuild:
+  Call udevadm control --reload in pkg_postinst.
+
+  10 Aug 2013; Michał Górny <mgorny@gentoo.org> systemd-9999-r1.ebuild:
+  Enable building multilib libgudev.
+
+  10 Aug 2013; Michał Górny <mgorny@gentoo.org> systemd-206-r3.ebuild,
+  systemd-9999-r1.ebuild:
+  Add missing prune_libtool_files call.
+
+  09 Aug 2013; Michał Górny <mgorny@gentoo.org> -systemd-206-r1.ebuild,
+  systemd-206-r3.ebuild, systemd-9999-r1.ebuild:
+  Make polkit a PDEP to avoid circular dependency. Bug #480328.
+
+  09 Aug 2013; Michał Górny <mgorny@gentoo.org> systemd-206-r3.ebuild,
+  systemd-9999-r1.ebuild:
+  Work-around 32-bit dbus check (it is not used by the libraries).
+
+*systemd-206-r3 (09 Aug 2013)
+
+  09 Aug 2013; Michał Górny <mgorny@gentoo.org> +systemd-206-r3.ebuild,
+  -systemd-206-r2.ebuild:
+  Fix installing multilib pkg-config files.
+
+  08 Aug 2013; Samuli Suominen <ssuominen@gentoo.org> systemd-206-r2.ebuild,
+  systemd-9999-r1.ebuild:
+  Raise the emul-linux-x86-baselibs block from -r7 to -r8 in order to avoid
+  file collision w/ libsystemd-daemon wrt #480274 by "nE0sIghT"
+
+*systemd-206-r2 (08 Aug 2013)
+
+  08 Aug 2013; Michał Górny <mgorny@gentoo.org> +systemd-206-r2.ebuild,
+  systemd-9999-r1.ebuild:
+  Enable partial multilib support wrt bug #479620.
+
+  07 Aug 2013; Agostino Sarubbo <ago@gentoo.org> systemd-204.ebuild:
+  Stable for x86, wrt bug #477910
+
+  04 Aug 2013; Agostino Sarubbo <ago@gentoo.org> systemd-204.ebuild:
+  Stable for ppc64, wrt bug #477910
+
+  04 Aug 2013; Michał Górny <mgorny@gentoo.org> systemd-9999-r1.ebuild:
+  Sync kmod dep in the live ebuild.
+
+  03 Aug 2013; Michał Górny <mgorny@gentoo.org> systemd-9999-r1.ebuild:
+  Update zsh-completion install after upstream cleanup.
+
+  31 Jul 2013; Michał Górny <mgorny@gentoo.org>
+  -files/191-0001-Disable-udev-targets-for-udev-190.patch,
+  -files/196-0001-Disable-udev-targets.patch,
+  -files/196-0002-Don-t-fail-with-missing-gcrypt-macros.patch,
+  -files/197-0001-Disable-udev-targets.patch,
+  -files/198-0001-Disable-udev-targets.patch,
+  -files/198-0002-build-sys-break-dependency-loop-between-libsystemd-i.patch,
+  -files/198-0003-build-sys-link-libsystemd-login-also-against-libsyst.patch,
+  -files/199-firmware.patch, -files/203-systemd-sleep.patch:
+  Drop old patches.
+
+*systemd-206-r1 (31 Jul 2013)
+
+  31 Jul 2013; Michał Górny <mgorny@gentoo.org>
+  +files/206-0001-logind-update-state-file-after-generating-the-sessio.patch,
+  +files/206-0002-Add-usr-share-keymaps-to-localectl-supported-locatio.patch,
+  +files/206-0003-tmpfiles-support-passing-prefix-multiple-times.patch,
+  +files/206-0004-tmpfiles-introduce-exclude-prefix.patch,
+  +files/206-0005-tmpfiles-setup-exclude-dev-prefixes-files.patch,
+  +systemd-206-r1.ebuild, -systemd-205.ebuild, -systemd-206.ebuild,
+  systemd-9999-r1.ebuild:
+  Fix gnome-shell<->logind race condition, bug #477954. Fix missing keymap
+  location, bug #474946. Fix broken device permissions due to static-nodes, bug
+  #478198. Check for CONFIG_AUDITSYSCALL, bug #478032. Add >=binutils-2.32.1
+  dep, bug #479038.
+
+  31 Jul 2013; Michał Górny <mgorny@gentoo.org> systemd-9999-r1.ebuild:
+  Finally drop compatibility symlinks. This time for real.
+
+  30 Jul 2013; Michał Górny <mgorny@gentoo.org> systemd-206.ebuild,
+  systemd-9999-r1.ebuild:
+  Bump kernel dep to 3.0. Reported by ssuominen, thanks.
+
+*systemd-9999-r1 (29 Jul 2013)
+
+  29 Jul 2013; Michał Górny <mgorny@gentoo.org> +systemd-9999-r1.ebuild,
+  -systemd-9999.ebuild:
+  Move the Gentoo-specific files from the live ebuild to gentoo-systemd-
+  integration. Revbump to ensure smooth migration.
+
+  28 Jul 2013; Agostino Sarubbo <ago@gentoo.org> systemd-204.ebuild:
+  Stable for arm, wrt bug #477910
+
+  28 Jul 2013; Agostino Sarubbo <ago@gentoo.org> systemd-204.ebuild:
+  Stable for ppc, wrt bug #477910
+
+  27 Jul 2013; Agostino Sarubbo <ago@gentoo.org> systemd-204.ebuild:
+  Stable for amd64, wrt bug #477910
+
+  24 Jul 2013; Mike Gilbert <floppym@gentoo.org> systemd-204.ebuild:
+  Add missing inherit bash-completion-r1, bug 478038.
+
+  23 Jul 2013; Michał Górny <mgorny@gentoo.org> systemd-206.ebuild:
+  Bump kmod dep per bug #477886.
+
+*systemd-206 (23 Jul 2013)
+
+  23 Jul 2013; Michał Górny <mgorny@gentoo.org> +systemd-206.ebuild,
+  systemd-9999.ebuild:
+  Version bump. Drop USE=keyword as it was replaced upstream by hwdb magic.
+
+  16 Jul 2013; Michał Górny <mgorny@gentoo.org> systemd-201.ebuild,
+  systemd-204.ebuild, systemd-205.ebuild, systemd-9999.ebuild:
+  Use get_bashcompdir for future bash-completion compat.
+
+  14 Jul 2013; Mike Gilbert <floppym@gentoo.org> systemd-205.ebuild,
+  systemd-9999.ebuild:
+  Set file capabilities on systemd-detect-virt, bug 468876 by Michał
+  Bartoszkiewicz.
+
+*systemd-205 (05 Jul 2013)
+
+  05 Jul 2013; Michał Górny <mgorny@gentoo.org> +systemd-205.ebuild,
+  -systemd-197-r1.ebuild, -systemd-200-r1.ebuild, -systemd-202.ebuild,
+  -systemd-203-r1.ebuild, systemd-9999.ebuild:
+  Version bump. Drop USE=static-libs since it is no longer supported. Drop old.
+
+  04 Jul 2013; Agostino Sarubbo <ago@gentoo.org> systemd-201.ebuild:
+  Stable for ppc64, wrt bug #465870
+
+  30 Jun 2013; Agostino Sarubbo <ago@gentoo.org> systemd-201.ebuild:
+  Stable for x86, wrt bug #465870
+
+  30 Jun 2013; Agostino Sarubbo <ago@gentoo.org> systemd-201.ebuild:
+  Stable for amd64, wrt bug #465870
+
+  20 Jun 2013; Agostino Sarubbo <ago@gentoo.org> systemd-204.ebuild:
+  Add ~ppc, wrt bug #465870
+
+  25 May 2013; Agostino Sarubbo <ago@gentoo.org> systemd-201.ebuild:
+  Stable for arm, wrt bug #465870
+
+  14 May 2013; Mike Gilbert <floppym@gentoo.org> systemd-201.ebuild,
+  systemd-202.ebuild, systemd-203-r1.ebuild, systemd-204.ebuild,
+  systemd-9999.ebuild:
+  Depend on app-text/docbook-xml-dtd:4.2, bug 469668 by Alexander Tsoy.
+
+*systemd-204 (13 May 2013)
+
+  13 May 2013; Michał Górny <mgorny@gentoo.org> +systemd-204.ebuild:
+  Version bump.
+
+*systemd-203-r1 (08 May 2013)
+
+  08 May 2013; Mike Gilbert <floppym@gentoo.org> +files/203-systemd-sleep.patch,
+  +systemd-203-r1.ebuild, -systemd-203.ebuild:
+  Apply upstream fix for systemd-sleep, bug 468998 by Paul Volkov.
+
+*systemd-203 (07 May 2013)
+
+  07 May 2013; Michał Górny <mgorny@gentoo.org> +systemd-203.ebuild,
+  systemd-9999.ebuild:
+  Version bump. Simplify .la removal. Drop init= compatibility symlinks.
+
+*systemd-202 (27 Apr 2013)
+
+  27 Apr 2013; Michal Gorny <mgorny@gentoo.org> +systemd-202.ebuild,
+  systemd-9999.ebuild:
+  Version bump. Use new --disable-tests option with USE=-test.
+
+  27 Apr 2013; Michal Gorny <mgorny@gentoo.org> systemd-200-r1.ebuild,
+  systemd-201.ebuild, systemd-9999.ebuild:
+  Enforce bash-completion dir to avoid automagic dependency on bash-completion.
+  Fixes bug #467428.
+
+  19 Apr 2013; Mike Gilbert <floppym@gentoo.org> systemd-201.ebuild,
+  systemd-9999.ebuild:
+  Skip python-single-r1_pkg_setup when python is disabled, bug 466408.
+
+  18 Apr 2013; William Hubbs <williamh@gentoo.org> systemd-201.ebuild,
+  systemd-9999.ebuild:
+  revert the check for CONFIG_FW_LOADER_USER_HELPER per mgorny since we force
+  the firmware-loader use flag on.
+
+  18 Apr 2013; Michał Górny <mgorny@gentoo.org> systemd-201.ebuild,
+  systemd-9999.ebuild:
+  Remove CONFIG_ wrt firmware loading, it was unnecessary.
+
+  18 Apr 2013; Michał Górny <mgorny@gentoo.org> -systemd-198-r1.ebuild,
+  metadata.xml:
+  The required udev version has been removed.
+
+  18 Apr 2013; Michał Górny <mgorny@gentoo.org> systemd-201.ebuild,
+  systemd-9999.ebuild:
+  Fix mistyped gcc version number.
+
+  18 Apr 2013; Michał Górny <mgorny@gentoo.org> systemd-201.ebuild,
+  systemd-9999.ebuild:
+  Update the firmware-loader CONFIG_CHECK for 3.9 kernel. Thanks to WilliamH for
+  noticing.
+
+  18 Apr 2013; Michał Górny <mgorny@gentoo.org> systemd-201.ebuild,
+  systemd-9999.ebuild:
+  Add a gcc version check wrt bug #466160.
+
+  17 Apr 2013; Michał Górny <mgorny@gentoo.org> metadata.xml,
+  systemd-201.ebuild, systemd-9999.ebuild:
+  Introduce USE=firmware-loader, as suggested by williamh. Check whether kernel
+  supports loading firmwares and warn properly.
+
+  17 Apr 2013; Michał Górny <mgorny@gentoo.org> systemd-201.ebuild,
+  systemd-9999.ebuild:
+  Fix duplicated --enable-polkit.
+
+  17 Apr 2013; Michał Górny <mgorny@gentoo.org> metadata.xml,
+  systemd-201.ebuild, systemd-9999.ebuild:
+  Add USE=keymap to match udev ebuild.
+
+  16 Apr 2013; Michał Górny <mgorny@gentoo.org> systemd-201.ebuild,
+  systemd-9999.ebuild:
+  Put polkit under a USE flag since people may want to disable the whole policy
+  magic.
+
+  16 Apr 2013; Michał Górny <mgorny@gentoo.org> systemd-201.ebuild,
+  systemd-9999.ebuild:
+  Perform kernel checks in pkg_pretend() to warn the user early. Use MERGE_TYPE
+  as an efficient replacement for pkg_preinst() implications.
+
+  16 Apr 2013; Michał Górny <mgorny@gentoo.org> systemd-201.ebuild,
+  systemd-9999.ebuild:
+  Re-enable IMA, my mistake.
+
+  15 Apr 2013; Michał Górny <mgorny@gentoo.org> systemd-201.ebuild:
+  Backport quota dep removal and configure cleanup from -9999. No need to
+  revbump since the changes affect build process only.
+
+  15 Apr 2013; Michał Górny <mgorny@gentoo.org> systemd-9999.ebuild:
+  Remove redundant configure args. Disable deps which are not supported in
+  Gentoo and therefore can result in automagic deps.
+
+  15 Apr 2013; Michał Górny <mgorny@gentoo.org> systemd-9999.ebuild:
+  Inline paths to quota tools and drop the dep.
+
+*systemd-201 (14 Apr 2013)
+
+  14 Apr 2013; Michał Górny <mgorny@gentoo.org> +systemd-201.ebuild,
+  -systemd-198-r5.ebuild:
+  Version bump. Mostly bugfixes and minor features in the new release.
+
+  06 Apr 2013; Mike Gilbert <floppym@gentoo.org> metadata.xml,
+  systemd-200-r1.ebuild, systemd-9999.ebuild:
+  Add openrc use flag to control dependency on sys-fs/udev-init-scripts, bug
+  464502.
+
+  05 Apr 2013; Michał Górny <mgorny@gentoo.org> systemd-200-r1.ebuild,
+  systemd-9999.ebuild:
+  Add a dependency on udev-init-scripts, to avoid breaking OpenRC installs if
+  the package got unmerged.
+
+*systemd-200-r1 (02 Apr 2013)
+
+  02 Apr 2013; Michał Górny <mgorny@gentoo.org> +systemd-200-r1.ebuild,
+  -systemd-200.ebuild, systemd-9999.ebuild:
+  Move udevadm temporarily to /bin as that is the official sys-fs/udev location
+  for longer time than I expected.
+
+  31 Mar 2013; Michał Górny <mgorny@gentoo.org> systemd-200.ebuild,
+  systemd-9999.ebuild:
+  Obtain PAM moduledir from pam.eclass.
+
+  30 Mar 2013; Mike Gilbert <floppym@gentoo.org> systemd-200.ebuild,
+  systemd-9999.ebuild:
+  Work around bug 463846 by exporting CC.
+
+  30 Mar 2013; Mike Gilbert <floppym@gentoo.org> systemd-200.ebuild,
+  systemd-9999.ebuild:
+  Copy last two changes from live ebuild.
+
+  30 Mar 2013; Mike Gilbert <floppym@gentoo.org> systemd-9999.ebuild:
+  Update hwids version per ssuominen.
+
+  30 Mar 2013; Mike Gilbert <floppym@gentoo.org> systemd-9999.ebuild:
+  Move hwids to PDEPEND. Call udevadm to update the hwdb in pkg_postinst. Copied
+  from the udev package.
+
+  29 Mar 2013; Michał Górny <mgorny@gentoo.org> -systemd-199.ebuild:
+  Drop the unnecessary mid-version.
+
+*systemd-200 (29 Mar 2013)
+
+  29 Mar 2013; Michał Górny <mgorny@gentoo.org> +systemd-200.ebuild,
+  systemd-9999.ebuild:
+  Move the #ifdefs around a bit and remove double deps from the live ebuild.
+  Bump to 200.
+
+  29 Mar 2013; Michał Górny <mgorny@gentoo.org> systemd-9999.ebuild:
+  Move udev executables to rootfs to avoid breaking the few systems which
+  install systemd but aren't prepared for it. Symlink to the new locations for
+  compat.
+
+  28 Mar 2013; Mike Gilbert <floppym@gentoo.org> +files/199-firmware.patch,
+  systemd-199.ebuild:
+  Add patch to resolve issue with firmware built-in, bug 463604.
+
+*systemd-199 (27 Mar 2013)
+
+  27 Mar 2013; Michał Górny <mgorny@gentoo.org> +systemd-199.ebuild:
+  Version bump.
+
+  26 Mar 2013; Michał Górny <mgorny@gentoo.org> systemd-9999.ebuild:
+  Move nss_myhostname back to /usr -- it seems that nss handles this well.
+
+  26 Mar 2013; Michał Górny <mgorny@gentoo.org> systemd-9999.ebuild:
+  Enable EFI support unconditionally since it does not introduce any deps.
+
+  26 Mar 2013; Michał Górny <mgorny@gentoo.org> systemd-9999.ebuild:
+  Warn users who use compatibility symlinks for init=.
+
+  26 Mar 2013; Michał Górny <mgorny@gentoo.org> systemd-9999.ebuild:
+  Depend on baselayout to handle /run. Remove old warnings.
+
+  26 Mar 2013; Michał Górny <mgorny@gentoo.org> systemd-198-r5.ebuild,
+  systemd-9999.ebuild:
+  Use get_udevdir rather than the deprecated one. Support installing static-libs
+  wrt bug #463250. Disable SysV compat wrt bug #463270.
+
+  26 Mar 2013; Michał Górny <mgorny@gentoo.org> systemd-198-r5.ebuild,
+  systemd-9999.ebuild:
+  Install udev to current udevdir to avoid breakages.
+
+*systemd-198-r5 (25 Mar 2013)
+
+  25 Mar 2013; Michał Górny <mgorny@gentoo.org> +systemd-198-r5.ebuild,
+  -systemd-198-r4.ebuild:
+  Re-introduce patches fixing bug #461210. Drop useless "README" files.
+
+  24 Mar 2013; Mike Gilbert <floppym@gentoo.org> systemd-198-r4.ebuild,
+  systemd-9999.ebuild:
+  Run the install phase with a single make job, bug 463156 by Ray Griffin.
+
+*systemd-198-r4 (24 Mar 2013)
+
+  24 Mar 2013; Mike Gilbert <floppym@gentoo.org> +systemd-198-r4.ebuild,
+  -systemd-198-r3.ebuild, systemd-9999.ebuild:
+  Fix collision with sys-apps/hwids.
+
+*systemd-198-r3 (24 Mar 2013)
+
+  24 Mar 2013; Michał Górny <mgorny@gentoo.org> +systemd-198-r3.ebuild,
+  -files/199-0001-Disable-udev-targets.patch, metadata.xml, systemd-9999.ebuild:
+  Install udev along with systemd again. Using a separate provider has proven to
+  be unmaintainable.
+
+  24 Mar 2013; Michał Górny <mgorny@gentoo.org> -systemd-198-r2.ebuild,
+  systemd-198-r1.ebuild:
+  Require working udev version. Drop the unit requiring udev which Samuli broke.
+
+*systemd-198-r2 (23 Mar 2013)
+
+  23 Mar 2013; Michał Górny <mgorny@gentoo.org> +systemd-198-r2.ebuild,
+  files/199-0001-Disable-udev-targets.patch, systemd-9999.ebuild:
+  Handle moving initrd-udevadm-cleanup.service to sys-fs/udev. Update the live
+  version patch.
+
+*systemd-198-r1 (14 Mar 2013)
+
+  14 Mar 2013; Michał Górny <mgorny@gentoo.org>
+  +files/198-0002-build-sys-break-dependency-loop-between-libsystemd-i.patch,
+  +files/198-0003-build-sys-link-libsystemd-login-also-against-libsyst.patch,
+  +systemd-198-r1.ebuild, -systemd-198.ebuild:
+  Fix underlinking of libsystemd-login, bug #461210.
+
+  10 Mar 2013; Michał Górny <mgorny@gentoo.org> systemd-198.ebuild,
+  systemd-9999.ebuild:
+  Add libgcrypt to autoreconf deps.
+
+  10 Mar 2013; Mike Gilbert <floppym@gentoo.org> systemd-198.ebuild,
+  systemd-9999.ebuild:
+  Create libdir before we move files into it, bug 460640.
+
+  10 Mar 2013; Mike Gilbert <floppym@gentoo.org> systemd-198.ebuild,
+  systemd-9999.ebuild:
+  Create systemd-journal-gateway user/group if USE=http. Bug 461044 by Michał
+  Bartoszkiewicz.
+
+  10 Mar 2013; Michał Górny <mgorny@gentoo.org> systemd-198.ebuild,
+  systemd-9999.ebuild:
+  Install zsh-completion file as _systemd, still bug #460640.
+
+  10 Mar 2013; Michał Górny <mgorny@gentoo.org> systemd-198.ebuild,
+  systemd-9999.ebuild:
+  Unconditionally add dependencies for full autoreconf, due to automake version
+  mismatch potential resulting in autoreconf.
+
+  10 Mar 2013; Michał Górny <mgorny@gentoo.org> systemd-198.ebuild,
+  systemd-9999.ebuild:
+  Add missing multilib inherit.
+
+*systemd-198 (09 Mar 2013)
+
+  09 Mar 2013; Michał Górny <mgorny@gentoo.org>
+  +files/199-0001-Disable-udev-targets.patch, +systemd-198.ebuild,
+  files/198-0001-Disable-udev-targets.patch, metadata.xml, systemd-9999.ebuild:
+  Version bump. Move nss_myhostname to rootfs and install zsh completion (both
+  bug #460640). Update the live version patch.
+
+  06 Mar 2013; Michał Górny <mgorny@gentoo.org>
+  files/198-0001-Disable-udev-targets.patch:
+  Rebase the future -198 build split patch on current git HEAD. Requested in bug
+  #460538.
+
+  24 Feb 2013; Agostino Sarubbo <ago@gentoo.org> systemd-197-r1.ebuild:
+  Add ~ppc64, wrt bug #458360
+
+  08 Feb 2013; Michał Górny <mgorny@gentoo.org>
+  +files/198-0001-Disable-udev-targets.patch, systemd-9999.ebuild:
+  Update wrt changes to udev ebuild.
+
+  21 Jan 2013; Alexandre Rostovtsev <tetromino@gentoo.org>
+  systemd-197-r1.ebuild, systemd-9999.ebuild:
+  Block nss-myhostname since it was merged into systemd-197 (bug#453026, thanks
+  to Michał Bartoszkiewicz).
+
+  21 Jan 2013; Mike Gilbert <floppym@gentoo.org> systemd-9999.ebuild:
+  Append to the DEPEND variable instead of overwriting it.
+
+  21 Jan 2013; Mike Gilbert <floppym@gentoo.org> systemd-9999.ebuild:
+  Update live ebuild with previous change.
+
+  21 Jan 2013; Mike Gilbert <floppym@gentoo.org> systemd-197-r1.ebuild:
+  udev-197-r3 is good enough as it does install sd-daemon.h.
+
+  21 Jan 2013; Michał Górny <mgorny@gentoo.org> -systemd-196.ebuild,
+  systemd-197-r1.ebuild, systemd-9999.ebuild:
+  Drop old as requested by ssuominen. Bump udev requirement to avoid bug
+  #452972.
+
+*systemd-197-r1 (21 Jan 2013)
+
+  21 Jan 2013; Mike Gilbert <floppym@gentoo.org> +systemd-197-r1.ebuild,
+  -systemd-197.ebuild, systemd-9999.ebuild:
+  Disable SysV init script compatibility. Thanks to Michał Bartoszkiewicz on bug
+  453260.
+
+  20 Jan 2013; Michał Górny <mgorny@gentoo.org> systemd-197.ebuild,
+  systemd-9999.ebuild:
+  Remove pointless README files installed in random system locations.
+
+  19 Jan 2013; Michał Górny <mgorny@gentoo.org>
+  files/197-0001-Disable-udev-targets.patch, systemd-197.ebuild,
+  systemd-9999.ebuild:
+  Fix installing udev rules for the new udev location.
+
+*systemd-197 (18 Jan 2013)
+
+  18 Jan 2013; Michał Górny <mgorny@gentoo.org> +systemd-197.ebuild,
+  files/197-0001-Disable-udev-targets.patch, systemd-9999.ebuild:
+  Commit the incomplete/broken ebuild to let people submit patches.
+
+  11 Jan 2013; Michał Górny <mgorny@gentoo.org> -systemd-195.ebuild,
+  systemd-196.ebuild, systemd-9999.ebuild:
+  Bump the sys-apps/dbus dependency, per bug #451402. Drop old.
+
+  08 Jan 2013; Michał Górny <mgorny@gentoo.org> systemd-9999.ebuild:
+  Remove unnecessary enewuser/enewgroup -- spotted by WilliamH.
+
+  08 Jan 2013; Michał Górny <mgorny@gentoo.org> systemd-9999.ebuild:
+  Update the journald catalogs when rebuilding systemd.
+
+  17 Dec 2012; Michał Górny <mgorny@gentoo.org> systemd-196.ebuild,
+  systemd-9999.ebuild:
+  Bump to EAPI=5 to make Paludis happy, bug #447524.
+
+*systemd-9999 (15 Dec 2012)
+
+  15 Dec 2012; Michał Górny <mgorny@gentoo.org>
+  +files/197-0001-Disable-udev-targets.patch, +systemd-9999.ebuild:
+  Import the live ebuild.
+
+  05 Dec 2012; Michał Górny <mgorny@gentoo.org> metadata.xml,
+  systemd-196.ebuild:
+  Make kmod optional, bug #446138.
+
+  04 Dec 2012; Michał Górny <mgorny@gentoo.org>
+  +files/196-0002-Don-t-fail-with-missing-gcrypt-macros.patch,
+  systemd-196.ebuild:
+  Do not require libgcrypt macros when gcrypt is disabled, bug #445920.
+
+*systemd-196 (02 Dec 2012)
+
+  02 Dec 2012; Michał Górny <mgorny@gentoo.org>
+  +files/196-0001-Disable-udev-targets.patch, +systemd-196.ebuild,
+  -files/0001-Disable-udev-targets-for-udev-189.patch,
+  -files/0002-journald-add-missing-includes.patch,
+  -files/0003-journal-add-HAVE_XZ-check-to-avoid-build-failure.patch,
+  -files/0004-journal-don-t-try-to-compress-without-XZ.patch,
+  -files/191-0002-journal-bring-mmap-cache-prototype-in-sync.patch,
+  -files/191-0003-log-fix-repeated-invocation-of-vsnprintf-vaprintf-in.patch,
+  -files/update-etc-systemd-symlinks.path,
+  -files/update-etc-systemd-symlinks.service,
+  -files/update-etc-systemd-symlinks.sh:
+  Version bump. Enable Python support. Drop old patches.
+
+  01 Dec 2012; Michał Górny <mgorny@gentoo.org> -systemd-189-r3.ebuild,
+  -systemd-191-r1.ebuild, -systemd-192.ebuild, -systemd-193.ebuild,
+  -systemd-194.ebuild:
+  Drop old.
+
+  27 Oct 2012; Michał Górny <mgorny@gentoo.org> systemd-195.ebuild:
+  Disable storing coredumps again, since it is insecure (bug #433457, c9).
+
+  26 Oct 2012; Michał Górny <mgorny@gentoo.org> systemd-195.ebuild:
+  Fix udev dep, once and for all.
+
+*systemd-195 (26 Oct 2012)
+
+  26 Oct 2012; Michał Górny <mgorny@gentoo.org> +systemd-195.ebuild,
+  metadata.xml:
+  Version bump. Re-enable coredumps since a tool to read them was introduced.
+  Add USE=vanilla to disable Gentoo-specific quirks as requested by Léo Gillot-
+  Lamure (via mail). Remove PAM .la file wrt bug #424900.
+
+  04 Oct 2012; Michał Górny <mgorny@gentoo.org> systemd-194.ebuild:
+  Preserve empty directories, per bug #437008.
+
+*systemd-194 (04 Oct 2012)
+
+  04 Oct 2012; Michał Górny <mgorny@gentoo.org> +systemd-194.ebuild:
+  Version bump.
+
+*systemd-193 (30 Sep 2012)
+
+  30 Sep 2012; Michał Górny <mgorny@gentoo.org> +systemd-193.ebuild,
+  metadata.xml:
+  Version bump.
+
+*systemd-192 (26 Sep 2012)
+
+  26 Sep 2012; Michał Górny <mgorny@gentoo.org> +systemd-192.ebuild:
+  Version bump.
+
+*systemd-191-r1 (26 Sep 2012)
+
+  26 Sep 2012; Michał Górny <mgorny@gentoo.org>
+  +files/191-0003-log-fix-repeated-invocation-of-vsnprintf-vaprintf-in.patch,
+  +systemd-191-r1.ebuild, -systemd-190.ebuild, -systemd-191.ebuild:
+  Fix libc segfault, bug #436196.
+
+  24 Sep 2012; Michał Górny <mgorny@gentoo.org>
+  +files/191-0001-Disable-udev-targets-for-udev-190.patch,
+  +files/191-0002-journal-bring-mmap-cache-prototype-in-sync.patch,
+  -files/0001-Disable-udev-targets-for-udev-190.patch, systemd-191.ebuild:
+  Fix journald prototype missync, bug #436098.
+
+*systemd-191 (22 Sep 2012)
+*systemd-190 (22 Sep 2012)
+
+  22 Sep 2012; Michał Górny <mgorny@gentoo.org>
+  +files/0001-Disable-udev-targets-for-udev-190.patch, +systemd-190.ebuild,
+  +systemd-191.ebuild:
+  Version bump.
+
+  21 Sep 2012; Michał Górny <mgorny@gentoo.org>
+  -files/0001-Disable-udev-targets-for-udev-188.patch,
+  -files/0001-util-never-follow-symlinks-in-rm_rf_children.patch,
+  -files/0002-journal-PAGE_SIZE-is-not-known-on-ppc-and-other-arch.patch,
+  -systemd-44-r2.ebuild:
+  Drop old.
+
+*systemd-189-r3 (17 Sep 2012)
+
+  17 Sep 2012; Michał Górny <mgorny@gentoo.org>
+  +files/0004-journal-don-t-try-to-compress-without-XZ.patch,
+  +systemd-189-r3.ebuild, -systemd-189-r2.ebuild:
+  Backport patch for journal storage without USE=lzma, wrt bug #434972.
+
+*systemd-189-r2 (08 Sep 2012)
+
+  08 Sep 2012; Michał Górny <mgorny@gentoo.org> +systemd-189-r2.ebuild,
+  -systemd-189-r1.ebuild:
+  Actually enable /var/lock and /var/run mounts. Stupid me.
+
+  07 Sep 2012; Michał Górny <mgorny@gentoo.org> systemd-189-r1.ebuild:
+  sulogin has been moved to util-linux, adjust the dep.
+
+*systemd-189-r1 (03 Sep 2012)
+
+  03 Sep 2012; Michał Górny <mgorny@gentoo.org> +files/var-lock.mount,
+  +files/var-run.mount, +systemd-189-r1.ebuild, -systemd-188-r1.ebuild,
+  -systemd-189.ebuild:
+  Fix missing /var/lock & /var/run mountpoints, bug #433607.
+
+  28 Aug 2012; Zac Medico <zmedico@gentoo.org> systemd-188-r1.ebuild,
+  systemd-189.ebuild:
+  Fix COMMON_RDEPEND typo for bug #432794.
+
+  25 Aug 2012; Michał Górny <mgorny@gentoo.org>
+  +files/0003-journal-add-HAVE_XZ-check-to-avoid-build-failure.patch,
+  systemd-189.ebuild:
+  Backport patch for USE=-lzma build failure. Bug #432700.
+
+*systemd-189 (24 Aug 2012)
+
+  24 Aug 2012; Michał Górny <mgorny@gentoo.org>
+  +files/0001-Disable-udev-targets-for-udev-189.patch,
+  +files/0002-journald-add-missing-includes.patch, +systemd-189.ebuild,
+  metadata.xml:
+  Version bump.
+
+*systemd-188-r1 (15 Aug 2012)
+
+  15 Aug 2012; Michał Górny <mgorny@gentoo.org>
+  +files/0001-Disable-udev-targets-for-udev-188.patch, +systemd-188-r1.ebuild,
+  -files/0001-Disable-udev-targets.patch, -systemd-188.ebuild:
+  Revbump and sync for udev-188. Install logind udev rules wrt bug #431152.
+
+  11 Aug 2012; Michał Górny <mgorny@gentoo.org> metadata.xml,
+  systemd-188.ebuild:
+  Remove leftover from USE=doc, and cleanup metadata.xml.
+
+  11 Aug 2012; Michał Górny <mgorny@gentoo.org>
+  files/0001-Disable-udev-targets.patch:
+  Update the udev removal patch to remove two more rule files, wrt #430872.
+
+*systemd-188 (11 Aug 2012)
+
+  11 Aug 2012; Michał Górny <mgorny@gentoo.org>
+  +files/0001-Disable-udev-targets.patch, +systemd-188.ebuild,
+  -files/0001-udev-add-lib-udev-rules.d-to-rules-directories.patch,
+  -files/40-gentoo.rules, -systemd-186.ebuild, -systemd-187.ebuild,
+  metadata.xml:
+  Version bump. Use sys-fs/udev again.
+
+  09 Aug 2012; Michał Górny <mgorny@gentoo.org> metadata.xml,
+  systemd-44-r2.ebuild:
+  Fix the dep to accept udev-187-r1, wrt bug #430470.
+
+*systemd-44-r2 (09 Aug 2012)
+
+  09 Aug 2012; Michał Górny <mgorny@gentoo.org> +systemd-44-r2.ebuild,
+  -systemd-29-r3.ebuild, -systemd-29-r6.ebuild, -systemd-39.ebuild,
+  -systemd-44-r1.ebuild:
+  Drop old, and require older udev in older systemd.
+
+*systemd-187 (06 Aug 2012)
+
+  06 Aug 2012; Michał Górny <mgorny@gentoo.org>
+  +files/0001-udev-add-lib-udev-rules.d-to-rules-directories.patch,
+  +systemd-187.ebuild:
+  Version bump. Update udev firmware search path and add /lib support patch.
+
+*systemd-186 (09 Jul 2012)
+
+  09 Jul 2012; Michał Górny <mgorny@gentoo.org> +files/40-gentoo.rules,
+  +systemd-186.ebuild, -systemd-185.ebuild:
+  Version bump. Integrate some code from the udev ebuild.
+
+  22 Jun 2012; Michał Górny <mgorny@gentoo.org> systemd-185.ebuild:
+  Disable out-of-source build wrt bug #422927.
+
+*systemd-185 (20 Jun 2012)
+
+  20 Jun 2012; Michał Górny <mgorny@gentoo.org> +systemd-185.ebuild,
+  metadata.xml:
+  Version bump. The new version comes with bundled udev and is highly
+  experimental. You need to put udev in package.provided to use it, and beware -
+  something will break, certainly.
+
+  24 May 2012; Mike Frysinger <vapier@gentoo.org> systemd-29-r3.ebuild,
+  systemd-29-r6.ebuild, systemd-39.ebuild, systemd-44-r1.ebuild:
+  Inherit user for enewuser/etc...
+
+*systemd-44-r1 (02 May 2012)
+
+  02 May 2012; Michał Górny <mgorny@gentoo.org> -systemd-44.ebuild,
+  +systemd-44-r1.ebuild:
+  systemd-analyze works only with py2.7, wrt bug #413755.
+
+  06 Apr 2012; Michał Górny <mgorny@gentoo.org> systemd-44.ebuild,
+  +files/0002-journal-PAGE_SIZE-is-not-known-on-ppc-and-other-arch.patch:
+  Add a patch for ARM and keyword wrt bug #410973.
+
+  05 Apr 2012; Michał Górny <mgorny@gentoo.org> systemd-44.ebuild:
+  Avoid installing duplicate systemadm manpage.
+
+*systemd-44 (05 Apr 2012)
+
+  05 Apr 2012; Michał Górny <mgorny@gentoo.org> -systemd-43.ebuild,
+  +systemd-44.ebuild,
+  +files/0001-util-never-follow-symlinks-in-rm_rf_children.patch:
+  Version bump wrt bug #376047.
+
+  04 Apr 2012; Michał Górny <mgorny@gentoo.org> systemd-29-r3.ebuild,
+  systemd-29-r6.ebuild, systemd-39.ebuild, systemd-43.ebuild:
+  Add doc building deps wrt bug #410615.
+
+  08 Mar 2012; Michał Górny <mgorny@gentoo.org> systemd-43.ebuild:
+  Restore UI parts in the ebuild.
+
+  05 Mar 2012; Michał Górny <mgorny@gentoo.org> -systemd-37-r1.ebuild,
+  -systemd-37-r4.ebuild, -systemd-38-r1.ebuild:
+  Due to security bug #406655, remove offending versions.
+
+*systemd-43 (23 Feb 2012)
+
+  23 Feb 2012; Michał Górny <mgorny@gentoo.org> +systemd-43.ebuild:
+  Version bump.
+
+*systemd-39 (02 Feb 2012)
+
+  02 Feb 2012; Michał Górny <mgorny@gentoo.org> +systemd-39.ebuild:
+  Version bump.
+
+*systemd-38-r1 (21 Jan 2012)
+*systemd-37-r4 (21 Jan 2012)
+*systemd-29-r6 (21 Jan 2012)
+
+  21 Jan 2012; Michał Górny <mgorny@gentoo.org> -systemd-29-r5.ebuild,
+  +systemd-29-r6.ebuild, -systemd-37-r3.ebuild, +systemd-37-r4.ebuild,
+  -systemd-38.ebuild, +systemd-38-r1.ebuild:
+  Fix installing pam_systemd.so to /lib*/security. Also, backport a few other
+  fixes.
+
+  14 Jan 2012; William Hubbs <williamh@gentoo.org> systemd-29-r3.ebuild,
+  systemd-29-r5.ebuild, systemd-37-r1.ebuild, systemd-37-r3.ebuild,
+  systemd-38.ebuild:
+  move the creation of /run to pkg_postinst (approved by mgorny)
+
+*systemd-38 (11 Jan 2012)
+
+  11 Jan 2012; Michał Górny <mgorny@gentoo.org> +systemd-38.ebuild:
+  Version bump. This is the first release including systemd-journald for
+  logging.
+
+*systemd-37-r3 (10 Jan 2012)
+*systemd-29-r5 (10 Jan 2012)
+
+  10 Jan 2012; Michał Górny <mgorny@gentoo.org> -systemd-29-r4.ebuild,
+  +systemd-29-r5.ebuild, -systemd-37-r2.ebuild, +systemd-37-r3.ebuild:
+  Add systemctl compatibility symlink.
+
+*systemd-37-r2 (06 Jan 2012)
+*systemd-29-r4 (06 Jan 2012)
+
+  06 Jan 2012; Michał Górny <mgorny@gentoo.org> systemd-29-r3.ebuild,
+  +systemd-29-r4.ebuild, systemd-37-r1.ebuild, +systemd-37-r2.ebuild,
+  +files/update-etc-systemd-symlinks.path,
+  +files/update-etc-systemd-symlinks.service,
+  +files/update-etc-systemd-symlinks.sh:
+  Migrate to /usr.
+
+*systemd-37-r1 (12 Dec 2011)
+*systemd-29-r3 (12 Dec 2011)
+
+  12 Dec 2011; Michał Górny <mgorny@gentoo.org> -systemd-29-r2.ebuild,
+  +systemd-29-r3.ebuild, -systemd-37.ebuild, +systemd-37-r1.ebuild,
+  +files/gentoo-run.conf:
+  Create /run/lock as enforced by new OpenRC.
+
+  06 Nov 2011; Michał Górny <mgorny@gentoo.org> systemd-37.ebuild:
+  Re-introduce keywords to the systemd ebuild as package.mask entry was
+  introduced.
+
+*systemd-37 (16 Oct 2011)
+
+  16 Oct 2011; Michał Górny <mgorny@gentoo.org> -systemd-36.ebuild,
+  +systemd-37.ebuild:
+  Version bump.
+
+*systemd-36 (25 Sep 2011)
+
+  25 Sep 2011; Michał Górny <mgorny@gentoo.org> -systemd-32.ebuild,
+  -systemd-35.ebuild, +systemd-36.ebuild:
+  Version bump. Still masked due to udev dep.
+
+*systemd-35 (05 Sep 2011)
+
+  05 Sep 2011; Michał Górny <mgorny@gentoo.org> +systemd-35.ebuild:
+  Version bump. Still masked due to udev not bumped.
+
+*systemd-29-r2 (15 Aug 2011)
+
+  15 Aug 2011; Michał Górny <mgorny@gentoo.org> -systemd-29-r1.ebuild,
+  +systemd-29-r2.ebuild:
+  Backport a few ebuild changes to -29: delay kernel checks and make them
+  non-obligatory, report optional deps, bump vala slot.
+
+*systemd-32 (09 Aug 2011)
+
+  09 Aug 2011; Michał Górny <mgorny@gentoo.org> +systemd-32.ebuild:
+  Version bump. Committing unkeyworded as udev is delaying bump, bug #375263.
+
+  24 Jun 2011; Michał Górny <mgorny@gentoo.org> systemd-29-r1.ebuild:
+  Add systemd inherit to silence the new portage QA warning.
+
+*systemd-29-r1 (24 Jun 2011)
+
+  24 Jun 2011; Michał Górny <mgorny@gentoo.org> -systemd-28.ebuild,
+  -systemd-29.ebuild, +systemd-29-r1.ebuild:
+  Use bash-completion eclass to install bash completion file correctly.
+  Temp-install docs to ${D}/tmp as well.
+
+*systemd-29 (17 Jun 2011)
+
+  17 Jun 2011; Michał Górny <mgorny@gentoo.org> +systemd-29.ebuild:
+  Version bump.
+
+  15 Jun 2011; Michał Górny <mgorny@gentoo.org> systemd-28.ebuild,
+  metadata.xml:
+  Support plymouth as requested by Christoph Brill.
+
+  10 Jun 2011; Michał Górny <mgorny@gentoo.org> metadata.xml:
+  Switch the maintainer to systemd@g.o alias.
+
+  08 Jun 2011; Michał Górny <mgorny@gentoo.org> systemd-28.ebuild:
+  Fix DESCRIPTION. Rely on dbus-1.4.10 to set up /etc/machine-id for us. Add a
+  warning about downsides of having /etc/mtab symlinked, reformat messages.
+
+  07 Jun 2011; Michał Górny <mgorny@gentoo.org> systemd-28.ebuild,
+  metadata.xml:
+  Support libcryptsetup, misc fixes.
+
+  06 Jun 2011; Robert Piasek <dagger@gentoo.org> metadata.xml:
+  Add dagger to metadata as maintainer
+
+*systemd-28 (06 Jun 2011)
+
+  06 Jun 2011; Michał Górny <mgorny@gentoo.org> +systemd-28.ebuild,
+  +metadata.xml:
+  Introduce sys-apps/systemd wrt bug #318365. The ebuild is currently
+  hard-masked for testing.

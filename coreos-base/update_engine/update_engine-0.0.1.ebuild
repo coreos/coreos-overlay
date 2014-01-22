@@ -90,7 +90,7 @@ src_install() {
 	insinto /usr/share/dbus-1/services
 	doins org.chromium.UpdateEngine.service
 
-	insinto /etc/dbus-1/system.d
+	insinto /usr/share/dbus-1/system.d
 	doins UpdateEngine.conf
 
 	insinto /lib/udev/rules.d

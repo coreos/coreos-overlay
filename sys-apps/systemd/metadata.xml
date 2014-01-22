@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer>
+		<email>systemd@gentoo.org</email>
+		<name>Gentoo systemd team</name>
+	</maintainer>
+	<use>
+		<!-- XXX: describe those two better -->
+		<flag name='audit'>Enable support for <pkg>sys-process/audit</pkg></flag>
+		<flag name='cryptsetup'>Use libcryptsetup</flag>
+		<flag name='firmware-loader'>Enable user-space firmware loader (for kernels prior to 3.8)</flag>
+		<flag name='gcrypt'>Enable sealing of journal files using gcrypt</flag>
+		<flag name="gudev">enable libudev gobject interface</flag>
+		<flag name='http'>Enable embedded HTTP server in journald</flag>
+		<flag name="keymap">Map custom hardware's multimedia keys</flag>
+		<flag name='kmod'>Enable kernel module loading via <pkg>sys-apps/kmod</pkg></flag>
+		<flag name='openrc'>Depend on <pkg>sys-fs/udev-init-scripts</pkg></flag>
+		<flag name='qrcode'>Enable qrcode output support in journal</flag>
+		<flag name='vanilla'>Disable Gentoo-specific behavior and compatibility quirks</flag>
+	</use>
+</pkgmetadata>
