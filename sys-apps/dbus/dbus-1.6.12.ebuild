@@ -56,6 +56,7 @@ pkg_setup() {
 
 src_prepare() {
 	epatch "${FILESDIR}"/${PN}-1.5.12-selinux-when-dropping-capabilities-only-include-AUDI.patch
+	epatch "${FILESDIR}"/${PN}-1.6.x-add-explicit-etc-path.patch
 
 	# Tests were restricted because of this
 	sed -i \
