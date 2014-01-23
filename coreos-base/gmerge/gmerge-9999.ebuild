@@ -23,16 +23,8 @@ RDEPEND="app-shells/bash
 	sys-apps/portage"
 DEPEND="${RDEPEND}"
 
-CHROMEOS_PROFILE="/usr/local/portage/coreos/profiles/coreos/targets/generic"
-
 src_install() {
 	# Install tools from platform/dev into /usr/local/bin
 	into /usr
 	dobin gmerge stateful_update crdev
-
-	# Setup package.provided so that gmerge will know what packages to ignore.
-	# - $CHROMEOS_PROFILE/package.provided contains packages that we don't
-	#   want to install to the device.
-	insinto /etc/make.profile/package.provided
-	newins "${CHROMEOS_PROFILE}"/package.provided coreos
 }
