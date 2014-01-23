@@ -157,6 +157,8 @@ src_install() {
 
 	# needs to exist for dbus sessions to launch
 	keepdir /usr/share/dbus-1/services
+	keepdir /etc/dbus-1/session.d
+	keepdir /etc/dbus-1/system.d
 	# machine-id symlink from pkg_postinst()
 	keepdir /var/lib/dbus
 
