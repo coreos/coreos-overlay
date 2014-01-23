@@ -125,6 +125,7 @@ src_install() {
 		# Insert a mini vimrc to avoid driving everyone insane
 		insinto /usr/share/vim
 		doins "${FILESDIR}"/vimrc
+		dosym ../../usr/share/vim/vimrc /etc/vim/vimrc
 	fi
 
 	# Add a sudo file for the core use
