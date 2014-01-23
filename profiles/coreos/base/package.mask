@@ -11,3 +11,6 @@
 # chromeos build system for now
 >=sys-boot/syslinux-3.90
 >=net-misc/tlsdate-0.0.6
+
+# Stick with python 2 for now
+>=dev-lang/python-3
