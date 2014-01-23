@@ -106,6 +106,7 @@ RDEPEND="${RDEPEND}
 	coreos-base/update_engine
 	coreos-base/coreos-installer
 	coreos-base/coreos-init
+	coreos-base/coretest
 	net-misc/dhcpcd
 	net-firewall/iptables
 	net-misc/rsync
