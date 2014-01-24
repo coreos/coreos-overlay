@@ -3,11 +3,11 @@
 #
 
 EAPI=4
-CROS_WORKON_COMMIT="v0.0.1"
+CROS_WORKON_COMMIT="000fa3a301fdfd04b3fe34e3a761285e5f7d12dd"
 CROS_WORKON_PROJECT="coreos/coretest"
 CROS_WORKON_LOCALNAME="coretest"
 CROS_WORKON_REPO="git://github.com"
-inherit cros-workon systemd
+inherit cros-workon
 
 DESCRIPTION="Sanity tests for CoreOS"
 HOMEPAGE="https://github.com/coreos/coretest"
@@ -26,6 +26,4 @@ src_compile() {
 
 src_install() {
 	dobin "${S}/${PN}"
-
-	systemd_dounit "${S}/misc/coretest.service"
 }
