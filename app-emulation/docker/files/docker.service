@@ -7,7 +7,7 @@ After=network.target
 ExecStartPre=/bin/mount --make-rprivate /
 # Run docker but don't have docker automatically restart
 # containers. This is a job for systemd and unit files.
-ExecStart=/usr/bin/docker -d -r=false
+ExecStart=/usr/bin/docker -d -r=false -H fd://
 
 [Install]
 WantedBy=multi-user.target
