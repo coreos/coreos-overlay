@@ -3,9 +3,16 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="4"
-EGIT_REPO_URI="https://github.com/coreos/init"
 CROS_WORKON_PROJECT="coreos/init"
 CROS_WORKON_LOCALNAME="init"
+CROS_WORKON_REPO="git://github.com"
+
+if [[ "${PV}" == 9999 ]]; then
+	KEYWORDS="~amd64 ~arm ~x86"
+else
+	CROS_WORKON_COMMIT="8130badcdf5e8961c056ac8610df2a9c7ef40b07"
+	KEYWORDS="amd64 arm x86"
+fi
 
 inherit cros-workon systemd
 
@@ -15,12 +22,12 @@ SRC_URI=""
 
 LICENSE="BSD"
 SLOT="0"
-KEYWORDS="~amd64 ~arm ~x86"
 IUSE="test symlink-usr"
 
 # Daemons we enable here must installed during build/install in addition to
 # during runtime so the systemd unit enable step works.
 DEPEND="
+	app-emulation/docker
 	net-misc/dhcpcd
 	net-misc/openssh
 	!<dev-db/etcd-0.0.1-r6
@@ -53,5 +60,5 @@ src_install() {
 	systemd_enable_service default.target sshd-keygen.service
 	systemd_enable_service default.target sshd.socket
 	systemd_enable_service default.target ssh-key-proc-cmdline.service
-	systemd_enable_service default.target docker.service
+	systemd_enable_service sockets.target docker.socket
 }
