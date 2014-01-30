@@ -1,1 +1,1 @@
-coreos-init-0.0.1.ebuild
+coreos-init-9999.ebuild
