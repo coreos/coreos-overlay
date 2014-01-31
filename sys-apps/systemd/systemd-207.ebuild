@@ -242,6 +242,11 @@ multilib_src_install() {
 
 		emake "${mymakeopts[@]}"
 	fi
+
+	rmdir ${D}/etc/binfmt.d
+	rmdir ${D}/etc/sysctl.d
+	rmdir ${D}/etc/tmpfiles.d
+	rmdir ${D}/etc/modules-load.d
 }
 
 multilib_src_install_all() {
