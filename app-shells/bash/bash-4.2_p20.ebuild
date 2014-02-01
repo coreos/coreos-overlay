@@ -134,9 +134,9 @@ src_compile() {
 src_install() {
 	emake install DESTDIR="${D}" || die
 
-	dodir /usr/bin
+	dodir /bin
 	mv "${D}"/usr/bin/bash "${D}"/bin/ || die
-	dosym bash /usr/bin/rbash
+	dosym bash /bin/rbash
 
 	insinto /usr/share/bash/defaults/
 	doins "${FILESDIR}"/{bashrc,bash_logout}
