@@ -73,7 +73,6 @@ RDEPEND="${RDEPEND}
 	sys-process/procps
 	sys-process/psmisc
 	sys-process/time
-	virtual/perf
 	virtual/python-argparse
 	coreos-base/coreos-experimental
 	"
