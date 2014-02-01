@@ -134,15 +134,17 @@ src_compile() {
 src_install() {
 	emake install DESTDIR="${D}" || die
 
-	dodir /bin
-	mv "${D}"/usr/bin/bash "${D}"/bin/ || die
-	dosym bash /bin/rbash
+	dodir /usr/bin
+	dosym bash /usr/bin/rbash
 
-	insinto /etc/bash
+	insinto /usr/share/bash/defaults/
 	doins "${FILESDIR}"/{bashrc,bash_logout}
-	insinto /etc/skel
+	dosym /usr/share/bash/defaults/bash_logout /etc/bash/bash_logout
+	dosym /usr/share/bash/defaults/bashrc /etc/bash/bashrc
+	insinto /usr/share/bash/skel
 	for f in bash{_logout,_profile,rc} ; do
 		newins "${FILESDIR}"/dot-${f} .${f}
+		dosym /usr/share/bash/skel/.${f} /etc/skel/.${f}
 	done
 
 	sed -i -e "s:#${USERLAND}#@::" "${D}"/etc/skel/.bashrc "${D}"/etc/bash/bashrc
