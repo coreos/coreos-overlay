@@ -135,6 +135,7 @@ src_install() {
 	emake install DESTDIR="${D}" || die
 
 	dodir /usr/bin
+	mv "${D}"/usr/bin/bash "${D}"/bin/ || die
 	dosym bash /usr/bin/rbash
 
 	insinto /usr/share/bash/defaults/
