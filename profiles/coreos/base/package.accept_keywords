@@ -65,7 +65,7 @@
 =app-portage/gentoolkit-0.3.0.8
 
 # Docker is masked upstream but we need it
-=app-emulation/docker-0.7* ~amd64
+=app-emulation/docker-0.8* ~amd64
 =sys-fs/aufs-util-3* ~amd64
 =sys-fs/aufs-headers-3* ~amd64
 =dev-util/boost-build-1.52.0-r1 ~amd64
