@@ -2,8 +2,8 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=4
-CROS_WORKON_PROJECT="coreos/coreinit"
-CROS_WORKON_LOCALNAME="coreinit"
+CROS_WORKON_PROJECT="coreos/fleet"
+CROS_WORKON_LOCALNAME="fleet"
 CROS_WORKON_REPO="git://github.com"
 
 if [[ "${PV}" == 9999 ]]; then
@@ -15,8 +15,8 @@ fi
 
 inherit cros-workon systemd
 
-DESCRIPTION="coreinit"
-HOMEPAGE="https://github.com/coreos/coreinit"
+DESCRIPTION="fleet"
+HOMEPAGE="https://github.com/coreos/fleet"
 SRC_URI=""
 
 LICENSE="Apache-2.0"
@@ -30,8 +30,8 @@ src_compile() {
 }
 
 src_install() {
-	dobin ${S}/bin/coreinit
-	dobin ${S}/bin/corectl
+	dobin ${S}/bin/fleet
+	dobin ${S}/bin/fleetctl
 
 	systemd_dounit "${FILESDIR}"/${PN}.service
 	systemd_enable_service multi-user.target ${PN}.service
