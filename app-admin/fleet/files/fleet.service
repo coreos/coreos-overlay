@@ -1,8 +1,8 @@
 [Unit]
-Description=coreinit
+Description=fleet
 
 [Service]
-ExecStart=/usr/bin/coreinit
+ExecStart=/usr/bin/fleet
 
 [Install]
 WantedBy=multi-user.target

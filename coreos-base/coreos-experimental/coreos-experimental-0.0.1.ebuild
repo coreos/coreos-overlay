@@ -14,5 +14,5 @@ IUSE=""
 
 DEPEND=""
 RDEPEND="
-	app-admin/coreinit
+	app-admin/fleet
 "
