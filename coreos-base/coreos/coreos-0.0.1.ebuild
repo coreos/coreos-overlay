@@ -107,6 +107,8 @@ RDEPEND="${RDEPEND}
 	coreos-base/coreos-installer
 	coreos-base/coreos-init
 	coreos-base/coretest
+	net-analyzer/netcat
+	net-misc/socat
 	net-misc/dhcpcd
 	net-firewall/iptables
 	net-misc/rsync
