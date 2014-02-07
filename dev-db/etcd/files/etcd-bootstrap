@@ -10,6 +10,8 @@ ARGS="-f -data-dir $STATE -bind-addr 0.0.0.0"
 if [ "${VIRT}" != "ec2" ]; then
 	echo "Detected environment \"${VIRT}\", just starting solo master..."
 	exec /usr/bin/etcd ${ARGS} -n ${HOSTNAME}
+else
+	ARGS="${ARGS} -peer-election-timeout 1200"
 fi
 
 BOOTSTRAP_PEERS="/var/run/etcd/bootstrap.config"
