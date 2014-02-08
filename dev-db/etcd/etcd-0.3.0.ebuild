@@ -21,7 +21,7 @@ SLOT="0"
 KEYWORDS="amd64 x86"
 IUSE=""
 
-DEPEND=">=dev-lang/go-1.1"
+DEPEND=">=dev-lang/go-1.2"
 
 src_compile() {
 	./build
