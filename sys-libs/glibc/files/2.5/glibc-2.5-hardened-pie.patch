@@ -1,0 +1,39 @@
+Change link commands for glibc executables to build PIEs
+
+Patch by Kevin F. Quinn <kevquinn@gentoo.org>
+
+--- Makeconfig
++++ Makeconfig
+@@ -415,10 +415,10 @@
+ 
+ # Command for linking programs with the C library.
+ ifndef +link
+-+link = $(CC) -nostdlib -nostartfiles -o $@ \
+++link = $(CC) -nostdlib -nostartfiles -fPIE -pie -o $@ \
+ 	      $(sysdep-LDFLAGS) $(config-LDFLAGS) $(LDFLAGS) $(LDFLAGS-$(@F)) \
+ 	      $(combreloc-LDFLAGS) $(relro-LDFLAGS) $(hashstyle-LDFLAGS) \
+-	      $(addprefix $(csu-objpfx),$(start-installed-name)) \
++	      $(addprefix $(csu-objpfx),S$(start-installed-name)) \
+ 	      $(+preinit) $(+prector) \
+ 	      $(filter-out $(addprefix $(csu-objpfx),start.o \
+ 						     $(start-installed-name))\
+@@ -429,7 +429,7 @@
+ ifndef +link-static
+ +link-static = $(CC) -nostdlib -nostartfiles -static -o $@ \
+ 	      $(sysdep-LDFLAGS) $(LDFLAGS) $(LDFLAGS-$(@F))  \
+-	      $(addprefix $(csu-objpfx),$(static-start-installed-name)) \
++	      $(addprefix $(csu-objpfx),S$(static-start-installed-name)) \
+ 	      $(+preinit) $(+prector) \
+ 	      $(filter-out $(addprefix $(csu-objpfx),start.o \
+ 						     $(start-installed-name))\
+@@ -528,8 +528,8 @@
+ ifeq ($(elf),yes)
+ +preinit = $(addprefix $(csu-objpfx),crti.o)
+ +postinit = $(addprefix $(csu-objpfx),crtn.o)
+-+prector = `$(CC) --print-file-name=crtbegin.o`
+-+postctor = `$(CC) --print-file-name=crtend.o`
+++prector = `$(CC) --print-file-name=crtbeginS.o`
+++postctor = `$(CC) --print-file-name=crtendS.o`
+ +interp = $(addprefix $(elf-objpfx),interp.os)
+ endif
+ csu-objpfx = $(common-objpfx)csu/
