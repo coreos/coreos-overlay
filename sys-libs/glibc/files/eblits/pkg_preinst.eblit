@@ -1,0 +1,60 @@
+# Copyright 1999-2013 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header: /var/cvsroot/gentoo-x86/sys-libs/glibc/files/eblits/pkg_preinst.eblit,v 1.11 2013/06/29 03:22:32 heroxbd Exp $
+
+# Simple test to make sure our new glibc isnt completely broken.
+# Make sure we don't test with statically built binaries since
+# they will fail.  Also, skip if this glibc is a cross compiler.
+glibc_sanity_check() {
+	cd / #228809
+
+	# We enter ${D} so to avoid trouble if the path contains
+	# special characters; for instance if the path contains the
+	# colon character (:), then the linker will try to split it
+	# and look for the libraries in an unexpected place. This can
+	# lead to unsafe code execution if the generated prefix is
+	# within a world-writable directory.
+	# (e.g. /var/tmp/portage:${HOSTNAME})
+	pushd "${ED}"/$(get_libdir) >/dev/null
+
+	local x striptest
+	for x in date env ls true uname ; do
+		x=$(type -p ${x})
+		[[ -z ${x} || ${x} != ${EPREFIX}/* ]] && continue
+		striptest=$(LC_ALL="C" file -L ${x} 2>/dev/null) || continue
+		[[ ${striptest} == *"statically linked"* ]] && continue
+		./ld-*.so --library-path . ${x} > /dev/null \
+			|| die "simple run test (${x}) failed"
+	done
+
+	popd >/dev/null
+}
+
+eblit-glibc-pkg_preinst() {
+	# nothing to do if just installing headers
+	just_headers && return
+
+	# prepare /etc/ld.so.conf.d/ for files
+	mkdir -p "${EROOT}"/etc/ld.so.conf.d
+
+	# Default /etc/hosts.conf:multi to on for systems with small dbs.
+	if [[ $(wc -l < "${EROOT}"/etc/hosts) -lt 1000 ]] ; then
+		sed -i '/^multi off/s:off:on:' "${ED}"/etc/host.conf
+		elog "Defaulting /etc/host.conf:multi to on"
+	fi
+
+	[[ ${ROOT} != "/" ]] && return 0
+	[[ -d ${D}/$(get_libdir) ]] || return 0
+	glibc_sanity_check
+
+	# Make sure devpts is mounted correctly for use w/out setuid pt_chown.
+	if in_iuse suid && ! use suid ; then
+		if awk '$3 == "devpts" && $4 ~ /[, ]gid=5[, ]/ { exit 1 }' /proc/mounts ; then
+			eerror "In order to use glibc with USE=-suid, you must make sure that"
+			eerror "you have devpts mounted at /dev/pts with the gid=5 option."
+			eerror "Openrc should do this for you, so you should check /etc/fstab"
+			eerror "and make sure you do not have any invalid settings there."
+			die "mount & fix your /dev/pts settings"
+		fi
+	fi
+}

@@ -1,0 +1,179 @@
+# Copyright 1999-2013 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header: /var/cvsroot/gentoo-x86/sys-libs/glibc/files/eblits/src_unpack.eblit,v 1.24 2013/09/28 22:07:57 vapier Exp $
+
+int_to_KV() {
+	local version=$1 major minor micro
+	major=$((version / 65536))
+	minor=$(((version % 65536) / 256))
+	micro=$((version % 256))
+	echo ${major}.${minor}.${micro}
+}
+
+eend_KV() {
+	[[ $(KV_to_int $1) -ge $(KV_to_int $2) ]]
+	eend $?
+}
+
+get_kheader_version() {
+	printf '#include <linux/version.h>\nLINUX_VERSION_CODE\n' | \
+	$(tc-getCPP ${CTARGET}) -I "${EPREFIX}/$(alt_build_headers)" - | \
+	tail -n 1
+}
+
+check_nptl_support() {
+	# don't care about the compiler here as we arent using it
+	just_headers && return
+
+	local run_kv build_kv want_kv
+	run_kv=$(int_to_KV $(get_KV))
+	build_kv=$(int_to_KV $(get_kheader_version))
+	want_kv=${NPTL_KERN_VER}
+
+	ebegin "Checking gcc for __thread support"
+	if ! eend $(want__thread ; echo $?) ; then
+		echo
+		eerror "Could not find a gcc that supports the __thread directive!"
+		eerror "Please update your binutils/gcc and try again."
+		die "No __thread support in gcc!"
+	fi
+
+	if ! is_crosscompile && ! tc-is-cross-compiler ; then
+		# Building fails on an non-supporting kernel
+		ebegin "Checking kernel version (${run_kv} >= ${want_kv})"
+		if ! eend_KV ${run_kv} ${want_kv} ; then
+			echo
+			eerror "You need a kernel of at least ${want_kv} for NPTL support!"
+			die "Kernel version too low!"
+		fi
+	fi
+
+	ebegin "Checking linux-headers version (${build_kv} >= ${want_kv})"
+	if ! eend_KV ${build_kv} ${want_kv} ; then
+		echo
+		eerror "You need linux-headers of at least ${want_kv} for NPTL support!"
+		die "linux-headers version too low!"
+	fi
+}
+
+unpack_pkg() {
+	local a=${PN}
+	[[ -n ${SNAP_VER} ]] && a="${a}-${RELEASE_VER}"
+	[[ -n $1 ]] && a="${a}-$1"
+	if [[ -n ${SNAP_VER} ]] ; then
+		a="${a}-${SNAP_VER}"
+	else
+		if [[ -n $2 ]] ; then
+			a="${a}-$2"
+		else
+			a="${a}-${RELEASE_VER}"
+		fi
+	fi
+	if has ${a}.tar.xz ${A} ; then
+		unpacker ${a}.tar.xz
+	else
+		unpack ${a}.tar.bz2
+	fi
+	[[ -n $1 ]] && { mv ${a} $1 || die ; }
+}
+
+toolchain-glibc_src_unpack() {
+	# Check NPTL support _before_ we unpack things to save some time
+	want_nptl && check_nptl_support
+
+	if [[ -n ${EGIT_REPO_URIS} ]] ; then
+		local i d
+		for ((i=0; i<${#EGIT_REPO_URIS[@]}; ++i)) ; do
+			EGIT_REPO_URI=${EGIT_REPO_URIS[$i]}
+			EGIT_SOURCEDIR=${EGIT_SOURCEDIRS[$i]}
+			git-2_src_unpack
+		done
+	else
+		unpack_pkg
+	fi
+
+	cd "${S}"
+	touch locale/C-translit.h #185476 #218003
+	[[ -n ${LT_VER}     ]] && unpack_pkg linuxthreads ${LT_VER}
+	[[ -n ${PORTS_VER}  ]] && unpack_pkg ports ${PORTS_VER}
+	[[ -n ${LIBIDN_VER} ]] && unpack_pkg libidn
+
+	if [[ -n ${PATCH_VER} ]] ; then
+		cd "${WORKDIR}"
+		unpack glibc-${RELEASE_VER}-patches-${PATCH_VER}.tar.bz2
+		# pull out all the addons
+		local d
+		for d in extra/*/configure ; do
+			d=${d%/configure}
+			[[ -d ${S}/${d} ]] && die "${d} already exists in \${S}"
+			mv "${d}" "${S}" || die "moving ${d} failed"
+		done
+	fi
+
+	# XXX: We should do the branchupdate, before extracting the manpages and
+	# infopages else it does not help much (mtimes change if there is a change
+	# to them with branchupdate)
+	if [[ -n ${BRANCH_UPDATE} ]] ; then
+		cd "${S}"
+		epatch "${DISTDIR}"/glibc-${RELEASE_VER}-branch-update-${BRANCH_UPDATE}.patch.bz2
+
+		# Snapshot date patch
+		einfo "Patching version to display snapshot date ..."
+		sed -i -e "s:\(#define RELEASE\).*:\1 \"${BRANCH_UPDATE}\":" version.h
+	fi
+
+	# tag, glibc is it
+	cd "${S}"
+	if ! version_is_at_least 2.17 ; then
+		[[ -e csu/Banner ]] && die "need new banner location"
+		glibc_banner > csu/Banner
+	fi
+	if [[ -n ${PATCH_VER} ]] && ! use vanilla ; then
+		cd "${S}"
+		EPATCH_MULTI_MSG="Applying Gentoo Glibc Patchset ${RELEASE_VER}-${PATCH_VER} ..." \
+		EPATCH_EXCLUDE=${GLIBC_PATCH_EXCLUDE} \
+		EPATCH_SUFFIX="patch" \
+		ARCH=$(tc-arch) \
+		epatch "${WORKDIR}"/patches
+	fi
+
+	if just_headers ; then
+		if [[ -e ports/sysdeps/mips/preconfigure ]] ; then
+			# mips peeps like to screw with us.  if building headers,
+			# we don't have a real compiler, so we can't let them
+			# insert -mabi on us.
+			sed -i '/CPPFLAGS=.*-mabi/s|.*|:|' ports/sysdeps/mips/preconfigure || die
+			find ports/sysdeps/mips/ -name Makefile -exec sed -i '/^CC.*-mabi=/s:-mabi=.*:-D_MIPS_SZPTR=32:' {} +
+		fi
+	fi
+
+	epatch_user
+
+	gnuconfig_update
+}
+
+eblit-glibc-src_unpack() {
+	setup_env
+
+	toolchain-glibc_src_unpack
+
+	# Glibc is stupid sometimes, and doesn't realize that with a
+	# static C-Only gcc, -lgcc_eh doesn't exist.
+	# http://sourceware.org/ml/libc-alpha/2003-09/msg00100.html
+	# http://sourceware.org/ml/libc-alpha/2005-02/msg00042.html
+	# But! Finally fixed in recent versions:
+	# http://sourceware.org/ml/libc-alpha/2012-05/msg01865.html
+	if ! version_is_at_least 2.16 ; then
+		echo 'int main(){}' > "${T}"/gcc_eh_test.c
+		if ! $(tc-getCC ${CTARGET}) "${T}"/gcc_eh_test.c -lgcc_eh 2>/dev/null ; then
+			sed -i -e 's:-lgcc_eh::' Makeconfig || die "sed gcc_eh"
+		fi
+	fi
+
+	cd "${WORKDIR}"
+	find . -type f '(' -size 0 -o -name "*.orig" ')' -exec rm -f {} \;
+	find . -name configure -exec touch {} \;
+
+	# Fix permissions on some of the scripts
+	chmod u+x "${S}"/scripts/*.sh
+}
