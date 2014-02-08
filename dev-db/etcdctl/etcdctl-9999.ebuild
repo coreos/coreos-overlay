@@ -25,5 +25,5 @@ src_compile() {
 }
 
 src_install() {
-	dobin ${S}/${PN}
+	dobin ${S}/bin/${PN}
 }

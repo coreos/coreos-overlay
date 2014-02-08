@@ -27,7 +27,7 @@ src_compile() {
 }
 
 src_install() {
-	dobin ${S}/${PN}
+	dobin ${S}/bin/${PN}
 	dobin ${FILESDIR}/etcd-bootstrap
 	dobin ${FILESDIR}/etcd-pre-exec
 

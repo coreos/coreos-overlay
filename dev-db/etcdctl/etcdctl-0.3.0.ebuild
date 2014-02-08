@@ -5,7 +5,7 @@ EAPI=5
 CROS_WORKON_PROJECT="coreos/etcdctl"
 CROS_WORKON_LOCALNAME="etcdctl"
 CROS_WORKON_REPO="git://github.com"
-CROS_WORKON_COMMIT="ee096789193311aa6ea0717c8b31f4cf8c2dfe7d" # v0.2.0 tag + version flag
+CROS_WORKON_COMMIT="54e8eaab737adcf887cf54d836cf91542f838fdc" # v0.3.0 tag
 
 inherit cros-workon
 
@@ -26,5 +26,5 @@ src_compile() {
 }
 
 src_install() {
-	dobin ${S}/${PN}
+	dobin ${S}/bin/${PN}
 }
