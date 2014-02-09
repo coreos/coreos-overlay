@@ -82,3 +82,6 @@
 
 # Hopefully includes some certs folks have been missing
 =app-misc/ca-certificates-20130906 ~amd64
+
+# Kills an annoying warning
+=app-admin/eselect-1.4
