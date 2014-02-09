@@ -20,8 +20,9 @@ DEPEND="
 	coreos-base/coreos-base
 	coreos-base/hard-host-depends
 	dev-python/setuptools
+	dev-util/boost-build
+	dev-util/checkbashisms
 	net-misc/curl
 	sys-devel/crossdev
-	dev-util/boost-build
 	"
 RDEPEND="${DEPEND}"
