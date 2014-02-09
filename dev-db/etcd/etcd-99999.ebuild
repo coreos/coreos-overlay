@@ -20,14 +20,14 @@ SLOT="0"
 KEYWORDS="~amd64"
 IUSE=""
 
-DEPEND=">=dev-lang/go-1.1"
+DEPEND=">=dev-lang/go-1.2"
 
 src_compile() {
 	./build
 }
 
 src_install() {
-	dobin ${S}/${PN}
+	dobin ${S}/bin/${PN}
 	dobin ${FILESDIR}/etcd-bootstrap
 	dobin ${FILESDIR}/etcd-pre-exec
 
