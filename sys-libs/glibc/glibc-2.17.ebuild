@@ -213,15 +213,19 @@ eblit-pkg_preinst-post() {
 #   These are moving to baselayout+usrfiles and glibc shouldn't conflict
 eblit-src_install-post() {
 	dodir /usr/share/glibc
-	mv "${D}"/etc/{nsswitch.conf,rpc} "${D}"/usr/share/glibc || die
-	rm "${D}"/etc/{gai.conf,host.conf} || die
+	local move
+	for move in nsswitch.conf rpc ; do
+		[ -f "${D}/etc/${move}" ] || continue
+		mv "${D}/etc/${move}" "${D}"/usr/share/glibc || die
+	done
+	rm -f "${D}"/etc/{gai.conf,host.conf} || die
 }
 
 eblit-pkg_postinst-post() {
 	local sym
 	for sym in nsswitch.conf rpc ; do
-		if [ ! -f "${ROOT}/etc/${sym}" ]; then
-			ln -s "../usr/share/glibc/${sym}" "${ROOT}/etc/${sym}" || die
-		fi
+		[ ! -f "${ROOT}/etc/${sym}" ] || continue
+		[ -f "${ROOT}/usr/share/glibc/${sym}" ] || continue
+		ln -sf "../usr/share/glibc/${sym}" "${ROOT}/etc/${sym}" || die
 	done
 }
