@@ -3,7 +3,7 @@
 # $Header: /var/cvsroot/gentoo-x86/sys-kernel/vanilla-sources/vanilla-sources-3.7.5.ebuild,v 1.1 2013/01/28 13:18:54 ago Exp $
 
 EAPI=5
-CROS_WORKON_COMMIT="5dc9edad60d1638c3f818dc294f844b3077f9363"
+CROS_WORKON_COMMIT="8f7338b0cf7426b5f76743e2e7aaa667b0255e21"
 CROS_WORKON_REPO="git://github.com"
 CROS_WORKON_PROJECT="coreos/linux"
 CROS_WORKON_LOCALNAME="linux"
