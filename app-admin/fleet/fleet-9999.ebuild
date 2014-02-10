@@ -23,7 +23,7 @@ LICENSE="Apache-2.0"
 SLOT="0"
 IUSE=""
 
-DEPEND=">=dev-lang/go-1.1"
+DEPEND=">=dev-lang/go-1.2"
 
 src_compile() {
 	./build || die
