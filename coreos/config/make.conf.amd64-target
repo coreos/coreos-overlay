@@ -2,22 +2,11 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-# Get the current SDK version, useful for fetching the latest packages
-source "/mnt/host/source/.repo/manifests/version.txt"
-COREOS_VERSION_STRING="${COREOS_BUILD}.${COREOS_BRANCH}.${COREOS_PATCH}"
-
 # Pull in definition of at least { ROOT, CHOST, [BOARD_OVERLAY] }
 source make.conf.board_setup
 
 # Common settings across all board targets.
 source make.conf.common
-
-PORTAGE_BINHOST="
-    http://storage.core-os.net/coreos/${BOARD_USE}/${COREOS_VERSION_STRING}/pkgs/
-    http://storage.core-os.net/coreos/${BOARD_USE}/${COREOS_VERSION_STRING}/toolchain/
-    http://storage.core-os.net/coreos/${BOARD_USE}/${COREOS_SDK_VERSION}/pkgs/
-    http://storage.core-os.net/coreos/${BOARD_USE}/${COREOS_SDK_VERSION}/toolchain/
-"
 
 # Recommended MARCH_TUNE, CFLAGS, etc.
 MARCH_TUNE=""
