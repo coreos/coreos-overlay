@@ -28,7 +28,7 @@ if [ -e $BOOTSTRAP_DISCO ]; then
 
 elif [ -e $BOOTSTRAP_PEERS ]; then
 	IPS=$(grep -v $MY_IP $BOOTSTRAP_PEERS | grep -v '^\n$' | sed 's/$/:7001/'| tr '\n' ','| sed 's/^,//' | sed 's/,$//')
-	if [ -z "$IPS" ]; then
+	if [ -n "$IPS" ]; then
 		ARGS="${ARGS} -C ${IPS}"
 	fi
 else 
