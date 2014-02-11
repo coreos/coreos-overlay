@@ -14,5 +14,4 @@ IUSE=""
 
 DEPEND=""
 RDEPEND="
-	app-admin/fleet
 "

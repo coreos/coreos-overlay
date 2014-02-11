@@ -96,6 +96,7 @@ RDEPEND="${RDEPEND}
 RDEPEND="${RDEPEND}
 	sys-apps/findutils
 	sys-apps/which
+	app-admin/fleet
 	app-admin/sudo
 	app-arch/gzip
 	app-arch/tar
