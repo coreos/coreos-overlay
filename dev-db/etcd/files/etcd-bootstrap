@@ -31,7 +31,7 @@ if [ -e $BOOTSTRAP_DISCO ]; then
 	ARGS="${ARGS} -discovery ${DISCOVERY_URL}"
 
 elif [ -e $BOOTSTRAP_PEERS ]; then
-	IPS=$(grep -v $MY_IP $BOOTSTRAP_PEERS | grep -v '^\n$' | sed 's/$/:7001/'| tr '\n' ','| sed 's/^,//' | sed 's/,$//')
+	IPS=$(grep -v $MY_IP $BOOTSTRAP_PEERS | grep -v '^$' | sed 's/$/:7001/'| tr '\n' ','| sed 's/^,//' | sed 's/,$//')
 	if [ -n "$IPS" ]; then
 		ARGS="${ARGS} -C ${IPS}"
 	fi
