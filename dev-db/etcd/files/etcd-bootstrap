@@ -18,7 +18,11 @@ BOOTSTRAP_PEERS="/var/run/etcd/bootstrap.config"
 BOOTSTRAP_DISCO="/var/run/etcd/bootstrap.disco"
 
 META_URL="http://169.254.169.254/latest"
-MY_IP=$(curl -s $META_URL/meta-data/local-ipv4)
+MY_IP=$(curl --fail -s $META_URL/meta-data/local-ipv4)
+if [ $? -ne 0 ]; then
+    echo "Request to meta-data service failed" >&2
+    exit 1
+fi
 
 ARGS="${ARGS} -name ${MY_IP} -addr ${MY_IP}:4001 -peer-addr ${MY_IP}:7001 -peer-bind-addr 0.0.0.0"
 
@@ -27,13 +31,10 @@ if [ -e $BOOTSTRAP_DISCO ]; then
 	ARGS="${ARGS} -discovery ${DISCOVERY_URL}"
 
 elif [ -e $BOOTSTRAP_PEERS ]; then
-	IPS=$(grep -v $MY_IP $BOOTSTRAP_PEERS | grep -v '^\n$' | sed 's/$/:7001/'| tr '\n' ','| sed 's/^,//' | sed 's/,$//')
+	IPS=$(grep -v $MY_IP $BOOTSTRAP_PEERS | grep -v '^$' | sed 's/$/:7001/'| tr '\n' ','| sed 's/^,//' | sed 's/,$//')
 	if [ -n "$IPS" ]; then
 		ARGS="${ARGS} -C ${IPS}"
 	fi
-else 
-	echo "Could not find any bootstrap configuration"
-	exit 1
 fi
 
 exec /usr/bin/etcd $ARGS

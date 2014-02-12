@@ -1,6 +1,6 @@
 [Unit]
 Description=etcd
-Wants=coreos-c10n.service
+Requires=coreos-c10n.service
 After=coreos-c10n.service
 
 [Service]
