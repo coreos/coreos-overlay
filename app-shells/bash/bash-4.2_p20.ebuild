@@ -138,18 +138,23 @@ src_install() {
 	mv "${D}"/usr/bin/bash "${D}"/bin/ || die
 	dosym bash /bin/rbash
 
-	insinto /usr/share/bash/defaults/
-	doins "${FILESDIR}"/{bashrc,bash_logout}
-	dosym /usr/share/bash/defaults/bash_logout /etc/bash/bash_logout
-	dosym /usr/share/bash/defaults/bashrc /etc/bash/bashrc
-	insinto /usr/share/bash/skel
+	insinto /usr/share/bash
+	for f in bash{_logout,rc} ; do
+		doins "${FILESDIR}"/${f}
+		dosym ../../usr/share/bash/${f} /etc/bash/${f}
+	done
+	insinto /usr/share/skel
 	for f in bash{_logout,_profile,rc} ; do
 		newins "${FILESDIR}"/dot-${f} .${f}
-		dosym /usr/share/bash/skel/.${f} /etc/skel/.${f}
+		dosym ../../usr/share/skel/.${f} /etc/skel/.${f}
 	done
 
-	sed -i -e "s:#${USERLAND}#@::" "${D}"/etc/skel/.bashrc "${D}"/etc/bash/bashrc
-	sed -i -e '/#@/d' "${D}"/etc/skel/.bashrc "${D}"/etc/bash/bashrc
+	sed -i -e "s:#${USERLAND}#@::" \
+		"${D}"/usr/share/skel/.bashrc \
+		"${D}"/usr/share/bash/bashrc
+	sed -i -e '/#@/d' \
+		"${D}"/usr/share/skel/.bashrc \
+		"${D}"/usr/share/bash/bashrc
 
 	if use plugins ; then
 		exeinto /usr/$(get_libdir)/bash
