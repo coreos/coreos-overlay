@@ -37,5 +37,13 @@ PROD_INSTALL_MASK="${INSTALL_MASK}
   /usr/src
 "
 
+# Exclude nmap from prod image, we just want ncat/nping in there
+# Also remove ncat's second ca-bundle.crt, just use the system's
+PROD_INSTALL_MASK="${PROD_INSTALL_MASK}
+  /usr/bin/nmap
+  /usr/share/ncat
+  /usr/share/nmap
+"
+
 # No suffix for 'generic' (use base, not base-usr)
 COREOS_DISK_LAYOUT_SUFFIX=""
