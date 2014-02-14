@@ -1,3 +1,4 @@
 -*sys-apps/busybox
 -*sys-apps/kbd
 *app-arch/lbzip2
+*sys-libs/nss-usrfiles
