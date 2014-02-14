@@ -131,6 +131,7 @@ RDEPEND="${RDEPEND}
 	sys-fs/aufs-util
 	sys-kernel/coreos-firmware
 	sys-kernel/coreos-kernel
+	sys-libs/nss-usrfiles
 	sys-libs/timezone-data
 	sys-process/lsof
 	sys-process/procps
