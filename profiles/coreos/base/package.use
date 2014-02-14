@@ -73,3 +73,5 @@ sys-libs/gdbm berkdb
 sys-libs/zlib static-libs
 
 dev-vcs/git -perl -iconv
+
+net-analyzer/nmap ncat -lua
