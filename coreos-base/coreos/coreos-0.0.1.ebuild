@@ -18,7 +18,7 @@ IUSE=""
 #
 ################################################################################
 #
-# Every chromeos dependency (along with its dependencies) is included in the
+# Every coreos dependency (along with its dependencies) is included in the
 # release image -- more packages contribute to longer build times, a larger
 # image, slower and bigger auto-updates, increased security risks, etc. Consider
 # the following before adding a new package:
@@ -120,6 +120,7 @@ RDEPEND="${RDEPEND}
 	sys-apps/grep
 	sys-apps/kexec-tools
 	sys-apps/less
+	sys-apps/mdadm
 	sys-apps/net-tools
 	sys-apps/rootdev
 	sys-apps/sed
