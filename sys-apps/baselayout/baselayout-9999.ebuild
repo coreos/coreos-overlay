@@ -9,7 +9,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~x86"
 else
-	CROS_WORKON_COMMIT="0cb1ea85886399fa3077df6866167104932aaed3"
+	CROS_WORKON_COMMIT="b357b8e3d87851ef821353624e0d872ee1f229da"
 	KEYWORDS="amd64 arm x86"
 fi
 
@@ -129,11 +129,14 @@ src_install() {
 	for libdir in $(get_all_libdirs) ; do
 		ldpaths+=":/${libdir}:/usr/${libdir}:/usr/local/${libdir}"
 	done
-	echo "LDPATH='${ldpaths#:}'" >> "${D}"/etc/env.d/00basic
+	echo "LDPATH='${ldpaths#:}'" >> "${D}"/etc/env.d/00basic || die
 
 	if ! use symlink-usr ; then
 		# modprobe uses /lib instead of /usr/lib
 		mv "${D}"/usr/lib/modprobe.d "${D}"/lib/modprobe.d || die
+
+		# move resolv.conf to a writable location
+		dosym /run/resolv.conf /etc/resolv.conf
 
 		# core is UID:GID 1000:1000 in old images
 		sed -i -e 's/^core:x:500:500:/core:x:1000:1000:/' \
@@ -141,18 +144,19 @@ src_install() {
 		sed -i -e 's/^core:x:500:/core:x:1000:/' \
 			"${D}"/usr/share/baselayout/group || die
 		# make sure the home dir ownership is correct
-		fowners -R 1000:1000 /home/core
+		fowners -R 1000:1000 /home/core || die
 	else
-		fowners -R 500:500 /home/core
+		fowners -R 500:500 /home/core || die
 	fi
 
 	if use cros_host; then
 		# Provided by vim in the SDK
-		rm -r "${D}"/etc/vim
+		rm -r "${D}"/etc/vim || die
 	else
-		# Don't install /etc/issue since it is handled by coreos-init
-		rm "${D}"/etc/issue
-		sed -i -e '%/etc/issue%d' "${D}"/usr/lib/tmpfiles.d/baselayout-etc.conf
+		# Don't install /etc/issue since it is handled by coreos-init right now
+		rm "${D}"/etc/issue || die
+		sed -i -e '/\/etc\/issue/d' \
+			"${D}"/usr/lib/tmpfiles.d/baselayout-etc.conf || die
 
 		# Set custom password for core user
 		if [[ -r "${SHARED_USER_PASSWD_FILE}" ]]; then
