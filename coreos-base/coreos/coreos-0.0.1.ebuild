@@ -120,7 +120,6 @@ RDEPEND="${RDEPEND}
 	sys-apps/grep
 	sys-apps/kexec-tools
 	sys-apps/less
-	sys-apps/mdadm
 	sys-apps/net-tools
 	sys-apps/rootdev
 	sys-apps/sed
@@ -128,8 +127,9 @@ RDEPEND="${RDEPEND}
 	sys-apps/systemd
 	sys-apps/systemd-sysv-utils
 	sys-apps/util-linux
-	sys-fs/e2fsprogs
 	sys-fs/aufs-util
+	sys-fs/e2fsprogs
+	sys-fs/mdadm
 	sys-kernel/coreos-firmware
 	sys-kernel/coreos-kernel
 	sys-libs/nss-usrfiles
