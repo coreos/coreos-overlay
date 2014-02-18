@@ -1,1 +1,0 @@
-vboot_reference-1.0.ebuild

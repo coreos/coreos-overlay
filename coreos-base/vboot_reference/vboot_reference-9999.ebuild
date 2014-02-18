@@ -6,20 +6,25 @@ CROS_WORKON_PROJECT="coreos/vboot_reference"
 CROS_WORKON_REPO="git://github.com"
 CROS_WORKON_LOCALDIR="src/platform"
 
+if [[ "${PV}" == 9999 ]]; then
+	KEYWORDS="~amd64 ~arm ~x86"
+else
+	CROS_WORKON_COMMIT="f634c54e9e2374243ecc3e93ef18925f4a439251"
+	KEYWORDS="amd64 arm x86"
+fi
+
 inherit cros-debug cros-workon cros-au
 
 DESCRIPTION="Chrome OS verified boot tools"
 
 LICENSE="BSD"
 SLOT="0"
-KEYWORDS="~amd64 ~arm ~x86"
 IUSE="cros_host"
 
 RDEPEND="dev-libs/libyaml
 	dev-libs/openssl
 	sys-apps/util-linux"
-DEPEND="app-crypt/trousers
-	${RDEPEND}"
+DEPEND="${RDEPEND}"
 
 src_compile() {
 	mkdir "${S}"/build-main
