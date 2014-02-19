@@ -17,7 +17,6 @@ DEPEND="
 	app-admin/sudo
 	app-arch/pbzip2
 	app-shells/bash-completion
-	coreos-base/coreos-base
 	coreos-base/hard-host-depends
 	dev-python/setuptools
 	dev-util/boost-build
