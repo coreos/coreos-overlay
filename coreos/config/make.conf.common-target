@@ -35,15 +35,6 @@ PORTDIR_OVERLAY="
 # of the ChromiumOS set.  You can use "--select" to override this.
 EMERGE_DEFAULT_OPTS="--oneshot"
 
-FETCHCOMMAND_GS="bash -c 'BOTO_CONFIG=/home/\${PORTAGE_USERNAME}/.boto gsutil cp \"${URI}\" \"${DISTDIR}/${FILE}\"'"
-RESUMECOMMAND_GS="bash -c 'BOTO_CONFIG=/home/\${PORTAGE_USERNAME}/.boto gsutil cp \"${URI}\" \"${DISTDIR}/${FILE}\"'"
-
-FETCHCOMMAND='curl -y 30 -f --retry 9 -L --output \${DISTDIR}/\${FILE} \${URI}'
-RESUMECOMMAND='curl -y 30 -f -C - --retry 9 -L --output \${DISTDIR}/\${FILE} \${URI}'
-
-# Print a checkpoint message every 10MB while archiving.
-PORTAGE_BINPKG_TAR_OPTS="--checkpoint=1000"
-
 # Since our portage comes from version control, we redirect distfiles.
 DISTDIR="/var/lib/portage/distfiles-target"
 
