@@ -1,0 +1,27 @@
+#!/bin/bash
+
+CERTSDIR="${1:-${ROOT}/etc/ssl/certs}"
+
+if [[ ! -w "${CERTSDIR}" ]]; then
+    echo "Error: SSL certificate directory ${CERTSDIR} isn't writable" >&2
+    exit 1
+fi
+
+set -e
+
+echo "Pruning broken links in ${CERTSDIR}"
+find -L "${CERTSDIR}" -type l -delete
+
+echo "Rehashing certificate files in ${CERTSDIR}"
+c_rehash "${CERTSDIR}"
+
+CERTBUNDLE="${CERTSDIR}/ca-certificates.crt"
+if [[ ! -e "${CERTBUNDLE}" || "${CERTSDIR}" -nt "${CERTBUNDLE}" ]]; then
+    echo "Recreating certificate bundle ${CERTBUNDLE}"
+    TEMPBUNDLE=$(mktemp "${CERTBUNDLE}.XXXXXXXXXX")
+    trap "rm -f '${CERTSDIR}/${TEMPBUNDLE}'" EXIT
+    # Use .0 instead of .pem to pull in only what c_rehash validated
+    cat "${CERTSDIR}"/*.0 > "${TEMPBUNDLE}"
+    mv -f "${TEMPBUNDLE}" "${CERTBUNDLE}"
+    trap - EXIT
+fi
