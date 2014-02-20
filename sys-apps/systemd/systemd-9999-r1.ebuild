@@ -4,13 +4,13 @@
 
 EAPI=5
 
-#if LIVE
+if [[ ${PV} == 9999 ]]; then
 AUTOTOOLS_AUTORECONF=yes
 EGIT_REPO_URI="git://anongit.freedesktop.org/${PN}/${PN}
 	http://cgit.freedesktop.org/${PN}/${PN}/"
 
 inherit git-r3
-#endif
+fi
 
 AUTOTOOLS_PRUNE_LIBTOOL_FILES=all
 PYTHON_COMPAT=( python{2_7,3_2,3_3} )
@@ -27,7 +27,7 @@ SLOT="0/1"
 KEYWORDS="~amd64 ~arm ~ppc ~ppc64 ~x86"
 IUSE="acl audit cryptsetup doc +firmware-loader gcrypt gudev http introspection
 	kdbus +kmod networkd lzma pam policykit python qrcode +seccomp selinux tcpd
-	test vanilla xattr"
+	test vanilla xattr openrc"
 
 MINKV="3.0"
 
@@ -43,9 +43,10 @@ COMMON_DEPEND=">=sys-apps/util-linux-2.20:0=
 	kmod? ( >=sys-apps/kmod-15:0= )
 	lzma? ( app-arch/xz-utils:0=[${MULTILIB_USEDEP}] )
 	pam? ( virtual/pam:= )
-	python? ( ${PYTHON_DEPS} )
+	python? ( ${PYTHON_DEPS} 
+		dev-python/lxml[${PYTHON_USEDEP}] )
 	qrcode? ( media-gfx/qrencode:0= )
-	seccomp? ( sys-libs/libseccomp:0= )
+	seccomp? ( >=sys-libs/libseccomp-2.1:0= )
 	selinux? ( sys-libs/libselinux:0= )
 	tcpd? ( sys-apps/tcp-wrappers:0= )
 	xattr? ( sys-apps/attr:0= )
@@ -66,7 +67,7 @@ RDEPEND="${COMMON_DEPEND}
 # sys-apps/daemon: the daemon only (+ build-time lib dep for tests)
 PDEPEND=">=sys-apps/dbus-1.6.8-r1:0
 	>=sys-apps/hwids-20130717-r1[udev]
-	>=sys-fs/udev-init-scripts-25
+	openrc? ( >=sys-fs/udev-init-scripts-25 )
 	policykit? ( sys-auth/polkit )
 	!vanilla? ( sys-apps/gentoo-systemd-integration )"
 
@@ -86,14 +87,14 @@ DEPEND="${COMMON_DEPEND}
 	doc? ( >=dev-util/gtk-doc-1.18 )
 	test? ( >=sys-apps/dbus-1.6.8-r1:0 )"
 
-#if LIVE
+if [[ ${PV} == 9999 ]]; then
 DEPEND="${DEPEND}
 	dev-libs/gobject-introspection
 	>=dev-libs/libgcrypt-1.4.5:0"
 
 SRC_URI=
 KEYWORDS=
-#endif
+fi
 
 src_prepare() {
 	if use doc; then
