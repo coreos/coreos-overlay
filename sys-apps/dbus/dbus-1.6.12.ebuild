@@ -20,7 +20,7 @@ RDEPEND=">=dev-libs/expat-2
 		sec-policy/selinux-dbus
 		sys-libs/libselinux
 		)
-	systemd? ( sys-apps/systemd )
+	systemd? ( sys-apps/systemd:= )
 	X? (
 		x11-libs/libX11
 		x11-libs/libXt
