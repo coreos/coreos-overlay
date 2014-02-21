@@ -1,0 +1,10 @@
+[Unit]
+Description=Create missing system files
+DefaultDependencies=no
+After=local-fs.target
+Before=sysinit.target
+ConditionPathIsReadWrite=/etc
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/coreos-tmpfiles
