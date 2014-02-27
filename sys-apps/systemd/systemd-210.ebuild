@@ -97,8 +97,6 @@ KEYWORDS=
 fi
 
 src_prepare() {
-	epatch "${FILESDIR}"/209-pkg-config-compat-libs-always.patch
-
 	if use doc; then
 		gtkdocize --docdir docs/ || die
 	else
