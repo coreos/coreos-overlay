@@ -1,0 +1,53 @@
+From a15ba88df0aeecf70eb6c1dfefe3506fda390f3c Mon Sep 17 00:00:00 2001
+From: Brandon Philips <brandon@ifup.co>
+Date: Fri, 28 Feb 2014 20:43:08 -0800
+Subject: [PATCH] fix(api): serve until the "acceptconnections" job
+
+This fixes a bug that I encountered when using socket activation with
+docker 0.8.1. When running the first `docker run` it would return:
+"create: command not found".
+
+The root cause was the socket activation code path was starting to
+listen before the "initserver" job had finished. This meant that the
+"create" handler hand't been registered yet leading to the command not
+found error.
+
+In log format it looks like this:
+
+```
+[/var/lib/docker|9d2e78e9] +job initserver()
+2014/03/01 04:05:35 Listening for HTTP on fd ()
+[/var/lib/docker|0d71c177] +job create()
+create: command not found
+[/var/lib/docker|0d71c177] -job create()
+[/var/lib/docker|0d71c177] +job acceptconnections()
+[/var/lib/docker|0d71c177] -job initserver() = OK (0)
+```
+
+To fix the issue select on the activationLock and block until the
+"acceptconnections" job has ran.
+---
+ api/api.go | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/api/api.go b/api/api.go
+index 8d9bae9..d668e5d 100644
+--- a/api/api.go
++++ b/api/api.go
+@@ -1127,6 +1127,13 @@ func ServeFd(addr string, handle http.Handler) error {
+ 
+ 	chErrors := make(chan error, len(ls))
+ 
++	// We don't want to start serving on these sockets until the
++	// "initserver" job has completed. Otherwise required handlers
++	// won't be ready.
++	select {
++	case <-activationLock:
++	}
++
+ 	// Since ListenFD will return one or more sockets we have
+ 	// to create a go func to spawn off multiple serves
+ 	for i := range ls {
+-- 
+1.8.1.4
+
