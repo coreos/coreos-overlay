@@ -97,6 +97,10 @@ pkg_setup() {
 	check_extra_config
 }
 
+src_prepare() {
+	epatch "${FILESDIR}"/fix-api-serve-until-the-acceptconnections-job.patch
+}
+
 src_compile() {
 	# if we treat them right, Docker's build scripts will set up a
 	# reasonable GOAPTH for us
