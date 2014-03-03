@@ -13,7 +13,7 @@ else
 	KEYWORDS="amd64 arm x86"
 fi
 
-inherit cros-workon cros-tmpfiles eutils multilib
+inherit cros-workon cros-tmpfiles eutils multilib systemd
 
 DESCRIPTION="Filesystem baselayout for CoreOS"
 HOMEPAGE="http://www.coreos.com/"
@@ -85,6 +85,19 @@ pkg_setup() {
 	fi
 }
 
+src_compile() {
+	default
+
+	# generate a tmpfiles.d config to cover our /usr symlinks
+	if use symlink-usr; then
+		local tmpfiles="${T}/baselayout-usr.conf"
+		echo -n > ${tmpfiles} || die
+		for sym in "${!USR_SYMS[@]}" ; do
+			echo "L	${sym}	-	-	-	-	${USR_SYMS[$sym]}" >> ${tmpfiles}
+		done
+	fi
+}
+
 src_install() {
 	# lib symlinks must be in place before make install
 	dodir "${BASE_DIRS[@]}"
@@ -100,20 +113,8 @@ src_install() {
 
 	emake DESTDIR="${D}" install
 
-	# generate a tmpfiles.d config to cover our /usr symlinks
 	if use symlink-usr; then
-		local tmpfiles=${D}/usr/lib/tmpfiles.d/baselayout-usr.conf
-		echo -n > ${tmpfiles} || die
-		for sym in "${!USR_SYMS[@]}" ; do
-			echo "L	${sym}	-	-	-	-	${USR_SYMS[$sym]}" >> ${tmpfiles}
-		done
-	fi
-
-	if ! use cros_host; then
-		# Docker parses /etc/group directly :(
-		local docker_grp=$(grep "^docker:" "${D}"/usr/share/baselayout/group)
-		echo "f	/etc/group	-	-	-	-	${docker_grp}" > \
-			"${D}"/usr/lib/tmpfiles.d/baselayout-docker.conf || die
+		systemd_dotmpfilesd "${T}/baselayout-usr.conf"
 	fi
 
 	# Fill in all other paths defined in tmpfiles configs
@@ -164,5 +165,11 @@ src_install() {
 				> "${D}"/etc/shadow || die
 			chmod 640 "${D}"/etc/shadow || die
 		fi
+
+		# Initialize /etc/passwd, group, and friends on boot.
+		bash "${FILESDIR}/coreos-tmpfiles" "${D}" || die
+		dosbin "${FILESDIR}/coreos-tmpfiles"
+		systemd_dounit "${FILESDIR}/coreos-tmpfiles.service"
+		systemd_enable_service sysinit.target coreos-tmpfiles.service
 	fi
 }

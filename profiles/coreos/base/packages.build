@@ -1,2 +1,3 @@
 app-arch/lbzip2
+sys-apps/which
 sys-libs/nss-usrfiles
