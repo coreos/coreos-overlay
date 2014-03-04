@@ -311,9 +311,6 @@ multilib_src_install() {
 
 	if multilib_is_native_abi; then
 		emake "${mymakeopts[@]}" install
-		# Even with --enable-networkd, it's not right to have this running by default
-		# when it's unconfigured.
-		rm -f "${D}"/etc/systemd/system/multi-user.target.wants/systemd-networkd.service
 	else
 		mymakeopts+=(
 			install-libLTLIBRARIES
