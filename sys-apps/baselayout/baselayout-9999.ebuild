@@ -132,12 +132,14 @@ src_install() {
 	done
 	echo "LDPATH='${ldpaths#:}'" >> "${D}"/etc/env.d/00basic || die
 
+	if ! use symlink-usr && ! use cros_host; then
+		# move resolv.conf to a writable location
+		dosym /run/resolv.conf /etc/resolv.conf
+	fi
+
 	if ! use symlink-usr ; then
 		# modprobe uses /lib instead of /usr/lib
 		mv "${D}"/usr/lib/modprobe.d "${D}"/lib/modprobe.d || die
-
-		# move resolv.conf to a writable location
-		dosym /run/resolv.conf /etc/resolv.conf
 
 		# core is UID:GID 1000:1000 in old images
 		sed -i -e 's/^core:x:500:500:/core:x:1000:1000:/' \
