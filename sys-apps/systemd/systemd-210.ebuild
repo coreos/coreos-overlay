@@ -1,6 +1,6 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-apps/systemd/systemd-9999.ebuild,v 1.86 2014/02/21 15:40:01 zx2c4 Exp $
+# $Header: /var/cvsroot/gentoo-x86/sys-apps/systemd/systemd-9999.ebuild,v 1.100 2014/03/03 22:19:31 floppym Exp $
 
 EAPI=5
 
@@ -8,6 +8,13 @@ if [[ ${PV} == 9999 ]]; then
 AUTOTOOLS_AUTORECONF=yes
 EGIT_REPO_URI="git://anongit.freedesktop.org/${PN}/${PN}
 	http://cgit.freedesktop.org/${PN}/${PN}/"
+
+inherit git-r3
+
+elif [[ ${PV} == *9999 ]]; then
+EGIT_REPO_URI="git://anongit.freedesktop.org/${PN}/${PN}-stable
+	http://cgit.freedesktop.org/${PN}/${PN}-stable/"
+EGIT_BRANCH=v${PV%%.*}-stable
 
 inherit git-r3
 fi
@@ -23,10 +30,10 @@ HOMEPAGE="http://www.freedesktop.org/wiki/Software/systemd"
 SRC_URI="http://www.freedesktop.org/software/systemd/${P}.tar.xz"
 
 LICENSE="GPL-2 LGPL-2.1 MIT public-domain"
-SLOT="0/1"
-KEYWORDS="~amd64 ~arm ~ppc ~ppc64 ~x86"
+SLOT="0/2"
+KEYWORDS="~alpha ~amd64 ~arm ~ia64 ~ppc ~ppc64 ~sparc ~x86"
 IUSE="acl audit cryptsetup doc +firmware-loader gcrypt gudev http introspection
-	kdbus +kmod networkd lzma pam policykit python qrcode +seccomp selinux tcpd
+	kdbus +kmod lzma pam policykit python qrcode +seccomp selinux tcpd
 	test vanilla xattr openrc"
 
 MINKV="3.0"
@@ -43,8 +50,7 @@ COMMON_DEPEND=">=sys-apps/util-linux-2.20:0=
 	kmod? ( >=sys-apps/kmod-15:0= )
 	lzma? ( app-arch/xz-utils:0=[${MULTILIB_USEDEP}] )
 	pam? ( virtual/pam:= )
-	python? ( ${PYTHON_DEPS} 
-		dev-python/lxml[${PYTHON_USEDEP}] )
+	python? ( ${PYTHON_DEPS} )
 	qrcode? ( media-gfx/qrencode:0= )
 	seccomp? ( >=sys-libs/libseccomp-2.1:0= )
 	selinux? ( sys-libs/libselinux:0= )
@@ -61,7 +67,7 @@ RDEPEND="${COMMON_DEPEND}
 		<sys-apps/sysvinit-2.88-r4
 	)
 	!sys-auth/nss-myhostname
-	!<sys-libs/glibc-2.10
+	!<sys-libs/glibc-2.14
 	!sys-fs/udev"
 
 # sys-apps/daemon: the daemon only (+ build-time lib dep for tests)
@@ -74,9 +80,6 @@ PDEPEND=">=sys-apps/dbus-1.6.8-r1:0
 # Newer linux-headers needed by ia64, bug #480218
 DEPEND="${COMMON_DEPEND}
 	app-arch/xz-utils:0
-	app-text/docbook-xml-dtd:4.2
-	app-text/docbook-xsl-stylesheets
-	dev-libs/libxslt:0
 	dev-util/gperf
 	>=dev-util/intltool-0.50
 	>=sys-devel/binutils-2.23.1
@@ -85,10 +88,15 @@ DEPEND="${COMMON_DEPEND}
 	ia64? ( >=sys-kernel/linux-headers-3.9 )
 	virtual/pkgconfig
 	doc? ( >=dev-util/gtk-doc-1.18 )
+	python? ( dev-python/lxml[${PYTHON_USEDEP}] )
 	test? ( >=sys-apps/dbus-1.6.8-r1:0 )"
 
-if [[ ${PV} == 9999 ]]; then
+if [[ ${PV} == *9999 ]]; then
 DEPEND="${DEPEND}
+	app-text/docbook-xml-dtd:4.2
+	app-text/docbook-xml-dtd:4.5
+	app-text/docbook-xsl-stylesheets
+	dev-libs/libxslt:0
 	dev-libs/gobject-introspection
 	>=dev-libs/libgcrypt-1.4.5:0"
 
@@ -99,11 +107,13 @@ fi
 src_prepare() {
 	epatch "${FILESDIR}"/210-0001-fix-detection-of-missing-loginuid.patch
 
+if [[ ${PV} == *9999 ]]; then
 	if use doc; then
 		gtkdocize --docdir docs/ || die
 	else
 		echo 'EXTRA_DIST =' > docs/gtk-doc.make
 	fi
+fi
 
 	# Bug 463376
 	sed -i -e 's/GROUP="dialout"/GROUP="uucp"/' rules/*.rules || die
@@ -163,6 +173,10 @@ pkg_setup() {
 
 multilib_src_configure() {
 	local myeconfargs=(
+		# disable -flto since it is an optimization flag
+		# and makes distcc less effective
+		cc_cv_CFLAGS__flto=no
+
 		--with-pamconfdir=/usr/share/pam.d
 		--with-dbuspolicydir=/usr/share/dbus-1/system.d
 		--disable-maintainer-mode
@@ -178,9 +192,6 @@ multilib_src_configure() {
 		# no deps
 		--enable-efi
 		--enable-ima
-		# disable compat libs, for compatibility we use a pkg-config patch
-		# linking breaks with binutils 2.23.x if this is enabled
-		--disable-compat-libs
 		# optional components/dependencies
 		$(use_enable acl)
 		$(use_enable audit)
@@ -193,9 +204,9 @@ multilib_src_configure() {
 		$(use_enable kdbus)
 		$(use_enable kmod)
 		$(use_enable lzma xz)
-		$(use_enable networkd)
 		$(use_enable pam)
 		$(use_enable policykit polkit)
+		$(use_with python)
 		$(use_enable python python-devel)
 		$(use_enable qrcode qrencode)
 		$(use_enable seccomp)
@@ -228,7 +239,6 @@ multilib_src_configure() {
 			DBUS_CFLAGS=' '
 			DBUS_LIBS=' '
 
-			--enable-compat-libs
 			--disable-acl
 			--disable-audit
 			--disable-gcrypt
@@ -310,6 +320,11 @@ multilib_src_install() {
 		emake "${mymakeopts[@]}"
 	fi
 
+	# install compat pkg-config files
+	local pcfiles=( src/compat-libs/libsystemd-{daemon,id128,journal,login}.pc )
+	emake "${mymakeopts[@]}" install-pkgconfiglibDATA \
+		pkgconfiglib_DATA="${pcfiles[*]}"
+
 	rmdir ${D}/etc/binfmt.d
 	rmdir ${D}/etc/sysctl.d
 	rmdir ${D}/etc/tmpfiles.d
@@ -376,6 +391,34 @@ migrate_locale() {
 	fi
 }
 
+migrate_net_name_slot() {
+	# If user has disabled 80-net-name-slot.rules using a empty file or a symlink to /dev/null,
+	# do the same for 80-net-setup-link.rules to keep the old behavior
+	local net_move=no
+	local net_name_slot_sym=no
+	local net_rules_path="${EROOT%/}"/etc/udev/rules.d
+	local net_name_slot="${net_rules_path}"/80-net-name-slot.rules
+	local net_setup_link="${net_rules_path}"/80-net-setup-link.rules
+	if [[ -e ${net_setup_link} ]]; then
+		net_move=no
+	elif [[ -f ${net_name_slot} && $(sed -e "/^#/d" -e "/^\W*$/d" ${net_name_slot} | wc -l) == 0 ]]; then
+		net_move=yes
+	elif [[ -L ${net_name_slot} && $(readlink ${net_name_slot}) == /dev/null ]]; then
+		net_move=yes
+		net_name_slot_sym=yes
+	fi
+	if [[ ${net_move} == yes ]]; then
+		ebegin "Copying ${net_name_slot} to ${net_setup_link}"
+
+		if [[ ${net_name_slot_sym} == yes ]]; then
+			ln -nfs /dev/null "${net_setup_link}"
+		else
+			cp "${net_name_slot}" "${net_setup_link}"
+		fi
+		eend $? || FAIL=1
+	fi
+}
+
 pkg_postinst() {
 	enewgroup systemd-journal
 	if use http; then
@@ -398,6 +441,9 @@ pkg_postinst() {
 	# Bug 465468, make sure locales are respect, and ensure consistency
 	# between OpenRC & systemd
 	migrate_locale
+
+	# Migrate 80-net-name-slot.rules -> 80-net-setup-link.rules
+	migrate_net_name_slot
 
 	if [[ ${FAIL} ]]; then
 		eerror "One of the postinst commands failed. Please check the postinst output"
