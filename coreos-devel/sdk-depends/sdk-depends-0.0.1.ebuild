@@ -23,5 +23,6 @@ DEPEND="
 	dev-util/checkbashisms
 	net-misc/curl
 	sys-devel/crossdev
+	sys-fs/btrfs-progs
 	"
 RDEPEND="${DEPEND}"
