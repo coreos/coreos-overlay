@@ -7,6 +7,13 @@ CROS_WORKON_LOCALNAME="bootengine"
 CROS_WORKON_OUTOFTREE_BUILD=1
 CROS_WORKON_REPO="git://github.com"
 
+if [[ "${PV}" == 9999 ]]; then
+	KEYWORDS="~amd64 ~arm ~x86"
+else
+	CROS_WORKON_COMMIT="d523f3055c6eb0a95b8074b3651d2ea23d512efc"
+	KEYWORDS="amd64 arm x86"
+fi
+
 inherit cros-workon cros-debug cros-au
 
 DESCRIPTION="CoreOS Bootengine"
