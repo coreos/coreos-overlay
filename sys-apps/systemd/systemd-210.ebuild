@@ -176,8 +176,9 @@ multilib_src_configure() {
 		# no deps
 		--enable-efi
 		--enable-ima
-		# we enable compat libs, for now. hopefully we can drop this flag later
-		--enable-compat-libs
+		# disable compat libs, for compatibility we use a pkg-config patch
+		# linking breaks with binutils 2.23.x if this is enabled
+		--disable-compat-libs
 		# optional components/dependencies
 		$(use_enable acl)
 		$(use_enable audit)
