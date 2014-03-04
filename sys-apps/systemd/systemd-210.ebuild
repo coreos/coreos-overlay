@@ -97,6 +97,8 @@ KEYWORDS=
 fi
 
 src_prepare() {
+	epatch "${FILESDIR}"/210-0001-fix-detection-of-missing-loginuid.patch
+
 	if use doc; then
 		gtkdocize --docdir docs/ || die
 	else
