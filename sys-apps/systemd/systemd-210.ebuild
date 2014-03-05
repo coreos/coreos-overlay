@@ -321,11 +321,6 @@ multilib_src_install() {
 	local pcfiles=( src/compat-libs/libsystemd-{daemon,id128,journal,login}.pc )
 	emake "${mymakeopts[@]}" install-pkgconfiglibDATA \
 		pkgconfiglib_DATA="${pcfiles[*]}"
-
-	rmdir ${D}/etc/binfmt.d
-	rmdir ${D}/etc/sysctl.d
-	rmdir ${D}/etc/tmpfiles.d
-	rmdir ${D}/etc/modules-load.d
 }
 
 multilib_src_install_all() {
@@ -342,6 +337,13 @@ multilib_src_install_all() {
 
 	# Preserve empty dir /var, bug #437008
 	keepdir /var/lib/systemd
+
+	# Keep /etc clean
+	rmdir "${D}"/etc/{binfmt,modules-load,sysctl,tmpfiles}.d || die
+
+	# Don't default to graphical.target
+	rm "${D}"/usr/lib/systemd/system/default.target || die
+	dosym multi-user.target /usr/lib/systemd/system/default.target
 }
 
 migrate_locale() {
