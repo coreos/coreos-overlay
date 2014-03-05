@@ -110,7 +110,6 @@ RDEPEND="${RDEPEND}
 	coreos-base/coretest
 	net-analyzer/nmap
 	net-firewall/iptables
-	net-misc/dhcpcd
 	net-misc/rsync
 	net-misc/tlsdate
 	net-misc/wget
