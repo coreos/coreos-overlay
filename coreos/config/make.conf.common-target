@@ -16,9 +16,6 @@ PORTAGE_TMPDIR=${ROOT}tmp/
 
 PORT_LOGDIR=${ROOT}tmp/portage/logs/
 
-# Tolerate collisions (for now), disable extra locking, ignore missing digests.
-FEATURES="-collision-protect -ebuild-locks -strict"
-
 PORTAGE_WORKDIR_MODE="0755"
 PKG_CONFIG_PATH="${ROOT}usr/lib/pkgconfig/:${ROOT}usr/share/pkgconfig/"
 
