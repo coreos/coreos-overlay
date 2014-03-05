@@ -209,23 +209,7 @@ eblit-pkg_preinst-post() {
 
 # CoreOS tweaks:
 # - drop host.conf and gai.conf
-# - move/symlink nsswitch.conf and rpc.
-#   These are moving to baselayout+usrfiles and glibc shouldn't conflict
+# - nsswitch.conf and rpc are provided by baselayout
 eblit-src_install-post() {
-	dodir /usr/share/glibc
-	local move
-	for move in nsswitch.conf rpc ; do
-		[ -f "${D}/etc/${move}" ] || continue
-		mv "${D}/etc/${move}" "${D}"/usr/share/glibc || die
-	done
-	rm -f "${D}"/etc/{gai.conf,host.conf} || die
-}
-
-eblit-pkg_postinst-post() {
-	local sym
-	for sym in nsswitch.conf rpc ; do
-		[ ! -f "${ROOT}/etc/${sym}" ] || continue
-		[ -f "${ROOT}/usr/share/glibc/${sym}" ] || continue
-		ln -sf "../usr/share/glibc/${sym}" "${ROOT}/etc/${sym}" || die
-	done
+	rm -f "${D}"/etc/{gai.conf,host.conf,nsswitch.conf,rpc} || die
 }
