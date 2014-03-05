@@ -4,9 +4,6 @@
 source "/mnt/host/source/.repo/manifests/version.txt"
 COREOS_VERSION_STRING="${COREOS_BUILD}.${COREOS_BRANCH}.${COREOS_PATCH}"
 
-# Tolerate collisions (for now), disable extra locking, ignore missing digests.
-FEATURES="-collision-protect -ebuild-locks -strict"
-
 # Since our portage comes from version control, we redirect distfiles
 DISTDIR="/var/lib/portage/distfiles"
 
