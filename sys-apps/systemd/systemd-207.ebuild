@@ -242,11 +242,6 @@ multilib_src_install() {
 
 		emake "${mymakeopts[@]}"
 	fi
-
-	rmdir ${D}/etc/binfmt.d
-	rmdir ${D}/etc/sysctl.d
-	rmdir ${D}/etc/tmpfiles.d
-	rmdir ${D}/etc/modules-load.d
 }
 
 multilib_src_install_all() {
@@ -262,6 +257,22 @@ multilib_src_install_all() {
 
 	# Preserve empty dir /var, bug #437008
 	keepdir /var/lib/systemd
+
+	# Keep /etc clean
+	rmdir "${D}"/etc/{binfmt,modules-load,sysctl,tmpfiles}.d || die
+
+	# Don't default to graphical.target
+	rm "${D}"/usr/lib/systemd/system/default.target || die
+	dosym multi-user.target /usr/lib/systemd/system/default.target
+
+	# Move a few services enabled in /etc to /usr
+	rm "${D}"/etc/systemd/system/getty.target.wants/getty@tty1.service || die
+	rmdir "${D}"/etc/systemd/system/getty.target.wants || die
+	dosym ../getty@.service /usr/lib/systemd/system/getty.target.wants/getty@tty1.service
+
+	rm "${D}"/etc/systemd/system/multi-user.target.wants/remote-fs.target || die
+	rmdir "${D}"/etc/systemd/system/multi-user.target.wants || die
+	systemd_enable_service multi-user.target remote-fs.target
 }
 
 pkg_postinst() {

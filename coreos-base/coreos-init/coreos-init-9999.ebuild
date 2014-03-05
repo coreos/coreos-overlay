@@ -37,7 +37,7 @@ DEPEND="
 RDEPEND="${DEPEND}
 	sys-block/parted
 	sys-apps/gptfdisk
-	sys-apps/systemd
+	>=sys-apps/systemd-207-r5
 	"
 
 src_install() {
@@ -47,9 +47,6 @@ src_install() {
 	else
 		emake DESTDIR="${D}" install
 	fi
-
-	# Set the default target to multi-user not graphical, this is CoreOS!
-	dosym /usr/lib/systemd/system/multi-user.target /etc/systemd/system/default.target
 
 	systemd_enable_service basic.target coreos-startup.target
 
