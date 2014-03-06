@@ -10,7 +10,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~x86"
 else
-	CROS_WORKON_COMMIT="403f5ece58e2519d98d22cb453dcf1672d8f240f"
+	CROS_WORKON_COMMIT="730d09ee93ff119f201e3b978cf28dfe1429cd55"
 	KEYWORDS="amd64 arm x86"
 fi
 
@@ -28,7 +28,6 @@ IUSE="test symlink-usr"
 # during runtime so the systemd unit enable step works.
 DEPEND="
 	app-emulation/docker
-	net-misc/dhcpcd
 	net-misc/openssh
 	!<dev-db/etcd-0.0.1-r6
 	!coreos-base/oem-service
@@ -53,7 +52,6 @@ src_install() {
 	# Services!
 	systemd_enable_service default.target coreos-c10n.service
 	systemd_enable_service default.target local-enable.service
-	systemd_enable_service default.target dhcpcd.service
 	systemd_enable_service default.target sshd-keygen.service
 	systemd_enable_service default.target sshd.socket
 	systemd_enable_service default.target ssh-key-proc-cmdline.service
