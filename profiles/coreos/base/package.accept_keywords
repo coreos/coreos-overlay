@@ -88,3 +88,5 @@ dev-util/checkbashisms
 
 # masked upstream due to lua dep, but we don't enable lua support
 =net-analyzer/nmap-6.40-r1
+
+sys-apps/systemd ~amd64
