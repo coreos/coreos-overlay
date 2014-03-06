@@ -110,6 +110,7 @@ RDEPEND="${RDEPEND}
 	coreos-base/coretest
 	net-analyzer/nmap
 	net-firewall/iptables
+	net-misc/bridge-utils
 	net-misc/rsync
 	net-misc/tlsdate
 	net-misc/wget
@@ -127,6 +128,7 @@ RDEPEND="${RDEPEND}
 	sys-apps/systemd-sysv-utils
 	sys-apps/util-linux
 	sys-fs/aufs-util
+	sys-fs/btrfs-progs
 	sys-fs/e2fsprogs
 	sys-fs/mdadm
 	sys-kernel/coreos-firmware
