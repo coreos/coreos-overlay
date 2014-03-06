@@ -127,6 +127,7 @@ RDEPEND="${RDEPEND}
 	sys-apps/systemd-sysv-utils
 	sys-apps/util-linux
 	sys-fs/aufs-util
+	sys-fs/btrfs-progs
 	sys-fs/e2fsprogs
 	sys-fs/mdadm
 	sys-kernel/coreos-firmware
