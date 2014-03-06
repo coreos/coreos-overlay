@@ -117,6 +117,11 @@ src_install() {
 		systemd_dotmpfilesd "${T}/baselayout-usr.conf"
 	fi
 
+	if use cros_host; then
+		# do not install networkd's resolv.conf symlink in SDK
+		rm "${D}"/usr/lib/tmpfiles.d/baselayout-resolv.conf || die
+	fi
+
 	# Fill in all other paths defined in tmpfiles configs
 	tmpfiles_create
 
@@ -131,11 +136,6 @@ src_install() {
 		ldpaths+=":/${libdir}:/usr/${libdir}:/usr/local/${libdir}"
 	done
 	echo "LDPATH='${ldpaths#:}'" >> "${D}"/etc/env.d/00basic || die
-
-	if ! use symlink-usr && ! use cros_host; then
-		# move resolv.conf to a writable location
-		dosym /run/resolv.conf /etc/resolv.conf
-	fi
 
 	if ! use symlink-usr ; then
 		# modprobe uses /lib instead of /usr/lib
