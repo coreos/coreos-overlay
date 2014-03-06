@@ -134,7 +134,7 @@ src_install() {
 
 	if ! use symlink-usr && ! use cros_host; then
 		# move resolv.conf to a writable location
-		dosym /run/resolv.conf /etc/resolv.conf
+		dosym /run/systemd/network/resolv.conf /etc/resolv.conf
 	fi
 
 	if ! use symlink-usr ; then
