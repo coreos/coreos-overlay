@@ -1,0 +1,39 @@
+From 50ab7a793277bd976ea68c1d74b999ce483af50b Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Thomas=20B=C3=A4chler?= <thomas@archlinux.org>
+Date: Fri, 7 Mar 2014 01:50:34 +0100
+Subject: units: Do not unescape instance name in systemd-backlight@.service
+
+The instance name is never escaped in the udev rule, but unescaped in the unit.
+This results in the following error message on Asus boards:
+
+  Failed to get backlight or LED device 'backlight:eeepc/wmi': No such file or directory
+
+(cherry picked from commit 6c49212741253dae05b89d22374186f092ef1e5a)
+---
+ units/systemd-backlight@.service.in | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/units/systemd-backlight@.service.in b/units/systemd-backlight@.service.in
+index 5caa5d531f43..e945d8733f88 100644
+--- a/units/systemd-backlight@.service.in
++++ b/units/systemd-backlight@.service.in
+@@ -6,7 +6,7 @@
+ #  (at your option) any later version.
+ 
+ [Unit]
+-Description=Load/Save Screen Backlight Brightness of %I
++Description=Load/Save Screen Backlight Brightness of %i
+ Documentation=man:systemd-backlight@.service(8)
+ DefaultDependencies=no
+ RequiresMountsFor=/var/lib/systemd/backlight
+@@ -17,5 +17,5 @@ Before=sysinit.target shutdown.target
+ [Service]
+ Type=oneshot
+ RemainAfterExit=yes
+-ExecStart=@rootlibexecdir@/systemd-backlight load %I
+-ExecStop=@rootlibexecdir@/systemd-backlight save %I
++ExecStart=@rootlibexecdir@/systemd-backlight load %i
++ExecStop=@rootlibexecdir@/systemd-backlight save %i
+-- 
+1.9.0
+

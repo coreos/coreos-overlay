@@ -1,0 +1,91 @@
+From a980c3fa6bee1b4f0185d9d317c1bbf30ce6b832 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Tue, 25 Feb 2014 20:11:04 -0500
+Subject: Replace /var/run with /run in remaining places
+
+/run was already used almost everywhere, fix the remaining places
+for consistency.
+
+(cherry picked from commit 41a55c46ab8fb4ef6727434227071321fc762cce)
+---
+ man/daemon.xml                 | 2 +-
+ man/runlevel.xml               | 2 +-
+ man/tmpfiles.d.xml             | 4 ++--
+ src/libsystemd/sd-bus/sd-bus.c | 4 ++--
+ src/systemctl/systemctl.c      | 4 ++--
+ 5 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/man/daemon.xml b/man/daemon.xml
+index 88dd082a33e3..fd29ba722d7d 100644
+--- a/man/daemon.xml
++++ b/man/daemon.xml
+@@ -149,7 +149,7 @@
+                                 write the daemon PID (as returned by
+                                 <function>getpid()</function>) to a
+                                 PID file, for example
+-                                <filename>/var/run/foobar.pid</filename>
++                                <filename>/run/foobar.pid</filename>
+                                 (for a hypothetical daemon "foobar")
+                                 to ensure that the daemon cannot be
+                                 started more than once. This must be
+diff --git a/man/runlevel.xml b/man/runlevel.xml
+index 976753a737ff..4db06dc87c9a 100644
+--- a/man/runlevel.xml
++++ b/man/runlevel.xml
+@@ -124,7 +124,7 @@
+ 
+                 <variablelist>
+                         <varlistentry>
+-                                <term><filename>/var/run/utmp</filename></term>
++                                <term><filename>/run/utmp</filename></term>
+ 
+                                 <listitem><para>The utmp database
+                                 <command>runlevel</command> reads the
+diff --git a/man/tmpfiles.d.xml b/man/tmpfiles.d.xml
+index 812129f6132e..0a006d17abcd 100644
+--- a/man/tmpfiles.d.xml
++++ b/man/tmpfiles.d.xml
+@@ -441,8 +441,8 @@ r! /tmp/.X[0-9]*-lock</programlisting>
+                         <title>/etc/tmpfiles.d/screen.conf example</title>
+                         <para><command>screen</command> needs two directories created at boot with specific modes and ownership.</para>
+ 
+-                        <programlisting>d /var/run/screens  1777 root root 10d
+-d /var/run/uscreens 0755 root root 10d12h</programlisting>
++                        <programlisting>d /run/screens  1777 root root 10d
++d /run/uscreens 0755 root root 10d12h</programlisting>
+                 </example>
+                 <example>
+                         <title>/etc/tmpfiles.d/abrt.conf example</title>
+diff --git a/src/libsystemd/sd-bus/sd-bus.c b/src/libsystemd/sd-bus/sd-bus.c
+index 20f540df5802..1318272085ac 100644
+--- a/src/libsystemd/sd-bus/sd-bus.c
++++ b/src/libsystemd/sd-bus/sd-bus.c
+@@ -794,8 +794,8 @@ static int parse_container_unix_address(sd_bus *b, const char **p, char **guid)
+         machine = NULL;
+ 
+         b->sockaddr.un.sun_family = AF_UNIX;
+-        strncpy(b->sockaddr.un.sun_path, "/var/run/dbus/system_bus_socket", sizeof(b->sockaddr.un.sun_path));
+-        b->sockaddr_size = offsetof(struct sockaddr_un, sun_path) + sizeof("/var/run/dbus/system_bus_socket") - 1;
++        strncpy(b->sockaddr.un.sun_path, "/run/dbus/system_bus_socket", sizeof(b->sockaddr.un.sun_path));
++        b->sockaddr_size = offsetof(struct sockaddr_un, sun_path) + strlen("/run/dbus/system_bus_socket");
+ 
+         return 0;
+ }
+diff --git a/src/systemctl/systemctl.c b/src/systemctl/systemctl.c
+index 34d70792990f..869271628f8a 100644
+--- a/src/systemctl/systemctl.c
++++ b/src/systemctl/systemctl.c
+@@ -3758,8 +3758,8 @@ static int show_one(
+             streq(verb, "status")) {
+                 /* According to LSB: "program not running" */
+                 /* 0: program is running or service is OK
+-                 * 1: program is dead and /var/run pid file exists
+-                 * 2: program is dead and /var/lock lock file exists
++                 * 1: program is dead and /run PID file exists
++                 * 2: program is dead and /run/lock lock file exists
+                  * 3: program is not running
+                  * 4: program or service status is unknown
+                  */
+-- 
+1.9.0
+

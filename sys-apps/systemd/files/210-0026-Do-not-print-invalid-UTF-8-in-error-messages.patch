@@ -1,0 +1,126 @@
+From 799f37dd06946958dfed2aec54788c5e81bf340a Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Tue, 4 Mar 2014 09:50:26 -0500
+Subject: Do not print invalid UTF-8 in error messages
+
+Inexplicably, 550a40ec ('core: do not print invalid utf-8 in error
+messages') only fixed two paths. Convert all of them now.
+
+(cherry picked from commit b5d742138f71e87312541a89aac5657015f50f48)
+
+Conflicts:
+	src/core/load-fragment.c
+	src/shared/conf-parser.c
+---
+ src/core/load-fragment.c | 11 +++--------
+ src/shared/conf-parser.c |  6 ++----
+ src/shared/conf-parser.h |  6 ++++++
+ src/shared/fileio.c      |  9 ++++++---
+ 4 files changed, 17 insertions(+), 15 deletions(-)
+
+diff --git a/src/core/load-fragment.c b/src/core/load-fragment.c
+index 82aed1eb92c0..027ec5faac6f 100644
+--- a/src/core/load-fragment.c
++++ b/src/core/load-fragment.c
+@@ -535,9 +535,7 @@ int config_parse_exec(const char *unit,
+                                 }
+ 
+                                 if (!utf8_is_valid(path)) {
+-                                        log_syntax(unit, LOG_ERR, filename, line, EINVAL,
+-                                                   "Path is not UTF-8 clean, ignoring assignment: %s",
+-                                                   rvalue);
++                                        log_invalid_utf8(unit, LOG_ERR, filename, line, EINVAL, rvalue);
+                                         r = 0;
+                                         goto fail;
+                                 }
+@@ -552,9 +550,7 @@ int config_parse_exec(const char *unit,
+                                 }
+ 
+                                 if (!utf8_is_valid(c)) {
+-                                        log_syntax(unit, LOG_ERR, filename, line, EINVAL,
+-                                                   "Path is not UTF-8 clean, ignoring assignment: %s",
+-                                                   rvalue);
++                                        log_invalid_utf8(unit, LOG_ERR, filename, line, EINVAL, rvalue);
+                                         r = 0;
+                                         goto fail;
+                                 }
+@@ -1959,8 +1955,7 @@ int config_parse_unit_requires_mounts_for(
+                         return log_oom();
+ 
+                 if (!utf8_is_valid(n)) {
+-                        log_syntax(unit, LOG_ERR, filename, line, EINVAL,
+-                                   "Path is not UTF-8 clean, ignoring assignment: %s", rvalue);
++                        log_invalid_utf8(unit, LOG_ERR, filename, line, EINVAL, rvalue);
+                         continue;
+                 }
+ 
+diff --git a/src/shared/conf-parser.c b/src/shared/conf-parser.c
+index cfa669b1139b..b6aa85637426 100644
+--- a/src/shared/conf-parser.c
++++ b/src/shared/conf-parser.c
+@@ -656,8 +656,7 @@ int config_parse_path(const char *unit,
+         assert(data);
+ 
+         if (!utf8_is_valid(rvalue)) {
+-                log_syntax(unit, LOG_ERR, filename, line, EINVAL,
+-                           "Path is not UTF-8 clean, ignoring assignment: %s", rvalue);
++                log_invalid_utf8(unit, LOG_ERR, filename, line, EINVAL, rvalue);
+                 return 0;
+         }
+ 
+@@ -725,8 +724,7 @@ int config_parse_strv(const char *unit,
+                         return log_oom();
+ 
+                 if (!utf8_is_valid(n)) {
+-                        log_syntax(unit, LOG_ERR, filename, line, EINVAL,
+-                                   "String is not UTF-8 clean, ignoring: %s", rvalue);
++                        log_invalid_utf8(unit, LOG_ERR, filename, line, EINVAL, rvalue);
+                         continue;
+                 }
+ 
+diff --git a/src/shared/conf-parser.h b/src/shared/conf-parser.h
+index 4ccdaddd2962..7e1c49331ac9 100644
+--- a/src/shared/conf-parser.h
++++ b/src/shared/conf-parser.h
+@@ -124,6 +124,12 @@ int log_syntax_internal(const char *unit, int level,
+                             config_file, config_line,                   \
+                             error, __VA_ARGS__)
+ 
++#define log_invalid_utf8(unit, level, config_file, config_line, error, rvalue) { \
++        _cleanup_free_ char *__p = utf8_escape_invalid(rvalue);                  \
++        log_syntax(unit, level, config_file, config_line, error,                 \
++                   "String is not UTF-8 clean, ignoring assignment: %s", __p);   \
++        }
++
+ #define DEFINE_CONFIG_PARSE_ENUM(function,name,type,msg)                \
+         int function(const char *unit,                                  \
+                      const char *filename,                              \
+diff --git a/src/shared/fileio.c b/src/shared/fileio.c
+index 0d3f2e90c75d..fcd1b8afece0 100644
+--- a/src/shared/fileio.c
++++ b/src/shared/fileio.c
+@@ -598,15 +598,18 @@ static int load_env_file_push(const char *filename, unsigned line,
+         int r;
+ 
+         if (!utf8_is_valid(key)) {
++                _cleanup_free_ char *t = utf8_escape_invalid(key);
++
+                 log_error("%s:%u: invalid UTF-8 for key '%s', ignoring.",
+-                          filename, line, key);
++                          filename, line, t);
+                 return -EINVAL;
+         }
+ 
+         if (value && !utf8_is_valid(value)) {
+-                /* FIXME: filter UTF-8 */
++                _cleanup_free_ char *t = utf8_escape_invalid(value);
++
+                 log_error("%s:%u: invalid UTF-8 value for key %s: '%s', ignoring.",
+-                          filename, line, key, value);
++                          filename, line, key, t);
+                 return -EINVAL;
+         }
+ 
+-- 
+1.9.0
+

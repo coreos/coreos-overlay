@@ -1,0 +1,66 @@
+From d5194bbb174d0b9a87e81d465644624ab455bbf6 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Tue, 25 Feb 2014 21:26:31 -0500
+Subject: Use /var/run/dbus/system_bus_socket for the D-Bus socket
+
+(cherry picked from commit 1ae383a8a3ae4824453e297352fda603d2d3fd5e)
+---
+ man/systemd-bus-proxyd@.service.xml | 2 +-
+ src/libsystemd/sd-bus/PORTING-DBUS1 | 2 +-
+ src/shared/def.h                    | 2 +-
+ units/systemd-bus-proxyd.socket     | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/man/systemd-bus-proxyd@.service.xml b/man/systemd-bus-proxyd@.service.xml
+index 75a3c8bc4f86..3a5930d574a0 100644
+--- a/man/systemd-bus-proxyd@.service.xml
++++ b/man/systemd-bus-proxyd@.service.xml
+@@ -59,7 +59,7 @@ along with systemd; If not, see <http://www.gnu.org/licenses/>.
+     <para><filename>systemd-bus-proxyd.socket</filename> will launch
+     <filename>systemd-bus-proxyd@.service</filename> for connections
+     to the classic D-Bus socket in
+-    <filename>/run/dbus/system_bus_socket</filename>.</para>
++    <filename>/var/run/dbus/system_bus_socket</filename>.</para>
+ 
+     <para><filename>systemd-bus-proxyd@.service</filename> is launched
+     for an existing D-Bus connection and will use
+diff --git a/src/libsystemd/sd-bus/PORTING-DBUS1 b/src/libsystemd/sd-bus/PORTING-DBUS1
+index 90d184b78622..0253a4213785 100644
+--- a/src/libsystemd/sd-bus/PORTING-DBUS1
++++ b/src/libsystemd/sd-bus/PORTING-DBUS1
+@@ -536,7 +536,7 @@ parameter.
+ Client libraries should use the following connection string when
+ connecting to the system bus:
+ 
+-   kernel:path=/dev/kdbus/0-system/bus;unix:path=/run/dbus/system_bus_socket
++   kernel:path=/dev/kdbus/0-system/bus;unix:path=/var/run/dbus/system_bus_socket
+ 
+ This will ensure that kdbus is preferred over the legacy AF_UNIX
+ socket, but compatibility is kept. For the user bus use:
+diff --git a/src/shared/def.h b/src/shared/def.h
+index 7777756aad45..aa489d80d081 100644
+--- a/src/shared/def.h
++++ b/src/shared/def.h
+@@ -61,7 +61,7 @@
+         "/usr/lib/kbd/keymaps/\0"
+ #endif
+ 
+-#define UNIX_SYSTEM_BUS_PATH "unix:path=/run/dbus/system_bus_socket"
++#define UNIX_SYSTEM_BUS_PATH "unix:path=/var/run/dbus/system_bus_socket"
+ #define KERNEL_SYSTEM_BUS_PATH "kernel:path=/dev/kdbus/0-system/bus"
+ 
+ #ifdef ENABLE_KDBUS
+diff --git a/units/systemd-bus-proxyd.socket b/units/systemd-bus-proxyd.socket
+index 406e15b5dd4d..6c42d388b4ed 100644
+--- a/units/systemd-bus-proxyd.socket
++++ b/units/systemd-bus-proxyd.socket
+@@ -9,5 +9,5 @@
+ Description=Legacy D-Bus Protocol Compatibility Socket
+ 
+ [Socket]
+-ListenStream=/run/dbus/system_bus_socket
++ListenStream=/var/run/dbus/system_bus_socket
+ Accept=yes
+-- 
+1.9.0
+

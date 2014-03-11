@@ -1,0 +1,62 @@
+From ab64c275efac13ed8fb255e4b2ccf1c287aa0bc6 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 26 Feb 2014 02:47:43 +0100
+Subject: Revert back to /var/run at a couple of problems
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+This partially reverts 41a55c46ab8fb4ef6727434227071321fc762cce
+
+Some specifications we want to stay compatibility actually document
+/var/run, not /run, and we should stay compatible with that. In order to
+make sure our D-Bus implementation works on any system, regardless if
+running systemd or not, we should always use /var/run which is the
+only path mandated by the D-Bus spec.
+
+Similar, glibc hardcodes the utmp location to /var/run, and this is
+exposed in _UTMP_PATH in limits.h, hence let's stay in sync with this
+public API, too.
+
+We simply do not support systems where /var/run is not a symlink → /run.
+Hence both are equivalent. Staying compatible with upstream
+specifications hence weighs more than cleaning up superficial
+appearance.
+
+(cherry picked from commit df1e02046144f41176c32ed011369fd8dba36b76)
+---
+ man/runlevel.xml               | 2 +-
+ src/libsystemd/sd-bus/sd-bus.c | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/man/runlevel.xml b/man/runlevel.xml
+index 4db06dc87c9a..976753a737ff 100644
+--- a/man/runlevel.xml
++++ b/man/runlevel.xml
+@@ -124,7 +124,7 @@
+ 
+                 <variablelist>
+                         <varlistentry>
+-                                <term><filename>/run/utmp</filename></term>
++                                <term><filename>/var/run/utmp</filename></term>
+ 
+                                 <listitem><para>The utmp database
+                                 <command>runlevel</command> reads the
+diff --git a/src/libsystemd/sd-bus/sd-bus.c b/src/libsystemd/sd-bus/sd-bus.c
+index 1318272085ac..636715f75909 100644
+--- a/src/libsystemd/sd-bus/sd-bus.c
++++ b/src/libsystemd/sd-bus/sd-bus.c
+@@ -794,8 +794,8 @@ static int parse_container_unix_address(sd_bus *b, const char **p, char **guid)
+         machine = NULL;
+ 
+         b->sockaddr.un.sun_family = AF_UNIX;
+-        strncpy(b->sockaddr.un.sun_path, "/run/dbus/system_bus_socket", sizeof(b->sockaddr.un.sun_path));
+-        b->sockaddr_size = offsetof(struct sockaddr_un, sun_path) + strlen("/run/dbus/system_bus_socket");
++        strncpy(b->sockaddr.un.sun_path, "/var/run/dbus/system_bus_socket", sizeof(b->sockaddr.un.sun_path));
++        b->sockaddr_size = offsetof(struct sockaddr_un, sun_path) + strlen("/var/run/dbus/system_bus_socket");
+ 
+         return 0;
+ }
+-- 
+1.9.0
+

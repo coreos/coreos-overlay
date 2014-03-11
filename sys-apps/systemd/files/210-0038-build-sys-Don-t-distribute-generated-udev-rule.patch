@@ -1,0 +1,41 @@
+From 66f231f4c71dfb11dc4552cb337571d3e3019c81 Mon Sep 17 00:00:00 2001
+From: Armin K <krejzi@email.com>
+Date: Tue, 4 Mar 2014 16:23:41 +0100
+Subject: build-sys: Don't distribute generated udev rule
+
+It contains hardcoded path to systemd-sysctl executable which
+is /usr/lib/systemd/systemd-sysctl on latest stable release and
+as such it will complain at runtime if rootprefix != prefix
+
+[zj: readd the file to nodist_udevrules_DATA]
+
+(cherry picked from commit e2eb18d56b14eeb405706970f0460d8539cdcf23)
+---
+ Makefile.am | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index 7187b8ddea08..8093526180ad 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -2518,7 +2518,6 @@ dist_network_DATA = \
+ 	network/80-container-host0.network
+ 
+ dist_udevrules_DATA += \
+-	rules/99-systemd.rules \
+ 	rules/42-usb-hid-pm.rules \
+ 	rules/50-udev-default.rules \
+ 	rules/60-drm.rules \
+@@ -2535,6 +2534,9 @@ dist_udevrules_DATA += \
+ 	rules/80-net-setup-link.rules \
+ 	rules/95-udev-late.rules
+ 
++nodist_udevrules_DATA += \
++	rules/99-systemd.rules
++
+ dist_udevhwdb_DATA = \
+ 	hwdb/20-pci-vendor-model.hwdb \
+ 	hwdb/20-pci-classes.hwdb \
+-- 
+1.9.0
+

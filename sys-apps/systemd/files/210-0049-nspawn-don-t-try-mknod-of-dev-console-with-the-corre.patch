@@ -1,0 +1,79 @@
+From 91dd24f207a5cb93227d4a7d364f033bfd572a31 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 10 Mar 2014 21:36:01 +0100
+Subject: nspawn: don't try mknod() of /dev/console with the correct
+ major/minor
+
+We overmount /dev/console with an external pty anyway, hence there's no
+point in using the real major/minor when we create the node to
+overmount. Instead, use the one of /dev/null now.
+
+This fixes a race against the cgroup device controller setup we are
+using. In case /dev/console was create before the cgroup policy was
+applied all was good, but if created in the opposite order the mknod()
+would fail, since creating /dev/console is not allowed by it. Creating
+/dev/null instances is however permitted, and hence use it.
+
+(cherry picked from commit eb0f0863f5af48865fb4569e2076d5f9e2313995)
+---
+ src/nspawn/nspawn.c | 25 ++++++++++---------------
+ 1 file changed, 10 insertions(+), 15 deletions(-)
+
+diff --git a/src/nspawn/nspawn.c b/src/nspawn/nspawn.c
+index 84b727646c7a..091307bc49b4 100644
+--- a/src/nspawn/nspawn.c
++++ b/src/nspawn/nspawn.c
+@@ -852,23 +852,19 @@ static int setup_ptmx(const char *dest) {
+ }
+ 
+ static int setup_dev_console(const char *dest, const char *console) {
++        _cleanup_umask_ mode_t u;
++        const char *to;
+         struct stat st;
+-        _cleanup_free_ char *to = NULL;
+         int r;
+-        _cleanup_umask_ mode_t u;
+ 
+         assert(dest);
+         assert(console);
+ 
+         u = umask(0000);
+ 
+-        if (stat(console, &st) < 0) {
+-                log_error("Failed to stat %s: %m", console);
++        if (stat("/dev/null", &st) < 0) {
++                log_error("Failed to stat /dev/null: %m");
+                 return -errno;
+-
+-        } else if (!S_ISCHR(st.st_mode)) {
+-                log_error("/dev/console is not a char device");
+-                return -EIO;
+         }
+ 
+         r = chmod_and_chown(console, 0600, 0, 0);
+@@ -877,16 +873,15 @@ static int setup_dev_console(const char *dest, const char *console) {
+                 return r;
+         }
+ 
+-        if (asprintf(&to, "%s/dev/console", dest) < 0)
+-                return log_oom();
+-
+         /* We need to bind mount the right tty to /dev/console since
+          * ptys can only exist on pts file systems. To have something
+-         * to bind mount things on we create a device node first, that
+-         * has the right major/minor (note that the major minor
+-         * doesn't actually matter here, since we mount it over
+-         * anyway). */
++         * to bind mount things on we create a device node first, and
++         * use /dev/null for that since we the cgroups device policy
++         * allows us to create that freely, while we cannot create
++         * /dev/console. (Note that the major minor doesn't actually
++         * matter here, since we mount it over anyway). */
+ 
++        to = strappenda(dest, "/dev/console");
+         if (mknod(to, (st.st_mode & ~07777) | 0600, st.st_rdev) < 0) {
+                 log_error("mknod() for /dev/console failed: %m");
+                 return -errno;
+-- 
+1.9.0
+

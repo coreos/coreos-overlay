@@ -1,0 +1,37 @@
+From d1df055e24f9daaeda39ee8a57429849c78f71d4 Mon Sep 17 00:00:00 2001
+From: Tom Gundersen <teg@jklm.no>
+Date: Sat, 8 Mar 2014 01:08:30 +0100
+Subject: networkd: link - degrade failed UP to warning
+
+Something else may still bring the link up, so don't enter failed state prematurely.
+
+(cherry picked from commit 76800848f281c3705c9364fd3e888153d94aaf34)
+---
+ src/network/networkd-link.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/src/network/networkd-link.c b/src/network/networkd-link.c
+index 1f495b38bbc5..5831d83104ce 100644
+--- a/src/network/networkd-link.c
++++ b/src/network/networkd-link.c
+@@ -790,15 +790,13 @@ static int link_up_handler(sd_rtnl *rtnl, sd_rtnl_message *m, void *userdata) {
+                 return 1;
+ 
+         r = sd_rtnl_message_get_errno(m);
+-        if (r < 0) {
+-                log_struct_link(LOG_ERR, link,
++        if (r < 0)
++                log_struct_link(LOG_WARNING, link,
+                                 "MESSAGE=%s: could not bring up interface: %s",
+                                 link->ifname, strerror(-r),
+                                 "ERRNO=%d", -r,
+                                 NULL);
+-                link_enter_failed(link);
+                 return 1;
+-        }
+ 
+         link_update_flags(link, link->flags | IFF_UP);
+ 
+-- 
+1.9.0
+

@@ -1,0 +1,58 @@
+From ff02c36bfc811fc7ecbcaebdbc3bc4bebb5f19ab Mon Sep 17 00:00:00 2001
+From: Henrik Grindal Bakken <hgb@ifi.uio.no>
+Date: Thu, 27 Feb 2014 21:19:13 +0100
+Subject: architecture: Add tilegx
+
+Add Tilera's TILE-GX processor family support.
+
+(cherry picked from commit 46eea341c36f0caf0bdd5b2274a1ef7cb4e83e97)
+---
+ src/shared/architecture.c | 3 +++
+ src/shared/architecture.h | 3 +++
+ 2 files changed, 6 insertions(+)
+
+diff --git a/src/shared/architecture.c b/src/shared/architecture.c
+index ceba492f2b44..fcdb3d54b8d0 100644
+--- a/src/shared/architecture.c
++++ b/src/shared/architecture.c
+@@ -112,6 +112,8 @@ Architecture uname_architecture(void) {
+                 { "sh",         ARCHITECTURE_SH       },
+ #elif defined(__m68k__)
+                 { "m68k",       ARCHITECTURE_M68K     },
++#elif defined(__tilegx__)
++                { "tilegx",     ARCHITECTURE_TILEGX   },
+ #else
+ #error "Please register your architecture here!"
+ #endif
+@@ -158,6 +160,7 @@ static const char *const architecture_table[_ARCHITECTURE_MAX] = {
+         [ARCHITECTURE_SH] = "sh",
+         [ARCHITECTURE_SH64] = "sh64",
+         [ARCHITECTURE_M68K] = "m68k",
++        [ARCHITECTURE_TILEGX] = "tilegx",
+ };
+ 
+ DEFINE_STRING_TABLE_LOOKUP(architecture, Architecture);
+diff --git a/src/shared/architecture.h b/src/shared/architecture.h
+index 3183645fecec..e589a91343bf 100644
+--- a/src/shared/architecture.h
++++ b/src/shared/architecture.h
+@@ -47,6 +47,7 @@ typedef enum Architecture {
+         ARCHITECTURE_SH,
+         ARCHITECTURE_SH64,
+         ARCHITECTURE_M68K,
++        ARCHITECTURE_TILEGX,
+         _ARCHITECTURE_MAX,
+         _ARCHITECTURE_INVALID = -1
+ } Architecture;
+@@ -107,6 +108,8 @@ Architecture uname_architecture(void);
+ #  define native_architecture() ARCHITECTURE_SH
+ #elif defined(__m68k__)
+ #  define native_architecture() ARCHITECTURE_M68K
++#elif defined(__tilegx__)
++#  define native_architecture() ARCHITECTURE_TILEGX
+ #else
+ #error "Please register your architecture here!"
+ #endif
+-- 
+1.9.0
+
