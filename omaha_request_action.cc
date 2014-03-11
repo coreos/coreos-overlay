@@ -192,7 +192,13 @@ string GetAppXml(const OmahaEvent* event,
     app_versions = "version=\"" + XmlEncode(params.app_version()) + "\" ";
   }
 
-  string app_channels = "track=\"" + XmlEncode(params.target_channel()) + "\" ";
+  string app_channels = "";
+  if (params.target_channel().length() > 0) {
+     app_channels += "track=\"" + XmlEncode(params.target_channel()) + "\" ";
+  } else {
+     app_channels += "track=\"" + XmlEncode(params.current_channel()) + "\" ";
+  }
+
   if (params.current_channel() != params.target_channel())
      app_channels +=
        "from_track=\"" + XmlEncode(params.current_channel()) + "\" ";
