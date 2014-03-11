@@ -118,6 +118,7 @@ RDEPEND="${RDEPEND}
 	sys-apps/dbus
 	sys-apps/gawk
 	sys-apps/grep
+	sys-apps/iproute2
 	sys-apps/kexec-tools
 	sys-apps/less
 	sys-apps/net-tools
