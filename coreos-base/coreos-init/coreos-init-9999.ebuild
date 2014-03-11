@@ -10,7 +10,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~x86"
 else
-	CROS_WORKON_COMMIT="730d09ee93ff119f201e3b978cf28dfe1429cd55"
+	CROS_WORKON_COMMIT="77d219211155cffd57c4895b36f7fcec52a5b953"
 	KEYWORDS="amd64 arm x86"
 fi
 
@@ -44,6 +44,7 @@ src_install() {
 	if use symlink-usr ; then
 		emake DESTDIR="${D}" install-usr
 		systemd_enable_service local-fs.target remount-root.service
+		systemd_enable_service default.target resize-btrfs.service
 	else
 		emake DESTDIR="${D}" install
 	fi
