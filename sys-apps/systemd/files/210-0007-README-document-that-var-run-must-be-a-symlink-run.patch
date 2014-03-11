@@ -1,0 +1,31 @@
+From 10acd244847eb8689e79efbf95475aef8818bb51 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 26 Feb 2014 02:54:37 +0100
+Subject: =?UTF-8?q?README:=20document=20that=20/var/run=20must=20be=20a=20?=
+ =?UTF-8?q?symlink=20=E2=86=92=20/run?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+(cherry picked from commit 47bc23c18cbc87471dc832534c8565625e4a9d16)
+---
+ README | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/README b/README
+index b9181324e3a6..7a227e7327f0 100644
+--- a/README
++++ b/README
+@@ -190,6 +190,9 @@ WARNINGS:
+         about this, since this kind of file system setup is not really
+         supported anymore by the basic set of Linux OS components.
+ 
++        systemd requires that the /run mount point exists. systemd also
++        requires that /var/run is a a symlink → /run.
++
+         For more information on this issue consult
+         http://freedesktop.org/wiki/Software/systemd/separate-usr-is-broken
+ 
+-- 
+1.9.0
+

@@ -1,0 +1,28 @@
+From a478182ddc3abcacd006ecef8de8829c3ec51b13 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Thu, 6 Mar 2014 23:54:13 -0500
+Subject: man: add missing comma
+
+marcosf0> missing comma in udevadm "see also" section
+
+(cherry picked from commit 7d06ef0a5cd2f0a4e021d3d12f3841cce529e0f2)
+---
+ man/udevadm.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/man/udevadm.xml b/man/udevadm.xml
+index a3f8d548df6b..21d14434a383 100644
+--- a/man/udevadm.xml
++++ b/man/udevadm.xml
+@@ -594,7 +594,7 @@
+     <title>See Also</title>
+     <para><citerefentry>
+         <refentrytitle>udev</refentrytitle><manvolnum>7</manvolnum>
+-    </citerefentry>
++    </citerefentry>,
+     <citerefentry>
+         <refentrytitle>systemd-udevd.service</refentrytitle><manvolnum>8</manvolnum>
+     </citerefentry></para>
+-- 
+1.9.0
+

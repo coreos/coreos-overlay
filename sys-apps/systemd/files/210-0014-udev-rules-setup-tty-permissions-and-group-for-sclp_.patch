@@ -1,0 +1,28 @@
+From 107e2ed29711c813a34a07e4ce626f98c3607534 Mon Sep 17 00:00:00 2001
+From: Lukas Nykryn <lnykryn@redhat.com>
+Date: Thu, 27 Feb 2014 11:19:09 +0100
+Subject: udev/rules: setup tty permissions and group for sclp_line, ttysclp
+ and 3270/tty
+
+(cherry picked from commit c594cccee264cfd98f183ae6ec289b11e70f2d6c)
+---
+ rules/50-udev-default.rules | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/rules/50-udev-default.rules b/rules/50-udev-default.rules
+index 679dfdfcf417..0bccf67b7b6b 100644
+--- a/rules/50-udev-default.rules
++++ b/rules/50-udev-default.rules
+@@ -15,6 +15,9 @@ ACTION!="add", GOTO="default_permissions_end"
+ SUBSYSTEM=="tty", KERNEL=="ptmx", GROUP="tty", MODE="0666"
+ SUBSYSTEM=="tty", KERNEL=="tty", GROUP="tty", MODE="0666"
+ SUBSYSTEM=="tty", KERNEL=="tty[0-9]*", GROUP="tty", MODE="0620"
++SUBSYSTEM=="tty", KERNEL=="sclp_line[0-9]*", GROUP="tty", MODE="0620"
++SUBSYSTEM=="tty", KERNEL=="ttysclp[0-9]*", GROUP="tty", MODE="0620"
++SUBSYSTEM=="tty", KERNEL=="3270/tty[0-9]*", GROUP="tty", MODE="0620"
+ SUBSYSTEM=="vc", KERNEL=="vcs*|vcsa*", GROUP="tty"
+ KERNEL=="tty[A-Z]*[0-9]|pppox[0-9]*|ircomm[0-9]*|noz[0-9]*|rfcomm[0-9]*", GROUP="dialout"
+ 
+-- 
+1.9.0
+

@@ -1,0 +1,73 @@
+From 6b4293393eb0a15e4f73ba9f08554178ccc4c222 Mon Sep 17 00:00:00 2001
+From: Thomas Hindoe Paaboel Andersen <phomes@gmail.com>
+Date: Sun, 2 Mar 2014 22:58:18 +0100
+Subject: add bash completion for systemd-cgtop
+
+(cherry picked from commit d9256bac4da4241cb5d97960c899390839f2c6e5)
+---
+ Makefile.am                         |  1 +
+ shell-completion/bash/systemd-cgtop | 40 +++++++++++++++++++++++++++++++++++++
+ 2 files changed, 41 insertions(+)
+ create mode 100644 shell-completion/bash/systemd-cgtop
+
+diff --git a/Makefile.am b/Makefile.am
+index 0b83823819fd..9cabd1dfc4ee 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -353,6 +353,7 @@ dist_bashcompletion_DATA = \
+ 	shell-completion/bash/systemctl \
+ 	shell-completion/bash/systemd-analyze \
+ 	shell-completion/bash/systemd-cgls \
++	shell-completion/bash/systemd-cgtop \
+ 	shell-completion/bash/systemd-delta \
+ 	shell-completion/bash/systemd-nspawn \
+ 	shell-completion/bash/systemd-run \
+diff --git a/shell-completion/bash/systemd-cgtop b/shell-completion/bash/systemd-cgtop
+new file mode 100644
+index 000000000000..d7ea42d9108a
+--- /dev/null
++++ b/shell-completion/bash/systemd-cgtop
+@@ -0,0 +1,40 @@
++# systemd-cgtop(1) completion                  -*- shell-script -*-
++#
++# This file is part of systemd.
++#
++# Copyright 2014 Thomas H.P. Andersen
++#
++# systemd is free software; you can redistribute it and/or modify it
++# under the terms of the GNU Lesser General Public License as published by
++# the Free Software Foundation; either version 2.1 of the License, or
++# (at your option) any later version.
++#
++# systemd is distributed in the hope that it will be useful, but
++# WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
++# General Public License for more details.
++#
++# You should have received a copy of the GNU Lesser General Public License
++# along with systemd; If not, see <http://www.gnu.org/licenses/>.
++
++__contains_word() {
++        local w word=$1; shift
++        for w in "$@"; do
++                [[ $w = "$word" ]] && return
++        done
++}
++
++_systemd_cgtop() {
++        local cur=${COMP_WORDS[COMP_CWORD]} prev=${COMP_WORDS[COMP_CWORD-1]}
++        local comps
++
++        local -A OPTS=(
++               [STANDALONE]='-h --help --version -p -t -c -m -i -b --batch -n --iterations -d --delay'
++        )
++
++        _init_completion || return
++
++        COMPREPLY=( $(compgen -W '${OPTS[*]}' -- "$cur") )
++}
++
++complete -F _systemd_cgtop systemd-cgtop
+-- 
+1.9.0
+

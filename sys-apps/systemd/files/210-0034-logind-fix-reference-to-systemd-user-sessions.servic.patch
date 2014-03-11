@@ -1,0 +1,26 @@
+From b7bc83734b75499d3bf9d5446adcb43818796da5 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Thu, 6 Mar 2014 04:52:31 +0100
+Subject: logind: fix reference to systemd-user-sessions.service
+
+(cherry picked from commit 646e392e10924454576f10b072f78d7676422816)
+---
+ src/login/logind-session.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/login/logind-session.c b/src/login/logind-session.c
+index 548f049202e9..3700522f9b3f 100644
+--- a/src/login/logind-session.c
++++ b/src/login/logind-session.c
+@@ -490,7 +490,7 @@ static int session_start_scope(Session *s) {
+                 if (!scope)
+                         return log_oom();
+ 
+-                r = manager_start_scope(s->manager, scope, s->leader, s->user->slice, description, "systemd-logind.service", "systemd-user-session.service", &error, &job);
++                r = manager_start_scope(s->manager, scope, s->leader, s->user->slice, description, "systemd-logind.service", "systemd-user-sessions.service", &error, &job);
+                 if (r < 0) {
+                         log_error("Failed to start session scope %s: %s %s",
+                                   scope, bus_error_message(&error, r), error.name);
+-- 
+1.9.0
+

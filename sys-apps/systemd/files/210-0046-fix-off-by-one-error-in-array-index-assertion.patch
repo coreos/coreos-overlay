@@ -1,0 +1,37 @@
+From 30711a3651f5b31cb67422bf8197e05d557dbe23 Mon Sep 17 00:00:00 2001
+From: Dave Reisner <dreisner@archlinux.org>
+Date: Sat, 8 Mar 2014 17:32:53 -0500
+Subject: fix off by one error in array index assertion
+
+Since the index is already post-incremented when the array is appended
+to, this assertion can be wrongly reached when the array is at capacity
+(with the NULL terminator). The bug is reproducible on shutdown with
+the following settings in /etc/systemd/system.conf:
+
+  LogTarget=journal-or-kmsg
+  LogColor=yes
+  LogLocation=yes
+
+Reported by Thermi on IRC.
+
+(cherry picked from commit 26abdc73a212b90f7c4b71808a1028d2e87ab09f)
+---
+ src/core/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/core/main.c b/src/core/main.c
+index 4e24f851e264..15bf684d7d5a 100644
+--- a/src/core/main.c
++++ b/src/core/main.c
+@@ -1940,7 +1940,7 @@ finish:
+                 if (log_get_show_location())
+                         command_line[pos++] = "--log-location";
+ 
+-                assert(pos + 1 < ELEMENTSOF(command_line));
++                assert(pos < ELEMENTSOF(command_line));
+ 
+                 if (arm_reboot_watchdog && arg_shutdown_watchdog > 0) {
+                         char *e;
+-- 
+1.9.0
+

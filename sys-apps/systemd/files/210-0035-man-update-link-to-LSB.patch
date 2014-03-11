@@ -1,0 +1,36 @@
+From bc447bbd474ed77da1a9cce0dcf85fb4f0e7cb35 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Thu, 6 Mar 2014 08:10:19 -0500
+Subject: man: update link to LSB
+
+https://bugzilla.redhat.com/show_bug.cgi?id=1073402
+(cherry picked from commit 27d14fb331ba8144f99f4da2d13f15cf5c8b8a9f)
+---
+ man/daemon.xml | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/man/daemon.xml b/man/daemon.xml
+index fd29ba722d7d..ab58d08a7642 100644
+--- a/man/daemon.xml
++++ b/man/daemon.xml
+@@ -252,7 +252,7 @@
+                                 detect service errors and problems. It
+                                 is recommended to follow the exit code
+                                 scheme as defined in the <ulink
+-                                url="http://refspecs.freestandards.org/LSB_3.1.1/LSB-Core-generic/LSB-Core-generic/iniscrptact.html">LSB
++                                url="http://refspecs.linuxbase.org/LSB_3.1.1/LSB-Core-generic/LSB-Core-generic/iniscrptact.html">LSB
+                                 recommendations for SysV init
+                                 scripts</ulink>.</para></listitem>
+ 
+@@ -395,7 +395,7 @@
+                         exclusively on boot (and manually by the
+                         administrator) via SysV init scripts, as
+                         detailed in the <ulink
+-                        url="http://refspecs.freestandards.org/LSB_3.1.1/LSB-Core-generic/LSB-Core-generic/iniscrptact.html">LSB
++                        url="http://refspecs.linuxbase.org/LSB_3.1.1/LSB-Core-generic/LSB-Core-generic/iniscrptact.html">LSB
+                         Linux Standard Base Core
+                         Specification</ulink>. This method of
+                         activation is supported ubiquitously on Linux
+-- 
+1.9.0
+

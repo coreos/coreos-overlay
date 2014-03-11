@@ -1,0 +1,71 @@
+From f230c64b5ad069b271f163da3142df52eab1202b Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Wed, 26 Feb 2014 04:27:50 +0100
+Subject: mount: don't send out PropertiesChanged message if actually nothing
+ got changed
+
+(cherry picked from commit ff5f34d08c191c326c41a083745522383ac86cae)
+---
+ src/core/mount.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
+
+diff --git a/src/core/mount.c b/src/core/mount.c
+index a0cea1e7d492..75b133bc66b5 100644
+--- a/src/core/mount.c
++++ b/src/core/mount.c
+@@ -1388,7 +1388,7 @@ static int mount_add_one(
+         _cleanup_free_ char *e = NULL, *w = NULL, *o = NULL, *f = NULL;
+         bool load_extras = false;
+         MountParameters *p;
+-        bool delete;
++        bool delete, changed = false;
+         Unit *u;
+         int r;
+ 
+@@ -1456,6 +1456,7 @@ static int mount_add_one(
+                 }
+ 
+                 unit_add_to_load_queue(u);
++                changed = true;
+         } else {
+                 delete = false;
+ 
+@@ -1474,6 +1475,7 @@ static int mount_add_one(
+                         /* Load in the extras later on, after we
+                          * finished initialization of the unit */
+                         load_extras = true;
++                        changed = true;
+                 }
+         }
+ 
+@@ -1485,10 +1487,16 @@ static int mount_add_one(
+         }
+ 
+         p = &MOUNT(u)->parameters_proc_self_mountinfo;
++
++        changed = changed ||
++                !streq_ptr(p->options, options) ||
++                !streq_ptr(p->what, what) ||
++                !streq_ptr(p->fstype, fstype);
++
+         if (set_flags) {
+                 MOUNT(u)->is_mounted = true;
+                 MOUNT(u)->just_mounted = !MOUNT(u)->from_proc_self_mountinfo;
+-                MOUNT(u)->just_changed = !streq_ptr(p->options, o);
++                MOUNT(u)->just_changed = changed;
+         }
+ 
+         MOUNT(u)->from_proc_self_mountinfo = true;
+@@ -1511,7 +1519,8 @@ static int mount_add_one(
+                         goto fail;
+         }
+ 
+-        unit_add_to_dbus_queue(u);
++        if (changed)
++                unit_add_to_dbus_queue(u);
+ 
+         return 0;
+ 
+-- 
+1.9.0
+

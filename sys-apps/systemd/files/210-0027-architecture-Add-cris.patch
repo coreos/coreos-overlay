@@ -1,0 +1,56 @@
+From b4fb5c323dc77954867e0d896dce03edd094617a Mon Sep 17 00:00:00 2001
+From: Umut Tezduyar Lindskog <umut.tezduyar@axis.com>
+Date: Tue, 4 Mar 2014 13:58:35 +0100
+Subject: architecture: Add cris
+
+(cherry picked from commit 86bafac9540ba9e111ccba2fdf4161fe3a67cd3b)
+---
+ src/shared/architecture.c | 3 +++
+ src/shared/architecture.h | 3 +++
+ 2 files changed, 6 insertions(+)
+
+diff --git a/src/shared/architecture.c b/src/shared/architecture.c
+index fcdb3d54b8d0..9e0c3efd1124 100644
+--- a/src/shared/architecture.c
++++ b/src/shared/architecture.c
+@@ -114,6 +114,8 @@ Architecture uname_architecture(void) {
+                 { "m68k",       ARCHITECTURE_M68K     },
+ #elif defined(__tilegx__)
+                 { "tilegx",     ARCHITECTURE_TILEGX   },
++#elif defined(__cris__)
++                { "cris",       ARCHITECTURE_CRIS     },
+ #else
+ #error "Please register your architecture here!"
+ #endif
+@@ -161,6 +163,7 @@ static const char *const architecture_table[_ARCHITECTURE_MAX] = {
+         [ARCHITECTURE_SH64] = "sh64",
+         [ARCHITECTURE_M68K] = "m68k",
+         [ARCHITECTURE_TILEGX] = "tilegx",
++        [ARCHITECTURE_CRIS] = "cris",
+ };
+ 
+ DEFINE_STRING_TABLE_LOOKUP(architecture, Architecture);
+diff --git a/src/shared/architecture.h b/src/shared/architecture.h
+index e589a91343bf..20e848bd8f62 100644
+--- a/src/shared/architecture.h
++++ b/src/shared/architecture.h
+@@ -48,6 +48,7 @@ typedef enum Architecture {
+         ARCHITECTURE_SH64,
+         ARCHITECTURE_M68K,
+         ARCHITECTURE_TILEGX,
++        ARCHITECTURE_CRIS,
+         _ARCHITECTURE_MAX,
+         _ARCHITECTURE_INVALID = -1
+ } Architecture;
+@@ -110,6 +111,8 @@ Architecture uname_architecture(void);
+ #  define native_architecture() ARCHITECTURE_M68K
+ #elif defined(__tilegx__)
+ #  define native_architecture() ARCHITECTURE_TILEGX
++#elif defined(__cris__)
++#  define native_architecture() ARCHITECTURE_CRIS
+ #else
+ #error "Please register your architecture here!"
+ #endif
+-- 
+1.9.0
+
