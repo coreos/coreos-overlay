@@ -35,7 +35,7 @@ const char* const kProductionOmahaUrl(
     "https://api.core-os.net/v1/update/");
 
 const char* const OmahaRequestParams::kUpdateChannelKey(
-    "COREOS_RELEASE_TRACK");
+    "GROUP");
 const char* const OmahaRequestParams::kIsPowerwashAllowedKey(
     "CHROMEOS_IS_POWERWASH_ALLOWED");
 
@@ -92,7 +92,7 @@ bool OmahaRequestParams::Init(const std::string& in_app_version,
   }
 
   if (in_update_url.empty())
-    update_url_ = GetLsbValue("COREOS_AUSERVER", kProductionOmahaUrl, NULL,
+    update_url_ = GetLsbValue("SERVER", kProductionOmahaUrl, NULL,
                               stateful_override);
   else
     update_url_ = in_update_url;
@@ -151,7 +151,7 @@ bool OmahaRequestParams::SetTargetChannel(const std::string& new_target_channel,
   }
 
   TEST_AND_RETURN_FALSE(IsValidChannel(new_target_channel));
-  FilePath kFile(root_ + utils::kStatefulPartition + "/etc/lsb-release");
+  FilePath kFile(root_ + utils::kStatefulPartition + "/etc/coreos/update.conf");
   string file_data;
   map<string, string> data;
   if (file_util::ReadFileToString(kFile, &file_data)) {
@@ -224,9 +224,10 @@ string OmahaRequestParams::GetLsbValue(const string& key,
                                        bool stateful_override) const {
   vector<string> files;
   if (stateful_override) {
-    files.push_back(string(utils::kStatefulPartition) + "/etc/lsb-release");
+    files.push_back(string(utils::kStatefulPartition) + "/etc/coreos/update.conf");
   }
-  files.push_back("/etc/lsb-release");
+  files.push_back("/etc/coreos/update.conf");
+  files.push_back("/usr/share/coreos/release");
   for (vector<string>::const_iterator it = files.begin();
        it != files.end(); ++it) {
     // TODO(adlr): make sure files checked are owned as root (and all their
