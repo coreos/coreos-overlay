@@ -105,58 +105,7 @@ KEYWORDS=
 fi
 
 src_prepare() {
-	epatch "${FILESDIR}"/210-0001-login-fix-pos-array-allocation.patch
-	epatch "${FILESDIR}"/210-0002-login-set-pos-slot-to-fallback-on-pos-eviction.patch
-	epatch "${FILESDIR}"/210-0003-login-Allow-calling-org.freedesktop.login1.Seat.Swit.patch
-	epatch "${FILESDIR}"/210-0004-fix-typo-in-iDRAC-network-interface-name-irdac-idrac.patch
-	epatch "${FILESDIR}"/210-0005-Replace-var-run-with-run-in-remaining-places.patch
-	epatch "${FILESDIR}"/210-0006-Revert-back-to-var-run-at-a-couple-of-problems.patch
-	epatch "${FILESDIR}"/210-0007-README-document-that-var-run-must-be-a-symlink-run.patch
-#	epatch "${FILESDIR}"/210-0008-Use-var-run-dbus-system_bus_socket-for-the-D-Bus-soc.patch
-	epatch "${FILESDIR}"/210-0009-mount-don-t-send-out-PropertiesChanged-message-if-ac.patch
-	epatch "${FILESDIR}"/210-0010-mount-don-t-fire-PropertiesChanged-signals-for-mount.patch
-	epatch "${FILESDIR}"/210-0011-logs-show-fix-corrupt-output-with-empty-messages.patch
-	epatch "${FILESDIR}"/210-0012-journalctl-refuse-extra-arguments-with-verify-and-si.patch
-	epatch "${FILESDIR}"/210-0013-cdrom_id-use-the-old-MMC-fallback.patch
-	epatch "${FILESDIR}"/210-0014-udev-rules-setup-tty-permissions-and-group-for-sclp_.patch
-	epatch "${FILESDIR}"/210-0015-architecture-Add-tilegx.patch
-	epatch "${FILESDIR}"/210-0016-nspawn-fix-detection-of-missing-proc-self-loginuid.patch
-	epatch "${FILESDIR}"/210-0017-bash-add-completion-for-systemd-nspawn.patch
-	epatch "${FILESDIR}"/210-0018-add-bash-completion-for-systemd-cgls.patch
-	epatch "${FILESDIR}"/210-0019-hwdb-Update-database-of-Bluetooth-company-identifier.patch
-	epatch "${FILESDIR}"/210-0020-Allow-fractional-parts-in-disk-sizes.patch
-	epatch "${FILESDIR}"/210-0021-add-bash-completion-for-systemd-cgtop.patch
-	epatch "${FILESDIR}"/210-0022-Fix-systemd-stdio-bridge-symlink.patch
-	epatch "${FILESDIR}"/210-0023-execute-free-directory-path-if-we-fail-to-remove-it-.patch
-	epatch "${FILESDIR}"/210-0024-update-bash-completion-for-systemd-analyze.patch
-	epatch "${FILESDIR}"/210-0025-add-bash-completion-for-systemd-detect-virt.patch
-	epatch "${FILESDIR}"/210-0026-Do-not-print-invalid-UTF-8-in-error-messages.patch
-	epatch "${FILESDIR}"/210-0027-architecture-Add-cris.patch
-	epatch "${FILESDIR}"/210-0028-add-bash-completion-for-systemd-cat.patch
-	epatch "${FILESDIR}"/210-0029-man-document-missing-options-of-systemd-run.patch
-	epatch "${FILESDIR}"/210-0030-systemd-run-add-some-extra-safety-checks.patch
-	epatch "${FILESDIR}"/210-0031-journal-assume-that-next-entry-is-after-previous-ent.patch
-	epatch "${FILESDIR}"/210-0032-journal-forget-file-after-encountering-an-error.patch
-	epatch "${FILESDIR}"/210-0033-core-correctly-unregister-PIDs-from-PID-hashtables.patch
-	epatch "${FILESDIR}"/210-0034-logind-fix-reference-to-systemd-user-sessions.servic.patch
-	epatch "${FILESDIR}"/210-0035-man-update-link-to-LSB.patch
-	epatch "${FILESDIR}"/210-0036-man-systemd-bootchart-fix-spacing-in-command.patch
-	epatch "${FILESDIR}"/210-0037-man-add-missing-comma.patch
-	epatch "${FILESDIR}"/210-0038-build-sys-Don-t-distribute-generated-udev-rule.patch
-	epatch "${FILESDIR}"/210-0039-units-Do-not-unescape-instance-name-in-systemd-backl.patch
-	epatch "${FILESDIR}"/210-0040-util-add-timeout-to-generator-execution.patch
-	epatch "${FILESDIR}"/210-0041-core-busname-add-lookup-string-for-BUSNAME_FAILURE_S.patch
-	epatch "${FILESDIR}"/210-0042-busname-don-t-drop-service-from-the-result-string.patch
-	epatch "${FILESDIR}"/210-0043-manager-flush-memory-stream-before-using-the-buffer.patch
-	epatch "${FILESDIR}"/210-0044-networkd-link-degrade-failed-UP-to-warning.patch
-	epatch "${FILESDIR}"/210-0045-networkd-fix-confusion-from-missing-braces.patch
-	epatch "${FILESDIR}"/210-0046-fix-off-by-one-error-in-array-index-assertion.patch
-	epatch "${FILESDIR}"/210-0047-input_id-Recognize-buttonless-joystick-types.patch
-	epatch "${FILESDIR}"/210-0048-logind-fix-policykit-checks.patch
-	epatch "${FILESDIR}"/210-0049-nspawn-don-t-try-mknod-of-dev-console-with-the-corre.patch
-	epatch "${FILESDIR}"/210-0050-build-sys-Find-the-tools-for-users-with-no-sbin-usr-.patch
-	epatch "${FILESDIR}"/210-0051-rules-mark-loop-device-as-SYSTEMD_READY-0-if-no-file.patch
-
+	epatch "${FILESDIR}"/211-tmpfiles.patch
 
 if [[ ${PV} == *9999 ]]; then
 	if use doc; then
