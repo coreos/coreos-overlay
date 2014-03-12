@@ -14,7 +14,7 @@ DEPEND="sys-apps/debianutils
 		sys-kernel/bootengine
 "
 
-IUSE="-source"
+IUSE="-source symlink-usr"
 RESTRICT="binchecks"
 STRIP_MASK="/usr/lib/debug/lib/modules/*/vmlinux"
 
@@ -195,15 +195,17 @@ cros-kernel2_src_compile() {
 }
 
 cros-kernel2_src_install() {
-	dodir /boot
-	kmake INSTALL_PATH="${D}/boot" install
+	dodir /usr/boot
+	kmake INSTALL_PATH="${D}/usr/boot" install
 	# Install firmware to a temporary (bogus) location.
 	# The linux-firmware package will be used instead.
 	kmake INSTALL_MOD_PATH="${D}" INSTALL_FW_PATH="${T}/fw" modules_install
 
 	local version=$(kernelversion)
-	if [ ! -e "${D}/boot/vmlinuz" ]; then
-		ln -sf "vmlinuz-${version}" "${D}/boot/vmlinuz" || die
+	dosym "vmlinuz-${version}" /usr/boot/vmlinuz
+
+	if ! use symlink-usr; then
+		dosym ../usr/boot/vmlinuz /boot/vmlinuz
 	fi
 
 	# Install uncompressed kernel for debugging purposes.
