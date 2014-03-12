@@ -7,9 +7,6 @@
 # version of these packages even if a newer stable version becomes
 # available in portage:
 
-# Use the 3.* series of syslinux, seems to work correctly with the
-# chromeos build system for now
->=sys-boot/syslinux-3.90
 >=net-misc/tlsdate-0.0.6
 
 # Stick with python 2 for now
