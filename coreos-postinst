@@ -1,0 +1,74 @@
+#!/bin/bash
+# Copyright (c) 2014 The CoreOS Authors.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+set -e
+
+INSTALL_MNT=$(dirname "$0")
+INSTALL_DEV="$1"
+
+# Figure out if the slot id is A or B
+INSTALL_LABEL=$(lsblk -n -o PARTLABEL "${INSTALL_DEV}")
+case "${INSTALL_LABEL}" in
+    ROOT-A|USR-A)
+        SLOT=A;;
+    ROOT-B|USR-B)
+        SLOT=B;;
+    *)
+        echo "Unknown LABEL ${INSTALL_LABEL}" >&2
+        exit 1
+esac
+
+# Find the ESP partition and mount it if needed
+ESP_PARTTYPE="c12a7328-f81f-11d2-ba4b-00a0c93ec93b"
+ESP_MNT=
+
+declare -a DEV_LIST
+lsblk -P -o NAME,PARTTYPE,MOUNTPOINT | mapfile DEV_LIST
+
+for dev_info in "${DEV_LIST[@]}"; do
+    eval "$dev_info"
+
+    if [[ "${PARTTYPE}" != "${ESP_PARTTYPE}" ]]; then
+        continue
+    fi
+
+    if [[ -n "${MOUNTPOINT}" ]]; then
+        ESP_MNT="${MOUNTPOINT}"
+    else
+        ESP_MNT="$(mktemp -d /tmp/postinst_esp.XXXXXXXXXX)"
+        mount "/dev/${NAME}" "${ESP_MNT}"
+        trap "umount '${ESP_MNT}' && rmdir '${ESP_MNT}'" EXIT
+    fi
+
+    break
+done
+
+# Update kernel and bootloader configs
+mkdir -p "${ESP_MNT}"{/syslinux,/boot/grub}
+cp -v "${INSTALL_MNT}/boot/vmlinuz" \
+    "${ESP_MNT}/syslinux/vmlinuz.${SLOT}"
+cp -v "${INSTALL_MNT}/boot/syslinux/root.${SLOT}.cfg" \
+    "${ESP_MNT}/syslinux/root.${SLOT}.cfg"
+
+# For Xen's pvgrub
+cp -v "${INSTALL_MNT}/boot/grub/menu.lst.${SLOT}" \
+    "${ESP_MNT}/boot/grub/menu.lst"
+
+# For Xen HVM, the default boot_kernel w/ kexec doesn't work
+if [[ $(systemd-detect-virt) == xen ]]; then
+    cp -v "${INSTALL_MNT}/boot/syslinux/default.cfg.${SLOT}" \
+        "${ESP_MNT}/syslinux/default.cfg"
+fi
+
+# Mark the new install with one try and the highest priority
+cgpt add -S0 -T1 "${INSTALL_DEV}"
+cgpt prioritize "${INSTALL_DEV}"
+cgpt show "${INSTALL_DEV}"
+
+grep ^COREOS_RELEASE_VERSION "${INSTALL_MNT}/share/coreos/release" || \
+    grep ^COREOS_RELEASE_VERSION "${INSTALL_MNT}/etc/lsb-release" || \
+    echo "Unknown COREOS_RELEASE_VERSION" >&2
+
+echo "Setup ${INSTALL_LABEL} (${INSTALL_DEV}) for next boot."
