@@ -20,6 +20,10 @@ IUSE=""
 EGIT_REPO_URI="https://github.com/coreos/nova-agent-container.git"
 EGIT_COMMIT="44af5608e9a9e43fe83d05f03049a1f66d564930"
 
+RDEPEND="
+	coreos-base/nova-agent-watcher
+"
+
 src_install() {
 	rsync --exclude=".git" -aq ${S}/ ${D}/nova-agent/
 	rsync -aq ${FILESDIR}/systemd/ ${D}/system/
