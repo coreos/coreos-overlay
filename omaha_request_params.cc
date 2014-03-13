@@ -207,10 +207,8 @@ string OmahaRequestParams::GetLsbValue(const string& key,
                                        ValueValidator validator,
                                        bool stateful_override) const {
   vector<string> files;
-  if (stateful_override) {
-    files.push_back(string(utils::kStatefulPartition) + "/etc/coreos/update.conf");
-  }
   files.push_back("/etc/coreos/update.conf");
+  files.push_back("/usr/share/coreos/update.conf");
   files.push_back("/usr/share/coreos/release");
   for (vector<string>::const_iterator it = files.begin();
        it != files.end(); ++it) {
