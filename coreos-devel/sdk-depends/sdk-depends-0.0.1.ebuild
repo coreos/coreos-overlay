@@ -22,6 +22,7 @@ DEPEND="
 	dev-util/boost-build
 	dev-util/checkbashisms
 	net-misc/curl
+	sys-apps/debianutils
 	sys-devel/crossdev
 	sys-fs/btrfs-progs
 	"
