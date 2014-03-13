@@ -2,21 +2,21 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=4
-CROS_WORKON_PROJECT="coreos/coreos-cloudinit"
-CROS_WORKON_LOCALNAME="coreos-cloudinit"
+CROS_WORKON_PROJECT="coreos/nova-agent-watcher"
+CROS_WORKON_LOCALNAME="nova-agent-watcher"
 CROS_WORKON_REPO="git://github.com"
 
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64"
 else
-	CROS_WORKON_COMMIT="6a6897831a8ada4cab112001620b08b0e31dfe89"  # tag v0.1.1
+	CROS_WORKON_COMMIT="bff26eea5578ca36115707d46d5bdc865d69a460"  # tag v0.1.1
 	KEYWORDS="amd64"
 fi
 
 inherit cros-workon systemd
 
-DESCRIPTION="coreos-cloudinit"
-HOMEPAGE="https://github.com/coreos/coreos-cloudinit"
+DESCRIPTION="nova-agent-watcher"
+HOMEPAGE="https://github.com/coreos/nova-agent-watcher"
 SRC_URI=""
 
 LICENSE="Apache-2.0"
@@ -30,5 +30,6 @@ src_compile() {
 }
 
 src_install() {
-	dobin ${S}/bin/coreos-cloudinit
+	dobin ${S}/scripts/gentoo-to-networkd
+	dobin ${S}/bin/nova-agent-watcher
 }

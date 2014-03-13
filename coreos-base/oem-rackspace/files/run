@@ -1,4 +1,3 @@
 #!/bin/bash
 
-systemctl enable --runtime /usr/share/oem/system/*
-systemctl start oem.target
+/usr/bin/systemd-run /usr/share/oem/usr/bin/nova-agent-watcher -watch-dir=/usr/share/oem/nova-agent -scripts-dir=/usr/share/oem/usr/bin/
