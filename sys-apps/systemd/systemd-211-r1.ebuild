@@ -105,6 +105,10 @@ KEYWORDS=
 fi
 
 src_prepare() {
+	# CoreOs specific hacks^Wfeatures
+	epatch "${FILESDIR}"/211-handle-empty-etc-os-release.patch
+
+	# upstream fixes not yet in the release
 	epatch "${FILESDIR}"/211-tmpfiles.patch
 
 if [[ ${PV} == *9999 ]]; then
