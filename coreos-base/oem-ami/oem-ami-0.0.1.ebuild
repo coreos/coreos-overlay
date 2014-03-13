@@ -16,9 +16,10 @@ IUSE=""
 S="${WORKDIR}"
 
 src_install() {
-	exeinto "/"
-	doexe ${FILESDIR}/run
+	doexe ${FILESDIR}/ec2-ssh-key
+	doexe ${FILESDIR}/coreos-setup-environment
+	doexe ${FILESDIR}/coreos-c10n
 
 	insinto "/"
-	doins ${FILESDIR}/oem-release
+	doins ${FILESDIR}/cloud-config.yml
 }
