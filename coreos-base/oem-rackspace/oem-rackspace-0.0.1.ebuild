@@ -26,13 +26,8 @@ RDEPEND="
 
 src_install() {
 	rsync --exclude=".git" -aq ${S}/ ${D}/nova-agent/
-	rsync -aq ${FILESDIR}/systemd/ ${D}/system/
-	dobin "${FILESDIR}"/ifconfig.sh
-	dobin "${FILESDIR}"/net.sh
-	dobin "${FILESDIR}"/ssh.sh
-	dobin "${FILESDIR}"/run-nova-agent.sh
-	dobin "${FILESDIR}"/resolvconf.sh
-
 	exeinto "/"
 	doexe ${FILESDIR}/run
+	insinto "/"
+	doins ${FILESDIR}/init.yml
 }
