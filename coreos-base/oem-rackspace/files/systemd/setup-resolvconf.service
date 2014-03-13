@@ -1,7 +1,0 @@
-[Service]
-Type=oneshot
-ExecStartPre=/usr/bin/systemctl stop dhcpcd
-ExecStart=/usr/bin/timeout 60 /usr/share/oem/usr/bin/resolvconf.sh
-
-[Install]
-WantedBy=multi-user.target

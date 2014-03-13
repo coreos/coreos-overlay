@@ -1,3 +1,4 @@
 #!/bin/bash
 
-/usr/bin/systemd-run /usr/share/oem/usr/bin/nova-agent-watcher -watch-dir=/usr/share/oem/nova-agent -scripts-dir=/usr/share/oem/usr/bin/
+/usr/bin/systemd-run --unit=cloudinit-init /usr/bin/coreos-cloudinit --from-file=/usr/share/oem/init.yml
+/usr/bin/systemd-run --unit=nova-agent-watcher /usr/share/oem/usr/bin/nova-agent-watcher -watch-dir=/usr/share/oem/nova-agent -scripts-dir=/usr/share/oem/usr/bin/

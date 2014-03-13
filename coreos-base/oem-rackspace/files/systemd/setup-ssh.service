@@ -1,6 +1,0 @@
-[Service]
-Type=oneshot
-ExecStart=/usr/bin/timeout 60 /usr/share/oem/usr/bin/ssh.sh
-
-[Install]
-WantedBy=multi-user.target
