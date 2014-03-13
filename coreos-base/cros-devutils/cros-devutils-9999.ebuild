@@ -10,7 +10,7 @@ CROS_WORKON_LOCALDIR="src/platform"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~x86"
 else
-	CROS_WORKON_COMMIT="22d26b046aaca60695c4b800f762a9f2d9d06dbd"
+	CROS_WORKON_COMMIT="9bbcec8fc19e854e3733ac058013281b3d3e0599"
 	KEYWORDS="amd64 arm x86"
 fi
 
@@ -31,6 +31,7 @@ RDEPEND="cros_host? ( app-emulation/qemu )
 	dev-util/shflags
 	cros_host? ( dev-util/crosutils )
 	app-crypt/efitools
+	!coreos-base/coreos-installer
 	"
 # These are all either bash / python scripts.  No actual builds DEPS.
 DEPEND=""
