@@ -1,0 +1,19 @@
+#cloud-config
+
+coreos:
+    units:
+      - name: nova-agent-auto.service
+        content: |
+          [Unit]
+          After=dbus.service
+          [Service]
+          Environment=HOME=/root
+          ExecStartPre=/bin/mount -t proc none /usr/share/oem/nova-agent/proc
+          ExecStartPre=/bin/mount -t xenfs none /usr/share/oem/nova-agent/proc/xen
+          ExecStartPre=/bin/mount --bind /dev /usr/share/oem/nova-agent/dev
+          ExecStartPre=/bin/mount --bind /sys /usr/share/oem/nova-agent/sys
+          ExecStart=/usr/bin/chroot /usr/share/oem/nova-agent/ /usr/share/nova-agent/0.0.1.38/sbin/nova-agent -o - -n -l info /usr/share/nova-agent/nova-agent.py
+          ExecStopPost=/bin/umount -f /usr/share/oem/nova-agent/sys
+          ExecStopPost=/bin/umount -f /usr/share/oem/nova-agent/dev
+          ExecStopPost=/bin/umount -f /usr/share/oem/nova-agent/proc/xen
+          ExecStopPost=/bin/umount -f /usr/share/oem/nova-agent/proc
