@@ -62,10 +62,24 @@ if [[ $(systemd-detect-virt) == xen ]]; then
         "${ESP_MNT}/syslinux/default.cfg"
 fi
 
+# use the cgpt binary from the image to ensure compatibility
+call_cgpt() {
+    local cgpt libs
+    if [[ -d "${INSTALL_MNT}/usr" ]]; then
+        cgpt="${INSTALL_MNT}/usr/bin/cgpt"
+        libs="${INSTALL_MNT}/lib:${INSTALL_MNT}/usr/lib"
+    else
+        cgpt="${INSTALL_MNT}/bin/cgpt"
+        libs="${INSTALL_MNT}/lib"
+    fi
+
+    LD_LIBRARY_PATH="${libs}" "${cgpt}" "$@"
+}
+
 # Mark the new install with one try and the highest priority
-cgpt add -S0 -T1 "${INSTALL_DEV}"
-cgpt prioritize "${INSTALL_DEV}"
-cgpt show "${INSTALL_DEV}"
+call_cgpt add -S0 -T1 "${INSTALL_DEV}"
+call_cgpt prioritize "${INSTALL_DEV}"
+call_cgpt show "${INSTALL_DEV}"
 
 grep ^COREOS_RELEASE_VERSION "${INSTALL_MNT}/share/coreos/release" || \
     grep ^COREOS_RELEASE_VERSION "${INSTALL_MNT}/etc/lsb-release" || \

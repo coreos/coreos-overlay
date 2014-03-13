@@ -207,7 +207,6 @@ env['LIBS'] = Split("""bz2
                        policy-%s
                        protobuf
                        pthread
-                       rootdev
                        ssl
                        udev
                        xml2""" % BASE_VER)

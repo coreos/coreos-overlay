@@ -29,7 +29,6 @@
 #include <base/stringprintf.h>
 #include <glib.h>
 #include <google/protobuf/stubs/common.h>
-#include <rootdev/rootdev.h>
 
 #include "update_engine/file_writer.h"
 #include "update_engine/omaha_request_params.h"
@@ -487,16 +486,21 @@ bool StringHasPrefix(const std::string& str, const std::string& prefix) {
 }
 
 const std::string BootDevice() {
-  char boot_path[PATH_MAX];
-  // Resolve the boot device path fully, including dereferencing
-  // through dm-verity.
-  int ret = rootdev(boot_path, sizeof(boot_path), true, false);
+  char boot_path[PATH_MAX], link_path[PATH_MAX];
+  struct stat stbuf;
+  int rc;
 
-  if (ret < 0) {
-    LOG(ERROR) << "rootdev failed to find the root device";
+  rc = stat("/usr", &stbuf);
+  CHECK_EQ(rc, 0);
+
+  rc = snprintf(link_path, sizeof(link_path), "/dev/block/%d:%d",
+                    major(stbuf.st_dev), minor(stbuf.st_dev));
+  CHECK(rc > 0);
+
+  if (realpath(link_path, boot_path) == NULL) {
+    LOG(ERROR) << "failed to find the device for /usr";
     return "";
   }
-  LOG_IF(WARNING, ret > 0) << "rootdev found a device name with no device node";
 
   // This local variable is used to construct the return string and is not
   // passed around after use.
