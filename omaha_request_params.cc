@@ -134,22 +134,6 @@ bool OmahaRequestParams::SetTargetChannel(const std::string& new_target_channel,
     return false;
   }
 
-  if (current_channel_ == "canary-channel") {
-    // TODO(jaysri): chromium-os:39751: We don't have the UI warnings yet. So,
-    // enable the powerwash-on-changing-to-more-stable-channel behavior for now
-    // only on canary-channel devices.
-    is_powerwash_allowed = true;
-    LOG(INFO) << "Is Powerwash Allowed set to true as we are in canary-channel";
-  } else if (!utils::IsOfficialBuild() &&
-             current_channel_ == "testimage-channel") {
-    // Also, allow test builds to have the powerwash behavior so we can always
-    // test channel changing behavior on them, without having to first get them
-    // on an official channel.
-    is_powerwash_allowed = true;
-    LOG(INFO) << "Is Powerwash Allowed set to true as we are running an "
-                 "unofficial build";
-  }
-
   TEST_AND_RETURN_FALSE(IsValidChannel(new_target_channel));
   FilePath kFile(root_ + utils::kStatefulPartition + "/etc/coreos/update.conf");
   string file_data;
