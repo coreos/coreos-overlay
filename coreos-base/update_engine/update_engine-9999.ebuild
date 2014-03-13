@@ -5,6 +5,13 @@ EAPI="4"
 CROS_WORKON_PROJECT="coreos/update_engine"
 CROS_WORKON_REPO="git://github.com"
 
+if [[ "${PV}" == 9999 ]]; then
+	KEYWORDS="~amd64 ~arm ~x86"
+else
+	CROS_WORKON_COMMIT="751a28659ea1f4fcbcdc3da5b17d6fa805c1eec6"
+	KEYWORDS="amd64 arm x86"
+fi
+
 inherit toolchain-funcs cros-debug cros-workon scons-utils systemd
 
 DESCRIPTION="Chrome OS Update Engine"
@@ -13,12 +20,12 @@ SRC_URI=""
 
 LICENSE="BSD"
 SLOT="0"
-KEYWORDS="~amd64 ~arm ~x86"
-IUSE="cros_host -delta_generator"
+IUSE="cros_host -delta_generator symlink-usr"
 
 LIBCHROME_VERS="180609"
 
-RDEPEND="app-arch/bzip2
+RDEPEND="!coreos-base/coreos-installer
+	app-arch/bzip2
 	coreos-base/coreos-ca-certificates
 	coreos-base/libchrome:${LIBCHROME_VERS}[cros-debug=]
 	coreos-base/libchromeos
@@ -33,7 +40,6 @@ RDEPEND="app-arch/bzip2
 	dev-libs/protobuf
 	dev-util/bsdiff
 	net-misc/curl
-	sys-apps/rootdev
 	sys-fs/e2fsprogs
 	virtual/udev"
 DEPEND="coreos-base/system_api
@@ -80,6 +86,14 @@ src_install() {
 
 	dosbin update_engine
 	dobin update_engine_client
+
+	dosbin coreos-postinst
+	dosbin coreos-setgoodroot
+	if use symlink-usr; then
+		dosym sbin/coreos-postinst /usr/postinst
+	else
+		dosym usr/sbin/coreos-postinst /postinst
+	fi
 
 	use delta_generator && dobin delta_generator
 

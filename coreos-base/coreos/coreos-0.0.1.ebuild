@@ -104,7 +104,6 @@ RDEPEND="${RDEPEND}
 	coreos-base/cros_boot_mode
 	coreos-base/vboot_reference
 	coreos-base/update_engine
-	coreos-base/coreos-installer
 	coreos-base/coreos-init
 	coreos-base/coreos-cloudinit
 	coreos-base/coretest

@@ -7,14 +7,20 @@ CROS_WORKON_REPO="git://github.com"
 CROS_WORKON_LOCALNAME="dev"
 CROS_WORKON_LOCALDIR="src/platform"
 
+if [[ "${PV}" == 9999 ]]; then
+	KEYWORDS="~amd64 ~arm ~x86"
+else
+	CROS_WORKON_COMMIT="22d26b046aaca60695c4b800f762a9f2d9d06dbd"
+	KEYWORDS="amd64 arm x86"
+fi
+
 inherit cros-workon multilib python
 
-DESCRIPTION="Development utilities for ChromiumOS"
-HOMEPAGE="http://www.chromium.org/"
+DESCRIPTION="Development utilities for CoreOS"
+HOMEPAGE="https://github.com/coreos/dev-util"
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="~amd64 ~arm ~x86"
 IUSE="cros_host test"
 
 RDEPEND="cros_host? ( app-emulation/qemu )
@@ -24,6 +30,7 @@ RDEPEND="cros_host? ( app-emulation/qemu )
 	dev-lang/python
 	dev-util/shflags
 	cros_host? ( dev-util/crosutils )
+	app-crypt/efitools
 	"
 # These are all either bash / python scripts.  No actual builds DEPS.
 DEPEND=""
@@ -65,7 +72,6 @@ src_install() {
 
 		# Payload generation scripts.
 		dobin host/cros_generate_update_payload
-		dobin host/cros_generate_stateful_update_payload
 
 		# Repo and git bash completion.
 		insinto /usr/share/bash-completion
