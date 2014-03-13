@@ -39,10 +39,9 @@ RDEPEND="${RDEPEND}
 	app-emulation/qemu
 	app-text/texi2html
 	coreos-base/google-breakpad
-	coreos-base/coreos-installer
 	coreos-base/cros-devutils[cros_host]
-	coreos-base/cros-factoryutils
 	coreos-base/cros-testutils
+	coreos-base/vboot_reference
 	=dev-lang/python-2*
 	dev-python/setuptools
 	dev-lang/nasm
