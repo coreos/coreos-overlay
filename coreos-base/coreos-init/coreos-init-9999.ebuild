@@ -53,6 +53,7 @@ src_install() {
 
 	# Services!
 	systemd_enable_service default.target coreos-c10n.service
+	systemd_enable_service default.target coreos-cloudinit-oem.service
 	systemd_enable_service default.target local-enable.service
 	systemd_enable_service default.target sshd-keygen.service
 	systemd_enable_service default.target sshd.socket
