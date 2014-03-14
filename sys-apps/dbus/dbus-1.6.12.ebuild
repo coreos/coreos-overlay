@@ -188,9 +188,8 @@ pkg_postinst() {
 		ewarn "Don't do this while X is running because it will restart your X as well."
 	fi
 
-	# Ensure unique id is generated and put it in /etc wrt #370451 but symlink
-	# for DBUS_MACHINE_UUID_FILE (see tools/dbus-launch.c) and reverse
-	# dependencies with hardcoded paths (although the known ones got fixed already)
-	dbus-uuidgen --ensure="${EROOT}"/etc/machine-id
-	ln -sf "${EROOT}"/etc/machine-id "${EROOT}"/var/lib/dbus/machine-id
+	# Put a "known" machine id into /etc/machine-id so that when we boot,
+	# if it matches, then we can override it with a unique one.
+	echo "42000000000000000000000000000042" > "${EROOT}"/etc/machine-id
+	ln -sf ../../../etc/machine-id "${EROOT}"/var/lib/dbus/machine-id
 }
