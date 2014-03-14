@@ -105,7 +105,12 @@ KEYWORDS=
 fi
 
 src_prepare() {
+	# CoreOs specific hacks^Wfeatures
+	epatch "${FILESDIR}"/211-handle-empty-etc-os-release.patch
+
+	# upstream fixes not yet in the release
 	epatch "${FILESDIR}"/211-tmpfiles.patch
+	epatch "${FILESDIR}"/211-0001-nspawn-allow-EEXIST-on-mkdir_safe-home-uid.patch
 
 if [[ ${PV} == *9999 ]]; then
 	if use doc; then
