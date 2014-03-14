@@ -126,6 +126,9 @@ src_prepare() {
 	epatch "${FILESDIR}"/211-003-tmpfiles-add-root-to-the-man-page.patch
 	epatch "${FILESDIR}"/211-004-machine-id-add-root-option-to-operate-on-an-alternate-fs-tree.patch
 
+	# dns feature for more than one server
+	epatch "${FILESDIR}"/211-networkd-allow-more-than-one-static-dns-server.patch
+
 if [[ ${PV} == *9999 ]]; then
 	if use doc; then
 		gtkdocize --docdir docs/ || die
