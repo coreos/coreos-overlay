@@ -109,8 +109,25 @@ src_prepare() {
 	epatch "${FILESDIR}"/211-handle-empty-etc-os-release.patch
 
 	# upstream fixes not yet in the release
+	epatch "${FILESDIR}"/211-0001-gpt-auto-generator-don-t-return-OOM-on-parentless-de.patch
+	epatch "${FILESDIR}"/211-0002-bus-fix-memory-leak-when-kdbus-is-not-enabled.patch
+	epatch "${FILESDIR}"/211-0003-sd-bus-don-t-look-for-a-64bit-value-when-we-only-hav.patch
+	epatch "${FILESDIR}"/211-0004-nspawn-allow-EEXIST-on-mkdir_safe-home-uid.patch
+	epatch "${FILESDIR}"/211-0005-networkd-fix-creation-of-runtime-dirs-at-startup.patch
+	epatch "${FILESDIR}"/211-0006-networkd-lease-store-up-to-one-dhcp-lease-file-per-i.patch
+	epatch "${FILESDIR}"/211-0007-Do-not-return-1-EINVAL-on-allocation-error.patch
+
+	# patch to make journald work at first boot
 	epatch "${FILESDIR}"/211-tmpfiles.patch
-	epatch "${FILESDIR}"/211-0001-nspawn-allow-EEXIST-on-mkdir_safe-home-uid.patch
+
+	# --root= options to some utilities needed by initramfs
+	epatch "${FILESDIR}"/211-001-shared-add-root-argument-to-search_and_fopen.patch
+	epatch "${FILESDIR}"/211-002-tmpfiles-add-root-option-to-operate-on-an-alternate-fs-tree.patch
+	epatch "${FILESDIR}"/211-003-tmpfiles-add-root-to-the-man-page.patch
+	epatch "${FILESDIR}"/211-004-machine-id-add-root-option-to-operate-on-an-alternate-fs-tree.patch
+
+	# dns feature for more than one server
+	epatch "${FILESDIR}"/211-networkd-allow-more-than-one-static-dns-server.patch
 
 if [[ ${PV} == *9999 ]]; then
 	if use doc; then

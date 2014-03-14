@@ -1,0 +1,39 @@
+From systemd-devel-bounces@lists.freedesktop.org Fri Mar 14 04:33:02 2014
+From: Michael Marineau <michael.marineau@coreos.com>
+Date: Thu, 13 Mar 2014 21:32:14 -0700
+Subject: [systemd-devel] [PATCH 3/3] tmpfiles: Add --root to the man page.
+To: systemd-devel@lists.freedesktop.org
+Message-ID: <1394771534-27529-3-git-send-email-michael.marineau@coreos.com>
+
+
+---
+ man/systemd-tmpfiles.xml | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/man/systemd-tmpfiles.xml b/man/systemd-tmpfiles.xml
+index 0b62640..193acb7 100644
+--- a/man/systemd-tmpfiles.xml
++++ b/man/systemd-tmpfiles.xml
+@@ -152,6 +152,14 @@
+                                 prefix. This option can be specified
+                                 multiple times.</para></listitem>
+                         </varlistentry>
++                        <varlistentry>
++                                <term><option>--root=ROOT</option></term>
++                                <listitem><para>Takes a directory path
++                                as an argument. All paths will be
++                                prefixed with the given alternate ROOT
++                                path, including config search paths.
++                                </para></listitem>
++                        </varlistentry>
+ 
+                         <xi:include href="standard-options.xml" xpointer="help" />
+                         <xi:include href="standard-options.xml" xpointer="version" />
+-- 
+1.8.3.2
+
+_______________________________________________
+systemd-devel mailing list
+systemd-devel@lists.freedesktop.org
+http://lists.freedesktop.org/mailman/listinfo/systemd-devel
+

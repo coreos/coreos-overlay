@@ -1,0 +1,25 @@
+From d6201d7653de28af38f7c84b7280302b512f4ef9 Mon Sep 17 00:00:00 2001
+From: Tomasz Torcz <tomek@pipebreaker.pl>
+Date: Wed, 12 Mar 2014 19:25:11 +0100
+Subject: gpt-auto-generator: don't return OOM on parentless devices
+
+---
+ src/gpt-auto-generator/gpt-auto-generator.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/gpt-auto-generator/gpt-auto-generator.c b/src/gpt-auto-generator/gpt-auto-generator.c
+index e487f6438689..19c5eea9de2f 100644
+--- a/src/gpt-auto-generator/gpt-auto-generator.c
++++ b/src/gpt-auto-generator/gpt-auto-generator.c
+@@ -395,7 +395,7 @@ static int enumerate_partitions(dev_t devnum) {
+ 
+         parent = udev_device_get_parent(d);
+         if (!parent)
+-                return log_oom();
++                return 0;
+ 
+         /* Does it have a devtype? */
+         devtype = udev_device_get_devtype(parent);
+-- 
+1.9.0
+
