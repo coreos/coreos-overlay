@@ -99,10 +99,6 @@ src_install() {
 	insopts -m0600
 	doins "${FILESDIR}"/default/useradd
 
-	# move passwd to / to help recover broke systems #64441
-	mv "${D}"/usr/bin/passwd "${D}"/bin/
-	dosym /bin/passwd /usr/bin/passwd
-
 	cd "${S}"
 	insinto /etc
 	insopts -m0644
