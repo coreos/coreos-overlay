@@ -9,7 +9,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64"
 else
-	CROS_WORKON_COMMIT="a5e5505b512d22b3b650cd76542ebdaee8155645" 
+	CROS_WORKON_COMMIT="e4965ec33d06f0c71622aad59d5f59f9aaca7c00"  # v0.1.2
 	KEYWORDS="amd64"
 fi
 
@@ -24,6 +24,10 @@ SLOT="0"
 IUSE=""
 
 DEPEND=">=dev-lang/go-1.2"
+
+RDEPEND="
+	>=sys-apps/shadow-4.1.5.1
+"
 
 src_compile() {
 	./build || die
