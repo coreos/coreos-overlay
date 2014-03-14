@@ -20,7 +20,7 @@ RDEPEND=">=dev-libs/expat-2
 		sec-policy/selinux-dbus
 		sys-libs/libselinux
 		)
-	systemd? ( sys-apps/systemd )
+	systemd? ( sys-apps/systemd:= )
 	X? (
 		x11-libs/libX11
 		x11-libs/libXt
@@ -58,6 +58,7 @@ pkg_setup() {
 
 src_prepare() {
 	epatch "${FILESDIR}"/${PN}-1.5.12-selinux-when-dropping-capabilities-only-include-AUDI.patch
+	epatch "${FILESDIR}"/${PN}-1.6.x-add-explicit-etc-path.patch
 
 	# Tests were restricted because of this
 	sed -i \
@@ -86,6 +87,7 @@ multilib_src_configure() {
 	# libaudit is *only* used in DBus wrt SELinux support, so disable it, if
 	# not on an SELinux profile.
 	myconf=(
+		--sysconfdir=/usr/share
 		--disable-silent-rules
 		--localstatedir="${EPREFIX}/var"
 		--docdir="${EPREFIX}/usr/share/doc/${PF}"
@@ -223,9 +225,8 @@ pkg_postinst() {
 		ewarn "Don't do this while X is running because it will restart your X as well."
 	fi
 
-	# Ensure unique id is generated and put it in /etc wrt #370451 but symlink
-	# for DBUS_MACHINE_UUID_FILE (see tools/dbus-launch.c) and reverse
-	# dependencies with hardcoded paths (although the known ones got fixed already)
-	dbus-uuidgen --ensure="${EROOT}"/etc/machine-id
-	ln -sf "${EROOT}"/etc/machine-id "${EROOT}"/var/lib/dbus/machine-id
+	# Put a "known" machine id into /etc/machine-id so that when we boot,
+	# if it matches, then we can override it with a unique one.
+	echo "42000000000000000000000000000042" > "${EROOT}"/etc/machine-id
+	ln -sf ../../../etc/machine-id "${EROOT}"/var/lib/dbus/machine-id
 }
