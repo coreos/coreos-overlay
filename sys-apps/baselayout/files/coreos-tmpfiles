@@ -10,7 +10,7 @@ BASE="${ROOT}/usr/share/baselayout"
 # readable files
 umask 022
 if [[ ! -e "${ROOT}/etc/passwd" ]]; then
-    grep "^core:" "${BASE}/passwd" > "${ROOT}/etc/passwd"
+    grep -e "^root:" -e "^core:" "${BASE}/passwd" > "${ROOT}/etc/passwd"
 fi
 if [[ ! -e "${ROOT}/etc/group" ]]; then
     grep "^docker:" "${BASE}/group" > "${ROOT}/etc/group"
@@ -19,7 +19,7 @@ fi
 # secure files
 umask 027
 if [[ ! -e "${ROOT}/etc/shadow" ]]; then
-    grep "^core:" "${BASE}/shadow" > "${ROOT}/etc/shadow"
+    grep -e "^root:" -e "^core:" "${BASE}/shadow" > "${ROOT}/etc/shadow"
 fi
 if [[ ! -e "${ROOT}/etc/gshadow" ]]; then
     grep "^docker:" "${BASE}/gshadow" > "${ROOT}/etc/gshadow"
