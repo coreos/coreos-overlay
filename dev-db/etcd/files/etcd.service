@@ -1,13 +1,14 @@
 [Unit]
 Description=etcd
-Requires=coreos-c10n.service
-After=coreos-c10n.service
+RequiresMountsFor=/usr/share/oem
+# oem will setup etcd for auto bootstrapping
+ConditionPathExists=!/usr/share/oem/cloud-config.yml
 
 [Service]
 User=etcd
 PermissionsStartOnly=true
-ExecStartPre=/usr/bin/etcd-pre-exec
-ExecStart=/usr/bin/etcd-bootstrap
+# Default, this will be overwritten with a cloud-config
+ExecStart=/usr/bin/etcd -f -data-dir /var/lib/etcd -bind-addr 0.0.0.0
 
 Restart=always
 # Set a longish timeout in case this machine isn't behaving

@@ -20,6 +20,7 @@ src_install() {
 	dobin ${FILESDIR}/ec2-ssh-key
 	dobin ${FILESDIR}/coreos-setup-environment
 	dobin ${FILESDIR}/coreos-c10n
+	dobin ${FILESDIR}/etcd-bootstrap
 
 	insinto "/"
 	doins ${FILESDIR}/cloud-config.yml
