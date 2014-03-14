@@ -1,0 +1,31 @@
+From 2d8a2869f482e17982eb4748d82a5066497e07bb Mon Sep 17 00:00:00 2001
+From: Tom Gundersen <teg@jklm.no>
+Date: Thu, 13 Mar 2014 18:42:56 +0100
+Subject: networkd: lease - store (up to) one dhcp lease file per interface
+
+This removes an accidentally left-over test fragment.
+---
+ src/network/networkd-link.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/src/network/networkd-link.c b/src/network/networkd-link.c
+index 5449a1246ec7..2650f863575b 100644
+--- a/src/network/networkd-link.c
++++ b/src/network/networkd-link.c
+@@ -1379,7 +1379,12 @@ int link_save(Link *link) {
+                 link_state_to_string(link->state));
+ 
+         if (link->dhcp_lease) {
+-                const char *lease_file = "/run/systemd/network/leases/test.lease";
++                char *lease_file;
++
++                r = asprintf(&lease_file, "/run/systemd/network/leases/%u",
++                             (unsigned) link->ifindex);
++                if (r < 0)
++                        return r;
+ 
+                 r = dhcp_lease_save(link->dhcp_lease, lease_file);
+                 if (r < 0)
+-- 
+1.9.0
+

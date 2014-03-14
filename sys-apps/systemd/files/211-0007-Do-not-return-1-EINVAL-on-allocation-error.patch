@@ -1,0 +1,69 @@
+From ca37f1e43b089e721760064b93882958e3f61485 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Fri, 14 Mar 2014 09:05:56 -0400
+Subject: Do not return -1 (EINVAL) on allocation error
+
+---
+ src/core/socket.c           |  8 +++-----
+ src/network/networkd-link.c | 12 ++++++------
+ 2 files changed, 9 insertions(+), 11 deletions(-)
+
+diff --git a/src/core/socket.c b/src/core/socket.c
+index 35531edb751e..ac59ce9d6a88 100644
+--- a/src/core/socket.c
++++ b/src/core/socket.c
+@@ -198,16 +198,14 @@ static int socket_instantiate_service(Socket *s) {
+ 
+         assert(s->accept);
+ 
+-        if (!(prefix = unit_name_to_prefix(UNIT(s)->id)))
++        prefix = unit_name_to_prefix(UNIT(s)->id);
++        if (!prefix)
+                 return -ENOMEM;
+ 
+-        r = asprintf(&name, "%s@%u.service", prefix, s->n_accepted);
+-
+-        if (r < 0)
++        if (asprintf(&name, "%s@%u.service", prefix, s->n_accepted) < 0)
+                 return -ENOMEM;
+ 
+         r = manager_load_unit(UNIT(s)->manager, name, NULL, NULL, &u);
+-
+         if (r < 0)
+                 return r;
+ 
+diff --git a/src/network/networkd-link.c b/src/network/networkd-link.c
+index 2650f863575b..275ad97a6307 100644
+--- a/src/network/networkd-link.c
++++ b/src/network/networkd-link.c
+@@ -53,10 +53,10 @@ int link_new(Manager *manager, struct udev_device *device, Link **ret) {
+         if (link->ifindex <= 0)
+                 return -EINVAL;
+ 
+-        r = asprintf(&link->state_file, "/run/systemd/network/links/%u",
+-                     (unsigned) link->ifindex);
++        r = asprintf(&link->state_file, "/run/systemd/network/links/%"PRIu64,
++                     link->ifindex);
+         if (r < 0)
+-                return r;
++                return -ENOMEM;
+ 
+         mac = udev_device_get_sysattr_value(device, "address");
+         if (mac) {
+@@ -1381,10 +1381,10 @@ int link_save(Link *link) {
+         if (link->dhcp_lease) {
+                 char *lease_file;
+ 
+-                r = asprintf(&lease_file, "/run/systemd/network/leases/%u",
+-                             (unsigned) link->ifindex);
++                r = asprintf(&lease_file, "/run/systemd/network/leases/%"PRIu64,
++                             link->ifindex);
+                 if (r < 0)
+-                        return r;
++                        return -ENOMEM;
+ 
+                 r = dhcp_lease_save(link->dhcp_lease, lease_file);
+                 if (r < 0)
+-- 
+1.9.0
+
