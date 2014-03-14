@@ -1,6 +1,8 @@
-# Copyright 1999-2012 Gentoo Foundation
+# Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-apps/shadow/shadow-4.1.4.3.ebuild,v 1.14 2012/08/18 21:28:14 vapier Exp $
+# $Header: /var/cvsroot/gentoo-x86/sys-apps/shadow/shadow-4.1.5.1-r1.ebuild,v 1.16 2014/01/18 04:48:18 vapier Exp $
+
+EAPI=4
 
 inherit eutils libtool toolchain-funcs pam multilib
 
@@ -10,47 +12,48 @@ SRC_URI="http://pkg-shadow.alioth.debian.org/releases/${P}.tar.bz2"
 
 LICENSE="BSD GPL-2"
 SLOT="0"
-KEYWORDS="alpha amd64 arm hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86"
-IUSE="audit cracklib nls pam selinux skey symlink-usr"
+KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86"
+IUSE="acl audit cracklib nls pam selinux skey xattr"
 
-RDEPEND="audit? ( sys-process/audit )
+RDEPEND="acl? ( sys-apps/acl )
+	audit? ( sys-process/audit )
 	cracklib? ( >=sys-libs/cracklib-2.7-r3 )
 	pam? ( virtual/pam )
 	skey? ( sys-auth/skey )
-	selinux? ( >=sys-libs/libselinux-1.28 )
-	nls? ( virtual/libintl )"
+	selinux? (
+		>=sys-libs/libselinux-1.28
+		sys-libs/libsemanage
+	)
+	nls? ( virtual/libintl )
+	xattr? ( sys-apps/attr )"
 DEPEND="${RDEPEND}
 	nls? ( sys-devel/gettext )"
 RDEPEND="${RDEPEND}
-	pam? ( >=sys-auth/pambase-20080219.1 )"
+	pam? ( >=sys-auth/pambase-20120417 )"
 
-src_unpack() {
-	unpack ${A}
-	cd "${S}"
-	epatch "${FILESDIR}"/${PN}-4.1.4.3-dup-install-targets.patch
-	epatch "${FILESDIR}"/${PN}-4.1.4.2-env-reset-keep-locale.patch #283725
+src_prepare() {
 	epatch "${FILESDIR}"/${PN}-4.1.3-dots-in-usernames.patch #22920
-	epatch "${FILESDIR}"/${PN}-4.1.4.2-groupmod-pam-check.patch #300790
-	epatch "${FILESDIR}"/${PN}-4.1.4.2-su_no_sanitize_env.patch #301957
-	epatch "${FILESDIR}"/${PN}-4.1.4.2-fix-etc-gshadow-reading.patch #327605
+	epatch_user
 	elibtoolize
-	epunt_cxx
 }
 
-src_compile() {
+src_configure() {
 	tc-is-cross-compiler && export ac_cv_func_setpgrp_void=yes
 	econf \
 		--without-group-name-max-length \
+		--without-tcb \
 		--enable-shared=no \
 		--enable-static=yes \
+		$(use_with acl) \
 		$(use_with audit) \
 		$(use_with cracklib libcrack) \
 		$(use_with pam libpam) \
 		$(use_with skey) \
 		$(use_with selinux) \
 		$(use_enable nls) \
-		$(use_with elibc_glibc nscd)
-	emake || die "compile problem"
+		$(use_with elibc_glibc nscd) \
+		$(use_with xattr attr)
+	has_version 'sys-libs/uclibc[-rpc]' && sed -i '/RLOGIN/d' config.h #425052
 }
 
 set_login_opt() {
@@ -64,7 +67,7 @@ set_login_opt() {
 }
 
 src_install() {
-	emake DESTDIR="${D}" suidperms=4711 install || die "install problem"
+	emake DESTDIR="${D}" suidperms=4711 install
 
 	# Remove libshadow and libmisc; see bug 37725 and the following
 	# comment from shadow's README.linux:
@@ -86,7 +89,7 @@ src_install() {
 	case $(tc-arch) in
 		ppc*)  devs="hvc0 hvsi0 ttyPSC0";;
 		hppa)  devs="ttyB0";;
-		arm)   devs="ttyFB0 ttySAC0 ttySAC1 ttySAC2 ttySAC3 ttymxc0 ttymxc1 ttyO0 ttyO1 ttyO2";;
+		arm)   devs="ttyFB0 ttySAC0 ttySAC1 ttySAC2 ttySAC3 ttymxc0 ttymxc1 ttymxc2 ttymxc3 ttyO0 ttyO1 ttyO2";;
 		sh)    devs="ttySC0 ttySC1";;
 	esac
 	[[ -n ${devs} ]] && printf '%s\n' ${devs} >> "${D}"/etc/securetty
@@ -95,12 +98,6 @@ src_install() {
 	insinto /etc/default
 	insopts -m0600
 	doins "${FILESDIR}"/default/useradd
-
-	# move passwd to / to help recover broke systems #64441
-	mv "${D}"/usr/bin/passwd "${D}"/bin/
-	if ! use symlink-usr ; then
-		dosym /bin/passwd /usr/bin/passwd
-	fi
 
 	cd "${S}"
 	insinto /etc
@@ -114,17 +111,15 @@ src_install() {
 		set_login_opt LOGIN_RETRIES 3
 		set_login_opt ENCRYPT_METHOD SHA512
 	else
-		dopamd "${FILESDIR}/pam.d-include/"{su,shadow}
+		dopamd "${FILESDIR}"/pam.d-include/shadow
 
-		newpamd "${FILESDIR}/login.pamd.3" login
-
-		for x in passwd chpasswd chgpasswd; do
-			newpamd "${FILESDIR}"/pam.d-include/passwd ${x} || die
+		for x in chpasswd chgpasswd newusers; do
+			newpamd "${FILESDIR}"/pam.d-include/passwd ${x}
 		done
 
-		for x in chage chsh chfn newusers \
+		for x in chage chsh chfn \
 				 user{add,del,mod} group{add,del,mod} ; do
-			newpamd "${FILESDIR}"/pam.d-include/shadow ${x} || die
+			newpamd "${FILESDIR}"/pam.d-include/shadow ${x}
 		done
 
 		# comment out login.defs options that pam hates
@@ -159,6 +154,9 @@ src_install() {
 		find "${D}"/usr/share/man \
 			'(' -name 'limits.5*' -o -name 'suauth.5*' ')' \
 			-exec rm {} +
+
+		# Remove pam.d files provided by pambase.
+		rm "${D}"/etc/pam.d/{login,passwd,su} || die
 	fi
 
 	# Remove manpages that are handled by other packages
@@ -176,16 +174,13 @@ src_install() {
 pkg_preinst() {
 	rm -f "${ROOT}"/etc/pam.d/system-auth.new \
 		"${ROOT}/etc/login.defs.new"
-
-	use pam && pam_epam_expand "${D}"/etc/pam.d/login
 }
 
 pkg_postinst() {
-	# Enable shadow groups (we need ROOT=/ here, as grpconv only
-	# operate on / ...).
-	if [[ ${ROOT} == / && ! -f /etc/gshadow ]] ; then
-		if grpck -r 2>/dev/null ; then
-			grpconv
+	# Enable shadow groups.
+	if [ ! -f "${ROOT}"/etc/gshadow ] ; then
+		if grpck -r -R "${ROOT}" 2>/dev/null ; then
+			grpconv -R "${ROOT}"
 		else
 			ewarn "Running 'grpck' returned errors.  Please run it by hand, and then"
 			ewarn "run 'grpconv' afterwards!"
