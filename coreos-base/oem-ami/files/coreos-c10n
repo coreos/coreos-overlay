@@ -68,7 +68,7 @@ if  head -n 1 $TMP | grep -q '^#!'; then
 elif head -n 1 $TMP | grep -q '^#cloud-config'; then
 	# If an etcd discovery URL was found, we can assume the new hotness
 	# will handle bootstrapping, allowing us to clear the c10n token
-	if head -n 1 $TMP | grep -q 'discovery_url:'; then
+	if grep -q 'discovery_url:' $TMP; then
 		C10N_TOKEN=""
 	fi
 

@@ -11,7 +11,7 @@ coreos:
           [Service]
           Type=oneshot
           StandardOutput=journal+console
-          ExecStart=/usr/share/oem/usr/bin/ec2-ssh-key.sh
+          ExecStart=/usr/share/oem/usr/bin/ec2-ssh-key
       - name: ec2-cloudinit.service
         runtime: yes
         content: |
