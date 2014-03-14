@@ -17,3 +17,23 @@ coreos:
           ExecStopPost=/bin/umount -f /usr/share/oem/nova-agent/dev
           ExecStopPost=/bin/umount -f /usr/share/oem/nova-agent/proc/xen
           ExecStopPost=/bin/umount -f /usr/share/oem/nova-agent/proc
+      - name: nova-agent-watcher.service
+        content: |
+          [Unit]
+          After=dbus.service
+
+          [Service]
+          ExecStart=/usr/share/oem/usr/bin/nova-agent-watcher -watch-dir=/usr/share/oem/nova-agent -scripts-dir=/usr/share/oem/usr/bin/
+      - name: media-configdrive.mount
+        content: |
+          [Mount]
+          What=/dev/disk/by-label/config-2
+          Where=/media/configdrive
+      - name: cloudinit-configdrive.service
+        content: |
+          [Unit]
+          RequiresMountsFor=/media/configdrive
+
+          [Service]
+          Type=oneshot
+          ExecStart=/usr/bin/coreos-cloudinit --from-file=/media/configdrive/openstack/latest/user_data
