@@ -3,16 +3,10 @@
 #TODO: Generating a config file rather than args so etcd-bootstrap can run as a
 #      completely separate unit from etcd
 
-VIRT=$(coreos-detect-virt)
 STATE=/var/lib/etcd
 ARGS="-f -data-dir $STATE -bind-addr 0.0.0.0"
 
-if [ "${VIRT}" != "ec2" ]; then
-	echo "Detected environment \"${VIRT}\", just starting solo master..."
-	exec /usr/bin/etcd ${ARGS} -n ${HOSTNAME}
-else
-	ARGS="${ARGS} -peer-election-timeout 1200"
-fi
+ARGS="${ARGS} -peer-election-timeout 1200"
 
 BOOTSTRAP_PEERS="/var/run/etcd/bootstrap.config"
 BOOTSTRAP_DISCO="/var/run/etcd/bootstrap.disco"

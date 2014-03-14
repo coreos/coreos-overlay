@@ -29,8 +29,6 @@ src_compile() {
 
 src_install() {
 	dobin ${S}/bin/${PN}
-	dobin ${FILESDIR}/etcd-bootstrap
-	dobin ${FILESDIR}/etcd-pre-exec
 
 	systemd_dounit "${FILESDIR}"/${PN}.service
 	systemd_enable_service multi-user.target ${PN}.service

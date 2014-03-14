@@ -1,0 +1,52 @@
+#cloud-config
+
+coreos:
+    units:
+      - name: ec2-ssh-key.service
+        runtime: yes
+        content: |
+          [Unit]
+          Description=Sets SSH key from metadata
+
+          [Service]
+          Type=oneshot
+          StandardOutput=journal+console
+          ExecStart=/usr/share/oem/usr/bin/ec2-ssh-key
+      - name: ec2-cloudinit.service
+        runtime: yes
+        content: |
+          [Unit]
+          Description=Cloudinit from EC2 metadata
+
+          [Service]
+          Type=oneshot
+          ExecStart=/usr/bin/coreos-cloudinit -from-url=http://169.254.169.254/latest/user-data
+      - name: ec2-c10n.service
+        runtime: yes
+        content: |
+          [Unit]
+          Description=Legacy c10n support from EC2 metadata
+          Requires=ec2-cloudinit.service
+          After=ec2-cloudinit.service
+
+          [Service]
+          Type=oneshot
+          RemainAfterExit=no
+          ExecStart=/usr/share/oem/usr/bin/coreos-c10n
+      - name: etcd.service
+        runtime: yes
+        content: |
+          [Unit]
+          Description=etcd with ec2 auto-bootstrap
+          Requires=ec2-c10n.service
+          After=ec2-c10n.service
+
+          [Service]
+          User=etcd
+          PermissionsStartOnly=true
+          ExecStart=/usr/share/oem/usr/bin/etcd-bootstrap
+          Restart=always
+          RestartSec=10s
+
+          [Install]
+          WantedBy=multi-user.target
