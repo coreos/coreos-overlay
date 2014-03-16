@@ -26,8 +26,6 @@ RDEPEND="
 
 src_install() {
 	rsync --exclude=".git" -aq ${S}/ ${D}/nova-agent/
-	exeinto "/"
-	doexe ${FILESDIR}/run
 	insinto "/"
-	doins ${FILESDIR}/init.yml
+	doins ${FILESDIR}/cloud-config.yml
 }
