@@ -15,11 +15,15 @@ coreos:
       - name: ec2-cloudinit.service
         runtime: yes
         content: |
+          [Service]
+          Requires=coreos-setup-environment.service
+          After=coreos-setup-environment.service
           [Unit]
           Description=Cloudinit from EC2 metadata
 
           [Service]
           Type=oneshot
+          EnvironmentFile=/etc/environment
           ExecStart=/usr/bin/coreos-cloudinit -from-url=http://169.254.169.254/latest/user-data
       - name: ec2-c10n.service
         runtime: yes
@@ -36,6 +40,7 @@ coreos:
 
 write_files:
     - path: /etc/systemd/system/etcd.service.d/10-oem.conf
-      contents: |
+      permissions: 0644
+      content: |
         [Service]
         Environment=ETCD_PEER_ELECTION_TIMEOUT=1200
