@@ -1,19 +1,14 @@
 [Unit]
 Description=etcd
-RequiresMountsFor=/usr/share/oem
-# oem will setup etcd for auto bootstrapping
-ConditionPathExists=!/usr/share/oem/cloud-config.yml
+# this will setup cloudinit and user envs
+Wants=coreos-cloudinit-oem.service
+After=coreos-cloudinit-oem.service
 
 [Service]
 User=etcd
 PermissionsStartOnly=true
-# Default, this will be overwritten with a cloud-config
-ExecStart=/usr/bin/etcd -f -data-dir /var/lib/etcd -bind-addr 0.0.0.0 -n default
-
-Restart=always
-# Set a longish timeout in case this machine isn't behaving
-# nicely and bothering the rest of the cluster
-RestartSec=10s
+Environment=ETCD_DATA_DIR=/var/lib/etcd ETCD_NAME=default
+ExecStart=/usr/bin/etcd 
 
 [Install]
 WantedBy=multi-user.target

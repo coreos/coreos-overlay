@@ -16,7 +16,7 @@ IUSE=""
 S="${WORKDIR}"
 
 src_install() {
-	into "/usr"
+	into "/"
 	dobin ${FILESDIR}/ec2-ssh-key
 	dobin ${FILESDIR}/coreos-setup-environment
 	dobin ${FILESDIR}/coreos-c10n
