@@ -84,23 +84,6 @@ bool IsNormalBootMode() {
   return !dev_mode;
 }
 
-string GetHardwareClass() {
-  // TODO(petkov): Convert to a library call once a crossystem library is
-  // available (crosbug.com/13291).
-  int exit_code = 0;
-  vector<string> cmd(1, "/usr/bin/crossystem");
-  cmd.push_back("hwid");
-
-  string hwid;
-  bool success = Subprocess::SynchronousExec(cmd, &exit_code, &hwid);
-  if (success && !exit_code) {
-    TrimWhitespaceASCII(hwid, TRIM_ALL, &hwid);
-    return hwid;
-  }
-  LOG(ERROR) << "Unable to read HWID (" << exit_code << ") " << hwid;
-  return "";
-}
-
 string GetBootId() {
   string id;
   string guid;

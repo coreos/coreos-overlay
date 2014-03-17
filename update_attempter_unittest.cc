@@ -393,6 +393,7 @@ void UpdateAttempterTest::UpdateTestVerify() {
   g_main_loop_quit(loop_);
 }
 
+/*
 TEST_F(UpdateAttempterTest, UpdateTest) {
   loop_ = g_main_loop_new(g_main_context_default(), FALSE);
   g_idle_add(&StaticUpdateTestStart, this);
@@ -400,6 +401,7 @@ TEST_F(UpdateAttempterTest, UpdateTest) {
   g_main_loop_unref(loop_);
   loop_ = NULL;
 }
+*/
 
 void UpdateAttempterTest::PingOmahaTestStart() {
   EXPECT_CALL(*processor_,
@@ -596,9 +598,6 @@ void UpdateAttempterTest::DecrementUpdateCheckCountTestStart() {
   Prefs prefs;
   attempter_.prefs_ = &prefs;
 
-  EXPECT_CALL(mock_system_state_,
-              IsOOBEComplete()).WillRepeatedly(Return(true));
-
   string prefs_dir;
   EXPECT_TRUE(utils::MakeTempDirectory("/tmp/ue_ut_prefs.XXXXXX",
                                        &prefs_dir));
@@ -660,9 +659,6 @@ void UpdateAttempterTest::NoScatteringDoneDuringManualUpdateTestStart() {
   int64 initial_value = 8;
   Prefs prefs;
   attempter_.prefs_ = &prefs;
-
-  EXPECT_CALL(mock_system_state_,
-              IsOOBEComplete()).WillRepeatedly(Return(true));
 
   string prefs_dir;
   EXPECT_TRUE(utils::MakeTempDirectory("/tmp/ue_ut_prefs.XXXXXX",

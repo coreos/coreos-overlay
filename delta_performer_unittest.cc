@@ -864,30 +864,6 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageSignGeneratedTest) {
                    hash_checks_mandatory);
 }
 
-TEST(DeltaPerformerTest, RunAsRootSmallImageSignGeneratedShellTest) {
-  bool hash_checks_mandatory = false;
-  DoSmallImageTest(false, false, false, kSignatureGeneratedShell,
-                   hash_checks_mandatory);
-}
-
-TEST(DeltaPerformerTest, RunAsRootSmallImageSignGeneratedShellBadKeyTest) {
-  bool hash_checks_mandatory = false;
-  DoSmallImageTest(false, false, false, kSignatureGeneratedShellBadKey,
-                   hash_checks_mandatory);
-}
-
-TEST(DeltaPerformerTest, RunAsRootSmallImageSignGeneratedShellRotateCl1Test) {
-  bool hash_checks_mandatory = false;
-  DoSmallImageTest(false, false, false, kSignatureGeneratedShellRotateCl1,
-                   hash_checks_mandatory);
-}
-
-TEST(DeltaPerformerTest, RunAsRootSmallImageSignGeneratedShellRotateCl2Test) {
-  bool hash_checks_mandatory = false;
-  DoSmallImageTest(false, false, false, kSignatureGeneratedShellRotateCl2,
-                   hash_checks_mandatory);
-}
-
 TEST(DeltaPerformerTest, BadDeltaMagicTest) {
   PrefsMock prefs;
   InstallPlan install_plan;

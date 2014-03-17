@@ -72,7 +72,6 @@ bool OmahaRequestParams::Init(const std::string& in_app_version,
                               NULL,
                               stateful_override);
   app_lang_ = "en-US";
-  hwid_ = utils::GetHardwareClass();
   bootid_ = utils::GetBootId();
   machineid_ = utils::GetMachineId();
 

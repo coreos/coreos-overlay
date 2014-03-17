@@ -8,7 +8,6 @@
 
 namespace chromeos_update_engine {
 
-static const char kOOBECompletedMarker[] = "/home/chronos/.oobe_completed";
 static const char kPrefsDirectory[] = "/var/lib/update_engine/prefs";
 
 RealSystemState::RealSystemState()
@@ -53,10 +52,6 @@ bool RealSystemState::Initialize(bool enable_gpio, bool enable_connection_manage
 
   // All is well. Initialization successful.
   return true;
-}
-
-bool RealSystemState::IsOOBEComplete() {
-  return file_util::PathExists(FilePath(kOOBECompletedMarker));
 }
 
 }  // namespace chromeos_update_engine

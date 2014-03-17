@@ -29,9 +29,7 @@ class OmahaRequestParamsTest : public ::testing::Test {
               const string& omaha_url);
 
   virtual void SetUp() {
-    ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir + "/etc"));
-    ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir +
-                        utils::kStatefulPartition + "/etc"));
+    ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir + "/usr/share/coreos"));
     // Create a fresh copy of the params for each test, so there's no
     // unintended reuse of state across tests.
     MockSystemState mock_system_state;
@@ -77,19 +75,16 @@ string GetMachineType() {
 
 TEST_F(OmahaRequestParamsTest, SimpleTest) {
   ASSERT_TRUE(WriteFileString(
-      kTestDir + "/etc/lsb-release",
-      "COREOS_RELEASE_BOARD=arm-generic\n"
+      kTestDir + "/usr/share/coreos/release",
       "COREOS_RELEASE_FOO=bar\n"
       "COREOS_RELEASE_VERSION=0.2.2.3\n"
-      "COREOS_RELEASE_TRACK=dev-channel\n"
-      "COREOS_AUSERVER=http://www.google.com"));
+      "GROUP=dev-channel\n"
+      "SERVER=http://www.google.com"));
   MockSystemState mock_system_state;
   OmahaRequestParams out(&mock_system_state);
   EXPECT_TRUE(DoTest(&out, "", ""));
-  EXPECT_EQ("Chrome OS", out.os_platform());
   EXPECT_EQ(string("0.2.2.3_") + GetMachineType(), out.os_sp());
-  EXPECT_EQ("arm-generic", out.os_board());
-  EXPECT_EQ("{87efface-864d-49a5-9bb3-4b050a7c227a}", out.app_id());
+  EXPECT_EQ("{e96281a6-d1af-4bde-9a0a-97b76e56dc57}", out.app_id());
   EXPECT_EQ("0.2.2.3", out.app_version());
   EXPECT_EQ("en-US", out.app_lang());
   EXPECT_EQ("", out.hwid());
@@ -100,19 +95,16 @@ TEST_F(OmahaRequestParamsTest, SimpleTest) {
 
 TEST_F(OmahaRequestParamsTest, AppIDTest) {
   ASSERT_TRUE(WriteFileString(
-      kTestDir + "/etc/lsb-release",
-      "COREOS_RELEASE_BOARD=arm-generic\n"
+      kTestDir + "/usr/share/coreos/release",
       "COREOS_RELEASE_FOO=bar\n"
       "COREOS_RELEASE_VERSION=0.2.2.3\n"
-      "COREOS_RELEASE_TRACK=dev-channel\n"
+      "GROUP=dev-channel\n"
       "COREOS_RELEASE_APPID={58c35cef-9d30-476e-9098-ce20377d535d}\n"
-      "COREOS_AUSERVER=http://www.google.com"));
+      "SERVER=http://www.google.com"));
   MockSystemState mock_system_state;
   OmahaRequestParams out(&mock_system_state);
   EXPECT_TRUE(DoTest(&out, "", ""));
-  EXPECT_EQ("Chrome OS", out.os_platform());
   EXPECT_EQ(string("0.2.2.3_") + GetMachineType(), out.os_sp());
-  EXPECT_EQ("arm-generic", out.os_board());
   EXPECT_EQ("{58c35cef-9d30-476e-9098-ce20377d535d}", out.app_id());
   EXPECT_EQ("0.2.2.3", out.app_version());
   EXPECT_EQ("en-US", out.app_lang());
@@ -124,16 +116,15 @@ TEST_F(OmahaRequestParamsTest, AppIDTest) {
 
 TEST_F(OmahaRequestParamsTest, MissingChannelTest) {
   ASSERT_TRUE(WriteFileString(
-      kTestDir + "/etc/lsb-release",
+      kTestDir + "/usr/share/coreos/release",
       "COREOS_RELEASE_FOO=bar\n"
       "COREOS_RELEASE_VERSION=0.2.2.3\n"
       "COREOS_RELEASE_TRXCK=dev-channel"));
   MockSystemState mock_system_state;
   OmahaRequestParams out(&mock_system_state);
   EXPECT_TRUE(DoTest(&out, "", ""));
-  EXPECT_EQ("Chrome OS", out.os_platform());
   EXPECT_EQ(string("0.2.2.3_") + GetMachineType(), out.os_sp());
-  EXPECT_EQ("{87efface-864d-49a5-9bb3-4b050a7c227a}", out.app_id());
+  EXPECT_EQ("{e96281a6-d1af-4bde-9a0a-97b76e56dc57}", out.app_id());
   EXPECT_EQ("0.2.2.3", out.app_version());
   EXPECT_EQ("en-US", out.app_lang());
   EXPECT_EQ("", out.target_channel());
@@ -141,16 +132,15 @@ TEST_F(OmahaRequestParamsTest, MissingChannelTest) {
 
 TEST_F(OmahaRequestParamsTest, ConfusingReleaseTest) {
   ASSERT_TRUE(WriteFileString(
-      kTestDir + "/etc/lsb-release",
+      kTestDir + "/usr/share/coreos/release",
       "COREOS_RELEASE_FOO=COREOS_RELEASE_VERSION=1.2.3.4\n"
       "COREOS_RELEASE_VERSION=0.2.2.3\n"
       "COREOS_RELEASE_TRXCK=dev-channel"));
   MockSystemState mock_system_state;
   OmahaRequestParams out(&mock_system_state);
   EXPECT_TRUE(DoTest(&out, "", ""));
-  EXPECT_EQ("Chrome OS", out.os_platform());
   EXPECT_EQ(string("0.2.2.3_") + GetMachineType(), out.os_sp());
-  EXPECT_EQ("{87efface-864d-49a5-9bb3-4b050a7c227a}", out.app_id());
+  EXPECT_EQ("{e96281a6-d1af-4bde-9a0a-97b76e56dc57}", out.app_id());
   EXPECT_EQ("0.2.2.3", out.app_version());
   EXPECT_EQ("en-US", out.app_lang());
   EXPECT_EQ("", out.target_channel());
@@ -158,17 +148,14 @@ TEST_F(OmahaRequestParamsTest, ConfusingReleaseTest) {
 
 TEST_F(OmahaRequestParamsTest, MissingVersionTest) {
   ASSERT_TRUE(WriteFileString(
-      kTestDir + "/etc/lsb-release",
-      "COREOS_RELEASE_BOARD=arm-generic\n"
+      kTestDir + "/usr/share/coreos/release",
       "COREOS_RELEASE_FOO=bar\n"
-      "COREOS_RELEASE_TRACK=dev-channel"));
+      "GROUP=dev-channel"));
   MockSystemState mock_system_state;
   OmahaRequestParams out(&mock_system_state);
   EXPECT_TRUE(DoTest(&out, "", ""));
-  EXPECT_EQ("Chrome OS", out.os_platform());
   EXPECT_EQ(string("_") + GetMachineType(), out.os_sp());
-  EXPECT_EQ("arm-generic", out.os_board());
-  EXPECT_EQ("{87efface-864d-49a5-9bb3-4b050a7c227a}", out.app_id());
+  EXPECT_EQ("{e96281a6-d1af-4bde-9a0a-97b76e56dc57}", out.app_id());
   EXPECT_EQ("", out.app_version());
   EXPECT_EQ("en-US", out.app_lang());
   EXPECT_TRUE(out.delta_okay());
@@ -177,17 +164,14 @@ TEST_F(OmahaRequestParamsTest, MissingVersionTest) {
 
 TEST_F(OmahaRequestParamsTest, ForceVersionTest) {
   ASSERT_TRUE(WriteFileString(
-      kTestDir + "/etc/lsb-release",
-      "COREOS_RELEASE_BOARD=arm-generic\n"
+      kTestDir + "/usr/share/coreos/release",
       "COREOS_RELEASE_FOO=bar\n"
-      "COREOS_RELEASE_TRACK=dev-channel"));
+      "GROUP=dev-channel"));
   MockSystemState mock_system_state;
   OmahaRequestParams out(&mock_system_state);
   EXPECT_TRUE(DoTest(&out, "ForcedVersion", ""));
-  EXPECT_EQ("Chrome OS", out.os_platform());
   EXPECT_EQ(string("ForcedVersion_") + GetMachineType(), out.os_sp());
-  EXPECT_EQ("arm-generic", out.os_board());
-  EXPECT_EQ("{87efface-864d-49a5-9bb3-4b050a7c227a}", out.app_id());
+  EXPECT_EQ("{e96281a6-d1af-4bde-9a0a-97b76e56dc57}", out.app_id());
   EXPECT_EQ("ForcedVersion", out.app_version());
   EXPECT_EQ("en-US", out.app_lang());
   EXPECT_TRUE(out.delta_okay());
@@ -196,18 +180,15 @@ TEST_F(OmahaRequestParamsTest, ForceVersionTest) {
 
 TEST_F(OmahaRequestParamsTest, ForcedURLTest) {
   ASSERT_TRUE(WriteFileString(
-      kTestDir + "/etc/lsb-release",
-      "COREOS_RELEASE_BOARD=arm-generic\n"
+      kTestDir + "/usr/share/coreos/release",
       "COREOS_RELEASE_FOO=bar\n"
       "COREOS_RELEASE_VERSION=0.2.2.3\n"
-      "COREOS_RELEASE_TRACK=dev-channel"));
+      "GROUP=dev-channel"));
   MockSystemState mock_system_state;
   OmahaRequestParams out(&mock_system_state);
   EXPECT_TRUE(DoTest(&out, "", "http://forced.google.com"));
-  EXPECT_EQ("Chrome OS", out.os_platform());
   EXPECT_EQ(string("0.2.2.3_") + GetMachineType(), out.os_sp());
-  EXPECT_EQ("arm-generic", out.os_board());
-  EXPECT_EQ("{87efface-864d-49a5-9bb3-4b050a7c227a}", out.app_id());
+  EXPECT_EQ("{e96281a6-d1af-4bde-9a0a-97b76e56dc57}", out.app_id());
   EXPECT_EQ("0.2.2.3", out.app_version());
   EXPECT_EQ("en-US", out.app_lang());
   EXPECT_TRUE(out.delta_okay());
@@ -217,18 +198,15 @@ TEST_F(OmahaRequestParamsTest, ForcedURLTest) {
 
 TEST_F(OmahaRequestParamsTest, MissingURLTest) {
   ASSERT_TRUE(WriteFileString(
-      kTestDir + "/etc/lsb-release",
-      "COREOS_RELEASE_BOARD=arm-generic\n"
+      kTestDir + "/usr/share/coreos/release",
       "COREOS_RELEASE_FOO=bar\n"
       "COREOS_RELEASE_VERSION=0.2.2.3\n"
-      "COREOS_RELEASE_TRACK=dev-channel"));
+      "GROUP=dev-channel"));
   MockSystemState mock_system_state;
   OmahaRequestParams out(&mock_system_state);
   EXPECT_TRUE(DoTest(&out, "", ""));
-  EXPECT_EQ("Chrome OS", out.os_platform());
   EXPECT_EQ(string("0.2.2.3_") + GetMachineType(), out.os_sp());
-  EXPECT_EQ("arm-generic", out.os_board());
-  EXPECT_EQ("{87efface-864d-49a5-9bb3-4b050a7c227a}", out.app_id());
+  EXPECT_EQ("{e96281a6-d1af-4bde-9a0a-97b76e56dc57}", out.app_id());
   EXPECT_EQ("0.2.2.3", out.app_version());
   EXPECT_EQ("en-US", out.app_lang());
   EXPECT_TRUE(out.delta_okay());
@@ -238,7 +216,7 @@ TEST_F(OmahaRequestParamsTest, MissingURLTest) {
 
 TEST_F(OmahaRequestParamsTest, NoDeltasTest) {
   ASSERT_TRUE(WriteFileString(
-      kTestDir + "/etc/lsb-release",
+      kTestDir + "/usr/share/coreos/release",
       "COREOS_RELEASE_FOO=COREOS_RELEASE_VERSION=1.2.3.4\n"
       "COREOS_RELEASE_VERSION=0.2.2.3\n"
       "COREOS_RELEASE_TRXCK=dev-channel"));
@@ -249,140 +227,13 @@ TEST_F(OmahaRequestParamsTest, NoDeltasTest) {
   EXPECT_FALSE(out.delta_okay());
 }
 
-TEST_F(OmahaRequestParamsTest, OverrideTest) {
-  ASSERT_TRUE(WriteFileString(
-      kTestDir + "/etc/lsb-release",
-      "COREOS_RELEASE_BOARD=arm-generic\n"
-      "COREOS_RELEASE_FOO=bar\n"
-      "COREOS_RELEASE_VERSION=0.2.2.3\n"
-      "COREOS_RELEASE_TRACK=dev-channel\n"
-      "COREOS_AUSERVER=http://www.google.com"));
-  ASSERT_TRUE(WriteFileString(
-      kTestDir + utils::kStatefulPartition + "/etc/lsb-release",
-      "COREOS_RELEASE_BOARD=x86-generic\n"
-      "COREOS_RELEASE_TRACK=beta-channel\n"
-      "COREOS_AUSERVER=https://www.google.com"));
-  MockSystemState mock_system_state;
-  OmahaRequestParams out(&mock_system_state);
-  EXPECT_TRUE(DoTest(&out, "", ""));
-  EXPECT_EQ("Chrome OS", out.os_platform());
-  EXPECT_EQ(string("0.2.2.3_") + GetMachineType(), out.os_sp());
-  EXPECT_EQ("x86-generic", out.os_board());
-  EXPECT_EQ("{87efface-864d-49a5-9bb3-4b050a7c227a}", out.app_id());
-  EXPECT_EQ("0.2.2.3", out.app_version());
-  EXPECT_EQ("en-US", out.app_lang());
-  EXPECT_EQ("", out.hwid());
-  EXPECT_FALSE(out.delta_okay());
-  EXPECT_EQ("beta-channel", out.target_channel());
-  EXPECT_EQ("https://www.google.com", out.update_url());
-}
-
-TEST_F(OmahaRequestParamsTest, OverrideLockDownTest) {
-  ASSERT_TRUE(WriteFileString(
-      kTestDir + "/etc/lsb-release",
-      "COREOS_RELEASE_BOARD=arm-generic\n"
-      "COREOS_RELEASE_FOO=bar\n"
-      "COREOS_RELEASE_VERSION=0.2.2.3\n"
-      "COREOS_RELEASE_TRACK=dev-channel\n"
-      "COREOS_AUSERVER=https://www.google.com"));
-  ASSERT_TRUE(WriteFileString(
-      kTestDir + utils::kStatefulPartition + "/etc/lsb-release",
-      "COREOS_RELEASE_BOARD=x86-generic\n"
-      "COREOS_RELEASE_TRACK=stable-channel\n"
-      "COREOS_AUSERVER=http://www.google.com"));
-  params_.SetLockDown(true);
-  MockSystemState mock_system_state;
-  OmahaRequestParams out(&mock_system_state);
-  EXPECT_TRUE(DoTest(&out, "", ""));
-  EXPECT_EQ("arm-generic", out.os_board());
-  EXPECT_EQ("{87efface-864d-49a5-9bb3-4b050a7c227a}", out.app_id());
-  EXPECT_EQ("0.2.2.3", out.app_version());
-  EXPECT_EQ("", out.hwid());
-  EXPECT_FALSE(out.delta_okay());
-  EXPECT_EQ("stable-channel", out.target_channel());
-  EXPECT_EQ("https://www.google.com", out.update_url());
-}
-
-TEST_F(OmahaRequestParamsTest, OverrideSameChannelTest) {
-  ASSERT_TRUE(WriteFileString(
-      kTestDir + "/etc/lsb-release",
-      "COREOS_RELEASE_BOARD=arm-generic\n"
-      "COREOS_RELEASE_FOO=bar\n"
-      "COREOS_RELEASE_VERSION=0.2.2.3\n"
-      "COREOS_RELEASE_TRACK=dev-channel\n"
-      "COREOS_AUSERVER=http://www.google.com"));
-  ASSERT_TRUE(WriteFileString(
-      kTestDir + utils::kStatefulPartition + "/etc/lsb-release",
-      "COREOS_RELEASE_BOARD=x86-generic\n"
-      "COREOS_RELEASE_TRACK=dev-channel"));
-  MockSystemState mock_system_state;
-  OmahaRequestParams out(&mock_system_state);
-  EXPECT_TRUE(DoTest(&out, "", ""));
-  EXPECT_EQ("x86-generic", out.os_board());
-  EXPECT_EQ("{87efface-864d-49a5-9bb3-4b050a7c227a}", out.app_id());
-  EXPECT_EQ("0.2.2.3", out.app_version());
-  EXPECT_EQ("", out.hwid());
-  EXPECT_TRUE(out.delta_okay());
-  EXPECT_EQ("dev-channel", out.target_channel());
-  EXPECT_EQ("http://www.google.com", out.update_url());
-}
-
-TEST_F(OmahaRequestParamsTest, SetTargetChannelTest) {
-  ASSERT_TRUE(WriteFileString(
-      kTestDir + "/etc/lsb-release",
-      "COREOS_RELEASE_BOARD=arm-generic\n"
-      "COREOS_RELEASE_FOO=bar\n"
-      "COREOS_RELEASE_VERSION=0.2.2.3\n"
-      "COREOS_RELEASE_TRACK=dev-channel\n"
-      "COREOS_AUSERVER=http://www.google.com"));
-  {
-    MockSystemState mock_system_state;
-    OmahaRequestParams params(&mock_system_state);
-    params.set_root(string("./") + kTestDir);
-    params.SetLockDown(false);
-    EXPECT_TRUE(params.Init("", "", false));
-    params.SetTargetChannel("canary-channel", false);
-    EXPECT_FALSE(params.is_powerwash_allowed());
-  }
-  MockSystemState mock_system_state;
-  OmahaRequestParams out(&mock_system_state);
-  EXPECT_TRUE(DoTest(&out, "", ""));
-  EXPECT_EQ("canary-channel", out.target_channel());
-  EXPECT_FALSE(out.is_powerwash_allowed());
-}
-
-TEST_F(OmahaRequestParamsTest, SetIsPowerwashAllowedTest) {
-  ASSERT_TRUE(WriteFileString(
-      kTestDir + "/etc/lsb-release",
-      "COREOS_RELEASE_BOARD=arm-generic\n"
-      "COREOS_RELEASE_FOO=bar\n"
-      "COREOS_RELEASE_VERSION=0.2.2.3\n"
-      "COREOS_RELEASE_TRACK=dev-channel\n"
-      "COREOS_AUSERVER=http://www.google.com"));
-  {
-    MockSystemState mock_system_state;
-    OmahaRequestParams params(&mock_system_state);
-    params.set_root(string("./") + kTestDir);
-    params.SetLockDown(false);
-    EXPECT_TRUE(params.Init("", "", false));
-    params.SetTargetChannel("canary-channel", true);
-    EXPECT_TRUE(params.is_powerwash_allowed());
-  }
-  MockSystemState mock_system_state;
-  OmahaRequestParams out(&mock_system_state);
-  EXPECT_TRUE(DoTest(&out, "", ""));
-  EXPECT_EQ("canary-channel", out.target_channel());
-  EXPECT_TRUE(out.is_powerwash_allowed());
-}
-
 TEST_F(OmahaRequestParamsTest, SetTargetChannelInvalidTest) {
   ASSERT_TRUE(WriteFileString(
-      kTestDir + "/etc/lsb-release",
-      "COREOS_RELEASE_BOARD=arm-generic\n"
+      kTestDir + "/usr/share/coreos/release",
       "COREOS_RELEASE_FOO=bar\n"
       "COREOS_RELEASE_VERSION=0.2.2.3\n"
-      "COREOS_RELEASE_TRACK=dev-channel\n"
-      "COREOS_AUSERVER=http://www.google.com"));
+      "GROUP=dev-channel\n"
+      "SERVER=http://www.google.com"));
   {
     MockSystemState mock_system_state;
     OmahaRequestParams params(&mock_system_state);
@@ -395,7 +246,6 @@ TEST_F(OmahaRequestParamsTest, SetTargetChannelInvalidTest) {
   MockSystemState mock_system_state;
   OmahaRequestParams out(&mock_system_state);
   EXPECT_TRUE(DoTest(&out, "", ""));
-  EXPECT_EQ("arm-generic", out.os_board());
   EXPECT_EQ("dev-channel", out.target_channel());
   EXPECT_FALSE(out.is_powerwash_allowed());
 }
@@ -414,63 +264,23 @@ TEST_F(OmahaRequestParamsTest, IsValidChannelTest) {
 
 TEST_F(OmahaRequestParamsTest, ValidChannelTest) {
   ASSERT_TRUE(WriteFileString(
-      kTestDir + "/etc/lsb-release",
-      "COREOS_RELEASE_BOARD=arm-generic\n"
+      kTestDir + "/usr/share/coreos/release",
       "COREOS_RELEASE_FOO=bar\n"
       "COREOS_RELEASE_VERSION=0.2.2.3\n"
-      "COREOS_RELEASE_TRACK=dev-channel\n"
-      "COREOS_AUSERVER=http://www.google.com"));
+      "GROUP=dev-channel\n"
+      "SERVER=http://www.google.com"));
   params_.SetLockDown(true);
   MockSystemState mock_system_state;
   OmahaRequestParams out(&mock_system_state);
   EXPECT_TRUE(DoTest(&out, "", ""));
-  EXPECT_EQ("Chrome OS", out.os_platform());
   EXPECT_EQ(string("0.2.2.3_") + GetMachineType(), out.os_sp());
-  EXPECT_EQ("arm-generic", out.os_board());
-  EXPECT_EQ("{87efface-864d-49a5-9bb3-4b050a7c227a}", out.app_id());
+  EXPECT_EQ("{e96281a6-d1af-4bde-9a0a-97b76e56dc57}", out.app_id());
   EXPECT_EQ("0.2.2.3", out.app_version());
   EXPECT_EQ("en-US", out.app_lang());
   EXPECT_EQ("", out.hwid());
   EXPECT_TRUE(out.delta_okay());
   EXPECT_EQ("dev-channel", out.target_channel());
   EXPECT_EQ("http://www.google.com", out.update_url());
-}
-
-TEST_F(OmahaRequestParamsTest, SetTargetChannelWorks) {
-  ASSERT_TRUE(WriteFileString(
-      kTestDir + "/etc/lsb-release",
-      "COREOS_RELEASE_BOARD=arm-generic\n"
-      "COREOS_RELEASE_FOO=bar\n"
-      "COREOS_RELEASE_VERSION=0.2.2.3\n"
-      "COREOS_RELEASE_TRACK=dev-channel\n"
-      "COREOS_AUSERVER=http://www.google.com"));
-  params_.SetLockDown(false);
-
-  // Check LSB value is used by default when SetTargetChannel is not called.
-  params_.Init("", "", false);
-  EXPECT_EQ("dev-channel", params_.target_channel());
-
-  // When an invalid value is set, it should be ignored and the
-  // value from lsb-release should be used instead.
-  params_.Init("", "", false);
-  EXPECT_FALSE(params_.SetTargetChannel("invalid-channel", false));
-  EXPECT_EQ("dev-channel", params_.target_channel());
-
-  // When set to a valid value, it should take effect.
-  params_.Init("", "", false);
-  EXPECT_TRUE(params_.SetTargetChannel("beta-channel", true));
-  EXPECT_EQ("beta-channel", params_.target_channel());
-
-  // When set to the same value, it should be idempotent.
-  params_.Init("", "", false);
-  EXPECT_TRUE(params_.SetTargetChannel("beta-channel", true));
-  EXPECT_EQ("beta-channel", params_.target_channel());
-
-  // When set to a valid value while a change is already pending, it should
-  // fail.
-  params_.Init("", "", false);
-  EXPECT_FALSE(params_.SetTargetChannel("stable-channel", true));
-  EXPECT_EQ("beta-channel", params_.target_channel());
 }
 
 TEST_F(OmahaRequestParamsTest, ChannelIndexTest) {
@@ -487,28 +297,6 @@ TEST_F(OmahaRequestParamsTest, ChannelIndexTest) {
   int bogus = params_.GetChannelIndex("bogus-channel");
   EXPECT_EQ(-1, testimage);
   EXPECT_EQ(-1, bogus);
-}
-
-TEST_F(OmahaRequestParamsTest, ToMoreStableChannelFlagTest) {
-  ASSERT_TRUE(WriteFileString(
-      kTestDir + "/etc/lsb-release",
-      "COREOS_RELEASE_BOARD=arm-generic\n"
-      "COREOS_RELEASE_FOO=bar\n"
-      "COREOS_RELEASE_VERSION=0.2.2.3\n"
-      "COREOS_RELEASE_TRACK=canary-channel\n"
-      "COREOS_AUSERVER=http://www.google.com"));
-  ASSERT_TRUE(WriteFileString(
-      kTestDir + utils::kStatefulPartition + "/etc/lsb-release",
-      "COREOS_RELEASE_BOARD=x86-generic\n"
-      "COREOS_RELEASE_TRACK=stable-channel\n"
-      "COREOS_AUSERVER=https://www.google.com"));
-  MockSystemState mock_system_state;
-  OmahaRequestParams out(&mock_system_state);
-  EXPECT_TRUE(DoTest(&out, "", ""));
-  EXPECT_EQ("https://www.google.com", out.update_url());
-  EXPECT_FALSE(out.delta_okay());
-  EXPECT_EQ("stable-channel", out.target_channel());
-  EXPECT_TRUE(out.to_more_stable_channel());
 }
 
 TEST_F(OmahaRequestParamsTest, ShouldLockDownTest) {

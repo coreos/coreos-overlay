@@ -118,7 +118,7 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     EXPECT_TRUE(DoTest(in, "/dev/sda3", &install_plan));
     EXPECT_EQ(in.payload_urls[0], install_plan.download_url);
     EXPECT_EQ(in.hash, install_plan.payload_hash);
-    EXPECT_EQ("/dev/sda5", install_plan.install_path);
+    EXPECT_EQ("/dev/sda4", install_plan.install_path);
     string deadline;
     EXPECT_TRUE(utils::ReadFile(
         OmahaResponseHandlerAction::kDeadlineFile,
@@ -141,7 +141,7 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     in.needs_admin = true;
     in.prompt = true;
     InstallPlan install_plan;
-    EXPECT_TRUE(DoTest(in, "/dev/sda5", &install_plan));
+    EXPECT_TRUE(DoTest(in, "/dev/sda4", &install_plan));
     EXPECT_EQ(in.payload_urls[0], install_plan.download_url);
     EXPECT_EQ(in.hash, install_plan.payload_hash);
     EXPECT_EQ("/dev/sda3", install_plan.install_path);
@@ -165,7 +165,7 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     EXPECT_TRUE(DoTest(in, "/dev/sda3", &install_plan));
     EXPECT_EQ(in.payload_urls[0], install_plan.download_url);
     EXPECT_EQ(in.hash, install_plan.payload_hash);
-    EXPECT_EQ("/dev/sda5", install_plan.install_path);
+    EXPECT_EQ("/dev/sda4", install_plan.install_path);
     string deadline;
     EXPECT_TRUE(utils::ReadFile(
         OmahaResponseHandlerAction::kDeadlineFile,
@@ -193,7 +193,7 @@ TEST_F(OmahaResponseHandlerActionTest, HashChecksForHttpTest) {
   in.hash = "HASHj+";
   in.size = 12;
   InstallPlan install_plan;
-  EXPECT_TRUE(DoTest(in, "/dev/sda5", &install_plan));
+  EXPECT_TRUE(DoTest(in, "/dev/sda4", &install_plan));
   EXPECT_EQ(in.payload_urls[0], install_plan.download_url);
   EXPECT_EQ(in.hash, install_plan.payload_hash);
   EXPECT_TRUE(install_plan.hash_checks_mandatory);
@@ -208,7 +208,7 @@ TEST_F(OmahaResponseHandlerActionTest, HashChecksForHttpsTest) {
   in.hash = "HASHj+";
   in.size = 12;
   InstallPlan install_plan;
-  EXPECT_TRUE(DoTest(in, "/dev/sda5", &install_plan));
+  EXPECT_TRUE(DoTest(in, "/dev/sda4", &install_plan));
   EXPECT_EQ(in.payload_urls[0], install_plan.download_url);
   EXPECT_EQ(in.hash, install_plan.payload_hash);
   EXPECT_FALSE(install_plan.hash_checks_mandatory);
@@ -224,84 +224,10 @@ TEST_F(OmahaResponseHandlerActionTest, HashChecksForBothHttpAndHttpsTest) {
   in.hash = "HASHj+";
   in.size = 12;
   InstallPlan install_plan;
-  EXPECT_TRUE(DoTest(in, "/dev/sda5", &install_plan));
+  EXPECT_TRUE(DoTest(in, "/dev/sda4", &install_plan));
   EXPECT_EQ(in.payload_urls[0], install_plan.download_url);
   EXPECT_EQ(in.hash, install_plan.payload_hash);
   EXPECT_TRUE(install_plan.hash_checks_mandatory);
-}
-
-TEST_F(OmahaResponseHandlerActionTest, ChangeToMoreStableChannelTest) {
-  OmahaResponse in;
-  in.update_exists = true;
-  in.display_version = "a.b.c.d";
-  in.payload_urls.push_back("https://MoreStableChannelTest");
-  in.more_info_url = "http://more/info";
-  in.hash = "HASHjk";
-  in.size = 15;
-
-  const string kTestDir = "omaha_response_handler_action-test";
-  ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir + "/etc"));
-  ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir +
-                        utils::kStatefulPartition + "/etc"));
-  ASSERT_TRUE(WriteFileString(
-      kTestDir + "/etc/lsb-release",
-      "COREOS_RELEASE_TRACK=canary-channel\n"));
-  ASSERT_TRUE(WriteFileString(
-      kTestDir + utils::kStatefulPartition + "/etc/lsb-release",
-      "CHROMEOS_IS_POWERWASH_ALLOWED=true\n"
-      "COREOS_RELEASE_TRACK=stable-channel\n"));
-
-  MockSystemState mock_system_state;
-  OmahaRequestParams params(&mock_system_state);
-  params.set_root(string("./") + kTestDir);
-  params.SetLockDown(false);
-  params.Init("1.2.3.4", "", 0);
-  EXPECT_EQ("canary-channel", params.current_channel());
-  EXPECT_EQ("stable-channel", params.target_channel());
-  EXPECT_TRUE(params.to_more_stable_channel());
-  EXPECT_TRUE(params.is_powerwash_allowed());
-
-  mock_system_state.set_request_params(&params);
-  InstallPlan install_plan;
-  EXPECT_TRUE(DoTestCommon(&mock_system_state, in, "/dev/sda5", &install_plan));
-  EXPECT_TRUE(install_plan.powerwash_required);
-}
-
-TEST_F(OmahaResponseHandlerActionTest, ChangeToLessStableChannelTest) {
-  OmahaResponse in;
-  in.update_exists = true;
-  in.display_version = "a.b.c.d";
-  in.payload_urls.push_back("https://LessStableChannelTest");
-  in.more_info_url = "http://more/info";
-  in.hash = "HASHjk";
-  in.size = 15;
-
-  const string kTestDir = "omaha_response_handler_action-test";
-  ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir + "/etc"));
-  ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir +
-                        utils::kStatefulPartition + "/etc"));
-  ASSERT_TRUE(WriteFileString(
-      kTestDir + "/etc/lsb-release",
-      "COREOS_RELEASE_TRACK=stable-channel\n"));
-  ASSERT_TRUE(WriteFileString(
-      kTestDir + utils::kStatefulPartition + "/etc/lsb-release",
-      "COREOS_RELEASE_TRACK=canary-channel\n"));
-
-  MockSystemState mock_system_state;
-  OmahaRequestParams params(&mock_system_state);
-  params.set_root(string("./") + kTestDir);
-  params.SetLockDown(false);
-  params.Init("5.6.7.8", "", 0);
-  EXPECT_EQ("stable-channel", params.current_channel());
-  params.SetTargetChannel("canary-channel", false);
-  EXPECT_EQ("canary-channel", params.target_channel());
-  EXPECT_FALSE(params.to_more_stable_channel());
-  EXPECT_FALSE(params.is_powerwash_allowed());
-
-  mock_system_state.set_request_params(&params);
-  InstallPlan install_plan;
-  EXPECT_TRUE(DoTestCommon(&mock_system_state, in, "/dev/sda5", &install_plan));
-  EXPECT_FALSE(install_plan.powerwash_required);
 }
 
 }  // namespace chromeos_update_engine
