@@ -57,6 +57,7 @@ const int kUnmountRetryIntervalInMicroseconds = 200 * 1000;  // 200 ms
 namespace utils {
 
 static const char kBootId[] = "/proc/sys/kernel/random/boot_id";
+static const char kMachineId[] = "/etc/machine-id";
 static const char kDevImageMarker[] = "/root/.dev_mode";
 const char* const kStatefulPartition = "/media/state";
 
@@ -114,6 +115,17 @@ string GetBootId() {
   guid.append(id);
   guid.append(1, '}');
   return guid;
+}
+
+string GetMachineId() {
+  string id;
+  if (!file_util::ReadFileToString(FilePath(kMachineId), &id)) {
+    LOG(ERROR) << "Unable to read machine_id";
+    return "";
+  }
+  TrimWhitespaceASCII(id, TRIM_ALL, &id);
+
+  return id;
 }
 
 bool WriteFile(const char* path, const char* data, int data_len) {

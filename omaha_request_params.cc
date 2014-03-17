@@ -54,6 +54,7 @@ bool OmahaRequestParams::Init(const std::string& in_app_version,
   bool stateful_override = !ShouldLockDown();
   os_platform_ = OmahaRequestParams::kOsPlatform;
   os_version_ = OmahaRequestParams::kOsVersion;
+  oemid_ = GetOemValue("ID", "");
   app_version_ = in_app_version.empty() ?
       GetLsbValue("COREOS_RELEASE_VERSION", "", NULL, stateful_override) :
       in_app_version;
@@ -73,6 +74,7 @@ bool OmahaRequestParams::Init(const std::string& in_app_version,
   app_lang_ = "en-US";
   hwid_ = utils::GetHardwareClass();
   bootid_ = utils::GetBootId();
+  machineid_ = utils::GetMachineId();
 
   if (current_channel_ == target_channel_) {
     // deltas are only okay if the /.nodelta file does not exist.  if we don't
@@ -228,6 +230,22 @@ string OmahaRequestParams::GetLsbValue(const string& key,
     }
   }
   // not found
+  return default_value;
+}
+
+string OmahaRequestParams::GetOemValue(const string& key,
+                                       const string& default_value) const {
+  string file_data;
+
+  if (!utils::ReadFile(root_ + "/etc/oem-release", &file_data))
+    return default_value;
+
+  map<string, string> data = simple_key_value_store::ParseString(file_data);
+  if (utils::MapContainsKey(data, key)) {
+    const string& value = data[key];
+    return value;
+  }
+
   return default_value;
 }
 

@@ -100,6 +100,8 @@ class OmahaRequestParams {
   inline std::string app_lang() const { return app_lang_; }
   inline std::string hwid() const { return hwid_; }
   inline std::string bootid() const { return bootid_; }
+  inline std::string machineid() const { return machineid_; }
+  inline std::string oemid() const { return oemid_; }
 
   inline void set_app_version(const std::string& version) {
     app_version_ = version;
@@ -247,6 +249,10 @@ class OmahaRequestParams {
                           ValueValidator validator,
                           bool stateful_override) const;
 
+  // Fetches the value for a given key from /etc/oem-release.
+  std::string GetOemValue(const std::string& key,
+                          const std::string& default_value) const;
+
   // Gets the machine type (e.g. "i686").
   std::string GetMachineType() const;
 
@@ -275,6 +281,8 @@ class OmahaRequestParams {
   std::string target_channel_;
   std::string hwid_;  // Hardware Qualification ID of the client
   std::string bootid_;  // Kernel generated guid that identifies this boot
+  std::string machineid_; // Unique machine ID that is set during installation 
+  std::string oemid_; // Unique machine ID that is set during installation 
   bool delta_okay_;  // If this client can accept a delta
   bool interactive_;   // Whether this is a user-initiated update check
 
