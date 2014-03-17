@@ -9,8 +9,14 @@ EAPI=4
 CROS_WORKON_PROJECT="coreos/etcd"
 CROS_WORKON_LOCALNAME="etcd"
 CROS_WORKON_REPO="git://github.com"
-CROS_WORKON_COMMIT="040c1f591efa735e24e794d5084ad07782123e3c" # v0.3.0 + v1 API fix
 inherit toolchain-funcs cros-workon systemd
+
+if [[ "${PV}" == 9999 ]]; then
+    KEYWORDS="~amd64"
+else
+    CROS_WORKON_COMMIT="040c1f591efa735e24e794d5084ad07782123e3c"
+    KEYWORDS="amd64"
+fi
 
 DESCRIPTION="etcd"
 HOMEPAGE="https://github.com/coreos/etcd"
@@ -18,7 +24,6 @@ SRC_URI=""
 
 LICENSE="Apache-2.0"
 SLOT="0"
-KEYWORDS="amd64 x86"
 IUSE=""
 
 DEPEND=">=dev-lang/go-1.2"

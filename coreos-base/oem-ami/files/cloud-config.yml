@@ -11,7 +11,7 @@ coreos:
           [Service]
           Type=oneshot
           StandardOutput=journal+console
-          ExecStart=/usr/share/oem/usr/bin/ec2-ssh-key
+          ExecStart=/usr/share/oem/bin/ec2-ssh-key
       - name: ec2-cloudinit.service
         runtime: yes
         content: |
@@ -32,21 +32,10 @@ coreos:
           [Service]
           Type=oneshot
           RemainAfterExit=no
-          ExecStart=/usr/share/oem/usr/bin/coreos-c10n
-      - name: etcd.service
-        runtime: yes
-        content: |
-          [Unit]
-          Description=etcd with ec2 auto-bootstrap
-          Requires=ec2-c10n.service
-          After=ec2-c10n.service
+          ExecStart=/usr/share/oem/bin/coreos-c10n
 
-          [Service]
-          User=etcd
-          PermissionsStartOnly=true
-          ExecStart=/usr/share/oem/usr/bin/etcd-bootstrap
-          Restart=always
-          RestartSec=10s
-
-          [Install]
-          WantedBy=multi-user.target
+write_files:
+    - path: /etc/systemd/system/etcd.service.d/10-oem.conf
+      contents: |
+        [Service]
+        Environment=ETCD_PEER_ELECTION_TIMEOUT=1200
