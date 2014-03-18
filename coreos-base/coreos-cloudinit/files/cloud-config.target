@@ -1,0 +1,6 @@
+[Unit]
+Requires=coreos-cloudinit-oem.service
+After=coreos-cloudinit-oem.service
+
+[Install]
+WantedBy=multi-user.target
