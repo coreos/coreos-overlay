@@ -282,34 +282,4 @@ TEST_F(UpdateCheckSchedulerTest, SetUpdateStatusNonIdleTest) {
                              kUpdateNoticeUnspecified);
 }
 
-TEST_F(UpdateCheckSchedulerTest, StaticCheckOOBECompleteTest) {
-  scheduler_.scheduled_ = true;
-  EXPECT_TRUE(scheduler_.mock_system_state_ != NULL);
-  EXPECT_CALL(*scheduler_.mock_system_state_,
-              IsOOBEComplete()).Times(1).WillOnce(Return(true));
-  EXPECT_CALL(attempter_, Update("", "", false, false, false))
-      .Times(1)
-      .WillOnce(Assign(&scheduler_.scheduled_, true));
-  scheduler_.enabled_ = true;
-  EXPECT_CALL(scheduler_, GTimeoutAddSeconds(_, _)).Times(0);
-  UpdateCheckSchedulerUnderTest::StaticCheck(&scheduler_);
-}
-
-TEST_F(UpdateCheckSchedulerTest, StaticCheckOOBENotCompleteTest) {
-  scheduler_.scheduled_ = true;
-  EXPECT_CALL(*scheduler_.mock_system_state_,
-              IsOOBEComplete()).Times(1).WillOnce(Return(false));
-  EXPECT_CALL(attempter_, Update("", "", _, _, _)).Times(0);
-  int interval_min, interval_max;
-  FuzzRange(UpdateCheckScheduler::kTimeoutInitialInterval,
-            UpdateCheckScheduler::kTimeoutRegularFuzz,
-            &interval_min,
-            &interval_max);
-  scheduler_.enabled_ = true;
-  EXPECT_CALL(scheduler_,
-              GTimeoutAddSeconds(AllOf(Ge(interval_min), Le(interval_max)),
-                                 scheduler_.StaticCheck)).Times(1);
-  UpdateCheckSchedulerUnderTest::StaticCheck(&scheduler_);
-}
-
 }  // namespace chromeos_update_engine

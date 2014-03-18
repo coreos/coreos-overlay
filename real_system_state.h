@@ -23,8 +23,6 @@ public:
   RealSystemState();
   virtual ~RealSystemState() {}
 
-  virtual bool IsOOBEComplete();
-
   virtual inline void set_device_policy(
       const policy::DevicePolicy* device_policy) {
     device_policy_ = device_policy;

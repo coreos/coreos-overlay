@@ -35,10 +35,6 @@ class SystemState {
   // Destructs this object.
   virtual ~SystemState() {}
 
-  // Returns true if the OOBE process has been completed and EULA accepted.
-  // False otherwise.
-  virtual bool IsOOBEComplete() = 0;
-
   // Sets or gets the latest device policy.
   virtual void set_device_policy(const policy::DevicePolicy* device_policy) = 0;
   virtual const policy::DevicePolicy* device_policy() const = 0;

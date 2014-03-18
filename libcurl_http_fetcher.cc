@@ -243,9 +243,8 @@ void LibcurlHttpFetcher::ProxiesResolved() {
   transfer_size_ = -1;
   resume_offset_ = 0;
   retry_count_ = 0;
-  max_retry_count_ = (system_state_->IsOOBEComplete() ?
-                      kMaxRetryCountOobeComplete :
-                      kMaxRetryCountOobeNotComplete);
+  max_retry_count_ = kMaxRetryCountOobeComplete;
+
   no_network_retry_count_ = 0;
   http_response_code_ = 0;
   terminate_requested_ = false;

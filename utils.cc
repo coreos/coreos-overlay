@@ -57,6 +57,7 @@ const int kUnmountRetryIntervalInMicroseconds = 200 * 1000;  // 200 ms
 namespace utils {
 
 static const char kBootId[] = "/proc/sys/kernel/random/boot_id";
+static const char kMachineId[] = "/etc/machine-id";
 static const char kDevImageMarker[] = "/root/.dev_mode";
 const char* const kStatefulPartition = "/media/state";
 
@@ -83,23 +84,6 @@ bool IsNormalBootMode() {
   return !dev_mode;
 }
 
-string GetHardwareClass() {
-  // TODO(petkov): Convert to a library call once a crossystem library is
-  // available (crosbug.com/13291).
-  int exit_code = 0;
-  vector<string> cmd(1, "/usr/bin/crossystem");
-  cmd.push_back("hwid");
-
-  string hwid;
-  bool success = Subprocess::SynchronousExec(cmd, &exit_code, &hwid);
-  if (success && !exit_code) {
-    TrimWhitespaceASCII(hwid, TRIM_ALL, &hwid);
-    return hwid;
-  }
-  LOG(ERROR) << "Unable to read HWID (" << exit_code << ") " << hwid;
-  return "";
-}
-
 string GetBootId() {
   string id;
   string guid;
@@ -114,6 +98,17 @@ string GetBootId() {
   guid.append(id);
   guid.append(1, '}');
   return guid;
+}
+
+string GetMachineId() {
+  string id;
+  if (!file_util::ReadFileToString(FilePath(kMachineId), &id)) {
+    LOG(ERROR) << "Unable to read machine_id";
+    return "";
+  }
+  TrimWhitespaceASCII(id, TRIM_ALL, &id);
+
+  return id;
 }
 
 bool WriteFile(const char* path, const char* data, int data_len) {

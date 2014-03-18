@@ -854,7 +854,6 @@ TEST(OmahaRequestActionTest, XmlEncodeTest) {
   EXPECT_EQ(post_str.find("unittest_track&lt;"), string::npos);
   EXPECT_NE(post_str.find("&lt;OEM MODEL&gt;"), string::npos);
   EXPECT_EQ(post_str.find("<OEM MODEL>"), string::npos);
-  EXPECT_EQ(post_str.find("{8DA4B84F-2864-447D-84B7-C2D9B72924E7}"), string::npos);
 }
 
 TEST(OmahaRequestActionTest, XmlDecodeTest) {
@@ -1347,22 +1346,6 @@ TEST(OmahaRequestActionTest, BadElapsedSecondsTest) {
                       NULL));
 }
 
-TEST(OmahaRequestActionTest, NoUniqueIDTest) {
-  vector<char> post_data;
-  ASSERT_FALSE(TestUpdateCheck(NULL,  // prefs
-                               kDefaultTestParams,
-                               "invalid xml>",
-                               -1,
-                               false,  // ping_only
-                               kActionCodeOmahaRequestXMLParseError,
-                               NULL,  // response
-                               &post_data));
-  // convert post_data to string
-  string post_str(&post_data[0], post_data.size());
-  EXPECT_EQ(post_str.find("machineid="), string::npos);
-  EXPECT_EQ(post_str.find("userid="), string::npos);
-}
-
 TEST(OmahaRequestActionTest, NetworkFailureTest) {
   OmahaResponse response;
   ASSERT_FALSE(
@@ -1482,86 +1465,6 @@ TEST(OmahaRequestActionTest, TestUpdateFirstSeenAtGetsUsedIfAlreadyPresent) {
   int64 timestamp = 0;
   ASSERT_TRUE(prefs.GetInt64(kPrefsUpdateFirstSeenAt, &timestamp));
   ASSERT_TRUE(timestamp == t1.ToInternalValue());
-}
-
-TEST(OmahaRequestActionTest, TestChangingToMoreStableChannel) {
-  const string kTestDir = "omaha_request_action-test";
-  ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir + "/etc"));
-  ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir +
-                        utils::kStatefulPartition + "/etc"));
-  vector<char> post_data;
-  NiceMock<PrefsMock> prefs;
-  ASSERT_TRUE(WriteFileString(
-      kTestDir + "/etc/lsb-release",
-      "COREOS_RELEASE_APPID={11111111-1111-1111-1111-111111111111}\n"
-      "CHROMEOS_BOARD_APPID={22222222-2222-2222-2222-222222222222}\n"
-      "COREOS_RELEASE_TRACK=canary-channel\n"));
-  ASSERT_TRUE(WriteFileString(
-      kTestDir + utils::kStatefulPartition + "/etc/lsb-release",
-      "CHROMEOS_IS_POWERWASH_ALLOWED=true\n"
-      "COREOS_RELEASE_TRACK=stable-channel\n"));
-  OmahaRequestParams params = kDefaultTestParams;
-  params.set_root(string("./") + kTestDir);
-  params.SetLockDown(false);
-  params.Init("1.2.3.4", "", 0);
-  EXPECT_EQ("canary-channel", params.current_channel());
-  EXPECT_EQ("stable-channel", params.target_channel());
-  EXPECT_TRUE(params.to_more_stable_channel());
-  EXPECT_TRUE(params.is_powerwash_allowed());
-  ASSERT_FALSE(TestUpdateCheck(&prefs,
-                               params,
-                               "invalid xml>",
-                               -1,
-                               false,  // ping_only
-                               kActionCodeOmahaRequestXMLParseError,
-                               NULL,  // response
-                               &post_data));
-  // convert post_data to string
-  string post_str(&post_data[0], post_data.size());
-  EXPECT_NE(string::npos, post_str.find(
-      "appid=\"{22222222-2222-2222-2222-222222222222}\" "
-      "version=\"0.0.0.0\" from_version=\"1.2.3.4\" "
-      "track=\"stable-channel\" from_track=\"canary-channel\" "));
-}
-
-TEST(OmahaRequestActionTest, TestChangingToLessStableChannel) {
-  const string kTestDir = "omaha_request_action-test";
-  ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir + "/etc"));
-  ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir +
-                        utils::kStatefulPartition + "/etc"));
-  vector<char> post_data;
-  NiceMock<PrefsMock> prefs;
-  ASSERT_TRUE(WriteFileString(
-      kTestDir + "/etc/lsb-release",
-      "COREOS_RELEASE_APPID={11111111-1111-1111-1111-111111111111}\n"
-      "CHROMEOS_BOARD_APPID={22222222-2222-2222-2222-222222222222}\n"
-      "COREOS_RELEASE_TRACK=stable-channel\n"));
-  ASSERT_TRUE(WriteFileString(
-      kTestDir + utils::kStatefulPartition + "/etc/lsb-release",
-      "COREOS_RELEASE_TRACK=canary-channel\n"));
-  OmahaRequestParams params = kDefaultTestParams;
-  params.set_root(string("./") + kTestDir);
-  params.SetLockDown(false);
-  params.Init("5.6.7.8", "", 0);
-  EXPECT_EQ("stable-channel", params.current_channel());
-  EXPECT_EQ("canary-channel", params.target_channel());
-  EXPECT_FALSE(params.to_more_stable_channel());
-  EXPECT_FALSE(params.is_powerwash_allowed());
-  ASSERT_FALSE(TestUpdateCheck(&prefs,
-                               params,
-                               "invalid xml>",
-                               -1,
-                               false,  // ping_only
-                               kActionCodeOmahaRequestXMLParseError,
-                               NULL,  // response
-                               &post_data));
-  // convert post_data to string
-  string post_str(&post_data[0], post_data.size());
-  EXPECT_NE(string::npos, post_str.find(
-      "appid=\"{11111111-1111-1111-1111-111111111111}\" "
-      "version=\"5.6.7.8\" "
-      "track=\"canary-channel\" from_track=\"stable-channel\""));
-  EXPECT_EQ(string::npos, post_str.find( "from_version"));
 }
 
 }  // namespace chromeos_update_engine

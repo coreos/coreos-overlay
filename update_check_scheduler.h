@@ -78,8 +78,6 @@ class UpdateCheckScheduler {
   FRIEND_TEST(UpdateCheckSchedulerTest, SetUpdateStatusIdleDisabledTest);
   FRIEND_TEST(UpdateCheckSchedulerTest, SetUpdateStatusIdleEnabledTest);
   FRIEND_TEST(UpdateCheckSchedulerTest, SetUpdateStatusNonIdleTest);
-  FRIEND_TEST(UpdateCheckSchedulerTest, StaticCheckOOBECompleteTest);
-  FRIEND_TEST(UpdateCheckSchedulerTest, StaticCheckOOBENotCompleteTest);
   FRIEND_TEST(UpdateAttempterTest, PingOmahaTest);
 
   // Wraps GLib's g_timeout_add_seconds so that it can be mocked in tests.
