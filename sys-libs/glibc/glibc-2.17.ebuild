@@ -156,6 +156,9 @@ eblit-src_unpack-pre() {
 }
 
 eblit-src_unpack-post() {
+	cd "${WORKDIR}"
+	epatch "${FILESDIR}"/locale-default-en_US.patch
+
 	if use hardened ; then
 		cd "${S}"
 		einfo "Patching to get working PIE binaries on PIE (hardened) platforms"
