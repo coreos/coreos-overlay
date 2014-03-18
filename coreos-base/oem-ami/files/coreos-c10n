@@ -86,7 +86,7 @@ fi
 if [ -n "${ETCD_DISCOVERY_URL}"  ]; then
 	echo "Using '${ETCD_DISCOVERY_URL}' as etcd discovery url"
 	echo "[Service]
-Environment=ETCD_DISCOVERY=${ETCD_DISCOVERY}
+Environment=ETCD_DISCOVERY=${ETCD_DISCOVERY_URL}
 Environment=ETCD_NAME=${IP}" > ${ETCD_SERVICE_D}/21-c10n.conf
 # ...otherwise, we treat the provided user-data as a legacy c10n URL
 elif [ -n "${C10N_TOKEN}" ]; then
