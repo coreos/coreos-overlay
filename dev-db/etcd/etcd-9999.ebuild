@@ -36,6 +36,5 @@ src_install() {
 	dobin ${S}/bin/${PN}
 
 	systemd_dounit "${FILESDIR}"/${PN}.service
-	systemd_enable_service multi-user.target ${PN}.service
 	systemd_dotmpfilesd "${FILESDIR}"/${PN}.conf
 }

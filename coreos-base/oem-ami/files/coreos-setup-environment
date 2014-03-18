@@ -17,6 +17,8 @@ sed -i -e '/^COREOS_PUBLIC_IPV4=/d' \
     -e '/^COREOS_PRIVATE_IPV4=/d' \
         "${ENV}"
 
+/usr/bin/block-until-url http://169.254.169.254/latest/meta-data/public-ipv4
+
 # get public ip from metadata
 PUB_IP_URL=http://169.254.169.254/latest/meta-data/public-ipv4
 IP=$(/usr/bin/curl --fail -s "$PUB_IP_URL")
