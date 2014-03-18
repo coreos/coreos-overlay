@@ -36,5 +36,7 @@ src_compile() {
 src_install() {
 	dobin ${S}/bin/coreos-cloudinit
 	systemd_dounit "${FILESDIR}"/coreos-cloudinit-oem.service
+	systemd_dounit "${FILESDIR}"/cloud-config.target
 	systemd_enable_service default.target coreos-cloudinit-oem.service
+	systemd_enable_service default.target cloud-config.target
 }

@@ -1,8 +1,13 @@
 [Unit]
 Description=etcd
+After=cloud-config.target
+Wants=cloud-config.target
 
 [Service]
 User=etcd
 PermissionsStartOnly=true
 Environment=ETCD_DATA_DIR=/var/lib/etcd ETCD_NAME=default
 ExecStart=/usr/bin/etcd 
+
+[Install]
+WantedBy=multi-user.target
