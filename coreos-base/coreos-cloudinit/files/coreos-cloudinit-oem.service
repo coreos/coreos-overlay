@@ -1,0 +1,23 @@
+[Unit]
+Description=coreos-cloudinit for /usr/share/oem/cloud-config.yml
+Requires=dbus.service
+After=dbus.service
+Requires=coreos-setup-environment.service
+After=coreos-setup-environment.service
+RequiresMountsFor=/usr/share/oem
+ConditionPathExists=/usr/share/oem/cloud-config.yml
+ 
+# We use this to start etcd, since cloudinit will reconfigure etcd
+#Wants=etcd.service
+#After=etcd.service
+ 
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/environment
+# XXX: We could not figure out a better way. The above Wants/After does not do this. 
+ExecStartPre=/usr/bin/coreos-cloudinit --from-file=/usr/share/oem/cloud-config.yml 
+ExecStart=/usr/bin/systemctl daemon-reload
+ExecStartPost=/usr/bin/systemctl start etcd
+ 
+[Install]
+WantedBy=multi-user.target
