@@ -1346,22 +1346,6 @@ TEST(OmahaRequestActionTest, BadElapsedSecondsTest) {
                       NULL));
 }
 
-TEST(OmahaRequestActionTest, NoUniqueIDTest) {
-  vector<char> post_data;
-  ASSERT_FALSE(TestUpdateCheck(NULL,  // prefs
-                               kDefaultTestParams,
-                               "invalid xml>",
-                               -1,
-                               false,  // ping_only
-                               kActionCodeOmahaRequestXMLParseError,
-                               NULL,  // response
-                               &post_data));
-  // convert post_data to string
-  string post_str(&post_data[0], post_data.size());
-  EXPECT_EQ(post_str.find("machineid="), string::npos);
-  EXPECT_EQ(post_str.find("userid="), string::npos);
-}
-
 TEST(OmahaRequestActionTest, NetworkFailureTest) {
   OmahaResponse response;
   ASSERT_FALSE(
