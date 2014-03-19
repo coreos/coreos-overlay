@@ -1,7 +1,7 @@
 # Copyright (c) 2013 CoreOS Authors. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI="4"
+EAPI=5
 CROS_WORKON_PROJECT="coreos/bootengine"
 CROS_WORKON_LOCALNAME="bootengine"
 CROS_WORKON_OUTOFTREE_BUILD=1
@@ -20,7 +20,7 @@ DESCRIPTION="CoreOS Bootengine"
 SRC_URI=""
 
 LICENSE="BSD"
-SLOT="0"
+SLOT="0/${PVR}"
 
 DEPEND="
 	app-arch/gzip
