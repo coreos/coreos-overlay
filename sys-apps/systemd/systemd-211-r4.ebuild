@@ -132,6 +132,9 @@ src_prepare() {
 	# dns feature for more than one server
 	epatch "${FILESDIR}"/211-networkd-allow-more-than-one-static-dns-server.patch
 
+	# patch to fix dhcp on gce
+	epatch "${FILESDIR}"/211-0001-sd-dhcp-client-accept-infinite-lease-lifetime.patch
+
 if [[ ${PV} == *9999 ]]; then
 	if use doc; then
 		gtkdocize --docdir docs/ || die

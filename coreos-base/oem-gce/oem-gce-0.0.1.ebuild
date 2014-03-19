@@ -15,8 +15,6 @@ IUSE=""
 # no source directory
 S="${WORKDIR}"
 
-RDEPEND="dev-lang/python"
-
 src_install() {
 	into "/"
 	dobin ${FILESDIR}/gce-ssh-key
