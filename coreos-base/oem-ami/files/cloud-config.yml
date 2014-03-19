@@ -24,7 +24,7 @@ coreos:
           [Service]
           Type=oneshot
           EnvironmentFile=/etc/environment
-          ExecStart=/usr/bin/coreos-cloudinit -from-url=http://169.254.169.254/latest/user-data
+          ExecStart=/usr/bin/coreos-cloudinit -ignore-failure=true -from-url=http://169.254.169.254/latest/user-data
       - name: ec2-c10n.service
         runtime: yes
         content: |
