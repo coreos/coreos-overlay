@@ -32,8 +32,7 @@ coreos:
           Description=Legacy c10n support from EC2 metadata
           Requires=ec2-cloudinit.service
           After=ec2-cloudinit.service
-          # hack: This only runs on the generic images
-          ConditionPathExists=/media/state/overlays/home
+          ConditionPathIsMountPoint=!/usr
 
           [Service]
           Type=oneshot
