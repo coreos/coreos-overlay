@@ -1,7 +1,7 @@
 # Copyright (c) 2013 CoreOS Authors. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI="4"
+EAPI=5
 CROS_WORKON_PROJECT="coreos/bootengine"
 CROS_WORKON_LOCALNAME="bootengine"
 CROS_WORKON_OUTOFTREE_BUILD=1
@@ -10,7 +10,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~x86"
 else
-	CROS_WORKON_COMMIT="a9975b9e125c722a0f9f534b1649104c79413d01"
+	CROS_WORKON_COMMIT="35a0a6963b6958c2a5b370b765d772b0576fd875"
 	KEYWORDS="amd64 arm x86"
 fi
 
@@ -20,7 +20,7 @@ DESCRIPTION="CoreOS Bootengine"
 SRC_URI=""
 
 LICENSE="BSD"
-SLOT="0"
+SLOT="0/${PVR}"
 
 DEPEND="
 	app-arch/gzip

@@ -11,7 +11,7 @@ SLOT="0/${PVR}"
 
 DEPEND="sys-apps/debianutils
 		sys-devel/bc
-		sys-kernel/bootengine
+		sys-kernel/bootengine:=
 "
 
 IUSE="-source symlink-usr"
