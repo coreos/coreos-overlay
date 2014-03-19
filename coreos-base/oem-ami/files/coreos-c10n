@@ -98,13 +98,9 @@ elif [ -n "${C10N_TOKEN}" ]; then
 	/usr/bin/block-until-url $C10N_ENDPOINT
 
 	ETCD_PEERS=$(curl -s $C10N_ENDPOINT -d "c10n_url=$C10N_TOKEN" -d"ip_list=$IP")
+	IPS=$(echo "$ETCD_PEERS" | grep -v $IP | grep -v '^$' | sed 's/$/:7001/'| tr '\n' ','| sed 's/^,//' | sed 's/,$//')
 	echo "[Service]" > ${ETCD_SERVICE_D}/22-c10n.conf
-	for peer in $ETCD_PEERS; do
-		if [ "${peer}" == "${IP}" ]; then
-			continue
-		fi
-		echo "Environment=ETCD_PEERS=${peer}" >> ${ETCD_SERVICE_D}/22-c10n.conf
-	done
+	echo "Environment=ETCD_PEERS=${IPS}" >> ${ETCD_SERVICE_D}/22-c10n.conf
 fi
 
 if [ "$START_FLEET" = "1" ]; then
