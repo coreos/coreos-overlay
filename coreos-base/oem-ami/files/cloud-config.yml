@@ -32,6 +32,8 @@ coreos:
           Description=Legacy c10n support from EC2 metadata
           Requires=ec2-cloudinit.service
           After=ec2-cloudinit.service
+          # hack: This only runs on the generic images
+          ConditionPathExists=/media/state/overlays/home
 
           [Service]
           Type=oneshot
@@ -39,7 +41,7 @@ coreos:
           ExecStart=/usr/share/oem/bin/coreos-c10n
 
 write_files:
-    - path: /etc/systemd/system/etcd.service.d/10-oem.conf
+    - path: /run/systemd/system/etcd.service.d/10-oem.conf
       permissions: 0644
       content: |
         [Service]

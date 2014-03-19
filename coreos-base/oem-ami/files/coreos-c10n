@@ -5,6 +5,7 @@ depwarn() {
 	echo "DEPRECATION WARNING! $1 See docs for the new cloud-config format here: $DOCS" 1>&2;
 }
 
+# this will only run on generic images
 
 C10N_ENDPOINT=https://core-api.appspot.com/v1/c10n/group
 META_URL="http://169.254.169.254/latest"
@@ -86,8 +87,7 @@ fi
 if [ -n "${ETCD_DISCOVERY_URL}"  ]; then
 	echo "Using '${ETCD_DISCOVERY_URL}' as etcd discovery url"
 	echo "[Service]
-Environment=ETCD_DISCOVERY=${ETCD_DISCOVERY_URL}
-Environment=ETCD_NAME=${IP}" > ${ETCD_SERVICE_D}/21-c10n.conf
+Environment=ETCD_DISCOVERY=${ETCD_DISCOVERY_URL}" > ${ETCD_SERVICE_D}/21-c10n.conf
 # ...otherwise, we treat the provided user-data as a legacy c10n URL
 elif [ -n "${C10N_TOKEN}" ]; then
 	depwarn "Bootstrapping etcd with the c10n service is deprecated."
@@ -98,8 +98,7 @@ elif [ -n "${C10N_TOKEN}" ]; then
 	/usr/bin/block-until-url $C10N_ENDPOINT
 
 	ETCD_PEERS=$(curl -s $C10N_ENDPOINT -d "c10n_url=$C10N_TOKEN" -d"ip_list=$IP")
-	echo "[Service]
-Environment=ETCD_NAME=${IP}" > ${ETCD_SERVICE_D}/22-c10n.conf
+	echo "[Service]" > ${ETCD_SERVICE_D}/22-c10n.conf
 	for peer in $ETCD_PEERS; do
 		echo "Environment=ETCD_PEERS=${peer}" >> ${ETCD_SERVICE_D}/22-c10n.conf
 	done
@@ -109,3 +108,9 @@ if [ "$START_FLEET" = "1" ]; then
 	echo "Starting fleet"
 	systemctl start --no-block fleet
 fi
+
+# on generic images, we only set the name to the internal IP
+echo "[Service]
+Environment=ETCD_NAME=${IP}
+Environment=ETCD_ADDR=${IP}:4001
+Environment=ETCD_PEER_ADDR=${IP}:7001" > ${ETCD_SERVICE_D}/23-c10n.conf
