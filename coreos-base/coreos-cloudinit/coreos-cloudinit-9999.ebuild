@@ -23,7 +23,8 @@ LICENSE="Apache-2.0"
 SLOT="0"
 IUSE=""
 
-DEPEND=">=dev-lang/go-1.2"
+DEPEND=">=dev-lang/go-1.2
+	!<coreos-base/coreos-init-0.0.1-r67"
 
 RDEPEND="
 	>=sys-apps/shadow-4.1.5.1
