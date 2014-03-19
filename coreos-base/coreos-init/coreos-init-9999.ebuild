@@ -37,7 +37,7 @@ RDEPEND="${DEPEND}
 	sys-block/parted
 	sys-apps/gptfdisk
 	>=sys-apps/systemd-207-r5
-	>=coreos-base/coreos-cloudinit-0.1.1
+	>=coreos-base/coreos-cloudinit-0.1.2-r5
 	"
 
 src_install() {

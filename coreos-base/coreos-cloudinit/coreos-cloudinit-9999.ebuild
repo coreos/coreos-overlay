@@ -24,7 +24,7 @@ SLOT="0"
 IUSE=""
 
 DEPEND=">=dev-lang/go-1.2
-	!<coreos-base/coreos-init-0.0.1-r67"
+	!<coreos-base/coreos-init-0.0.1-r69"
 
 RDEPEND="
 	>=sys-apps/shadow-4.1.5.1
