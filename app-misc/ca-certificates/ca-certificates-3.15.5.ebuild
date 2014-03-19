@@ -3,7 +3,7 @@
 
 EAPI=5
 PYTHON_COMPAT=( python2_7 )
-inherit python-any-r1 systemd
+inherit cros-tmpfiles python-any-r1 systemd
 
 RTM_NAME="NSS_${PV//./_}_RTM"
 MY_PN="nss"
@@ -21,8 +21,7 @@ KEYWORDS="amd64"
 IUSE=""
 
 RDEPEND="dev-libs/openssl
-	sys-apps/findutils
-	sys-apps/systemd"
+	sys-apps/findutils"
 DEPEND="${RDEPEND}
 	${PYTHON_DEPS}"
 
@@ -54,6 +53,6 @@ src_install() {
 
 	# Setup initial links in /etc
 	dodir /etc/ssl/certs
-	systemd-tmpfiles --root="${D}" --create
+	tmpfiles_create
 	bash "${FILESDIR}/update-ca-certificates" "${D}/etc/ssl/certs" || die
 }
