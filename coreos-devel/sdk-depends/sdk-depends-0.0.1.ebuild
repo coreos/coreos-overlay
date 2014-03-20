@@ -23,6 +23,7 @@ DEPEND="
 	dev-util/checkbashisms
 	net-misc/curl
 	sys-apps/debianutils
+	sys-apps/iproute2
 	sys-devel/crossdev
 	sys-fs/btrfs-progs
 	"
