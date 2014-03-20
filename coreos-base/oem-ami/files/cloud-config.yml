@@ -15,11 +15,10 @@ coreos:
       - name: ec2-cloudinit.service
         runtime: yes
         content: |
-          [Service]
-          Requires=coreos-setup-environment.service
-          After=coreos-setup-environment.service
           [Unit]
           Description=Cloudinit from EC2 metadata
+          Requires=coreos-setup-environment.service
+          After=coreos-setup-environment.service
 
           [Service]
           Type=oneshot
