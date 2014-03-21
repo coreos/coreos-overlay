@@ -1,0 +1,35 @@
+#!/bin/bash +x
+
+ENV=$1
+
+if [ -z "$ENV" ]; then
+        echo usage: $0 /etc/environment
+        exit 1
+fi
+# test for rw
+touch $ENV
+if [ $? -ne 0 ]; then
+        echo exiting, unable to modify: $ENV
+        exit 1
+fi
+
+sed -i -e '/^COREOS_PUBLIC_IPV4=/d' \
+    -e '/^COREOS_PRIVATE_IPV4=/d' \
+    "${ENV}"
+
+# We spin loop until the nova-agent sets up the ip addresses
+function get_ip () {
+	IF=$1
+	IP=
+	while [ 1 ]; do
+		IP=$(ifconfig $IF | awk '/inet /{print $2}')
+		if [ "$IP" != "" ]; then
+			break
+		fi
+		sleep .1
+	done
+	echo $IP	
+}
+
+echo COREOS_PUBLIC_IPV4=$(get_ip eth0) >> $ENV
+echo COREOS_PRIVATE_IPV4=$(get_ip eth1) >> $ENV
