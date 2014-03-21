@@ -2,14 +2,11 @@
 Description=coreos-cloudinit for /usr/share/oem/cloud-config.yml
 Requires=dbus.service
 After=dbus.service
-Requires=coreos-setup-environment.service
-After=coreos-setup-environment.service
 RequiresMountsFor=/usr/share/oem
 ConditionPathExists=/usr/share/oem/cloud-config.yml
  
 [Service]
 Type=oneshot
-EnvironmentFile=/etc/environment
 ExecStartPre=/usr/bin/coreos-cloudinit --from-file=/usr/share/oem/cloud-config.yml 
 ExecStart=/usr/bin/systemctl daemon-reload
  
