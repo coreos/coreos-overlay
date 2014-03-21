@@ -1,0 +1,10 @@
+#!/bin/bash -e
+
+TMPFILE=$(mktemp /tmp/XXXXXX-cloud-init)
+trap 'echo "removing ${TMPFILE}"; rm -f ${TMPFILE}' INT TERM EXIT
+
+curl --retry 5 --retry-delay 2 --silent --fail \
+		"http://169.254.169.254/computeMetadata/v1/instance/attributes/user-data" \
+                -H "X-Google-Metadata-Request: True" > ${TMPFILE}
+
+/usr/bin/coreos-cloudinit --from-file=${TMPFILE}
