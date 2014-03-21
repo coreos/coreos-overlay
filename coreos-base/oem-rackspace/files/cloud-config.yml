@@ -33,7 +33,10 @@ coreos:
         content: |
           [Unit]
           RequiresMountsFor=/media/configdrive
+          Requires=coreos-setup-environment.service
+          After=coreos-setup-environment.service
 
           [Service]
           Type=oneshot
+          EnvironmentFile=/etc/environment
           ExecStart=/usr/bin/coreos-cloudinit --from-file=/media/configdrive/openstack/latest/user_data
