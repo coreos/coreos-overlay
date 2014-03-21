@@ -1,0 +1,66 @@
+From 2b1ce33baa29bddf5367c0bcfcfb884e36641cc7 Mon Sep 17 00:00:00 2001
+From: Brandon Philips <brandon@ifup.co>
+Date: Thu, 20 Mar 2014 11:28:12 -0700
+Subject: [PATCH] network: dhcp: create explicit host route to gateway
+
+Some DHCP servers gives you a netmask of 255.255.255.255 so the gateway is not
+routable. Other DHCP client implementations look through the existing routes to
+figure out if they should add an explicit host route. See below for a link.
+
+However, it makes sense to just create the route explicitly whether it is
+needed or not since it is explicit, makes the dhcp route entries independent of
+other entries and saves us from knowing the state of the kernel tables.
+
+The code from dhcpcd that works around this issue is on line 637.
+https://android.googlesource.com/platform/external/dhcpcd/+/master/configure.c
+---
+ src/network/networkd-link.c | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
+
+diff --git a/src/network/networkd-link.c b/src/network/networkd-link.c
+index 275ad97..8077ac7 100644
+--- a/src/network/networkd-link.c
++++ b/src/network/networkd-link.c
+@@ -237,6 +237,8 @@ static int link_enter_set_routes(Link *link) {
+ 
+         if (link->dhcp_lease) {
+                 _cleanup_route_free_ Route *route = NULL;
++                _cleanup_route_free_ Route *route_gw = NULL;
++                struct in_addr netmask;
+                 struct in_addr gateway;
+ 
+                 r = sd_dhcp_lease_get_router(link->dhcp_lease, &gateway);
+@@ -253,6 +255,30 @@ static int link_enter_set_routes(Link *link) {
+                         return r;
+                 }
+ 
++                r = route_new_dynamic(&route_gw);
++                if (r < 0) {
++                        log_error_link(link, "Could not allocate route: %s",
++                                       strerror(-r));
++                        return r;
++                }
++
++                /* The dhcp netmask may mask out the gateway. Add an explicit
++                 * route for the gw host so that we can route no matter the
++                 * netmask or existing kernel route tables. */
++                route_gw->family = AF_INET;
++                route_gw->dst_addr.in = gateway;
++                route_gw->dst_prefixlen = 32;
++                route_gw->scope = RT_SCOPE_LINK;
++
++                r = route_configure(route_gw, link, &route_handler);
++                if (r < 0) {
++                        log_warning_link(link,
++                                         "could not set host route: %s", strerror(-r));
++                        return r;
++                }
++
++                link->route_messages ++;
++
+                 route->family = AF_INET;
+                 route->in_addr.in = gateway;
+ 
+-- 
+1.8.5.2 (Apple Git-48)
+

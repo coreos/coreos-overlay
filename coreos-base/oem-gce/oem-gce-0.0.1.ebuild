@@ -16,9 +16,9 @@ IUSE=""
 S="${WORKDIR}"
 
 src_install() {
-	exeinto "/"
-	doexe ${FILESDIR}/run
+	into "/"
+	dobin ${FILESDIR}/gce-ssh-key
 
 	insinto "/"
-	doins ${FILESDIR}/oem-release
+	doins ${FILESDIR}/cloud-config.yml
 }
