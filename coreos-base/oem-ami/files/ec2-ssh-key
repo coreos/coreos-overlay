@@ -1,6 +1,4 @@
-#!/bin/sh
-
-set -e
+#!/bin/sh -e
 
 KEY_URL="http://169.254.169.254/latest/meta-data/public-keys/0/openssh-key"
 
