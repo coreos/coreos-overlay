@@ -2,7 +2,27 @@
 
 coreos:
     units:
-      - name: ec2-ssh-key.service
+      - name: gce-coreos-cloudinit.service
+        runtime: yes
+        content: |
+          [Unit]
+          Requires=gce-setup-environment.service
+          After=gce-setup-environment.service
+
+          [Service]
+          EnvironmentFile=/etc/environment
+          ExecStart=/usr/share/oem/bin/gce-coreos-cloudinit
+      - name: gce-setup-environment.service
+        runtime: yes
+        content: |
+          [Unit]
+          Description=Setup environment variables from metadata
+
+          [Service]
+          Type=oneshot
+          StandardOutput=journal+console
+          ExecStart=/usr/share/oem/bin/gce-setup-environment /etc/environment
+      - name: gce-ssh-key.service
         runtime: yes
         content: |
           [Unit]
