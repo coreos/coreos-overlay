@@ -18,11 +18,7 @@ S="${WORKDIR}"
 src_install() {
 	into "/"
 	dobin ${FILESDIR}/gce-ssh-key
-
-	into "/"
 	dobin ${FILESDIR}/gce-coreos-cloudinit
-
-	into "/"
 	dobin ${FILESDIR}/gce-setup-environment
 
 	insinto "/"
