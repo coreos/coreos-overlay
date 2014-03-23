@@ -4,5 +4,9 @@
 # Enable tweaks to install everything under /usr
 USE="symlink-usr"
 
+# Currently we have no particular need for pam and it is the biggest
+# thing we have left in /etc. Disable for now, we can revisit later.
+USE="${USE} -pam"
+
 # Append -usr to disk layout names (use base-usr, not base)
 COREOS_DISK_LAYOUT_SUFFIX="-usr"
