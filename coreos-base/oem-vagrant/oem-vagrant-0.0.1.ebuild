@@ -18,4 +18,5 @@ S="${WORKDIR}"
 src_install() {
 	insinto "/"
 	doins "${FILESDIR}/authorized_keys"
+	doins "${FILESDIR}/cloud-config.yml"
 }

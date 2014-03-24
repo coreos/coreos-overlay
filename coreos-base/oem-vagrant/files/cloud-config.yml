@@ -1,0 +1,20 @@
+#cloud-config
+coreos:
+    units:
+      - name: coreos-cloudinit-vagrant.path
+        command: start
+        runtime: no
+        content: |
+          [Path]
+          PathExists=/var/lib/coreos-vagrant/user-data
+
+          [Install]
+          WantedBy=multi-user.target
+      - name: coreos-cloudinit-vagrant.service
+        command: stop
+        runtime: no
+        content: |
+          [Service]
+          Type=oneshot
+          EnvironmentFile=/etc/environment
+          ExecStart=/usr/bin/coreos-cloudinit --from-file /var/lib/coreos-vagrant/user-data
