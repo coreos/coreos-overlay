@@ -4,7 +4,7 @@
 
 EAPI=4
 
-inherit eutils libtool toolchain-funcs pam multilib
+inherit eutils libtool toolchain-funcs pam multilib systemd
 
 DESCRIPTION="Utilities to deal with user accounts"
 HOMEPAGE="http://shadow.pld.org.pl/ http://pkg-shadow.alioth.debian.org/"
@@ -61,9 +61,9 @@ set_login_opt() {
 	[[ -z ${val} ]] && comment="#"
 	sed -i -r \
 		-e "/^#?${opt}/s:.*:${comment}${opt} ${val}:" \
-		"${D}"/etc/login.defs
-	local res=$(grep "^${comment}${opt}" "${D}"/etc/login.defs)
-	einfo ${res:-Unable to find ${opt} in /etc/login.defs}
+		"${D}"/usr/share/shadow/login.defs
+	local res=$(grep "^${comment}${opt}" "${D}"/usr/share/shadow/login.defs)
+	einfo ${res:-Unable to find ${opt} in /usr/share/shadow/login.defs}
 }
 
 src_install() {
@@ -76,13 +76,20 @@ src_install() {
 	#   remove it.
 	rm -f "${D}"/{,usr/}$(get_libdir)/lib{misc,shadow}.{a,la}
 
-	insinto /etc
+	# Remove files from /etc, they will be symlinks to /usr instead.
+	rm -f "${D}"/etc/{limits,login.access,login.defs,securetty,default/useradd}
+	systemd_dotmpfilesd "${FILESDIR}"/tmpfiles.d/shadow.conf
+
+	insinto /usr/share/shadow
 	# Using a securetty with devfs device names added
 	# (compat names kept for non-devfs compatibility)
 	insopts -m0600 ; doins "${FILESDIR}"/securetty
+	dosym ../usr/share/shadow/securetty /etc/securetty
 	if ! use pam ; then
 		insopts -m0600
 		doins etc/login.access etc/limits
+		dosym ../usr/share/shadow/login.access /etc/login.access
+		dosym ../usr/share/shadow/limits /etc/limits
 	fi
 	# Output arch-specific cruft
 	local devs
@@ -91,18 +98,20 @@ src_install() {
 		hppa)  devs="ttyB0";;
 		arm)   devs="ttyFB0 ttySAC0 ttySAC1 ttySAC2 ttySAC3 ttymxc0 ttymxc1 ttymxc2 ttymxc3 ttyO0 ttyO1 ttyO2";;
 		sh)    devs="ttySC0 ttySC1";;
+		amd64|x86)	devs="hvc0";;
 	esac
-	[[ -n ${devs} ]] && printf '%s\n' ${devs} >> "${D}"/etc/securetty
+	if [[ -n ${devs} ]]; then
+		printf '%s\n' ${devs} >> "${D}"/usr/share/shadow/securetty
+	fi
 
 	# needed for 'useradd -D'
-	insinto /etc/default
 	insopts -m0600
 	doins "${FILESDIR}"/default/useradd
+	dosym ../../usr/share/shadow/useradd /etc/default/useradd
 
-	cd "${S}"
-	insinto /etc
 	insopts -m0644
 	newins etc/login.defs login.defs
+	dosym ../usr/share/shadow/login.defs /etc/login.defs
 
 	if ! use pam ; then
 		set_login_opt MAIL_CHECK_ENAB no
@@ -147,7 +156,7 @@ src_install() {
 		done
 
 		sed -i -f "${FILESDIR}"/login_defs_pam.sed \
-			"${D}"/etc/login.defs
+			"${D}"/usr/share/shadow/login.defs
 
 		# remove manpages that pam will install for us
 		# and/or don't apply when using pam
@@ -164,28 +173,8 @@ src_install() {
 		'(' -name id.1 -o -name passwd.5 -o -name getspnam.3 ')' \
 		-exec rm {} +
 
-	cd "${S}"
 	dodoc ChangeLog NEWS TODO
 	newdoc README README.download
 	cd doc
 	dodoc HOWTO README* WISHLIST *.txt
-}
-
-pkg_preinst() {
-	rm -f "${ROOT}"/etc/pam.d/system-auth.new \
-		"${ROOT}/etc/login.defs.new"
-}
-
-pkg_postinst() {
-	# Enable shadow groups.
-	if [ ! -f "${ROOT}"/etc/gshadow ] ; then
-		if grpck -r -R "${ROOT}" 2>/dev/null ; then
-			grpconv -R "${ROOT}"
-		else
-			ewarn "Running 'grpck' returned errors.  Please run it by hand, and then"
-			ewarn "run 'grpconv' afterwards!"
-		fi
-	fi
-
-	einfo "The 'adduser' symlink to 'useradd' has been dropped."
 }
