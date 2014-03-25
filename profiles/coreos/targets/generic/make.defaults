@@ -45,5 +45,10 @@ PROD_INSTALL_MASK="${PROD_INSTALL_MASK}
   /usr/share/nmap
 "
 
+# Exclude assorted config files that we can do without
+PROD_INSTALL_MASK="${PROD_INSTALL_MASK}
+  /etc/sudoers
+"
+
 # No suffix for 'generic' (use base, not base-usr)
 COREOS_DISK_LAYOUT_SUFFIX=""
