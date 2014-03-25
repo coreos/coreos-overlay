@@ -25,7 +25,7 @@ ESP_PARTTYPE="c12a7328-f81f-11d2-ba4b-00a0c93ec93b"
 ESP_MNT=
 
 declare -a DEV_LIST
-lsblk -P -o NAME,PARTTYPE,MOUNTPOINT | mapfile DEV_LIST
+mapfile DEV_LIST < <(lsblk -P -o NAME,PARTTYPE,MOUNTPOINT)
 
 for dev_info in "${DEV_LIST[@]}"; do
     eval "$dev_info"
@@ -44,6 +44,16 @@ for dev_info in "${DEV_LIST[@]}"; do
 
     break
 done
+
+if [[ -z "${ESP_MNT}" ]]; then
+    echo "Failed to find ESP partition!" >&2
+    exit 1
+fi
+
+if [[ ! -d "${ESP_MNT}" ]]; then
+    echo "ESP partition mount point (${ESP_MNT}) is not a directory!" >&2
+    exit 1
+fi
 
 # Update kernel and bootloader configs
 mkdir -p "${ESP_MNT}"{/syslinux,/boot/grub}
