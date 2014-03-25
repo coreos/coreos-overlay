@@ -3,6 +3,8 @@
 coreos:
     units:
       - name: nova-agent-auto.service
+        command: restart
+        runtime: yes
         content: |
           [Unit]
           After=dbus.service
@@ -18,6 +20,8 @@ coreos:
           ExecStopPost=/bin/umount -f /usr/share/oem/nova-agent/proc/xen
           ExecStopPost=/bin/umount -f /usr/share/oem/nova-agent/proc
       - name: nova-agent-watcher.service
+        command: restart
+        runtime: yes
         content: |
           [Unit]
           After=dbus.service
@@ -25,11 +29,15 @@ coreos:
           [Service]
           ExecStart=/usr/share/oem/usr/bin/nova-agent-watcher -watch-dir=/usr/share/oem/nova-agent -scripts-dir=/usr/share/oem/usr/bin/
       - name: media-configdrive.mount
+        command: restart
+        runtime: yes
         content: |
           [Mount]
           What=/dev/disk/by-label/config-2
           Where=/media/configdrive
       - name: cloudinit-configdrive.service
+        command: restart
+        runtime: yes
         content: |
           [Unit]
           RequiresMountsFor=/media/configdrive
