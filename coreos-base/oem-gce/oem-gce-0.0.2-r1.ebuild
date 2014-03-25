@@ -15,6 +15,8 @@ IUSE=""
 # no source directory
 S="${WORKDIR}"
 
+DEPENDS="app-emulation/google-daemon"
+
 src_install() {
 	into "/usr/share/oem"
 	dobin ${FILESDIR}/gce-ssh-key

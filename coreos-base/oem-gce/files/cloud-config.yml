@@ -35,3 +35,32 @@ coreos:
           Type=oneshot
           StandardOutput=journal+console
           ExecStart=/usr/share/oem/bin/gce-ssh-key
+      - name: google-accounts-manager.service
+        runtime: yes
+        content: |
+          [Unit]
+          Description=Google Compute Engine User Accounts Manager Daemon
+          After=network.target
+          Before=sshd.service
+          Requires=network.target
+ 
+          [Service]
+          Type=simple
+          ExecStart=/usr/share/oem/python/bin/python2.7 /usr/share/oem/google-compute-daemon/manage_accounts.py
+
+          [Install]
+          WantedBy=multi-user.target
+      - name: google-address-manager.service
+        runtime: yes
+        content: |
+          [Unit]
+          Description=Google Compute Engine Address Manager Daemon
+          After=network.target
+          Requires=network.target
+
+          [Service]
+          Type=simple
+          ExecStart=/usr/share/oem/python/bin/python2.7 /usr/share/oem/google-compute-daemon/manage_addresses.py
+
+          [Install]
+          WantedBy=multi-user.target
