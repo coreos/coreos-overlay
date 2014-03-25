@@ -9,23 +9,42 @@
 
 set -e -o pipefail
 
-source /etc/lsb-release
+source /usr/share/coreos/release
+source /usr/share/coreos/update.conf
+source /etc/coreos/update.conf || true
 
 BOOT_ID=$(</proc/sys/kernel/random/boot_id)
+MACHINE_ID=$(</etc/machine-id)
 
+OEM_ID="pxe"
 VERSION="${COREOS_RELEASE_VERSION}"
-TRACK="${COREOS_RELEASE_VERSION}"
-AUSERVER="${COREOS_AUSERVER}"
-BOARD="${COREOS_RELEASE_BOARD}"
+
+# Fill in default values
+: ${COREOS_RELEASE_APPID:="{e96281a6-d1af-4bde-9a0a-97b76e56dc57}"}
+: ${SERVER:="https://api.core-os.net/v1/update/"}
+: ${GROUP:="alpha"}
+
+fill_attrs() {
+    echo -n "appid=\"${COREOS_RELEASE_APPID}\" "
+    echo -n "oem=\"${OEM_ID}\" "
+    echo -n "version=\"${VERSION}\" "
+    echo -n "track=\"${GROUP}\" "
+    echo -n "bootid=\"{${BOOT_ID}}\" "
+    # other UUID's are surrounded by {} but not machineid
+    echo -n "machineid=\"${MACHINE_ID}\" "
+    echo -n "lang=\"en-US\" "
+    echo -n "hardware_class=\"\" "
+    echo -n "delta_okay=\"false\" "
+}
 
 BODY="<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <request protocol=\"3.0\" version=\"CoreOSUpdateEngine-0.1.0.0\" updaterversion=\"CoreOSUpdateEngine-0.1.0.0\" installsource=\"scheduler\" ismachine=\"1\">
 <os version=\"Chateau\" platform=\"CoreOS\" sp=\"${VERSION}\"></os>
-<app appid=\"{e96281a6-d1af-4bde-9a0a-97b76e56dc57}\" oem=\"pxe\" version=\"${VERSION}\" track=\"${TRACK}\" bootid=\"{${BOOT_ID}}\" lang=\"en-US\" board=\"${BOARD}\" hardware_class=\"\" delta_okay=\"false\" >
+<app $(fill_attrs) >
 <event eventtype=\"3\" eventresult=\"2\" previousversion=\"\"></event>
 </app>
 </request>"
 
 echo Request: "${BODY}"
 
-curl -H "text/xml" --capath /usr/share/coreos-ca-certificates -X POST -d "${BODY}" "${AUSERVER}"
+curl -H "text/xml" --capath /usr/share/coreos-ca-certificates -X POST -d "${BODY}" "${SERVER}"
