@@ -115,4 +115,4 @@ Environment=ETCD_ADDR=${IP}:4001
 Environment=ETCD_PEER_ADDR=${IP}:7001" > ${ETCD_SERVICE_D}/23-c10n.conf
 
 systemctl daemon-reload
-systemctl start etcd
+systemctl --no-block start etcd
