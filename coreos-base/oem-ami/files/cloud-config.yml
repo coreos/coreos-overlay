@@ -3,6 +3,7 @@
 coreos:
     units:
       - name: ec2-ssh-key.service
+        command: restart
         runtime: yes
         content: |
           [Unit]
@@ -13,6 +14,7 @@ coreos:
           StandardOutput=journal+console
           ExecStart=/usr/share/oem/bin/ec2-ssh-key
       - name: ec2-cloudinit.service
+        command: restart
         runtime: yes
         content: |
           [Unit]
@@ -25,6 +27,7 @@ coreos:
           EnvironmentFile=/etc/environment
           ExecStart=/usr/bin/coreos-cloudinit -ignore-failure=true -from-url=http://169.254.169.254/latest/user-data
       - name: ec2-c10n.service
+        command: restart
         runtime: yes
         content: |
           [Unit]

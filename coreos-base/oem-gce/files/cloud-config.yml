@@ -3,6 +3,7 @@
 coreos:
     units:
       - name: gce-coreos-cloudinit.service
+        command: restart
         runtime: yes
         content: |
           [Unit]
@@ -13,6 +14,7 @@ coreos:
           EnvironmentFile=/etc/environment
           ExecStart=/usr/share/oem/bin/gce-coreos-cloudinit
       - name: gce-setup-environment.service
+        command: restart
         runtime: yes
         content: |
           [Unit]
@@ -23,6 +25,7 @@ coreos:
           StandardOutput=journal+console
           ExecStart=/usr/share/oem/bin/gce-setup-environment /etc/environment
       - name: gce-ssh-key.service
+        command: restart
         runtime: yes
         content: |
           [Unit]
