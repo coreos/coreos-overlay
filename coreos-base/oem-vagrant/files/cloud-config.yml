@@ -13,7 +13,11 @@ coreos:
       - name: coreos-cloudinit-vagrant.service
         runtime: no
         content: |
+          [Unit]
+          ConditionFileNotEmpty=/var/lib/coreos-vagrant/user-data
+
           [Service]
           Type=oneshot
           EnvironmentFile=/etc/environment
           ExecStart=/usr/bin/coreos-cloudinit --from-file /var/lib/coreos-vagrant/user-data
+          RemainAfterExit=yes
