@@ -10,7 +10,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~x86"
 else
-	CROS_WORKON_COMMIT="d5520f16e8a1ea26c81264cc9d471f48493229e3"
+	CROS_WORKON_COMMIT="769724ddfc5137eafeca692ef77a4890885ec413"
 	KEYWORDS="amd64 arm x86"
 fi
 
@@ -45,6 +45,10 @@ src_install() {
 	insinto /usr/lib/dracut/modules.d/
 	doins -r dracut/.
 	dosbin update-bootengine
+
+	# must be executable since dracut's install scripts just
+	# re-use existing filesystem permissions during initrd creation.
+	chmod +x "${D}/usr/lib/dracut/modules.d/10usr-generator/usr-generator"
 }
 
 # We are bad, we want to get around the sandbox.  So do the creation of the
