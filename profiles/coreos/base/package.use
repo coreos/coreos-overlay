@@ -64,6 +64,9 @@ app-emulation/xen-tools -ocaml -hvm -xend -pygrub -qemu -flask -screen -doc amd6
 >=media-libs/libjpeg-turbo-1.2.0-r1 static-libs
 sys-apps/gptfdisk -icu
 
+# We don't want to pull in gnutls right now
+sys-apps/systemd -ssl
+
 # for profile migration
 dev-lang/perl -gdbm
 dev-libs/apr-util -gdbm
