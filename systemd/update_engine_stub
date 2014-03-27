@@ -13,16 +13,20 @@ source /usr/share/coreos/release
 source /usr/share/coreos/update.conf
 source /etc/coreos/update.conf || true
 
+if [[ -e /etc/oem-release ]]; then
+    # Pull in OEM information too, but prefixing variables with OEM_
+    eval "$(sed -e 's/^/OEM_/' /etc/oem-release)"
+fi
+
 BOOT_ID=$(</proc/sys/kernel/random/boot_id)
 MACHINE_ID=$(</etc/machine-id)
-
-OEM_ID="pxe"
 VERSION="${COREOS_RELEASE_VERSION}"
 
 # Fill in default values
 : ${COREOS_RELEASE_APPID:="{e96281a6-d1af-4bde-9a0a-97b76e56dc57}"}
 : ${SERVER:="https://api.core-os.net/v1/update/"}
 : ${GROUP:="alpha"}
+: ${OEM_ID:="pxe"}
 
 fill_attrs() {
     echo -n "appid=\"${COREOS_RELEASE_APPID}\" "

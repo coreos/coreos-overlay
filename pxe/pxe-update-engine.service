@@ -1,3 +1,0 @@
-[Service]
-Type=oneshot
-ExecStart=/usr/lib/coreos/pxe_update_engine

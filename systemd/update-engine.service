@@ -1,8 +1,7 @@
 [Unit]
 Description=Update Engine
 ConditionVirtualization=!container
-ConditionKernelCommandLine=!coreos.diskless
-ConditionKernelCommandLine=!coreos.statediskonly
+ConditionPathExists=!/usr/.noupdate
 Wants=update-engine-reboot-manager.service
 
 [Service]

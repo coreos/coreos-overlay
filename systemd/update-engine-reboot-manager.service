@@ -1,6 +1,8 @@
 [Unit]
-PartOf=update-engine.service
 Description=Update Engine Reboot Manager
+ConditionVirtualization=!container
+ConditionPathExists=!/usr/.noupdate
+PartOf=update-engine.service
 
 [Service]
 ExecStart=/usr/sbin/update_engine_reboot_manager
