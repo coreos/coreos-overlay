@@ -32,7 +32,7 @@ IUSE="bluetooth opengl X"
 #	dev-util/hdctools
 #	app-benchmarks/punybench
 #	dev-util/libc-bench
-RDEPEND="${RDEPEND}
+RDEPEND="
 	app-admin/sudo
 	app-arch/gzip
 	app-arch/tar
@@ -41,6 +41,7 @@ RDEPEND="${RDEPEND}
 	app-misc/evtest
 	app-portage/gentoolkit
 	app-shells/bash
+	coreos-base/coreos
 	coreos-base/gmerge
 	dev-lang/python
 	dev-python/dbus-python
@@ -65,6 +66,7 @@ RDEPEND="${RDEPEND}
 	sys-apps/smartmontools
 	sys-apps/usbutils
 	sys-apps/which
+	sys-devel/gcc
 	sys-devel/gdb
 	sys-fs/fuse
 	sys-fs/lvm2
