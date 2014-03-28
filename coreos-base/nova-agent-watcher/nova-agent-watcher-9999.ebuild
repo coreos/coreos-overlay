@@ -30,6 +30,7 @@ src_compile() {
 }
 
 src_install() {
+	into "/usr/share/oem"
 	dobin ${S}/scripts/gentoo-to-networkd
 	dobin ${S}/bin/nova-agent-watcher
 }

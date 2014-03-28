@@ -16,11 +16,11 @@ IUSE=""
 S="${WORKDIR}"
 
 src_install() {
-	into "/"
+	into "/usr/share/oem"
 	dobin ${FILESDIR}/gce-ssh-key
 	dobin ${FILESDIR}/gce-coreos-cloudinit
 	dobin ${FILESDIR}/gce-setup-environment
 
-	insinto "/"
+	insinto "/usr/share/oem"
 	doins ${FILESDIR}/cloud-config.yml
 }
