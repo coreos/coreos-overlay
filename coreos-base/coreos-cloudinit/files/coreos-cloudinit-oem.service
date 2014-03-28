@@ -7,8 +7,7 @@ ConditionPathExists=/usr/share/oem/cloud-config.yml
  
 [Service]
 Type=oneshot
-ExecStartPre=/usr/bin/coreos-cloudinit --from-file=/usr/share/oem/cloud-config.yml 
-ExecStart=/usr/bin/systemctl daemon-reload
+ExecStart=/usr/bin/coreos-cloudinit --from-file=/usr/share/oem/cloud-config.yml
  
 [Install]
 WantedBy=multi-user.target
