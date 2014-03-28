@@ -8,7 +8,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~x86"
 else
-	CROS_WORKON_COMMIT="dba8a748e1da4d0bb85d2a0232b101906da80ae5"
+	CROS_WORKON_COMMIT="f084f56dec6aeb1259e901112f3b9461e265883f"
 	KEYWORDS="amd64 arm x86"
 fi
 
@@ -80,11 +80,9 @@ src_test() {
 }
 
 src_install() {
-	dosbin "${FILESDIR}"/update_engine_reboot_manager
-	systemd_dounit "${FILESDIR}"/update-engine-reboot-manager.service
-	systemd_enable_service multi-user.target update-engine-reboot-manager.service
-
 	dosbin update_engine
+	dosbin systemd/update_engine_reboot_manager
+	dosbin systemd/update_engine_stub
 	dobin update_engine_client
 
 	dosbin coreos-postinst
@@ -97,26 +95,20 @@ src_install() {
 
 	use delta_generator && dobin delta_generator
 
-	systemd_dounit "${FILESDIR}"/update-engine.service
+	systemd_dounit systemd/update-engine.service
+	systemd_dounit systemd/update-engine-reboot-manager.service
+	systemd_dounit systemd/update-engine-stub.service
+	systemd_dounit systemd/update-engine-stub.timer
 	systemd_enable_service multi-user.target update-engine.service
+	systemd_enable_service multi-user.target update-engine-stub.timer
 
 	insinto /usr/share/dbus-1/services
 	doins org.chromium.UpdateEngine.service
 
-	insinto /etc/dbus-1/system.d
+	insinto /usr/share/dbus-1/system.d
 	doins UpdateEngine.conf
-
-	insinto /lib/udev/rules.d
-	doins 99-gpio-dutflag.rules
 
 	insinto /usr/include/chromeos/update_engine
 	doins update_engine.dbusserver.h
 	doins update_engine.dbusclient.h
-
-	# PXE
-	exeinto /usr/lib/coreos/
-	doexe "${S}"/pxe/pxe_update_engine
-	systemd_dounit "${S}"/pxe/pxe-update-engine.service
-	systemd_dounit "${S}"/pxe/pxe-update-engine.timer
-	systemd_enable_service default.target pxe-update-engine.timer
 }
