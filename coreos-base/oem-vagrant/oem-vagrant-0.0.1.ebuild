@@ -16,7 +16,7 @@ IUSE=""
 S="${WORKDIR}"
 
 src_install() {
-	insinto "/"
+	insinto "/usr/share/oem"
 	doins "${FILESDIR}/authorized_keys"
 	doins "${FILESDIR}/cloud-config.yml"
 }

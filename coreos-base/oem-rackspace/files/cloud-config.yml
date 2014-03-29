@@ -27,7 +27,7 @@ coreos:
           After=dbus.service
 
           [Service]
-          ExecStart=/usr/share/oem/usr/bin/nova-agent-watcher -watch-dir=/usr/share/oem/nova-agent -scripts-dir=/usr/share/oem/usr/bin/
+          ExecStart=/usr/share/oem/bin/nova-agent-watcher -watch-dir=/usr/share/oem/nova-agent -scripts-dir=/usr/share/oem/bin/
       - name: media-configdrive.mount
         command: restart
         runtime: yes

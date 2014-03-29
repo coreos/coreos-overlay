@@ -25,10 +25,10 @@ RDEPEND="
 "
 
 src_install() {
-	rsync --exclude=".git" -aq ${S}/ ${D}/nova-agent/
-	insinto "/"
+	rsync --exclude=".git" -aq ${S}/ ${D}/usr/share/oem/nova-agent/
+	insinto "/usr/share/oem"
 	doins ${FILESDIR}/cloud-config.yml
 
-	into "/"
+	into "/usr/share/oem"
 	dobin ${FILESDIR}/coreos-setup-environment
 }

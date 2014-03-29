@@ -16,12 +16,12 @@ IUSE=""
 S="${WORKDIR}"
 
 src_install() {
-	into "/"
+	into "/usr/share/oem"
 	dobin ${FILESDIR}/ec2-ssh-key
 	dobin ${FILESDIR}/coreos-setup-environment
 	dobin ${FILESDIR}/coreos-c10n
 	dobin ${FILESDIR}/etcd-bootstrap
 
-	insinto "/"
+	insinto "/usr/share/oem"
 	doins ${FILESDIR}/cloud-config.yml
 }
