@@ -1,0 +1,11 @@
+[Unit]
+Description=Update Engine Stub
+ConditionVirtualization=!container
+ConditionPathExists=/usr/.noupdate
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/update_engine_stub
+
+[Install]
+WantedBy=default.target

@@ -1,12 +1,12 @@
 [Unit]
-ConditionKernelCommandLine=|root=squashfs:
-ConditionKernelCommandLine=|root=squashfs
+Description=Update Engine Stub Timer
 ConditionVirtualization=!container
+ConditionPathExists=/usr/.noupdate
 
 [Timer]
 OnBootSec=7minutes
 OnActiveSec=41minutes
-Unit=pxe-update-engine.service
+Unit=update-engine-stub.service
 
 [Install]
 WantedBy=default.target
