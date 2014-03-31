@@ -26,7 +26,7 @@ VERSION="${COREOS_RELEASE_VERSION}"
 : ${COREOS_RELEASE_APPID:="{e96281a6-d1af-4bde-9a0a-97b76e56dc57}"}
 : ${SERVER:="https://api.core-os.net/v1/update/"}
 : ${GROUP:="alpha"}
-: ${OEM_ID:="pxe"}
+: ${OEM_ID:="diskless"}
 
 fill_attrs() {
     echo -n "appid=\"${COREOS_RELEASE_APPID}\" "
