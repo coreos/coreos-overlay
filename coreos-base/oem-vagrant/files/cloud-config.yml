@@ -18,6 +18,6 @@ coreos:
 
           [Service]
           Type=oneshot
-          EnvironmentFile=/etc/environment
+          EnvironmentFile=-/etc/environment
           ExecStart=/usr/bin/coreos-cloudinit --from-file /var/lib/coreos-vagrant/user-data
           RemainAfterExit=yes
