@@ -191,6 +191,11 @@ RDEPEND="${RDEPEND}
 	dev-util/lcov
 	"
 
+# Host dependencies for building ISOs
+RDEPEND="${RDEPEND}
+	virtual/cdrtools
+	"
+
 # Pull tis into / or patch the lvm ebuild to configure with:
 #   --with-thin-check=/sbin/thin_check
 #   --with-thin-dump=/sbin/thin_dump
