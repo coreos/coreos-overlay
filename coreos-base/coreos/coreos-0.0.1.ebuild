@@ -115,6 +115,7 @@ RDEPEND="${RDEPEND}
 	net-misc/wget
 	sys-apps/coreutils
 	sys-apps/dbus
+	sys-apps/ethtool
 	sys-apps/gawk
 	sys-apps/grep
 	sys-apps/iproute2
