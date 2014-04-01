@@ -1,0 +1,13 @@
+[Unit]
+Description=Load cloud-config from %f
+Requires=dbus.service
+After=dbus.service
+RequiresMountsFor=%f
+ConditionFileNotEmpty=%f
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/coreos-cloudinit --from-file=%f
+ 
+[Install]
+WantedBy=cloud-config.target
