@@ -17,5 +17,5 @@ DEPEND=""
 RDEPEND="
 	coreos-base/coreos
 	coreos-base/coreos-dev
+	dev-lang/python-oem
 	"
-	# dev-lang/python-oem
