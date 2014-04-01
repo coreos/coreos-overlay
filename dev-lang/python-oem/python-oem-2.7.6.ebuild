@@ -20,26 +20,20 @@ SRC_URI="http://www.python.org/ftp/python/${PV}/${MY_P}.tar.xz
 LICENSE="PSF-2"
 SLOT="2.7"
 KEYWORDS="~alpha amd64 ~arm ~arm64 hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
-IUSE="+build doc elibc_uclibc examples gdbm hardened ipv6"
+IUSE="hardened"
 
 # Do not add a dependency on dev-lang/python to this ebuild.
 # If you need to apply a patch which requires python for bootstrapping, please
 # run the bootstrap code on your dev box and include the results in the
 # patchset. See bug 447752.
 
-RDEPEND="app-arch/bzip2
+RDEPEND=""
+DEPEND="app-arch/bzip2
 	>=sys-libs/zlib-1.1.3
-	virtual/libffi
 	virtual/libintl
-	!!<sys-apps/portage-2.1.9"
-DEPEND="${RDEPEND}
 	virtual/pkgconfig
 	>=sys-devel/autoconf-2.65
 	!sys-devel/gcc[libffi]"
-RDEPEND+=" !build? ( app-misc/mime-types )
-	doc? ( dev-python/python-docs:${SLOT} )"
-PDEPEND="app-admin/eselect-python
-	app-admin/python-updater"
 
 S="${WORKDIR}/${MY_P}"
 
@@ -72,7 +66,7 @@ src_prepare() {
 
 src_configure() {
 	# Disable extraneous modules with extra dependencies.
-	export PYTHON_DISABLE_MODULES="dbm _bsddb gdbm _curses _curses_panel readline _sqlite3 _tkinter _elementtree pyexpat"
+	export PYTHON_DISABLE_MODULES="dbm _bsddb gdbm _curses _curses_panel readline _sqlite3 _tkinter"
 	export PYTHON_DISABLE_SSL="1"
 
 	if [[ -n "${PYTHON_DISABLE_MODULES}" ]]; then
@@ -99,22 +93,36 @@ src_configure() {
 		export ac_cv_file__dev_ptmx=yes
 	fi
 
+	# Export CXX so it ends up in /usr/lib/python2.X/config/Makefile.
+	tc-export CXX
+	# The configure script fails to use pkg-config correctly.
+	# http://bugs.python.org/issue15506
+	export ac_cv_path_PKG_CONFIG=$(tc-getPKG_CONFIG)
+
+	# Set LDFLAGS so we link modules with -lpython2.7 correctly.
+	# Needed on FreeBSD unless Python 2.7 is already installed.
+	# Please query BSD team before removing this!
+	append-ldflags "-L."
+
 	BUILD_DIR="${WORKDIR}/${CHOST}"
 	mkdir -p "${BUILD_DIR}" || die
 	cd "${BUILD_DIR}" || die
 
 	ECONF_SOURCE="${S}" OPT="" \
 	econf \
+		--prefix=/usr/share/oem/python \
 		--with-fpectl \
-		--enable-shared \
+		--disable-shared \
+		--enable-ipv6 \
+		--enable-threads \
 		--enable-unicode=ucs4 \
-		$(use_enable ipv6) \
-		--infodir='${prefix}/share/info' \
-		--mandir='${prefix}/share/man' \
+		--includedir='/discard/include' \
+		--infodir='/discard/info' \
+		--mandir='/discard/man' \
+		--with-dbmliborder="" \
 		--with-libc="" \
-		--enable-loadable-sqlite-extensions \
-		--with-system-expat \
-		--prefix=/usr/share/oem/python
+		--without-system-expat \
+		--without-system-ffi
 }
 
 src_compile() {
@@ -125,56 +133,23 @@ src_compile() {
 	emake
 }
 
-src_test() {
-	# Tests will not work when cross compiling.
-	if tc-is-cross-compiler; then
-		elog "Disabling tests due to crosscompiling."
-		return
-	fi
-
-	cd "${BUILD_DIR}" || die
-
-	# Skip failing tests.
-	local skipped_tests="distutils gdb"
-
-	for test in ${skipped_tests}; do
-		mv "${S}"/Lib/test/test_${test}.py "${T}"
-	done
-
-	# Rerun failed tests in verbose mode (regrtest -w).
-	emake test EXTRATESTOPTS="-w" < /dev/tty
-	local result="$?"
-
-	for test in ${skipped_tests}; do
-		mv "${T}/test_${test}.py" "${S}"/Lib/test
-	done
-
-	elog "The following tests have been skipped:"
-	for test in ${skipped_tests}; do
-		elog "test_${test}.py"
-	done
-
-	elog "If you would like to run them, you may:"
-	elog "cd '${EPREFIX}/usr/$(get_libdir)/python${SLOT}/test'"
-	elog "and run the tests separately."
-
-	if [[ "${result}" -ne 0 ]]; then
-		die "emake test failed"
-	fi
-}
-
 src_install() {
+	local bindir=/usr/share/oem/python/bin
 	local libdir=/usr/share/oem/python/$(get_libdir)/python${SLOT}
 
 	cd "${BUILD_DIR}" || die
 	emake DESTDIR="${D}" altinstall
 
-	rm -fr "${ED}usr/bin/idle${SLOT}" "${libdir}/"{bsddb,dbhash.py,idlelib,lib-tk,sqlite3,test}
+	# create a simple versionless 'python' symlink
+	dosym "python${SLOT}" "${bindir}/python"
 
-	dodoc "${S}"/Misc/{ACKS,HISTORY,NEWS}
-
-	if use examples; then
-		insinto /usr/share/doc/${PF}/examples
-		doins -r "${S}"/Tools
-	fi
+	# Throw away headers and man/info pages and extra modules
+	rm -r "${D}/discard" \
+		"${D}${bindir}/"{idle,smtpd.py} \
+		"${D}${libdir}/"{bsddb,dbhash.py,test/test_bsddb*} \
+		"${D}${libdir}/"{idlelib,lib-tk} \
+		"${D}${libdir}/distutils/command/"wininst-*.exe \
+		"${D}${libdir}/test" \
+		"${D}${libdir}/sqlite3" \
+		|| die
 }
