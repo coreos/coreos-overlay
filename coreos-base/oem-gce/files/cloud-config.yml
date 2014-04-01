@@ -36,6 +36,7 @@ coreos:
           StandardOutput=journal+console
           ExecStart=/usr/share/oem/bin/gce-ssh-key
       - name: google-accounts-manager.service
+        command: start
         runtime: yes
         content: |
           [Unit]
@@ -51,6 +52,7 @@ coreos:
           [Install]
           WantedBy=multi-user.target
       - name: google-address-manager.service
+        command: start
         runtime: yes
         content: |
           [Unit]
@@ -61,6 +63,22 @@ coreos:
           [Service]
           Type=simple
           ExecStart=/usr/share/oem/python/bin/python2.7 /usr/share/oem/google-compute-daemon/manage_addresses.py
+
+          [Install]
+          WantedBy=multi-user.target
+      - name: google-startup-scripts.service
+        command: start
+        runtime: yes
+        content: |
+          [Unit]
+          Description=Google Compute Engine Startup Scripts
+          After=network.target
+          Requires=network.target
+
+          [Service]
+          Type=oneshot
+          Environment=PREFIX=/usr/share/oem/google-startup-scripts
+          ExecStart=/usr/share/oem/google-startup-scripts/usr/share/google/onboot
 
           [Install]
           WantedBy=multi-user.target
