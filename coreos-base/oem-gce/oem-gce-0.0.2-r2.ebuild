@@ -25,6 +25,7 @@ src_install() {
 	dobin ${FILESDIR}/gce-ssh-key
 	dobin ${FILESDIR}/gce-coreos-cloudinit
 	dobin ${FILESDIR}/gce-setup-environment
+	dobin ${FILESDIR}/gce-add-metadata-host
 
 	insinto "/usr/share/oem"
 	doins ${FILESDIR}/cloud-config.yml

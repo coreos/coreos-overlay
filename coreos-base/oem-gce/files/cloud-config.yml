@@ -2,6 +2,15 @@
 
 coreos:
     units:
+      - name: gce-add-metadata-host.service
+        command: start
+        runtime: yes
+        content: |
+          [Unit]
+          Description=Setup metadata in /etc/hosts
+
+          [Service]
+          ExecStart=/usr/share/oem/bin/gce-add-metadata-host
       - name: gce-coreos-cloudinit.service
         command: restart
         runtime: yes
