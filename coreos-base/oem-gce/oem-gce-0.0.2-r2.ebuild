@@ -15,7 +15,10 @@ IUSE=""
 # no source directory
 S="${WORKDIR}"
 
-DEPENDS="app-emulation/google-daemon"
+RDEPEND="
+	app-emulation/google-compute-daemon
+	app-emulation/google-startup-scripts
+"
 
 src_install() {
 	into "/usr/share/oem"

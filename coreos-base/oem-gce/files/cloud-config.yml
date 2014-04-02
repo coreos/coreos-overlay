@@ -77,8 +77,8 @@ coreos:
 
           [Service]
           Type=oneshot
-          Environment=PREFIX=/usr/share/oem/google-startup-scripts
-          ExecStart=/usr/share/oem/google-startup-scripts/usr/share/google/onboot
+          Environment=GOOGLE_STARTUP_SCRIPTS_PREFIX=/usr/share/oem/google-startup-scripts
+          ExecStart=/usr/share/oem/google-startup-scripts/onboot
 
           [Install]
           WantedBy=multi-user.target
