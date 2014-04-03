@@ -16,24 +16,13 @@ coreos:
         runtime: yes
         content: |
           [Unit]
-          Requires=gce-setup-environment.service
-          After=gce-setup-environment.service
+          Requires=coreos-setup-environment.service
+          After=coreos-setup-environment.service
 
           [Service]
           Type=oneshot
           EnvironmentFile=/etc/environment
           ExecStart=/usr/share/oem/bin/gce-coreos-cloudinit
-      - name: gce-setup-environment.service
-        command: restart
-        runtime: yes
-        content: |
-          [Unit]
-          Description=Setup environment variables from metadata
-
-          [Service]
-          Type=oneshot
-          StandardOutput=journal+console
-          ExecStart=/usr/share/oem/bin/gce-setup-environment /etc/environment
       - name: gce-ssh-key.service
         command: restart
         runtime: yes
