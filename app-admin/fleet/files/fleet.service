@@ -1,6 +1,8 @@
 [Unit]
 Description=fleet
 Wants=etcd.service
+Wants=user-config.target
+After=user-config.target
 
 [Service]
 ExecStart=/usr/bin/fleet

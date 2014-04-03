@@ -1,5 +1,7 @@
 [Unit]
 Description=etcd
+Wants=user-config.target
+After=user-config.target
 
 [Service]
 User=etcd
