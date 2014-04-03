@@ -2,6 +2,15 @@
 
 coreos:
     units:
+      - name: gce-add-metadata-host.service
+        command: start
+        runtime: yes
+        content: |
+          [Unit]
+          Description=Setup metadata in /etc/hosts
+
+          [Service]
+          ExecStart=/usr/share/oem/bin/gce-add-metadata-host
       - name: gce-coreos-cloudinit.service
         command: restart
         runtime: yes
@@ -11,6 +20,7 @@ coreos:
           After=gce-setup-environment.service
 
           [Service]
+          Type=oneshot
           EnvironmentFile=/etc/environment
           ExecStart=/usr/share/oem/bin/gce-coreos-cloudinit
       - name: gce-setup-environment.service
@@ -35,3 +45,50 @@ coreos:
           Type=oneshot
           StandardOutput=journal+console
           ExecStart=/usr/share/oem/bin/gce-ssh-key
+      - name: google-accounts-manager.service
+        command: start
+        runtime: yes
+        content: |
+          [Unit]
+          Description=Google Compute Engine User Accounts Manager Daemon
+          After=network.target
+          Before=sshd.service
+          Requires=network.target
+ 
+          [Service]
+          Type=simple
+          ExecStart=/usr/share/oem/python/bin/python2.7 /usr/share/oem/google-compute-daemon/manage_accounts.py
+
+          [Install]
+          WantedBy=multi-user.target
+      - name: google-address-manager.service
+        command: start
+        runtime: yes
+        content: |
+          [Unit]
+          Description=Google Compute Engine Address Manager Daemon
+          After=network.target
+          Requires=network.target
+
+          [Service]
+          Type=simple
+          ExecStart=/usr/share/oem/python/bin/python2.7 /usr/share/oem/google-compute-daemon/manage_addresses.py
+
+          [Install]
+          WantedBy=multi-user.target
+      - name: google-startup-scripts.service
+        command: start
+        runtime: yes
+        content: |
+          [Unit]
+          Description=Google Compute Engine Startup Scripts
+          After=network.target
+          Requires=network.target
+
+          [Service]
+          Type=oneshot
+          Environment=GOOGLE_STARTUP_SCRIPTS_PREFIX=/usr/share/oem/google-startup-scripts
+          ExecStart=/usr/share/oem/google-startup-scripts/onboot
+
+          [Install]
+          WantedBy=multi-user.target
