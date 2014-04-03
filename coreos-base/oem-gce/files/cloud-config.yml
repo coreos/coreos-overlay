@@ -20,6 +20,7 @@ coreos:
           After=gce-setup-environment.service
 
           [Service]
+          Type=oneshot
           EnvironmentFile=/etc/environment
           ExecStart=/usr/share/oem/bin/gce-coreos-cloudinit
       - name: gce-setup-environment.service
