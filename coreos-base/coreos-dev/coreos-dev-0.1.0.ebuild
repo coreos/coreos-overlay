@@ -15,7 +15,7 @@ IUSE="bluetooth opengl X"
 # developers want to use for development, test, or debug".  This
 # category is meant to include all developer use cases, including
 # software test and debug, performance tuning, hardware validation,
-# and debugging failures running autotest.
+# and debugging failures.
 #
 # To protect developer images from changes in other ebuilds you
 # should include any package with a user constituency, regardless of
