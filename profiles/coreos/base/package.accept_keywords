@@ -87,3 +87,6 @@ dev-util/checkbashisms
 
 # masked upstream due to lua dep, but we don't enable lua support
 =net-analyzer/nmap-6.40-r1
+
+# this version does not segfault when a user isn't in sudoers
+=app-admin/sudo-1.8.10_p2
