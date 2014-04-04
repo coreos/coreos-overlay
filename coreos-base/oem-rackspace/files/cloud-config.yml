@@ -28,26 +28,6 @@ coreos:
 
           [Service]
           ExecStart=/usr/share/oem/bin/nova-agent-watcher -watch-dir=/usr/share/oem/nova-agent -scripts-dir=/usr/share/oem/bin/
-      - name: media-configdrive.mount
-        command: restart
-        runtime: yes
-        content: |
-          [Mount]
-          What=/dev/disk/by-label/config-2
-          Where=/media/configdrive
-      - name: cloudinit-configdrive.service
-        command: restart
-        runtime: yes
-        content: |
-          [Unit]
-          RequiresMountsFor=/media/configdrive
-          Requires=coreos-setup-environment.service
-          After=coreos-setup-environment.service
-
-          [Service]
-          Type=oneshot
-          EnvironmentFile=/etc/environment
-          ExecStart=/usr/bin/coreos-cloudinit --from-file=/media/configdrive/openstack/latest/user_data
     oem:
       id: rackspace
       name: Rackspace Cloud Servers
