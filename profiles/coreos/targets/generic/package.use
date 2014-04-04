@@ -29,6 +29,10 @@ sys-libs/pam        -berkdb
 sys-libs/zlib		static-libs
 sys-libs/gdbm		berkdb
 
+
+sys-apps/systemd http
+net-libs/libmicrohttpd -ssl
+
 sys-boot/syslinux       -custom-cflags
 
 sys-apps/flashrom -dediprog -ft2232_spi -serprog

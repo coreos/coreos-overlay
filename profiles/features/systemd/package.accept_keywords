@@ -4,3 +4,6 @@ sys-apps/gentoo-systemd-integration ~amd64 ~x86
 sys-apps/hwids                  ~amd64 ~x86
 sys-apps/kmod                   ~amd64 ~x86
 virtual/udev                    ~amd64 ~x86
+
+# use the latest libmicrohttpd that builds.
+=net-libs/libmicrohttpd-0.9.34
