@@ -48,3 +48,8 @@ coreos:
           Type=oneshot
           EnvironmentFile=/etc/environment
           ExecStart=/usr/bin/coreos-cloudinit --from-file=/media/configdrive/openstack/latest/user_data
+    oem:
+      id: rackspace
+      name: Rackspace Cloud Servers
+      home-url: https://www.rackspace.com/cloud/servers/
+      bug-report-url: https://github.com/coreos/coreos-overlay

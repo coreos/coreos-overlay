@@ -92,3 +92,8 @@ coreos:
 
           [Install]
           WantedBy=multi-user.target
+    oem:
+      id: gce
+      name: Google Compute Engine
+      home-url: https://cloud.google.com/products/compute-engine/
+      bug-report-url: https://github.com/coreos/coreos-overlay
