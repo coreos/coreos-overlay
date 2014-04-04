@@ -9,7 +9,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~x86"
 else
-	CROS_WORKON_COMMIT="aa12816e0637a2ef800854e7343246d6a8177dd9"
+	CROS_WORKON_COMMIT="45a1b989acecdeba5fd2499b56fdbe158ef367bb"
 	KEYWORDS="amd64 arm x86"
 fi
 
@@ -169,9 +169,9 @@ src_install() {
 		fi
 
 		# Initialize /etc/passwd, group, and friends on boot.
-		bash "${FILESDIR}/coreos-tmpfiles" "${D}" || die
-		dosbin "${FILESDIR}/coreos-tmpfiles"
-		systemd_dounit "${FILESDIR}/coreos-tmpfiles.service"
+		bash "scripts/coreos-tmpfiles" "${D}" || die
+		dosbin "scripts/coreos-tmpfiles"
+		systemd_dounit "scripts/coreos-tmpfiles.service"
 		systemd_enable_service sysinit.target coreos-tmpfiles.service
 	fi
 }
