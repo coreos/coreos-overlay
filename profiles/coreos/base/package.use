@@ -75,3 +75,6 @@ sys-libs/zlib static-libs
 dev-vcs/git -perl -iconv
 
 net-analyzer/nmap ncat -lua
+
+# removes mta dependencies
+app-admin/sudo -sendmail
