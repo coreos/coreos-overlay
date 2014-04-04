@@ -126,11 +126,6 @@ RDEPEND="${RDEPEND}
 	sys-devel/smatch
 	"
 
-# Host dependencies that are needed for autotests.
-RDEPEND="${RDEPEND}
-	dev-util/dejagnu
-	"
-
 # Host dependencies that are needed to create and sign images
 # TODO:	sys-apps/mosys
 RDEPEND="${RDEPEND}
