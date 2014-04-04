@@ -1,5 +1,0 @@
-[Service]
-ExecStart=/usr/sbin/systemd-rest
-
-[Install]
-WantedBy=multi-user.target
