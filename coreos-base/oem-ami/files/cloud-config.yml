@@ -40,7 +40,11 @@ coreos:
           Type=oneshot
           RemainAfterExit=no
           ExecStart=/usr/share/oem/bin/coreos-c10n
-
+    oem:
+      id: ami
+      name: Amazon EC2
+      home-url: http://aws.amazon.com/ec2/
+      bug-report-url: https://github.com/coreos/coreos-overlay
 write_files:
     - path: /run/systemd/system/etcd.service.d/10-oem.conf
       permissions: 0644

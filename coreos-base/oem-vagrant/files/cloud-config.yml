@@ -21,3 +21,8 @@ coreos:
           EnvironmentFile=-/etc/environment
           ExecStart=/usr/bin/coreos-cloudinit --from-file /var/lib/coreos-vagrant/user-data
           RemainAfterExit=yes
+    oem:
+      id: vagrant
+      name: Vagrant
+      home-url: http://www.vagrantup.com/
+      bug-report-url: https://github.com/coreos/coreos-overlay
