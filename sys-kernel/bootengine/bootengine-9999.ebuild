@@ -10,7 +10,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~x86"
 else
-	CROS_WORKON_COMMIT="59e154d3712252a90ff438197524e7ef10e00a15"
+	CROS_WORKON_COMMIT="b72fdc5cb0a8ef8211d5c09ca1bb168cb89c1228"
 	KEYWORDS="amd64 arm x86"
 fi
 
@@ -48,7 +48,7 @@ src_install() {
 
 	# must be executable since dracut's install scripts just
 	# re-use existing filesystem permissions during initrd creation.
-	chmod +x "${D}/usr/lib/dracut/modules.d/10usr-generator/usr-generator"
+	chmod +x "${D}"/usr/lib/dracut/modules.d/10*-generator/*-generator
 }
 
 # We are bad, we want to get around the sandbox.  So do the creation of the
