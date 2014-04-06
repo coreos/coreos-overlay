@@ -26,4 +26,6 @@ src_prepare() {
 src_install() {
 	mkdir -p ${D}/usr/share/oem/google-startup-scripts/usr/share/google/
 	cp -Ra ${WORKDIR}/usr/share/google/. ${D}/usr/share/oem/google-startup-scripts/ || die
+	# We don't install python or gsutil so skip this
+	rm -R ${D}/usr/share/oem/google-startup-scripts/boto || die
 }
