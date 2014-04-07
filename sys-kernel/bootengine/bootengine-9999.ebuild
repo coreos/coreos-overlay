@@ -48,7 +48,9 @@ src_install() {
 
 	# must be executable since dracut's install scripts just
 	# re-use existing filesystem permissions during initrd creation.
-	chmod +x "${D}"/usr/lib/dracut/modules.d/10*-generator/*-generator
+	chmod +x "${D}"/usr/lib/dracut/modules.d/10*-generator/*-generator \
+		"${D}"/usr/lib/dracut/modules.d/10diskless-generator/diskless-btrfs \
+		|| die chmod
 }
 
 # We are bad, we want to get around the sandbox.  So do the creation of the
