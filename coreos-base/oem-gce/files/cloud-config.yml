@@ -76,14 +76,17 @@ coreos:
 
           [Install]
           WantedBy=multi-user.target
-      - name: google-startup-scripts.service
+      - name: google-startup-scripts-onboot.service
         command: start
         runtime: yes
         content: |
           [Unit]
           Description=Google Compute Engine Startup Scripts
           After=network.target
+          After=local-fs.target
+          Before=sshd.service
           Requires=network.target
+          Requires=local-fs.target
 
           [Service]
           Type=oneshot
@@ -92,6 +95,24 @@ coreos:
 
           [Install]
           WantedBy=multi-user.target
+      - name: google-startup-scripts.service
+        command: start
+        runtime: yes
+        content: |
+          [Unit]
+          Description=Google Compute Engine user startup scripts
+          After=network.target
+          After=google-startup-scripts-onboot.service
+          Requires=google-startup-scripts-onboot.service
+          Requires=network.target
+
+          [Service]
+          ExecStart=/usr/share/oem/google-startup-scripts/run-startup-scripts
+          Type=idle
+
+          [Install]
+          WantedBy=multi-user.target
+
     oem:
       id: gce
       name: Google Compute Engine
