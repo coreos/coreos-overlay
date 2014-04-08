@@ -11,7 +11,9 @@ set -e -o pipefail
 
 source /usr/share/coreos/release
 source /usr/share/coreos/update.conf
-source /etc/coreos/update.conf || true
+if [[ -e /etc/coreos/update.conf ]]; then
+    source /etc/coreos/update.conf
+fi
 
 if [[ -e /etc/oem-release ]]; then
     # Pull in OEM information too, but prefixing variables with OEM_
