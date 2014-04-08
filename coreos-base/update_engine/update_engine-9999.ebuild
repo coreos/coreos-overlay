@@ -8,14 +8,14 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~x86"
 else
-	CROS_WORKON_COMMIT="f084f56dec6aeb1259e901112f3b9461e265883f"
+	CROS_WORKON_COMMIT="c1db4d2857206d8cf71c91c4c129b202e4651209"
 	KEYWORDS="amd64 arm x86"
 fi
 
 inherit toolchain-funcs cros-debug cros-workon scons-utils systemd
 
-DESCRIPTION="Chrome OS Update Engine"
-HOMEPAGE="http://www.chromium.org/"
+DESCRIPTION="CoreOS Update Engine"
+HOMEPAGE="https://www.coreos.com/"
 SRC_URI=""
 
 LICENSE="BSD"
@@ -103,7 +103,7 @@ src_install() {
 	systemd_enable_service multi-user.target update-engine-stub.timer
 
 	insinto /usr/share/dbus-1/services
-	doins org.chromium.UpdateEngine.service
+	doins com.coreos.UpdateEngine.service
 
 	insinto /usr/share/dbus-1/system.d
 	doins UpdateEngine.conf
