@@ -83,7 +83,7 @@ void SetupDbusService(UpdateEngineService* service) {
                << DBUS_REQUEST_NAME_REPLY_PRIMARY_OWNER;
   }
   dbus_g_connection_register_g_object(bus,
-                                      "/org/chromium/UpdateEngine",
+                                      "/com/coreos/update1",
                                       G_OBJECT(service));
 }
 

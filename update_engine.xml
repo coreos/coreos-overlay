@@ -3,13 +3,11 @@
      dbus-binding-tool -mode=glib-server -prefix=update_engine update_engine.xml
                         &gt; glib_server.h
 -->
-<node name="/org/chromium">
-  <interface name="org.chromium.UpdateEngineInterface">
+<node name="/com/coreos/update1/Manager">
+  <interface name="com.coreos.update1.Manager">
     <annotation name="org.freedesktop.DBus.GLib.CSymbol"
                 value="update_engine_service"/>
     <method name="AttemptUpdate">
-      <arg type="s" name="app_version" />
-      <arg type="s" name="omaha_url" />
     </method>
     <method name="ResetStatus">
     </method>
@@ -19,23 +17,6 @@
       <arg type="s" name="current_operation" direction="out" />
       <arg type="s" name="new_version" direction="out" />
       <arg type="x" name="new_size" direction="out" />
-    </method>
-    <method name="RebootIfNeeded">
-    </method>
-    <!-- Deprecate GetTrack and SetTrack after updating the clients -->
-    <method name="GetTrack">
-      <arg type="s" name="track" direction="out" />
-    </method>
-    <method name="SetTrack">
-      <arg type="s" name="track" />
-    </method>
-    <method name="SetChannel">
-      <arg type="s" name="target_channel" />
-      <arg type="b" name="is_powerwash_allowed" />
-    </method>
-    <method name="GetChannel">
-      <arg type="b" name="get_current_channel" />
-      <arg type="s" name="channel" direction="out" />
     </method>
     <signal name="StatusUpdate">
       <arg type="x" name="last_checked_time" />

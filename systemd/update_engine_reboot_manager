@@ -6,7 +6,7 @@
 
 # TODO: Make this a service in Go that coordinates between a host group
 
-interface=org.chromium.UpdateEngineInterface
+interface=com.coreos.update1.Manager
 member=StatusUpdate
 
 reboot_tasks() {

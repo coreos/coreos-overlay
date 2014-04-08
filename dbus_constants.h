@@ -7,11 +7,11 @@
 
 namespace chromeos_update_engine {
 
-static const char* const kUpdateEngineServiceName = "org.chromium.UpdateEngine";
+static const char* const kUpdateEngineServiceName = "com.coreos.update1";
 static const char* const kUpdateEngineServicePath =
-    "/org/chromium/UpdateEngine";
+    "/com/coreos/update1";
 static const char* const kUpdateEngineServiceInterface =
-    "org.chromium.UpdateEngineInterface";
+    "com.coreos.update1.Manager";
 }  // namespace chromeos_update_engine
 
 #endif  // CHROMEOS_PLATFORM_UPDATE_ENGINE_DBUS_CONSTANTS_H__
