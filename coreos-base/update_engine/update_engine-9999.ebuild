@@ -108,6 +108,9 @@ src_install() {
 	insinto /usr/share/dbus-1/system.d
 	doins UpdateEngine.conf
 
+	# Install rule to remove old UpdateEngine.conf from /etc
+	systemd_dotmpfilesd "${FILESDIR}"/update-engine.conf
+
 	insinto /usr/include/chromeos/update_engine
 	doins update_engine.dbusserver.h
 	doins update_engine.dbusclient.h
