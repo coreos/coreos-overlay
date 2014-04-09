@@ -25,7 +25,8 @@ RDEPEND="
 "
 
 src_install() {
-	rsync --exclude=".git" -aq ${S}/ ${D}/usr/share/oem/nova-agent/
+	dodir /usr/share/oem/nova-agent
+	rsync --exclude=".git" -aq ${S}/ ${D}/usr/share/oem/nova-agent/ || die
 	insinto "/usr/share/oem"
 	doins ${FILESDIR}/cloud-config.yml
 
