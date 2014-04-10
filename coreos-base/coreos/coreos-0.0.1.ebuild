@@ -94,6 +94,7 @@ RDEPEND="${RDEPEND}
 #	coreos-base/metrics
 
 RDEPEND="${RDEPEND}
+	app-emulation/xenstore
 	sys-apps/findutils
 	sys-apps/which
 	app-admin/fleet
