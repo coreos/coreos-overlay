@@ -1,10 +1,32 @@
-#!/bin/bash -e
+#!/bin/bash
 
+URL_PREFIX="http://169.254.169.254/computeMetadata/v1/"
 TMPFILE=$(mktemp /tmp/XXXXXX-cloud-init)
-trap 'echo "removing ${TMPFILE}"; rm -f ${TMPFILE}' INT TERM EXIT
+if [[ $? -ne 0 || ! -f "${TMPFILE}" ]]; then
+	echo "Failed to create temp file for user-data" >&2
+	exit 1
+fi
+trap "rm -f '${TMPFILE}'" EXIT
 
-curl --retry 5 --retry-delay 2 --silent --fail \
-		"http://169.254.169.254/computeMetadata/v1/instance/attributes/user-data" \
-                -H "X-Google-Metadata-Request: True" > ${TMPFILE}
+try_cloudinit() {
+    local id="$1"
+    local url="${URL_PREFIX}${id}/attributes/user-data"
 
-/usr/bin/coreos-cloudinit --from-file=${TMPFILE}
+    echo "Trying to fetch $id user-data..."
+    curl --retry 5 --retry-delay 2 --silent --fail --show-error \
+        -H "X-Google-Metadata-Request: True" -o "${TMPFILE}" "${url}"
+
+    ret=$?
+    if [[ $ret -ne 0 && $ret -ne 22 ]]; then
+        echo "curl failed with error code $ret" >&2
+        return $ret
+    elif [[ $ret -eq 22 || ! -s "${TMPFILE}" ]]; then
+        echo "$id user-data is missing or empty, skipping"
+        return 0
+    fi
+
+    coreos-cloudinit --from-file="${TMPFILE}"
+    return $?
+}
+
+try_cloudinit project && try_cloudinit instance
