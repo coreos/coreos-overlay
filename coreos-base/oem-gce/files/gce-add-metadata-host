@@ -2,7 +2,7 @@
 
 entry="169.254.169.254 metadata"
 
-grep -q "${entry}" /etc/hosts
+grep -qs "${entry}" /etc/hosts
 
 if [ $? -ne 0 ]; then
 	echo ${entry} >> /etc/hosts
