@@ -18,7 +18,7 @@ coreos:
         runtime: yes
         content: |
           [Unit]
-          Description=Cloudinit from EC2 metadata
+          Description=Cloudinit from EC2-style metadata
           Requires=coreos-setup-environment.service
           After=coreos-setup-environment.service
 
@@ -31,7 +31,7 @@ coreos:
         runtime: yes
         content: |
           [Unit]
-          Description=Legacy c10n support from EC2 metadata
+          Description=Legacy c10n support from EC2-style metadata
           Requires=ec2-cloudinit.service
           After=ec2-cloudinit.service
           ConditionPathIsMountPoint=!/usr
@@ -41,10 +41,10 @@ coreos:
           RemainAfterExit=no
           ExecStart=/usr/share/oem/bin/coreos-c10n
     oem:
-      id: ami
-      name: Amazon EC2
-      home-url: http://aws.amazon.com/ec2/
-      bug-report-url: https://github.com/coreos/coreos-overlay
+      id: @@OEM_ID@@
+      name: @@OEM_NAME@@
+      home-url: @@OEM_HOME_URL@@
+      bug-report-url: https://github.com/coreos/bugs/issues
 write_files:
     - path: /run/systemd/system/etcd.service.d/10-oem.conf
       permissions: 0644
