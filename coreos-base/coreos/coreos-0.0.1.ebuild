@@ -99,6 +99,7 @@ RDEPEND="${RDEPEND}
 	sys-apps/which
 	app-admin/fleet
 	app-admin/sudo
+	app-admin/toolbox
 	app-arch/gzip
 	app-arch/tar
 	app-shells/bash
