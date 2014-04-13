@@ -1,6 +1,6 @@
 #!/bin/bash
 
-URL_PREFIX="http://169.254.169.254/computeMetadata/v1/"
+METADATA_URL="http://169.254.169.254/computeMetadata/"
 TMPFILE=$(mktemp /tmp/XXXXXX-cloud-init)
 if [[ $? -ne 0 || ! -f "${TMPFILE}" ]]; then
 	echo "Failed to create temp file for user-data" >&2
@@ -10,11 +10,12 @@ trap "rm -f '${TMPFILE}'" EXIT
 
 try_cloudinit() {
     local id="$1"
-    local url="${URL_PREFIX}${id}/attributes/user-data"
+    local url="${METADATA_URL}v1/${id}/attributes/user-data"
 
     echo "Trying to fetch $id user-data..."
-    curl --retry 5 --retry-delay 2 --silent --fail --show-error \
-        -H "X-Google-Metadata-Request: True" -o "${TMPFILE}" "${url}"
+    curl --fail --silent --show-error \
+        -H "X-Google-Metadata-Request: True" \
+        -o "${TMPFILE}" "${url}"
 
     ret=$?
     if [[ $ret -ne 0 && $ret -ne 22 ]]; then
@@ -29,4 +30,5 @@ try_cloudinit() {
     return $?
 }
 
+block-until-url "${METADATA_URL}"
 try_cloudinit project && try_cloudinit instance
