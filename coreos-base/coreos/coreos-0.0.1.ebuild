@@ -95,6 +95,7 @@ RDEPEND="${RDEPEND}
 
 RDEPEND="${RDEPEND}
 	app-emulation/xenstore
+	app-emulation/xenserver-pv-version
 	sys-apps/findutils
 	sys-apps/which
 	app-admin/fleet

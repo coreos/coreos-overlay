@@ -6,7 +6,7 @@ EAPI=5
 
 PYTHON_COMPAT=( python2_7 )
 
-inherit multilib python-any-r1 toolchain-funcs
+inherit multilib python-any-r1 systemd toolchain-funcs
 
 MY_PV=${PV/_/-}
 S="${WORKDIR}/xen-${MY_PV}"
@@ -70,4 +70,7 @@ src_compile() {
 src_install() {
 	dolib.so tools/xenstore/libxenstore.so*
 	dobin tools/xenstore/xenstore
+
+	systemd_dounit "${FILESDIR}"/proc-xen.mount
+	systemd_enable_service local-fs.target proc-xen.mount
 }
