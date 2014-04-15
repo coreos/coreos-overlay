@@ -9,11 +9,11 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64"
 else
-	CROS_WORKON_COMMIT="0fddd1735d013b6e6c78b232329c0ea4d5b709be"  # v0.4.0
+	CROS_WORKON_COMMIT="13a3d892ca557c7474fdb17a7562697a05464290"  # v0.4.2
 	KEYWORDS="amd64"
 fi
 
-inherit cros-workon systemd
+inherit cros-workon systemd udev
 
 DESCRIPTION="coreos-cloudinit"
 HOMEPAGE="https://github.com/coreos/coreos-cloudinit"
@@ -36,7 +36,9 @@ src_compile() {
 
 src_install() {
 	dobin ${S}/bin/coreos-cloudinit
-	systemd_dounit "${FILESDIR}"/coreos-cloudinit@.service
-	systemd_dounit "${FILESDIR}"/cloud-config.target
-	systemd_enable_service default.target cloud-config.target
+	udev_dorules units/*.rules
+	systemd_dounit units/*.service
+	systemd_dounit units/*.target
+	systemd_enable_service default.target system-config.target
+	systemd_enable_service default.target user-config.target
 }
