@@ -350,11 +350,7 @@ multilib_src_install_all() {
 	# Disable storing coredumps in journald, bug #433457
 	mv "${D}"/usr/lib/sysctl.d/50-coredump.conf{,.disabled} || die
 
-	# Preserve empty dir /var, bug #437008
-	keepdir /var/lib/systemd
-
-	# Keep /etc clean
-	rmdir "${D}"/etc/{binfmt,modules-load,sysctl,tmpfiles}.d || die
+	systemd_dotmpfilesd "${FILESDIR}"/systemd-coreos.conf
 
 	# Don't default to graphical.target
 	rm "${D}"/usr/lib/systemd/system/default.target || die
