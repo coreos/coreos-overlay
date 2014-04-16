@@ -9,7 +9,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~x86"
 else
-	CROS_WORKON_COMMIT="5ae4bccc0ebb6cc7c572ddfd5a647f146c24cabe"
+	CROS_WORKON_COMMIT="1f378ad0040e2f6f269a503df9c47f1966ed180d"
 	KEYWORDS="amd64 arm x86"
 fi
 
@@ -124,6 +124,8 @@ src_install() {
 
 	# Fill in all other paths defined in tmpfiles configs
 	tmpfiles_create
+
+	doenvd "env.d/99coreos_ldpath"
 
 	# handle multilib paths.  do it here because we want this behavior
 	# regardless of the C library that you're using.  we do explicitly
