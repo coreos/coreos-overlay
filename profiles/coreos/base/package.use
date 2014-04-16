@@ -78,3 +78,6 @@ net-analyzer/nmap ncat -lua
 
 # removes mta dependencies
 app-admin/sudo -sendmail
+
+# avoid pulling in gnutls
+sys-apps/systemd -ssl

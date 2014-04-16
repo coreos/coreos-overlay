@@ -32,7 +32,7 @@ SRC_URI="http://www.freedesktop.org/software/systemd/${P}.tar.xz"
 
 LICENSE="GPL-2 LGPL-2.1 MIT public-domain"
 SLOT="0/2"
-KEYWORDS="~alpha ~amd64 ~arm ~ia64 ~ppc ~ppc64 ~sparc ~x86"
+KEYWORDS="~alpha amd64 ~arm ~ia64 ~ppc ~ppc64 ~sparc ~x86"
 IUSE="acl audit cryptsetup doc +firmware-loader gcrypt gudev http introspection
 	kdbus +kmod lzma pam policykit python qrcode +seccomp selinux ssl
 	test vanilla xattr openrc"
@@ -113,6 +113,14 @@ if [[ ${PV} == *9999 ]]; then
 		echo 'EXTRA_DIST =' > docs/gtk-doc.make
 	fi
 fi
+	# fix networkd crash, https://bugs.gentoo.org/show_bug.cgi?id=507044
+	epatch "${FILESDIR}"/212-0001-sd-rtnl-fix-off-by-one.patch
+
+	# CoreOs specific hacks^Wfeatures
+	epatch "${FILESDIR}"/211-handle-empty-etc-os-release.patch
+
+	# patch to make journald work at first boot
+	epatch "${FILESDIR}"/211-tmpfiles.patch
 
 	# Bug 463376
 	sed -i -e 's/GROUP="dialout"/GROUP="uucp"/' rules/*.rules || die
