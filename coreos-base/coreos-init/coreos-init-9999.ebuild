@@ -10,7 +10,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~x86"
 else
-	CROS_WORKON_COMMIT="953ceb97775dcd6ad500b4a47462afeec10e5b86"
+	CROS_WORKON_COMMIT="f9d7d2b10defb4669d6785d1e1791cbdda6249fd"
 	KEYWORDS="amd64 arm x86"
 fi
 
@@ -45,6 +45,7 @@ src_install() {
 		emake DESTDIR="${D}" install-usr
 		systemd_enable_service local-fs.target remount-root.service
 		systemd_enable_service default.target resize-btrfs.service
+		systemd_enable_service default.target ldsocache.service
 	else
 		emake DESTDIR="${D}" install
 	fi
