@@ -94,3 +94,6 @@ dev-util/checkbashisms
 # Security update, CVE-2014-0160
 # https://bugs.gentoo.org/show_bug.cgi?id=507074
 =dev-libs/openssl-1.0.1g
+
+# Includes fix for checking mount status of loop devices
+=sys-fs/btrfs-progs-3.14_pre20140414
