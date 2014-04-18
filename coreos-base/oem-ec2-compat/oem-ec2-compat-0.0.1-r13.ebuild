@@ -1,1 +1,1 @@
-oem-ami-compat-0.0.1.ebuild
+oem-ec2-compat-0.0.1.ebuild
