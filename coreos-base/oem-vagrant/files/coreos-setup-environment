@@ -1,0 +1,13 @@
+#!/bin/bash -e
+
+ENV="$1"
+
+if [ -z "$ENV" ]; then
+        echo usage: $0 /etc/environment
+        exit 1
+fi
+
+# just block until cloudinit updates environment 
+while ! grep -qs ^COREOS_PUBLIC_IPV4 "$ENV"; do
+    sleep 0.1
+done

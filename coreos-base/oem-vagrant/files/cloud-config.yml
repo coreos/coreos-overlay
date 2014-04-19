@@ -7,7 +7,7 @@ coreos:
         content: |
           [Path]
           PathExists=/var/lib/coreos-vagrant/user-data
-          Unit=user-cloudinit@var-lib-coreos\x2dvagrant-user\x2ddata.service
+          Unit=system-cloudinit@var-lib-coreos\x2dvagrant-user\x2ddata.service
     oem:
       id: vagrant
       name: Vagrant
