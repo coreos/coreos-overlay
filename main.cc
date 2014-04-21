@@ -157,7 +157,7 @@ int main(int argc, char** argv) {
   if (!FLAGS_foreground)
     PLOG_IF(FATAL, daemon(0, 0) == 1) << "daemon() failed";
 
-  LOG(INFO) << "Chrome OS Update Engine starting";
+  LOG(INFO) << "CoreOS Update Engine starting";
 
   // Ensure that all written files have safe permissions.
   // This is a mask, so we _block_ execute for the owner, and ALL
@@ -216,6 +216,6 @@ int main(int argc, char** argv) {
   update_attempter->set_dbus_service(NULL);
   g_object_unref(G_OBJECT(service));
 
-  LOG(INFO) << "Chrome OS Update Engine terminating";
+  LOG(INFO) << "CoreOS Update Engine terminating";
   return 0;
 }
