@@ -10,7 +10,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~x86"
 else
-	CROS_WORKON_COMMIT="4099b3f635abc082ec68f4f4e212146e246cb5cc"
+	CROS_WORKON_COMMIT="78d3ccf4f3f2c1684f7b7291d3ecd68b29eb18ab"
 	KEYWORDS="amd64 arm x86"
 fi
 
@@ -23,6 +23,8 @@ SRC_URI=""
 LICENSE="BSD"
 SLOT="0"
 IUSE="test symlink-usr"
+
+REQUIRED_USE="symlink-usr"
 
 # Daemons we enable here must installed during build/install in addition to
 # during runtime so the systemd unit enable step works.
@@ -41,19 +43,15 @@ RDEPEND="${DEPEND}
 	"
 
 src_install() {
-	if use symlink-usr ; then
-		emake DESTDIR="${D}" install-usr
-		systemd_enable_service local-fs.target remount-root.service
-		systemd_enable_service default.target resize-btrfs.service
-		systemd_enable_service default.target ldsocache.service
-	else
-		emake DESTDIR="${D}" install
-	fi
+	emake DESTDIR="${D}" install
 
+	# Basic system startup
 	systemd_enable_service basic.target coreos-startup.target
+	systemd_enable_service local-fs.target remount-root.service
+	systemd_enable_service default.target resize-btrfs.service
+	systemd_enable_service default.target ldsocache.service
 
 	# Services!
-	systemd_enable_service default.target local-enable.service
 	systemd_enable_service default.target sshd-keygen.service
 	systemd_enable_service default.target sshd.socket
 	systemd_enable_service default.target ssh-key-proc-cmdline.service
