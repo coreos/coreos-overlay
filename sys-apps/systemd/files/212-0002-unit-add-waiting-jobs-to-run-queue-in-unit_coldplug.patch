@@ -1,0 +1,32 @@
+From 7b6a4f0380c0f95e0ce1beccddd82b6c4aecc8bc Mon Sep 17 00:00:00 2001
+From: Michal Sekletar <msekleta@redhat.com>
+Date: Tue, 1 Apr 2014 18:45:54 +0200
+Subject: [PATCH] unit: add waiting jobs to run queue in unit_coldplug
+
+When we have job installed and added to run queue for service which is still in
+dead state and systemd initiates reload then after reload we never add
+deserialized job to the run queue again. This is caused by check in
+service_coldplug() where we check if deserialized state is something else
+than dead state, which is not the case thus we never call service_set_state()
+and finally unit_notify() where we would have added job to the run queue.
+---
+ src/core/unit.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/core/unit.c b/src/core/unit.c
+index 153b79b..bb7893b 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -2558,6 +2558,9 @@ int unit_coldplug(Unit *u) {
+                 r = job_coldplug(u->job);
+                 if (r < 0)
+                         return r;
++
++                if (u->job->state == JOB_WAITING)
++                        job_add_to_run_queue(u->job);
+         } else if (u->deserialized_job >= 0) {
+                 /* legacy */
+                 r = manager_add_job(u->manager, u->deserialized_job, u, JOB_IGNORE_REQUIREMENTS, false, NULL, NULL);
+-- 
+1.8.3.2
+
