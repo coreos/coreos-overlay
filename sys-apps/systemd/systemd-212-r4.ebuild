@@ -1,6 +1,6 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-apps/systemd/systemd-9999.ebuild,v 1.100 2014/03/03 22:19:31 floppym Exp $
+# $Header: /var/cvsroot/gentoo-x86/sys-apps/systemd/systemd-9999.ebuild,v 1.103 2014/03/31 19:01:25 floppym Exp $
 
 EAPI=5
 
@@ -12,6 +12,7 @@ EGIT_REPO_URI="git://anongit.freedesktop.org/${PN}/${PN}
 inherit git-r3
 
 elif [[ ${PV} == *9999 ]]; then
+AUTOTOOLS_AUTORECONF=yes
 EGIT_REPO_URI="git://anongit.freedesktop.org/${PN}/${PN}-stable
 	http://cgit.freedesktop.org/${PN}/${PN}-stable/"
 EGIT_BRANCH=v${PV%%.*}-stable
@@ -33,7 +34,7 @@ LICENSE="GPL-2 LGPL-2.1 MIT public-domain"
 SLOT="0/2"
 KEYWORDS="~alpha amd64 ~arm ~ia64 ~ppc ~ppc64 ~sparc ~x86"
 IUSE="acl audit cryptsetup doc +firmware-loader gcrypt gudev http introspection
-	kdbus +kmod lzma pam policykit python qrcode +seccomp selinux tcpd
+	kdbus +kmod lzma pam policykit python qrcode +seccomp selinux ssl
 	test vanilla xattr openrc"
 
 MINKV="3.0"
@@ -45,7 +46,7 @@ COMMON_DEPEND=">=sys-apps/util-linux-2.20:0=
 	cryptsetup? ( >=sys-fs/cryptsetup-1.6:0= )
 	gcrypt? ( >=dev-libs/libgcrypt-1.4.5:0= )
 	gudev? ( dev-libs/glib:2=[${MULTILIB_USEDEP}] )
-	http? ( net-libs/libmicrohttpd:0= )
+	http? ( >=net-libs/libmicrohttpd-0.9.33:0= )
 	introspection? ( >=dev-libs/gobject-introspection-1.31.1:0= )
 	kmod? ( >=sys-apps/kmod-15:0= )
 	lzma? ( app-arch/xz-utils:0=[${MULTILIB_USEDEP}] )
@@ -54,7 +55,7 @@ COMMON_DEPEND=">=sys-apps/util-linux-2.20:0=
 	qrcode? ( media-gfx/qrencode:0= )
 	seccomp? ( >=sys-libs/libseccomp-2.1:0= )
 	selinux? ( sys-libs/libselinux:0= )
-	tcpd? ( sys-apps/tcp-wrappers:0= )
+	ssl? ( >=net-libs/gnutls-3.1.4:0= )
 	xattr? ( sys-apps/attr:0= )
 	abi_x86_32? ( !<=app-emulation/emul-linux-x86-baselibs-20130224-r9
 		!app-emulation/emul-linux-x86-baselibs[-abi_x86_32(-)] )"
@@ -91,15 +92,12 @@ DEPEND="${COMMON_DEPEND}
 	python? ( dev-python/lxml[${PYTHON_USEDEP}] )
 	test? ( >=sys-apps/dbus-1.6.8-r1:0 )"
 
-# Pull in docbook to rebuild man pages since we are patching them
+if [[ ${PV} == *9999 ]]; then
 DEPEND="${DEPEND}
 	app-text/docbook-xml-dtd:4.2
 	app-text/docbook-xml-dtd:4.5
 	app-text/docbook-xsl-stylesheets
-	dev-libs/libxslt:0"
-
-if [[ ${PV} == *9999 ]]; then
-DEPEND="${DEPEND}
+	dev-libs/libxslt:0
 	dev-libs/gobject-introspection
 	>=dev-libs/libgcrypt-1.4.5:0"
 
@@ -108,34 +106,6 @@ KEYWORDS=
 fi
 
 src_prepare() {
-	# CoreOs specific hacks^Wfeatures
-	epatch "${FILESDIR}"/211-handle-empty-etc-os-release.patch
-
-	# upstream fixes not yet in the release
-	epatch "${FILESDIR}"/211-0001-gpt-auto-generator-don-t-return-OOM-on-parentless-de.patch
-	epatch "${FILESDIR}"/211-0002-bus-fix-memory-leak-when-kdbus-is-not-enabled.patch
-	epatch "${FILESDIR}"/211-0003-sd-bus-don-t-look-for-a-64bit-value-when-we-only-hav.patch
-	epatch "${FILESDIR}"/211-0004-nspawn-allow-EEXIST-on-mkdir_safe-home-uid.patch
-	epatch "${FILESDIR}"/211-0005-networkd-fix-creation-of-runtime-dirs-at-startup.patch
-	epatch "${FILESDIR}"/211-0006-networkd-lease-store-up-to-one-dhcp-lease-file-per-i.patch
-	epatch "${FILESDIR}"/211-0007-Do-not-return-1-EINVAL-on-allocation-error.patch
-
-	# patch to make journald work at first boot
-	epatch "${FILESDIR}"/211-tmpfiles.patch
-
-	# --root= options to some utilities needed by initramfs
-	epatch "${FILESDIR}"/211-001-shared-add-root-argument-to-search_and_fopen.patch
-	epatch "${FILESDIR}"/211-002-tmpfiles-add-root-option-to-operate-on-an-alternate-fs-tree.patch
-	epatch "${FILESDIR}"/211-003-tmpfiles-add-root-to-the-man-page.patch
-	epatch "${FILESDIR}"/211-004-machine-id-add-root-option-to-operate-on-an-alternate-fs-tree.patch
-
-	# dns feature for more than one server
-	epatch "${FILESDIR}"/211-networkd-allow-more-than-one-static-dns-server.patch
-
-	# patches to fix dhcp on gce
-	epatch "${FILESDIR}"/211-0001-sd-dhcp-client-accept-infinite-lease-lifetime.patch
-	epatch "${FILESDIR}"/0001-network-dhcp-create-explicit-host-route-to-gateway.patch
-
 if [[ ${PV} == *9999 ]]; then
 	if use doc; then
 		gtkdocize --docdir docs/ || die
@@ -143,6 +113,17 @@ if [[ ${PV} == *9999 ]]; then
 		echo 'EXTRA_DIST =' > docs/gtk-doc.make
 	fi
 fi
+	# fix networkd crash, https://bugs.gentoo.org/show_bug.cgi?id=507044
+	epatch "${FILESDIR}"/212-0001-sd-rtnl-fix-off-by-one.patch
+
+	# fix stuck jobs after daemon-reload
+	epatch "${FILESDIR}"/212-0002-job-add-waiting-jobs-to-run-queue-in-unit_coldplug.patch
+
+	# CoreOs specific hacks^Wfeatures
+	epatch "${FILESDIR}"/211-handle-empty-etc-os-release.patch
+
+	# patch to make journald work at first boot
+	epatch "${FILESDIR}"/211-tmpfiles.patch
 
 	# Bug 463376
 	sed -i -e 's/GROUP="dialout"/GROUP="uucp"/' rules/*.rules || die
@@ -152,7 +133,7 @@ fi
 
 pkg_pretend() {
 	local CONFIG_CHECK="~AUTOFS4_FS ~BLK_DEV_BSG ~CGROUPS ~DEVTMPFS ~DMIID
-		~EPOLL ~FANOTIFY ~FHANDLE ~INOTIFY_USER ~IPV6 ~NET ~PROC_FS
+		~EPOLL ~FANOTIFY ~FHANDLE ~INOTIFY_USER ~IPV6 ~NET ~NET_NS ~PROC_FS
 		~SECCOMP ~SIGNALFD ~SYSFS ~TIMERFD
 		~!IDE ~!SYSFS_DEPRECATED ~!SYSFS_DEPRECATED_V2
 		~!GRKERNSEC_PROC"
@@ -240,7 +221,7 @@ multilib_src_configure() {
 		$(use_enable qrcode qrencode)
 		$(use_enable seccomp)
 		$(use_enable selinux)
-		$(use_enable tcpd tcpwrap)
+		$(use_enable ssl gnutls)
 		$(use_enable test tests)
 		$(use_enable xattr)
 
@@ -261,6 +242,14 @@ multilib_src_configure() {
 		)
 	fi
 
+	# Added for testing; this is UNSUPPORTED by the Gentoo systemd team!
+	if [[ -n ${ROOTPREFIX+set} ]]; then
+		myeconfargs+=(
+			--with-rootprefix="${ROOTPREFIX}"
+			--with-rootlibdir="${ROOTPREFIX}/$(get_libdir)"
+		)
+	fi
+
 	if ! multilib_is_native_abi; then
 		myeconfargs+=(
 			ac_cv_search_cap_init=
@@ -271,6 +260,7 @@ multilib_src_configure() {
 			--disable-acl
 			--disable-audit
 			--disable-gcrypt
+			--disable-gnutls
 			--disable-gtk-doc
 			--disable-introspection
 			--disable-kmod
@@ -282,7 +272,6 @@ multilib_src_configure() {
 			--disable-qrencode
 			--disable-seccomp
 			--disable-selinux
-			--disable-tcpwrap
 			--disable-tests
 			--disable-xattr
 			--disable-xz
@@ -364,11 +353,7 @@ multilib_src_install_all() {
 	# Disable storing coredumps in journald, bug #433457
 	mv "${D}"/usr/lib/sysctl.d/50-coredump.conf{,.disabled} || die
 
-	# Preserve empty dir /var, bug #437008
-	keepdir /var/lib/systemd
-
-	# Keep /etc clean
-	rmdir "${D}"/etc/{binfmt,modules-load,sysctl,tmpfiles}.d || die
+	systemd_dotmpfilesd "${FILESDIR}"/systemd-coreos.conf
 
 	# Don't default to graphical.target
 	rm "${D}"/usr/lib/systemd/system/default.target || die
