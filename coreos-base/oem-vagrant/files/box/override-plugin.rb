@@ -14,23 +14,6 @@ BASE_CLOUD_CONFIG = <<EOF
 
 coreos:
     units:
-      - name: coreos-cloudinit-vagrant-user.path
-        command: start
-        runtime: no
-        content: |
-          [Path]
-          PathExists=/var/lib/coreos-vagrant/vagrantfile-user-data
-      - name: coreos-cloudinit-vagrant-user.service
-        runtime: no
-        content: |
-          [Unit]
-          ConditionFileNotEmpty=/var/lib/coreos-vagrant/vagrantfile-user-data
-
-          [Service]
-          Type=oneshot
-          EnvironmentFile=/etc/environment
-          ExecStart=/usr/bin/coreos-cloudinit --from-file /var/lib/coreos-vagrant/vagrantfile-user-data
-          RemainAfterExit=yes
 EOF
 
 NETWORK_UNIT = <<EOF
