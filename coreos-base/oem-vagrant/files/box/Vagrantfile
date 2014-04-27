@@ -1,6 +1,11 @@
-if Vagrant::VERSION < "1.2.3"
-  raise "Need at least vagrant version 1.2.3, please update"
+# -*- mode: ruby -*-
+# # vi: set ft=ruby :
+
+if Vagrant::VERSION < "1.5.0"
+  raise "Need at least vagrant version 1.5.0, please update"
 end
+
+require_relative 'override-plugin.rb'
 
 Vagrant.configure("2") do |config|
   # SSH in as the default 'core' user, it has the vagrant ssh key.
@@ -8,4 +13,13 @@ Vagrant.configure("2") do |config|
 
   # Disable the base shared folder, guest additions are unavailable.
   config.vm.synced_folder ".", "/vagrant", disabled: true
+
+  config.vm.provider :virtualbox do |vb|
+    # Guest Additions are unavailable.
+    vb.check_guest_additions = false
+
+    # Fix docker not being able to resolve private registry in VirtualBox
+    vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+    vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
+  end
 end
