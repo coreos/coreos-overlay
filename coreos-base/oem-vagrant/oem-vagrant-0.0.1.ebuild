@@ -17,7 +17,6 @@ S="${WORKDIR}"
 
 src_install() {
 	insinto "/usr/share/oem"
-	doins "${FILESDIR}/authorized_keys"
 	doins "${FILESDIR}/cloud-config.yml"
 
 	into "/usr/share/oem"
