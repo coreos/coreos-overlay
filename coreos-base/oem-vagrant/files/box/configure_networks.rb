@@ -50,8 +50,6 @@ module VagrantPlugins
               interfaces = result.split("\n")
             end
 
-            ip = ""
-
             # Configure interfaces
             # FIXME: fix matching of interfaces with IP adresses
             networks.each do |network|
@@ -63,36 +61,18 @@ module VagrantPlugins
               unit = NETWORK_UNIT % [unit_name, iface_name, address]
 
               cfg = "#{cfg}#{unit}"
-              ip = network[:ip]
             end
-
-            cfg = <<EOF
-#{cfg}
-write_files:
-  - path: /etc/environment
-    content: |
-      COREOS_PUBLIC_IPV4=#{ip}
-      COREOS_PRIVATE_IPV4=#{ip}
-
-hostname: #{machine.name}
-EOF
 
             temp = Tempfile.new("coreos-vagrant")
             temp.binmode
             temp.write(cfg)
             temp.close
 
-            comm.upload(temp.path, "/tmp/user-data")
-            comm.sudo("mkdir -p /var/lib/coreos-vagrant")
-            comm.sudo("mv /tmp/user-data /var/lib/coreos-vagrant/")
-
+            path = "/var/tmp/networks.yml"
+            path_esc = path.gsub("/", "-")
+            comm.upload(temp.path, path)
+            comm.sudo("systemctl start system-cloudinit@#{path_esc}.service")
           end
-        end
-      end
-
-      class ChangeHostName
-        def self.change_host_name(machine, name)
-          # This is handled in configure_networks
         end
       end
     end

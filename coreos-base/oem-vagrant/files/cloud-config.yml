@@ -1,13 +1,6 @@
 #cloud-config
 coreos:
     units:
-      - name: coreos-cloudinit-vagrant.path
-        command: start
-        runtime: no
-        content: |
-          [Path]
-          PathExists=/var/lib/coreos-vagrant/user-data
-          Unit=system-cloudinit@var-lib-coreos\x2dvagrant-user\x2ddata.service
       - name: coreos-cloudinit-vagrant-user.path
         command: start
         runtime: no
