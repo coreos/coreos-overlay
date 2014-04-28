@@ -18,6 +18,7 @@ S="${WORKDIR}"
 src_install() {
 	insinto "/usr/share/oem"
 	doins "${FILESDIR}/cloud-config.yml"
+	doins -r "${FILESDIR}/box"
 
 	into "/usr/share/oem"
 	dobin ${FILESDIR}/coreos-setup-environment
