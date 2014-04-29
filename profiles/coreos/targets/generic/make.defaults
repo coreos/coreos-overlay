@@ -1,7 +1,7 @@
 # Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
-USE="cros-debug acpi usb pam"
+USE="cros-debug acpi usb symlink-usr -pam"
 USE="${USE} -cros_host -expat -pic -pie -cairo -X"
 USE="${USE} -acl -cracklib -gpm -ipv6 -openmp -python -sha512"
 USE="${USE} -fortran -abiword -perl -cups -poppler-data -nls"
@@ -49,6 +49,3 @@ PROD_INSTALL_MASK="${PROD_INSTALL_MASK}
 PROD_INSTALL_MASK="${PROD_INSTALL_MASK}
   /etc/sudoers
 "
-
-# No suffix for 'generic' (use base, not base-usr)
-COREOS_DISK_LAYOUT_SUFFIX=""
