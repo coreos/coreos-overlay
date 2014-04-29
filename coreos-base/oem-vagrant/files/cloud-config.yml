@@ -1,9 +1,16 @@
 #cloud-config
 coreos:
     units:
+      - name: coreos-cloudinit-vagrant-mkdir.service
+        command: start
+        runtime: yes
+        content: |
+          [Service]
+          Type=oneshot
+          ExecStart=/bin/mkdir -p /var/lib/coreos-vagrant
       - name: coreos-cloudinit-vagrant-user.path
         command: start
-        runtime: no
+        runtime: yes
         content: |
           [Path]
           PathExists=/var/lib/coreos-vagrant/vagrantfile-user-data
