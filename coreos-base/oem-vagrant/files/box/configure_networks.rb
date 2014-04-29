@@ -93,9 +93,8 @@ module VagrantPlugins
           end
         end
 
-        # Find IP addresses to export in /etc/environment. This step
-        # must be performed here because that file must be written even
-        # if there are no additional networks configured.
+        # Find IP addresses to export in /etc/environment. This only works
+        # for static addresses defined in the user's Vagrantfile.
         def self.get_environment_ips(machine, default)
           public_ipv4 = nil
           private_ipv4 = nil
@@ -109,7 +108,7 @@ module VagrantPlugins
             end
           end
 
-          # Fall back to localhost if no networks are configured.
+          # Fall back to localhost if no static networks are configured.
           private_ipv4 ||= default
           public_ipv4 ||= private_ipv4
           return [public_ipv4, private_ipv4]
