@@ -99,6 +99,7 @@ RDEPEND="${RDEPEND}
 	sys-apps/findutils
 	sys-apps/which
 	app-admin/fleet
+	app-admin/locksmith
 	app-admin/sudo
 	app-admin/toolbox
 	app-arch/gzip
