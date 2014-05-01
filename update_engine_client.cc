@@ -25,13 +25,8 @@ using std::string;
 DEFINE_string(app_version, "", "Force the current app version.");
 DEFINE_bool(check_for_update, false, "Initiate check for updates.");
 DEFINE_string(omaha_url, "", "The URL of the Omaha update server.");
-DEFINE_bool(reboot, false, "Initiate a reboot if needed.");
-DEFINE_bool(show_channel, false, "Show the current and target channels.");
 DEFINE_bool(status, false, "Print the status to stdout.");
 DEFINE_bool(reset_status, false, "Sets the status in update_engine to idle.");
-DEFINE_string(channel, "",
-    "Set the target channel. The device will be powerwashed if the target "
-    "channel is more stable than the current channel.");
 DEFINE_bool(update, false, "Forces an update and waits for its completion. "
             "Exit status is 0 if the update succeeded, and 1 otherwise.");
 DEFINE_bool(watch_for_updates, false,
@@ -97,7 +92,7 @@ bool ResetStatus() {
   CHECK(GetProxy(&proxy));
 
   gboolean rc =
-      org_chromium_UpdateEngineInterface_reset_status(proxy, &error);
+      com_coreos_update1_Manager_reset_status(proxy, &error);
   return rc;
 }
 
@@ -116,7 +111,7 @@ bool GetStatus(string* op) {
   char* new_version = NULL;
   gint64 new_size = 0;
 
-  gboolean rc = org_chromium_UpdateEngineInterface_get_status(
+  gboolean rc = com_coreos_update1_Manager_get_status(
       proxy,
       &last_checked_time,
       &progress,
@@ -183,63 +178,10 @@ bool CheckForUpdates(const string& app_version, const string& omaha_url) {
   CHECK(GetProxy(&proxy));
 
   gboolean rc =
-      org_chromium_UpdateEngineInterface_attempt_update(proxy,
-                                                        app_version.c_str(),
-                                                        omaha_url.c_str(),
-                                                        &error);
+      com_coreos_update1_Manager_attempt_update(proxy, &error);
   CHECK_EQ(rc, TRUE) << "Error checking for update: "
                      << GetAndFreeGError(&error);
   return true;
-}
-
-bool RebootIfNeeded() {
-  DBusGProxy* proxy;
-  GError* error = NULL;
-
-  CHECK(GetProxy(&proxy));
-
-  gboolean rc =
-      org_chromium_UpdateEngineInterface_reboot_if_needed(proxy, &error);
-  // Reboot error code doesn't necessarily mean that a reboot
-  // failed. For example, D-Bus may be shutdown before we receive the
-  // result.
-  LOG_IF(INFO, !rc) << "Reboot error message: " << GetAndFreeGError(&error);
-  return true;
-}
-
-void SetTargetChannel(const string& target_channel) {
-  DBusGProxy* proxy;
-  GError* error = NULL;
-
-  CHECK(GetProxy(&proxy));
-
-  gboolean rc =
-      org_chromium_UpdateEngineInterface_set_channel(proxy,
-                                                     target_channel.c_str(),
-                                                     true, // OK to Powerwash
-                                                     &error);
-  CHECK_EQ(rc, true) << "Error setting the channel: "
-                     << GetAndFreeGError(&error);
-  LOG(INFO) << "Channel permanently set to: " << target_channel;
-}
-
-string GetChannel(bool get_current_channel) {
-  DBusGProxy* proxy;
-  GError* error = NULL;
-
-  CHECK(GetProxy(&proxy));
-
-  char* channel = NULL;
-  gboolean rc =
-      org_chromium_UpdateEngineInterface_get_channel(proxy,
-                                                     get_current_channel,
-                                                     &channel,
-                                                     &error);
-  CHECK_EQ(rc, true) << "Error getting the channel: "
-                     << GetAndFreeGError(&error);
-  string output = channel;
-  g_free(channel);
-  return output;
 }
 
 static gboolean CompleteUpdateSource(gpointer data) {
@@ -299,26 +241,11 @@ int main(int argc, char** argv) {
     return 0;
   }
 
-  // First, update the target channel if requested.
-  if (!FLAGS_channel.empty())
-    SetTargetChannel(FLAGS_channel);
-
-  // Show the current and target channels if requested.
-  if (FLAGS_show_channel) {
-    string current_channel = GetChannel(true);
-    LOG(INFO) << "Current Channel: " << current_channel;
-
-    string target_channel = GetChannel(false);
-    if (!target_channel.empty())
-      LOG(INFO) << "Target Channel (pending update): " << target_channel;
-  }
-
   // Initiate an update check, if necessary.
   if (FLAGS_check_for_update ||
       FLAGS_update ||
       !FLAGS_app_version.empty() ||
       !FLAGS_omaha_url.empty()) {
-    LOG_IF(WARNING, FLAGS_reboot) << "-reboot flag ignored.";
     string app_version = FLAGS_app_version;
     if (FLAGS_update && app_version.empty()) {
       app_version = "ForcedUpdate";
@@ -339,16 +266,9 @@ int main(int argc, char** argv) {
 
   // Start watching for updates.
   if (FLAGS_watch_for_updates) {
-    LOG_IF(WARNING, FLAGS_reboot) << "-reboot flag ignored.";
     LOG(INFO) << "Watching for status updates.";
     WatchForUpdates();  // Should never return.
     return 1;
-  }
-
-  if (FLAGS_reboot) {
-    LOG(INFO) << "Requesting a reboot...";
-    CHECK(RebootIfNeeded());
-    return 0;
   }
 
   LOG(INFO) << "Done.";
