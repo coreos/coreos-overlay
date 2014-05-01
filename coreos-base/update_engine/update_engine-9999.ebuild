@@ -8,7 +8,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~x86"
 else
-	CROS_WORKON_COMMIT="a6f122f3893a957301231a5250c59f04e94d35c9"
+	CROS_WORKON_COMMIT="1513ebd611c79ba06500c31275e0bee3b01644a6"
 	KEYWORDS="amd64 arm x86"
 fi
 
@@ -81,7 +81,6 @@ src_test() {
 
 src_install() {
 	dosbin update_engine
-	dosbin systemd/update_engine_reboot_manager
 	dosbin systemd/update_engine_stub
 	dobin update_engine_client
 
@@ -96,22 +95,18 @@ src_install() {
 	use delta_generator && dobin delta_generator
 
 	systemd_dounit systemd/update-engine.service
-	systemd_dounit systemd/update-engine-reboot-manager.service
 	systemd_dounit systemd/update-engine-stub.service
 	systemd_dounit systemd/update-engine-stub.timer
+
 	systemd_enable_service multi-user.target update-engine.service
 	systemd_enable_service multi-user.target update-engine-stub.timer
 
 	insinto /usr/share/dbus-1/services
-	doins org.chromium.UpdateEngine.service
+	doins com.coreos.update1.service
 
 	insinto /usr/share/dbus-1/system.d
-	doins UpdateEngine.conf
+	doins com.coreos.update1.conf
 
 	# Install rule to remove old UpdateEngine.conf from /etc
 	systemd_dotmpfilesd "${FILESDIR}"/update-engine.conf
-
-	insinto /usr/include/chromeos/update_engine
-	doins update_engine.dbusserver.h
-	doins update_engine.dbusclient.h
 }
