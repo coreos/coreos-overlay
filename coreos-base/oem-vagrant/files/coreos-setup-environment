@@ -7,7 +7,17 @@ if [ -z "$ENV" ]; then
         exit 1
 fi
 
+now=$(date +%s)
+timeout=$(( now + 60 ))
+
 # just block until cloudinit updates environment 
 while ! grep -qs ^COREOS_PUBLIC_IPV4 "$ENV"; do
+    if [[ $timeout -lt $(date +%s) ]]; then
+        echo "No network configuration provided by Vagrant!" >&2
+        echo "Using localhost, for default public and private IPs" >&2
+        echo "COREOS_PUBLIC_IPV4=127.0.0.1" >> "$ENV"
+        echo "COREOS_PRIVATE_IPV4=127.0.0.1" >> "$ENV"
+        exit
+    fi
     sleep 0.1
 done
