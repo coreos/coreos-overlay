@@ -27,7 +27,6 @@ LIBCHROME_VERS="180609"
 RDEPEND="!coreos-base/coreos-installer
 	app-arch/bzip2
 	coreos-base/coreos-au-key
-	coreos-base/coreos-ca-certificates
 	coreos-base/libchrome:${LIBCHROME_VERS}[cros-debug=]
 	coreos-base/libchromeos
 	coreos-base/metrics
