@@ -26,20 +26,6 @@ coreos:
           Type=oneshot
           EnvironmentFile=/etc/environment
           ExecStart=/usr/bin/coreos-cloudinit -ignore-failure=true -from-url=http://169.254.169.254/latest/user-data
-      - name: ec2-c10n.service
-        command: restart
-        runtime: yes
-        content: |
-          [Unit]
-          Description=Legacy c10n support from EC2-style metadata
-          Requires=ec2-cloudinit.service
-          After=ec2-cloudinit.service
-          ConditionPathIsMountPoint=!/usr
-
-          [Service]
-          Type=oneshot
-          RemainAfterExit=no
-          ExecStart=/usr/share/oem/bin/coreos-c10n
     oem:
       id: @@OEM_ID@@
       name: @@OEM_NAME@@

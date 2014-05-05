@@ -43,8 +43,6 @@ src_install() {
 	into "/usr/share/oem"
 	dobin ${FILESDIR}/ec2-ssh-key
 	dobin ${FILESDIR}/coreos-setup-environment
-	dobin ${FILESDIR}/coreos-c10n
-	dobin ${FILESDIR}/etcd-bootstrap
 
 	insinto "/usr/share/oem"
 	doins ${T}/cloud-config.yml
