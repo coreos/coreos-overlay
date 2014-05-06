@@ -117,7 +117,7 @@ fi
 	epatch "${FILESDIR}"/212-0001-sd-rtnl-fix-off-by-one.patch
 
 	# fix stuck jobs after daemon-reload
-	epatch "${FILESDIR}"/212-0002-job-add-waiting-jobs-to-run-queue-in-unit_coldplug.patch
+	epatch "${FILESDIR}"/212-0002-unit-add-waiting-jobs-to-run-queue-in-unit_coldplug.patch
 
 	# CoreOs specific hacks^Wfeatures
 	epatch "${FILESDIR}"/211-handle-empty-etc-os-release.patch
