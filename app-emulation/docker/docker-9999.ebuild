@@ -7,7 +7,11 @@ EAPI=5
 DESCRIPTION="Docker complements kernel namespacing with a high-level API which operates at the process level."
 HOMEPAGE="https://www.docker.io/"
 
-GITHUB_URI="github.com/dotcloud/docker"
+CROS_WORKON_PROJECT="crosbymichael/docker"
+CROS_WORKON_LOCALNAME="docker"
+CROS_WORKON_REPO="git://github.com"
+
+GITHUB_URI="github.com/crosbymichael/docker"
 
 if [[ ${PV} == *9999 ]]; then
 	SRC_URI=""
@@ -15,13 +19,13 @@ if [[ ${PV} == *9999 ]]; then
 	inherit git-2
 	KEYWORDS=""
 else
-	SRC_URI="https://${GITHUB_URI}/archive/v${PV}.zip -> ${P}.zip"
-	DOCKER_GITCOMMIT="dc9c28f"
+	CROS_WORKON_COMMIT="78e702ab56a54750882cef1838ed74b1a84583a2"
+	DOCKER_GITCOMMIT="78e702a"
 	KEYWORDS="amd64"
 	[ "$DOCKER_GITCOMMIT" ] || die "DOCKER_GITCOMMIT must be added manually for each bump!"
 fi
 
-inherit bash-completion-r1 linux-info systemd udev user
+inherit bash-completion-r1 linux-info systemd udev user cros-workon
 
 LICENSE="Apache-2.0"
 SLOT="0"
