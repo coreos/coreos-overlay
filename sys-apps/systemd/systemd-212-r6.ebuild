@@ -119,6 +119,9 @@ fi
 	# fix stuck jobs after daemon-reload
 	epatch "${FILESDIR}"/212-0002-unit-add-waiting-jobs-to-run-queue-in-unit_coldplug.patch
 
+	# fix broken device dependencies after daemon-reload
+	epatch "${FILESDIR}"/212-0003-device-add-stub-serialization-methods-to-enable-job.patch
+
 	# CoreOs specific hacks^Wfeatures
 	epatch "${FILESDIR}"/211-handle-empty-etc-os-release.patch
 

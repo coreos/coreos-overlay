@@ -1,0 +1,57 @@
+From 5572e8cef02a1d769a94c5da4c407c0f472535f2 Mon Sep 17 00:00:00 2001
+From: Michael Marineau <michael.marineau@coreos.com>
+Date: Tue, 6 May 2014 18:39:59 -0700
+Subject: [PATCH] device: Add stub serialization methods to enable job
+ serialization.
+
+If a unit type doesn't provide its own serialization methods then
+none of the generic serialization will happen either. For devices this
+means jobs used for waiting on device dependencies are dropped during
+reloads, breaking dependency state that was relying on those jobs.
+---
+ src/core/device.c | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+
+diff --git a/src/core/device.c b/src/core/device.c
+index 444286e..07c0860 100644
+--- a/src/core/device.c
++++ b/src/core/device.c
+@@ -130,6 +130,25 @@ static void device_dump(Unit *u, FILE *f, const char *prefix) {
+                 prefix, strna(d->sysfs));
+ }
+ 
++static int device_serialize(Unit *u, FILE *f, FDSet *fds) {
++        assert(u);
++        assert(f);
++        assert(fds);
++
++        return 0;
++}
++
++static int device_deserialize_item(Unit *u, const char *key, const char *value, FDSet *fds) {
++        assert(u);
++        assert(key);
++        assert(value);
++        assert(fds);
++
++        log_debug("Unknown serialization key '%s'", key);
++
++        return 0;
++}
++
+ _pure_ static UnitActiveState device_active_state(Unit *u) {
+         assert(u);
+ 
+@@ -693,6 +712,9 @@ const UnitVTable device_vtable = {
+ 
+         .dump = device_dump,
+ 
++        .serialize = device_serialize,
++        .deserialize_item = device_deserialize_item,
++
+         .active_state = device_active_state,
+         .sub_state_to_string = device_sub_state_to_string,
+ 
+-- 
+1.8.5.5
+
