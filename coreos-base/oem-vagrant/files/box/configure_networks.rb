@@ -47,7 +47,7 @@ module VagrantPlugins
         @@logger = Log4r::Logger.new("vagrant::guest::coreos::configure_networks")
 
         def self.configure_networks(machine, networks)
-          public_ipv4, private_ipv4 = get_environment_ips(machine, "127.0.0.1")
+          public_ipv4, private_ipv4 = get_environment_ips(machine, networks)
           cfg = BASE_CLOUD_CONFIG % [public_ipv4, private_ipv4]
 
           # Define network units by mac address if possible.
@@ -93,23 +93,60 @@ module VagrantPlugins
           end
         end
 
-        # Find IP addresses to export in /etc/environment. This only works
-        # for static addresses defined in the user's Vagrantfile.
-        def self.get_environment_ips(machine, default)
-          public_ipv4 = nil
+        def self.get_ipv4(machine, interface)
+          ipv4 = nil
+          machine.communicate.tap do |comm|
+            comm.sudo("ifconfig #{interface} | grep 'inet ' | sed 's/^ *//' | cut -f 2 -d ' '") do |_, result|
+              ipv4 = result.gsub("\n", "")
+            end
+          end
+          ipv4
+        end
+
+        # Find IP addresses to export in /etc/environment.
+        def self.get_environment_ips(machine, networks)
+          default_ipv4 = "127.0.0.1"
+          public_ipv4  = nil
           private_ipv4 = nil
 
-          machine.config.vm.networks.each do |type, options|
-            next if !options[:ip]
-            if type == :public_network
-              public_ipv4 = options[:ip]
-            elsif type == :private_network
-              private_ipv4 = options[:ip]
+          current = 0
+          interface_to_adapter = {}
+          vm_adapters = machine.provider.driver.read_network_interfaces
+          vm_adapters.sort.each do |number, adapter|
+            if adapter[:type] != :none
+              interface_to_adapter[current] = number
+              current += 1
+            end
+          end
+
+          machine.communicate.tap do |comm|
+            interfaces = []
+            comm.sudo("ifconfig | grep ^en | cut -f1 -d:") do |_, result|
+              interfaces = result.split("\n")
+            end
+
+            default_ipv4 = get_ipv4(machine, interfaces[0]) || default_ipv4
+
+            networks.each do |network|
+              adapter = vm_adapters[interface_to_adapter[network[:interface]]]
+              if adapter[:type] == :hostonly
+                if network[:type] == :static && network[:ip]
+                  private_ipv4 = network[:ip]
+                else
+                  private_ipv4 = get_ipv4(machine, interfaces[network[:interface]])
+                end
+              elsif adapter[:type] == :bridged
+                if network[:type] == :static && network[:ip]
+                  public_ipv4 = network[:ip]
+                else
+                  public_ipv4 = get_ipv4(machine, interfaces[network[:interface]])
+                end
+              end
             end
           end
 
           # Fall back to localhost if no static networks are configured.
-          private_ipv4 ||= default
+          private_ipv4 ||= default_ipv4
           public_ipv4 ||= private_ipv4
           return [public_ipv4, private_ipv4]
         end
