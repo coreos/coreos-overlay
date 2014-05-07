@@ -7,7 +7,7 @@ EAPI=5
 DESCRIPTION="Docker complements kernel namespacing with a high-level API which operates at the process level."
 HOMEPAGE="https://www.docker.io/"
 
-CROS_WORKON_PROJECT="crosbymichael/docker"
+CROS_WORKON_PROJECT="dotcloud/docker"
 CROS_WORKON_LOCALNAME="docker"
 CROS_WORKON_REPO="git://github.com"
 
@@ -19,10 +19,8 @@ if [[ ${PV} == *9999 ]]; then
 	inherit git-2
 	KEYWORDS=""
 else
-	CROS_WORKON_COMMIT="78e702ab56a54750882cef1838ed74b1a84583a2"
-	DOCKER_GITCOMMIT="78e702a"
+	CROS_WORKON_COMMIT="15209c380c3f510e3f8d5ba1ff5fcc5cc8db3357"
 	KEYWORDS="amd64"
-	[ "$DOCKER_GITCOMMIT" ] || die "DOCKER_GITCOMMIT must be added manually for each bump!"
 fi
 
 inherit bash-completion-r1 linux-info systemd udev user cros-workon
@@ -143,9 +141,6 @@ src_compile() {
 	# see https://github.com/tianon/docker-overlay/pull/10
 	export CGO_CFLAGS="-I${ROOT}/usr/include"
 	export CGO_LDFLAGS="-L${ROOT}/usr/lib"
-
-	# if we're building from a zip, we need the GITCOMMIT value
-	[ "$DOCKER_GITCOMMIT" ] && export DOCKER_GITCOMMIT
 
 	# time to build!
 	./hack/make.sh dynbinary || die
