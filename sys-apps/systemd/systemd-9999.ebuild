@@ -78,15 +78,13 @@ PDEPEND=">=sys-apps/dbus-1.6.8-r1:0
 	policykit? ( sys-auth/polkit )
 	!vanilla? ( sys-apps/gentoo-systemd-integration )"
 
-# Newer linux-headers needed by ia64, bug #480218
 DEPEND="${COMMON_DEPEND}
 	app-arch/xz-utils:0
 	dev-util/gperf
 	>=dev-util/intltool-0.50
 	>=sys-devel/binutils-2.23.1
 	>=sys-devel/gcc-4.6
-	>=sys-kernel/linux-headers-${MINKV}
-	ia64? ( >=sys-kernel/linux-headers-3.9 )
+	>=sys-kernel/linux-headers-3.13
 	virtual/pkgconfig
 	doc? ( >=dev-util/gtk-doc-1.18 )
 	python? ( dev-python/lxml[${PYTHON_USEDEP}] )

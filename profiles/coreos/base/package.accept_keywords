@@ -97,3 +97,8 @@ dev-util/checkbashisms
 
 # Includes fix for checking mount status of loop devices
 =sys-fs/btrfs-progs-3.14_pre20140414
+
+# Current systemd git requires >= 3.10 to build,
+# use 3.13 since Gentoo is starting to stabilize that one:
+# https://bugs.gentoo.org/show_bug.cgi?id=507096
+=sys-kernel/linux-headers-3.13
