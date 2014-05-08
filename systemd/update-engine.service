@@ -2,7 +2,6 @@
 Description=Update Engine
 ConditionVirtualization=!container
 ConditionPathExists=!/usr/.noupdate
-Wants=update-engine-reboot-manager.service
 
 [Service]
 Type=dbus
