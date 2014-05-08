@@ -1,13 +1,17 @@
-# Copyright 1999-2013 Gentoo Foundation
+# Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
 EAPI=5
 
-DESCRIPTION="Docker complements LXC with a high-level API which operates at the process level."
-HOMEPAGE="http://www.docker.io/"
+DESCRIPTION="Docker complements kernel namespacing with a high-level API which operates at the process level."
+HOMEPAGE="https://www.docker.io/"
 
-GITHUB_URI="github.com/dotcloud/docker"
+CROS_WORKON_PROJECT="dotcloud/docker"
+CROS_WORKON_LOCALNAME="docker"
+CROS_WORKON_REPO="git://github.com"
+
+GITHUB_URI="github.com/crosbymichael/docker"
 
 if [[ ${PV} == *9999 ]]; then
 	SRC_URI=""
@@ -15,17 +19,15 @@ if [[ ${PV} == *9999 ]]; then
 	inherit git-2
 	KEYWORDS=""
 else
-	SRC_URI="https://${GITHUB_URI}/archive/v${PV}.zip -> ${P}.zip"
-	DOCKER_GITCOMMIT="28b162e"
-	KEYWORDS="~amd64"
-	[ "$DOCKER_GITCOMMIT" ] || die "DOCKER_GITCOMMIT must be added manually for each bump!"
+	CROS_WORKON_COMMIT="15209c380c3f510e3f8d5ba1ff5fcc5cc8db3357"
+	KEYWORDS="amd64"
 fi
 
-inherit bash-completion-r1 linux-info systemd udev user
+inherit bash-completion-r1 linux-info systemd udev user cros-workon
 
 LICENSE="Apache-2.0"
 SLOT="0"
-IUSE="aufs +device-mapper doc vim-syntax"
+IUSE="aufs btrfs +device-mapper doc lxc vim-syntax zsh-completion symlink-usr"
 
 # TODO work with upstream to allow us to build without lvm2 installed if we have -device-mapper
 CDEPEND="
@@ -35,6 +37,7 @@ CDEPEND="
 DEPEND="
 	${CDEPEND}
 	>=dev-lang/go-1.2
+	>=sys-fs/btrfs-progs-0.20
 	dev-vcs/git
 	dev-vcs/mercurial
 	doc? (
@@ -45,10 +48,10 @@ DEPEND="
 RDEPEND="
 	${CDEPEND}
 	!app-emulation/docker-bin
-	>=app-arch/tar-1.26
-	>=sys-apps/iproute2-3.5
 	>=net-firewall/iptables-1.4
-	>=app-emulation/lxc-0.8
+	lxc? (
+		>=app-emulation/lxc-0.8
+	)
 	>=dev-vcs/git-1.7
 	>=app-arch/xz-utils-4.9
 	aufs? (
@@ -62,21 +65,60 @@ RDEPEND="
 RESTRICT="strip"
 
 pkg_setup() {
+	# many of these were borrowed from the app-emulation/lxc ebuild
 	CONFIG_CHECK+="
+		~CGROUPS
+		~CGROUP_CPUACCT
+		~CGROUP_DEVICE
+		~CGROUP_SCHED
+		~CPUSETS
+		~MEMCG_SWAP
+		~RESOURCE_COUNTERS
+
+		~IPC_NS
+		~NAMESPACES
+		~PID_NS
+
+		~DEVPTS_MULTIPLE_INSTANCES
+		~MACVLAN
+		~NET_NS
+		~UTS_NS
+		~VETH
+
+		~!NETPRIO_CGROUP
+		~POSIX_MQUEUE
+
 		~BRIDGE
 		~IP_NF_TARGET_MASQUERADE
-		~MEMCG_SWAP
 		~NETFILTER_XT_MATCH_ADDRTYPE
+		~NETFILTER_XT_MATCH_CONNTRACK
 		~NF_NAT
 		~NF_NAT_NEEDED
+
+		~!GRKERNSEC_CHROOT_CAPS
+		~!GRKERNSEC_CHROOT_CHMOD
+		~!GRKERNSEC_CHROOT_DOUBLE
+		~!GRKERNSEC_CHROOT_MOUNT
+		~!GRKERNSEC_CHROOT_PIVOT
 	"
-	ERROR_MEMCG_SWAP="MEMCG_SWAP is required if you wish to limit swap usage of containers"
+
+	ERROR_MEMCG_SWAP="CONFIG_MEMCG_SWAP: is required if you wish to limit swap usage of containers"
+
+	for c in GRKERNSEC_CHROOT_MOUNT GRKERNSEC_CHROOT_DOUBLE GRKERNSEC_CHROOT_PIVOT GRKERNSEC_CHROOT_CHMOD; do
+		declare "ERROR_$c"="CONFIG_$c: see app-emulation/lxc postinst notes for why some GRSEC features make containers unusuable"
+	done
 
 	if use aufs; then
 		CONFIG_CHECK+="
 			~AUFS_FS
 		"
-		ERROR_AUFS_FS="AUFS_FS is required to be set if and only if aufs-sources are used"
+		ERROR_AUFS_FS="CONFIG_AUFS_FS: is required to be set if and only if aufs-sources are used"
+	fi
+
+	if use btrfs; then
+		CONFIG_CHECK+="
+			~BTRFS_FS
+		"
 	fi
 
 	if use device-mapper; then
@@ -91,25 +133,14 @@ pkg_setup() {
 }
 
 src_compile() {
-	# eventually, perhaps Gentoo will include a "go" eclass to do some of this
-
-	export GOPATH="${WORKDIR}/gopath"
-	mkdir -p "$GOPATH" || die
-
-	# make sure docker itself is in our shiny new GOPATH
-	mkdir -p "${GOPATH}/src/github.com/dotcloud" || die
-	ln -sf "$(pwd -P)" "${GOPATH}/src/github.com/dotcloud/docker" || die
-
-	# we need our vendored deps, too
-	export GOPATH="$GOPATH:$(pwd -P)/vendor"
+	# if we treat them right, Docker's build scripts will set up a
+	# reasonable GOPATH for us
+	export AUTO_GOPATH=1
 
 	# setup CFLAGS and LDFLAGS for separate build target
 	# see https://github.com/tianon/docker-overlay/pull/10
 	export CGO_CFLAGS="-I${ROOT}/usr/include"
 	export CGO_LDFLAGS="-L${ROOT}/usr/lib"
-
-	# if we're building from a zip, we need the GITCOMMIT value
-	[ "$DOCKER_GITCOMMIT" ] && export DOCKER_GITCOMMIT
 
 	# time to build!
 	./hack/make.sh dynbinary || die
@@ -128,7 +159,15 @@ src_install() {
 	newinitd contrib/init/openrc/docker.initd docker
 	newconfd contrib/init/openrc/docker.confd docker
 
-	systemd_dounit "${FILESDIR}/docker.service"
+	if use symlink-usr; then
+		systemd_dounit "${FILESDIR}/symlink-usr/docker.service"
+	else
+		systemd_dounit "${FILESDIR}/docker.service"
+	fi
+	systemd_dounit "${FILESDIR}/docker.socket"
+
+	insinto /usr/lib/systemd/network
+	doins "${FILESDIR}"/50-docker{,-veth}.network
 
 	udev_dorules contrib/udev/*.rules
 
@@ -140,13 +179,15 @@ src_install() {
 
 	dobashcomp contrib/completion/bash/*
 
-	insinto /usr/share/zsh/site-functions
-	doins contrib/completion/zsh/*
+	if use zsh-completion; then
+		insinto /usr/share/zsh/site-functions
+		doins contrib/completion/zsh/*
+	fi
 
 	if use vim-syntax; then
 		insinto /usr/share/vim/vimfiles
-		doins -r contrib/vim-syntax/ftdetect
-		doins -r contrib/vim-syntax/syntax
+		doins -r contrib/syntax/vim/ftdetect
+		doins -r contrib/syntax/vim/syntax
 	fi
 
 	insinto /usr/share/${P}/contrib
@@ -170,13 +211,4 @@ pkg_postinst() {
 
 	elog "To use docker as a non-root user, add yourself to the docker group."
 	elog ""
-
-	ewarn ""
-	ewarn "If you want your containers to have access to the public internet or even"
-	ewarn "the existing private network, IP Forwarding must be enabled:"
-	ewarn "  sysctl -w net.ipv4.ip_forward=1"
-	ewarn "or more permanently:"
-	ewarn "  echo net.ipv4.ip_forward = 1 > /etc/sysctl.d/${PN}.conf"
-	ewarn "Please be mindful of the security implications of enabling IP Forwarding."
-	ewarn ""
 }
