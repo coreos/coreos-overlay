@@ -14,10 +14,8 @@ CROS_WORKON_REPO="git://github.com"
 GITHUB_URI="github.com/crosbymichael/docker"
 
 if [[ ${PV} == *9999 ]]; then
-	SRC_URI=""
-	EGIT_REPO_URI="git://${GITHUB_URI}.git"
-	inherit git-2
-	KEYWORDS=""
+	DOCKER_GITCOMMIT="deadbee"
+	KEYWORDS="~amd64"
 else
 	CROS_WORKON_COMMIT="dc9c28f51d669d6b09e81c2381f800f1a33bb659" # v0.10.0
 	KEYWORDS="amd64"
@@ -142,6 +140,7 @@ src_compile() {
 	export CGO_CFLAGS="-I${ROOT}/usr/include"
 	export CGO_LDFLAGS="-L${ROOT}/usr/lib"
 
+	[ "$DOCKER_GITCOMMIT" ] && export DOCKER_GITCOMMIT
 	# time to build!
 	./hack/make.sh dynbinary || die
 
