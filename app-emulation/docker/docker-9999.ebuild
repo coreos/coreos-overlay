@@ -19,7 +19,7 @@ if [[ ${PV} == *9999 ]]; then
 	inherit git-2
 	KEYWORDS=""
 else
-	CROS_WORKON_COMMIT="fb99f992c081a1d433c97c99ffb46d12693eeb76"
+	CROS_WORKON_COMMIT="dc9c28f51d669d6b09e81c2381f800f1a33bb659" # v0.10.0
 	KEYWORDS="amd64"
 fi
 
