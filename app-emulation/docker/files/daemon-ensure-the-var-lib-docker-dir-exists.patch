@@ -1,0 +1,41 @@
+From b4ccd7cbfb5f2c7c4b6c963c4c12e41500e7ad55 Mon Sep 17 00:00:00 2001
+From: Brandon Philips <brandon@ifup.co>
+Date: Fri, 9 May 2014 18:05:54 -0700
+Subject: [PATCH] fix(daemon): ensure the /var/lib/docker dir exists
+
+The btrfs driver attempts to stat the /var/lib/docker directory to
+ensure it exists. If it doesn't exist then it bails with an unhelpful
+log line:
+
+```
+2014/05/10 00:51:30 no such file or directory
+```
+
+In 0.10 the directory was created but quickly digging through the logs I
+can't tell what sort of re-ordering of code caused this regression.
+
+Docker-DCO-1.1-Signed-off-by: Brandon Philips <brandon.philips@coreos.com> (github: philips)
+---
+ daemon/daemon.go | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/daemon/daemon.go b/daemon/daemon.go
+index 00b6d9e..7901f8e 100644
+--- a/daemon/daemon.go
++++ b/daemon/daemon.go
+@@ -680,6 +680,12 @@ func NewDaemonFromDirectory(config *daemonconfig.Config, eng *engine.Engine) (*D
+ 	if !config.EnableSelinuxSupport {
+ 		selinux.SetDisabled()
+ 	}
++
++	// Create the root directory if it doesn't exists
++	if err := os.MkdirAll(config.Root, 0700); err != nil && !os.IsExist(err) {
++		return nil, err
++	}
++
+ 	// Set the default driver
+ 	graphdriver.DefaultDriver = config.GraphDriver
+ 
+-- 
+1.9.1
+
