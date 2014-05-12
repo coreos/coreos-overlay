@@ -14,12 +14,11 @@ CROS_WORKON_REPO="git://github.com"
 GITHUB_URI="github.com/crosbymichael/docker"
 
 if [[ ${PV} == *9999 ]]; then
-	SRC_URI=""
-	EGIT_REPO_URI="git://${GITHUB_URI}.git"
-	inherit git-2
-	KEYWORDS=""
+	DOCKER_GITCOMMIT="deadbee"
+	KEYWORDS="~amd64"
 else
-	CROS_WORKON_COMMIT="dc9c28f51d669d6b09e81c2381f800f1a33bb659" # v0.10.0
+	CROS_WORKON_COMMIT="fb99f992c081a1d433c97c99ffb46d12693eeb76" # v0.11.1
+	DOCKER_GITCOMMIT="fb99f99" # hack(philips): delete when an epatch isn't in use
 	KEYWORDS="amd64"
 fi
 
@@ -132,7 +131,14 @@ pkg_setup() {
 	check_extra_config
 }
 
+src_prepare() {
+	epatch "${FILESDIR}"/daemon-ensure-the-var-lib-docker-dir-exists.patch
+}
+
 src_compile() {
+	# hack(philips): to keep the git commit from being dirty
+	mv .git .git.old
+
 	# if we treat them right, Docker's build scripts will set up a
 	# reasonable GOPATH for us
 	export AUTO_GOPATH=1
@@ -142,6 +148,7 @@ src_compile() {
 	export CGO_CFLAGS="-I${ROOT}/usr/include"
 	export CGO_LDFLAGS="-L${ROOT}/usr/lib"
 
+	[ "$DOCKER_GITCOMMIT" ] && export DOCKER_GITCOMMIT
 	# time to build!
 	./hack/make.sh dynbinary || die
 
