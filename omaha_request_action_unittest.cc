@@ -1228,29 +1228,6 @@ TEST(OmahaRequestActionTest, NoPingTest) {
   EXPECT_EQ(post_str.find("ping"), string::npos);
 }
 
-TEST(OmahaRequestActionTest, IgnoreEmptyPingTest) {
-  // This test ensures that we ignore empty ping only requests.
-  NiceMock<PrefsMock> prefs;
-  int64_t now = Time::Now().ToInternalValue();
-  EXPECT_CALL(prefs, GetInt64(kPrefsLastActivePingDay, _))
-      .WillOnce(DoAll(SetArgumentPointee<1>(now), Return(true)));
-  EXPECT_CALL(prefs, GetInt64(kPrefsLastRollCallPingDay, _))
-      .WillOnce(DoAll(SetArgumentPointee<1>(now), Return(true)));
-  EXPECT_CALL(prefs, SetInt64(kPrefsLastActivePingDay, _)).Times(0);
-  EXPECT_CALL(prefs, SetInt64(kPrefsLastRollCallPingDay, _)).Times(0);
-  vector<char> post_data;
-  EXPECT_TRUE(
-      TestUpdateCheck(&prefs,
-                      kDefaultTestParams,
-                      GetNoUpdateResponse(OmahaRequestParams::kAppId),
-                      -1,
-                      true,  // ping_only
-                      kActionCodeSuccess,
-                      NULL,
-                      &post_data));
-  EXPECT_EQ(post_data.size(), 0);
-}
-
 TEST(OmahaRequestActionTest, BackInTimePingTest) {
   NiceMock<PrefsMock> prefs;
   int64_t future =
