@@ -834,12 +834,6 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
                    hash_checks_mandatory);
 }
 
-TEST(DeltaPerformerTest, RunAsRootFullKernelSmallImageTest) {
-  bool hash_checks_mandatory = false;
-  DoSmallImageTest(true, false, false, kSignatureGenerator,
-                   hash_checks_mandatory);
-}
-
 TEST(DeltaPerformerTest, RunAsRootFullSmallImageTest) {
   bool hash_checks_mandatory = true;
   DoSmallImageTest(true, true, false, kSignatureGenerator,
