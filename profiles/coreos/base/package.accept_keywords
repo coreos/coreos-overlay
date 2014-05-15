@@ -46,9 +46,6 @@
 >=sys-apps/kexec-tools-2.0.4-r1 ~amd64
 >=sys-kernel/dracut-027-r3 ~amd64
 
-# Needed for docker
-=sys-fs/aufs-util-3.7.6 ~amd64
-
 # Needed by gsutil-3.34
 =dev-python/httplib2-0.8 ~amd64
 =dev-python/crcmod-1.7-r1 ~amd64
@@ -65,8 +62,6 @@
 =app-portage/gentoolkit-0.3.0.8
 
 # Docker dependencies are needed
-=sys-fs/aufs-util-3* ~amd64
-=sys-fs/aufs-headers-3* ~amd64
 =dev-util/boost-build-1.52.0-r1 ~amd64
 
 # Fixes ruby dependency

@@ -39,8 +39,6 @@ app-emulation/qemu	aio caps curl jpeg ncurses png python seccomp threads uuid vh
 dev-libs/libaio		static-libs
 cross-armv7a-cros-linux-gnueabi/gcc   hardfp
 cross-armv6j-cros-linux-gnueabi/gcc   hardfp -thumb
-# we need aufs and bridging in the kernel for docker
-sys-kernel/coreos-kernel aufs bridge
 # pciutils is required by flashrom / mosys which is required to be statically
 # compiled to reduce dependency during auto update.
 sys-apps/pciutils	static-libs
