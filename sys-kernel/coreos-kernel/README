@@ -1,4 +1,4 @@
-The kernel tree is managed in git and is essentially the stable kernel + aufs.
+The kernel tree is managed in git and is just the latest stable kernel.
 
 To bump to a new version do the following:
 
@@ -24,9 +24,6 @@ To bump to a new version do the following:
 [remote "stable"]
 	url = https://kernel.googlesource.com/pub/scm/linux/kernel/git/stable/linux-stable
 	fetch = +refs/heads/*:refs/remotes/stable/*
-[remote "aufs"]
-	url = http://git.code.sf.net/p/aufs/aufs3-linux
-	fetch = +refs/heads/*:refs/remotes/aufs/*
 ```
 
 3) git fetch --all
@@ -34,8 +31,6 @@ To bump to a new version do the following:
 3) git checkout -b 'coreos/v3.10.10'
 
 4) git reset --hard v3.10.10
-
-5) git pull . aufs/aufs-3.10
 
 5a) apply any coreos-specific patches that are not yet upstream (i.e. 9p patch)
     that happened to be in a previous kernel branch.
