@@ -81,33 +81,10 @@ class ScopedPtrXmlXPathContextFree {
   }
 };
 
-// Returns true if |ping_days| has a value that needs to be sent,
-// false otherwise.
-bool ShouldPing(int ping_days) {
-  return ping_days > 0 || ping_days == OmahaRequestAction::kNeverPinged;
-}
-
-// Returns an XML ping element attribute assignment with attribute
-// |name| and value |ping_days| if |ping_days| has a value that needs
-// to be sent, or an empty string otherwise.
-string GetPingAttribute(const string& name, int ping_days) {
-  if (ShouldPing(ping_days)) {
-    return StringPrintf(" %s=\"%d\"", name.c_str(), ping_days);
-  }
-  return "";
-}
-
 // Returns an XML ping element if any of the elapsed days need to be
 // sent, or an empty string otherwise.
 string GetPingXml(int ping_active_days, int ping_roll_call_days) {
-  string ping_active = GetPingAttribute("a", ping_active_days);
-  string ping_roll_call = GetPingAttribute("r", ping_roll_call_days);
-  if (!ping_active.empty() || !ping_roll_call.empty()) {
-    return StringPrintf("        <ping active=\"1\"%s%s></ping>\n",
-                        ping_active.c_str(),
-                        ping_roll_call.c_str());
-  }
-  return "";
+  return StringPrintf("        <ping active=\"1\"></ping>\n");
 }
 
 // Returns an XML that goes into the body of the <app> element of the Omaha
@@ -301,41 +278,8 @@ OmahaRequestAction::OmahaRequestAction(SystemState* system_state,
 
 OmahaRequestAction::~OmahaRequestAction() {}
 
-// Calculates the value to use for the ping days parameter.
-int OmahaRequestAction::CalculatePingDays(const string& key) {
-  int days = kNeverPinged;
-  int64_t last_ping = 0;
-  if (system_state_->prefs()->GetInt64(key, &last_ping) && last_ping >= 0) {
-    days = (Time::Now() - Time::FromInternalValue(last_ping)).InDays();
-    if (days < 0) {
-      // If |days| is negative, then the system clock must have jumped
-      // back in time since the ping was sent. Mark the value so that
-      // it doesn't get sent to the server but we still update the
-      // last ping daystart preference. This way the next ping time
-      // will be correct, hopefully.
-      days = kPingTimeJump;
-      LOG(WARNING) <<
-          "System clock jumped back in time. Resetting ping daystarts.";
-    }
-  }
-  return days;
-}
-
-void OmahaRequestAction::InitPingDays() {
-  // We send pings only along with update checks, not with events.
-  if (IsEvent()) {
-    return;
-  }
-  // TODO(petkov): Figure a way to distinguish active use pings
-  // vs. roll call pings. Currently, the two pings are identical. A
-  // fix needs to change this code as well as UpdateLastPingDays.
-  ping_active_days_ = CalculatePingDays(kPrefsLastActivePingDay);
-  ping_roll_call_days_ = CalculatePingDays(kPrefsLastRollCallPingDay);
-}
-
 void OmahaRequestAction::PerformAction() {
   http_fetcher_->set_delegate(this);
-  InitPingDays();
   string request_post(GetRequestXml(event_.get(),
                                     *params_,
                                     ping_only_,
@@ -417,33 +361,6 @@ off_t ParseInt(const string& str) {
   return ret;
 }
 
-// Update the last ping day preferences based on the server daystart
-// response. Returns true on success, false otherwise.
-bool UpdateLastPingDays(xmlDoc* doc, PrefsInterface* prefs) {
-  static const char kDaystartNodeXpath[] = "/response/daystart";
-
-  scoped_ptr_malloc<xmlXPathObject, ScopedPtrXmlXPathObjectFree>
-      xpath_nodeset(GetNodeSet(doc, ConstXMLStr(kDaystartNodeXpath)));
-  TEST_AND_RETURN_FALSE(xpath_nodeset.get());
-  xmlNodeSet* nodeset = xpath_nodeset->nodesetval;
-  TEST_AND_RETURN_FALSE(nodeset && nodeset->nodeNr >= 1);
-  xmlNode* daystart_node = nodeset->nodeTab[0];
-  TEST_AND_RETURN_FALSE(xmlHasProp(daystart_node,
-                                   ConstXMLStr("elapsed_seconds")));
-
-  int64_t elapsed_seconds = 0;
-  TEST_AND_RETURN_FALSE(base::StringToInt64(XmlGetProperty(daystart_node,
-                                                           "elapsed_seconds"),
-                                            &elapsed_seconds));
-  TEST_AND_RETURN_FALSE(elapsed_seconds >= 0);
-
-  // Remember the local time that matches the server's last midnight
-  // time.
-  Time daystart = Time::Now() - TimeDelta::FromSeconds(elapsed_seconds);
-  prefs->SetInt64(kPrefsLastActivePingDay, daystart.ToInternalValue());
-  prefs->SetInt64(kPrefsLastRollCallPingDay, daystart.ToInternalValue());
-  return true;
-}
 }  // namespace {}
 
 bool OmahaRequestAction::ParseResponse(xmlDoc* doc,
@@ -734,16 +651,6 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
                        kActionCodeOmahaRequestEmptyResponseError :
                        kActionCodeOmahaRequestXMLParseError);
     return;
-  }
-
-  // If a ping was sent, update the last ping day preferences based on
-  // the server daystart response.
-  if (ShouldPing(ping_active_days_) ||
-      ShouldPing(ping_roll_call_days_) ||
-      ping_active_days_ == kPingTimeJump ||
-      ping_roll_call_days_ == kPingTimeJump) {
-    LOG_IF(ERROR, !UpdateLastPingDays(doc.get(), system_state_->prefs()))
-        << "Failed to update the last ping day preferences!";
   }
 
   if (!HasOutputPipe()) {

@@ -143,15 +143,6 @@ class OmahaRequestAction : public Action<OmahaRequestAction>,
   bool IsEvent() const { return event_.get() != NULL; }
 
  private:
-  // If this is an update check request, initializes
-  // |ping_active_days_| and |ping_roll_call_days_| to values that may
-  // be sent as pings to Omaha.
-  void InitPingDays();
-
-  // Based on the persistent preference store values, calculates the
-  // number of days since the last ping sent for |key|.
-  int CalculatePingDays(const std::string& key);
-
   // Returns true if the download of a new update should be deferred.
   // False if the update can be downloaded.
   bool ShouldDeferDownload(OmahaResponse* output_object);

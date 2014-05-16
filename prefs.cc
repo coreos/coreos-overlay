@@ -20,8 +20,6 @@ const char kPrefsCertificateReportToSendDownload[] =
 const char kPrefsCertificateReportToSendUpdate[] =
     "certificate-report-to-send-update";
 const char kPrefsDeltaUpdateFailures[] = "delta-update-failures";
-const char kPrefsLastActivePingDay[] = "last-active-ping-day";
-const char kPrefsLastRollCallPingDay[] = "last-roll-call-ping-day";
 const char kPrefsManifestMetadataSize[] = "manifest-metadata-size";
 const char kPrefsPreviousVersion[] = "previous-version";
 const char kPrefsResumedUpdateFailures[] = "resumed-update-failures";
