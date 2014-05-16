@@ -924,7 +924,7 @@ TEST(OmahaRequestActionTest, FormatUpdateCheckOutputTest) {
   // convert post_data to string
   string post_str(&post_data[0], post_data.size());
   EXPECT_NE(post_str.find(
-      "        <ping active=\"1\" a=\"-1\" r=\"-1\"></ping>\n"
+      "        <ping active=\"1\"></ping>\n"
       "        <updatecheck targetversionprefix=\"\"></updatecheck>\n"),
       string::npos);
   EXPECT_NE(post_str.find("hardware_class=\"OEM MODEL 09235 7471\""),
@@ -953,7 +953,7 @@ TEST(OmahaRequestActionTest, FormatUpdateDisabledOutputTest) {
   // convert post_data to string
   string post_str(&post_data[0], post_data.size());
   EXPECT_NE(post_str.find(
-      "        <ping active=\"1\" a=\"-1\" r=\"-1\"></ping>\n"
+      "        <ping active=\"1\"></ping>\n"
       "        <updatecheck targetversionprefix=\"\"></updatecheck>\n"),
       string::npos);
   EXPECT_NE(post_str.find("hardware_class=\"OEM MODEL 09235 7471\""),
@@ -1125,14 +1125,6 @@ TEST(OmahaRequestActionTest, PingTest) {
   for (int ping_only = 0; ping_only < 2; ping_only++) {
     NiceMock<PrefsMock> prefs;
     // Add a few hours to the day difference to test no rounding, etc.
-    int64_t five_days_ago =
-        (Time::Now() - TimeDelta::FromHours(5 * 24 + 13)).ToInternalValue();
-    int64_t six_days_ago =
-        (Time::Now() - TimeDelta::FromHours(6 * 24 + 11)).ToInternalValue();
-    EXPECT_CALL(prefs, GetInt64(kPrefsLastActivePingDay, _))
-        .WillOnce(DoAll(SetArgumentPointee<1>(six_days_ago), Return(true)));
-    EXPECT_CALL(prefs, GetInt64(kPrefsLastRollCallPingDay, _))
-        .WillOnce(DoAll(SetArgumentPointee<1>(five_days_ago), Return(true)));
     vector<char> post_data;
     ASSERT_TRUE(
         TestUpdateCheck(&prefs,
@@ -1144,7 +1136,7 @@ TEST(OmahaRequestActionTest, PingTest) {
                         NULL,
                         &post_data));
     string post_str(&post_data[0], post_data.size());
-    EXPECT_NE(post_str.find("<ping active=\"1\" a=\"6\" r=\"5\"></ping>"),
+    EXPECT_NE(post_str.find("<ping active=\"1\"></ping>"),
               string::npos);
     if (ping_only) {
       EXPECT_EQ(post_str.find("updatecheck"), string::npos);
@@ -1158,13 +1150,6 @@ TEST(OmahaRequestActionTest, PingTest) {
 
 TEST(OmahaRequestActionTest, ActivePingTest) {
   NiceMock<PrefsMock> prefs;
-  int64_t three_days_ago =
-      (Time::Now() - TimeDelta::FromHours(3 * 24 + 12)).ToInternalValue();
-  int64_t now = Time::Now().ToInternalValue();
-  EXPECT_CALL(prefs, GetInt64(kPrefsLastActivePingDay, _))
-      .WillOnce(DoAll(SetArgumentPointee<1>(three_days_ago), Return(true)));
-  EXPECT_CALL(prefs, GetInt64(kPrefsLastRollCallPingDay, _))
-      .WillOnce(DoAll(SetArgumentPointee<1>(now), Return(true)));
   vector<char> post_data;
   ASSERT_TRUE(
       TestUpdateCheck(&prefs,
@@ -1176,144 +1161,12 @@ TEST(OmahaRequestActionTest, ActivePingTest) {
                       NULL,
                       &post_data));
   string post_str(&post_data[0], post_data.size());
-  EXPECT_NE(post_str.find("<ping active=\"1\" a=\"3\"></ping>"),
+  EXPECT_NE(post_str.find("<ping active=\"1\"></ping>"),
             string::npos);
-}
-
-TEST(OmahaRequestActionTest, RollCallPingTest) {
-  NiceMock<PrefsMock> prefs;
-  int64_t four_days_ago =
-      (Time::Now() - TimeDelta::FromHours(4 * 24)).ToInternalValue();
-  int64_t now = Time::Now().ToInternalValue();
-  EXPECT_CALL(prefs, GetInt64(kPrefsLastActivePingDay, _))
-      .WillOnce(DoAll(SetArgumentPointee<1>(now), Return(true)));
-  EXPECT_CALL(prefs, GetInt64(kPrefsLastRollCallPingDay, _))
-      .WillOnce(DoAll(SetArgumentPointee<1>(four_days_ago), Return(true)));
-  vector<char> post_data;
-  ASSERT_TRUE(
-      TestUpdateCheck(&prefs,
-                      kDefaultTestParams,
-                      GetNoUpdateResponse(OmahaRequestParams::kAppId),
-                      -1,
-                      false,  // ping_only
-                      kActionCodeSuccess,
-                      NULL,
-                      &post_data));
-  string post_str(&post_data[0], post_data.size());
-  EXPECT_NE(post_str.find("<ping active=\"1\" r=\"4\"></ping>\n"),
-            string::npos);
-}
-
-TEST(OmahaRequestActionTest, NoPingTest) {
-  NiceMock<PrefsMock> prefs;
-  int64_t one_hour_ago =
-      (Time::Now() - TimeDelta::FromHours(1)).ToInternalValue();
-  EXPECT_CALL(prefs, GetInt64(kPrefsLastActivePingDay, _))
-      .WillOnce(DoAll(SetArgumentPointee<1>(one_hour_ago), Return(true)));
-  EXPECT_CALL(prefs, GetInt64(kPrefsLastRollCallPingDay, _))
-      .WillOnce(DoAll(SetArgumentPointee<1>(one_hour_ago), Return(true)));
-  EXPECT_CALL(prefs, SetInt64(kPrefsLastActivePingDay, _)).Times(0);
-  EXPECT_CALL(prefs, SetInt64(kPrefsLastRollCallPingDay, _)).Times(0);
-  vector<char> post_data;
-  ASSERT_TRUE(
-      TestUpdateCheck(&prefs,
-                      kDefaultTestParams,
-                      GetNoUpdateResponse(OmahaRequestParams::kAppId),
-                      -1,
-                      false,  // ping_only
-                      kActionCodeSuccess,
-                      NULL,
-                      &post_data));
-  string post_str(&post_data[0], post_data.size());
-  EXPECT_EQ(post_str.find("ping"), string::npos);
-}
-
-TEST(OmahaRequestActionTest, IgnoreEmptyPingTest) {
-  // This test ensures that we ignore empty ping only requests.
-  NiceMock<PrefsMock> prefs;
-  int64_t now = Time::Now().ToInternalValue();
-  EXPECT_CALL(prefs, GetInt64(kPrefsLastActivePingDay, _))
-      .WillOnce(DoAll(SetArgumentPointee<1>(now), Return(true)));
-  EXPECT_CALL(prefs, GetInt64(kPrefsLastRollCallPingDay, _))
-      .WillOnce(DoAll(SetArgumentPointee<1>(now), Return(true)));
-  EXPECT_CALL(prefs, SetInt64(kPrefsLastActivePingDay, _)).Times(0);
-  EXPECT_CALL(prefs, SetInt64(kPrefsLastRollCallPingDay, _)).Times(0);
-  vector<char> post_data;
-  EXPECT_TRUE(
-      TestUpdateCheck(&prefs,
-                      kDefaultTestParams,
-                      GetNoUpdateResponse(OmahaRequestParams::kAppId),
-                      -1,
-                      true,  // ping_only
-                      kActionCodeSuccess,
-                      NULL,
-                      &post_data));
-  EXPECT_EQ(post_data.size(), 0);
-}
-
-TEST(OmahaRequestActionTest, BackInTimePingTest) {
-  NiceMock<PrefsMock> prefs;
-  int64_t future =
-      (Time::Now() + TimeDelta::FromHours(3 * 24 + 4)).ToInternalValue();
-  EXPECT_CALL(prefs, GetInt64(kPrefsLastActivePingDay, _))
-      .WillOnce(DoAll(SetArgumentPointee<1>(future), Return(true)));
-  EXPECT_CALL(prefs, GetInt64(kPrefsLastRollCallPingDay, _))
-      .WillOnce(DoAll(SetArgumentPointee<1>(future), Return(true)));
-  EXPECT_CALL(prefs, SetInt64(kPrefsLastActivePingDay, _))
-      .WillOnce(Return(true));
-  EXPECT_CALL(prefs, SetInt64(kPrefsLastRollCallPingDay, _))
-      .WillOnce(Return(true));
-  vector<char> post_data;
-  ASSERT_TRUE(
-      TestUpdateCheck(&prefs,
-                      kDefaultTestParams,
-                      "<?xml version=\"1.0\" encoding=\"UTF-8\"?><response "
-                      "protocol=\"3.0\"><daystart elapsed_seconds=\"100\"/>"
-                      "<app appid=\"foo\" status=\"ok\"><ping status=\"ok\"/>"
-                      "<updatecheck status=\"noupdate\"/></app></response>",
-                      -1,
-                      false,  // ping_only
-                      kActionCodeSuccess,
-                      NULL,
-                      &post_data));
-  string post_str(&post_data[0], post_data.size());
-  EXPECT_EQ(post_str.find("ping"), string::npos);
-}
-
-TEST(OmahaRequestActionTest, LastPingDayUpdateTest) {
-  // This test checks that the action updates the last ping day to now
-  // minus 200 seconds with a slack of 5 seconds. Therefore, the test
-  // may fail if it runs for longer than 5 seconds. It shouldn't run
-  // that long though.
-  int64_t midnight =
-      (Time::Now() - TimeDelta::FromSeconds(200)).ToInternalValue();
-  int64_t midnight_slack =
-      (Time::Now() - TimeDelta::FromSeconds(195)).ToInternalValue();
-  NiceMock<PrefsMock> prefs;
-  EXPECT_CALL(prefs, SetInt64(kPrefsLastActivePingDay,
-                              AllOf(Ge(midnight), Le(midnight_slack))))
-      .WillOnce(Return(true));
-  EXPECT_CALL(prefs, SetInt64(kPrefsLastRollCallPingDay,
-                              AllOf(Ge(midnight), Le(midnight_slack))))
-      .WillOnce(Return(true));
-  ASSERT_TRUE(
-      TestUpdateCheck(&prefs,
-                      kDefaultTestParams,
-                      "<?xml version=\"1.0\" encoding=\"UTF-8\"?><response "
-                      "protocol=\"3.0\"><daystart elapsed_seconds=\"200\"/>"
-                      "<app appid=\"foo\" status=\"ok\"><ping status=\"ok\"/>"
-                      "<updatecheck status=\"noupdate\"/></app></response>",
-                      -1,
-                      false,  // ping_only
-                      kActionCodeSuccess,
-                      NULL,
-                      NULL));
 }
 
 TEST(OmahaRequestActionTest, NoElapsedSecondsTest) {
   NiceMock<PrefsMock> prefs;
-  EXPECT_CALL(prefs, SetInt64(kPrefsLastActivePingDay, _)).Times(0);
-  EXPECT_CALL(prefs, SetInt64(kPrefsLastRollCallPingDay, _)).Times(0);
   ASSERT_TRUE(
       TestUpdateCheck(&prefs,
                       kDefaultTestParams,
@@ -1330,8 +1183,6 @@ TEST(OmahaRequestActionTest, NoElapsedSecondsTest) {
 
 TEST(OmahaRequestActionTest, BadElapsedSecondsTest) {
   NiceMock<PrefsMock> prefs;
-  EXPECT_CALL(prefs, SetInt64(kPrefsLastActivePingDay, _)).Times(0);
-  EXPECT_CALL(prefs, SetInt64(kPrefsLastRollCallPingDay, _)).Times(0);
   ASSERT_TRUE(
       TestUpdateCheck(&prefs,
                       kDefaultTestParams,

@@ -12,8 +12,6 @@ namespace chromeos_update_engine {
 extern const char kPrefsCertificateReportToSendDownload[];
 extern const char kPrefsCertificateReportToSendUpdate[];
 extern const char kPrefsDeltaUpdateFailures[];
-extern const char kPrefsLastActivePingDay[];
-extern const char kPrefsLastRollCallPingDay[];
 extern const char kPrefsManifestMetadataSize[];
 extern const char kPrefsPreviousVersion[];
 extern const char kPrefsResumedUpdateFailures[];
