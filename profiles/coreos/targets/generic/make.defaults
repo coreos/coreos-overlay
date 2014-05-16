@@ -3,7 +3,7 @@
 
 USE="cros-debug acpi usb symlink-usr -pam"
 USE="${USE} -cros_host -expat -pic -pie -cairo -X"
-USE="${USE} -acl -cracklib -gpm -ipv6 -openmp -python -sha512"
+USE="${USE} -acl -cracklib -gpm -openmp -python -sha512"
 USE="${USE} -fortran -abiword -perl -cups -poppler-data -nls"
 
 # Exclude documentation
