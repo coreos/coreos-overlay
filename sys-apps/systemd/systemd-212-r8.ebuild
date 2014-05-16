@@ -123,6 +123,9 @@ fi
 	# fix broken device dependencies after daemon-reload
 	epatch "${FILESDIR}"/212-0004-core-make-sure-to-serialize-jobs-for-all-units.patch
 
+	# stop scaring all our users with warnings about "X-Fleet"
+	epatch "${FILESDIR}"/212-0005-conf-parser-silently-ignore-sections-starting-with-X.patch
+
 	# patch to make journald work at first boot
 	epatch "${FILESDIR}"/211-tmpfiles.patch
 
