@@ -8,12 +8,5 @@ source make.conf.board_setup
 # Common settings across all board targets.
 source make.conf.common
 
-# Recommended MARCH_TUNE, CFLAGS, etc.
-MARCH_TUNE=""
-
-# Allow a board to override or define additional settings.
-CFLAGS="-O2 -pipe ${MARCH_TUNE} -g"
-CXXFLAGS="${CFLAGS}"
-
 # Allow the user to override or define additional settings.
 source make.conf.user
