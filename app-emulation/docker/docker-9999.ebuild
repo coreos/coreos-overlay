@@ -166,11 +166,7 @@ src_install() {
 	newinitd contrib/init/openrc/docker.initd docker
 	newconfd contrib/init/openrc/docker.confd docker
 
-	if use symlink-usr; then
-		systemd_dounit "${FILESDIR}/symlink-usr/docker.service"
-	else
-		systemd_dounit "${FILESDIR}/docker.service"
-	fi
+	systemd_dounit "${FILESDIR}/docker.service"
 	systemd_dounit "${FILESDIR}/docker.socket"
 
 	insinto /usr/lib/systemd/network
