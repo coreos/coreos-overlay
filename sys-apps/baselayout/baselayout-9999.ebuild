@@ -163,13 +163,6 @@ src_install() {
 		sed -i -e '/\/etc\/issue/d' \
 			"${D}"/usr/lib/tmpfiles.d/baselayout-etc.conf || die
 
-		# Set custom password for core user
-		if [[ -r "${SHARED_USER_PASSWD_FILE}" ]]; then
-			echo "core:$(<${SHARED_USER_PASSWD_FILE}):15887:0:::::" \
-				> "${D}"/etc/shadow || die
-			chmod 640 "${D}"/etc/shadow || die
-		fi
-
 		# Initialize /etc/passwd, group, and friends on boot.
 		bash "scripts/coreos-tmpfiles" "${D}" || die
 		dosbin "scripts/coreos-tmpfiles"

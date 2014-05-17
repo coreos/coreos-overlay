@@ -34,8 +34,3 @@ EMERGE_DEFAULT_OPTS="--oneshot"
 
 # Since our portage comes from version control, we redirect distfiles.
 DISTDIR="/var/lib/portage/distfiles-target"
-
-# Username and home directory of the shared user.
-SHARED_USER_NAME="core"
-SHARED_USER_HOME="/home/core"
-SHARED_USER_PASSWD_FILE="/etc/shared_user_passwd.txt"
