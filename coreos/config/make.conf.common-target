@@ -40,11 +40,6 @@ SHARED_USER_NAME="core"
 SHARED_USER_HOME="/home/core"
 SHARED_USER_PASSWD_FILE="/etc/shared_user_passwd.txt"
 
-# the AC_FUNC_WAIT3 macro uses runtime-checks for the function, which
-# doesn't work when cross-compiling; we know that our targets have it,
-# so let's tell about it to autoconf. — Flameeyes
-ac_cv_func_wait3_rusage=yes
-
 # When building packages for the target, we need to search the target's
 # sysroot for additional m4 files.  The autotools.eclass uses this.
 AT_SYS_M4DIR="\${SYSROOT}/usr/share/aclocal"

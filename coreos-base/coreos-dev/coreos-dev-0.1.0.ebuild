@@ -74,7 +74,6 @@ RDEPEND="
 	sys-process/ktop
 	sys-process/procps
 	sys-process/psmisc
-	sys-process/time
 	virtual/python-argparse
 	coreos-base/coreos-experimental
 	"
