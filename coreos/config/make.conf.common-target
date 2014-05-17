@@ -39,7 +39,3 @@ DISTDIR="/var/lib/portage/distfiles-target"
 SHARED_USER_NAME="core"
 SHARED_USER_HOME="/home/core"
 SHARED_USER_PASSWD_FILE="/etc/shared_user_passwd.txt"
-
-# When building packages for the target, we need to search the target's
-# sysroot for additional m4 files.  The autotools.eclass uses this.
-AT_SYS_M4DIR="\${SYSROOT}/usr/share/aclocal"
