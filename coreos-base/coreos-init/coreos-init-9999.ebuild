@@ -10,7 +10,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~x86"
 else
-	CROS_WORKON_COMMIT="f395357a5f28043c9ed8c50bdf6391cad4421552"
+	CROS_WORKON_COMMIT="8719e23c5790dea12bbff001c29c9622efd7d2a8"
 	KEYWORDS="amd64 arm x86"
 fi
 
@@ -58,5 +58,5 @@ src_install() {
 	systemd_enable_service default.target ssh-key-proc-cmdline.service
 	systemd_enable_service sockets.target docker.socket
 	systemd_enable_service default.target issuegen.service
-	systemd_enable_service default.target motdgen.service
+	systemd_enable_service default.target motdgen.timer
 }
