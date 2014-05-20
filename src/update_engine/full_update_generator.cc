@@ -7,7 +7,7 @@
 #include <inttypes.h>
 #include <fcntl.h>
 
-#include <tr1/memory>
+#include <memory>
 
 #include <base/string_util.h>
 
@@ -16,10 +16,10 @@
 #include "update_engine/utils.h"
 
 using std::deque;
-using std::min;
 using std::max;
+using std::min;
+using std::shared_ptr;
 using std::string;
-using std::tr1::shared_ptr;
 using std::vector;
 using strings::StringPrintf;
 

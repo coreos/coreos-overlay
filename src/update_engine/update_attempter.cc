@@ -11,7 +11,7 @@
 #include <time.h>
 
 #include <string>
-#include <tr1/memory>
+#include <memory>
 #include <vector>
 
 #include <base/file_util.h>
@@ -37,7 +37,7 @@ using base::TimeDelta;
 using base::TimeTicks;
 using google::protobuf::NewPermanentCallback;
 using std::make_pair;
-using std::tr1::shared_ptr;
+using std::shared_ptr;
 using std::set;
 using std::string;
 using std::vector;
