@@ -104,6 +104,8 @@ RDEPEND="${RDEPEND}
 	app-admin/toolbox
 	app-arch/gzip
 	app-arch/tar
+	app-arch/unzip
+	app-arch/zip
 	app-shells/bash
 	coreos-base/cros_boot_mode
 	coreos-base/vboot_reference
