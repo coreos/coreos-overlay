@@ -21,10 +21,6 @@ app-admin/eselect-vi-1.1.5
 
 app-arch/cabextract-1.2-r1
 app-arch/rpm2targz-9.0.0.3g
-app-arch/unzip-6.0-r1
-
-# Needed for building Icedtea
-app-arch/zip-3.0
 
 app-portage/portage-utils-0.1.29
 
