@@ -114,6 +114,7 @@ RDEPEND="${RDEPEND}
 	net-analyzer/nmap
 	net-firewall/iptables
 	net-misc/bridge-utils
+	net-misc/dhcpcd
 	net-misc/rsync
 	net-misc/tlsdate
 	net-misc/wget
