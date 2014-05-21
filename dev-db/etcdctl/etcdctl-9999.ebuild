@@ -6,6 +6,13 @@ CROS_WORKON_PROJECT="coreos/etcdctl"
 CROS_WORKON_LOCALNAME="etcdctl"
 CROS_WORKON_REPO="git://github.com"
 
+if [[ "${PV}" == 9999 ]]; then
+    KEYWORDS="~amd64"
+else
+    CROS_WORKON_COMMIT="43d576e9e84568372048f2b6cc912e7a5d048081" # v0.4.1
+    KEYWORDS="amd64"
+fi
+
 inherit cros-workon
 
 DESCRIPTION="etcd command line client"
