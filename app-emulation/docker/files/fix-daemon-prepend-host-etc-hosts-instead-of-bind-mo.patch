@@ -1,0 +1,63 @@
+From 000a37fe9d13a173ab46fcd5b8e693950a438f98 Mon Sep 17 00:00:00 2001
+From: Brandon Philips <brandon@ifup.co>
+Date: Fri, 16 May 2014 15:01:25 -0700
+Subject: [PATCH] fix(daemon): prepend host /etc/hosts instead of bind mounting
+
+systemd systems do not require a /etc/hosts file exists since an nss
+module is shipped that creates localhost implicitly. So, mounting
+/etc/hosts can fail on these sorts of systems, as was reported on CoreOS
+in issue #5812.
+
+Instead of trying to bind mount just copy the hosts entries onto the
+containers private /etc/hosts.
+
+Docker-DCO-1.1-Signed-off-by: Brandon Philips <brandon.philips@coreos.com> (github: philips)
+---
+ daemon/container.go | 12 ++++++++++--
+ daemon/volumes.go   |  5 ++++-
+ 2 files changed, 14 insertions(+), 3 deletions(-)
+
+diff --git a/daemon/container.go b/daemon/container.go
+index 9ca94b2..54e720d 100644
+--- a/daemon/container.go
++++ b/daemon/container.go
+@@ -879,9 +879,17 @@ func (container *Container) initializeNetworking() error {
+ 			container.Config.Hostname = parts[0]
+ 			container.Config.Domainname = parts[1]
+ 		}
+-		container.HostsPath = "/etc/hosts"
+ 
+-		return container.buildHostnameFile()
++		content, err := ioutil.ReadFile("/etc/hosts")
++		if os.IsNotExist(err) {
++			return container.buildHostnameAndHostsFiles("")
++		}
++		if err != nil {
++			return err
++		}
++
++		container.HostsPath = path.Join(container.root, "hostname")
++		return ioutil.WriteFile(container.HostsPath, content, 0644)
+ 	} else if container.hostConfig.NetworkMode.IsContainer() {
+ 		// we need to get the hosts files from the container to join
+ 		nc, err := container.getNetworkedContainer()
+diff --git a/daemon/volumes.go b/daemon/volumes.go
+index eac743b..f96ce05 100644
+--- a/daemon/volumes.go
++++ b/daemon/volumes.go
+@@ -40,8 +40,11 @@ func setupMountsForContainer(container *Container) error {
+ 		{container.ResolvConfPath, "/etc/resolv.conf", false, true},
+ 	}
+ 
+-	if container.HostnamePath != "" && container.HostsPath != "" {
++	if container.HostnamePath != "" {
+ 		mounts = append(mounts, execdriver.Mount{container.HostnamePath, "/etc/hostname", false, true})
++	}
++
++	if container.HostsPath != "" {
+ 		mounts = append(mounts, execdriver.Mount{container.HostsPath, "/etc/hosts", false, true})
+ 	}
+ 
+-- 
+1.8.1.4
+

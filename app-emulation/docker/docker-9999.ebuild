@@ -133,6 +133,7 @@ pkg_setup() {
 
 src_prepare() {
 	epatch "${FILESDIR}"/daemon-ensure-the-var-lib-docker-dir-exists.patch
+	epatch "${FILESDIR}"/fix-daemon-prepend-host-etc-hosts-instead-of-bind-mo.patch
 }
 
 src_compile() {
