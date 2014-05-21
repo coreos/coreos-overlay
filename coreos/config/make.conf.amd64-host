@@ -1,39 +1,5 @@
 # See "man make.conf" for the available options.
 
-# Get the current SDK version, useful for fetching the latest packages
-source "/mnt/host/source/.repo/manifests/version.txt"
-COREOS_VERSION_STRING="${COREOS_BUILD}.${COREOS_BRANCH}.${COREOS_PATCH}"
-
-# Since our portage comes from version control, we redirect distfiles
-DISTDIR="/var/lib/portage/distfiles"
-
-PORTDIR="/usr/local/portage/stable"
-
-# We initialize PORTDIR_OVERLAY here to clobber any redefinitions elsewhere.
-# This has to be the first overlay so crossdev finds the correct gcc and 
-# glibc ebuilds.
-PORTDIR_OVERLAY="
-  /usr/local/portage/crossdev
-  /usr/local/portage/coreos
-"
-
-# Adding packages to the @world set causes people more trouble than it's
-# worth in our setup -- we rarely have people add custom packages outside
-# of the ChromiumOS set.  You can use "--select" to override this.
-EMERGE_DEFAULT_OPTS="--oneshot"
-
-# Where to store built packages.
-PKGDIR="/var/lib/portage/pkgs"
-
-PORT_LOGDIR="/var/log/portage"
-
-PORTAGE_BINHOST="
-    http://storage.core-os.net/coreos/sdk/${ARCH}/${COREOS_VERSION_STRING}/pkgs/
-    http://storage.core-os.net/coreos/sdk/${ARCH}/${COREOS_VERSION_STRING}/toolchain/
-    http://storage.core-os.net/coreos/sdk/${ARCH}/${COREOS_SDK_VERSION}/pkgs/
-    http://storage.core-os.net/coreos/sdk/${ARCH}/${COREOS_SDK_VERSION}/toolchain/
-"
-
 # This is used by profiles/base/profile.bashrc to figure out that we
 # are targeting the cros-sdk (in all its various modes).  It should
 # be utilized nowhere else!
