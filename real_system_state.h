@@ -41,10 +41,6 @@ public:
     return connection_manager_;
   }
 
-  virtual inline MetricsLibraryInterface* metrics_lib() {
-    return &metrics_lib_;
-  }
-
   virtual inline PrefsInterface* prefs() {
     return &prefs_;
   }
@@ -78,9 +74,6 @@ private:
   // The connection manager object that makes download
   // decisions depending on the current type of connection.
   ConnectionManager* connection_manager_;
-
-  // The Metrics Library interface for reporting UMA stats.
-  MetricsLibrary metrics_lib_;
 
   // Interface for persisted store.
   Prefs prefs_;

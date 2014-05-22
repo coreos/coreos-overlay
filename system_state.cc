@@ -15,8 +15,6 @@ RealSystemState::RealSystemState()
       request_params_(this) {}
 
 bool RealSystemState::Initialize(bool enable_gpio, bool enable_connection_manager) {
-  metrics_lib_.Init();
-
   if (!prefs_.Init(FilePath(kPrefsDirectory))) {
     LOG(ERROR) << "Failed to initialize preferences.";
     return false;

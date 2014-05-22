@@ -203,7 +203,6 @@ env['LIBS'] = Split("""bz2
                        glib-2.0
                        gthread-2.0
                        libpcrecpp
-                       metrics
                        policy-%s
                        protobuf
                        pthread

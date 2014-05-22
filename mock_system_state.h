@@ -7,7 +7,6 @@
 
 #include <gmock/gmock.h>
 
-#include <metrics/metrics_library_mock.h>
 #include <policy/mock_device_policy.h>
 
 #include "update_engine/mock_dbus_interface.h"
@@ -35,10 +34,6 @@ class MockSystemState : public SystemState {
     return connection_manager_;
   }
 
-  inline virtual MetricsLibraryInterface* metrics_lib() {
-    return &mock_metrics_lib_;
-  }
-
   inline virtual PrefsInterface* prefs() {
     return prefs_;
   }
@@ -62,10 +57,6 @@ class MockSystemState : public SystemState {
     connection_manager_ = connection_manager;
   }
 
-  inline MetricsLibraryMock* mock_metrics_lib() {
-    return &mock_metrics_lib_;
-  }
-
   inline void set_prefs(PrefsInterface* prefs) {
     prefs_ = prefs;
   }
@@ -84,7 +75,6 @@ class MockSystemState : public SystemState {
 
  private:
   // These are Mock objects or objects we own.
-  testing::NiceMock<MetricsLibraryMock> mock_metrics_lib_;
   testing::NiceMock<PrefsMock> mock_prefs_;
   testing::NiceMock<MockPayloadState> mock_payload_state_;
   testing::NiceMock<MockGpioHandler>* mock_gpio_handler_;

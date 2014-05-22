@@ -17,7 +17,6 @@
 #include <base/file_util.h>
 #include <base/rand_util.h>
 #include <glib.h>
-#include <metrics/metrics_library.h>
 #include <policy/libpolicy.h>
 #include <policy/device_policy.h>
 
@@ -603,16 +602,6 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
 
     SetStatusAndNotify(UPDATE_STATUS_UPDATED_NEED_REBOOT,
                        kUpdateNoticeUnspecified);
-
-    // Report the time it took to update the system.
-    int64_t update_time = time(NULL) - last_checked_time_;
-    if (!fake_update_success_)
-      system_state_->metrics_lib()->SendToUMA(
-          "Installer.UpdateTime",
-           static_cast<int>(update_time),  // sample
-           1,  // min = 1 second
-           20 * 60,  // max = 20 minutes
-           50);  // buckets
 
     // Also report the success code so that the percentiles can be
     // interpreted properly for the remaining error codes in UMA.

@@ -11,7 +11,6 @@
 #include <base/stringprintf.h>
 #include <base/logging.h>
 #include <curl/curl.h>
-#include <metrics/metrics_library.h>
 #include <openssl/evp.h>
 #include <openssl/ssl.h>
 
@@ -166,7 +165,6 @@ bool CertificateChecker::CheckCertificateChange(
 void CertificateChecker::FlushReport() {
   // This check shouldn't be needed, but it is useful for testing.
   TEST_AND_RETURN(system_state_);
-  TEST_AND_RETURN(system_state_->metrics_lib());
   TEST_AND_RETURN(system_state_->prefs());
 
   // We flush reports for both servers.
@@ -176,8 +174,7 @@ void CertificateChecker::FlushReport() {
         && !report_to_send.empty()) {
       // There is a report to be sent. We send it and erase it.
       LOG(INFO) << "Found report #" << i << ". Sending it";
-      LOG_IF(WARNING, !system_state_->metrics_lib()->SendUserActionToUMA(
-          report_to_send))
+      LOG(WARNING)
           << "Failed to send server certificate report to UMA: "
           << report_to_send;
       LOG_IF(WARNING, !system_state_->prefs()->Delete(kReportToSendKey[i]))

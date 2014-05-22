@@ -23,7 +23,6 @@
 #include "update_engine/proxy_resolver.h"
 #include "update_engine/system_state.h"
 
-class MetricsLibraryInterface;
 struct UpdateEngineService;
 
 namespace policy {

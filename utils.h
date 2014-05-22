@@ -16,7 +16,6 @@
 #include <base/time.h>
 #include <ext2fs/ext2fs.h>
 #include <glib.h>
-#include "metrics/metrics_library.h"
 
 #include "update_engine/action.h"
 #include "update_engine/action_processor.h"

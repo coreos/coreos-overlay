@@ -5,7 +5,6 @@
 #ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_SYSTEM_STATE_H_
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_SYSTEM_STATE_H_
 
-#include "metrics/metrics_library.h"
 #include <policy/device_policy.h>
 #include <policy/libpolicy.h>
 
@@ -41,9 +40,6 @@ class SystemState {
 
   // Gets the connection manager object.
   virtual ConnectionManager* connection_manager() = 0;
-
-  // Gets the Metrics Library interface for reporting UMA stats.
-  virtual MetricsLibraryInterface* metrics_lib() = 0;
 
   // Gets the interface object for persisted store.
   virtual PrefsInterface* prefs() = 0;

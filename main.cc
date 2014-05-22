@@ -13,7 +13,6 @@
 #include <base/stringprintf.h>
 #include <gflags/gflags.h>
 #include <glib.h>
-#include <metrics/metrics_library.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 

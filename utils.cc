@@ -794,10 +794,6 @@ void SendErrorCodeToUma(SystemState* system_state, ActionExitCode code) {
             << " (" << CodeToString(uma_error_code) << ")"
             << " to UMA metric: " << metric
             << ". Flags = " << (flags ? GetFlagNames(flags) : "None");
-
-  system_state->metrics_lib()->SendEnumToUMA(metric,
-                                             uma_error_code,
-                                             kActionCodeUmaReportedMax);
 }
 
 string CodeToString(ActionExitCode code) {
