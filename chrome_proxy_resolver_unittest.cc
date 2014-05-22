@@ -138,21 +138,4 @@ TEST(ChromeProxyResolverTest, DbusInterfaceTest) {
   g_main_loop_unref(loop);
 }
 
-TEST(ChromeProxyResolverTest, GetProxyTypeTest) {
-  curl_proxytype type;
-  EXPECT_TRUE(ChromeProxyResolver::GetProxyType("socks://f.ru", &type));
-  EXPECT_EQ(CURLPROXY_SOCKS5_HOSTNAME, type);
-  EXPECT_TRUE(ChromeProxyResolver::GetProxyType("socks5://f.ru:9", &type));
-  EXPECT_EQ(CURLPROXY_SOCKS5_HOSTNAME, type);
-  EXPECT_TRUE(ChromeProxyResolver::GetProxyType("socks4://f.ru:9", &type));
-  EXPECT_EQ(CURLPROXY_SOCKS4A, type);
-  EXPECT_TRUE(ChromeProxyResolver::GetProxyType("http://f.no:88", &type));
-  EXPECT_EQ(CURLPROXY_HTTP, type);
-  EXPECT_TRUE(ChromeProxyResolver::GetProxyType("https://f.no:88", &type));
-  EXPECT_EQ(CURLPROXY_HTTP, type);
-  EXPECT_FALSE(ChromeProxyResolver::GetProxyType(kNoProxy, &type));
-  EXPECT_FALSE(ChromeProxyResolver::GetProxyType("foo://", &type));
-  EXPECT_FALSE(ChromeProxyResolver::GetProxyType("missing.com:8", &type));
-}
-
 }  // namespace chromeos_update_engine

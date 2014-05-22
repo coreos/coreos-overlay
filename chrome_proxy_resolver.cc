@@ -178,28 +178,4 @@ bool ChromeProxyResolver::GetProxiesForUrlWithSettings(
   return true;
 }
 
-bool ChromeProxyResolver::GetProxyType(const std::string& proxy,
-                                       curl_proxytype* out_type) {
-  if (utils::StringHasPrefix(proxy, "socks5://") ||
-      utils::StringHasPrefix(proxy, "socks://")) {
-    *out_type = CURLPROXY_SOCKS5_HOSTNAME;
-    return true;
-  }
-  if (utils::StringHasPrefix(proxy, "socks4://")) {
-    *out_type = CURLPROXY_SOCKS4A;
-    return true;
-  }
-  if (utils::StringHasPrefix(proxy, "http://") ||
-      utils::StringHasPrefix(proxy, "https://")) {
-    *out_type = CURLPROXY_HTTP;
-    return true;
-  }
-  if (utils::StringHasPrefix(proxy, kNoProxy)) {
-    // known failure case. don't log.
-    return false;
-  }
-  LOG(INFO) << "Unknown proxy type: " << proxy;
-  return false;
-}
-
 }  // namespace chromeos_update_engine

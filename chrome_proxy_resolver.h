@@ -8,7 +8,6 @@
 #include <deque>
 #include <string>
 
-#include <curl/curl.h>
 #include <gtest/gtest_prod.h>  // for FRIEND_TEST
 
 #include "update_engine/dbus_interface.h"
@@ -41,10 +40,6 @@ class ChromeProxyResolver : public ProxyResolver {
   virtual bool GetProxiesForUrl(const std::string& url,
                                 ProxiesResolvedFn callback,
                                 void* data);
-
-  // Get the curl proxy type for a given proxy url. Returns true on success.
-  // Note: if proxy is kNoProxy, this will return false.
-  static bool GetProxyType(const std::string& proxy, curl_proxytype* out_type);
 
  private:
   FRIEND_TEST(ChromeProxyResolverTest, GetProxiesForUrlWithSettingsTest);

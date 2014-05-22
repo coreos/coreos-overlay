@@ -110,6 +110,10 @@ class LibcurlHttpFetcher : public HttpFetcher {
     return static_cast<size_t>(bytes_downloaded_);
   }
 
+  // Get the curl proxy type for a given proxy url. Returns true on success.
+  // Note: if proxy is kNoProxy, this will return false.
+  static bool GetProxyType(const std::string& proxy, curl_proxytype* out_type);
+
  private:
   // Callback for when proxy resolution has completed. This begins the
   // transfer.
