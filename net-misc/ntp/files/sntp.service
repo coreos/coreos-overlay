@@ -1,0 +1,14 @@
+[Unit]
+Description=Set time via SNTP
+After=network.target NetworkManager-wait-online.service nss-lookup.target
+Before=time-sync.target
+Wants=time-sync.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/conf.d/sntp
+ExecStart=/usr/bin/sntp $SNTP_OPTS
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
