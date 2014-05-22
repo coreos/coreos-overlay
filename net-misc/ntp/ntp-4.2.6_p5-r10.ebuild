@@ -97,6 +97,7 @@ src_install() {
 	else
 		systemd_dounit "${FILESDIR}"/ntpd.service
 		systemd_enable_ntpunit 60-ntpd ntpd.service
+		systemd_enable_service multi-user.target ntpd.service
 		if ! use caps ; then
 			sed -i "s|-u ntp:ntp||" \
 				"${ED}/$(systemd_get_unitdir)/ntpd.service" || die
