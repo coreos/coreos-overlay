@@ -85,19 +85,6 @@ src_install() {
 			-exec rm -r {} \;
 	fi
 
-	insinto /etc
-	doins "${FILESDIR}"/ntp.conf
-	newinitd "${FILESDIR}"/ntpd.rc ntpd
-	newconfd "${FILESDIR}"/ntpd.confd ntpd
-	newinitd "${FILESDIR}"/ntp-client.rc ntp-client
-	newconfd "${FILESDIR}"/ntp-client.confd ntp-client
-	newinitd "${FILESDIR}"/sntp.rc sntp
-	newconfd "${FILESDIR}"/sntp.confd sntp
-	if ! use caps ; then
-		sed -i "s|-u ntp:ntp||" "${ED}"/etc/conf.d/ntpd || die
-	fi
-	sed -i "s:/usr/bin:/usr/sbin:" "${ED}"/etc/init.d/ntpd || die
-
 	keepdir /var/lib/ntp
 	use prefix || fowners ntp:ntp /var/lib/ntp
 
@@ -105,33 +92,12 @@ src_install() {
 		cd "${ED}"
 		rm usr/sbin/ntpd || die
 		rm -r var/lib
-		rm etc/{conf,init}.d/ntpd
 		rm usr/share/man/*/ntpd.8 || die
 	else
-		systemd_newunit "${FILESDIR}"/ntpd.service-r1 ntpd.service
+		systemd_dounit "${FILESDIR}"/ntpd.service
 		systemd_enable_ntpunit 60-ntpd ntpd.service
 	fi
 
 	systemd_dounit "${FILESDIR}"/ntpdate.service
-	systemd_install_serviced "${FILESDIR}"/ntpdate.service.conf
 	systemd_dounit "${FILESDIR}"/sntp.service
-	systemd_install_serviced "${FILESDIR}"/sntp.service.conf
-}
-
-pkg_postinst() {
-	ewarn "You can find an example /etc/ntp.conf in /usr/share/ntp/"
-	ewarn "Review /etc/ntp.conf to setup server info."
-	ewarn "Review /etc/conf.d/ntpd to setup init.d info."
-	echo
-	elog "The way ntp sets and maintains your system time has changed."
-	elog "Now you can use /etc/init.d/ntp-client to set your time at"
-	elog "boot while you can use /etc/init.d/ntpd to maintain your time"
-	elog "while your machine runs"
-	if grep -qs '^[^#].*notrust' "${EROOT}"/etc/ntp.conf ; then
-		echo
-		eerror "The notrust option was found in your /etc/ntp.conf!"
-		ewarn "If your ntpd starts sending out weird responses,"
-		ewarn "then make sure you have keys properly setup and see"
-		ewarn "http://bugs.gentoo.org/41827"
-	fi
 }
