@@ -117,8 +117,8 @@ RDEPEND="${RDEPEND}
 	net-firewall/iptables
 	net-misc/bridge-utils
 	net-misc/dhcpcd
+	net-misc/ntp
 	net-misc/rsync
-	net-misc/tlsdate
 	net-misc/wget
 	sys-apps/coreutils
 	sys-apps/dbus
