@@ -177,7 +177,6 @@ void PayloadState::UpdateFailed(ActionExitCode error) {
 
     case kActionCodeSuccess:                            // success code
     case kActionCodeSetBootableFlagError:               // unused
-    case kActionCodeUmaReportedMax:                     // not an error code
     case kActionCodeOmahaRequestHTTPResponseBase:       // aggregated already
     case kActionCodeDevModeFlag:                       // not an error code
     case kActionCodeResumedFlag:                        // not an error code

@@ -602,10 +602,6 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
 
     SetStatusAndNotify(UPDATE_STATUS_UPDATED_NEED_REBOOT,
                        kUpdateNoticeUnspecified);
-
-    // Also report the success code so that the percentiles can be
-    // interpreted properly for the remaining error codes in UMA.
-    utils::SendErrorCodeToUma(system_state_, code);
     return;
   }
 
@@ -893,10 +889,6 @@ bool UpdateAttempter::ScheduleErrorEventAction() {
 
   LOG(ERROR) << "Update failed.";
   system_state_->payload_state()->UpdateFailed(error_event_->error_code);
-
-  // Send it to Uma.
-  LOG(INFO) << "Reporting the error event";
-  utils::SendErrorCodeToUma(system_state_, error_event_->error_code);
 
   // Send it to Omaha.
   shared_ptr<OmahaRequestAction> error_event_action(

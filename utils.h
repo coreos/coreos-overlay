@@ -289,17 +289,12 @@ std::string FormatSecs(unsigned secs);
 // when applicable.
 std::string FormatTimeDelta(base::TimeDelta delta);
 
-// This method transforms the given error code to be suitable for UMA and
-// for error classification purposes by removing the higher order bits and
+// This method transforms the given error code to be suitable for
+// error classification purposes by removing the higher order bits and
 // aggregating error codes beyond the enum range, etc. This method is
 // idempotent, i.e. if called with a value previously returned by this method,
 // it'll return the same value again.
 ActionExitCode GetBaseErrorCode(ActionExitCode code);
-
-// Sends the error code to UMA using the metrics interface object in the given
-// system state. It also uses the system state to determine the right UMA
-// bucket for the error code.
-void SendErrorCodeToUma(SystemState* system_state, ActionExitCode code);
 
 // Returns a string representation of the ActionExitCodes (either the base
 // error codes or the bit flags) for logging purposes.
