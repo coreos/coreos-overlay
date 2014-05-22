@@ -15,7 +15,7 @@ SRC_URI="http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-${PV:0:3}/${MY_P}.tar
 LICENSE="HPND BSD ISC"
 SLOT="0"
 KEYWORDS="alpha amd64 arm arm64 hppa ia64 ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd ~x86-freebsd ~amd64-linux ~ia64-linux ~x86-linux ~m68k-mint"
-IUSE="caps debug ipv6 openntpd parse-clocks samba selinux snmp ssl vim-syntax zeroconf"
+IUSE="caps debug doc examples ipv6 openntpd parse-clocks samba selinux snmp ssl vim-syntax zeroconf"
 
 DEPEND=">=sys-libs/ncurses-5.2
 	>=sys-libs/readline-4.1
@@ -69,19 +69,21 @@ src_install() {
 
 	dodoc INSTALL WHERE-TO-START
 	doman "${WORKDIR}"/man/*.[58]
-	dohtml -r html/*
+	use doc && dohtml -r html/*
 
 	insinto /usr/share/ntp
 	doins "${FILESDIR}"/ntp.conf
-	cp -r scripts/* "${ED}"/usr/share/ntp/ || die
-	use prefix || fperms -R go-w /usr/share/ntp
-	find "${ED}"/usr/share/ntp \
-		'(' \
-		-name '*.in' -o \
-		-name 'Makefile*' -o \
-		-name support \
-		')' \
-		-exec rm -r {} \;
+	if use examples; then
+		cp -r scripts/* "${ED}"/usr/share/ntp/ || die
+		use prefix || fperms -R go-w /usr/share/ntp
+		find "${ED}"/usr/share/ntp \
+			'(' \
+			-name '*.in' -o \
+			-name 'Makefile*' -o \
+			-name support \
+			')' \
+			-exec rm -r {} \;
+	fi
 
 	insinto /etc
 	doins "${FILESDIR}"/ntp.conf
