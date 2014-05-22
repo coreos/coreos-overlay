@@ -1,0 +1,23 @@
+#!/bin/bash
+
+get_dhcp_ip() {
+    local leases_dir="/run/systemd/network/leases"
+    while true; do
+        if [[ "$(find "${leases_dir}" -type f -size +1c)" ]]; then
+            break
+        fi
+        sleep .5
+    done
+
+    for leasefile in "${leases_dir}/"*; do
+        dhcp_server_ip=$(cat $leasefile | awk -F= '/SERVER_ADDRESS/ { print $2 }')
+        if [[ -n "${dhcp_server_ip}" ]]; then
+            metadata_url="http://${dhcp_server_ip}/latest/meta-data/"
+            curl --fail -s "${metadata_url}" >/dev/null
+            if [[ $? -eq 0 ]]; then
+                echo $dhcp_server_ip
+                break
+            fi
+        fi
+    done
+}
