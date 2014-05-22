@@ -127,7 +127,6 @@ UpdateAttempter::UpdateAttempter(SystemState* system_state,
       new_payload_size_(0),
       proxy_manual_checks_(0),
       obeying_proxies_(true),
-      chrome_proxy_resolver_(dbus_iface),
       updated_boot_flags_(false),
       update_boot_flags_running_(false),
       start_action_processor_(false),
@@ -150,7 +149,6 @@ void UpdateAttempter::Update(const string& app_version,
                              bool obey_proxies,
                              bool interactive,
                              bool is_test_mode) {
-  chrome_proxy_resolver_.Init();
   fake_update_success_ = false;
   if (status_ == UPDATE_STATUS_UPDATED_NEED_REBOOT) {
     // Although we have applied an update, we still want to ping Omaha

@@ -16,7 +16,7 @@
 #include <gtest/gtest_prod.h>  // for FRIEND_TEST
 
 #include "update_engine/action_processor.h"
-#include "update_engine/chrome_browser_proxy_resolver.h"
+#include "update_engine/dbus_interface.h"
 #include "update_engine/download_action.h"
 #include "update_engine/omaha_request_params.h"
 #include "update_engine/omaha_response_handler_action.h"
@@ -225,10 +225,10 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // update can be tried when needed.
   void MarkDeltaUpdateFailure();
 
+  // TODO: Add a ProxyResolver that is initialized from environment variables.
+  // It should be returned only when obeying_proxies_ is true.
   ProxyResolver* GetProxyResolver() {
-    return obeying_proxies_ ?
-        reinterpret_cast<ProxyResolver*>(&chrome_proxy_resolver_) :
-        reinterpret_cast<ProxyResolver*>(&direct_proxy_resolver_);
+    return reinterpret_cast<ProxyResolver*>(&direct_proxy_resolver_);
   }
 
   // Sends a ping to Omaha.
@@ -333,9 +333,8 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // If true, this update cycle we are obeying proxies
   bool obeying_proxies_;
 
-  // Our two proxy resolvers
+  // Our stub proxy resolver
   DirectProxyResolver direct_proxy_resolver_;
-  ChromeBrowserProxyResolver chrome_proxy_resolver_;
 
   // Originally, both of these flags are false. Once UpdateBootFlags is called,
   // |update_boot_flags_running_| is set to true. As soon as UpdateBootFlags
