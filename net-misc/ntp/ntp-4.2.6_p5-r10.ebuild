@@ -87,6 +87,7 @@ src_install() {
 
 	keepdir /var/lib/ntp
 	use prefix || fowners ntp:ntp /var/lib/ntp
+	systemd_newtmpfilesd "${FILESDIR}"/ntp.tmpfiles ntp.conf
 
 	if use openntpd ; then
 		cd "${ED}"
@@ -96,6 +97,10 @@ src_install() {
 	else
 		systemd_dounit "${FILESDIR}"/ntpd.service
 		systemd_enable_ntpunit 60-ntpd ntpd.service
+		if ! use caps ; then
+			sed -i "s|-u ntp:ntp||" \
+				"${ED}/$(systemd_get_unitdir)/ntpd.service" || die
+		fi
 	fi
 
 	systemd_dounit "${FILESDIR}"/ntpdate.service

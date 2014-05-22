@@ -1,0 +1,2 @@
+d   /var/lib/ntp    0755    ntp     ntp     -       -
+L   /etc/ntp.conf   -       -       -       -       /usr/share/ntp/ntp.conf
