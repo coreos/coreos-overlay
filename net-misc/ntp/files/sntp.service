@@ -1,0 +1,14 @@
+[Unit]
+Description=Set time via SNTP
+After=network.target nss-lookup.target
+Before=time-sync.target
+Wants=time-sync.target
+
+[Service]
+Type=oneshot
+Environment="SERVER=0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org"
+ExecStart=/usr/bin/sntp -s $SERVER
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
