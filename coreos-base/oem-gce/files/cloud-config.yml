@@ -107,3 +107,12 @@ coreos:
       name: Google Compute Engine
       home-url: https://cloud.google.com/products/compute-engine/
       bug-report-url: https://github.com/coreos/coreos-overlay
+
+write_files:
+  - path: /etc/profile.d/google-cloud-sdk.sh
+    permissions: 0644
+    content: |
+        #!/bin/sh
+        alias gcloud='docker run -t -i -v $HOME/.gcloud-config:/.config --net=host google/cloud-sdk gcloud'
+        alias gcutil='docker run -t -i -v $HOME/.gcloud-config:/.config --net=host google/cloud-sdk gcutil'
+        alias gsutil='docker run -t -i -v $HOME/.gcloud-config:/.config --net=host google/cloud-sdk gsutil'
