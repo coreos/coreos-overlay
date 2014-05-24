@@ -106,4 +106,23 @@ coreos:
       id: gce
       name: Google Compute Engine
       home-url: https://cloud.google.com/products/compute-engine/
-      bug-report-url: https://github.com/coreos/coreos-overlay
+      bug-report-url: https://github.com/coreos/bugs/issues
+
+write_files:
+  - path: /etc/profile.d/google-cloud-sdk.sh
+    permissions: 0644
+    content: |
+        #!/bin/sh
+        function _fake_gcloud {
+        cat >&2 <<EOF
+        gcloud, gcutil, and other Google Cloud SDK tools are available from
+        Google via a Docker container named google/cloud-sdk.
+
+        See https://index.docker.io/u/google/cloud-sdk/
+        EOF
+        return 1
+        }
+
+        alias gcloud=_fake_gcloud
+        alias gcutil=_fake_gcloud
+        alias gsutil=_fake_gcloud
