@@ -23,7 +23,7 @@ src_prepare() {
 	epatch "${FILESDIR}"/0001-Fixes-authorized_keys-file-permissions.patch
 	epatch "${FILESDIR}"/0001-fix-google-daemon-use-for-the-passwd-not.patch
 	epatch "${FILESDIR}"/0001-hack-address_manager-use-CoreOS-names-and-locations.patch
-	epatch "${FILESDIR}"/0001-feat-accounts-add-users-to-the-sudo-group-by-default.patch
+	epatch "${FILESDIR}"/0001-feat-accounts-add-users-to-the-sudo-and-docker-group.patch
 }
 
 src_install() {
