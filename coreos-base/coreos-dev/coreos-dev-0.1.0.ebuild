@@ -25,6 +25,7 @@ RDEPEND="
 	dev-python/dbus-python
 	dev-python/pygobject
 	dev-util/strace
+	dev-vcs/repo
 	net-analyzer/netperf
 	net-analyzer/tcpdump
 	net-dialup/minicom
