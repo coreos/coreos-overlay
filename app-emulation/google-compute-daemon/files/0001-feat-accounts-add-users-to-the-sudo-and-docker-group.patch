@@ -1,16 +1,18 @@
-From 6126db1c7c690d666b2389c4a918a4c4955c8e91 Mon Sep 17 00:00:00 2001
+From dbe7826e27c8f82afbd7acf902812f4d9c8317d6 Mon Sep 17 00:00:00 2001
 From: Brandon Philips <brandon@ifup.co>
 Date: Fri, 4 Apr 2014 12:12:00 -0700
-Subject: [PATCH] feat(accounts): add users to the sudo group by default
+Subject: [PATCH] feat(accounts): add users to the sudo and docker groups by
+ default
 
 On CoreOS the sudo group gets passwordless sudo. Add users to this
-group.
+group. Docker is used to provide access to gcloud tools, give users
+access so docker just works for them.
 ---
  google-daemon/usr/share/google/google_daemon/accounts.py | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/google-daemon/usr/share/google/google_daemon/accounts.py b/google-daemon/usr/share/google/google_daemon/accounts.py
-index 6f970c4..17cb2ce 100755
+index 4c572ca..ae00e1b 100755
 --- a/google-daemon/usr/share/google/google_daemon/accounts.py
 +++ b/google-daemon/usr/share/google/google_daemon/accounts.py
 @@ -76,7 +76,7 @@ class Accounts(object):
@@ -18,10 +20,10 @@ index 6f970c4..17cb2ce 100755
  
      self.default_user_groups = self.GroupsThatExist(
 -        ['adm', 'video', 'dip', 'plugdev'])
-+        ['adm', 'video', 'dip', 'plugdev', 'sudo'])
++        ['adm', 'video', 'dip', 'plugdev', 'sudo', 'docker'])
  
    def CreateUser(self, username, ssh_keys):
      """Create username on the system, with authorized ssh_keys."""
 -- 
-1.8.5.2 (Apple Git-48)
+1.8.5.5
 
