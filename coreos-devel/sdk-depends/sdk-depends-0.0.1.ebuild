@@ -21,6 +21,7 @@ DEPEND="
 	dev-python/setuptools
 	dev-util/boost-build
 	dev-util/checkbashisms
+	dev-vcs/repo
 	net-misc/curl
 	sys-apps/debianutils
 	sys-apps/iproute2
