@@ -3,50 +3,29 @@
 
 EAPI="4"
 
-DESCRIPTION="Adds some developer niceties on top of Chrome OS for debugging"
-HOMEPAGE="http://src.chromium.org"
+DESCRIPTION="CoreOS developer images and containers (meta package)"
+HOMEPAGE="http://coreos.com"
 
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="amd64 arm x86"
-IUSE="bluetooth opengl X"
+IUSE=""
 
 # The dependencies here are meant to capture "all the packages
 # developers want to use for development, test, or debug".  This
 # category is meant to include all developer use cases, including
 # software test and debug, performance tuning, hardware validation,
 # and debugging failures.
-#
-# To protect developer images from changes in other ebuilds you
-# should include any package with a user constituency, regardless of
-# whether that package is included in the base Chromium OS image or
-# any other ebuild.
-#
-# Don't include packages that are indirect dependencies: only
-# include a package if a file *in that package* is expected to be
-# useful.
-# TODO: 	chromeos-base/chromeos-dev-init
-#	chromeos-base/flimflam-test
-#	chromeos-base/protofiles
-#	chromeos-base/system_api
-#	dev-util/hdctools
-#	app-benchmarks/punybench
-#	dev-util/libc-bench
 RDEPEND="
-	app-admin/sudo
-	app-arch/gzip
-	app-arch/tar
-	dev-libs/nss
-	app-editors/vim
-	app-misc/evtest
 	app-portage/gentoolkit
-	app-shells/bash
 	coreos-base/coreos
+	coreos-base/coreos-experimental
 	coreos-base/gmerge
 	dev-lang/python
 	dev-python/dbus-python
 	dev-python/pygobject
 	dev-util/strace
+	dev-vcs/repo
 	net-analyzer/netperf
 	net-analyzer/tcpdump
 	net-dialup/minicom
@@ -74,8 +53,6 @@ RDEPEND="
 	sys-process/ktop
 	sys-process/procps
 	sys-process/psmisc
-	virtual/python-argparse
-	coreos-base/coreos-experimental
 	"
 
 # TODO:  sys-apps/iotools
