@@ -1,6 +1,6 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-apps/systemd/systemd-9999.ebuild,v 1.103 2014/03/31 19:01:25 floppym Exp $
+# $Header: /var/cvsroot/gentoo-x86/sys-apps/systemd/systemd-9999.ebuild,v 1.108 2014/05/03 17:35:41 mgorny Exp $
 
 EAPI=5
 
@@ -46,7 +46,10 @@ COMMON_DEPEND=">=sys-apps/util-linux-2.20:0=
 	cryptsetup? ( >=sys-fs/cryptsetup-1.6:0= )
 	gcrypt? ( >=dev-libs/libgcrypt-1.4.5:0= )
 	gudev? ( dev-libs/glib:2=[${MULTILIB_USEDEP}] )
-	http? ( >=net-libs/libmicrohttpd-0.9.33:0= )
+	http? (
+		>=net-libs/libmicrohttpd-0.9.33:0=
+		ssl? ( >=net-libs/gnutls-3.1.4:0= )
+	)
 	introspection? ( >=dev-libs/gobject-introspection-1.31.1:0= )
 	kmod? ( >=sys-apps/kmod-15:0= )
 	lzma? ( app-arch/xz-utils:0=[${MULTILIB_USEDEP}] )
@@ -55,7 +58,6 @@ COMMON_DEPEND=">=sys-apps/util-linux-2.20:0=
 	qrcode? ( media-gfx/qrencode:0= )
 	seccomp? ( >=sys-libs/libseccomp-2.1:0= )
 	selinux? ( sys-libs/libselinux:0= )
-	ssl? ( >=net-libs/gnutls-3.1.4:0= )
 	xattr? ( sys-apps/attr:0= )
 	abi_x86_32? ( !<=app-emulation/emul-linux-x86-baselibs-20130224-r9
 		!app-emulation/emul-linux-x86-baselibs[-abi_x86_32(-)] )"
@@ -168,6 +170,15 @@ pkg_setup() {
 	use python && python-single-r1_pkg_setup
 }
 
+src_configure() {
+	# Keep using the one where the rules were installed.
+	MY_UDEVDIR=$(get_udevdir)
+	# Fix systems broken by bug #509454.
+	[[ ${MY_UDEVDIR} ]] || MY_UDEVDIR=/lib/udev
+
+	multilib-minimal_src_configure
+}
+
 multilib_src_configure() {
 	local myeconfargs=(
 		# disable -flto since it is an optimization flag
@@ -175,7 +186,6 @@ multilib_src_configure() {
 		cc_cv_CFLAGS__flto=no
 
 		--with-pamconfdir=/usr/share/pam.d
-		--with-dbuspolicydir=/usr/share/dbus-1/system.d
 		--disable-maintainer-mode
 		--localstatedir=/var
 		--with-pamlibdir=$(getpam_mod_dir)
@@ -197,6 +207,7 @@ multilib_src_configure() {
 		$(use_enable gcrypt)
 		$(use_enable gudev)
 		$(use_enable http microhttpd)
+		$(usex http $(use_enable ssl gnutls) --disable-gnutls)
 		$(use_enable introspection)
 		$(use_enable kdbus)
 		$(use_enable kmod)
@@ -208,7 +219,6 @@ multilib_src_configure() {
 		$(use_enable qrcode qrencode)
 		$(use_enable seccomp)
 		$(use_enable selinux)
-		$(use_enable ssl gnutls)
 		$(use_enable test tests)
 		$(use_enable xattr)
 
@@ -218,10 +228,13 @@ multilib_src_configure() {
 		# hardcode a few paths to spare some deps
 		QUOTAON=/usr/sbin/quotaon
 		QUOTACHECK=/usr/sbin/quotacheck
-	)
 
-	# Keep using the one where the rules were installed.
-	MY_UDEVDIR=$(get_udevdir)
+		# dbus paths
+		--with-dbuspolicydir="${EPREFIX}/usr/share/dbus-1/system.d"
+		--with-dbussessionservicedir="${EPREFIX}/usr/share/dbus-1/services"
+		--with-dbussystemservicedir="${EPREFIX}/usr/share/dbus-1/system-services"
+		--with-dbusinterfacedir="${EPREFIX}/usr/share/dbus-1/interfaces"
+	)
 
 	if use firmware-loader; then
 		myeconfargs+=(
