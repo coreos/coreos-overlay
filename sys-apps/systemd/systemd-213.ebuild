@@ -113,18 +113,6 @@ if [[ ${PV} == *9999 ]]; then
 		echo 'EXTRA_DIST =' > docs/gtk-doc.make
 	fi
 fi
-	# fix networkd crash, https://bugs.gentoo.org/show_bug.cgi?id=507044
-	epatch "${FILESDIR}"/212-0001-sd-rtnl-fix-off-by-one.patch
-
-	# fix stuck jobs after daemon-reload
-	epatch "${FILESDIR}"/212-0002-job-add-waiting-jobs-to-run-queue-in-unit_coldplug.patch
-	epatch "${FILESDIR}"/212-0003-job-always-add-waiting-jobs-to-run-queue-during-cold.patch
-
-	# fix broken device dependencies after daemon-reload
-	epatch "${FILESDIR}"/212-0004-core-make-sure-to-serialize-jobs-for-all-units.patch
-
-	# stop scaring all our users with warnings about "X-Fleet"
-	epatch "${FILESDIR}"/212-0005-conf-parser-silently-ignore-sections-starting-with-X.patch
 
 	# patch to make journald work at first boot
 	epatch "${FILESDIR}"/211-tmpfiles.patch
