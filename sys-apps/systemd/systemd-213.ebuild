@@ -114,9 +114,6 @@ if [[ ${PV} == *9999 ]]; then
 	fi
 fi
 
-	# patch to make journald work at first boot
-	epatch "${FILESDIR}"/211-tmpfiles.patch
-
 	# fixes https://github.com/coreos/bugs/issues/12
 	epatch "${FILESDIR}"/212-0006-sd-dhcp-client-Sets-broadcast-flag-to-1.patch
 
@@ -361,10 +358,12 @@ multilib_src_install_all() {
 
 	rm "${D}"/etc/systemd/system/multi-user.target.wants/remote-fs.target \
 		"${D}"/etc/systemd/system/multi-user.target.wants/systemd-networkd.service \
+		"${D}"/etc/systemd/system/multi-user.target.wants/systemd-resolved.service \
 		|| die
 	rmdir "${D}"/etc/systemd/system/multi-user.target.wants || die
 	systemd_enable_service multi-user.target remote-fs.target
 	systemd_enable_service multi-user.target systemd-networkd.service
+	systemd_enable_service multi-user.target systemd-resolved.service
 }
 
 migrate_locale() {
