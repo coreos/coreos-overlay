@@ -366,10 +366,16 @@ multilib_src_install_all() {
 
 	rm "${D}"/etc/systemd/system/multi-user.target.wants/remote-fs.target \
 		"${D}"/etc/systemd/system/multi-user.target.wants/systemd-networkd.service \
+		"${D}"/etc/systemd/system/multi-user.target.wants/systemd-resolved.service \
+		"${D}"/etc/systemd/system/network-online.target.wants/systemd-networkd-wait-online.service \
 		|| die
-	rmdir "${D}"/etc/systemd/system/multi-user.target.wants || die
+	rmdir "${D}"/etc/systemd/system/multi-user.target.wants \
+		"${D}"/etc/systemd/system/network-online.target.wants \
+		|| die
 	systemd_enable_service multi-user.target remote-fs.target
 	systemd_enable_service multi-user.target systemd-networkd.service
+	systemd_enable_service multi-user.target systemd-resolved.service
+	systemd_enable_service network-online.target systemd-networkd-wait-online.service
 }
 
 migrate_locale() {
