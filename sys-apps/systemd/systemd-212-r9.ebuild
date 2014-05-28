@@ -129,6 +129,9 @@ fi
 	# patch to make journald work at first boot
 	epatch "${FILESDIR}"/211-tmpfiles.patch
 
+	# fixes https://github.com/coreos/bugs/issues/12
+	epatch "${FILESDIR}"/212-0006-sd-dhcp-client-Sets-broadcast-flag-to-1.patch
+
 	# Bug 463376
 	sed -i -e 's/GROUP="dialout"/GROUP="uucp"/' rules/*.rules || die
 
