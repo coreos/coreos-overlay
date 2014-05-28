@@ -142,17 +142,10 @@ src_install() {
 	if ! use symlink-usr ; then
 		# modprobe uses /lib instead of /usr/lib
 		mv "${D}"/usr/lib/modprobe.d "${D}"/lib/modprobe.d || die
-
-		# core is UID:GID 1000:1000 in old images
-		sed -i -e 's/^core:x:500:500:/core:x:1000:1000:/' \
-			"${D}"/usr/share/baselayout/passwd || die
-		sed -i -e 's/^core:x:500:/core:x:1000:/' \
-			"${D}"/usr/share/baselayout/group || die
-		# make sure the home dir ownership is correct
-		fowners -R 1000:1000 /home/core || die
-	else
-		fowners -R 500:500 /home/core || die
 	fi
+
+	# For compatibility with older SDKs which use 1000 for the core user.
+	fowners -R 500:500 /home/core || die
 
 	if use cros_host; then
 		# Provided by vim in the SDK
