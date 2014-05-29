@@ -1,0 +1,114 @@
+From 8933e182d319b07697340624cafd545d86addba7 Mon Sep 17 00:00:00 2001
+From: Camilo Aguilar <camilo.aguilar@gmail.com>
+Date: Thu, 29 May 2014 19:06:21 -0400
+Subject: [PATCH] sd-dhcp-client: Sets broadcast flag when driver does not
+ support layer2
+
+VMware VMs using bridged networking are unable to receive DHCPOFFER
+messages through unicast. Drivers tested are vmxnet3 and e1000.
+
+More information about this issue can be found at the following places:
+
+- Issue originally reported at https://github.com/coreos/bugs/issues/12
+- Mailing list discussion: http://lists.freedesktop.org/archives/systemd-devel/2014-May/019560.html
+
+[tomegun: made the feature conditional]
+
+Signed-off-by: Camilo Aguilar <camilo.aguilar@gmail.com>
+---
+ src/libsystemd-network/sd-dhcp-client.c | 21 +++++++++++++++++++++
+ src/network/networkd-link.c             | 19 +++++++++++++++++++
+ src/systemd/sd-dhcp-client.h            |  1 +
+ 3 files changed, 41 insertions(+)
+
+diff --git a/src/libsystemd-network/sd-dhcp-client.c b/src/libsystemd-network/sd-dhcp-client.c
+index 0300a6b..7311b7c 100644
+--- a/src/libsystemd-network/sd-dhcp-client.c
++++ b/src/libsystemd-network/sd-dhcp-client.c
+@@ -56,6 +56,7 @@ struct sd_dhcp_client {
+                 uint8_t type;
+                 struct ether_addr mac_addr;
+         } _packed_ client_id;
++        bool broadcast;
+         uint32_t xid;
+         usec_t start_time;
+         uint16_t secs;
+@@ -180,6 +181,16 @@ int sd_dhcp_client_set_mac(sd_dhcp_client *client,
+         return 0;
+ }
+ 
++int sd_dhcp_client_request_broadcast(sd_dhcp_client *client) {
++        assert_return(client, -EINVAL);
++        assert_return(IN_SET(client->state, DHCP_STATE_INIT,
++                             DHCP_STATE_STOPPED), -EBUSY);
++
++        client->broadcast = true;
++
++        return 0;
++}
++
+ int sd_dhcp_client_get_lease(sd_dhcp_client *client, sd_dhcp_lease **ret) {
+         assert_return(client, -EINVAL);
+         assert_return(ret, -EINVAL);
+@@ -286,6 +297,16 @@ static int client_message_init(sd_dhcp_client *client, DHCPPacket **ret,
+            refuse to issue an DHCP lease if 'secs' is set to zero */
+         packet->dhcp.secs = htobe16(client->secs);
+ 
++        /* RFC2132 section 4.1
++           A client that cannot receive unicast IP datagrams until its protocol
++           software has been configured with an IP address SHOULD set the
++           BROADCAST bit in the 'flags' field to 1 in any DHCPDISCOVER or
++           DHCPREQUEST messages that client sends.  The BROADCAST bit will
++           provide a hint to the DHCP server and BOOTP relay agent to broadcast
++           any messages to the client on the client's subnet. */
++        if (client->broadcast)
++                packet->dhcp.flags = htobe16(0x8000);
++
+         /* RFC2132 section 4.1.1:
+            The client MUST include its hardware address in the ’chaddr’ field, if
+            necessary for delivery of DHCP reply messages.
+diff --git a/src/network/networkd-link.c b/src/network/networkd-link.c
+index 6677b94..b3933ee 100644
+--- a/src/network/networkd-link.c
++++ b/src/network/networkd-link.c
+@@ -1640,6 +1640,25 @@ static int link_configure(Link *link) {
+                 if (r < 0)
+                         return r;
+ 
++                if (link->udev_device) {
++                        const char *l2;
++
++                        l2 = udev_device_get_sysattr_value(link->udev_device, "layer2");
++                        if (l2) {
++                                unsigned layer2;
++
++                                r = safe_atou(l2, &layer2);
++                                if (r < 0)
++                                        return r;
++
++                                if (!layer2) {
++                                        r = sd_dhcp_client_request_broadcast(link->dhcp_client);
++                                        if (r < 0)
++                                                return r;
++                                }
++                        }
++                }
++
+                 r = sd_dhcp_client_attach_event(link->dhcp_client, NULL, 0);
+                 if (r < 0)
+                         return r;
+diff --git a/src/systemd/sd-dhcp-client.h b/src/systemd/sd-dhcp-client.h
+index 5818ec4..e94cdaa 100644
+--- a/src/systemd/sd-dhcp-client.h
++++ b/src/systemd/sd-dhcp-client.h
+@@ -50,6 +50,7 @@ int sd_dhcp_client_set_request_address(sd_dhcp_client *client,
+ int sd_dhcp_client_set_index(sd_dhcp_client *client, int interface_index);
+ int sd_dhcp_client_set_mac(sd_dhcp_client *client,
+                            const struct ether_addr *addr);
++int sd_dhcp_client_request_broadcast(sd_dhcp_client *client);
+ int sd_dhcp_client_get_lease(sd_dhcp_client *client, sd_dhcp_lease **ret);
+ 
+ int sd_dhcp_client_stop(sd_dhcp_client *client);
+-- 
+1.9.3
+

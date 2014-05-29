@@ -115,7 +115,7 @@ if [[ ${PV} == *9999 ]]; then
 fi
 
 	# fixes https://github.com/coreos/bugs/issues/12
-	epatch "${FILESDIR}"/213-0001-sd-dhcp-client-Sets-broadcast-flag-to-1.patch
+	epatch "${FILESDIR}"/213-0001-sd-dhcp-client-Sets-broadcast-flag-when-driver-does-.patch
 
 	# Bug 463376
 	sed -i -e 's/GROUP="dialout"/GROUP="uucp"/' rules/*.rules || die
