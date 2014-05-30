@@ -113,6 +113,11 @@ if [[ ${PV} == *9999 ]]; then
 		echo 'EXTRA_DIST =' > docs/gtk-doc.make
 	fi
 fi
+	# fix regression in systemd-tmpfiles
+	epatch "${FILESDIR}"/213-0001-shared-fix-searching-for-configs-in-alternate-roots.patch
+
+	# fix DHCP for VMware bridged network interfaces
+	epatch "${FILESDIR}"/213-0002-sd-dhcp-client-Sets-broadcast-flag-to-1.patch
 
 	# Bug 463376
 	sed -i -e 's/GROUP="dialout"/GROUP="uucp"/' rules/*.rules || die
