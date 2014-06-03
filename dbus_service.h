@@ -62,41 +62,6 @@ gboolean update_engine_service_get_status(UpdateEngineService* self,
                                           int64_t* new_size,
                                           GError **error);
 
-gboolean update_engine_service_reboot_if_needed(UpdateEngineService* self,
-                                                GError **error);
-
-// TODO(jaysri): Deprecate set_track and get_track once Chrome is modified to
-// use set_channel and get_channel.
-gboolean update_engine_service_set_track(UpdateEngineService* self,
-                                         gchar* track,
-                                         GError **error);
-
-gboolean update_engine_service_get_track(UpdateEngineService* self,
-                                         gchar** track,
-                                         GError **error);
-
-// Changes the current channel of the device to the target channel. If the
-// target channel is a less stable channel than the current channel, then the
-// channel change happens immediately (at the next update check).  If the
-// target channel is a more stable channel, then if is_powerwash_allowed is set
-// to true, then also the change happens immediately but with a powerwash if
-// required. Otherwise, the change takes effect eventually (when the version on
-// the target channel goes above the version number of what the device
-// currently has).
-gboolean update_engine_service_set_channel(UpdateEngineService* self,
-                                           gchar* target_channel,
-                                           bool is_powerwash_allowed,
-                                           GError **error);
-
-// If get_current_channel is set to true, populates |channel| with the name of
-// the channel that the device is currently on. Otherwise, it populates it with
-// the name of the channel the device is supposed to be (in case of a pending
-// channel change).
-gboolean update_engine_service_get_channel(UpdateEngineService* self,
-                                           bool get_current_channel,
-                                           gchar** channel,
-                                           GError **error);
-
 gboolean update_engine_service_emit_status_update(
     UpdateEngineService* self,
     gint64 last_checked_time,
