@@ -1,0 +1,30 @@
+#cloud-config
+
+write_files:
+    - path: /run/systemd/system/user-configdrive.service.d/netconf.conf
+      permissions: 0644
+      content: |
+        [Service]
+        ExecStart=
+        ExecStart=/usr/bin/coreos-cloudinit --from-configdrive=/media/configdrive --convert-netconf=debian
+
+coreos:
+    units:
+      - name: media-configdrive.mount
+        command: start
+        runtime: yes
+        content: |
+          [Unit]
+          DefaultDependencies=no
+          Conflicts=umount.target
+          Before=local-fs.target umount.target
+
+          [Mount]
+          What=/dev/disk/by-label/config-2
+          Where=/media/configdrive
+          Options=ro
+    oem:
+      id: teeth
+      name: Rackspace Teeth
+      home-url: http://www.rackspace.com/
+      bug-report-url: https://github.com/coreos/bugs/issues
