@@ -8,7 +8,6 @@
 #include <base/stringprintf.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <metrics/metrics_library_mock.h>
 
 #include "update_engine/certificate_checker.h"
 #include "update_engine/certificate_checker_mock.h"
@@ -142,9 +141,6 @@ TEST_F(CertificateCheckerTest, FlushReport) {
           Return(true)));
   EXPECT_CALL(*prefs_, GetString(kPrefsCertificateReportToSendDownload, _))
       .WillOnce(Return(false));
-  EXPECT_CALL(*mock_system_state_.mock_metrics_lib(),
-              SendUserActionToUMA(kCertChanged))
-      .WillOnce(Return(true));
   EXPECT_CALL(*prefs_, Delete(kPrefsCertificateReportToSendUpdate))
       .WillOnce(Return(true));
   EXPECT_CALL(*prefs_, SetString(kPrefsCertificateReportToSendDownload, _))
@@ -161,8 +157,6 @@ TEST_F(CertificateCheckerTest, FlushNothingToReport) {
           Return(true)));
   EXPECT_CALL(*prefs_, GetString(kPrefsCertificateReportToSendDownload, _))
       .WillOnce(Return(false));
-  EXPECT_CALL(*mock_system_state_.mock_metrics_lib(),
-              SendUserActionToUMA(_)).Times(0);
   EXPECT_CALL(*prefs_, SetString(_,_)).Times(0);
   CertificateChecker::FlushReport();
 }

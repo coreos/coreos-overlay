@@ -778,7 +778,7 @@ void DoMetadataSignatureTest(MetadataSignatureTest metadata_signature_test,
 
   // Init actual_error with an invalid value so that we make sure
   // ParsePayloadMetadata properly populates it in all cases.
-  actual_error = kActionCodeUmaReportedMax;
+  actual_error = kActionCodeOmahaRequestHTTPResponseBase;
   actual_result = delta_performer.ParsePayloadMetadata(payload, &manifest,
       &parsed_metadata_size, &actual_error);
 

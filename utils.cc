@@ -736,68 +736,18 @@ string ToString(bool b) {
 ActionExitCode GetBaseErrorCode(ActionExitCode code) {
   // Ignore the higher order bits in the code by applying the mask as
   // we want the enumerations to be in the small contiguous range
-  // with values less than kActionCodeUmaReportedMax.
+  // with values less than kActionCodeOmahaRequestHTTPResponseBase.
   ActionExitCode base_code = static_cast<ActionExitCode>(code & ~kSpecialFlags);
 
-  // Make additional adjustments required for UMA and error classification.
-  // TODO(jaysri): Move this logic to UeErrorCode.cc when we fix
-  // chromium-os:34369.
   if (base_code >= kActionCodeOmahaRequestHTTPResponseBase) {
     // Since we want to keep the enums to a small value, aggregate all HTTP
-    // errors into this one bucket for UMA and error classification purposes.
+    // errors into this one bucket for error classification purposes.
     LOG(INFO) << "Converting error code " << base_code
               << " to kActionCodeOmahaErrorInHTTPResponse";
     base_code = kActionCodeOmahaErrorInHTTPResponse;
   }
 
   return base_code;
-}
-
-// Returns a printable version of the various flags denoted in the higher order
-// bits of the given code. Returns an empty string if none of those bits are
-// set.
-string GetFlagNames(uint32_t code) {
-  uint32_t flags = code & kSpecialFlags;
-  string flag_names;
-  string separator = "";
-  for(size_t i = 0; i < sizeof(flags) * 8; i++) {
-    uint32_t flag = flags & (1 << i);
-    if (flag) {
-      flag_names += separator + CodeToString(static_cast<ActionExitCode>(flag));
-      separator = ", ";
-    }
-  }
-
-  return flag_names;
-}
-
-void SendErrorCodeToUma(SystemState* system_state, ActionExitCode code) {
-  if (!system_state)
-    return;
-
-  ActionExitCode uma_error_code = GetBaseErrorCode(code);
-
-  // If the code doesn't have flags computed already, compute them now based on
-  // the state of the current update attempt.
-  uint32_t flags = code & kSpecialFlags;
-  if (!flags)
-    flags = system_state->update_attempter()->GetErrorCodeFlags();
-
-  // Determine the UMA bucket depending on the flags. But, ignore the resumed
-  // flag, as it's perfectly normal for production devices to resume their
-  // downloads and so we want to record those cases also in NormalErrorCodes
-  // bucket.
-  string metric = (flags & ~kActionCodeResumedFlag) ?
-      "Installer.DevModeErrorCodes" : "Installer.NormalErrorCodes";
-
-  LOG(INFO) << "Sending error code " << uma_error_code
-            << " (" << CodeToString(uma_error_code) << ")"
-            << " to UMA metric: " << metric
-            << ". Flags = " << (flags ? GetFlagNames(flags) : "None");
-
-  system_state->metrics_lib()->SendEnumToUMA(metric,
-                                             uma_error_code,
-                                             kActionCodeUmaReportedMax);
 }
 
 string CodeToString(ActionExitCode code) {
@@ -889,8 +839,6 @@ string CodeToString(ActionExitCode code) {
       return "kActionCodeOmahaUpdateDeferredForBackoff";
     case kActionCodePostinstallPowerwashError:
       return "kActionCodePostinstallPowerwashError";
-    case kActionCodeUmaReportedMax:
-      return "kActionCodeUmaReportedMax";
     case kActionCodeOmahaRequestHTTPResponseBase:
       return "kActionCodeOmahaRequestHTTPResponseBase";
     case kActionCodeResumedFlag:

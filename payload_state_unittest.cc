@@ -57,17 +57,6 @@ static void SetupPayloadStateWith2Urls(string hash,
 
 class PayloadStateTest : public ::testing::Test { };
 
-TEST(PayloadStateTest, DidYouAddANewActionExitCode) {
-  if (kActionCodeUmaReportedMax != 42) {
-    LOG(ERROR) << "The following failure is intentional. If you added a new "
-               << "ActionExitCode enum value, make sure to add it to the "
-               << "PayloadState::UpdateFailed method and then update this test "
-               << "to the new value of kActionCodeUmaReportedMax, which is "
-               << kActionCodeUmaReportedMax;
-    EXPECT_FALSE("Please see the log line above");
-  }
-}
-
 TEST(PayloadStateTest, SetResponseWorksWithEmptyResponse) {
   OmahaResponse response;
   NiceMock<PrefsMock> prefs;

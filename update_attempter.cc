@@ -17,7 +17,6 @@
 #include <base/file_util.h>
 #include <base/rand_util.h>
 #include <glib.h>
-#include <metrics/metrics_library.h>
 #include <policy/libpolicy.h>
 #include <policy/device_policy.h>
 
@@ -127,7 +126,6 @@ UpdateAttempter::UpdateAttempter(SystemState* system_state,
       new_payload_size_(0),
       proxy_manual_checks_(0),
       obeying_proxies_(true),
-      chrome_proxy_resolver_(dbus_iface),
       updated_boot_flags_(false),
       update_boot_flags_running_(false),
       start_action_processor_(false),
@@ -150,7 +148,6 @@ void UpdateAttempter::Update(const string& app_version,
                              bool obey_proxies,
                              bool interactive,
                              bool is_test_mode) {
-  chrome_proxy_resolver_.Init();
   fake_update_success_ = false;
   if (status_ == UPDATE_STATUS_UPDATED_NEED_REBOOT) {
     // Although we have applied an update, we still want to ping Omaha
@@ -605,20 +602,6 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
 
     SetStatusAndNotify(UPDATE_STATUS_UPDATED_NEED_REBOOT,
                        kUpdateNoticeUnspecified);
-
-    // Report the time it took to update the system.
-    int64_t update_time = time(NULL) - last_checked_time_;
-    if (!fake_update_success_)
-      system_state_->metrics_lib()->SendToUMA(
-          "Installer.UpdateTime",
-           static_cast<int>(update_time),  // sample
-           1,  // min = 1 second
-           20 * 60,  // max = 20 minutes
-           50);  // buckets
-
-    // Also report the success code so that the percentiles can be
-    // interpreted properly for the remaining error codes in UMA.
-    utils::SendErrorCodeToUma(system_state_, code);
     return;
   }
 
@@ -906,10 +889,6 @@ bool UpdateAttempter::ScheduleErrorEventAction() {
 
   LOG(ERROR) << "Update failed.";
   system_state_->payload_state()->UpdateFailed(error_event_->error_code);
-
-  // Send it to Uma.
-  LOG(INFO) << "Reporting the error event";
-  utils::SendErrorCodeToUma(system_state_, error_event_->error_code);
 
   // Send it to Omaha.
   shared_ptr<OmahaRequestAction> error_event_action(

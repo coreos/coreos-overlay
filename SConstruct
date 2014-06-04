@@ -203,7 +203,6 @@ env['LIBS'] = Split("""bz2
                        glib-2.0
                        gthread-2.0
                        libpcrecpp
-                       metrics
                        policy-%s
                        protobuf
                        pthread
@@ -242,8 +241,6 @@ sources = Split("""action_processor.cc
                    bzip.cc
                    bzip_extent_writer.cc
                    certificate_checker.cc
-                   chrome_browser_proxy_resolver.cc
-                   chrome_proxy_resolver.cc
                    connection_manager.cc
                    cycle_breaker.cc
                    dbus_service.cc
@@ -293,8 +290,6 @@ unittest_sources = Split("""action_unittest.cc
                             action_processor_unittest.cc
                             bzip_extent_writer_unittest.cc
                             certificate_checker_unittest.cc
-                            chrome_browser_proxy_resolver_unittest.cc
-                            chrome_proxy_resolver_unittest.cc
                             connection_manager_unittest.cc
                             cycle_breaker_unittest.cc
                             delta_diff_generator_unittest.cc
@@ -312,6 +307,7 @@ unittest_sources = Split("""action_unittest.cc
                             gpio_mock_udev_interface.cc
                             graph_utils_unittest.cc
                             http_fetcher_unittest.cc
+                            libcurl_http_fetcher_unittest.cc
                             metadata_unittest.cc
                             mock_http_fetcher.cc
                             mock_system_state.cc

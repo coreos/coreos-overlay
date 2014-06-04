@@ -370,12 +370,11 @@ DeltaPerformer::MetadataParseResult DeltaPerformer::ParsePayloadMetadata(
     LOG(INFO) << "Manifest size in payload matches expected value from Omaha";
   } else {
     // For mandatory-cases, we'd have already returned a kMetadataParseError
-    // above. We'll be here only for non-mandatory cases. Just send a UMA stat.
+    // above. We'll be here only for non-mandatory cases. Just log a warning.
     LOG(WARNING) << "Ignoring missing/incorrect metadata size ("
                  << install_plan_->metadata_size
                  << ") in Omaha response as validation is not mandatory. "
                  << "Trusting metadata size in payload = " << *metadata_size;
-    SendUmaStat(kActionCodeDownloadInvalidMetadataSize);
   }
 
   // We have the full metadata in |payload|. Verify its integrity
@@ -387,9 +386,8 @@ DeltaPerformer::MetadataParseResult DeltaPerformer::ParsePayloadMetadata(
       return kMetadataParseError;
     }
 
-    // For non-mandatory cases, just send a UMA stat.
+    // For non-mandatory cases, just log a warning.
     LOG(WARNING) << "Ignoring metadata signature validation failures";
-    SendUmaStat(*error);
     *error = kActionCodeSuccess;
   }
 
@@ -484,9 +482,8 @@ bool DeltaPerformer::Write(const void* bytes, size_t count,
           return false;
         }
 
-        // For non-mandatory cases, just send a UMA stat.
+        // For non-mandatory cases, just log a warning.
         LOG(WARNING) << "Ignoring operation validation errors";
-        SendUmaStat(*error);
         *error = kActionCodeSuccess;
       }
     }
@@ -808,9 +805,8 @@ ActionExitCode DeltaPerformer::ValidateMetadataSignature(
       return kActionCodeDownloadMetadataSignatureMissingError;
     }
 
-    // For non-mandatory cases, just send a UMA stat.
+    // For non-mandatory cases, just log a warning.
     LOG(WARNING) << "Cannot validate metadata as the signature is empty";
-    SendUmaStat(kActionCodeDownloadMetadataSignatureMissingError);
     return kActionCodeSuccess;
   }
 
@@ -889,10 +885,9 @@ ActionExitCode DeltaPerformer::ValidateOperationHash(
         return kActionCodeDownloadOperationHashMissingError;
       }
 
-      // For non-mandatory cases, just send a UMA stat.
+      // For non-mandatory cases, just log a warning.
       LOG(WARNING) << "Cannot validate operation " << next_operation_num_ + 1
                    << " as there's no operation hash in manifest";
-      SendUmaStat(kActionCodeDownloadOperationHashMissingError);
     }
     return kActionCodeSuccess;
   }
@@ -1224,10 +1219,6 @@ bool DeltaPerformer::PrimeUpdateState() {
   }
   prefs_->SetInt64(kPrefsResumedUpdateFailures, resumed_update_failures);
   return true;
-}
-
-void DeltaPerformer::SendUmaStat(ActionExitCode code) {
-  utils::SendErrorCodeToUma(system_state_, code);
 }
 
 }  // namespace chromeos_update_engine
