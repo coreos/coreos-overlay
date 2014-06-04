@@ -91,7 +91,6 @@ RDEPEND="${RDEPEND}
 
 # TODO(ifup): 
 #	coreos-base/crash-reporter
-#	coreos-base/metrics
 
 RDEPEND="${RDEPEND}
 	app-emulation/xenstore

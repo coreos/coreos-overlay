@@ -8,7 +8,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~x86"
 else
-	CROS_WORKON_COMMIT="574bb572abea8c713efa9a858102bfdd175c9e77"
+	CROS_WORKON_COMMIT="9346a95ab688b3cb416758a0d2a6038ea5e8b0ed"
 	KEYWORDS="amd64 arm x86"
 fi
 
@@ -29,7 +29,6 @@ RDEPEND="!coreos-base/coreos-installer
 	coreos-base/coreos-au-key
 	coreos-base/libchrome:${LIBCHROME_VERS}[cros-debug=]
 	coreos-base/libchromeos
-	coreos-base/metrics
 	coreos-base/verity
 	dev-cpp/gflags
 	dev-libs/dbus-glib
