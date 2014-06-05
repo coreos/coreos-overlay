@@ -86,9 +86,9 @@ dev-util/checkbashisms
 # this version does not segfault when a user isn't in sudoers
 =app-admin/sudo-1.8.10_p2
 
-# Security update, CVE-2014-0160
-# https://bugs.gentoo.org/show_bug.cgi?id=507074
-=dev-libs/openssl-1.0.1g
+# Security update, CVE-2014-0224
+# https://bugs.gentoo.org/show_bug.cgi?id=512506
+=dev-libs/openssl-1.0.1h
 
 # Includes fix for checking mount status of loop devices
 =sys-fs/btrfs-progs-3.14_pre20140414
