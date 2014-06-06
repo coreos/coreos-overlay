@@ -34,6 +34,7 @@ DEPEND="
 	!<dev-db/etcd-0.0.1-r6
 	!coreos-base/oem-service
 	test? ( dev-lang/python:2.7 )
+	app-emulation/open-vm-tools
 	"
 RDEPEND="${DEPEND}
 	sys-block/parted
@@ -58,5 +59,6 @@ src_install() {
 	systemd_enable_service default.target ssh-key-proc-cmdline.service
 	systemd_enable_service sockets.target docker.socket
 	systemd_enable_service default.target issuegen.service
-	systemd_enable_service default.target motdgen.timer
+	systemd_enable_service default.target motdgen.service
+        systemd_enable_service default.target vmtoolsd.service
 }
