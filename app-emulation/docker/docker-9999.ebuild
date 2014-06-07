@@ -17,8 +17,8 @@ if [[ ${PV} == *9999 ]]; then
 	DOCKER_GITCOMMIT="deadbee"
 	KEYWORDS="~amd64"
 else
-	CROS_WORKON_COMMIT="fb99f992c081a1d433c97c99ffb46d12693eeb76" # v0.11.1
-	DOCKER_GITCOMMIT="fb99f99" # hack(philips): delete when an epatch isn't in use
+	CROS_WORKON_COMMIT="14680bf724161785d164fd99de36e3eb03a823ef" # v0.12.0
+	DOCKER_GITCOMMIT="14680bf"
 	KEYWORDS="amd64"
 fi
 
@@ -129,11 +129,6 @@ pkg_setup() {
 	fi
 
 	check_extra_config
-}
-
-src_prepare() {
-	epatch "${FILESDIR}"/daemon-ensure-the-var-lib-docker-dir-exists.patch
-	epatch "${FILESDIR}"/fix-daemon-prepend-host-etc-hosts-instead-of-bind-mo.patch
 }
 
 src_compile() {
