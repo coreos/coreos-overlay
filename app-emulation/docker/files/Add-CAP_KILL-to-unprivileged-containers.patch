@@ -1,0 +1,26 @@
+From fa72eb3a58ebfec8ef1b27d8e7aa8cbdb41733a2 Mon Sep 17 00:00:00 2001
+From: Michael Crosby <michael@crosbymichael.com>
+Date: Sat, 7 Jun 2014 15:18:18 -0700
+Subject: [PATCH] Add CAP_KILL to unprivileged containers
+ Docker-DCO-1.1-Signed-off-by: Michael Crosby <michael@crosbymichael.com>
+ (github: crosbymichael)
+
+---
+ daemon/execdriver/native/template/default_template.go | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/daemon/execdriver/native/template/default_template.go b/daemon/execdriver/native/template/default_template.go
+index e7d3143..3488b20 100644
+--- a/daemon/execdriver/native/template/default_template.go
++++ b/daemon/execdriver/native/template/default_template.go
+@@ -21,6 +21,7 @@ func New() *libcontainer.Container {
+ 			"SETPCAP",
+ 			"NET_BIND_SERVICE",
+ 			"SYS_CHROOT",
++			"KILL",
+ 		},
+ 		Namespaces: map[string]bool{
+ 			"NEWNS":  true,
+-- 
+1.8.1.4
+

@@ -133,6 +133,7 @@ pkg_setup() {
 
 src_prepare() {
 	epatch "${FILESDIR}"/Disable-timeout-for-push.patch
+	epatch "${FILESDIR}"/Add-CAP_KILL-to-unprivileged-containers.patch
 }
 
 src_compile() {
