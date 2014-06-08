@@ -1,0 +1,102 @@
+From 8baafacf404265c95753e63d2b7510731359c4b4 Mon Sep 17 00:00:00 2001
+From: Victor Vieux <vieux@docker.com>
+Date: Sat, 7 Jun 2014 23:48:25 +0000
+Subject: [PATCH] Disable timeout for push
+
+Docker-DCO-1.1-Signed-off-by: Victor Vieux <vieux@docker.com> (github: vieux)
+---
+ registry/registry.go      | 23 +++++++++++------------
+ registry/registry_test.go |  2 +-
+ registry/service.go       |  2 +-
+ server/server.go          |  4 ++--
+ 4 files changed, 15 insertions(+), 16 deletions(-)
+
+diff --git a/registry/registry.go b/registry/registry.go
+index 95cc740..e91e7d1 100644
+--- a/registry/registry.go
++++ b/registry/registry.go
+@@ -790,22 +790,21 @@ func AddRequiredHeadersToRedirectedRequests(req *http.Request, via []*http.Reque
+ 	return nil
+ }
+ 
+-func NewRegistry(authConfig *AuthConfig, factory *utils.HTTPRequestFactory, indexEndpoint string) (r *Registry, err error) {
+-	httpDial := func(proto string, addr string) (net.Conn, error) {
+-		conn, err := net.Dial(proto, addr)
+-		if err != nil {
+-			return nil, err
+-		}
+-		conn = utils.NewTimeoutConn(conn, time.Duration(1)*time.Minute)
+-		return conn, nil
+-	}
+-
++func NewRegistry(authConfig *AuthConfig, factory *utils.HTTPRequestFactory, indexEndpoint string, timeout bool) (r *Registry, err error) {
+ 	httpTransport := &http.Transport{
+-		Dial:              httpDial,
+ 		DisableKeepAlives: true,
+ 		Proxy:             http.ProxyFromEnvironment,
+ 	}
+-
++	if timeout {
++		httpTransport.Dial = func(proto string, addr string) (net.Conn, error) {
++			conn, err := net.Dial(proto, addr)
++			if err != nil {
++				return nil, err
++			}
++			conn = utils.NewTimeoutConn(conn, time.Duration(1)*time.Minute)
++			return conn, nil
++		}
++	}
+ 	r = &Registry{
+ 		authConfig: authConfig,
+ 		client: &http.Client{
+diff --git a/registry/registry_test.go b/registry/registry_test.go
+index 91a5ffa..2aae80e 100644
+--- a/registry/registry_test.go
++++ b/registry/registry_test.go
+@@ -18,7 +18,7 @@ var (
+ 
+ func spawnTestRegistry(t *testing.T) *Registry {
+ 	authConfig := &AuthConfig{}
+-	r, err := NewRegistry(authConfig, utils.NewHTTPRequestFactory(), makeURL("/v1/"))
++	r, err := NewRegistry(authConfig, utils.NewHTTPRequestFactory(), makeURL("/v1/"), true)
+ 	if err != nil {
+ 		t.Fatal(err)
+ 	}
+diff --git a/registry/service.go b/registry/service.go
+index 1c7a93d..89a4baa 100644
+--- a/registry/service.go
++++ b/registry/service.go
+@@ -82,7 +82,7 @@ func (s *Service) Search(job *engine.Job) engine.Status {
+ 	job.GetenvJson("authConfig", authConfig)
+ 	job.GetenvJson("metaHeaders", metaHeaders)
+ 
+-	r, err := NewRegistry(authConfig, HTTPRequestFactory(metaHeaders), IndexServerAddress())
++	r, err := NewRegistry(authConfig, HTTPRequestFactory(metaHeaders), IndexServerAddress(), true)
+ 	if err != nil {
+ 		return job.Error(err)
+ 	}
+diff --git a/server/server.go b/server/server.go
+index 93c6d39..af62db8 100644
+--- a/server/server.go
++++ b/server/server.go
+@@ -1387,7 +1387,7 @@ func (srv *Server) ImagePull(job *engine.Job) engine.Status {
+ 		return job.Error(err)
+ 	}
+ 
+-	r, err := registry.NewRegistry(authConfig, registry.HTTPRequestFactory(metaHeaders), endpoint)
++	r, err := registry.NewRegistry(authConfig, registry.HTTPRequestFactory(metaHeaders), endpoint, true)
+ 	if err != nil {
+ 		return job.Error(err)
+ 	}
+@@ -1610,7 +1610,7 @@ func (srv *Server) ImagePush(job *engine.Job) engine.Status {
+ 	}
+ 
+ 	img, err := srv.daemon.Graph().Get(localName)
+-	r, err2 := registry.NewRegistry(authConfig, registry.HTTPRequestFactory(metaHeaders), endpoint)
++	r, err2 := registry.NewRegistry(authConfig, registry.HTTPRequestFactory(metaHeaders), endpoint, false)
+ 	if err2 != nil {
+ 		return job.Error(err2)
+ 	}
+-- 
+1.8.1.4
+

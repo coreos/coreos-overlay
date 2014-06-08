@@ -131,6 +131,10 @@ pkg_setup() {
 	check_extra_config
 }
 
+src_prepare() {
+	epatch "${FILESDIR}"/Disable-timeout-for-push.patch
+}
+
 src_compile() {
 	# hack(philips): to keep the git commit from being dirty
 	mv .git .git.old
