@@ -17,8 +17,8 @@ if [[ ${PV} == *9999 ]]; then
 	DOCKER_GITCOMMIT="deadbee"
 	KEYWORDS="~amd64"
 else
-	CROS_WORKON_COMMIT="14680bf724161785d164fd99de36e3eb03a823ef" # v0.12.0
-	DOCKER_GITCOMMIT="14680bf"
+	CROS_WORKON_COMMIT="63fe64c471e7d76be96a625350468dfc65c06c31" # v1.0.0
+	DOCKER_GITCOMMIT="63fe64c"
 	KEYWORDS="amd64"
 fi
 
@@ -129,11 +129,6 @@ pkg_setup() {
 	fi
 
 	check_extra_config
-}
-
-src_prepare() {
-	epatch "${FILESDIR}"/Disable-timeout-for-push.patch
-	epatch "${FILESDIR}"/Add-CAP_KILL-to-unprivileged-containers.patch
 }
 
 src_compile() {
