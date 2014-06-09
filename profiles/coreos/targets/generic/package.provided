@@ -1,80 +1,14 @@
 # Copyright (c) 2009 The Chromium OS Authors. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
-# This file lists packages that ebuilds DEPEND on, sometimes implicitly,
-# but really are only needed on the build host. This allows us to use
-# --root-deps without "--rootdeps=rdeps" to install package DEPEND into
-# the sysroot as part of the build process without also having to cross-
-# compile and drag in the below packages as dependencies. See "man portage".
+# Packages that are pulled in via RDEPEND without a use flag to
+# disable them and we have no need/use for them in prod images.
 
-# NOTE: Toolchain packages (gcc, glibc, binutils) are specified in the
-# dynamically generated ${BOARD_DIR}/etc/portage/profile/package.provided
-# created by the setup_board script.
-
-app-admin/eselect-1.2.9
-app-admin/eselect-esd-20060719
-app-admin/eselect-fontconfig-1.0
-app-admin/eselect-opengl-1.0.8-r1
-app-admin/eselect-mesa-0.0.8
+# pulled in by app-crypt/pinentry
 app-admin/eselect-pinentry-0.3
+
+# pulled in by app-editors/vim
 app-admin/eselect-vi-1.1.5
 
-app-arch/cabextract-1.2-r1
-app-arch/rpm2targz-9.0.0.3g
-
-app-portage/portage-utils-0.1.29
-
-app-text/build-docbook-catalog-1.4
-app-text/docbook-xsl-stylesheets-1.75.2
-app-text/texi2html-1.76
-
-dev-lang/nasm-2.07
-dev-lang/perl-5.8.8-r5
-
-# Needed for building Icedtea
-dev-java/ant-core-1.7.1-r4
-dev-java/xalan-2.7.1
-dev-java/xerces-2.9.1
-
-dev-perl/Crypt-PasswdMD5-1.3
-dev-perl/Digest-SHA1-2.11
-dev-perl/XML-Parser-2.36
-
-dev-util/cmake-2.8.6
-dev-util/ctags-5.7
-dev-util/gperf-3.0.3
-dev-util/gtk-doc-1.13-r3
-dev-util/gtk-doc-am-1.13-r2
-dev-util/pkgconfig-0.23
-
-dev-vcs/git-1.6.4.4
-dev-vcs/subversion-1.6.9
-
-perl-core/digest-base-1.16
-perl-core/MIME-Base64-3.08
-
-sys-apps/debianutils-3.1.3-r1
-sys-apps/help2man-1.36.4
-
-# Needed for building Icedtea
-sys-apps/lsb-release-1.4
-
-sys-apps/texinfo-4.13
-
-sys-devel/autoconf-2.63-r1
-sys-devel/automake-1.10.2
-sys-devel/bison-2.3
-sys-devel/gettext-0.18.1-r1
-sys-devel/gnuconfig-20090203
-sys-devel/m4-1.4.12
-
-sys-kernel/gentoo-sources-2.6.30-r6
-
-x11-apps/mkfontscale-1.0.6
-x11-misc/makedepend-1.0.1
-
-# Legacy font map encodings which we don't care about.  http://crosbug.com/25001
-media-fonts/encodings-1.0.3
-
-# Our chromeos-base package takes care of this.
+# pulled in by app-admin/sudo
 app-misc/editor-wrapper-4
