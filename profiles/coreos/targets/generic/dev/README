@@ -1,0 +1,7 @@
+Profile settings specific to "dev" images and containers.
+
+Settings here must *ONLY* influence installing binary packages and never
+change build time settings like USE or CFLAGS because binary packages
+are shared between dev and prod, dev just includes more stuff.
+
+For example, INSTALL_MASK and package.provided are ok.
