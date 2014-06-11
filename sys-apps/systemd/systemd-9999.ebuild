@@ -77,8 +77,7 @@ RDEPEND="${COMMON_DEPEND}
 PDEPEND=">=sys-apps/dbus-1.6.8-r1:0
 	>=sys-apps/hwids-20130717-r1[udev]
 	openrc? ( >=sys-fs/udev-init-scripts-25 )
-	policykit? ( sys-auth/polkit )
-	!vanilla? ( sys-apps/gentoo-systemd-integration )"
+	policykit? ( sys-auth/polkit )"
 
 DEPEND="${COMMON_DEPEND}
 	app-arch/xz-utils:0
