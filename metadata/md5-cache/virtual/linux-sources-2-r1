@@ -1,0 +1,10 @@
+DEFINED_PHASES=-
+DESCRIPTION=CoreOS Kernel virtual package
+EAPI=2
+HOMEPAGE=http://www.coreos.com
+IUSE=cros_host
+KEYWORDS=amd64 arm x86
+LICENSE=GPL-2
+RDEPEND=!cros_host? ( sys-kernel/coreos-kernel )
+SLOT=0
+_md5_=f78911361a2303210622cbf68d62e5ee

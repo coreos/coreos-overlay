@@ -1,0 +1,11 @@
+DEFINED_PHASES=install unpack
+DESCRIPTION=Stand-alone and portable version of Gentoo's functions.sh
+EAPI=5
+HOMEPAGE=https://github.com/marcusatbang/efunctions
+KEYWORDS=~amd64 ~x86
+LICENSE=BSD-2
+RDEPEND=!sys-apps/openrc !<sys-apps/baselayout-2.0 !coreos-base/efunctions
+SLOT=0
+SRC_URI=https://github.com/marcusatbang/efunctions/tarball/b35f73e902fc0a6977260a1d6e8b287ae3b1c82a -> efunctions-1.tar.gz
+_eclasses_=multilib	892e597faee02a5b94eb02ab512e7622	toolchain-funcs	51e6c948e72c43bcc8edc7544411c953	vcs-snapshot	58b766562c9fbfb3268b04e33cdf2f66
+_md5_=920916f5c691c606ecc56b7fdc8d6c43

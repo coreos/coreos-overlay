@@ -1,5 +1,5 @@
 DEFINED_PHASES=configure install postinst preinst prepare test
-DEPEND=virtual/libiconv virtual/libffi sys-libs/zlib xattr? ( sys-apps/attr ) fam? ( virtual/fam ) >=sys-devel/gettext-0.11 >=dev-util/gtk-doc-am-1.15 doc? ( >=dev-libs/libxslt-1.0 >=dev-util/gtk-doc-1.15 ~app-text/docbook-xml-dtd-4.1.2 ) systemtap? ( >=dev-util/systemtap-1.3 ) test? ( >=dev-util/gdbus-codegen-2.30.0 >=sys-apps/dbus-1.2.14 ) !<dev-util/gtk-doc-1.15-r2 || ( >=sys-devel/automake-1.11.1:1.11 ) >=sys-devel/autoconf-2.68 sys-devel/libtool app-arch/xz-utils test? ( !prefix? ( x11-base/xorg-server ) x11-apps/xhost )
+DEPEND=virtual/libiconv virtual/libffi sys-libs/zlib xattr? ( sys-apps/attr ) fam? ( virtual/fam ) >=sys-devel/gettext-0.11 >=dev-util/gtk-doc-am-1.15 doc? ( >=dev-libs/libxslt-1.0 >=dev-util/gtk-doc-1.15 ~app-text/docbook-xml-dtd-4.1.2 ) systemtap? ( >=dev-util/systemtap-1.3 ) test? ( >=dev-util/gdbus-codegen-2.30.0 >=sys-apps/dbus-1.2.14 ) !<dev-util/gtk-doc-1.15-r2 || ( >=sys-devel/automake-1.12:1.12 >=sys-devel/automake-1.13:1.13 ) >=sys-devel/autoconf-2.68 sys-devel/libtool app-arch/xz-utils test? ( !prefix? ( x11-base/xorg-server[xvfb] ) x11-apps/xhost )
 DESCRIPTION=The GLib library of C routines
 EAPI=4
 HOMEPAGE=http://www.gtk.org/
@@ -10,5 +10,5 @@ PDEPEND=!<gnome-base/gvfs-1.6.4-r990
 RDEPEND=virtual/libiconv virtual/libffi sys-libs/zlib xattr? ( sys-apps/attr ) fam? ( virtual/fam )
 SLOT=2
 SRC_URI=mirror://gnome/sources/glib/2.30/glib-2.30.0.tar.xz http://pkgconfig.freedesktop.org/releases/pkg-config-0.26.tar.gz
-_eclasses_=autotools	addbdf6cce5024ac93ad2084ad5e1d2d	binutils-funcs	73669d0b20960c1cc54cf381a4b89e77	eutils	33ef77a15337022e05342d2c772a7a5a	flag-o-matic	01a8b1eb019305bc4b4a8bd0b04e4cd8	gnome.org	8fef8f967214f56e08fa92d61163d891	libtool	0fd90d183673bf1107465ec45849d1ea	multilib	5f4ad6cf85e365e8f0c6050ddd21659e	pax-utils	3551398d6ede2b572568832730cc2a45	portability	0be430f759a631e692678ed796e09f5c	toolchain-funcs	64fc271a237429f84f36b91c9f4b9912	user	9e552f935106ff0bc92af16da64b4b29	versionator	865bc8b2fc9fcfb6d520bdf5a110f5ed	virtualx	e9162f65645513120b4e12863a5fa972
+_eclasses_=autotools	16761a2f972abd686713e5967ff3c754	eutils	4878e7f88afc0ba0866ac112190b0fd4	flag-o-matic	65cef1287b9d62b1a0f180765d1e0c69	gnome.org	8fef8f967214f56e08fa92d61163d891	libtool	b1c8688e60f9580bcb9bb46e08737eb1	multilib	892e597faee02a5b94eb02ab512e7622	multiprocessing	89580da5ec17ad687fcde876c542b91e	pax-utils	2424f959506320f5196de8f79fa05297	toolchain-funcs	51e6c948e72c43bcc8edc7544411c953	user	d0a4d0735a6c0183d707ca919bd72f28	versionator	6601b4c5b3f019a993db59a50e1854e4	virtualx	73cfc129b4b9ba23aed1abb10c825d86
 _md5_=1db53b0397b760a260626595b1df8333

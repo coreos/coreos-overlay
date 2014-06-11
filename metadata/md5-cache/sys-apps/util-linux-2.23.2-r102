@@ -1,0 +1,13 @@
+DEFINED_PHASES=configure install postinst prepare
+DEPEND=!sys-process/schedutils !sys-apps/setarch !<sys-apps/sysvinit-2.88-r5 !sys-block/eject !<sys-libs/e2fsprogs-libs-1.41.8 !<sys-fs/e2fsprogs-1.41.8 !<app-shells/bash-completion-1.3-r2 caps? ( sys-libs/libcap-ng ) cramfs? ( sys-libs/zlib ) ncurses? ( >=sys-libs/ncurses-5.2-r2 ) pam? ( sys-libs/pam ) selinux? ( sys-libs/libselinux ) slang? ( sys-libs/slang ) udev? ( virtual/udev ) virtual/pkgconfig nls? ( sys-devel/gettext ) test? ( sys-devel/bc ) virtual/os-headers
+DESCRIPTION=Various useful Linux utilities
+EAPI=4
+HOMEPAGE=http://www.kernel.org/pub/linux/utils/util-linux/
+IUSE=bash-completion caps +cramfs cytune fdformat ncurses nls old-linux pam selinux slang static-libs +suid test tty-helpers udev unicode
+KEYWORDS=amd64
+LICENSE=GPL-2 GPL-3 LGPL-2.1 BSD-4 MIT public-domain
+RDEPEND=!sys-process/schedutils !sys-apps/setarch !<sys-apps/sysvinit-2.88-r5 !sys-block/eject !<sys-libs/e2fsprogs-libs-1.41.8 !<sys-fs/e2fsprogs-1.41.8 !<app-shells/bash-completion-1.3-r2 caps? ( sys-libs/libcap-ng ) cramfs? ( sys-libs/zlib ) ncurses? ( >=sys-libs/ncurses-5.2-r2 ) pam? ( sys-libs/pam ) selinux? ( sys-libs/libselinux ) slang? ( sys-libs/slang ) udev? ( virtual/udev )
+SLOT=0
+SRC_URI=mirror://kernel/linux/utils/util-linux/v2.23/util-linux-2.23.2.tar.xz
+_eclasses_=bash-completion-r1	d339dd40b2014cf1edba8592580eef42	eutils	4878e7f88afc0ba0866ac112190b0fd4	flag-o-matic	65cef1287b9d62b1a0f180765d1e0c69	libtool	b1c8688e60f9580bcb9bb46e08737eb1	multilib	892e597faee02a5b94eb02ab512e7622	toolchain-funcs	51e6c948e72c43bcc8edc7544411c953	user	d0a4d0735a6c0183d707ca919bd72f28
+_md5_=045d173d7bbf1f079c5d37c31dac640d

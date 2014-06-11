@@ -1,0 +1,11 @@
+DEFINED_PHASES=configure install prepare unpack
+DEPEND=!net-misc/arpd iptables? ( >=net-firewall/iptables-1.4.5 ) !minimal? ( berkdb? ( sys-libs/db ) ) atm? ( net-dialup/linux-atm ) app-arch/xz-utils iptables? ( virtual/pkgconfig ) sys-devel/bison sys-devel/flex >=sys-kernel/linux-headers-2.6.27 elibc_glibc? ( >=sys-libs/glibc-2.7 ) dev-vcs/git
+DESCRIPTION=kernel routing and traffic control utilities
+EAPI=4
+HOMEPAGE=http://www.linuxfoundation.org/collaborate/workgroups/networking/iproute2
+IUSE=atm berkdb +iptables ipv6 minimal
+LICENSE=GPL-2
+RDEPEND=!net-misc/arpd iptables? ( >=net-firewall/iptables-1.4.5 ) !minimal? ( berkdb? ( sys-libs/db ) ) atm? ( net-dialup/linux-atm )
+SLOT=0
+_eclasses_=eutils	4878e7f88afc0ba0866ac112190b0fd4	flag-o-matic	65cef1287b9d62b1a0f180765d1e0c69	git-2	2027b81a576527fa16bece425941e094	git-r3	536297c3f55d49069f6d2785b061e4d9	multilib	892e597faee02a5b94eb02ab512e7622	toolchain-funcs	51e6c948e72c43bcc8edc7544411c953	user	d0a4d0735a6c0183d707ca919bd72f28
+_md5_=edaf234b560df078f583c0df4b29dbe3

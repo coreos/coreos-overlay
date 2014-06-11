@@ -1,0 +1,11 @@
+DEFINED_PHASES=install prepare unpack
+DEPEND=!<=chromeos-base/chromeos-chrome-16.0.886.0_rc-r1 !=chromeos-base/chromeos-chrome-16.0.882.0_alpha-r1 >=dev-vcs/git-1.6
+DESCRIPTION=Protobuf installer for the device policy proto definitions.
+EAPI=2
+HOMEPAGE=http://chromium.org
+KEYWORDS=amd64 arm x86
+LICENSE=BSD
+RDEPEND=!<=chromeos-base/chromeos-chrome-16.0.886.0_rc-r1 !=chromeos-base/chromeos-chrome-16.0.882.0_alpha-r1
+SLOT=0
+_eclasses_=eutils	4878e7f88afc0ba0866ac112190b0fd4	git	a673225a1558ef94456dbd8ce271d16a	multilib	892e597faee02a5b94eb02ab512e7622	toolchain-funcs	51e6c948e72c43bcc8edc7544411c953	user	d0a4d0735a6c0183d707ca919bd72f28
+_md5_=579f60ce72224267969c368f3c1ac26c

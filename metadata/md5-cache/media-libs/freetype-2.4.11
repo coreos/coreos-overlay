@@ -1,5 +1,5 @@
-DEFINED_PHASES=compile configure install postinst prepare test unpack
-DEPEND=sys-libs/zlib bzip2? ( app-arch/bzip2 ) X? ( x11-libs/libX11 x11-libs/libXau x11-libs/libXdmcp ) || ( >=sys-devel/automake-1.11.1:1.11 ) >=sys-devel/autoconf-2.68 sys-devel/libtool
+DEFINED_PHASES=compile configure install postinst prepare test
+DEPEND=sys-libs/zlib bzip2? ( app-arch/bzip2 ) X? ( x11-libs/libX11 x11-libs/libXau x11-libs/libXdmcp ) || ( >=sys-devel/automake-1.12:1.12 >=sys-devel/automake-1.13:1.13 ) >=sys-devel/autoconf-2.68 sys-devel/libtool
 DESCRIPTION=A high-quality and portable font engine
 EAPI=4
 HOMEPAGE=http://www.freetype.org/
@@ -9,5 +9,5 @@ LICENSE=FTL GPL-2
 RDEPEND=sys-libs/zlib bzip2? ( app-arch/bzip2 ) X? ( x11-libs/libX11 x11-libs/libXau x11-libs/libXdmcp )
 SLOT=2
 SRC_URI=mirror://sourceforge/freetype/freetype-2.4.11.tar.bz2 utils? ( mirror://sourceforge/freetype/ft2demos-2.4.11.tar.bz2 ) doc? ( mirror://sourceforge/freetype/freetype-doc-2.4.11.tar.bz2 )
-_eclasses_=autotools	addbdf6cce5024ac93ad2084ad5e1d2d	autotools-utils	966fed1f979132a778b0b48c74a16adb	base	fc89786f3f7e7bcf03334359bd5b639b	binutils-funcs	73669d0b20960c1cc54cf381a4b89e77	eutils	33ef77a15337022e05342d2c772a7a5a	flag-o-matic	01a8b1eb019305bc4b4a8bd0b04e4cd8	libtool	0fd90d183673bf1107465ec45849d1ea	multilib	5f4ad6cf85e365e8f0c6050ddd21659e	portability	0be430f759a631e692678ed796e09f5c	toolchain-funcs	64fc271a237429f84f36b91c9f4b9912	user	9e552f935106ff0bc92af16da64b4b29
+_eclasses_=autotools	16761a2f972abd686713e5967ff3c754	autotools-utils	5f912199ed4fdfb0bfbde29c7ac7dbdb	eutils	4878e7f88afc0ba0866ac112190b0fd4	flag-o-matic	65cef1287b9d62b1a0f180765d1e0c69	libtool	b1c8688e60f9580bcb9bb46e08737eb1	multilib	892e597faee02a5b94eb02ab512e7622	multiprocessing	89580da5ec17ad687fcde876c542b91e	toolchain-funcs	51e6c948e72c43bcc8edc7544411c953	user	d0a4d0735a6c0183d707ca919bd72f28
 _md5_=7bfc11a059ecad55b13f45e94e881cf7

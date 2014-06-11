@@ -1,0 +1,11 @@
+DEFINED_PHASES=install postinst unpack
+DESCRIPTION=Stand-alone and portable version of Gentoo's functions.sh
+EAPI=5
+HOMEPAGE=https://github.com/coreos/efunctions
+KEYWORDS=amd64 x86
+LICENSE=BSD-2
+RDEPEND=!sys-apps/openrc
+SLOT=0
+SRC_URI=https://github.com/coreos/efunctions/tarball/9578f50fd0a87c6b8021025d70eb84297cbb15a0 -> efunctions-20130722_p1.tar.gz
+_eclasses_=vcs-snapshot	58b766562c9fbfb3268b04e33cdf2f66
+_md5_=02c0e57b124d632c90aebf5412c229b9

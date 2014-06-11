@@ -1,0 +1,11 @@
+DEFINED_PHASES=install
+DESCRIPTION=sysvinit compatibility symlinks and manpages
+EAPI=5
+HOMEPAGE=http://www.freedesktop.org/wiki/Software/systemd
+IUSE=symlink-usr
+KEYWORDS=amd64 arm ppc ppc64 x86
+LICENSE=GPL-2
+RDEPEND=!sys-apps/sysvinit >=sys-apps/systemd-201
+SLOT=0
+SRC_URI=http://www.freedesktop.org/software/systemd/systemd-207.tar.xz
+_md5_=f9b15faee51b3d6ac057c35b1e100ccb

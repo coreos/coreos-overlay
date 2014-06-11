@@ -1,0 +1,13 @@
+DEFINED_PHASES=configure install prepare
+DEPEND=acl? ( sys-apps/acl ) audit? ( sys-process/audit ) cracklib? ( >=sys-libs/cracklib-2.7-r3 ) pam? ( virtual/pam ) skey? ( sys-auth/skey ) selinux? ( >=sys-libs/libselinux-1.28 sys-libs/libsemanage ) nls? ( virtual/libintl ) xattr? ( sys-apps/attr ) nls? ( sys-devel/gettext ) virtual/pkgconfig
+DESCRIPTION=Utilities to deal with user accounts
+EAPI=4
+HOMEPAGE=http://shadow.pld.org.pl/ http://pkg-shadow.alioth.debian.org/
+IUSE=acl audit cracklib nls pam selinux skey xattr
+KEYWORDS=alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86
+LICENSE=BSD GPL-2
+RDEPEND=acl? ( sys-apps/acl ) audit? ( sys-process/audit ) cracklib? ( >=sys-libs/cracklib-2.7-r3 ) pam? ( virtual/pam ) skey? ( sys-auth/skey ) selinux? ( >=sys-libs/libselinux-1.28 sys-libs/libsemanage ) nls? ( virtual/libintl ) xattr? ( sys-apps/attr ) pam? ( >=sys-auth/pambase-20120417 )
+SLOT=0
+SRC_URI=http://pkg-shadow.alioth.debian.org/releases/shadow-4.1.5.1.tar.bz2
+_eclasses_=eutils	4878e7f88afc0ba0866ac112190b0fd4	flag-o-matic	65cef1287b9d62b1a0f180765d1e0c69	libtool	b1c8688e60f9580bcb9bb46e08737eb1	multilib	892e597faee02a5b94eb02ab512e7622	pam	5c1a9ef4892062f9ec25c8ef7c1f1e52	systemd	9f063b2cc19c5e8030911372aa246c4e	toolchain-funcs	51e6c948e72c43bcc8edc7544411c953	user	d0a4d0735a6c0183d707ca919bd72f28
+_md5_=ae201b2f869ee6d2cb6f15f1bde02ab3

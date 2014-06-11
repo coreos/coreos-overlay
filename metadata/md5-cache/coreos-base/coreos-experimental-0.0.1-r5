@@ -1,0 +1,8 @@
+DEFINED_PHASES=-
+DESCRIPTION=CoreOS Experimental Packages
+EAPI=4
+HOMEPAGE=http://coreos.com
+KEYWORDS=amd64 arm x86
+LICENSE=GPL-2
+SLOT=0
+_md5_=5b0d2714d80b6bb5d4adf35bbd3d35f0
