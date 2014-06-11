@@ -1,0 +1,12 @@
+DEFINED_PHASES=install prepare
+DEPEND=virtual/pkgconfig
+DESCRIPTION=Google Daemon for Compute Engine
+EAPI=5
+HOMEPAGE=https://github.com/GoogleCloudPlatform/compute-image-packages
+KEYWORDS=amd64 x86
+LICENSE=MIT
+RDEPEND=dev-lang/python-oem
+SLOT=0
+SRC_URI=https://github.com/GoogleCloudPlatform/compute-image-packages/releases/download/1.1.1/google-daemon-1.1.1.tar.gz
+_eclasses_=eutils	4878e7f88afc0ba0866ac112190b0fd4	multilib	892e597faee02a5b94eb02ab512e7622	systemd	9f063b2cc19c5e8030911372aa246c4e	toolchain-funcs	51e6c948e72c43bcc8edc7544411c953	user	d0a4d0735a6c0183d707ca919bd72f28
+_md5_=bd421b5e317a18f293b394b9db96bd8a

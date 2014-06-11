@@ -1,12 +1,12 @@
 DEFINED_PHASES=compile install postinst postrm preinst setup test unpack
-DEPEND=tcl? ( >=dev-lang/tcl-8.4 ) test? ( >=dev-lang/tcl-8.4 ) java? ( >=virtual/jdk-1.5 ) >=sys-devel/binutils-2.16.1 test? ( >=dev-lang/tcl-8.4 ) java? ( >=dev-java/java-config-2.1.9-r1 ) || ( >=sys-devel/automake-1.11.1 ) >=sys-devel/autoconf-2.68 sys-devel/libtool
+DEPEND=tcl? ( >=dev-lang/tcl-8.4 ) test? ( >=dev-lang/tcl-8.4 ) java? ( >=virtual/jdk-1.5 ) >=sys-devel/binutils-2.16.1 test? ( >=dev-lang/tcl-8.4 ) java? ( >=dev-java/java-config-2.1.9-r1 ) || ( >=sys-devel/automake-1.12 >=sys-devel/automake-1.13 ) >=sys-devel/autoconf-2.68 sys-devel/libtool
 DESCRIPTION=Oracle Berkeley DB
 HOMEPAGE=http://www.oracle.com/technology/software/products/berkeley-db/index.html
-IUSE=doc java nocxx tcl test doc test elibc_FreeBSD java
+IUSE=doc java nocxx tcl test doc test examples elibc_FreeBSD java
 KEYWORDS=alpha amd64 arm hppa ia64 m68k ppc ppc64 s390 sh sparc x86 ~sparc-fbsd ~x86-fbsd
 LICENSE=OracleDB
 RDEPEND=tcl? ( dev-lang/tcl ) java? ( >=virtual/jre-1.5 ) java? ( >=dev-java/java-config-2.1.9-r1 )
 SLOT=4.7
 SRC_URI=http://download.oracle.com/berkeley-db/db-4.7.25.tar.gz
-_eclasses_=autotools	addbdf6cce5024ac93ad2084ad5e1d2d	binutils-funcs	73669d0b20960c1cc54cf381a4b89e77	db	1135d23301373966b04d357a4397bc9a	eutils	33ef77a15337022e05342d2c772a7a5a	flag-o-matic	01a8b1eb019305bc4b4a8bd0b04e4cd8	java-pkg-opt-2	31a1663247652448431dcc8c194e2752	java-utils-2	6beafc7c3d1dbae83a4478182b158f66	libtool	0fd90d183673bf1107465ec45849d1ea	multilib	5f4ad6cf85e365e8f0c6050ddd21659e	portability	0be430f759a631e692678ed796e09f5c	toolchain-funcs	64fc271a237429f84f36b91c9f4b9912	user	9e552f935106ff0bc92af16da64b4b29	versionator	865bc8b2fc9fcfb6d520bdf5a110f5ed
+_eclasses_=autotools	16761a2f972abd686713e5967ff3c754	binutils-funcs	73669d0b20960c1cc54cf381a4b89e77	db	217d1394b8ade73a6a416da2b3be3332	eutils	4878e7f88afc0ba0866ac112190b0fd4	flag-o-matic	65cef1287b9d62b1a0f180765d1e0c69	java-pkg-opt-2	f9bbbe5092225a2059aa9e6a3a2b52f1	java-utils-2	8d0d93b7a8605ea346cce4604f6db516	libtool	b1c8688e60f9580bcb9bb46e08737eb1	multilib	892e597faee02a5b94eb02ab512e7622	multiprocessing	89580da5ec17ad687fcde876c542b91e	toolchain-funcs	51e6c948e72c43bcc8edc7544411c953	user	d0a4d0735a6c0183d707ca919bd72f28	versionator	6601b4c5b3f019a993db59a50e1854e4
 _md5_=5eb807c394541351031be3c9a3bcab2a

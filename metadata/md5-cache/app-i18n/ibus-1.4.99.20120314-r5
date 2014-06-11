@@ -1,12 +1,12 @@
 DEFINED_PHASES=configure install prepare test
-DEPEND=>=dev-libs/glib-2.26 x11-libs/libX11 dev-util/pkgconfig >=app-admin/eselect-python-20091230
+DEPEND=>=dev-libs/glib-2.26 x11-libs/libX11 dev-util/pkgconfig
 DESCRIPTION=Intelligent Input Bus for Linux / Unix OS
 EAPI=2
 HOMEPAGE=http://code.google.com/p/ibus/
 KEYWORDS=amd64 arm x86
 LICENSE=LGPL-2.1
-RDEPEND=>=dev-libs/glib-2.26 x11-libs/libX11 >=app-admin/eselect-python-20091230
+RDEPEND=>=dev-libs/glib-2.26 x11-libs/libX11
 SLOT=0
 SRC_URI=mirror://gentoo/ibus-1.4.99.20120314.tar.gz
-_eclasses_=binutils-funcs	73669d0b20960c1cc54cf381a4b89e77	eutils	33ef77a15337022e05342d2c772a7a5a	flag-o-matic	01a8b1eb019305bc4b4a8bd0b04e4cd8	libtool	0fd90d183673bf1107465ec45849d1ea	multilib	5f4ad6cf85e365e8f0c6050ddd21659e	portability	0be430f759a631e692678ed796e09f5c	python	6bbd984910e27780e5d0ea543d83ef84	toolchain-funcs	64fc271a237429f84f36b91c9f4b9912	user	9e552f935106ff0bc92af16da64b4b29
+_eclasses_=eutils	4878e7f88afc0ba0866ac112190b0fd4	flag-o-matic	65cef1287b9d62b1a0f180765d1e0c69	libtool	b1c8688e60f9580bcb9bb46e08737eb1	multilib	892e597faee02a5b94eb02ab512e7622	python	305197b0aa1194fa3ef67ca21f6faa7e	toolchain-funcs	51e6c948e72c43bcc8edc7544411c953	user	d0a4d0735a6c0183d707ca919bd72f28
 _md5_=cceb116577db8305e13ab66f271681b7

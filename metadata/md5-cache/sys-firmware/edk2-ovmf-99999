@@ -1,0 +1,12 @@
+DEFINED_PHASES=compile configure install preinst prepare unpack
+DEPEND=sys-power/iasl || ( dev-vcs/subversion[webdav-neon] dev-vcs/subversion[webdav-serf] ) net-misc/rsync
+DESCRIPTION=EDK II Open Source UEFI Firmware
+EAPI=5
+HOMEPAGE=http://tianocore.sourceforge.net
+IUSE=+qemu
+KEYWORDS=-* ~amd64
+LICENSE=BSD-2
+RDEPEND=qemu? ( app-emulation/qemu )
+SLOT=0
+_eclasses_=eutils	4878e7f88afc0ba0866ac112190b0fd4	multilib	892e597faee02a5b94eb02ab512e7622	multiprocessing	89580da5ec17ad687fcde876c542b91e	subversion	de38ef8c5baf84d80e695a4d6ad26554	toolchain-funcs	51e6c948e72c43bcc8edc7544411c953	user	d0a4d0735a6c0183d707ca919bd72f28
+_md5_=ecf1a4e0afd49b1e3cebc05e377ab1c0

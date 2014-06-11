@@ -6,5 +6,5 @@ KEYWORDS=~amd64 ~arm ~x86
 LICENSE=GPL-2
 SLOT=0
 SRC_URI=http://ftp.uni-erlangen.de/pub/utilities/etc/xxd-1.10.tar.gz
-_eclasses_=binutils-funcs	73669d0b20960c1cc54cf381a4b89e77	multilib	5f4ad6cf85e365e8f0c6050ddd21659e	toolchain-funcs	64fc271a237429f84f36b91c9f4b9912
+_eclasses_=multilib	892e597faee02a5b94eb02ab512e7622	toolchain-funcs	51e6c948e72c43bcc8edc7544411c953
 _md5_=74c48cb092b0a7dcfc76998cfe09efea

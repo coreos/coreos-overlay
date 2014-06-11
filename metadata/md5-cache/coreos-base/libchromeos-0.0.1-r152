@@ -1,0 +1,12 @@
+DEFINED_PHASES=compile info install setup test unpack
+DEPEND=coreos-base/libchrome:125070[cros-debug=] dev-libs/dbus-c++ dev-libs/dbus-glib dev-libs/openssl dev-libs/protobuf coreos-base/protofiles test? ( dev-cpp/gtest ) cros_host? ( dev-util/scons ) dev-vcs/git dev-util/scons
+DESCRIPTION=Chrome OS base library.
+EAPI=4
+HOMEPAGE=http://www.chromium.org/
+IUSE=cros_host test cros-debug cros_workon_tree_0e93b9386777f1606fb731bee338820c54d6b9b9 profiling
+KEYWORDS=amd64 arm x86
+LICENSE=BSD
+RDEPEND=coreos-base/libchrome:125070[cros-debug=] dev-libs/dbus-c++ dev-libs/dbus-glib dev-libs/openssl dev-libs/protobuf
+SLOT=0
+_eclasses_=cros-debug	deb4c0b1259db4d092692c4c46fe072b	cros-workon	d935ab9241325115878cd889446e7cb4	eutils	4878e7f88afc0ba0866ac112190b0fd4	flag-o-matic	65cef1287b9d62b1a0f180765d1e0c69	git-2	2027b81a576527fa16bece425941e094	git-r3	536297c3f55d49069f6d2785b061e4d9	multilib	892e597faee02a5b94eb02ab512e7622	scons-utils	988e24b9e2e4642189b4e97c03e5ae71	toolchain-funcs	51e6c948e72c43bcc8edc7544411c953	user	d0a4d0735a6c0183d707ca919bd72f28
+_md5_=c183f68464e71f403eff46203368228f

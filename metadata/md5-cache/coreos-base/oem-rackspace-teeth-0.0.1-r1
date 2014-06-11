@@ -1,0 +1,7 @@
+DEFINED_PHASES=install
+DESCRIPTION=OEM suite for Rackspace Teeth images
+EAPI=5
+KEYWORDS=amd64 x86
+LICENSE=Apache-2.0
+SLOT=0
+_md5_=badeb142af0f937f1014ea4c7d8197d5

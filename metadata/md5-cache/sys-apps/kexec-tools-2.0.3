@@ -1,0 +1,13 @@
+DEFINED_PHASES=configure install prepare
+DEPEND=lzma? ( app-arch/xz-utils ) zlib? ( sys-libs/zlib )
+DESCRIPTION=Load another kernel from the currently executing Linux kernel
+EAPI=4
+HOMEPAGE=http://kernel.org/pub/linux/utils/kernel/kexec/
+IUSE=booke lzma xen zlib
+KEYWORDS=~amd64 ~x86
+LICENSE=GPL-2
+RDEPEND=lzma? ( app-arch/xz-utils ) zlib? ( sys-libs/zlib )
+SLOT=0
+SRC_URI=mirror://kernel/linux/utils/kernel/kexec/kexec-tools-2.0.3.tar.xz
+_eclasses_=eutils	4878e7f88afc0ba0866ac112190b0fd4	flag-o-matic	65cef1287b9d62b1a0f180765d1e0c69	multilib	892e597faee02a5b94eb02ab512e7622	toolchain-funcs	51e6c948e72c43bcc8edc7544411c953	user	d0a4d0735a6c0183d707ca919bd72f28
+_md5_=61a5132e7c73d802ff4d08d5497b4d4a
