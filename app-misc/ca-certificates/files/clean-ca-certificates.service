@@ -1,0 +1,12 @@
+[Unit]
+Description=Clean up broken links in /etc/ssl/certs
+# Since other services depend on the certificate store run this early
+DefaultDependencies=no
+Wants=systemd-tmpfiles-setup.service
+After=systemd-tmpfiles-setup.service
+Before=sysinit.target
+ConditionPathIsReadWrite=/etc/ssl/certs
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/find -L /etc/ssl/certs -type l -delete
