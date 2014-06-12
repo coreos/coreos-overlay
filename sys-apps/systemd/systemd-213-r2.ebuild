@@ -117,6 +117,9 @@ fi
 	# fix DHCP for VMware bridged network interfaces
 	epatch "${FILESDIR}"/213-0002-sd-dhcp-client-Sets-broadcast-flag-to-1.patch
 
+	# fix matching interfaces by MAC address
+	epatch "${FILESDIR}"/213-0003-networkd-link-intialize-mac-address.patch
+
 	# Bug 463376
 	sed -i -e 's/GROUP="dialout"/GROUP="uucp"/' rules/*.rules || die
 
