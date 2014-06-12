@@ -1,7 +1,7 @@
 From fa51901447b24b4894da26a35a16596a90786429 Mon Sep 17 00:00:00 2001
 From: Camilo Aguilar <camilo.aguilar@gmail.com>
 Date: Tue, 27 May 2014 23:05:14 -0400
-Subject: [PATCH 2/2] sd-dhcp-client: Sets broadcast flag to 1
+Subject: [PATCH 2/3] sd-dhcp-client: Sets broadcast flag to 1
 
 In systems running on hypervisors this flag needs to be set ON, so offers can reach
 the virtual machines.
