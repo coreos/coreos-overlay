@@ -9,7 +9,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~x86"
 else
-	CROS_WORKON_COMMIT="c6d25f9aa7ce2869aabcde3641dc1936c172edd1"
+	CROS_WORKON_COMMIT="08d3b10ab1b0d01d200189e9f405ec8e3b76aedb"
 	KEYWORDS="amd64 arm x86"
 fi
 
@@ -115,11 +115,6 @@ src_install() {
 
 	if use symlink-usr; then
 		systemd_dotmpfilesd "${T}/baselayout-usr.conf"
-	fi
-
-	if use cros_host; then
-		# do not install networkd's resolv.conf symlink in SDK
-		rm "${D}"/usr/lib/tmpfiles.d/baselayout-resolv.conf || die
 	fi
 
 	# Fill in all other paths defined in tmpfiles configs

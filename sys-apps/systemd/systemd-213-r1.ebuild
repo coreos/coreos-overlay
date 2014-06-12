@@ -1,6 +1,6 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-apps/systemd/systemd-9999.ebuild,v 1.103 2014/03/31 19:01:25 floppym Exp $
+# $Header: /var/cvsroot/gentoo-x86/sys-apps/systemd/systemd-9999.ebuild,v 1.114 2014/06/11 15:13:06 floppym Exp $
 
 EAPI=5
 
@@ -35,9 +35,9 @@ SLOT="0/2"
 KEYWORDS="~alpha amd64 ~arm ~ia64 ~ppc ~ppc64 ~sparc ~x86"
 IUSE="acl audit cryptsetup doc +firmware-loader gcrypt gudev http introspection
 	kdbus +kmod lzma pam policykit python qrcode +seccomp selinux ssl
-	test vanilla xattr openrc"
+	test xattr"
 
-MINKV="3.0"
+MINKV="3.10"
 
 COMMON_DEPEND=">=sys-apps/util-linux-2.20:0=
 	sys-libs/libcap:0=
@@ -46,7 +46,10 @@ COMMON_DEPEND=">=sys-apps/util-linux-2.20:0=
 	cryptsetup? ( >=sys-fs/cryptsetup-1.6:0= )
 	gcrypt? ( >=dev-libs/libgcrypt-1.4.5:0= )
 	gudev? ( dev-libs/glib:2=[${MULTILIB_USEDEP}] )
-	http? ( >=net-libs/libmicrohttpd-0.9.33:0= )
+	http? (
+		>=net-libs/libmicrohttpd-0.9.33:0=
+		ssl? ( >=net-libs/gnutls-3.1.4:0= )
+	)
 	introspection? ( >=dev-libs/gobject-introspection-1.31.1:0= )
 	kmod? ( >=sys-apps/kmod-15:0= )
 	lzma? ( app-arch/xz-utils:0=[${MULTILIB_USEDEP}] )
@@ -55,7 +58,6 @@ COMMON_DEPEND=">=sys-apps/util-linux-2.20:0=
 	qrcode? ( media-gfx/qrencode:0= )
 	seccomp? ( >=sys-libs/libseccomp-2.1:0= )
 	selinux? ( sys-libs/libselinux:0= )
-	ssl? ( >=net-libs/gnutls-3.1.4:0= )
 	xattr? ( sys-apps/attr:0= )
 	abi_x86_32? ( !<=app-emulation/emul-linux-x86-baselibs-20130224-r9
 		!app-emulation/emul-linux-x86-baselibs[-abi_x86_32(-)] )"
@@ -74,11 +76,8 @@ RDEPEND="${COMMON_DEPEND}
 # sys-apps/daemon: the daemon only (+ build-time lib dep for tests)
 PDEPEND=">=sys-apps/dbus-1.6.8-r1:0
 	>=sys-apps/hwids-20130717-r1[udev]
-	openrc? ( >=sys-fs/udev-init-scripts-25 )
-	policykit? ( sys-auth/polkit )
-	!vanilla? ( sys-apps/gentoo-systemd-integration )"
+	policykit? ( sys-auth/polkit )"
 
-# Newer linux-headers needed by ia64, bug #480218
 DEPEND="${COMMON_DEPEND}
 	app-arch/xz-utils:0
 	dev-util/gperf
@@ -86,7 +85,6 @@ DEPEND="${COMMON_DEPEND}
 	>=sys-devel/binutils-2.23.1
 	>=sys-devel/gcc-4.6
 	>=sys-kernel/linux-headers-${MINKV}
-	ia64? ( >=sys-kernel/linux-headers-3.9 )
 	virtual/pkgconfig
 	doc? ( >=dev-util/gtk-doc-1.18 )
 	python? ( dev-python/lxml[${PYTHON_USEDEP}] )
@@ -113,21 +111,11 @@ if [[ ${PV} == *9999 ]]; then
 		echo 'EXTRA_DIST =' > docs/gtk-doc.make
 	fi
 fi
-	# fix networkd crash, https://bugs.gentoo.org/show_bug.cgi?id=507044
-	epatch "${FILESDIR}"/212-0001-sd-rtnl-fix-off-by-one.patch
+	# fix regression in systemd-tmpfiles
+	epatch "${FILESDIR}"/213-0001-shared-fix-searching-for-configs-in-alternate-roots.patch
 
-	# fix stuck jobs after daemon-reload
-	epatch "${FILESDIR}"/212-0002-job-add-waiting-jobs-to-run-queue-in-unit_coldplug.patch
-	epatch "${FILESDIR}"/212-0003-job-always-add-waiting-jobs-to-run-queue-during-cold.patch
-
-	# fix broken device dependencies after daemon-reload
-	epatch "${FILESDIR}"/212-0004-core-make-sure-to-serialize-jobs-for-all-units.patch
-
-	# stop scaring all our users with warnings about "X-Fleet"
-	epatch "${FILESDIR}"/212-0005-conf-parser-silently-ignore-sections-starting-with-X.patch
-
-	# patch to make journald work at first boot
-	epatch "${FILESDIR}"/211-tmpfiles.patch
+	# fix DHCP for VMware bridged network interfaces
+	epatch "${FILESDIR}"/213-0002-sd-dhcp-client-Sets-broadcast-flag-to-1.patch
 
 	# Bug 463376
 	sed -i -e 's/GROUP="dialout"/GROUP="uucp"/' rules/*.rules || die
@@ -143,7 +131,6 @@ pkg_pretend() {
 		~!GRKERNSEC_PROC"
 
 	use acl && CONFIG_CHECK+=" ~TMPFS_POSIX_ACL"
-	use pam && CONFIG_CHECK+=" ~AUDITSYSCALL"
 	use xattr && CONFIG_CHECK+=" ~TMPFS_XATTR"
 	kernel_is -lt 3 7 && CONFIG_CHECK+=" ~HOTPLUG"
 	use firmware-loader || CONFIG_CHECK+=" ~!FW_LOADER_USER_HELPER"
@@ -185,6 +172,15 @@ pkg_setup() {
 	use python && python-single-r1_pkg_setup
 }
 
+src_configure() {
+	# Keep using the one where the rules were installed.
+	MY_UDEVDIR=$(get_udevdir)
+	# Fix systems broken by bug #509454.
+	[[ ${MY_UDEVDIR} ]] || MY_UDEVDIR=/lib/udev
+
+	multilib-minimal_src_configure
+}
+
 multilib_src_configure() {
 	local myeconfargs=(
 		# disable -flto since it is an optimization flag
@@ -192,7 +188,6 @@ multilib_src_configure() {
 		cc_cv_CFLAGS__flto=no
 
 		--with-pamconfdir=/usr/share/pam.d
-		--with-dbuspolicydir=/usr/share/dbus-1/system.d
 		--disable-maintainer-mode
 		--localstatedir=/var
 		--with-pamlibdir=$(getpam_mod_dir)
@@ -214,6 +209,7 @@ multilib_src_configure() {
 		$(use_enable gcrypt)
 		$(use_enable gudev)
 		$(use_enable http microhttpd)
+		$(usex http $(use_enable ssl gnutls) --disable-gnutls)
 		$(use_enable introspection)
 		$(use_enable kdbus)
 		$(use_enable kmod)
@@ -225,7 +221,6 @@ multilib_src_configure() {
 		$(use_enable qrcode qrencode)
 		$(use_enable seccomp)
 		$(use_enable selinux)
-		$(use_enable ssl gnutls)
 		$(use_enable test tests)
 		$(use_enable xattr)
 
@@ -235,10 +230,15 @@ multilib_src_configure() {
 		# hardcode a few paths to spare some deps
 		QUOTAON=/usr/sbin/quotaon
 		QUOTACHECK=/usr/sbin/quotacheck
-	)
 
-	# Keep using the one where the rules were installed.
-	MY_UDEVDIR=$(get_udevdir)
+		# dbus paths
+		--with-dbuspolicydir="${EPREFIX}/usr/share/dbus-1/system.d"
+		--with-dbussessionservicedir="${EPREFIX}/usr/share/dbus-1/services"
+		--with-dbussystemservicedir="${EPREFIX}/usr/share/dbus-1/system-services"
+		--with-dbusinterfacedir="${EPREFIX}/usr/share/dbus-1/interfaces"
+
+		--with-ntp-servers="0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org"
+	)
 
 	if use firmware-loader; then
 		myeconfargs+=(
@@ -276,6 +276,7 @@ multilib_src_configure() {
 			--disable-qrencode
 			--disable-seccomp
 			--disable-selinux
+			--disable-timesyncd
 			--disable-tests
 			--disable-xattr
 			--disable-xz
@@ -358,6 +359,7 @@ multilib_src_install_all() {
 	mv "${D}"/usr/lib/sysctl.d/50-coredump.conf{,.disabled} || die
 
 	systemd_dotmpfilesd "${FILESDIR}"/systemd-coreos.conf
+	systemd_newtmpfilesd "${FILESDIR}"/213-systemd-resolv.conf systemd-resolv.conf
 
 	# Don't default to graphical.target
 	rm "${D}"/usr/lib/systemd/system/default.target || die
@@ -370,10 +372,16 @@ multilib_src_install_all() {
 
 	rm "${D}"/etc/systemd/system/multi-user.target.wants/remote-fs.target \
 		"${D}"/etc/systemd/system/multi-user.target.wants/systemd-networkd.service \
+		"${D}"/etc/systemd/system/multi-user.target.wants/systemd-resolved.service \
+		"${D}"/etc/systemd/system/network-online.target.wants/systemd-networkd-wait-online.service \
 		|| die
-	rmdir "${D}"/etc/systemd/system/multi-user.target.wants || die
+	rmdir "${D}"/etc/systemd/system/multi-user.target.wants \
+		"${D}"/etc/systemd/system/network-online.target.wants \
+		|| die
 	systemd_enable_service multi-user.target remote-fs.target
 	systemd_enable_service multi-user.target systemd-networkd.service
+	systemd_enable_service multi-user.target systemd-resolved.service
+	systemd_enable_service network-online.target systemd-networkd-wait-online.service
 }
 
 migrate_locale() {
