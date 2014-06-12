@@ -1,27 +1,42 @@
 #!/bin/bash
 
-CERTSDIR="${1:-${ROOT}/etc/ssl/certs}"
+set -e
+
+CERTSDIR="${ROOT}/etc/ssl/certs"
+CERTBUNDLE="${CERTSDIR}/ca-certificates.crt"
+SKIP_REHASH=0
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --skip-rehash)
+            SKIP_REHASH=1 ;;
+        --help|-h|*)
+            echo "$0 [--skip-rehash]"
+            exit ;;
+    esac
+    shift
+done
 
 if [[ ! -w "${CERTSDIR}" ]]; then
     echo "Error: SSL certificate directory ${CERTSDIR} isn't writable" >&2
     exit 1
 fi
 
-set -e
+if [[ ${SKIP_REHASH} -ne 1 ]]; then
+    c_rehash "${CERTSDIR}"
+fi
 
-echo "Pruning broken links in ${CERTSDIR}"
-find -L "${CERTSDIR}" -type l -delete
-
-echo "Rehashing certificate files in ${CERTSDIR}"
-c_rehash "${CERTSDIR}"
-
-CERTBUNDLE="${CERTSDIR}/ca-certificates.crt"
 if [[ ! -e "${CERTBUNDLE}" || "${CERTSDIR}" -nt "${CERTBUNDLE}" ]]; then
     echo "Recreating certificate bundle ${CERTBUNDLE}"
     TEMPBUNDLE=$(mktemp "${CERTBUNDLE}.XXXXXXXXXX")
     trap "rm -f '${CERTSDIR}/${TEMPBUNDLE}'" EXIT
+
     # Use .0 instead of .pem to pull in only what c_rehash validated
-    cat "${CERTSDIR}"/*.0 > "${TEMPBUNDLE}"
+    cat "${CERTSDIR}"/*.[0-9] > "${TEMPBUNDLE}"
+    chmod 644 "${TEMPBUNDLE}"
     mv -f "${TEMPBUNDLE}" "${CERTBUNDLE}"
     trap - EXIT
+
+    # Update the bundle's mtime so future runs know not to regenerate it
+    touch --reference="${CERTSDIR}" "${CERTBUNDLE}"
 fi
