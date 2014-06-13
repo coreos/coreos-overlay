@@ -10,7 +10,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~x86"
 else
-	CROS_WORKON_COMMIT="96e8537231d4a10aedd1261ecdb9899d879d97c0"
+	CROS_WORKON_COMMIT="a4c3267c680a46b110533fb3a5e22048ea386218"
 	KEYWORDS="amd64 arm x86"
 fi
 
@@ -45,18 +45,7 @@ RDEPEND="${DEPEND}
 src_install() {
 	emake DESTDIR="${D}" install
 
-	# Basic system startup
-	systemd_enable_service local-fs.target remount-root.service
-	systemd_enable_service local-fs.target media.mount
-	systemd_enable_service local-fs.target usr-share-oem.mount
-	systemd_enable_service default.target resize-btrfs.service
-	systemd_enable_service default.target ldsocache.service
-
-	# Services!
-	systemd_enable_service default.target sshd-keygen.service
-	systemd_enable_service default.target sshd.socket
-	systemd_enable_service default.target ssh-key-proc-cmdline.service
+	# Enable some sockets that aren't enabled by their own ebuilds.
+	systemd_enable_service sockets.target sshd.socket
 	systemd_enable_service sockets.target docker.socket
-	systemd_enable_service default.target issuegen.service
-	systemd_enable_service default.target motdgen.timer
 }
