@@ -110,6 +110,8 @@ if [[ ${PV} == *9999 ]]; then
 		echo 'EXTRA_DIST =' > docs/gtk-doc.make
 	fi
 fi
+	# fix regression in systemd-tmpfiles
+	epatch "${FILESDIR}"/214-0001-shared-fix-searching-for-configs-in-alternate-roots.patch
 
 	# Bug 463376
 	sed -i -e 's/GROUP="dialout"/GROUP="uucp"/' rules/*.rules || die

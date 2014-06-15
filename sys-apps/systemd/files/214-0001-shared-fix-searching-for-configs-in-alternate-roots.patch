@@ -1,0 +1,169 @@
+From 7171a436771c02a75b6dd74b4ff9473d4d831e70 Mon Sep 17 00:00:00 2001
+From: Michael Marineau <michael.marineau@coreos.com>
+Date: Thu, 29 May 2014 10:59:42 -0700
+Subject: [PATCH] shared: fix searching for configs in alternate roots
+
+Commit 12ed81d9 changed path_strv_canonicalize_absolute's behavior to
+return a directory list without the root prefix if one was given but did
+not update other users of the function to the new behavior. This broke
+the --root option in systemd-tmpfiles, a regression in v213.
+
+To better reflect that path_strv_canonicalize_absolute does not return
+fully resolved paths any more as canonicalize may imply it is now simply
+called path_strv_cleanup.
+---
+ src/shared/conf-files.c  | 18 +++++++++++++-----
+ src/shared/path-lookup.c |  6 +++---
+ src/shared/path-util.c   |  6 +++---
+ src/shared/path-util.h   |  4 ++--
+ src/shared/util.c        |  7 +++++--
+ 5 files changed, 26 insertions(+), 15 deletions(-)
+
+diff --git a/src/shared/conf-files.c b/src/shared/conf-files.c
+index 5201782..6f1dc7f 100644
+--- a/src/shared/conf-files.c
++++ b/src/shared/conf-files.c
+@@ -37,10 +37,18 @@
+ #include "hashmap.h"
+ #include "conf-files.h"
+ 
+-static int files_add(Hashmap *h, const char *dirpath, const char *suffix) {
++static int files_add(Hashmap *h, const char *dirpath, const char *suffix, const char *root) {
+         _cleanup_closedir_ DIR *dir = NULL;
++        _cleanup_free_ char *fullpath = NULL;
+ 
+-        dir = opendir(dirpath);
++        if (root)
++                fullpath = strappend(root, dirpath);
++        else
++                fullpath = strdup(dirpath);
++        if (!fullpath)
++                return -ENOMEM;
++
++        dir = opendir(fullpath);
+         if (!dir) {
+                 if (errno == ENOENT)
+                         return 0;
+@@ -63,7 +71,7 @@ static int files_add(Hashmap *h, const char *dirpath, const char *suffix) {
+                 if (!dirent_is_file_with_suffix(de, suffix))
+                         continue;
+ 
+-                p = strjoin(dirpath, "/", de->d_name, NULL);
++                p = strjoin(fullpath, "/", de->d_name, NULL);
+                 if (!p)
+                         return -ENOMEM;
+ 
+@@ -100,7 +108,7 @@ static int conf_files_list_strv_internal(char ***strv, const char *suffix, const
+         assert(suffix);
+ 
+         /* This alters the dirs string array */
+-        if (!path_strv_canonicalize_absolute_uniq(dirs, root))
++        if (!path_strv_cleanup_uniq(dirs, root))
+                 return -ENOMEM;
+ 
+         fh = hashmap_new(string_hash_func, string_compare_func);
+@@ -108,7 +116,7 @@ static int conf_files_list_strv_internal(char ***strv, const char *suffix, const
+                 return -ENOMEM;
+ 
+         STRV_FOREACH(p, dirs) {
+-                r = files_add(fh, *p, suffix);
++                r = files_add(fh, *p, suffix, root);
+                 if (r == -ENOMEM) {
+                         hashmap_free_free(fh);
+                         return r;
+diff --git a/src/shared/path-lookup.c b/src/shared/path-lookup.c
+index e072fd6..1a497f9 100644
+--- a/src/shared/path-lookup.c
++++ b/src/shared/path-lookup.c
+@@ -284,7 +284,7 @@ int lookup_paths_init(
+                 }
+         }
+ 
+-        if (!path_strv_canonicalize_absolute_uniq(p->unit_path, root_dir))
++        if (!path_strv_cleanup_uniq(p->unit_path, root_dir))
+                 return -ENOMEM;
+ 
+         if (!strv_isempty(p->unit_path)) {
+@@ -338,10 +338,10 @@ int lookup_paths_init(
+                                 return -ENOMEM;
+                 }
+ 
+-                if (!path_strv_canonicalize_absolute_uniq(p->sysvinit_path, root_dir))
++                if (!path_strv_cleanup_uniq(p->sysvinit_path, root_dir))
+                         return -ENOMEM;
+ 
+-                if (!path_strv_canonicalize_absolute_uniq(p->sysvrcnd_path, root_dir))
++                if (!path_strv_cleanup_uniq(p->sysvrcnd_path, root_dir))
+                         return -ENOMEM;
+ 
+                 if (!strv_isempty(p->sysvinit_path)) {
+diff --git a/src/shared/path-util.c b/src/shared/path-util.c
+index 5863429..37490be 100644
+--- a/src/shared/path-util.c
++++ b/src/shared/path-util.c
+@@ -238,7 +238,7 @@ char **path_strv_make_absolute_cwd(char **l) {
+         return l;
+ }
+ 
+-char **path_strv_canonicalize_absolute(char **l, const char *prefix) {
++char **path_strv_cleanup(char **l, const char *prefix) {
+         char **s;
+         unsigned k = 0;
+         bool enomem = false;
+@@ -323,12 +323,12 @@ char **path_strv_canonicalize_absolute(char **l, const char *prefix) {
+         return l;
+ }
+ 
+-char **path_strv_canonicalize_absolute_uniq(char **l, const char *prefix) {
++char **path_strv_cleanup_uniq(char **l, const char *prefix) {
+ 
+         if (strv_isempty(l))
+                 return l;
+ 
+-        if (!path_strv_canonicalize_absolute(l, prefix))
++        if (!path_strv_cleanup(l, prefix))
+                 return NULL;
+ 
+         return strv_uniq(l);
+diff --git a/src/shared/path-util.h b/src/shared/path-util.h
+index 6882d78..b523bcc 100644
+--- a/src/shared/path-util.h
++++ b/src/shared/path-util.h
+@@ -47,8 +47,8 @@ char* path_startswith(const char *path, const char *prefix) _pure_;
+ bool path_equal(const char *a, const char *b) _pure_;
+ 
+ char** path_strv_make_absolute_cwd(char **l);
+-char** path_strv_canonicalize_absolute(char **l, const char *prefix);
+-char** path_strv_canonicalize_absolute_uniq(char **l, const char *prefix);
++char** path_strv_cleanup(char **l, const char *prefix);
++char** path_strv_cleanup_uniq(char **l, const char *prefix);
+ 
+ int path_is_mount_point(const char *path, bool allow_symlink);
+ int path_is_read_only_fs(const char *path);
+diff --git a/src/shared/util.c b/src/shared/util.c
+index 91cbf20..429a775 100644
+--- a/src/shared/util.c
++++ b/src/shared/util.c
+@@ -5691,14 +5691,17 @@ static int search_and_fopen_internal(const char *path, const char *mode, const c
+         assert(mode);
+         assert(_f);
+ 
+-        if (!path_strv_canonicalize_absolute_uniq(search, root))
++        if (!path_strv_cleanup_uniq(search, root))
+                 return -ENOMEM;
+ 
+         STRV_FOREACH(i, search) {
+                 _cleanup_free_ char *p = NULL;
+                 FILE *f;
+ 
+-                p = strjoin(*i, "/", path, NULL);
++                if (root)
++                        p = strjoin(root, *i, "/", path, NULL);
++                else
++                        p = strjoin(*i, "/", path, NULL);
+                 if (!p)
+                         return -ENOMEM;
+ 
+-- 
+1.8.5.5
+

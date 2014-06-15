@@ -1,0 +1,118 @@
+From fb7fe351e092bb591a6fc24c76fd4a8effec644d Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Fri, 16 May 2014 01:15:03 +0200
+Subject: [PATCH 4/4] core: make sure to serialize jobs for all units
+
+Previously we wouldn't serialize jobs for units that themselves have
+nothing to serialize.
+
+http://lists.freedesktop.org/archives/systemd-devel/2014-May/019051.html
+---
+ src/core/manager.c |  3 ---
+ src/core/unit.c    | 43 +++++++++++++++++++++----------------------
+ 2 files changed, 21 insertions(+), 25 deletions(-)
+
+diff --git a/src/core/manager.c b/src/core/manager.c
+index 224106c..0b91db3 100644
+--- a/src/core/manager.c
++++ b/src/core/manager.c
+@@ -2129,9 +2129,6 @@ int manager_serialize(Manager *m, FILE *f, FDSet *fds, bool switching_root) {
+                 if (u->id != t)
+                         continue;
+ 
+-                if (!unit_can_serialize(u))
+-                        continue;
+-
+                 /* Start marker */
+                 fputs(u->id, f);
+                 fputc('\n', f);
+diff --git a/src/core/unit.c b/src/core/unit.c
+index 153b79b..9147686 100644
+--- a/src/core/unit.c
++++ b/src/core/unit.c
+@@ -2287,25 +2287,25 @@ bool unit_can_serialize(Unit *u) {
+ }
+ 
+ int unit_serialize(Unit *u, FILE *f, FDSet *fds, bool serialize_jobs) {
+-        ExecRuntime *rt;
+         int r;
+ 
+         assert(u);
+         assert(f);
+         assert(fds);
+ 
+-        if (!unit_can_serialize(u))
+-                return 0;
+-
+-        r = UNIT_VTABLE(u)->serialize(u, f, fds);
+-        if (r < 0)
+-                return r;
++        if (unit_can_serialize(u)) {
++                ExecRuntime *rt;
+ 
+-        rt = unit_get_exec_runtime(u);
+-        if (rt) {
+-                r = exec_runtime_serialize(rt, u, f, fds);
++                r = UNIT_VTABLE(u)->serialize(u, f, fds);
+                 if (r < 0)
+                         return r;
++
++                rt = unit_get_exec_runtime(u);
++                if (rt) {
++                        r = exec_runtime_serialize(rt, u, f, fds);
++                        if (r < 0)
++                                return r;
++                }
+         }
+ 
+         dual_timestamp_serialize(f, "inactive-exit-timestamp", &u->inactive_exit_timestamp);
+@@ -2367,17 +2367,14 @@ void unit_serialize_item(Unit *u, FILE *f, const char *key, const char *value) {
+ }
+ 
+ int unit_deserialize(Unit *u, FILE *f, FDSet *fds) {
+-        size_t offset;
+         ExecRuntime **rt = NULL;
++        size_t offset;
+         int r;
+ 
+         assert(u);
+         assert(f);
+         assert(fds);
+ 
+-        if (!unit_can_serialize(u))
+-                return 0;
+-
+         offset = UNIT_VTABLE(u)->exec_runtime_offset;
+         if (offset > 0)
+                 rt = (ExecRuntime**) ((uint8_t*) u + offset);
+@@ -2494,17 +2491,19 @@ int unit_deserialize(Unit *u, FILE *f, FDSet *fds) {
+                         continue;
+                 }
+ 
+-                if (rt) {
+-                        r = exec_runtime_deserialize_item(rt, u, l, v, fds);
++                if (unit_can_serialize(u)) {
++                        if (rt) {
++                                r = exec_runtime_deserialize_item(rt, u, l, v, fds);
++                                if (r < 0)
++                                        return r;
++                                if (r > 0)
++                                        continue;
++                        }
++
++                        r = UNIT_VTABLE(u)->deserialize_item(u, l, v, fds);
+                         if (r < 0)
+                                 return r;
+-                        if (r > 0)
+-                                continue;
+                 }
+-
+-                r = UNIT_VTABLE(u)->deserialize_item(u, l, v, fds);
+-                if (r < 0)
+-                        return r;
+         }
+ }
+ 
+-- 
+1.8.5.5
+
