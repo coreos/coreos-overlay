@@ -35,7 +35,7 @@ SLOT="0/2"
 KEYWORDS="~alpha amd64 ~arm ~ia64 ~ppc ~ppc64 ~sparc ~x86"
 IUSE="acl audit cryptsetup doc +firmware-loader gcrypt gudev http introspection
 	kdbus +kmod lzma pam policykit python qrcode +seccomp selinux ssl
-	test vanilla xattr openrc"
+	test xattr"
 
 MINKV="3.0"
 
@@ -74,9 +74,7 @@ RDEPEND="${COMMON_DEPEND}
 # sys-apps/daemon: the daemon only (+ build-time lib dep for tests)
 PDEPEND=">=sys-apps/dbus-1.6.8-r1:0
 	>=sys-apps/hwids-20130717-r1[udev]
-	openrc? ( >=sys-fs/udev-init-scripts-25 )
-	policykit? ( sys-auth/polkit )
-	!vanilla? ( sys-apps/gentoo-systemd-integration )"
+	policykit? ( sys-auth/polkit )"
 
 # Newer linux-headers needed by ia64, bug #480218
 DEPEND="${COMMON_DEPEND}
@@ -358,6 +356,7 @@ multilib_src_install_all() {
 	mv "${D}"/usr/lib/sysctl.d/50-coredump.conf{,.disabled} || die
 
 	systemd_dotmpfilesd "${FILESDIR}"/systemd-coreos.conf
+	systemd_newtmpfilesd "${FILESDIR}"/213-systemd-resolv.conf systemd-resolv.conf
 
 	# Don't default to graphical.target
 	rm "${D}"/usr/lib/systemd/system/default.target || die
