@@ -1,0 +1,7 @@
+# Copyright (c) 2014 The CoreOS Authors. All rights reserved.
+# Distributed under the terms of the GNU General Public License v2
+
+# full debug info is way to big to fit into our 1GB /usr partitions.
+INSTALL_MASK="${INSTALL_MASK}
+    /usr/lib/debug
+"

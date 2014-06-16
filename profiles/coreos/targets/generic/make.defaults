@@ -9,29 +9,34 @@ USE="${USE} -fortran -abiword -perl -cups -poppler-data -nls"
 # Exclude documentation
 FEATURES="nodoc noinfo noman"
 
-# Remove sandbox files since we don't use that in the sysroot.
+# Exclude even more documentaiton
 # Remove bash-completion files as we don't install bash-completion.
 # Remove alternate locales, we only need the standard LANG=C
 INSTALL_MASK="${INSTALL_MASK}
-  /etc/sandbox.d
   /usr/share/bash-completion
+  /usr/share/gtk-doc
   /usr/share/i18n
   /usr/share/locale
+"
+
+# Exclude assorted config files that we can do without
+INSTALL_MASK="${INSTALL_MASK}
+  /etc/sudoers
 "
 
 # Restrictive mask for production images.
 # TODO(marineam): Perhaps later move this to a generic/production profile.
 PROD_INSTALL_MASK="${INSTALL_MASK}
   *.a *.la *.h *.hpp
+  /etc/sandbox.d
+  /usr/include
   /usr/lib/debug
   /usr/lib*/pkgconfig
   /usr/share/aclocal*
   /usr/share/awk
-  /usr/share/doc
   /usr/share/gdb
   /usr/share/gettext
   /usr/share/gobject-introspection-1.0
-  /usr/share/gtk-doc
   /usr/share/pkgconfig
   /usr/share/readline
   /usr/src
@@ -43,9 +48,4 @@ PROD_INSTALL_MASK="${PROD_INSTALL_MASK}
   /usr/bin/nmap
   /usr/share/ncat
   /usr/share/nmap
-"
-
-# Exclude assorted config files that we can do without
-PROD_INSTALL_MASK="${PROD_INSTALL_MASK}
-  /etc/sudoers
 "
