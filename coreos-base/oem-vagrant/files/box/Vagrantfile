@@ -1,8 +1,8 @@
 # -*- mode: ruby -*-
 # # vi: set ft=ruby :
 
-if Vagrant::VERSION < "1.5.0"
-  raise "Need at least vagrant version 1.5.0, please update"
+if Vagrant::VERSION < "1.6.0"
+  raise "Need at least vagrant version 1.6.0, please update"
 end
 
 require_relative 'change_host_name.rb'
