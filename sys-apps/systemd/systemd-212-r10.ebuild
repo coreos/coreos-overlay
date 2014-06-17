@@ -124,6 +124,9 @@ fi
 	# stop scaring all our users with warnings about "X-Fleet"
 	epatch "${FILESDIR}"/212-0005-conf-parser-silently-ignore-sections-starting-with-X.patch
 
+	# networkd: netdev - allow setting MACAddress in .netdev files
+	epatch "${FILESDIR}"/212-0006-networkd-netdev-allow-setting-macaddress-in-netdev-files.patch
+
 	# patch to make journald work at first boot
 	epatch "${FILESDIR}"/211-tmpfiles.patch
 
