@@ -8,6 +8,20 @@ coreos:
           [Service]
           ExecStart=
           ExecStart=/usr/bin/coreos-cloudinit --from-configdrive=/media/configdrive --convert-netconf=debian
+      - name: ping-out.service
+        runtime: yes
+        enable: yes
+        content: |
+          [Unit]
+          After=user-config.target
+
+          [Service]
+          Type=oneshot
+          RemainAfterExit=yes
+          ExecStart=/usr/bin/sh -c "ping -A -c1 $(ip route | awk '/default/ { print $3 }')"
+
+          [Install]
+          WantedBy=user-config.target
       - name: media-configdrive.mount
         command: start
         runtime: yes
