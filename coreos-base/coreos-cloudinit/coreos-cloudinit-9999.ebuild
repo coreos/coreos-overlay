@@ -9,7 +9,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64"
 else
-	CROS_WORKON_COMMIT="41b9dfcb1c65f0e86666a7feffa07bccd538a838" # tag v0.7.6
+	CROS_WORKON_COMMIT="d0a6d6f92f376e9fea26f0291c753c39504ffc9c" # tag v0.7.7
 	KEYWORDS="amd64"
 fi
 
@@ -37,6 +37,7 @@ src_compile() {
 src_install() {
 	dobin ${S}/bin/coreos-cloudinit
 	udev_dorules units/*.rules
+	systemd_dounit units/*.mount
 	systemd_dounit units/*.path
 	systemd_dounit units/*.service
 	systemd_dounit units/*.target
