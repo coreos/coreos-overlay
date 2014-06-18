@@ -1,0 +1,11 @@
+DEFINED_PHASES=install prepare unpack
+DEPEND=sys-kernel/coreos-kernel:=
+DESCRIPTION=Linux firmware files
+EAPI=5
+HOMEPAGE=http://git.kernel.org/?p=linux/kernel/git/firmware/linux-firmware.git
+KEYWORDS=amd64
+LICENSE=GPL-1 GPL-2 GPL-3 BSD freedist
+RDEPEND=sys-kernel/coreos-kernel:= !=sys-kernel/coreos-kernel-3.12.6 !<=sys-kernel/coreos-kernel-3.11.7-r5 !sys-kernel/linux-firmware !sys-firmware/alsa-firmware[alsa_cards_ca0132] !sys-firmware/alsa-firmware[alsa_cards_korg1212] !sys-firmware/alsa-firmware[alsa_cards_maestro3] !sys-firmware/alsa-firmware[alsa_cards_sb16] !sys-firmware/alsa-firmware[alsa_cards_ymfpci] !media-tv/cx18-firmware !<sys-firmware/ivtv-firmware-20080701-r1 !media-tv/linuxtv-dvb-firmware[dvb_cards_cx231xx] !media-tv/linuxtv-dvb-firmware[dvb_cards_cx23885] !media-tv/linuxtv-dvb-firmware[dvb_cards_usb-dib0700] !net-dialup/ueagle-atm !net-dialup/ueagle4-atm !net-wireless/ar9271-firmware !net-wireless/i2400m-fw !net-wireless/libertas-firmware !sys-firmware/rt61-firmware !net-wireless/rt73-firmware !net-wireless/rt2860-firmware !net-wireless/rt2870-firmware !sys-block/qla-fc-firmware !sys-firmware/amd-ucode !sys-firmware/iwl1000-ucode !sys-firmware/iwl2000-ucode !sys-firmware/iwl2030-ucode !sys-firmware/iwl3945-ucode !sys-firmware/iwl4965-ucode !sys-firmware/iwl5000-ucode !sys-firmware/iwl5150-ucode !sys-firmware/iwl6000-ucode !sys-firmware/iwl6005-ucode !sys-firmware/iwl6030-ucode !sys-firmware/iwl6050-ucode !x11-drivers/radeon-ucode
+SLOT=0
+SRC_URI=mirror://gentoo/linux-firmware-20140603.tar.xz
+_md5_=1f8a0be671d2b16b37221fbf5a840870

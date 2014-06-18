@@ -9,4 +9,4 @@ RDEPEND=dev-libs/openssl sys-apps/findutils
 SLOT=0
 SRC_URI=ftp://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_3_16_RTM/src/nss-3.16.tar.gz
 _eclasses_=cros-tmpfiles	f8426c9bb283cf98bc19ff88ea93a934	eutils	4878e7f88afc0ba0866ac112190b0fd4	multilib	892e597faee02a5b94eb02ab512e7622	python-any-r1	08d3455b23110d650f173ab0a090818b	python-utils-r1	49ee0ca5e1019d8f256a23692dad2642	systemd	9f063b2cc19c5e8030911372aa246c4e	toolchain-funcs	51e6c948e72c43bcc8edc7544411c953	user	d0a4d0735a6c0183d707ca919bd72f28
-_md5_=4456b1a4b696306ba07039e22e52efbe
+_md5_=fbb896423ab95297e1ef95176d46817a
