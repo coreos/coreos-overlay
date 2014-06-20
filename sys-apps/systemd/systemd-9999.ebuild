@@ -194,6 +194,8 @@ multilib_src_configure() {
 		# no deps
 		--enable-efi
 		--enable-ima
+		# used for stacktraces in log messages, leave off for now
+		--disable-elfutils
 		# optional components/dependencies
 		$(use_enable acl)
 		$(use_enable audit)
