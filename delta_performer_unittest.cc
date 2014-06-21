@@ -423,7 +423,7 @@ static void ApplyDeltaFile(bool full_kernel, bool full_rootfs, bool noop,
       else
         EXPECT_EQ(1, sigs_message.signatures_size());
       const Signatures_Signature& signature = sigs_message.signatures(0);
-      EXPECT_EQ(1, signature.version());
+      EXPECT_EQ(kSignatureMessageCurrentVersion, signature.version());
 
       uint64_t expected_sig_data_length = 0;
       vector<string> key_paths (1, kUnittestPrivateKeyPath);
