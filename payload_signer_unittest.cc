@@ -111,7 +111,7 @@ TEST(PayloadSignerTest, SimpleTest) {
                                         signature_blob.size()));
   EXPECT_EQ(1, signatures.signatures_size());
   const Signatures_Signature& signature = signatures.signatures(0);
-  EXPECT_EQ(kSignatureMessageOriginalVersion, signature.version());
+  EXPECT_EQ(kSignatureMessageCurrentVersion, signature.version());
   const string sig_data = signature.data();
   ASSERT_EQ(arraysize(kDataSignature), sig_data.size());
   for (size_t i = 0; i < arraysize(kDataSignature); i++) {

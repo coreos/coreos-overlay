@@ -16,7 +16,6 @@
 
 namespace chromeos_update_engine {
 
-extern const uint32_t kSignatureMessageOriginalVersion;
 extern const uint32_t kSignatureMessageCurrentVersion;
 
 class PayloadSigner {

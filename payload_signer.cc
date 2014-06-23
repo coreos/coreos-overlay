@@ -21,7 +21,6 @@ using std::vector;
 
 namespace chromeos_update_engine {
 
-const uint32_t kSignatureMessageOriginalVersion = 1;
 const uint32_t kSignatureMessageCurrentVersion = 1;
 
 namespace {
@@ -85,13 +84,7 @@ bool ConvertSignatureToProtobufBlob(const vector<vector<char> >& signatures,
                                     vector<char>* out_signature_blob) {
   // Pack it into a protobuf
   Signatures out_message;
-  uint32_t version = kSignatureMessageOriginalVersion;
-  LOG_IF(WARNING, kSignatureMessageCurrentVersion -
-         kSignatureMessageOriginalVersion + 1 < signatures.size())
-      << "You may want to support clients in the range ["
-      << kSignatureMessageOriginalVersion << ", "
-      << kSignatureMessageCurrentVersion << "] inclusive, but you only "
-      << "provided " << signatures.size() << " signatures.";
+  uint32_t version = kSignatureMessageCurrentVersion + 1 - signatures.size();
   for (vector<vector<char> >::const_iterator it = signatures.begin(),
            e = signatures.end(); it != e; ++it) {
     const vector<char>& signature = *it;

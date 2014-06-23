@@ -153,7 +153,7 @@ static void SignGeneratedPayload(const string& payload_path,
   EXPECT_TRUE(PayloadSigner::VerifySignedPayload(
       payload_path,
       kUnittestPublicKeyPath,
-      kSignatureMessageOriginalVersion));
+      kSignatureMessageCurrentVersion));
 }
 
 static void SignGeneratedShellPayload(SignatureTest signature_test,
