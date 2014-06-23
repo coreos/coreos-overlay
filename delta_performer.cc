@@ -451,27 +451,19 @@ bool DeltaPerformer::Write(const void* bytes, size_t count,
       return true;
     }
 
-    // Validate the operation only if the metadata signature is present.
-    // Otherwise, keep the old behavior. This serves as a knob to disable
-    // the validation logic in case we find some regression after rollout.
-    // NOTE: If hash checks are mandatory and if metadata_signature is empty,
-    // we would have already failed in ParsePayloadMetadata method and thus not
-    // even be here. So no need to handle that case again here.
-    if (!install_plan_->metadata_signature.empty()) {
-      // Note: Validate must be called only if CanPerformInstallOperation is
-      // called. Otherwise, we might be failing operations before even if there
-      // isn't sufficient data to compute the proper hash.
-      *error = ValidateOperationHash(op);
-      if (*error != kActionCodeSuccess) {
-        if (install_plan_->hash_checks_mandatory) {
-          LOG(ERROR) << "Mandatory operation hash check failed";
-          return false;
-        }
-
-        // For non-mandatory cases, just log a warning.
-        LOG(WARNING) << "Ignoring operation validation errors";
-        *error = kActionCodeSuccess;
+    // Note: Validate must be called only if CanPerformInstallOperation is
+    // called. Otherwise, we might be failing operations before even if there
+    // isn't sufficient data to compute the proper hash.
+    *error = ValidateOperationHash(op);
+    if (*error != kActionCodeSuccess) {
+      if (install_plan_->hash_checks_mandatory) {
+        LOG(ERROR) << "Mandatory operation hash check failed";
+        return false;
       }
+
+      // For non-mandatory cases, just log a warning.
+      LOG(WARNING) << "Ignoring operation validation errors";
+      *error = kActionCodeSuccess;
     }
 
     // Makes sure we unblock exit when this operation completes.
