@@ -199,17 +199,6 @@ class DeltaPerformer : public FileWriter {
   ActionExitCode ValidateOperationHash(
       const DeltaArchiveManifest_InstallOperation& operation);
 
-  // Interprets the given |protobuf| as a DeltaArchiveManifest protocol buffer
-  // of the given protobuf_length and verifies that the signed hash of the
-  // metadata matches what's specified in the install plan from Omaha.
-  // Returns kActionCodeSuccess on match or a suitable error code otherwise.
-  // This method must be called before any part of the |protobuf| is parsed
-  // so that a man-in-the-middle attack on the SSL connection to the payload
-  // server doesn't exploit any vulnerability in the code that parses the
-  // protocol buffer.
-  ActionExitCode ValidateMetadataSignature(const char* protobuf,
-                                           uint64_t protobuf_length);
-
   // Returns true on success.
   bool PerformInstallOperation(
       const DeltaArchiveManifest_InstallOperation& operation);

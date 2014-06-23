@@ -926,7 +926,9 @@ TEST(DeltaPerformerTest, ValidMandatoryMetadataSizeTest) {
   DoMetadataSizeTest(85376, 85376, true);
 }
 
-TEST(DeltaPerformerTest, RunAsRootMandatoryEmptyMetadataSignatureTest) {
+// TODO: These metadata signature tests can be removed but not before further study
+// to ensure that all the code that used to support this functionality is gone.
+TEST(DeltaPerformerTest, DISABLED_RunAsRootMandatoryEmptyMetadataSignatureTest) {
   DoMetadataSignatureTest(kEmptyMetadataSignature, kSignatureGenerated, true);
 }
 
@@ -934,7 +936,7 @@ TEST(DeltaPerformerTest, RunAsRootNonMandatoryEmptyMetadataSignatureTest) {
   DoMetadataSignatureTest(kEmptyMetadataSignature, kSignatureGenerated, false);
 }
 
-TEST(DeltaPerformerTest, RunAsRootMandatoryInvalidMetadataSignatureTest) {
+TEST(DeltaPerformerTest, DISABLED_RunAsRootMandatoryInvalidMetadataSignatureTest) {
   DoMetadataSignatureTest(kInvalidMetadataSignature, kSignatureGenerated, true);
 }
 

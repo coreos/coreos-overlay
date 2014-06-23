@@ -377,20 +377,6 @@ DeltaPerformer::MetadataParseResult DeltaPerformer::ParsePayloadMetadata(
                  << "Trusting metadata size in payload = " << *metadata_size;
   }
 
-  // We have the full metadata in |payload|. Verify its integrity
-  // and authenticity based on the information we have in Omaha response.
-  *error = ValidateMetadataSignature(&payload[0], *metadata_size);
-  if (*error != kActionCodeSuccess) {
-    if (install_plan_->hash_checks_mandatory) {
-      LOG(ERROR) << "Mandatory metadata signature validation failed";
-      return kMetadataParseError;
-    }
-
-    // For non-mandatory cases, just log a warning.
-    LOG(WARNING) << "Ignoring metadata signature validation failures";
-    *error = kActionCodeSuccess;
-  }
-
   // The metadata in |payload| is deemed valid. So, it's now safe to
   // parse the protobuf.
   if (!manifest->ParseFromArray(&payload[manifest_offset], manifest_size)) {
@@ -794,63 +780,6 @@ bool DeltaPerformer::ExtractSignatureMessage(
             << manifest_.signatures_size() << " at "
             << manifest_.signatures_offset();
   return true;
-}
-
-ActionExitCode DeltaPerformer::ValidateMetadataSignature(
-    const char* metadata, uint64_t metadata_size) {
-
-  if (install_plan_->metadata_signature.empty()) {
-    if (install_plan_->hash_checks_mandatory) {
-      LOG(ERROR) << "Missing mandatory metadata signature in Omaha response";
-      return kActionCodeDownloadMetadataSignatureMissingError;
-    }
-
-    // For non-mandatory cases, just log a warning.
-    LOG(WARNING) << "Cannot validate metadata as the signature is empty";
-    return kActionCodeSuccess;
-  }
-
-  // Convert base64-encoded signature to raw bytes.
-  vector<char> metadata_signature;
-  if (!OmahaHashCalculator::Base64Decode(install_plan_->metadata_signature,
-                                         &metadata_signature)) {
-    LOG(ERROR) << "Unable to decode base64 metadata signature: "
-               << install_plan_->metadata_signature;
-    return kActionCodeDownloadMetadataSignatureError;
-  }
-
-  vector<char> expected_metadata_hash;
-  if (!PayloadSigner::GetRawHashFromSignature(metadata_signature,
-                                              public_key_path_,
-                                              &expected_metadata_hash)) {
-    LOG(ERROR) << "Unable to compute expected hash from metadata signature";
-    return kActionCodeDownloadMetadataSignatureError;
-  }
-
-  OmahaHashCalculator metadata_hasher;
-  metadata_hasher.Update(metadata, metadata_size);
-  if (!metadata_hasher.Finalize()) {
-    LOG(ERROR) << "Unable to compute actual hash of manifest";
-    return kActionCodeDownloadMetadataSignatureVerificationError;
-  }
-
-  vector<char> calculated_metadata_hash = metadata_hasher.raw_hash();
-  PayloadSigner::PadRSA2048SHA256Hash(&calculated_metadata_hash);
-  if (calculated_metadata_hash.empty()) {
-    LOG(ERROR) << "Computed actual hash of metadata is empty.";
-    return kActionCodeDownloadMetadataSignatureVerificationError;
-  }
-
-  if (calculated_metadata_hash != expected_metadata_hash) {
-    LOG(ERROR) << "Manifest hash verification failed. Expected hash = ";
-    utils::HexDumpVector(expected_metadata_hash);
-    LOG(ERROR) << "Calculated hash = ";
-    utils::HexDumpVector(calculated_metadata_hash);
-    return kActionCodeDownloadMetadataSignatureMismatch;
-  }
-
-  LOG(INFO) << "Manifest signature matches expected value in Omaha response";
-  return kActionCodeSuccess;
 }
 
 ActionExitCode DeltaPerformer::ValidateOperationHash(
