@@ -5,6 +5,8 @@ Documentation=http://docs.docker.io
 [Service]
 Environment="TMPDIR=/var/tmp/"
 ExecStartPre=/bin/mount --make-rprivate /
+LimitNOFILE=1048576
+LimitNPROC=1048576
 # Run docker but don't have docker automatically restart
 # containers. This is a job for systemd and unit files.
 ExecStart=/usr/bin/docker -d -s=btrfs -r=false -H fd://
