@@ -239,7 +239,7 @@ gboolean  TerminateScheduleCrashReporterUploadTest(void* arg) {
 }
 }  // namespace {}
 
-TEST(UtilsTest, ScheduleCrashReporterUploadTest) {
+TEST(UtilsTest, DISABLED_ScheduleCrashReporterUploadTest) {
   // Not much to test. At least this tests for memory leaks, crashes,
   // log errors.
   GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
