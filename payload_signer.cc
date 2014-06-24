@@ -21,8 +21,7 @@ using std::vector;
 
 namespace chromeos_update_engine {
 
-const uint32_t kSignatureMessageOriginalVersion = 1;
-const uint32_t kSignatureMessageCurrentVersion = 1;
+const uint32_t kSignatureMessageCurrentVersion = 2;
 
 namespace {
 
@@ -85,13 +84,7 @@ bool ConvertSignatureToProtobufBlob(const vector<vector<char> >& signatures,
                                     vector<char>* out_signature_blob) {
   // Pack it into a protobuf
   Signatures out_message;
-  uint32_t version = kSignatureMessageOriginalVersion;
-  LOG_IF(WARNING, kSignatureMessageCurrentVersion -
-         kSignatureMessageOriginalVersion + 1 < signatures.size())
-      << "You may want to support clients in the range ["
-      << kSignatureMessageOriginalVersion << ", "
-      << kSignatureMessageCurrentVersion << "] inclusive, but you only "
-      << "provided " << signatures.size() << " signatures.";
+  uint32_t version = kSignatureMessageCurrentVersion + 1 - signatures.size();
   for (vector<vector<char> >::const_iterator it = signatures.begin(),
            e = signatures.end(); it != e; ++it) {
     const vector<char>& signature = *it;
@@ -443,28 +436,5 @@ bool PayloadSigner::PadRSA2048SHA256Hash(std::vector<char>* hash) {
   TEST_AND_RETURN_FALSE(hash->size() == 256);
   return true;
 }
-
-bool PayloadSigner::GetMetadataSignature(const char* const metadata,
-                                         size_t metadata_size,
-                                         const string& private_key_path,
-                                         string* out_signature) {
-  // Calculates the hash on the updated payload. Note that the payload includes
-  // the signature op but doesn't include the signature blob at the end.
-  vector<char> metadata_hash;
-  TEST_AND_RETURN_FALSE(OmahaHashCalculator::RawHashOfBytes(metadata,
-                                                            metadata_size,
-                                                            &metadata_hash));
-
-  vector<char> signature;
-  TEST_AND_RETURN_FALSE(SignHash(metadata_hash,
-                                 private_key_path,
-                                 &signature));
-
-  TEST_AND_RETURN_FALSE(OmahaHashCalculator::Base64Encode(&signature[0],
-                                                          signature.size(),
-                                                          out_signature));
-  return true;
-}
-
 
 }  // namespace chromeos_update_engine

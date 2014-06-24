@@ -20,7 +20,6 @@ struct InstallPlan {
               uint64_t payload_size,
               const std::string& payload_hash,
               uint64_t metadata_size,
-              const std::string& metadata_signature,
               const std::string& install_path,
               const std::string& kernel_install_path);
 
@@ -39,7 +38,6 @@ struct InstallPlan {
   uint64_t payload_size;                 // size of the payload
   std::string payload_hash ;             // SHA256 hash of the payload
   uint64_t metadata_size;                // size of the metadata
-  std::string metadata_signature;        // signature of the  metadata
   std::string install_path;              // path to install device
   std::string kernel_install_path;       // path to kernel install device
 
