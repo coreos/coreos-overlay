@@ -33,7 +33,6 @@ static void SetupPayloadStateWith2Urls(string hash,
   response->size = 523456789;
   response->hash = hash;
   response->metadata_size = 558123;
-  response->metadata_signature = "metasign";
   response->max_failure_count_per_url = 3;
   payload_state->SetResponse(*response);
   string stored_response_sign = payload_state->GetResponseSignature();
@@ -44,7 +43,6 @@ static void SetupPayloadStateWith2Urls(string hash,
       "Payload Size = 523456789\n"
       "Payload Sha256 Hash = %s\n"
       "Metadata Size = 558123\n"
-      "Metadata Signature = metasign\n"
       "Is Delta Payload = %d\n"
       "Max Failure Count Per Url = %d\n"
       "Disable Payload Backoff = %d\n",
@@ -72,7 +70,6 @@ TEST(PayloadStateTest, SetResponseWorksWithEmptyResponse) {
                                   "Payload Size = 0\n"
                                   "Payload Sha256 Hash = \n"
                                   "Metadata Size = 0\n"
-                                  "Metadata Signature = \n"
                                   "Is Delta Payload = 0\n"
                                   "Max Failure Count Per Url = 0\n"
                                   "Disable Payload Backoff = 0\n";
@@ -87,7 +84,6 @@ TEST(PayloadStateTest, SetResponseWorksWithSingleUrl) {
   response.size = 123456789;
   response.hash = "hash";
   response.metadata_size = 58123;
-  response.metadata_signature = "msign";
   NiceMock<PrefsMock> prefs;
   EXPECT_CALL(prefs, SetInt64(kPrefsPayloadAttemptNumber, 0));
   EXPECT_CALL(prefs, SetInt64(kPrefsBackoffExpiryTime, 0));
@@ -102,7 +98,6 @@ TEST(PayloadStateTest, SetResponseWorksWithSingleUrl) {
                                   "Payload Size = 123456789\n"
                                   "Payload Sha256 Hash = hash\n"
                                   "Metadata Size = 58123\n"
-                                  "Metadata Signature = msign\n"
                                   "Is Delta Payload = 0\n"
                                   "Max Failure Count Per Url = 0\n"
                                   "Disable Payload Backoff = 0\n";
@@ -118,7 +113,6 @@ TEST(PayloadStateTest, SetResponseWorksWithMultipleUrls) {
   response.size = 523456789;
   response.hash = "rhash";
   response.metadata_size = 558123;
-  response.metadata_signature = "metasign";
   NiceMock<PrefsMock> prefs;
   EXPECT_CALL(prefs, SetInt64(kPrefsPayloadAttemptNumber, 0));
   EXPECT_CALL(prefs, SetInt64(kPrefsBackoffExpiryTime, 0));
@@ -134,7 +128,6 @@ TEST(PayloadStateTest, SetResponseWorksWithMultipleUrls) {
                                   "Payload Size = 523456789\n"
                                   "Payload Sha256 Hash = rhash\n"
                                   "Metadata Size = 558123\n"
-                                  "Metadata Signature = metasign\n"
                                   "Is Delta Payload = 0\n"
                                   "Max Failure Count Per Url = 0\n"
                                   "Disable Payload Backoff = 0\n";

@@ -42,7 +42,6 @@ extern const char* kUnittestPrivateKey2Path;
 extern const char* kUnittestPublicKey2Path;
 
 static const size_t kBlockSize = 4096;
-static const char* kBogusMetadataSignature1 = "awSFIUdUZz2VWFiR+ku0Pj00V7bPQPQFYQSXjEXr3vaw3TE4xHV5CraY3/YrZpBvJ5z4dSBskoeuaO1TNC/S6E05t+yt36tE4Fh79tMnJ/z9fogBDXWgXLEUyG78IEQrYH6/eBsQGT2RJtBgXIXbZ9W+5G9KmGDoPOoiaeNsDuqHiBc/58OFsrxskH8E6vMSBmMGGk82mvgzic7ApcoURbCGey1b3Mwne/hPZ/bb9CIyky8Og9IfFMdL2uAweOIRfjoTeLYZpt+WN65Vu7jJ0cQN8e1y+2yka5112wpRf/LLtPgiAjEZnsoYpLUd7CoVpLRtClp97kN2+tXGNBQqkA==";
 
 static const int kDefaultKernelSize = 4096; // Something small for a test
 static const char* kNewDataString = "This is new data.";
@@ -78,15 +77,6 @@ enum SignatureTest {
   kSignatureGeneratedShellBadKey,  // Sign with a bad key through shell cmds.
   kSignatureGeneratedShellRotateCl1,  // Rotate key, test client v1
   kSignatureGeneratedShellRotateCl2,  // Rotate key, test client v2
-};
-
-// Different options that determine what we should fill into the
-// install_plan.metadata_signature to simulate the contents received in the
-// Omaha response.
-enum MetadataSignatureTest {
-  kEmptyMetadataSignature,
-  kInvalidMetadataSignature,
-  kValidMetadataSignature,
 };
 
 enum OperationHashTest {
@@ -489,12 +479,6 @@ static void ApplyDeltaFile(bool full_kernel, bool full_rootfs, bool noop,
   install_plan.metadata_size = state->metadata_size;
   LOG(INFO) << "Setting payload metadata size in Omaha  = "
             << state->metadata_size;
-  ASSERT_TRUE(PayloadSigner::GetMetadataSignature(
-      &state->delta[0],
-      state->metadata_size,
-      kUnittestPrivateKeyPath,
-      &install_plan.metadata_signature));
-  EXPECT_FALSE(install_plan.metadata_signature.empty());
 
   *performer = new DeltaPerformer(&prefs,
                                   &state->mock_system_state,
@@ -694,102 +678,6 @@ void DoMetadataSizeTest(uint64_t expected_metadata_size,
   EXPECT_LT(performer.Close(), 0);
 }
 
-// Generates a valid delta file but tests the delta performer by suppling
-// different metadata signatures as per omaha_metadata_signature flag and
-// sees if the result of the parsing are as per hash_checks_mandatory flag.
-void DoMetadataSignatureTest(MetadataSignatureTest metadata_signature_test,
-                             SignatureTest signature_test,
-                             bool hash_checks_mandatory) {
-  DeltaState state;
-
-  // Using kSignatureNone since it doesn't affect the results of our test.
-  // If we've to use other signature options, then we'd have to get the
-  // metadata size again after adding the signing operation to the manifest.
-  GenerateDeltaFile(true, true, false, signature_test, &state);
-
-  ScopedPathUnlinker a_img_unlinker(state.a_img);
-  ScopedPathUnlinker b_img_unlinker(state.b_img);
-  ScopedPathUnlinker delta_unlinker(state.delta_path);
-  ScopedPathUnlinker old_kernel_unlinker(state.old_kernel);
-  ScopedPathUnlinker new_kernel_unlinker(state.new_kernel);
-
-  // Loads the payload and parses the manifest.
-  vector<char> payload;
-  EXPECT_TRUE(utils::ReadFile(state.delta_path, &payload));
-  LOG(INFO) << "Payload size: " << payload.size();
-
-  InstallPlan install_plan;
-  install_plan.hash_checks_mandatory = hash_checks_mandatory;
-  install_plan.metadata_size = state.metadata_size;
-
-  DeltaPerformer::MetadataParseResult expected_result, actual_result;
-  ActionExitCode expected_error, actual_error;
-
-  // Fill up the metadata signature in install plan according to the test.
-  switch (metadata_signature_test) {
-    case kEmptyMetadataSignature:
-      install_plan.metadata_signature.clear();
-      expected_result = DeltaPerformer::kMetadataParseError;
-      expected_error = kActionCodeDownloadMetadataSignatureMissingError;
-      break;
-
-    case kInvalidMetadataSignature:
-      install_plan.metadata_signature = kBogusMetadataSignature1;
-      expected_result = DeltaPerformer::kMetadataParseError;
-      expected_error = kActionCodeDownloadMetadataSignatureMismatch;
-      break;
-
-    case kValidMetadataSignature:
-    default:
-      // Set the install plan's metadata size to be the same as the one
-      // in the manifest so that we pass the metadata size checks. Only
-      // then we can get to manifest signature checks.
-      ASSERT_TRUE(PayloadSigner::GetMetadataSignature(
-          &payload[0],
-          state.metadata_size,
-          kUnittestPrivateKeyPath,
-          &install_plan.metadata_signature));
-      EXPECT_FALSE(install_plan.metadata_signature.empty());
-      expected_result = DeltaPerformer::kMetadataParseSuccess;
-      expected_error = kActionCodeSuccess;
-      break;
-  }
-
-  // Ignore the expected result/error if hash checks are not mandatory.
-  if (!hash_checks_mandatory) {
-    expected_result = DeltaPerformer::kMetadataParseSuccess;
-    expected_error = kActionCodeSuccess;
-  }
-
-  // Create the delta performer object.
-  PrefsMock prefs;
-  DeltaPerformer delta_performer(&prefs,
-                                 &state.mock_system_state,
-                                 &install_plan);
-
-  // Use the public key corresponding to the private key used above to
-  // sign the metadata.
-  EXPECT_TRUE(utils::FileExists(kUnittestPublicKeyPath));
-  delta_performer.set_public_key_path(kUnittestPublicKeyPath);
-
-  // Parse the delta payload we created.
-  DeltaArchiveManifest manifest;
-  uint64_t parsed_metadata_size;
-
-  // Init actual_error with an invalid value so that we make sure
-  // ParsePayloadMetadata properly populates it in all cases.
-  actual_error = kActionCodeOmahaRequestHTTPResponseBase;
-  actual_result = delta_performer.ParsePayloadMetadata(payload, &manifest,
-      &parsed_metadata_size, &actual_error);
-
-  EXPECT_EQ(expected_result, actual_result);
-  EXPECT_EQ(expected_error, actual_error);
-
-  // Check that the parsed metadata size is what's expected. This test
-  // implicitly confirms that the metadata signature is valid, if required.
-  EXPECT_EQ(state.metadata_size, parsed_metadata_size);
-}
-
 void DoOperationHashMismatchTest(OperationHashTest op_hash_test,
                                  bool hash_checks_mandatory) {
   DeltaState state;
@@ -924,37 +812,6 @@ TEST(DeltaPerformerTest, InvalidNonMandatoryMetadataSizeTest) {
 
 TEST(DeltaPerformerTest, ValidMandatoryMetadataSizeTest) {
   DoMetadataSizeTest(85376, 85376, true);
-}
-
-// TODO: These metadata signature tests can be removed but not before further study
-// to ensure that all the code that used to support this functionality is gone.
-TEST(DeltaPerformerTest, DISABLED_RunAsRootMandatoryEmptyMetadataSignatureTest) {
-  DoMetadataSignatureTest(kEmptyMetadataSignature, kSignatureGenerated, true);
-}
-
-TEST(DeltaPerformerTest, RunAsRootNonMandatoryEmptyMetadataSignatureTest) {
-  DoMetadataSignatureTest(kEmptyMetadataSignature, kSignatureGenerated, false);
-}
-
-TEST(DeltaPerformerTest, DISABLED_RunAsRootMandatoryInvalidMetadataSignatureTest) {
-  DoMetadataSignatureTest(kInvalidMetadataSignature, kSignatureGenerated, true);
-}
-
-TEST(DeltaPerformerTest, RunAsRootNonMandatoryInvalidMetadataSignatureTest) {
-  DoMetadataSignatureTest(kInvalidMetadataSignature, kSignatureGenerated,
-                          false);
-}
-
-TEST(DeltaPerformerTest, RunAsRootMandatoryValidMetadataSignature1Test) {
-  DoMetadataSignatureTest(kValidMetadataSignature, kSignatureNone, true);
-}
-
-TEST(DeltaPerformerTest, RunAsRootMandatoryValidMetadataSignature2Test) {
-  DoMetadataSignatureTest(kValidMetadataSignature, kSignatureGenerated, true);
-}
-
-TEST(DeltaPerformerTest, RunAsRootNonMandatoryValidMetadataSignatureTest) {
-  DoMetadataSignatureTest(kValidMetadataSignature, kSignatureGenerated, false);
 }
 
 TEST(DeltaPerformerTest, RunAsRootMandatoryOperationHashMismatchTest) {

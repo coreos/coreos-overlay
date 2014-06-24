@@ -44,7 +44,6 @@ struct OmahaResponse {
 
   std::string more_info_url;
   std::string hash;
-  std::string metadata_signature;
   std::string deadline;
   off_t size;
   off_t metadata_size;

@@ -17,7 +17,6 @@ InstallPlan::InstallPlan(bool is_resume,
                          uint64_t payload_size,
                          const string& payload_hash,
                          uint64_t metadata_size,
-                         const string& metadata_signature,
                          const string& install_path,
                          const string& kernel_install_path)
     : is_resume(is_resume),
@@ -25,7 +24,6 @@ InstallPlan::InstallPlan(bool is_resume,
       payload_size(payload_size),
       payload_hash(payload_hash),
       metadata_size(metadata_size),
-      metadata_signature(metadata_signature),
       install_path(install_path),
       kernel_install_path(kernel_install_path),
       kernel_size(0),
@@ -48,7 +46,6 @@ bool InstallPlan::operator==(const InstallPlan& that) const {
           (payload_size == that.payload_size) &&
           (payload_hash == that.payload_hash) &&
           (metadata_size == that.metadata_size) &&
-          (metadata_signature == that.metadata_signature) &&
           (install_path == that.install_path) &&
           (kernel_install_path == that.kernel_install_path));
 }
@@ -64,7 +61,6 @@ void InstallPlan::Dump() const {
             << ", payload size: " << payload_size
             << ", payload hash: " << payload_hash
             << ", metadata size: " << metadata_size
-            << ", metadata signature: " << metadata_signature
             << ", install_path: " << install_path
             << ", kernel_install_path: " << kernel_install_path
             << ", hash_checks_mandatory: " << utils::ToString(

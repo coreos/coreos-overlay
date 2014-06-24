@@ -437,27 +437,4 @@ bool PayloadSigner::PadRSA2048SHA256Hash(std::vector<char>* hash) {
   return true;
 }
 
-bool PayloadSigner::GetMetadataSignature(const char* const metadata,
-                                         size_t metadata_size,
-                                         const string& private_key_path,
-                                         string* out_signature) {
-  // Calculates the hash on the updated payload. Note that the payload includes
-  // the signature op but doesn't include the signature blob at the end.
-  vector<char> metadata_hash;
-  TEST_AND_RETURN_FALSE(OmahaHashCalculator::RawHashOfBytes(metadata,
-                                                            metadata_size,
-                                                            &metadata_hash));
-
-  vector<char> signature;
-  TEST_AND_RETURN_FALSE(SignHash(metadata_hash,
-                                 private_key_path,
-                                 &signature));
-
-  TEST_AND_RETURN_FALSE(OmahaHashCalculator::Base64Encode(&signature[0],
-                                                          signature.size(),
-                                                          out_signature));
-  return true;
-}
-
-
 }  // namespace chromeos_update_engine

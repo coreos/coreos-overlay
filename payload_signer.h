@@ -120,15 +120,6 @@ class PayloadSigner {
   // 2048 bits. Returns true on success, false otherwise.
   static bool PadRSA2048SHA256Hash(std::vector<char>* hash);
 
-  // Computes the SHA256 hash of the first metadata_size bytes of |metadata|
-  // and signs the hash with the given private_key_path and writes the signed
-  // hash in |out_signature|. Returns true if successful or false if there was
-  // any error in the computations.
-  static bool GetMetadataSignature(const char* const metadata,
-                                   size_t metadata_size,
-                                   const std::string& private_key_path,
-                                   std::string* out_signature);
-
   // Reads the payload from the given |payload_path| into the |out_payload|
   // vector. It also parses the manifest protobuf in the payload and returns it
   // in |out_manifest| along with the size of the entire metadata in
