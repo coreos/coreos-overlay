@@ -14,7 +14,7 @@ inherit toolchain-funcs cros-workon systemd
 if [[ "${PV}" == 9999 ]]; then
     KEYWORDS="~amd64"
 else
-    CROS_WORKON_COMMIT="9970141f76241c909977af7bafe7b6f2c4923de8" # v0.4.3
+    CROS_WORKON_COMMIT="4fb6087f4a71cbc6c59e7107ebeea36dede62cc9" # v0.4.4
     KEYWORDS="amd64"
 fi
 
