@@ -47,7 +47,6 @@ void OmahaResponseHandlerAction::PerformAction() {
   // Fill up the other properties based on the response.
   install_plan_.payload_size = response.size;
   install_plan_.payload_hash = response.hash;
-  install_plan_.metadata_size = response.metadata_size;
   install_plan_.hash_checks_mandatory = AreHashChecksMandatory(response);
   install_plan_.is_resume =
       DeltaPerformer::CanResumeUpdate(system_state_->prefs(), response.hash);

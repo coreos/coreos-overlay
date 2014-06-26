@@ -311,7 +311,7 @@ TEST_F(FilesystemCopierActionTest, ResumeTest) {
 
   ObjectFeederAction<InstallPlan> feeder_action;
   const char* kUrl = "http://some/url";
-  InstallPlan install_plan(true, kUrl, 0, "", 0, "", "");
+  InstallPlan install_plan(true, kUrl, 0, "", "", "");
   feeder_action.set_obj(install_plan);
   FilesystemCopierAction copier_action(false, false);
   ObjectCollectorAction<InstallPlan> collector_action;
@@ -340,7 +340,6 @@ TEST_F(FilesystemCopierActionTest, NonExistentDriveTest) {
                            "",
                            0,
                            "",
-                           0,
                            "/no/such/file",
                            "/no/such/file");
   feeder_action.set_obj(install_plan);

@@ -476,9 +476,6 @@ static void ApplyDeltaFile(bool full_kernel, bool full_rootfs, bool noop,
   // Update the A image in place.
   InstallPlan install_plan;
   install_plan.hash_checks_mandatory = hash_checks_mandatory;
-  install_plan.metadata_size = state->metadata_size;
-  LOG(INFO) << "Setting payload metadata size in Omaha  = "
-            << state->metadata_size;
 
   *performer = new DeltaPerformer(&prefs,
                                   &state->mock_system_state,
@@ -641,43 +638,6 @@ void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop,
   VerifyPayload(performer, &state, signature_test);
 }
 
-// Calls delta performer's Write method by pretending to pass in bytes from a
-// delta file whose metadata size is actual_metadata_size and tests if all
-// checks are correctly performed if the install plan contains
-// expected_metadata_size and that the result of the parsing are as per
-// hash_checks_mandatory flag.
-void DoMetadataSizeTest(uint64_t expected_metadata_size,
-                        uint64_t actual_metadata_size,
-                        bool hash_checks_mandatory) {
-  PrefsMock prefs;
-  InstallPlan install_plan;
-  install_plan.hash_checks_mandatory = hash_checks_mandatory;
-  MockSystemState mock_system_state;
-  DeltaPerformer performer(&prefs, &mock_system_state, &install_plan);
-  EXPECT_EQ(0, performer.Open("/dev/null", 0, 0));
-  EXPECT_TRUE(performer.OpenKernel("/dev/null"));
-
-  // Set a valid magic string and version number 1.
-  EXPECT_TRUE(performer.Write("CrAU", 4));
-  uint64_t version = htobe64(1);
-  EXPECT_TRUE(performer.Write(&version, 8));
-
-  install_plan.metadata_size = expected_metadata_size;
-  ActionExitCode error_code;
-  // When filling in size in manifest, exclude the size of the 20-byte header.
-  uint64_t size_in_manifest = htobe64(actual_metadata_size - 20);
-  bool result = performer.Write(&size_in_manifest, 8, &error_code);
-  if (expected_metadata_size == actual_metadata_size ||
-      !hash_checks_mandatory) {
-    EXPECT_TRUE(result);
-  } else {
-    EXPECT_FALSE(result);
-    EXPECT_EQ(kActionCodeDownloadInvalidMetadataSize, error_code);
-  }
-
-  EXPECT_LT(performer.Close(), 0);
-}
-
 void DoOperationHashMismatchTest(OperationHashTest op_hash_test,
                                  bool hash_checks_mandatory) {
   DeltaState state;
@@ -792,26 +752,6 @@ TEST(DeltaPerformerTest, WriteUpdatesPayloadState) {
   EXPECT_TRUE(performer.Write("morejunk", 8));
   EXPECT_FALSE(performer.Write("morejunk", 8));
   EXPECT_LT(performer.Close(), 0);
-}
-
-TEST(DeltaPerformerTest, MissingMandatoryMetadataSizeTest) {
-  DoMetadataSizeTest(0, 75456, true);
-}
-
-TEST(DeltaPerformerTest, MissingNonMandatoryMetadataSizeTest) {
-  DoMetadataSizeTest(0, 123456, false);
-}
-
-TEST(DeltaPerformerTest, InvalidMandatoryMetadataSizeTest) {
-  DoMetadataSizeTest(13000, 140000, true);
-}
-
-TEST(DeltaPerformerTest, InvalidNonMandatoryMetadataSizeTest) {
-  DoMetadataSizeTest(40000, 50000, false);
-}
-
-TEST(DeltaPerformerTest, ValidMandatoryMetadataSizeTest) {
-  DoMetadataSizeTest(85376, 85376, true);
 }
 
 TEST(DeltaPerformerTest, RunAsRootMandatoryOperationHashMismatchTest) {

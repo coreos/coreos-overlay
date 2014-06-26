@@ -330,13 +330,11 @@ string PayloadState::CalculateResponseSignature() {
 
   response_sign += StringPrintf("Payload Size = %llu\n"
                                 "Payload Sha256 Hash = %s\n"
-                                "Metadata Size = %llu\n"
                                 "Is Delta Payload = %d\n"
                                 "Max Failure Count Per Url = %d\n"
                                 "Disable Payload Backoff = %d\n",
                                 response_.size,
                                 response_.hash.c_str(),
-                                response_.metadata_size,
                                 response_.is_delta_payload,
                                 response_.max_failure_count_per_url,
                                 response_.disable_payload_backoff);
