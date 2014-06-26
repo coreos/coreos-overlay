@@ -338,43 +338,10 @@ DeltaPerformer::MetadataParseResult DeltaPerformer::ParsePayloadMetadata(
          kDeltaManifestSizeSize);
   manifest_size = be64toh(manifest_size);  // switch big endian to host
 
-  // Now, check if the metasize we computed matches what was passed in
-  // through Omaha Response.
+  // We should wait for the full metadata to be read in before we can parse it.
   *metadata_size = manifest_offset + manifest_size;
-
-  // If the metadata size is present in install plan, check for it immediately
-  // even before waiting for that many number of bytes to be downloaded
-  // in the payload. This will prevent any attack which relies on us downloading
-  // data beyond the expected metadata size.
-  if (install_plan_->hash_checks_mandatory) {
-    if (install_plan_->metadata_size != *metadata_size) {
-      LOG(ERROR) << "Mandatory metadata size in Omaha response ("
-                 << install_plan_->metadata_size << ") is missing/incorrect."
-                 << ", Actual = " << *metadata_size;
-      *error = kActionCodeDownloadInvalidMetadataSize;
-      return kMetadataParseError;
-    }
-  }
-
-  // Now that we have validated the metadata size, we should wait for the full
-  // metadata to be read in before we can parse it.
   if (payload.size() < *metadata_size) {
     return kMetadataParseInsufficientData;
-  }
-
-  // Log whether we validated the size or simply trusting what's in the payload
-  // here. This is logged here (after we received the full metadata data) so
-  // that we just log once (instead of logging n times) if it takes n
-  // DeltaPerformer::Write calls to download the full manifest.
-  if (install_plan_->metadata_size == *metadata_size) {
-    LOG(INFO) << "Manifest size in payload matches expected value from Omaha";
-  } else {
-    // For mandatory-cases, we'd have already returned a kMetadataParseError
-    // above. We'll be here only for non-mandatory cases. Just log a warning.
-    LOG(WARNING) << "Ignoring missing/incorrect metadata size ("
-                 << install_plan_->metadata_size
-                 << ") in Omaha response as validation is not mandatory. "
-                 << "Trusting metadata size in payload = " << *metadata_size;
   }
 
   // The metadata in |payload| is deemed valid. So, it's now safe to
