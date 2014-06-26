@@ -2,18 +2,11 @@
 
 coreos:
     units:
-      - name: ec2-ssh-key.service
-        command: restart
-        runtime: yes
-        content: |
-          [Unit]
-          Description=Sets SSH key from metadata
-
-          [Service]
-          Type=oneshot
-          StandardOutput=journal+console
-          ExecStart=/usr/share/oem/bin/ec2-ssh-key
-      - name: ec2-cloudinit.service
+      - name: user-configdrive.service
+        mask: yes
+      - name: user-configvirtfs.service
+        mask: yes
+      - name: oem-cloudinit.service
         command: restart
         runtime: yes
         content: |
@@ -25,7 +18,7 @@ coreos:
           [Service]
           Type=oneshot
           EnvironmentFile=/etc/environment
-          ExecStart=/usr/bin/coreos-cloudinit -ignore-failure=true -from-url=http://169.254.169.254/latest/user-data
+          ExecStart=/usr/bin/coreos-cloudinit --from-configdrive=/media/configdrive --from-metadata-service
     oem:
       id: @@OEM_ID@@
       name: @@OEM_NAME@@
