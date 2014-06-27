@@ -26,8 +26,7 @@ KEYWORDS="amd64 arm x86"
 IUSE="cros_host"
 
 RDEPEND="dev-libs/glib
-	dev-libs/libevent
-	dev-libs/nss"
+	dev-libs/libevent"
 DEPEND="${RDEPEND}
 	dev-cpp/gtest
 	cros_host? ( dev-util/scons )"
