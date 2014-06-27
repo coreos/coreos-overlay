@@ -35,7 +35,6 @@ RDEPEND="${RDEPEND}
 	app-arch/rpm2targz
 	app-arch/sharutils
 	app-arch/unzip
-	dev-libs/nss
 	app-emulation/qemu
 	app-text/texi2html
 	coreos-base/google-breakpad
