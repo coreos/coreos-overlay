@@ -139,9 +139,7 @@ void TestWithData(const vector<char>& data,
   ObjectFeederAction<InstallPlan> feeder_action;
   feeder_action.set_obj(install_plan);
   PrefsMock prefs;
-  MockHttpFetcher* http_fetcher = new MockHttpFetcher(&data[0],
-                                                      data.size(),
-                                                      NULL);
+  MockHttpFetcher* http_fetcher = new MockHttpFetcher(&data[0], data.size());
   // takes ownership of passed in HttpFetcher
   DownloadAction download_action(&prefs, NULL, http_fetcher);
   download_action.SetTestFileWriter(&writer);
@@ -254,9 +252,7 @@ void TestTerminateEarly(bool use_download_delegate) {
     feeder_action.set_obj(install_plan);
     PrefsMock prefs;
     DownloadAction download_action(&prefs, NULL,
-                                   new MockHttpFetcher(&data[0],
-                                                       data.size(),
-                                                       NULL));
+                                   new MockHttpFetcher(&data[0], data.size()));
     download_action.SetTestFileWriter(&writer);
     DownloadActionDelegateMock download_delegate;
     if (use_download_delegate) {
@@ -360,7 +356,7 @@ TEST(DownloadActionTest, PassObjectOutTest) {
   feeder_action.set_obj(install_plan);
   PrefsMock prefs;
   DownloadAction download_action(&prefs, NULL,
-                                 new MockHttpFetcher("x", 1, NULL));
+                                 new MockHttpFetcher("x", 1));
   download_action.SetTestFileWriter(&writer);
 
   DownloadActionTestAction test_action;
@@ -395,7 +391,7 @@ TEST(DownloadActionTest, BadOutFileTest) {
   feeder_action.set_obj(install_plan);
   PrefsMock prefs;
   DownloadAction download_action(&prefs, NULL,
-                                 new MockHttpFetcher("x", 1, NULL));
+                                 new MockHttpFetcher("x", 1));
   download_action.SetTestFileWriter(&writer);
 
   BondActions(&feeder_action, &download_action);

@@ -20,7 +20,6 @@
 #include "update_engine/download_action.h"
 #include "update_engine/omaha_request_params.h"
 #include "update_engine/omaha_response_handler_action.h"
-#include "update_engine/proxy_resolver.h"
 #include "update_engine/system_state.h"
 
 struct UpdateEngineService;
@@ -64,16 +63,14 @@ class UpdateAttempter : public ActionProcessorDelegate,
 
   // Checks for update and, if a newer version is available, attempts to update
   // the system. Non-empty |in_app_version| or |in_update_url| prevents
-  // automatic detection of the parameter.  If |obey_proxies| is true, the
-  // update will likely respect Chrome's proxy setting. For security reasons, we
-  // may still not honor them.  Interactive should be true if this was called
+  // automatic detection of the parameter.
+  // Interactive should be true if this was called
   // from the user (ie dbus).  |is_test| will lead to using an alternative test
   // server URL, if |omaha_url| is empty. |is_user_initiated| will be true
   // only if the update is being kicked off through dbus and will be false for
   // other types of kick off such as scheduled updates.
   virtual void Update(const std::string& app_version,
                       const std::string& omaha_url,
-                      bool obey_proxies,
                       bool interactive,
                       bool is_test_mode);
 
@@ -224,12 +221,6 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // update can be tried when needed.
   void MarkDeltaUpdateFailure();
 
-  // TODO: Add a ProxyResolver that is initialized from environment variables.
-  // It should be returned only when obeying_proxies_ is true.
-  ProxyResolver* GetProxyResolver() {
-    return reinterpret_cast<ProxyResolver*>(&direct_proxy_resolver_);
-  }
-
   // Sends a ping to Omaha.
   // This is used after an update has been applied and we're waiting for the
   // user to reboot.  This ping helps keep the number of actives count
@@ -242,7 +233,6 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // Update() method for the meaning of the parametes.
   bool CalculateUpdateParams(const std::string& app_version,
                              const std::string& omaha_url,
-                             bool obey_proxies,
                              bool interactive,
                              bool is_test);
 
@@ -324,16 +314,6 @@ class UpdateAttempter : public ActionProcessorDelegate,
 
   // Common parameters for all Omaha requests.
   OmahaRequestParams* omaha_request_params_;
-
-  // Number of consecutive manual update checks we've had where we obeyed
-  // Chrome's proxy settings.
-  int proxy_manual_checks_;
-
-  // If true, this update cycle we are obeying proxies
-  bool obeying_proxies_;
-
-  // Our stub proxy resolver
-  DirectProxyResolver direct_proxy_resolver_;
 
   // Originally, both of these flags are false. Once UpdateBootFlags is called,
   // |update_boot_flags_running_| is set to true. As soon as UpdateBootFlags

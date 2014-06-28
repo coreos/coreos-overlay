@@ -24,7 +24,6 @@
 #include "update_engine/mock_http_fetcher.h"
 #include "update_engine/mock_system_state.h"
 #include "update_engine/multi_range_http_fetcher.h"
-#include "update_engine/proxy_resolver.h"
 #include "update_engine/utils.h"
 
 using std::make_pair;
@@ -168,15 +167,8 @@ class AnyHttpFetcherTest {
     mock_system_state_.set_connection_manager(&mock_connection_manager_);
   }
 
- virtual HttpFetcher* NewLargeFetcher(size_t num_proxies) = 0;
-  HttpFetcher* NewLargeFetcher() {
-    return NewLargeFetcher(1);
-  }
-
-  virtual HttpFetcher* NewSmallFetcher(size_t num_proxies) = 0;
-  HttpFetcher* NewSmallFetcher() {
-    return NewSmallFetcher(1);
-  }
+  virtual HttpFetcher* NewLargeFetcher() = 0;
+  virtual HttpFetcher* NewSmallFetcher() = 0;
 
   virtual string BigUrl() const { return kUnusedUrl; }
   virtual string SmallUrl() const { return kUnusedUrl; }
@@ -190,7 +182,6 @@ class AnyHttpFetcherTest {
   virtual HttpServer *CreateServer() = 0;
 
  protected:
-  DirectProxyResolver proxy_resolver_;
   MockSystemState mock_system_state_;
   MockConnectionManager mock_connection_manager_;
 };
@@ -199,25 +190,15 @@ class MockHttpFetcherTest : public AnyHttpFetcherTest {
  public:
   // Necessary to unhide the definition in the base class.
   using AnyHttpFetcherTest::NewLargeFetcher;
-  virtual HttpFetcher* NewLargeFetcher(size_t num_proxies) {
+  virtual HttpFetcher* NewLargeFetcher() {
     vector<char> big_data(1000000);
-    CHECK(num_proxies > 0);
-    proxy_resolver_.set_num_proxies(num_proxies);
-    return new MockHttpFetcher(
-        big_data.data(),
-        big_data.size(),
-        reinterpret_cast<ProxyResolver*>(&proxy_resolver_));
+    return new MockHttpFetcher(big_data.data(), big_data.size());
   }
 
   // Necessary to unhide the definition in the base class.
   using AnyHttpFetcherTest::NewSmallFetcher;
-  virtual HttpFetcher* NewSmallFetcher(size_t num_proxies) {
-    CHECK(num_proxies > 0);
-    proxy_resolver_.set_num_proxies(num_proxies);
-    return new MockHttpFetcher(
-        "x",
-        1,
-        reinterpret_cast<ProxyResolver*>(&proxy_resolver_));
+  virtual HttpFetcher* NewSmallFetcher() {
+    return new MockHttpFetcher("x", 1);
   }
 
   virtual bool IsMock() const { return true; }
@@ -232,12 +213,9 @@ class LibcurlHttpFetcherTest : public AnyHttpFetcherTest {
  public:
   // Necessary to unhide the definition in the base class.
   using AnyHttpFetcherTest::NewLargeFetcher;
-  virtual HttpFetcher* NewLargeFetcher(size_t num_proxies) {
-    CHECK(num_proxies > 0);
-    proxy_resolver_.set_num_proxies(num_proxies);
+  virtual HttpFetcher* NewLargeFetcher() {
     LibcurlHttpFetcher *ret = new
-        LibcurlHttpFetcher(reinterpret_cast<ProxyResolver*>(&proxy_resolver_),
-                           &mock_system_state_, false);
+        LibcurlHttpFetcher(&mock_system_state_, false);
     // Speed up test execution.
     ret->set_idle_seconds(1);
     ret->set_retry_seconds(1);
@@ -247,8 +225,8 @@ class LibcurlHttpFetcherTest : public AnyHttpFetcherTest {
 
   // Necessary to unhide the definition in the base class.
   using AnyHttpFetcherTest::NewSmallFetcher;
-  virtual HttpFetcher* NewSmallFetcher(size_t num_proxies) {
-    return NewLargeFetcher(num_proxies);
+  virtual HttpFetcher* NewSmallFetcher() {
+    return NewLargeFetcher();
   }
 
   virtual string BigUrl() const {
@@ -279,14 +257,10 @@ class MultiRangeHttpFetcherTest : public LibcurlHttpFetcherTest {
  public:
   // Necessary to unhide the definition in the base class.
   using AnyHttpFetcherTest::NewLargeFetcher;
-  virtual HttpFetcher* NewLargeFetcher(size_t num_proxies) {
-    CHECK(num_proxies > 0);
-    proxy_resolver_.set_num_proxies(num_proxies);
-    ProxyResolver* resolver =
-        reinterpret_cast<ProxyResolver*>(&proxy_resolver_);
+  virtual HttpFetcher* NewLargeFetcher() {
     MultiRangeHttpFetcher *ret =
         new MultiRangeHttpFetcher(
-            new LibcurlHttpFetcher(resolver, &mock_system_state_, false));
+            new LibcurlHttpFetcher(&mock_system_state_, false));
     ret->ClearRanges();
     ret->AddRange(0);
     // Speed up test execution.
@@ -298,8 +272,8 @@ class MultiRangeHttpFetcherTest : public LibcurlHttpFetcherTest {
 
   // Necessary to unhide the definition in the base class.
   using AnyHttpFetcherTest::NewSmallFetcher;
-  virtual HttpFetcher* NewSmallFetcher(size_t num_proxies) {
-    return NewLargeFetcher(num_proxies);
+  virtual HttpFetcher* NewSmallFetcher() {
+    return NewLargeFetcher();
   }
 
   virtual bool IsMulti() const { return true; }
@@ -1079,53 +1053,6 @@ TYPED_TEST(HttpFetcherTest, MultiHttpFetcherInsufficientTest) {
     ranges.push_back(make_pair(0, 5));
   }
 }
-
-// Issue #18143: when a fetch of a secondary chunk out of a chain, then it
-// should retry with other proxies listed before giving up.
-//
-// (1) successful recovery: The offset fetch will fail twice but succeed with
-// the third proxy.
-TYPED_TEST(HttpFetcherTest, MultiHttpFetcherErrorIfOffsetRecoverableTest) {
-  if (!this->test_.IsMulti())
-    return;
-
-  scoped_ptr<HttpServer> server(this->test_.CreateServer());
-  ASSERT_TRUE(server->started_);
-
-  vector<pair<off_t, off_t> > ranges;
-  ranges.push_back(make_pair(0, 25));
-  ranges.push_back(make_pair(99, 0));
-  MultiTest(this->test_.NewLargeFetcher(3),
-            LocalServerUrlForPath(base::StringPrintf("/error-if-offset/%d/2",
-                                                     kBigLength)),
-            ranges,
-            "abcdefghijabcdefghijabcdejabcdefghijabcdef",
-            kBigLength - (99 - 25),
-            kHttpResponsePartialContent);
-}
-
-// (2) unsuccessful recovery: The offset fetch will fail repeatedly.  The
-// fetcher will signal a (failed) completed transfer to the delegate.
-TYPED_TEST(HttpFetcherTest, MultiHttpFetcherErrorIfOffsetUnrecoverableTest) {
-  if (!this->test_.IsMulti())
-    return;
-
-  scoped_ptr<HttpServer> server(this->test_.CreateServer());
-  ASSERT_TRUE(server->started_);
-
-  vector<pair<off_t, off_t> > ranges;
-  ranges.push_back(make_pair(0, 25));
-  ranges.push_back(make_pair(99, 0));
-  MultiTest(this->test_.NewLargeFetcher(2),
-            LocalServerUrlForPath(base::StringPrintf("/error-if-offset/%d/3",
-                                                     kBigLength)),
-            ranges,
-            "abcdefghijabcdefghijabcde",  // only received the first chunk
-            25,
-            kHttpResponseUndefined);
-}
-
-
 
 namespace {
 class BlockedTransferTestDelegate : public HttpFetcherDelegate {

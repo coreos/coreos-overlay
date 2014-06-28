@@ -15,7 +15,6 @@
 #include <google/protobuf/stubs/common.h>
 
 #include "http_common.h"
-#include "update_engine/proxy_resolver.h"
 #include "update_engine/system_state.h"
 
 // This class is a simple wrapper around an HTTP library (libcurl). We can
@@ -31,19 +30,12 @@ class HttpFetcherDelegate;
 
 class HttpFetcher {
  public:
-  // |proxy_resolver| is the resolver that will be consulted for proxy
-  // settings. It may be null, in which case direct connections will
-  // be used. Does not take ownership of the resolver.
-  HttpFetcher(ProxyResolver* proxy_resolver, SystemState* system_state)
+  HttpFetcher(SystemState* system_state)
       : post_data_set_(false),
         http_response_code_(0),
         delegate_(NULL),
-        proxies_(1, kNoProxy),
-        proxy_resolver_(proxy_resolver),
-        no_resolver_idle_id_(0),
-        callback_(NULL),
         system_state_(system_state) {}
-  virtual ~HttpFetcher();
+  virtual ~HttpFetcher() {}
 
   void set_delegate(HttpFetcherDelegate* delegate) { delegate_ = delegate; }
   HttpFetcherDelegate* delegate() const { return delegate_; }
@@ -56,20 +48,6 @@ class HttpFetcher {
 
   // Same without a specified Content-Type.
   void SetPostData(const void* data, size_t size);
-
-  // Proxy methods to set the proxies, then to pop them off.
-  // Returns true on success.
-  bool ResolveProxiesForUrl(const std::string& url,
-                            google::protobuf::Closure* callback);
-
-  void SetProxies(const std::deque<std::string>& proxies) {
-    proxies_ = proxies;
-  }
-  const std::string& GetCurrentProxy() const {
-    return proxies_.front();
-  }
-  bool HasProxy() const { return !proxies_.empty(); }
-  void PopProxy() { proxies_.pop_front(); }
 
   // Downloading should resume from this offset
   virtual void SetOffset(off_t offset) = 0;
@@ -105,8 +83,6 @@ class HttpFetcher {
   // Get the total number of bytes downloaded by fetcher.
   virtual size_t GetBytesDownloaded() = 0;
 
-  ProxyResolver* proxy_resolver() const { return proxy_resolver_; }
-
   // These are used for testing:
   virtual void SetBuildType(bool is_official) {}
 
@@ -131,28 +107,10 @@ class HttpFetcher {
   // The delegate; may be NULL.
   HttpFetcherDelegate* delegate_;
 
-  // Proxy servers
-  std::deque<std::string> proxies_;
-
-  ProxyResolver* const proxy_resolver_;
-
-  // The ID of the idle callback, used when we have no proxy resolver.
-  guint no_resolver_idle_id_;
-
-  // Callback for when we are resolving proxies
-  google::protobuf::Closure* callback_;
-
   // Global system context.
   SystemState* system_state_;
 
  private:
-  // Callback from the proxy resolver
-  void ProxiesResolved(const std::deque<std::string>& proxies);
-  static void StaticProxiesResolved(const std::deque<std::string>& proxies,
-                                    void* data) {
-    reinterpret_cast<HttpFetcher*>(data)->ProxiesResolved(proxies);
-  }
-
   DISALLOW_COPY_AND_ASSIGN(HttpFetcher);
 };
 

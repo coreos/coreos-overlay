@@ -31,9 +31,8 @@ class MockHttpFetcher : public HttpFetcher {
   // The data passed in here is copied and then passed to the delegate after
   // the transfer begins.
   MockHttpFetcher(const char* data,
-                  size_t size,
-                  ProxyResolver* proxy_resolver)
-      : HttpFetcher(proxy_resolver, &mock_system_state_),
+                  size_t size)
+      : HttpFetcher(&mock_system_state_),
         sent_size_(0),
         timeout_source_(NULL),
         timout_tag_(0),
