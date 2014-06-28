@@ -13,7 +13,6 @@
 
 #include "update_engine/certificate_checker.h"
 #include "update_engine/dbus_interface.h"
-#include "update_engine/proxy_resolver.h"
 #include "update_engine/utils.h"
 
 using google::protobuf::NewCallback;
@@ -72,26 +71,6 @@ void LibcurlHttpFetcher::ResumeTransfer(const std::string& url) {
   CHECK_EQ(curl_easy_setopt(curl_handle_,
                             CURLOPT_ERRORBUFFER,
                             &curl_error_buffer_), CURLE_OK);
-
-  CHECK(HasProxy());
-  bool is_direct = (GetCurrentProxy() == kNoProxy);
-  LOG(INFO) << "Using proxy: " << (is_direct ? "no" : "yes");
-  if (is_direct) {
-    CHECK_EQ(curl_easy_setopt(curl_handle_,
-                              CURLOPT_PROXY,
-                              ""), CURLE_OK);
-  } else {
-    CHECK_EQ(curl_easy_setopt(curl_handle_,
-                              CURLOPT_PROXY,
-                              GetCurrentProxy().c_str()), CURLE_OK);
-    // Curl seems to require us to set the protocol
-    curl_proxytype type;
-    if (GetProxyType(GetCurrentProxy(), &type)) {
-      CHECK_EQ(curl_easy_setopt(curl_handle_,
-                                CURLOPT_PROXYTYPE,
-                                type), CURLE_OK);
-    }
-  }
 
   if (post_data_set_) {
     CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_POST, 1), CURLE_OK);
@@ -230,16 +209,6 @@ void LibcurlHttpFetcher::SetCurlOptionsForHttps() {
 void LibcurlHttpFetcher::BeginTransfer(const std::string& url) {
   CHECK(!transfer_in_progress_);
   url_ = url;
-  if (!ResolveProxiesForUrl(
-          url_,
-          NewCallback(this, &LibcurlHttpFetcher::ProxiesResolved))) {
-    LOG(ERROR) << "Couldn't resolve proxies";
-    if (delegate_)
-      delegate_->TransferComplete(this, false);
-  }
-}
-
-void LibcurlHttpFetcher::ProxiesResolved() {
   transfer_size_ = -1;
   resume_offset_ = 0;
   retry_count_ = 0;
@@ -312,7 +281,6 @@ void LibcurlHttpFetcher::CurlPerformOnce() {
 
     if ((!sent_byte_ && !IsHttpResponseSuccess()) || IsHttpResponseError()) {
       // The transfer completed w/ error and we didn't get any bytes.
-      // If we have another proxy to try, try that.
       //
       // TODO(garnold) in fact there are two separate cases here: one case is an
       // other-than-success return code (including no return code) and no
@@ -323,19 +291,8 @@ void LibcurlHttpFetcher::CurlPerformOnce() {
       // should be unified into a complete, coherent interface.
       LOG(INFO) << "Transfer resulted in an error (" << http_response_code_
                 << "), " << bytes_downloaded_ << " bytes downloaded";
-
-      PopProxy();  // Delete the proxy we just gave up on.
-
-      if (HasProxy()) {
-        // We have another proxy. Retry immediately.
-        LOG(INFO) << "Retrying with next proxy setting";
-        g_idle_add(&LibcurlHttpFetcher::StaticRetryTimeoutCallback, this);
-      } else {
-        // Out of proxies. Give up.
-        LOG(INFO) << "No further proxies, indicating transfer complete";
-        if (delegate_)
-          delegate_->TransferComplete(this, false);  // signal fail
-      }
+      if (delegate_)
+        delegate_->TransferComplete(this, false);  // signal fail
     } else if ((transfer_size_ >= 0) && (bytes_downloaded_ < transfer_size_)) {
       retry_count_++;
       LOG(INFO) << "Transfer interrupted after downloading "
@@ -559,30 +516,6 @@ void LibcurlHttpFetcher::GetHttpResponseCode() {
                         &http_response_code) == CURLE_OK) {
     http_response_code_ = static_cast<int>(http_response_code);
   }
-}
-
-bool LibcurlHttpFetcher::GetProxyType(const std::string& proxy,
-                                      curl_proxytype* out_type) {
-  if (utils::StringHasPrefix(proxy, "socks5://") ||
-      utils::StringHasPrefix(proxy, "socks://")) {
-    *out_type = CURLPROXY_SOCKS5_HOSTNAME;
-    return true;
-  }
-  if (utils::StringHasPrefix(proxy, "socks4://")) {
-    *out_type = CURLPROXY_SOCKS4A;
-    return true;
-  }
-  if (utils::StringHasPrefix(proxy, "http://") ||
-      utils::StringHasPrefix(proxy, "https://")) {
-    *out_type = CURLPROXY_HTTP;
-    return true;
-  }
-  if (utils::StringHasPrefix(proxy, kNoProxy)) {
-    // known failure case. don't log.
-    return false;
-  }
-  LOG(INFO) << "Unknown proxy type: " << proxy;
-  return false;
 }
 
 }  // namespace chromeos_update_engine

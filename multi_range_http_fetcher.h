@@ -34,8 +34,7 @@ class MultiRangeHttpFetcher : public HttpFetcher, public HttpFetcherDelegate {
  public:
   // Takes ownership of the passed in fetcher.
   explicit MultiRangeHttpFetcher(HttpFetcher* base_fetcher)
-      : HttpFetcher(base_fetcher->proxy_resolver(),
-                    base_fetcher->GetSystemState()),
+      : HttpFetcher(base_fetcher->GetSystemState()),
         base_fetcher_(base_fetcher),
         base_fetcher_active_(false),
         pending_transfer_ended_(false),
@@ -82,10 +81,6 @@ class MultiRangeHttpFetcher : public HttpFetcher, public HttpFetcherDelegate {
   virtual void SetBuildType(bool is_official) {
     base_fetcher_->SetBuildType(is_official);
   }
-  virtual void SetProxies(const std::deque<std::string>& proxies) {
-    base_fetcher_->SetProxies(proxies);
-  }
-
   inline virtual size_t GetBytesDownloaded() {
     return base_fetcher_->GetBytesDownloaded();
   }

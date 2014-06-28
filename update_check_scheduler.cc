@@ -91,7 +91,7 @@ gboolean UpdateCheckScheduler::StaticCheck(void* scheduler) {
 
   // Before updating, we flush any previously generated UMA reports.
   CertificateChecker::FlushReport();
-  me->update_attempter_->Update("", "", false, false, false);
+  me->update_attempter_->Update("", "", false, false);
 
   // This check ensures that future update checks will be or are already
   // scheduled. The check should never fail. A check failure means that there's

@@ -272,7 +272,6 @@ sources = Split("""action_processor.cc
                    payload_state.cc
                    postinstall_runner_action.cc
                    prefs.cc
-                   proxy_resolver.cc
                    simple_key_value_store.cc
                    subprocess.cc
                    system_state.cc
@@ -307,7 +306,6 @@ unittest_sources = Split("""action_unittest.cc
                             gpio_mock_udev_interface.cc
                             graph_utils_unittest.cc
                             http_fetcher_unittest.cc
-                            libcurl_http_fetcher_unittest.cc
                             metadata_unittest.cc
                             mock_http_fetcher.cc
                             mock_system_state.cc

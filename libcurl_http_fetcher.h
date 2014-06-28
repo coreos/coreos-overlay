@@ -30,10 +30,9 @@ class LibcurlHttpFetcher : public HttpFetcher {
   static const int kMaxRetryCountOobeComplete;
   static const int kMaxRetryCountOobeNotComplete;
 
-  LibcurlHttpFetcher(ProxyResolver* proxy_resolver,
-                     SystemState* system_state,
+  LibcurlHttpFetcher(SystemState* system_state,
                      bool is_test_mode)
-      : HttpFetcher(proxy_resolver, system_state),
+      : HttpFetcher(system_state),
         curl_multi_handle_(NULL),
         curl_handle_(NULL),
         curl_http_headers_(NULL),
@@ -110,15 +109,7 @@ class LibcurlHttpFetcher : public HttpFetcher {
     return static_cast<size_t>(bytes_downloaded_);
   }
 
-  // Get the curl proxy type for a given proxy url. Returns true on success.
-  // Note: if proxy is kNoProxy, this will return false.
-  static bool GetProxyType(const std::string& proxy, curl_proxytype* out_type);
-
  private:
-  // Callback for when proxy resolution has completed. This begins the
-  // transfer.
-  void ProxiesResolved();
-
   // Asks libcurl for the http response code and stores it in the object.
   void GetHttpResponseCode();
 
