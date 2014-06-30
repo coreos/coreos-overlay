@@ -15,6 +15,7 @@ IUSE=""
 
 DEPEND="
 	app-admin/sudo
+	app-admin/updatectl
 	app-arch/pbzip2
 	app-shells/bash-completion
 	coreos-base/hard-host-depends
