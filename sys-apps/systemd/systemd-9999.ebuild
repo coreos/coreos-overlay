@@ -359,6 +359,7 @@ multilib_src_install_all() {
 	dosym multi-user.target /usr/lib/systemd/system/default.target
 
 	# Move a few services enabled in /etc to /usr
+	# systemd-timesyncd is left disabled, we currently use ntpd
 	rm "${D}"/etc/systemd/system/getty.target.wants/getty@tty1.service || die
 	rmdir "${D}"/etc/systemd/system/getty.target.wants || die
 	dosym ../getty@.service /usr/lib/systemd/system/getty.target.wants/getty@tty1.service
@@ -366,6 +367,7 @@ multilib_src_install_all() {
 	rm "${D}"/etc/systemd/system/multi-user.target.wants/remote-fs.target \
 		"${D}"/etc/systemd/system/multi-user.target.wants/systemd-networkd.service \
 		"${D}"/etc/systemd/system/multi-user.target.wants/systemd-resolved.service \
+		"${D}"/etc/systemd/system/multi-user.target.wants/systemd-timesyncd.service \
 		"${D}"/etc/systemd/system/network-online.target.wants/systemd-networkd-wait-online.service \
 		|| die
 	rmdir "${D}"/etc/systemd/system/multi-user.target.wants \
