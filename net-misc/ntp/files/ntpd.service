@@ -5,6 +5,7 @@ After=ntpdate.service sntp.service
 [Service]
 ExecStart=/usr/sbin/ntpd -g -n -u ntp:ntp -f /var/lib/ntp/ntp.drift
 PrivateTmp=true
+Restart=always
 
 [Install]
 WantedBy=multi-user.target
