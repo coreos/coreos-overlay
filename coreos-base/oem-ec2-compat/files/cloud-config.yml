@@ -12,12 +12,9 @@ coreos:
         content: |
           [Unit]
           Description=Cloudinit from EC2-style metadata
-          Requires=coreos-setup-environment.service
-          After=coreos-setup-environment.service
 
           [Service]
           Type=oneshot
-          EnvironmentFile=/etc/environment
           ExecStart=/usr/bin/coreos-cloudinit --from-configdrive=/media/configdrive --from-metadata-service
     oem:
       id: @@OEM_ID@@
