@@ -1,0 +1,29 @@
+#!/bin/bash
+
+ENV=$1
+
+if [ -z "$ENV" ]; then
+        echo usage: $0 /etc/environment
+        exit 1
+fi
+# test for rw
+touch $ENV
+if [ $? -ne 0 ]; then
+        echo exiting, unable to modify: $ENV
+        exit 1
+fi
+
+sed -i -e '/^COREOS_PUBLIC_IPV4=/d' \
+    -e '/^COREOS_PRIVATE_IPV4=/d' \
+        "${ENV}"
+
+/usr/bin/block-until-url http://169.254.169.254/latest/meta-data/public-ipv4
+
+# get public ip from metadata
+PUB_IP_URL=http://169.254.169.254/latest/meta-data/public-ipv4
+IP=$(/usr/bin/curl --fail -s "$PUB_IP_URL")
+echo COREOS_PUBLIC_IPV4=${IP} >> $ENV
+
+PRIV_IP_URL=http://169.254.169.254/latest/meta-data/local-ipv4
+IP=$(/usr/bin/curl --fail -s "$PRIV_IP_URL")
+echo COREOS_PRIVATE_IPV4=${IP} >> $ENV

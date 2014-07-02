@@ -40,6 +40,10 @@ src_prepare() {
 }
 
 src_install() {
+	into "/usr/share/oem"
+	dobin ${FILESDIR}/ec2-ssh-key
+	dobin ${FILESDIR}/coreos-setup-environment
+
 	insinto "/usr/share/oem"
 	doins ${T}/cloud-config.yml
 }
