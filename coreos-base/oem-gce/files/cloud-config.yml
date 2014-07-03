@@ -113,16 +113,6 @@ write_files:
     permissions: 0644
     content: |
         #!/bin/sh
-        function _fake_gcloud {
-        cat >&2 <<EOF
-        gcloud, gcutil, and other Google Cloud SDK tools are available from
-        Google via a Docker container named google/cloud-sdk.
-
-        See https://index.docker.io/u/google/cloud-sdk/
-        EOF
-        return 1
-        }
-
-        alias gcloud=_fake_gcloud
-        alias gcutil=_fake_gcloud
-        alias gsutil=_fake_gcloud
+        alias gcloud="(docker images google/cloud-sdk || docker pull google/cloud-sdk) > /dev/null;docker run -t -i --net="host" -v $HOME/.config:/.config google/cloud-sdk gcloud"
+        alias gcutil="(docker images google/cloud-sdk || docker pull google/cloud-sdk) > /dev/null;docker run -t -i --net="host" -v $HOME/.config:/.config google/cloud-sdk gcutil"
+        alias gsutil="(docker images google/cloud-sdk || docker pull google/cloud-sdk) > /dev/null;docker run -t -i --net="host" -v $HOME/.config:/.config google/cloud-sdk gsutil"
