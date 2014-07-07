@@ -1,5 +1,19 @@
 #cloud-config
 
+write_files:
+  - path: /run/udev/rules.d/79-netname.rules
+    permissions: 444
+    content: |
+      SUBSYSTEM!="net", GOTO="netname_end"
+      ACTION!="add", GOTO="netname_end"
+      ENV{ID_BUS}!="pci", GOTO="netname_end"
+
+      IMPORT{program}="/usr/share/oem/bin/netname.sh $env{IFINDEX}"
+
+      NAME=="", ENV{ID_NET_NAME_SIMPLE}!="", NAME="$env{ID_NET_NAME_SIMPLE}"
+
+      LABEL="netname_end"
+
 coreos:
     units:
       - name: user-configdrive.service.d/netconf.conf
@@ -22,6 +36,20 @@ coreos:
 
           [Install]
           WantedBy=user-config.target
+      - name: rename-network-interfaces.service
+        command: start
+        runtime: yes
+        content: |
+          [Unit]
+          Before=user-config.target
+
+          [Service]
+          Type=oneshot
+          RemainAfterExit=yes
+          ExecStart=/usr/bin/systemctl stop systemd-networkd
+          ExecStart=/usr/bin/bash -c "for dev in $(ip link show | gawk -F ':' '/^[0-9]+/ { print $2 }' | tr -d ' ' | sed 's/lo//'); do ip link set $dev down; done"
+          ExecStart=/usr/bin/bash -c "udevadm test /sys/class/net/*"
+          ExecStart=/usr/bin/systemctl start systemd-networkd
       - name: media-configdrive.mount
         command: start
         runtime: yes

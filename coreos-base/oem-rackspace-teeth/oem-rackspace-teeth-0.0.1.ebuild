@@ -15,6 +15,9 @@ KEYWORDS="amd64 x86"
 S="${WORKDIR}"
 
 src_install() {
+	into "/usr/share/oem"
+	dobin ${FILESDIR}/netname.sh
+
 	insinto "/usr/share/oem"
 	doins ${FILESDIR}/cloud-config.yml
 }
