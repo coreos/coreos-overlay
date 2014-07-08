@@ -1,6 +1,5 @@
 #
-# Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
-# Copyright (c) 2013 CoreOS, Inc.. All rights reserved.
+# Copyright (c) 2014 CoreOS, Inc.. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 # $Header:$
 #
@@ -14,7 +13,7 @@ inherit toolchain-funcs cros-workon systemd
 if [[ "${PV}" == 9999 ]]; then
     KEYWORDS="~amd64"
 else
-    CROS_WORKON_COMMIT="4fb6087f4a71cbc6c59e7107ebeea36dede62cc9" # v0.4.4
+    CROS_WORKON_COMMIT="13b0e7230445dcb432f6652b6fd7449c86e468d8" # v0.4.5
     KEYWORDS="amd64"
 fi
 
