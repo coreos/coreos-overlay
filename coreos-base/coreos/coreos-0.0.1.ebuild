@@ -113,6 +113,7 @@ RDEPEND="${RDEPEND}
 	coreos-base/coreos-cloudinit
 	coreos-base/coretest
 	net-analyzer/nmap
+	net-firewall/ipset
 	net-firewall/iptables
 	net-misc/bridge-utils
 	net-misc/dhcpcd

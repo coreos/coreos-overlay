@@ -79,3 +79,6 @@ app-admin/sudo -sendmail
 
 # avoid pulling in gnutls
 sys-apps/systemd -ssl
+
+# disable kernel config detection and module building
+net-firewall/ipset -modules
