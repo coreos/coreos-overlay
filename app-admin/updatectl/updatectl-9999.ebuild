@@ -9,7 +9,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64"
 else
-	CROS_WORKON_COMMIT="ba223e9b8c05ade82ee780b224d1707bfd2e0ce5"  # tag v1.1.0
+	CROS_WORKON_COMMIT="95872fe46f0e208bf6e6467c7be18f7da85f9f22"  # tag v1.2.0
 	KEYWORDS="amd64"
 fi
 
@@ -30,6 +30,5 @@ src_compile() {
 }
 
 src_install() {
-	# Temporary until the name is fixed
-	newbin ${S}/bin/${P} updatectl
+	dobin bin/updatectl
 }
