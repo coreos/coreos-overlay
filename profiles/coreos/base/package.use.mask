@@ -3,3 +3,6 @@ dev-vcs/git cvs perl subversion
 
 # not needed, requires cython
 dev-lang/yasm python
+
+# not needed, requires dev-lang/python-exec
+sys-apps/util-linux python
