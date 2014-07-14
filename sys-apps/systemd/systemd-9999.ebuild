@@ -352,7 +352,6 @@ multilib_src_install_all() {
 	mv "${D}"/usr/lib/sysctl.d/50-coredump.conf{,.disabled} || die
 
 	systemd_dotmpfilesd "${FILESDIR}"/systemd-coreos.conf
-	systemd_dotmpfilesd "${FILESDIR}"/systemd-resolv.conf
 
 	# Don't default to graphical.target
 	rm "${D}"/usr/lib/systemd/system/default.target || die
