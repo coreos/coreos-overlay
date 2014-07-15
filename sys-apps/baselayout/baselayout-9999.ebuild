@@ -13,7 +13,7 @@ else
 	KEYWORDS="amd64 arm x86"
 fi
 
-inherit cros-workon cros-tmpfiles eutils multilib systemd
+inherit cros-workon eutils multilib systemd
 
 DESCRIPTION="Filesystem baselayout for CoreOS"
 HOMEPAGE="http://www.coreos.com/"
@@ -24,7 +24,8 @@ SLOT="0"
 IUSE="cros_host symlink-usr"
 
 # This version of baselayout replaces coreos-base
-DEPEND="!coreos-base/coreos-base
+DEPEND="sys-apps/systemd
+	!coreos-base/coreos-base
 	!<sys-libs/glibc-2.17-r1
 	!<=sys-libs/nss-usrfiles-2.18.1_pre"
 
@@ -106,19 +107,14 @@ src_install() {
 		dosym "${LIB_SYMS[$sym]}" "${sym}"
 	done
 	if use symlink-usr; then
-		for sym in "${!USR_SYMS[@]}" ; do
-			dosym "${USR_SYMS[$sym]}" "${sym}"
-		done
+		systemd_dotmpfilesd "${T}/baselayout-usr.conf"
+		systemd-tmpfiles --root="${D}" --create
 	fi
 
 	emake DESTDIR="${D}" install
 
-	if use symlink-usr; then
-		systemd_dotmpfilesd "${T}/baselayout-usr.conf"
-	fi
-
 	# Fill in all other paths defined in tmpfiles configs
-	tmpfiles_create
+	systemd-tmpfiles --root="${D}" --create
 
 	doenvd "env.d/99coreos_ldpath"
 
