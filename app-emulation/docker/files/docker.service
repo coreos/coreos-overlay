@@ -1,6 +1,7 @@
 [Unit]
 Description=Docker Application Container Engine 
 Documentation=http://docs.docker.io
+Requires=docker.socket
 
 [Service]
 Environment="TMPDIR=/var/tmp/"

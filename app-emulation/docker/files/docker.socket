@@ -2,6 +2,9 @@
 Description=Docker Socket for the API
 
 [Socket]
+SocketMode=0660
+SocketUser=docker
+SocketGroup=docker
 ListenStream=/var/run/docker.sock
 
 [Install]
