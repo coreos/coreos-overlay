@@ -185,15 +185,6 @@ RDEPEND="${RDEPEND}
 	virtual/cdrtools
 	"
 
-# Pull tis into / or patch the lvm ebuild to configure with:
-#   --with-thin-check=/sbin/thin_check
-#   --with-thin-dump=/sbin/thin_dump
-#   --with-thin-repair=/sbin/thin_repair
-# This will work for now until the proper fix is merged upstream.
-RDEPEND="${RDEPEND}
-	>=sys-block/thin-provisioning-tools-0.2.8-r1
-	"
-
 # Uninstall these packages.
 RDEPEND="${RDEPEND}
 	!net-misc/dhcpcd
