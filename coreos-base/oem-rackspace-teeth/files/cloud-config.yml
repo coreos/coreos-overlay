@@ -47,8 +47,7 @@ coreos:
           Type=oneshot
           RemainAfterExit=yes
           ExecStart=/usr/bin/systemctl stop systemd-networkd
-          ExecStart=/usr/bin/bash -c "for dev in $(ip link show | gawk -F ':' '/^[0-9]+/ { print $2 }' | tr -d ' ' | sed 's/lo//'); do ip link set $dev down; done"
-          ExecStart=/usr/bin/bash -c "udevadm test /sys/class/net/*"
+          ExecStart=/usr/share/oem/bin/rename-interfaces.sh
           ExecStart=/usr/bin/systemctl start systemd-networkd
       - name: media-configdrive.mount
         command: start
