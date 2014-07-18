@@ -357,9 +357,6 @@ multilib_src_install_all() {
 		|| die
 	rm "${D}"/usr/share/man/man1/init.1 || die
 
-	# Disable storing coredumps in journald, bug #433457
-	mv "${D}"/usr/lib/sysctl.d/50-coredump.conf{,.disabled} || die
-
 	systemd_dotmpfilesd "${FILESDIR}"/systemd-coreos.conf
 	systemd_dotmpfilesd "${FILESDIR}"/systemd-resolv.conf
 
