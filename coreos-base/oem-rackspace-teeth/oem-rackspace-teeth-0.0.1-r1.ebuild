@@ -1,1 +1,0 @@
-oem-rackspace-teeth-0.0.1.ebuild

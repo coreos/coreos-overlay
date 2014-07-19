@@ -117,7 +117,6 @@ RDEPEND="${RDEPEND}
 	app-portage/eclass-manpages
 	app-portage/gentoolkit
 	app-portage/portage-utils
-	app-editors/qemacs
 	app-editors/vim
 	dev-util/perf
 	sys-apps/pv
