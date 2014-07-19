@@ -1,8 +1,0 @@
---- opencv/modules/highgui/src/grfmt_png.cpp	(revision 4945)
-+++ opencv/modules/highgui/src/grfmt_png.cpp	(revision 6143)
-@@ -57,4 +57,5 @@ 
- #include <png.h>
- #endif
-+#include <zlib.h>
- #include "grfmt_png.hpp"
- 

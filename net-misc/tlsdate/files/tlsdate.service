@@ -1,9 +1,0 @@
-[Unit]
-Description=Update local time over HTTPS
-
-[Service]
-# TODO: use api.core-os.net. Unfortunatly, tlsdate doesn't like it for some reason.
-ExecStart=/usr/bin/tlsdated -v
-
-[Install]
-WantedBy=default.target

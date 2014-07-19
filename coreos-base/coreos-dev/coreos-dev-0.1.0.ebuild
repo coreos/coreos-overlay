@@ -58,8 +58,6 @@ RDEPEND="
 # TODO:  sys-apps/iotools
 X86_DEPEND="
 	app-benchmarks/i7z
-	app-editors/qemacs
-	sys-apps/dmidecode
 	sys-apps/pciutils
 "
 
