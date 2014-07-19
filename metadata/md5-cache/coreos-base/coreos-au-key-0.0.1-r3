@@ -1,9 +1,0 @@
-DEFINED_PHASES=install
-DESCRIPTION=CoreOS development auto update keys.
-EAPI=2
-HOMEPAGE=http://github.com/coreos/
-IUSE=cros_host
-KEYWORDS=amd64 arm x86
-LICENSE=BSD
-SLOT=0
-_md5_=e37f90a5887fa6cd2195b2f4b4b422ea

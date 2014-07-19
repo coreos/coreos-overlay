@@ -1,8 +1,0 @@
-DEFINED_PHASES=install
-DEPEND=sys-apps/kbd
-DESCRIPTION=chvt: Change virtual terminal console
-EAPI=4
-KEYWORDS=amd64 arm x86
-LICENSE=GPL-2
-SLOT=0
-_md5_=aa8758a45e081c12ccbefddf1e9c7838

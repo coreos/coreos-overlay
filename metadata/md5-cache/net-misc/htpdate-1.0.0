@@ -1,9 +1,0 @@
-DEFINED_PHASES=compile install postinst unpack
-DESCRIPTION=Synchronize local workstation with time offered by remote webservers
-HOMEPAGE=http://www.clevervest.com/htp/
-KEYWORDS=amd64 arm hppa ~mips ppc s390 sh x86
-LICENSE=GPL-2
-SLOT=0
-SRC_URI=http://www.clevervest.com/htp/archive/c/htpdate-1.0.0.tar.gz
-_eclasses_=multilib	892e597faee02a5b94eb02ab512e7622	toolchain-funcs	51e6c948e72c43bcc8edc7544411c953
-_md5_=06d10d75c5f9a7562899898fd2056cdc
