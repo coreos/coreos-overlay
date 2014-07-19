@@ -63,7 +63,6 @@ app-emulation/xen-tools -ocaml -hvm -xend -pygrub -qemu -flask -screen -doc amd6
 sys-apps/gptfdisk -icu
 
 # for profile migration
-dev-lang/perl -gdbm
 dev-libs/apr-util -gdbm
 sys-libs/gdbm berkdb
 
