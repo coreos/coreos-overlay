@@ -1,0 +1,56 @@
+From 18a89b529289474263c6dbf642b04e720b8f885b Mon Sep 17 00:00:00 2001
+From: Michael Marineau <mike@marineau.org>
+Date: Sat, 19 Jul 2014 12:02:52 -0700
+Subject: [PATCH] cross-pkg-config: require 0.24 and use PKG_CONFIG_SYSROOT_DIR
+
+The bug with PKG_CONFIG_SYSROOT_DIR was fixed long ago and the
+replacement code doesn't translate paths outside of /usr, causing the
+wrapper to abort when it looks up a library installed in /lib.
+---
+ wrappers/cross-pkg-config | 16 ++--------------
+ 1 file changed, 2 insertions(+), 14 deletions(-)
+
+diff --git a/wrappers/cross-pkg-config b/wrappers/cross-pkg-config
+index d124261..67acd9b 100755
+--- a/wrappers/cross-pkg-config
++++ b/wrappers/cross-pkg-config
+@@ -23,7 +23,7 @@ error() {
+ #
+ # Sanity/distro checks
+ #
+-MIN_VER="0.20" # needs PKG_CONFIG_SYSROOT_DIR
++MIN_VER="0.24" # needs working PKG_CONFIG_SYSROOT_DIR
+ if ! pkg-config --atleast-pkgconfig-version ${MIN_VER} ; then
+ 	error pkg-config is too old ... upgrade to at least v${MIN_VER}
+ fi
+@@ -81,12 +81,7 @@ export PKG_CONFIG_LIBDIR="${SYSROOT}/usr/lib/pkgconfig:${SYSROOT}/usr/share/pkgc
+ if [ -n "${EXTRA_PKG_CONFIG_LIBDIR}" ] ; then
+ 	PKG_CONFIG_LIBDIR="${EXTRA_PKG_CONFIG_LIBDIR}:${PKG_CONFIG_LIBDIR}"
+ fi
+-#
+-# This guy is horribly broken in pkg-config <=0.23:
+-#	https://bugs.freedesktop.org/show_bug.cgi?id=16905
+-#
+-#export PKG_CONFIG_SYSROOT_DIR="${SYSROOT}"
+-unset PKG_CONFIG_SYSROOT_DIR
++export PKG_CONFIG_SYSROOT_DIR="${SYSROOT}"
+ 
+ #
+ # Sanity check the output to catch common errors that do not
+@@ -95,13 +90,6 @@ unset PKG_CONFIG_SYSROOT_DIR
+ output=$(pkg-config "$@")
+ ret=$?
+ 
+-#
+-# Inject PKG_CONFIG_SYSROOT_DIR ourselves until pkg-config is fixed.
+-# We can't mung the .pc files as some of the vars are used at compile
+-# time to encode runtime paths.
+-#
+-output=$(echo "${output}" | sed -e 's:\(-[IL][[:space:]]*\)\(/usr\):\1'"${SYSROOT}"'\2:g')
+-
+ # We turn the output into a newline separate string of options, then use grep
+ # to look for bad -Is and -Ls.  Bad -Is and -Ls are ones that point to things
+ # outside the ${SYSROOT}.
+-- 
+1.8.5.5
+
