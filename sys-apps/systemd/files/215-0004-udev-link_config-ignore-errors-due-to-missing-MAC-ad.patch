@@ -1,7 +1,7 @@
-From e61b751158571ced56447b02f1855d6c5c79e213 Mon Sep 17 00:00:00 2001
+From 36749d890949896f3105fc852cfb5b8c2f22af3e Mon Sep 17 00:00:00 2001
 From: Tom Gundersen <teg@jklm.no>
 Date: Mon, 7 Jul 2014 14:50:16 +0200
-Subject: [PATCH 1/2] udev: link_config - ignore errors due to missing MAC
+Subject: [PATCH 04/32] udev: link_config - ignore errors due to missing MAC
  address
 
 Otherwis, we get misleading error messages on links with MACs.

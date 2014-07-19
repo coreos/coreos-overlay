@@ -1,0 +1,29 @@
+From 669455ef0d5a3cf56c03c9fc668daa0750629cf5 Mon Sep 17 00:00:00 2001
+From: Jon Severinsson <jon@severinsson.net>
+Date: Fri, 11 Jul 2014 14:37:36 +0200
+Subject: [PATCH 18/32] build-sys: Do not distribute generated
+ emergency.service
+
+It is already in nodist_systemunit_DATA and if it is
+shipped, it contains the hardcoded path to systemctl
+which will cause it to fail to start when
+rootprefix != prefix and rootbindir != bindir.
+---
+ Makefile.am | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index 32dc1fd..5d169b7 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -412,7 +412,6 @@ dist_sysctl_DATA = \
+ dist_systemunit_DATA = \
+ 	units/graphical.target \
+ 	units/multi-user.target \
+-	units/emergency.service \
+ 	units/emergency.target \
+ 	units/sysinit.target \
+ 	units/basic.target \
+-- 
+1.8.5.5
+

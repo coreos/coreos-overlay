@@ -1,0 +1,25 @@
+From cb59448753d949cd31c5a84bccc37f10597e23d7 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 7 Jul 2014 14:58:36 +0200
+Subject: [PATCH 07/32] man: chroot jails are no longer detected by
+ ConditionVirtualization=
+
+---
+ man/systemd.unit.xml | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/man/systemd.unit.xml b/man/systemd.unit.xml
+index be0873c..cd3279c 100644
+--- a/man/systemd.unit.xml
++++ b/man/systemd.unit.xml
+@@ -990,7 +990,6 @@
+                                 <varname>oracle</varname>,
+                                 <varname>xen</varname>,
+                                 <varname>bochs</varname>,
+-                                <varname>chroot</varname>,
+                                 <varname>uml</varname>,
+                                 <varname>openvz</varname>,
+                                 <varname>lxc</varname>,
+-- 
+1.8.5.5
+
