@@ -1,0 +1,37 @@
+From 82155b957fac44db3858e1b008cf31e5004d40cd Mon Sep 17 00:00:00 2001
+From: David Herrmann <dh.herrmann@gmail.com>
+Date: Tue, 8 Jul 2014 12:56:55 +0200
+Subject: [PATCH 13/32] logind: allow switching to unused VTs via SwitchTo()
+
+If compositors use the new SwitchTo() logic to map F1-F12, we should allow
+them to switch to unregistered VTs, too. Otherwise, the auto-spawn logic
+of gettys won't trigger.
+
+Reported-by: Jasper St. Pierre <jstpierre@mecheye.net>
+Signed-off-by: David Herrmann <dh.herrmann@gmail.com>
+---
+ src/login/logind-seat.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/src/login/logind-seat.c b/src/login/logind-seat.c
+index 3114de8..9992195 100644
+--- a/src/login/logind-seat.c
++++ b/src/login/logind-seat.c
+@@ -275,8 +275,13 @@ int seat_switch_to(Seat *s, unsigned int num) {
+         if (!num)
+                 return -EINVAL;
+ 
+-        if (num >= s->position_count || !s->positions[num])
++        if (num >= s->position_count || !s->positions[num]) {
++                /* allow switching to unused VTs to trigger auto-activate */
++                if (seat_has_vts(s) && num < 64)
++                        return chvt(num);
++
+                 return -EINVAL;
++        }
+ 
+         return session_activate(s->positions[num]);
+ }
+-- 
+1.8.5.5
+

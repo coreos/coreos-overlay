@@ -110,15 +110,8 @@ if [[ ${PV} == *9999 ]]; then
 		echo 'EXTRA_DIST =' > docs/gtk-doc.make
 	fi
 fi
-	# backports from master tagged with "Backport: bugfix" notes.
-	epatch "${FILESDIR}"/215-0001-udev-link_config-ignore-errors-due-to-missing-MAC-ad.patch
-	epatch "${FILESDIR}"/215-0002-util-consider-0x7F-a-control-chracter-which-it-is-DE.patch
-
-	# http://thread.gmane.org/gmane.comp.sysutils.systemd.devel/20815
-	touch src/core/org.freedesktop.systemd1.policy.in.in || die
-
-	# http://thread.gmane.org/gmane.comp.sysutils.systemd.devel/21074
-	touch units/emergency.service.in || die
+	# backports from master
+	epatch "${FILESDIR}"/215-*.patch
 
 	# Bug 463376
 	sed -i -e 's/GROUP="dialout"/GROUP="uucp"/' rules/*.rules || die

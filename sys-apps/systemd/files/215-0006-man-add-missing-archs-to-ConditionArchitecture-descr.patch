@@ -1,0 +1,48 @@
+From efbcb2ef7b6337530ece0a251b80b35c109fcdf7 Mon Sep 17 00:00:00 2001
+From: Lennart Poettering <lennart@poettering.net>
+Date: Mon, 7 Jul 2014 14:58:13 +0200
+Subject: [PATCH 06/32] man: add missing archs to ConditionArchitecture=
+ description
+
+---
+ man/systemd.unit.xml | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/man/systemd.unit.xml b/man/systemd.unit.xml
+index 960fb90..be0873c 100644
+--- a/man/systemd.unit.xml
++++ b/man/systemd.unit.xml
+@@ -931,7 +931,9 @@
+                                 <varname>x86</varname>,
+                                 <varname>x86-64</varname>,
+                                 <varname>ppc</varname>,
++                                <varname>ppc-le</varname>,
+                                 <varname>ppc64</varname>,
++                                <varname>ppc64-le</varname>,
+                                 <varname>ia64</varname>,
+                                 <varname>parisc</varname>,
+                                 <varname>parisc64</varname>,
+@@ -940,7 +942,9 @@
+                                 <varname>sparc</varname>,
+                                 <varname>sparc64</varname>,
+                                 <varname>mips</varname>,
++                                <varname>mips-le</varname>,
+                                 <varname>mips64</varname>,
++                                <varname>mips64-le</varname>,
+                                 <varname>alpha</varname>,
+                                 <varname>arm</varname>,
+                                 <varname>arm-be</varname>,
+@@ -948,7 +952,9 @@
+                                 <varname>arm64-be</varname>,
+                                 <varname>sh</varname>,
+                                 <varname>sh64</varname>,
+-                                <varname>m86k</varname> to test
++                                <varname>m86k</varname>,
++                                <varname>tilegx</varname>,
++                                <varname>cris</varname> to test
+                                 against a specific architecture. The
+                                 architecture is determined from the
+                                 information returned by
+-- 
+1.8.5.5
+

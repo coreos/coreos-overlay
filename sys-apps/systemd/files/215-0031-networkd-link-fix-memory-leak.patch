@@ -1,0 +1,28 @@
+From 25bb651691c89caa40d57ca6cb347fbbf20633c5 Mon Sep 17 00:00:00 2001
+From: Tom Gundersen <teg@jklm.no>
+Date: Sun, 13 Jul 2014 01:11:52 +0200
+Subject: [PATCH 31/32] networkd: link - fix memory leak
+
+Make link_initialized() idempotent to avoid taking refs on several udev_device
+objects.
+---
+ src/network/networkd-link.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/network/networkd-link.c b/src/network/networkd-link.c
+index 2289284..5e63045 100644
+--- a/src/network/networkd-link.c
++++ b/src/network/networkd-link.c
+@@ -2114,6 +2114,9 @@ int link_initialized(Link *link, struct udev_device *device) {
+         if (link->state != LINK_STATE_INITIALIZING)
+                 return 0;
+ 
++        if (link->udev_device)
++                return 0;
++
+         log_debug_link(link, "udev initialized link");
+ 
+         link->udev_device = udev_device_ref(device);
+-- 
+1.8.5.5
+

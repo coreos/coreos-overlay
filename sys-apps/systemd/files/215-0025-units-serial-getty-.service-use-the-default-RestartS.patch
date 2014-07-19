@@ -1,0 +1,34 @@
+From 0a9a32ccbb38db14ff5dc8455af8cdac9610fbce Mon Sep 17 00:00:00 2001
+From: Michael Olbrich <m.olbrich@pengutronix.de>
+Date: Tue, 15 Jul 2014 18:28:10 +0200
+Subject: [PATCH 25/32] units/serial-getty@.service: use the default RestartSec
+
+For pluggable ttys such as USB serial devices, the getty is restarted
+and exits in a loop until the remove event reaches systemd. Under
+certain circumstances the restart loop can overload the system in a
+way that prevents the remove event from reaching systemd for a long
+time (e.g. at least several minutes on a small embedded system).
+
+Use the default RestartSec to prevent the restart loop from
+overloading the system. Serial gettys are interactive units, so
+waiting an extra 100ms really doesn't make a difference anyways
+compared to the time it takes the user to log in.
+---
+ units/serial-getty@.service.m4 | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/units/serial-getty@.service.m4 b/units/serial-getty@.service.m4
+index 4ac51e7..4522d0d 100644
+--- a/units/serial-getty@.service.m4
++++ b/units/serial-getty@.service.m4
+@@ -25,7 +25,6 @@ IgnoreOnIsolate=yes
+ ExecStart=-/sbin/agetty --keep-baud 115200,38400,9600 %I $TERM
+ Type=idle
+ Restart=always
+-RestartSec=0
+ UtmpIdentifier=%I
+ TTYPath=/dev/%I
+ TTYReset=yes
+-- 
+1.8.5.5
+

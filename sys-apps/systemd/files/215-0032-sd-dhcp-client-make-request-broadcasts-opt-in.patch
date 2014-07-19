@@ -1,0 +1,141 @@
+From 64e271490cf958e5554ddb8daa662c84c2003452 Mon Sep 17 00:00:00 2001
+From: Tom Gundersen <teg@jklm.no>
+Date: Tue, 15 Jul 2014 18:55:31 +0200
+Subject: [PATCH 32/32] sd-dhcp-client: make request broadcasts opt-in
+
+It appears there is no good way to decide whether or not broadcasts should be enabled,
+there is hardware that must have broadcast, and there are networks that only allow
+unicast. So we give up and make this configurable.
+
+By default, unicast is used, but if the kernel were to inform us abotu certain
+interfaces requiring broadcast, we could change this to opt-in by default in
+those cases.
+
+Conflicts:
+	man/systemd.network.xml
+---
+ man/systemd.network.xml                  |  9 +++++++++
+ src/libsystemd-network/sd-dhcp-client.c  | 18 ++++++++++++++++--
+ src/network/networkd-link.c              |  4 ++++
+ src/network/networkd-network-gperf.gperf |  1 +
+ src/network/networkd.h                   |  1 +
+ src/systemd/sd-dhcp-client.h             |  1 +
+ 6 files changed, 32 insertions(+), 2 deletions(-)
+
+diff --git a/man/systemd.network.xml b/man/systemd.network.xml
+index 2b0eb56..f7cc39b 100644
+--- a/man/systemd.network.xml
++++ b/man/systemd.network.xml
+@@ -433,6 +433,15 @@
+                                                 if, say, the root filesystem relies on this connection. Defaults to false.</para>
+                                         </listitem>
+                                 </varlistentry>
++                                <varlistentry>
++                                        <term><varname>RequestBroadcast=</varname></term>
++                                        <listitem>
++                                                <para>Request the server to use broadcast messages before the IP address has been
++                                                configured. This is necessary for devices that cannot receive RAW packets, or that
++                                                cannot receive packets at all before an IP address has been configured. On the other
++                                                hand, this must not be enabled on networks where broadcasts are filtered out.</para>
++                                        </listitem>
++                                </varlistentry>
+                        </variablelist>
+ 
+         </refsect1>
+diff --git a/src/libsystemd-network/sd-dhcp-client.c b/src/libsystemd-network/sd-dhcp-client.c
+index 6b19666..04ee7de 100644
+--- a/src/libsystemd-network/sd-dhcp-client.c
++++ b/src/libsystemd-network/sd-dhcp-client.c
+@@ -48,6 +48,7 @@ struct sd_dhcp_client {
+         int fd;
+         union sockaddr_union link;
+         sd_event_source *receive_message;
++        bool request_broadcast;
+         uint8_t *req_opts;
+         size_t req_opts_allocated;
+         size_t req_opts_size;
+@@ -95,6 +96,14 @@ int sd_dhcp_client_set_callback(sd_dhcp_client *client, sd_dhcp_client_cb_t cb,
+         return 0;
+ }
+ 
++int sd_dhcp_client_set_request_broadcast(sd_dhcp_client *client, int broadcast) {
++        assert_return(client, -EINVAL);
++
++        client->request_broadcast = !!broadcast;
++
++        return 0;
++}
++
+ int sd_dhcp_client_set_request_option(sd_dhcp_client *client, uint8_t option) {
+         size_t i;
+ 
+@@ -304,8 +313,13 @@ static int client_message_init(sd_dhcp_client *client, DHCPPacket **ret,
+            BROADCAST bit in the 'flags' field to 1 in any DHCPDISCOVER or
+            DHCPREQUEST messages that client sends.  The BROADCAST bit will
+            provide a hint to the DHCP server and BOOTP relay agent to broadcast
+-           any messages to the client on the client's subnet. */
+-        packet->dhcp.flags = htobe16(0x8000);
++           any messages to the client on the client's subnet.
++
++           Note: some interfaces needs this to be enabled, but some networks
++           needs this to be disabled as broadcasts are filteretd, so this
++           needs to be configurable */
++        if (client->request_broadcast)
++                packet->dhcp.flags = htobe16(0x8000);
+ 
+         /* RFC2132 section 4.1.1:
+            The client MUST include its hardware address in the ’chaddr’ field, if
+diff --git a/src/network/networkd-link.c b/src/network/networkd-link.c
+index 5e63045..a806990 100644
+--- a/src/network/networkd-link.c
++++ b/src/network/networkd-link.c
+@@ -1997,6 +1997,10 @@ static int link_configure(Link *link) {
+                 if (r < 0)
+                         return r;
+ 
++                r = sd_dhcp_client_set_request_broadcast(link->dhcp_client, link->network->dhcp_broadcast);
++                if (r < 0)
++                        return r;
++
+                 if (link->network->dhcp_mtu) {
+                         r = sd_dhcp_client_set_request_option(link->dhcp_client, 26);
+                         if (r < 0)
+diff --git a/src/network/networkd-network-gperf.gperf b/src/network/networkd-network-gperf.gperf
+index ce9047c..53cfd5e 100644
+--- a/src/network/networkd-network-gperf.gperf
++++ b/src/network/networkd-network-gperf.gperf
+@@ -49,6 +49,7 @@ DHCP.UseHostname,            config_parse_bool,                  0,
+ DHCP.UseDomainName,          config_parse_bool,                  0,                             offsetof(Network, dhcp_domainname)
+ DHCP.UseRoutes,              config_parse_bool,                  0,                             offsetof(Network, dhcp_routes)
+ DHCP.SendHostname,           config_parse_bool,                  0,                             offsetof(Network, dhcp_sendhost)
++DHCP.RequestBroadcast,       config_parse_bool,                  0,                             offsetof(Network, dhcp_broadcast)
+ DHCP.CriticalConnection,     config_parse_bool,                  0,                             offsetof(Network, dhcp_critical)
+ /* backwards compatibility: do not add new entries to this section */
+ DHCPv4.UseDNS,               config_parse_bool,                  0,                             offsetof(Network, dhcp_dns)
+diff --git a/src/network/networkd.h b/src/network/networkd.h
+index 6a00175..1185747 100644
+--- a/src/network/networkd.h
++++ b/src/network/networkd.h
+@@ -180,6 +180,7 @@ struct Network {
+         bool dhcp_hostname;
+         bool dhcp_domainname;
+         bool dhcp_sendhost;
++        bool dhcp_broadcast;
+         bool dhcp_critical;
+         bool dhcp_routes;
+         bool ipv4ll;
+diff --git a/src/systemd/sd-dhcp-client.h b/src/systemd/sd-dhcp-client.h
+index c3ea059..0b07237 100644
+--- a/src/systemd/sd-dhcp-client.h
++++ b/src/systemd/sd-dhcp-client.h
+@@ -48,6 +48,7 @@ int sd_dhcp_client_set_callback(sd_dhcp_client *client, sd_dhcp_client_cb_t cb,
+ int sd_dhcp_client_set_request_option(sd_dhcp_client *client, uint8_t option);
+ int sd_dhcp_client_set_request_address(sd_dhcp_client *client,
+                                        const struct in_addr *last_address);
++int sd_dhcp_client_set_request_broadcast(sd_dhcp_client *client, int broadcast);
+ int sd_dhcp_client_set_index(sd_dhcp_client *client, int interface_index);
+ int sd_dhcp_client_set_mac(sd_dhcp_client *client,
+                            const struct ether_addr *addr);
+-- 
+1.8.5.5
+

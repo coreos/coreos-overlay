@@ -1,0 +1,28 @@
+From f71f5fa7f6796cb809a2b827a5348cc494c128e1 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Mon, 7 Jul 2014 16:10:38 -0400
+Subject: [PATCH 10/32] fstab-generator: add comma when removed option is in
+ the middle
+
+xxx,x-systemd.default-timeout=y,zzz was filtered to xxxzzz,
+but should be xxx,zzz, of course.
+---
+ src/shared/generator.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/shared/generator.c b/src/shared/generator.c
+index 5d5b6a0..2f9e595 100644
+--- a/src/shared/generator.c
++++ b/src/shared/generator.c
+@@ -125,7 +125,7 @@ int generator_write_timeouts(const char *dir, const char *what, const char *wher
+                 char *prefix, *postfix;
+ 
+                 prefix = strndupa(opts, start - opts - (start != opts));
+-                postfix = timeout + len + (timeout[len] != '\0');
++                postfix = timeout + len + (start == opts && timeout[len] != '\0');
+                 *filtered = strjoin(prefix, *postfix ? postfix : NULL, NULL);
+                 if (!*filtered)
+                         return log_oom();
+-- 
+1.8.5.5
+

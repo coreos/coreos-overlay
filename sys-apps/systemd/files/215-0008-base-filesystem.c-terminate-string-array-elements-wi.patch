@@ -1,0 +1,38 @@
+From 5055a12659b731d78cc30553576193905b6530ae Mon Sep 17 00:00:00 2001
+From: Harald Hoyer <harald@redhat.com>
+Date: Mon, 7 Jul 2014 17:45:53 +0200
+Subject: [PATCH 08/32] base-filesystem.c: terminate string array elements with
+ \0
+
+NULSTR_FOREACH() looks for a terminating zero and the element also needs
+one.
+---
+ src/shared/base-filesystem.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/src/shared/base-filesystem.c b/src/shared/base-filesystem.c
+index daaeaca..addd26c 100644
+--- a/src/shared/base-filesystem.c
++++ b/src/shared/base-filesystem.c
+@@ -42,12 +42,13 @@ typedef struct BaseFilesystem {
+ } BaseFilesystem;
+ 
+ static const BaseFilesystem table[] = {
+-        { "bin",      0, "usr/bin",                             NULL },
+-        { "lib",      0, "usr/lib",                             NULL },
+-        { "root",  0755, NULL,                                  NULL },
+-        { "sbin",     0, "usr/sbin",                            NULL },
++        { "bin",      0, "usr/bin\0",                  NULL },
++        { "lib",      0, "usr/lib\0",                  NULL },
++        { "root",  0755, NULL,                         NULL },
++        { "sbin",     0, "usr/sbin\0",                 NULL },
+ #if defined(__i386__) || defined(__x86_64__)
+-        { "lib64",    0, "usr/lib/x86_64-linux-gnu\0usr/lib64", "ld-linux-x86-64.so.2" },
++        { "lib64",    0, "usr/lib/x86_64-linux-gnu\0"
++                         "usr/lib64\0",                "ld-linux-x86-64.so.2" },
+ #endif
+ };
+ 
+-- 
+1.8.5.5
+

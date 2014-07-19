@@ -1,0 +1,37 @@
+From b44c15f77e59d40d5bdf5608bf8d76cc2375ac6e Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
+Date: Mon, 7 Jul 2014 08:55:30 -0400
+Subject: [PATCH 03/32] vconsole-setup: fix inverted error messages
+
+Introduced in abee28c56d.
+
+Pointed-out-by: Werner Fink <werner@suse.de>
+---
+ src/vconsole/vconsole-setup.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/vconsole/vconsole-setup.c b/src/vconsole/vconsole-setup.c
+index 25d15af..645b1e6 100644
+--- a/src/vconsole/vconsole-setup.c
++++ b/src/vconsole/vconsole-setup.c
+@@ -305,7 +305,7 @@ int main(int argc, char **argv) {
+ 
+         r = font_load(vc, vc_font, vc_font_map, vc_font_unimap, &font_pid);
+         if (r < 0) {
+-                log_error("Failed to start " KBD_LOADKEYS ": %s", strerror(-r));
++                log_error("Failed to start " KBD_SETFONT ": %s", strerror(-r));
+                 return EXIT_FAILURE;
+         }
+ 
+@@ -314,7 +314,7 @@ int main(int argc, char **argv) {
+ 
+         r = keymap_load(vc, vc_keymap, vc_keymap_toggle, utf8, &keymap_pid);
+         if (r < 0) {
+-                log_error("Failed to start " KBD_SETFONT ": %s", strerror(-r));
++                log_error("Failed to start " KBD_LOADKEYS ": %s", strerror(-r));
+                 return EXIT_FAILURE;
+         }
+ 
+-- 
+1.8.5.5
+

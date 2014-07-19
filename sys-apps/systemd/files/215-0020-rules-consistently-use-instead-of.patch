@@ -1,0 +1,69 @@
+From 584152929252c948e9826bc3c735165ea1328737 Mon Sep 17 00:00:00 2001
+From: Kay Sievers <kay@vrfy.org>
+Date: Tue, 15 Jul 2014 02:04:47 +0200
+Subject: [PATCH 20/32] rules: consistently use "?*" instead of "*?"
+
+---
+ rules/99-systemd.rules.in  |  2 +-
+ src/login/70-uaccess.rules | 12 ++++++------
+ 2 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/rules/99-systemd.rules.in b/rules/99-systemd.rules.in
+index db72373..c3ef81b 100644
+--- a/rules/99-systemd.rules.in
++++ b/rules/99-systemd.rules.in
+@@ -43,7 +43,7 @@ SUBSYSTEM=="net", KERNEL!="lo", TAG+="systemd", ENV{SYSTEMD_ALIAS}+="/sys/subsys
+ SUBSYSTEM=="bluetooth", TAG+="systemd", ENV{SYSTEMD_ALIAS}+="/sys/subsystem/bluetooth/devices/%k"
+ 
+ SUBSYSTEM=="bluetooth", TAG+="systemd", ENV{SYSTEMD_WANTS}+="bluetooth.target"
+-ENV{ID_SMARTCARD_READER}=="*?", TAG+="systemd", ENV{SYSTEMD_WANTS}+="smartcard.target"
++ENV{ID_SMARTCARD_READER}=="?*", TAG+="systemd", ENV{SYSTEMD_WANTS}+="smartcard.target"
+ SUBSYSTEM=="sound", KERNEL=="card*", TAG+="systemd", ENV{SYSTEMD_WANTS}+="sound.target"
+ 
+ SUBSYSTEM=="printer", TAG+="systemd", ENV{SYSTEMD_WANTS}+="printer.target"
+diff --git a/src/login/70-uaccess.rules b/src/login/70-uaccess.rules
+index e1cf897..57f619d 100644
+--- a/src/login/70-uaccess.rules
++++ b/src/login/70-uaccess.rules
+@@ -12,7 +12,7 @@ ENV{MAJOR}=="", GOTO="uaccess_end"
+ SUBSYSTEM=="usb", ENV{ID_USB_INTERFACES}=="*:060101:*", TAG+="uaccess"
+ 
+ # Digicams with proprietary protocol
+-ENV{ID_GPHOTO2}=="*?", TAG+="uaccess"
++ENV{ID_GPHOTO2}=="?*", TAG+="uaccess"
+ 
+ # SCSI and USB scanners
+ ENV{libsane_matched}=="yes", TAG+="uaccess"
+@@ -49,13 +49,13 @@ SUBSYSTEM=="drm", KERNEL=="card*|renderD*", TAG+="uaccess"
+ SUBSYSTEM=="misc", KERNEL=="kvm", TAG+="uaccess"
+ 
+ # smart-card readers
+-ENV{ID_SMARTCARD_READER}=="*?", TAG+="uaccess"
++ENV{ID_SMARTCARD_READER}=="?*", TAG+="uaccess"
+ 
+ # (USB) authentication devices
+-ENV{ID_SECURITY_TOKEN}=="*?", TAG+="uaccess"
++ENV{ID_SECURITY_TOKEN}=="?*", TAG+="uaccess"
+ 
+ # PDA devices
+-ENV{ID_PDA}=="*?", TAG+="uaccess"
++ENV{ID_PDA}=="?*", TAG+="uaccess"
+ 
+ # Programmable remote control
+ ENV{ID_REMOTE_CONTROL}=="1", TAG+="uaccess"
+@@ -64,10 +64,10 @@ ENV{ID_REMOTE_CONTROL}=="1", TAG+="uaccess"
+ SUBSYSTEM=="input", ENV{ID_INPUT_JOYSTICK}=="?*", TAG+="uaccess"
+ 
+ # color measurement devices
+-ENV{COLOR_MEASUREMENT_DEVICE}=="*?", TAG+="uaccess"
++ENV{COLOR_MEASUREMENT_DEVICE}=="?*", TAG+="uaccess"
+ 
+ # DDC/CI device, usually high-end monitors such as the DreamColor
+-ENV{DDC_DEVICE}=="*?", TAG+="uaccess"
++ENV{DDC_DEVICE}=="?*", TAG+="uaccess"
+ 
+ # media player raw devices (for user-mode drivers, Android SDK, etc.)
+ SUBSYSTEM=="usb", ENV{ID_MEDIA_PLAYER}=="?*", TAG+="uaccess"
+-- 
+1.8.5.5
+
