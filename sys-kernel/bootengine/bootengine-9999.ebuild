@@ -58,7 +58,7 @@ src_install() {
 # cpio image in pkg_postinst() where we are free to mount filesystems, chroot,
 # and other fun stuff.
 pkg_postinst() {
-	if [[ -n "${ROOT}" ]]; then
+	if [[ "${ROOT:-/}" != / ]]; then
 		${ROOT}/usr/sbin/update-bootengine -m -c ${ROOT} || die
 	else
 		update-bootengine || die
