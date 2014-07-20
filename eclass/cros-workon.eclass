@@ -470,8 +470,8 @@ cros-workon_pkg_setup() {
 	if [[ ${CROS_WORKON_INCREMENTAL_BUILD} == "1" ]]; then
 		local out=$(cros-workon_get_build_dir)
 		addwrite "${out}"
-		mkdir -p -m 755 "${out}"
-		chown ${PORTAGE_USERNAME}:${PORTAGE_GRPNAME} "${out}" "${out%/*}"
+		mkdir -p -m 755 "${out}" || die
+		chown ${PORTAGE_USERNAME:-portage}:${PORTAGE_GRPNAME:-portage} "${out}" "${out%/*}" || die
 	fi
 }
 
