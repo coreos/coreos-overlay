@@ -17,6 +17,7 @@ S="${WORKDIR}"
 src_install() {
 	into "/usr/share/oem"
 	dobin ${FILESDIR}/netname.sh
+	dobin ${FILESDIR}/rename-interfaces.sh
 
 	insinto "/usr/share/oem"
 	doins ${FILESDIR}/cloud-config.yml
