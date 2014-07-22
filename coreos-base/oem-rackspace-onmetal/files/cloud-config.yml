@@ -62,7 +62,7 @@ coreos:
           Where=/media/configdrive
           Options=ro
     oem:
-      id: teeth
+      id: onmetal
       name: Rackspace Teeth
       home-url: http://www.rackspace.com/
       bug-report-url: https://github.com/coreos/bugs/issues
