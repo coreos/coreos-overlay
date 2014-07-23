@@ -1,0 +1,94 @@
+From 9a1aced57aaa6767298667c72308157d849282dc Mon Sep 17 00:00:00 2001
+From: Michael Marineau <michael.marineau@coreos.com>
+Date: Tue, 22 Jul 2014 17:56:40 -0700
+Subject: [PATCH 34/34] resolved: re-add support for getting local domain from
+ DHCP
+
+When the code for generating resolv.conf was moved from networkd to
+resolved the DHCP domain name code was dropped.
+---
+ src/network/networkd-link.c    |  2 ++
+ src/network/sd-network.c       |  4 ++++
+ src/resolve/resolved-manager.c | 13 +++++++++++++
+ src/systemd/sd-network.h       |  3 +++
+ 4 files changed, 22 insertions(+)
+
+diff --git a/src/network/networkd-link.c b/src/network/networkd-link.c
+index 24b4ebc..f0d48ad 100644
+--- a/src/network/networkd-link.c
++++ b/src/network/networkd-link.c
+@@ -2517,9 +2517,11 @@ int link_save(Link *link) {
+                 fprintf(f,
+                         "DHCP_LEASE=%s\n"
+                         "DHCP_USE_DNS=%s\n"
++                        "DHCP_USE_DOMAINNAME=%s\n"
+                         "DHCP_USE_NTP=%s\n",
+                         link->lease_file,
+                         yes_no(link->network->dhcp_dns),
++                        yes_no(link->network->dhcp_domainname),
+                         yes_no(link->network->dhcp_ntp));
+         } else
+                 unlink(link->lease_file);
+diff --git a/src/network/sd-network.c b/src/network/sd-network.c
+index 3ebc5d8..6ee837e 100644
+--- a/src/network/sd-network.c
++++ b/src/network/sd-network.c
+@@ -246,6 +246,10 @@ _public_ int sd_network_dhcp_use_dns(unsigned index) {
+         return network_get_boolean("DHCP_USE_DNS", index);
+ }
+ 
++_public_ int sd_network_dhcp_use_domainname(int ifindex) {
++        return network_get_boolean("DHCP_USE_DOMAINNAME", ifindex);
++}
++
+ _public_ int sd_network_dhcp_use_ntp(unsigned index) {
+         return network_get_boolean("DHCP_USE_NTP", index);
+ }
+diff --git a/src/resolve/resolved-manager.c b/src/resolve/resolved-manager.c
+index 3ed0603..ddff2aa 100644
+--- a/src/resolve/resolved-manager.c
++++ b/src/resolve/resolved-manager.c
+@@ -195,6 +195,7 @@ int manager_update_resolv_conf(Manager *m) {
+         _cleanup_free_ char *temp_path = NULL;
+         _cleanup_fclose_ FILE *f = NULL;
+          _cleanup_free_ unsigned *indices = NULL;
++        const char *domainname = NULL;
+         Address *address;
+         unsigned count = 0;
+         int n, r, i;
+@@ -223,6 +224,18 @@ int manager_update_resolv_conf(Manager *m) {
+                 struct in6_addr *nameservers6;
+                 size_t nameservers_size;
+ 
++                if (!domainname) {
++                        r = sd_network_dhcp_use_domainname(indices[i]);
++                        if (r > 0) {
++                                r = sd_network_get_dhcp_lease(indices[i], &lease);
++                                if (r >= 0) {
++                                        r = sd_dhcp_lease_get_domainname(lease, &domainname);
++                                        if (r >= 0)
++                                                fprintf(f, "domain %s\n", domainname);
++                                }
++                        }
++                }
++
+                 r = sd_network_dhcp_use_dns(indices[i]);
+                 if (r > 0) {
+                         r = sd_network_get_dhcp_lease(indices[i], &lease);
+diff --git a/src/systemd/sd-network.h b/src/systemd/sd-network.h
+index 7d05086..3e3ec37 100644
+--- a/src/systemd/sd-network.h
++++ b/src/systemd/sd-network.h
+@@ -83,6 +83,9 @@ int sd_network_get_dhcp_lease(unsigned index, sd_dhcp_lease **ret);
+ /* Returns true if link is configured to respect DNS entries received by DHCP */
+ int sd_network_dhcp_use_dns(unsigned index);
+ 
++/* Returns true if link is configured to use the domain name received by DHCP */
++int sd_network_dhcp_use_domainname(int ifindex);
++
+ /* Returns true if link is configured to respect NTP entries received by DHCP */
+ int sd_network_dhcp_use_ntp(unsigned index);
+ 
+-- 
+1.8.5.5
+
