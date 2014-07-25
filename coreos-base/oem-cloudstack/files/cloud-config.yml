@@ -1,0 +1,33 @@
+#cloud-config
+
+coreos:
+    units:
+      - name: cloudstack-ssh-key.service
+        command: restart
+        runtime: yes
+        content: |
+          [Unit]
+          Description=Sets SSH key from metadata
+
+          [Service]
+          Type=oneshot
+          StandardOutput=journal+console
+          ExecStart=/usr/share/oem/bin/cloudstack-ssh-key
+      - name: cloudstack-cloudinit.service
+        command: restart
+        runtime: yes
+        content: |
+          [Unit]
+          Description=Cloudinit from CloudStack-style metadata
+          Requires=coreos-setup-environment.service
+          After=coreos-setup-environment.service
+
+          [Service]
+          Type=oneshot
+          EnvironmentFile=/etc/environment
+          ExecStart=/usr/share/oem/bin/cloudstack-coreos-cloudinit
+    oem:
+      id: cloudstack
+      name: CloudStack
+      home-url: http://cloudstack.apache.org/
+      bug-report-url: https://github.com/coreos/coreos-overlay
