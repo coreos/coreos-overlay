@@ -10,26 +10,28 @@ CROS_WORKON_LOCALDIR="src/platform"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~x86"
 else
-	CROS_WORKON_COMMIT="d5c4968e694f2d56779562142803ff2cbe8052ab"
+	CROS_WORKON_COMMIT="66e206c20f22e002bbdaed1982b08b18a9b7f730"
 	KEYWORDS="amd64 arm x86"
 fi
 
 inherit cros-workon
 
-DESCRIPTION="A util for installing packages using the CrOS dev server"
-HOMEPAGE="http://www.chromium.org/"
+DESCRIPTION="emerge utilities for CoreOS developer images"
+HOMEPAGE="https://github.com/coreos/dev-util/"
 
 LICENSE="GPL-2"
 SLOT="0"
 IUSE=""
 
-RDEPEND="app-shells/bash
-	dev-lang/python
-	dev-util/shflags
+RDEPEND="dev-lang/python
 	sys-apps/portage"
-DEPEND="${RDEPEND}"
+DEPEND=""
+
+src_compile() {
+	echo "Nothing to compile"
+}
 
 src_install() {
-	into /usr
-	dobin gmerge stateful_update crdev
+	dobin gmerge
+	dobin emerge-gitclone
 }
