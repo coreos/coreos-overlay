@@ -5,7 +5,6 @@ app-arch/pigz static
 dev-libs/glib static-libs
 
 coreos-base/update_engine delta_generator
-net-misc/openssh kerberos
 sys-apps/flashrom dediprog ft2232_spi serprog
 
 dev-vcs/git pcre
