@@ -58,17 +58,28 @@ src_prepare() {
 src_configure() {
 	cd "${BUILDDIR}" || die
 
-	CC="$(tc-getCC)" CXX="$(tc-getCXX)" \
-	AR="$(tc-getAR)" RANLIB="$(tc-getRANLIB)" \
-	LD="$(tc-getLD)" \
+	# Mozilla screws up the meaning of BUILD, HOST, and TARGET :(
+	tc-export_build_env CC CXX LD AR RANLIB PKG_CONFIG \
+		BUILD_CC BUILD_CXX BUILD_LD BUILD_AR BUILD_RANLIB
+	export HOST_CC="${BUILD_CC}" HOST_CFLAGS="${BUILD_CFLAGS}" \
+		   HOST_CXX="${BUILD_CXX}" HOST_CXXFLAGS="${BUILD_CXXFLAGS}" \
+		   HOST_LD="${BUILD_LD}" HOST_LDFLAGS="${BUILD_LDFLAGS}" \
+		   HOST_AR="${BUILD_AR}" HOST_RANLIB="${BUILD_RANLIB}"
+
+	# Use pkg-config instead of nspr-config to use $SYSROOT
+	local nspr_cflags="$(${PKG_CONFIG} --cflags nspr)" || die
+	local nspr_libs="$(${PKG_CONFIG} --libs nspr)" || die
+
 	econf \
 		${myopts} \
+		--host="${CBUILD}" \
+		--target="${CHOST}" \
 		--enable-jemalloc \
 		--enable-readline \
 		--enable-threadsafe \
-		--with-system-nspr \
 		--enable-system-ffi \
-		--enable-jemalloc \
+		--with-nspr-cflags="${nspr_cflags}" \
+		--with-nspr-libs="${nspr_libs}" \
 		$(use_enable debug) \
 		$(use_enable jit tracejit) \
 		$(use_enable jit methodjit) \
@@ -78,29 +89,6 @@ src_configure() {
 
 src_compile() {
 	cd "${BUILDDIR}" || die
-	if tc-is-cross-compiler; then
-		make CFLAGS="" CXXFLAGS="" \
-			CC=$(tc-getBUILD_CC) CXX=$(tc-getBUILD_CXX) \
-			AR=$(tc-getBUILD_AR) RANLIB=$(tc-getBUILD_RANLIB) \
-			jscpucfg host_jsoplengen host_jskwgen || die
-		make CFLAGS="" CXXFLAGS="" \
-			CC=$(tc-getBUILD_CC) CXX=$(tc-getBUILD_CXX) \
-			AR=$(tc-getBUILD_AR) RANLIB=$(tc-getBUILD_RANLIB) \
-			-C config nsinstall || die
-		mv {,native-}jscpucfg || die
-		mv {,native-}host_jskwgen || die
-		mv {,native-}host_jsoplengen || die
-		mv config/{,native-}nsinstall || die
-		sed -e 's@./jscpucfg@./native-jscpucfg@' \
-			-e 's@./host_jskwgen@./native-host_jskwgen@' \
-			-e 's@./host_jsoplengen@./native-host_jsoplengen@' \
-			-i Makefile || die
-		sed -e 's@/nsinstall@/native-nsinstall@' -i config/config.mk || die
-		rm -f config/host_nsinstall.o \
-			config/host_pathsub.o \
-			host_jskwgen.o \
-			host_jsoplengen.o || die
-	fi
 	emake
 }
 

@@ -81,3 +81,5 @@ sys-apps/systemd -ssl
 
 # disable kernel config detection and module building
 net-firewall/ipset -modules
+
+dev-lang/spidermonkey minimal
