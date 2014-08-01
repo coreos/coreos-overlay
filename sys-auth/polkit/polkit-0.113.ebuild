@@ -96,10 +96,15 @@ src_install() {
 
 	dodoc docs/TODO HACKING NEWS README
 
-	fowners -R polkitd:root /{etc,usr/share}/polkit-1/rules.d
+	# relocate default configs from /etc to /usr
+	dodir /usr/share/dbus-1/system.d
+	mv "${D}"/{etc,usr/share}/dbus-1/system.d/org.freedesktop.PolicyKit1.conf || die
+	mv "${D}"/{etc,usr/share}/polkit-1/rules.d/50-default.rules || die
+	rmdir "${D}"/etc/dbus-1/system.d "${D}"/etc/dbus-1 || die
 
+	systemd_dotmpfilesd "${FILESDIR}/polkit.conf"
 	diropts -m0700 -o polkitd -g polkitd
-	keepdir /var/lib/polkit-1
+	dodir /var/lib/polkit-1
 
 	if use examples; then
 		insinto /usr/share/doc/${PF}/examples
@@ -107,9 +112,4 @@ src_install() {
 	fi
 
 	prune_libtool_files
-}
-
-pkg_postinst() {
-	chown -R polkitd:root "${EROOT}"/{etc,usr/share}/polkit-1/rules.d
-	chown -R polkitd:polkitd "${EROOT}"/var/lib/polkit-1
 }
