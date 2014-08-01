@@ -35,7 +35,7 @@ SLOT="0/2"
 KEYWORDS="~alpha ~amd64 ~arm ~ia64 ~ppc ~ppc64 ~sparc ~x86"
 IUSE="acl audit cryptsetup doc +firmware-loader gcrypt gudev http introspection
 	kdbus +kmod lzma pam policykit python qrcode +seccomp selinux ssl
-	test"
+	nls test"
 
 MINKV="3.10"
 
@@ -209,6 +209,7 @@ multilib_src_configure() {
 		$(use_enable kdbus)
 		$(use_enable kmod)
 		$(use_enable lzma xz)
+		$(use_enable nls)
 		$(use_enable pam)
 		$(use_enable policykit polkit)
 		$(use_with python)
