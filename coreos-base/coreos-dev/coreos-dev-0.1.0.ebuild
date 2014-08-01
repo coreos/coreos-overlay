@@ -43,7 +43,6 @@ RDEPEND="
 	sys-apps/less
 	sys-apps/portage
 	sys-apps/smartmontools
-	sys-apps/usbutils
 	sys-apps/which
 	sys-devel/gcc
 	sys-devel/gdb
@@ -58,7 +57,6 @@ RDEPEND="
 # TODO:  sys-apps/iotools
 X86_DEPEND="
 	app-benchmarks/i7z
-	sys-apps/pciutils
 "
 
 RDEPEND="${RDEPEND} x86? ( ${X86_DEPEND} )"

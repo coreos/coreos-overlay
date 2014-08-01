@@ -129,11 +129,13 @@ RDEPEND="${RDEPEND}
 	sys-apps/kexec-tools
 	sys-apps/less
 	sys-apps/net-tools
+	sys-apps/pciutils
 	sys-apps/rootdev
 	sys-apps/sed
 	sys-apps/shadow
 	sys-apps/systemd
 	sys-apps/systemd-sysv-utils
+	sys-apps/usbutils
 	sys-apps/util-linux
 	sys-fs/btrfs-progs
 	sys-fs/e2fsprogs
