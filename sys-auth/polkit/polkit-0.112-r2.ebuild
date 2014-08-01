@@ -3,7 +3,7 @@
 # $Header: /var/cvsroot/gentoo-x86/sys-auth/polkit/polkit-0.112-r2.ebuild,v 1.2 2014/04/06 15:39:36 pacho Exp $
 
 EAPI=5
-inherit eutils multilib pam pax-utils systemd user
+inherit eutils multilib pam pax-utils systemd toolchain-funcs user
 
 DESCRIPTION="Policy framework for controlling privileges for system-wide services"
 HOMEPAGE="http://www.freedesktop.org/wiki/Software/polkit"
@@ -11,7 +11,7 @@ SRC_URI="http://www.freedesktop.org/software/${PN}/releases/${P}.tar.gz"
 
 LICENSE="LGPL-2"
 SLOT="0"
-KEYWORDS="~alpha ~amd64 ~arm ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86"
+KEYWORDS="~alpha amd64 ~arm ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86"
 IUSE="examples gtk +introspection jit kde nls pam selinux systemd"
 
 RDEPEND="ia64? ( =dev-lang/spidermonkey-1.8.5*[-debug] )
@@ -59,6 +59,24 @@ src_prepare() {
 }
 
 src_configure() {
+	local mozjs
+	if use ia64 || use mips; then 
+		mozjs=mozjs185
+	else
+		mozjs=mozjs-17.0
+	fi
+
+	# pkg-config doesn't properly apply SYSROOT to -include
+	local sysroot="${PKG_CONFIG_SYSROOT_DIR:-${SYSROOT:-/}}"
+	if [[ "${sysroot}" != / ]]; then
+		local pkgconf=$(tc-getPKG_CONFIG)
+		LIBJS_CFLAGS=$($pkgconf --cflags "${mozjs}") || die
+		LIBJS_LIBS=$($pkgconf --libs "${mozjs}") || die
+		LIBJS_CFLAGS=$(echo "${LIBJS_CFLAGS}" | \
+			sed -e "s%-include /usr/%-include ${sysroot}/usr/%") || die
+		export LIBJS_CFLAGS LIBJS_LIBS
+	fi
+
 	econf \
 		--localstatedir="${EPREFIX}"/var \
 		--disable-static \
@@ -68,7 +86,7 @@ src_configure() {
 		$(use_enable introspection) \
 		--disable-examples \
 		$(use_enable nls) \
-		$(if use ia64 || use mips; then echo --with-mozjs=mozjs185; else echo --with-mozjs=mozjs-17.0; fi) \
+		--with-mozjs="${mozjs}" \
 		"$(systemd_with_unitdir)" \
 		--with-authfw=$(usex pam pam shadow) \
 		$(use pam && echo --with-pam-module-dir="$(getpam_mod_dir)") \
