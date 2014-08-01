@@ -1,0 +1,5 @@
+# Disable PAX use flags, we don't use grsec kernels
+# Don't favor /dev/urandom over /dev/random, not sure why this flag
+# is enabled in hardened, the default profiles do not enable it.
+BOOTSTRAP_USE="${BOOTSTRAP_USE} -pax_kernel -xtpax"
+USE="-pax_kernel -urandom -xtpax"
