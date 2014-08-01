@@ -383,6 +383,10 @@ multilib_src_install_all() {
 	systemd_enable_service multi-user.target systemd-networkd.service
 	systemd_enable_service multi-user.target systemd-resolved.service
 	systemd_enable_service network-online.target systemd-networkd-wait-online.service
+
+	# Grant networkd access to set the transient host name
+	insinto /usr/share/polkit-1/rules.d
+	doins "${FILESDIR}"/99-org.freedesktop.hostname1.rules
 }
 
 migrate_locale() {
