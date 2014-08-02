@@ -19,11 +19,10 @@ sys-apps/busybox	-pam -selinux
 sys-apps/dbus		-X -systemd
 sys-apps/smartmontools	minimal
 sys-block/parted        device-mapper
-sys-fs/lvm2		-lvm1 -readline -static
+sys-fs/lvm2		-lvm1 -readline
 sys-fs/squashfs         lzo
 sys-libs/ncurses	minimal
 sys-libs/pam        -berkdb
-sys-libs/zlib		static-libs
 sys-libs/gdbm		berkdb
 
 
