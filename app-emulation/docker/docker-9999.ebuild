@@ -26,30 +26,29 @@ inherit bash-completion-r1 linux-info systemd udev user cros-workon
 
 LICENSE="Apache-2.0"
 SLOT="0"
-IUSE="aufs btrfs +device-mapper doc lxc vim-syntax zsh-completion symlink-usr"
+IUSE="aufs +btrfs contrib +device-mapper doc lxc vim-syntax zsh-completion"
 
-# TODO work with upstream to allow us to build without lvm2 installed if we have -device-mapper
 CDEPEND="
 	>=dev-db/sqlite-3.7.9:3
-	sys-fs/lvm2[thin]
+	device-mapper? (
+		sys-fs/lvm2[thin]
+	)
 "
 DEPEND="
 	${CDEPEND}
 	>=dev-lang/go-1.2
-	>=sys-fs/btrfs-progs-0.20
+	btrfs? (
+		>=sys-fs/btrfs-progs-0.20
+	)
 	dev-vcs/git
 	dev-vcs/mercurial
-	doc? (
-		dev-python/sphinx
-		dev-python/sphinxcontrib-httpdomain
-	)
 "
 RDEPEND="
 	${CDEPEND}
 	!app-emulation/docker-bin
 	>=net-firewall/iptables-1.4
 	lxc? (
-		>=app-emulation/lxc-0.8
+		>=app-emulation/lxc-1.0
 	)
 	>=dev-vcs/git-1.7
 	>=app-arch/xz-utils-4.9
@@ -61,14 +60,21 @@ RDEPEND="
 	)
 "
 
-RESTRICT="strip"
+RESTRICT="installsources strip"
 
 pkg_setup() {
+	if kernel_is lt 3 8; then
+		ewarn ""
+		ewarn "Using Docker with kernels older than 3.8 is unstable and unsupported."
+		ewarn ""
+	fi
+
 	# many of these were borrowed from the app-emulation/lxc ebuild
 	CONFIG_CHECK+="
 		~CGROUPS
 		~CGROUP_CPUACCT
 		~CGROUP_DEVICE
+		~CGROUP_FREEZER
 		~CGROUP_SCHED
 		~CPUSETS
 		~MEMCG_SWAP
@@ -144,13 +150,29 @@ src_compile() {
 	export CGO_CFLAGS="-I${ROOT}/usr/include"
 	export CGO_LDFLAGS="-L${ROOT}/usr/lib"
 
+	# if we're building from a zip, we need the GITCOMMIT value
 	[ "$DOCKER_GITCOMMIT" ] && export DOCKER_GITCOMMIT
+
+	if gcc-specs-pie; then
+		sed -i "s/EXTLDFLAGS_STATIC='/EXTLDFLAGS_STATIC='-fno-PIC /" hack/make.sh || die
+		grep -q -- '-fno-PIC' hack/make.sh || die 'hardened sed failed'
+
+		sed -i 's/LDFLAGS_STATIC_DOCKER="/LDFLAGS_STATIC_DOCKER="-extldflags -fno-PIC /' hack/make/dynbinary || die
+		grep -q -- '-fno-PIC' hack/make/dynbinary || die 'hardened sed failed'
+	fi
+
+	# let's set up some optional features :)
+	export DOCKER_BUILDTAGS=''
+	for gd in aufs btrfs device-mapper; do
+		if ! use $gd; then
+			DOCKER_BUILDTAGS+=" exclude_graphdriver_${gd//-/}"
+		fi
+	done
+
 	# time to build!
 	./hack/make.sh dynbinary || die
 
-	if use doc; then
-		emake -C docs docs man || die
-	fi
+	# TODO pandoc the man pages using docs/man/md2man-all.sh
 }
 
 src_install() {
@@ -172,8 +194,11 @@ src_install() {
 
 	dodoc AUTHORS CONTRIBUTING.md CHANGELOG.md NOTICE README.md
 	if use doc; then
-		dohtml -r docs/_build/html/*
-		doman docs/_build/man/*
+		# TODO doman contrib/man/man*/*
+
+		docompress -x /usr/share/doc/${PF}/md
+		docinto md
+		dodoc -r docs/sources/*
 	fi
 
 	dobashcomp contrib/completion/bash/*
@@ -189,9 +214,10 @@ src_install() {
 		doins -r contrib/syntax/vim/syntax
 	fi
 
-	insinto /usr/share/${P}/contrib
-	doins contrib/README
-	cp -R "${S}/contrib"/* "${D}/usr/share/${P}/contrib/"
+	if use contrib; then
+		mkdir -p "${D}/usr/share/${PN}/contrib"
+		cp -R contrib/* "${D}/usr/share/${PN}/contrib"
+	fi
 }
 
 pkg_postinst() {
