@@ -37,7 +37,6 @@ RDEPEND="${RDEPEND}
 	app-arch/unzip
 	app-emulation/qemu
 	app-text/texi2html
-	coreos-base/google-breakpad
 	coreos-base/cros-devutils[cros_host]
 	coreos-base/cros-testutils
 	coreos-base/vboot_reference
@@ -187,4 +186,5 @@ RDEPEND="${RDEPEND}
 # Uninstall these packages.
 RDEPEND="${RDEPEND}
 	!net-misc/dhcpcd
+	!coreos-base/google-breakpad
 	"
