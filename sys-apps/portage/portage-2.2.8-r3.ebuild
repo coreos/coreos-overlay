@@ -8,7 +8,7 @@ EAPI=2
 PYTHON_COMPAT=(
 	pypy2_0
 	python3_2 python3_3 python3_4
-	python2_6 python2_7
+	python2_7
 )
 inherit eutils multilib
 
