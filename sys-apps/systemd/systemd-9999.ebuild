@@ -110,6 +110,8 @@ if [[ ${PV} == *9999 ]]; then
 		echo 'EXTRA_DIST =' > docs/gtk-doc.make
 	fi
 fi
+	# remove -Wl,-fuse-ld=gold
+	epatch "${FILESDIR}"/0001-hack-testing-Wl-fuse-ld-gold-does-not-work-correctly.patch
 
 	# Bug 463376
 	sed -i -e 's/GROUP="dialout"/GROUP="uucp"/' rules/*.rules || die
