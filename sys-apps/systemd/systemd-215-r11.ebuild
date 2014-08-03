@@ -20,6 +20,7 @@ EGIT_BRANCH=v${PV%%.*}-stable
 inherit git-r3
 fi
 
+AUTOTOOLS_AUTORECONF=yes
 AUTOTOOLS_PRUNE_LIBTOOL_FILES=all
 PYTHON_COMPAT=( python{2_7,3_2,3_3} )
 inherit autotools-utils bash-completion-r1 fcaps linux-info multilib \
@@ -115,6 +116,9 @@ if [[ ${PV} == *9999 ]]; then
 fi
 	# backports from master
 	epatch "${FILESDIR}"/215-*.patch
+
+	# remove -Wl,-fuse-ld=gold
+	epatch "${FILESDIR}"/0001-hack-testing-Wl-fuse-ld-gold-does-not-work-correctly.patch
 
 	# Bug 463376
 	sed -i -e 's/GROUP="dialout"/GROUP="uucp"/' rules/*.rules || die

@@ -1,1 +1,2 @@
+portage-stable:targets/systemd
 :features/systemd

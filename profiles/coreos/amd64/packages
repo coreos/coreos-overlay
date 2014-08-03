@@ -1,0 +1,3 @@
+# Disable PAX utilities, we don't use grsec kernels
+-*sys-apps/paxctl
+-*sys-apps/elfix

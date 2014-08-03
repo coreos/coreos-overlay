@@ -1,9 +1,3 @@
-# TODO: remove static stuff
-app-arch/bzip2 static-libs
-app-arch/pbzip2 static
-app-arch/pigz static
-dev-libs/glib static-libs
-
 coreos-base/update_engine delta_generator
 sys-apps/flashrom dediprog ft2232_spi serprog
 

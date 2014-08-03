@@ -21,53 +21,15 @@ media-libs/gd           png
 media-libs/libmtp       -crypt
 # We don't want any driver/hw rendering on the host
 media-sound/alsa-utils	-libsamplerate minimal
-net-misc/curl		ares static-libs
 sci-geosciences/gpsd	-cxx
-# verity and other packages link statically with libuuid.
-sys-apps/util-linux	-perl static-libs
-sys-boot/grub       grub_platforms_pc grub_platforms_efi-64 grub_platforms_coreboot static
 sys-devel/gettext	-git
-# Build emulation statically so that we can execute it within a chroot and
-# still find the shared libraries.
-net-misc/dhcpcd -crash
-# Building qemu-kvm with static libraries and X/sdl does not work right now,
-# with the likely problem in libsdl-1.2.13-r1 from upstream.  Previously,
-# this comment was here:
-# build kvm with X and sdl so we have an option of running it with local
-# display without VNC
 app-emulation/qemu	aio caps curl jpeg ncurses png python seccomp threads uuid vhost-net virtfs vnc xattr qemu_softmmu_targets_x86_64
-dev-libs/libaio		static-libs
-cross-armv7a-cros-linux-gnueabi/gcc   hardfp
-cross-armv6j-cros-linux-gnueabi/gcc   hardfp -thumb
-# pciutils is required by flashrom / mosys which is required to be statically
-# compiled to reduce dependency during auto update.
-sys-apps/pciutils	static-libs
-# xz-utils includes liblzma, which is picked by bmpblk_utility (vboot_reference)
-# and may be executed outside chroot.
-app-arch/xz-utils	static-libs
 
-app-emulation/xen-tools -ocaml -hvm -xend -pygrub -qemu -flask -screen -doc amd64
-
-=sys-libs/gdbm-1.8.3-r4 berkdb
->=sys-libs/libseccomp-1.0.1 static-libs
-=app-text/ghostscript-gpl-9.05-r1 cups
-=coreos-base/cros-devutils-0.0.1-r516 cros_host
-=sys-libs/libcap-ng-0.6.6 static-libs
->=sys-libs/ncurses-5.9-r2 static-libs
->=media-libs/libjpeg-turbo-1.2.1 static-libs
->=dev-libs/openssl-1.0.1c static-libs
-=x11-libs/cairo-1.10.2-r3 X
-=media-libs/libpng-1.5.13-r1 static-libs
->=virtual/jpeg-0 static-libs
->=media-libs/libjpeg-turbo-1.2.0-r1 static-libs
 sys-apps/gptfdisk -icu
 
 # for profile migration
 dev-libs/apr-util -gdbm
 sys-libs/gdbm berkdb
-
-# TODO: disable most static things
-sys-libs/zlib static-libs
 
 dev-vcs/git -perl -iconv
 

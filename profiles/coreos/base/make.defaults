@@ -10,7 +10,7 @@ USE_EXPAND="${USE_EXPAND} BOARD_USE CROS_WORKON_TREE TESTS U_BOOT_CONFIG_USE U_B
 USE_EXPAND_HIDDEN="${USE_EXPAND_HIDDEN} CROS_WORKON_TREE"
 
 # Extra use flags for CoreOS SDK
-USE="${USE} hardened cros_host pic pie expat -introspection -cups -tcpd -pcre -berkdb"
+USE="${USE} cros_host pic pie expat -introspection -cups -tcpd -pcre -berkdb"
 
 # Enable bindist for both SDK and targets
 USE="${USE} bindist"

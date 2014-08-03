@@ -1,4 +1,2 @@
 ..
-portage-stable:arch/amd64/no-multilib
-portage-stable:features/64bit-native
 :coreos/targets/generic

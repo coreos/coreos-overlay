@@ -1,5 +1,2 @@
-portage-stable:base
-portage-stable:default/linux
-portage-stable:arch/amd64
-portage-stable:releases/10.0
+portage-stable:hardened/linux/amd64/no-multilib
 :coreos/base
