@@ -1,0 +1,29 @@
+#cloud-config
+
+coreos:
+    units:
+      - name: 99-public-interface.network
+        runtime: yes
+        content: |
+          [Match]
+          Path=*:03.0
+
+          [Network]
+          IPv4LL=true
+      - name: systemd-networkd.service
+        command: restart
+      - name: oem-cloudinit.service
+        command: restart
+        runtime: yes
+        content: |
+          [Unit]
+          Description=Cloudinit from DigitalOcean metadata
+
+          [Service]
+          Type=oneshot
+          ExecStart=/usr/bin/coreos-cloudinit --from-digitalocean-metadata=http://169.254.169.254/ --convert-netconf=digitalocean
+    oem:
+      id: digitalocean
+      name: DigitalOcean
+      home-url: https://www.digitalocean.com/
+      bug-report-url: https://github.com/coreos/bugs/issues
