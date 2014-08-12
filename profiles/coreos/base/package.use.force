@@ -1,6 +1,2 @@
 # Copyright (c) 2014 The CoreOS Authors. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
-
-# Make sure stage1 bootstrapping does not disable kmod,
-# systemd 213 does not properly build without it.
-~sys-apps/systemd-213 kmod
