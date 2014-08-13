@@ -47,7 +47,13 @@ class UpdateAttempterTest : public ::testing::Test {
  protected:
   UpdateAttempterTest()
       : attempter_(&mock_system_state_, &dbus_),
-        loop_(NULL) {}
+        loop_(NULL) {
+    // We set the set_good_partition command to a non-existent path so it fails
+    // to run it. This avoids the async call to the command and continues the
+    // update process right away. Tests testing that behavior can override the
+    // default set_good_partition command if needed.
+    attempter_.set_good_partition_cmd_ = "/path/to/non-existent/command";
+  }
 
   virtual void SetUp() {
     EXPECT_EQ(NULL, attempter_.dbus_service_);

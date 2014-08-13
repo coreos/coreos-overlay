@@ -257,6 +257,9 @@ class UpdateAttempter : public ActionProcessorDelegate,
   bool updated_boot_flags_;  // True if UpdateBootFlags has completed.
   bool update_boot_flags_running_;  // True if UpdateBootFlags is running.
 
+  // The command to run to set the current system as good.
+  std::string set_good_partition_cmd_ = "/usr/sbin/coreos-setgoodroot";
+
   // True if the action processor needs to be started by the boot flag updater.
   bool start_action_processor_;
 
