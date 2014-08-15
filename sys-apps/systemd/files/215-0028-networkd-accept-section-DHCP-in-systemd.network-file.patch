@@ -1,7 +1,7 @@
 From 49047278910689c619b768130cce40c377fa5560 Mon Sep 17 00:00:00 2001
 From: Steven Noonan <steven@uplinklabs.net>
 Date: Thu, 3 Jul 2014 19:42:19 -0700
-Subject: [PATCH 28/32] networkd: accept section DHCP in systemd.network files
+Subject: [PATCH 28/37] networkd: accept section DHCP in systemd.network files
 
 ---
  src/network/networkd-network.c | 2 +-

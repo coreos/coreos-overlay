@@ -1,7 +1,7 @@
 From 446e61ba07ec949544594729cdd2dff79c8e4cdc Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Tue, 15 Jul 2014 09:52:17 -0400
-Subject: [PATCH 22/32] timesyncd: only listen to clock changes when connected
+Subject: [PATCH 22/37] timesyncd: only listen to clock changes when connected
 
 This reverts previous commit and applies a different fix.
 

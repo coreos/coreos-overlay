@@ -1,7 +1,7 @@
 From 64e271490cf958e5554ddb8daa662c84c2003452 Mon Sep 17 00:00:00 2001
 From: Tom Gundersen <teg@jklm.no>
 Date: Tue, 15 Jul 2014 18:55:31 +0200
-Subject: [PATCH 32/32] sd-dhcp-client: make request broadcasts opt-in
+Subject: [PATCH 32/37] sd-dhcp-client: make request broadcasts opt-in
 
 It appears there is no good way to decide whether or not broadcasts should be enabled,
 there is hardware that must have broadcast, and there are networks that only allow

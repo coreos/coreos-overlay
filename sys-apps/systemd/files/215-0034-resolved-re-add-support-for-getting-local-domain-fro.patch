@@ -1,7 +1,7 @@
 From 9a1aced57aaa6767298667c72308157d849282dc Mon Sep 17 00:00:00 2001
 From: Michael Marineau <michael.marineau@coreos.com>
 Date: Tue, 22 Jul 2014 17:56:40 -0700
-Subject: [PATCH 34/34] resolved: re-add support for getting local domain from
+Subject: [PATCH 34/37] resolved: re-add support for getting local domain from
  DHCP
 
 When the code for generating resolv.conf was moved from networkd to

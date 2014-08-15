@@ -1,7 +1,7 @@
 From d26956e27de9ec6d7bfd22da985136ae22930eaf Mon Sep 17 00:00:00 2001
 From: Tom Gundersen <teg@jklm.no>
 Date: Sun, 6 Jul 2014 14:12:28 +0200
-Subject: [PATCH 01/32] machine: don't return uninitialized variable
+Subject: [PATCH 01/37] machine: don't return uninitialized variable
 
 Repotred by Ronny Chevalier
 ---

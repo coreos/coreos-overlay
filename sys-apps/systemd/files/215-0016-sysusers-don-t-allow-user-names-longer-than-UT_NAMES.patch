@@ -1,7 +1,7 @@
 From c4067527b6c8875b1cb767cf4efd14998cf17c34 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Wed, 9 Jul 2014 19:20:58 +0200
-Subject: [PATCH 16/32] sysusers: don't allow user names longer than
+Subject: [PATCH 16/37] sysusers: don't allow user names longer than
  UT_NAMESIZE
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8

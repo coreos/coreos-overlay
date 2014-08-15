@@ -117,10 +117,6 @@ fi
 	# backports from master
 	epatch "${FILESDIR}"/215-*.patch
 
-	# patches not upstream
-	epatch "${FILESDIR}"/0001-hack-testing-Wl-fuse-ld-gold-does-not-work-correctly.patch
-	epatch "${FILESDIR}"/0002-units-run-ldconfig-after-tmpfiles-setup-to-ensure-ld.patch
-
 	# Bug 463376
 	sed -i -e 's/GROUP="dialout"/GROUP="uucp"/' rules/*.rules || die
 

@@ -1,7 +1,7 @@
 From efbcb2ef7b6337530ece0a251b80b35c109fcdf7 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Mon, 7 Jul 2014 14:58:13 +0200
-Subject: [PATCH 06/32] man: add missing archs to ConditionArchitecture=
+Subject: [PATCH 06/37] man: add missing archs to ConditionArchitecture=
  description
 
 ---

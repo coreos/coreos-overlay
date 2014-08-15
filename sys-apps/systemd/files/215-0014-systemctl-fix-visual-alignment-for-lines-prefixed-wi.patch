@@ -1,7 +1,7 @@
 From d91cba9f5ed3aee340115bd4b4097bf3bf396365 Mon Sep 17 00:00:00 2001
 From: Michal Schmidt <mschmidt@redhat.com>
 Date: Tue, 8 Jul 2014 15:17:36 +0200
-Subject: [PATCH 14/32] systemctl: fix visual alignment for lines prefixed with
+Subject: [PATCH 14/37] systemctl: fix visual alignment for lines prefixed with
  color dots
 
 ---

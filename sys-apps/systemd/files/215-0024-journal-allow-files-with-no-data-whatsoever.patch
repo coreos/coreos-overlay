@@ -1,7 +1,7 @@
 From 168b42d2860dcaaa4f4970f96467da1007cd78f5 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Sun, 30 Mar 2014 14:20:34 -0400
-Subject: [PATCH 24/32] journal: allow files with no data whatsoever
+Subject: [PATCH 24/37] journal: allow files with no data whatsoever
 
 If a file was opened for writing, and then closed immediately without
 actually writing any entries, on subsequent opening, it would be

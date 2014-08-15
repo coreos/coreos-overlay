@@ -1,7 +1,7 @@
 From c49b22614e4a6f843f8c2395d22bedf335f79fde Mon Sep 17 00:00:00 2001
 From: Sjoerd Simons <sjoerd@luon.net>
 Date: Sun, 13 Jul 2014 16:56:16 +0200
-Subject: [PATCH 19/32] man: sysusers.d correct default user shell
+Subject: [PATCH 19/37] man: sysusers.d correct default user shell
 
 For the non-root user sysusers uses nologin as the default shell, not
 login. Correct the documentation to match the code.

@@ -1,7 +1,7 @@
 From c831530cf5cf6795e6c465c51689481a308a20a0 Mon Sep 17 00:00:00 2001
 From: Tom Gundersen <teg@jklm.no>
 Date: Thu, 3 Jul 2014 22:47:51 +0200
-Subject: [PATCH 26/32] networkd: properly track addresses when first added
+Subject: [PATCH 26/37] networkd: properly track addresses when first added
 
 When doing a NEWADDR, the reply we get back is the NEWADDR itself, rather
 than just an empty ack (unlike how NEWLINK works). For this reason, the

@@ -1,7 +1,7 @@
 From b407f12e7656916b25b3b3c006290187e1064793 Mon Sep 17 00:00:00 2001
 From: Mike Gilbert <floppym@gentoo.org>
 Date: Fri, 4 Jul 2014 14:43:14 -0400
-Subject: [PATCH 17/32] Revert "build-sys: include PolicyKit files as part of
+Subject: [PATCH 17/37] Revert "build-sys: include PolicyKit files as part of
  distribution"
 
 This reverts commit 0c26bfc3d21fdb3963f1248c237e2f1a33b5566d.

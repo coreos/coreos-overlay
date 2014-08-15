@@ -1,7 +1,7 @@
 From 669455ef0d5a3cf56c03c9fc668daa0750629cf5 Mon Sep 17 00:00:00 2001
 From: Jon Severinsson <jon@severinsson.net>
 Date: Fri, 11 Jul 2014 14:37:36 +0200
-Subject: [PATCH 18/32] build-sys: Do not distribute generated
+Subject: [PATCH 18/37] build-sys: Do not distribute generated
  emergency.service
 
 It is already in nodist_systemunit_DATA and if it is

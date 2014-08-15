@@ -1,7 +1,7 @@
 From 1a45876927c5a2fb7a48d4ecd00359b37b8e1c4f Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Mon, 7 Jul 2014 18:45:07 +0200
-Subject: [PATCH 09/32] man: drop references to the --priviliged command line
+Subject: [PATCH 09/37] man: drop references to the --priviliged command line
  option which has been removed a while back
 
 ---
