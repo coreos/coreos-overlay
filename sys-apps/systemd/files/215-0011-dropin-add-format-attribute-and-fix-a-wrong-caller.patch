@@ -1,7 +1,7 @@
 From 05e483d224be6a7c057a7b6eb30d830fea18eda8 Mon Sep 17 00:00:00 2001
 From: Thomas Hindoe Paaboel Andersen <phomes@gmail.com>
 Date: Mon, 7 Jul 2014 21:40:00 +0200
-Subject: [PATCH 11/32] dropin: add format attribute and fix a wrong caller
+Subject: [PATCH 11/37] dropin: add format attribute and fix a wrong caller
 
 ---
  src/shared/dropin.h    | 4 +++-

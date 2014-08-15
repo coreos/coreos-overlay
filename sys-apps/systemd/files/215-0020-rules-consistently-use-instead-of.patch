@@ -1,7 +1,7 @@
 From 584152929252c948e9826bc3c735165ea1328737 Mon Sep 17 00:00:00 2001
 From: Kay Sievers <kay@vrfy.org>
 Date: Tue, 15 Jul 2014 02:04:47 +0200
-Subject: [PATCH 20/32] rules: consistently use "?*" instead of "*?"
+Subject: [PATCH 20/37] rules: consistently use "?*" instead of "*?"
 
 ---
  rules/99-systemd.rules.in  |  2 +-

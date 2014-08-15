@@ -1,7 +1,7 @@
 From f491638dd12ad53539d62f5a1088eb26e233badf Mon Sep 17 00:00:00 2001
 From: Steven Noonan <steven@uplinklabs.net>
 Date: Thu, 3 Jul 2014 19:43:56 -0700
-Subject: [PATCH 27/32] networkd: don't clear dhcpv6 lease timers if there's no
+Subject: [PATCH 27/37] networkd: don't clear dhcpv6 lease timers if there's no
  previous lease
 
 If client->lease is NULL, dhcp6_lease_clear_timers will cause a segmentation

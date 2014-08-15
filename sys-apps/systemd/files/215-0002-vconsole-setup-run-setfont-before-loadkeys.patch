@@ -1,7 +1,7 @@
 From 79c9e82026d0c2e9466a5b2bc81ee7a3d16b1ade Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Tue, 1 Jul 2014 22:20:11 -0400
-Subject: [PATCH 02/32] vconsole-setup: run setfont before loadkeys
+Subject: [PATCH 02/37] vconsole-setup: run setfont before loadkeys
 
 https://bugs.freedesktop.org/show_bug.cgi?id=80685
 ---

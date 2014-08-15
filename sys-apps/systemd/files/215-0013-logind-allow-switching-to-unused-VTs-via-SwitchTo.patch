@@ -1,7 +1,7 @@
 From 82155b957fac44db3858e1b008cf31e5004d40cd Mon Sep 17 00:00:00 2001
 From: David Herrmann <dh.herrmann@gmail.com>
 Date: Tue, 8 Jul 2014 12:56:55 +0200
-Subject: [PATCH 13/32] logind: allow switching to unused VTs via SwitchTo()
+Subject: [PATCH 13/37] logind: allow switching to unused VTs via SwitchTo()
 
 If compositors use the new SwitchTo() logic to map F1-F12, we should allow
 them to switch to unregistered VTs, too. Otherwise, the auto-spawn logic

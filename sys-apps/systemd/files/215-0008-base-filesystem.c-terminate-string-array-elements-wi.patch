@@ -1,7 +1,7 @@
 From 5055a12659b731d78cc30553576193905b6530ae Mon Sep 17 00:00:00 2001
 From: Harald Hoyer <harald@redhat.com>
 Date: Mon, 7 Jul 2014 17:45:53 +0200
-Subject: [PATCH 08/32] base-filesystem.c: terminate string array elements with
+Subject: [PATCH 08/37] base-filesystem.c: terminate string array elements with
  \0
 
 NULSTR_FOREACH() looks for a terminating zero and the element also needs

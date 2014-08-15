@@ -1,7 +1,7 @@
 From 8070ab78b7bba4a20bba278086580d6582c96e80 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Mon, 7 Jul 2014 22:49:59 +0200
-Subject: [PATCH 12/32] shared: fix format string for usec_t type
+Subject: [PATCH 12/37] shared: fix format string for usec_t type
 
 ---
  src/shared/generator.c | 2 +-

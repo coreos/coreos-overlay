@@ -1,7 +1,7 @@
 From 5c7eaa88675fc6e400420bbeb4890ef13b18b85b Mon Sep 17 00:00:00 2001
 From: Tom Gundersen <teg@jklm.no>
 Date: Mon, 7 Jul 2014 14:18:26 +0200
-Subject: [PATCH 30/32] networkd: netdev - add missing refs
+Subject: [PATCH 30/37] networkd: netdev - add missing refs
 
 Without this, the underlying device would get freed (and hence
 fail).

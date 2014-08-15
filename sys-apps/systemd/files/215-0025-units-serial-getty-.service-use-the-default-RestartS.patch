@@ -1,7 +1,7 @@
 From 0a9a32ccbb38db14ff5dc8455af8cdac9610fbce Mon Sep 17 00:00:00 2001
 From: Michael Olbrich <m.olbrich@pengutronix.de>
 Date: Tue, 15 Jul 2014 18:28:10 +0200
-Subject: [PATCH 25/32] units/serial-getty@.service: use the default RestartSec
+Subject: [PATCH 25/37] units/serial-getty@.service: use the default RestartSec
 
 For pluggable ttys such as USB serial devices, the getty is restarted
 and exits in a loop until the remove event reaches systemd. Under

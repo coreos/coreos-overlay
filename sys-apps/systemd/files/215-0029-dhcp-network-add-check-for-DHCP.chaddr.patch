@@ -1,7 +1,7 @@
 From f0b0beb95c95235ffc88d7230334f93e37982b04 Mon Sep 17 00:00:00 2001
 From: Michal Sekletar <msekleta@redhat.com>
 Date: Thu, 19 Jun 2014 15:14:14 +0200
-Subject: [PATCH 29/32] dhcp-network: add check for DHCP.chaddr
+Subject: [PATCH 29/37] dhcp-network: add check for DHCP.chaddr
 
 Check that received DHCP packets actually include our MAC address in
 chaddr field. BPF interpreter has 32 bit wide registers but MAC address

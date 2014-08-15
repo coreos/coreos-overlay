@@ -1,7 +1,7 @@
 From bdabb3772ddd38ef7a62342efaa5b23d77765e5b Mon Sep 17 00:00:00 2001
 From: Umut Tezduyar Lindskog <umut.tezduyar@axis.com>
 Date: Tue, 15 Jul 2014 08:36:29 +0200
-Subject: [PATCH 23/32] core: fix oneshot service resource control
+Subject: [PATCH 23/37] core: fix oneshot service resource control
 
 Oneshot services's cgroup is removed when the service
 exits. An assert is hit otherwise.

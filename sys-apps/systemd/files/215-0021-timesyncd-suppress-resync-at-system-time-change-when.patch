@@ -1,7 +1,7 @@
 From 19c0af955631f8a32b3c95232cfcb4682dc362d6 Mon Sep 17 00:00:00 2001
 From: Kay Sievers <kay@vrfy.org>
 Date: Tue, 15 Jul 2014 02:24:35 +0200
-Subject: [PATCH 21/32] timesyncd: suppress resync at system time change when
+Subject: [PATCH 21/37] timesyncd: suppress resync at system time change when
  not connected
 
 Jul 04 17:46:03 orchid systemd[1]: Starting Network Time Synchronization...

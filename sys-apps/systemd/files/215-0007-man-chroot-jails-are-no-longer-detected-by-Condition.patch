@@ -1,7 +1,7 @@
 From cb59448753d949cd31c5a84bccc37f10597e23d7 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Mon, 7 Jul 2014 14:58:36 +0200
-Subject: [PATCH 07/32] man: chroot jails are no longer detected by
+Subject: [PATCH 07/37] man: chroot jails are no longer detected by
  ConditionVirtualization=
 
 ---

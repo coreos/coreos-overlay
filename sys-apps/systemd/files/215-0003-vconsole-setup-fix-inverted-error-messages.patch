@@ -1,7 +1,7 @@
 From b44c15f77e59d40d5bdf5608bf8d76cc2375ac6e Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Mon, 7 Jul 2014 08:55:30 -0400
-Subject: [PATCH 03/32] vconsole-setup: fix inverted error messages
+Subject: [PATCH 03/37] vconsole-setup: fix inverted error messages
 
 Introduced in abee28c56d.
 

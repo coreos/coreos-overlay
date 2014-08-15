@@ -1,7 +1,7 @@
 From f71f5fa7f6796cb809a2b827a5348cc494c128e1 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Zbigniew=20J=C4=99drzejewski-Szmek?= <zbyszek@in.waw.pl>
 Date: Mon, 7 Jul 2014 16:10:38 -0400
-Subject: [PATCH 10/32] fstab-generator: add comma when removed option is in
+Subject: [PATCH 10/37] fstab-generator: add comma when removed option is in
  the middle
 
 xxx,x-systemd.default-timeout=y,zzz was filtered to xxxzzz,

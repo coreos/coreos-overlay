@@ -1,7 +1,7 @@
 From 1335bbd1c9dd114d6491f08bc3b2c5eaf3768a04 Mon Sep 17 00:00:00 2001
 From: Lennart Poettering <lennart@poettering.net>
 Date: Mon, 7 Jul 2014 11:47:10 +0200
-Subject: [PATCH 05/32] util: consider 0x7F a control chracter (which it is:
+Subject: [PATCH 05/37] util: consider 0x7F a control chracter (which it is:
  DEL)
 
 Let's better be safe than sorry.

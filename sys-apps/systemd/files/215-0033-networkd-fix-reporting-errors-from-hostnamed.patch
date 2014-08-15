@@ -1,7 +1,7 @@
 From cd210f1210700a9917412cb6d312eb029236f1ae Mon Sep 17 00:00:00 2001
 From: Michael Marineau <michael.marineau@coreos.com>
 Date: Mon, 21 Jul 2014 16:11:00 -0700
-Subject: [PATCH 33/33] networkd: fix reporting errors from hostnamed
+Subject: [PATCH 33/37] networkd: fix reporting errors from hostnamed
 
 The return value may be -EINVAL or a positive errno from the dbus
 message. Check both ranges, otherwise most errors are silently ignored.

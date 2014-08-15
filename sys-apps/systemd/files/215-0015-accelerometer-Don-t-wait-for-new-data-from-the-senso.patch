@@ -1,7 +1,7 @@
 From 18dd397f6383eb21ba383840dd9b10feaca4a663 Mon Sep 17 00:00:00 2001
 From: Bastien Nocera <hadess@hadess.net>
 Date: Tue, 8 Jul 2014 18:29:06 +0200
-Subject: [PATCH 15/32] accelerometer: Don't wait for new data from the sensor
+Subject: [PATCH 15/37] accelerometer: Don't wait for new data from the sensor
 
 Instead of waiting for new data from the sensor, which might be
 a long time coming, depending on the sensor device, ask the kernel
