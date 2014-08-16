@@ -45,3 +45,6 @@ sys-apps/systemd -ssl
 net-firewall/ipset -modules
 
 dev-lang/spidermonkey minimal
+
+# do not pull in x11-misc/shared-mime-info
+dev-libs/glib -mime
