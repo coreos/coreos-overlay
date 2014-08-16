@@ -619,8 +619,7 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
     CHECK(!HasOutputPipe()) << "No output pipe allowed for event requests.";
     if (event_->result == OmahaEvent::kResultError && successful &&
         utils::IsOfficialBuild()) {
-      LOG(INFO) << "Signalling Crash Reporter.";
-      utils::ScheduleCrashReporterUpload();
+      LOG(ERROR) << "HTTP reported success but Omaha reports an error.";
     }
     completer.set_code(kActionCodeSuccess);
     return;
