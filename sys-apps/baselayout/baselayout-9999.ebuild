@@ -154,3 +154,23 @@ src_install() {
 		systemd_enable_service sysinit.target coreos-tmpfiles.service
 	fi
 }
+
+pkg_postinst() {
+	# Set up /usr/lib/debug to match the root filesystem layout
+	# FIXME: This is done in postinst right now and all errors are ignored
+	# as a transitional scheme, this isn't important enough to migrate
+	# existing SDK environments.
+	local dir
+	for dir in "${BASE_DIRS[@]}"; do
+		mkdir -p "${ROOT}/usr/lib/debug/${dir}"
+	done
+	local sym
+	for sym in "${!LIB_SYMS[@]}" ; do
+		ln -sfT "${LIB_SYMS[$sym]}" "${ROOT}/usr/lib/debug/${sym}"
+	done
+	if use symlink-usr; then
+		for sym in "${!USR_SYMS[@]}" ; do
+			ln -sfT "${USR_SYMS[$sym]}" "${ROOT}/usr/lib/debug/${sym}"
+		done
+	fi
+}
