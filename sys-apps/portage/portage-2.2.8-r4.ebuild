@@ -38,7 +38,6 @@ python_dep="${python_dep//ssl,}"
 
 python_dep="${python_dep}
 	python_targets_pypy2_0? ( virtual/pypy:2.0 )
-	python_targets_python2_6? ( dev-lang/python:2.6 )
 	python_targets_python2_7? ( dev-lang/python:2.7 )
 	python_targets_python3_2? ( dev-lang/python:3.2 )
 	python_targets_python3_3? ( dev-lang/python:3.3 )
@@ -71,7 +70,7 @@ RDEPEND="${python_dep}
 	>=app-misc/pax-utils-0.1.17
 	selinux? ( || ( >=sys-libs/libselinux-2.0.94[python] <sys-libs/libselinux-2.0.94 ) )
 	xattr? ( kernel_linux? (
-		$(for python_impl in python{2_6,2_7,3_2} pypy2_0; do
+		$(for python_impl in python{2_7,3_2} pypy2_0; do
 			echo "python_targets_${python_impl}? ( dev-python/pyxattr[python_targets_${python_impl}] )"
 		done) ) )
 	!<app-shells/bash-3.2_p17
