@@ -189,6 +189,7 @@ env['CCFLAGS'] = ' '.join("""-g
                              -Wtype-limits
                              -Wtype-limits
                              -Wuninitialized
+                             -Wno-error=deprecated-declarations
                              -D__STDC_FORMAT_MACROS=1
                              -D_FILE_OFFSET_BITS=64
                              -I/usr/include/libxml2""".split());

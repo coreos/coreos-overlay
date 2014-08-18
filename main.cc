@@ -144,9 +144,9 @@ void SetupLogging() {
 }  // namespace chromeos_update_engine
 
 int main(int argc, char** argv) {
+  // FIXME: g_type_init is deprecated, remove once updated to glib >= 3.36
   ::g_type_init();
-  g_thread_init(NULL);
-  dbus_g_thread_init();
+  dbus_threads_init_default();
   base::AtExitManager exit_manager;  // Required for base/rand_util.h.
   chromeos_update_engine::Terminator::Init();
   chromeos_update_engine::Subprocess::Init();

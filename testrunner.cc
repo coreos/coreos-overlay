@@ -18,9 +18,9 @@
 
 int main(int argc, char **argv) {
   LOG(INFO) << "started";
+  // FIXME: g_type_init is deprecated, remove once updated to glib >= 3.36
   ::g_type_init();
-  g_thread_init(NULL);
-  dbus_g_thread_init();
+  dbus_threads_init_default();
   base::AtExitManager exit_manager;
   // TODO(garnold) temporarily cause the unittest binary to exit with status
   // code 2 upon catching a SIGTERM. This will help diagnose why the unittest

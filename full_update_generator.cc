@@ -70,7 +70,9 @@ class ChunkProcessor {
 };
 
 bool ChunkProcessor::Start() {
-  thread_ = g_thread_create(ReadAndCompressThread, this, TRUE, NULL);
+  // g_thread_create is deprecated since glib 2.32. Use
+  // g_thread_new instead.
+  thread_ = g_thread_try_new("chunk_proc", ReadAndCompressThread, this, NULL);
   TEST_AND_RETURN_FALSE(thread_ != NULL);
   return true;
 }
