@@ -9,5 +9,5 @@ LICENSE=LGPL-2
 RDEPEND=virtual/libiconv xattr? ( sys-apps/attr ) fam? ( virtual/fam )
 SLOT=2
 SRC_URI=mirror://gnome/sources/glib/2.22/glib-2.22.4.tar.bz2
-_eclasses_=eutils	4878e7f88afc0ba0866ac112190b0fd4	flag-o-matic	65cef1287b9d62b1a0f180765d1e0c69	gnome.org	8fef8f967214f56e08fa92d61163d891	libtool	b1c8688e60f9580bcb9bb46e08737eb1	multilib	892e597faee02a5b94eb02ab512e7622	toolchain-funcs	51e6c948e72c43bcc8edc7544411c953	user	d0a4d0735a6c0183d707ca919bd72f28	versionator	6601b4c5b3f019a993db59a50e1854e4
+_eclasses_=eutils	06133990e861be0fe60c2b428fd025d9	flag-o-matic	75e24bac8423c515dd9c5717f08feb83	gnome.org	8fef8f967214f56e08fa92d61163d891	libtool	52d0e17251d04645ffaa61bfdd858944	multilib	3bf24e6abb9b76d9f6c20600f0b716bf	toolchain-funcs	0f1760274637a138b99bb649202ea402	versionator	cd0bcdb170807e4a1984115e9d53a26f
 _md5_=2e997e6a07e491f5872cbc176310d3b6

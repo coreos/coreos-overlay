@@ -9,5 +9,5 @@ LICENSE=BSD-2
 RDEPEND=qemu? ( app-emulation/qemu )
 SLOT=0
 SRC_URI=http://storage.core-os.net/mirror/snapshots/edk2-15046.tar.xz
-_eclasses_=multilib	892e597faee02a5b94eb02ab512e7622	multiprocessing	89580da5ec17ad687fcde876c542b91e	toolchain-funcs	51e6c948e72c43bcc8edc7544411c953
+_eclasses_=multilib	3bf24e6abb9b76d9f6c20600f0b716bf	multiprocessing	d7f2985a2c76c365ee20269db5261414	toolchain-funcs	0f1760274637a138b99bb649202ea402
 _md5_=ecf1a4e0afd49b1e3cebc05e377ab1c0

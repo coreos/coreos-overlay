@@ -9,5 +9,5 @@ RDEPEND=!sys-kernel/ps3-sources selinux? ( sys-libs/libselinux ) !sys-libs/nss-d
 RESTRICT=strip
 SLOT=2.2
 SRC_URI=mirror://gnu/glibc/glibc-2.17.tar.xz ftp://sourceware.org/pub/glibc/releases/glibc-2.17.tar.xz ftp://sourceware.org/pub/glibc/snapshots/glibc-2.17.tar.xz mirror://gentoo/glibc-2.17.tar.xz mirror://gentoo/glibc-2.17-patches-8.tar.bz2 http://dev.gentoo.org/~vapier/dist/glibc-2.17-patches-8.tar.bz2 http://dev.gentoo.org/~azarah/glibc/glibc-2.17-patches-8.tar.bz2
-_eclasses_=eutils	4878e7f88afc0ba0866ac112190b0fd4	flag-o-matic	65cef1287b9d62b1a0f180765d1e0c69	gnuconfig	ee02e61d6c68cee478e2e69214b7caef	multilib	892e597faee02a5b94eb02ab512e7622	multiprocessing	89580da5ec17ad687fcde876c542b91e	systemd	9f063b2cc19c5e8030911372aa246c4e	toolchain-funcs	51e6c948e72c43bcc8edc7544411c953	unpacker	658a981a81fd7cb0767315a541bab01d	user	d0a4d0735a6c0183d707ca919bd72f28	versionator	6601b4c5b3f019a993db59a50e1854e4
+_eclasses_=eutils	06133990e861be0fe60c2b428fd025d9	flag-o-matic	75e24bac8423c515dd9c5717f08feb83	gnuconfig	ee02e61d6c68cee478e2e69214b7caef	multilib	3bf24e6abb9b76d9f6c20600f0b716bf	multiprocessing	d7f2985a2c76c365ee20269db5261414	systemd	090342761f573a8280dd5aa6b0345f3b	toolchain-funcs	0f1760274637a138b99bb649202ea402	unpacker	f300a7ca9131b1024a79762e8edd3c52	versionator	cd0bcdb170807e4a1984115e9d53a26f
 _md5_=449153ddaea9adb0da57cff08dbbeb4f

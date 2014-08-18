@@ -6,5 +6,5 @@ KEYWORDS=amd64 x86
 LICENSE=Apache-2.0
 RDEPEND=coreos-base/nova-agent-watcher
 SLOT=0
-_eclasses_=eutils	4878e7f88afc0ba0866ac112190b0fd4	git-2	2027b81a576527fa16bece425941e094	git-r3	536297c3f55d49069f6d2785b061e4d9	multilib	892e597faee02a5b94eb02ab512e7622	toolchain-funcs	51e6c948e72c43bcc8edc7544411c953	user	d0a4d0735a6c0183d707ca919bd72f28
+_eclasses_=eutils	06133990e861be0fe60c2b428fd025d9	git-2	2027b81a576527fa16bece425941e094	git-r3	6ebae45064cb04482f3c702632dd9528	multilib	3bf24e6abb9b76d9f6c20600f0b716bf	toolchain-funcs	0f1760274637a138b99bb649202ea402
 _md5_=2a024b25b29591cd1a55cde3fca27d55

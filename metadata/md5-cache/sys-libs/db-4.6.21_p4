@@ -1,5 +1,5 @@
 DEFINED_PHASES=compile install postinst postrm preinst setup test unpack
-DEPEND=tcl? ( >=dev-lang/tcl-8.4 ) java? ( >=virtual/jdk-1.4 ) >=sys-devel/binutils-2.16.1 test? ( >=dev-lang/tcl-8.4 ) java? ( >=dev-java/java-config-2.1.9-r1 ) || ( >=sys-devel/automake-1.12 >=sys-devel/automake-1.13 ) >=sys-devel/autoconf-2.68 sys-devel/libtool
+DEPEND=tcl? ( >=dev-lang/tcl-8.4 ) java? ( >=virtual/jdk-1.4 ) >=sys-devel/binutils-2.16.1 test? ( >=dev-lang/tcl-8.4 ) java? ( >=dev-java/java-config-2.1.9-r1 ) !<sys-devel/gettext-0.18.1.1-r3 || ( >=sys-devel/automake-1.13 >=sys-devel/automake-1.14 ) >=sys-devel/autoconf-2.69 sys-devel/libtool
 DESCRIPTION=Oracle Berkeley DB
 HOMEPAGE=http://www.oracle.com/technology/software/products/berkeley-db/index.html
 IUSE=tcl java doc nocxx doc test examples elibc_FreeBSD java
@@ -8,5 +8,5 @@ LICENSE=OracleDB
 RDEPEND=tcl? ( dev-lang/tcl ) java? ( >=virtual/jre-1.4 ) java? ( >=dev-java/java-config-2.1.9-r1 )
 SLOT=4.6
 SRC_URI=http://download.oracle.com/berkeley-db/db-4.6.21.tar.gz http://www.oracle.com/technology/products/berkeley-db/db/update/4.6.21/patch.4.6.21.1 http://www.oracle.com/technology/products/berkeley-db/db/update/4.6.21/patch.4.6.21.2 http://www.oracle.com/technology/products/berkeley-db/db/update/4.6.21/patch.4.6.21.3 http://www.oracle.com/technology/products/berkeley-db/db/update/4.6.21/patch.4.6.21.4
-_eclasses_=autotools	16761a2f972abd686713e5967ff3c754	db	217d1394b8ade73a6a416da2b3be3332	eutils	4878e7f88afc0ba0866ac112190b0fd4	flag-o-matic	65cef1287b9d62b1a0f180765d1e0c69	java-pkg-opt-2	f9bbbe5092225a2059aa9e6a3a2b52f1	java-utils-2	8d0d93b7a8605ea346cce4604f6db516	libtool	b1c8688e60f9580bcb9bb46e08737eb1	multilib	892e597faee02a5b94eb02ab512e7622	multiprocessing	89580da5ec17ad687fcde876c542b91e	toolchain-funcs	51e6c948e72c43bcc8edc7544411c953	user	d0a4d0735a6c0183d707ca919bd72f28	versionator	6601b4c5b3f019a993db59a50e1854e4
+_eclasses_=autotools	ebea507d219855923e3438c953cf4ab8	db	217d1394b8ade73a6a416da2b3be3332	eutils	06133990e861be0fe60c2b428fd025d9	flag-o-matic	75e24bac8423c515dd9c5717f08feb83	java-pkg-opt-2	f9bbbe5092225a2059aa9e6a3a2b52f1	java-utils-2	f02d3e4777b404c719a5a6479c37c6e3	libtool	52d0e17251d04645ffaa61bfdd858944	multilib	3bf24e6abb9b76d9f6c20600f0b716bf	multiprocessing	d7f2985a2c76c365ee20269db5261414	toolchain-funcs	0f1760274637a138b99bb649202ea402	versionator	cd0bcdb170807e4a1984115e9d53a26f
 _md5_=27a7862c5840714fec13b91d34bc4fee

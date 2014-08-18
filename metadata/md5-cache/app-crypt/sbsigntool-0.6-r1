@@ -8,5 +8,5 @@ LICENSE=GPL-3
 RDEPEND=dev-libs/openssl sys-apps/util-linux
 SLOT=0
 SRC_URI=https://launchpad.net/ubuntu/+archive/primary/+files/sbsigntool_0.6.orig.tar.gz
-_eclasses_=eutils	4878e7f88afc0ba0866ac112190b0fd4	multilib	892e597faee02a5b94eb02ab512e7622	toolchain-funcs	51e6c948e72c43bcc8edc7544411c953	user	d0a4d0735a6c0183d707ca919bd72f28
+_eclasses_=eutils	06133990e861be0fe60c2b428fd025d9	multilib	3bf24e6abb9b76d9f6c20600f0b716bf	toolchain-funcs	0f1760274637a138b99bb649202ea402
 _md5_=b5ea6469674d7b88b834e01a58aff95e

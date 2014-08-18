@@ -1,5 +1,5 @@
 DEFINED_PHASES=compile configure install prepare setup test
-DEPEND=>=dev-libs/nspr-4.9.4 virtual/libffi >=sys-libs/zlib-1.1.4 || ( >=dev-lang/python-2.7.5-r2:2.7[threads] >=dev-lang/python-2.6.8-r3:2.6[threads] ) app-arch/zip virtual/pkgconfig
+DEPEND=>=dev-libs/nspr-4.9.4 virtual/libffi >=sys-libs/zlib-1.1.4 || ( >=dev-lang/python-2.7.5-r2:2.7[threads] ) app-arch/zip virtual/pkgconfig
 DESCRIPTION=Stand-alone JavaScript C library
 EAPI=5
 HOMEPAGE=http://www.mozilla.org/js/spidermonkey/
@@ -11,5 +11,5 @@ REQUIRED_USE=debug? ( jit )
 RESTRICT=ia64? ( test )
 SLOT=17
 SRC_URI=http://ftp.mozilla.org/pub/mozilla.org/js/mozjs17.0.0.tar.gz
-_eclasses_=eutils	4878e7f88afc0ba0866ac112190b0fd4	multilib	892e597faee02a5b94eb02ab512e7622	pax-utils	2424f959506320f5196de8f79fa05297	python-any-r1	08d3455b23110d650f173ab0a090818b	python-utils-r1	49ee0ca5e1019d8f256a23692dad2642	toolchain-funcs	51e6c948e72c43bcc8edc7544411c953	user	d0a4d0735a6c0183d707ca919bd72f28	versionator	6601b4c5b3f019a993db59a50e1854e4
+_eclasses_=eutils	06133990e861be0fe60c2b428fd025d9	multilib	3bf24e6abb9b76d9f6c20600f0b716bf	pax-utils	51ad5130f4a69b1a118ca5296de276ae	python-any-r1	4560effd96d3d2a82e50af7cf87166da	python-utils-r1	8c66c6dabd0295878b68b40dbd0b087b	toolchain-funcs	0f1760274637a138b99bb649202ea402	versionator	cd0bcdb170807e4a1984115e9d53a26f
 _md5_=652ba3bfeb44a63a2b664de20d5e8db7
