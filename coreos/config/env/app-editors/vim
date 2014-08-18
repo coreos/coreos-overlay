@@ -1,0 +1,3 @@
+# automatic terminal library selection doesn't work when cross-compiling
+# Gentoo bug: https://bugs.gentoo.org/show_bug.cgi?id=473372
+EXTRA_ECONF="--with-tlib=ncurses"

@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=5
-PYTHON_COMPAT=( python{2_6,2_7} )
+PYTHON_COMPAT=( python2_7 )
 
 CROS_WORKON_COMMIT="3e4b20f67839aa541839eca6b4b7274d5ad1932c"
 CROS_WORKON_PROJECT="coreos/coreos-buildbot"

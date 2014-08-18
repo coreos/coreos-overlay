@@ -32,3 +32,6 @@ net-libs/libmicrohttpd -ssl
 sys-boot/syslinux       -custom-cflags
 
 sys-apps/flashrom -dediprog -ft2232_spi -serprog
+
+# break dependency loop between pkg-config and glib
+dev-util/pkgconfig internal-glib
