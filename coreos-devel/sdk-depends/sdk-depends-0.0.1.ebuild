@@ -26,6 +26,7 @@ DEPEND="
 	net-misc/curl
 	sys-apps/debianutils
 	sys-apps/iproute2
+	sys-boot/grub
 	sys-devel/crossdev
 	sys-fs/btrfs-progs
 	"

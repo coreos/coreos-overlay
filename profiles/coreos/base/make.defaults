@@ -75,3 +75,7 @@ FEATURES="buildpkg ccache clean-logs compressdebug parallel-install splitdebug
 
 # No need to restrict access to build directories in dev environments.
 PORTAGE_WORKDIR_MODE="0755"
+
+# Enable our assorted Grub targets, don't whine about /boot
+GRUB_PLATFORMS="efi-64 pc xen"
+DONT_MOUNT_BOOT=1

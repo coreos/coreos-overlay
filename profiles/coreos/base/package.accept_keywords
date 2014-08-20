@@ -100,3 +100,8 @@ dev-util/checkbashisms
 # 106 and 107 ebuilds improve systemd integration
 =sys-fs/lvm2-2.02.107
 =sys-block/thin-provisioning-tools-0.3.2
+
+# this version includes the xen target
+=sys-boot/grub-2.02_beta2
+# current stable xen-tools doesn't build without multilib
+=app-emulation/xen-tools-4.4.0-r9
