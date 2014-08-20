@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 USE="cros-debug acpi usb symlink-usr cryptsetup policykit -pam"
-USE="${USE} -cros_host -expat -pic -pie -cairo -X"
+USE="${USE} -cros_host -expat -cairo -X"
 USE="${USE} -acl -cracklib -gpm -openmp -python -sha512"
 USE="${USE} -fortran -abiword -perl -cups -poppler-data -nls"
 
