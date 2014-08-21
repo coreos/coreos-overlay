@@ -13,7 +13,7 @@ else
 	KEYWORDS="amd64"
 fi
 
-inherit cros-workon systemd udev
+inherit cros-workon systemd toolchain-funcs udev
 
 DESCRIPTION="coreos-cloudinit"
 HOMEPAGE="https://github.com/coreos/coreos-cloudinit"
@@ -31,6 +31,14 @@ RDEPEND="
 "
 
 src_compile() {
+	# setup CFLAGS and LDFLAGS for separate build target
+	export CGO_CFLAGS="-I${ROOT}/usr/include"
+	export CGO_LDFLAGS="-L${ROOT}/usr/lib"
+
+	if gcc-specs-pie; then
+		CGO_LDFLAGS+=" -fno-PIC"
+	fi
+
 	./build || die
 }
 
