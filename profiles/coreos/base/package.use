@@ -39,7 +39,7 @@ net-analyzer/nmap ncat -lua
 app-admin/sudo -sendmail
 
 # avoid pulling in gnutls
-sys-apps/systemd -ssl
+sys-apps/systemd -ssl vanilla
 
 # disable kernel config detection and module building
 net-firewall/ipset -modules

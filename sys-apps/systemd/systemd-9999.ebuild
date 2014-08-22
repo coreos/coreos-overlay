@@ -1,6 +1,6 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-apps/systemd/systemd-9999.ebuild,v 1.115 2014/06/14 16:33:20 floppym Exp $
+# $Header: /var/cvsroot/gentoo-x86/sys-apps/systemd/systemd-9999.ebuild,v 1.136 2014/08/20 07:44:27 mgorny Exp $
 
 EAPI=5
 
@@ -21,8 +21,8 @@ inherit git-r3
 fi
 
 AUTOTOOLS_PRUNE_LIBTOOL_FILES=all
-PYTHON_COMPAT=( python{2_7,3_2,3_3} )
-inherit autotools-utils bash-completion-r1 fcaps linux-info multilib \
+PYTHON_COMPAT=( python{2_7,3_2,3_3,3_4} )
+inherit autotools-utils bash-completion-r1 linux-info multilib \
 	multilib-minimal pam python-single-r1 systemd toolchain-funcs udev \
 	user
 
@@ -33,26 +33,30 @@ SRC_URI="http://www.freedesktop.org/software/systemd/${P}.tar.xz"
 LICENSE="GPL-2 LGPL-2.1 MIT public-domain"
 SLOT="0/2"
 KEYWORDS="~alpha ~amd64 ~arm ~ia64 ~ppc ~ppc64 ~sparc ~x86"
-IUSE="acl audit cryptsetup doc +firmware-loader gcrypt gudev http introspection
-	kdbus +kmod lzma pam policykit python qrcode +seccomp selinux ssl
-	nls test"
+IUSE="acl audit cryptsetup curl doc elfutils +firmware-loader gcrypt gudev http
+	idn introspection kdbus +kmod lz4 lzma pam policykit python qrcode +seccomp
+	selinux ssl nls test vanilla"
 
-MINKV="3.10"
+MINKV="3.8"
 
 COMMON_DEPEND=">=sys-apps/util-linux-2.20:0=
 	sys-libs/libcap:0=
 	acl? ( sys-apps/acl:0= )
 	audit? ( >=sys-process/audit-2:0= )
 	cryptsetup? ( >=sys-fs/cryptsetup-1.6:0= )
-	gcrypt? ( >=dev-libs/libgcrypt-1.4.5:0= )
-	gudev? ( dev-libs/glib:2=[${MULTILIB_USEDEP}] )
+	curl? ( net-misc/curl:0= )
+	elfutils? ( >=dev-libs/elfutils-0.158:0= )
+	gcrypt? ( >=dev-libs/libgcrypt-1.4.5:0=[${MULTILIB_USEDEP}] )
+	gudev? ( >=dev-libs/glib-2.34.3:2=[${MULTILIB_USEDEP}] )
 	http? (
 		>=net-libs/libmicrohttpd-0.9.33:0=
 		ssl? ( >=net-libs/gnutls-3.1.4:0= )
 	)
+	idn? ( net-dns/libidn:0= )
 	introspection? ( >=dev-libs/gobject-introspection-1.31.1:0= )
 	kmod? ( >=sys-apps/kmod-15:0= )
-	lzma? ( app-arch/xz-utils:0=[${MULTILIB_USEDEP}] )
+	lz4? ( >=app-arch/lz4-0_p119:0=[${MULTILIB_USEDEP}] )
+	lzma? ( >=app-arch/xz-utils-5.0.5-r1:0=[${MULTILIB_USEDEP}] )
 	pam? ( virtual/pam:= )
 	python? ( ${PYTHON_DEPS} )
 	qrcode? ( media-gfx/qrencode:0= )
@@ -72,15 +76,18 @@ RDEPEND="${COMMON_DEPEND}
 	!<sys-libs/glibc-2.14
 	!sys-fs/udev"
 
-# sys-apps/daemon: the daemon only (+ build-time lib dep for tests)
-PDEPEND=">=sys-apps/dbus-1.6.8-r1:0
+# sys-apps/dbus: the daemon only (+ build-time lib dep for tests)
+PDEPEND=">=sys-apps/dbus-1.6.8-r1:0[systemd]
 	>=sys-apps/hwids-20130717-r1[udev]
-	policykit? ( sys-auth/polkit )"
+	policykit? ( sys-auth/polkit )
+	!vanilla? ( sys-apps/gentoo-systemd-integration )"
 
+# Newer linux-headers needed by ia64, bug #480218
 DEPEND="${COMMON_DEPEND}
 	app-arch/xz-utils:0
 	dev-util/gperf
 	>=dev-util/intltool-0.50
+	>=sys-apps/coreutils-8.16
 	>=sys-devel/binutils-2.23.1
 	>=sys-devel/gcc-4.6
 	>=sys-kernel/linux-headers-${MINKV}
@@ -177,9 +184,21 @@ src_configure() {
 	multilib-minimal_src_configure
 }
 
+multilib_native_enable() {
+	if multilib_is_native_abi; then
+		echo "--enable-${1}"
+	else
+		echo "--disable-${1}"
+	fi
+}
+
 multilib_src_configure() {
 	local myeconfargs=(
 		--with-pamconfdir=/usr/share/pam.d
+
+		# Workaround for bug 516346
+		--enable-dependency-tracking
+
 		--disable-maintainer-mode
 		--localstatedir=/var
 		--with-pamlibdir=$(getpam_mod_dir)
@@ -187,6 +206,9 @@ multilib_src_configure() {
 		--with-bashcompletiondir="$(get_bashcompdir)"
 		# make sure we get /bin:/sbin in $PATH
 		--enable-split-usr
+		# For testing.
+		--with-rootprefix="${ROOTPREFIX-/usr}"
+		--with-rootlibdir="${ROOTPREFIX-/usr}/$(get_libdir)"
 		# disable sysv compatibility
 		--with-sysvinit-path=
 		--with-sysvrcnd-path=
@@ -195,30 +217,59 @@ multilib_src_configure() {
 		--enable-ima
 		# used for stacktraces in log messages, leave off for now
 		--disable-elfutils
-		# optional components/dependencies
-		$(use_enable acl)
-		$(use_enable audit)
-		$(use_enable cryptsetup libcryptsetup)
-		$(use_enable doc gtk-doc)
+
+		# Optional components/dependencies
+		$(multilib_native_use_enable acl)
+		$(multilib_native_use_enable audit)
+		$(multilib_native_use_enable cryptsetup libcryptsetup)
+		$(multilib_native_use_enable curl libcurl)
+		$(multilib_native_use_enable doc gtk-doc)
+		$(multilib_native_use_enable elfutils)
 		$(use_enable gcrypt)
 		$(use_enable gudev)
-		$(use_enable http microhttpd)
-		$(usex http $(use_enable ssl gnutls) --disable-gnutls)
-		$(use_enable introspection)
+		$(multilib_native_use_enable http microhttpd)
+		$(usex http $(multilib_native_use_enable ssl gnutls) --disable-gnutls)
+		$(multilib_native_use_enable idn libidn)
+		$(multilib_native_use_enable introspection)
 		$(use_enable kdbus)
-		$(use_enable kmod)
+		$(multilib_native_use_enable kmod)
+		$(use_enable lz4)
 		$(use_enable lzma xz)
 		$(use_enable nls)
-		$(use_enable pam)
-		$(use_enable policykit polkit)
-		$(use_with python)
-		$(use_enable python python-devel)
-		$(use_enable qrcode qrencode)
-		$(use_enable seccomp)
-		$(use_enable selinux)
-		$(use_enable test tests)
+		$(multilib_native_use_enable pam)
+		$(multilib_native_use_enable policykit polkit)
+		$(multilib_native_use_with python)
+		$(multilib_native_use_enable python python-devel)
+		$(multilib_native_use_enable qrcode qrencode)
+		$(multilib_native_use_enable seccomp)
+		$(multilib_native_use_enable selinux)
+		$(multilib_native_use_enable test tests)
+		$(multilib_native_use_enable test dbus)
+
+		# Disable optional binaries for non-native abis
+		$(multilib_native_enable backlight)
+		$(multilib_native_enable binfmt)
+		$(multilib_native_enable bootchart)
+		$(multilib_native_enable coredump)
+		$(multilib_native_enable firstboot)
+		$(multilib_native_enable hostnamed)
+		$(multilib_native_enable localed)
+		$(multilib_native_enable logind)
+		$(multilib_native_enable machined)
+		$(multilib_native_enable networkd)
+		$(multilib_native_enable quotacheck)
+		$(multilib_native_enable randomseed)
+		$(multilib_native_enable readahead)
+		$(multilib_native_enable resolved)
+		$(multilib_native_enable rfkill)
+		$(multilib_native_enable sysusers)
+		$(multilib_native_enable timedated)
+		$(multilib_native_enable timesyncd)
+		$(multilib_native_enable tmpfiles)
+		$(multilib_native_enable vconsole)
 
 		# not supported (avoid automagic deps in the future)
+		--disable-apparmor
 		--disable-chkconfig
 
 		# hardcode a few paths to spare some deps
@@ -243,40 +294,10 @@ multilib_src_configure() {
 		)
 	fi
 
-	# Added for testing; this is UNSUPPORTED by the Gentoo systemd team!
-	if [[ -n ${ROOTPREFIX+set} ]]; then
-		myeconfargs+=(
-			--with-rootprefix="${ROOTPREFIX}"
-			--with-rootlibdir="${ROOTPREFIX}/$(get_libdir)"
-		)
-	fi
-
 	if ! multilib_is_native_abi; then
 		myeconfargs+=(
 			ac_cv_search_cap_init=
 			ac_cv_header_sys_capability_h=yes
-			DBUS_CFLAGS=' '
-			DBUS_LIBS=' '
-
-			--disable-acl
-			--disable-audit
-			--disable-gcrypt
-			--disable-gnutls
-			--disable-gtk-doc
-			--disable-introspection
-			--disable-kmod
-			--disable-libcryptsetup
-			--disable-microhttpd
-			--disable-networkd
-			--disable-pam
-			--disable-polkit
-			--disable-qrencode
-			--disable-seccomp
-			--disable-selinux
-			--disable-timesyncd
-			--disable-tests
-			--disable-xz
-			--disable-python-devel
 		)
 	fi
 
@@ -458,6 +479,7 @@ pkg_postinst() {
 		enewuser "$1" -1 -1 -1 "$1"
 	}
 
+	enewgroup input
 	enewgroup systemd-journal
 	newusergroup systemd-bus-proxy
 	newusergroup systemd-network
@@ -474,9 +496,6 @@ pkg_postinst() {
 	fi
 
 	udev_reload || FAIL=1
-
-	# Bug 468876
-	fcaps cap_dac_override,cap_sys_ptrace=ep usr/bin/systemd-detect-virt
 
 	# Bug 465468, make sure locales are respect, and ensure consistency
 	# between OpenRC & systemd
@@ -500,10 +519,23 @@ pkg_postinst() {
 		ewarn
 	fi
 
+	if [[ $(readlink "${ROOT}"/etc/resolv.conf) == */run/systemd/network/resolv.conf ]]; then
+		ewarn "resolv.conf is now generated by systemd-resolved. To use it, enable"
+		ewarn "systemd-resolved.service, and create a symlink from /etc/resolv.conf"
+		ewarn "to /run/systemd/resolve/resolv.conf"
+		ewarn
+	fi
+
 	if ! has_version sys-apps/systemd-ui; then
 		elog "To get additional features, a number of optional runtime dependencies may"
 		elog "be installed:"
 		elog "- sys-apps/systemd-ui: for GTK+ systemadm UI and gnome-ask-password-agent"
+	fi
+
+	if has_version sys-apps/openrc &&
+		! has_version sys-fs/udev-init-scripts; then
+		elog "If you plan to boot using OpenRC and udev or eudev, you"
+		elog "need to install the udev-init-scripts package."
 	fi
 }
 
