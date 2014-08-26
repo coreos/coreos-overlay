@@ -162,7 +162,7 @@ for key in Split('CC CXX AR RANLIB LD NM'):
   value = os.environ.get(key)
   if value != None:
     env[key] = value
-for key in Split('CFLAGS CCFLAGS CPPPATH LIBPATH'):
+for key in Split('CFLAGS CCFLAGS LDFLAGS CPPPATH LIBPATH'):
   value = os.environ.get(key)
   if value != None:
     env[key] = Split(value)
@@ -172,44 +172,29 @@ for key in Split('PATH PKG_CONFIG_LIBDIR PKG_CONFIG_PATH SYSROOT'):
     env['ENV'][key] = os.environ[key]
 
 
+env['LINKFLAGS'] = env.get('LDFLAGS', '')
 env['CCFLAGS'] = ' '.join("""-g
                              -fno-exceptions
                              -fno-strict-aliasing
                              -Wall
                              -Wclobbered
-                             -Wclobbered
-                             -Wempty-body
                              -Wempty-body
                              -Werror
-                             -Wignored-qualifiers
                              -Wignored-qualifiers
                              -Wmissing-field-initializers
                              -Wno-format
                              -Wsign-compare
                              -Wtype-limits
-                             -Wtype-limits
                              -Wuninitialized
                              -Wno-error=deprecated-declarations
                              -D__STDC_FORMAT_MACROS=1
-                             -D_FILE_OFFSET_BITS=64
-                             -I/usr/include/libxml2""".split());
+                             -D_FILE_OFFSET_BITS=64""".split());
 env['CCFLAGS'] += (' ' + ' '.join(env['CFLAGS']))
 
 BASE_VER = os.environ.get('BASE_VER', '180609')
 env['LIBS'] = Split("""bz2
-                       crypto
-                       curl
-                       ext2fs
                        gflags
-                       glib-2.0
-                       gthread-2.0
-                       libpcrecpp
-                       policy-%s
-                       protobuf
-                       pthread
-                       ssl
-                       udev
-                       xml2""" % BASE_VER)
+                       policy-%s""" % (BASE_VER,))
 env['CPPPATH'] = ['..']
 env['BUILDERS']['ProtocolBuffer'] = proto_builder
 env['BUILDERS']['DbusBindings'] = dbus_bindings_builder
@@ -223,9 +208,22 @@ for key in Split('PKG_CONFIG_LIBDIR PKG_CONFIG_PATH'):
 
 pkgconfig = os.environ.get('PKG_CONFIG', 'pkg-config')
 
-env.ParseConfig(pkgconfig + ' --cflags --libs '
-                'dbus-1 dbus-glib-1 gio-2.0 gio-unix-2.0 glib-2.0 libchrome-%s '
-                'libchromeos-%s' % (BASE_VER, BASE_VER))
+env.ParseConfig(pkgconfig + ' --cflags --libs ' + ' '.join((
+                'dbus-1',
+                'dbus-glib-1',
+                'ext2fs',
+                'gio-2.0',
+                'gio-unix-2.0',
+                'glib-2.0',
+                'gthread-2.0',
+                'libchrome-%s' % BASE_VER,
+                'libchromeos-%s' % BASE_VER,
+                'libcrypto',
+                'libcurl',
+                'libssl',
+                'libudev',
+                'libxml-2.0',
+                'protobuf')))
 env.ProtocolBuffer('update_metadata.pb.cc', 'update_metadata.proto')
 env.PublicKey('unittest_key.pub.pem', 'unittest_key.pem')
 env.PublicKey('unittest_key2.pub.pem', 'unittest_key2.pem')
