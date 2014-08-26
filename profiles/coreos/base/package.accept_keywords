@@ -105,3 +105,6 @@ dev-util/checkbashisms
 =sys-boot/grub-2.02_beta2
 # current stable xen-tools doesn't build without multilib
 =app-emulation/xen-tools-4.4.0-r9
+
+# 1.3 is marked stable but 1.3.1 hasn't yet
+=dev-lang/go-1.3.1
