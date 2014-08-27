@@ -1,0 +1,28 @@
+From e19828f6d0e1c9417946d675a3c63203a778b23b Mon Sep 17 00:00:00 2001
+From: Michael Marineau <michael.marineau@coreos.com>
+Date: Tue, 26 Aug 2014 18:21:53 -0700
+Subject: [PATCH 38/38] units: run ldconfig on every boot
+
+The "needs update" logic is not quite correct for CoreOS, for one it
+compares against the mtime of /usr which will match the time /usr was
+*built* not the time what /usr was updated on the system. Additionally
+it only considers moving forward, so roll backs do not work.
+---
+ units/ldconfig.service | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/units/ldconfig.service b/units/ldconfig.service
+index c8d9b6b..482de1e 100644
+--- a/units/ldconfig.service
++++ b/units/ldconfig.service
+@@ -12,7 +12,6 @@ DefaultDependencies=no
+ Conflicts=shutdown.target
+ After=systemd-readahead-collect.service systemd-readahead-replay.service systemd-remount-fs.service systemd-tmpfiles-setup.service
+ Before=sysinit.target shutdown.target systemd-update-done.service
+-ConditionNeedsUpdate=/etc
+ 
+ [Service]
+ Type=oneshot
+-- 
+1.8.5.5
+
