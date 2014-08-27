@@ -106,7 +106,6 @@ RDEPEND="${RDEPEND}
 	app-arch/unzip
 	app-arch/zip
 	app-shells/bash
-	coreos-base/cros_boot_mode
 	coreos-base/vboot_reference
 	coreos-base/update_engine
 	coreos-base/coreos-init
