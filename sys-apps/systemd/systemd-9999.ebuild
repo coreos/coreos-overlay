@@ -179,10 +179,6 @@ src_configure() {
 
 multilib_src_configure() {
 	local myeconfargs=(
-		# disable -flto since it is an optimization flag
-		# and makes distcc less effective
-		cc_cv_CFLAGS__flto=no
-
 		--with-pamconfdir=/usr/share/pam.d
 		--disable-maintainer-mode
 		--localstatedir=/var
