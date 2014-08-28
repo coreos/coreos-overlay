@@ -12,7 +12,7 @@ else
 	KEYWORDS="amd64 arm x86"
 fi
 
-inherit toolchain-funcs cros-debug cros-workon scons-utils systemd
+inherit flag-o-matic toolchain-funcs cros-debug cros-workon scons-utils systemd
 
 DESCRIPTION="Chrome OS Update Engine"
 HOMEPAGE="http://www.chromium.org/"
@@ -46,6 +46,15 @@ DEPEND="coreos-base/system_api
 	${RDEPEND}"
 
 src_compile() {
+	# Disable PIE when building for the SDK, this works around a bug that
+	# breaks using delta_generator from the update.zip bundle.
+	# https://code.google.com/p/chromium/issues/detail?id=394508
+	# https://code.google.com/p/chromium/issues/detail?id=394241
+	if use cros_host; then
+		append-flags -nopie
+		append-ldflags -nopie
+	fi
+
 	tc-export CC CXX AR RANLIB LD NM PKG_CONFIG
 	cros-debug-add-NDEBUG
 	export CCFLAGS="$CFLAGS"
