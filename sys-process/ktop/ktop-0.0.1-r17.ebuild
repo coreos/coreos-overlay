@@ -27,5 +27,5 @@ src_compile() {
 }
 
 src_install() {
-	emake install DESTDIR="${D}" || die
+	emake install DESTDIR="${D}" sbindir=/usr/sbin || die
 }
