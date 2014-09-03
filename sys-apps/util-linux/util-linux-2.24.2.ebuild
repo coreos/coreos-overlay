@@ -61,6 +61,7 @@ pkg_setup() {
 }
 
 src_prepare() {
+	epatch "${FILESDIR}/0001-build-sys-create-parent-directory-for-PATHFILES.patch"
 	epatch "${FILESDIR}/0002-lsblk-add-PARTTYPE-tag.patch"
 
 	if [[ ${PV} == 9999 ]] ; then
