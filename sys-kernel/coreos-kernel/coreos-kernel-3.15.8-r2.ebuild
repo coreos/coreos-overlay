@@ -3,7 +3,7 @@
 # $Header: /var/cvsroot/gentoo-x86/sys-kernel/vanilla-sources/vanilla-sources-3.7.5.ebuild,v 1.1 2013/01/28 13:18:54 ago Exp $
 
 EAPI=5
-CROS_WORKON_COMMIT="9a35988df62b6ce3b69d640da44a3ead96f63182" # v3.16.1
+CROS_WORKON_COMMIT="edfabbd4dfaeb376ff6a6a58d5b23ae84b8b4167" # v3.15.8
 CROS_WORKON_REPO="git://github.com"
 CROS_WORKON_PROJECT="coreos/linux"
 CROS_WORKON_LOCALNAME="linux"
@@ -13,5 +13,5 @@ DESCRIPTION="CoreOS kernel"
 HOMEPAGE="http://www.kernel.org"
 SRC_URI=""
 
-KEYWORDS="~amd64"
+KEYWORDS="amd64"
 IUSE=""
