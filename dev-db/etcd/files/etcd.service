@@ -8,6 +8,3 @@ Environment=ETCD_DATA_DIR=/var/lib/etcd ETCD_NAME=default
 ExecStart=/usr/bin/etcd 
 Restart=always
 RestartSec=10s
-
-[Install]
-WantedBy=multi-user.target
