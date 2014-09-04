@@ -7,6 +7,3 @@ After=etcd.service
 ExecStart=/usr/bin/fleet
 Restart=always
 RestartSec=10s
-
-[Install]
-WantedBy=multi-user.target
