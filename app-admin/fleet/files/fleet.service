@@ -1,7 +1,11 @@
 [Unit]
 Description=fleet
+
 Wants=etcd.service
 After=etcd.service
+
+Wants=fleet.socket
+After=fleet.socket
 
 [Service]
 ExecStart=/usr/bin/fleet
