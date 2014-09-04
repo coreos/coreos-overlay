@@ -34,4 +34,5 @@ src_install() {
 	dobin ${S}/bin/fleetctl
 
 	systemd_dounit "${FILESDIR}"/${PN}.service
+	systemd_dounit "${FILESDIR}"/${PN}.socket
 }
