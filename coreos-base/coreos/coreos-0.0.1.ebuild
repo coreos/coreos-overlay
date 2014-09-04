@@ -63,19 +63,6 @@ IUSE=""
 #
 ################################################################################
 
-X86_DEPEND="
-		sys-boot/syslinux
-"
-
-RDEPEND="${RDEPEND} x86? ( ${X86_DEPEND} )"
-RDEPEND="${RDEPEND} amd64? ( ${X86_DEPEND} )"
-
-RDEPEND="${RDEPEND}
-	arm? (
-		coreos-base/u-boot-scripts
-	)
-	"
-
 RDEPEND="${RDEPEND}
 	virtual/linux-sources
 	"
