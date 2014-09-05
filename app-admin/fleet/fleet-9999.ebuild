@@ -9,7 +9,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64"
 else
-	CROS_WORKON_COMMIT="58f2e8d059892f8db7fdb3ac54430f7888d6f0db"  # tag v0.7.1
+	CROS_WORKON_COMMIT="03ca0ddf2e434a21c21661bfbca1ab92f3be2fd2"  # tag v0.8.0
 	KEYWORDS="amd64"
 fi
 
@@ -23,14 +23,16 @@ LICENSE="Apache-2.0"
 SLOT="0"
 IUSE=""
 
-DEPEND=">=dev-lang/go-1.2"
+DEPEND=">=dev-lang/go-1.3"
 
 src_compile() {
 	./build || die
 }
 
 src_install() {
-	dobin ${S}/bin/fleet
+	dobin ${S}/bin/fleetd
+	dosym ./fleetd /usr/bin/fleet
+
 	dobin ${S}/bin/fleetctl
 
 	systemd_dounit "${FILESDIR}"/${PN}.service

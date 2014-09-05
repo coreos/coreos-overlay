@@ -1,5 +1,5 @@
 [Unit]
-Description=fleet
+Description=fleet daemon
 
 Wants=etcd.service
 After=etcd.service
@@ -8,6 +8,6 @@ Wants=fleet.socket
 After=fleet.socket
 
 [Service]
-ExecStart=/usr/bin/fleet
+ExecStart=/usr/bin/fleetd
 Restart=always
 RestartSec=10s
