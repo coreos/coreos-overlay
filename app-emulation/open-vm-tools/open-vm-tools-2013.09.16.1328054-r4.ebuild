@@ -19,7 +19,7 @@ SRC_URI="mirror://sourceforge/${PN}/${MY_P}.tar.gz"
 LICENSE="LGPL-2"
 SLOT="0"
 KEYWORDS="amd64 ~x86"
-IUSE="X doc fuse dnet icu modules pam +pic xinerama"
+IUSE="X doc fuse +dnet icu modules pam +pic xinerama"
 
 COMMON_DEPEND="
 	dev-libs/glib:2
@@ -55,7 +55,10 @@ RDEPEND="${COMMON_DEPEND}
 
 S="${WORKDIR}/${MY_P}"
 
-PATCHES=( "${FILESDIR}/0001-add-extra-configure-flags.patch" )
+PATCHES=(
+	"${FILESDIR}/0001-add-extra-configure-flags.patch"
+	"${FILESDIR}/0002-rename-dnet-config.patch"
+)
 
 pkg_setup() {
 	enewgroup vmware

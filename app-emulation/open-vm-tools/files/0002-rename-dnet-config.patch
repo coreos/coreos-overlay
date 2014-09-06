@@ -1,0 +1,34 @@
+From 5ccda96c4804f915ba21e3b2d4e228bfbff1f439 Mon Sep 17 00:00:00 2001
+From: Alex Crawford <alex.crawford@coreos.com>
+Date: Fri, 5 Sep 2014 17:33:27 -0700
+Subject: [PATCH] Rename dnet-config
+
+---
+ configure.ac | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index 6d52905..bac3707 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -692,7 +692,7 @@ if test "$with_dnet" = "yes"; then
+       AC_VMW_CHECK_LIB([dnet],
+                        [DNET],
+                        [],
+-                       [dnet-config],
++                       [x86_64-cros-linux-gnu-dnet-config],
+                        [],
+                        [dnet.h],
+                        [intf_open],
+@@ -702,7 +702,7 @@ if test "$with_dnet" = "yes"; then
+ 
+    if test $have_dnet = "no"; then
+ 		AC_MSG_ERROR(
+-		   [dnet-config was not found on your PATH. Please configure without dnet (using --without-dnet) or install dnet - http://libdnet.sourceforge.net])
++		   [x86_64-cros-linux-gnu-dnet-config was not found on your PATH. Please configure without dnet (using --without-dnet) or install dnet - http://libdnet.sourceforge.net])
+ 	fi
+ fi
+ 
+-- 
+1.9.3
+
