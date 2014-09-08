@@ -17,6 +17,7 @@ REQUIRED_USE="^^ ( ec2 openstack brightbox )"
 S="${WORKDIR}"
 
 src_prepare() {
+	CONVERT_NETCONF=""
 	if use ec2 ; then
 		ID="ami"
 		NAME="Amazon EC2"
@@ -25,6 +26,7 @@ src_prepare() {
 		ID="openstack"
 		NAME="Openstack"
 		HOME_URL="https://www.openstack.org/"
+		CONVERT_NETCONF="--convert-netconf=debian"
 	elif use brightbox ; then
 		ID="brightbox"
 		NAME="Brightbox"
@@ -36,6 +38,7 @@ src_prepare() {
 	sed -e "s\\@@OEM_ID@@\\${ID}\\g" \
 	    -e "s\\@@OEM_NAME@@\\${NAME}\\g" \
 	    -e "s\\@@OEM_HOME_URL@@\\${HOME_URL}\\g" \
+	    -e "s\\@@CONVERT_NETCONF@@\\${CONVERT_NETCONF}\\g" \
 	    ${FILESDIR}/cloud-config.yml > ${T}/cloud-config.yml || die
 }
 
