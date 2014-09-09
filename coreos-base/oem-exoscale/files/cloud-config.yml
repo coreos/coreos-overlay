@@ -1,0 +1,44 @@
+#cloud-config
+
+coreos:
+    units:
+      - name: exoscale-ssh-key.service
+        command: restart
+        runtime: yes
+        content: |
+          [Unit]
+          Description=Sets SSH key from metadata
+
+          [Service]
+          Type=oneshot
+          StandardOutput=journal+console
+          ExecStart=/usr/share/oem/bin/exoscale-ssh-key
+      - name: exoscale-network.service
+        command: restart
+        runtime: yes
+        content: |
+          [Unit]
+          Description=Optimize network parameters for performance
+
+          [Service]
+          Type=oneshot
+          StandardOutput=journal+console
+          ExecStart=/usr/share/oem/bin/exoscale-setup-network
+      - name: exoscale-cloudinit.service
+        command: restart
+        runtime: yes
+        content: |
+          [Unit]
+          Description=Cloudinit from exoscale (cloudstack-style) metadata
+          Requires=coreos-setup-environment.service
+          After=coreos-setup-environment.service
+
+          [Service]
+          Type=oneshot
+          EnvironmentFile=/etc/environment
+          ExecStart=/usr/share/oem/bin/exoscale-coreos-cloudinit
+    oem:
+      id: exoscale
+      name: exoscale
+      home-url: http://www.exoscale.ch
+      bug-report-url: https://github.com/coreos/coreos-overlay
