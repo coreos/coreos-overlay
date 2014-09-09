@@ -58,6 +58,7 @@ S="${WORKDIR}/${MY_P}"
 PATCHES=(
 	"${FILESDIR}/0001-add-extra-configure-flags.patch"
 	"${FILESDIR}/0002-rename-dnet-config.patch"
+	"${FILESDIR}/0003-oliver-test.patch"
 )
 
 pkg_setup() {
