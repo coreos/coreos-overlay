@@ -1,0 +1,51 @@
+From 4cf95238a99afd14896e95437016923ab8f453e5 Mon Sep 17 00:00:00 2001
+From: Yuya Kusakabe <yuya.kusakabe@gmail.com>
+Date: Wed, 10 Sep 2014 09:11:48 +0900
+Subject: [PATCH] Remove ifup
+
+---
+ scripts/linux/network | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/scripts/linux/network b/scripts/linux/network
+index 874744f..5fdef35 100644
+--- a/scripts/linux/network
++++ b/scripts/linux/network
+@@ -21,7 +21,7 @@
+ #
+ # network (Linux)
+ #
+-# Using a combination of a system networking script, ifconfig, and ifup,
++# Using a combination of a system networking script, ifconfig,
+ # attempt to release and renew DHCP leases upon receipt of suspend and resume
+ # events, respectively.
+ #
+@@ -130,7 +130,7 @@ save_active_NIC_list() {
+ # rescue_NIC --
+ #
+ #    For each NIC recorded in $activeList that is not currently "up", run
+-#    "ifup $nic".
++#    "ifconfig $nic up".
+ #
+ # Results:
+ #    All downed NICs should be active.
+@@ -144,7 +144,7 @@ rescue_NIC() {
+          else
+             echo `date` "[rescue_nic] activating $nic ..."
+ 
+-            ifup $nic
++            ifconfig $nic up
+             exitCode=`expr $exitCode \| $?`
+          fi
+       done < $activeList
+@@ -292,7 +292,6 @@ main() {
+ 
+    # XXX Are these really necessary?  If so, we should have seen customer
+    # complaints by now.
+-   which ifup >/dev/null 2>&1      || Panic "ifup not in search path."
+    which ifconfig >/dev/null 2>&1  || Panic "ifconfig not in search path."
+ 
+    case "$1" in
+-- 
+1.9.1
+
