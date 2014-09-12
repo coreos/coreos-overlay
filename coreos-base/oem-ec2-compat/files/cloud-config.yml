@@ -15,7 +15,7 @@ coreos:
 
           [Service]
           Type=oneshot
-          ExecStart=/usr/bin/coreos-cloudinit --from-configdrive=/media/configdrive --from-ec2-metadata=http://169.254.169.254/
+          ExecStart=/usr/bin/coreos-cloudinit --oem=ec2-compat
     oem:
       id: @@OEM_ID@@
       name: @@OEM_NAME@@
