@@ -21,7 +21,7 @@ coreos:
         content: |
           [Service]
           ExecStart=
-          ExecStart=/usr/bin/coreos-cloudinit --from-configdrive=/media/configdrive --convert-netconf=debian
+          ExecStart=/usr/bin/coreos-cloudinit --oem=rackspace-onmetal
       - name: ping-out.service
         runtime: yes
         enable: yes
