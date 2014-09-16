@@ -1,0 +1,11 @@
+--- a/configure
++++ b/configure
+@@ -1318,6 +1318,7 @@
+     cross_compiling=yes
+   fi
+ fi
++cross_compiling=no
+ 
+ ac_tool_prefix=
+ test -n "$host_alias" && ac_tool_prefix=$host_alias-
+

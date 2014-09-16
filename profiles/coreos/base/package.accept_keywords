@@ -108,3 +108,6 @@ dev-util/checkbashisms
 =sys-boot/grub-2.02_beta2
 # current stable xen-tools doesn't build without multilib
 =app-emulation/xen-tools-4.4.0-r9
+
+# glusterfs 3.4.2 hasn't been marked as stable yet
+~sys-cluster/glusterfs-3.4.2
