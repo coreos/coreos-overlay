@@ -4,7 +4,8 @@ Description=etcd
 [Service]
 User=etcd
 PermissionsStartOnly=true
-Environment=ETCD_DATA_DIR=/var/lib/etcd ETCD_NAME=default
+Environment=ETCD_DATA_DIR=/var/lib/etcd
+Environment=ETCD_NAME=%m
 ExecStart=/usr/bin/etcd 
 Restart=always
 RestartSec=10s
