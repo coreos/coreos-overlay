@@ -23,29 +23,3 @@ INSTALL_MASK="${INSTALL_MASK}
 INSTALL_MASK="${INSTALL_MASK}
   /etc/sudoers
 "
-
-# Restrictive mask for production images.
-# TODO(marineam): Perhaps later move this to a generic/production profile.
-PROD_INSTALL_MASK="${INSTALL_MASK}
-  *.a *.la *.h *.hpp
-  /etc/sandbox.d
-  /usr/include
-  /usr/lib/debug
-  /usr/lib*/pkgconfig
-  /usr/share/aclocal*
-  /usr/share/awk
-  /usr/share/gdb
-  /usr/share/gettext
-  /usr/share/gobject-introspection-1.0
-  /usr/share/pkgconfig
-  /usr/share/readline
-  /usr/src
-"
-
-# Exclude nmap from prod image, we just want ncat/nping in there
-# Also remove ncat's second ca-bundle.crt, just use the system's
-PROD_INSTALL_MASK="${PROD_INSTALL_MASK}
-  /usr/bin/nmap
-  /usr/share/ncat
-  /usr/share/nmap
-"
