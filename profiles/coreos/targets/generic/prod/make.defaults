@@ -1,6 +1,27 @@
 # Copyright (c) 2014 The CoreOS Authors. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
-# default to the full PROD_INSTALL_MASK
-# TODO: after transitioning that list will just be defined here.
-INSTALL_MASK="${PROD_INSTALL_MASK}"
+# Restrictive mask for production images.
+INSTALL_MASK="${INSTALL_MASK}
+  *.a *.la *.h *.hpp *.o
+  /etc/sandbox.d
+  /usr/include
+  /usr/lib/debug
+  /usr/lib*/pkgconfig
+  /usr/share/aclocal*
+  /usr/share/awk
+  /usr/share/gdb
+  /usr/share/gettext
+  /usr/share/gobject-introspection-1.0
+  /usr/share/pkgconfig
+  /usr/share/readline
+  /usr/src
+"
+
+# Exclude nmap from prod image, we just want ncat/nping in there
+# Also remove ncat's second ca-bundle.crt, just use the system's
+INSTALL_MASK="${INSTALL_MASK}
+  /usr/bin/nmap
+  /usr/share/ncat
+  /usr/share/nmap
+"
