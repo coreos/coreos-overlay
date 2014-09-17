@@ -3,7 +3,7 @@
 
 # Restrictive mask for production images.
 INSTALL_MASK="${INSTALL_MASK}
-  *.a *.la *.h *.hpp
+  *.a *.la *.h *.hpp *.o
   /etc/sandbox.d
   /usr/include
   /usr/lib/debug
