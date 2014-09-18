@@ -182,12 +182,9 @@ class OmahaRequestParams {
   static const int64 kDefaultMinUpdateChecks = 0;
   static const int64 kDefaultMaxUpdateChecks = 8;
 
-  // Initializes all the data in the object. Non-empty
-  // |in_app_version| or |in_update_url| prevents automatic detection
-  // of the parameter. Returns true on success, false otherwise.
-  bool Init(const std::string& in_app_version,
-            const std::string& in_update_url,
-            bool in_interactive);
+  // Initializes all the data in the object.
+  // Returns true on success, false otherwise.
+  bool Init(bool interactive);
 
   // Permanently changes the release channel to |channel|. Performs a
   // powerwash, if required and allowed.

@@ -372,7 +372,7 @@ void UpdateAttempterTest::UpdateTestStart() {
   }
   EXPECT_CALL(*processor_, StartProcessing()).Times(1);
 
-  attempter_.Update("", "", false);
+  attempter_.Update(false);
   g_idle_add(&StaticUpdateTestVerify, this);
 }
 
@@ -481,7 +481,7 @@ void UpdateAttempterTest::ReadChannelFromPolicyTestStart() {
       Return(true)));
 
   attempter_.omaha_request_params_->set_root("./UpdateAttempterTest");
-  attempter_.Update("", "", false);
+  attempter_.Update(false);
   EXPECT_EQ("beta-channel",
             attempter_.omaha_request_params_->target_channel());
 
@@ -512,7 +512,7 @@ void UpdateAttempterTest::ReadUpdateDisabledFromPolicyTestStart() {
           SetArgumentPointee<0>(true),
           Return(true)));
 
-  attempter_.Update("", "", false);
+  attempter_.Update(false);
   EXPECT_TRUE(attempter_.omaha_request_params_->update_disabled());
 
   g_idle_add(&StaticQuitMainLoop, this);
@@ -544,7 +544,7 @@ void UpdateAttempterTest::ReadTargetVersionPrefixFromPolicyTestStart() {
           SetArgumentPointee<0>(target_version_prefix),
           Return(true)));
 
-  attempter_.Update("", "", false);
+  attempter_.Update(false);
   EXPECT_EQ(target_version_prefix.c_str(),
             attempter_.omaha_request_params_->target_version_prefix());
 
@@ -577,7 +577,7 @@ void UpdateAttempterTest::ReadScatterFactorFromPolicyTestStart() {
           SetArgumentPointee<0>(scatter_factor_in_seconds),
           Return(true)));
 
-  attempter_.Update("", "", false);
+  attempter_.Update(false);
   EXPECT_EQ(scatter_factor_in_seconds, attempter_.scatter_factor_.InSeconds());
 
   g_idle_add(&StaticQuitMainLoop, this);
@@ -621,7 +621,7 @@ void UpdateAttempterTest::DecrementUpdateCheckCountTestStart() {
           SetArgumentPointee<0>(scatter_factor_in_seconds),
           Return(true)));
 
-  attempter_.Update("", "", false);
+  attempter_.Update(false);
   EXPECT_EQ(scatter_factor_in_seconds, attempter_.scatter_factor_.InSeconds());
 
   // Make sure the file still exists.
@@ -637,7 +637,7 @@ void UpdateAttempterTest::DecrementUpdateCheckCountTestStart() {
   // However, if the count is already 0, it's not decremented. Test that.
   initial_value = 0;
   EXPECT_TRUE(prefs.SetInt64(kPrefsUpdateCheckCount, initial_value));
-  attempter_.Update("", "", false);
+  attempter_.Update(false);
   EXPECT_TRUE(prefs.Exists(kPrefsUpdateCheckCount));
   EXPECT_TRUE(prefs.GetInt64(kPrefsUpdateCheckCount, &new_value));
   EXPECT_EQ(initial_value, new_value);
@@ -687,7 +687,7 @@ void UpdateAttempterTest::NoScatteringDoneDuringManualUpdateTestStart() {
           Return(true)));
 
   // Trigger an interactive check so we can test that scattering is disabled.
-  attempter_.Update("", "", true);
+  attempter_.Update(true);
   EXPECT_EQ(scatter_factor_in_seconds, attempter_.scatter_factor_.InSeconds());
 
   // Make sure scattering is disabled for manual (i.e. user initiated) update

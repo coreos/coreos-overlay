@@ -127,9 +127,7 @@ UpdateAttempter::~UpdateAttempter() {
   CleanupCpuSharesManagement();
 }
 
-void UpdateAttempter::Update(const string& app_version,
-                             const string& omaha_url,
-                             bool interactive) {
+void UpdateAttempter::Update(bool interactive) {
   fake_update_success_ = false;
   if (status_ == UPDATE_STATUS_UPDATED_NEED_REBOOT) {
     // Although we have applied an update, we still want to ping Omaha
@@ -144,9 +142,7 @@ void UpdateAttempter::Update(const string& app_version,
     return;
   }
 
-  if (!CalculateUpdateParams(app_version,
-                             omaha_url,
-                             interactive)) {
+  if (!CalculateUpdateParams(interactive)) {
     return;
   }
 
@@ -161,9 +157,7 @@ void UpdateAttempter::Update(const string& app_version,
   UpdateBootFlags();
 }
 
-bool UpdateAttempter::CalculateUpdateParams(const string& app_version,
-                                            const string& omaha_url,
-                                            bool interactive) {
+bool UpdateAttempter::CalculateUpdateParams(bool interactive) {
   http_response_code_ = 0;
 
   // Lazy initialize the policy provider, or reload the latest policy data.
@@ -204,9 +198,7 @@ bool UpdateAttempter::CalculateUpdateParams(const string& app_version,
 
   CalculateScatteringParams(interactive);
 
-  if (!omaha_request_params_->Init(app_version,
-                                   omaha_url,
-                                   interactive)) {
+  if (!omaha_request_params_->Init(interactive)) {
     LOG(ERROR) << "Unable to initialize Omaha request device params.";
     return false;
   }
@@ -462,9 +454,7 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
               postinstall_runner_action.get());
 }
 
-void UpdateAttempter::CheckForUpdate(const string& app_version,
-                                     const string& omaha_url,
-                                     bool interactive) {
+void UpdateAttempter::CheckForUpdate(bool interactive) {
   LOG(INFO) << "New update check requested";
 
   if (status_ != UPDATE_STATUS_IDLE) {
@@ -475,7 +465,7 @@ void UpdateAttempter::CheckForUpdate(const string& app_version,
 
   // Pass through the interactive flag, in case we want to simulate a scheduled
   // test.
-  Update(app_version, omaha_url, interactive);
+  Update(interactive);
 }
 
 bool UpdateAttempter::RebootIfNeeded() {

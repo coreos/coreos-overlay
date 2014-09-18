@@ -25,8 +25,7 @@ class OmahaRequestParamsTest : public ::testing::Test {
  protected:
   // Return true iff the OmahaRequestParams::Init succeeded. If
   // out is non-NULL, it's set w/ the generated data.
-  bool DoTest(OmahaRequestParams* out, const string& app_version,
-              const string& omaha_url);
+  bool DoTest(OmahaRequestParams* out);
 
   virtual void SetUp() {
     ASSERT_EQ(0, System(string("mkdir -p ") + kTestDir + "/usr/share/coreos"));
@@ -51,10 +50,8 @@ class OmahaRequestParamsTest : public ::testing::Test {
 const string OmahaRequestParamsTest::kTestDir =
     "omaha_request_params-test";
 
-bool OmahaRequestParamsTest::DoTest(OmahaRequestParams* out,
-                                    const string& app_version,
-                                    const string& omaha_url) {
-  bool success = params_.Init(app_version, omaha_url, false);
+bool OmahaRequestParamsTest::DoTest(OmahaRequestParams* out) {
+  bool success = params_.Init(false);
   if (out)
     *out = params_;
   return success;
@@ -82,7 +79,7 @@ TEST_F(OmahaRequestParamsTest, SimpleTest) {
       "SERVER=http://www.google.com"));
   MockSystemState mock_system_state;
   OmahaRequestParams out(&mock_system_state);
-  EXPECT_TRUE(DoTest(&out, "", ""));
+  EXPECT_TRUE(DoTest(&out));
   EXPECT_EQ(string("0.2.2.3_") + GetMachineType(), out.os_sp());
   EXPECT_EQ("{e96281a6-d1af-4bde-9a0a-97b76e56dc57}", out.app_id());
   EXPECT_EQ("0.2.2.3", out.app_version());
@@ -103,7 +100,7 @@ TEST_F(OmahaRequestParamsTest, AppIDTest) {
       "SERVER=http://www.google.com"));
   MockSystemState mock_system_state;
   OmahaRequestParams out(&mock_system_state);
-  EXPECT_TRUE(DoTest(&out, "", ""));
+  EXPECT_TRUE(DoTest(&out));
   EXPECT_EQ(string("0.2.2.3_") + GetMachineType(), out.os_sp());
   EXPECT_EQ("{58c35cef-9d30-476e-9098-ce20377d535d}", out.app_id());
   EXPECT_EQ("0.2.2.3", out.app_version());
@@ -122,7 +119,7 @@ TEST_F(OmahaRequestParamsTest, MissingChannelTest) {
       "COREOS_RELEASE_TRXCK=dev-channel"));
   MockSystemState mock_system_state;
   OmahaRequestParams out(&mock_system_state);
-  EXPECT_TRUE(DoTest(&out, "", ""));
+  EXPECT_TRUE(DoTest(&out));
   EXPECT_EQ(string("0.2.2.3_") + GetMachineType(), out.os_sp());
   EXPECT_EQ("{e96281a6-d1af-4bde-9a0a-97b76e56dc57}", out.app_id());
   EXPECT_EQ("0.2.2.3", out.app_version());
@@ -138,7 +135,7 @@ TEST_F(OmahaRequestParamsTest, ConfusingReleaseTest) {
       "COREOS_RELEASE_TRXCK=dev-channel"));
   MockSystemState mock_system_state;
   OmahaRequestParams out(&mock_system_state);
-  EXPECT_TRUE(DoTest(&out, "", ""));
+  EXPECT_TRUE(DoTest(&out));
   EXPECT_EQ(string("0.2.2.3_") + GetMachineType(), out.os_sp());
   EXPECT_EQ("{e96281a6-d1af-4bde-9a0a-97b76e56dc57}", out.app_id());
   EXPECT_EQ("0.2.2.3", out.app_version());
@@ -153,47 +150,13 @@ TEST_F(OmahaRequestParamsTest, MissingVersionTest) {
       "GROUP=dev-channel"));
   MockSystemState mock_system_state;
   OmahaRequestParams out(&mock_system_state);
-  EXPECT_TRUE(DoTest(&out, "", ""));
+  EXPECT_TRUE(DoTest(&out));
   EXPECT_EQ(string("_") + GetMachineType(), out.os_sp());
   EXPECT_EQ("{e96281a6-d1af-4bde-9a0a-97b76e56dc57}", out.app_id());
   EXPECT_EQ("", out.app_version());
   EXPECT_EQ("en-US", out.app_lang());
   EXPECT_TRUE(out.delta_okay());
   EXPECT_EQ("dev-channel", out.target_channel());
-}
-
-TEST_F(OmahaRequestParamsTest, ForceVersionTest) {
-  ASSERT_TRUE(WriteFileString(
-      kTestDir + "/usr/share/coreos/release",
-      "COREOS_RELEASE_FOO=bar\n"
-      "GROUP=dev-channel"));
-  MockSystemState mock_system_state;
-  OmahaRequestParams out(&mock_system_state);
-  EXPECT_TRUE(DoTest(&out, "ForcedVersion", ""));
-  EXPECT_EQ(string("ForcedVersion_") + GetMachineType(), out.os_sp());
-  EXPECT_EQ("{e96281a6-d1af-4bde-9a0a-97b76e56dc57}", out.app_id());
-  EXPECT_EQ("ForcedVersion", out.app_version());
-  EXPECT_EQ("en-US", out.app_lang());
-  EXPECT_TRUE(out.delta_okay());
-  EXPECT_EQ("dev-channel", out.target_channel());
-}
-
-TEST_F(OmahaRequestParamsTest, ForcedURLTest) {
-  ASSERT_TRUE(WriteFileString(
-      kTestDir + "/usr/share/coreos/release",
-      "COREOS_RELEASE_FOO=bar\n"
-      "COREOS_RELEASE_VERSION=0.2.2.3\n"
-      "GROUP=dev-channel"));
-  MockSystemState mock_system_state;
-  OmahaRequestParams out(&mock_system_state);
-  EXPECT_TRUE(DoTest(&out, "", "http://forced.google.com"));
-  EXPECT_EQ(string("0.2.2.3_") + GetMachineType(), out.os_sp());
-  EXPECT_EQ("{e96281a6-d1af-4bde-9a0a-97b76e56dc57}", out.app_id());
-  EXPECT_EQ("0.2.2.3", out.app_version());
-  EXPECT_EQ("en-US", out.app_lang());
-  EXPECT_TRUE(out.delta_okay());
-  EXPECT_EQ("dev-channel", out.target_channel());
-  EXPECT_EQ("http://forced.google.com", out.update_url());
 }
 
 TEST_F(OmahaRequestParamsTest, MissingURLTest) {
@@ -204,7 +167,7 @@ TEST_F(OmahaRequestParamsTest, MissingURLTest) {
       "GROUP=dev-channel"));
   MockSystemState mock_system_state;
   OmahaRequestParams out(&mock_system_state);
-  EXPECT_TRUE(DoTest(&out, "", ""));
+  EXPECT_TRUE(DoTest(&out));
   EXPECT_EQ(string("0.2.2.3_") + GetMachineType(), out.os_sp());
   EXPECT_EQ("{e96281a6-d1af-4bde-9a0a-97b76e56dc57}", out.app_id());
   EXPECT_EQ("0.2.2.3", out.app_version());
@@ -223,7 +186,7 @@ TEST_F(OmahaRequestParamsTest, NoDeltasTest) {
   ASSERT_TRUE(WriteFileString(kTestDir + "/.nodelta", ""));
   MockSystemState mock_system_state;
   OmahaRequestParams out(&mock_system_state);
-  EXPECT_TRUE(DoTest(&out, "", ""));
+  EXPECT_TRUE(DoTest(&out));
   EXPECT_FALSE(out.delta_okay());
 }
 
@@ -239,13 +202,13 @@ TEST_F(OmahaRequestParamsTest, SetTargetChannelInvalidTest) {
     OmahaRequestParams params(&mock_system_state);
     params.set_root(string("./") + kTestDir);
     params.SetLockDown(true);
-    EXPECT_TRUE(params.Init("", "", false));
+    EXPECT_TRUE(params.Init(false));
     params.SetTargetChannel("dogfood-channel", true);
     EXPECT_FALSE(params.is_powerwash_allowed());
   }
   MockSystemState mock_system_state;
   OmahaRequestParams out(&mock_system_state);
-  EXPECT_TRUE(DoTest(&out, "", ""));
+  EXPECT_TRUE(DoTest(&out));
   EXPECT_EQ("dev-channel", out.target_channel());
   EXPECT_FALSE(out.is_powerwash_allowed());
 }
@@ -272,7 +235,7 @@ TEST_F(OmahaRequestParamsTest, ValidChannelTest) {
   params_.SetLockDown(true);
   MockSystemState mock_system_state;
   OmahaRequestParams out(&mock_system_state);
-  EXPECT_TRUE(DoTest(&out, "", ""));
+  EXPECT_TRUE(DoTest(&out));
   EXPECT_EQ(string("0.2.2.3_") + GetMachineType(), out.os_sp());
   EXPECT_EQ("{e96281a6-d1af-4bde-9a0a-97b76e56dc57}", out.app_id());
   EXPECT_EQ("0.2.2.3", out.app_version());

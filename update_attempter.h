@@ -62,13 +62,8 @@ class UpdateAttempter : public ActionProcessorDelegate,
   virtual ~UpdateAttempter();
 
   // Checks for update and, if a newer version is available, attempts to update
-  // the system. Non-empty |in_app_version| or |in_update_url| prevents
-  // automatic detection of the parameter.
-  // Interactive should be true if this was called
-  // from the user (ie dbus).
-  virtual void Update(const std::string& app_version,
-                      const std::string& omaha_url,
-                      bool interactive);
+  // the system. Interactive should be true when called by the user (ie dbus).
+  virtual void Update(bool interactive);
 
   // ActionProcessorDelegate methods:
   void ProcessingDone(const ActionProcessor* processor, ActionExitCode code);
@@ -130,9 +125,7 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // This is the internal entry point for going through an
   // update. If the current status is idle invokes Update.
   // This is called by the DBus implementation.
-  void CheckForUpdate(const std::string& app_version,
-                      const std::string& omaha_url,
-                      bool is_interactive);
+  void CheckForUpdate(bool interactive);
 
   // Initiates a reboot if the current state is
   // UPDATED_NEED_REBOOT. Returns true on sucess, false otherwise.
@@ -224,9 +217,7 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // Helper method of Update() to calculate the update-related parameters
   // from various sources and set the appropriate state. Please refer to
   // Update() method for the meaning of the parametes.
-  bool CalculateUpdateParams(const std::string& app_version,
-                             const std::string& omaha_url,
-                             bool interactive);
+  bool CalculateUpdateParams(bool interactive);
 
   // Calculates all the scattering related parameters (such as waiting period,
   // which type of scattering is enabled, etc.) and also updates/deletes

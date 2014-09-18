@@ -47,17 +47,14 @@ const char* kChannelsByStability[] = {
     "stable-channel",
 };
 
-bool OmahaRequestParams::Init(const std::string& in_app_version,
-                              const std::string& in_update_url,
-                              bool in_interactive) {
+bool OmahaRequestParams::Init(bool interactive) {
   InitFromLsbValue();
   bool stateful_override = !ShouldLockDown();
   os_platform_ = OmahaRequestParams::kOsPlatform;
   os_version_ = OmahaRequestParams::kOsVersion;
   oemid_ = GetOemValue("ID", "");
-  app_version_ = in_app_version.empty() ?
-      GetLsbValue("COREOS_RELEASE_VERSION", "", NULL, stateful_override) :
-      in_app_version;
+  app_version_ =
+      GetLsbValue("COREOS_RELEASE_VERSION", "", NULL, stateful_override);
   os_sp_ = app_version_ + "_" + GetMachineType();
   os_board_ = GetLsbValue("COREOS_RELEASE_BOARD",
                           "",
@@ -74,6 +71,9 @@ bool OmahaRequestParams::Init(const std::string& in_app_version,
   app_lang_ = "en-US";
   bootid_ = utils::GetBootId();
   machineid_ = utils::GetMachineId();
+  update_url_ = GetLsbValue("SERVER", kProductionOmahaUrl, NULL,
+                            stateful_override);
+  interactive_ = interactive;
 
   if (current_channel_ == target_channel_) {
     // deltas are only okay if the /.nodelta file does not exist.  if we don't
@@ -92,14 +92,6 @@ bool OmahaRequestParams::Init(const std::string& in_app_version,
     delta_okay_ = false;
   }
 
-  if (in_update_url.empty())
-    update_url_ = GetLsbValue("SERVER", kProductionOmahaUrl, NULL,
-                              stateful_override);
-  else
-    update_url_ = in_update_url;
-
-  // Set the interactive flag accordingly.
-  interactive_ = in_interactive;
   return true;
 }
 
