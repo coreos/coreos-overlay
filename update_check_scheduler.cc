@@ -27,7 +27,6 @@ UpdateCheckScheduler::UpdateCheckScheduler(UpdateAttempter* update_attempter,
       scheduled_(false),
       last_interval_(0),
       poll_interval_(0),
-      is_test_update_attempted_(false),
       system_state_(system_state) {}
 
 UpdateCheckScheduler::~UpdateCheckScheduler() {}
@@ -91,7 +90,7 @@ gboolean UpdateCheckScheduler::StaticCheck(void* scheduler) {
 
   // Before updating, we flush any previously generated UMA reports.
   CertificateChecker::FlushReport();
-  me->update_attempter_->Update("", "", false, false);
+  me->update_attempter_->Update("", "", false);
 
   // This check ensures that future update checks will be or are already
   // scheduled. The check should never fail. A check failure means that there's

@@ -65,14 +65,10 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // the system. Non-empty |in_app_version| or |in_update_url| prevents
   // automatic detection of the parameter.
   // Interactive should be true if this was called
-  // from the user (ie dbus).  |is_test| will lead to using an alternative test
-  // server URL, if |omaha_url| is empty. |is_user_initiated| will be true
-  // only if the update is being kicked off through dbus and will be false for
-  // other types of kick off such as scheduled updates.
+  // from the user (ie dbus).
   virtual void Update(const std::string& app_version,
                       const std::string& omaha_url,
-                      bool interactive,
-                      bool is_test_mode);
+                      bool interactive);
 
   // ActionProcessorDelegate methods:
   void ProcessingDone(const ActionProcessor* processor, ActionExitCode code);
@@ -154,9 +150,6 @@ class UpdateAttempter : public ActionProcessorDelegate,
   uint32_t GetErrorCodeFlags();
 
  private:
-  // Update server URL for automated lab test.
-  static const char* const kTestUpdateUrl;
-
   friend class UpdateAttempterTest;
   FRIEND_TEST(UpdateAttempterTest, ActionCompletedDownloadTest);
   FRIEND_TEST(UpdateAttempterTest, ActionCompletedErrorTest);
@@ -233,8 +226,7 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // Update() method for the meaning of the parametes.
   bool CalculateUpdateParams(const std::string& app_version,
                              const std::string& omaha_url,
-                             bool interactive,
-                             bool is_test);
+                             bool interactive);
 
   // Calculates all the scattering related parameters (such as waiting period,
   // which type of scattering is enabled, etc.) and also updates/deletes
@@ -328,15 +320,6 @@ class UpdateAttempter : public ActionProcessorDelegate,
 
   // Used for fetching information about the device policy.
   scoped_ptr<policy::PolicyProvider> policy_provider_;
-
-  // A flag for indicating whether we are using a test server URL.
-  bool is_using_test_url_;
-
-  // If true, will induce a test mode update attempt.
-  bool is_test_mode_;
-
-  // A flag indicating whether a test update cycle was already attempted.
-  bool is_test_update_attempted_;
 
   // The current scatter factor as found in the policy setting.
   base::TimeDelta scatter_factor_;

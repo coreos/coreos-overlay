@@ -152,9 +152,9 @@ void LibcurlHttpFetcher::ResumeTransfer(const std::string& url) {
   CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_MAXREDIRS, kMaxRedirects),
            CURLE_OK);
 
-  // If we are running in test mode or using a dev/test build, then lock down
+  // For the sake of security if this is an official build lock down
   // the appropriate curl options for HTTP or HTTPS depending on the url.
-  if (!is_test_mode_ && IsOfficialBuild()) {
+  if (IsOfficialBuild()) {
     if (StartsWithASCII(url_to_use, "http://", false))
       SetCurlOptionsForHttp();
     else
