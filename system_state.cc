@@ -14,7 +14,7 @@ RealSystemState::RealSystemState()
     : device_policy_(NULL),
       request_params_(this) {}
 
-bool RealSystemState::Initialize(bool enable_gpio, bool enable_connection_manager) {
+bool RealSystemState::Initialize(bool enable_connection_manager) {
   if (!prefs_.Init(FilePath(kPrefsDirectory))) {
     LOG(ERROR) << "Failed to initialize preferences.";
     return false;
@@ -27,22 +27,6 @@ bool RealSystemState::Initialize(bool enable_gpio, bool enable_connection_manage
     connection_manager_ = new ConnectionManager(this);
   } else {
     connection_manager_ = new NoopConnectionManager(this);
-  }
-
-  // Initialize the GPIO handler as instructed.
-  if (enable_gpio) {
-    // A real GPIO handler. Defer GPIO discovery to ensure the udev has ample
-    // time to export the devices. Also require that test mode is physically
-    // queried at most once and the result cached, for a more consistent update
-    // behavior.
-    udev_iface_.reset(new StandardUdevInterface());
-    file_descriptor_.reset(new EintrSafeFileDescriptor());
-    gpio_handler_.reset(new StandardGpioHandler(udev_iface_.get(),
-                                                file_descriptor_.get(),
-                                                true, true));
-  } else {
-    // A no-op GPIO handler, always indicating a non-test mode.
-    gpio_handler_.reset(new NoopGpioHandler(false));
   }
 
   // Create the update attempter.

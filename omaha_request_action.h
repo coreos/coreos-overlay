@@ -19,6 +19,7 @@
 #include "update_engine/action.h"
 #include "update_engine/http_fetcher.h"
 #include "update_engine/omaha_response.h"
+#include "update_engine/utils.h"
 
 // The Omaha Request action makes a request to Omaha and can output
 // the response on the output ActionPipe.

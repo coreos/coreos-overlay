@@ -24,7 +24,6 @@
 #include "update_engine/dbus_service.h"
 #include "update_engine/download_action.h"
 #include "update_engine/filesystem_copier_action.h"
-#include "update_engine/gpio_handler.h"
 #include "update_engine/libcurl_http_fetcher.h"
 #include "update_engine/multi_range_http_fetcher.h"
 #include "update_engine/omaha_request_action.h"

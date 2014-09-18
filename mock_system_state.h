@@ -10,7 +10,6 @@
 #include <policy/mock_device_policy.h>
 
 #include "update_engine/mock_dbus_interface.h"
-#include "update_engine/mock_gpio_handler.h"
 #include "update_engine/mock_payload_state.h"
 #include "update_engine/prefs_mock.h"
 #include "update_engine/system_state.h"
@@ -25,7 +24,7 @@ class MockSystemState : public SystemState {
  public:
   MockSystemState();
 
-  virtual ~MockSystemState();
+  virtual ~MockSystemState() {}
 
   MOCK_METHOD1(set_device_policy, void(const policy::DevicePolicy*));
   MOCK_CONST_METHOD0(device_policy, const policy::DevicePolicy*());
@@ -40,10 +39,6 @@ class MockSystemState : public SystemState {
 
   inline virtual PayloadStateInterface* payload_state() {
     return &mock_payload_state_;
-  }
-
-  inline virtual GpioHandler* gpio_handler() const {
-    return mock_gpio_handler_;
   }
 
   virtual UpdateAttempter* update_attempter();
@@ -77,7 +72,6 @@ class MockSystemState : public SystemState {
   // These are Mock objects or objects we own.
   testing::NiceMock<PrefsMock> mock_prefs_;
   testing::NiceMock<MockPayloadState> mock_payload_state_;
-  testing::NiceMock<MockGpioHandler>* mock_gpio_handler_;
   testing::NiceMock<UpdateAttempterMock>* mock_update_attempter_;
   MockDbusGlib dbus_;
 

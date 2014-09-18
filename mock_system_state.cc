@@ -14,13 +14,8 @@ MockSystemState::MockSystemState()
     prefs_(&mock_prefs_) {
   request_params_ = &default_request_params_;
   mock_payload_state_.Initialize(&mock_prefs_);
-  mock_gpio_handler_ = new testing::NiceMock<MockGpioHandler>();
   mock_update_attempter_ = new testing::NiceMock<UpdateAttempterMock>(
       this, &dbus_);
-}
-
-MockSystemState::~MockSystemState() {
-  delete mock_gpio_handler_;
 }
 
 UpdateAttempter* MockSystemState::update_attempter() {

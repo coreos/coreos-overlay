@@ -8,7 +8,6 @@
 #include <policy/device_policy.h>
 #include <policy/libpolicy.h>
 
-#include "update_engine/gpio_handler.h"
 #include "update_engine/omaha_request_params.h"
 
 namespace chromeos_update_engine {
@@ -46,9 +45,6 @@ class SystemState {
 
   // Gets the interface for the payload state object.
   virtual PayloadStateInterface* payload_state() = 0;
-
-  // Returns a pointer to the GPIO handler.
-  virtual GpioHandler* gpio_handler() const = 0;
 
   // Returns a pointer to the update attempter object.
   virtual UpdateAttempter* update_attempter() = 0;
