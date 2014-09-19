@@ -8,7 +8,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~x86"
 else
-	CROS_WORKON_COMMIT="654e5d04d46195f187b0ae6a6464bf7bae9b47d1"
+	CROS_WORKON_COMMIT="5f3883e84f9b50216b6af8bb5bad334238685795"
 	KEYWORDS="amd64 arm x86"
 fi
 
@@ -37,8 +37,7 @@ RDEPEND="!coreos-base/coreos-installer
 	dev-libs/protobuf
 	dev-util/bsdiff
 	net-misc/curl
-	sys-fs/e2fsprogs
-	virtual/udev"
+	sys-fs/e2fsprogs"
 DEPEND="coreos-base/system_api
 	dev-cpp/gmock
 	dev-cpp/gtest
