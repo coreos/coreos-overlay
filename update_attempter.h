@@ -62,17 +62,8 @@ class UpdateAttempter : public ActionProcessorDelegate,
   virtual ~UpdateAttempter();
 
   // Checks for update and, if a newer version is available, attempts to update
-  // the system. Non-empty |in_app_version| or |in_update_url| prevents
-  // automatic detection of the parameter.
-  // Interactive should be true if this was called
-  // from the user (ie dbus).  |is_test| will lead to using an alternative test
-  // server URL, if |omaha_url| is empty. |is_user_initiated| will be true
-  // only if the update is being kicked off through dbus and will be false for
-  // other types of kick off such as scheduled updates.
-  virtual void Update(const std::string& app_version,
-                      const std::string& omaha_url,
-                      bool interactive,
-                      bool is_test_mode);
+  // the system. Interactive should be true when called by the user (ie dbus).
+  virtual void Update(bool interactive);
 
   // ActionProcessorDelegate methods:
   void ProcessingDone(const ActionProcessor* processor, ActionExitCode code);
@@ -134,9 +125,7 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // This is the internal entry point for going through an
   // update. If the current status is idle invokes Update.
   // This is called by the DBus implementation.
-  void CheckForUpdate(const std::string& app_version,
-                      const std::string& omaha_url,
-                      bool is_interactive);
+  void CheckForUpdate(bool interactive);
 
   // Initiates a reboot if the current state is
   // UPDATED_NEED_REBOOT. Returns true on sucess, false otherwise.
@@ -154,9 +143,6 @@ class UpdateAttempter : public ActionProcessorDelegate,
   uint32_t GetErrorCodeFlags();
 
  private:
-  // Update server URL for automated lab test.
-  static const char* const kTestUpdateUrl;
-
   friend class UpdateAttempterTest;
   FRIEND_TEST(UpdateAttempterTest, ActionCompletedDownloadTest);
   FRIEND_TEST(UpdateAttempterTest, ActionCompletedErrorTest);
@@ -231,10 +217,7 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // Helper method of Update() to calculate the update-related parameters
   // from various sources and set the appropriate state. Please refer to
   // Update() method for the meaning of the parametes.
-  bool CalculateUpdateParams(const std::string& app_version,
-                             const std::string& omaha_url,
-                             bool interactive,
-                             bool is_test);
+  bool CalculateUpdateParams(bool interactive);
 
   // Calculates all the scattering related parameters (such as waiting period,
   // which type of scattering is enabled, etc.) and also updates/deletes
@@ -328,15 +311,6 @@ class UpdateAttempter : public ActionProcessorDelegate,
 
   // Used for fetching information about the device policy.
   scoped_ptr<policy::PolicyProvider> policy_provider_;
-
-  // A flag for indicating whether we are using a test server URL.
-  bool is_using_test_url_;
-
-  // If true, will induce a test mode update attempt.
-  bool is_test_mode_;
-
-  // A flag indicating whether a test update cycle was already attempted.
-  bool is_test_update_attempted_;
 
   // The current scatter factor as found in the policy setting.
   base::TimeDelta scatter_factor_;

@@ -8,7 +8,6 @@
 #include <update_engine/system_state.h>
 
 #include <update_engine/connection_manager.h>
-#include <update_engine/gpio_handler.h>
 #include <update_engine/payload_state.h>
 #include <update_engine/prefs.h>
 #include <update_engine/update_attempter.h>
@@ -49,10 +48,6 @@ public:
     return &payload_state_;
   }
 
-  virtual inline GpioHandler* gpio_handler() const {
-    return gpio_handler_.get();
-  }
-
   virtual inline UpdateAttempter* update_attempter() {
     return update_attempter_.get();
   }
@@ -65,7 +60,7 @@ public:
 
   // Initializes this concrete object. Other methods should be invoked only
   // if the object has been initialized successfully.
-  bool Initialize(bool enable_gpio, bool enable_connection_manager);
+  bool Initialize(bool enable_connection_manager);
 
 private:
   // The latest device policy object from the policy provider.
@@ -81,13 +76,6 @@ private:
   // All state pertaining to payload state such as
   // response, URL, backoff states.
   PayloadState payload_state_;
-
-  // Pointer to a GPIO handler and other needed modules (note that the order of
-  // declaration significant for destruction, as the latter depends on the
-  // former).
-  scoped_ptr<UdevInterface> udev_iface_;
-  scoped_ptr<FileDescriptor> file_descriptor_;
-  scoped_ptr<GpioHandler> gpio_handler_;
 
   // The dbus object used to initialize the update attempter.
   ConcreteDbusGlib dbus_;

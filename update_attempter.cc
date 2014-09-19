@@ -24,7 +24,6 @@
 #include "update_engine/dbus_service.h"
 #include "update_engine/download_action.h"
 #include "update_engine/filesystem_copier_action.h"
-#include "update_engine/gpio_handler.h"
 #include "update_engine/libcurl_http_fetcher.h"
 #include "update_engine/multi_range_http_fetcher.h"
 #include "update_engine/omaha_request_action.h"
@@ -49,12 +48,6 @@ using std::vector;
 namespace chromeos_update_engine {
 
 const int UpdateAttempter::kMaxDeltaUpdateFailures = 3;
-
-// Private test server URL w/ custom port number.
-// TODO(garnold) This is a temporary hack to allow us to test the closed loop
-// automated update testing. To be replaced with an hard-coded local IP address.
-const char* const UpdateAttempter::kTestUpdateUrl(
-    "http://garnold.mtv.corp.google.com:8080/update");
 
 const char* kUpdateCompletedMarker =
     "/var/run/update_engine_autoupdate_completed";
@@ -123,10 +116,7 @@ UpdateAttempter::UpdateAttempter(SystemState* system_state,
       updated_boot_flags_(false),
       update_boot_flags_running_(false),
       start_action_processor_(false),
-      policy_provider_(NULL),
-      is_using_test_url_(false),
-      is_test_mode_(false),
-      is_test_update_attempted_(false) {
+      policy_provider_(NULL) {
   prefs_ = system_state->prefs();
   omaha_request_params_ = system_state->request_params();
   if (utils::FileExists(kUpdateCompletedMarker))
@@ -137,10 +127,7 @@ UpdateAttempter::~UpdateAttempter() {
   CleanupCpuSharesManagement();
 }
 
-void UpdateAttempter::Update(const string& app_version,
-                             const string& omaha_url,
-                             bool interactive,
-                             bool is_test_mode) {
+void UpdateAttempter::Update(bool interactive) {
   fake_update_success_ = false;
   if (status_ == UPDATE_STATUS_UPDATED_NEED_REBOOT) {
     // Although we have applied an update, we still want to ping Omaha
@@ -155,10 +142,7 @@ void UpdateAttempter::Update(const string& app_version,
     return;
   }
 
-  if (!CalculateUpdateParams(app_version,
-                             omaha_url,
-                             interactive,
-                             is_test_mode)) {
+  if (!CalculateUpdateParams(interactive)) {
     return;
   }
 
@@ -173,14 +157,8 @@ void UpdateAttempter::Update(const string& app_version,
   UpdateBootFlags();
 }
 
-bool UpdateAttempter::CalculateUpdateParams(const string& app_version,
-                                            const string& omaha_url,
-                                            bool interactive,
-                                            bool is_test_mode) {
+bool UpdateAttempter::CalculateUpdateParams(bool interactive) {
   http_response_code_ = 0;
-
-  // Set the test mode flag for the current update attempt.
-  is_test_mode_ = is_test_mode;
 
   // Lazy initialize the policy provider, or reload the latest policy data.
   if (!policy_provider_.get())
@@ -220,43 +198,9 @@ bool UpdateAttempter::CalculateUpdateParams(const string& app_version,
 
   CalculateScatteringParams(interactive);
 
-  // Determine whether an alternative test address should be used.
-  string omaha_url_to_use = omaha_url;
-  if ((is_using_test_url_ = (omaha_url_to_use.empty() && is_test_mode_))) {
-    omaha_url_to_use = kTestUpdateUrl;
-    LOG(INFO) << "using alternative server address: " << omaha_url_to_use;
-  }
-
-  if (!omaha_request_params_->Init(app_version,
-                                   omaha_url_to_use,
-                                   interactive)) {
+  if (!omaha_request_params_->Init(interactive)) {
     LOG(ERROR) << "Unable to initialize Omaha request device params.";
     return false;
-  }
-
-  // Set the target channel iff ReleaseChannelDelegated policy is set to
-  // false and a non-empty ReleaseChannel policy is present. If delegated
-  // is true, we'll ignore ReleaseChannel policy value.
-  if (system_state_->device_policy()) {
-    bool delegated = false;
-    system_state_->device_policy()->GetReleaseChannelDelegated(&delegated);
-    if (delegated) {
-      LOG(INFO) << "Channel settings are delegated to user by policy. "
-                   "Ignoring ReleaseChannel policy value";
-    }
-    else {
-      LOG(INFO) << "Channel settings are not delegated to the user by policy";
-      string target_channel;
-      system_state_->device_policy()->GetReleaseChannel(&target_channel);
-      if (target_channel.empty()) {
-        LOG(INFO) << "No ReleaseChannel specified in policy";
-      } else {
-        // Pass in false for powerwash_allowed until we add it to the policy
-        // protobuf.
-        LOG(INFO) << "Setting target channel from ReleaseChannel policy value";
-        omaha_request_params_->SetTargetChannel(target_channel, false);
-      }
-    }
   }
 
   LOG(INFO) << "update_disabled = "
@@ -403,7 +347,7 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
 
   // Actions:
   LibcurlHttpFetcher* update_check_fetcher =
-      new LibcurlHttpFetcher(system_state_, is_test_mode_);
+      new LibcurlHttpFetcher(system_state_);
   // Try harder to connect to the network, esp when not interactive.
   // See comment in libcurl_http_fetcher.cc.
   update_check_fetcher->set_no_network_max_retries(interactive ? 1 : 3);
@@ -423,11 +367,10 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
       new OmahaRequestAction(system_state_,
                              new OmahaEvent(
                                  OmahaEvent::kTypeUpdateDownloadStarted),
-                             new LibcurlHttpFetcher(system_state_,
-                                                    is_test_mode_),
+                             new LibcurlHttpFetcher(system_state_),
                              false));
   LibcurlHttpFetcher* download_fetcher =
-      new LibcurlHttpFetcher(system_state_, is_test_mode_);
+      new LibcurlHttpFetcher(system_state_);
   download_fetcher->set_check_certificate(CertificateChecker::kDownload);
   shared_ptr<DownloadAction> download_action(
       new DownloadAction(prefs_,
@@ -438,8 +381,7 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
       new OmahaRequestAction(system_state_,
                              new OmahaEvent(
                                  OmahaEvent::kTypeUpdateDownloadFinished),
-                             new LibcurlHttpFetcher(system_state_,
-                                                    is_test_mode_),
+                             new LibcurlHttpFetcher(system_state_),
                              false));
   shared_ptr<FilesystemCopierAction> filesystem_verifier_action(
       new FilesystemCopierAction(false, true));
@@ -450,8 +392,7 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
   shared_ptr<OmahaRequestAction> update_complete_action(
       new OmahaRequestAction(system_state_,
                              new OmahaEvent(OmahaEvent::kTypeUpdateComplete),
-                             new LibcurlHttpFetcher(system_state_,
-                                                    is_test_mode_),
+                             new LibcurlHttpFetcher(system_state_),
                              false));
 
   download_action->set_delegate(this);
@@ -488,9 +429,7 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
               postinstall_runner_action.get());
 }
 
-void UpdateAttempter::CheckForUpdate(const string& app_version,
-                                     const string& omaha_url,
-                                     bool interactive) {
+void UpdateAttempter::CheckForUpdate(bool interactive) {
   LOG(INFO) << "New update check requested";
 
   if (status_ != UPDATE_STATUS_IDLE) {
@@ -499,19 +438,9 @@ void UpdateAttempter::CheckForUpdate(const string& app_version,
     return;
   }
 
-  // Read GPIO signals and determine whether this is an automated test scenario.
-  // For safety, we only allow a test update to be performed once; subsequent
-  // update requests will be carried out normally.
-  bool is_test_mode = (!is_test_update_attempted_ &&
-                       system_state_->gpio_handler()->IsTestModeSignaled());
-  if (is_test_mode) {
-    LOG(WARNING) << "this is a test mode update attempt!";
-    is_test_update_attempted_ = true;
-  }
-
   // Pass through the interactive flag, in case we want to simulate a scheduled
   // test.
-  Update(app_version, omaha_url, interactive, is_test_mode);
+  Update(interactive);
 }
 
 bool UpdateAttempter::RebootIfNeeded() {
@@ -537,11 +466,8 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
   if (status_ == UPDATE_STATUS_REPORTING_ERROR_EVENT) {
     LOG(INFO) << "Error event sent.";
 
-    // Inform scheduler of new status; also specifically inform about a failed
-    // update attempt with a test address.
-    SetStatusAndNotify(UPDATE_STATUS_IDLE,
-                       (is_using_test_url_ ? kUpdateNoticeTestAddrFailed :
-                        kUpdateNoticeUnspecified));
+    // Inform scheduler of new status
+    SetStatusAndNotify(UPDATE_STATUS_IDLE, kUpdateNoticeUnspecified);
 
     if (!fake_update_success_) {
       return;
@@ -865,8 +791,7 @@ bool UpdateAttempter::ScheduleErrorEventAction() {
   shared_ptr<OmahaRequestAction> error_event_action(
       new OmahaRequestAction(system_state_,
                              error_event_.release(),  // Pass ownership.
-                             new LibcurlHttpFetcher(system_state_,
-                                                    is_test_mode_),
+                             new LibcurlHttpFetcher(system_state_),
                              false));
   actions_.push_back(shared_ptr<AbstractAction>(error_event_action));
   processor_->EnqueueAction(error_event_action.get());
@@ -979,8 +904,7 @@ void UpdateAttempter::PingOmaha() {
     shared_ptr<OmahaRequestAction> ping_action(
         new OmahaRequestAction(system_state_,
                                NULL,
-                               new LibcurlHttpFetcher(system_state_,
-                                                      is_test_mode_),
+                               new LibcurlHttpFetcher(system_state_),
                                true));
     actions_.push_back(shared_ptr<OmahaRequestAction>(ping_action));
     processor_->set_delegate(NULL);

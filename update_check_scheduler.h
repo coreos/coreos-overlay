@@ -126,9 +126,6 @@ class UpdateCheckScheduler {
   // Server dictated poll interval in seconds, if positive.
   int poll_interval_;
 
-  // A flag indicating whether a test update cycle was already attempted.
-  bool is_test_update_attempted_;
-
   // The external state of the system outside the update_engine process.
   SystemState* system_state_;
 

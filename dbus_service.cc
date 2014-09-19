@@ -62,41 +62,9 @@ UpdateEngineService* update_engine_service_new(void) {
 }
 
 gboolean update_engine_service_attempt_update(UpdateEngineService* self,
-                                              gchar* app_version,
-                                              gchar* omaha_url,
                                               GError **error) {
-  string update_app_version;
-  string update_omaha_url;
-  bool interactive = true;
-
-  // Only non-official (e.g., dev and test) builds can override the current
-  // version and update server URL over D-Bus. However, pointing to the
-  // hardcoded test update server URL is always allowed.
-  if (!chromeos_update_engine::utils::IsOfficialBuild()) {
-    if (app_version) {
-      update_app_version = app_version;
-    }
-    if (omaha_url) {
-      update_omaha_url = omaha_url;
-    }
-  }
-  if (omaha_url) {
-    if (strcmp(omaha_url, kScheduledAUTestURLRequest) == 0) {
-      update_omaha_url = kAUTestURL;
-      // pretend that it's not user-initiated even though it is,
-      // so as to test scattering logic, etc. which get kicked off
-      // only in scheduled update checks.
-      interactive = false;
-    } else if (strcmp(omaha_url, kAUTestURLRequest) == 0) {
-      update_omaha_url = kAUTestURL;
-    }
-  }
-  LOG(INFO) << "Attempt update: app_version=\"" << update_app_version << "\" "
-            << "omaha_url=\"" << update_omaha_url << "\" "
-            << "interactive=" << (interactive? "yes" : "no");
-  self->system_state_->update_attempter()->CheckForUpdate(update_app_version,
-                                                          update_omaha_url,
-                                                          interactive);
+  LOG(INFO) << "Attempting interactive update";
+  self->system_state_->update_attempter()->CheckForUpdate(true);
   return TRUE;
 }
 

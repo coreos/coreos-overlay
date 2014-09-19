@@ -168,10 +168,7 @@ int main(int argc, char** argv) {
   GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
 
   chromeos_update_engine::RealSystemState real_system_state;
-  // TODO(garnold) s/false/true/ once we decide to activate actual GPIO-based
-  // protocol for testing of MP-signed images (chromium-os:25400).
-  LOG_IF(ERROR, !real_system_state.Initialize(false,
-                                              !FLAGS_no_connection_manager))
+  LOG_IF(ERROR, !real_system_state.Initialize(!FLAGS_no_connection_manager))
       << "Failed to initialize system state.";
   chromeos_update_engine::UpdateAttempter *update_attempter =
       real_system_state.update_attempter();

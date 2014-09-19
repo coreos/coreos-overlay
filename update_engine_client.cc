@@ -23,9 +23,7 @@ using chromeos_update_engine::kUpdateEngineServiceInterface;
 using chromeos_update_engine::utils::GetAndFreeGError;
 using std::string;
 
-DEFINE_string(app_version, "", "Force the current app version.");
 DEFINE_bool(check_for_update, false, "Initiate check for updates.");
-DEFINE_string(omaha_url, "", "The URL of the Omaha update server.");
 DEFINE_bool(status, false, "Print the status to stdout.");
 DEFINE_bool(reset_status, false, "Sets the status in update_engine to idle.");
 DEFINE_bool(update, false, "Forces an update and waits for its completion. "
@@ -172,7 +170,7 @@ void WatchForUpdates() {
   g_main_loop_unref(loop);
 }
 
-bool CheckForUpdates(const string& app_version, const string& omaha_url) {
+bool CheckForUpdates() {
   DBusGProxy* proxy;
   GError* error = NULL;
 
@@ -243,18 +241,9 @@ int main(int argc, char** argv) {
   }
 
   // Initiate an update check, if necessary.
-  if (FLAGS_check_for_update ||
-      FLAGS_update ||
-      !FLAGS_app_version.empty() ||
-      !FLAGS_omaha_url.empty()) {
-    string app_version = FLAGS_app_version;
-    if (FLAGS_update && app_version.empty()) {
-      app_version = "ForcedUpdate";
-      LOG(INFO) << "Forcing an update by setting app_version to ForcedUpdate.";
-    }
+  if (FLAGS_check_for_update || FLAGS_update) {
     LOG(INFO) << "Initiating update check and install.";
-    CHECK(CheckForUpdates(app_version, FLAGS_omaha_url))
-        << "Update check/initiate update failed.";
+    CHECK(CheckForUpdates()) << "Update check/initiate update failed.";
 
     // Wait for an update to complete.
     if (FLAGS_update) {

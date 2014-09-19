@@ -155,42 +155,13 @@ string GetAppXml(const OmahaEvent* event,
                  SystemState* system_state) {
   string app_body = GetAppBody(event, params, ping_only, ping_active_days,
                                ping_roll_call_days, system_state->prefs());
-  string app_versions;
-
-  // If we are upgrading to a more stable channel and we are allowed to do
-  // powerwash, then pass 0.0.0.0 as the version. This is needed to get the
-  // highest-versioned payload on the destination channel.
-  if (params.to_more_stable_channel() && params.is_powerwash_allowed()) {
-    LOG(INFO) << "Passing OS version as 0.0.0.0 as we are set to powerwash "
-              << "on downgrading to the version in the more stable channel";
-    app_versions = "version=\"0.0.0.0\" from_version=\"" +
-      XmlEncode(params.app_version()) + "\" ";
-  } else {
-    app_versions = "version=\"" + XmlEncode(params.app_version()) + "\" ";
-  }
-
-  string app_channels = "";
-  if (params.target_channel().length() > 0) {
-     app_channels += "track=\"" + XmlEncode(params.target_channel()) + "\" ";
-  } else {
-     app_channels += "track=\"" + XmlEncode(params.current_channel()) + "\" ";
-  }
-
-  if (params.current_channel() != params.target_channel())
-     app_channels +=
-       "from_track=\"" + XmlEncode(params.current_channel()) + "\" ";
 
   string delta_okay_str = params.delta_okay() ? "true" : "false";
 
-  // Use the default app_id only if we're asking for an update on the
-  // canary-channel. Otherwise, use the board's app_id.
-  string request_app_id =
-      (params.target_channel() == "canary-channel" ?
-       params.app_id() : params.board_app_id());
   string app_xml =
-      "    <app appid=\"" + XmlEncode(request_app_id) + "\" " +
-                app_versions +
-                app_channels +
+      "    <app appid=\"" + XmlEncode(params.app_id()) + "\" " +
+                "version=\"" + XmlEncode(params.app_version()) + "\" " +
+                "track=\"" + XmlEncode(params.app_channel()) + "\" " +
                 "bootid=\"" + XmlEncode(params.bootid()) + "\" " +
                 "oem=\"" + XmlEncode(params.oemid()) + "\" " +
                 "machineid=\"" + XmlEncode(params.machineid()) + "\" " +

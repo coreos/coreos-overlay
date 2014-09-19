@@ -80,9 +80,6 @@ class UpdateAttempterTest : public ::testing::Test {
   void PingOmahaTestStart();
   static gboolean StaticPingOmahaTestStart(gpointer data);
 
-  void ReadChannelFromPolicyTestStart();
-  static gboolean StaticReadChannelFromPolicyTestStart(gpointer data);
-
   void ReadUpdateDisabledFromPolicyTestStart();
   static gboolean StaticReadUpdateDisabledFromPolicyTestStart(gpointer data);
 
@@ -304,13 +301,6 @@ gboolean UpdateAttempterTest::StaticPingOmahaTestStart(gpointer data) {
   return FALSE;
 }
 
-gboolean UpdateAttempterTest::StaticReadChannelFromPolicyTestStart(
-    gpointer data) {
-  UpdateAttempterTest* ua_test = reinterpret_cast<UpdateAttempterTest*>(data);
-  ua_test->ReadChannelFromPolicyTestStart();
-  return FALSE;
-}
-
 gboolean UpdateAttempterTest::StaticReadUpdateDisabledFromPolicyTestStart(
     gpointer data) {
   UpdateAttempterTest* ua_test = reinterpret_cast<UpdateAttempterTest*>(data);
@@ -372,7 +362,7 @@ void UpdateAttempterTest::UpdateTestStart() {
   }
   EXPECT_CALL(*processor_, StartProcessing()).Times(1);
 
-  attempter_.Update("", "", false, false);
+  attempter_.Update(false);
   g_idle_add(&StaticUpdateTestVerify, this);
 }
 
@@ -453,41 +443,6 @@ TEST_F(UpdateAttempterTest, CreatePendingErrorEventResumedTest) {
             attempter_.error_event_->error_code);
 }
 
-TEST_F(UpdateAttempterTest, ReadChannelFromPolicy) {
-  loop_ = g_main_loop_new(g_main_context_default(), FALSE);
-  g_idle_add(&StaticReadChannelFromPolicyTestStart, this);
-  g_main_loop_run(loop_);
-  g_main_loop_unref(loop_);
-  loop_ = NULL;
-}
-
-void UpdateAttempterTest::ReadChannelFromPolicyTestStart() {
-  // Tests that the update channel (aka release channel) is properly fetched
-  // from the device policy.
-
-  policy::MockDevicePolicy* device_policy = new policy::MockDevicePolicy();
-  attempter_.policy_provider_.reset(new policy::PolicyProvider(device_policy));
-
-  EXPECT_CALL(*device_policy, LoadPolicy()).WillRepeatedly(Return(true));
-  EXPECT_CALL(mock_system_state_, device_policy()).WillRepeatedly(
-      Return(device_policy));
-
-  EXPECT_CALL(*device_policy, GetReleaseChannelDelegated(_)).WillRepeatedly(
-      DoAll(SetArgumentPointee<0>(bool(false)),
-      Return(true)));
-
-  EXPECT_CALL(*device_policy, GetReleaseChannel(_)).WillRepeatedly(
-      DoAll(SetArgumentPointee<0>(std::string("beta-channel")),
-      Return(true)));
-
-  attempter_.omaha_request_params_->set_root("./UpdateAttempterTest");
-  attempter_.Update("", "", false, false);
-  EXPECT_EQ("beta-channel",
-            attempter_.omaha_request_params_->target_channel());
-
-  g_idle_add(&StaticQuitMainLoop, this);
-}
-
 TEST_F(UpdateAttempterTest, ReadUpdateDisabledFromPolicy) {
   loop_ = g_main_loop_new(g_main_context_default(), FALSE);
   g_idle_add(&StaticReadUpdateDisabledFromPolicyTestStart, this);
@@ -512,7 +467,7 @@ void UpdateAttempterTest::ReadUpdateDisabledFromPolicyTestStart() {
           SetArgumentPointee<0>(true),
           Return(true)));
 
-  attempter_.Update("", "", false, false);
+  attempter_.Update(false);
   EXPECT_TRUE(attempter_.omaha_request_params_->update_disabled());
 
   g_idle_add(&StaticQuitMainLoop, this);
@@ -544,7 +499,7 @@ void UpdateAttempterTest::ReadTargetVersionPrefixFromPolicyTestStart() {
           SetArgumentPointee<0>(target_version_prefix),
           Return(true)));
 
-  attempter_.Update("", "", false, false);
+  attempter_.Update(false);
   EXPECT_EQ(target_version_prefix.c_str(),
             attempter_.omaha_request_params_->target_version_prefix());
 
@@ -577,7 +532,7 @@ void UpdateAttempterTest::ReadScatterFactorFromPolicyTestStart() {
           SetArgumentPointee<0>(scatter_factor_in_seconds),
           Return(true)));
 
-  attempter_.Update("", "", false, false);
+  attempter_.Update(false);
   EXPECT_EQ(scatter_factor_in_seconds, attempter_.scatter_factor_.InSeconds());
 
   g_idle_add(&StaticQuitMainLoop, this);
@@ -621,7 +576,7 @@ void UpdateAttempterTest::DecrementUpdateCheckCountTestStart() {
           SetArgumentPointee<0>(scatter_factor_in_seconds),
           Return(true)));
 
-  attempter_.Update("", "", false, false);
+  attempter_.Update(false);
   EXPECT_EQ(scatter_factor_in_seconds, attempter_.scatter_factor_.InSeconds());
 
   // Make sure the file still exists.
@@ -637,7 +592,7 @@ void UpdateAttempterTest::DecrementUpdateCheckCountTestStart() {
   // However, if the count is already 0, it's not decremented. Test that.
   initial_value = 0;
   EXPECT_TRUE(prefs.SetInt64(kPrefsUpdateCheckCount, initial_value));
-  attempter_.Update("", "", false, false);
+  attempter_.Update(false);
   EXPECT_TRUE(prefs.Exists(kPrefsUpdateCheckCount));
   EXPECT_TRUE(prefs.GetInt64(kPrefsUpdateCheckCount, &new_value));
   EXPECT_EQ(initial_value, new_value);
@@ -687,7 +642,7 @@ void UpdateAttempterTest::NoScatteringDoneDuringManualUpdateTestStart() {
           Return(true)));
 
   // Trigger an interactive check so we can test that scattering is disabled.
-  attempter_.Update("", "", true, false);
+  attempter_.Update(true);
   EXPECT_EQ(scatter_factor_in_seconds, attempter_.scatter_factor_.InSeconds());
 
   // Make sure scattering is disabled for manual (i.e. user initiated) update

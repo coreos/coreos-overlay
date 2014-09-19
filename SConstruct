@@ -221,7 +221,6 @@ env.ParseConfig(pkgconfig + ' --cflags --libs ' + ' '.join((
                 'libcrypto',
                 'libcurl',
                 'libssl',
-                'libudev',
                 'libxml-2.0',
                 'protobuf')))
 env.ProtocolBuffer('update_metadata.pb.cc', 'update_metadata.proto')
@@ -251,10 +250,8 @@ sources = Split("""action_processor.cc
                    extent_writer.cc
                    filesystem_copier_action.cc
                    filesystem_iterator.cc
-                   file_descriptor.cc
                    file_writer.cc
                    full_update_generator.cc
-                   gpio_handler.cc
                    graph_utils.cc
                    http_common.cc
                    http_fetcher.cc
@@ -300,9 +297,6 @@ unittest_sources = Split("""action_unittest.cc
                             filesystem_copier_action_unittest.cc
                             filesystem_iterator_unittest.cc
                             full_update_generator_unittest.cc
-                            gpio_handler_unittest.cc
-                            gpio_mock_file_descriptor.cc
-                            gpio_mock_udev_interface.cc
                             graph_utils_unittest.cc
                             http_fetcher_unittest.cc
                             metadata_unittest.cc

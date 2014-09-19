@@ -215,7 +215,7 @@ class LibcurlHttpFetcherTest : public AnyHttpFetcherTest {
   using AnyHttpFetcherTest::NewLargeFetcher;
   virtual HttpFetcher* NewLargeFetcher() {
     LibcurlHttpFetcher *ret = new
-        LibcurlHttpFetcher(&mock_system_state_, false);
+        LibcurlHttpFetcher(&mock_system_state_);
     // Speed up test execution.
     ret->set_idle_seconds(1);
     ret->set_retry_seconds(1);
@@ -260,7 +260,7 @@ class MultiRangeHttpFetcherTest : public LibcurlHttpFetcherTest {
   virtual HttpFetcher* NewLargeFetcher() {
     MultiRangeHttpFetcher *ret =
         new MultiRangeHttpFetcher(
-            new LibcurlHttpFetcher(&mock_system_state_, false));
+            new LibcurlHttpFetcher(&mock_system_state_));
     ret->ClearRanges();
     ret->AddRange(0);
     // Speed up test execution.

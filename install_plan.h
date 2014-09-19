@@ -58,10 +58,6 @@ struct InstallPlan {
   // True if payload hash checks are mandatory based on the system state and
   // the Omaha response.
   bool hash_checks_mandatory;
-
-  // True if Powerwash is required on reboot after applying the payload.
-  // False otherwise.
-  bool powerwash_required;
 };
 
 }  // namespace chromeos_update_engine

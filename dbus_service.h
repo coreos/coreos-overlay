@@ -47,8 +47,6 @@ GType update_engine_service_get_type(void);
 // Methods
 
 gboolean update_engine_service_attempt_update(UpdateEngineService* self,
-                                              gchar* app_version,
-                                              gchar* omaha_url,
                                               GError **error);
 
 gboolean update_engine_service_reset_status(UpdateEngineService* self,
