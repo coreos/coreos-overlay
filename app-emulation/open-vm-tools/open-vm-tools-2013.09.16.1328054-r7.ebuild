@@ -113,6 +113,7 @@ src_install() {
 	rm "${D}"/usr/$(get_libdir)/open-vm-tools/plugins/common/*.la
 
 	systemd_dounit "${FILESDIR}"/vmtoolsd.service
+	systemd_enable_service multi-user.target vmtoolsd.service
 
 	#exeinto /etc/vmware-tools/scripts/vmware/
 	#doexe "${FILESDIR}"/network
