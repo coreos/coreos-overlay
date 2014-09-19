@@ -60,6 +60,7 @@ PATCHES=(
 	"${FILESDIR}/0002-rename-dnet-config.patch"
 	"${FILESDIR}/0003-oliver-test.patch"
 	"${FILESDIR}/0004-remove-ifup.patch"
+	"${FILESDIR}/0005-fix-USE_SLASH_PROC-conditional.patch"
 )
 
 pkg_setup() {
