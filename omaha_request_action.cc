@@ -182,13 +182,8 @@ string GetAppXml(const OmahaEvent* event,
 
   string delta_okay_str = params.delta_okay() ? "true" : "false";
 
-  // Use the default app_id only if we're asking for an update on the
-  // canary-channel. Otherwise, use the board's app_id.
-  string request_app_id =
-      (params.target_channel() == "canary-channel" ?
-       params.app_id() : params.board_app_id());
   string app_xml =
-      "    <app appid=\"" + XmlEncode(request_app_id) + "\" " +
+      "    <app appid=\"" + XmlEncode(params.app_id()) + "\" " +
                 app_versions +
                 app_channels +
                 "bootid=\"" + XmlEncode(params.bootid()) + "\" " +

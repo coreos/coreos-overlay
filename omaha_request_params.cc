@@ -64,10 +64,6 @@ bool OmahaRequestParams::Init(bool interactive) {
                         OmahaRequestParams::kAppId,
                         NULL,
                         stateful_override);
-  board_app_id_ = GetLsbValue("CHROMEOS_BOARD_APPID",
-                              app_id_,
-                              NULL,
-                              stateful_override);
   app_lang_ = "en-US";
   bootid_ = utils::GetBootId();
   machineid_ = utils::GetMachineId();
