@@ -203,31 +203,6 @@ bool UpdateAttempter::CalculateUpdateParams(bool interactive) {
     return false;
   }
 
-  // Set the target channel iff ReleaseChannelDelegated policy is set to
-  // false and a non-empty ReleaseChannel policy is present. If delegated
-  // is true, we'll ignore ReleaseChannel policy value.
-  if (system_state_->device_policy()) {
-    bool delegated = false;
-    system_state_->device_policy()->GetReleaseChannelDelegated(&delegated);
-    if (delegated) {
-      LOG(INFO) << "Channel settings are delegated to user by policy. "
-                   "Ignoring ReleaseChannel policy value";
-    }
-    else {
-      LOG(INFO) << "Channel settings are not delegated to the user by policy";
-      string target_channel;
-      system_state_->device_policy()->GetReleaseChannel(&target_channel);
-      if (target_channel.empty()) {
-        LOG(INFO) << "No ReleaseChannel specified in policy";
-      } else {
-        // Pass in false for powerwash_allowed until we add it to the policy
-        // protobuf.
-        LOG(INFO) << "Setting target channel from ReleaseChannel policy value";
-        omaha_request_params_->SetTargetChannel(target_channel, false);
-      }
-    }
-  }
-
   LOG(INFO) << "update_disabled = "
             << utils::ToString(omaha_request_params_->update_disabled())
             << ", target_version_prefix = "

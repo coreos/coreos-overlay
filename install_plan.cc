@@ -26,15 +26,13 @@ InstallPlan::InstallPlan(bool is_resume,
       kernel_install_path(kernel_install_path),
       kernel_size(0),
       rootfs_size(0),
-      hash_checks_mandatory(false),
-      powerwash_required(false) {}
+      hash_checks_mandatory(false) {}
 
 InstallPlan::InstallPlan() : is_resume(false),
                              payload_size(0),
                              kernel_size(0),
                              rootfs_size(0),
-                             hash_checks_mandatory(false),
-                             powerwash_required(false) {}
+                             hash_checks_mandatory(false) {}
 
 
 bool InstallPlan::operator==(const InstallPlan& that) const {
@@ -59,9 +57,7 @@ void InstallPlan::Dump() const {
             << ", install_path: " << install_path
             << ", kernel_install_path: " << kernel_install_path
             << ", hash_checks_mandatory: " << utils::ToString(
-                hash_checks_mandatory)
-            << ", powerwash_required: " << utils::ToString(
-                powerwash_required);
+                hash_checks_mandatory);
 }
 
 }  // namespace chromeos_update_engine

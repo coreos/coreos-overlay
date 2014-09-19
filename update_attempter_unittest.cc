@@ -80,9 +80,6 @@ class UpdateAttempterTest : public ::testing::Test {
   void PingOmahaTestStart();
   static gboolean StaticPingOmahaTestStart(gpointer data);
 
-  void ReadChannelFromPolicyTestStart();
-  static gboolean StaticReadChannelFromPolicyTestStart(gpointer data);
-
   void ReadUpdateDisabledFromPolicyTestStart();
   static gboolean StaticReadUpdateDisabledFromPolicyTestStart(gpointer data);
 
@@ -304,13 +301,6 @@ gboolean UpdateAttempterTest::StaticPingOmahaTestStart(gpointer data) {
   return FALSE;
 }
 
-gboolean UpdateAttempterTest::StaticReadChannelFromPolicyTestStart(
-    gpointer data) {
-  UpdateAttempterTest* ua_test = reinterpret_cast<UpdateAttempterTest*>(data);
-  ua_test->ReadChannelFromPolicyTestStart();
-  return FALSE;
-}
-
 gboolean UpdateAttempterTest::StaticReadUpdateDisabledFromPolicyTestStart(
     gpointer data) {
   UpdateAttempterTest* ua_test = reinterpret_cast<UpdateAttempterTest*>(data);
@@ -451,41 +441,6 @@ TEST_F(UpdateAttempterTest, CreatePendingErrorEventResumedTest) {
   EXPECT_EQ(OmahaEvent::kResultError, attempter_.error_event_->result);
   EXPECT_EQ(kCode | kActionCodeResumedFlag | kActionCodeTestOmahaUrlFlag,
             attempter_.error_event_->error_code);
-}
-
-TEST_F(UpdateAttempterTest, ReadChannelFromPolicy) {
-  loop_ = g_main_loop_new(g_main_context_default(), FALSE);
-  g_idle_add(&StaticReadChannelFromPolicyTestStart, this);
-  g_main_loop_run(loop_);
-  g_main_loop_unref(loop_);
-  loop_ = NULL;
-}
-
-void UpdateAttempterTest::ReadChannelFromPolicyTestStart() {
-  // Tests that the update channel (aka release channel) is properly fetched
-  // from the device policy.
-
-  policy::MockDevicePolicy* device_policy = new policy::MockDevicePolicy();
-  attempter_.policy_provider_.reset(new policy::PolicyProvider(device_policy));
-
-  EXPECT_CALL(*device_policy, LoadPolicy()).WillRepeatedly(Return(true));
-  EXPECT_CALL(mock_system_state_, device_policy()).WillRepeatedly(
-      Return(device_policy));
-
-  EXPECT_CALL(*device_policy, GetReleaseChannelDelegated(_)).WillRepeatedly(
-      DoAll(SetArgumentPointee<0>(bool(false)),
-      Return(true)));
-
-  EXPECT_CALL(*device_policy, GetReleaseChannel(_)).WillRepeatedly(
-      DoAll(SetArgumentPointee<0>(std::string("beta-channel")),
-      Return(true)));
-
-  attempter_.omaha_request_params_->set_root("./UpdateAttempterTest");
-  attempter_.Update(false);
-  EXPECT_EQ("beta-channel",
-            attempter_.omaha_request_params_->target_channel());
-
-  g_idle_add(&StaticQuitMainLoop, this);
 }
 
 TEST_F(UpdateAttempterTest, ReadUpdateDisabledFromPolicy) {
