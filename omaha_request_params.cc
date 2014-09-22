@@ -89,7 +89,7 @@ string OmahaRequestParams::GetConfValue(const string& key,
 string OmahaRequestParams::GetOemValue(const string& key,
                                        const string& default_value) const {
   vector<string> files;
-  files.push_back("/etc/coreos/update.conf");
+  files.push_back("/etc/oem-release");
   return SearchConfValue(files, key, default_value);
 }
 
