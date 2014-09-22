@@ -39,6 +39,7 @@ bool OmahaRequestParams::Init(bool interactive) {
   os_platform_ = OmahaRequestParams::kOsPlatform;
   os_version_ = OmahaRequestParams::kOsVersion;
   oemid_ = GetOemValue("ID", "");
+  oemversion_ = GetOemValue("VERSION_ID", "");
   app_version_ = GetConfValue("COREOS_RELEASE_VERSION", "");
   os_sp_ = app_version_ + "_" + GetMachineType();
   os_board_ = GetConfValue("COREOS_RELEASE_BOARD", "");
