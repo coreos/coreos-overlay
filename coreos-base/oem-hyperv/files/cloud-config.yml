@@ -1,0 +1,7 @@
+#cloud-config
+
+coreos:
+    oem:
+      id: hyperv
+      name: Microsoft Hyper-V
+      bug-report-url: https://github.com/coreos/bugs/issues

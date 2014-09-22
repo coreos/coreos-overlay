@@ -1,0 +1,8 @@
+#cloud-config
+
+coreos:
+    oem:
+      id: azure
+      name: Microsoft Azure
+      home-url: https://azure.microsoft.com/
+      bug-report-url: https://github.com/coreos/bugs/issues
