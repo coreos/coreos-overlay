@@ -19,6 +19,11 @@ IUSE=""
 # no source directory
 S="${WORKDIR}"
 
+src_prepare() {
+	sed -e "s\\@@OEM_VERSION_ID@@\\${PVR}\\g" \
+	    ${FILESDIR}/cloud-config.yml > ${T}/cloud-config.yml || die
+}
+
 src_install() {
 	into "/usr/share/oem"
 	dobin ${FILESDIR}/cloudstack-dhcp
@@ -27,5 +32,5 @@ src_install() {
 	dobin ${FILESDIR}/coreos-setup-environment
 
 	insinto "/usr/share/oem"
-	doins ${FILESDIR}/cloud-config.yml
+	doins ${T}/cloud-config.yml
 }

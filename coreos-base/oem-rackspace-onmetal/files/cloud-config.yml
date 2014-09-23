@@ -64,5 +64,6 @@ coreos:
     oem:
       id: onmetal
       name: Rackspace Teeth
+      version-id: @@OEM_VERSION_ID@@
       home-url: http://www.rackspace.com/
       bug-report-url: https://github.com/coreos/bugs/issues
