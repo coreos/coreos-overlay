@@ -18,6 +18,7 @@ coreos:
     oem:
       id: vagrant
       name: Vagrant
+      version-id: @@OEM_VERSION_ID@@
       home-url: http://www.vagrantup.com/
       bug-report-url: https://github.com/coreos/coreos-overlay
 

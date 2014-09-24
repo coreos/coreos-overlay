@@ -4,4 +4,5 @@ coreos:
     oem:
       id: hyperv
       name: Microsoft Hyper-V
+      version-id: @@OEM_VERSION_ID@@
       bug-report-url: https://github.com/coreos/bugs/issues

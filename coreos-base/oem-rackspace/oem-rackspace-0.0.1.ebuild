@@ -24,11 +24,16 @@ RDEPEND="
 	coreos-base/nova-agent-watcher
 "
 
+src_prepare() {
+	sed -e "s\\@@OEM_VERSION_ID@@\\${PVR}\\g" \
+	    ${FILESDIR}/cloud-config.yml > ${T}/cloud-config.yml || die
+}
+
 src_install() {
 	dodir /usr/share/oem/nova-agent
 	rsync --exclude=".git" -aq ${S}/ ${D}/usr/share/oem/nova-agent/ || die
 	insinto "/usr/share/oem"
-	doins ${FILESDIR}/cloud-config.yml
+	doins ${T}/cloud-config.yml
 
 	into "/usr/share/oem"
 	dobin ${FILESDIR}/coreos-setup-environment

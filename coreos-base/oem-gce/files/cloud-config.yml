@@ -105,6 +105,7 @@ coreos:
     oem:
       id: gce
       name: Google Compute Engine
+      version-id: @@OEM_VERSION_ID@@
       home-url: https://cloud.google.com/products/compute-engine/
       bug-report-url: https://github.com/coreos/bugs/issues
 

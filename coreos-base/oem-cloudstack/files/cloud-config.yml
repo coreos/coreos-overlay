@@ -29,5 +29,6 @@ coreos:
     oem:
       id: cloudstack
       name: CloudStack
+      version-id: @@OEM_VERSION_ID@@
       home-url: http://cloudstack.apache.org/
       bug-report-url: https://github.com/coreos/coreos-overlay

@@ -35,6 +35,7 @@ src_prepare() {
 
 	sed -e "s\\@@OEM_ID@@\\${ID}\\g" \
 	    -e "s\\@@OEM_NAME@@\\${NAME}\\g" \
+	    -e "s\\@@OEM_VERSION_ID@@\\${PVR}\\g" \
 	    -e "s\\@@OEM_HOME_URL@@\\${HOME_URL}\\g" \
 	    ${FILESDIR}/cloud-config.yml > ${T}/cloud-config.yml || die
 }
