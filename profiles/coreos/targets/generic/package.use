@@ -35,3 +35,6 @@ sys-apps/flashrom -dediprog -ft2232_spi -serprog
 
 # break dependency loop between pkg-config and glib
 dev-util/pkgconfig internal-glib
+
+# minimize risk removing unneeded patches and networking support
+app-shells/bash -net vanilla
