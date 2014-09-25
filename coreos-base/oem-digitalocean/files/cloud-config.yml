@@ -21,7 +21,7 @@ coreos:
 
           [Service]
           Type=oneshot
-          ExecStart=/usr/bin/coreos-cloudinit --from-digitalocean-metadata=http://169.254.169.254/ --convert-netconf=digitalocean
+          ExecStart=/usr/bin/coreos-cloudinit --oem=digitalocean
     oem:
       id: digitalocean
       name: DigitalOcean
