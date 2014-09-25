@@ -93,6 +93,7 @@ class OmahaRequestParams {
   inline std::string machineid() const { return machineid_; }
   inline std::string oemid() const { return oemid_; }
   inline std::string oemversion() const { return oemversion_; }
+  inline std::string alephversion() const { return alephversion_; }
 
   inline void set_app_version(const std::string& version) {
     app_version_ = version;
@@ -209,6 +210,7 @@ class OmahaRequestParams {
   std::string machineid_; // Unique machine ID that is set during installation 
   std::string oemid_; // Unique machine ID that is set during installation 
   std::string oemversion_; // CoreOS version set during installation
+  std::string alephversion_; // first CoreOS version cached by update_engine
   bool delta_okay_;  // If this client can accept a delta
   bool interactive_;   // Whether this is a user-initiated update check
 
