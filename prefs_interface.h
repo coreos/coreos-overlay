@@ -30,6 +30,7 @@ extern const char kPrefsCurrentResponseSignature[];
 extern const char kPrefsCurrentUrlIndex[];
 extern const char kPrefsCurrentUrlFailureCount[];
 extern const char kPrefsBackoffExpiryTime[];
+extern const char kPrefsAlephVersion[];
 
 // The prefs interface allows access to a persistent preferences
 // store. The two reasons for providing this as an interface are

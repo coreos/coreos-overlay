@@ -165,6 +165,7 @@ string GetAppXml(const OmahaEvent* event,
                 "bootid=\"" + XmlEncode(params.bootid()) + "\" " +
                 "oem=\"" + XmlEncode(params.oemid()) + "\" " +
                 "oemversion=\"" + XmlEncode(params.oemversion()) + "\" " +
+                "alephversion=\"" + XmlEncode(params.alephversion()) + "\" " +
                 "machineid=\"" + XmlEncode(params.machineid()) + "\" " +
                 "lang=\"" + XmlEncode(params.app_lang()) + "\" " +
                 "board=\"" + XmlEncode(params.os_board()) + "\" " +

@@ -40,6 +40,7 @@ const char kPrefsCurrentResponseSignature[] = "current-response-signature";
 const char kPrefsCurrentUrlIndex[] = "current-url-index";
 const char kPrefsCurrentUrlFailureCount[] = "current-url-failure-count";
 const char kPrefsBackoffExpiryTime[] = "backoff-expiry-time";
+const char kPrefsAlephVersion[] = "aleph-version";
 
 bool Prefs::Init(const FilePath& prefs_dir) {
   prefs_dir_ = prefs_dir;

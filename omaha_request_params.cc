@@ -17,6 +17,7 @@
 
 #include "update_engine/simple_key_value_store.h"
 #include "update_engine/system_state.h"
+#include "update_engine/prefs_interface.h"
 #include "update_engine/utils.h"
 
 #define CALL_MEMBER_FN(object, member) ((object).*(member))
@@ -41,6 +42,12 @@ bool OmahaRequestParams::Init(bool interactive) {
   oemid_ = GetOemValue("ID", "");
   oemversion_ = GetOemValue("VERSION_ID", "");
   app_version_ = GetConfValue("COREOS_RELEASE_VERSION", "");
+
+  if (!system_state_->prefs()->GetString(kPrefsAlephVersion, &alephversion_)) {
+    alephversion_ = app_version_;
+    system_state_->prefs()->SetString(kPrefsAlephVersion, alephversion_);
+  }
+
   os_sp_ = app_version_ + "_" + GetMachineType();
   os_board_ = GetConfValue("COREOS_RELEASE_BOARD", "");
   app_id_ = GetConfValue("COREOS_RELEASE_APPID", OmahaRequestParams::kAppId);
