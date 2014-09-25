@@ -85,6 +85,8 @@ src_prepare() {
 		epatch "${FILESDIR}"/${PN}-4.2-speed-up-read-N.patch
 	fi
 	epatch "${FILESDIR}"/bash-eol-pushback.patch #523592
+	epatch "${FILESDIR}"/bash-4.2-parser-oob.patch
+	epatch "${FILESDIR}"/bash-4.2-variables-affix.patch
 
 	epatch_user
 }
