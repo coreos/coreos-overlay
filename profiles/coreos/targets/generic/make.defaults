@@ -13,13 +13,22 @@ FEATURES="nodoc noinfo noman"
 # Remove bash-completion files as we don't install bash-completion.
 # Remove alternate locales, we only need the standard LANG=C
 INSTALL_MASK="${INSTALL_MASK}
+  /etc/locale.gen
   /usr/share/bash-completion
   /usr/share/gtk-doc
   /usr/share/i18n
   /usr/share/locale
+  /var/db/Makefile
 "
 
 # Exclude assorted config files that we can do without
 INSTALL_MASK="${INSTALL_MASK}
+  /etc/dmtab
+  /etc/e2fsck.conf
+  /etc/lvm/*
+  /etc/mdadm.conf
+  /etc/rsyncd.conf
   /etc/sudoers
+  /etc/wgetrc
+  /etc/xinetd.d
 "
