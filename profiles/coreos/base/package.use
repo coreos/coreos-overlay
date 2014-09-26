@@ -51,3 +51,6 @@ dev-libs/glib -mime
 
 # keep grub build simple
 sys-boot/grub -multislot -nls
+
+# disable "high performance ssh" patch
+net-misc/openssh -hpn
