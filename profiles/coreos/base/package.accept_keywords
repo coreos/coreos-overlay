@@ -29,9 +29,6 @@
 =sys-apps/util-linux-2.22.2 ~amd64
 =dev-libs/opencryptoki-2.4.2 ~amd64
 
-# Go is masked but we need it.
-=dev-lang/go-1.2* ~amd64
-
 # Replace the function.sh script in baselayout
 =sys-apps/efunctions-1 ~amd64 ~x86
 
@@ -105,6 +102,3 @@ dev-util/checkbashisms
 =sys-boot/grub-2.02_beta2
 # current stable xen-tools doesn't build without multilib
 =app-emulation/xen-tools-4.4.0-r9
-
-# 1.3 is marked stable but 1.3.1 hasn't yet
-=dev-lang/go-1.3.1
