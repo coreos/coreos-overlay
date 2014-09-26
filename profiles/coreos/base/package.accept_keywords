@@ -46,10 +46,16 @@
 >=sys-apps/kexec-tools-2.0.4-r1 ~amd64
 >=sys-kernel/dracut-027-r3 ~amd64
 
-# Needed by gsutil-3.34
-=dev-python/httplib2-0.8 ~amd64
-=dev-python/crcmod-1.7-r1 ~amd64
-=dev-python/boto-2.9.8 ~amd64
+# Needed by gsutil
+=dev-python/boto-2.31.1
+=dev-python/crcmod-1.7-r1
+=dev-python/gcs-oauth2-boto-plugin-1.8
+=dev-python/google-api-python-client-1.1
+=dev-python/httplib2-0.8
+=dev-python/python-gflags-2.0
+=dev-python/retry-decorator-1.0.0
+=dev-python/socksipy-1.02
+=net-misc/gsutil-4.6
 
 # Fixes XML validation failure and python eclass usage
 =dev-lang/yasm-1.2.0-r1
