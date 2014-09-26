@@ -1,6 +1,6 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/app-shells/bash/bash-4.2_p48.ebuild,v 1.1 2014/09/24 17:23:53 polynomial-c Exp $
+# $Header: /var/cvsroot/gentoo-x86/app-shells/bash/bash-4.2_p48-r1.ebuild,v 1.4 2014/09/25 11:02:20 armin76 Exp $
 
 EAPI="4"
 
@@ -8,7 +8,8 @@ inherit eutils flag-o-matic toolchain-funcs multilib
 
 # Official patchlevel
 # See ftp://ftp.cwru.edu/pub/bash/bash-4.2-patches/
-PLEVEL=${PV##*_p}
+#PLEVEL=${PV##*_p}
+PLEVEL=48
 MY_PV=${PV/_p*}
 MY_PV=${MY_PV/_/-}
 MY_P=${PN}-${MY_PV}
@@ -34,7 +35,7 @@ SRC_URI="mirror://gnu/bash/${MY_P}.tar.gz $(patches)"
 
 LICENSE="GPL-3"
 SLOT="0"
-KEYWORDS="alpha amd64 arm ~arm64 ~hppa ia64 ~m68k ~mips ppc ppc64 ~s390 ~sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
+KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
 IUSE="afs bashlogger examples mem-scramble +net nls plugins +readline vanilla"
 
 DEPEND=">=sys-libs/ncurses-5.2-r2
@@ -84,6 +85,8 @@ src_prepare() {
 	if ! use vanilla ; then
 		epatch "${FILESDIR}"/${PN}-4.2-speed-up-read-N.patch
 	fi
+	# proposed new release but not available for download yet
+	epatch "${FILESDIR}"/${PN}-4.2-049.patch
 
 	epatch_user
 }
