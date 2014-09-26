@@ -8,7 +8,8 @@ inherit eutils flag-o-matic toolchain-funcs multilib
 
 # Official patchlevel
 # See ftp://ftp.cwru.edu/pub/bash/bash-4.2-patches/
-PLEVEL=${PV##*_p}
+#PLEVEL=${PV##*_p}
+PLEVEL=48
 MY_PV=${PV/_p*}
 MY_PV=${MY_PV/_/-}
 MY_P=${PN}-${MY_PV}
@@ -84,7 +85,8 @@ src_prepare() {
 	if ! use vanilla ; then
 		epatch "${FILESDIR}"/${PN}-4.2-speed-up-read-N.patch
 	fi
-	epatch "${FILESDIR}"/bash-eol-pushback.patch #523592
+	# proposed new release but not available for download yet
+	epatch "${FILESDIR}"/${PN}-4.2-049.patch
 
 	epatch_user
 }
