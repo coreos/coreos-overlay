@@ -52,5 +52,11 @@ dev-libs/glib -mime
 # keep grub build simple
 sys-boot/grub -multislot -nls
 
+
 # disable "high performance ssh" patch
 net-misc/openssh -hpn
+
+# disable open-vm-tools kernel modules since we use modules provided by the
+# mainline kernel, which in theory will give us more stability.
+app-emulation/open-vm-tools -modules
+

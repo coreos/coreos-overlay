@@ -1,0 +1,53 @@
+From 770fcef7aec0b86e3f26f67dbedb55547cb1665d Mon Sep 17 00:00:00 2001
+From: Michael Marineau <mike@marineau.org>
+Date: Sun, 30 Mar 2014 20:28:05 -0700
+Subject: [PATCH] add extra configure flags
+
+---
+ configure.ac | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/configure.ac b/configure.ac
+index 6d52905..fc781c6 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -344,6 +344,13 @@ fi
+ #
+ # Check for fuse.
+ #
++AC_ARG_WITH([fuse],
++   [AS_HELP_STRING([--without-fuse],
++   [compiles without fuse support.])],
++   [],
++   [with_fuse=yes])
++
++if test "$with_fuse" = "yes"; then
+ AC_VMW_CHECK_LIB([fuse],
+                  [FUSE],
+                  [fuse],
+@@ -354,6 +361,7 @@ AC_VMW_CHECK_LIB([fuse],
+                  [have_fuse=yes],
+                  [have_fuse=no;
+                   AC_MSG_WARN([Fuse is missing, vmblock-fuse will be disabled.])])
++fi
+ 
+ #
+ # Check for PAM.
+@@ -1028,6 +1036,14 @@ if test "$os" = "solaris"; then
+    fi
+ fi
+ 
++if test "$buildHgfsmounter" = "yes"; then
++    AC_ARG_ENABLE([hgfs-mounter],
++                  [AS_HELP_STRING([--disable-hgfs-mounter],
++                                  [disables mount.vmhgfs])],
++                  [buildHgfsmounter="$enableval"],
++                  [])
++fi
++
+ AM_CONDITIONAL(BUILD_HGFSMOUNTER, test "$buildHgfsmounter" = "yes")
+ AM_CONDITIONAL(LINUX, test "$os" = "linux")
+ AM_CONDITIONAL(SOLARIS, test "$os" = "solaris")
+-- 
+1.8.3.2
+

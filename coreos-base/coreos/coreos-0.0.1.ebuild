@@ -80,6 +80,7 @@ RDEPEND="${RDEPEND}
 #	coreos-base/crash-reporter
 
 RDEPEND="${RDEPEND}
+	app-emulation/open-vm-tools
 	app-emulation/xenstore
 	app-emulation/xenserver-pv-version
 	sys-apps/findutils
