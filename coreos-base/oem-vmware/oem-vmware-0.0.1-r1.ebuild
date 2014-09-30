@@ -31,5 +31,5 @@ src_install() {
 	doins ${T}/cloud-config.yml
 
 	insinto "/usr/lib/systemd/network"
-	doins "${FILESDIR}"/zzz-default.network
+	doins "${FILESDIR}"/zz-default.network
 }
