@@ -116,9 +116,6 @@ src_install() {
 	systemd_dounit "${FILESDIR}"/vmtoolsd.service
 	systemd_enable_service multi-user.target vmtoolsd.service
 
-	insinto /usr/lib/systemd/network
-	doins "${FILESDIR}"/zzz-default.network
-
 	#exeinto /etc/vmware-tools/scripts/vmware/
 	#doexe "${FILESDIR}"/network
 

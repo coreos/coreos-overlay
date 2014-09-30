@@ -13,19 +13,22 @@ KEYWORDS="amd64"
 IUSE=""
 
 DEPEND="
-    app-emulation/open-vm-tools
-    "
+	app-emulation/open-vm-tools
+	"
 RDEPEND="${DEPEND}"
 
 # no source directory
 S="${WORKDIR}"
 
 src_prepare() {
-    sed -e "s\\@@OEM_VERSION_ID@@\\${PVR}\\g" \
-        ${FILESDIR}/cloud-config.yml > ${T}/cloud-config.yml || die
+	sed -e "s\\@@OEM_VERSION_ID@@\\${PVR}\\g" \
+		"${FILESDIR}"/cloud-config.yml > ${T}/cloud-config.yml || die
 }
 
 src_install() {
-    insinto "/usr/share/oem"
-    doins ${T}/cloud-config.yml
+	insinto "/usr/share/oem"
+	doins ${T}/cloud-config.yml
+
+	insinto "/usr/lib/systemd/network"
+	doins "${FILESDIR}"/zzz-default.network
 }
