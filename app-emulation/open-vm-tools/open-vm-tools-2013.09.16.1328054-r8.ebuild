@@ -131,5 +131,5 @@ src_install() {
 		elog "To be able to use the drag'n'drop feature of VMware for file"
 		elog "exchange, please add the users to the 'vmware' group."
 	fi
-	elog "Add 'vmware-tools' service to the default runlevel."
+	elog "Add 'vmtoolsd' service to the default runlevel."
 }
