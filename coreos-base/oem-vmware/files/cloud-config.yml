@@ -1,0 +1,10 @@
+#cloud-config
+coreos:
+    units:
+      - name: vmtoolsd.service
+        command: start
+    oem:
+      id: vmware
+      name: VMWare
+      version-id: @@OEM_VERSION_ID@@
+      bug-report-url: https://github.com/coreos/bugs/issues
