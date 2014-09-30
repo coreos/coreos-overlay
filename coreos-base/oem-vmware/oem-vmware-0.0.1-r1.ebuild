@@ -14,6 +14,7 @@ IUSE=""
 
 DEPEND="
 	app-emulation/open-vm-tools
+	>=sys-apps/systemd-215-r15
 	"
 RDEPEND="${DEPEND}"
 
