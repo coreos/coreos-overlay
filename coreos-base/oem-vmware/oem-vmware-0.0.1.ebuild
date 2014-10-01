@@ -26,9 +26,9 @@ src_prepare() {
 }
 
 src_install() {
+	into "/usr/share/oem"
+	dobin "${FILESDIR}"/vmware-set-bdcast-dhcp
+
 	insinto "/usr/share/oem"
 	doins "${T}/cloud-config.yml"
-
-	insinto "/usr/lib/systemd/network"
-	doins "${FILESDIR}/z-vmware-default.network"
 }
