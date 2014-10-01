@@ -125,7 +125,6 @@ RDEPEND="${RDEPEND}
 # Host dependencies that are needed to create and sign images
 # TODO:	sys-apps/mosys
 RDEPEND="${RDEPEND}
-	coreos-base/verity
 	sys-fs/libfat
 	sys-fs/squashfs-tools
 	"
