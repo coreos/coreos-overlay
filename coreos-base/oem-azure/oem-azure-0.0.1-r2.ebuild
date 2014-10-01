@@ -15,7 +15,7 @@ IUSE=""
 # no source directory
 S="${WORKDIR}"
 
-RDEPEND="dev-lang/python-oem"
+RDEPEND="app-emulation/wa-linux-agent"
 
 src_prepare() {
     sed -e "s\\@@OEM_VERSION_ID@@\\${PVR}\\g" \

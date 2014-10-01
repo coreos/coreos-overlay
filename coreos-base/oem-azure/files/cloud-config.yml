@@ -1,9 +1,27 @@
 #cloud-config
 
 coreos:
-    oem:
-      id: azure
-      name: Microsoft Azure
-      version-id: @@OEM_VERSION_ID@@
-      home-url: https://azure.microsoft.com/
-      bug-report-url: https://github.com/coreos/bugs/issues
+  units:
+    - name: user-cloudinit@var-lib-waagent-CustomData.path
+      command: start
+      runtime: true
+
+    - name: waagent.service
+      command: start
+      runtime: true
+      content: |
+        [Unit]
+        Description=Microsoft Azure Agent
+        Wants=network-online.target sshd-keygen.service
+        After=network-online.target sshd-keygen.service
+
+        [Service]
+        Type=simple
+        ExecStart=/usr/share/oem/python/bin/python /usr/share/oem/bin/waagent -daemon
+
+  oem:
+    id: azure
+    name: Microsoft Azure
+    version-id: @@OEM_VERSION_ID@@
+    home-url: https://azure.microsoft.com/
+    bug-report-url: https://github.com/coreos/bugs/issues
