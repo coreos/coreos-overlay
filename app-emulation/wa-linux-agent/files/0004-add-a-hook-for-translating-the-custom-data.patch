@@ -1,0 +1,48 @@
+From a3a728564011481b73e6845202780401842b9002 Mon Sep 17 00:00:00 2001
+From: Alex Crawford <alex.crawford@coreos.com>
+Date: Thu, 2 Oct 2014 08:53:48 -0700
+Subject: [PATCH] add a hook for translating the custom data
+
+---
+ waagent | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/waagent b/waagent
+index f4632c5..4efc810 100644
+--- a/waagent
++++ b/waagent
+@@ -556,6 +556,12 @@ class AbstractDistro(object):
+             Error("Can't find host key: {0}".format(path))
+             return False
+ 
++    def translateCustomData(self, data):
++        """
++        Translate the custom data from a Base64 encoding. Default to no-op.
++        """
++        return data
++
+ ############################################################
+ #	GentooDistro
+ ############################################################
+@@ -1044,6 +1050,9 @@ class CoreOSDistro(AbstractDistro):
+         else :
+             return 0
+ 
++    def translateCustomData(self, data):
++        return base64.b64decode(data)
++
+ ############################################################    
+ #	debianDistro
+ ############################################################    
+@@ -3833,7 +3842,7 @@ class OvfEnv(object):
+             if len(CDSection) > 0 :
+                 self.CustomData=GetNodeTextData(CDSection[0])
+                 if len(self.CustomData)>0:
+-                    SetFileContents(LibDir + '/CustomData',self.CustomData)
++                    SetFileContents(LibDir + '/CustomData', MyDistro.translateCustomData(self.CustomData))
+                     Log('Wrote ' + LibDir + '/CustomData')
+                 else :
+                     Error('<CustomData> contains no data!')
+-- 
+1.9.3
+
