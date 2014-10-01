@@ -27,7 +27,7 @@ src_prepare() {
 
 src_install() {
 	into "/usr/share/oem"
-	dobin "${FILESDIR}"/vmware-set-bdcast-dhcp
+	dobin "${FILESDIR}/vmware-set-dhcp-broadcast"
 
 	insinto "/usr/share/oem"
 	doins "${T}/cloud-config.yml"
