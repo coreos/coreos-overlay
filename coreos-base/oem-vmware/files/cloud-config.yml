@@ -1,22 +1,24 @@
 #cloud-config
 coreos:
-    units:
-      - name: vmtoolsd.service
-        command: start
-
-    - name: vmware-set-dhcp-broadcast.service
-        command: restart
-        runtime: yes
-        content: |
+  oem:
+    bug-report-url: "https://github.com/coreos/bugs/issues"
+    id: vmware
+    name: VMWare
+    version-id: "@@OEM_VERSION_ID@@"
+  units:
+    -
+      name: vmtoolsd.service
+      command: start
+    -
+      name: vmware-set-dhcp-broadcast.service
+      command: restart
+      content: |
           [Unit]
           Before=network.target
-
+          
           [Service]
           Type=oneshot
           StandardOutput=journal+console
           ExecStart=/usr/share/oem/bin/vmware-set-dhcp-broadcast
-    oem:
-      id: vmware
-      name: VMWare
-      version-id: @@OEM_VERSION_ID@@
-      bug-report-url: https://github.com/coreos/bugs/issues
+
+      runtime: true
