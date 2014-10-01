@@ -1,8 +1,0 @@
-[Network]
-DHCP=v4
-
-[DHCP]
-RequestBroadcast=true
-
-[DHCPv4]
-UseMTU=true

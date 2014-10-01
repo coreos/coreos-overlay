@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -e
+
+CFG="/usr/lib/systemd/network/zz-default.network"
+touch $CFG
+if [ $? -ne 0 ]; then
+        echo exiting, unable to modify: $CFG
+        exit 1
+fi
+
+printf "[DHCP]\nRequestBroadcast=true\n" >> $CFG

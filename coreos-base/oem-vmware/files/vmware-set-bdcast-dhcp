@@ -1,6 +1,0 @@
-#!/bin/bash
-
-set -e
-
-printf "[DHCP]\nRequestBroadcast=true\n" \
->> /usr/lib/systemd/network/zz-default.network
