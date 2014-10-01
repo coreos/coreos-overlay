@@ -1,0 +1,4 @@
+We are disabling CoreOS default network configuration by setting
+a symlink to /dev/null and enabling a new default network configuration for VMware. This is due to some issues getting DHCP offers with IP addresses.
+
+More information about the mentioned issue can be found at https://github.com/coreos/bugs/issues/12
