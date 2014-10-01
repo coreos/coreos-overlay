@@ -27,11 +27,8 @@ src_prepare() {
 
 src_install() {
 	insinto "/usr/share/oem"
-	doins ${T}/cloud-config.yml
-
-	# Disables CoreOS default network configuration
-	#dosym "/dev/null" "/etc/systemd/network/zz-default.network"
+	doins "${T}/cloud-config.yml"
 
 	insinto "/usr/lib/systemd/network"
-	doins "${FILESDIR}"/z-vmware-default.network
+	doins "${FILESDIR}/z-vmware-default.network"
 }
