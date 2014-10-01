@@ -9,16 +9,3 @@ coreos:
     -
       name: vmtoolsd.service
       command: start
-    -
-      name: vmware-set-dhcp-broadcast.service
-      command: restart
-      content: |
-          [Unit]
-          Before=network.target
-          
-          [Service]
-          Type=oneshot
-          StandardOutput=journal+console
-          ExecStart=/usr/share/oem/bin/vmware-set-dhcp-broadcast
-
-      runtime: true
