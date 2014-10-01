@@ -1,17 +1,18 @@
 [Unit]
-Description=Docker Application Container Engine 
+Description=Docker Application Container Engine
 Documentation=http://docs.docker.io
-Requires=docker.socket
-After=docker.socket
+After=docker.socket early-docker.target
+Requires=docker.socket early-docker.target
 
 [Service]
 Environment="TMPDIR=/var/tmp/"
 ExecStartPre=/bin/mount --make-rprivate /
+EnvironmentFile=-/run/docker_opts.env
 LimitNOFILE=1048576
 LimitNPROC=1048576
 # Run docker but don't have docker automatically restart
 # containers. This is a job for systemd and unit files.
-ExecStart=/usr/bin/docker --daemon --storage-driver=btrfs --host=fd://
+ExecStart=/usr/bin/docker --daemon --storage-driver=btrfs --host=fd:// $DOCKER_OPTS
 
 [Install]
 WantedBy=multi-user.target

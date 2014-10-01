@@ -1,0 +1,8 @@
+[Unit]
+Description=Early Docker Socket for the API
+
+[Socket]
+ListenStream=/var/run/early-docker.sock
+
+[Install]
+WantedBy=sockets.target

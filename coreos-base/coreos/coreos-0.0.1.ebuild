@@ -84,6 +84,7 @@ RDEPEND="${RDEPEND}
 	app-emulation/xenserver-pv-version
 	sys-apps/findutils
 	sys-apps/which
+	app-admin/flannel
 	app-admin/fleet
 	app-admin/locksmith
 	app-admin/sudo
