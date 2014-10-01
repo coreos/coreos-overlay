@@ -30,9 +30,8 @@ src_install() {
 	doins ${T}/cloud-config.yml
 
 	# Disables CoreOS default network configuration
-	dosym "/dev/null" "/etc/systemd/network/zz-default.network"
+	#dosym "/dev/null" "/etc/systemd/network/zz-default.network"
 
-	insinto "/etc/systemd/network"
-	doins "${FILESDIR}"/zz-vmware-default.network
-	doins "${FILESDIR}"/README
+	insinto "/usr/lib/systemd/network"
+	doins "${FILESDIR}"/z-vmware-default.network
 }
