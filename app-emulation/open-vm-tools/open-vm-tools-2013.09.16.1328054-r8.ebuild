@@ -19,7 +19,7 @@ SRC_URI="mirror://sourceforge/${PN}/${MY_P}.tar.gz"
 LICENSE="LGPL-2"
 SLOT="0"
 KEYWORDS="amd64 ~x86"
-IUSE="X doc fuse +dnet icu modules pam +pic xinerama"
+IUSE="fuse +dnet icu modules pam +pic"
 
 COMMON_DEPEND="
 	dev-libs/glib:2
@@ -27,23 +27,11 @@ COMMON_DEPEND="
 	sys-apps/ethtool
 	sys-process/procps
 	pam? ( virtual/pam )
-	X? (
-		dev-cpp/gtkmm:2.4
-		x11-base/xorg-server
-		x11-drivers/xf86-input-vmmouse
-		x11-drivers/xf86-video-vmware
-		x11-libs/gtk+:2
-		x11-libs/libnotify
-		x11-libs/libX11
-		x11-libs/libXtst
-	)
 	fuse? ( sys-fs/fuse )
 	icu? ( dev-libs/icu:= )
-	xinerama? ( x11-libs/libXinerama )
 "
 
 DEPEND="${COMMON_DEPEND}
-	doc? ( app-doc/doxygen )
 	virtual/pkgconfig
 	virtual/linux-sources
 	sys-apps/findutils
@@ -59,7 +47,6 @@ PATCHES=(
 	"${FILESDIR}/0001-add-extra-configure-flags.patch"
 	"${FILESDIR}/0002-rename-dnet-config.patch"
 	"${FILESDIR}/0003-oliver-test.patch"
-	"${FILESDIR}/0004-remove-ifup.patch"
 	"${FILESDIR}/0005-fix-USE_SLASH_PROC-conditional.patch"
 )
 
@@ -86,16 +73,10 @@ src_configure() {
 		--disable-hgfs-mounter
 		--with-procps
 		--without-kernel-modules
-		$(use_enable doc docs)
-		--docdir=/usr/share/doc/${PF}
-		$(use_with X x)
-		$(use_with X gtk2)
-		$(use_with X gtkmm)
 		$(use_with dnet)
 		$(use_with icu)
 		$(use_with pam)
 		$(use_with pic)
-		$(use_enable xinerama multimon)
 	)
 
 	econf "${myeconfargs[@]}"
@@ -119,17 +100,5 @@ src_install() {
 	#exeinto /etc/vmware-tools/scripts/vmware/
 	#doexe "${FILESDIR}"/network
 
-	if use X;
-	then
-		fperms 4755 "/usr/bin/vmware-user-suid-wrapper"
-
-		dobin "${S}"/scripts/common/vmware-xdg-detect-de
-
-		#insinto /etc/xdg/autostart
-		#doins "${FILESDIR}/open-vm-tools.desktop"
-
-		elog "To be able to use the drag'n'drop feature of VMware for file"
-		elog "exchange, please add the users to the 'vmware' group."
-	fi
 	elog "Add 'vmtoolsd' service to the default runlevel."
 }
