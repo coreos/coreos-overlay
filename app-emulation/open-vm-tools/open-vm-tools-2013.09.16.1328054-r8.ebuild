@@ -41,7 +41,7 @@ S="${WORKDIR}/${MY_P}"
 
 PATCHES=(
 	"${FILESDIR}/0001-add-extra-configure-flags.patch"
-	"${FILESDIR}/0002-rename-dnet-config.patch"
+	"${FILESDIR}/0002-adds-libdnet-dir-option.patch"
 	"${FILESDIR}/0003-oliver-test.patch"
 	"${FILESDIR}/0004-remove-ifup.patch"
 	"${FILESDIR}/0005-fix-USE_SLASH_PROC-conditional.patch"
@@ -68,6 +68,7 @@ src_configure() {
 
 	local myeconfargs=(
 		--prefix=/usr/share/oem
+		--with-libdnet=/usr/share/oem
 		--disable-hgfs-mounter
 		--disable-multimon
 		--disable-docs
@@ -76,7 +77,6 @@ src_configure() {
 		--without-icu
 		--without-kernel-modules
 		$(use_with dnet)
-		$(use_with icu)
 		$(use_with pam)
 		$(use_with pic)
 	)
