@@ -1,0 +1,133 @@
+diff -r 12bf7fc1ba76 Lib/platform.py
+--- a/Lib/platform.py	Tue Oct 22 20:03:47 2013 +0100
++++ b/Lib/platform.py	Sat Nov 02 22:56:46 2013 +0200
+@@ -241,6 +241,8 @@
+ 
+     return distname,version,id
+ 
++_os_release_fields = re.compile(r'(?!#)(?P<key>.+)=(?P<quote>[\'\"]?)(?P<value>.+)(?P=quote)$')
++_os_release_unescape = re.compile(r'\\(?P<escaped>[\'\"\\])')
+ _release_filename = re.compile(r'(\w+)[-_](release|version)')
+ _lsb_release_version = re.compile(r'(.+)'
+                                    ' release '
+@@ -251,10 +253,13 @@
+                                '([\d.]+)'
+                                '[^(]*(?:\((.+)\))?')
+ 
++_UNIXCONFDIR = '/etc'
++
+ # See also http://www.novell.com/coolsolutions/feature/11251.html
+ # and http://linuxmafia.com/faq/Admin/release-files.html
+ # and http://data.linux-ntfs.org/rpm/whichrpm
+ # and http://www.die.net/doc/linux/man/man1/lsb_release.1.html
++# http://www.freedesktop.org/software/systemd/man/os-release.html
+ 
+ _supported_dists = (
+     'SuSE', 'debian', 'fedora', 'redhat', 'centos',
+@@ -288,6 +293,20 @@
+             id = l[1]
+     return '', version, id
+ 
++def _parse_os_release():
++    try:
++        with open(os.path.join(_UNIXCONFDIR, 'os-release')) as f:
++            info = {}
++            for line in f:
++                m = re.match(_os_release_fields, line)
++                if m is not None:
++                    key = m.group('key')
++                    value = re.sub(_os_release_unescape, r'\g<escaped>', m.group('value'))
++                    info[key] = value
++            return info
++    except OSError:
++        return None
++
+ def linux_distribution(distname='', version='', id='',
+ 
+                        supported_dists=_supported_dists,
+@@ -295,9 +314,9 @@
+ 
+     """ Tries to determine the name of the Linux OS distribution name.
+ 
+-        The function first looks for a distribution release file in
+-        /etc and then reverts to _dist_try_harder() in case no
+-        suitable files are found.
++        The function first checks for an /etc/os-release file, then
++        looks for a distribution release file in /etc and then reverts
++        to _dist_try_harder() in case no suitable files are found.
+ 
+         supported_dists may be given to define the set of Linux
+         distributions to look for. It defaults to a list of currently
+@@ -316,7 +335,18 @@
+         etc = os.listdir('/etc')
+     except os.error:
+         # Probably not a Unix system
+-        return distname,version,id
++        return distname, version, id
++
++    os_release_info = _parse_os_release()
++    if os_release_info is not None:
++        if 'NAME' in os_release_info:
++            distname = os_release_info['NAME']
++        if 'VERSION_ID' in os_release_info:
++            version = os_release_info['VERSION_ID']
++        if 'ID' in os_release_info:
++            id = os_release_info['ID']
++        return distname, version, id
++
+     etc.sort()
+     for file in etc:
+         m = _release_filename.match(file)
+diff -r 12bf7fc1ba76 Lib/test/test_platform.py
+--- a/Lib/test/test_platform.py	Tue Oct 22 20:03:47 2013 +0100
++++ b/Lib/test/test_platform.py	Sat Nov 02 22:56:46 2013 +0200
+@@ -3,8 +3,10 @@
+ import unittest
+ import platform
+ import subprocess
++import tempfile
+ 
+ from test import test_support
++from unittest.mock import patch
+ 
+ class PlatformTest(unittest.TestCase):
+     def test_architecture(self):
+@@ -257,6 +259,38 @@
+             ):
+             self.assertEqual(platform._parse_release_file(input), output)
+ 
++    def test_parse_os_release(self):
++        # various os-release contents and expected output
++        expected = {
++            'NAME=Fedora\nVERSION_ID="17"\nID=fedora': {
++                'NAME': 'Fedora',
++                'VERSION_ID': '17',
++                'ID': 'fedora'
++            },
++            'NAME="AimÃ©e\\\'s "Distro""\nID=\'aimÃ©esdistro\'\nVERSION_ID=1\n': {
++                'NAME': "AimÃ©e's \"Distro\"",
++                'VERSION_ID': '1',
++                'ID': 'aimÃ©esdistro'
++            },
++            'NAME="SchrÃ¶dingerLinux"\n#Some comment here:)\n'
++            'ID=schrÃ¶dingerlinux\nVERSION_ID=3.21\nPRETTY_NAME="SchrÃ¶dingerOS"': {
++                'NAME': 'SchrÃ¶dingerLinux',
++                'VERSION_ID': '3.21',
++                'ID': 'schrÃ¶dingerlinux',
++                'PRETTY_NAME': 'SchrÃ¶dingerOS'
++            }
++        }
++        with tempfile.TemporaryDirectory() as d:
++            with patch('platform._UNIXCONFDIR', d):
++                # test that return value is None if /etc/os-release doesn't exist
++                self.assertEqual(platform._parse_os_release(), None)
++
++                # test behavior for inputs above
++                for input, output in expected.items():
++                    with open(os.path.join(d, 'os-release'), mode='w', encoding='utf-8') as f:
++                        f.write(input)
++                    self.assertEqual(platform._parse_os_release(), output)
++
+ 
+ def test_main():
+     test_support.run_unittest(

@@ -47,6 +47,9 @@ src_prepare() {
 	# Fix for cross-compiling.
 	epatch "${FILESDIR}/python-2.7.5-nonfatal-compileall.patch"
 
+	# Fix for linux_distribution()
+	epatch "${FILESDIR}/python-2.7.6-add_os_release_support.patch"
+
 	sed -i -e "s:@@GENTOO_LIBDIR@@:$(get_libdir):g" \
 		Lib/distutils/command/install.py \
 		Lib/distutils/sysconfig.py \
