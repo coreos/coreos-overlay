@@ -15,6 +15,7 @@ IUSE=""
 
 DEPEND=""
 RDEPEND="
+	app-emulation/open-vm-tools
 	coreos-base/coreos
 	coreos-base/coreos-dev
 	dev-lang/python-oem
