@@ -19,16 +19,14 @@ SRC_URI="mirror://sourceforge/${PN}/${MY_P}.tar.gz"
 LICENSE="LGPL-2"
 SLOT="0"
 KEYWORDS="amd64 ~x86"
-IUSE="fuse +dnet icu modules pam +pic"
+IUSE="+dnet pam +pic"
 
+# sys-apps/ethtool and sys-process/procps are also common dependencies but
+# they are already taken care by https://github.com/coreos/coreos-overlay/blob/master/coreos-base/coreos/coreos-0.0.1.ebuild
 COMMON_DEPEND="
 	dev-libs/glib:2
 	dnet? ( dev-libs/libdnet )
-	sys-apps/ethtool
-	sys-process/procps
 	pam? ( virtual/pam )
-	fuse? ( sys-fs/fuse )
-	icu? ( dev-libs/icu:= )
 "
 
 DEPEND="${COMMON_DEPEND}
@@ -37,9 +35,7 @@ DEPEND="${COMMON_DEPEND}
 	sys-apps/findutils
 "
 
-RDEPEND="${COMMON_DEPEND}
-	modules? ( app-emulation/open-vm-tools-kmod )
-"
+RDEPEND="${COMMON_DEPEND}"
 
 S="${WORKDIR}/${MY_P}"
 
@@ -47,6 +43,7 @@ PATCHES=(
 	"${FILESDIR}/0001-add-extra-configure-flags.patch"
 	"${FILESDIR}/0002-rename-dnet-config.patch"
 	"${FILESDIR}/0003-oliver-test.patch"
+	"${FILESDIR}/0004-remove-ifup.patch"
 	"${FILESDIR}/0005-fix-USE_SLASH_PROC-conditional.patch"
 )
 
@@ -70,8 +67,13 @@ src_configure() {
 	fi
 
 	local myeconfargs=(
+		--prefix=/usr/share/oem
 		--disable-hgfs-mounter
+		--disable-multimon
+		--disable-docs
 		--with-procps
+		--without-x
+		--without-icu
 		--without-kernel-modules
 		$(use_with dnet)
 		$(use_with icu)
