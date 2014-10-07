@@ -21,8 +21,10 @@ SLOT="0"
 KEYWORDS="amd64 ~x86"
 IUSE="+dnet pam +pic"
 
-# sys-apps/ethtool and sys-process/procps are also common dependencies but
-# they are already taken care by https://github.com/coreos/coreos-overlay/blob/master/coreos-base/coreos/coreos-0.0.1.ebuild
+# The following dependencies are being taken care by https://github.com/coreos/coreos-overlay/blob/master/coreos-base/coreos/coreos-0.0.1.ebuild
+# * sys-apps/ethtool
+# * sys-process/procps
+#
 COMMON_DEPEND="
 	dev-libs/glib:2
 	dnet? ( dev-libs/libdnet )
@@ -41,7 +43,6 @@ S="${WORKDIR}/${MY_P}"
 
 PATCHES=(
 	"${FILESDIR}/0001-add-extra-configure-flags.patch"
-	"${FILESDIR}/0002-adds-libdnet-dir-option.patch"
 	"${FILESDIR}/0003-oliver-test.patch"
 	"${FILESDIR}/0004-remove-ifup.patch"
 	"${FILESDIR}/0005-fix-USE_SLASH_PROC-conditional.patch"
@@ -66,9 +67,10 @@ src_configure() {
 		export CUSTOM_PROCPS_LIBS="$($(tc-getPKG_CONFIG) --libs libprocps)"
 	fi
 
+	export PATH="${PATH}:${SYSROOT}/usr/share/oem/bin"
+
 	local myeconfargs=(
 		--prefix=/usr/share/oem
-		--with-libdnet=/usr/share/oem
 		--disable-hgfs-mounter
 		--disable-multimon
 		--disable-docs
