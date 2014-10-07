@@ -36,7 +36,13 @@ src_prepare() {
 		-e 's/libcheck.a/libcheck.so/g' \
 		-e 's|AM_CONFIG_HEADER|AC_CONFIG_HEADERS|g' \
 		configure.in || die
-	#sed -i -e 's|-L@libdir@ ||g' dnet-config.in || die
+
+	sed -i \
+		-e "s|-L@libdir@ |-L${SYSROOT}/usr/share/oem/$(get_libdir) |g" \
+		-e "s|-I@includedir@|-I${SYSROOT}/usr/share/oem/include|g" \
+		dnet-config.in || die
+
+
 	use ipv6 && epatch "${WORKDIR}/${P}.ipv6-1.patch"
 	sed -i -e '/^SUBDIRS/s|python||g' Makefile.am || die
 	eautoreconf
