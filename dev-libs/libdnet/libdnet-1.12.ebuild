@@ -5,13 +5,10 @@
 EAPI=5
 
 AT_M4DIR="config"
-PYTHON_DEPEND="python? 2"
-PYTHON_COMPAT=( python2_6 python2_7 )
-DISTUTILS_OPTIONAL=1
 
-inherit autotools distutils-r1 eutils
+inherit autotools eutils
 
-DESCRIPTION="simplified, portable interface to several low-level networking routines"
+DESCRIPTION="simplified network library for /usr/share/oem"
 HOMEPAGE="http://code.google.com/p/libdnet/"
 SRC_URI="http://libdnet.googlecode.com/files/${P}.tgz
 	ipv6? ( http://fragroute-ipv6.googlecode.com/files/${P}.ipv6-1.patch.gz )"
@@ -19,10 +16,10 @@ SRC_URI="http://libdnet.googlecode.com/files/${P}.tgz
 LICENSE="LGPL-2"
 SLOT="0"
 KEYWORDS="alpha amd64 arm hppa ia64 ~mips ppc ppc64 sparc x86 ~x86-fbsd"
-IUSE="ipv6 python static-libs test"
+IUSE="ipv6 static-libs test"
 
 #DEPEND="test? ( dev-libs/check )"
-DEPEND="python? ( ${PYTHON_DEPS} )"
+DEPEND=""
 RDEPEND="${DEPEND}"
 RESTRICT="test"
 
@@ -40,33 +37,18 @@ src_prepare() {
 	use ipv6 && epatch "${WORKDIR}/${P}.ipv6-1.patch"
 	sed -i -e '/^SUBDIRS/s|python||g' Makefile.am || die
 	eautoreconf
-	if use python; then
-		cd python
-		distutils-r1_src_prepare
-	fi
 }
 
 src_configure() {
+	# Install into OEM, don't bother with a sbin directory.
 	econf \
 		--prefix=/usr/share/oem \
-		$(use_with python) \
+		--sbindir=/usr/share/oem/bin \
+		--without-python \
 		$(use_enable static-libs static)
-}
-
-src_compile() {
-	default
-	if use python; then
-		cd python
-		distutils-r1_src_compile
-	fi
 }
 
 src_install() {
 	default
-	if use python; then
-		cd python
-		unset DOCS
-		distutils-r1_src_install
-	fi
 	prune_libtool_files
 }
