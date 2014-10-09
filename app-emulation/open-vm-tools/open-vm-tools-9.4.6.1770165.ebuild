@@ -22,14 +22,16 @@ SLOT="0"
 KEYWORDS="amd64 ~x86"
 IUSE="+dnet +pic" # TODO: pam
 
-# Dependencies provided by CoreOS, not the OEM:
+DEPEND="dev-libs/glib:2
+	sys-process/procps
+	dnet? ( dev-libs/libdnet )"
+
+# Runtime dependencies provided by CoreOS, not the OEM:
 #	dev-libs/glib:2
 #	sys-apps/ethtool
 #	sys-process/procps
 #	pam? ( virtual/pam )
-RDEPEND="
-	dnet? ( dev-libs/libdnet )
-"
+RDEPEND="dnet? ( dev-libs/libdnet )"
 
 S="${WORKDIR}/${MY_P}"
 
