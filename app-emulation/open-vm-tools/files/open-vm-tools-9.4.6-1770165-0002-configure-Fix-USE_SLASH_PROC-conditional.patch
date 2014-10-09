@@ -1,0 +1,25 @@
+From 64566ff351ec73693b6d9ce498fc94529ea0aca8 Mon Sep 17 00:00:00 2001
+From: Alex Crawford <alex.crawford@coreos.com>
+Date: Fri, 19 Sep 2014 14:52:35 -0700
+Subject: [PATCH 2/3] configure: Fix USE_SLASH_PROC conditional
+
+---
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/configure.ac b/configure.ac
+index 4964364..8cd990d 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -1048,7 +1048,7 @@ AM_CONDITIONAL(HAVE_FUSE, test "$have_fuse" = "yes")
+ AM_CONDITIONAL(HAVE_GNU_LD, test "$with_gnu_ld" = "yes")
+ AM_CONDITIONAL(HAVE_GTKMM, test "$have_x" = "yes" -a "$with_gtkmm" = "yes")
+ AM_CONDITIONAL(HAVE_PAM, test "$with_pam" = "yes")
+-AM_CONDITIONAL(USE_SLASH_PROC, test "os" = "linux" -a "$have_glib_2_14" = "yes")
++AM_CONDITIONAL(USE_SLASH_PROC, test "$os" = "linux" -a "$have_glib_2_14" = "yes")
+ AM_CONDITIONAL(USE_PRINTF_WRAPPERS, test "$bsdPrintfWrappers" = "yes")
+ 
+ if test "$have_xsm" != "yes"; then
+-- 
+2.0.4
+
