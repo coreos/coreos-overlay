@@ -69,8 +69,8 @@ cp -v "${INSTALL_MNT}/boot/syslinux/root.${SLOT}.cfg" \
 cp -v "${INSTALL_MNT}/boot/grub/menu.lst.${SLOT}" \
     "${ESP_MNT}/boot/grub/menu.lst"
 
-# For Xen HVM, the default boot_kernel w/ kexec doesn't work
-if [[ $(systemd-detect-virt) == xen ]]; then
+# For systems that have disabled boot_kernel and kexec
+if ! grep -q boot_kernel "${ESP_MNT}/syslinux/default.cfg"; then
     cp -v "${INSTALL_MNT}/boot/syslinux/default.cfg.${SLOT}" \
         "${ESP_MNT}/syslinux/default.cfg"
 fi
