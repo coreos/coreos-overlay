@@ -26,7 +26,13 @@ IUSE=""
 DEPEND=">=dev-lang/go-1.2"
 
 src_compile() {
-	./build || die
+	# work around gentoo hardened gcc incompatibilities with cgo
+	# see https://bugs.gentoo.org/show_bug.cgi?id=493328
+	if gcc-specs-pie; then
+		GOLDFLAGS="-extldflags -fno-PIC"
+	fi
+
+	GOLDFLAGS=${GOLDFLAGS} ./build || die
 }
 
 src_install() {
