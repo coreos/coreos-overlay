@@ -180,7 +180,7 @@ void LibcurlHttpFetcher::SetCurlOptionsForHttp() {
 
 // Security lock-down in official builds: makes sure that peer certificate
 // verification is enabled, restricts the set of trusted certificates,
-// restricts protocols to HTTPS, restricts ciphers to HIGH.
+// restricts protocols to HTTPS, restricts ciphers to HIGH, disables SSLv3.
 void LibcurlHttpFetcher::SetCurlOptionsForHttps() {
   LOG(INFO) << "Setting up curl options for HTTPS";
   CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_SSL_VERIFYPEER, 1),
@@ -193,6 +193,9 @@ void LibcurlHttpFetcher::SetCurlOptionsForHttps() {
                             CURLPROTO_HTTPS),
            CURLE_OK);
   CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_SSL_CIPHER_LIST, "HIGH:!ADH"),
+           CURLE_OK);
+  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_SSLVERSION,
+                            CURL_SSLVERSION_TLSv1),
            CURLE_OK);
   if (check_certificate_ != CertificateChecker::kNone) {
     CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_SSL_CTX_DATA,
