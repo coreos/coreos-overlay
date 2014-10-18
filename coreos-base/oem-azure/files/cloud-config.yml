@@ -32,3 +32,10 @@ coreos:
     version-id: @@OEM_VERSION_ID@@
     home-url: https://azure.microsoft.com/
     bug-report-url: https://github.com/coreos/bugs/issues
+
+write_files:
+    - path: /run/systemd/system/etcd.service.d/10-oem.conf
+      permissions: 0644
+      content: |
+        [Service]
+        Environment=ETCD_PEER_ELECTION_TIMEOUT=1200
