@@ -114,6 +114,7 @@ call_cgpt() {
 }
 
 # Mark the new install with one try and the highest priority
+call_cgpt repair "${INSTALL_DEV}"
 call_cgpt add -S0 -T1 "${INSTALL_DEV}"
 call_cgpt prioritize "${INSTALL_DEV}"
 call_cgpt show "${INSTALL_DEV}"
