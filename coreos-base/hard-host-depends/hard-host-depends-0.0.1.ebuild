@@ -20,7 +20,6 @@ RDEPEND="${RDEPEND}
 	dev-embedded/u-boot-tools
 	dev-util/ccache
 	dev-util/crosutils
-	>=sys-apps/dtc-1.3.0-r5
 	sys-boot/syslinux
 	sys-devel/crossdev
 	sys-devel/sysroot-wrappers
