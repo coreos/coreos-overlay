@@ -12,7 +12,6 @@
 =dev-embedded/smdk-dltool-0.20-r3 ~amd64
 =sys-fs/libfat-0.3a ~amd64
 =dev-cpp/gflags-2.0 ~amd64
-=sys-apps/dtc-9999 **
 =sys-devel/smatch-1.57-r1 ~amd64
 =dev-lang/closure-compiler-bin-20120305 ~amd64
 =dev-util/shflags-1.0.3 ~amd64
