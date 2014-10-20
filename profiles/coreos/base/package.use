@@ -54,3 +54,6 @@ sys-boot/grub -multislot -nls
 
 # disable "high performance ssh" patch
 net-misc/openssh -hpn
+
+# xz and lzo are required to run grub tests
+sys-fs/squashfs-tools lzo xz
