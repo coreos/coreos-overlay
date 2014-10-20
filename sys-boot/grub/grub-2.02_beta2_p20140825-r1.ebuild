@@ -1,6 +1,6 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-boot/grub/grub-2.02_beta2.ebuild,v 1.8 2014/06/22 18:02:08 floppym Exp $
+# $Header: /var/cvsroot/gentoo-x86/sys-boot/grub/grub-9999-r1.ebuild,v 1.21 2014/10/19 01:51:58 floppym Exp $
 
 EAPI=5
 
@@ -38,11 +38,9 @@ else
 fi
 
 DEJAVU=dejavu-sans-ttf-2.34
-UNIFONT=unifont-7.0.01
-SRC_URI+=" truetype? (
-	mirror://sourceforge/dejavu/${DEJAVU}.zip
-	mirror://gnu/unifont/${UNIFONT}/${UNIFONT}.pcf.gz
-)"
+UNIFONT=unifont-7.0.05
+SRC_URI+=" mirror://gnu/unifont/${UNIFONT}/${UNIFONT}.pcf.gz
+	truetype? ( mirror://sourceforge/dejavu/${DEJAVU}.zip )"
 
 DESCRIPTION="GNU GRUB boot loader"
 HOMEPAGE="http://www.gnu.org/software/grub/"
@@ -56,7 +54,7 @@ GRUB_ALL_PLATFORMS=(
 	# everywhere:
 	emu
 	# mips only:
-	qemu-mips yeeloong
+	qemu-mips loongson
 	# amd64, x86, ppc, ppc64:
 	ieee1275
 	# amd64, x86:
@@ -65,9 +63,6 @@ GRUB_ALL_PLATFORMS=(
 	efi-64
 )
 IUSE+=" ${GRUB_ALL_PLATFORMS[@]/#/grub_platforms_}"
-
-REQUIRED_USE="grub_platforms_qemu? ( truetype )
-	grub_platforms_yeeloong? ( truetype )"
 
 # os-prober: Used on runtime to detect other OSes
 # xorriso (dev-libs/libisoburn): Used on runtime for mkrescue
@@ -80,7 +75,7 @@ RDEPEND="
 	device-mapper? ( >=sys-fs/lvm2-2.02.45 )
 	libzfs? ( sys-fs/zfs )
 	mount? ( sys-fs/fuse )
-	truetype? ( media-libs/freetype )
+	truetype? ( media-libs/freetype:2= )
 	ppc? ( sys-apps/ibm-powerpc-utils sys-apps/powerpc-utils )
 	ppc64? ( sys-apps/ibm-powerpc-utils sys-apps/powerpc-utils )
 "
@@ -91,6 +86,10 @@ DEPEND="${RDEPEND}
 	sys-devel/bison
 	sys-apps/help2man
 	sys-apps/texinfo
+	grub_platforms_coreboot? ( media-libs/freetype:2 )
+	grub_platforms_qemu? ( media-libs/freetype:2 )
+	grub_platforms_ieee1275? ( media-libs/freetype:2 )
+	grub_platforms_loongson? ( media-libs/freetype:2 )
 	grub_platforms_xen? ( app-emulation/xen-tools )
 	static? (
 		app-arch/xz-utils[static-libs(+)]
@@ -157,16 +156,21 @@ src_unpack() {
 
 src_prepare() {
 	[[ ${PATCHES} ]] && epatch "${PATCHES[@]}"
+
 	sed -i -e /autoreconf/d autogen.sh || die
+
 	if use multislot; then
 		# fix texinfo file name, bug 416035
 		sed -i -e 's/^\* GRUB:/* GRUB2:/' -e 's/(grub)/(grub2)/' docs/grub.texi || die
 	fi
+
 	epatch_user
+
 	if [[ -n ${GRUB_AUTOGEN} ]]; then
 		python_setup
 		bash autogen.sh || die
 	fi
+
 	if [[ -n ${AUTOTOOLS_AUTORECONF} ]]; then
 		autopoint() { return 0; }
 		eautoreconf
@@ -174,8 +178,10 @@ src_prepare() {
 }
 
 setup_fonts() {
-	ln -s "${WORKDIR}/${DEJAVU}/ttf/DejaVuSans.ttf" DejaVuSans.ttf || die
 	ln -s "${WORKDIR}/${UNIFONT}.pcf" unifont.pcf || die
+	if use truetype; then
+		ln -s "${WORKDIR}/${DEJAVU}/ttf/DejaVuSans.ttf" DejaVuSans.ttf || die
+	fi
 }
 
 grub_configure() {
@@ -222,10 +228,8 @@ grub_configure() {
 		myeconfargs+=( --program-transform-name="s,grub,grub2," )
 	fi
 
-	if use truetype; then
-		mkdir -p "${BUILD_DIR}" || die
-		run_in_build_dir setup_fonts
-	fi
+	mkdir -p "${BUILD_DIR}" || die
+	run_in_build_dir setup_fonts
 
 	autotools-utils_src_configure
 }
