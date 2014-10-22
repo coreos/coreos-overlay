@@ -18,6 +18,7 @@ DEPEND="
 	app-admin/updateservicectl
 	app-arch/pbzip2
 	app-shells/bash-completion
+	app-misc/jq
 	coreos-base/hard-host-depends
 	dev-python/setuptools
 	dev-util/boost-build
