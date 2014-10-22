@@ -44,7 +44,7 @@ bool OmahaRequestParams::Init(bool interactive) {
   app_version_ = GetConfValue("COREOS_RELEASE_VERSION", "");
 
   if (!system_state_->prefs()->GetString(kPrefsAlephVersion, &alephversion_)) {
-    alephversion_ = app_version_;
+    alephversion_.assign(app_version_);
     system_state_->prefs()->SetString(kPrefsAlephVersion, alephversion_);
   }
 

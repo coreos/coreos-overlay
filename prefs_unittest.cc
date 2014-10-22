@@ -43,6 +43,8 @@ TEST_F(PrefsTest, GetFileNameForKey) {
   FilePath path;
   EXPECT_TRUE(prefs_.GetFileNameForKey(kKey, &path));
   EXPECT_EQ(prefs_dir_.Append(kKey).value(), path.value());
+  EXPECT_TRUE(prefs_.GetFileNameForKey(kKey, &path));
+  EXPECT_EQ(prefs_dir_.Append(kKey).value(), path.value());
 }
 
 TEST_F(PrefsTest, GetFileNameForKeyBadCharacter) {
@@ -62,6 +64,8 @@ TEST_F(PrefsTest, GetString) {
   string value;
   EXPECT_TRUE(prefs_.GetString(kKey, &value));
   EXPECT_EQ(test_data, value);
+  EXPECT_TRUE(prefs_.GetString(kKey, &value));
+  EXPECT_EQ(test_data, value);
 }
 
 TEST_F(PrefsTest, GetStringBadKey) {
@@ -79,6 +83,9 @@ TEST_F(PrefsTest, SetString) {
   const char kValue[] = "some test value\non 2 lines";
   EXPECT_TRUE(prefs_.SetString(kKey, kValue));
   string value;
+  EXPECT_TRUE(file_util::ReadFileToString(prefs_dir_.Append(kKey), &value));
+  EXPECT_EQ(kValue, value);
+  EXPECT_TRUE(prefs_.SetString(kKey, kValue));
   EXPECT_TRUE(file_util::ReadFileToString(prefs_dir_.Append(kKey), &value));
   EXPECT_EQ(kValue, value);
 }
