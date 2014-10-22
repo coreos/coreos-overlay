@@ -42,6 +42,7 @@ src_prepare() {
 
 	epatch "${FILESDIR}"/base-125070-no-X.patch
 	epatch "${FILESDIR}"/base-125070-x32.patch
+	epatch "${FILESDIR}"/readfiletostring_clearfirst.patch
 }
 
 src_configure() {
