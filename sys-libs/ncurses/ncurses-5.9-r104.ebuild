@@ -34,7 +34,7 @@ S=${WORKDIR}/${MY_P}
 HOSTTIC_DIR=${WORKDIR}/${P}-host
 
 MINIMAL_TERMINFO=(ansi console dumb linux rxvt rxvt-256color rxvt-unicode \
-				  screen screen-256color sun vt{52,100,102,200,220} \
+				  screen screen-16color screen-256color sun vt{52,100,102,200,220} \
 				  xterm xterm-color xterm-256color xterm-xfree86)
 
 src_prepare() {
