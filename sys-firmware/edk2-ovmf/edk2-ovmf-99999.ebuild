@@ -11,7 +11,7 @@ HOMEPAGE="http://tianocore.sourceforge.net"
 
 LICENSE="BSD-2"
 SLOT="0"
-IUSE="debug +qemu secure-boot"
+IUSE="debug +qemu +secure-boot"
 
 if [[ ${PV} == 99999 ]]; then
 	inherit subversion
@@ -77,8 +77,9 @@ src_compile() {
 }
 
 src_install() {
+	local fv="Build/OvmfX64/${TARGET_NAME}_${TARGET_TOOLS}/FV"
 	insinto /usr/share/${PN}
-	doins Build/OvmfX64/${TARGET_NAME}_${TARGET_TOOLS}/FV/OVMF.fd
+	doins "${fv}"/OVMF{,_CODE,_VARS}.fd
 	dosym OVMF.fd /usr/share/${PN}/bios.bin
 
 	if use qemu; then
