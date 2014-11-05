@@ -7,7 +7,7 @@
 EAPI=4
 
 EGIT_REPO_URI="git://github.com/Azure/WALinuxAgent"
-EGIT_COMMIT="639581c3e61ce7365020de88999325a36b8cb1d7"
+EGIT_COMMIT="11ec1548b335d8b64e61e67d8b90906d560d7b0d"
 EGIT_MASTER="2.0"
 
 inherit toolchain-funcs git-2
@@ -22,10 +22,6 @@ SLOT="0"
 IUSE=""
 
 RDEPEND="dev-lang/python-oem"
-
-src_prepare() {
-	epatch "${FILESDIR}"/*.patch
-}
 
 src_install() {
 	into "/usr/share/oem"
