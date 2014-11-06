@@ -1,0 +1,50 @@
+From 7071154a3700a7b826b0d56f0cc8f4ae05b55fd1 Mon Sep 17 00:00:00 2001
+From: Oliver Kurth <okurth@vmware.com>
+Date: Tue, 9 Sep 2014 08:58:34 -0700
+Subject: [PATCH] auth: Read from shadow password if needed
+
+---
+ lib/auth/authPosix.c | 20 +++++++++++++++++---
+ 1 file changed, 17 insertions(+), 3 deletions(-)
+
+diff --git a/lib/auth/authPosix.c b/lib/auth/authPosix.c
+index beec4ee..6a3da65 100644
+--- a/lib/auth/authPosix.c
++++ b/lib/auth/authPosix.c
+@@ -20,6 +20,7 @@
+ #include <stdio.h>
+ #include <string.h>
+ #include <unistd.h> // for access, crypt, etc.
++#include <shadow.h>
+ 
+ #include "vmware.h"
+ #include "vm_version.h"
+@@ -341,10 +342,23 @@
+    }
+ 
+    if (*pwd->pw_passwd != '\0') {
+-      char *namep = (char *) crypt(pass, pwd->pw_passwd);
++      const char *pw = pwd->pw_passwd;
++      const char *namep;
+ 
+-      if (strcmp(namep, pwd->pw_passwd) != 0) {
+-         // Incorrect password
++      if(strcmp(pwd->pw_passwd, "x") == 0) {
++         struct spwd *sp = getspnam(user);
++         if (sp) {
++            pw = sp->sp_pwdp;
++         }
++      }
++
++      namep = (char *) crypt(pass, pw);
++      if (namep) {
++         if (strcmp(namep, pw) != 0) {
++            // Incorrect password
++            return NULL;
++         }
++      } else {
+          return NULL;
+       }
+ 
+-- 
+1.8.5.5
