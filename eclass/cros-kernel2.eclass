@@ -15,7 +15,7 @@ DEPEND="sys-apps/debianutils
 "
 
 IUSE="-source symlink-usr"
-RESTRICT="binchecks"
+RESTRICT="binchecks strip"
 STRIP_MASK="/usr/lib/debug/lib/modules/*/vmlinux"
 
 # Build out-of-tree and incremental by default, but allow an ebuild inheriting
@@ -146,6 +146,15 @@ kmake() {
 		"$@"
 }
 
+# Discard the module signing key, we use new keys for each build.
+shred_keys() {
+	local build_dir="$(cros-workon_get_build_dir)"
+	if [[ -e "${build_dir}"/signing_key.priv ]]; then
+		shred -u "${build_dir}"/signing_key.* || die
+		rm -f "${build_dir}"/x509.genkey || die
+	fi
+}
+
 cros-kernel2_src_unpack() {
 	local srclocal="${CROS_WORKON_LOCALDIR[0]}/${CROS_WORKON_LOCALNAME[0]}"
 	local srcpath="${CROS_WORKON_SRCROOT}/${srclocal}"
@@ -165,6 +174,9 @@ cros-kernel2_src_unpack() {
 	# onto the kernel image itself.
 	cp "${ROOT}"/usr/share/bootengine/bootengine.cpio \
 		"$(cros-workon_get_build_dir)" || die "copy of dracut cpio failed."
+
+	# make sure no keys are cached from a previous build
+	shred_keys
 }
 
 cros-kernel2_src_configure() {
@@ -199,7 +211,11 @@ cros-kernel2_src_install() {
 	kmake INSTALL_PATH="${D}/usr/boot" install
 	# Install firmware to a temporary (bogus) location.
 	# The linux-firmware package will be used instead.
-	kmake INSTALL_MOD_PATH="${D}" INSTALL_FW_PATH="${T}/fw" modules_install
+	# Stripping must be done here, not portage, to preserve sigs.
+	kmake INSTALL_MOD_PATH="${D}" \
+		  INSTALL_MOD_STRIP="--strip-unneeded" \
+		  INSTALL_FW_PATH="${T}/fw" \
+		  modules_install
 
 	local version=$(kernelversion)
 	dosym "vmlinuz-${version}" /usr/boot/vmlinuz
@@ -209,8 +225,10 @@ cros-kernel2_src_install() {
 	fi
 
 	# Install uncompressed kernel for debugging purposes.
-	insinto /usr/lib/debug/lib/modules/${version}/
-	doins "$(cros-workon_get_build_dir)/vmlinux"
+	# XXX: we haven't been using this, also we are not keeping module symbols
+	# right now. Revisit both of these if we need to beef up debugging tools.
+	#insinto /usr/lib/debug/lib/modules/${version}/
+	#doins "$(cros-workon_get_build_dir)/vmlinux"
 
 	if use source; then
 		install_kernel_sources
@@ -218,6 +236,8 @@ cros-kernel2_src_install() {
 		# Remove invalid symlinks when source isn't installed
 		rm -f "${D}/lib/modules/${version}/"{build,source}
 	fi
+
+	shred_keys
 }
 
 EXPORT_FUNCTIONS src_unpack src_configure src_compile src_install
