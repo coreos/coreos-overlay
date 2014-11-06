@@ -6,24 +6,24 @@ EAPI=5
 AUTOTOOLS_AUTORECONF=1
 AUTOTOOLS_IN_SOURCE_BUILD=1
 
-inherit autotools-utils versionator toolchain-funcs
-
-MY_PV="$(replace_version_separator 3 '-')"
-MY_P="${PN}-${MY_PV}"
-# Downloads are organized into versioned directories
-MY_DIR="${PN}/$(version_format_string 'stable-$1.$2.x')"
+inherit autotools-utils toolchain-funcs git-2
 
 DESCRIPTION="VMware tools for distribution via /usr/share/oem"
 HOMEPAGE="http://open-vm-tools.sourceforge.net/"
-SRC_URI="mirror://sourceforge/project/${PN}/${MY_DIR}/${MY_P}.tar.gz"
+
+EGIT_REPO_URI="https://github.com/vmware/open-vm-tools"
+EGIT_BRANCH="stable-9.4.6-deploypkg"
+EGIT_COMMIT="a4d763b036c6b413f71a5841194a53858625a3cb"
+EGIT_SOURCEDIR="${WORKDIR}"
 
 LICENSE="LGPL-2"
 SLOT="0"
 KEYWORDS="amd64 ~x86"
-IUSE="+dnet +pic" # TODO: pam
+IUSE="+dnet +pic +deploypkg" # TODO: pam
 
 DEPEND="dev-libs/glib:2
 	sys-process/procps
+	deploypkg? ( dev-libs/libmspack )
 	dnet? ( dev-libs/libdnet )"
 
 # Runtime dependencies provided by CoreOS, not the OEM:
@@ -31,15 +31,16 @@ DEPEND="dev-libs/glib:2
 #	sys-apps/ethtool
 #	sys-process/procps
 #	pam? ( virtual/pam )
-RDEPEND="dnet? ( dev-libs/libdnet )"
+RDEPEND="dnet? ( dev-libs/libdnet )
+	deploypkg? ( dev-libs/libmspack )"
 
-S="${WORKDIR}/${MY_P}"
+S="${WORKDIR}/${PN}"
 
 PATCHES=(
-	"${FILESDIR}/${MY_P}-0001-configure-Add-options-for-fuse-and-hgfs.patch"
-	"${FILESDIR}/${MY_P}-0002-configure-Fix-USE_SLASH_PROC-conditional.patch"
-	"${FILESDIR}/${MY_P}-0003-scripts-Remove-ifup.patch"
-	"${FILESDIR}/${MY_P}-0004-auth-Read-from-shadow.patch"
+	"${FILESDIR}/${P}-0001-configure-Add-options-for-fuse-and-hgfs.patch"
+	"${FILESDIR}/${P}-0002-configure-Fix-USE_SLASH_PROC-conditional.patch"
+	"${FILESDIR}/${P}-0003-scripts-Remove-ifup.patch"
+	"${FILESDIR}/${P}-0004-auth-Read-from-shadow.patch"
 )
 
 #pkg_setup() {
@@ -63,6 +64,8 @@ src_configure() {
 	# libdnet is installed to /usr/share/oem
 	export CUSTOM_DNET_CPPFLAGS="-I${SYSROOT}/usr/share/oem/include"
 	export CUSTOM_DNET_LIBS="-L${SYSROOT}/usr/share/oem/lib64"
+	export CUSTOM_MSPACK_CPPFLAGS="-I${SYSROOT}/usr/share/oem/include"
+	export CUSTOM_MSPACK_LIBS="-L${SYSROOT}/usr/share/oem/lib64"
 
 	# >=sys-process/procps-3.3.2 not handled by configure
 	export CUSTOM_PROCPS_NAME=procps
@@ -78,6 +81,7 @@ src_configure() {
 
 	local myeconfargs=(
 		--prefix=/usr/share/oem
+		$(use_enable deploypkg)
 		--disable-docs
 		--disable-hgfs-mounter
 		--disable-multimon
