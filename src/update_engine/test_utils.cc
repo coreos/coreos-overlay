@@ -280,9 +280,8 @@ void VerifyAllPaths(const string& parent, set<string> expected_paths) {
   EXPECT_FALSE(iter.IsErr());
   EXPECT_TRUE(expected_paths.empty());
   if (!expected_paths.empty()) {
-    for (set<string>::const_iterator it = expected_paths.begin();
-         it != expected_paths.end(); ++it) {
-      LOG(INFO) << "extra path: " << *it;
+    for (const string& path : expected_paths) {
+      LOG(INFO) << "extra path: " << path;
     }
   }
 }

@@ -209,9 +209,8 @@ TEST(UtilsTest, ApplyMapTest) {
   utils::ApplyMap(&collection, value_map);
 
   size_t index = 0;
-  for (vector<int>::iterator it = collection.begin(), e = collection.end();
-       it != e; ++it) {
-    EXPECT_EQ(expected_values[index++], *it);
+  for (const int value : collection) {
+    EXPECT_EQ(expected_values[index++], value);
   }
 }
 

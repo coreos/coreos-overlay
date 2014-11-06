@@ -288,19 +288,18 @@ bool ReadUnwrittenBlocks(const vector<Block>& blocks,
   // We use the temporary buffer 'buf' to hold the data, which may be
   // smaller than the extent, so in that case we have to loop to get
   // the extent's data (that's the inner while loop).
-  for (vector<Extent>::const_iterator it = extents.begin();
-       it != extents.end(); ++it) {
+  for (const Extent& extent : extents) {
     vector<Block>::size_type blocks_read = 0;
     float printed_progress = -1;
-    while (blocks_read < it->num_blocks()) {
+    while (blocks_read < extent.num_blocks()) {
       const int copy_block_cnt =
           min(buf.size() / kBlockSize,
               static_cast<vector<char>::size_type>(
-                  it->num_blocks() - blocks_read));
+                  extent.num_blocks() - blocks_read));
       ssize_t rc = pread(image_fd,
                          &buf[0],
                          copy_block_cnt * kBlockSize,
-                         (it->start_block() + blocks_read) * kBlockSize);
+                         (extent.start_block() + blocks_read) * kBlockSize);
       TEST_AND_RETURN_FALSE_ERRNO(rc >= 0);
       TEST_AND_RETURN_FALSE(static_cast<size_t>(rc) ==
                             copy_block_cnt * kBlockSize);
@@ -363,9 +362,8 @@ void InstallOperationsToManifest(
     const vector<DeltaArchiveManifest_InstallOperation>& kernel_ops,
     DeltaArchiveManifest* out_manifest,
     OperationNameMap* out_op_name_map) {
-  for (vector<Vertex::Index>::const_iterator it = order.begin();
-       it != order.end(); ++it) {
-    const Vertex& vertex = graph[*it];
+  for (Vertex::Index vertex_index : order) {
+    const Vertex& vertex = graph[vertex_index];
     const DeltaArchiveManifest_InstallOperation& add_op = vertex.op;
     if (DeltaDiffGenerator::IsNoopOperation(add_op)) {
       continue;
@@ -388,8 +386,8 @@ void InstallOperationsToManifest(
 }
 
 void CheckGraph(const Graph& graph) {
-  for (Graph::const_iterator it = graph.begin(); it != graph.end(); ++it) {
-    CHECK(it->op.has_type());
+  for (const Vertex& v : graph) {
+    CHECK(v.op.has_type());
   }
 }
 
@@ -479,9 +477,7 @@ void ReportPayloadUsage(const DeltaArchiveManifest& manifest,
   std::sort(objects.begin(), objects.end());
 
   static const char kFormatString[] = "%6.2f%% %10jd %-10s %s\n";
-  for (vector<DeltaObject>::const_iterator it = objects.begin();
-       it != objects.end(); ++it) {
-    const DeltaObject& object = *it;
+  for (const DeltaObject& object : objects) {
     fprintf(stderr, kFormatString,
             object.size * 100.0 / total_size,
             static_cast<intmax_t>(object.size),
@@ -670,9 +666,8 @@ vector<uint64_t> ExpandExtents(const T& extents) {
 // objects.
 vector<Extent> CompressExtents(const vector<uint64_t>& blocks) {
   vector<Extent> new_extents;
-  for (vector<uint64_t>::const_iterator it = blocks.begin(), e = blocks.end();
-       it != e; ++it) {
-    graph_utils::AppendBlockToExtents(&new_extents, *it);
+  for (uint64_t block : blocks) {
+    graph_utils::AppendBlockToExtents(&new_extents, block);
   }
   return new_extents;
 }
@@ -698,12 +693,12 @@ void DeltaDiffGenerator::SubstituteBlocks(
       conversion[remove_extents_expanded[i]] = replace_extents_expanded[i];
     }
     utils::ApplyMap(&read_blocks, conversion);
-    for (Vertex::EdgeMap::iterator it = vertex->out_edges.begin(),
-             e = vertex->out_edges.end(); it != e; ++it) {
+    for (auto& edge_prop_pair : vertex->out_edges) {
       vector<uint64_t> write_before_deps_expanded =
-          ExpandExtents(it->second.write_extents);
+          ExpandExtents(edge_prop_pair.second.write_extents);
       utils::ApplyMap(&write_before_deps_expanded, conversion);
-      it->second.write_extents = CompressExtents(write_before_deps_expanded);
+      edge_prop_pair.second.write_extents =
+          CompressExtents(write_before_deps_expanded);
     }
   }
   // Convert read_blocks back to extents
@@ -721,23 +716,22 @@ bool DeltaDiffGenerator::CutEdges(Graph* graph,
   cuts.reserve(edges.size());
 
   uint64_t scratch_blocks_used = 0;
-  for (set<Edge>::const_iterator it = edges.begin();
-       it != edges.end(); ++it) {
+  for (const Edge& edge : edges) {
     cuts.resize(cuts.size() + 1);
     vector<Extent> old_extents =
-        (*graph)[it->first].out_edges[it->second].extents;
+        (*graph)[edge.first].out_edges[edge.second].extents;
     // Choose some scratch space
-    scratch_blocks_used += graph_utils::EdgeWeight(*graph, *it);
+    scratch_blocks_used += graph_utils::EdgeWeight(*graph, edge);
     cuts.back().tmp_extents =
-        scratch_allocator.Allocate(graph_utils::EdgeWeight(*graph, *it));
+        scratch_allocator.Allocate(graph_utils::EdgeWeight(*graph, edge));
     // create vertex to copy original->scratch
     cuts.back().new_vertex = graph->size();
     graph->resize(graph->size() + 1);
-    cuts.back().old_src = it->first;
-    cuts.back().old_dst = it->second;
+    cuts.back().old_src = edge.first;
+    cuts.back().old_dst = edge.second;
 
     EdgeProperties& cut_edge_properties =
-        (*graph)[it->first].out_edges.find(it->second)->second;
+        (*graph)[edge.first].out_edges.find(edge.second)->second;
 
     // This should never happen, as we should only be cutting edges between
     // real file nodes, and write-before relationships are created from
@@ -746,7 +740,7 @@ bool DeltaDiffGenerator::CutEdges(Graph* graph,
         << "Can't cut edge that has write-before relationship.";
 
     // make node depend on the copy operation
-    (*graph)[it->first].out_edges.insert(make_pair(graph->size() - 1,
+    (*graph)[edge.first].out_edges.insert(make_pair(graph->size() - 1,
                                                    cut_edge_properties));
 
     // Set src/dst extents and other proto variables for copy operation
@@ -757,23 +751,23 @@ bool DeltaDiffGenerator::CutEdges(Graph* graph,
     DeltaDiffGenerator::StoreExtents(cuts.back().tmp_extents,
                                      graph->back().op.mutable_dst_extents());
     graph->back().op.set_src_length(
-        graph_utils::EdgeWeight(*graph, *it) * kBlockSize);
+        graph_utils::EdgeWeight(*graph, edge) * kBlockSize);
     graph->back().op.set_dst_length(graph->back().op.src_length());
 
     // make the dest node read from the scratch space
     DeltaDiffGenerator::SubstituteBlocks(
-        &((*graph)[it->second]),
-        (*graph)[it->first].out_edges[it->second].extents,
+        &((*graph)[edge.second]),
+        (*graph)[edge.first].out_edges[edge.second].extents,
         cuts.back().tmp_extents);
 
     // delete the old edge
     CHECK_EQ(static_cast<Graph::size_type>(1),
-             (*graph)[it->first].out_edges.erase(it->second));
+             (*graph)[edge.first].out_edges.erase(edge.second));
 
     // Add an edge from dst to copy operation
     EdgeProperties write_before_edge_properties;
     write_before_edge_properties.write_extents = cuts.back().tmp_extents;
-    (*graph)[it->second].out_edges.insert(
+    (*graph)[edge.second].out_edges.insert(
         make_pair(graph->size() - 1, write_before_edge_properties));
   }
   out_cuts->swap(cuts);
@@ -784,10 +778,9 @@ bool DeltaDiffGenerator::CutEdges(Graph* graph,
 void DeltaDiffGenerator::StoreExtents(
     const vector<Extent>& extents,
     google::protobuf::RepeatedPtrField<Extent>* out) {
-  for (vector<Extent>::const_iterator it = extents.begin();
-       it != extents.end(); ++it) {
+  for (const Extent& extent : extents) {
     Extent* new_extent = out->Add();
-    *new_extent = *it;
+    *new_extent = extent;
   }
 }
 
@@ -917,25 +910,23 @@ bool ConvertCutsToFull(
     const vector<CutEdgeVertexes>& cuts) {
   CHECK(!cuts.empty());
   set<Vertex::Index> deleted_nodes;
-  for (vector<CutEdgeVertexes>::const_iterator it = cuts.begin(),
-           e = cuts.end(); it != e; ++it) {
+  for (const CutEdgeVertexes& cut : cuts) {
     TEST_AND_RETURN_FALSE(DeltaDiffGenerator::ConvertCutToFullOp(
         graph,
-        *it,
+        cut,
         new_root,
         data_fd,
         data_file_size));
-    deleted_nodes.insert(it->new_vertex);
+    deleted_nodes.insert(cut.new_vertex);
   }
   deleted_nodes.insert(cuts[0].old_dst);
 
   vector<Vertex::Index> new_op_indexes;
   new_op_indexes.reserve(op_indexes->size());
-  for (vector<Vertex::Index>::iterator it = op_indexes->begin(),
-           e = op_indexes->end(); it != e; ++it) {
-    if (utils::SetContainsKey(deleted_nodes, *it))
+  for (Vertex::Index vertex_index : *op_indexes) {
+    if (utils::SetContainsKey(deleted_nodes, vertex_index))
       continue;
-    new_op_indexes.push_back(*it);
+    new_op_indexes.push_back(vertex_index);
   }
   new_op_indexes.push_back(cuts[0].old_dst);
   op_indexes->swap(new_op_indexes);
@@ -961,16 +952,14 @@ bool AssignBlockForAdjoiningCuts(
   const Vertex::Index old_dst = cuts[0].old_dst;
   // Calculate # of blocks needed
   uint64_t blocks_needed = 0;
-  map<const CutEdgeVertexes*, uint64_t> cuts_blocks_needed;
-  for (vector<CutEdgeVertexes>::const_iterator it = cuts.begin(),
-           e = cuts.end(); it != e; ++it) {
+  vector<uint64_t> cuts_blocks_needed(cuts.size());
+  for (vector<CutEdgeVertexes>::size_type i = 0; i < cuts.size(); ++i) {
     uint64_t cut_blocks_needed = 0;
-    for (vector<Extent>::const_iterator jt = it->tmp_extents.begin(),
-             je = it->tmp_extents.end(); jt != je; ++jt) {
-      cut_blocks_needed += jt->num_blocks();
+    for (const Extent& extent : cuts[i].tmp_extents) {
+      cut_blocks_needed += extent.num_blocks();
     }
     blocks_needed += cut_blocks_needed;
-    cuts_blocks_needed[&*it] = cut_blocks_needed;
+    cuts_blocks_needed[i] = cut_blocks_needed;
   }
 
   // Find enough blocks
@@ -1029,31 +1018,30 @@ bool AssignBlockForAdjoiningCuts(
   TEST_AND_RETURN_FALSE(scratch_ranges.blocks() == scratch_blocks_found);
 
   // Make all the suppliers depend on this node
-  for (SupplierVector::iterator it = block_suppliers.begin(),
-           e = block_suppliers.end(); it != e; ++it) {
+  for (const auto& index_range_pair : block_suppliers) {
     graph_utils::AddReadBeforeDepExtents(
-        &(*graph)[it->first],
+        &(*graph)[index_range_pair.first],
         old_dst,
-        it->second.GetExtentsForBlockCount(it->second.blocks()));
+        index_range_pair.second.GetExtentsForBlockCount(
+            index_range_pair.second.blocks()));
   }
 
   // Replace temp blocks in each cut
-  for (vector<CutEdgeVertexes>::const_iterator it = cuts.begin(),
-           e = cuts.end(); it != e; ++it) {
+  for (vector<CutEdgeVertexes>::size_type i = 0; i < cuts.size(); ++i) {
+    const CutEdgeVertexes& cut = cuts[i];
     vector<Extent> real_extents =
-        scratch_ranges.GetExtentsForBlockCount(cuts_blocks_needed[&*it]);
+        scratch_ranges.GetExtentsForBlockCount(cuts_blocks_needed[i]);
     scratch_ranges.SubtractExtents(real_extents);
 
     // Fix the old dest node w/ the real blocks
     DeltaDiffGenerator::SubstituteBlocks(&(*graph)[old_dst],
-                                         it->tmp_extents,
+                                         cut.tmp_extents,
                                          real_extents);
 
     // Fix the new node w/ the real blocks. Since the new node is just a
     // copy operation, we can replace all the dest extents w/ the real
     // blocks.
-    DeltaArchiveManifest_InstallOperation *op =
-        &(*graph)[it->new_vertex].op;
+    DeltaArchiveManifest_InstallOperation *op = &(*graph)[cut.new_vertex].op;
     op->clear_dst_extents();
     DeltaDiffGenerator::StoreExtents(real_extents, op->mutable_dst_extents());
   }
@@ -1136,10 +1124,9 @@ bool DeltaDiffGenerator::NoTempBlocksRemain(const Graph& graph) {
     }
 
     // Check out-edges:
-    for (Vertex::EdgeMap::const_iterator jt = it->out_edges.begin(),
-             je = it->out_edges.end(); jt != je; ++jt) {
-      if (TempBlocksExistInExtents(jt->second.extents) ||
-          TempBlocksExistInExtents(jt->second.write_extents)) {
+    for (const auto& edge_prop_pair : it->out_edges) {
+      if (TempBlocksExistInExtents(edge_prop_pair.second.extents) ||
+          TempBlocksExistInExtents(edge_prop_pair.second.write_extents)) {
         LOG(INFO) << "bad out edge in node " << idx;
         LOG(INFO) << "so yeah";
         return false;

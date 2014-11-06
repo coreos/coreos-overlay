@@ -381,25 +381,12 @@ std::string ErrnoNumberAsString(int err) {
 
 std::string NormalizePath(const std::string& path, bool strip_trailing_slash) {
   string ret;
-  bool last_insert_was_slash = false;
-  for (string::const_iterator it = path.begin(); it != path.end(); ++it) {
-    if (*it == '/') {
-      if (last_insert_was_slash)
-        continue;
-      last_insert_was_slash = true;
-    } else {
-      last_insert_was_slash = false;
-    }
-    ret.push_back(*it);
-  }
-  if (strip_trailing_slash && last_insert_was_slash) {
-    string::size_type last_non_slash = ret.find_last_not_of('/');
-    if (last_non_slash != string::npos) {
-      ret.resize(last_non_slash + 1);
-    } else {
-      ret = "";
-    }
-  }
+  std::unique_copy(path.begin(), path.end(), std::back_inserter(ret),
+                   [](char c1, char c2) { return c1 == c2 && c1 == '/'; });
+  // The above code ensures no "//" is present in the string, so at most one
+  // '/' is present at the end of the line.
+  if (strip_trailing_slash && !ret.empty() && ret.back() == '/')
+    ret.pop_back();
   return ret;
 }
 

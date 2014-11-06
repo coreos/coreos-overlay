@@ -37,9 +37,8 @@ bool ReadExtentsData(const ext2_filsys fs,
                      vector<char>* data) {
   // Resize the data buffer to hold all data in the extents
   size_t num_data_blocks = 0;
-  for (vector<Extent>::const_iterator it = extents.begin();
-       it != extents.end(); it++) {
-    num_data_blocks += it->num_blocks();
+  for (const Extent& extent : extents) {
+    num_data_blocks += extent.num_blocks();
   }
 
   data->resize(num_data_blocks * kBlockSize);
@@ -47,17 +46,16 @@ bool ReadExtentsData(const ext2_filsys fs,
   // Read in the data blocks
   const size_t kMaxReadBlocks = 256;
   vector<Block>::size_type blocks_copied_count = 0;
-  for (vector<Extent>::const_iterator it = extents.begin();
-       it != extents.end(); it++) {
+  for (const Extent& extent : extents) {
     vector<Block>::size_type blocks_read = 0;
-    while (blocks_read < it->num_blocks()) {
+    while (blocks_read < extent.num_blocks()) {
       const int copy_block_cnt =
           min(kMaxReadBlocks,
               static_cast<size_t>(
-                  it->num_blocks() - blocks_read));
+                  extent.num_blocks() - blocks_read));
       TEST_AND_RETURN_FALSE_ERRCODE(
           io_channel_read_blk(fs->io,
-                              it->start_block() + blocks_read,
+                              extent.start_block() + blocks_read,
                               copy_block_cnt,
                               &(*data)[blocks_copied_count * kBlockSize]));
       blocks_read += copy_block_cnt;
