@@ -9,7 +9,7 @@ CROS_WORKON_LOCALDIR="src/platform"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~x86"
 else
-	CROS_WORKON_COMMIT="dcd450948b5ebda1706f6e7f521e3e6356ba8aac"
+	CROS_WORKON_COMMIT="7359eb09a7419bf025d9ab1f5234be1466bbb636"
 	KEYWORDS="amd64 arm x86"
 fi
 
