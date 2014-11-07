@@ -39,7 +39,7 @@ S="${WORKDIR}/${PN}"
 PATCHES=(
 	"${FILESDIR}/${P}-0001-configure-Add-options-for-fuse-and-hgfs.patch"
 	"${FILESDIR}/${P}-0002-configure-Fix-USE_SLASH_PROC-conditional.patch"
-	"${FILESDIR}/${P}-0003-scripts-Remove-ifup.patch"
+	"${FILESDIR}/${P}-0003-scripts-network.patch"
 	"${FILESDIR}/${P}-0004-auth-Read-from-shadow.patch"
 )
 
