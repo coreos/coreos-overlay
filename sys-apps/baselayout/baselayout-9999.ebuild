@@ -130,6 +130,14 @@ src_install() {
 	done
 	echo "LDPATH='${ldpaths#:}'" >> "${D}"/etc/env.d/00basic || die
 
+	# Add oem/lib64 to search path towards end of the system's list.
+	# This simplifies the configuration of OEMs with dynamic libs.
+	ldpaths=
+	for libdir in $(get_all_libdirs) ; do
+		ldpaths+=":/usr/share/oem/${libdir}"
+	done
+	echo "LDPATH='${ldpaths#:}'" >> "${D}"/etc/env.d/80oem || die
+
 	if ! use symlink-usr ; then
 		# modprobe uses /lib instead of /usr/lib
 		mv "${D}"/usr/lib/modprobe.d "${D}"/lib/modprobe.d || die
