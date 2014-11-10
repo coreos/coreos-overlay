@@ -33,7 +33,7 @@
 
 #=dev-libs/libxml2-2.9.0-r1 ~amd64
 
-=sys-apps/util-linux-2.23 ~amd64 
+=sys-apps/util-linux-2.25.2 ~amd64
 
 # CRIU dependencies
 =dev-libs/protobuf-c-0.15 ~amd64
