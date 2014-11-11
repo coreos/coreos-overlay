@@ -1,6 +1,6 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-apps/systemd/systemd-9999.ebuild,v 1.147 2014/11/18 19:15:03 mgorny Exp $
+# $Header: /var/cvsroot/gentoo-x86/sys-apps/systemd/systemd-217-r3.ebuild,v 1.1 2014/11/28 18:13:49 floppym Exp $
 
 EAPI=5
 
@@ -29,7 +29,8 @@ inherit autotools-utils bash-completion-r1 linux-info multilib \
 
 DESCRIPTION="System and service manager for Linux"
 HOMEPAGE="http://www.freedesktop.org/wiki/Software/systemd"
-SRC_URI="http://www.freedesktop.org/software/systemd/${P}.tar.xz"
+SRC_URI="http://www.freedesktop.org/software/systemd/${P}.tar.xz
+	http://dev.gentoo.org/~floppym/dist/systemd-gentoo-patches-217-r1.tar.xz"
 
 LICENSE="GPL-2 LGPL-2.1 MIT public-domain"
 SLOT="0/2"
@@ -125,6 +126,11 @@ fi
 	# Bug 463376
 	sed -i -e 's/GROUP="dialout"/GROUP="uucp"/' rules/*.rules || die
 
+	# missing in tarball
+	cp "${FILESDIR}"/217-systemd-consoled.service.in \
+		units/user/systemd-consoled.service.in || die
+
+	EPATCH_FORCE=yes EPATCH_SUFFIX=patch epatch
 	autotools-utils_src_prepare
 }
 
