@@ -1,0 +1,17 @@
+[Unit]
+Description=Early Docker Application Container Engine
+Documentation=http://docs.docker.io
+After=early-docker.socket
+Requires=early-docker.socket
+
+[Service]
+Environment="TMPDIR=/var/tmp/"
+ExecStartPre=/bin/mount --make-rprivate /
+LimitNOFILE=1048576
+LimitNPROC=1048576
+# Run docker but don't have docker automatically restart
+# containers. This is a job for systemd and unit files.
+ExecStart=/usr/bin/docker --daemon --storage-driver=btrfs --host=fd:// --bridge=none --iptables=false --graph=/var/lib/early-docker --pidfile=/var/run/early-docker.pid
+
+[Install]
+WantedBy=early-docker.target
