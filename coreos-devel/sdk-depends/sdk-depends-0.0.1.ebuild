@@ -31,5 +31,6 @@ DEPEND="
 	sys-devel/crossdev
 	sys-firmware/edk2-ovmf
 	sys-fs/btrfs-progs
+	sys-fs/cryptsetup
 	"
 RDEPEND="${DEPEND}"
