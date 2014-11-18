@@ -22,7 +22,7 @@ ExecStartPost=/bin/bash -c '    \
 	touch /run/docker_opts.env;     \
 	source /run/docker_opts.env;    \
 	source /run/flannel/subnet.env; \
-	DOCKER_OPTS+=--ip-masq=false    \
+	DOCKER_OPTS+="--ip-masq=false " \
 	DOCKER_OPTS+=$(test -n "$FLANNEL_SUBNET" && echo "--bip=$FLANNEL_SUBNET "); \
 	DOCKER_OPTS+=$(test -n "$FLANNEL_MTU" && echo "--mtu=$FLANNEL_MTU ");       \
 	echo "DOCKER_OPTS=\\"$DOCKER_OPTS\\"" >/run/docker_opts.env'
