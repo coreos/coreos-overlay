@@ -3,26 +3,28 @@
 
 EAPI=5
 
-DESCRIPTION="OEM suite for Azure"
+DESCRIPTION="OEM suite for Rackspace Teeth images"
 HOMEPAGE=""
 SRC_URI=""
 
 LICENSE="Apache-2.0"
 SLOT="0"
-KEYWORDS="amd64"
-IUSE=""
+KEYWORDS="amd64 x86"
 
 # no source directory
 S="${WORKDIR}"
 
-RDEPEND="app-emulation/wa-linux-agent"
-
 src_prepare() {
-    sed -e "s\\@@OEM_VERSION_ID@@\\${PVR}\\g" \
-        ${FILESDIR}/cloud-config.yml > ${T}/cloud-config.yml || die
+	sed -e "s\\@@OEM_VERSION_ID@@\\${PVR}\\g" \
+	    ${FILESDIR}/cloud-config.yml > ${T}/cloud-config.yml || die
 }
 
 src_install() {
+	into "/usr/share/oem"
+	dobin ${FILESDIR}/netname.sh
+	dobin ${FILESDIR}/rename-interfaces.sh
+
 	insinto "/usr/share/oem"
 	doins ${T}/cloud-config.yml
+	doins ${FILESDIR}/grub.cfg
 }
