@@ -1,0 +1,5 @@
+# Creating symlinks on FAT doesn't work, so don't do that
+INSTALL_MASK="${INSTALL_MASK}
+    /boot/xen-?.?.gz
+    /boot/xen-?.gz
+    /boot/xen.gz"

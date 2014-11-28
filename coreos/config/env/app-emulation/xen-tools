@@ -1,0 +1,6 @@
+# We provide xenstore as a standalone package
+INSTALL_MASK="${INSTALL_MASK}
+    /usr/bin/xenstore
+    /usr/lib/debug/usr/bin/xenstore.debug
+    /usr/lib/debug/usr/lib*/libxenstore.so*
+    /usr/lib*/libxenstore.so*"
