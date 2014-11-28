@@ -53,11 +53,3 @@ RDEPEND="
 	sys-process/procps
 	sys-process/psmisc
 	"
-
-# TODO:  sys-apps/iotools
-X86_DEPEND="
-	app-benchmarks/i7z
-"
-
-RDEPEND="${RDEPEND} x86? ( ${X86_DEPEND} )"
-RDEPEND="${RDEPEND} amd64? ( ${X86_DEPEND} )"
