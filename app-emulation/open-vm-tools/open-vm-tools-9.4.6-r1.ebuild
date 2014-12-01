@@ -41,6 +41,7 @@ PATCHES=(
 	"${FILESDIR}/${P}-0002-configure-Fix-USE_SLASH_PROC-conditional.patch"
 	"${FILESDIR}/${P}-0003-scripts-network.patch"
 	"${FILESDIR}/${P}-0004-auth-Read-from-shadow.patch"
+	"${FILESDIR}/${P}-0005-define_USE_SLASH_PROC.patch"
 )
 
 #pkg_setup() {
