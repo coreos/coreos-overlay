@@ -9,7 +9,7 @@ HOMEPAGE="http://coreos.com"
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="amd64 arm x86"
-IUSE=""
+IUSE="vm-testing"
 
 # The dependencies here are meant to capture "all the packages
 # developers want to use for development, test, or debug".  This
@@ -52,12 +52,10 @@ RDEPEND="
 	sys-process/ktop
 	sys-process/procps
 	sys-process/psmisc
+	vm-testing? (
+		app-emulation/xen
+		app-emulation/xen-pvgrub
+		app-emulation/xen-tools
+		app-emulation/qemu
+	)
 	"
-
-# TODO:  sys-apps/iotools
-X86_DEPEND="
-	app-benchmarks/i7z
-"
-
-RDEPEND="${RDEPEND} x86? ( ${X86_DEPEND} )"
-RDEPEND="${RDEPEND} amd64? ( ${X86_DEPEND} )"
