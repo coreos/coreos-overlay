@@ -7,6 +7,7 @@ After=docker.socket
 [Service]
 Environment="TMPDIR=/var/tmp/"
 ExecStartPre=/bin/mount --make-rprivate /
+Environment=DOCKER_OPTS='--insecure-registry="0.0.0.0/0"'
 LimitNOFILE=1048576
 LimitNPROC=1048576
 # Run docker but don't have docker automatically restart
