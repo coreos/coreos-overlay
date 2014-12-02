@@ -1331,7 +1331,7 @@ CONFIG_BLK_DEV_RBD=m
 # CONFIG_TIFM_CORE is not set
 # CONFIG_ICS932S401 is not set
 # CONFIG_ENCLOSURE_SERVICES is not set
-# CONFIG_HP_ILO is not set
+CONFIG_HP_ILO=m
 # CONFIG_APDS9802ALS is not set
 # CONFIG_ISL29003 is not set
 # CONFIG_ISL29020 is not set
@@ -1803,8 +1803,7 @@ CONFIG_8139TOO_8129=y
 # CONFIG_8139_OLD_RX_RESET is not set
 CONFIG_R8169=m
 # CONFIG_NET_VENDOR_RDC is not set
-CONFIG_NET_VENDOR_SAMSUNG=y
-# CONFIG_SXGBE_ETH is not set
+# CONFIG_NET_VENDOR_SAMSUNG is not set
 # CONFIG_NET_VENDOR_SEEQ is not set
 # CONFIG_NET_VENDOR_SILAN is not set
 # CONFIG_NET_VENDOR_SIS is not set
@@ -1819,30 +1818,29 @@ CONFIG_NET_VENDOR_SAMSUNG=y
 # CONFIG_FDDI is not set
 # CONFIG_HIPPI is not set
 # CONFIG_NET_SB1000 is not set
-CONFIG_PHYLIB=y
+CONFIG_PHYLIB=m
 
 #
 # MII PHY device drivers
 #
-# CONFIG_AT803X_PHY is not set
-# CONFIG_AMD_PHY is not set
-# CONFIG_MARVELL_PHY is not set
+CONFIG_AT803X_PHY=m
+CONFIG_AMD_PHY=m
+CONFIG_MARVELL_PHY=m
 # CONFIG_DAVICOM_PHY is not set
 # CONFIG_QSEMI_PHY is not set
 # CONFIG_LXT_PHY is not set
 # CONFIG_CICADA_PHY is not set
 # CONFIG_VITESSE_PHY is not set
 # CONFIG_SMSC_PHY is not set
-# CONFIG_BROADCOM_PHY is not set
+CONFIG_BROADCOM_PHY=m
 # CONFIG_BCM7XXX_PHY is not set
-# CONFIG_BCM87XX_PHY is not set
+CONFIG_BCM87XX_PHY=m
 # CONFIG_ICPLUS_PHY is not set
-# CONFIG_REALTEK_PHY is not set
+CONFIG_REALTEK_PHY=m
 # CONFIG_NATIONAL_PHY is not set
 # CONFIG_STE10XP is not set
 # CONFIG_LSI_ET1011C_PHY is not set
 # CONFIG_MICREL_PHY is not set
-CONFIG_FIXED_PHY=y
 # CONFIG_MDIO_BITBANG is not set
 # CONFIG_PPP is not set
 # CONFIG_SLIP is not set
@@ -1850,14 +1848,7 @@ CONFIG_FIXED_PHY=y
 #
 # Host-side USB support is needed for USB Network Adapter support
 #
-CONFIG_USB_NET_DRIVERS=m
-# CONFIG_USB_CATC is not set
-# CONFIG_USB_KAWETH is not set
-# CONFIG_USB_PEGASUS is not set
-# CONFIG_USB_RTL8150 is not set
-# CONFIG_USB_RTL8152 is not set
-# CONFIG_USB_USBNET is not set
-# CONFIG_USB_IPHETH is not set
+# CONFIG_USB_NET_DRIVERS is not set
 # CONFIG_WLAN is not set
 
 #
