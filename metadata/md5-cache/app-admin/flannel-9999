@@ -1,0 +1,11 @@
+DEFINED_PHASES=install
+DEPEND=virtual/pkgconfig
+DESCRIPTION=flannel
+EAPI=4
+HOMEPAGE=https://github.com/coreos/flannel
+KEYWORDS=~amd64
+LICENSE=Apache-2.0
+RDEPEND=app-admin/sdnotify-proxy
+SLOT=0
+_eclasses_=eutils	06133990e861be0fe60c2b428fd025d9	multilib	3bf24e6abb9b76d9f6c20600f0b716bf	systemd	090342761f573a8280dd5aa6b0345f3b	toolchain-funcs	0f1760274637a138b99bb649202ea402
+_md5_=736433fcb93dfeeb50c93954608346d8

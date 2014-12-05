@@ -1,0 +1,11 @@
+DEFINED_PHASES=install unpack
+DEPEND=dev-vcs/git
+DESCRIPTION=Windows Azure Linux Agent
+EAPI=4
+HOMEPAGE=https://github.com/Azure/WALinuxAgent
+KEYWORDS=amd64
+LICENSE=Apache-2.0
+RDEPEND=dev-lang/python-oem
+SLOT=0
+_eclasses_=eutils	06133990e861be0fe60c2b428fd025d9	git-2	2027b81a576527fa16bece425941e094	git-r3	6ebae45064cb04482f3c702632dd9528	multilib	3bf24e6abb9b76d9f6c20600f0b716bf	toolchain-funcs	0f1760274637a138b99bb649202ea402
+_md5_=ac8763590c5ad54be5a0e05507f15c45
