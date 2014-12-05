@@ -1,7 +1,0 @@
-DEFINED_PHASES=install
-DESCRIPTION=OEM suite for CloudStack images
-EAPI=5
-KEYWORDS=amd64 x86
-LICENSE=Apache-2.0
-SLOT=0
-_md5_=3a49c9c882d4fc9227bb0e65d1957f48

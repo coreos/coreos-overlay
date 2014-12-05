@@ -1,0 +1,2 @@
+# Do not enable any services if /etc is detected as empty.
+disable *
