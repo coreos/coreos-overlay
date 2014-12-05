@@ -16,7 +16,6 @@ net-misc/dhcp	        -server
 net-misc/iperf		threads
 net-misc/ntp            caps
 sys-apps/busybox	-pam -selinux
-sys-apps/dbus		-X -systemd
 sys-apps/smartmontools	minimal
 sys-block/parted        device-mapper
 sys-fs/lvm2		-lvm1 -readline

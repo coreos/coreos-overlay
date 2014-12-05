@@ -1,0 +1,27 @@
+From a5ad570fc0577080f994ac7f864470aa9fbd95d8 Mon Sep 17 00:00:00 2001
+From: Michael Marineau <mike@marineau.org>
+Date: Sun, 3 Aug 2014 18:16:07 -0700
+Subject: [PATCH] units: run ldconfig after tmpfiles-setup to ensure ld.so.conf
+ exists
+
+We lost this ordering when we switched to this unit instead of our own.
+---
+ units/ldconfig.service | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/units/ldconfig.service b/units/ldconfig.service
+index 43c145b..c8d9b6b 100644
+--- a/units/ldconfig.service
++++ b/units/ldconfig.service
+@@ -10,7 +10,7 @@ Description=Rebuild Dynamic Linker Cache
+ Documentation=man:ldconfig(8)
+ DefaultDependencies=no
+ Conflicts=shutdown.target
+-After=systemd-remount-fs.service
++After=systemd-remount-fs.service systemd-tmpfiles-setup.service
+ Before=sysinit.target shutdown.target systemd-update-done.service
+ ConditionNeedsUpdate=/etc
+ 
+-- 
+1.8.5.5
+
