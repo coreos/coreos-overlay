@@ -1,0 +1,3 @@
+if [[ $(cros_target) != "cros_host" ]] ; then
+  CMAKE_EXTRA_CACHE_FILE="${CROS_ADDONS_TREE}/config/cross_compile_config.cmake"
+fi
