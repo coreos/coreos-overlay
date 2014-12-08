@@ -69,7 +69,6 @@ RDEPEND="${RDEPEND}
 	dev-python/ws4py
 	sys-devel/bc
 	dev-util/cmake
-	dev-util/gob
 	dev-util/gdbus-codegen
 	dev-util/gperf
 	>=dev-util/gtk-doc-am-1.13
@@ -167,12 +166,6 @@ RDEPEND="${RDEPEND}
 # Host dependencies for HWID processing
 RDEPEND="${RDEPEND}
 	dev-python/pyyaml
-	"
-
-# Tools for working with compiler generated profile information
-# (such as coverage analysis in common.mk)
-RDEPEND="${RDEPEND}
-	dev-util/lcov
 	"
 
 # Host dependencies for building ISOs
