@@ -34,7 +34,7 @@ SRC_URI="http://www.freedesktop.org/software/systemd/${P}.tar.xz
 
 LICENSE="GPL-2 LGPL-2.1 MIT public-domain"
 SLOT="0/2"
-KEYWORDS="~alpha ~amd64 ~arm ~ia64 ~ppc ~ppc64 ~sparc ~x86"
+KEYWORDS="~alpha amd64 ~arm ~ia64 ~ppc ~ppc64 ~sparc ~x86"
 IUSE="acl apparmor audit cryptsetup curl doc elfutils gcrypt gudev http
 	idn introspection kdbus +kmod lz4 lzma pam policykit python qrcode +seccomp
 	selinux ssl terminal nls test vanilla"
@@ -122,6 +122,9 @@ if [[ ${PV} == *9999 ]]; then
 fi
 	# patches not upstream
 	epatch "${FILESDIR}"/0001-hack-testing-Wl-fuse-ld-gold-does-not-work-correctly.patch
+
+	# make mount.usr friendlier
+	epatch "${FILESDIR}"/217-0001-fstab-generator-Allow-mount.usr-without-mount.usrfla.patch
 
 	# Bug 463376
 	sed -i -e 's/GROUP="dialout"/GROUP="uucp"/' rules/*.rules || die
