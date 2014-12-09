@@ -38,8 +38,8 @@ net-analyzer/nmap ncat -lua
 # removes mta dependencies
 app-admin/sudo -sendmail
 
-# avoid pulling in gnutls
-sys-apps/systemd -ssl vanilla
+# avoid pulling in gnutls, disable gentoo-only bits, enable journal upload
+sys-apps/systemd -ssl curl vanilla
 
 # disable kernel config detection and module building
 net-firewall/ipset -modules
