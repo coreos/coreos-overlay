@@ -74,7 +74,8 @@ CCACHE_SIZE="2.5G"
 
 # Always build binary packages, remove old build logs, avoid running as root.
 FEATURES="buildpkg ccache clean-logs compressdebug parallel-install splitdebug
-          userfetch userpriv usersandbox -merge-sync"
+          userfetch userpriv usersandbox ipc-sandbox network-sandbox
+          -merge-sync"
 
 # No need to restrict access to build directories in dev environments.
 PORTAGE_WORKDIR_MODE="0755"
