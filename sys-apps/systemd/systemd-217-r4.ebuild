@@ -123,6 +123,9 @@ fi
 	# patches not upstream
 	epatch "${FILESDIR}"/0001-hack-testing-Wl-fuse-ld-gold-does-not-work-correctly.patch
 
+	# make mount.usr friendlier
+	epatch "${FILESDIR}"/217-0001-fstab-generator-Allow-mount.usr-without-mount.usrfla.patch
+
 	# Bug 463376
 	sed -i -e 's/GROUP="dialout"/GROUP="uucp"/' rules/*.rules || die
 

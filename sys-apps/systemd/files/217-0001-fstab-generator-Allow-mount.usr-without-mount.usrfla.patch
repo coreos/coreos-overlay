@@ -1,0 +1,47 @@
+From eb5800026d5a6754514fb8f8a8561b49974fc879 Mon Sep 17 00:00:00 2001
+From: Michael Marineau <michael.marineau@coreos.com>
+Date: Mon, 8 Dec 2014 11:05:31 -0800
+Subject: [PATCH] fstab-generator: Allow mount.usr without mount.usrflags,
+ honor rw/ro
+
+There is no need to require mount.usrflags. The original implementation
+assumed that a btrfs subvolume would always be needed but that is not
+applicable to systems that do not use btrfs for /usr.
+
+Similar to using rootflags= for the default of mount.usrflags=, append
+the classic 'ro' and 'rw' flags to the mount options.
+---
+ src/fstab-generator/fstab-generator.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/src/fstab-generator/fstab-generator.c b/src/fstab-generator/fstab-generator.c
+index 568b02a..1f34594 100644
+--- a/src/fstab-generator/fstab-generator.c
++++ b/src/fstab-generator/fstab-generator.c
+@@ -476,7 +476,7 @@ static int add_usr_mount(void) {
+                         return log_oom();
+         }
+ 
+-        if (!arg_usr_what || !arg_usr_options)
++        if (!arg_usr_what)
+                 return 0;
+ 
+         what = fstab_node_to_udev_node(arg_usr_what);
+@@ -485,7 +485,13 @@ static int add_usr_mount(void) {
+                 return -1;
+         }
+ 
+-        opts = arg_usr_options;
++        if (!arg_usr_options)
++                opts = arg_root_rw > 0 ? "rw" : "ro";
++        else if (!mount_test_option(arg_usr_options, "ro") &&
++                 !mount_test_option(arg_usr_options, "rw"))
++                opts = strappenda(arg_usr_options, ",", arg_root_rw > 0 ? "rw" : "ro");
++        else
++                opts = arg_usr_options;
+ 
+         log_debug("Found entry what=%s where=/sysroot/usr type=%s", what, strna(arg_usr_fstype));
+         return add_mount(what,
+-- 
+2.0.4
+
