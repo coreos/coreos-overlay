@@ -7,7 +7,7 @@ EAPI=5
 DESCRIPTION="Docker complements kernel namespacing with a high-level API which operates at the process level."
 HOMEPAGE="https://www.docker.io/"
 
-CROS_WORKON_PROJECT="dotcloud/docker"
+CROS_WORKON_PROJECT="coreos/docker"
 CROS_WORKON_LOCALNAME="docker"
 CROS_WORKON_REPO="git://github.com"
 
@@ -17,8 +17,8 @@ if [[ ${PV} == *9999 ]]; then
 	DOCKER_GITCOMMIT="deadbee"
 	KEYWORDS="~amd64"
 else
-	CROS_WORKON_COMMIT="39fa2faad2f3d6fa5133de4eb740677202f53ef4" # v1.3.2
-	DOCKER_GITCOMMIT="39fa2fa"
+	CROS_WORKON_COMMIT="54d900ae358b636fa329752a2e09736b6a497430" # v1.3.3
+	DOCKER_GITCOMMIT="${CROS_WORKON_COMMIT:0:7}"
 	KEYWORDS="amd64"
 fi
 
