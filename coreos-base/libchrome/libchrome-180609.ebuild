@@ -50,6 +50,11 @@ src_configure() {
 	cros-debug-add-NDEBUG
 	export CCFLAGS="$CFLAGS"
 
+	# Fix builds with GCC 4.8
+	if [[ $(gcc-major-version) -ge 4 &&  $(gcc-minor-version) -ge 8 ]]; then
+		CCFLAGS+=" -Wno-unused-local-typedefs"
+	fi
+
 	mkdir -p third_party/libevent
 	echo '#include <event.h>' > third_party/libevent/event.h
 }
