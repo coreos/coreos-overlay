@@ -54,6 +54,11 @@ src_compile() {
 		append-ldflags -nopie
 	fi
 
+	# Fix builds with GCC 4.8
+	if [[ $(gcc-major-version) -ge 4 &&  $(gcc-minor-version) -ge 8 ]]; then
+		append-flags -Wno-unused-local-typedefs
+	fi
+
 	tc-export CC CXX AR RANLIB LD NM PKG_CONFIG
 	cros-debug-add-NDEBUG
 	export CCFLAGS="$CFLAGS"
