@@ -99,12 +99,15 @@ DEPEND="${COMMON_DEPEND}
 	python? ( dev-python/lxml[${PYTHON_USEDEP}] )
 	test? ( >=sys-apps/dbus-1.6.8-r1:0 )"
 
-if [[ ${PV} == *9999 ]]; then
+# Only required if patches touch man page source xml, which is usually.
 DEPEND="${DEPEND}
 	app-text/docbook-xml-dtd:4.2
 	app-text/docbook-xml-dtd:4.5
 	app-text/docbook-xsl-stylesheets
-	dev-libs/libxslt:0
+	dev-libs/libxslt:0"
+
+if [[ ${PV} == *9999 ]]; then
+DEPEND="${DEPEND}
 	dev-libs/gobject-introspection
 	>=dev-libs/libgcrypt-1.4.5:0"
 
