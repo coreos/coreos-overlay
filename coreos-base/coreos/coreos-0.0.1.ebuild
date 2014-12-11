@@ -127,6 +127,7 @@ RDEPEND="${RDEPEND}
 	sys-fs/btrfs-progs
 	sys-fs/e2fsprogs
 	sys-fs/mdadm
+	sys-fs/xfs-progs
 	sys-kernel/coreos-firmware
 	sys-kernel/coreos-kernel
 	sys-libs/glibc
