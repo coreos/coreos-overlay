@@ -5,14 +5,15 @@ After=docker.socket early-docker.target
 Requires=docker.socket early-docker.target
 
 [Service]
-Environment="TMPDIR=/var/tmp/"
+Environment=TMPDIR=/var/tmp
+Environment=DOCKER_DRIVER=btrfs
 ExecStartPre=/bin/mount --make-rprivate /
 EnvironmentFile=-/run/docker_opts.env
 LimitNOFILE=1048576
 LimitNPROC=1048576
 # Run docker but don't have docker automatically restart
 # containers. This is a job for systemd and unit files.
-ExecStart=/usr/bin/docker --daemon --storage-driver=btrfs --host=fd:// $DOCKER_OPTS
+ExecStart=/usr/bin/docker --daemon --host=fd:// $DOCKER_OPTS
 
 [Install]
 WantedBy=multi-user.target
