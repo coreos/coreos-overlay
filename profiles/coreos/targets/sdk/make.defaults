@@ -1,1 +1,5 @@
 USE="-pam"
+
+# Used by some old goo in profiles/coreos/base/profile.bashrc
+# TODO: clean up that old goo
+CROS_SDK_HOST="cros-sdk-host"
