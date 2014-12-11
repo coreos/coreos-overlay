@@ -1,0 +1,24 @@
+The kernel is provided in two parts: coreos-sources and coreos-kernel.
+
+coreos-sources is a traditional Gentoo kernel source ebuild, which
+installs to ${ROOT}/usr/src/linux-${PV}. No extra revision or name is
+added since, like the upstream vanilla-sources, we don't ship patches.
+
+coreos-kernel uses the installed sources to build a kernel image and all
+modules. The kernel config is searched for in the files directory based
+on the ebuild version and revision. For example version 3.12.4-r2:
+ - amd64_defconfig-3.12.4-r2
+ - amd64_defconfig-3.12.4
+ - amd64_defconfig-3.12
+ - amd64_defconfig
+
+Currently our dracut based initrd (bootengine) gets built directly into
+the kernel image, including all kernel modules. (go go modular kernels!)
+This reason for this screwy scheme never came to pass and should be
+fixed eventually. The current grub bootloader already includes logic for
+initrds but the old configure_bootloaders and coreos-postinst scripts
+need to be updated in order to support existing installs.
+
+The coreos-firmware package is a magic version of the upstream
+linux-firmware ebuild which scans the modules installed by coreos-kernel
+and only installs files modules declare as required.

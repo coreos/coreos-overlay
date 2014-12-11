@@ -4,6 +4,11 @@
 
 EAPI=5
 
+# Tell linux-info where to find the kernel source/build
+KERNEL_DIR="${SYSROOT}/usr/src/linux"
+KBUILD_OUTPUT="${SYSROOT}/var/cache/portage/sys-kernel/coreos-kernel"
+inherit linux-info
+
 if [[ ${PV} == 99999999* ]]; then
 	inherit git-2
 	SRC_URI=""
@@ -21,10 +26,9 @@ LICENSE="GPL-1 GPL-2 GPL-3 BSD freedist"
 SLOT="0"
 IUSE=""
 
-DEPEND="sys-kernel/coreos-kernel:="
+DEPEND="sys-kernel/coreos-sources
+	>=sys-kernel/coreos-kernel-3.17.6-r1:="
 RDEPEND="${DEPEND}
-	!=sys-kernel/coreos-kernel-3.12.6
-	!<=sys-kernel/coreos-kernel-3.11.7-r5
 	!sys-kernel/linux-firmware
 	!sys-firmware/alsa-firmware[alsa_cards_ca0132]
 	!sys-firmware/alsa-firmware[alsa_cards_korg1212]
@@ -76,22 +80,13 @@ src_unpack() {
 }
 
 src_prepare() {
-	# FIXME(marineam): The linux-info eclass would normally be able to
-	# provide version info but since we don't install kernel source code the
-	# way it expects it doesn't work correctly. Will fix this eventually...
-	local kernel_pkg=$(best_version sys-kernel/coreos-kernel)
-	local kernel_ver="${kernel_pkg#sys-kernel/coreos-kernel-}"
-	kernel_ver="${kernel_ver%_*}"
-	kernel_ver="${kernel_ver%-*}"
-	local kernel_mods="${ROOT}/lib/modules/${kernel_ver}"
-	# the actually version may have a + or other extraversion suffix
-	local kernel_mods=$(ls -d1 "${kernel_mods}"* | tail -n1)
+	local kernel_mods="${ROOT}/lib/modules/${KV_FULL}"
 
 	# If any firmware is missing warn but don't raise a fuss. Missing
 	# files either means linux-firmware probably out-of-date but since
 	# this is new and hacky I'm not going to worry too much just yet.
 
-	einfo "Scanning for files required by ${kernel_pkg}"
+	einfo "Scanning for files required by ${KV_FULL}"
 	echo -n > "${T}/firmware-scan"
 	local kofile fwfile
 	for kofile in $(find "${kernel_mods}" -name '*.ko'); do
