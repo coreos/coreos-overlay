@@ -13,9 +13,13 @@ CROS_WORKON_REPO="git://github.com"
 
 GITHUB_URI="github.com/crosbymichael/docker"
 
+# TODO: Remove this logic once we cross the 1.4.0 threshold
+BTRFS_VER="0.20"
+
 if [[ ${PV} == *9999 ]]; then
 	DOCKER_GITCOMMIT="deadbee"
 	KEYWORDS="~amd64"
+	BTRFS_VER="3.16.1"
 else
 	CROS_WORKON_COMMIT="39fa2faad2f3d6fa5133de4eb740677202f53ef4" # v1.3.2
 	DOCKER_GITCOMMIT="39fa2fa"
@@ -38,7 +42,7 @@ DEPEND="
 	${CDEPEND}
 	>=dev-lang/go-1.2
 	btrfs? (
-		>=sys-fs/btrfs-progs-0.20
+		>=sys-fs/btrfs-progs-${BTRFS_VER}
 	)
 	dev-vcs/git
 	dev-vcs/mercurial
