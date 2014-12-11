@@ -16,8 +16,13 @@ Environment="FLANNEL_VER={{flannel_ver}}"
 LimitNOFILE=1048576
 LimitNPROC=1048576
 ExecStartPre=/usr/bin/mkdir -p /run/flannel
+ExecStartPre=/usr/bin/touch /run/flannel/options.env
 
-ExecStart=/usr/libexec/sdnotify-proxy /run/flannel/sd.sock /usr/bin/docker run --net=host --privileged=true --rm -v /run/flannel:/run/flannel -e NOTIFY_SOCKET=/run/flannel/sd.sock quay.io/coreos/flannel:${FLANNEL_VER} /opt/bin/flanneld --ip-masq=true
+ExecStart=/usr/libexec/sdnotify-proxy /run/flannel/sd.sock \
+  /usr/bin/docker run --net=host --privileged=true --rm \
+  -v /run/flannel:/run/flannel -e NOTIFY_SOCKET=/run/flannel/sd.sock \
+  --env-file=/run/flannel/options.env \
+  quay.io/coreos/flannel:${FLANNEL_VER} /opt/bin/flanneld --ip-masq=true
 
 # Update docker options
 ExecStartPost=/bin/bash -c '    \
