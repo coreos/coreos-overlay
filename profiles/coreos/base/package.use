@@ -57,3 +57,6 @@ net-misc/openssh -hpn
 
 # xz and lzo are required to run grub tests
 sys-fs/squashfs-tools lzo xz
+
+# make the kernel version discoverable via the traditional gentoo symlink
+sys-kernel/coreos-sources symlink
