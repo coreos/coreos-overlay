@@ -7,7 +7,7 @@
 EAPI=4
 
 EGIT_REPO_URI="git://github.com/Azure/WALinuxAgent"
-EGIT_COMMIT="11ec1548b335d8b64e61e67d8b90906d560d7b0d"
+EGIT_COMMIT="b3f2619a854455675ae5f2ee14726659e0398af7" # WALinuxAgent-2.0.11
 EGIT_MASTER="2.0"
 
 inherit toolchain-funcs git-2
