@@ -1,0 +1,81 @@
+fix already in upstream
+
+From f17f4989fa193fa8279474c5462289a3cfe69aea Mon Sep 17 00:00:00 2001
+From: Mike Frysinger <vapier@chromium.org>
+Date: Fri, 8 Aug 2014 09:40:25 +0900
+Subject: [PATCH] linux-user: fix readlink handling with magic exe symlink
+
+The current code always returns the length of the path when it should
+be returning the number of bytes it wrote to the output string.
+
+Further, readlink is not supposed to append a NUL byte, but the current
+snprintf logic will always do just that.
+
+Even further, if you pass in a length of 0, you're suppoesd to get back
+an error (EINVAL), but the current logic just returns 0.
+
+Further still, if there was an error reading the symlink, we should not
+go ahead and try to read the target buffer as it is garbage.
+
+Simple test for the first two issues:
+$ cat test.c
+int main() {
+    char buf[50];
+    size_t len;
+    for (len = 0; len < 10; ++len) {
+        memset(buf, '!', sizeof(buf));
+        ssize_t ret = readlink("/proc/self/exe", buf, len);
+        buf[20] = '\0';
+        printf("readlink(/proc/self/exe, {%s}, %zu) = %zi\n", buf, len, ret);
+    }
+    return 0;
+}
+
+Now compare the output of the native:
+$ gcc test.c -o /tmp/x
+$ /tmp/x
+$ strace /tmp/x
+
+With what qemu does:
+$ armv7a-cros-linux-gnueabi-gcc test.c -o /tmp/x -static
+$ qemu-arm /tmp/x
+$ qemu-arm -strace /tmp/x
+
+Signed-off-by: Mike Frysinger <vapier@chromium.org>
+Signed-off-by: Riku Voipio <riku.voipio@linaro.org>
+---
+ linux-user/syscall.c | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
+
+diff --git a/linux-user/syscall.c b/linux-user/syscall.c
+index fccf9f0..7c108ab 100644
+--- a/linux-user/syscall.c
++++ b/linux-user/syscall.c
+@@ -6636,11 +6636,22 @@ abi_long do_syscall(void *cpu_env, int num, abi_long arg1,
+             p2 = lock_user(VERIFY_WRITE, arg2, arg3, 0);
+             if (!p || !p2) {
+                 ret = -TARGET_EFAULT;
++            } else if (!arg3) {
++                /* Short circuit this for the magic exe check. */
++                ret = -TARGET_EINVAL;
+             } else if (is_proc_myself((const char *)p, "exe")) {
+                 char real[PATH_MAX], *temp;
+                 temp = realpath(exec_path, real);
+-                ret = temp == NULL ? get_errno(-1) : strlen(real) ;
+-                snprintf((char *)p2, arg3, "%s", real);
++                /* Return value is # of bytes that we wrote to the buffer. */
++                if (temp == NULL) {
++                    ret = get_errno(-1);
++                } else {
++                    /* Don't worry about sign mismatch as earlier mapping
++                     * logic would have thrown a bad address error. */
++                    ret = MIN(strlen(real), arg3);
++                    /* We cannot NUL terminate the string. */
++                    memcpy(p2, real, ret);
++                }
+             } else {
+                 ret = get_errno(readlink(path(p), p2, arg3));
+             }
+-- 
+2.0.0
+
