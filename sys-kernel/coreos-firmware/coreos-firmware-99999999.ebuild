@@ -26,9 +26,10 @@ LICENSE="GPL-1 GPL-2 GPL-3 BSD freedist"
 SLOT="0"
 IUSE=""
 
-DEPEND="sys-kernel/coreos-sources
-	>=sys-kernel/coreos-kernel-3.17.6-r1:="
-RDEPEND="${DEPEND}
+CDEPEND=">=sys-kernel/coreos-kernel-3.17.6-r1:="
+DEPEND="${CDEPEND}
+	sys-kernel/coreos-sources"
+RDEPEND="${CDEPEND}
 	!sys-kernel/linux-firmware
 	!sys-firmware/alsa-firmware[alsa_cards_ca0132]
 	!sys-firmware/alsa-firmware[alsa_cards_korg1212]
