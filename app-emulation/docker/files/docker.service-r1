@@ -1,0 +1,17 @@
+[Unit]
+Description=Docker Application Container Engine
+Documentation=http://docs.docker.com
+After=docker.socket early-docker.target network.target
+Requires=docker.socket early-docker.target
+
+[Service]
+Environment=TMPDIR=/var/tmp
+Environment=DOCKER_DRIVER=btrfs
+Environment=DOCKER_OPTS='--insecure-registry="0.0.0.0/0"'
+EnvironmentFile=-/run/docker_opts.env
+LimitNOFILE=1048576
+LimitNPROC=1048576
+ExecStart=/usr/bin/docker --daemon --host=fd:// $DOCKER_OPTS
+
+[Install]
+WantedBy=multi-user.target
