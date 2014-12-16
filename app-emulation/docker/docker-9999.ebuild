@@ -28,6 +28,7 @@ IUSE="aufs +btrfs contrib +device-mapper doc lxc vim-syntax zsh-completion"
 
 # https://github.com/docker/docker/blob/master/hack/PACKAGERS.md#build-dependencies
 CDEPEND="
+	>=sys-kernel/coreos-kernel-3.18.0
 	>=dev-db/sqlite-3.7.9:3
 	device-mapper? (
 		>=sys-fs/lvm2-2.02.89[thin]
@@ -185,6 +186,9 @@ src_install() {
 
 	newinitd contrib/init/openrc/docker.initd docker
 	newconfd contrib/init/openrc/docker.confd docker
+
+	exeinto /usr/lib/coreos
+	doexe "${FILESDIR}/dockerd"
 
 	systemd_newunit "${FILESDIR}/docker.service-r1" "docker.service"
 	systemd_dounit "${FILESDIR}/docker.socket"

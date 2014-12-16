@@ -6,10 +6,9 @@ Requires=early-docker.socket
 
 [Service]
 Environment=TMPDIR=/var/tmp
-Environment=DOCKER_DRIVER=btrfs
 LimitNOFILE=1048576
 LimitNPROC=1048576
-ExecStart=/usr/bin/docker --daemon --host=fd:// --bridge=none --iptables=false --ip-masq=false --graph=/var/lib/early-docker --pidfile=/var/run/early-docker.pid
+ExecStart=/usr/lib/coreos/dockerd --daemon --host=fd:// --bridge=none --iptables=false --ip-masq=false --graph=/var/lib/early-docker --pidfile=/var/run/early-docker.pid
 
 [Install]
 WantedBy=early-docker.target
