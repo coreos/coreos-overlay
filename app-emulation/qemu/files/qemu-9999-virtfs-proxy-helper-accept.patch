@@ -1,0 +1,30 @@
+From c5970614489e385e69667f1f323421442a7a46c0 Mon Sep 17 00:00:00 2001
+From: Tim Comer <comer0@gmail.com>
+Date: Sat, 19 Apr 2014 12:51:42 -0400
+Subject: [PATCH] virtfs-proxy-helper: fix call to accept
+
+The current code calls accept() without initializing the size parameter
+which means the accept call might write too much to the stack.
+
+URL: https://bugs.gentoo.org/486714
+Signed-off-by: Tim Comer <comer0@gmail.com>
+Signed-off-by: Mike Frysinger <vapier@gentoo.org>
+---
+ fsdev/virtfs-proxy-helper.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/fsdev/virtfs-proxy-helper.c b/fsdev/virtfs-proxy-helper.c
+index bfecb87..cd291d3 100644
+--- a/fsdev/virtfs-proxy-helper.c
++++ b/fsdev/virtfs-proxy-helper.c
+@@ -760,6 +760,7 @@ static int proxy_socket(const char *path, uid_t uid, gid_t gid)
+         return -1;
+     }
+ 
++    size = sizeof(qemu);
+     client = accept(sock, (struct sockaddr *)&qemu, &size);
+     if (client < 0) {
+         do_perror("accept");
+-- 
+1.9.2
+

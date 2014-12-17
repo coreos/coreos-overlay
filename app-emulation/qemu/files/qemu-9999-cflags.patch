@@ -1,0 +1,13 @@
+diff --git a/configure b/configure
+index 82f6e71..7e19aaf 100755
+--- a/configure
++++ b/configure
+@@ -3131,8 +3131,6 @@ fi
+ if test "$gcov" = "yes" ; then
+   CFLAGS="-fprofile-arcs -ftest-coverage -g $CFLAGS"
+   LDFLAGS="-fprofile-arcs -ftest-coverage $LDFLAGS"
+-elif test "$debug" = "no" ; then
+-  CFLAGS="-O2 -D_FORTIFY_SOURCE=2 $CFLAGS"
+ fi
+ 
+ 
