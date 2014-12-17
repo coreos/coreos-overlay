@@ -17,6 +17,7 @@ DEPEND="
 	app-admin/sudo
 	app-admin/updateservicectl
 	app-arch/pbzip2
+	app-emulation/open-vmdk
 	app-shells/bash-completion
 	app-misc/jq
 	coreos-base/hard-host-depends
