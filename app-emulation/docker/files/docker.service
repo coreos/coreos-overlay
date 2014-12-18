@@ -7,10 +7,11 @@ Requires=docker.socket early-docker.target
 [Service]
 Environment=TMPDIR=/var/tmp
 Environment=DOCKER_DRIVER=btrfs
-ExecStartPre=/bin/mount --make-rprivate /
+Environment=DOCKER_OPTS='--insecure-registry="0.0.0.0/0"'
 EnvironmentFile=-/run/docker_opts.env
 LimitNOFILE=1048576
 LimitNPROC=1048576
+ExecStartPre=/bin/mount --make-rprivate /
 # Run docker but don't have docker automatically restart
 # containers. This is a job for systemd and unit files.
 ExecStart=/usr/bin/docker --daemon --host=fd:// $DOCKER_OPTS
