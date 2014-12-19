@@ -491,6 +491,9 @@ pkg_postinst() {
 	# Migrate 80-net-name-slot.rules -> 80-net-setup-link.rules
 	migrate_net_name_slot
 
+	# Mark journald log directory as no copy-on-write
+	chattr +C /var/log/journal
+
 	if [[ ${FAIL} ]]; then
 		eerror "One of the postinst commands failed. Please check the postinst output"
 		eerror "for errors. You may need to clean up your system and/or try installing"
