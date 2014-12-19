@@ -1,6 +1,6 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/net-misc/ntp/ntp-4.2.6_p5-r10.ebuild,v 1.12 2014/04/06 15:03:40 vapier Exp $
+# $Header: /var/cvsroot/gentoo-x86/net-misc/ntp/ntp-4.2.6_p5-r10.ebuild,v 1.15 2014/11/02 09:09:15 swift Exp $
 
 EAPI="4"
 
@@ -24,9 +24,9 @@ DEPEND=">=sys-libs/ncurses-5.2
 	!openntpd? ( !net-misc/openntpd )
 	snmp? ( net-analyzer/net-snmp )
 	ssl? ( dev-libs/openssl )
-	selinux? ( sec-policy/selinux-ntp )
 	parse-clocks? ( net-misc/pps-tools )"
 RDEPEND="${DEPEND}
+	selinux? ( sec-policy/selinux-ntp )
 	vim-syntax? ( app-vim/ntp-syntax )"
 PDEPEND="openntpd? ( net-misc/openntpd )"
 
@@ -96,12 +96,10 @@ src_install() {
 		rm usr/share/man/*/ntpd.8 || die
 	else
 		systemd_dounit "${FILESDIR}"/ntpd.service
+		use caps && sed -i '/ExecStart/ s|$| -u ntp:ntp|' \
+			"${ED}/$(systemd_get_unitdir)/ntpd.service"
 		systemd_enable_ntpunit 60-ntpd ntpd.service
 		systemd_enable_service multi-user.target ntpd.service
-		if ! use caps ; then
-			sed -i "s|-u ntp:ntp||" \
-				"${ED}/$(systemd_get_unitdir)/ntpd.service" || die
-		fi
 	fi
 
 	systemd_dounit "${FILESDIR}"/ntpdate.service
