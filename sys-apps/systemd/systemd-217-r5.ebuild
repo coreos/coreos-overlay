@@ -411,6 +411,12 @@ multilib_src_install_all() {
 
 	# Disable the "First Boot Wizard" by default, it isn't very applicable to CoreOS
 	rm "${D}"/usr/lib/systemd/system/sysinit.target.wants/systemd-firstboot.service
+
+	# Do not ship distro-specific files (nsswitch.conf pam.d)
+	rm -rf "${D}"/usr/share/factory
+	sed -i "${D}"/usr/lib/tmpfiles.d/etc.conf \
+		-e '/^C \/etc\/nsswitch\.conf/d' \
+		-e '/^C \/etc\/pam\.d/d'
 }
 
 migrate_locale() {
