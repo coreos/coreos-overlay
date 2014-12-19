@@ -18,6 +18,7 @@ INSTALL_MASK="${INSTALL_MASK}
   /usr/share/gtk-doc
   /usr/share/i18n
   /usr/share/locale
+  /usr/share/zsh
   /var/db/Makefile
 "
 
