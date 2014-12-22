@@ -8,6 +8,8 @@ Before=early-docker.target
 
 [Service]
 Type=notify
+Restart=always
+RestartSec=5
 Environment="TMPDIR=/var/tmp/"
 Environment="DOCKER_HOST=unix:///var/run/early-docker.sock"
 Environment="FLANNEL_VER={{flannel_ver}}"
