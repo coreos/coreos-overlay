@@ -6,7 +6,7 @@ EAPI=5
 AUTOTOOLS_AUTORECONF=1
 AUTOTOOLS_IN_SOURCE_BUILD=1
 
-inherit autotools-utils toolchain-funcs git-2
+inherit autotools-utils flag-o-matic git-2 multilib toolchain-funcs
 
 DESCRIPTION="VMware tools for distribution via /usr/share/oem"
 HOMEPAGE="http://open-vm-tools.sourceforge.net/"
@@ -62,11 +62,17 @@ override_vmw_check_lib() {
 }
 
 src_configure() {
+	local oemlib="/usr/share/oem/$(get_libdir)"
+	local oeminc="/usr/share/oem/include"
+
+	# set rpath even if oem is in ld.so.conf
+	append-ldflags "-Wl,-rpath,${oemlib}"
+
 	# libdnet is installed to /usr/share/oem
-	export CUSTOM_DNET_CPPFLAGS="-I${SYSROOT}/usr/share/oem/include"
-	export CUSTOM_DNET_LIBS="-L${SYSROOT}/usr/share/oem/lib64"
-	export CUSTOM_MSPACK_CPPFLAGS="-I${SYSROOT}/usr/share/oem/include"
-	export CUSTOM_MSPACK_LIBS="-L${SYSROOT}/usr/share/oem/lib64"
+	export CUSTOM_DNET_CPPFLAGS="-I${SYSROOT}${oeminc}"
+	export CUSTOM_DNET_LIBS="-L${SYSROOT}${oemlib}"
+	export CUSTOM_MSPACK_CPPFLAGS="-I${SYSROOT}${oeminc}"
+	export CUSTOM_MSPACK_LIBS="-L${SYSROOT}${oemlib}"
 
 	# >=sys-process/procps-3.3.2 not handled by configure
 	export CUSTOM_PROCPS_NAME=procps
