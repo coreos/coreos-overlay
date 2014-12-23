@@ -1,20 +1,21 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/net-misc/ntp/ntp-4.2.6_p5-r10.ebuild,v 1.15 2014/11/02 09:09:15 swift Exp $
+# $Header: /var/cvsroot/gentoo-x86/net-misc/ntp/ntp-4.2.8-r1.ebuild,v 1.4 2014/12/22 15:04:43 hwoarang Exp $
 
 EAPI="4"
 
-inherit eutils toolchain-funcs flag-o-matic user systemd
+inherit autotools eutils toolchain-funcs flag-o-matic user systemd
 
 MY_P=${P/_p/p}
 DESCRIPTION="Network Time Protocol suite/programs"
 HOMEPAGE="http://www.ntp.org/"
-SRC_URI="http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-${PV:0:3}/${MY_P}.tar.gz"
+SRC_URI="http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-${PV:0:3}/${MY_P}.tar.gz
+	mirror://gentoo/${MY_P}-manpages.tar.bz2"
 
 LICENSE="HPND BSD ISC"
 SLOT="0"
 KEYWORDS="alpha amd64 arm arm64 hppa ia64 ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd ~x86-freebsd ~amd64-linux ~ia64-linux ~x86-linux ~m68k-mint"
-IUSE="caps debug doc examples ipv6 openntpd parse-clocks samba selinux snmp ssl vim-syntax zeroconf"
+IUSE="caps debug doc ipv6 openntpd parse-clocks perl samba selinux snmp ssl vim-syntax zeroconf"
 
 CDEPEND=">=sys-libs/ncurses-5.2
 	>=sys-libs/readline-4.1
@@ -26,7 +27,7 @@ CDEPEND=">=sys-libs/ncurses-5.2
 	ssl? ( dev-libs/openssl )
 	parse-clocks? ( net-misc/pps-tools )"
 DEPEND="${CDEPEND}
-	dev-util/pkgconfig"
+	virtual/pkgconfig"
 RDEPEND="${CDEPEND}
 	selinux? ( sec-policy/selinux-ntp )
 	vim-syntax? ( app-vim/ntp-syntax )"
@@ -41,7 +42,10 @@ pkg_setup() {
 
 src_prepare() {
 	epatch "${FILESDIR}"/${PN}-4.2.4_p7-nano.patch #270483
+	epatch "${FILESDIR}"/${P}-ntp-keygen-no-openssl.patch #533238
+	use perl || epatch "${FILESDIR}"/${P}-disable-perl-scripts.patch
 	append-cppflags -D_GNU_SOURCE #264109
+	eautoreconf
 }
 
 src_configure() {
@@ -71,21 +75,11 @@ src_install() {
 	mv "${ED}"/usr/bin/{ntpd,ntpdate} "${ED}"/usr/sbin/ || die "move to sbin"
 
 	dodoc INSTALL WHERE-TO-START
+	doman "${WORKDIR}"/man/*.[58]
 	use doc && dohtml -r html/*
 
 	insinto /usr/share/ntp
 	doins "${FILESDIR}"/ntp.conf
-	if use examples; then
-		cp -r scripts/* "${ED}"/usr/share/ntp/ || die
-		use prefix || fperms -R go-w /usr/share/ntp
-		find "${ED}"/usr/share/ntp \
-			'(' \
-			-name '*.in' -o \
-			-name 'Makefile*' -o \
-			-name support \
-			')' \
-			-exec rm -r {} \;
-	fi
 
 	keepdir /var/lib/ntp
 	use prefix || fowners ntp:ntp /var/lib/ntp
@@ -98,8 +92,7 @@ src_install() {
 		rm usr/share/man/*/ntpd.8 || die
 	else
 		systemd_dounit "${FILESDIR}"/ntpd.service
-		use caps && sed -i '/ExecStart/ s|$| -u ntp:ntp|' \
-			"${ED}/$(systemd_get_unitdir)/ntpd.service"
+		use caps && sed -i '/ExecStart/ s|$| -u ntp:ntp|' "${ED}"/usr/lib/systemd/system/ntpd.service
 		systemd_enable_ntpunit 60-ntpd ntpd.service
 		systemd_enable_service multi-user.target ntpd.service
 	fi
