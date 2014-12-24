@@ -8,5 +8,5 @@ KEYWORDS=amd64 x86 arm
 LICENSE=LGPL-2
 RDEPEND=glib? ( >=dev-libs/dbus-glib-0.76 ) glib? ( >=dev-libs/glib-2.19:2 ) >=sys-apps/dbus-1.0 >=dev-cpp/ctemplate-1.0
 SLOT=1
-_eclasses_=cros-workon	371c4d0af591fe21f1a019af07137224	eutils	06133990e861be0fe60c2b428fd025d9	flag-o-matic	75e24bac8423c515dd9c5717f08feb83	git-2	2027b81a576527fa16bece425941e094	git-r3	6ebae45064cb04482f3c702632dd9528	multilib	3bf24e6abb9b76d9f6c20600f0b716bf	toolchain-funcs	0f1760274637a138b99bb649202ea402
+_eclasses_=cros-workon	371c4d0af591fe21f1a019af07137224	eutils	6faef4c127028ccbba3a11400d24ae34	flag-o-matic	eda1c0b5ba85b3eeb555a071d69eb819	git-2	e28f0d8a9b321431b1e699782851b827	multilib	3bf24e6abb9b76d9f6c20600f0b716bf	toolchain-funcs	0dfbfa13f57c6184f4728d12ac002aac
 _md5_=ede450037ec66481cbd1612d53f33ba3

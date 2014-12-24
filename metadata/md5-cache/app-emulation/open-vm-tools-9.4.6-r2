@@ -1,0 +1,12 @@
+DEFINED_PHASES=compile configure install prepare test unpack
+DEPEND=dev-libs/glib:2 sys-process/procps deploypkg? ( dev-libs/libmspack ) dnet? ( dev-libs/libdnet ) !<sys-devel/gettext-0.18.1.1-r3 || ( >=sys-devel/automake-1.13:1.13 >=sys-devel/automake-1.14:1.14 ) >=sys-devel/autoconf-2.69 >=sys-devel/libtool-2.4 dev-vcs/git
+DESCRIPTION=VMware tools for distribution via /usr/share/oem
+EAPI=5
+HOMEPAGE=http://open-vm-tools.sourceforge.net/
+IUSE=+dnet +pic +deploypkg
+KEYWORDS=amd64 ~x86
+LICENSE=LGPL-2
+RDEPEND=dnet? ( dev-libs/libdnet ) deploypkg? ( dev-libs/libmspack )
+SLOT=0
+_eclasses_=autotools	c118b9a8e93bfef124f2d7a2fe56a95e	autotools-utils	3727db64c7b960903d5033280f108080	eutils	6faef4c127028ccbba3a11400d24ae34	flag-o-matic	eda1c0b5ba85b3eeb555a071d69eb819	git-2	e28f0d8a9b321431b1e699782851b827	libtool	52d0e17251d04645ffaa61bfdd858944	multilib	3bf24e6abb9b76d9f6c20600f0b716bf	toolchain-funcs	0dfbfa13f57c6184f4728d12ac002aac
+_md5_=499a165844dc5417fbb149fead33b945

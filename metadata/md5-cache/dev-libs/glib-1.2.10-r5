@@ -1,5 +1,5 @@
 DEFINED_PHASES=compile install unpack
-DEPEND=!<sys-devel/gettext-0.18.1.1-r3 || ( >=sys-devel/automake-1.13 >=sys-devel/automake-1.14 ) >=sys-devel/autoconf-2.69 sys-devel/libtool
+DEPEND=!<sys-devel/gettext-0.18.1.1-r3 || ( >=sys-devel/automake-1.13 >=sys-devel/automake-1.14 ) >=sys-devel/autoconf-2.69 >=sys-devel/libtool-2.4
 DESCRIPTION=The GLib library of C routines
 HOMEPAGE=http://www.gtk.org/
 IUSE=hardened
@@ -7,5 +7,5 @@ KEYWORDS=alpha amd64 arm hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~x86-f
 LICENSE=LGPL-2.1
 SLOT=1
 SRC_URI=ftp://ftp.gtk.org/pub/gtk/v1.2/glib-1.2.10.tar.gz ftp://ftp.gnome.org/pub/GNOME/stable/sources/glib/glib-1.2.10.tar.gz mirror://gentoo/glib-1.2.10-r1-as-needed.patch.bz2
-_eclasses_=autotools	ebea507d219855923e3438c953cf4ab8	eutils	06133990e861be0fe60c2b428fd025d9	flag-o-matic	75e24bac8423c515dd9c5717f08feb83	libtool	52d0e17251d04645ffaa61bfdd858944	multilib	3bf24e6abb9b76d9f6c20600f0b716bf	multiprocessing	d7f2985a2c76c365ee20269db5261414	portability	a45c088f246ef5091e029f6285d7ce42	toolchain-funcs	0f1760274637a138b99bb649202ea402
+_eclasses_=autotools	c118b9a8e93bfef124f2d7a2fe56a95e	eutils	6faef4c127028ccbba3a11400d24ae34	flag-o-matic	eda1c0b5ba85b3eeb555a071d69eb819	libtool	52d0e17251d04645ffaa61bfdd858944	multilib	3bf24e6abb9b76d9f6c20600f0b716bf	portability	a45c088f246ef5091e029f6285d7ce42	toolchain-funcs	0dfbfa13f57c6184f4728d12ac002aac
 _md5_=f31941ec5f6a80c3afb225a703745269
