@@ -1,5 +1,5 @@
 DEFINED_PHASES=compile configure install postinst preinst prepare pretend test
-DEPEND=nls? ( virtual/libintl ) cracklib? ( >=sys-libs/cracklib-2.8.3 ) audit? ( sys-process/audit ) selinux? ( >=sys-libs/libselinux-1.28 ) berkdb? ( sys-libs/db ) elibc_glibc? ( >=sys-libs/glibc-2.7 nis? ( || ( >=net-libs/libtirpc-0.2.2-r1 <sys-libs/glibc-2.14 ) ) ) >=sys-devel/libtool-2 sys-devel/flex nls? ( sys-devel/gettext ) virtual/pkgconfig !<sys-devel/gettext-0.18.1.1-r3 || ( >=sys-devel/automake-1.13:1.13 >=sys-devel/automake-1.14:1.14 ) >=sys-devel/autoconf-2.69 sys-devel/libtool
+DEPEND=nls? ( virtual/libintl ) cracklib? ( >=sys-libs/cracklib-2.8.3 ) audit? ( sys-process/audit ) selinux? ( >=sys-libs/libselinux-1.28 ) berkdb? ( sys-libs/db ) elibc_glibc? ( >=sys-libs/glibc-2.7 nis? ( || ( >=net-libs/libtirpc-0.2.2-r1 <sys-libs/glibc-2.14 ) ) ) >=sys-devel/libtool-2 sys-devel/flex nls? ( sys-devel/gettext ) virtual/pkgconfig !<sys-devel/gettext-0.18.1.1-r3 || ( >=sys-devel/automake-1.13:1.13 >=sys-devel/automake-1.14:1.14 ) >=sys-devel/autoconf-2.69 >=sys-devel/libtool-2.4
 DESCRIPTION=Linux-PAM (Pluggable Authentication Modules)
 EAPI=5
 HOMEPAGE=https://fedorahosted.org/linux-pam/
@@ -10,5 +10,5 @@ PDEPEND=sys-auth/pambase vim-syntax? ( app-vim/pam-syntax )
 RDEPEND=nls? ( virtual/libintl ) cracklib? ( >=sys-libs/cracklib-2.8.3 ) audit? ( sys-process/audit ) selinux? ( >=sys-libs/libselinux-1.28 ) berkdb? ( sys-libs/db ) elibc_glibc? ( >=sys-libs/glibc-2.7 nis? ( || ( >=net-libs/libtirpc-0.2.2-r1 <sys-libs/glibc-2.14 ) ) ) !<sys-apps/openrc-0.11.8 !sys-auth/openpam !sys-auth/pam_userdb
 SLOT=0
 SRC_URI=http://www.linux-pam.org/library/Linux-PAM-1.1.6.tar.bz2 http://www.linux-pam.org/documentation/Linux-PAM-1.1.6-docs.tar.bz2
-_eclasses_=autotools	ebea507d219855923e3438c953cf4ab8	db-use	82d0e62839f20e1e0d5a2259abd5316f	eutils	06133990e861be0fe60c2b428fd025d9	flag-o-matic	75e24bac8423c515dd9c5717f08feb83	libtool	52d0e17251d04645ffaa61bfdd858944	multilib	3bf24e6abb9b76d9f6c20600f0b716bf	multiprocessing	d7f2985a2c76c365ee20269db5261414	pam	aa1ebb3ab720ea04dbbdd6eaaf9554ed	toolchain-funcs	0f1760274637a138b99bb649202ea402	versionator	cd0bcdb170807e4a1984115e9d53a26f
+_eclasses_=autotools	c118b9a8e93bfef124f2d7a2fe56a95e	db-use	82d0e62839f20e1e0d5a2259abd5316f	eutils	6faef4c127028ccbba3a11400d24ae34	flag-o-matic	eda1c0b5ba85b3eeb555a071d69eb819	libtool	52d0e17251d04645ffaa61bfdd858944	multilib	3bf24e6abb9b76d9f6c20600f0b716bf	pam	aa1ebb3ab720ea04dbbdd6eaaf9554ed	toolchain-funcs	0dfbfa13f57c6184f4728d12ac002aac	versionator	cd0bcdb170807e4a1984115e9d53a26f
 _md5_=79d2bc46c17099683aed473c131be224

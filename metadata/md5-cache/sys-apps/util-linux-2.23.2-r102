@@ -9,5 +9,5 @@ LICENSE=GPL-2 GPL-3 LGPL-2.1 BSD-4 MIT public-domain
 RDEPEND=!sys-process/schedutils !sys-apps/setarch !<sys-apps/sysvinit-2.88-r5 !sys-block/eject !<sys-libs/e2fsprogs-libs-1.41.8 !<sys-fs/e2fsprogs-1.41.8 !<app-shells/bash-completion-1.3-r2 caps? ( sys-libs/libcap-ng ) cramfs? ( sys-libs/zlib ) ncurses? ( >=sys-libs/ncurses-5.2-r2 ) pam? ( sys-libs/pam ) selinux? ( sys-libs/libselinux ) slang? ( sys-libs/slang ) udev? ( virtual/udev )
 SLOT=0
 SRC_URI=mirror://kernel/linux/utils/util-linux/v2.23/util-linux-2.23.2.tar.xz
-_eclasses_=bash-completion-r1	db412e427e3317ffd3e15f17df269c5e	eutils	06133990e861be0fe60c2b428fd025d9	flag-o-matic	75e24bac8423c515dd9c5717f08feb83	libtool	52d0e17251d04645ffaa61bfdd858944	multilib	3bf24e6abb9b76d9f6c20600f0b716bf	toolchain-funcs	0f1760274637a138b99bb649202ea402
+_eclasses_=bash-completion-r1	c8399c7c7ecbcf7ed6e5bd3abb3d4af3	eutils	6faef4c127028ccbba3a11400d24ae34	flag-o-matic	eda1c0b5ba85b3eeb555a071d69eb819	libtool	52d0e17251d04645ffaa61bfdd858944	multilib	3bf24e6abb9b76d9f6c20600f0b716bf	toolchain-funcs	0dfbfa13f57c6184f4728d12ac002aac
 _md5_=045d173d7bbf1f079c5d37c31dac640d

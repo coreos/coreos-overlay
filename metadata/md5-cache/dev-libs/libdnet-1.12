@@ -1,5 +1,5 @@
 DEFINED_PHASES=configure install prepare
-DEPEND=!<sys-devel/gettext-0.18.1.1-r3 || ( >=sys-devel/automake-1.13:1.13 >=sys-devel/automake-1.14:1.14 ) >=sys-devel/autoconf-2.69 sys-devel/libtool
+DEPEND=!<sys-devel/gettext-0.18.1.1-r3 || ( >=sys-devel/automake-1.13:1.13 >=sys-devel/automake-1.14:1.14 ) >=sys-devel/autoconf-2.69 >=sys-devel/libtool-2.4
 DESCRIPTION=simplified network library for /usr/share/oem
 EAPI=5
 HOMEPAGE=http://code.google.com/p/libdnet/
@@ -9,5 +9,5 @@ LICENSE=LGPL-2
 RESTRICT=test
 SLOT=0
 SRC_URI=http://libdnet.googlecode.com/files/libdnet-1.12.tgz ipv6? ( http://fragroute-ipv6.googlecode.com/files/libdnet-1.12.ipv6-1.patch.gz )
-_eclasses_=autotools	ebea507d219855923e3438c953cf4ab8	eutils	06133990e861be0fe60c2b428fd025d9	libtool	52d0e17251d04645ffaa61bfdd858944	multilib	3bf24e6abb9b76d9f6c20600f0b716bf	multiprocessing	d7f2985a2c76c365ee20269db5261414	toolchain-funcs	0f1760274637a138b99bb649202ea402
+_eclasses_=autotools	c118b9a8e93bfef124f2d7a2fe56a95e	eutils	6faef4c127028ccbba3a11400d24ae34	libtool	52d0e17251d04645ffaa61bfdd858944	multilib	3bf24e6abb9b76d9f6c20600f0b716bf	toolchain-funcs	0dfbfa13f57c6184f4728d12ac002aac
 _md5_=ed8834cfb0b1f5863cbfe26c9a3fa384
