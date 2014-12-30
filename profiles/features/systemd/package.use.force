@@ -1,8 +1,8 @@
 # Copyright (c) 2014 The CoreOS Authors. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
-# disable gentoo-only bits
-sys-apps/systemd vanilla
+# disable gentoo-only bits and replace sysvinit
+sys-apps/systemd vanilla sysv-utils
 
 # dbus without systemd conflicts with systemd
 sys-apps/dbus systemd
