@@ -383,6 +383,14 @@ multilib_src_install_all() {
 		rm "${D}"/usr/share/man/man1/init.1 || die
 	fi
 
+	# Ensure journal directory has correct ownership/mode in inital image.
+	# This is fixed by systemd-tmpfiles *but* journald starts before that
+	# and will create the journal if the filesystem is already read-write.
+	# Conveniently the systemd Makefile sets this up completely wrong.
+	dodir /var/log/journal
+	fowners root:systemd-journal /var/log/journal
+	fperms 2755 /var/log/journal
+
 	systemd_dotmpfilesd "${FILESDIR}"/systemd-coreos.conf
 	systemd_dotmpfilesd "${FILESDIR}"/systemd-resolv.conf
 
