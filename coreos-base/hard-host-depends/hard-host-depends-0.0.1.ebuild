@@ -82,7 +82,6 @@ RDEPEND="${RDEPEND}
 	net-misc/gsutil
 	sys-apps/usbutils
 	sys-apps/systemd
-	sys-apps/systemd-sysv-utils
 	!sys-apps/nih-dbus-tool
 	=sys-devel/automake-1.10*
 	sys-fs/sshfs-fuse

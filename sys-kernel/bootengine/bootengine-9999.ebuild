@@ -31,7 +31,6 @@ DEPEND="
 	sys-apps/less
 	sys-apps/sed
 	sys-apps/systemd
-	sys-apps/systemd-sysv-utils
 	sys-apps/util-linux
 	sys-fs/btrfs-progs
 	sys-fs/mdadm
