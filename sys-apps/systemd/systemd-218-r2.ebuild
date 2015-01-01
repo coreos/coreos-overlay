@@ -38,8 +38,8 @@ IUSE="acl apparmor audit cryptsetup curl doc elfutils gcrypt gudev http
 	idn introspection kdbus +kmod lz4 lzma pam policykit python qrcode +seccomp
 	selinux ssl sysv-utils terminal test vanilla xkb"
 
-# Gentoo removed this use flag, we'll keep it for now
-IUSE+=" nls"
+# Gentoo removed the nls use flag, we'll keep it for now
+IUSE+=" nls symlink-usr"
 
 MINKV="3.8"
 
@@ -372,10 +372,12 @@ multilib_src_install_all() {
 	einstalldocs
 
 	if use sysv-utils; then
+		local prefix
+		use symlink-usr && prefix=/usr
 		for app in halt poweroff reboot runlevel shutdown telinit; do
-			dosym "..${ROOTPREFIX-/usr}/bin/systemctl" /sbin/${app}
+			dosym /usr/bin/systemctl ${prefix}/sbin/${app}
 		done
-		dosym "..${ROOTPREFIX-/usr}/lib/systemd/systemd" /sbin/init
+		dosym /usr/lib/systemd/systemd ${prefix}/sbin/init
 	else
 		# we just keep sysvinit tools, so no need for the mans
 		rm "${D}"/usr/share/man/man8/{halt,poweroff,reboot,runlevel,shutdown,telinit}.8 \
