@@ -40,11 +40,9 @@ if [[ -z ${CHOST} ]] || [[ -z ${SYSROOT} ]] ; then
   exit 1
 fi
 
-PATH="${SYSROOT}/usr/bin:${PATH}"
-
 # Some wrappers will dynamically figure out where they're being run from,
 # and then output a full path -I/-L path based on that.  So we trim any
 # expanded sysroot paths that might be in the output already to avoid
 # having it be -L${SYSROOT}${SYSROOT}/usr/lib.
 set -o pipefail
-exec ${cfg} "$@" | sed -r "s:(-[IL])(${SYSROOT})?:\1${SYSROOT}:g"
+exec ${SYSROOT}/usr/bin/${cfg} "$@" | sed -r "s:(-[IL])(${SYSROOT})?:\1${SYSROOT}:g"
