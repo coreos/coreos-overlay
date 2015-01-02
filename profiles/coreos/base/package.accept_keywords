@@ -112,6 +112,3 @@ dev-util/checkbashisms
 
 # >=3.16 required by docker 1.4
 =sys-fs/btrfs-progs-3.17.1
-
-# Lets give go 1.4 a spin!
-=dev-lang/go-1.4
