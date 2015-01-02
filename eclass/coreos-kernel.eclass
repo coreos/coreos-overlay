@@ -165,8 +165,19 @@ coreos-kernel_src_install() {
 
 	local version=$(kmake -s --no-print-directory kernelrelease)
 	dosym "vmlinuz-${version}" /usr/boot/vmlinuz
+	dosym "config-${version}" /usr/boot/config
 
 	shred_keys
 }
 
-EXPORT_FUNCTIONS pkg_setup src_prepare src_configure src_compile src_install
+coreos-kernel_pkg_postinst() {
+	# linux-info always expects to be able to find the current .config
+	# so copy it into the build tree if it isn't already there.
+	if ! cmp --quiet "${ROOT}/usr/boot/config" "${KBUILD_OUTPUT}/.config"; then
+		cp "${ROOT}/usr/boot/config" "${KBUILD_OUTPUT}/.config"
+		chown ${PORTAGE_USERNAME:-portage}:${PORTAGE_GRPNAME:-portage} \
+			"${KBUILD_OUTPUT}/.config"
+	fi
+}
+
+EXPORT_FUNCTIONS pkg_setup src_prepare src_configure src_compile src_install pkg_postinst
