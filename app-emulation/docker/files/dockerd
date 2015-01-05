@@ -11,8 +11,8 @@ parse_docker_args() {
 
         # treat --flag=foo and --flag foo identically
         if [[ "${flag}" == *=* ]]; then
-            flag="${flag%=*}"
             set -- "${flag#*=}" "$@"
+            flag="${flag%=*}"
         fi
 
         case "${flag}" in
