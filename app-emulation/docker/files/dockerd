@@ -4,7 +4,7 @@
 set -e
 
 parse_docker_args() {
-    local flag value
+    local flag
     while [[ $# -gt 0 ]]; do
         flag="$1"
         shift
