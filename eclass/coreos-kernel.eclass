@@ -84,6 +84,11 @@ update_bootengine_cpio() {
 
 kmake() {
 	local kernel_arch=$(tc-arch-kernel)
+	# Disable hardened PIE explicitly, >=ccache-3.2 breaks the hardened
+	# compiler's auto-detection of kernel builds.
+	if gcc-specs-pie; then
+		set -- KCFLAGS=-nopie "$@"
+	fi
 	emake ARCH="${kernel_arch}" CROSS_COMPILE="${CHOST}-" "$@"
 }
 
