@@ -73,7 +73,7 @@ PORTAGE_BUNZIP2_COMMAND="lbunzip2"
 CCACHE_SIZE="2.5G"
 
 # Always build binary packages, remove old build logs, avoid running as root.
-FEATURES="buildpkg ccache clean-logs compressdebug parallel-install splitdebug
+FEATURES="buildpkg clean-logs compressdebug parallel-install splitdebug
           userfetch userpriv usersandbox ipc-sandbox network-sandbox
           -merge-sync"
 

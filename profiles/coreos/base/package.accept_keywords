@@ -112,6 +112,3 @@ dev-util/checkbashisms
 
 # >=3.16 required by docker 1.4
 =sys-fs/btrfs-progs-3.17.1
-
-# ccache 3.1.9 (current stable) has a locking bug
-=dev-util/ccache-3.2.1-r1
