@@ -6,7 +6,6 @@ Requires=docker.socket early-docker.target
 
 [Service]
 Environment=TMPDIR=/var/tmp
-Environment=DOCKER_OPTS='--insecure-registry="0.0.0.0/0"'
 EnvironmentFile=-/run/docker_opts.env
 LimitNOFILE=1048576
 LimitNPROC=1048576
