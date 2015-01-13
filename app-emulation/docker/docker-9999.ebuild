@@ -190,9 +190,9 @@ src_install() {
 	exeinto /usr/lib/coreos
 	doexe "${FILESDIR}/dockerd"
 
-	systemd_newunit "${FILESDIR}/docker.service-r1" "docker.service"
+	systemd_dounit "${FILESDIR}/docker.service"
 	systemd_dounit "${FILESDIR}/docker.socket"
-	systemd_newunit "${FILESDIR}/early-docker.service-r1" "early-docker.service"
+	systemd_dounit "${FILESDIR}/early-docker.service"
 	systemd_dounit "${FILESDIR}/early-docker.socket"
 	systemd_dounit "${FILESDIR}/early-docker.target"
 
