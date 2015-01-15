@@ -19,5 +19,5 @@ coreos-dodoc() {
 	[[ "${#}" -lt 1 ]] && die "${0}: at least one file needed"
 
 	insinto "/usr/share/coreos/doc/${P}/"
-	doins $flags $@
+	doins $flags "$@"
 }

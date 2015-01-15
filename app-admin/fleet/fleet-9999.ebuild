@@ -13,7 +13,7 @@ else
 	KEYWORDS="amd64"
 fi
 
-inherit cros-workon systemd
+inherit coreos-doc cros-workon systemd
 
 DESCRIPTION="fleet"
 HOMEPAGE="https://github.com/coreos/fleet"
@@ -37,4 +37,6 @@ src_install() {
 
 	systemd_dounit "${FILESDIR}"/${PN}.service
 	systemd_dounit "${FILESDIR}"/${PN}.socket
+
+	coreos-dodoc -r Documentation/*
 }
