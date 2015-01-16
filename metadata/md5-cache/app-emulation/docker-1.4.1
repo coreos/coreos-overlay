@@ -4,10 +4,10 @@ DESCRIPTION=Docker complements kernel namespacing with a high-level API which op
 EAPI=5
 HOMEPAGE=https://www.docker.com
 IUSE=aufs +btrfs contrib +device-mapper doc lxc vim-syntax zsh-completion cros_workon_tree_* profiling
-KEYWORDS=~amd64
+KEYWORDS=amd64
 LICENSE=Apache-2.0
 RDEPEND=>=sys-kernel/coreos-kernel-3.18.0 >=dev-db/sqlite-3.7.9:3 device-mapper? ( >=sys-fs/lvm2-2.02.89[thin] ) !app-emulation/docker-bin >=net-firewall/iptables-1.4 sys-process/procps >=dev-vcs/git-1.7 >=app-arch/xz-utils-4.9 lxc? ( >=app-emulation/lxc-1.0 ) aufs? ( || ( sys-fs/aufs3 sys-kernel/aufs-sources ) )
 RESTRICT=installsources strip
 SLOT=0
 _eclasses_=bash-completion-r1	c8399c7c7ecbcf7ed6e5bd3abb3d4af3	cros-workon	371c4d0af591fe21f1a019af07137224	eutils	6faef4c127028ccbba3a11400d24ae34	flag-o-matic	eda1c0b5ba85b3eeb555a071d69eb819	git-2	e28f0d8a9b321431b1e699782851b827	linux-info	2b8c53f6065bdee2d757472215a3088f	multilib	3bf24e6abb9b76d9f6c20600f0b716bf	systemd	090342761f573a8280dd5aa6b0345f3b	toolchain-funcs	0dfbfa13f57c6184f4728d12ac002aac	udev	da001465a2e939c93f7ae16947ce3438	user	f54e098dd38ba1c0847a13e685b87747	versionator	cd0bcdb170807e4a1984115e9d53a26f
-_md5_=4747395f6b43ab83c90641714f2dc1b8
+_md5_=2002e4d65b38b231df9d2b6cd3c5d3b3
