@@ -13,7 +13,7 @@ else
 	KEYWORDS="amd64"
 fi
 
-inherit cros-workon systemd toolchain-funcs udev
+inherit coreos-doc cros-workon systemd toolchain-funcs udev
 
 DESCRIPTION="coreos-cloudinit"
 HOMEPAGE="https://github.com/coreos/coreos-cloudinit"
@@ -51,4 +51,6 @@ src_install() {
 	systemd_dounit units/*.target
 	systemd_enable_service default.target system-config.target
 	systemd_enable_service default.target user-config.target
+
+	coreos-dodoc -r Documentation/*
 }

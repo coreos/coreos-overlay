@@ -8,7 +8,7 @@ EAPI=4
 CROS_WORKON_PROJECT="coreos/etcd"
 CROS_WORKON_LOCALNAME="etcd"
 CROS_WORKON_REPO="git://github.com"
-inherit toolchain-funcs cros-workon systemd
+inherit coreos-doc toolchain-funcs cros-workon systemd
 
 if [[ "${PV}" == 9999 ]]; then
     KEYWORDS="~amd64"
@@ -36,4 +36,6 @@ src_install() {
 
 	systemd_dounit "${FILESDIR}"/${PN}.service
 	systemd_dotmpfilesd "${FILESDIR}"/${PN}.conf
+
+	coreos-dodoc -r Documentation/*
 }
