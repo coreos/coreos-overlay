@@ -177,6 +177,9 @@ fi
 	cp "${FILESDIR}"/217-systemd-consoled.service.in \
 		units/user/systemd-consoled.service.in || die
 
+	# https://github.com/coreos/bugs/issues/220
+	epatch "${FILESDIR}"/218-0001-networkd-accept-a-trailing-.-on-the-end-of-domains.patch
+
 	autotools-utils_src_prepare
 }
 
