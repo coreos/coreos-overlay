@@ -1,13 +1,21 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-libs/glibc/files/eblits/common.eblit,v 1.34 2014/01/16 17:38:31 vapier Exp $
+# $Header: /var/cvsroot/gentoo-x86/sys-libs/glibc/files/eblits/common.eblit,v 1.45 2014/10/18 23:09:51 vapier Exp $
 
 alt_prefix() {
 	is_crosscompile && echo /usr/${CTARGET}
 }
 
-: ${ED:=${D}}
-: ${EROOT:=${ROOT}}
+if [[ ${EAPI:-0} == [012] ]] ; then
+	: ${ED:=${D}}
+	: ${EROOT:=${ROOT}}
+fi
+# This indirection is for binpkgs. #523332
+_nonfatal() { nonfatal "$@" ; }
+if [[ ${EAPI:-0} == [0123] ]] ; then
+	nonfatal() { "$@" ; }
+	_nonfatal() { "$@" ; }
+fi
 
 # We need to be able to set alternative headers for
 # compiling for non-native platform
@@ -21,7 +29,7 @@ alt_build_headers() {
 	if [[ -z ${ALT_BUILD_HEADERS} ]] ; then
 		ALT_BUILD_HEADERS=$(alt_headers)
 		if tc-is-cross-compiler ; then
-			ALT_BUILD_HEADERS=${ROOT}$(alt_headers)
+			ALT_BUILD_HEADERS=${SYSROOT}$(alt_headers)
 			if [[ ! -e ${ALT_BUILD_HEADERS}/linux/version.h ]] ; then
 				local header_path=$(echo '#include <linux/version.h>' | $(tc-getCPP ${CTARGET}) ${CFLAGS} 2>&1 | grep -o '[^"]*linux/version.h')
 				ALT_BUILD_HEADERS=${header_path%/linux/version.h}
@@ -36,6 +44,10 @@ alt_libdir() {
 }
 alt_usrlibdir() {
 	echo $(alt_prefix)/usr/$(get_libdir)
+}
+
+builddir() {
+	echo "${WORKDIR}/build-${ABI}-${CTARGET}-$1"
 }
 
 setup_target_flags() {
@@ -160,7 +172,7 @@ setup_flags() {
 	filter-flags -frecord-gcc-switches
 
 	unset CBUILD_OPT CTARGET_OPT
-	if has_multilib_profile ; then
+	if use multilib ; then
 		CTARGET_OPT=$(get_abi_CTARGET)
 		[[ -z ${CTARGET_OPT} ]] && CTARGET_OPT=$(get_abi_CHOST)
 	fi
@@ -183,7 +195,12 @@ setup_flags() {
 	# building glibc with SSP is fraught with difficulty, especially
 	# due to __stack_chk_fail_local which would mean significant changes
 	# to the glibc build process. See bug #94325 #293721
-	gcc-specs-ssp && append-cflags $(test-flags-CC -fno-stack-protector)
+	# Note we have to handle both user-given CFLAGS and gcc defaults via
+	# spec rules here.  We can't simply add -fno-stack-protector as it gets
+	# added before user flags, and we can't just filter-flags because
+	# _filter_hardened doesn't support globs.
+	filter-flags -fstack-protector*
+	gcc-specs-ssp && append-flags $(test-flags -fno-stack-protector)
 
 	if use hardened && gcc-specs-pie ; then
 		# Force PIC macro definition for all compilations since they're all
@@ -201,15 +218,8 @@ want_nptl() {
 	want_tls || return 1
 	use nptl || return 1
 
-	# Only list the arches that cannot do NPTL
-	case $(tc-arch) in
-		m68k) return 1;;
-		sparc)
-			# >= v9 is needed for nptl.
-			[[ ${PROFILE_ARCH} == "sparc" ]] && return 1
-		;;
-	esac
-
+	# Older versions of glibc had incomplete arch support for nptl.
+	# But if you're building those now, you can handle USE=nptl yourself.
 	return 0
 }
 
@@ -269,6 +279,7 @@ use_multiarch() {
 setup_env() {
 	# silly users
 	unset LD_RUN_PATH
+	unset LD_ASSUME_KERNEL
 
 	multilib_env ${CTARGET_OPT:-${CTARGET}}
 	if is_crosscompile || tc-is-cross-compiler ; then
@@ -295,6 +306,28 @@ setup_env() {
 	# top of each other.
 	: ${__GLIBC_CC:=$(tc-getCC ${CTARGET_OPT:-${CTARGET}})}
 	export __GLIBC_CC CC="${__GLIBC_CC} ${!VAR}"
+}
+
+foreach_abi() {
+	setup_env
+
+	local ret=0
+	local abilist=""
+	if use multilib ; then
+		abilist=$(get_install_abis)
+	else
+		abilist=${DEFAULT_ABI}
+	fi
+	evar_push ABI
+	export ABI
+	for ABI in ${abilist:-default} ; do
+		setup_env
+		einfo "Running $1 for ABI ${ABI}"
+		$1
+		: $(( ret |= $? ))
+	done
+	evar_pop
+	return ${ret}
 }
 
 just_headers() {
