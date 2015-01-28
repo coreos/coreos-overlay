@@ -157,6 +157,9 @@ eblit-src_unpack-pre() {
 }
 
 eblit-src_unpack-post() {
+	cd "${WORKDIR}"
+	epatch "${FILESDIR}"/locale-default-en_US.patch
+
 	if use hardened ; then
 		cd "${S}"
 		einfo "Patching to get working PIE binaries on PIE (hardened) platforms"
@@ -206,4 +209,11 @@ eblit-pkg_preinst-post() {
 			fi
 		fi
 	fi
+}
+
+# CoreOS tweaks:
+# - drop host.conf and gai.conf
+# - nsswitch.conf and rpc are provided by baselayout
+eblit-src_install-post() {
+	rm -f "${D}"/etc/{gai.conf,host.conf,nsswitch.conf,rpc} || die
 }
