@@ -1,6 +1,6 @@
-# Copyright 1999-2013 Gentoo Foundation
+# Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-libs/glibc/files/eblits/pkg_setup.eblit,v 1.11 2013/06/29 03:22:32 heroxbd Exp $
+# $Header: /var/cvsroot/gentoo-x86/sys-libs/glibc/files/eblits/pkg_setup.eblit,v 1.14 2014/10/17 17:30:04 vapier Exp $
 
 glibc_compile_test() {
 	local ret save_cflags=${CFLAGS}
@@ -12,7 +12,7 @@ glibc_compile_test() {
 	rm -f glibc-test*
 	printf '%b' "$*" > glibc-test.c
 
-	emake -s glibc-test
+	_nonfatal emake -s glibc-test
 	ret=$?
 
 	popd >/dev/null
@@ -48,7 +48,10 @@ glibc_run_test() {
 eblit-glibc-pkg_setup() {
 	# prevent native builds from downgrading ... maybe update to allow people
 	# to change between diff -r versions ? (2.3.6-r4 -> 2.3.6-r2)
-	if [[ ${ROOT} == "/" ]] && [[ ${CBUILD} == ${CHOST} ]] && [[ ${CHOST} == ${CTARGET} ]] ; then
+	if [[ ${MERGE_TYPE} != "buildonly" ]] && \
+	   [[ ${ROOT} == "/" ]] && \
+	   [[ ${CBUILD} == ${CHOST} ]] && \
+	   [[ ${CHOST} == ${CTARGET} ]] ; then
 		if has_version '>'${CATEGORY}/${PF} ; then
 			eerror "Sanity check to keep you from breaking your system:"
 			eerror " Downgrading glibc is not supported and a sure way to destruction"

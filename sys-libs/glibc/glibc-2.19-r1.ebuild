@@ -1,6 +1,6 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-libs/glibc/glibc-2.17.ebuild,v 1.34 2014/04/05 16:05:07 vapier Exp $
+# $Header: /var/cvsroot/gentoo-x86/sys-libs/glibc/glibc-2.19-r1.ebuild,v 1.11 2014/10/26 08:05:50 vapier Exp $
 
 inherit eutils versionator toolchain-funcs flag-o-matic gnuconfig multilib systemd unpacker multiprocessing
 
@@ -25,7 +25,7 @@ case ${PV} in
 	;;
 esac
 GCC_BOOTSTRAP_VER="4.7.3-r1"
-PATCH_VER="8"                                  # Gentoo patchset
+PATCH_VER="3"                                  # Gentoo patchset
 NPTL_KERN_VER=${NPTL_KERN_VER:-"2.6.16"}       # min kernel version nptl requires
 
 IUSE="debug gd hardened multilib nscd selinux systemtap profile suid vanilla crosscompile_opts_headers-only"
@@ -153,7 +153,6 @@ for x in setup {pre,post}inst ; do
 done
 
 eblit-src_unpack-pre() {
-	GLIBC_PATCH_EXCLUDE+=" 6600_mips_librt-mips.patch" #456912
 	[[ -n ${GCC_BOOTSTRAP_VER} ]] && use multilib && unpack gcc-${GCC_BOOTSTRAP_VER}-multilib-bootstrap.tar.bz2
 }
 
@@ -165,14 +164,13 @@ eblit-src_unpack-post() {
 		cd "${S}"
 		einfo "Patching to get working PIE binaries on PIE (hardened) platforms"
 		gcc-specs-pie && epatch "${FILESDIR}"/2.17/glibc-2.17-hardened-pie.patch
-		epatch "${FILESDIR}"/2.10/glibc-2.10-hardened-configure-picdefault.patch
-		epatch "${FILESDIR}"/2.10/glibc-2.10-hardened-inittls-nosysenter.patch
-		epatch "${FILESDIR}"/2.17/glibc-2.17-parsing-in-gethostbyname.patch
+		epatch "${FILESDIR}"/2.19/glibc-2.19-hardened-configure-picdefault.patch
+		epatch "${FILESDIR}"/2.18/glibc-2.18-hardened-inittls-nosysenter.patch
 
 		einfo "Installing Hardened Gentoo SSP and FORTIFY_SOURCE handler"
-		cp -f "${FILESDIR}"/2.6/glibc-2.6-gentoo-stack_chk_fail.c \
+		cp -f "${FILESDIR}"/2.18/glibc-2.18-gentoo-stack_chk_fail.c \
 			debug/stack_chk_fail.c || die
-		cp -f "${FILESDIR}"/2.10/glibc-2.10-gentoo-chk_fail.c \
+		cp -f "${FILESDIR}"/2.18/glibc-2.18-gentoo-chk_fail.c \
 			debug/chk_fail.c || die
 
 		if use debug ; then
