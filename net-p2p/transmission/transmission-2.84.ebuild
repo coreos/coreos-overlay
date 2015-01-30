@@ -14,13 +14,13 @@ SRC_URI="http://download.transmissionbt.com/${PN}/files/${P}.tar.xz"
 # MIT is in several libtransmission/ headers
 LICENSE="|| ( GPL-2 GPL-3 Transmission-OpenSSL-exception ) GPL-2 MIT"
 SLOT=0
-IUSE="ayatana gtk lightweight systemd qt4 xfs"
+IUSE="ayatana gtk lightweight miniupnp natpmp systemd qt4 xfs"
 KEYWORDS="amd64 ~arm ~mips ppc ppc64 x86 ~x86-fbsd ~amd64-linux"
 
 RDEPEND=">=dev-libs/libevent-2.0.10:=
 	dev-libs/openssl:0=
-	net-libs/libnatpmp:=
-	>=net-libs/miniupnpc-1.7:=
+	natpmp? ( net-libs/libnatpmp:= )
+	miniupnp? ( >=net-libs/miniupnpc-1.7:= )
 	>=net-misc/curl-7.16.3:=[ssl]
 	sys-libs/zlib:=
 	gtk? (
@@ -73,7 +73,7 @@ src_configure() {
 	export ac_cv_header_xfs_xfs_h=$(usex xfs)
 
 	econf \
-		--enable-external-natpmp \
+		$(use_enable natpmp external-natpmp) \
 		$(use_enable lightweight) \
 		$(use_with systemd systemd-daemon) \
 		$(use_with gtk)
