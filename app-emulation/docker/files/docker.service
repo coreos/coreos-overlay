@@ -6,10 +6,10 @@ Requires=docker.socket early-docker.target
 
 [Service]
 Environment=TMPDIR=/var/tmp
-EnvironmentFile=-/run/docker_opts.env
+EnvironmentFile=-/run/flannel_docker_opts.env
 LimitNOFILE=1048576
 LimitNPROC=1048576
-ExecStart=/usr/lib/coreos/dockerd --daemon --host=fd:// $DOCKER_OPTS
+ExecStart=/usr/lib/coreos/dockerd --daemon --host=fd:// $DOCKER_OPTS $DOCKER_OPT_BIP $DOCKER_OPT_MTU $DOCKER_OPT_IPMASQ
 
 [Install]
 WantedBy=multi-user.target
