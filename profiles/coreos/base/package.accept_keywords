@@ -112,5 +112,3 @@ dev-util/checkbashisms
 
 # >=3.16 required by docker 1.4
 =sys-fs/btrfs-progs-3.17.1
-
-=sys-libs/glibc-2.17
