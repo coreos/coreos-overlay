@@ -179,6 +179,8 @@ fi
 
 	# https://github.com/coreos/bugs/issues/220
 	epatch "${FILESDIR}"/218-0001-networkd-accept-a-trailing-.-on-the-end-of-domains.patch
+	# https://github.com/coreos/bugs/issues/260
+	epatch "${FILESDIR}"/218-0002-allow-module-loading.patch
 
 	autotools-utils_src_prepare
 }
