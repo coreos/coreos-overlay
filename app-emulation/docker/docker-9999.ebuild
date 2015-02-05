@@ -141,6 +141,9 @@ src_prepare() {
 
 	# allow user patches (use sparingly - upstream won't support them)
 	epatch_user
+
+	# https://github.com/coreos/bugs/issues/186
+	epatch "${FILESDIR}"/0001-cgroups-systemd-set-DefaultDependencies-false-if-pos.patch
 }
 
 src_compile() {
