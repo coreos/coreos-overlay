@@ -13,7 +13,7 @@ inherit cros-workon
 if [[ "${PV}" == 9999 ]]; then
     KEYWORDS="~amd64"
 else
-    CROS_WORKON_COMMIT="aa939201219427bbab24a64f738816e8386cccaa" # v0.2.0
+    CROS_WORKON_COMMIT="199e2c43337dc18eafd7288ea65b5ff8944fccc4" # 0.3.1
     KEYWORDS="amd64"
 fi
 
@@ -31,10 +31,10 @@ DEPEND="
 "
 
 src_unpack() {
+	# TODO: this needs to be moved out once we can fetch an ACI for stage 1
 	cros-workon_src_unpack
 	${S}/stage1/rootfs/usr/cache.sh
 	mv cache ${S}/stage1/rootfs/usr/
-	GOPATH=${S}/gopath go get github.com/appc/spec/...
 }
 
 src_compile() {
@@ -43,4 +43,5 @@ src_compile() {
 
 src_install() {
 	dobin ${S}/bin/rkt
+	dobin ${S}/bin/stage1.aci
 }
