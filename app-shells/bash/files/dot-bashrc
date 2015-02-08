@@ -16,3 +16,6 @@ fi
 
 
 # Put your fun stuff here.
+
+# Load local settings, if present
+[[ -f ~/.bashrc.local ]] && . ~/.bashrc.local
