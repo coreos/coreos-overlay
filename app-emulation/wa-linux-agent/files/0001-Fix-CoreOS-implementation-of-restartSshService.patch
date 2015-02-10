@@ -1,0 +1,34 @@
+From d7267ca77201e09f9bfb78036530ac117943814c Mon Sep 17 00:00:00 2001
+From: Alex Crawford <alex.crawford@coreos.com>
+Date: Tue, 10 Feb 2015 15:23:37 -0800
+Subject: [PATCH] Fix CoreOS implementation of restartSshService
+
+Because SSH is socket activated on CoreOS, there is no need to restart
+it. In fact, starting it causes it to fail while binding to port 22,
+which sshd.socket has already bound.
+---
+ waagent | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
+
+diff --git a/waagent b/waagent
+index 2e5909b..fc98056 100644
+--- a/waagent
++++ b/waagent
+@@ -1060,12 +1060,9 @@ class CoreOSDistro(AbstractDistro):
+ 
+     def restartSshService(self):
+         """
+-        Service call to re(start) the SSH service
++        SSH is socket activated on CoreOS. No need to restart it.
+         """
+-        retcode = Run("systemctl restart sshd")
+-        if retcode > 0:
+-            Error("Failed to restart SSH service with return code:" + str(retcode))
+-        return retcode
++        return 0
+ 
+     def sshDeployPublicKey(self,fprint,path):
+         """
+-- 
+1.9.3
+

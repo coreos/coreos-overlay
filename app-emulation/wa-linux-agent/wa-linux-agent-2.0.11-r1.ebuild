@@ -23,6 +23,10 @@ IUSE=""
 
 RDEPEND="dev-lang/python-oem"
 
+src_prepare() {
+	epatch "${FILESDIR}"/0001-Fix-CoreOS-implementation-of-restartSshService.patch
+}
+
 src_install() {
 	into "/usr/share/oem"
 	dobin "${S}"/waagent
