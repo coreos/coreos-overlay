@@ -139,8 +139,8 @@ RDEPEND="${RDEPEND}
 	app-misc/ca-certificates
 	app-crypt/gnupg
 	virtual/udev
-	dev-db/etcd
-	dev-db/etcdctl
+	~dev-db/etcd-0.4.7
+	~dev-db/etcd-2.0.0
 	net-fs/nfs-utils
 	net-misc/iputils
 	dev-vcs/git
