@@ -13,7 +13,7 @@ inherit coreos-doc toolchain-funcs cros-workon systemd
 if [[ "${PV}" == 9999 ]]; then
     KEYWORDS="~amd64"
 else
-    CROS_WORKON_COMMIT="d6523fe4638100c72f40cb282cd1232db13f7336" # v0.4.7
+    CROS_WORKON_COMMIT="fe1d9565c2619f7633d21d14c48588700edeed4d" # v2.0.1
     KEYWORDS="amd64"
 fi
 
@@ -26,13 +26,20 @@ SLOT="0"
 IUSE=""
 
 DEPEND=">=dev-lang/go-1.2"
+RDEPEND="!dev-db/etcdctl"
+
+ETCD_INTERNAL_VERSION=2
 
 src_compile() {
 	./build
 }
 
 src_install() {
-	dobin ${S}/bin/${PN}
+	exeinto /usr/libexec/${PN}/internal_versions
+	newexe ${S}/bin/${PN} ${ETCD_INTERNAL_VERSION}
+
+	dosym ../libexec/${PN}/internal_versions/${ETCD_INTERNAL_VERSION} /usr/bin/${PN}
+	dobin ${S}/bin/etcdctl
 
 	systemd_dounit "${FILESDIR}"/${PN}.service
 	systemd_dotmpfilesd "${FILESDIR}"/${PN}.conf
