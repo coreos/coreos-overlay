@@ -80,8 +80,11 @@ RDEPEND="${RDEPEND}
 # If protocol 1 is installed it must be configured to provide the default
 # implementation based on whether protocol 2 is enabled or not.
 RDEPEND="${RDEPEND}
-	dev-db/etcdctl
-	etcd_protocols_1? ( dev-db/etcd:1[etcd_protocols_2=] )
+	etcd_protocols_1? (
+		dev-db/etcd:1[etcd_protocols_2=]
+		!etcd_protocols_2? ( dev-db/etcdctl )
+	)
+	etcd_protocols_2? ( dev-db/etcd:2 )
 	"
 
 RDEPEND="${RDEPEND}
