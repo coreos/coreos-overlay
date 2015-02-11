@@ -140,7 +140,6 @@ RDEPEND="${RDEPEND}
 	app-crypt/gnupg
 	virtual/udev
 	dev-db/etcd
-	dev-db/etcdctl
 	net-fs/nfs-utils
 	net-misc/iputils
 	dev-vcs/git
