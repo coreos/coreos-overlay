@@ -15,6 +15,7 @@ Environment="DOCKER_HOST=unix:///var/run/early-docker.sock"
 Environment="FLANNEL_VER={{flannel_ver}}"
 LimitNOFILE=1048576
 LimitNPROC=1048576
+ExecStartPre=/sbin/modprobe ip_tables
 ExecStartPre=/usr/bin/mkdir -p /run/flannel
 ExecStartPre=/usr/bin/touch /run/flannel/options.env
 
