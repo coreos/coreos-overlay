@@ -13,7 +13,7 @@ inherit cros-workon
 if [[ "${PV}" == 9999 ]]; then
     KEYWORDS="~amd64"
 else
-    CROS_WORKON_COMMIT="aa939201219427bbab24a64f738816e8386cccaa" # v0.2.0
+    CROS_WORKON_COMMIT="c94b5338411a3dbfb0d9cf62e9066fb837c1baae" # v0.3.2
     KEYWORDS="amd64"
 fi
 
