@@ -10,7 +10,7 @@ EGIT_REPO_URI="git://github.com/Azure/WALinuxAgent"
 EGIT_COMMIT="b3f2619a854455675ae5f2ee14726659e0398af7" # WALinuxAgent-2.0.11
 EGIT_MASTER="2.0"
 
-inherit toolchain-funcs git-2
+inherit eutils toolchain-funcs git-2
 
 DESCRIPTION="Windows Azure Linux Agent"
 HOMEPAGE="https://github.com/Azure/WALinuxAgent"
