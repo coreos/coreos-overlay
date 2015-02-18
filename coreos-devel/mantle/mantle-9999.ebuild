@@ -9,7 +9,7 @@ COREOS_GO_PACKAGE="github.com/coreos/mantle"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64"
 else
-	CROS_WORKON_COMMIT="a1a810b88e4fca2c320a31a740796eaffecab57f"
+	CROS_WORKON_COMMIT="444fecccb109b5a90765cb1b79311fb10dd5c5e5"
 	KEYWORDS="amd64"
 fi
 
@@ -21,5 +21,7 @@ LICENSE="Apache-2"
 SLOT="0"
 
 src_compile() {
-	go_build "${COREOS_GO_PACKAGE}"/cmd/plume
+	for cmd in kola plume; do
+		go_build "${COREOS_GO_PACKAGE}/cmd/${cmd}"
+	done
 }

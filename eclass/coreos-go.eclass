@@ -11,7 +11,7 @@
 
 [[ ${EAPI} != "5" ]] && die "Only EAPI=5 is supported"
 
-inherit multiprocessing
+inherit flag-o-matic multiprocessing toolchain-funcs
 
 DEPEND="dev-lang/go"
 
@@ -24,8 +24,8 @@ go_build() {
 	local package_name="$1"
 	local binary_name="${package_name##*/}"
 
-	# TODO: handle cgo, cross-compiling, etc etc...
-	CGO_ENABLED=0 go build -x -p "$(makeopts_jobs)" \
+	go build -x -p "$(makeopts_jobs)" \
+		-ldflags "-extldflags '${LDFLAGS}'" \
 		-o "${GOPATH}/bin/${binary_name}" "${package_name}" \
 		|| die "go build failed"
 }
@@ -44,6 +44,19 @@ coreos-go_src_prepare() {
 	local package_path="${GOPATH}/src/${COREOS_GO_PACKAGE}"
 	mkdir -p "${package_path%/*}" || die
 	ln -sT "${S}" "${package_path}" || die
+
+	# Go's 6l linker does not support PIE, disable so cgo binaries
+	# which use 6l+gcc for linking can be built correctly.
+	if gcc-specs-pie; then
+		append-ldflags -nopie
+	fi
+
+	export CC=$(tc-getCC)
+	export CGO_ENABLED=1
+	export CGO_CFLAGS="${CFLAGS}"
+	export CGO_CPPFLAGS="${CPPFLAGS}"
+	export CGO_CXXFLAGS="${CXXFLAGS}"
+	export CGO_LDFLAGS="${LDFLAGS}"
 }
 
 coreos-go_src_compile() {
