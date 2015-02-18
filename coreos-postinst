@@ -103,17 +103,23 @@ EOF
 fi
 
 # use the cgpt binary from the image to ensure compatibility
-call_cgpt() {
-    local cgpt libs
-    if [[ -d "${INSTALL_MNT}/usr" ]]; then
-        cgpt="${INSTALL_MNT}/usr/bin/cgpt"
-        libs="${INSTALL_MNT}/lib:${INSTALL_MNT}/usr/lib"
-    else
-        cgpt="${INSTALL_MNT}/bin/cgpt"
-        libs="${INSTALL_MNT}/lib"
+CGPT=
+for bindir in bin/old_bins bin sbin; do
+    if [[ -x "${INSTALL_MNT}/${bindir}/cgpt" ]]; then
+        CGPT="${INSTALL_MNT}/${bindir}/cgpt"
+        break
     fi
+done
+if [[ -z "${CGPT}" ]]; then
+    echo "Failed to locate the cgpt binary in ${INSTALL_MNT}" >&2
+    exit 1
+fi
 
-    LD_LIBRARY_PATH="${libs}" "${cgpt}" "$@"
+call_cgpt() {
+    # safe to assume amd64 for now
+    "${INSTALL_MNT}/lib64/ld-linux-x86-64.so.2" \
+        --library-path "${INSTALL_MNT}/lib64" \
+        "${CGPT}" "$@"
 }
 
 # Mark the new install with one try and the highest priority
