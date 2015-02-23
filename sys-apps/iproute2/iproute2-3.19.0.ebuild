@@ -1,8 +1,8 @@
-# Copyright 1999-2013 Gentoo Foundation
+# Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-apps/iproute2/iproute2-3.8.0.ebuild,v 1.14 2013/05/04 05:09:02 vapier Exp $
+# $Header: /var/cvsroot/gentoo-x86/sys-apps/iproute2/iproute2-3.19.0.ebuild,v 1.1 2015/02/15 02:54:06 radhermit Exp $
 
-EAPI="4"
+EAPI="5"
 
 inherit eutils toolchain-funcs flag-o-matic multilib
 
@@ -11,7 +11,7 @@ if [[ ${PV} == "9999" ]] ; then
 	inherit git-2
 else
 	SRC_URI="mirror://kernel/linux/utils/net/${PN}/${P}.tar.xz"
-	KEYWORDS="alpha amd64 arm hppa ia64 m68k ~mips ppc ppc64 s390 ~sh sparc x86"
+	KEYWORDS="~alpha amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86"
 fi
 
 DESCRIPTION="kernel routing and traffic control utilities"
@@ -19,12 +19,13 @@ HOMEPAGE="http://www.linuxfoundation.org/collaborate/workgroups/networking/iprou
 
 LICENSE="GPL-2"
 SLOT="0"
-IUSE="atm berkdb +iptables ipv6 minimal"
+IUSE="atm berkdb +iptables ipv6 minimal selinux"
 
 RDEPEND="!net-misc/arpd
-	iptables? ( >=net-firewall/iptables-1.4.5 )
+	iptables? ( >=net-firewall/iptables-1.4.20:= )
 	!minimal? ( berkdb? ( sys-libs/db ) )
-	atm? ( net-dialup/linux-atm )"
+	atm? ( net-dialup/linux-atm )
+	selinux? ( sys-libs/libselinux )"
 DEPEND="${RDEPEND}
 	app-arch/xz-utils
 	iptables? ( virtual/pkgconfig )
@@ -35,8 +36,7 @@ DEPEND="${RDEPEND}
 
 src_prepare() {
 	epatch "${FILESDIR}"/${PN}-3.1.0-mtu.patch #291907
-	epatch "${FILESDIR}"/${P}-old-mount-libc.patch #468120
-	use ipv6 || epatch "${FILESDIR}"/${PN}-3.1.0-no-ipv6.patch #326849
+	use ipv6 || epatch "${FILESDIR}"/${PN}-3.10.0-no-ipv6.patch #326849
 
 	sed -i \
 		-e '/^CC =/d' \
@@ -44,7 +44,14 @@ src_prepare() {
 		-e "s:-O2:${CFLAGS} ${CPPFLAGS}:" \
 		-e "/^HOSTCC/s:=.*:= $(tc-getBUILD_CC):" \
 		-e "/^WFLAGS/s:-Werror::" \
+		-e "/^DBM_INCLUDE/s:=.*:=${T}:" \
 		Makefile || die
+
+	# Use /run instead of /var/run.
+	sed -i \
+		-e 's:/var/run:/run:g' \
+		ip/ipnetns.c \
+		man/man8/ip-netns.8 || die
 
 	# build against system headers
 	rm -r include/netinet #include/linux include/ip{,6}tables{,_common}.h include/libiptc
@@ -71,6 +78,7 @@ src_configure() {
 	cat <<-EOF > Config
 	TC_CONFIG_ATM := $(usex atm y n)
 	TC_CONFIG_XT  := $(usex iptables y n)
+	HAVE_SELINUX  := $(usex selinux y n)
 	IP_CONFIG_SETNS := ${setns}
 	# Use correct iptables dir, #144265 #293709
 	IPT_LIB_DIR := $(use iptables && ${PKG_CONFIG} xtables --variable=xtlibdir)
