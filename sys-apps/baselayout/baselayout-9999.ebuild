@@ -181,4 +181,9 @@ pkg_postinst() {
 			ln -sfT "${USR_SYMS[$sym]}" "${ROOT}/usr/lib/debug/${sym}"
 		done
 	fi
+	# The default passwd/group files must exist in the SDK for some ebuilds
+	if use cros_host; then
+		touch "${ROOT}/etc/"{group,gshadow,passwd,shadow}
+		chmod 640 "${ROOT}/etc/"{gshadow,shadow}
+	fi
 }
