@@ -18,9 +18,10 @@ DEPEND="
 	app-admin/updateservicectl
 	app-arch/pbzip2
 	app-emulation/open-vmdk
-	app-shells/bash-completion
 	app-misc/jq
+	app-shells/bash-completion
 	coreos-base/hard-host-depends
+	coreos-devel/mantle
 	dev-python/setuptools
 	dev-util/boost-build
 	dev-util/checkbashisms
