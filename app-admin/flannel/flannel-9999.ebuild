@@ -25,4 +25,7 @@ S="$WORKDIR"
 src_install() {
 	sed "s/{{flannel_ver}}/${PV}/" "${FILESDIR}"/flanneld.service >"${T}"/flanneld.service
 	systemd_dounit "${T}"/flanneld.service
+
+	insinto /usr/lib/systemd/network
+	doins "${FILESDIR}"/50-flannel.network
 }
