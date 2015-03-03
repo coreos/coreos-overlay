@@ -13,16 +13,20 @@ RestartSec=5
 Environment="TMPDIR=/var/tmp/"
 Environment="DOCKER_HOST=unix:///var/run/early-docker.sock"
 Environment="FLANNEL_VER={{flannel_ver}}"
+Environment="ETCD_SSL_DIR=/etc/ssl/etcd"
 LimitNOFILE=1048576
 LimitNPROC=1048576
 ExecStartPre=/sbin/modprobe ip_tables
 ExecStartPre=/usr/bin/mkdir -p /run/flannel
+ExecStartPre=/usr/bin/mkdir -p ${ETCD_SSL_DIR}
 ExecStartPre=/usr/bin/touch /run/flannel/options.env
 
 ExecStart=/usr/libexec/sdnotify-proxy /run/flannel/sd.sock \
   /usr/bin/docker run --net=host --privileged=true --rm \
-  -v /run/flannel:/run/flannel -e NOTIFY_SOCKET=/run/flannel/sd.sock \
+  --volume=/run/flannel:/run/flannel \
+  --env=NOTIFY_SOCKET=/run/flannel/sd.sock \
   --env-file=/run/flannel/options.env \
+  --volume=${ETCD_SSL_DIR}:/etc/ssl/etcd:ro \
   quay.io/coreos/flannel:${FLANNEL_VER} /opt/bin/flanneld --ip-masq=true
 
 # Update docker options
