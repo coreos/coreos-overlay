@@ -14,7 +14,7 @@ Environment="TMPDIR=/var/tmp/"
 Environment="DOCKER_HOST=unix:///var/run/early-docker.sock"
 Environment="FLANNEL_VER={{flannel_ver}}"
 Environment="ETCD_SSL_DIR=/etc/ssl/etcd"
-LimitNOFILE=1048576
+LimitNOFILE=40000
 LimitNPROC=1048576
 ExecStartPre=/sbin/modprobe ip_tables
 ExecStartPre=/usr/bin/mkdir -p /run/flannel
