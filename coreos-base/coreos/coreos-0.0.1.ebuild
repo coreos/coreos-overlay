@@ -9,7 +9,7 @@ HOMEPAGE="http://coreos.com"
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="amd64 arm x86"
-IUSE=""
+IUSE="etcd_protocols_1 etcd_protocols_2"
 
 
 ################################################################################
@@ -76,8 +76,16 @@ RDEPEND="${RDEPEND}
 	app-editors/vim
 	"
 
-# TODO(ifup): 
-#	coreos-base/crash-reporter
+# Select between versions of etcd
+# If protocol 1 is installed it must be configured to provide the default
+# implementation based on whether protocol 2 is enabled or not.
+RDEPEND="${RDEPEND}
+	etcd_protocols_1? (
+		dev-db/etcd:1[etcd_protocols_2=]
+		!etcd_protocols_2? ( dev-db/etcdctl )
+	)
+	etcd_protocols_2? ( dev-db/etcd:2 )
+	"
 
 RDEPEND="${RDEPEND}
 	app-emulation/xenstore
@@ -139,8 +147,6 @@ RDEPEND="${RDEPEND}
 	app-misc/ca-certificates
 	app-crypt/gnupg
 	virtual/udev
-	dev-db/etcd
-	dev-db/etcdctl
 	net-fs/nfs-utils
 	net-misc/iputils
 	dev-vcs/git
