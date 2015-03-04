@@ -1,10 +1,10 @@
-# Copyright 1999-2014 Gentoo Foundation
+# Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/net-libs/libtirpc/libtirpc-0.2.4-r1.ebuild,v 1.6 2014/08/11 13:37:31 vapier Exp $
+# $Header: /var/cvsroot/gentoo-x86/net-libs/libtirpc/libtirpc-0.2.5.ebuild,v 1.11 2015/02/27 11:27:58 ago Exp $
 
 EAPI="4"
 
-inherit toolchain-funcs
+inherit multilib-minimal toolchain-funcs
 
 DESCRIPTION="Transport Independent RPC library (SunRPC replacement)"
 HOMEPAGE="http://libtirpc.sourceforge.net/"
@@ -16,35 +16,50 @@ SLOT="0"
 KEYWORDS="alpha amd64 arm arm64 hppa ia64 ~mips ppc ppc64 s390 sh sparc x86"
 IUSE="ipv6 kerberos static-libs"
 
-RDEPEND="kerberos? ( virtual/krb5 )"
+RDEPEND="kerberos? ( >=virtual/krb5-0-r1[${MULTILIB_USEDEP}] )"
 DEPEND="${RDEPEND}
 	app-arch/xz-utils
-	virtual/pkgconfig"
+	>=virtual/pkgconfig-0-r1[${MULTILIB_USEDEP}]"
+RDEPEND="${RDEPEND}
+	abi_x86_32? (
+		!<=app-emulation/emul-linux-x86-baselibs-20140508-r7
+		!app-emulation/emul-linux-x86-baselibs[-abi_x86_32(-)]
+	)"
 
 src_unpack() {
 	unpack ${A}
 	cp -r tirpc "${S}"/ || die
 }
 
-src_configure() {
+src_prepare() {
+	epatch "${FILESDIR}"/${P}-stdarg.patch
+}
+
+multilib_src_configure() {
+	ECONF_SOURCE=${S} \
 	econf \
 		$(use_enable ipv6) \
 		$(use_enable kerberos gssapi) \
 		$(use_enable static-libs static)
 }
 
-src_install() {
+multilib_src_install() {
 	default
+
+	# libtirpc replaces rpc support in glibc, so we need it in /
+	multilib_is_native_abi && gen_usr_ldscript -a tirpc
+}
+
+multilib_src_install_all() {
+	einstalldocs
+
 	insinto /etc
 	doins doc/netconfig
 
 	insinto /usr/include/tirpc
 	doins -r "${WORKDIR}"/tirpc/*
 
-	# libtirpc replaces rpc support in glibc, so we need it in /
-	gen_usr_ldscript -a tirpc
-
 	# makes sure that the linking order for nfs-utils is proper, as
 	# libtool would inject a libgssglue dependency in the list.
-	use static-libs || find "${ED}" -name '*.la' -delete
+	use static-libs || prune_libtool_files
 }
