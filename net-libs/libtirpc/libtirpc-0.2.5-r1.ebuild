@@ -33,6 +33,9 @@ src_unpack() {
 
 src_prepare() {
 	epatch "${FILESDIR}"/${P}-stdarg.patch
+
+	# set netconfig path to /usr so nfs works in CoreOS PXE/ISO booted systems.
+	sed -ie "s,/etc,/usr/share/tirpc," "${S}/tirpc/netconfig.h" || die
 }
 
 multilib_src_configure() {
@@ -53,7 +56,7 @@ multilib_src_install() {
 multilib_src_install_all() {
 	einstalldocs
 
-	insinto /etc
+	insinto /usr/share/tirpc
 	doins doc/netconfig
 
 	insinto /usr/include/tirpc
