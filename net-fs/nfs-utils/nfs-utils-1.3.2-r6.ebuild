@@ -114,10 +114,6 @@ src_install() {
 		doins id_resolver.conf
 	fi
 
-	insinto /etc
-	doins "${FILESDIR}"/exports
-	keepdir /etc/exports.d
-
 	local f opt_need=""
 	if use nfsv4 ; then
 		opt_need="rpc.idmapd"
