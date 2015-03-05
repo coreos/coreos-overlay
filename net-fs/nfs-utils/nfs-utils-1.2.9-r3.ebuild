@@ -112,15 +112,10 @@ src_install() {
 	insinto /etc
 	doins "${FILESDIR}"/exports
 
-	local f list=() opt_need=""
+	local f opt_need=""
 	if use nfsv4 ; then
 		opt_need="rpc.idmapd"
-		list+=( rpc.idmapd rpc.pipefs )
-		use kerberos && list+=( rpc.gssd rpc.svcgssd )
 	fi
-	for f in nfs nfsmount rpc.statd "${list[@]}" ; do
-		newinitd "${FILESDIR}"/${f}.initd ${f}
-	done
 	for f in nfs nfsmount ; do
 		newconfd "${FILESDIR}"/${f}.confd ${f}
 	done
