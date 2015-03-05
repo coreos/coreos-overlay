@@ -1,0 +1,12 @@
+[Unit]
+Description=NFS Mount Daemon
+After=rpcbind.service nfsd.service
+Requires=rpcbind.service nfsd.service
+
+[Service]
+Type=forking
+EnvironmentFile=/etc/conf.d/nfs
+ExecStart=/usr/sbin/rpc.mountd $OPTS_RPC_MOUNTD
+
+[Install]
+WantedBy=multi-user.target
