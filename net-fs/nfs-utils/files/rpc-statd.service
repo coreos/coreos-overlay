@@ -3,11 +3,10 @@ Description=NFSv2/3 Network Status Monitor Daemon
 After=rpcbind.service
 Requires=rpcbind.service
 Before=remote-fs-pre.target
+Wants=remote-fs-pre.target
 
 [Service]
-Type=forking
-EnvironmentFile=/etc/conf.d/nfs
-ExecStart=/sbin/rpc.statd $OPTS_RPC_STATD
+ExecStart=/sbin/rpc.statd -F
 
 [Install]
 WantedBy=multi-user.target

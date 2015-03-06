@@ -109,21 +109,10 @@ src_install() {
 		doins id_resolver.conf
 	fi
 
-	local f opt_need=""
-	if use nfsv4 ; then
-		opt_need="rpc.idmapd"
-	fi
-	for f in nfs nfsmount ; do
-		newconfd "${FILESDIR}"/${f}.confd ${f}
-	done
-	sed -i \
-		-e "/^NFS_NEEDED_SERVICES=/s:=.*:=\"${opt_need}\":" \
-		"${ED}"/etc/conf.d/nfs || die #234132
-
 	systemd_dotmpfilesd "${FILESDIR}"/nfs-utils.conf
-	systemd_newunit "${FILESDIR}"/nfsd.service-r1 nfsd.service
-	systemd_newunit "${FILESDIR}"/rpc-statd.service-r2 rpc-statd.service
-	systemd_newunit "${FILESDIR}"/rpc-mountd.service-r1 rpc-mountd.service
+	systemd_dounit "${FILESDIR}"/nfsd.service
+	systemd_dounit "${FILESDIR}"/rpc-statd.service
+	systemd_dounit "${FILESDIR}"/rpc-mountd.service
 	systemd_dounit "${FILESDIR}"/rpc-idmapd.service
 	systemd_dounit "${FILESDIR}"/{proc-fs-nfsd,var-lib-nfs-rpc_pipefs}.mount
 	use nfsv4 && use kerberos && systemd_dounit "${FILESDIR}"/rpc-{gssd,svcgssd}.service
