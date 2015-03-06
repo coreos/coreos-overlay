@@ -126,9 +126,6 @@ src_install() {
 	emake install DESTDIR="${D}" || die
 	dodoc AUTHORS ChangeLog* NEWS README* THANKS TODO
 
-	insinto /etc
-	newins src/dircolors.hin DIR_COLORS || die
-
 	if [[ ${USERLAND} == "GNU" ]] ; then
 		cd "${D}"/usr/bin
 		dodir /bin
