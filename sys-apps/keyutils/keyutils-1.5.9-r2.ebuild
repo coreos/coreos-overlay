@@ -4,7 +4,7 @@
 
 EAPI="5"
 
-inherit multilib eutils toolchain-funcs linux-info multilib-minimal
+inherit multilib eutils toolchain-funcs linux-info multilib-minimal systemd
 
 DESCRIPTION="Linux Key Management Utilities"
 HOMEPAGE="http://people.redhat.com/dhowells/keyutils/"
@@ -72,8 +72,14 @@ multilib_src_test() {
 }
 
 multilib_src_install() {
-	default
+	# setup tmpfiles symlinks for moved confs
+	systemd_dotmpfilesd "${FILESDIR}"/tmpfiles.d/keyutils.conf
+
+	emake install ETCDIR=/usr/share/keyutils DESTDIR="${D}"
 	multilib_is_native_abi && gen_usr_ldscript -a keyutils
+
+	dosym ../usr/share/keyutils/request-key.conf /etc/request-key.conf
+	dodir /etc/request-key.d
 }
 
 multilib_src_install_all() {
