@@ -10,7 +10,7 @@ inherit cros-workon
 if [[ "${PV}" == 9999 ]]; then
     KEYWORDS="~amd64"
 else
-    CROS_WORKON_COMMIT="c94b5338411a3dbfb0d9cf62e9066fb837c1baae" # v0.3.2
+    CROS_WORKON_COMMIT="258f946e3c85918e2dbf1920ae3c2bfe64ab2a14" # v0.4.1
     KEYWORDS="amd64"
 fi
 
@@ -43,7 +43,7 @@ src_unpack() {
 # TODO: Use or adapt coreos-go.eclass so we have half a chance of
 # cross-compiling builds working
 src_compile() {
-	RKT_STAGE1_IMAGE=/usr/share/rkt/stage1.aci ./build || die
+	RKT_STAGE1_IMAGE=/usr/share/rkt/stage1.aci CGO_ENABLED=0 ./build || die
 }
 
 src_install() {
