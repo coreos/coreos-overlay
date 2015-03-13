@@ -4,7 +4,7 @@
 
 EAPI="2"
 
-inherit autotools eutils
+inherit autotools eutils systemd
 
 DESCRIPTION="NFSv4 ID <-> name mapping library"
 HOMEPAGE="http://www.citi.umich.edu/projects/nfsv4/linux/"
@@ -37,8 +37,10 @@ src_install() {
 	emake install DESTDIR="${D}" || die
 	dodoc AUTHORS ChangeLog NEWS README
 
-	insinto /etc
+	insinto /usr/share/libnfsidmap
 	doins idmapd.conf || die
+	dosym ../usr/share/libnfsidmap/idmapd.conf /etc/idmapd.conf
+	systemd_dotmpfilesd "${FILESDIR}"/tmpfiles.d/libnfsidmap.conf
 
 	# remove useless files
 	rm -f "${D}"/usr/lib*/libnfsidmap/*.{a,la}
