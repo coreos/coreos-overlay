@@ -186,6 +186,10 @@ fi
 	# https://github.com/coreos/bugs/issues/186
 	epatch "${FILESDIR}"/218-0003-core-open-up-DefaultDependencies-property-for-transi.patch
 
+	# Allow timesyncd in VMs, make DHCP provided NTP servers optional
+	epatch "${FILESDIR}"/218-0004-timesyncd-enable-timesyncd-in-virtual-machines.patch
+	epatch "${FILESDIR}"/218-0005-network-add-UseNTP-DHCP-option.patch
+
 	autotools-utils_src_prepare
 }
 
