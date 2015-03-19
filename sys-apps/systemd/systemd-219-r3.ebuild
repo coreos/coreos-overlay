@@ -189,6 +189,9 @@ fi
 	# Fix for coreos/bugs #293
 	epatch "${FILESDIR}"/219-0003-nspawn-map-all-seccomp-filters-to-capabilities.patch
 
+	# https://github.com/coreos/bugs/issues/279
+	epatch "${FILESDIR}"/218-0006-networkd-fix-systemd-networkd-wait-online-with-multi.patch
+
 	autotools-utils_src_prepare
 }
 
