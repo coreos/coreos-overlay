@@ -81,7 +81,7 @@ RDEPEND="${RDEPEND}
 # implementation based on whether protocol 2 is enabled or not.
 RDEPEND="${RDEPEND}
 	etcd_protocols_1? (
-		dev-db/etcd:1[etcd_protocols_2=]
+		dev-db/etcd:1
 		!etcd_protocols_2? ( dev-db/etcdctl )
 	)
 	etcd_protocols_2? ( dev-db/etcd:2 )
@@ -108,6 +108,7 @@ RDEPEND="${RDEPEND}
 	coreos-base/coreos-init
 	coreos-base/coreos-cloudinit
 	coreos-base/coretest
+	dev-db/etcd-starter
 	net-analyzer/nmap
 	net-firewall/ebtables
 	net-firewall/ipset

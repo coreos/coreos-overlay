@@ -8,7 +8,7 @@ EAPI=4
 CROS_WORKON_PROJECT="coreos/etcd"
 CROS_WORKON_LOCALNAME="etcd"
 CROS_WORKON_REPO="git://github.com"
-inherit coreos-doc toolchain-funcs cros-workon systemd
+inherit coreos-doc toolchain-funcs cros-workon
 
 if [[ "${PV}" == 9999 ]]; then
     KEYWORDS="~amd64"
@@ -23,32 +23,17 @@ SRC_URI=""
 
 LICENSE="Apache-2.0"
 SLOT="1"
-IUSE="etcd_protocols_1 etcd_protocols_2"
-
-# Sanity check that this version is indeed wanted!
-REQUIRED_USE="etcd_protocols_${SLOT}"
 
 DEPEND=">=dev-lang/go-1.2"
-RDEPEND="!dev-db/etcd:0
-	!etcd_protocols_2? ( !dev-db/etcd:2 )"
+RDEPEND="!dev-db/etcd:0"
 
 src_compile() {
 	./build
 }
 
 src_install() {
-	local libexec="libexec/${PN}/internal_versions"
+	local libexec="libexec/${PN}/internal_versions/${SLOT}"
 
 	exeinto "/usr/${libexec}"
-	newexe "${S}/bin/${PN}" ${SLOT}
-
-	# protocol1 is default if protocol2 is disabled
-	if ! use etcd_protocols_2; then
-		dosym "../${libexec}/${SLOT}" /usr/bin/${PN}
-
-		systemd_dounit "${FILESDIR}"/${PN}.service
-		systemd_dotmpfilesd "${FILESDIR}"/${PN}.conf
-
-		coreos-dodoc -r Documentation/*
-	fi
+	doexe "${S}/bin/${PN}"
 }
