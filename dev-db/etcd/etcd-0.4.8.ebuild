@@ -13,7 +13,7 @@ inherit coreos-doc toolchain-funcs cros-workon
 if [[ "${PV}" == 9999 ]]; then
     KEYWORDS="~amd64"
 else
-    CROS_WORKON_COMMIT="d6523fe4638100c72f40cb282cd1232db13f7336" # v0.4.7
+    CROS_WORKON_COMMIT="2f6ea0a0e5a6854d2d0f79bf0d1bb87dde649071" # v0.4.8
     KEYWORDS="amd64"
 fi
 
