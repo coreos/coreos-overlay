@@ -196,6 +196,10 @@ fi
 	# https://github.com/coreos/bugs/issues/279
 	epatch "${FILESDIR}"/218-0006-networkd-fix-systemd-networkd-wait-online-with-multi.patch
 
+	# stops systemd from hanging when there's trailing space after a line
+	# contiuation
+	epatch "${FILESDIR}"/218-0007-Treat-a-trailing-backslash-as-an-error.patch
+
 	autotools-utils_src_prepare
 }
 
