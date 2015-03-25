@@ -4,21 +4,21 @@
 
 EAPI=5
 
-if [[ ${PV} == 9999 ]]; then
-AUTOTOOLS_AUTORECONF=yes
-EGIT_REPO_URI="git://anongit.freedesktop.org/${PN}/${PN}
-	http://cgit.freedesktop.org/${PN}/${PN}/"
+CROS_WORKON_PROJECT="coreos/systemd"
+CROS_WORKON_REPO="git://github.com"
 
-inherit git-r3
-
-elif [[ ${PV} == *9999 ]]; then
-AUTOTOOLS_AUTORECONF=yes
-EGIT_REPO_URI="git://anongit.freedesktop.org/${PN}/${PN}-stable
-	http://cgit.freedesktop.org/${PN}/${PN}-stable/"
-EGIT_BRANCH=v${PV%%.*}-stable
-
-inherit git-r3
+if [[ "${PV}" == 9999 ]]; then
+	# Use ~arch instead of empty keywords for compatibility with cros-workon
+	KEYWORDS="~amd64 ~arm ~x86"
+else
+	CROS_WORKON_COMMIT="26f5c5989fa5e4024a3a717c42977b898c621d07"
+	KEYWORDS="~amd64 ~arm ~x86"
 fi
+
+# cros-workon must be imported first, in cases where cros-workon and
+# another eclass exports the same function (say src_compile) we want
+# the later eclass's version to win. Only need src_unpack from workon.
+inherit cros-workon
 
 AUTOTOOLS_AUTORECONF=yes
 AUTOTOOLS_PRUNE_LIBTOOL_FILES=all
@@ -33,7 +33,6 @@ SRC_URI="http://www.freedesktop.org/software/systemd/${P}.tar.xz"
 
 LICENSE="GPL-2 LGPL-2.1 MIT public-domain"
 SLOT="0/2"
-KEYWORDS="~alpha ~amd64 ~arm ~ia64 ~ppc ~ppc64 ~sparc ~x86"
 IUSE="acl apparmor audit cryptsetup curl doc elfutils gcrypt gudev http
 	idn importd introspection kdbus +kmod +lz4 lzma nat pam policykit python
 	qrcode +seccomp selinux ssl sysv-utils terminal test vanilla xkb"
@@ -114,21 +113,14 @@ DEPEND="${COMMON_DEPEND}
 	terminal? ( media-fonts/unifont[utils(+)] )
 	test? ( >=sys-apps/dbus-1.6.8-r1:0 )"
 
-# Only required if patches touch man page source xml, which is usually.
+# Not required when building from unpatched tarballs, but we build from git.
 DEPEND="${DEPEND}
 	app-text/docbook-xml-dtd:4.2
 	app-text/docbook-xml-dtd:4.5
 	app-text/docbook-xsl-stylesheets
-	dev-libs/libxslt:0"
-
-if [[ ${PV} == *9999 ]]; then
-DEPEND="${DEPEND}
+	dev-libs/libxslt:0
 	dev-libs/gobject-introspection
 	>=dev-libs/libgcrypt-1.4.5:0"
-
-SRC_URI=
-KEYWORDS=
-fi
 
 pkg_pretend() {
 	local CONFIG_CHECK="~AUTOFS4_FS ~BLK_DEV_BSG ~CGROUPS
@@ -173,13 +165,12 @@ pkg_setup() {
 }
 
 src_prepare() {
-if [[ ${PV} == *9999 ]]; then
 	if use doc; then
 		gtkdocize --docdir docs/ || die
 	else
 		echo 'EXTRA_DIST =' > docs/gtk-doc.make
 	fi
-fi
+
 	# Bug 463376
 	sed -i -e 's/GROUP="dialout"/GROUP="uucp"/' rules/*.rules || die
 

@@ -1,0 +1,13 @@
+= CoreOS systemd packages
+
+The systemd git repo lives in src/third_party/systemd and is normally
+checked out to the 'master' branch by repo and the live ebuild,
+systemd-9999, will build the master branch. Release ebuilds must
+specify a specific git commit to build which may be the upstream tagged
+commit (e.g. v218) or a commit on one of the CoreOS release branches
+(e.g. v218-coreos). If you want to use cros-workon and the live ebuild
+to test new changes to a release branch it is up to you to check out
+that branch in src/third_party/systemd and be warned: a repo sync will
+always switch back to master. I don't have a particularly good
+recommendation for dealing with this, repo thinks it should be
+authoritative when in fact it is the ebuilds that are authoritative.
