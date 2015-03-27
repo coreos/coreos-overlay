@@ -96,6 +96,7 @@ RDEPEND="${RDEPEND}
 	app-admin/flannel
 	app-admin/fleet
 	app-admin/locksmith
+	app-admin/mayday
 	app-admin/sudo
 	app-admin/toolbox
 	app-arch/gzip
