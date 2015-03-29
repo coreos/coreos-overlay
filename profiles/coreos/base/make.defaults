@@ -18,9 +18,6 @@ ETCD_PROTOCOLS="1"
 # Extra use flags for CoreOS SDK
 USE="${USE} cros_host expat -introspection -cups -tcpd -pcre -berkdb"
 
-# Enable bindist for both SDK and targets
-USE="${USE} bindist"
-
 # No need for zeroconf, that's a desktop world thing.
 # Namely dhcpcd shoudln't make up random ipv4 addresses using ipv4ll
 USE="${USE} -zeroconf"
@@ -34,6 +31,10 @@ USE="$USE -python_targets_python3_2 -python_single_target_python3_2"
 USE="$USE -python_targets_python3_3 -python_single_target_python3_3"
 BOOTSTRAP_USE="$BOOTSTRAP_USE -python_targets_python3_2"
 BOOTSTRAP_USE="$BOOTSTRAP_USE -python_targets_python3_3"
+
+# Disable packages or optional features with distribution issues.
+ACCEPT_RESTRICT="* -bindist -mirror"
+USE="${USE} bindist"
 
 # Default licenses that are accepted for ChromiumOS builds.
 # If you want to accept more, use the --accept_licenses flag
