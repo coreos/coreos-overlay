@@ -158,6 +158,9 @@ eblit-src_unpack-pre() {
 }
 
 eblit-src_prepare-post() {
+	cd "${WORKDIR}"
+	epatch "${FILESDIR}"/locale-default-en_US.patch
+
 	cd "${S}"
 
 	if use hardened ; then
@@ -185,4 +188,11 @@ eblit-src_prepare-post() {
 			-e 's:-fstack-protector$:-fstack-protector-all:' \
 			*/Makefile || die
 	fi
+}
+
+# CoreOS tweaks:
+# - drop host.conf and gai.conf
+# - nsswitch.conf and rpc are provided by baselayout
+eblit-src_install-post() {
+	rm -f "${D}"/etc/{gai.conf,host.conf,nsswitch.conf,rpc} || die
 }
