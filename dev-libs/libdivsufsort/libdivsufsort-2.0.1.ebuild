@@ -10,8 +10,6 @@ DESCRIPTION="library to construct the suffix array and the Burrows-Wheeler trans
 HOMEPAGE="http://code.google.com/p/libdivsufsort/"
 SRC_URI="http://libdivsufsort.googlecode.com/files/${P}.tar.gz"
 
-RESTRICT="mirror"
-
 LICENSE="MIT"
 SLOT="0"
 KEYWORDS="amd64 arm x86"
