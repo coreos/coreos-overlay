@@ -1,6 +1,6 @@
-# Copyright 1999-2014 Gentoo Foundation
+# Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-libs/glibc/files/eblits/src_configure.eblit,v 1.3 2014/12/31 08:20:02 vapier Exp $
+# $Header: /var/cvsroot/gentoo-x86/sys-libs/glibc/files/eblits/src_configure.eblit,v 1.6 2015/03/17 00:06:40 vapier Exp $
 
 dump_toolchain_settings() {
 	echo
@@ -8,23 +8,20 @@ dump_toolchain_settings() {
 	einfo "$*"
 
 	local v
-	for v in ABI CBUILD CHOST CTARGET CBUILD_OPT CTARGET_OPT CC {AS,C,CPP,CXX,LD}FLAGS ; do
+	for v in ABI CBUILD CHOST CTARGET CBUILD_OPT CTARGET_OPT CC LD {AS,C,CPP,CXX,LD}FLAGS ; do
 		einfo " $(printf '%15s' ${v}:)   ${!v}"
 	done
 
-	export CC=$(tc-getCC ${CTARGET})
-	# Glibc does not work with gold (for various reasons) #269274.
-	if $(tc-getLD ${CTARGET}) --version | grep -q 'GNU gold' ; then
-		local d="${T}/bfd-linker"
-		mkdir -p "${d}"
-		ln -sf $(which ${CTARGET}-ld.bfd) "${d}"/ld
-		CC+=" -B${d}"
-	fi
+	# The glibc configure script doesn't properly use LDFLAGS all the time.
+	export CC="$(tc-getCC ${CTARGET}) ${LDFLAGS}"
 	einfo " $(printf '%15s' 'Manual CC:')   ${CC}"
 	echo
 }
 
 glibc_do_configure() {
+	# Glibc does not work with gold (for various reasons) #269274.
+	tc-ld-disable-gold
+
 	dump_toolchain_settings "Configuring glibc for $1"
 
 	local myconf=()
@@ -101,6 +98,7 @@ glibc_do_configure() {
 
 	myconf+=(
 		--without-cvs
+		--disable-werror
 		--enable-bind-now
 		--build=${CBUILD_OPT:-${CBUILD}}
 		--host=${CTARGET_OPT:-${CTARGET}}
@@ -208,11 +206,12 @@ toolchain-glibc_headers_configure() {
 		export ${v}
 	done
 
-	local ports="" myconf=()
+	local myconf=()
 	myconf+=(
 		--disable-sanity-checks
 		--enable-hacker-mode
 		--without-cvs
+		--disable-werror
 		--enable-bind-now
 		--build=${CBUILD_OPT:-${CBUILD}}
 		--host=${CTARGET_OPT:-${CTARGET}}
