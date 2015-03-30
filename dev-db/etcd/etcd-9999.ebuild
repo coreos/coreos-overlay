@@ -9,7 +9,7 @@ CROS_WORKON_PROJECT="coreos/etcd"
 CROS_WORKON_LOCALNAME="etcd"
 CROS_WORKON_REPO="git://github.com"
 COREOS_GO_PACKAGE="github.com/coreos/etcd"
-inherit coreos-doc coreos-go toolchain-funcs cros-workon
+inherit coreos-doc coreos-go toolchain-funcs cros-workon systemd
 
 if [[ "${PV}" == 9999 ]]; then
     KEYWORDS="~amd64"
@@ -33,19 +33,14 @@ RDEPEND="!dev-db/etcd:0
 src_compile() {
 	go_build "${COREOS_GO_PACKAGE}"
 	go_build "${COREOS_GO_PACKAGE}/etcdctl"
-	go_build "${COREOS_GO_PACKAGE}/tools/etcd-migrate"
-	go_build "${COREOS_GO_PACKAGE}/tools/etcd-dump-logs"
 }
 
 src_install() {
-	local libexec="libexec/${PN}/internal_versions/${SLOT}"
-
 	dobin ${WORKDIR}/gopath/bin/etcdctl
-	dobin ${WORKDIR}/gopath/bin/etcd-migrate
-	dobin ${WORKDIR}/gopath/bin/etcd-dump-logs
+	newbin "${WORKDIR}/gopath/bin/${PN}" "${PN}${SLOT}"
 
-	exeinto "/usr/${libexec}"
-	doexe "${WORKDIR}/gopath/bin/${PN}"
+	systemd_dounit "${FILESDIR}/${PN}${SLOT}.service"
+	systemd_dotmpfilesd "${FILESDIR}/${PN}${SLOT}.conf"
 
 	coreos-dodoc -r Documentation/*
 }
