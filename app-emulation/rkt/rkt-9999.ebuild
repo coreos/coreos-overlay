@@ -2,8 +2,8 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=5
-CROS_WORKON_PROJECT="coreos/rocket"
-CROS_WORKON_LOCALNAME="rocket"
+CROS_WORKON_PROJECT="coreos/rkt"
+CROS_WORKON_LOCALNAME="rkt"
 CROS_WORKON_REPO="git://github.com"
 inherit cros-workon
 
@@ -18,8 +18,8 @@ fi
 IMG_RELEASE="444.5.0"
 IMG_URL="http://stable.release.core-os.net/amd64-usr/${IMG_RELEASE}/coreos_production_pxe_image.cpio.gz"
 
-DESCRIPTION="rocket"
-HOMEPAGE="https://github.com/coreos/rocket"
+DESCRIPTION="App Container runtime"
+HOMEPAGE="https://github.com/coreos/rkt"
 SRC_URI="${IMG_URL} -> pxe-${IMG_RELEASE}.img"
 
 LICENSE="Apache-2.0"
