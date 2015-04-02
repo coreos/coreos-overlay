@@ -88,7 +88,7 @@ RDEPEND="${RDEPEND}
 	"
 
 RDEPEND="${RDEPEND}
-	app-emulation/rocket
+	app-emulation/rkt
 	app-emulation/xenstore
 	app-emulation/xenserver-pv-version
 	sys-apps/findutils
