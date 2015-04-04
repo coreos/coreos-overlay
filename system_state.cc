@@ -14,7 +14,7 @@ RealSystemState::RealSystemState()
     : device_policy_(NULL),
       request_params_(this) {}
 
-bool RealSystemState::Initialize(bool enable_connection_manager) {
+bool RealSystemState::Initialize() {
   if (!prefs_.Init(FilePath(kPrefsDirectory))) {
     LOG(ERROR) << "Failed to initialize preferences.";
     return false;
@@ -22,12 +22,6 @@ bool RealSystemState::Initialize(bool enable_connection_manager) {
 
   if (!payload_state_.Initialize(&prefs_))
     return false;
-
-  if (enable_connection_manager) {
-    connection_manager_ = new ConnectionManager(this);
-  } else {
-    connection_manager_ = new NoopConnectionManager(this);
-  }
 
   // Create the update attempter.
   update_attempter_.reset(new UpdateAttempter(this, &dbus_));

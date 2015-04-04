@@ -217,7 +217,6 @@ env.ParseConfig(pkgconfig + ' --cflags --libs ' + ' '.join((
                 'glib-2.0',
                 'gthread-2.0',
                 'libchrome-%s' % BASE_VER,
-                'libchromeos-%s' % BASE_VER,
                 'libcrypto',
                 'libcurl',
                 'libssl',
@@ -239,7 +238,6 @@ sources = Split("""action_processor.cc
                    bzip.cc
                    bzip_extent_writer.cc
                    certificate_checker.cc
-                   connection_manager.cc
                    cycle_breaker.cc
                    dbus_service.cc
                    delta_diff_generator.cc
@@ -285,7 +283,6 @@ unittest_sources = Split("""action_unittest.cc
                             action_processor_unittest.cc
                             bzip_extent_writer_unittest.cc
                             certificate_checker_unittest.cc
-                            connection_manager_unittest.cc
                             cycle_breaker_unittest.cc
                             delta_diff_generator_unittest.cc
                             delta_performer_unittest.cc

@@ -10,9 +10,11 @@
 #include "base/string_util.h"
 #include <base/stringprintf.h>
 #include "base/time.h"
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "update_engine/action_pipe.h"
 #include "update_engine/mock_http_fetcher.h"
+#include "update_engine/mock_system_state.h"
 #include "update_engine/omaha_hash_calculator.h"
 #include "update_engine/omaha_request_action.h"
 #include "update_engine/omaha_request_params.h"

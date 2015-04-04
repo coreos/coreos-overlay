@@ -18,6 +18,7 @@
 
 #include "update_engine/action.h"
 #include "update_engine/http_fetcher.h"
+#include "update_engine/system_state.h"
 #include "update_engine/omaha_response.h"
 #include "update_engine/utils.h"
 

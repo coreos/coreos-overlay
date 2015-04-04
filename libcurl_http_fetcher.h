@@ -14,9 +14,7 @@
 #include <glib.h>
 
 #include "update_engine/certificate_checker.h"
-#include "update_engine/connection_manager.h"
 #include "update_engine/http_fetcher.h"
-#include "update_engine/system_state.h"
 
 
 // This is a concrete implementation of HttpFetcher that uses libcurl to do the
@@ -30,8 +28,8 @@ class LibcurlHttpFetcher : public HttpFetcher {
   static const int kMaxRetryCountOobeComplete;
   static const int kMaxRetryCountOobeNotComplete;
 
-  LibcurlHttpFetcher(SystemState* system_state)
-      : HttpFetcher(system_state),
+  LibcurlHttpFetcher()
+      : HttpFetcher(),
         curl_multi_handle_(NULL),
         curl_handle_(NULL),
         curl_http_headers_(NULL),

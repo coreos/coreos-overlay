@@ -29,10 +29,6 @@ class MockSystemState : public SystemState {
   MOCK_METHOD1(set_device_policy, void(const policy::DevicePolicy*));
   MOCK_CONST_METHOD0(device_policy, const policy::DevicePolicy*());
 
-  inline virtual ConnectionManager* connection_manager() {
-    return connection_manager_;
-  }
-
   inline virtual PrefsInterface* prefs() {
     return prefs_;
   }
@@ -45,11 +41,6 @@ class MockSystemState : public SystemState {
 
   inline virtual OmahaRequestParams* request_params() {
     return request_params_;
-  }
-
-  // MockSystemState-specific public method.
-  inline void set_connection_manager(ConnectionManager* connection_manager) {
-    connection_manager_ = connection_manager;
   }
 
   inline void set_prefs(PrefsInterface* prefs) {
@@ -80,7 +71,6 @@ class MockSystemState : public SystemState {
 
   // These are pointers to objects which caller can override.
   PrefsInterface* prefs_;
-  ConnectionManager* connection_manager_;
   OmahaRequestParams* request_params_;
 };
 

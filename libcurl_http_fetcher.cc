@@ -40,20 +40,6 @@ LibcurlHttpFetcher::~LibcurlHttpFetcher() {
   CleanUp();
 }
 
-// On error, returns false.
-bool LibcurlHttpFetcher::IsUpdateAllowedOverCurrentConnection() const {
-  NetworkConnectionType type;
-  ConcreteDbusGlib dbus_iface;
-  ConnectionManager* connection_manager = system_state_->connection_manager();
-  TEST_AND_RETURN_FALSE(connection_manager->GetConnectionType(&dbus_iface,
-                                                              &type));
-  bool is_allowed = connection_manager->IsUpdateAllowedOver(type);
-  LOG(INFO) << "We are connected via "
-            << connection_manager->StringForConnectionType(type)
-            << ", Updates allowed: " << (is_allowed ? "Yes" : "No");
-  return is_allowed;
-}
-
 bool LibcurlHttpFetcher::IsOfficialBuild() const {
   return force_build_type_ ? forced_official_build_ : utils::IsOfficialBuild();
 }
@@ -124,14 +110,7 @@ void LibcurlHttpFetcher::ResumeTransfer(const std::string& url) {
   CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_WRITEFUNCTION,
                             StaticLibcurlWrite), CURLE_OK);
 
-  string url_to_use(url_);
-  if (!IsUpdateAllowedOverCurrentConnection()) {
-    LOG(INFO) << "Not initiating HTTP connection b/c updates are disabled "
-              << "over this connection";
-    url_to_use = "";  // Sabotage the URL
-  }
-
-  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_URL, url_to_use.c_str()),
+  CHECK_EQ(curl_easy_setopt(curl_handle_, CURLOPT_URL, url_.c_str()),
            CURLE_OK);
 
   // If the connection drops under 10 bytes/sec for 3 minutes, reconnect.
@@ -155,7 +134,7 @@ void LibcurlHttpFetcher::ResumeTransfer(const std::string& url) {
   // For the sake of security if this is an official build lock down
   // the appropriate curl options for HTTP or HTTPS depending on the url.
   if (IsOfficialBuild()) {
-    if (StartsWithASCII(url_to_use, "http://", false))
+    if (StartsWithASCII(url_, "http://", false))
       SetCurlOptionsForHttp();
     else
       SetCurlOptionsForHttps();

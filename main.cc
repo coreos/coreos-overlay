@@ -35,8 +35,6 @@ DEFINE_bool(logtostderr, false,
             "Write logs to stderr instead of to a file in log_dir.");
 DEFINE_bool(foreground, false,
             "Don't daemon()ize; run in foreground.");
-DEFINE_bool(no_connection_manager, false,
-            "Don't use a connection manager.");
 
 using std::string;
 using std::vector;
@@ -168,7 +166,7 @@ int main(int argc, char** argv) {
   GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
 
   chromeos_update_engine::RealSystemState real_system_state;
-  LOG_IF(ERROR, !real_system_state.Initialize(!FLAGS_no_connection_manager))
+  LOG_IF(ERROR, !real_system_state.Initialize())
       << "Failed to initialize system state.";
   chromeos_update_engine::UpdateAttempter *update_attempter =
       real_system_state.update_attempter();

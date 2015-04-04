@@ -47,10 +47,8 @@ class UpdateAttempterTest : public ::testing::Test {
  protected:
   UpdateAttempterTest()
       : attempter_(&mock_system_state_, &dbus_),
-        mock_connection_manager(&mock_system_state_),
-        loop_(NULL) {
-    mock_system_state_.set_connection_manager(&mock_connection_manager);
-  }
+        loop_(NULL) {}
+
   virtual void SetUp() {
     EXPECT_EQ(NULL, attempter_.dbus_service_);
     EXPECT_TRUE(attempter_.system_state_ != NULL);
@@ -100,7 +98,6 @@ class UpdateAttempterTest : public ::testing::Test {
   UpdateAttempterUnderTest attempter_;
   NiceMock<ActionProcessorMock>* processor_;
   NiceMock<PrefsMock>* prefs_; // shortcut to mock_system_state_->mock_prefs()
-  NiceMock<MockConnectionManager> mock_connection_manager;
   GMainLoop* loop_;
 };
 

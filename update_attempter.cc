@@ -176,17 +176,6 @@ bool UpdateAttempter::CalculateUpdateParams(bool interactive) {
     omaha_request_params_->set_update_disabled(update_disabled);
 
     system_state_->set_device_policy(&device_policy);
-
-    set<string> allowed_types;
-    string allowed_types_str;
-    if (device_policy.GetAllowedConnectionTypesForUpdate(&allowed_types)) {
-      set<string>::const_iterator iter;
-      for (iter = allowed_types.begin(); iter != allowed_types.end(); ++iter)
-        allowed_types_str += *iter + " ";
-    }
-
-    LOG(INFO) << "Networks over which updates are allowed per policy : "
-              << (allowed_types_str.empty() ? "all" : allowed_types_str);
   } else {
     LOG(INFO) << "No device policies/settings present.";
     system_state_->set_device_policy(NULL);
@@ -340,8 +329,7 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
   processor_->set_delegate(this);
 
   // Actions:
-  LibcurlHttpFetcher* update_check_fetcher =
-      new LibcurlHttpFetcher(system_state_);
+  LibcurlHttpFetcher* update_check_fetcher = new LibcurlHttpFetcher();
   // Try harder to connect to the network, esp when not interactive.
   // See comment in libcurl_http_fetcher.cc.
   update_check_fetcher->set_no_network_max_retries(interactive ? 1 : 3);
@@ -361,10 +349,9 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
       new OmahaRequestAction(system_state_,
                              new OmahaEvent(
                                  OmahaEvent::kTypeUpdateDownloadStarted),
-                             new LibcurlHttpFetcher(system_state_),
+                             new LibcurlHttpFetcher(),
                              false));
-  LibcurlHttpFetcher* download_fetcher =
-      new LibcurlHttpFetcher(system_state_);
+  LibcurlHttpFetcher* download_fetcher = new LibcurlHttpFetcher();
   download_fetcher->set_check_certificate(CertificateChecker::kDownload);
   shared_ptr<DownloadAction> download_action(
       new DownloadAction(prefs_,
@@ -375,7 +362,7 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
       new OmahaRequestAction(system_state_,
                              new OmahaEvent(
                                  OmahaEvent::kTypeUpdateDownloadFinished),
-                             new LibcurlHttpFetcher(system_state_),
+                             new LibcurlHttpFetcher(),
                              false));
   shared_ptr<FilesystemCopierAction> filesystem_verifier_action(
       new FilesystemCopierAction(false, true));
@@ -386,7 +373,7 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
   shared_ptr<OmahaRequestAction> update_complete_action(
       new OmahaRequestAction(system_state_,
                              new OmahaEvent(OmahaEvent::kTypeUpdateComplete),
-                             new LibcurlHttpFetcher(system_state_),
+                             new LibcurlHttpFetcher(),
                              false));
 
   download_action->set_delegate(this);
@@ -785,7 +772,7 @@ bool UpdateAttempter::ScheduleErrorEventAction() {
   shared_ptr<OmahaRequestAction> error_event_action(
       new OmahaRequestAction(system_state_,
                              error_event_.release(),  // Pass ownership.
-                             new LibcurlHttpFetcher(system_state_),
+                             new LibcurlHttpFetcher(),
                              false));
   actions_.push_back(shared_ptr<AbstractAction>(error_event_action));
   processor_->EnqueueAction(error_event_action.get());
@@ -898,7 +885,7 @@ void UpdateAttempter::PingOmaha() {
     shared_ptr<OmahaRequestAction> ping_action(
         new OmahaRequestAction(system_state_,
                                NULL,
-                               new LibcurlHttpFetcher(system_state_),
+                               new LibcurlHttpFetcher(),
                                true));
     actions_.push_back(shared_ptr<OmahaRequestAction>(ping_action));
     processor_->set_delegate(NULL);
