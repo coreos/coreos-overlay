@@ -175,10 +175,6 @@ bool UpdateAttempter::CalculateUpdateParams(bool interactive) {
     device_policy.GetUpdateDisabled(&update_disabled);
     omaha_request_params_->set_update_disabled(update_disabled);
 
-    string target_version_prefix;
-    device_policy.GetTargetVersionPrefix(&target_version_prefix);
-    omaha_request_params_->set_target_version_prefix(target_version_prefix);
-
     system_state_->set_device_policy(&device_policy);
 
     set<string> allowed_types;
@@ -205,8 +201,6 @@ bool UpdateAttempter::CalculateUpdateParams(bool interactive) {
 
   LOG(INFO) << "update_disabled = "
             << utils::ToString(omaha_request_params_->update_disabled())
-            << ", target_version_prefix = "
-            << omaha_request_params_->target_version_prefix()
             << ", scatter_factor_in_seconds = "
             << utils::FormatSecs(scatter_factor_.InSeconds());
 

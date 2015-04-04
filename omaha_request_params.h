@@ -58,8 +58,7 @@ class OmahaRequestParams {
                      bool in_delta_okay,
                      bool in_interactive,
                      const std::string& in_update_url,
-                     bool in_update_disabled,
-                     const std::string& in_target_version_prefix)
+                     bool in_update_disabled)
       : system_state_(system_state),
         os_platform_(in_os_platform),
         os_version_(in_os_version),
@@ -75,7 +74,6 @@ class OmahaRequestParams {
         interactive_(in_interactive),
         update_url_(in_update_url),
         update_disabled_(in_update_disabled),
-        target_version_prefix_(in_target_version_prefix),
         wall_clock_based_wait_enabled_(false),
         update_check_count_wait_enabled_(false),
         min_update_checks_needed_(kDefaultMinUpdateChecks),
@@ -115,14 +113,6 @@ class OmahaRequestParams {
     update_disabled_ = disabled;
   }
   inline bool update_disabled() const { return update_disabled_; }
-
-  inline void set_target_version_prefix(const std::string& prefix) {
-    target_version_prefix_ = prefix;
-  }
-
-  inline std::string target_version_prefix() const {
-    return target_version_prefix_;
-  }
 
   inline void set_wall_clock_based_wait_enabled(bool enabled) {
     wall_clock_based_wait_enabled_ = enabled;
@@ -219,10 +209,6 @@ class OmahaRequestParams {
 
   // True if we've been told to block updates per enterprise policy.
   bool update_disabled_;
-
-  // Prefix of the target OS version that the enterprise wants this device
-  // to be pinned to. It's empty otherwise.
-  std::string target_version_prefix_;
 
   // True if scattering is enabled, in which case waiting_period_ specifies the
   // amount of absolute time that we've to wait for before sending a request to

@@ -104,10 +104,7 @@ string GetAppBody(const OmahaEvent* event,
       // borgmon charts show up updates that are deferred. This is also
       // the expected behavior when we move to Omaha v3.0 protocol, so it'll
       // be consistent.
-      app_body += StringPrintf(
-          "        <updatecheck targetversionprefix=\"%s\""
-          "></updatecheck>\n",
-          XmlEncode(params.target_version_prefix()).c_str());
+      app_body += "        <updatecheck></updatecheck>\n";
 
       // If this is the first update check after a reboot following a previous
       // update, generate an event containing the previous version number. If

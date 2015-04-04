@@ -83,10 +83,6 @@ class UpdateAttempterTest : public ::testing::Test {
   void ReadUpdateDisabledFromPolicyTestStart();
   static gboolean StaticReadUpdateDisabledFromPolicyTestStart(gpointer data);
 
-  void ReadTargetVersionPrefixFromPolicyTestStart();
-  static gboolean StaticReadTargetVersionPrefixFromPolicyTestStart(
-      gpointer data);
-
   void ReadScatterFactorFromPolicyTestStart();
   static gboolean StaticReadScatterFactorFromPolicyTestStart(
       gpointer data);
@@ -308,13 +304,6 @@ gboolean UpdateAttempterTest::StaticReadUpdateDisabledFromPolicyTestStart(
   return FALSE;
 }
 
-gboolean UpdateAttempterTest::StaticReadTargetVersionPrefixFromPolicyTestStart(
-    gpointer data) {
-  UpdateAttempterTest* ua_test = reinterpret_cast<UpdateAttempterTest*>(data);
-  ua_test->ReadTargetVersionPrefixFromPolicyTestStart();
-  return FALSE;
-}
-
 gboolean UpdateAttempterTest::StaticReadScatterFactorFromPolicyTestStart(
     gpointer data) {
   UpdateAttempterTest* ua_test = reinterpret_cast<UpdateAttempterTest*>(data);
@@ -472,40 +461,6 @@ void UpdateAttempterTest::ReadUpdateDisabledFromPolicyTestStart() {
 
   g_idle_add(&StaticQuitMainLoop, this);
 }
-
-TEST_F(UpdateAttempterTest, ReadTargetVersionPrefixFromPolicy) {
-  loop_ = g_main_loop_new(g_main_context_default(), FALSE);
-  g_idle_add(&StaticReadTargetVersionPrefixFromPolicyTestStart, this);
-  g_main_loop_run(loop_);
-  g_main_loop_unref(loop_);
-  loop_ = NULL;
-}
-
-void UpdateAttempterTest::ReadTargetVersionPrefixFromPolicyTestStart() {
-  // Tests that the target_version_prefix value is properly fetched
-  // from the device policy.
-
-  const std::string target_version_prefix = "1412.";
-
-  policy::MockDevicePolicy* device_policy = new policy::MockDevicePolicy();
-  attempter_.policy_provider_.reset(new policy::PolicyProvider(device_policy));
-
-  EXPECT_CALL(*device_policy, LoadPolicy()).WillRepeatedly(Return(true));
-  EXPECT_CALL(mock_system_state_, device_policy()).WillRepeatedly(
-      Return(device_policy));
-
-  EXPECT_CALL(*device_policy, GetTargetVersionPrefix(_))
-      .WillRepeatedly(DoAll(
-          SetArgumentPointee<0>(target_version_prefix),
-          Return(true)));
-
-  attempter_.Update(false);
-  EXPECT_EQ(target_version_prefix.c_str(),
-            attempter_.omaha_request_params_->target_version_prefix());
-
-  g_idle_add(&StaticQuitMainLoop, this);
-}
-
 
 TEST_F(UpdateAttempterTest, ReadScatterFactorFromPolicy) {
   loop_ = g_main_loop_new(g_main_context_default(), FALSE);

@@ -55,8 +55,7 @@ OmahaRequestParams kDefaultTestParams(
     false,  // delta okay
     false,  // interactive
     "http://url",
-    false, // update_disabled
-    ""); // target_version_prefix);
+    false);  // update_disabled
 
 string GetNoUpdateResponse(const string& app_id) {
   return string(
@@ -828,8 +827,7 @@ TEST(OmahaRequestActionTest, XmlEncodeTest) {
                             false,  // delta okay
                             false,  // interactive
                             "http://url",
-                            false,   // update_disabled
-                            "");  // target_version_prefix
+                            false);  // update_disabled
   OmahaResponse response;
   ASSERT_FALSE(
       TestUpdateCheck(NULL,  // prefs
@@ -921,7 +919,7 @@ TEST(OmahaRequestActionTest, FormatUpdateCheckOutputTest) {
   string post_str(&post_data[0], post_data.size());
   EXPECT_NE(post_str.find(
       "        <ping active=\"1\"></ping>\n"
-      "        <updatecheck targetversionprefix=\"\"></updatecheck>\n"),
+      "        <updatecheck></updatecheck>\n"),
       string::npos);
   EXPECT_NE(post_str.find("hardware_class=\"OEM MODEL 09235 7471\""),
             string::npos);
@@ -950,7 +948,7 @@ TEST(OmahaRequestActionTest, FormatUpdateDisabledOutputTest) {
   string post_str(&post_data[0], post_data.size());
   EXPECT_NE(post_str.find(
       "        <ping active=\"1\"></ping>\n"
-      "        <updatecheck targetversionprefix=\"\"></updatecheck>\n"),
+      "        <updatecheck></updatecheck>\n"),
       string::npos);
   EXPECT_NE(post_str.find("hardware_class=\"OEM MODEL 09235 7471\""),
             string::npos);
@@ -1039,8 +1037,7 @@ TEST(OmahaRequestActionTest, FormatDeltaOkayOutputTest) {
                               delta_okay,
                               false,  // interactive
                               "http://url",
-                              false, // update_disabled
-                              "");   // target_version_prefix
+                              false);  // update_disabled
     ASSERT_FALSE(TestUpdateCheck(NULL,  // prefs
                                  params,
                                  "invalid xml>",
@@ -1077,8 +1074,7 @@ TEST(OmahaRequestActionTest, FormatInteractiveOutputTest) {
                               true,  // delta_okay
                               interactive,
                               "http://url",
-                              false, // update_disabled
-                              "");   // target_version_prefix
+                              false);  // update_disabled
     ASSERT_FALSE(TestUpdateCheck(NULL,  // prefs
                                  params,
                                  "invalid xml>",
