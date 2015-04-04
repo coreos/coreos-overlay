@@ -98,14 +98,6 @@ class OmahaRequestAction : public Action<OmahaRequestAction>,
   // fallback ones.
   static const int kDefaultMaxFailureCountPerUrl = 10;
 
-  // These are the possible outcome upon checking whether we satisfied
-  // the wall-clock-based-wait.
-  enum WallClockWaitResult {
-    kWallClockWaitNotSatisfied,
-    kWallClockWaitDoneButUpdateCheckWaitRequired,
-    kWallClockWaitDoneAndUpdateCheckWaitNotRequired,
-  };
-
   // The ctor takes in all the parameters that will be used for making
   // the request to Omaha. For some of them we have constants that
   // should be used.
@@ -145,21 +137,6 @@ class OmahaRequestAction : public Action<OmahaRequestAction>,
   bool IsEvent() const { return event_.get() != NULL; }
 
  private:
-  // Returns true if the download of a new update should be deferred.
-  // False if the update can be downloaded.
-  bool ShouldDeferDownload(OmahaResponse* output_object);
-
-  // Returns true if the basic wall-clock-based waiting period has been
-  // satisfied based on the scattering policy setting. False otherwise.
-  // If true, it also indicates whether the additional update-check-count-based
-  // waiting period also needs to be satisfied before the download can begin.
-  WallClockWaitResult IsWallClockBasedWaitingSatisfied(
-      OmahaResponse* output_object);
-
-  // Returns true if the update-check-count-based waiting period has been
-  // satisfied. False otherwise.
-  bool IsUpdateCheckCountBasedWaitingSatisfied();
-
   // Parses the response from Omaha that's available in |doc| using the other
   // helper methods below and populates the |output_object| with the relevant
   // values. Returns true if we should continue the parsing.  False otherwise,

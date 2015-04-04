@@ -37,7 +37,7 @@ static const char* kTagDisplayVersion = "DisplayVersion";
 // Deprecated: "IsDelta"
 static const char* kTagIsDeltaPayload = "IsDeltaPayload";
 static const char* kTagMaxFailureCountPerUrl = "MaxFailureCountPerUrl";
-static const char* kTagMaxDaysToScatter = "MaxDaysToScatter";
+// Deprecated: "MaxDaysToScatter";
 // Deprecated: "ManifestSignatureRsa"
 // Deprecated: "ManifestSize"
 // Deprecated: "MetadataSignatureRsa"
@@ -351,12 +351,8 @@ bool OmahaRequestAction::ParseResponse(xmlDoc* doc,
   // PollInterval is not persisted, so it has to be sent by the server on every
   // response to guarantee that the UpdateCheckScheduler uses this value
   // (otherwise, if the device got rebooted after the last server-indicated
-  // value, it'll revert to the default value). Also kDefaultMaxUpdateChecks
-  // value for the scattering logic is based on the assumption that we perform
-  // an update check every hour so that the max value of 8 will roughly be
-  // equivalent to one work day. If we decide to use PollInterval permanently,
-  // we should update the max_update_checks_allowed to take PollInterval into
-  // account.  Note: The parsing for PollInterval happens even before parsing
+  // value, it'll revert to the default value).
+  // Note: The parsing for PollInterval happens even before parsing
   // of the status because we may want to specify the PollInterval even when
   // there's no update.
   base::StringToInt(XmlGetProperty(update_check_node, "PollInterval"),
@@ -554,8 +550,6 @@ bool OmahaRequestAction::ParseParams(xmlDoc* doc,
       XmlGetProperty(pie_action_node, kTagNeedsAdmin) == "true";
   output_object->prompt = XmlGetProperty(pie_action_node, kTagPrompt) == "true";
   output_object->deadline = XmlGetProperty(pie_action_node, kTagDeadline);
-  output_object->max_days_to_scatter =
-      ParseInt(XmlGetProperty(pie_action_node, kTagMaxDaysToScatter));
 
   string max = XmlGetProperty(pie_action_node, kTagMaxFailureCountPerUrl);
   if (!base::StringToUint(max, &output_object->max_failure_count_per_url))
@@ -624,13 +618,6 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
   if (!ParseResponse(doc.get(), &output_object, &completer))
     return;
 
-  if (ShouldDeferDownload(&output_object)) {
-    output_object.update_exists = false;
-    LOG(INFO) << "Ignoring Omaha updates as updates are deferred by policy.";
-    completer.set_code(kActionCodeOmahaUpdateDeferredPerPolicy);
-    return;
-  }
-
   // Update the payload state with the current response. The payload state
   // will automatically reset all stale state if this response is different
   // from what's stored already. We are updating the payload state as late
@@ -649,204 +636,4 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
   }
 }
 
-bool OmahaRequestAction::ShouldDeferDownload(OmahaResponse* output_object) {
-  // We should defer the downloads only if we've first satisfied the
-  // wall-clock-based-waiting period and then the update-check-based waiting
-  // period, if required.
-
-  if (!params_->wall_clock_based_wait_enabled()) {
-    // Wall-clock-based waiting period is not enabled, so no scattering needed.
-    return false;
-  }
-
-  switch (IsWallClockBasedWaitingSatisfied(output_object)) {
-    case kWallClockWaitNotSatisfied:
-      // We haven't even satisfied the first condition, passing the
-      // wall-clock-based waiting period, so we should defer the downloads
-      // until that happens.
-      LOG(INFO) << "wall-clock-based-wait not satisfied.";
-      return true;
-
-    case kWallClockWaitDoneButUpdateCheckWaitRequired:
-      LOG(INFO) << "wall-clock-based-wait satisfied and "
-                << "update-check-based-wait required.";
-      return !IsUpdateCheckCountBasedWaitingSatisfied();
-
-    case kWallClockWaitDoneAndUpdateCheckWaitNotRequired:
-      // Wall-clock-based waiting period is satisfied, and it's determined
-      // that we do not need the update-check-based wait. so no need to
-      // defer downloads.
-      LOG(INFO) << "wall-clock-based-wait satisfied and "
-                << "update-check-based-wait is not required.";
-      return false;
-
-    default:
-      // Returning false for this default case so we err on the
-      // side of downloading updates than deferring in case of any bugs.
-      NOTREACHED();
-      return false;
-  }
-}
-
-OmahaRequestAction::WallClockWaitResult
-OmahaRequestAction::IsWallClockBasedWaitingSatisfied(
-    OmahaResponse* output_object) {
-  Time update_first_seen_at;
-  int64 update_first_seen_at_int;
-
-  if (system_state_->prefs()->Exists(kPrefsUpdateFirstSeenAt)) {
-    if (system_state_->prefs()->GetInt64(kPrefsUpdateFirstSeenAt,
-                                         &update_first_seen_at_int)) {
-      // Note: This timestamp could be that of ANY update we saw in the past
-      // (not necessarily this particular update we're considering to apply)
-      // but never got to apply because of some reason (e.g. stop AU policy,
-      // updates being pulled out from Omaha, changes in target version prefix,
-      // new update being rolled out, etc.). But for the purposes of scattering
-      // it doesn't matter which update the timestamp corresponds to. i.e.
-      // the clock starts ticking the first time we see an update and we're
-      // ready to apply when the random wait period is satisfied relative to
-      // that first seen timestamp.
-      update_first_seen_at = Time::FromInternalValue(update_first_seen_at_int);
-      LOG(INFO) << "Using persisted value of UpdateFirstSeenAt: "
-                << utils::ToString(update_first_seen_at);
-    } else {
-      // This seems like an unexpected error where the persisted value exists
-      // but it's not readable for some reason. Just skip scattering in this
-      // case to be safe.
-     LOG(INFO) << "Not scattering as UpdateFirstSeenAt value cannot be read";
-     return kWallClockWaitDoneAndUpdateCheckWaitNotRequired;
-    }
-  } else {
-    update_first_seen_at = Time::Now();
-    update_first_seen_at_int = update_first_seen_at.ToInternalValue();
-    if (system_state_->prefs()->SetInt64(kPrefsUpdateFirstSeenAt,
-                                         update_first_seen_at_int)) {
-      LOG(INFO) << "Persisted the new value for UpdateFirstSeenAt: "
-                << utils::ToString(update_first_seen_at);
-    }
-    else {
-      // This seems like an unexpected error where the value cannot be
-      // persisted for some reason. Just skip scattering in this
-      // case to be safe.
-      LOG(INFO) << "Not scattering as UpdateFirstSeenAt value "
-                << utils::ToString(update_first_seen_at)
-                << " cannot be persisted";
-     return kWallClockWaitDoneAndUpdateCheckWaitNotRequired;
-    }
-  }
-
-  TimeDelta elapsed_time = Time::Now() - update_first_seen_at;
-  TimeDelta max_scatter_period = TimeDelta::FromDays(
-      output_object->max_days_to_scatter);
-
-  LOG(INFO) << "Waiting Period = "
-            << utils::FormatSecs(params_->waiting_period().InSeconds())
-            << ", Time Elapsed = "
-            << utils::FormatSecs(elapsed_time.InSeconds())
-            << ", MaxDaysToScatter = "
-            << max_scatter_period.InDays();
-
-  if (!output_object->deadline.empty()) {
-    // The deadline is set for all rules which serve a delta update from a
-    // previous FSI, which means this update will be applied mostly in OOBE
-    // cases. For these cases, we shouldn't scatter so as to finish the OOBE
-    // quickly.
-    LOG(INFO) << "Not scattering as deadline flag is set";
-    return kWallClockWaitDoneAndUpdateCheckWaitNotRequired;
-  }
-
-  if (max_scatter_period.InDays() == 0) {
-    // This means the Omaha rule creator decides that this rule
-    // should not be scattered irrespective of the policy.
-    LOG(INFO) << "Not scattering as MaxDaysToScatter in rule is 0.";
-    return kWallClockWaitDoneAndUpdateCheckWaitNotRequired;
-  }
-
-  if (elapsed_time > max_scatter_period) {
-    // This means we've waited more than the upperbound wait in the rule
-    // from the time we first saw a valid update available to us.
-    // This will prevent update starvation.
-    LOG(INFO) << "Not scattering as we're past the MaxDaysToScatter limit.";
-    return kWallClockWaitDoneAndUpdateCheckWaitNotRequired;
-  }
-
-  // This means we are required to participate in scattering.
-  // See if our turn has arrived now.
-  TimeDelta remaining_wait_time = params_->waiting_period() - elapsed_time;
-  if (remaining_wait_time.InSeconds() <= 0) {
-    // Yes, it's our turn now.
-    LOG(INFO) << "Successfully passed the wall-clock-based-wait.";
-
-    // But we can't download until the update-check-count-based wait is also
-    // satisfied, so mark it as required now if update checks are enabled.
-    return params_->update_check_count_wait_enabled() ?
-              kWallClockWaitDoneButUpdateCheckWaitRequired :
-              kWallClockWaitDoneAndUpdateCheckWaitNotRequired;
-  }
-
-  // Not our turn yet, so we have to wait until our turn to
-  // help scatter the downloads across all clients of the enterprise.
-  LOG(INFO) << "Update deferred for another "
-            << utils::FormatSecs(remaining_wait_time.InSeconds())
-            << " per policy.";
-  return kWallClockWaitNotSatisfied;
-}
-
-bool OmahaRequestAction::IsUpdateCheckCountBasedWaitingSatisfied() {
-  int64 update_check_count_value;
-
-  if (system_state_->prefs()->Exists(kPrefsUpdateCheckCount)) {
-    if (!system_state_->prefs()->GetInt64(kPrefsUpdateCheckCount,
-                                          &update_check_count_value)) {
-      // We are unable to read the update check count from file for some reason.
-      // So let's proceed anyway so as to not stall the update.
-      LOG(ERROR) << "Unable to read update check count. "
-                 << "Skipping update-check-count-based-wait.";
-      return true;
-    }
-  } else {
-    // This file does not exist. This means we haven't started our update
-    // check count down yet, so this is the right time to start the count down.
-    update_check_count_value = base::RandInt(
-      params_->min_update_checks_needed(),
-      params_->max_update_checks_allowed());
-
-    LOG(INFO) << "Randomly picked update check count value = "
-              << update_check_count_value;
-
-    // Write out the initial value of update_check_count_value.
-    if (!system_state_->prefs()->SetInt64(kPrefsUpdateCheckCount,
-                                          update_check_count_value)) {
-      // We weren't able to write the update check count file for some reason.
-      // So let's proceed anyway so as to not stall the update.
-      LOG(ERROR) << "Unable to write update check count. "
-                 << "Skipping update-check-count-based-wait.";
-      return true;
-    }
-  }
-
-  if (update_check_count_value == 0) {
-    LOG(INFO) << "Successfully passed the update-check-based-wait.";
-    return true;
-  }
-
-  if (update_check_count_value < 0 ||
-      update_check_count_value > params_->max_update_checks_allowed()) {
-    // We err on the side of skipping scattering logic instead of stalling
-    // a machine from receiving any updates in case of any unexpected state.
-    LOG(ERROR) << "Invalid value for update check count detected. "
-               << "Skipping update-check-count-based-wait.";
-    return true;
-  }
-
-  // Legal value, we need to wait for more update checks to happen
-  // until this becomes 0.
-  LOG(INFO) << "Deferring Omaha updates for another "
-            << update_check_count_value
-            << " update checks per policy";
-  return false;
-}
-
 }  // namespace chromeos_update_engine
-
-

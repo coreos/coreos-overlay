@@ -21,7 +21,6 @@ struct OmahaResponse {
       : update_exists(false),
         poll_interval(0),
         size(0),
-        max_days_to_scatter(0),
         max_failure_count_per_url(0),
         needs_admin(false),
         prompt(false),
@@ -45,7 +44,6 @@ struct OmahaResponse {
   std::string hash;
   std::string deadline;
   off_t size;
-  int max_days_to_scatter;
   // The number of URL-related failures to tolerate before moving on to the
   // next URL in the current pass. This is a configurable value from the
   // Omaha Response attribute, if ever we need to fine tune the behavior.
