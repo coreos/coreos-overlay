@@ -99,11 +99,6 @@ string GetAppBody(const OmahaEvent* event,
   if (event == NULL) {
     app_body = GetPingXml(ping_active_days, ping_roll_call_days);
     if (!ping_only) {
-      // not passing update_disabled to Omaha because we want to
-      // get the update and report with UpdateDeferred result so that
-      // borgmon charts show up updates that are deferred. This is also
-      // the expected behavior when we move to Omaha v3.0 protocol, so it'll
-      // be consistent.
       app_body += "        <updatecheck></updatecheck>\n";
 
       // If this is the first update check after a reboot following a previous
@@ -628,20 +623,6 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
   OmahaResponse output_object;
   if (!ParseResponse(doc.get(), &output_object, &completer))
     return;
-
-  if (params_->update_disabled()) {
-    LOG(INFO) << "Ignoring Omaha updates as updates are disabled by policy.";
-    output_object.update_exists = false;
-    completer.set_code(kActionCodeOmahaUpdateIgnoredPerPolicy);
-    // Note: We could technically delete the UpdateFirstSeenAt state here.
-    // If we do, it'll mean a device has to restart the UpdateFirstSeenAt
-    // and thus help scattering take effect when the AU is turned on again.
-    // On the other hand, it also increases the chance of update starvation if
-    // an admin turns AU on/off more frequently. We choose to err on the side
-    // of preventing starvation at the cost of not applying scattering in
-    // those cases.
-    return;
-  }
 
   if (ShouldDeferDownload(&output_object)) {
     output_object.update_exists = false;

@@ -78,9 +78,6 @@ class UpdateAttempterTest : public ::testing::Test {
   void PingOmahaTestStart();
   static gboolean StaticPingOmahaTestStart(gpointer data);
 
-  void ReadUpdateDisabledFromPolicyTestStart();
-  static gboolean StaticReadUpdateDisabledFromPolicyTestStart(gpointer data);
-
   void ReadScatterFactorFromPolicyTestStart();
   static gboolean StaticReadScatterFactorFromPolicyTestStart(
       gpointer data);
@@ -294,13 +291,6 @@ gboolean UpdateAttempterTest::StaticPingOmahaTestStart(gpointer data) {
   return FALSE;
 }
 
-gboolean UpdateAttempterTest::StaticReadUpdateDisabledFromPolicyTestStart(
-    gpointer data) {
-  UpdateAttempterTest* ua_test = reinterpret_cast<UpdateAttempterTest*>(data);
-  ua_test->ReadUpdateDisabledFromPolicyTestStart();
-  return FALSE;
-}
-
 gboolean UpdateAttempterTest::StaticReadScatterFactorFromPolicyTestStart(
     gpointer data) {
   UpdateAttempterTest* ua_test = reinterpret_cast<UpdateAttempterTest*>(data);
@@ -427,36 +417,6 @@ TEST_F(UpdateAttempterTest, CreatePendingErrorEventResumedTest) {
   EXPECT_EQ(OmahaEvent::kResultError, attempter_.error_event_->result);
   EXPECT_EQ(kCode | kActionCodeResumedFlag | kActionCodeTestOmahaUrlFlag,
             attempter_.error_event_->error_code);
-}
-
-TEST_F(UpdateAttempterTest, ReadUpdateDisabledFromPolicy) {
-  loop_ = g_main_loop_new(g_main_context_default(), FALSE);
-  g_idle_add(&StaticReadUpdateDisabledFromPolicyTestStart, this);
-  g_main_loop_run(loop_);
-  g_main_loop_unref(loop_);
-  loop_ = NULL;
-}
-
-void UpdateAttempterTest::ReadUpdateDisabledFromPolicyTestStart() {
-  // Tests that the update_disbled flag is properly fetched
-  // from the device policy.
-
-  policy::MockDevicePolicy* device_policy = new policy::MockDevicePolicy();
-  attempter_.policy_provider_.reset(new policy::PolicyProvider(device_policy));
-
-  EXPECT_CALL(*device_policy, LoadPolicy()).WillRepeatedly(Return(true));
-  EXPECT_CALL(mock_system_state_, device_policy()).WillRepeatedly(
-      Return(device_policy));
-
-  EXPECT_CALL(*device_policy, GetUpdateDisabled(_))
-      .WillRepeatedly(DoAll(
-          SetArgumentPointee<0>(true),
-          Return(true)));
-
-  attempter_.Update(false);
-  EXPECT_TRUE(attempter_.omaha_request_params_->update_disabled());
-
-  g_idle_add(&StaticQuitMainLoop, this);
 }
 
 TEST_F(UpdateAttempterTest, ReadScatterFactorFromPolicy) {

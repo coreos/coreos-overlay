@@ -171,10 +171,6 @@ bool UpdateAttempter::CalculateUpdateParams(bool interactive) {
     const policy::DevicePolicy& device_policy =
                                 policy_provider_->GetDevicePolicy();
 
-    bool update_disabled = false;
-    device_policy.GetUpdateDisabled(&update_disabled);
-    omaha_request_params_->set_update_disabled(update_disabled);
-
     system_state_->set_device_policy(&device_policy);
   } else {
     LOG(INFO) << "No device policies/settings present.";
@@ -188,9 +184,7 @@ bool UpdateAttempter::CalculateUpdateParams(bool interactive) {
     return false;
   }
 
-  LOG(INFO) << "update_disabled = "
-            << utils::ToString(omaha_request_params_->update_disabled())
-            << ", scatter_factor_in_seconds = "
+  LOG(INFO) << "scatter_factor_in_seconds = "
             << utils::FormatSecs(scatter_factor_.InSeconds());
 
   LOG(INFO) << "Wall Clock Based Wait Enabled = "

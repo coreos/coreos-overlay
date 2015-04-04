@@ -38,7 +38,6 @@ class OmahaRequestParams {
 	app_channel_(kDefaultChannel),
         delta_okay_(true),
         interactive_(false),
-        update_disabled_(false),
         wall_clock_based_wait_enabled_(false),
         update_check_count_wait_enabled_(false),
         min_update_checks_needed_(kDefaultMinUpdateChecks),
@@ -57,8 +56,7 @@ class OmahaRequestParams {
                      const std::string& in_bootid,
                      bool in_delta_okay,
                      bool in_interactive,
-                     const std::string& in_update_url,
-                     bool in_update_disabled)
+                     const std::string& in_update_url)
       : system_state_(system_state),
         os_platform_(in_os_platform),
         os_version_(in_os_version),
@@ -73,7 +71,6 @@ class OmahaRequestParams {
         delta_okay_(in_delta_okay),
         interactive_(in_interactive),
         update_url_(in_update_url),
-        update_disabled_(in_update_disabled),
         wall_clock_based_wait_enabled_(false),
         update_check_count_wait_enabled_(false),
         min_update_checks_needed_(kDefaultMinUpdateChecks),
@@ -108,11 +105,6 @@ class OmahaRequestParams {
 
   inline void set_update_url(const std::string& url) { update_url_ = url; }
   inline std::string update_url() const { return update_url_; }
-
-  inline void set_update_disabled(bool disabled) {
-    update_disabled_ = disabled;
-  }
-  inline bool update_disabled() const { return update_disabled_; }
 
   inline void set_wall_clock_based_wait_enabled(bool enabled) {
     wall_clock_based_wait_enabled_ = enabled;
@@ -206,9 +198,6 @@ class OmahaRequestParams {
 
   // The URL to send the Omaha request to.
   std::string update_url_;
-
-  // True if we've been told to block updates per enterprise policy.
-  bool update_disabled_;
 
   // True if scattering is enabled, in which case waiting_period_ specifies the
   // amount of absolute time that we've to wait for before sending a request to

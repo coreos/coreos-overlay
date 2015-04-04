@@ -56,8 +56,7 @@ OmahaRequestParams kDefaultTestParams(
     "{8DA4B84F-2864-447D-84B7-C2D9B72924E7}",
     false,  // delta okay
     false,  // interactive
-    "http://url",
-    false);  // update_disabled
+    "http://url");
 
 string GetNoUpdateResponse(const string& app_id) {
   return string(
@@ -313,47 +312,6 @@ TEST(OmahaRequestActionTest, ValidUpdateTest) {
   EXPECT_FALSE(response.needs_admin);
   EXPECT_TRUE(response.prompt);
   EXPECT_EQ("20101020", response.deadline);
-}
-
-TEST(OmahaRequestActionTest, ValidUpdateBlockedByPolicyTest) {
-  OmahaResponse response;
-  OmahaRequestParams params = kDefaultTestParams;
-  params.set_update_disabled(true);
-  ASSERT_FALSE(
-      TestUpdateCheck(NULL,  // prefs
-                      params,
-                      GetUpdateResponse(OmahaRequestParams::kAppId,
-                                        "1.2.3.4",  // version
-                                        "http://more/info",
-                                        "true",  // prompt
-                                        "http://code/base/",  // dl url
-                                        "file.signed", // file name
-                                        "HASH1234=",  // checksum
-                                        "false",  // needs admin
-                                        "123",  // size
-                                        ""),  // deadline
-                      -1,
-                      false,  // ping_only
-                      kActionCodeOmahaUpdateIgnoredPerPolicy,
-                      &response,
-                      NULL));
-  EXPECT_FALSE(response.update_exists);
-}
-
-TEST(OmahaRequestActionTest, NoUpdatesSentWhenBlockedByPolicyTest) {
-  OmahaResponse response;
-  OmahaRequestParams params = kDefaultTestParams;
-  params.set_update_disabled(true);
-  ASSERT_TRUE(
-      TestUpdateCheck(NULL,  // prefs
-                      params,
-                      GetNoUpdateResponse(OmahaRequestParams::kAppId),
-                      -1,
-                      false,  // ping_only
-                      kActionCodeSuccess,
-                      &response,
-                      NULL));
-  EXPECT_FALSE(response.update_exists);
 }
 
 TEST(OmahaRequestActionTest, WallClockBasedWaitAloneCausesScattering) {
@@ -828,8 +786,7 @@ TEST(OmahaRequestActionTest, XmlEncodeTest) {
                             "{8DA4B84F-2864-447D-84B7-C2D9B72924E7}",
                             false,  // delta okay
                             false,  // interactive
-                            "http://url",
-                            false);  // update_disabled
+                            "http://url");
   OmahaResponse response;
   ASSERT_FALSE(
       TestUpdateCheck(NULL,  // prefs
@@ -929,35 +886,6 @@ TEST(OmahaRequestActionTest, FormatUpdateCheckOutputTest) {
             string::npos);
 }
 
-
-TEST(OmahaRequestActionTest, FormatUpdateDisabledOutputTest) {
-  vector<char> post_data;
-  NiceMock<PrefsMock> prefs;
-  EXPECT_CALL(prefs, GetString(kPrefsPreviousVersion, _))
-      .WillOnce(DoAll(SetArgumentPointee<1>(string("")), Return(true)));
-  EXPECT_CALL(prefs, SetString(kPrefsPreviousVersion, _)).Times(1);
-  OmahaRequestParams params = kDefaultTestParams;
-  params.set_update_disabled(true);
-  ASSERT_FALSE(TestUpdateCheck(&prefs,
-                               params,
-                               "invalid xml>",
-                               -1,
-                               false,  // ping_only
-                               kActionCodeOmahaRequestXMLParseError,
-                               NULL,  // response
-                               &post_data));
-  // convert post_data to string
-  string post_str(&post_data[0], post_data.size());
-  EXPECT_NE(post_str.find(
-      "        <ping active=\"1\"></ping>\n"
-      "        <updatecheck></updatecheck>\n"),
-      string::npos);
-  EXPECT_NE(post_str.find("hardware_class=\"OEM MODEL 09235 7471\""),
-            string::npos);
-  EXPECT_NE(post_str.find("bootid=\"{8DA4B84F-2864-447D-84B7-C2D9B72924E7}\""),
-            string::npos);
-}
-
 TEST(OmahaRequestActionTest, FormatSuccessEventOutputTest) {
   vector<char> post_data;
   TestEvent(kDefaultTestParams,
@@ -1038,8 +966,7 @@ TEST(OmahaRequestActionTest, FormatDeltaOkayOutputTest) {
                               "{88DC1453-ABB2-45F5-A622-1808F18E1B61}",
                               delta_okay,
                               false,  // interactive
-                              "http://url",
-                              false);  // update_disabled
+                              "http://url");
     ASSERT_FALSE(TestUpdateCheck(NULL,  // prefs
                                  params,
                                  "invalid xml>",
@@ -1075,8 +1002,7 @@ TEST(OmahaRequestActionTest, FormatInteractiveOutputTest) {
                               "{88DC1453-ABB2-45F5-A622-1808F18E1B61}",
                               true,  // delta_okay
                               interactive,
-                              "http://url",
-                              false);  // update_disabled
+                              "http://url");
     ASSERT_FALSE(TestUpdateCheck(NULL,  // prefs
                                  params,
                                  "invalid xml>",
