@@ -29,7 +29,7 @@ IUSE=""
 DEPEND=">=dev-lang/go-1.3
 	app-arch/cpio
 	sys-fs/squashfs-tools"
-RDEPEND=""
+RDEPEND="!app-emulation/rocket"
 
 src_unpack() {
 	local cache="${S}/stage1/rootfs/usr_from_coreos/cache"
