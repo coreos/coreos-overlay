@@ -11,8 +11,7 @@ namespace chromeos_update_engine {
 static const char kPrefsDirectory[] = "/var/lib/update_engine/prefs";
 
 RealSystemState::RealSystemState()
-    : device_policy_(NULL),
-      request_params_(this) {}
+    : request_params_(this) {}
 
 bool RealSystemState::Initialize() {
   if (!prefs_.Init(FilePath(kPrefsDirectory))) {

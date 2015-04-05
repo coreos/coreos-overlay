@@ -21,15 +21,6 @@ public:
   RealSystemState();
   virtual ~RealSystemState() {}
 
-  virtual inline void set_device_policy(
-      const policy::DevicePolicy* device_policy) {
-    device_policy_ = device_policy;
-  }
-
-  virtual inline const policy::DevicePolicy* device_policy() const {
-    return device_policy_;
-  }
-
   virtual inline PrefsInterface* prefs() {
     return &prefs_;
   }
@@ -53,9 +44,6 @@ public:
   bool Initialize();
 
 private:
-  // The latest device policy object from the policy provider.
-  const policy::DevicePolicy* device_policy_;
-
   // Interface for persisted store.
   Prefs prefs_;
 

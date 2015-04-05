@@ -24,10 +24,6 @@
 
 struct UpdateEngineService;
 
-namespace policy {
-  class PolicyProvider;
-}
-
 namespace chromeos_update_engine {
 
 class UpdateCheckScheduler;
@@ -293,9 +289,6 @@ class UpdateAttempter : public ActionProcessorDelegate,
 
   // True if the action processor needs to be started by the boot flag updater.
   bool start_action_processor_;
-
-  // Used for fetching information about the device policy.
-  scoped_ptr<policy::PolicyProvider> policy_provider_;
 
   DISALLOW_COPY_AND_ASSIGN(UpdateAttempter);
 };

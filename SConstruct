@@ -193,8 +193,7 @@ env['CCFLAGS'] += (' ' + ' '.join(env['CFLAGS']))
 
 BASE_VER = os.environ.get('BASE_VER', '180609')
 env['LIBS'] = Split("""bz2
-                       gflags
-                       policy-%s""" % (BASE_VER,))
+                       gflags""")
 env['CPPPATH'] = ['..']
 env['BUILDERS']['ProtocolBuffer'] = proto_builder
 env['BUILDERS']['DbusBindings'] = dbus_bindings_builder

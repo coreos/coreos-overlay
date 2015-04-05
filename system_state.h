@@ -5,9 +5,6 @@
 #ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_SYSTEM_STATE_H_
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_SYSTEM_STATE_H_
 
-#include <policy/device_policy.h>
-#include <policy/libpolicy.h>
-
 #include "update_engine/omaha_request_params.h"
 
 namespace chromeos_update_engine {
@@ -31,10 +28,6 @@ class SystemState {
  public:
   // Destructs this object.
   virtual ~SystemState() {}
-
-  // Sets or gets the latest device policy.
-  virtual void set_device_policy(const policy::DevicePolicy* device_policy) = 0;
-  virtual const policy::DevicePolicy* device_policy() const = 0;
 
   // Gets the interface object for persisted store.
   virtual PrefsInterface* prefs() = 0;

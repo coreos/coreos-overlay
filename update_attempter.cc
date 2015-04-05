@@ -17,8 +17,6 @@
 #include <base/file_util.h>
 #include <base/rand_util.h>
 #include <glib.h>
-#include <policy/libpolicy.h>
-#include <policy/device_policy.h>
 
 #include "update_engine/certificate_checker.h"
 #include "update_engine/dbus_service.h"
@@ -115,8 +113,7 @@ UpdateAttempter::UpdateAttempter(SystemState* system_state,
       new_payload_size_(0),
       updated_boot_flags_(false),
       update_boot_flags_running_(false),
-      start_action_processor_(false),
-      policy_provider_(NULL) {
+      start_action_processor_(false) {
   prefs_ = system_state->prefs();
   omaha_request_params_ = system_state->request_params();
   if (utils::FileExists(kUpdateCompletedMarker))
@@ -159,23 +156,6 @@ void UpdateAttempter::Update(bool interactive) {
 
 bool UpdateAttempter::CalculateUpdateParams(bool interactive) {
   http_response_code_ = 0;
-
-  // Lazy initialize the policy provider, or reload the latest policy data.
-  if (!policy_provider_.get())
-    policy_provider_.reset(new policy::PolicyProvider());
-  policy_provider_->Reload();
-
-  if (policy_provider_->device_policy_is_loaded()) {
-    LOG(INFO) << "Device policies/settings present";
-
-    const policy::DevicePolicy& device_policy =
-                                policy_provider_->GetDevicePolicy();
-
-    system_state_->set_device_policy(&device_policy);
-  } else {
-    LOG(INFO) << "No device policies/settings present.";
-    system_state_->set_device_policy(NULL);
-  }
 
   if (!omaha_request_params_->Init(interactive)) {
     LOG(ERROR) << "Unable to initialize Omaha request device params.";

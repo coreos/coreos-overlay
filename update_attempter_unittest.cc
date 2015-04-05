@@ -4,8 +4,6 @@
 
 #include <base/file_util.h>
 #include <gtest/gtest.h>
-#include <policy/libpolicy.h>
-#include <policy/mock_device_policy.h>
 
 #include "update_engine/action_mock.h"
 #include "update_engine/action_processor_mock.h"

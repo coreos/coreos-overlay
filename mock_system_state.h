@@ -7,8 +7,6 @@
 
 #include <gmock/gmock.h>
 
-#include <policy/mock_device_policy.h>
-
 #include "update_engine/mock_dbus_interface.h"
 #include "update_engine/mock_payload_state.h"
 #include "update_engine/prefs_mock.h"
@@ -25,9 +23,6 @@ class MockSystemState : public SystemState {
   MockSystemState();
 
   virtual ~MockSystemState() {}
-
-  MOCK_METHOD1(set_device_policy, void(const policy::DevicePolicy*));
-  MOCK_CONST_METHOD0(device_policy, const policy::DevicePolicy*());
 
   inline virtual PrefsInterface* prefs() {
     return prefs_;
