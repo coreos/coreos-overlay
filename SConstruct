@@ -182,11 +182,11 @@ env['CCFLAGS'] = ' '.join("""-g
                              -Werror
                              -Wignored-qualifiers
                              -Wmissing-field-initializers
-                             -Wno-format
                              -Wsign-compare
                              -Wtype-limits
                              -Wuninitialized
-                             -Wno-error=deprecated-declarations
+                             -Wno-error=format
+                             -Wno-error=unused-local-typedefs
                              -D__STDC_FORMAT_MACROS=1
                              -D_FILE_OFFSET_BITS=64""".split());
 env['CCFLAGS'] += (' ' + ' '.join(env['CFLAGS']))
