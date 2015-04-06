@@ -1,0 +1,11 @@
+[Unit]
+Description=etcd2
+Conflicts=etcd.service
+
+[Service]
+User=etcd
+Environment=ETCD_DATA_DIR=/var/lib/etcd2
+ExecStart=/usr/bin/etcd2
+Restart=always
+RestartSec=10s
+LimitNOFILE=40000

@@ -109,7 +109,6 @@ RDEPEND="${RDEPEND}
 	coreos-base/coreos-init
 	coreos-base/coreos-cloudinit
 	coreos-base/coretest
-	dev-db/etcd-starter
 	net-analyzer/nmap
 	net-firewall/ebtables
 	net-firewall/ipset

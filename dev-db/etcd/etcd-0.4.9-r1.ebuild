@@ -8,7 +8,7 @@ EAPI=4
 CROS_WORKON_PROJECT="coreos/etcd"
 CROS_WORKON_LOCALNAME="etcd"
 CROS_WORKON_REPO="git://github.com"
-inherit coreos-doc toolchain-funcs cros-workon
+inherit coreos-doc toolchain-funcs cros-workon systemd
 
 if [[ "${PV}" == 9999 ]]; then
     KEYWORDS="~amd64"
@@ -25,15 +25,18 @@ LICENSE="Apache-2.0"
 SLOT="1"
 
 DEPEND=">=dev-lang/go-1.2"
-RDEPEND="!dev-db/etcd:0"
+RDEPEND="!dev-db/etcd:0
+	!dev-db/etcd-starter"
 
 src_compile() {
 	./build
 }
 
 src_install() {
-	local libexec="libexec/${PN}/internal_versions/${SLOT}"
+	dobin "${S}/bin/${PN}"
 
-	exeinto "/usr/${libexec}"
-	doexe "${S}/bin/${PN}"
+	systemd_dounit "${FILESDIR}"/${PN}.service
+	systemd_dotmpfilesd "${FILESDIR}"/${PN}.conf
+
+	coreos-dodoc -r Documentation/*
 }

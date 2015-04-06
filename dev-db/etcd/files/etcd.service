@@ -1,5 +1,6 @@
 [Unit]
 Description=etcd
+Conflicts=etcd2.service
 
 [Service]
 User=etcd
