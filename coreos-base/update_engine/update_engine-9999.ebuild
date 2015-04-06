@@ -8,14 +8,14 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~x86"
 else
-	CROS_WORKON_COMMIT="fa62c26931c3650c6ceb28a3028e167d30985490"
+	CROS_WORKON_COMMIT="e2d68d8eb56450982e53bc0703c11f41b653dcd5"
 	KEYWORDS="amd64 arm x86"
 fi
 
 inherit flag-o-matic toolchain-funcs cros-debug cros-workon scons-utils systemd
 
-DESCRIPTION="Chrome OS Update Engine"
-HOMEPAGE="http://www.chromium.org/"
+DESCRIPTION="CoreOS OS Update Engine"
+HOMEPAGE="https://github.com/coreos/update_engine"
 SRC_URI=""
 
 LICENSE="BSD"
@@ -28,7 +28,6 @@ RDEPEND="!coreos-base/coreos-installer
 	app-arch/bzip2
 	coreos-base/coreos-au-key
 	coreos-base/libchrome:${LIBCHROME_VERS}[cros-debug=]
-	coreos-base/libchromeos
 	dev-cpp/gflags
 	dev-libs/dbus-glib
 	dev-libs/glib
@@ -38,8 +37,7 @@ RDEPEND="!coreos-base/coreos-installer
 	dev-util/bsdiff
 	net-misc/curl
 	sys-fs/e2fsprogs"
-DEPEND="coreos-base/system_api
-	dev-cpp/gmock
+DEPEND="dev-cpp/gmock
 	dev-cpp/gtest
 	cros_host? ( dev-util/scons )
 	${RDEPEND}"
