@@ -6,7 +6,7 @@ ConditionPathExists=!/usr/.noupdate
 [Service]
 Type=dbus
 BusName=com.coreos.update1
-ExecStart=/usr/sbin/update_engine -foreground -logtostderr -no_connection_manager
+ExecStart=/usr/sbin/update_engine -foreground -logtostderr
 BlockIOWeight=100
 Restart=always
 RestartSec=30

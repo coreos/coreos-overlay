@@ -24,10 +24,6 @@
 
 struct UpdateEngineService;
 
-namespace policy {
-  class PolicyProvider;
-}
-
 namespace chromeos_update_engine {
 
 class UpdateCheckScheduler;
@@ -219,25 +215,10 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // Update() method for the meaning of the parametes.
   bool CalculateUpdateParams(bool interactive);
 
-  // Calculates all the scattering related parameters (such as waiting period,
-  // which type of scattering is enabled, etc.) and also updates/deletes
-  // the corresponding prefs file used in scattering. Should be called
-  // only after the device policy has been loaded and set in the system_state_.
-  void CalculateScatteringParams(bool is_interactive);
-
-  // Sets a random value for the waiting period to wait for before downloading
-  // an update, if one available. This value will be upperbounded by the
-  // scatter factor value specified from policy.
-  void GenerateNewWaitingPeriod();
-
   // Helper method of Update() to construct the sequence of actions to
   // be performed for an update check. Please refer to
   // Update() method for the meaning of the parametes.
   void BuildUpdateActions(bool interactive);
-
-  // Decrements the count in the kUpdateCheckCountFilePath.
-  // Returns True if successfully decremented, false otherwise.
-  bool DecrementUpdateCheckCount();
 
   // Last status notification timestamp used for throttling. Use monotonic
   // TimeTicks to ensure that notifications are sent even if the system clock is
@@ -308,12 +289,6 @@ class UpdateAttempter : public ActionProcessorDelegate,
 
   // True if the action processor needs to be started by the boot flag updater.
   bool start_action_processor_;
-
-  // Used for fetching information about the device policy.
-  scoped_ptr<policy::PolicyProvider> policy_provider_;
-
-  // The current scatter factor as found in the policy setting.
-  base::TimeDelta scatter_factor_;
 
   DISALLOW_COPY_AND_ASSIGN(UpdateAttempter);
 };

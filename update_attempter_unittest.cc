@@ -4,8 +4,6 @@
 
 #include <base/file_util.h>
 #include <gtest/gtest.h>
-#include <policy/libpolicy.h>
-#include <policy/mock_device_policy.h>
 
 #include "update_engine/action_mock.h"
 #include "update_engine/action_processor_mock.h"
@@ -47,10 +45,8 @@ class UpdateAttempterTest : public ::testing::Test {
  protected:
   UpdateAttempterTest()
       : attempter_(&mock_system_state_, &dbus_),
-        mock_connection_manager(&mock_system_state_),
-        loop_(NULL) {
-    mock_system_state_.set_connection_manager(&mock_connection_manager);
-  }
+        loop_(NULL) {}
+
   virtual void SetUp() {
     EXPECT_EQ(NULL, attempter_.dbus_service_);
     EXPECT_TRUE(attempter_.system_state_ != NULL);
@@ -80,31 +76,11 @@ class UpdateAttempterTest : public ::testing::Test {
   void PingOmahaTestStart();
   static gboolean StaticPingOmahaTestStart(gpointer data);
 
-  void ReadUpdateDisabledFromPolicyTestStart();
-  static gboolean StaticReadUpdateDisabledFromPolicyTestStart(gpointer data);
-
-  void ReadTargetVersionPrefixFromPolicyTestStart();
-  static gboolean StaticReadTargetVersionPrefixFromPolicyTestStart(
-      gpointer data);
-
-  void ReadScatterFactorFromPolicyTestStart();
-  static gboolean StaticReadScatterFactorFromPolicyTestStart(
-      gpointer data);
-
-  void DecrementUpdateCheckCountTestStart();
-  static gboolean StaticDecrementUpdateCheckCountTestStart(
-      gpointer data);
-
-  void NoScatteringDoneDuringManualUpdateTestStart();
-  static gboolean StaticNoScatteringDoneDuringManualUpdateTestStart(
-      gpointer data);
-
   NiceMock<MockSystemState> mock_system_state_;
   NiceMock<MockDbusGlib> dbus_;
   UpdateAttempterUnderTest attempter_;
   NiceMock<ActionProcessorMock>* processor_;
   NiceMock<PrefsMock>* prefs_; // shortcut to mock_system_state_->mock_prefs()
-  NiceMock<MockConnectionManager> mock_connection_manager;
   GMainLoop* loop_;
 };
 
@@ -301,41 +277,6 @@ gboolean UpdateAttempterTest::StaticPingOmahaTestStart(gpointer data) {
   return FALSE;
 }
 
-gboolean UpdateAttempterTest::StaticReadUpdateDisabledFromPolicyTestStart(
-    gpointer data) {
-  UpdateAttempterTest* ua_test = reinterpret_cast<UpdateAttempterTest*>(data);
-  ua_test->ReadUpdateDisabledFromPolicyTestStart();
-  return FALSE;
-}
-
-gboolean UpdateAttempterTest::StaticReadTargetVersionPrefixFromPolicyTestStart(
-    gpointer data) {
-  UpdateAttempterTest* ua_test = reinterpret_cast<UpdateAttempterTest*>(data);
-  ua_test->ReadTargetVersionPrefixFromPolicyTestStart();
-  return FALSE;
-}
-
-gboolean UpdateAttempterTest::StaticReadScatterFactorFromPolicyTestStart(
-    gpointer data) {
-  UpdateAttempterTest* ua_test = reinterpret_cast<UpdateAttempterTest*>(data);
-  ua_test->ReadScatterFactorFromPolicyTestStart();
-  return FALSE;
-}
-
-gboolean UpdateAttempterTest::StaticDecrementUpdateCheckCountTestStart(
-    gpointer data) {
-  UpdateAttempterTest* ua_test = reinterpret_cast<UpdateAttempterTest*>(data);
-  ua_test->DecrementUpdateCheckCountTestStart();
-  return FALSE;
-}
-
-gboolean UpdateAttempterTest::StaticNoScatteringDoneDuringManualUpdateTestStart(
-    gpointer data) {
-  UpdateAttempterTest* ua_test = reinterpret_cast<UpdateAttempterTest*>(data);
-  ua_test->NoScatteringDoneDuringManualUpdateTestStart();
-  return FALSE;
-}
-
 namespace {
 const string kActionTypes[] = {
   OmahaRequestAction::StaticType(),
@@ -441,221 +382,6 @@ TEST_F(UpdateAttempterTest, CreatePendingErrorEventResumedTest) {
   EXPECT_EQ(OmahaEvent::kResultError, attempter_.error_event_->result);
   EXPECT_EQ(kCode | kActionCodeResumedFlag | kActionCodeTestOmahaUrlFlag,
             attempter_.error_event_->error_code);
-}
-
-TEST_F(UpdateAttempterTest, ReadUpdateDisabledFromPolicy) {
-  loop_ = g_main_loop_new(g_main_context_default(), FALSE);
-  g_idle_add(&StaticReadUpdateDisabledFromPolicyTestStart, this);
-  g_main_loop_run(loop_);
-  g_main_loop_unref(loop_);
-  loop_ = NULL;
-}
-
-void UpdateAttempterTest::ReadUpdateDisabledFromPolicyTestStart() {
-  // Tests that the update_disbled flag is properly fetched
-  // from the device policy.
-
-  policy::MockDevicePolicy* device_policy = new policy::MockDevicePolicy();
-  attempter_.policy_provider_.reset(new policy::PolicyProvider(device_policy));
-
-  EXPECT_CALL(*device_policy, LoadPolicy()).WillRepeatedly(Return(true));
-  EXPECT_CALL(mock_system_state_, device_policy()).WillRepeatedly(
-      Return(device_policy));
-
-  EXPECT_CALL(*device_policy, GetUpdateDisabled(_))
-      .WillRepeatedly(DoAll(
-          SetArgumentPointee<0>(true),
-          Return(true)));
-
-  attempter_.Update(false);
-  EXPECT_TRUE(attempter_.omaha_request_params_->update_disabled());
-
-  g_idle_add(&StaticQuitMainLoop, this);
-}
-
-TEST_F(UpdateAttempterTest, ReadTargetVersionPrefixFromPolicy) {
-  loop_ = g_main_loop_new(g_main_context_default(), FALSE);
-  g_idle_add(&StaticReadTargetVersionPrefixFromPolicyTestStart, this);
-  g_main_loop_run(loop_);
-  g_main_loop_unref(loop_);
-  loop_ = NULL;
-}
-
-void UpdateAttempterTest::ReadTargetVersionPrefixFromPolicyTestStart() {
-  // Tests that the target_version_prefix value is properly fetched
-  // from the device policy.
-
-  const std::string target_version_prefix = "1412.";
-
-  policy::MockDevicePolicy* device_policy = new policy::MockDevicePolicy();
-  attempter_.policy_provider_.reset(new policy::PolicyProvider(device_policy));
-
-  EXPECT_CALL(*device_policy, LoadPolicy()).WillRepeatedly(Return(true));
-  EXPECT_CALL(mock_system_state_, device_policy()).WillRepeatedly(
-      Return(device_policy));
-
-  EXPECT_CALL(*device_policy, GetTargetVersionPrefix(_))
-      .WillRepeatedly(DoAll(
-          SetArgumentPointee<0>(target_version_prefix),
-          Return(true)));
-
-  attempter_.Update(false);
-  EXPECT_EQ(target_version_prefix.c_str(),
-            attempter_.omaha_request_params_->target_version_prefix());
-
-  g_idle_add(&StaticQuitMainLoop, this);
-}
-
-
-TEST_F(UpdateAttempterTest, ReadScatterFactorFromPolicy) {
-  loop_ = g_main_loop_new(g_main_context_default(), FALSE);
-  g_idle_add(&StaticReadScatterFactorFromPolicyTestStart, this);
-  g_main_loop_run(loop_);
-  g_main_loop_unref(loop_);
-  loop_ = NULL;
-}
-
-// Tests that the scatter_factor_in_seconds value is properly fetched
-// from the device policy.
-void UpdateAttempterTest::ReadScatterFactorFromPolicyTestStart() {
-  int64 scatter_factor_in_seconds = 36000;
-
-  policy::MockDevicePolicy* device_policy = new policy::MockDevicePolicy();
-  attempter_.policy_provider_.reset(new policy::PolicyProvider(device_policy));
-
-  EXPECT_CALL(*device_policy, LoadPolicy()).WillRepeatedly(Return(true));
-  EXPECT_CALL(mock_system_state_, device_policy()).WillRepeatedly(
-      Return(device_policy));
-
-  EXPECT_CALL(*device_policy, GetScatterFactorInSeconds(_))
-      .WillRepeatedly(DoAll(
-          SetArgumentPointee<0>(scatter_factor_in_seconds),
-          Return(true)));
-
-  attempter_.Update(false);
-  EXPECT_EQ(scatter_factor_in_seconds, attempter_.scatter_factor_.InSeconds());
-
-  g_idle_add(&StaticQuitMainLoop, this);
-}
-
-TEST_F(UpdateAttempterTest, DecrementUpdateCheckCountTest) {
-  loop_ = g_main_loop_new(g_main_context_default(), FALSE);
-  g_idle_add(&StaticDecrementUpdateCheckCountTestStart, this);
-  g_main_loop_run(loop_);
-  g_main_loop_unref(loop_);
-  loop_ = NULL;
-}
-
-void UpdateAttempterTest::DecrementUpdateCheckCountTestStart() {
-  // Tests that the scatter_factor_in_seconds value is properly fetched
-  // from the device policy and is decremented if value > 0.
-  int64 initial_value = 5;
-  Prefs prefs;
-  attempter_.prefs_ = &prefs;
-
-  string prefs_dir;
-  EXPECT_TRUE(utils::MakeTempDirectory("/tmp/ue_ut_prefs.XXXXXX",
-                                       &prefs_dir));
-  ScopedDirRemover temp_dir_remover(prefs_dir);
-
-  LOG_IF(ERROR, !prefs.Init(FilePath(prefs_dir)))
-      << "Failed to initialize preferences.";
-  EXPECT_TRUE(prefs.SetInt64(kPrefsUpdateCheckCount, initial_value));
-
-  int64 scatter_factor_in_seconds = 10;
-
-  policy::MockDevicePolicy* device_policy = new policy::MockDevicePolicy();
-  attempter_.policy_provider_.reset(new policy::PolicyProvider(device_policy));
-
-  EXPECT_CALL(*device_policy, LoadPolicy()).WillRepeatedly(Return(true));
-  EXPECT_CALL(mock_system_state_, device_policy()).WillRepeatedly(
-      Return(device_policy));
-
-  EXPECT_CALL(*device_policy, GetScatterFactorInSeconds(_))
-      .WillRepeatedly(DoAll(
-          SetArgumentPointee<0>(scatter_factor_in_seconds),
-          Return(true)));
-
-  attempter_.Update(false);
-  EXPECT_EQ(scatter_factor_in_seconds, attempter_.scatter_factor_.InSeconds());
-
-  // Make sure the file still exists.
-  EXPECT_TRUE(prefs.Exists(kPrefsUpdateCheckCount));
-
-  int64 new_value;
-  EXPECT_TRUE(prefs.GetInt64(kPrefsUpdateCheckCount, &new_value));
-  EXPECT_EQ(initial_value - 1, new_value);
-
-  EXPECT_TRUE(
-      attempter_.omaha_request_params_->update_check_count_wait_enabled());
-
-  // However, if the count is already 0, it's not decremented. Test that.
-  initial_value = 0;
-  EXPECT_TRUE(prefs.SetInt64(kPrefsUpdateCheckCount, initial_value));
-  attempter_.Update(false);
-  EXPECT_TRUE(prefs.Exists(kPrefsUpdateCheckCount));
-  EXPECT_TRUE(prefs.GetInt64(kPrefsUpdateCheckCount, &new_value));
-  EXPECT_EQ(initial_value, new_value);
-
-  g_idle_add(&StaticQuitMainLoop, this);
-}
-
-TEST_F(UpdateAttempterTest, NoScatteringDoneDuringManualUpdateTestStart) {
-  loop_ = g_main_loop_new(g_main_context_default(), FALSE);
-  g_idle_add(&StaticNoScatteringDoneDuringManualUpdateTestStart, this);
-  g_main_loop_run(loop_);
-  g_main_loop_unref(loop_);
-  loop_ = NULL;
-}
-
-void UpdateAttempterTest::NoScatteringDoneDuringManualUpdateTestStart() {
-  // Tests that no scattering logic is enabled if the update check
-  // is manually done (as opposed to a scheduled update check)
-  int64 initial_value = 8;
-  Prefs prefs;
-  attempter_.prefs_ = &prefs;
-
-  string prefs_dir;
-  EXPECT_TRUE(utils::MakeTempDirectory("/tmp/ue_ut_prefs.XXXXXX",
-                                       &prefs_dir));
-  ScopedDirRemover temp_dir_remover(prefs_dir);
-
-  LOG_IF(ERROR, !prefs.Init(FilePath(prefs_dir)))
-      << "Failed to initialize preferences.";
-  EXPECT_TRUE(prefs.SetInt64(kPrefsWallClockWaitPeriod, initial_value));
-  EXPECT_TRUE(prefs.SetInt64(kPrefsUpdateCheckCount, initial_value));
-
-  // make sure scatter_factor is non-zero as scattering is disabled
-  // otherwise.
-  int64 scatter_factor_in_seconds = 50;
-
-  policy::MockDevicePolicy* device_policy = new policy::MockDevicePolicy();
-  attempter_.policy_provider_.reset(new policy::PolicyProvider(device_policy));
-
-  EXPECT_CALL(*device_policy, LoadPolicy()).WillRepeatedly(Return(true));
-  EXPECT_CALL(mock_system_state_, device_policy()).WillRepeatedly(
-      Return(device_policy));
-
-  EXPECT_CALL(*device_policy, GetScatterFactorInSeconds(_))
-      .WillRepeatedly(DoAll(
-          SetArgumentPointee<0>(scatter_factor_in_seconds),
-          Return(true)));
-
-  // Trigger an interactive check so we can test that scattering is disabled.
-  attempter_.Update(true);
-  EXPECT_EQ(scatter_factor_in_seconds, attempter_.scatter_factor_.InSeconds());
-
-  // Make sure scattering is disabled for manual (i.e. user initiated) update
-  // checks and all artifacts are removed.
-  EXPECT_FALSE(
-      attempter_.omaha_request_params_->wall_clock_based_wait_enabled());
-  EXPECT_FALSE(prefs.Exists(kPrefsWallClockWaitPeriod));
-  EXPECT_EQ(0, attempter_.omaha_request_params_->waiting_period().InSeconds());
-  EXPECT_FALSE(
-      attempter_.omaha_request_params_->update_check_count_wait_enabled());
-  EXPECT_FALSE(prefs.Exists(kPrefsUpdateCheckCount));
-
-  g_idle_add(&StaticQuitMainLoop, this);
 }
 
 }  // namespace chromeos_update_engine

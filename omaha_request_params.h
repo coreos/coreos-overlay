@@ -37,12 +37,7 @@ class OmahaRequestParams {
         app_id_(kAppId),
 	app_channel_(kDefaultChannel),
         delta_okay_(true),
-        interactive_(false),
-        update_disabled_(false),
-        wall_clock_based_wait_enabled_(false),
-        update_check_count_wait_enabled_(false),
-        min_update_checks_needed_(kDefaultMinUpdateChecks),
-        max_update_checks_allowed_(kDefaultMaxUpdateChecks) {}
+        interactive_(false) {}
 
   OmahaRequestParams(SystemState* system_state,
                      const std::string& in_os_platform,
@@ -57,9 +52,7 @@ class OmahaRequestParams {
                      const std::string& in_bootid,
                      bool in_delta_okay,
                      bool in_interactive,
-                     const std::string& in_update_url,
-                     bool in_update_disabled,
-                     const std::string& in_target_version_prefix)
+                     const std::string& in_update_url)
       : system_state_(system_state),
         os_platform_(in_os_platform),
         os_version_(in_os_version),
@@ -73,13 +66,7 @@ class OmahaRequestParams {
         bootid_(in_bootid),
         delta_okay_(in_delta_okay),
         interactive_(in_interactive),
-        update_url_(in_update_url),
-        update_disabled_(in_update_disabled),
-        target_version_prefix_(in_target_version_prefix),
-        wall_clock_based_wait_enabled_(false),
-        update_check_count_wait_enabled_(false),
-        min_update_checks_needed_(kDefaultMinUpdateChecks),
-        max_update_checks_allowed_(kDefaultMaxUpdateChecks) {}
+        update_url_(in_update_url) {}
 
   // Setters and getters for the various properties.
   inline std::string os_platform() const { return os_platform_; }
@@ -111,61 +98,12 @@ class OmahaRequestParams {
   inline void set_update_url(const std::string& url) { update_url_ = url; }
   inline std::string update_url() const { return update_url_; }
 
-  inline void set_update_disabled(bool disabled) {
-    update_disabled_ = disabled;
-  }
-  inline bool update_disabled() const { return update_disabled_; }
-
-  inline void set_target_version_prefix(const std::string& prefix) {
-    target_version_prefix_ = prefix;
-  }
-
-  inline std::string target_version_prefix() const {
-    return target_version_prefix_;
-  }
-
-  inline void set_wall_clock_based_wait_enabled(bool enabled) {
-    wall_clock_based_wait_enabled_ = enabled;
-  }
-  inline bool wall_clock_based_wait_enabled() const {
-    return wall_clock_based_wait_enabled_;
-  }
-
-  inline void set_waiting_period(base::TimeDelta period) {
-    waiting_period_ = period;
-  }
-  base::TimeDelta waiting_period() const { return waiting_period_; }
-
-  inline void set_update_check_count_wait_enabled(bool enabled) {
-    update_check_count_wait_enabled_ = enabled;
-  }
-
-  inline bool update_check_count_wait_enabled() const {
-    return update_check_count_wait_enabled_;
-  }
-
-  inline void set_min_update_checks_needed(int64 min) {
-    min_update_checks_needed_ = min;
-  }
-  inline int64 min_update_checks_needed() const {
-    return min_update_checks_needed_;
-  }
-
-  inline void set_max_update_checks_allowed(int64 max) {
-    max_update_checks_allowed_ = max;
-  }
-  inline int64 max_update_checks_allowed() const {
-    return max_update_checks_allowed_;
-  }
-
   // Suggested defaults
   static const char* const kAppId;
   static const char* const kOsPlatform;
   static const char* const kOsVersion;
   static const char* const kUpdateUrl;
   static const char* const kDefaultChannel;
-  static const int64 kDefaultMinUpdateChecks = 0;
-  static const int64 kDefaultMaxUpdateChecks = 8;
 
   // Initializes all the data in the object.
   // Returns true on success, false otherwise.
@@ -216,27 +154,6 @@ class OmahaRequestParams {
 
   // The URL to send the Omaha request to.
   std::string update_url_;
-
-  // True if we've been told to block updates per enterprise policy.
-  bool update_disabled_;
-
-  // Prefix of the target OS version that the enterprise wants this device
-  // to be pinned to. It's empty otherwise.
-  std::string target_version_prefix_;
-
-  // True if scattering is enabled, in which case waiting_period_ specifies the
-  // amount of absolute time that we've to wait for before sending a request to
-  // Omaha.
-  bool wall_clock_based_wait_enabled_;
-  base::TimeDelta waiting_period_;
-
-  // True if scattering is enabled to denote the number of update checks
-  // we've to skip before we can send a request to Omaha. The min and max
-  // values establish the bounds for a random number to be chosen within that
-  // range to enable such a wait.
-  bool update_check_count_wait_enabled_;
-  int64 min_update_checks_needed_;
-  int64 max_update_checks_allowed_;
 
   // When reading files, prepend root_ to the paths. Useful for testing.
   std::string root_;

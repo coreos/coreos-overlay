@@ -7,7 +7,6 @@
 
 #include <update_engine/system_state.h>
 
-#include <update_engine/connection_manager.h>
 #include <update_engine/payload_state.h>
 #include <update_engine/prefs.h>
 #include <update_engine/update_attempter.h>
@@ -21,24 +20,6 @@ public:
   // Constructors and destructors.
   RealSystemState();
   virtual ~RealSystemState() {}
-
-  virtual inline void set_device_policy(
-      const policy::DevicePolicy* device_policy) {
-    device_policy_ = device_policy;
-  }
-
-  virtual inline const policy::DevicePolicy* device_policy() const {
-    return device_policy_;
-  }
-
-  virtual inline void set_connection_manager(
-      ConnectionManager* connection_manager) {
-    connection_manager_ = connection_manager;
-  }
-
-  virtual inline ConnectionManager* connection_manager() {
-    return connection_manager_;
-  }
 
   virtual inline PrefsInterface* prefs() {
     return &prefs_;
@@ -60,16 +41,9 @@ public:
 
   // Initializes this concrete object. Other methods should be invoked only
   // if the object has been initialized successfully.
-  bool Initialize(bool enable_connection_manager);
+  bool Initialize();
 
 private:
-  // The latest device policy object from the policy provider.
-  const policy::DevicePolicy* device_policy_;
-
-  // The connection manager object that makes download
-  // decisions depending on the current type of connection.
-  ConnectionManager* connection_manager_;
-
   // Interface for persisted store.
   Prefs prefs_;
 

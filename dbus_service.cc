@@ -14,15 +14,6 @@
 
 using std::string;
 
-static const char kAUTestURLRequest[] = "autest";
-// By default autest bypasses scattering. If we want to test scattering,
-// we should use autest-scheduled. The Url used is same in both cases, but
-// different params are passed to CheckForUpdate method.
-static const char kScheduledAUTestURLRequest[] = "autest-scheduled";
-
-static const char kAUTestURL[] =
-    "https://omaha.sandbox.google.com/service/update2";
-
 G_DEFINE_TYPE(UpdateEngineService, update_engine_service, G_TYPE_OBJECT)
 
 static void update_engine_service_finalize(GObject* object) {

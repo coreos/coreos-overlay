@@ -13,7 +13,6 @@
 #include <vector>
 
 #include <base/file_util.h>
-#include <policy/device_policy.h>
 
 #include "update_engine/simple_key_value_store.h"
 #include "update_engine/system_state.h"

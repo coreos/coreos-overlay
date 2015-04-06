@@ -15,7 +15,6 @@
 #include <google/protobuf/stubs/common.h>
 
 #include "http_common.h"
-#include "update_engine/system_state.h"
 
 // This class is a simple wrapper around an HTTP library (libcurl). We can
 // easily mock out this interface for testing.
@@ -30,11 +29,10 @@ class HttpFetcherDelegate;
 
 class HttpFetcher {
  public:
-  HttpFetcher(SystemState* system_state)
+  HttpFetcher()
       : post_data_set_(false),
         http_response_code_(0),
-        delegate_(NULL),
-        system_state_(system_state) {}
+        delegate_(NULL) {}
   virtual ~HttpFetcher() {}
 
   void set_delegate(HttpFetcherDelegate* delegate) { delegate_ = delegate; }
@@ -86,10 +84,6 @@ class HttpFetcher {
   // These are used for testing:
   virtual void SetBuildType(bool is_official) {}
 
-  SystemState* GetSystemState() {
-    return system_state_;
-  }
-
  protected:
   // The URL we're actively fetching from
   std::string url_;
@@ -106,9 +100,6 @@ class HttpFetcher {
 
   // The delegate; may be NULL.
   HttpFetcherDelegate* delegate_;
-
-  // Global system context.
-  SystemState* system_state_;
 
  private:
   DISALLOW_COPY_AND_ASSIGN(HttpFetcher);

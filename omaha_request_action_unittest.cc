@@ -10,9 +10,11 @@
 #include "base/string_util.h"
 #include <base/stringprintf.h>
 #include "base/time.h"
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "update_engine/action_pipe.h"
 #include "update_engine/mock_http_fetcher.h"
+#include "update_engine/mock_system_state.h"
 #include "update_engine/omaha_hash_calculator.h"
 #include "update_engine/omaha_request_action.h"
 #include "update_engine/omaha_request_params.h"
@@ -54,9 +56,7 @@ OmahaRequestParams kDefaultTestParams(
     "{8DA4B84F-2864-447D-84B7-C2D9B72924E7}",
     false,  // delta okay
     false,  // interactive
-    "http://url",
-    false, // update_disabled
-    ""); // target_version_prefix);
+    "http://url");
 
 string GetNoUpdateResponse(const string& app_id) {
   return string(
@@ -75,8 +75,7 @@ string GetUpdateResponse2(const string& app_id,
                           const string& hash,
                           const string& needsadmin,
                           const string& size,
-                          const string& deadline,
-                          const string& max_days_to_scatter) {
+                          const string& deadline) {
   string response =
       "<?xml version=\"1.0\" encoding=\"UTF-8\"?><response "
       "protocol=\"3.0\">"
@@ -93,7 +92,6 @@ string GetUpdateResponse2(const string& app_id,
       "MoreInfo=\"" + more_info_url + "\" Prompt=\"" + prompt + "\" "
       "IsDelta=\"true\" "
       "IsDeltaPayload=\"true\" "
-      "MaxDaysToScatter=\"" + max_days_to_scatter + "\" "
       "sha256=\"" + hash + "\" "
       "needsadmin=\"" + needsadmin + "\" " +
       (deadline.empty() ? "" : ("deadline=\"" + deadline + "\" ")) +
@@ -121,8 +119,7 @@ string GetUpdateResponse(const string& app_id,
                             hash,
                             needsadmin,
                             size,
-                            deadline,
-                            "7");
+                            deadline);
 }
 
 class OmahaRequestActionTestProcessorDelegate : public ActionProcessorDelegate {
@@ -312,307 +309,6 @@ TEST(OmahaRequestActionTest, ValidUpdateTest) {
   EXPECT_FALSE(response.needs_admin);
   EXPECT_TRUE(response.prompt);
   EXPECT_EQ("20101020", response.deadline);
-}
-
-TEST(OmahaRequestActionTest, ValidUpdateBlockedByPolicyTest) {
-  OmahaResponse response;
-  OmahaRequestParams params = kDefaultTestParams;
-  params.set_update_disabled(true);
-  ASSERT_FALSE(
-      TestUpdateCheck(NULL,  // prefs
-                      params,
-                      GetUpdateResponse(OmahaRequestParams::kAppId,
-                                        "1.2.3.4",  // version
-                                        "http://more/info",
-                                        "true",  // prompt
-                                        "http://code/base/",  // dl url
-                                        "file.signed", // file name
-                                        "HASH1234=",  // checksum
-                                        "false",  // needs admin
-                                        "123",  // size
-                                        ""),  // deadline
-                      -1,
-                      false,  // ping_only
-                      kActionCodeOmahaUpdateIgnoredPerPolicy,
-                      &response,
-                      NULL));
-  EXPECT_FALSE(response.update_exists);
-}
-
-TEST(OmahaRequestActionTest, NoUpdatesSentWhenBlockedByPolicyTest) {
-  OmahaResponse response;
-  OmahaRequestParams params = kDefaultTestParams;
-  params.set_update_disabled(true);
-  ASSERT_TRUE(
-      TestUpdateCheck(NULL,  // prefs
-                      params,
-                      GetNoUpdateResponse(OmahaRequestParams::kAppId),
-                      -1,
-                      false,  // ping_only
-                      kActionCodeSuccess,
-                      &response,
-                      NULL));
-  EXPECT_FALSE(response.update_exists);
-}
-
-TEST(OmahaRequestActionTest, WallClockBasedWaitAloneCausesScattering) {
-  OmahaResponse response;
-  OmahaRequestParams params = kDefaultTestParams;
-  params.set_wall_clock_based_wait_enabled(true);
-  params.set_update_check_count_wait_enabled(false);
-  params.set_waiting_period(TimeDelta::FromDays(2));
-
-  string prefs_dir;
-  EXPECT_TRUE(utils::MakeTempDirectory("/tmp/ue_ut_prefs.XXXXXX",
-                                       &prefs_dir));
-  ScopedDirRemover temp_dir_remover(prefs_dir);
-
-  Prefs prefs;
-  LOG_IF(ERROR, !prefs.Init(FilePath(prefs_dir)))
-      << "Failed to initialize preferences.";
-
-  ASSERT_FALSE(
-      TestUpdateCheck(&prefs,  // prefs
-                      params,
-                      GetUpdateResponse2(OmahaRequestParams::kAppId,
-                                         "1.2.3.4",  // version
-                                         "http://more/info",
-                                         "true",  // prompt
-                                         "http://code/base/",  // dl url
-                                         "file.signed", // file name
-                                         "HASH1234=",  // checksum
-                                         "false",  // needs admin
-                                         "123",  // size
-                                         "",  // deadline
-                                         "7"), // max days to scatter
-                      -1,
-                      false,  // ping_only
-                      kActionCodeOmahaUpdateDeferredPerPolicy,
-                      &response,
-                      NULL));
-  EXPECT_FALSE(response.update_exists);
-}
-
-TEST(OmahaRequestActionTest, NoWallClockBasedWaitCausesNoScattering) {
-  OmahaResponse response;
-  OmahaRequestParams params = kDefaultTestParams;
-  params.set_wall_clock_based_wait_enabled(false);
-  params.set_waiting_period(TimeDelta::FromDays(2));
-
-  params.set_update_check_count_wait_enabled(true);
-  params.set_min_update_checks_needed(1);
-  params.set_max_update_checks_allowed(8);
-
-  string prefs_dir;
-  EXPECT_TRUE(utils::MakeTempDirectory("/tmp/ue_ut_prefs.XXXXXX",
-                                       &prefs_dir));
-  ScopedDirRemover temp_dir_remover(prefs_dir);
-
-  Prefs prefs;
-  LOG_IF(ERROR, !prefs.Init(FilePath(prefs_dir)))
-      << "Failed to initialize preferences.";
-
-  ASSERT_TRUE(
-      TestUpdateCheck(&prefs,  // prefs
-                      params,
-                      GetUpdateResponse2(OmahaRequestParams::kAppId,
-                                         "1.2.3.4",  // version
-                                         "http://more/info",
-                                         "true",  // prompt
-                                         "http://code/base/",  // dl url
-                                         "file.signed", // file name
-                                         "HASH1234=",  // checksum
-                                         "false",  // needs admin
-                                         "123",  // size
-                                         "",  // deadline
-                                         "7"), // max days to scatter
-                      -1,
-                      false,  // ping_only
-                      kActionCodeSuccess,
-                      &response,
-                      NULL));
-  EXPECT_TRUE(response.update_exists);
-}
-
-TEST(OmahaRequestActionTest, ZeroMaxDaysToScatterCausesNoScattering) {
-  OmahaResponse response;
-  OmahaRequestParams params = kDefaultTestParams;
-  params.set_wall_clock_based_wait_enabled(true);
-  params.set_waiting_period(TimeDelta::FromDays(2));
-
-  params.set_update_check_count_wait_enabled(true);
-  params.set_min_update_checks_needed(1);
-  params.set_max_update_checks_allowed(8);
-
-  string prefs_dir;
-  EXPECT_TRUE(utils::MakeTempDirectory("/tmp/ue_ut_prefs.XXXXXX",
-                                       &prefs_dir));
-  ScopedDirRemover temp_dir_remover(prefs_dir);
-
-  Prefs prefs;
-  LOG_IF(ERROR, !prefs.Init(FilePath(prefs_dir)))
-      << "Failed to initialize preferences.";
-
-  ASSERT_TRUE(
-      TestUpdateCheck(&prefs,  // prefs
-                      params,
-                      GetUpdateResponse2(OmahaRequestParams::kAppId,
-                                         "1.2.3.4",  // version
-                                         "http://more/info",
-                                         "true",  // prompt
-                                         "http://code/base/",  // dl url
-                                         "file.signed", // file name
-                                         "HASH1234=",  // checksum
-                                         "false",  // needs admin
-                                         "123",  // size
-                                         "",  // deadline
-                                         "0"), // max days to scatter
-                      -1,
-                      false,  // ping_only
-                      kActionCodeSuccess,
-                      &response,
-                      NULL));
-  EXPECT_TRUE(response.update_exists);
-}
-
-
-TEST(OmahaRequestActionTest, ZeroUpdateCheckCountCausesNoScattering) {
-  OmahaResponse response;
-  OmahaRequestParams params = kDefaultTestParams;
-  params.set_wall_clock_based_wait_enabled(true);
-  params.set_waiting_period(TimeDelta());
-
-  params.set_update_check_count_wait_enabled(true);
-  params.set_min_update_checks_needed(0);
-  params.set_max_update_checks_allowed(0);
-
-  string prefs_dir;
-  EXPECT_TRUE(utils::MakeTempDirectory("/tmp/ue_ut_prefs.XXXXXX",
-                                       &prefs_dir));
-  ScopedDirRemover temp_dir_remover(prefs_dir);
-
-  Prefs prefs;
-  LOG_IF(ERROR, !prefs.Init(FilePath(prefs_dir)))
-      << "Failed to initialize preferences.";
-
-  ASSERT_TRUE(TestUpdateCheck(
-                      &prefs,  // prefs
-                      params,
-                      GetUpdateResponse2(OmahaRequestParams::kAppId,
-                                         "1.2.3.4",  // version
-                                         "http://more/info",
-                                         "true",  // prompt
-                                         "http://code/base/",  // dl url
-                                         "file.signed", // file name
-                                         "HASH1234=",  // checksum
-                                         "false",  // needs admin
-                                         "123",  // size
-                                         "",  // deadline
-                                         "7"), // max days to scatter
-                      -1,
-                      false,  // ping_only
-                      kActionCodeSuccess,
-                      &response,
-                      NULL));
-
-  int64 count;
-  ASSERT_TRUE(prefs.GetInt64(kPrefsUpdateCheckCount, &count));
-  ASSERT_TRUE(count == 0);
-  EXPECT_TRUE(response.update_exists);
-}
-
-TEST(OmahaRequestActionTest, NonZeroUpdateCheckCountCausesScattering) {
-  OmahaResponse response;
-  OmahaRequestParams params = kDefaultTestParams;
-  params.set_wall_clock_based_wait_enabled(true);
-  params.set_waiting_period(TimeDelta());
-
-  params.set_update_check_count_wait_enabled(true);
-  params.set_min_update_checks_needed(1);
-  params.set_max_update_checks_allowed(8);
-
-  string prefs_dir;
-  EXPECT_TRUE(utils::MakeTempDirectory("/tmp/ue_ut_prefs.XXXXXX",
-                                       &prefs_dir));
-  ScopedDirRemover temp_dir_remover(prefs_dir);
-
-  Prefs prefs;
-  LOG_IF(ERROR, !prefs.Init(FilePath(prefs_dir)))
-      << "Failed to initialize preferences.";
-
-  ASSERT_FALSE(TestUpdateCheck(
-                      &prefs,  // prefs
-                      params,
-                      GetUpdateResponse2(OmahaRequestParams::kAppId,
-                                         "1.2.3.4",  // version
-                                         "http://more/info",
-                                         "true",  // prompt
-                                         "http://code/base/",  // dl url
-                                         "file.signed", // file name
-                                         "HASH1234=",  // checksum
-                                         "false",  // needs admin
-                                         "123",  // size
-                                         "",  // deadline
-                                         "7"), // max days to scatter
-                      -1,
-                      false,  // ping_only
-                      kActionCodeOmahaUpdateDeferredPerPolicy,
-                      &response,
-                      NULL));
-
-  int64 count;
-  ASSERT_TRUE(prefs.GetInt64(kPrefsUpdateCheckCount, &count));
-  ASSERT_TRUE(count > 0);
-  EXPECT_FALSE(response.update_exists);
-}
-
-TEST(OmahaRequestActionTest, ExistingUpdateCheckCountCausesScattering) {
-  OmahaResponse response;
-  OmahaRequestParams params = kDefaultTestParams;
-  params.set_wall_clock_based_wait_enabled(true);
-  params.set_waiting_period(TimeDelta());
-
-  params.set_update_check_count_wait_enabled(true);
-  params.set_min_update_checks_needed(1);
-  params.set_max_update_checks_allowed(8);
-
-  string prefs_dir;
-  EXPECT_TRUE(utils::MakeTempDirectory("/tmp/ue_ut_prefs.XXXXXX",
-                                       &prefs_dir));
-  ScopedDirRemover temp_dir_remover(prefs_dir);
-
-  Prefs prefs;
-  LOG_IF(ERROR, !prefs.Init(FilePath(prefs_dir)))
-      << "Failed to initialize preferences.";
-
-  ASSERT_TRUE(prefs.SetInt64(kPrefsUpdateCheckCount, 5));
-
-  ASSERT_FALSE(TestUpdateCheck(
-                      &prefs,  // prefs
-                      params,
-                      GetUpdateResponse2(OmahaRequestParams::kAppId,
-                                         "1.2.3.4",  // version
-                                         "http://more/info",
-                                         "true",  // prompt
-                                         "http://code/base/",  // dl url
-                                         "file.signed", // file name
-                                         "HASH1234=",  // checksum
-                                         "false",  // needs admin
-                                         "123",  // size
-                                         "",  // deadline
-                                         "7"), // max days to scatter
-                      -1,
-                      false,  // ping_only
-                      kActionCodeOmahaUpdateDeferredPerPolicy,
-                      &response,
-                      NULL));
-
-  int64 count;
-  ASSERT_TRUE(prefs.GetInt64(kPrefsUpdateCheckCount, &count));
-  // count remains the same, as the decrementing happens in update_attempter
-  // which this test doesn't exercise.
-  ASSERT_TRUE(count == 5);
-  EXPECT_FALSE(response.update_exists);
 }
 
 TEST(OmahaRequestActionTest, NoOutputPipeTest) {
@@ -827,9 +523,7 @@ TEST(OmahaRequestActionTest, XmlEncodeTest) {
                             "{8DA4B84F-2864-447D-84B7-C2D9B72924E7}",
                             false,  // delta okay
                             false,  // interactive
-                            "http://url",
-                            false,   // update_disabled
-                            "");  // target_version_prefix
+                            "http://url");
   OmahaResponse response;
   ASSERT_FALSE(
       TestUpdateCheck(NULL,  // prefs
@@ -921,36 +615,7 @@ TEST(OmahaRequestActionTest, FormatUpdateCheckOutputTest) {
   string post_str(&post_data[0], post_data.size());
   EXPECT_NE(post_str.find(
       "        <ping active=\"1\"></ping>\n"
-      "        <updatecheck targetversionprefix=\"\"></updatecheck>\n"),
-      string::npos);
-  EXPECT_NE(post_str.find("hardware_class=\"OEM MODEL 09235 7471\""),
-            string::npos);
-  EXPECT_NE(post_str.find("bootid=\"{8DA4B84F-2864-447D-84B7-C2D9B72924E7}\""),
-            string::npos);
-}
-
-
-TEST(OmahaRequestActionTest, FormatUpdateDisabledOutputTest) {
-  vector<char> post_data;
-  NiceMock<PrefsMock> prefs;
-  EXPECT_CALL(prefs, GetString(kPrefsPreviousVersion, _))
-      .WillOnce(DoAll(SetArgumentPointee<1>(string("")), Return(true)));
-  EXPECT_CALL(prefs, SetString(kPrefsPreviousVersion, _)).Times(1);
-  OmahaRequestParams params = kDefaultTestParams;
-  params.set_update_disabled(true);
-  ASSERT_FALSE(TestUpdateCheck(&prefs,
-                               params,
-                               "invalid xml>",
-                               -1,
-                               false,  // ping_only
-                               kActionCodeOmahaRequestXMLParseError,
-                               NULL,  // response
-                               &post_data));
-  // convert post_data to string
-  string post_str(&post_data[0], post_data.size());
-  EXPECT_NE(post_str.find(
-      "        <ping active=\"1\"></ping>\n"
-      "        <updatecheck targetversionprefix=\"\"></updatecheck>\n"),
+      "        <updatecheck></updatecheck>\n"),
       string::npos);
   EXPECT_NE(post_str.find("hardware_class=\"OEM MODEL 09235 7471\""),
             string::npos);
@@ -1038,9 +703,7 @@ TEST(OmahaRequestActionTest, FormatDeltaOkayOutputTest) {
                               "{88DC1453-ABB2-45F5-A622-1808F18E1B61}",
                               delta_okay,
                               false,  // interactive
-                              "http://url",
-                              false, // update_disabled
-                              "");   // target_version_prefix
+                              "http://url");
     ASSERT_FALSE(TestUpdateCheck(NULL,  // prefs
                                  params,
                                  "invalid xml>",
@@ -1076,9 +739,7 @@ TEST(OmahaRequestActionTest, FormatInteractiveOutputTest) {
                               "{88DC1453-ABB2-45F5-A622-1808F18E1B61}",
                               true,  // delta_okay
                               interactive,
-                              "http://url",
-                              false, // update_disabled
-                              "");   // target_version_prefix
+                              "http://url");
     ASSERT_FALSE(TestUpdateCheck(NULL,  // prefs
                                  params,
                                  "invalid xml>",
@@ -1219,97 +880,6 @@ TEST(OmahaRequestActionTest, NetworkFailureBadHTTPCodeTest) {
                       &response,
                       NULL));
   EXPECT_FALSE(response.update_exists);
-}
-
-TEST(OmahaRequestActionTest, TestUpdateFirstSeenAtGetsPersistedFirstTime) {
-  OmahaResponse response;
-  OmahaRequestParams params = kDefaultTestParams;
-  params.set_wall_clock_based_wait_enabled(true);
-  params.set_waiting_period(TimeDelta().FromDays(1));
-  params.set_update_check_count_wait_enabled(false);
-
-  string prefs_dir;
-  EXPECT_TRUE(utils::MakeTempDirectory("/tmp/ue_ut_prefs.XXXXXX",
-                                       &prefs_dir));
-  ScopedDirRemover temp_dir_remover(prefs_dir);
-
-  Prefs prefs;
-  LOG_IF(ERROR, !prefs.Init(FilePath(prefs_dir)))
-      << "Failed to initialize preferences.";
-
-  ASSERT_FALSE(TestUpdateCheck(
-                      &prefs,  // prefs
-                      params,
-                      GetUpdateResponse2(OmahaRequestParams::kAppId,
-                                         "1.2.3.4",  // version
-                                         "http://more/info",
-                                         "true",  // prompt
-                                         "http://code/base/",  // dl url
-                                         "file.signed", // file name
-                                         "HASH1234=",  // checksum
-                                         "false",  // needs admin
-                                         "123",  // size
-                                         "",  // deadline
-                                         "7"), // max days to scatter
-                      -1,
-                      false,  // ping_only
-                      kActionCodeOmahaUpdateDeferredPerPolicy,
-                      &response,
-                      NULL));
-
-  int64 timestamp = 0;
-  ASSERT_TRUE(prefs.GetInt64(kPrefsUpdateFirstSeenAt, &timestamp));
-  ASSERT_TRUE(timestamp > 0);
-  EXPECT_FALSE(response.update_exists);
-}
-
-TEST(OmahaRequestActionTest, TestUpdateFirstSeenAtGetsUsedIfAlreadyPresent) {
-  OmahaResponse response;
-  OmahaRequestParams params = kDefaultTestParams;
-  params.set_wall_clock_based_wait_enabled(true);
-  params.set_waiting_period(TimeDelta().FromDays(1));
-  params.set_update_check_count_wait_enabled(false);
-
-  string prefs_dir;
-  EXPECT_TRUE(utils::MakeTempDirectory("/tmp/ue_ut_prefs.XXXXXX",
-                                       &prefs_dir));
-  ScopedDirRemover temp_dir_remover(prefs_dir);
-
-  Prefs prefs;
-  LOG_IF(ERROR, !prefs.Init(FilePath(prefs_dir)))
-      << "Failed to initialize preferences.";
-
-  // Set the timestamp to a very old value such that it exceeds the
-  // waiting period set above.
-  Time t1;
-  Time::FromString("1/1/2012", &t1);
-  ASSERT_TRUE(prefs.SetInt64(kPrefsUpdateFirstSeenAt, t1.ToInternalValue()));
-  ASSERT_TRUE(TestUpdateCheck(
-                      &prefs,  // prefs
-                      params,
-                      GetUpdateResponse2(OmahaRequestParams::kAppId,
-                                         "1.2.3.4",  // version
-                                         "http://more/info",
-                                         "true",  // prompt
-                                         "http://code/base/",  // dl url
-                                         "file.signed", // file name
-                                         "HASH1234=",  // checksum
-                                         "false",  // needs admin
-                                         "123",  // size
-                                         "",  // deadline
-                                         "7"), // max days to scatter
-                      -1,
-                      false,  // ping_only
-                      kActionCodeSuccess,
-                      &response,
-                      NULL));
-
-  EXPECT_TRUE(response.update_exists);
-
-  // Make sure the timestamp t1 is unchanged showing that it was reused.
-  int64 timestamp = 0;
-  ASSERT_TRUE(prefs.GetInt64(kPrefsUpdateFirstSeenAt, &timestamp));
-  ASSERT_TRUE(timestamp == t1.ToInternalValue());
 }
 
 }  // namespace chromeos_update_engine
