@@ -8,7 +8,6 @@
 =app-crypt/nss-3.14 -* ~arm ~x86 ~amd64
 
 =dev-python/ws4py-0.2.4 ~amd64
-=dev-libs/dbus-c++-0.9.0-r1 ~amd64
 =dev-embedded/smdk-dltool-0.20-r3 ~amd64
 =sys-fs/libfat-0.3a ~amd64
 =dev-cpp/gflags-2.0 ~amd64
