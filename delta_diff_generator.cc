@@ -477,17 +477,18 @@ void ReportPayloadUsage(const DeltaArchiveManifest& manifest,
 
   std::sort(objects.begin(), objects.end());
 
-  static const char kFormatString[] = "%6.2f%% %10llu %-10s %s\n";
+  static const char kFormatString[] = "%6.2f%% %10jd %-10s %s\n";
   for (vector<DeltaObject>::const_iterator it = objects.begin();
        it != objects.end(); ++it) {
     const DeltaObject& object = *it;
     fprintf(stderr, kFormatString,
             object.size * 100.0 / total_size,
-            object.size,
+            static_cast<intmax_t>(object.size),
             object.type >= 0 ? kInstallOperationTypes[object.type] : "-",
             object.name.c_str());
   }
-  fprintf(stderr, kFormatString, 100.0, total_size, "", "<total>");
+  fprintf(stderr, kFormatString,
+          100.0, static_cast<intmax_t>(total_size), "", "<total>");
 }
 
 }  // namespace {}

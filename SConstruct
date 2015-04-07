@@ -185,7 +185,6 @@ env['CCFLAGS'] = ' '.join("""-g
                              -Wsign-compare
                              -Wtype-limits
                              -Wuninitialized
-                             -Wno-error=format
                              -Wno-error=unused-local-typedefs
                              -D__STDC_FORMAT_MACROS=1
                              -D_FILE_OFFSET_BITS=64""".split());
