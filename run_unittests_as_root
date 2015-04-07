@@ -1,0 +1,12 @@
+#!/bin/bash
+
+sudo=
+if [[ "$(id -u)" -ne 0 ]]; then
+    if sudo -n true; then
+        sudo=sudo
+    else
+        echo "ERROR: tests require root access" >&2
+        exit 77
+    fi
+fi
+$sudo ./update_engine_unittests --gtest_filter='*.RunAsRoot*'
