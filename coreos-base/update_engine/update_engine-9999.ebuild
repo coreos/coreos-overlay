@@ -1,18 +1,21 @@
 # Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI="4"
+EAPI=5
 CROS_WORKON_PROJECT="coreos/update_engine"
 CROS_WORKON_REPO="git://github.com"
+AUTOTOOLS_AUTORECONF=1
+# TODO: this can be disabled once -I.. is no longer used
+AUTOTOOLS_IN_SOURCE_BUILD=1
 
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~arm64 ~x86"
 else
-	CROS_WORKON_COMMIT="e2d68d8eb56450982e53bc0703c11f41b653dcd5"
+	CROS_WORKON_COMMIT="e2cf3c5c3074b987767132de07a1533f2af6597b"
 	KEYWORDS="amd64 arm arm64 x86"
 fi
 
-inherit flag-o-matic toolchain-funcs cros-debug cros-workon scons-utils systemd
+inherit autotools-utils flag-o-matic toolchain-funcs cros-workon systemd
 
 DESCRIPTION="CoreOS OS Update Engine"
 HOMEPAGE="https://github.com/coreos/update_engine"
@@ -20,7 +23,7 @@ SRC_URI=""
 
 LICENSE="BSD"
 SLOT="0"
-IUSE="cros_host -delta_generator symlink-usr"
+IUSE="cros-debug cros_host -delta_generator symlink-usr"
 
 LIBCHROME_VERS="180609"
 
@@ -39,10 +42,9 @@ RDEPEND="!coreos-base/coreos-installer
 	sys-fs/e2fsprogs"
 DEPEND="dev-cpp/gmock
 	dev-cpp/gtest
-	cros_host? ( dev-util/scons )
 	${RDEPEND}"
 
-src_compile() {
+src_configure() {
 	# Disable PIE when building for the SDK, this works around a bug that
 	# breaks using delta_generator from the update.zip bundle.
 	# https://code.google.com/p/chromium/issues/detail?id=394508
@@ -52,55 +54,30 @@ src_compile() {
 		append-ldflags -nopie
 	fi
 
-	# Fix builds with GCC 4.8
-	if [[ $(gcc-major-version) -ge 4 &&  $(gcc-minor-version) -ge 8 ]]; then
-		append-flags -Wno-unused-local-typedefs
-	fi
+	local myeconfargs=(
+		$(use_enable cros-debug debug)
+		$(use_enable delta_generator)
+	)
 
-	tc-export CC CXX AR RANLIB LD NM PKG_CONFIG
-	cros-debug-add-NDEBUG
-	export CCFLAGS="$CFLAGS"
-	export BASE_VER=${LIBCHROME_VERS}
-
-	escons
+	autotools-utils_src_configure
 }
 
 src_test() {
-	UNITTESTS_BINARY=update_engine_unittests
-	TARGETS="${UNITTESTS_BINARY} test_http_server delta_generator"
-	escons ${TARGETS}
-
-	if ! use x86 && ! use amd64 ; then
-		einfo "Skipping tests on non-x86 platform..."
+	if use cros_host; then
+		autotools-utils_src_test
 	else
-		# We need to set PATH so that the `openssl` in the target
-		# sysroot gets executed instead of the host one (which is
-		# compiled differently). http://crosbug.com/27683
-		PATH="$SYSROOT/usr/bin:$PATH" \
-		"./${UNITTESTS_BINARY}" --gtest_filter='-*.RunAsRoot*' \
-			&& einfo "./${UNITTESTS_BINARY} (unprivileged) succeeded" \
-			|| die "./${UNITTESTS_BINARY} (unprivileged) failed, retval=$?"
-		sudo LD_LIBRARY_PATH="${LD_LIBRARY_PATH}" PATH="$SYSROOT/usr/bin:$PATH" \
-			"./${UNITTESTS_BINARY}" --gtest_filter='*.RunAsRoot*' \
-			&& einfo "./${UNITTESTS_BINARY} (root) succeeded" \
-			|| die "./${UNITTESTS_BINARY} (root) failed, retval=$?"
+		ewarn "Skipping tests on cross-compiled target platform..."
 	fi
 }
 
 src_install() {
-	dosbin update_engine
-	dosbin systemd/update_engine_stub
-	dobin update_engine_client
+	autotools-utils_src_install
 
-	dosbin coreos-postinst
-	dosbin coreos-setgoodroot
 	if use symlink-usr; then
 		dosym sbin/coreos-postinst /usr/postinst
 	else
 		dosym usr/sbin/coreos-postinst /postinst
 	fi
-
-	use delta_generator && dobin delta_generator
 
 	systemd_dounit systemd/update-engine.service
 	systemd_dounit systemd/update-engine-stub.service
