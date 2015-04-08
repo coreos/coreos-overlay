@@ -2,6 +2,14 @@
 
 coreos:
   units:
+    - name: etcd.service
+      runtime: true
+      drop-ins:
+        - name: 10-oem.conf
+          content: |
+            [Service]
+            Environment=ETCD_PEER_ELECTION_TIMEOUT=1200
+
     - name: waagent.service
       command: start
       runtime: true
@@ -34,10 +42,3 @@ coreos:
     version-id: @@OEM_VERSION_ID@@
     home-url: https://azure.microsoft.com/
     bug-report-url: https://github.com/coreos/bugs/issues
-
-write_files:
-    - path: /run/systemd/system/etcd.service.d/10-oem.conf
-      permissions: 0644
-      content: |
-        [Service]
-        Environment=ETCD_PEER_ELECTION_TIMEOUT=1200
