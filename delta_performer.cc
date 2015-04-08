@@ -48,56 +48,6 @@ namespace {
 const int kUpdateStateOperationInvalid = -1;
 const int kMaxResumedUpdateFailures = 10;
 
-// Converts extents to a human-readable string, for use by DumpUpdateProto().
-string ExtentsToString(const RepeatedPtrField<Extent>& extents) {
-  string ret;
-  for (int i = 0; i < extents.size(); i++) {
-    const Extent& extent = extents.Get(i);
-    if (extent.start_block() == kSparseHole) {
-      ret += StringPrintf("{kSparseHole, %" PRIu64 "}, ", extent.num_blocks());
-    } else {
-      ret += StringPrintf("{%" PRIu64 ", %" PRIu64 "}, ",
-                          extent.start_block(), extent.num_blocks());
-    }
-  }
-  if (!ret.empty()) {
-    DCHECK_GT(ret.size(), static_cast<size_t>(1));
-    ret.resize(ret.size() - 2);
-  }
-  return ret;
-}
-
-// LOGs a DeltaArchiveManifest object. Useful for debugging.
-void DumpUpdateProto(const DeltaArchiveManifest& manifest) {
-  LOG(INFO) << "Update Proto:";
-  LOG(INFO) << "  block_size: " << manifest.block_size();
-  for (int i = 0; i < (manifest.install_operations_size() +
-                       manifest.kernel_install_operations_size()); i++) {
-    const DeltaArchiveManifest_InstallOperation& op =
-        i < manifest.install_operations_size() ?
-        manifest.install_operations(i) :
-        manifest.kernel_install_operations(
-            i - manifest.install_operations_size());
-    if (i == 0)
-      LOG(INFO) << "  Rootfs ops:";
-    else if (i == manifest.install_operations_size())
-      LOG(INFO) << "   Kernel ops:";
-    LOG(INFO) << "  operation(" << i << ")";
-    LOG(INFO) << "    type: "
-              << DeltaArchiveManifest_InstallOperation_Type_Name(op.type());
-    if (op.has_data_offset())
-      LOG(INFO) << "    data_offset: " << op.data_offset();
-    if (op.has_data_length())
-      LOG(INFO) << "    data_length: " << op.data_length();
-    LOG(INFO) << "    src_extents: " << ExtentsToString(op.src_extents());
-    if (op.has_src_length())
-      LOG(INFO) << "    src_length: " << op.src_length();
-    LOG(INFO) << "    dst_extents: " << ExtentsToString(op.dst_extents());
-    if (op.has_dst_length())
-      LOG(INFO) << "    dst_length: " << op.dst_length();
-  }
-}
-
 // Opens path for read/write, put the fd into *fd. On success returns true
 // and sets *err to 0. On failure, returns false and sets *err to errno.
 bool OpenFile(const char* path, int* fd, int* err) {
