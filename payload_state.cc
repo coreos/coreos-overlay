@@ -321,19 +321,19 @@ void PayloadState::ResetPersistedState() {
 }
 
 string PayloadState::CalculateResponseSignature() {
-  string response_sign = StringPrintf("NumURLs = %d\n",
+  string response_sign = StringPrintf("NumURLs = %zu\n",
                                       response_.payload_urls.size());
 
   for (size_t i = 0; i < response_.payload_urls.size(); i++)
-    response_sign += StringPrintf("Url%d = %s\n",
+    response_sign += StringPrintf("Url%zu = %s\n",
                                   i, response_.payload_urls[i].c_str());
 
-  response_sign += StringPrintf("Payload Size = %llu\n"
+  response_sign += StringPrintf("Payload Size = %jd\n"
                                 "Payload Sha256 Hash = %s\n"
                                 "Is Delta Payload = %d\n"
                                 "Max Failure Count Per Url = %d\n"
                                 "Disable Payload Backoff = %d\n",
-                                response_.size,
+                                static_cast<intmax_t>(response_.size),
                                 response_.hash.c_str(),
                                 response_.is_delta_payload,
                                 response_.max_failure_count_per_url,

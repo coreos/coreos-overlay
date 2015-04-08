@@ -133,7 +133,7 @@ void DeltaPerformer::LogProgress(const char* message_prefix) {
     total_operations_str = StringPrintf("%zu", num_total_operations_);
     // Upcasting to 64-bit to avoid overflow, back to size_t for formatting.
     completed_percentage_str =
-        StringPrintf(" (%llu%%)",
+        StringPrintf(" (%" PRIu64 "%%)",
                      IntRatio(next_operation_num_, num_total_operations_,
                               100));
   }
@@ -146,7 +146,7 @@ void DeltaPerformer::LogProgress(const char* message_prefix) {
     payload_size_str = StringPrintf("%zu", payload_size);
     // Upcasting to 64-bit to avoid overflow, back to size_t for formatting.
     downloaded_percentage_str =
-        StringPrintf(" (%llu%%)",
+        StringPrintf(" (%" PRIu64 "%%)",
                      IntRatio(total_bytes_received_, payload_size, 100));
   }
 
