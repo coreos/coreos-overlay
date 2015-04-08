@@ -1,30 +1,35 @@
 #cloud-config
 
 coreos:
-    units:
-      - name: user-configdrive.service
-        mask: yes
-      - name: user-configvirtfs.service
-        mask: yes
-      - name: oem-cloudinit.service
-        command: restart
-        runtime: yes
-        content: |
-          [Unit]
-          Description=Cloudinit from EC2-style metadata
+  units:
+    - name: etcd.service
+      runtime: true
+      drop-ins:
+        - name: 10-oem.conf
+          content: |
+            [Service]
+            Environment=ETCD_PEER_ELECTION_TIMEOUT=1200
 
-          [Service]
-          Type=oneshot
-          ExecStart=/usr/bin/coreos-cloudinit --oem=ec2-compat
-    oem:
-      id: @@OEM_ID@@
-      name: @@OEM_NAME@@
-      version-id: @@OEM_VERSION_ID@@
-      home-url: @@OEM_HOME_URL@@
-      bug-report-url: https://github.com/coreos/bugs/issues
-write_files:
-    - path: /run/systemd/system/etcd.service.d/10-oem.conf
-      permissions: 0644
+    - name: user-configdrive.service
+      mask: yes
+
+    - name: user-configvirtfs.service
+      mask: yes
+
+    - name: oem-cloudinit.service
+      command: restart
+      runtime: yes
       content: |
+        [Unit]
+        Description=Cloudinit from EC2-style metadata
+
         [Service]
-        Environment=ETCD_PEER_ELECTION_TIMEOUT=1200
+        Type=oneshot
+        ExecStart=/usr/bin/coreos-cloudinit --oem=ec2-compat
+
+  oem:
+    id: @@OEM_ID@@
+    name: @@OEM_NAME@@
+    version-id: @@OEM_VERSION_ID@@
+    home-url: @@OEM_HOME_URL@@
+    bug-report-url: https://github.com/coreos/bugs/issues
