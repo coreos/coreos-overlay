@@ -31,6 +31,7 @@ BOARD_USE_PREFIX="board_use_"
 ALL_BOARDS=(
 	amd64-generic
 	amd64-host
+	arm64-generic
 )
 
 # Add BOARD_USE_PREFIX to each board in ALL_BOARDS to create IUSE.
