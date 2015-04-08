@@ -1,42 +1,45 @@
 #cloud-config
 
 coreos:
-    units:
-      - name: nova-agent-auto.service
-        command: restart
-        runtime: yes
-        content: |
-          [Unit]
-          After=dbus.service
-          [Service]
-          Environment=HOME=/root
-          ExecStartPre=/bin/mount -t proc none /usr/share/oem/nova-agent/proc
-          ExecStartPre=/bin/mount -t xenfs none /usr/share/oem/nova-agent/proc/xen
-          ExecStartPre=/bin/mount --bind /dev /usr/share/oem/nova-agent/dev
-          ExecStartPre=/bin/mount --bind /sys /usr/share/oem/nova-agent/sys
-          ExecStart=/usr/bin/chroot /usr/share/oem/nova-agent/ /usr/share/nova-agent/0.0.1.38/sbin/nova-agent -o - -n -l info /usr/share/nova-agent/nova-agent.py
-          ExecStopPost=/bin/umount -f /usr/share/oem/nova-agent/sys
-          ExecStopPost=/bin/umount -f /usr/share/oem/nova-agent/dev
-          ExecStopPost=/bin/umount -f /usr/share/oem/nova-agent/proc/xen
-          ExecStopPost=/bin/umount -f /usr/share/oem/nova-agent/proc
-      - name: nova-agent-watcher.service
-        command: restart
-        runtime: yes
-        content: |
-          [Unit]
-          After=dbus.service
+  units:
+    - name: etcd.service
+      runtime: true
+      drop-ins:
+        - name: 10-oem.conf
+          content: |
+            [Service]
+            Environment=ETCD_PEER_ELECTION_TIMEOUT=1200
 
-          [Service]
-          ExecStart=/usr/share/oem/bin/nova-agent-watcher -watch-dir=/usr/share/oem/nova-agent -scripts-dir=/usr/share/oem/bin/
-    oem:
-      id: rackspace
-      name: Rackspace Cloud Servers
-      version-id: @@OEM_VERSION_ID@@
-      home-url: https://www.rackspace.com/cloud/servers/
-      bug-report-url: https://github.com/coreos/coreos-overlay
-write_files:
-    - path: /run/systemd/system/etcd.service.d/10-oem.conf
-      permissions: 0644
+    - name: nova-agent-auto.service
+      command: restart
+      runtime: yes
       content: |
+        [Unit]
+        After=dbus.service
         [Service]
-        Environment=ETCD_PEER_ELECTION_TIMEOUT=1200
+        Environment=HOME=/root
+        ExecStartPre=/bin/mount -t proc none /usr/share/oem/nova-agent/proc
+        ExecStartPre=/bin/mount -t xenfs none /usr/share/oem/nova-agent/proc/xen
+        ExecStartPre=/bin/mount --bind /dev /usr/share/oem/nova-agent/dev
+        ExecStartPre=/bin/mount --bind /sys /usr/share/oem/nova-agent/sys
+        ExecStart=/usr/bin/chroot /usr/share/oem/nova-agent/ /usr/share/nova-agent/0.0.1.38/sbin/nova-agent -o - -n -l info /usr/share/nova-agent/nova-agent.py
+        ExecStopPost=/bin/umount -f /usr/share/oem/nova-agent/sys
+        ExecStopPost=/bin/umount -f /usr/share/oem/nova-agent/dev
+        ExecStopPost=/bin/umount -f /usr/share/oem/nova-agent/proc/xen
+        ExecStopPost=/bin/umount -f /usr/share/oem/nova-agent/proc
+    - name: nova-agent-watcher.service
+      command: restart
+      runtime: yes
+      content: |
+        [Unit]
+        After=dbus.service
+
+        [Service]
+        ExecStart=/usr/share/oem/bin/nova-agent-watcher -watch-dir=/usr/share/oem/nova-agent -scripts-dir=/usr/share/oem/bin/
+
+  oem:
+    id: rackspace
+    name: Rackspace Cloud Servers
+    version-id: @@OEM_VERSION_ID@@
+    home-url: https://www.rackspace.com/cloud/servers/
+    bug-report-url: https://github.com/coreos/bugs/issues
