@@ -1,0 +1,3 @@
+# hardened and sanitize are masked for arm64, cross compilers should agree
+cross-aarch64-cros-linux-gnu/gcc hardened sanitize
+cross-aarch64-cros-linux-gnu/glibc hardened
