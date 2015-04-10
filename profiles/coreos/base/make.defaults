@@ -13,7 +13,7 @@ USE_EXPAND_HIDDEN="${USE_EXPAND_HIDDEN} CROS_WORKON_TREE"
 # via use flags because if two versions are installed one must provide
 # the "default" /usr/bin/etcd binary and systemd services.
 USE_EXPAND="${USE_EXPAND} ETCD_PROTOCOLS"
-ETCD_PROTOCOLS="1"
+ETCD_PROTOCOLS="1 2"
 
 # Extra use flags for CoreOS SDK
 USE="${USE} cros_host expat -introspection -cups -tcpd -pcre -berkdb"
