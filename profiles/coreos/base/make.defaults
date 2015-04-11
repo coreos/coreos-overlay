@@ -92,4 +92,4 @@ GRUB_PLATFORMS="efi-64 pc xen"
 DONT_MOUNT_BOOT=1
 
 # Both x86_64 and i386 targets are required for grub testing
-QEMU_SOFTMMU_TARGETS="x86_64 i386"
+QEMU_SOFTMMU_TARGETS="x86_64 i386 aarch64"
