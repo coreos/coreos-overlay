@@ -14,7 +14,6 @@
 *.gcno
 /*.pub.pem
 /.deps/
-/.sconsign.dblite
 /Makefile
 /Makefile.in
 /aclocal.m4
