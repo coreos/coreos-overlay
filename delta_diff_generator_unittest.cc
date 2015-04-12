@@ -485,13 +485,6 @@ vector<Extent> VectOfExt(uint64_t start_block, uint64_t num_blocks) {
   return vector<Extent>(1, ExtentForRange(start_block, num_blocks));
 }
 
-vector<Extent> VectOfExts(uint64_t start_block1, uint64_t num_blocks1,
-                          uint64_t start_block2, uint64_t num_blocks2) {
-  vector<Extent> ret(1, ExtentForRange(start_block1, num_blocks1));
-  ret.push_back(ExtentForRange(start_block2, num_blocks2));
-  return ret;
-}
-
 EdgeProperties EdgeWithReadDep(const vector<Extent>& extents) {
   EdgeProperties ret;
   ret.extents = extents;
