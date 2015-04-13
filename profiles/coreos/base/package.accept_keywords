@@ -111,3 +111,7 @@ dev-util/checkbashisms
 
 # Fixes findmnt with overlay and btrfs filesystems
 =sys-apps/util-linux-2.26.1
+
+# fix for https://github.com/coreos/bugs/issues/324
+=net-misc/curl-7.41
+
