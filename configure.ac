@@ -4,7 +4,7 @@
 AC_PREREQ([2.69])
 AC_INIT([update_engine],[0.1.0],[https://github.com/coreos/bugs/issues])
 AC_CONFIG_AUX_DIR([build-aux])
-AC_CONFIG_SRCDIR([main.cc])
+AC_CONFIG_SRCDIR([src/update_engine/main.cc])
 
 AM_INIT_AUTOMAKE([foreign 1.13 -Wall -Wno-portability silent-rules serial-tests])
 AM_SILENT_RULES([yes])
@@ -12,6 +12,7 @@ AM_SILENT_RULES([yes])
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_CXX
+AC_PROG_MKDIR_P
 AC_PROG_RANLIB
 AM_PROG_AR
 
