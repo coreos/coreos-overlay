@@ -1,9 +1,8 @@
 [Unit]
 Description=Network fabric for containers
 Documentation=https://github.com/coreos/flannel
-Wants=etcd.service
 Requires=early-docker.service
-After=etcd.service early-docker.service
+After=etcd.service etcd2.service early-docker.service
 Before=early-docker.target
 
 [Service]
