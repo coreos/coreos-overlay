@@ -31,6 +31,7 @@ DEPEND="
 	sys-apps/debianutils
 	sys-apps/iproute2
 	sys-boot/grub
+	sys-boot/shim
 	sys-devel/crossdev
 	sys-firmware/edk2-ovmf
 	sys-fs/btrfs-progs
