@@ -21,6 +21,7 @@ DEPEND="
 	app-misc/jq
 	app-shells/bash-completion
 	coreos-base/hard-host-depends
+	coreos-base/coreos-sb-keys
 	coreos-devel/mantle
 	dev-python/setuptools
 	dev-util/boost-build
