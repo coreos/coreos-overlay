@@ -13,8 +13,16 @@
 *.gcda
 *.gcno
 /*.pub.pem
-/.sconsign.dblite
+/.deps/
+/Makefile
+/Makefile.in
+/aclocal.m4
 /app.info
+/autom4te.cache/
+/build-aux/
+/config.log
+/config.status
+/configure
 /delta_generator
 /html/
 /marshal.glibmarshal.c
