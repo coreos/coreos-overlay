@@ -6,10 +6,10 @@ CROS_WORKON_PROJECT="coreos/update_engine"
 CROS_WORKON_REPO="git://github.com"
 
 if [[ "${PV}" == 9999 ]]; then
-	KEYWORDS="~amd64 ~arm ~x86"
+	KEYWORDS="~amd64 ~arm ~arm64 ~x86"
 else
 	CROS_WORKON_COMMIT="e2d68d8eb56450982e53bc0703c11f41b653dcd5"
-	KEYWORDS="amd64 arm x86"
+	KEYWORDS="amd64 arm arm64 x86"
 fi
 
 inherit flag-o-matic toolchain-funcs cros-debug cros-workon scons-utils systemd
