@@ -6,9 +6,11 @@
 
 # pulled in by app-crypt/pinentry
 app-admin/eselect-pinentry-0.3
+app-eselect/eselect-pinentry-0.4
 
 # pulled in by app-editors/vim
 app-admin/eselect-vi-1.1.5
+app-eselect/eselect-vi-1.1.7-r1
 
 # pulled in by app-admin/sudo
 app-misc/editor-wrapper-4
