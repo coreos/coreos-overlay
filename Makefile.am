@@ -8,7 +8,7 @@ check_DATA =
 CLEANFILES = $(BUILT_SOURCES) $(check_DATA)
 EXTRA_DIST =
 
-AM_CPPFLAGS = -I$(srcdir)/..
+AM_CPPFLAGS = -I$(srcdir)/src -I$(builddir)/src
 AM_CFLAGS = -fno-exceptions \
 	    -fno-strict-aliasing \
 	    -Wall \
@@ -55,196 +55,203 @@ TESTS = run_unittests_as_user run_unittests_as_root
 EXTRA_DIST += $(TESTS)
 
 update_engine_LDADD = libupdate_engine.a $(LDADD)
-update_engine_SOURCES = main.cc \
-			update_engine.dbusserver.h
+update_engine_SOURCES = src/update_engine/main.cc \
+			src/update_engine/update_engine.dbusserver.h
 
 delta_generator_LDADD = libupdate_engine.a $(LDADD)
 delta_generator_SOURCES = generate_delta_main.cc
 
 update_engine_client_LDADD = libupdate_engine.a $(LDADD)
-update_engine_client_SOURCES = update_engine_client.cc \
-			       update_engine.dbusclient.h
+update_engine_client_SOURCES = src/update_engine/update_engine_client.cc \
+			       src/update_engine/update_engine.dbusclient.h
 
 libupdate_engine_a_SOURCES = \
-	action.h \
-	action_pipe.h \
-	action_processor.cc \
-	action_processor.h \
-	bzip.cc \
-	bzip.h \
-	bzip_extent_writer.cc \
-	bzip_extent_writer.h \
-	certificate_checker.cc \
-	certificate_checker.h \
-	cycle_breaker.cc \
-	cycle_breaker.h \
-	dbus_constants.h \
-	dbus_interface.h \
-	dbus_service.cc \
-	dbus_service.h \
-	delta_diff_generator.cc \
-	delta_diff_generator.h \
-	delta_performer.cc \
-	delta_performer.h \
-	download_action.cc \
-	download_action.h \
-	extent_mapper.cc \
-	extent_mapper.h \
-	extent_ranges.cc \
-	extent_ranges.h \
-	extent_writer.cc \
-	extent_writer.h \
-	file_writer.cc \
-	file_writer.h \
-	filesystem_copier_action.cc \
-	filesystem_copier_action.h \
-	filesystem_iterator.cc \
-	filesystem_iterator.h \
-	full_update_generator.cc \
-	full_update_generator.h \
-	graph_types.h \
-	graph_utils.cc \
-	graph_utils.h \
-	http_common.cc \
-	http_common.h \
-	http_fetcher.cc \
-	http_fetcher.h \
-	install_plan.cc \
-	install_plan.h \
-	libcurl_http_fetcher.cc \
-	libcurl_http_fetcher.h \
-	marshal.glibmarshal.c \
-	marshal.glibmarshal.h \
-	metadata.cc \
-	metadata.h \
-	multi_range_http_fetcher.cc \
-	multi_range_http_fetcher.h \
-	omaha_hash_calculator.cc \
-	omaha_hash_calculator.h \
-	omaha_request_action.cc \
-	omaha_request_action.h \
-	omaha_request_params.cc \
-	omaha_request_params.h \
-	omaha_response.h \
-	omaha_response_handler_action.cc \
-	omaha_response_handler_action.h \
-	payload_signer.cc \
-	payload_signer.h \
-	payload_state.cc \
-	payload_state.h \
-	payload_state_interface.h \
-	postinstall_runner_action.cc \
-	postinstall_runner_action.h \
-	prefs.cc \
-	prefs.h \
-	prefs_interface.h \
-	real_system_state.h \
-	simple_key_value_store.cc \
-	simple_key_value_store.h \
-	subprocess.cc \
-	subprocess.h \
-	system_state.cc \
-	system_state.h \
-	tarjan.cc \
-	tarjan.h \
-	terminator.cc \
-	terminator.h \
-	topological_sort.cc \
-	topological_sort.h \
-	update_attempter.cc \
-	update_attempter.h \
-	update_check_scheduler.cc \
-	update_check_scheduler.h \
-	update_metadata.pb.cc \
-	update_metadata.pb.h \
-	utils.cc \
-	utils.h
+	src/update_engine/action.h \
+	src/update_engine/action_pipe.h \
+	src/update_engine/action_processor.cc \
+	src/update_engine/action_processor.h \
+	src/update_engine/bzip.cc \
+	src/update_engine/bzip.h \
+	src/update_engine/bzip_extent_writer.cc \
+	src/update_engine/bzip_extent_writer.h \
+	src/update_engine/certificate_checker.cc \
+	src/update_engine/certificate_checker.h \
+	src/update_engine/cycle_breaker.cc \
+	src/update_engine/cycle_breaker.h \
+	src/update_engine/dbus_constants.h \
+	src/update_engine/dbus_interface.h \
+	src/update_engine/dbus_service.cc \
+	src/update_engine/dbus_service.h \
+	src/update_engine/delta_diff_generator.cc \
+	src/update_engine/delta_diff_generator.h \
+	src/update_engine/delta_performer.cc \
+	src/update_engine/delta_performer.h \
+	src/update_engine/download_action.cc \
+	src/update_engine/download_action.h \
+	src/update_engine/extent_mapper.cc \
+	src/update_engine/extent_mapper.h \
+	src/update_engine/extent_ranges.cc \
+	src/update_engine/extent_ranges.h \
+	src/update_engine/extent_writer.cc \
+	src/update_engine/extent_writer.h \
+	src/update_engine/file_writer.cc \
+	src/update_engine/file_writer.h \
+	src/update_engine/filesystem_copier_action.cc \
+	src/update_engine/filesystem_copier_action.h \
+	src/update_engine/filesystem_iterator.cc \
+	src/update_engine/filesystem_iterator.h \
+	src/update_engine/full_update_generator.cc \
+	src/update_engine/full_update_generator.h \
+	src/update_engine/graph_types.h \
+	src/update_engine/graph_utils.cc \
+	src/update_engine/graph_utils.h \
+	src/update_engine/http_common.cc \
+	src/update_engine/http_common.h \
+	src/update_engine/http_fetcher.cc \
+	src/update_engine/http_fetcher.h \
+	src/update_engine/install_plan.cc \
+	src/update_engine/install_plan.h \
+	src/update_engine/libcurl_http_fetcher.cc \
+	src/update_engine/libcurl_http_fetcher.h \
+	src/update_engine/marshal.glibmarshal.c \
+	src/update_engine/marshal.glibmarshal.h \
+	src/update_engine/metadata.cc \
+	src/update_engine/metadata.h \
+	src/update_engine/multi_range_http_fetcher.cc \
+	src/update_engine/multi_range_http_fetcher.h \
+	src/update_engine/omaha_hash_calculator.cc \
+	src/update_engine/omaha_hash_calculator.h \
+	src/update_engine/omaha_request_action.cc \
+	src/update_engine/omaha_request_action.h \
+	src/update_engine/omaha_request_params.cc \
+	src/update_engine/omaha_request_params.h \
+	src/update_engine/omaha_response.h \
+	src/update_engine/omaha_response_handler_action.cc \
+	src/update_engine/omaha_response_handler_action.h \
+	src/update_engine/payload_signer.cc \
+	src/update_engine/payload_signer.h \
+	src/update_engine/payload_state.cc \
+	src/update_engine/payload_state.h \
+	src/update_engine/payload_state_interface.h \
+	src/update_engine/postinstall_runner_action.cc \
+	src/update_engine/postinstall_runner_action.h \
+	src/update_engine/prefs.cc \
+	src/update_engine/prefs.h \
+	src/update_engine/prefs_interface.h \
+	src/update_engine/real_system_state.h \
+	src/update_engine/simple_key_value_store.cc \
+	src/update_engine/simple_key_value_store.h \
+	src/update_engine/subprocess.cc \
+	src/update_engine/subprocess.h \
+	src/update_engine/system_state.cc \
+	src/update_engine/system_state.h \
+	src/update_engine/tarjan.cc \
+	src/update_engine/tarjan.h \
+	src/update_engine/terminator.cc \
+	src/update_engine/terminator.h \
+	src/update_engine/topological_sort.cc \
+	src/update_engine/topological_sort.h \
+	src/update_engine/update_attempter.cc \
+	src/update_engine/update_attempter.h \
+	src/update_engine/update_check_scheduler.cc \
+	src/update_engine/update_check_scheduler.h \
+	src/update_engine/update_metadata.pb.cc \
+	src/update_engine/update_metadata.pb.h \
+	src/update_engine/utils.cc \
+	src/update_engine/utils.h
 
 update_engine_unittests_LDADD = libupdate_engine.a \
 				-lgtest -lgmock $(LDADD)
 update_engine_unittests_SOURCES = \
-	testrunner.cc \
-	action_mock.h \
-	action_pipe_unittest.cc \
-	action_processor_mock.h \
-	action_processor_unittest.cc \
-	action_unittest.cc \
-	bzip_extent_writer_unittest.cc \
-	certificate_checker_mock.h \
-	certificate_checker_unittest.cc \
-	cycle_breaker_unittest.cc \
-	delta_diff_generator_unittest.cc \
-	delta_performer_unittest.cc \
-	download_action_unittest.cc \
-	extent_mapper_unittest.cc \
-	extent_ranges_unittest.cc \
-	extent_writer_unittest.cc \
-	file_writer_mock.h \
-	file_writer_unittest.cc \
-	filesystem_copier_action_unittest.cc \
-	filesystem_iterator_unittest.cc \
-	full_update_generator_unittest.cc \
-	graph_utils_unittest.cc \
-	http_fetcher_unittest.cc \
-	http_fetcher_unittest.h \
-	metadata_unittest.cc \
-	mock_dbus_interface.h \
-	mock_file_writer.h \
-	mock_http_fetcher.cc \
-	mock_http_fetcher.h \
-	mock_payload_state.h \
-	mock_system_state.cc \
-	mock_system_state.h \
-	omaha_hash_calculator_unittest.cc \
-	omaha_request_action_unittest.cc \
-	omaha_request_params_unittest.cc \
-	omaha_response_handler_action_unittest.cc \
-	payload_signer_unittest.cc \
-	payload_state_unittest.cc \
-	postinstall_runner_action_unittest.cc \
-	prefs_mock.h \
-	prefs_unittest.cc \
-	simple_key_value_store_unittest.cc \
-	subprocess_unittest.cc \
-	tarjan_unittest.cc \
-	terminator_unittest.cc \
-	test_utils.cc \
-	test_utils.h \
-	topological_sort_unittest.cc \
-	update_attempter_mock.h \
-	update_attempter_unittest.cc \
-	update_check_scheduler_unittest.cc \
-	utils_unittest.cc \
-	zip_unittest.cc
+	src/update_engine/testrunner.cc \
+	src/update_engine/action_mock.h \
+	src/update_engine/action_pipe_unittest.cc \
+	src/update_engine/action_processor_mock.h \
+	src/update_engine/action_processor_unittest.cc \
+	src/update_engine/action_unittest.cc \
+	src/update_engine/bzip_extent_writer_unittest.cc \
+	src/update_engine/certificate_checker_mock.h \
+	src/update_engine/certificate_checker_unittest.cc \
+	src/update_engine/cycle_breaker_unittest.cc \
+	src/update_engine/delta_diff_generator_unittest.cc \
+	src/update_engine/delta_performer_unittest.cc \
+	src/update_engine/download_action_unittest.cc \
+	src/update_engine/extent_mapper_unittest.cc \
+	src/update_engine/extent_ranges_unittest.cc \
+	src/update_engine/extent_writer_unittest.cc \
+	src/update_engine/file_writer_mock.h \
+	src/update_engine/file_writer_unittest.cc \
+	src/update_engine/filesystem_copier_action_unittest.cc \
+	src/update_engine/filesystem_iterator_unittest.cc \
+	src/update_engine/full_update_generator_unittest.cc \
+	src/update_engine/graph_utils_unittest.cc \
+	src/update_engine/http_fetcher_unittest.cc \
+	src/update_engine/http_fetcher_unittest.h \
+	src/update_engine/metadata_unittest.cc \
+	src/update_engine/mock_dbus_interface.h \
+	src/update_engine/mock_file_writer.h \
+	src/update_engine/mock_http_fetcher.cc \
+	src/update_engine/mock_http_fetcher.h \
+	src/update_engine/mock_payload_state.h \
+	src/update_engine/mock_system_state.cc \
+	src/update_engine/mock_system_state.h \
+	src/update_engine/omaha_hash_calculator_unittest.cc \
+	src/update_engine/omaha_request_action_unittest.cc \
+	src/update_engine/omaha_request_params_unittest.cc \
+	src/update_engine/omaha_response_handler_action_unittest.cc \
+	src/update_engine/payload_signer_unittest.cc \
+	src/update_engine/payload_state_unittest.cc \
+	src/update_engine/postinstall_runner_action_unittest.cc \
+	src/update_engine/prefs_mock.h \
+	src/update_engine/prefs_unittest.cc \
+	src/update_engine/simple_key_value_store_unittest.cc \
+	src/update_engine/subprocess_unittest.cc \
+	src/update_engine/tarjan_unittest.cc \
+	src/update_engine/terminator_unittest.cc \
+	src/update_engine/test_utils.cc \
+	src/update_engine/test_utils.h \
+	src/update_engine/topological_sort_unittest.cc \
+	src/update_engine/update_attempter_mock.h \
+	src/update_engine/update_attempter_unittest.cc \
+	src/update_engine/update_check_scheduler_unittest.cc \
+	src/update_engine/utils_unittest.cc \
+	src/update_engine/zip_unittest.cc
 
 test_http_server_SOURCES = \
-	test_http_server.cc \
-	http_common.cc \
-	http_common.h \
-	http_fetcher_unittest.h
+	src/update_engine/test_http_server.cc \
+	src/update_engine/http_common.cc \
+	src/update_engine/http_common.h \
+	src/update_engine/http_fetcher_unittest.h
 
-EXTRA_DIST += marshal.list
-BUILT_SOURCES += marshal.glibmarshal.c marshal.glibmarshal.h
+EXTRA_DIST += src/update_engine/marshal.list
+BUILT_SOURCES += src/update_engine/marshal.glibmarshal.c \
+		 src/update_engine/marshal.glibmarshal.h
 %.glibmarshal.c: %.list
+	$(AM_V_at) $(MKDIR_P) $(dir $@)
 	$(AM_V_GEN) $(GLIB_GENMARSHAL) --body \
 	    --prefix=update_engine $< > $@
 
 %.glibmarshal.h: %.list
+	$(AM_V_at) $(MKDIR_P) $(dir $@)
 	$(AM_V_GEN) $(GLIB_GENMARSHAL) --header \
 	    --prefix=update_engine $< > $@
 
-EXTRA_DIST += update_engine.xml
-BUILT_SOURCES += update_engine.dbusclient.h update_engine.dbusserver.h
+EXTRA_DIST += src/update_engine/update_engine.xml
+BUILT_SOURCES += src/update_engine/update_engine.dbusclient.h \
+		 src/update_engine/update_engine.dbusserver.h
 %.dbusclient.h: %.xml
+	$(AM_V_at) $(MKDIR_P) $(dir $@)
 	$(AM_V_GEN) $(DBUS_BINDING_TOOL) --mode=glib-client \
 	    --prefix=update_engine_service $< > $@
 
 %.dbusserver.h: %.xml
+	$(AM_V_at) $(MKDIR_P) $(dir $@)
 	$(AM_V_GEN) $(DBUS_BINDING_TOOL) --mode=glib-server \
 	    --prefix=update_engine_service $< > $@
 
-EXTRA_DIST += update_metadata.proto
-BUILT_SOURCES += update_metadata.pb.cc update_metadata.pb.h
+EXTRA_DIST += src/update_engine/update_metadata.proto
+BUILT_SOURCES += src/update_engine/update_metadata.pb.cc \
+		 src/update_engine/update_metadata.pb.h
 %.pb.cc %.pb.h: %.proto
 	$(AM_V_GEN) $(PROTOC) --proto_path=$(srcdir) --cpp_out=$(builddir) $<
 
@@ -252,6 +259,7 @@ BUILT_SOURCES += update_metadata.pb.cc update_metadata.pb.h
 EXTRA_DIST += unittest_key.pem unittest_key2.pem
 check_DATA += unittest_key.pub.pem unittest_key2.pub.pem
 %.pub.pem: %.pem
+	$(AM_V_at) $(MKDIR_P) $(dir $@)
 	$(AM_V_GEN) openssl rsa -in $< -pubout -out $@
 
 # TODO: revisit how to generate useful coverage data or re-add lcov to
