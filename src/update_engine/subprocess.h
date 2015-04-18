@@ -11,9 +11,9 @@
 #include <vector>
 
 #include <glib.h>
+#include <glog/logging.h>
 
 #include "base/basictypes.h"
-#include "base/logging.h"
 
 // The Subprocess class is a singleton. It's used to spawn off a subprocess
 // and get notified when the subprocess exits. The result of Exec() can

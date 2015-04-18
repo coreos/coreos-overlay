@@ -5,7 +5,7 @@
 #include "update_engine/topological_sort.h"
 #include <set>
 #include <vector>
-#include "base/logging.h"
+#include <glog/logging.h>
 
 using std::set;
 using std::vector;

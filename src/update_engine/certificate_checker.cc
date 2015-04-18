@@ -6,8 +6,8 @@
 
 #include <string>
 
-#include <base/logging.h>
 #include <curl/curl.h>
+#include <glog/logging.h>
 #include <openssl/evp.h>
 #include <openssl/ssl.h>
 

@@ -2,18 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <string>
-#include <vector>
-
-#include <base/command_line.h>
-#include <base/logging.h>
 #include <gflags/gflags.h>
 #include <glib.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+#include <glog/logging.h>
 
-#include "files/file_util.h"
-#include "strings/string_printf.h"
 #include "update_engine/certificate_checker.h"
 #include "update_engine/dbus_constants.h"
 #include "update_engine/dbus_interface.h"
@@ -29,14 +21,9 @@ extern "C" {
 #include "update_engine/update_engine.dbusserver.h"
 }
 
-DEFINE_bool(logtostderr, false,
-            "Write logs to stderr instead of to a file in log_dir.");
 DEFINE_bool(foreground, false,
             "Don't daemon()ize; run in foreground.");
 
-using std::string;
-using std::vector;
-using strings::StringPrintf;
 
 namespace chromeos_update_engine {
 
@@ -83,60 +70,6 @@ void SetupDbusService(UpdateEngineService* service) {
                                       G_OBJECT(service));
 }
 
-void SetupLogSymlink(const string& symlink_path, const string& log_path) {
-  // TODO(petkov): To ensure a smooth transition between non-timestamped and
-  // timestamped logs, move an existing log to start the first timestamped
-  // one. This code can go away once all clients are switched to this version or
-  // we stop caring about the old-style logs.
-  if (utils::FileExists(symlink_path.c_str()) &&
-      !utils::IsSymlink(symlink_path.c_str())) {
-    files::ReplaceFile(files::FilePath(symlink_path), files::FilePath(log_path));
-  }
-  files::DeleteFile(files::FilePath(symlink_path), true);
-  if (symlink(log_path.c_str(), symlink_path.c_str()) == -1) {
-    PLOG(ERROR) << "Unable to create symlink " << symlink_path
-                << " pointing at " << log_path;
-  }
-}
-
-string GetTimeAsString(time_t utime) {
-  struct tm tm;
-  CHECK(localtime_r(&utime, &tm) == &tm);
-  char str[16];
-  CHECK(strftime(str, sizeof(str), "%Y%m%d-%H%M%S", &tm) == 15);
-  return str;
-}
-
-string SetupLogFile(const string& kLogsRoot) {
-  const string kLogSymlink = kLogsRoot + "/update_engine.log";
-  const string kLogsDir = kLogsRoot + "/update_engine";
-  const string kLogPath =
-      StringPrintf("%s/update_engine.%s",
-                   kLogsDir.c_str(),
-                   GetTimeAsString(::time(NULL)).c_str());
-  mkdir(kLogsDir.c_str(), 0755);
-  SetupLogSymlink(kLogSymlink, kLogPath);
-  return kLogSymlink;
-}
-
-void SetupLogging() {
-  // Log to stderr initially.
-  logging::InitLogging(NULL,
-                       logging::LOG_ONLY_TO_SYSTEM_DEBUG_LOG,
-                       logging::DONT_LOCK_LOG_FILE,
-                       logging::APPEND_TO_OLD_LOG_FILE,
-                       logging::DISABLE_DCHECK_FOR_NON_OFFICIAL_RELEASE_BUILDS);
-  if (FLAGS_logtostderr) {
-    return;
-  }
-  const string log_file = SetupLogFile("/var/log");
-  logging::InitLogging(log_file.c_str(),
-                       logging::LOG_ONLY_TO_FILE,
-                       logging::DONT_LOCK_LOG_FILE,
-                       logging::APPEND_TO_OLD_LOG_FILE,
-                       logging::DISABLE_DCHECK_FOR_NON_OFFICIAL_RELEASE_BUILDS);
-}
-
 }  // namespace {}
 }  // namespace chromeos_update_engine
 
@@ -145,8 +78,7 @@ int main(int argc, char** argv) {
   chromeos_update_engine::Terminator::Init();
   chromeos_update_engine::Subprocess::Init();
   GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
-  CommandLine::Init(argc, argv);
-  chromeos_update_engine::SetupLogging();
+  google::InitGoogleLogging(argv[0]);
   if (!FLAGS_foreground)
     PLOG_IF(FATAL, daemon(0, 0) == 1) << "daemon() failed";
 

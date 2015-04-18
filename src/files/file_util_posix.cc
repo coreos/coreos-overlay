@@ -17,7 +17,7 @@
 #include <unistd.h>
 
 #include "base/basictypes.h"
-#include "base/logging.h"
+#include <glog/logging.h>
 
 #include "files/file_enumerator.h"
 #include "files/file_path.h"

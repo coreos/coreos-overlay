@@ -6,7 +6,7 @@
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_EXTENT_WRITER_H__
 
 #include <vector>
-#include "base/logging.h"
+#include <glog/logging.h>
 #include "update_engine/update_metadata.pb.h"
 #include "update_engine/utils.h"
 

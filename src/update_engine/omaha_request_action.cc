@@ -10,7 +10,7 @@
 #include <sstream>
 #include <string>
 
-#include <base/logging.h>
+#include <glog/logging.h>
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
 

@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "base/logging.h"
+#include <glog/logging.h>
 
 namespace strings {
 

@@ -13,7 +13,7 @@
 #include <utility>
 #include <vector>
 
-#include <base/logging.h>
+#include <glog/logging.h>
 #include <gtest/gtest.h>
 
 #include "files/scoped_file.h"

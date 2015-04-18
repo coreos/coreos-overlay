@@ -7,7 +7,7 @@
 #include <endian.h>
 #include <string.h>
 
-#include <base/logging.h>
+#include <glog/logging.h>
 
 namespace chromeos_update_engine {
 

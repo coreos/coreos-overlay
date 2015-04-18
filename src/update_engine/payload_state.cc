@@ -6,7 +6,7 @@
 
 #include <algorithm>
 
-#include <base/logging.h>
+#include <glog/logging.h>
 
 #include "strings/string_printf.h"
 #include "update_engine/prefs.h"

@@ -4,8 +4,8 @@
 
 #include <string>
 #include <vector>
+#include <glog/logging.h>
 #include <gtest/gtest.h>
-#include "base/logging.h"
 #include "update_engine/payload_signer.h"
 #include "update_engine/update_metadata.pb.h"
 #include "update_engine/utils.h"

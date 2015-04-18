@@ -9,7 +9,7 @@
 #include <set>
 #include <string>
 #include <vector>
-#include "base/logging.h"
+#include <glog/logging.h>
 #include "update_engine/utils.h"
 
 using std::set;

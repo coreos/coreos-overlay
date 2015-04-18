@@ -76,6 +76,7 @@ PKG_CHECK_MODULES([DEPS],
                    libchrome-180609
                    libcrypto
                    libcurl
+                   libglog
                    libssl
                    libxml-2.0
                    protobuf])

@@ -18,8 +18,8 @@
 #include <utility>
 #include <vector>
 
-#include <base/logging.h>
 #include <bzlib.h>
+#include <glog/logging.h>
 
 #include "files/scoped_file.h"
 #include "strings/string_printf.h"

@@ -7,9 +7,9 @@
 
 // This class interfaces with DBus. The interface allows it to be mocked.
 
-#include <base/logging.h>
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus-glib-lowlevel.h>
+#include <glog/logging.h>
 
 #ifndef DBUS_TYPE_G_OBJECT_PATH_ARRAY
 #define DBUS_TYPE_G_OBJECT_PATH_ARRAY \

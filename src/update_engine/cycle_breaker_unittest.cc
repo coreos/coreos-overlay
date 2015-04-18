@@ -6,8 +6,8 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <glog/logging.h>
 #include <gtest/gtest.h>
-#include "base/logging.h"
 #include "update_engine/cycle_breaker.h"
 #include "update_engine/graph_types.h"
 #include "update_engine/utils.h"

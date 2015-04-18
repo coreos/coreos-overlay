@@ -11,8 +11,8 @@
 #include <utility>
 #include <vector>
 
-#include <base/logging.h>
 #include <glib.h>
+#include <glog/logging.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 

@@ -9,7 +9,7 @@
 #include <fnmatch.h>
 #include <string.h>
 
-#include "base/logging.h"
+#include <glog/logging.h>
 
 namespace files {
 

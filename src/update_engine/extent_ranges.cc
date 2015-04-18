@@ -8,7 +8,7 @@
 #include <utility>
 #include <vector>
 
-#include <base/logging.h>
+#include <glog/logging.h>
 
 using std::max;
 using std::min;

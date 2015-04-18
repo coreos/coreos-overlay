@@ -4,7 +4,7 @@
 
 #include "update_engine/install_plan.h"
 
-#include "base/logging.h"
+#include <glog/logging.h>
 
 #include "update_engine/utils.h"
 

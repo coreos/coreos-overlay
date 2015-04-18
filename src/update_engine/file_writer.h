@@ -9,7 +9,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "base/logging.h"
+#include <glog/logging.h>
 #include "update_engine/action_processor.h"
 #include "update_engine/utils.h"
 
