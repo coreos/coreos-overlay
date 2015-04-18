@@ -12,8 +12,7 @@ DESCRIPTION="VMware tools for distribution via /usr/share/oem"
 HOMEPAGE="http://open-vm-tools.sourceforge.net/"
 
 EGIT_REPO_URI="https://github.com/vmware/open-vm-tools"
-EGIT_BRANCH="stable-9.4.6-deploypkg"
-EGIT_COMMIT="a4d763b036c6b413f71a5841194a53858625a3cb"
+EGIT_COMMIT="0696234c3905bf91cfba2cf909dbf92fc30ee6fc"
 EGIT_SOURCEDIR="${WORKDIR}"
 
 LICENSE="LGPL-2"
@@ -35,14 +34,6 @@ RDEPEND="dnet? ( dev-libs/libdnet )
 	deploypkg? ( dev-libs/libmspack )"
 
 S="${WORKDIR}/${PN}"
-
-PATCHES=(
-	"${FILESDIR}/${P}-0001-configure-Add-options-for-fuse-and-hgfs.patch"
-	"${FILESDIR}/${P}-0002-configure-Fix-USE_SLASH_PROC-conditional.patch"
-	"${FILESDIR}/${P}-0003-scripts-network.patch"
-	"${FILESDIR}/${P}-0004-auth-Read-from-shadow.patch"
-	"${FILESDIR}/${P}-0005-define_USE_SLASH_PROC.patch"
-)
 
 #pkg_setup() {
 #	enewgroup vmware
@@ -99,6 +90,7 @@ src_configure() {
 		--without-kernel-modules
 		--without-pam
 		--without-x
+		--disable-vgauth
 		$(use_with dnet)
 		$(use_with pic)
 	)
