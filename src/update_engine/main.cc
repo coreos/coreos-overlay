@@ -144,7 +144,7 @@ int main(int argc, char** argv) {
   dbus_threads_init_default();
   chromeos_update_engine::Terminator::Init();
   chromeos_update_engine::Subprocess::Init();
-  google::ParseCommandLineFlags(&argc, &argv, true);
+  GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
   CommandLine::Init(argc, argv);
   chromeos_update_engine::SetupLogging();
   if (!FLAGS_foreground)
