@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 
-#include <base/at_exit.h>
 #include <base/command_line.h>
 #include <base/file_util.h>
 #include <base/logging.h>
@@ -143,7 +142,6 @@ void SetupLogging() {
 
 int main(int argc, char** argv) {
   dbus_threads_init_default();
-  base::AtExitManager exit_manager;  // Required for base/rand_util.h.
   chromeos_update_engine::Terminator::Init();
   chromeos_update_engine::Subprocess::Init();
   google::ParseCommandLineFlags(&argc, &argv, true);

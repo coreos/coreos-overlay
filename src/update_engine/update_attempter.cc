@@ -15,7 +15,6 @@
 #include <vector>
 
 #include <base/file_util.h>
-#include <base/rand_util.h>
 #include <glib.h>
 
 #include "update_engine/certificate_checker.h"

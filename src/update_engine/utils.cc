@@ -23,7 +23,6 @@
 #include <base/file_util.h>
 #include <base/logging.h>
 #include <base/posix/eintr_wrapper.h>
-#include <base/rand_util.h>
 #include <base/string_number_conversions.h>
 #include <base/string_util.h>
 #include <base/stringprintf.h>
@@ -646,10 +645,11 @@ int CompareCpuShares(CpuShares shares_lhs,
   return static_cast<int>(shares_lhs) - static_cast<int>(shares_rhs);
 }
 
-int FuzzInt(int value, unsigned int range) {
-  int min = value - range / 2;
-  int max = value + range - range / 2;
-  return base::RandInt(min, max);
+int32_t FuzzInt(int32_t value, uint32_t range) {
+  int32_t min = value - range / 2;
+  int32_t max = value + range - range / 2;
+  // int_range uses [begin..end-1]
+  return g_random_int_range(min, max+1);
 }
 
 gboolean GlibRunClosure(gpointer data) {
