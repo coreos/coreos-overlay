@@ -389,19 +389,6 @@ void UpdateAttempter::ActionCompleted(ActionProcessor* processor,
   }
 }
 
-// Stop updating. An attempt will be made to record status to the disk
-// so that updates can be resumed later.
-void UpdateAttempter::Terminate() {
-  // TODO(adlr): implement this method.
-  NOTIMPLEMENTED();
-}
-
-// Try to resume from a previously Terminate()d update.
-void UpdateAttempter::ResumeUpdating() {
-  // TODO(adlr): implement this method.
-  NOTIMPLEMENTED();
-}
-
 void UpdateAttempter::SetDownloadStatus(bool active) {
   download_active_ = active;
   LOG(INFO) << "Download status: " << (active ? "active" : "inactive");
