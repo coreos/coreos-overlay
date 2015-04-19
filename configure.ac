@@ -25,6 +25,7 @@ AS_IF([test "x${PROTOC}" = "x"],
       [AC_MSG_ERROR([*** protoc not found])])
 
 # Checks for libraries.
+AC_USE_SYSTEM_EXTENSIONS
 AC_SYS_LARGEFILE
 
 AC_CHECK_LIB([bz2], [BZ2_bzDecompressInit], [],
