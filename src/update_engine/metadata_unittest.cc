@@ -10,9 +10,9 @@
 #include <vector>
 
 #include <base/string_util.h>
-#include <base/stringprintf.h>
 #include <gtest/gtest.h>
 
+#include "strings/string_printf.h"
 #include "update_engine/graph_types.h"
 #include "update_engine/delta_diff_generator.h"
 #include "update_engine/metadata.h"
@@ -21,6 +21,7 @@
 
 using std::string;
 using std::vector;
+using strings::StringPrintf;
 
 namespace chromeos_update_engine {
 

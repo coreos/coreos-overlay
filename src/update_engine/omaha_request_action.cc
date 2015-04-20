@@ -12,11 +12,11 @@
 #include <base/logging.h>
 #include <base/string_number_conversions.h>
 #include <base/string_util.h>
-#include <base/stringprintf.h>
 #include <base/time.h>
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
 
+#include "strings/string_printf.h"
 #include "update_engine/action_pipe.h"
 #include "update_engine/omaha_request_params.h"
 #include "update_engine/payload_state_interface.h"
@@ -26,6 +26,7 @@
 using base::Time;
 using base::TimeDelta;
 using std::string;
+using strings::StringPrintf;
 
 namespace chromeos_update_engine {
 

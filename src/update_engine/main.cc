@@ -9,12 +9,12 @@
 #include <base/file_util.h>
 #include <base/logging.h>
 #include <base/string_util.h>
-#include <base/stringprintf.h>
 #include <gflags/gflags.h>
 #include <glib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include "strings/string_printf.h"
 #include "update_engine/certificate_checker.h"
 #include "update_engine/dbus_constants.h"
 #include "update_engine/dbus_interface.h"
@@ -37,6 +37,7 @@ DEFINE_bool(foreground, false,
 
 using std::string;
 using std::vector;
+using strings::StringPrintf;
 
 namespace chromeos_update_engine {
 

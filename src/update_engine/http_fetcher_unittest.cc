@@ -11,12 +11,12 @@
 #include <base/logging.h>
 #include <base/memory/scoped_ptr.h>
 #include <base/string_util.h>
-#include <base/stringprintf.h>
 #include <base/time.h>
 #include <glib.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include "strings/string_printf.h"
 #include "update_engine/http_common.h"
 #include "update_engine/http_fetcher_unittest.h"
 #include "update_engine/libcurl_http_fetcher.h"
@@ -30,6 +30,7 @@ using std::string;
 using std::vector;
 
 using base::TimeDelta;
+using strings::StringPrintf;
 using testing::_;
 using testing::SetArgumentPointee;
 using testing::DoAll;
@@ -50,7 +51,7 @@ namespace chromeos_update_engine {
 static const char *kUnusedUrl = "unused://unused";
 
 static inline string LocalServerUrlForPath(const string& path) {
-  return base::StringPrintf("http://127.0.0.1:%d%s", kServerPort, path.c_str());
+  return StringPrintf("http://127.0.0.1:%d%s", kServerPort, path.c_str());
 }
 
 //
@@ -220,8 +221,7 @@ class LibcurlHttpFetcherTest : public AnyHttpFetcherTest {
   }
 
   virtual string BigUrl() const {
-    return LocalServerUrlForPath(base::StringPrintf("/download/%d",
-                                                    kBigLength));
+    return LocalServerUrlForPath(StringPrintf("/download/%d", kBigLength));
   }
   virtual string SmallUrl() const {
     return LocalServerUrlForPath("/foo");
@@ -771,9 +771,9 @@ TYPED_TEST(HttpFetcherTest, SimpleRedirectTest) {
   ASSERT_TRUE(server->started_);
 
   for (size_t c = 0; c < arraysize(kRedirectCodes); ++c) {
-    const string url = base::StringPrintf("/redirect/%d/download/%d",
-                                          kRedirectCodes[c],
-                                          kMediumLength);
+    const string url = StringPrintf("/redirect/%d/download/%d",
+                                    kRedirectCodes[c],
+                                    kMediumLength);
     RedirectTest(true, url, this->test_.NewLargeFetcher());
   }
 }
@@ -787,10 +787,10 @@ TYPED_TEST(HttpFetcherTest, MaxRedirectTest) {
 
   string url;
   for (int r = 0; r < LibcurlHttpFetcher::kMaxRedirects; r++) {
-    url += base::StringPrintf("/redirect/%d",
-                              kRedirectCodes[r % arraysize(kRedirectCodes)]);
+    url += StringPrintf("/redirect/%d",
+                        kRedirectCodes[r % arraysize(kRedirectCodes)]);
   }
-  url += base::StringPrintf("/download/%d", kMediumLength);
+  url += StringPrintf("/download/%d", kMediumLength);
   RedirectTest(true, url, this->test_.NewLargeFetcher());
 }
 
@@ -803,10 +803,10 @@ TYPED_TEST(HttpFetcherTest, BeyondMaxRedirectTest) {
 
   string url;
   for (int r = 0; r < LibcurlHttpFetcher::kMaxRedirects + 1; r++) {
-    url += base::StringPrintf("/redirect/%d",
-                              kRedirectCodes[r % arraysize(kRedirectCodes)]);
+    url += StringPrintf("/redirect/%d",
+                        kRedirectCodes[r % arraysize(kRedirectCodes)]);
   }
-  url += base::StringPrintf("/download/%d", kMediumLength);
+  url += StringPrintf("/download/%d", kMediumLength);
   RedirectTest(false, url, this->test_.NewLargeFetcher());
 }
 
@@ -862,10 +862,10 @@ void MultiTest(HttpFetcher* fetcher_in,
              e = ranges.end(); it != e; ++it) {
       std::string tmp_str = StringPrintf("%jd+", it->first);
       if (it->second > 0) {
-        base::StringAppendF(&tmp_str, "%jd", it->second);
+        tmp_str += StringPrintf("%jd", it->second);
         multi_fetcher->AddRange(it->first, it->second);
       } else {
-        base::StringAppendF(&tmp_str, "?");
+        tmp_str += "?";
         multi_fetcher->AddRange(it->first);
       }
       LOG(INFO) << "added range: " << tmp_str;

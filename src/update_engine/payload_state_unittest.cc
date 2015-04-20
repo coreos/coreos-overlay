@@ -4,10 +4,10 @@
 
 #include <glib.h>
 
-#include "base/stringprintf.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
+#include "strings/string_printf.h"
 #include "update_engine/omaha_request_action.h"
 #include "update_engine/payload_state.h"
 #include "update_engine/prefs_mock.h"
@@ -17,6 +17,7 @@
 using base::Time;
 using base::TimeDelta;
 using std::string;
+using strings::StringPrintf;
 using testing::_;
 using testing::NiceMock;
 using testing::Return;

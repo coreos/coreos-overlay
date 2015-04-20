@@ -25,10 +25,10 @@
 #include <base/posix/eintr_wrapper.h>
 #include <base/string_number_conversions.h>
 #include <base/string_util.h>
-#include <base/stringprintf.h>
 #include <glib.h>
 #include <google/protobuf/stubs/common.h>
 
+#include "strings/string_printf.h"
 #include "update_engine/file_writer.h"
 #include "update_engine/omaha_request_params.h"
 #include "update_engine/subprocess.h"
@@ -40,6 +40,7 @@ using base::TimeDelta;
 using std::min;
 using std::string;
 using std::vector;
+using strings::StringPrintf;
 
 namespace chromeos_update_engine {
 
@@ -607,9 +608,9 @@ string GetAndFreeGError(GError** error) {
     return "Unknown GLib error.";
   }
   string message =
-      base::StringPrintf("GError(%d): %s",
-                         (*error)->code,
-                         (*error)->message ? (*error)->message : "(unknown)");
+      StringPrintf("GError(%d): %s",
+                   (*error)->code,
+                   (*error)->message ? (*error)->message : "(unknown)");
   g_error_free(*error);
   *error = NULL;
   return message;
@@ -678,21 +679,21 @@ string FormatTimeDelta(TimeDelta delta) {
   // Construct and return string.
   string str;
   if (days)
-    base::StringAppendF(&str, "%ud", days);
+    str += StringPrintf("%ud", days);
   if (days || hours)
-    base::StringAppendF(&str, "%uh", hours);
+    str += StringPrintf("%uh", hours);
   if (days || hours || mins)
-    base::StringAppendF(&str, "%um", mins);
-  base::StringAppendF(&str, "%u", secs);
+    str += StringPrintf("%um", mins);
+  str += StringPrintf("%u", secs);
   if (usecs) {
     int width = 6;
     while ((usecs / 10) * 10 == usecs) {
       usecs /= 10;
       width--;
     }
-    base::StringAppendF(&str, ".%0*u", width, usecs);
+    str += StringPrintf(".%0*u", width, usecs);
   }
-  base::StringAppendF(&str, "s");
+  str += "s";
   return str;
 }
 

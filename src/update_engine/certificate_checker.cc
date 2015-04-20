@@ -8,16 +8,17 @@
 
 #include <base/string_number_conversions.h>
 #include <base/string_util.h>
-#include <base/stringprintf.h>
 #include <base/logging.h>
 #include <curl/curl.h>
 #include <openssl/evp.h>
 #include <openssl/ssl.h>
 
+#include "strings/string_printf.h"
 #include "update_engine/prefs_interface.h"
 #include "update_engine/utils.h"
 
 using std::string;
+using strings::StringPrintf;
 
 namespace chromeos_update_engine {
 

@@ -10,15 +10,16 @@
 #include <vector>
 
 #include <base/string_util.h>
-#include <base/stringprintf.h>
 #include <gtest/gtest.h>
 
+#include "strings/string_printf.h"
 #include "update_engine/postinstall_runner_action.h"
 #include "update_engine/test_utils.h"
 #include "update_engine/utils.h"
 
 using std::string;
 using std::vector;
+using strings::StringPrintf;
 
 namespace chromeos_update_engine {
 

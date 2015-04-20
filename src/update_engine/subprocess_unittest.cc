@@ -10,11 +10,11 @@
 #include <vector>
 
 #include <base/string_util.h>
-#include <base/stringprintf.h>
 #include <base/time.h>
 #include <glib.h>
 #include <gtest/gtest.h>
 
+#include "strings/string_printf.h"
 #include "update_engine/subprocess.h"
 #include "update_engine/test_utils.h"
 #include "update_engine/utils.h"
@@ -22,6 +22,7 @@
 using base::TimeDelta;
 using std::string;
 using std::vector;
+using strings::StringPrintf;
 
 namespace chromeos_update_engine {
 

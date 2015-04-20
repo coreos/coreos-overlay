@@ -10,7 +10,8 @@
 #include <vector>
 #include <gtest/gtest.h>
 #include "base/string_util.h"
-#include <base/stringprintf.h>
+
+#include "strings/string_printf.h"
 #include "update_engine/filesystem_iterator.h"
 #include "update_engine/test_utils.h"
 #include "update_engine/utils.h"
@@ -18,6 +19,7 @@
 using std::set;
 using std::string;
 using std::vector;
+using strings::StringPrintf;
 
 namespace chromeos_update_engine {
 

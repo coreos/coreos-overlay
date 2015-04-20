@@ -10,8 +10,8 @@
 #include <tr1/memory>
 
 #include <base/string_util.h>
-#include <base/stringprintf.h>
 
+#include "strings/string_printf.h"
 #include "update_engine/bzip.h"
 #include "update_engine/utils.h"
 
@@ -21,6 +21,7 @@ using std::max;
 using std::string;
 using std::tr1::shared_ptr;
 using std::vector;
+using strings::StringPrintf;
 
 namespace chromeos_update_engine {
 

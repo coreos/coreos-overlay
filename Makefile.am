@@ -153,9 +153,8 @@ update_engine_unittests_SOURCES = \
 	src/update_engine/utils_unittest.cc \
 	src/update_engine/zip_unittest.cc
 
-test_http_server_SOURCES = \
-	src/update_engine/test_http_server.cc \
-	src/update_engine/http_common.cc
+test_http_server_LDADD = libupdate_engine.a $(LDADD)
+test_http_server_SOURCES = src/update_engine/test_http_server.cc
 
 EXTRA_DIST += src/update_engine/marshal.list
 BUILT_SOURCES += src/update_engine/marshal.glibmarshal.c \

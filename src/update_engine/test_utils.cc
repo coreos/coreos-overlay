@@ -16,8 +16,9 @@
 #include <vector>
 
 #include "base/string_util.h"
-#include <base/stringprintf.h>
 #include "base/logging.h"
+
+#include "strings/string_printf.h"
 #include "update_engine/file_writer.h"
 #include "update_engine/filesystem_iterator.h"
 #include "update_engine/utils.h"
@@ -25,6 +26,7 @@
 using std::set;
 using std::string;
 using std::vector;
+using strings::StringPrintf;
 
 namespace chromeos_update_engine {
 

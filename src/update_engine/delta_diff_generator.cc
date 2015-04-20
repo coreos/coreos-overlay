@@ -20,9 +20,9 @@
 #include <base/logging.h>
 #include <base/memory/scoped_ptr.h>
 #include <base/string_util.h>
-#include <base/stringprintf.h>
 #include <bzlib.h>
 
+#include "strings/string_printf.h"
 #include "update_engine/bzip.h"
 #include "update_engine/cycle_breaker.h"
 #include "update_engine/extent_mapper.h"
@@ -48,6 +48,7 @@ using std::pair;
 using std::set;
 using std::string;
 using std::vector;
+using strings::StringPrintf;
 
 namespace chromeos_update_engine {
 

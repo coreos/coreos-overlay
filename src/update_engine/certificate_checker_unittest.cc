@@ -5,10 +5,10 @@
 #include <string>
 
 #include <base/string_util.h>
-#include <base/stringprintf.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include "strings/string_printf.h"
 #include "update_engine/certificate_checker.h"
 #include "update_engine/certificate_checker_mock.h"
 #include "update_engine/mock_system_state.h"
@@ -20,6 +20,7 @@ using ::testing::Return;
 using ::testing::SetArgumentPointee;
 using ::testing::SetArrayArgument;
 using std::string;
+using strings::StringPrintf;
 
 namespace chromeos_update_engine {
 

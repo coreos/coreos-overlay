@@ -10,10 +10,10 @@
 
 #include <base/posix/eintr_wrapper.h>
 #include <base/string_util.h>
-#include <base/stringprintf.h>
 #include <glib.h>
 #include <gtest/gtest.h>
 
+#include "strings/string_printf.h"
 #include "update_engine/filesystem_copier_action.h"
 #include "update_engine/filesystem_iterator.h"
 #include "update_engine/omaha_hash_calculator.h"
@@ -23,6 +23,7 @@
 using std::set;
 using std::string;
 using std::vector;
+using strings::StringPrintf;
 
 namespace chromeos_update_engine {
 
