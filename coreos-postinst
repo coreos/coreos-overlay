@@ -23,43 +23,43 @@ case "${INSTALL_LABEL}" in
         exit 1
 esac
 
+# Find the ESP partition and mount it if needed
+ESP_PARTTYPE="c12a7328-f81f-11d2-ba4b-00a0c93ec93b"
+ESP_MNT=
+
+declare -a DEV_LIST
+mapfile DEV_LIST < <(lsblk -P -o NAME,PARTTYPE,MOUNTPOINT)
+
+for dev_info in "${DEV_LIST[@]}"; do
+    eval "$dev_info"
+
+    if [[ "${PARTTYPE}" != "${ESP_PARTTYPE}" ]]; then
+        continue
+    fi
+
+    if [[ -n "${MOUNTPOINT}" ]]; then
+        ESP_MNT="${MOUNTPOINT}"
+    else
+        ESP_MNT="$(mktemp -d /tmp/postinst_esp.XXXXXXXXXX)"
+        mount "/dev/${NAME}" "${ESP_MNT}"
+        trap "umount '${ESP_MNT}' && rmdir '${ESP_MNT}'" EXIT
+    fi
+
+    break
+done
+
+if [[ -z "${ESP_MNT}" ]]; then
+    echo "Failed to find ESP partition!" >&2
+    exit 1
+fi
+
+if [[ ! -d "${ESP_MNT}" ]]; then
+    echo "ESP partition mount point (${ESP_MNT}) is not a directory!" >&2
+    exit 1
+fi
+
 # Update bootloaders from CoreOS <= 522.x.x
 if grep -q cros_legacy /proc/cmdline; then
-    # Find the ESP partition and mount it if needed
-    ESP_PARTTYPE="c12a7328-f81f-11d2-ba4b-00a0c93ec93b"
-    ESP_MNT=
-
-    declare -a DEV_LIST
-    mapfile DEV_LIST < <(lsblk -P -o NAME,PARTTYPE,MOUNTPOINT)
-
-    for dev_info in "${DEV_LIST[@]}"; do
-        eval "$dev_info"
-
-        if [[ "${PARTTYPE}" != "${ESP_PARTTYPE}" ]]; then
-            continue
-        fi
-
-        if [[ -n "${MOUNTPOINT}" ]]; then
-            ESP_MNT="${MOUNTPOINT}"
-        else
-            ESP_MNT="$(mktemp -d /tmp/postinst_esp.XXXXXXXXXX)"
-            mount "/dev/${NAME}" "${ESP_MNT}"
-            trap "umount '${ESP_MNT}' && rmdir '${ESP_MNT}'" EXIT
-        fi
-
-        break
-    done
-
-    if [[ -z "${ESP_MNT}" ]]; then
-        echo "Failed to find ESP partition!" >&2
-        exit 1
-    fi
-
-    if [[ ! -d "${ESP_MNT}" ]]; then
-        echo "ESP partition mount point (${ESP_MNT}) is not a directory!" >&2
-        exit 1
-    fi
-
     # Update kernel and bootloader configs
     mkdir -p "${ESP_MNT}"{/syslinux,/boot/grub}
     cp -v "${INSTALL_MNT}/boot/vmlinuz" \
@@ -76,6 +76,13 @@ if grep -q cros_legacy /proc/cmdline; then
         cp -v "${INSTALL_MNT}/boot/syslinux/default.cfg.${SLOT}" \
             "${ESP_MNT}/syslinux/default.cfg"
     fi
+fi
+
+# Copy the kernel to the ESP for new-style boots
+if [[ -f "${ESP_MNT}/coreos/vmlinuz-a" ]]; then
+    # kernel names are in lower case, ${SLOT,,} converts the slot name
+    cp -v "${INSTALL_MNT}/boot/vmlinuz" \
+       "${ESP_MNT}/coreos/vmlinuz-${SLOT,,}"
 fi
 
 # If the OEM provides a hook, call it
