@@ -12,7 +12,7 @@ PYTHON_COMPAT=( python{2_6,2_7,3_2,3_3,3_4} )
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~x86"
 else
-	CROS_WORKON_COMMIT="4f35e110039dd408168fbf26d900f007b29eb0df"
+	CROS_WORKON_COMMIT="19c075a7ac80becf61bfff39541a9a04f5c3efde"
 	KEYWORDS="amd64 x86"
 fi
 
