@@ -16,7 +16,7 @@ coreos:
         - name: 10-oem.conf
           content: |
             [Service]
-            Environment=ETCD_PEER_ELECTION_TIMEOUT=1200
+            Environment=ETCD_ELECTION_TIMEOUT=1200
 
     - name: nova-agent-auto.service
       command: restart
