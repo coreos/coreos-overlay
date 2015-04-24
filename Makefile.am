@@ -59,7 +59,7 @@ update_engine_SOURCES = src/update_engine/main.cc \
 			src/update_engine/update_engine.dbusserver.h
 
 delta_generator_LDADD = libupdate_engine.a $(LDADD)
-delta_generator_SOURCES = generate_delta_main.cc
+delta_generator_SOURCES = src/update_engine/generate_delta_main.cc
 
 update_engine_client_LDADD = libupdate_engine.a $(LDADD)
 update_engine_client_SOURCES = src/update_engine/update_engine_client.cc \

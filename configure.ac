@@ -50,7 +50,8 @@ PKG_CHECK_MODULES([DEPS],
 
 AC_ARG_ENABLE([delta_generator],
               [AS_HELP_STRING([--enable-delta_generator],
-                              [build delta_generator])])
+                              [build delta_generator])],
+              [], [enable_delta_generator=yes])
 AM_CONDITIONAL([ENABLE_DELTA_GENERATOR],
                [test "x$enable_delta_generator" = "xyes"])
 
