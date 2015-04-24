@@ -24,7 +24,10 @@ ExecStart=/usr/libexec/sdnotify-proxy /run/flannel/sd.sock \
   /usr/bin/docker run --net=host --privileged=true --rm \
   --volume=/run/flannel:/run/flannel \
   --env=NOTIFY_SOCKET=/run/flannel/sd.sock \
+  --env=AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} \
+  --env=AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
   --env-file=/run/flannel/options.env \
+  --volume=/usr/share/ca-certificates:/etc/ssl/certs:ro \
   --volume=${ETCD_SSL_DIR}:/etc/ssl/etcd:ro \
   quay.io/coreos/flannel:${FLANNEL_VER} /opt/bin/flanneld --ip-masq=true
 
