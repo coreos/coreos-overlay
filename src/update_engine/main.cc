@@ -5,17 +5,16 @@
 #include <string>
 #include <vector>
 
-#include <base/at_exit.h>
 #include <base/command_line.h>
 #include <base/file_util.h>
 #include <base/logging.h>
 #include <base/string_util.h>
-#include <base/stringprintf.h>
 #include <gflags/gflags.h>
 #include <glib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include "strings/string_printf.h"
 #include "update_engine/certificate_checker.h"
 #include "update_engine/dbus_constants.h"
 #include "update_engine/dbus_interface.h"
@@ -38,6 +37,7 @@ DEFINE_bool(foreground, false,
 
 using std::string;
 using std::vector;
+using strings::StringPrintf;
 
 namespace chromeos_update_engine {
 
@@ -143,7 +143,6 @@ void SetupLogging() {
 
 int main(int argc, char** argv) {
   dbus_threads_init_default();
-  base::AtExitManager exit_manager;  // Required for base/rand_util.h.
   chromeos_update_engine::Terminator::Init();
   chromeos_update_engine::Subprocess::Init();
   google::ParseCommandLineFlags(&argc, &argv, true);

@@ -12,10 +12,10 @@
 #include <base/file_util.h>
 #include <base/memory/scoped_ptr.h>
 #include <base/string_util.h>
-#include <base/stringprintf.h>
 #include <google/protobuf/repeated_field.h>
 #include <gtest/gtest.h>
 
+#include "strings/string_printf.h"
 #include "update_engine/delta_diff_generator.h"
 #include "update_engine/delta_performer.h"
 #include "update_engine/extent_ranges.h"
@@ -33,6 +33,7 @@ namespace chromeos_update_engine {
 using std::min;
 using std::string;
 using std::vector;
+using strings::StringPrintf;
 using testing::_;
 using testing::Return;
 
@@ -251,7 +252,7 @@ static void GenerateDeltaFile(bool full_kernel,
   state->image_size = static_cast<int>(utils::FileSize(state->a_img));
 
   // Extend the "partitions" holding the file system a bit.
-  EXPECT_EQ(0, System(base::StringPrintf(
+  EXPECT_EQ(0, System(StringPrintf(
       "dd if=/dev/zero of=%s seek=%d bs=1 count=1",
       state->a_img.c_str(),
       state->image_size + 1024 * 1024 - 1)));
@@ -280,7 +281,7 @@ static void GenerateDeltaFile(bool full_kernel,
                                     FilePath(state->b_img)));
   } else {
     CreateExtImageAtPath(state->b_img, NULL);
-    EXPECT_EQ(0, System(base::StringPrintf(
+    EXPECT_EQ(0, System(StringPrintf(
         "dd if=/dev/zero of=%s seek=%d bs=1 count=1",
         state->b_img.c_str(),
         state->image_size + 1024 * 1024 - 1)));

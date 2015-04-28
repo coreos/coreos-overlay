@@ -7,7 +7,8 @@
 #include <set>
 #include <utility>
 #include "base/string_util.h"
-#include <base/stringprintf.h>
+
+#include "strings/string_printf.h"
 #include "update_engine/graph_utils.h"
 #include "update_engine/tarjan.h"
 #include "update_engine/utils.h"
@@ -15,6 +16,7 @@
 using std::make_pair;
 using std::set;
 using std::vector;
+using strings::StringPrintf;
 
 namespace chromeos_update_engine {
 

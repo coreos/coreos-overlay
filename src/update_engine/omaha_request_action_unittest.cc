@@ -8,10 +8,11 @@
 #include <glib.h>
 
 #include "base/string_util.h"
-#include <base/stringprintf.h>
 #include "base/time.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+
+#include "strings/string_printf.h"
 #include "update_engine/action_pipe.h"
 #include "update_engine/mock_http_fetcher.h"
 #include "update_engine/mock_system_state.h"
@@ -26,6 +27,7 @@ using base::Time;
 using base::TimeDelta;
 using std::string;
 using std::vector;
+using strings::StringPrintf;
 using testing::_;
 using testing::AllOf;
 using testing::DoAll;

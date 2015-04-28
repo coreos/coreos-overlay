@@ -177,7 +177,7 @@ void ScheduleCrashReporterUpload();
 
 // Fuzzes an integer |value| randomly in the range:
 // [value - range / 2, value + range - range / 2]
-int FuzzInt(int value, unsigned int range);
+int32_t FuzzInt(int32_t value, uint32_t range);
 
 // Log a string in hex to LOG(INFO). Useful for debugging.
 void HexDumpArray(const unsigned char* const arr, const size_t length);

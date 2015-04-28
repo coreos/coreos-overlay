@@ -7,11 +7,11 @@
 #include <vector>
 
 #include <base/string_util.h>
-#include <base/stringprintf.h>
 #include <et/com_err.h>
 #include <ext2fs/ext2_io.h>
 #include <ext2fs/ext2fs.h>
 
+#include "strings/string_printf.h"
 #include "update_engine/bzip.h"
 #include "update_engine/delta_diff_generator.h"
 #include "update_engine/extent_ranges.h"
@@ -22,6 +22,7 @@
 using std::min;
 using std::string;
 using std::vector;
+using strings::StringPrintf;
 
 namespace chromeos_update_engine {
 

@@ -5,6 +5,8 @@ AC_PREREQ([2.69])
 AC_INIT([update_engine],[0.1.0],[https://github.com/coreos/bugs/issues])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_SRCDIR([src/update_engine/main.cc])
+AC_USE_SYSTEM_EXTENSIONS
+AC_SYS_LARGEFILE
 
 AM_INIT_AUTOMAKE([foreign 1.13 -Wall -Wno-portability silent-rules serial-tests])
 AM_SILENT_RULES([yes])
@@ -25,8 +27,6 @@ AS_IF([test "x${PROTOC}" = "x"],
       [AC_MSG_ERROR([*** protoc not found])])
 
 # Checks for libraries.
-AC_SYS_LARGEFILE
-
 AC_CHECK_LIB([bz2], [BZ2_bzDecompressInit], [],
              [AC_MSG_ERROR([*** libbz2 not found])])
 AC_CHECK_HEADERS([bzlib.h], [],

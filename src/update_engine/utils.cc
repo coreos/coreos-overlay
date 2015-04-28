@@ -23,13 +23,12 @@
 #include <base/file_util.h>
 #include <base/logging.h>
 #include <base/posix/eintr_wrapper.h>
-#include <base/rand_util.h>
 #include <base/string_number_conversions.h>
 #include <base/string_util.h>
-#include <base/stringprintf.h>
 #include <glib.h>
 #include <google/protobuf/stubs/common.h>
 
+#include "strings/string_printf.h"
 #include "update_engine/file_writer.h"
 #include "update_engine/omaha_request_params.h"
 #include "update_engine/subprocess.h"
@@ -41,6 +40,7 @@ using base::TimeDelta;
 using std::min;
 using std::string;
 using std::vector;
+using strings::StringPrintf;
 
 namespace chromeos_update_engine {
 
@@ -608,9 +608,9 @@ string GetAndFreeGError(GError** error) {
     return "Unknown GLib error.";
   }
   string message =
-      base::StringPrintf("GError(%d): %s",
-                         (*error)->code,
-                         (*error)->message ? (*error)->message : "(unknown)");
+      StringPrintf("GError(%d): %s",
+                   (*error)->code,
+                   (*error)->message ? (*error)->message : "(unknown)");
   g_error_free(*error);
   *error = NULL;
   return message;
@@ -646,10 +646,11 @@ int CompareCpuShares(CpuShares shares_lhs,
   return static_cast<int>(shares_lhs) - static_cast<int>(shares_rhs);
 }
 
-int FuzzInt(int value, unsigned int range) {
-  int min = value - range / 2;
-  int max = value + range - range / 2;
-  return base::RandInt(min, max);
+int32_t FuzzInt(int32_t value, uint32_t range) {
+  int32_t min = value - range / 2;
+  int32_t max = value + range - range / 2;
+  // int_range uses [begin..end-1]
+  return g_random_int_range(min, max+1);
 }
 
 gboolean GlibRunClosure(gpointer data) {
@@ -678,21 +679,21 @@ string FormatTimeDelta(TimeDelta delta) {
   // Construct and return string.
   string str;
   if (days)
-    base::StringAppendF(&str, "%ud", days);
+    str += StringPrintf("%ud", days);
   if (days || hours)
-    base::StringAppendF(&str, "%uh", hours);
+    str += StringPrintf("%uh", hours);
   if (days || hours || mins)
-    base::StringAppendF(&str, "%um", mins);
-  base::StringAppendF(&str, "%u", secs);
+    str += StringPrintf("%um", mins);
+  str += StringPrintf("%u", secs);
   if (usecs) {
     int width = 6;
     while ((usecs / 10) * 10 == usecs) {
       usecs /= 10;
       width--;
     }
-    base::StringAppendF(&str, ".%0*u", width, usecs);
+    str += StringPrintf(".%0*u", width, usecs);
   }
-  base::StringAppendF(&str, "s");
+  str += "s";
   return str;
 }
 

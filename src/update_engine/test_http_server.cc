@@ -28,8 +28,8 @@
 #include <base/logging.h>
 #include <base/string_split.h>
 #include <base/string_util.h>
-#include <base/stringprintf.h>
 
+#include "strings/string_printf.h"
 #include "update_engine/http_common.h"
 #include "update_engine/http_fetcher_unittest.h"
 
@@ -40,6 +40,7 @@
 using std::min;
 using std::string;
 using std::vector;
+using strings::StringPrintf;
 
 
 namespace chromeos_update_engine {
@@ -103,10 +104,9 @@ bool ParseRequest(int fd, HttpRequest* request) {
       std::string tmp_str = StringPrintf("decoded range offsets: start=%jd "
                                          "end=", request->start_offset);
       if (request->end_offset > 0)
-        base::StringAppendF(&tmp_str, "%jd (non-inclusive)",
-                            request->end_offset);
+        tmp_str += StringPrintf("%jd (non-inclusive)", request->end_offset);
       else
-        base::StringAppendF(&tmp_str, "unspecified");
+        tmp_str += "unspecified";
       LOG(INFO) << tmp_str;
     } else if (terms[0] == "Host:") {
       CHECK_EQ(terms.size(), static_cast<vector<string>::size_type>(2));

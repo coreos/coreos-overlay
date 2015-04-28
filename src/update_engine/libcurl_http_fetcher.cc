@@ -9,8 +9,8 @@
 
 #include <base/logging.h>
 #include <base/string_util.h>
-#include <base/stringprintf.h>
 
+#include "strings/string_printf.h"
 #include "update_engine/certificate_checker.h"
 #include "update_engine/dbus_interface.h"
 #include "update_engine/utils.h"
@@ -19,6 +19,7 @@ using google::protobuf::NewCallback;
 using std::max;
 using std::make_pair;
 using std::string;
+using strings::StringPrintf;
 
 // This is a concrete implementation of HttpFetcher that uses libcurl to do the
 // http work.
@@ -71,8 +72,8 @@ void LibcurlHttpFetcher::ResumeTransfer(const std::string& url) {
     CHECK(!curl_http_headers_);
     if (post_content_type_ != kHttpContentTypeUnspecified) {
       const string content_type_attr =
-        base::StringPrintf("Content-Type: %s",
-                           GetHttpContentTypeString(post_content_type_));
+          StringPrintf("Content-Type: %s",
+                       GetHttpContentTypeString(post_content_type_));
       curl_http_headers_ = curl_slist_append(NULL, content_type_attr.c_str());
       CHECK(curl_http_headers_);
       CHECK_EQ(

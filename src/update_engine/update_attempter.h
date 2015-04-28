@@ -68,13 +68,6 @@ class UpdateAttempter : public ActionProcessorDelegate,
                        AbstractAction* action,
                        ActionExitCode code);
 
-  // Stop updating. An attempt will be made to record status to the disk
-  // so that updates can be resumed later.
-  void Terminate();
-
-  // Try to resume from a previously Terminate()d update.
-  void ResumeUpdating();
-
   // Resets the current state to UPDATE_STATUS_IDLE.
   // Used by update_engine_client for restarting a new update without
   // having to reboot once the previous update has reached

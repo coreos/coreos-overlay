@@ -9,11 +9,13 @@
 #include "base/basictypes.h"
 #include "base/file_util.h"
 #include "base/string_util.h"
-#include "base/stringprintf.h"
 #include "gtest/gtest.h"
+
+#include "strings/string_printf.h"
 #include "update_engine/prefs.h"
 
 using std::string;
+using strings::StringPrintf;
 
 namespace chromeos_update_engine {
 

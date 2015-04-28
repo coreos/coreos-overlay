@@ -15,7 +15,6 @@
 #include <vector>
 
 #include <base/file_util.h>
-#include <base/rand_util.h>
 #include <glib.h>
 
 #include "update_engine/certificate_checker.h"
@@ -388,19 +387,6 @@ void UpdateAttempter::ActionCompleted(ActionProcessor* processor,
   } else if (type == DownloadAction::StaticType()) {
     SetStatusAndNotify(UPDATE_STATUS_FINALIZING, kUpdateNoticeUnspecified);
   }
-}
-
-// Stop updating. An attempt will be made to record status to the disk
-// so that updates can be resumed later.
-void UpdateAttempter::Terminate() {
-  // TODO(adlr): implement this method.
-  NOTIMPLEMENTED();
-}
-
-// Try to resume from a previously Terminate()d update.
-void UpdateAttempter::ResumeUpdating() {
-  // TODO(adlr): implement this method.
-  NOTIMPLEMENTED();
 }
 
 void UpdateAttempter::SetDownloadStatus(bool active) {

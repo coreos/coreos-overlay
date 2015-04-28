@@ -2,10 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <base/stringprintf.h>
-
+#include "strings/string_printf.h"
 #include "update_engine/multi_range_http_fetcher.h"
 #include "update_engine/utils.h"
+
+using strings::StringPrintf;
 
 namespace chromeos_update_engine {
 
@@ -165,9 +166,9 @@ void MultiRangeHttpFetcher::Reset() {
 std::string MultiRangeHttpFetcher::Range::ToString() const {
   std::string range_str = StringPrintf("%jd+", offset());
   if (HasLength())
-    base::StringAppendF(&range_str, "%zu", length());
+    range_str += StringPrintf("%zu", length());
   else
-    base::StringAppendF(&range_str, "?");
+    range_str += "?";
   return range_str;
 }
 

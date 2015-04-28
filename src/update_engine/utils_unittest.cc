@@ -11,15 +11,16 @@
 #include <vector>
 
 #include <base/string_util.h>
-#include <base/stringprintf.h>
 #include <gtest/gtest.h>
 
+#include "strings/string_printf.h"
 #include "update_engine/test_utils.h"
 #include "update_engine/utils.h"
 
 using std::map;
 using std::string;
 using std::vector;
+using strings::StringPrintf;
 
 namespace chromeos_update_engine {
 
@@ -220,7 +221,7 @@ TEST(UtilsTest, RunAsRootGetFilesystemSizeTest) {
   ScopedPathUnlinker img_unlinker(img);
   CreateExtImageAtPath(img, NULL);
   // Extend the "partition" holding the file system from 10MiB to 20MiB.
-  EXPECT_EQ(0, System(base::StringPrintf(
+  EXPECT_EQ(0, System(StringPrintf(
       "dd if=/dev/zero of=%s seek=20971519 bs=1 count=1",
       img.c_str())));
   EXPECT_EQ(20 * 1024 * 1024, utils::FileSize(img));

@@ -14,9 +14,9 @@
 
 #include <base/memory/scoped_ptr.h>
 #include <base/string_util.h>
-#include <base/stringprintf.h>
 #include <google/protobuf/repeated_field.h>
 
+#include "strings/string_printf.h"
 #include "update_engine/bzip_extent_writer.h"
 #include "update_engine/delta_diff_generator.h"
 #include "update_engine/extent_ranges.h"
@@ -32,6 +32,7 @@ using std::min;
 using std::string;
 using std::vector;
 using google::protobuf::RepeatedPtrField;
+using strings::StringPrintf;
 
 namespace chromeos_update_engine {
 
