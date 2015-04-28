@@ -201,7 +201,10 @@ bool DeltaPerformer::OpenKernel(const char* kernel_path) {
 
 int DeltaPerformer::Close() {
   int err = 0;
-
+  if (close(kernel_fd_) == -1) {
+    err = errno;
+    PLOG(ERROR) << "Unable to close kernel fd:";
+  }
   if (close(fd_) == -1) {
     err = errno;
     PLOG(ERROR) << "Unable to close rootfs fd:";
@@ -461,10 +464,18 @@ bool DeltaPerformer::PerformReplaceOperation(
   // point to one of the ExtentWriter objects above.
   ExtentWriter* writer = NULL;
   if (operation.type() == DeltaArchiveManifest_InstallOperation_Type_REPLACE) {
-    writer = &zero_pad_writer;
+    if (is_kernel_partition) {
+      writer = &direct_writer;
+    } else {
+      writer = &zero_pad_writer;
+    }
   } else if (operation.type() ==
              DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ) {
-    bzip_writer.reset(new BzipExtentWriter(&zero_pad_writer));
+    if (is_kernel_partition) {
+      bzip_writer.reset(new BzipExtentWriter(&direct_writer));
+    } else {
+      bzip_writer.reset(new BzipExtentWriter(&zero_pad_writer));
+    }
     writer = bzip_writer.get();
   } else {
     NOTREACHED();
@@ -481,7 +492,6 @@ bool DeltaPerformer::PerformReplaceOperation(
   TEST_AND_RETURN_FALSE(writer->Init(fd, extents, block_size_));
   TEST_AND_RETURN_FALSE(writer->Write(&buffer_[0], operation.data_length()));
   TEST_AND_RETURN_FALSE(writer->End());
-
   // Update buffer
   buffer_offset_ += operation.data_length();
   DiscardBufferHeadBytes(operation.data_length());
@@ -829,20 +839,16 @@ bool DeltaPerformer::GetNewPartitionInfo(uint64_t* kernel_size,
                                          uint64_t* rootfs_size,
                                          vector<char>* rootfs_hash) {
   TEST_AND_RETURN_FALSE(manifest_valid_ &&
+                        manifest_.has_new_kernel_info() &&
                         manifest_.has_new_rootfs_info());
-
+  *kernel_size = manifest_.new_kernel_info().size();
   *rootfs_size = manifest_.new_rootfs_info().size();
+  vector<char> new_kernel_hash(manifest_.new_kernel_info().hash().begin(),
+                               manifest_.new_kernel_info().hash().end());
   vector<char> new_rootfs_hash(manifest_.new_rootfs_info().hash().begin(),
                                manifest_.new_rootfs_info().hash().end());
+  kernel_hash->swap(new_kernel_hash);
   rootfs_hash->swap(new_rootfs_hash);
-
-  if (manifest_.has_new_kernel_info()) {
-    *kernel_size = manifest_.new_kernel_info().size();
-    vector<char> new_kernel_hash(manifest_.new_kernel_info().hash().begin(),
-                               manifest_.new_kernel_info().hash().end());
-    kernel_hash->swap(new_kernel_hash);
-  }
-
   return true;
 }
 

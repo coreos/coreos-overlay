@@ -228,12 +228,11 @@ void ApplyMap(std::vector<ValueType>* collection,
 // or something with equivalent funcionality to interpret those.
 const std::string BootDevice();
 
-// Returns the currently booted kernel device, "dev/sda2", for example.
+// Returns the currently booted kernel name, "/boot/coreos/vmlinuz-a", for example.
 // Client must pass in the boot device. The suggested calling convention
 // is: BootKernelDevice(BootDevice()).
-// This function works by doing string modification on boot_device.
 // Returns empty string on failure.
-const std::string BootKernelDevice(const std::string& boot_device);
+const std::string BootKernelName(const std::string& boot_device);
 
 // Assumes data points to a Closure. Runs it and returns FALSE;
 gboolean GlibRunClosure(gpointer data);

@@ -83,7 +83,7 @@ void FilesystemCopierAction::PerformAction() {
   string source = verify_hash_ ? destination : copy_source_;
   if (source.empty()) {
     source = copying_kernel_install_path_ ?
-        utils::BootKernelDevice(utils::BootDevice()) :
+        utils::BootKernelName(utils::BootDevice()) :
         utils::BootDevice();
   }
   int src_fd = open(source.c_str(), O_RDONLY);

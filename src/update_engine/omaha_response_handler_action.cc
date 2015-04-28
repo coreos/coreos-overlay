@@ -63,7 +63,7 @@ void OmahaResponseHandlerAction::PerformAction() {
       (!boot_device_.empty() ? boot_device_ : utils::BootDevice()),
       &install_plan_.install_path));
   install_plan_.kernel_install_path =
-      utils::BootKernelDevice(install_plan_.install_path);
+      utils::BootKernelName(install_plan_.install_path);
 
   TEST_AND_RETURN(HasOutputPipe());
   if (HasOutputPipe())
@@ -91,8 +91,7 @@ bool OmahaResponseHandlerAction::GetInstallDev(const std::string& boot_dev,
   TEST_AND_RETURN_FALSE(utils::StringHasPrefix(boot_dev, "/dev/"));
   string ret(boot_dev);
   string::reverse_iterator it = ret.rbegin();  // last character in string
-  // Right now, we just switch '3' and '5' partition numbers.
-  // TODOBP: Make this read in the partition table and do it from there
+  // Right now, we just switch '3' and '4' partition numbers.
   TEST_AND_RETURN_FALSE((*it == '3') || (*it == '4'));
   *it = (*it == '3') ? '4' : '3';
   *install_dev = ret;

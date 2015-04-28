@@ -484,17 +484,15 @@ const std::string BootDevice() {
   return boot_path;
 }
 
-const string BootKernelDevice(const std::string& boot_device) {
-  // Currntly this assumes the last digit of the boot device is
-  // 3, 5, or 7, and changes it to 2, 4, or 6, respectively, to
-  // get the kernel device.
-  string ret = boot_device;
-  if (ret.empty())
-    return ret;
-  char last_char = ret[ret.size() - 1];
-  if (last_char == '3' || last_char == '5' || last_char == '7') {
-    ret[ret.size() - 1] = last_char - 1;
-    return ret;
+const string BootKernelName(const std::string& boot_device) {
+  // If the target fs is 3, the kernel name is vmlinuz-a.
+  // If the target fs is 4, the kernel name is vmlinuz-b.
+  char last_char = boot_device[boot_device.size() - 1];
+  if (last_char == '3') {
+    return "/boot/coreos/vmlinuz-a";
+  }
+  if (last_char == '4') {
+    return "/boot/coreos/vmlinuz-b";
   }
   return "";
 }

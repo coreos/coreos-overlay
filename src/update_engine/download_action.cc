@@ -60,7 +60,15 @@ void DownloadAction::PerformAction() {
     processor_->ActionComplete(this, kActionCodeInstallDeviceOpenError);
     return;
   }
-
+  if (delta_performer_.get() &&
+      !delta_performer_->OpenKernel(
+          install_plan_.kernel_install_path.c_str())) {
+    LOG(ERROR) << "Unable to open kernel file "
+               << install_plan_.kernel_install_path;
+    writer_->Close();
+    processor_->ActionComplete(this, kActionCodeKernelDeviceOpenError);
+    return;
+  }
   if (delegate_) {
     delegate_->SetDownloadStatus(true);  // Set to active.
   }
