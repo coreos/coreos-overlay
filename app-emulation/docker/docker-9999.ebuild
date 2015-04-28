@@ -24,7 +24,7 @@ inherit bash-completion-r1 linux-info multilib systemd udev user cros-workon
 
 LICENSE="Apache-2.0"
 SLOT="0"
-IUSE="aufs btrfs +contrib +device-mapper doc lxc overlay vim-syntax zsh-completion"
+IUSE="aufs +btrfs contrib +device-mapper doc lxc +overlay vim-syntax zsh-completion"
 
 # https://github.com/docker/docker/blob/master/hack/PACKAGERS.md#build-dependencies
 CDEPEND="
