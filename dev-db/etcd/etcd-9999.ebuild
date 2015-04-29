@@ -14,7 +14,7 @@ inherit coreos-doc coreos-go toolchain-funcs cros-workon systemd
 if [[ "${PV}" == 9999 ]]; then
     KEYWORDS="~amd64"
 else
-    CROS_WORKON_COMMIT="86e616c6e974828fc9119c1eb0f6439577a9ce0b" # v2.0.8
+    CROS_WORKON_COMMIT="fbaef0588533149aa5cdb5091a2053c2bc328575" # v2.0.10
     KEYWORDS="amd64"
 fi
 
@@ -26,7 +26,7 @@ LICENSE="Apache-2.0"
 SLOT="2"
 IUSE=""
 
-DEPEND=">=dev-lang/go-1.2"
+DEPEND=">=dev-lang/go-1.3"
 RDEPEND="!dev-db/etcd:0
 	!dev-db/etcdctl"
 
