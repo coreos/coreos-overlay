@@ -1,6 +1,6 @@
 #
 # Automatically generated file; DO NOT EDIT.
-# Linux/x86 4.0.0 Kernel Configuration
+# Linux/x86 4.0.1 Kernel Configuration
 #
 CONFIG_64BIT=y
 CONFIG_X86_64=y
@@ -1484,7 +1484,9 @@ CONFIG_SCSI_AACRAID=m
 # CONFIG_SCSI_AIC79XX is not set
 CONFIG_SCSI_AIC94XX=m
 # CONFIG_AIC94XX_DEBUG is not set
-# CONFIG_SCSI_MVSAS is not set
+CONFIG_SCSI_MVSAS=m
+# CONFIG_SCSI_MVSAS_DEBUG is not set
+CONFIG_SCSI_MVSAS_TASKLET=y
 # CONFIG_SCSI_MVUMI is not set
 # CONFIG_SCSI_DPT_I2O is not set
 # CONFIG_SCSI_ADVANSYS is not set
