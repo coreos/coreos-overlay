@@ -283,7 +283,8 @@ void FilesystemCopierAction::SpawnAsyncActions() {
       LOG(INFO) << "Hash: " << hasher_.hash();
       if (verify_hash_) {
         if (copying_kernel_install_path_) {
-          if (install_plan_.kernel_hash != hasher_.raw_hash()) {
+          if (install_plan_.kernel_size &&
+	      (install_plan_.kernel_hash != hasher_.raw_hash())) {
             code = kActionCodeNewKernelVerificationError;
             LOG(ERROR) << "New kernel verification failed.";
           }
