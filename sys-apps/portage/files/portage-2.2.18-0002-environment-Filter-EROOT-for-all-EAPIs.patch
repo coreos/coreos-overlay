@@ -1,7 +1,7 @@
 From f1ca1359c9cc2bd9e867305e1b07506d3d6722cc Mon Sep 17 00:00:00 2001
 From: Michael Marineau <mike@marineau.org>
 Date: Sun, 20 Jul 2014 20:27:43 -0700
-Subject: [PATCH 2/3] environment: Filter EROOT for all EAPIs
+Subject: [PATCH 2/4] environment: Filter EROOT for all EAPIs
 
 This variable is often defined in older EAPIs with "${EROOT:=$ROOT}"
 but it should never be preserved since ROOT may change. Bug #490014
