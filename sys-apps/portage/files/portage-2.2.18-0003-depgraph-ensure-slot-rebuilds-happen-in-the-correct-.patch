@@ -1,7 +1,7 @@
 From a4329f54504afedc0840d42faf5f15a158fdaada Mon Sep 17 00:00:00 2001
 From: Michael Marineau <mike@marineau.org>
 Date: Mon, 27 Apr 2015 18:33:11 -0700
-Subject: [PATCH 3/3] depgraph: ensure slot rebuilds happen in the correct root
+Subject: [PATCH 3/4] depgraph: ensure slot rebuilds happen in the correct root
 
 https://bugs.gentoo.org/show_bug.cgi?id=520112
 ---
