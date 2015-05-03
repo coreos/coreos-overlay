@@ -74,7 +74,7 @@ bool Prefs::GetInt64(const string& key, int64_t* value) {
 }
 
 bool Prefs::SetInt64(const string& key, const int64_t value) {
-  return SetString(key, base::Int64ToString(value));
+  return SetString(key, std::to_string(value));
 }
 
 bool Prefs::Exists(const string& key) {
