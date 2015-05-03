@@ -102,8 +102,6 @@ UpdateAttempter::UpdateAttempter(SystemState* system_state,
       update_check_scheduler_(NULL),
       fake_update_success_(false),
       http_response_code_(0),
-      shares_(utils::kCpuSharesNormal),
-      manage_shares_source_(NULL),
       download_active_(false),
       status_(UPDATE_STATUS_IDLE),
       download_progress_(0.0),
@@ -117,10 +115,6 @@ UpdateAttempter::UpdateAttempter(SystemState* system_state,
   omaha_request_params_ = system_state->request_params();
   if (utils::FileExists(kUpdateCompletedMarker))
     status_ = UPDATE_STATUS_UPDATED_NEED_REBOOT;
-}
-
-UpdateAttempter::~UpdateAttempter() {
-  CleanupCpuSharesManagement();
 }
 
 void UpdateAttempter::Update(bool interactive) {
@@ -281,9 +275,6 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
   LOG(INFO) << "Processing Done.";
   actions_.clear();
 
-  // Reset cpu shares back to normal.
-  CleanupCpuSharesManagement();
-
   if (status_ == UPDATE_STATUS_REPORTING_ERROR_EVENT) {
     LOG(INFO) << "Error event sent.";
 
@@ -319,8 +310,6 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
 }
 
 void UpdateAttempter::ProcessingStopped(const ActionProcessor* processor) {
-  // Reset cpu shares back to normal.
-  CleanupCpuSharesManagement();
   download_progress_ = 0.0;
   SetStatusAndNotify(UPDATE_STATUS_IDLE, kUpdateNoticeUnspecified);
   actions_.clear();
@@ -380,7 +369,6 @@ void UpdateAttempter::ActionCompleted(ActionProcessor* processor,
     new_version_ = "0.0.0.0";
     new_payload_size_ = plan.payload_size;
     SetupDownload();
-    SetupCpuSharesManagement();
     SetStatusAndNotify(UPDATE_STATUS_UPDATE_AVAILABLE,
                        kUpdateNoticeUnspecified);
   } else if (type == DownloadAction::StaticType()) {
@@ -597,43 +585,6 @@ bool UpdateAttempter::ScheduleErrorEventAction() {
   return true;
 }
 
-void UpdateAttempter::SetCpuShares(utils::CpuShares shares) {
-  if (shares_ == shares) {
-    return;
-  }
-  if (utils::SetCpuShares(shares)) {
-    shares_ = shares;
-    LOG(INFO) << "CPU shares = " << shares_;
-  }
-}
-
-void UpdateAttempter::SetupCpuSharesManagement() {
-  if (manage_shares_source_) {
-    LOG(ERROR) << "Cpu shares timeout source hasn't been destroyed.";
-    CleanupCpuSharesManagement();
-  }
-  const int kCpuSharesTimeout = 2 * 60 * 60;  // 2 hours
-  manage_shares_source_ = g_timeout_source_new_seconds(kCpuSharesTimeout);
-  g_source_set_callback(manage_shares_source_,
-                        StaticManageCpuSharesCallback,
-                        this,
-                        NULL);
-  g_source_attach(manage_shares_source_, NULL);
-  SetCpuShares(utils::kCpuSharesLow);
-}
-
-void UpdateAttempter::CleanupCpuSharesManagement() {
-  if (manage_shares_source_) {
-    g_source_destroy(manage_shares_source_);
-    manage_shares_source_ = NULL;
-  }
-  SetCpuShares(utils::kCpuSharesNormal);
-}
-
-gboolean UpdateAttempter::StaticManageCpuSharesCallback(gpointer data) {
-  return reinterpret_cast<UpdateAttempter*>(data)->ManageCpuSharesCallback();
-}
-
 gboolean UpdateAttempter::StaticStartProcessing(gpointer data) {
   reinterpret_cast<UpdateAttempter*>(data)->processor_->StartProcessing();
   return FALSE;  // Don't call this callback again.
@@ -643,12 +594,6 @@ void UpdateAttempter::ScheduleProcessingStart() {
   LOG(INFO) << "Scheduling an action processor start.";
   start_action_processor_ = false;
   g_idle_add(&StaticStartProcessing, this);
-}
-
-bool UpdateAttempter::ManageCpuSharesCallback() {
-  SetCpuShares(utils::kCpuSharesNormal);
-  manage_shares_source_ = NULL;
-  return false;  // Destroy the timeout source.
 }
 
 void UpdateAttempter::DisableDeltaUpdateIfNeeded() {

@@ -55,7 +55,7 @@ class UpdateAttempter : public ActionProcessorDelegate,
 
   UpdateAttempter(SystemState* system_state,
                   DbusGlibInterface* dbus_iface);
-  virtual ~UpdateAttempter();
+  virtual ~UpdateAttempter() = default;
 
   // Checks for update and, if a newer version is available, attempts to update
   // the system. Interactive should be true when called by the user (ie dbus).
@@ -164,23 +164,6 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // otherwise.
   bool ScheduleErrorEventAction();
 
-  // Sets the cpu shares to |shares| and updates |shares_| if the new
-  // |shares| is different than the current |shares_|, otherwise simply
-  // returns.
-  void SetCpuShares(utils::CpuShares shares);
-
-  // Sets the cpu shares to low and sets up timeout events to increase it.
-  void SetupCpuSharesManagement();
-
-  // Resets the cpu shares to normal and destroys any scheduled timeout
-  // sources.
-  void CleanupCpuSharesManagement();
-
-  // The cpu shares timeout source callback sets the current cpu shares to
-  // normal. Returns false so that GLib destroys the timeout source.
-  static gboolean StaticManageCpuSharesCallback(gpointer data);
-  bool ManageCpuSharesCallback();
-
   // Callback to start the action processor.
   static gboolean StaticStartProcessing(gpointer data);
 
@@ -251,12 +234,6 @@ class UpdateAttempter : public ActionProcessorDelegate,
 
   // HTTP server response code from the last HTTP request action.
   int http_response_code_;
-
-  // Current cpu shares.
-  utils::CpuShares shares_;
-
-  // The cpu shares management timeout source.
-  GSource* manage_shares_source_;
 
   // Set to true if an update download is active (and BytesReceived
   // will be called), set to false otherwise.

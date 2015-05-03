@@ -61,10 +61,6 @@ static const char kMachineId[] = "/etc/machine-id";
 static const char kDevImageMarker[] = "/root/.dev_mode";
 const char* const kStatefulPartition = "/media/state";
 
-// Cgroup container is created in update-engine's upstart script located at
-// /etc/init/update-engine.conf.
-static const char kCGroupDir[] = "/sys/fs/cgroup/cpu/update-engine";
-
 bool IsOfficialBuild() {
   return !file_util::PathExists(FilePath(kDevImageMarker));
 }
@@ -612,25 +608,6 @@ bool Reboot() {
   Subprocess::SynchronousExec(command, &rc, NULL);
   TEST_AND_RETURN_FALSE(rc == 0);
   return true;
-}
-
-bool SetCpuShares(CpuShares shares) {
-  string string_shares = base::IntToString(static_cast<int>(shares));
-  string cpu_shares_file = string(utils::kCGroupDir) + "/cpu.shares";
-  LOG(INFO) << "Setting cgroup cpu shares to  " << string_shares;
-  if(utils::WriteFile(cpu_shares_file.c_str(), string_shares.c_str(),
-                      string_shares.size())){
-    return true;
-  } else {
-    LOG(ERROR) << "Failed to change cgroup cpu shares to "<< string_shares
-               << " using " << cpu_shares_file;
-    return false;
-  }
-}
-
-int CompareCpuShares(CpuShares shares_lhs,
-                     CpuShares shares_rhs) {
-  return static_cast<int>(shares_lhs) - static_cast<int>(shares_rhs);
 }
 
 int32_t FuzzInt(int32_t value, uint32_t range) {
