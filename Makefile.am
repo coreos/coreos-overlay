@@ -64,6 +64,7 @@ update_engine_client_LDADD = libupdate_engine.a $(LDADD)
 update_engine_client_SOURCES = src/update_engine/update_engine_client.cc
 
 libupdate_engine_a_SOURCES = \
+	src/strings/string_number_conversions.cc \
 	src/strings/string_printf.cc \
 	src/update_engine/action_processor.cc \
 	src/update_engine/bzip.cc \
@@ -112,6 +113,7 @@ update_engine_unittests_LDADD = libupdate_engine.a \
 				-lgtest -lgmock $(LDADD)
 update_engine_unittests_SOURCES = \
 	src/update_engine/testrunner.cc \
+	src/strings/string_number_conversions_unittest.cc \
 	src/strings/string_printf_unittest.cc \
 	src/update_engine/action_pipe_unittest.cc \
 	src/update_engine/action_processor_unittest.cc \
