@@ -84,8 +84,10 @@ void PostinstallRunnerActionTest::DoTest(bool do_losetup, int err_code) {
   ASSERT_EQ(0, getuid()) << "Run me as root. Ideally don't run other tests "
                          << "as root, tho.";
 
-  const string mountpoint(string(utils::kStatefulPartition) +
-                          "/au_destination");
+  string mountpoint;
+  EXPECT_TRUE(utils::MakeTempDirectory("/tmp/PostinstallRunnerActionTest.XXXXXX",
+                                       &mountpoint));
+  ScopedDirRemover mountpoint_remover(mountpoint);
 
   string cwd;
   {

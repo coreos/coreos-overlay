@@ -59,7 +59,6 @@ namespace utils {
 static const char kBootId[] = "/proc/sys/kernel/random/boot_id";
 static const char kMachineId[] = "/etc/machine-id";
 static const char kDevImageMarker[] = "/root/.dev_mode";
-const char* const kStatefulPartition = "/media/state";
 
 bool IsOfficialBuild() {
   return !file_util::PathExists(FilePath(kDevImageMarker));

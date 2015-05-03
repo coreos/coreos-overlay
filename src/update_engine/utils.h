@@ -188,8 +188,6 @@ inline void HexDumpVector(const std::vector<char>& vect) {
   HexDumpArray(reinterpret_cast<const unsigned char*>(&vect[0]), vect.size());
 }
 
-extern const char* const kStatefulPartition;
-
 bool StringHasSuffix(const std::string& str, const std::string& suffix);
 bool StringHasPrefix(const std::string& str, const std::string& prefix);
 
