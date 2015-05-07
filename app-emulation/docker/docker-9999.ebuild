@@ -7,7 +7,8 @@ EAPI=5
 DESCRIPTION="Docker complements kernel namespacing with a high-level API which operates at the process level"
 HOMEPAGE="https://www.docker.com"
 
-CROS_WORKON_PROJECT="dotcloud/docker"
+CROS_WORKON_PROJECT="coreos/docker"
+#CROS_WORKON_PROJECT="dotcloud/docker"
 CROS_WORKON_LOCALNAME="docker"
 CROS_WORKON_REPO="git://github.com"
 
