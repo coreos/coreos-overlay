@@ -1,6 +1,6 @@
-# Copyright 1999-2013 Gentoo Foundation
+# Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-libs/ncurses/ncurses-5.9-r3.ebuild,v 1.3 2013/08/21 15:51:16 aballier Exp $
+# $Header: /var/cvsroot/gentoo-x86/sys-libs/ncurses/ncurses-5.9-r3.ebuild,v 1.17 2014/08/05 16:09:26 ottxor Exp $
 
 EAPI="4"
 inherit eutils flag-o-matic toolchain-funcs multilib-minimal
@@ -14,8 +14,8 @@ SRC_URI="mirror://gnu/ncurses/${MY_P}.tar.gz"
 
 LICENSE="MIT"
 SLOT="5"
-KEYWORDS="alpha amd64 arm hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
-IUSE="ada +cxx debug doc gpm minimal profile static-libs symlink-usr tinfo trace unicode"
+KEYWORDS="alpha amd64 arm arm64 hppa ia64 ~m68k ~mips ppc ppc64 s390 ~sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
+IUSE="ada +cxx debug doc gpm minimal profile static-libs tinfo trace unicode"
 
 DEPEND="gpm? ( sys-libs/gpm )"
 #	berkdb? ( sys-libs/db )"
@@ -33,16 +33,13 @@ PDEPEND="gpm? ( sys-libs/gpm[${MULTILIB_USEDEP}] )"
 S=${WORKDIR}/${MY_P}
 HOSTTIC_DIR=${WORKDIR}/${P}-host
 
-MINIMAL_TERMINFO=(ansi console dumb linux rxvt rxvt-256color rxvt-unicode \
-				  screen screen-16color screen-256color sun vt{52,100,102,200,220} \
-				  xterm xterm-color xterm-256color xterm-xfree86)
-
 src_prepare() {
 	[[ -n ${PV_SNAP} ]] && epatch "${WORKDIR}"/${MY_P}-${PV_SNAP}-patch.sh
 	epatch "${FILESDIR}"/${PN}-5.8-gfbsd.patch
 	epatch "${FILESDIR}"/${PN}-5.7-nongnu.patch
 	epatch "${FILESDIR}"/${PN}-5.9-rxvt-unicode-9.15.patch #192083 #383871
 	epatch "${FILESDIR}"/${PN}-5.9-fix-clang-build.patch #417763
+	epatch "${FILESDIR}"/${PN}-5.9-pkg-config.patch
 }
 
 src_configure() {
@@ -66,7 +63,7 @@ src_configure() {
 
 multilib_src_configure() {
 	do_configure narrowc
-	use unicode && do_configure widec --enable-widec --includedir=/usr/include/ncursesw
+	use unicode && do_configure widec --enable-widec --includedir="${EPREFIX}"/usr/include/ncursesw
 }
 
 do_configure() {
@@ -76,54 +73,59 @@ do_configure() {
 	cd "${BUILD_DIR}"-$1 || die
 	shift
 
-	# ncurses is dumb and doesn't install .pc files unless pkg-config
-	# is also installed.  Force the tests to go our way.  Note that it
-	# doesn't actually use pkg-config ... it just looks for set vars.
-	tc-export PKG_CONFIG
-	export PKG_CONFIG_LIBDIR="/usr/$(get_libdir)/pkgconfig"
+	local conf=(
+		# We need the basic terminfo files in /etc, bug #37026.  We will
+		# add '--with-terminfo-dirs' and then populate /etc/terminfo in
+		# src_install() ...
+		--with-terminfo-dirs="${EPREFIX}/etc/terminfo:${EPREFIX}/usr/share/terminfo"
 
-	# The chtype/mmask-t settings below are to retain ABI compat
-	# with ncurses-5.4 so dont change em !
-	local conf_abi="
-		--with-chtype=long \
-		--with-mmask-t=long \
-		--disable-ext-colors \
-		--disable-ext-mouse \
-		--without-pthread \
-		--without-reentrant \
-	"
-	# We need the basic terminfo files in /etc, bug #37026.  We will
-	# add '--with-terminfo-dirs' and then populate /etc/terminfo in
-	# src_install() ...
-#		$(use_with berkdb hashed-db)
-	econf \
-		--with-terminfo-dirs="/etc/terminfo:/usr/share/terminfo" \
-		--with-shared \
-		--without-hashed-db \
-		$(use_with ada) \
-		$(use_with cxx) \
-		$(use_with cxx cxx-binding) \
-		$(use_with debug) \
-		$(use_with profile) \
-		$(use_with gpm) \
-		$(multilib_is_native_abi || use_with gpm gpm libgpm.so.1) \
-		--disable-termcap \
-		--enable-symlinks \
-		--with-rcs-ids \
-		--with-manpage-format=normal \
-		--enable-const \
-		--enable-colorfgbg \
-		--enable-echo \
-		--enable-pc-files \
-		$(use_enable !ada warnings) \
-		$(use_with debug assertions) \
-		$(use_enable debug leaks) \
-		$(use_with debug expanded) \
-		$(use_with !debug macros) \
-		$(use_with trace) \
-		$(use_with tinfo termlib) \
-		${conf_abi} \
-		"$@"
+		# Disabled until #245417 is sorted out.
+		#$(use_with berkdb hashed-db)
+
+		# ncurses is dumb and doesn't install .pc files unless pkg-config
+		# is also installed.  Force the tests to go our way.  Note that it
+		# doesn't actually use pkg-config ... it just looks for set vars.
+		--enable-pc-files
+		--with-pkg-config="$(tc-getPKG_CONFIG)"
+		# This path is used to control where the .pc files are installed.
+		PKG_CONFIG_LIBDIR="${EPREFIX}/usr/$(get_libdir)/pkgconfig"
+
+		# Now the rest of the various standard flags.
+		--with-shared
+		--without-hashed-db
+		$(use_with ada)
+		$(use_with cxx)
+		$(use_with cxx cxx-binding)
+		$(use_with debug)
+		$(use_with profile)
+		$(use_with gpm)
+		$(multilib_is_native_abi || use_with gpm gpm libgpm.so.1)
+		--disable-termcap
+		--enable-symlinks
+		--with-rcs-ids
+		--with-manpage-format=normal
+		--enable-const
+		--enable-colorfgbg
+		--enable-echo
+		$(use_enable !ada warnings)
+		$(use_with debug assertions)
+		$(use_enable debug leaks)
+		$(use_with debug expanded)
+		$(use_with !debug macros)
+		$(use_with trace)
+		$(use_with tinfo termlib)
+
+		# The chtype/mmask-t settings below are to retain ABI compat
+		# with ncurses-5.4 so dont change em !
+		--with-chtype=long
+		--with-mmask-t=long
+		--disable-ext-colors
+		--disable-ext-mouse
+		--without-pthread
+		--without-reentrant
+	)
+
+	econf "${conf[@]}" "$@"
 }
 
 src_compile() {
@@ -181,42 +183,40 @@ multilib_src_install() {
 		$(usex unicode 'ncursesw' '') \
 		$(use tinfo && usex unicode 'tinfow' '') \
 		$(usev tinfo)
-	ln -sf libncurses.so "${D}"/usr/$(get_libdir)/libcurses.so || die
-	use static-libs || find "${D}"/usr/ -name '*.a' -a '!' -name '*curses++*.a' -delete
+	if ! tc-is-static-only ; then
+		ln -sf libncurses$(get_libname) "${ED}"/usr/$(get_libdir)/libcurses$(get_libname) || die
+	fi
+	use static-libs || find "${ED}"/usr/ -name '*.a' -a '!' -name '*curses++*.a' -delete
 
 	# Build fails to create this ...
 	dosym ../share/terminfo /usr/$(get_libdir)/terminfo
 }
 
 multilib_src_install_all() {
-	if ! use symlink-usr ; then
+#	if ! use berkdb ; then
 		# We need the basic terminfo files in /etc, bug #37026
 		einfo "Installing basic terminfo files in /etc..."
-		for x in "${MINIMAL_TERMINFO[@]}" ; do
-			local termfile=$(find "${D}"/usr/share/terminfo/ -name "${x}" 2>/dev/null)
+		for x in ansi console dumb linux rxvt rxvt-unicode screen sun vt{52,100,102,200,220} \
+				 xterm xterm-color xterm-xfree86
+		do
+			local termfile=$(find "${ED}"/usr/share/terminfo/ -name "${x}" 2>/dev/null)
 			local basedir=$(basename $(dirname "${termfile}"))
 
 			if [[ -n ${termfile} ]] ; then
 				dodir /etc/terminfo/${basedir}
-				mv ${termfile} "${D}"/etc/terminfo/${basedir}/
+				mv ${termfile} "${ED}"/etc/terminfo/${basedir}/
 				dosym ../../../../etc/terminfo/${basedir}/${x} \
 					/usr/share/terminfo/${basedir}/${x}
 			fi
 		done
+#	fi
 
-		echo "CONFIG_PROTECT_MASK=\"/etc/terminfo\"" > "${T}"/50ncurses
-		doenvd "${T}"/50ncurses
+	echo "CONFIG_PROTECT_MASK=\"/etc/terminfo\"" > "${T}"/50ncurses
+	doenvd "${T}"/50ncurses
 
-		use minimal && rm -r "${D}"/usr/share/terminfo*
-		# Because ncurses5-config --terminfo returns the directory we keep it
-		keepdir /usr/share/terminfo #245374
-	elif use minimal; then
-		# prune all files and symlinks not listed in MINIMAL_TERMINFO
-		find "${D}"/usr/share/terminfo ! -type d \
-			${MINIMAL_TERMINFO[@]/#/! -name } \
-			-delete || die
-		find "${D}"/usr/share/terminfo -type d -empty -delete || die
-	fi
+	use minimal && rm -r "${ED}"/usr/share/terminfo*
+	# Because ncurses5-config --terminfo returns the directory we keep it
+	keepdir /usr/share/terminfo #245374
 
 	cd "${S}"
 	dodoc ANNOUNCE MANIFEST NEWS README* TO-DO doc/*.doc
