@@ -45,7 +45,7 @@ TEST(ExtentMapperTest, RunAsRootSimpleTest) {
     for (uint64_t block = it->start_block();
          block < it->start_block() + it->num_blocks();
          block++) {
-      EXPECT_FALSE(utils::SetContainsKey(blocks, block));
+      EXPECT_FALSE(blocks.count(block));
       blocks.insert(block);
     }
   }

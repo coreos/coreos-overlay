@@ -68,9 +68,9 @@ void CycleBreaker::BreakCycles(const Graph& graph, set<Edge>* out_cut_edges) {
            jt != component_indexes.end(); ++jt) {
         // If there's a link from *it -> *jt in the graph,
         // add a subgraph_ edge
-        if (utils::MapContainsKey(subgraph_[*it].out_edges, *jt))
+        if (subgraph_[*it].out_edges.count(*jt))
           subgraph_[*it].subgraph_edges.insert(*jt);
-      }        
+      }
     }
 
     current_vertex_ = i;
@@ -131,7 +131,7 @@ bool CycleBreaker::StackContainsCutEdge() const {
   for (std::vector<Vertex::Index>::const_iterator it = ++stack_.begin(),
            e = stack_.end(); it != e; ++it) {
     Edge edge = make_pair(*(it - 1), *it);
-    if (utils::SetContainsKey(cut_edges_, edge)) {
+    if (cut_edges_.count(edge)) {
       return true;
     }
   }

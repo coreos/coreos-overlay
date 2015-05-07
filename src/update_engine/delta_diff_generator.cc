@@ -167,7 +167,7 @@ bool DeltaReadFiles(Graph* graph,
       continue;
 
     // Make sure we visit each inode only once.
-    if (utils::SetContainsKey(visited_inodes, fs_iter.GetStat().st_ino))
+    if (visited_inodes.count(fs_iter.GetStat().st_ino))
       continue;
     visited_inodes.insert(fs_iter.GetStat().st_ino);
     if (fs_iter.GetStat().st_size == 0)
@@ -189,8 +189,7 @@ bool DeltaReadFiles(Graph* graph,
     // We never diff symlinks (here, we check that src file is not a symlink).
     if (0 == lstat(src_path.c_str(), &src_stbuf) &&
         S_ISREG(src_stbuf.st_mode)) {
-      should_diff_from_source = !utils::SetContainsKey(visited_src_inodes,
-                                                       src_stbuf.st_ino);
+      should_diff_from_source = !visited_src_inodes.count(src_stbuf.st_ino);
       visited_src_inodes.insert(src_stbuf.st_ino);
     }
 
@@ -924,7 +923,7 @@ bool ConvertCutsToFull(
   vector<Vertex::Index> new_op_indexes;
   new_op_indexes.reserve(op_indexes->size());
   for (Vertex::Index vertex_index : *op_indexes) {
-    if (utils::SetContainsKey(deleted_nodes, vertex_index))
+    if (deleted_nodes.count(vertex_index))
       continue;
     new_op_indexes.push_back(vertex_index);
   }
