@@ -45,6 +45,7 @@ src_prepare() {
 	epatch "${FILESDIR}"/${PN}-${SLOT}-js-config-shebang.patch
 	epatch "${FILESDIR}"/${PN}-${SLOT}-ia64-mmap.patch
 	epatch "${FILESDIR}"/${PN}-17.0.0-fix-file-permissions.patch
+	epatch "${FILESDIR}"/${PN}-mfbt-Add-aarch64-to-double-conversion.patch
 	# Remove obsolete jsuword bug #506160
 	sed -i -e '/jsuword/d' "${BUILDDIR}"/jsval.h ||die "sed failed"
 	epatch_user
