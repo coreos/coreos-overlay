@@ -56,6 +56,7 @@ src_prepare() {
 }
 
 src_configure() {
+	local nspr_cflags nspr_libs
 	cd "${BUILDDIR}" || die
 
 	# Mozilla screws up the meaning of BUILD, HOST, and TARGET :(
@@ -67,8 +68,8 @@ src_configure() {
 		   HOST_AR="${BUILD_AR}" HOST_RANLIB="${BUILD_RANLIB}"
 
 	# Use pkg-config instead of nspr-config to use $SYSROOT
-	local nspr_cflags="$(${PKG_CONFIG} --cflags nspr)" || die
-	local nspr_libs="$(${PKG_CONFIG} --libs nspr)" || die
+	nspr_cflags="$(${PKG_CONFIG} --cflags nspr)" || die
+	nspr_libs="$(${PKG_CONFIG} --libs nspr)" || die
 
 	econf \
 		${myopts} \
