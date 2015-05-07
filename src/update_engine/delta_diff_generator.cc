@@ -614,29 +614,29 @@ bool InitializePartitionInfos(const string& old_kernel,
                               const string& new_kernel,
                               const string& old_rootfs,
                               const string& new_rootfs,
-                              DeltaArchiveManifest* manifest) {
+                              DeltaArchiveManifest& manifest) {
   if (!old_kernel.empty()) {
     TEST_AND_RETURN_FALSE(DeltaDiffGenerator::InitializePartitionInfo(
         true,
         old_kernel,
-        manifest->mutable_old_kernel_info()));
+        manifest.mutable_old_kernel_info()));
   }
   if (!new_kernel.empty()) {
     TEST_AND_RETURN_FALSE(DeltaDiffGenerator::InitializePartitionInfo(
         true,
         new_kernel,
-        manifest->mutable_new_kernel_info()));
+        manifest.mutable_new_kernel_info()));
   }
   if (!old_rootfs.empty()) {
     TEST_AND_RETURN_FALSE(DeltaDiffGenerator::InitializePartitionInfo(
         false,
         old_rootfs,
-        manifest->mutable_old_rootfs_info()));
+        manifest.mutable_old_rootfs_info()));
   }
   TEST_AND_RETURN_FALSE(DeltaDiffGenerator::InitializePartitionInfo(
       false,
       new_rootfs,
-      manifest->mutable_new_rootfs_info()));
+      manifest.mutable_new_rootfs_info()));
   return true;
 }
 
@@ -1040,9 +1040,9 @@ bool AssignBlockForAdjoiningCuts(
     // Fix the new node w/ the real blocks. Since the new node is just a
     // copy operation, we can replace all the dest extents w/ the real
     // blocks.
-    DeltaArchiveManifest_InstallOperation *op = &(*graph)[cut.new_vertex].op;
-    op->clear_dst_extents();
-    DeltaDiffGenerator::StoreExtents(real_extents, op->mutable_dst_extents());
+    DeltaArchiveManifest_InstallOperation& op = (*graph)[cut.new_vertex].op;
+    op.clear_dst_extents();
+    DeltaDiffGenerator::StoreExtents(real_extents, op.mutable_dst_extents());
   }
   return true;
 }
@@ -1488,14 +1488,14 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
     TEST_AND_RETURN_FALSE(
         PayloadSigner::SignatureBlobLength(vector<string>(1, private_key_path),
                                            &signature_blob_length));
-    AddSignatureOp(next_blob_offset, signature_blob_length, &manifest);
+    AddSignatureOp(next_blob_offset, signature_blob_length, manifest);
   }
 
   TEST_AND_RETURN_FALSE(InitializePartitionInfos(old_kernel_part,
                                                  new_kernel_part,
                                                  old_image,
                                                  new_image,
-                                                 &manifest));
+                                                 manifest));
 
   // Serialize protobuf
   string serialized_manifest;
@@ -1641,18 +1641,18 @@ bool DeltaDiffGenerator::AddInstallOpToBlocksVector(
 
 void DeltaDiffGenerator::AddSignatureOp(uint64_t signature_blob_offset,
                                         uint64_t signature_blob_length,
-                                        DeltaArchiveManifest* manifest) {
+                                        DeltaArchiveManifest& manifest) {
   LOG(INFO) << "Making room for signature in file";
-  manifest->set_signatures_offset(signature_blob_offset);
-  LOG(INFO) << "set? " << manifest->has_signatures_offset();
+  manifest.set_signatures_offset(signature_blob_offset);
+  LOG(INFO) << "set? " << manifest.has_signatures_offset();
   // Add a dummy op at the end to appease older clients
   DeltaArchiveManifest_InstallOperation* dummy_op =
-      manifest->add_kernel_install_operations();
+      manifest.add_kernel_install_operations();
   dummy_op->set_type(DeltaArchiveManifest_InstallOperation_Type_REPLACE);
   dummy_op->set_data_offset(signature_blob_offset);
-  manifest->set_signatures_offset(signature_blob_offset);
+  manifest.set_signatures_offset(signature_blob_offset);
   dummy_op->set_data_length(signature_blob_length);
-  manifest->set_signatures_size(signature_blob_length);
+  manifest.set_signatures_size(signature_blob_length);
   Extent* dummy_extent = dummy_op->add_dst_extents();
   // Tell the dummy op to write this data to a big sparse hole
   dummy_extent->set_start_block(kSparseHole);

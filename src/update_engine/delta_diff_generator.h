@@ -248,7 +248,7 @@ class DeltaDiffGenerator {
   // located at the specified offset/length.
   static void AddSignatureOp(uint64_t signature_blob_offset,
                              uint64_t signature_blob_length,
-                             DeltaArchiveManifest* manifest);
+                             DeltaArchiveManifest& manifest);
 
  private:
  // This should never be constructed

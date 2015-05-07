@@ -125,7 +125,7 @@ bool AddSignatureOpToPayload(const string& payload_path,
   // Updates the manifest to include the signature operation.
   DeltaDiffGenerator::AddSignatureOp(payload.size() - metadata_size,
                                      signature_blob_size,
-                                     &manifest);
+                                     manifest);
 
   // Updates the payload to include the new manifest.
   string serialized_manifest;
