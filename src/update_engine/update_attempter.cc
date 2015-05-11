@@ -11,7 +11,7 @@
 #include <time.h>
 
 #include <string>
-#include <tr1/memory>
+#include <memory>
 #include <vector>
 
 #include <base/file_util.h>
@@ -37,7 +37,7 @@ using base::TimeDelta;
 using base::TimeTicks;
 using google::protobuf::NewPermanentCallback;
 using std::make_pair;
-using std::tr1::shared_ptr;
+using std::shared_ptr;
 using std::set;
 using std::string;
 using std::vector;
@@ -232,9 +232,8 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
   actions_.push_back(shared_ptr<AbstractAction>(update_complete_action));
 
   // Enqueue the actions
-  for (vector<shared_ptr<AbstractAction> >::iterator it = actions_.begin();
-       it != actions_.end(); ++it) {
-    processor_->EnqueueAction(it->get());
+  for (const shared_ptr<AbstractAction>& action : actions_) {
+    processor_->EnqueueAction(action.get());
   }
 
   // Bond them together. We have to use the leaf-types when calling

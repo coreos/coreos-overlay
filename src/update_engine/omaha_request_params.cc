@@ -75,7 +75,7 @@ string OmahaRequestParams::SearchConfValue(const vector<string>& files,
       continue;
 
     map<string, string> data = simple_key_value_store::ParseString(file_data);
-    if (utils::MapContainsKey(data, key)) {
+    if (data.count(key)) {
       const string& value = data[key];
       return value;
     }

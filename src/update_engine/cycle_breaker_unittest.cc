@@ -68,14 +68,14 @@ TEST(CycleBreakerTest, SimpleTest) {
   // C->D->E
   // G->H
 
-  EXPECT_TRUE(utils::SetContainsKey(broken_edges, make_pair(n_a, n_e)) ||
-              utils::SetContainsKey(broken_edges, make_pair(n_e, n_b)) ||
-              utils::SetContainsKey(broken_edges, make_pair(n_b, n_a)));
-  EXPECT_TRUE(utils::SetContainsKey(broken_edges, make_pair(n_c, n_d)) ||
-              utils::SetContainsKey(broken_edges, make_pair(n_d, n_e)) ||
-              utils::SetContainsKey(broken_edges, make_pair(n_e, n_c)));
-  EXPECT_TRUE(utils::SetContainsKey(broken_edges, make_pair(n_g, n_h)) ||
-              utils::SetContainsKey(broken_edges, make_pair(n_h, n_g)));
+  EXPECT_TRUE(broken_edges.count(make_pair(n_a, n_e)) ||
+              broken_edges.count(make_pair(n_e, n_b)) ||
+              broken_edges.count(make_pair(n_b, n_a)));
+  EXPECT_TRUE(broken_edges.count(make_pair(n_c, n_d)) ||
+              broken_edges.count(make_pair(n_d, n_e)) ||
+              broken_edges.count(make_pair(n_e, n_c)));
+  EXPECT_TRUE(broken_edges.count(make_pair(n_g, n_h)) ||
+              broken_edges.count(make_pair(n_h, n_g)));
   EXPECT_EQ(3, broken_edges.size());
 }
 
@@ -203,11 +203,11 @@ TEST(CycleBreakerTest, WeightTest) {
   breaker.BreakCycles(graph, &broken_edges);
 
   // These are required to be broken:
-  EXPECT_TRUE(utils::SetContainsKey(broken_edges, make_pair(n_b, n_a)));
-  EXPECT_TRUE(utils::SetContainsKey(broken_edges, make_pair(n_b, n_c)));
-  EXPECT_TRUE(utils::SetContainsKey(broken_edges, make_pair(n_d, n_e)));
-  EXPECT_TRUE(utils::SetContainsKey(broken_edges, make_pair(n_f, n_g)));
-  EXPECT_TRUE(utils::SetContainsKey(broken_edges, make_pair(n_h, n_i)));
+  EXPECT_TRUE(broken_edges.count(make_pair(n_b, n_a)));
+  EXPECT_TRUE(broken_edges.count(make_pair(n_b, n_c)));
+  EXPECT_TRUE(broken_edges.count(make_pair(n_d, n_e)));
+  EXPECT_TRUE(broken_edges.count(make_pair(n_f, n_g)));
+  EXPECT_TRUE(broken_edges.count(make_pair(n_h, n_i)));
 }
 
 TEST(CycleBreakerTest, UnblockGraphTest) {
@@ -234,8 +234,8 @@ TEST(CycleBreakerTest, UnblockGraphTest) {
   breaker.BreakCycles(graph, &broken_edges);
 
   // These are required to be broken:
-  EXPECT_TRUE(utils::SetContainsKey(broken_edges, make_pair(n_a, n_b)));
-  EXPECT_TRUE(utils::SetContainsKey(broken_edges, make_pair(n_a, n_c)));
+  EXPECT_TRUE(broken_edges.count(make_pair(n_a, n_b)));
+  EXPECT_TRUE(broken_edges.count(make_pair(n_a, n_c)));
 }
 
 TEST(CycleBreakerTest, SkipOpsTest) {

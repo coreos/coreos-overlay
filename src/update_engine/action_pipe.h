@@ -6,12 +6,14 @@
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_PIPE_H__
 
 #include <stdio.h>
+
 #include <iostream>
 #include <map>
+#include <memory>
 #include <string>
-#include <tr1/memory>
-#include "base/basictypes.h"
-#include "base/logging.h"
+
+#include <base/basictypes.h>
+#include <base/logging.h>
 
 // The structure of these classes (Action, ActionPipe, ActionProcessor, etc.)
 // is based on the KSAction* classes from the Google Update Engine code at
@@ -56,7 +58,7 @@ class ActionPipe {
   // when the last Action is destroyed.
   template<typename FromAction, typename ToAction>
   static void Bond(FromAction* from, ToAction* to) {
-    std::tr1::shared_ptr<ActionPipe<ObjectType> > pipe(
+    std::shared_ptr<ActionPipe<ObjectType> > pipe(
         new ActionPipe<ObjectType>);
     from->set_out_pipe(pipe);
 

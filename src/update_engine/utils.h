@@ -193,22 +193,6 @@ extern const char* const kStatefulPartition;
 bool StringHasSuffix(const std::string& str, const std::string& suffix);
 bool StringHasPrefix(const std::string& str, const std::string& prefix);
 
-template<typename KeyType, typename ValueType>
-bool MapContainsKey(const std::map<KeyType, ValueType>& m, const KeyType& k) {
-  return m.find(k) != m.end();
-}
-template<typename KeyType>
-bool SetContainsKey(const std::set<KeyType>& s, const KeyType& k) {
-  return s.find(k) != s.end();
-}
-
-template<typename ValueType>
-std::set<ValueType> SetWithValue(const ValueType& value) {
-  std::set<ValueType> ret;
-  ret.insert(value);
-  return ret;
-}
-
 template<typename T>
 bool VectorContainsValue(const std::vector<T>& vect, const T& value) {
   return std::find(vect.begin(), vect.end(), value) != vect.end();

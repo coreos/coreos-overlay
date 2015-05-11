@@ -6,8 +6,8 @@
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_SUBPROCESS_H__
 
 #include <map>
+#include <memory>
 #include <string>
-#include <tr1/memory>
 #include <vector>
 
 #include <glib.h>
@@ -97,7 +97,7 @@ class Subprocess {
 
   // A map from the asynchronous subprocess tag (see Exec) to the subprocess
   // record structure for all active asynchronous subprocesses.
-  std::map<int, std::tr1::shared_ptr<SubprocessRecord> > subprocess_records_;
+  std::map<int, std::shared_ptr<SubprocessRecord> > subprocess_records_;
 
   DISALLOW_COPY_AND_ASSIGN(Subprocess);
 };

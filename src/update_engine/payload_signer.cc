@@ -85,9 +85,7 @@ bool ConvertSignatureToProtobufBlob(const vector<vector<char> >& signatures,
   // Pack it into a protobuf
   Signatures out_message;
   uint32_t version = kSignatureMessageCurrentVersion + 1 - signatures.size();
-  for (vector<vector<char> >::const_iterator it = signatures.begin(),
-           e = signatures.end(); it != e; ++it) {
-    const vector<char>& signature = *it;
+  for (const vector<char>& signature : signatures) {
     Signatures_Signature* sig_message = out_message.add_signatures();
     sig_message->set_version(version++);
     sig_message->set_data(signature.data(), signature.size());
@@ -127,7 +125,7 @@ bool AddSignatureOpToPayload(const string& payload_path,
   // Updates the manifest to include the signature operation.
   DeltaDiffGenerator::AddSignatureOp(payload.size() - metadata_size,
                                      signature_blob_size,
-                                     &manifest);
+                                     manifest);
 
   // Updates the payload to include the new manifest.
   string serialized_manifest;
@@ -218,10 +216,9 @@ bool PayloadSigner::SignPayload(const string& unsigned_payload_path,
                         utils::FileSize(unsigned_payload_path));
 
   vector<vector<char> > signatures;
-  for (vector<string>::const_iterator it = private_key_paths.begin(),
-           e = private_key_paths.end(); it != e; ++it) {
+  for (const string& path : private_key_paths) {
     vector<char> signature;
-    TEST_AND_RETURN_FALSE(SignHash(hash_data, *it, &signature));
+    TEST_AND_RETURN_FALSE(SignHash(hash_data, path, &signature));
     signatures.push_back(signature);
   }
   TEST_AND_RETURN_FALSE(ConvertSignatureToProtobufBlob(signatures,
@@ -364,10 +361,8 @@ bool PayloadSigner::HashPayloadForSigning(const string& payload_path,
 
   // Loads the payload and adds the signature op to it.
   vector<vector<char> > signatures;
-  for (vector<int>::const_iterator it = signature_sizes.begin(),
-           e = signature_sizes.end(); it != e; ++it) {
-    vector<char> signature(*it, 0);
-    signatures.push_back(signature);
+  for (int signature_size : signature_sizes) {
+    signatures.emplace_back(signature_size, 0);
   }
   vector<char> signature_blob;
   TEST_AND_RETURN_FALSE(ConvertSignatureToProtobufBlob(signatures,

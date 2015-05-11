@@ -18,8 +18,8 @@
 #include "strings/string_printf.h"
 #include "update_engine/utils.h"
 
+using std::shared_ptr;
 using std::string;
-using std::tr1::shared_ptr;
 using std::vector;
 using strings::StringPrintf;
 

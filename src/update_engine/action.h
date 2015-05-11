@@ -6,12 +6,15 @@
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_ACTION_H__
 
 #include <stdio.h>
-#include <tr1/memory>
+
 #include <iostream>
-#include "base/basictypes.h"
-#include "base/logging.h"
-#include "update_engine/action_processor.h"
+#include <memory>
+
+#include <base/basictypes.h>
+#include <base/logging.h>
+
 #include "update_engine/action_pipe.h"
+#include "update_engine/action_processor.h"
 
 // The structure of these classes (Action, ActionPipe, ActionProcessor, etc.)
 // is based on the KSAction* classes from the Google Update Engine code at
@@ -134,7 +137,7 @@ class Action : public AbstractAction {
   void set_in_pipe(
       // this type is a fancy way of saying: a shared_ptr to an
       // ActionPipe<InputObjectType>.
-      const std::tr1::shared_ptr<ActionPipe<
+      const std::shared_ptr<ActionPipe<
           typename ActionTraits<SubClass>::InputObjectType> >&
           in_pipe) {
     in_pipe_ = in_pipe;
@@ -147,7 +150,7 @@ class Action : public AbstractAction {
   void set_out_pipe(
       // this type is a fancy way of saying: a shared_ptr to an
       // ActionPipe<OutputObjectType>.
-      const std::tr1::shared_ptr<ActionPipe<
+      const std::shared_ptr<ActionPipe<
           typename ActionTraits<SubClass>::OutputObjectType> >&
           out_pipe) {
     out_pipe_ = out_pipe;
@@ -190,10 +193,10 @@ class Action : public AbstractAction {
   // point to when the last such shared_ptr object dies. We consider the
   // Actions on either end of a pipe to "own" the pipe. When the last Action
   // of the two dies, the ActionPipe will die, too.
-  std::tr1::shared_ptr<
+  std::shared_ptr<
       ActionPipe<typename ActionTraits<SubClass>::InputObjectType> >
       in_pipe_;
-  std::tr1::shared_ptr<
+  std::shared_ptr<
       ActionPipe<typename ActionTraits<SubClass>::OutputObjectType> >
       out_pipe_;
 };

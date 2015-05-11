@@ -85,12 +85,11 @@ void ParseSignatureSizes(vector<int>* sizes) {
       << "Must pass --signature_size to calculate hash for signing.";
   vector<string> strsizes;
   base::SplitString(FLAGS_signature_size, ':', &strsizes);
-  for (vector<string>::iterator it = strsizes.begin(), e = strsizes.end();
-       it != e; ++it) {
+  for (const string& str : strsizes) {
     int size = 0;
-    bool parsing_successful = base::StringToInt(*it, &size);
+    bool parsing_successful = base::StringToInt(str, &size);
     LOG_IF(FATAL, !parsing_successful)
-        << "Invalid signature size: " << *it;
+        << "Invalid signature size: " << str;
     sizes->push_back(size);
   }
 }

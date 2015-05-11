@@ -7,7 +7,7 @@
 
 #include <time.h>
 
-#include <tr1/memory>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -218,7 +218,7 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // set back in the middle of an update.
   base::TimeTicks last_notify_time_;
 
-  std::vector<std::tr1::shared_ptr<AbstractAction> > actions_;
+  std::vector<std::shared_ptr<AbstractAction> > actions_;
   scoped_ptr<ActionProcessor> processor_;
 
   // External state of the system outside the update_engine process
@@ -230,10 +230,10 @@ class UpdateAttempter : public ActionProcessorDelegate,
   UpdateEngineService* dbus_service_;
 
   // Pointer to the OmahaResponseHandlerAction in the actions_ vector.
-  std::tr1::shared_ptr<OmahaResponseHandlerAction> response_handler_action_;
+  std::shared_ptr<OmahaResponseHandlerAction> response_handler_action_;
 
   // Pointer to the DownloadAction in the actions_ vector.
-  std::tr1::shared_ptr<DownloadAction> download_action_;
+  std::shared_ptr<DownloadAction> download_action_;
 
   // Pointer to the preferences store interface. This is just a cached
   // copy of system_state->prefs() because it's used in many methods and
