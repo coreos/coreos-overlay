@@ -1,0 +1,16 @@
+[Unit]
+Description=Ignition
+Requires=initrd-fs.target
+After=initrd-fs.target
+ConditionPathExists=/etc/initrd-release
+ConditionPathExists=!/sysroot/etc/machine-id
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+Environment=OEM_NAME=pxe
+EnvironmentFile=-/usr/share/oem/environment
+ExecStart=/usr/bin/ignition --root=/sysroot --oem=${OEM_NAME} --stage=%i
+
+[Install]
+WantedBy=initrd.target
