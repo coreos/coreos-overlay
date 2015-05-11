@@ -18,6 +18,10 @@ namespace {
 const char kPostinstallScript[] = "/postinst";
 }
 
+PostinstallRunnerAction::PostinstallRunnerAction(
+    std::string app_id)
+    : app_id_(std::move(app_id)) {}
+
 void PostinstallRunnerAction::PerformAction() {
   CHECK(HasInputObject());
   const InstallPlan install_plan = GetInputObject();
@@ -57,6 +61,7 @@ void PostinstallRunnerAction::PerformAction() {
   vector<string> command;
   command.push_back(temp_rootfs_dir_ + kPostinstallScript);
   command.push_back(install_device);
+  command.push_back(app_id_);
   if (!Subprocess::Get().Exec(command, StaticCompletePostinstall, this)) {
     CompletePostinstall(1);
   }

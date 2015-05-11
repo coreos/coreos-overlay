@@ -204,7 +204,7 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
   shared_ptr<FilesystemCopierAction> kernel_filesystem_verifier_action(
       new FilesystemCopierAction(true, true));
   shared_ptr<PostinstallRunnerAction> postinstall_runner_action(
-      new PostinstallRunnerAction);
+      new PostinstallRunnerAction(omaha_request_params_->app_id()));
   shared_ptr<OmahaRequestAction> update_complete_action(
       new OmahaRequestAction(system_state_,
                              new OmahaEvent(OmahaEvent::kTypeUpdateComplete),
