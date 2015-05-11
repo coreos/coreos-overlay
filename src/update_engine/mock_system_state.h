@@ -5,16 +5,17 @@
 #ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_MOCK_SYSTEM_STATE_H__
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_MOCK_SYSTEM_STATE_H__
 
+#include <memory>
+
 #include <gmock/gmock.h>
 
 #include "update_engine/mock_dbus_interface.h"
 #include "update_engine/mock_payload_state.h"
 #include "update_engine/prefs_mock.h"
 #include "update_engine/system_state.h"
+#include "update_engine/update_attempter_mock.h"
 
 namespace chromeos_update_engine {
-
-class UpdateAttempterMock;
 
 // Mock the SystemStateInterface so that we could lie that
 // OOBE is completed even when there's no such marker file, etc.
@@ -58,7 +59,7 @@ class MockSystemState : public SystemState {
   // These are Mock objects or objects we own.
   testing::NiceMock<PrefsMock> mock_prefs_;
   testing::NiceMock<MockPayloadState> mock_payload_state_;
-  testing::NiceMock<UpdateAttempterMock>* mock_update_attempter_;
+  std::unique_ptr<testing::NiceMock<UpdateAttempterMock>> mock_update_attempter_;
   MockDbusGlib dbus_;
 
   // These are the other object we own.

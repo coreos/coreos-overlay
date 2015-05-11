@@ -148,6 +148,7 @@ update_engine_unittests_SOURCES = \
 	src/update_engine/terminator_unittest.cc \
 	src/update_engine/test_utils.cc \
 	src/update_engine/topological_sort_unittest.cc \
+	src/update_engine/update_attempter_mock.cc \
 	src/update_engine/update_attempter_unittest.cc \
 	src/update_engine/update_check_scheduler_unittest.cc \
 	src/update_engine/utils_unittest.cc \
