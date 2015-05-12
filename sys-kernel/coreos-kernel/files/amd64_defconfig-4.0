@@ -557,7 +557,7 @@ CONFIG_HOTPLUG_CPU=y
 # CONFIG_DEBUG_HOTPLUG_CPU0 is not set
 # CONFIG_COMPAT_VDSO is not set
 CONFIG_CMDLINE_BOOL=y
-CONFIG_CMDLINE="init=/usr/lib/systemd/systemd"
+CONFIG_CMDLINE="init=/usr/lib/systemd/systemd rootflags=rw mount.usrflags=ro"
 # CONFIG_CMDLINE_OVERRIDE is not set
 CONFIG_HAVE_LIVEPATCH=y
 # CONFIG_LIVEPATCH is not set
