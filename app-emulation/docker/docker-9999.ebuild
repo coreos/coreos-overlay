@@ -15,7 +15,7 @@ if [[ ${PV} == *9999 ]]; then
 	DOCKER_GITCOMMIT=""
 	KEYWORDS=""
 else
-	CROS_WORKON_COMMIT="47496519da9664202d900d3635bb840509fa9647" # v1.6.0
+	CROS_WORKON_COMMIT="a8a31eff10544860d2188dddabdee4d727545796" # v1.5.0
 	DOCKER_GITCOMMIT="${CROS_WORKON_COMMIT:0:7}"
 	KEYWORDS="amd64"
 fi
@@ -55,7 +55,7 @@ RDEPEND="
 	>=app-arch/xz-utils-4.9
 
 	lxc? (
-		>=app-emulation/lxc-1.0.7
+		>=app-emulation/lxc-1.0
 	)
 	aufs? (
 		|| (
@@ -71,24 +71,20 @@ RESTRICT="installsources strip"
 CONFIG_CHECK="
 	NAMESPACES NET_NS PID_NS IPC_NS UTS_NS
 	DEVPTS_MULTIPLE_INSTANCES
-	CGROUPS CGROUP_CPUACCT CGROUP_DEVICE CGROUP_FREEZER CGROUP_SCHED CPUSETS
+	CGROUPS CGROUP_CPUACCT CGROUP_DEVICE CGROUP_FREEZER CGROUP_SCHED
 	MACVLAN VETH BRIDGE
 	NF_NAT_IPV4 IP_NF_FILTER IP_NF_TARGET_MASQUERADE
 	NETFILTER_XT_MATCH_ADDRTYPE NETFILTER_XT_MATCH_CONNTRACK
 	NF_NAT NF_NAT_NEEDED
 
-	POSIX_MQUEUE
-
-	~MEMCG_SWAP ~MEMCG_SWAP_ENABLED
+	~MEMCG_SWAP
 	~RESOURCE_COUNTERS
 	~CGROUP_PERF
-	~CFS_BANDWIDTH
 "
 
 ERROR_MEMCG_SWAP="CONFIG_MEMCG_SWAP: is required if you wish to limit swap usage of containers"
 ERROR_RESOURCE_COUNTERS="CONFIG_RESOURCE_COUNTERS: is optional for container statistics gathering"
 ERROR_CGROUP_PERF="CONFIG_CGROUP_PERF: is optional for container statistics gathering"
-ERROR_CFS_BANDWIDTH="CONFIG_CFS_BANDWIDTH: is optional for container statistics gathering"
 
 pkg_setup() {
 	if kernel_is lt 3 8; then
@@ -116,7 +112,6 @@ pkg_setup() {
 	if use aufs; then
 		CONFIG_CHECK+="
 			~AUFS_FS
-			~EXT4_FS_POSIX_ACL ~EXT4_FS_SECURITY
 		"
 		# TODO there must be a way to detect "sys-kernel/aufs-sources" so we don't warn "sys-fs/aufs3" users about this
 		# an even better solution would be to check if the current kernel sources include CONFIG_AUFS_FS as an option, but that sounds hairy and error-prone
@@ -131,13 +126,7 @@ pkg_setup() {
 
 	if use device-mapper; then
 		CONFIG_CHECK+="
-			~BLK_DEV_DM ~DM_THIN_PROVISIONING ~EXT4_FS ~EXT4_FS_POSIX_ACL ~EXT4_FS_SECURITY
-		"
-	fi
-
-	if use overlay; then
-		CONFIG_CHECK+="
-			~OVERLAY_FS ~EXT4_FS_SECURITY ~EXT4_FS_POSIX_ACL
+			~BLK_DEV_DM ~DM_THIN_PROVISIONING ~EXT4_FS
 		"
 	fi
 
@@ -145,8 +134,16 @@ pkg_setup() {
 }
 
 src_prepare() {
+	# hack(philips): to keep the git commit from being dirty
+	if [[ -n "${DOCKER_GITCOMMIT}" ]]; then
+		.git .git.old
+	fi
+
 	# allow user patches (use sparingly - upstream won't support them)
 	epatch_user
+
+	# https://github.com/coreos/bugs/issues/186
+	epatch "${FILESDIR}"/0001-cgroups-systemd-set-DefaultDependencies-false-if-pos.patch
 }
 
 src_compile() {
@@ -166,13 +163,13 @@ src_compile() {
 		sed -i "s/EXTLDFLAGS_STATIC='/EXTLDFLAGS_STATIC='-fno-PIC /" hack/make.sh || die
 		grep -q -- '-fno-PIC' hack/make.sh || die 'hardened sed failed'
 
-		sed -i "s/LDFLAGS_STATIC_DOCKER='/LDFLAGS_STATIC_DOCKER='-extldflags -fno-PIC /" hack/make/dynbinary || die
+		sed -i 's/LDFLAGS_STATIC_DOCKER="/LDFLAGS_STATIC_DOCKER="-extldflags -fno-PIC /' hack/make/dynbinary || die
 		grep -q -- '-fno-PIC' hack/make/dynbinary || die 'hardened sed failed'
 	fi
 
 	# let's set up some optional features :)
 	export DOCKER_BUILDTAGS=''
-	for gd in aufs btrfs device-mapper overlay; do
+	for gd in aufs btrfs device-mapper; do
 		if ! use $gd; then
 			DOCKER_BUILDTAGS+=" exclude_graphdriver_${gd//-/}"
 		fi
