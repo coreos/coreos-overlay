@@ -1,6 +1,6 @@
 # Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-apps/systemd/systemd-9999.ebuild,v 1.160 2015/02/20 16:13:22 floppym Exp $
+# $Header: /var/cvsroot/gentoo-x86/sys-apps/systemd/systemd-9999.ebuild,v 1.164 2015/04/18 23:54:18 floppym Exp $
 
 EAPI=5
 
@@ -22,7 +22,7 @@ inherit cros-workon
 
 AUTOTOOLS_AUTORECONF=yes
 AUTOTOOLS_PRUNE_LIBTOOL_FILES=all
-PYTHON_COMPAT=( python{2_7,3_2,3_3,3_4} )
+PYTHON_COMPAT=( python{2_7,3_3,3_4} )
 inherit autotools-utils bash-completion-r1 linux-info multilib \
 	multilib-minimal pam python-single-r1 systemd toolchain-funcs udev \
 	user
@@ -45,6 +45,7 @@ MINKV="3.8"
 
 COMMON_DEPEND=">=sys-apps/util-linux-2.25:0=
 	sys-libs/libcap:0=
+	!<sys-libs/glibc-2.16
 	acl? ( sys-apps/acl:0= )
 	apparmor? ( sys-libs/libapparmor:0= )
 	audit? ( >=sys-process/audit-2:0= )
@@ -86,7 +87,6 @@ COMMON_DEPEND=">=sys-apps/util-linux-2.25:0=
 RDEPEND="${COMMON_DEPEND}
 	>=sys-apps/baselayout-2.2
 	!sys-auth/nss-myhostname
-	!<sys-libs/glibc-2.14
 	!sys-fs/eudev
 	!sys-fs/udev"
 
@@ -255,6 +255,9 @@ multilib_src_configure() {
 		QUOTAON=/usr/sbin/quotaon
 		QUOTACHECK=/usr/sbin/quotacheck
 
+		# TODO: we may need to restrict this to gcc
+		EFI_CC="$(tc-getCC)"
+
 		# dbus paths
 		--with-dbuspolicydir="${EPREFIX}/usr/share/dbus-1/system.d"
 		--with-dbussessionservicedir="${EPREFIX}/usr/share/dbus-1/services"
@@ -340,6 +343,8 @@ multilib_src_install() {
 }
 
 multilib_src_install_all() {
+	local unitdir=$(systemd_get_unitdir)
+
 	prune_libtool_files --modules
 	einstalldocs
 
@@ -347,9 +352,9 @@ multilib_src_install_all() {
 		local prefix
 		use symlink-usr && prefix=/usr
 		for app in halt poweroff reboot runlevel shutdown telinit; do
-			dosym "/${ROOTPREFIX-/usr}/bin/systemctl" ${prefix}/sbin/${app}
+			dosym "${ROOTPREFIX-/usr}/bin/systemctl" ${prefix}/sbin/${app}
 		done
-		dosym "/${ROOTPREFIX-/usr}/lib/systemd/systemd" ${prefix}/sbin/init
+		dosym "${ROOTPREFIX-/usr}/lib/systemd/systemd" ${prefix}/sbin/init
 	else
 		# we just keep sysvinit tools, so no need for the mans
 		rm "${D}"/usr/share/man/man8/{halt,poweroff,reboot,runlevel,shutdown,telinit}.8 \
@@ -369,31 +374,32 @@ multilib_src_install_all() {
 	systemd_dotmpfilesd "${FILESDIR}"/systemd-resolv.conf
 
 	# Don't default to graphical.target
-	rm "${D}"/usr/lib/systemd/system/default.target || die
-	dosym multi-user.target /usr/lib/systemd/system/default.target
+	rm "${D}${unitdir}"/default.target || die
+	dosym multi-user.target "${unitdir}"/default.target
 
-	# If we install these symlinks, there is no way for the sysadmin to remove them
-	# permanently.
-	rm "${D}"/etc/systemd/system/multi-user.target.wants/systemd-networkd.service || die
-	rm "${D}"/etc/systemd/system/multi-user.target.wants/systemd-resolved.service || die
-	rm -r "${D}"/etc/systemd/system/network-online.target.wants || die
-	rm -r "${D}"/etc/systemd/system/sysinit.target.wants || die
+	# Move a few services enabled in /etc to /usr, delete files individually
+	# so builds fail if systemd adds any new unexpected stuff to /etc
+	local f
+	for f in \
+		getty.target.wants/getty@tty1.service \
+		multi-user.target.wants/remote-fs.target \
+		multi-user.target.wants/systemd-networkd.service \
+		multi-user.target.wants/systemd-resolved.service \
+		network-online.target.wants/systemd-networkd-wait-online.service \
+		sockets.target.wants/systemd-networkd.socket \
+		sysinit.target.wants/systemd-timesyncd.service
+	do
+		local s="${f#*/}" t="${f%/*}"
+		local u="${s/@*.service/@.service}"
 
-	# Move a few services enabled in /etc to /usr
-	# systemd-timesyncd is left disabled, we currently use ntpd
-	rm -f "${D}"/etc/systemd/system/getty.target.wants/getty@tty1.service
-	rm -f "${D}"/etc/systemd/system/multi-user.target.wants/remote-fs.target
+		# systemd_enable_service doesn't understand template units
+		einfo "Enabling ${s} via ${t}"
+		dodir "${unitdir}/${t}"
+		dosym "../${u}" "${unitdir}/${t}/${s}"
 
-	rm -f "${D}"/etc/systemd/system/sysinit.target.wants/systemd-timesyncd.service
-	rmdir "${D}"/etc/systemd/system/getty.target.wants \
-		"${D}"/etc/systemd/system/multi-user.target.wants \
-		|| die
-
-	dosym ../getty@.service /usr/lib/systemd/system/getty.target.wants/getty@tty1.service
-	systemd_enable_service multi-user.target remote-fs.target
-	systemd_enable_service multi-user.target systemd-networkd.service
-	systemd_enable_service multi-user.target systemd-resolved.service
-	systemd_enable_service network-online.target systemd-networkd-wait-online.service
+		rm "${D}/etc/systemd/system/${f}" || die
+	done
+	rmdir "${D}"/etc/systemd/system/*.wants || die
 
 	# Grant networkd access to set the transient host name
 	insinto /usr/share/polkit-1/rules.d
@@ -405,7 +411,7 @@ multilib_src_install_all() {
 	doins "${FILESDIR}"/99-default.preset
 
 	# Disable the "First Boot Wizard" by default, it isn't very applicable to CoreOS
-	rm "${D}"/usr/lib/systemd/system/sysinit.target.wants/systemd-firstboot.service
+	rm "${D}${unitdir}"/sysinit.target.wants/systemd-firstboot.service
 
 	# Do not ship distro-specific files (nsswitch.conf pam.d)
 	rm -rf "${D}"/usr/share/factory
