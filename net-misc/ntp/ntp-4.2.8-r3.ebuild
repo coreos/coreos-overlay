@@ -1,6 +1,6 @@
-# Copyright 1999-2014 Gentoo Foundation
+# Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/net-misc/ntp/ntp-4.2.8-r1.ebuild,v 1.4 2014/12/22 15:04:43 hwoarang Exp $
+# $Header: /var/cvsroot/gentoo-x86/net-misc/ntp/ntp-4.2.8-r2.ebuild,v 1.2 2015/02/26 18:30:06 floppym Exp $
 
 EAPI="4"
 
@@ -14,12 +14,12 @@ SRC_URI="http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-${PV:0:3}/${MY_P}.tar
 
 LICENSE="HPND BSD ISC"
 SLOT="0"
-KEYWORDS="alpha amd64 arm arm64 hppa ia64 ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd ~x86-freebsd ~amd64-linux ~ia64-linux ~x86-linux ~m68k-mint"
-IUSE="caps debug doc ipv6 openntpd parse-clocks perl samba selinux snmp ssl vim-syntax zeroconf"
+KEYWORDS="~alpha amd64 ~arm ~arm64 ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd ~x86-freebsd ~amd64-linux ~ia64-linux ~x86-linux ~m68k-mint"
+IUSE="caps debug ipv6 openntpd parse-clocks perl samba selinux snmp ssl threads vim-syntax zeroconf"
 
 CDEPEND=">=sys-libs/ncurses-5.2
 	>=sys-libs/readline-4.1
-	>=dev-libs/libevent-2.0.9
+	>=dev-libs/libevent-2.0.9[threads?]
 	kernel_linux? ( caps? ( sys-libs/libcap ) )
 	zeroconf? ( net-dns/avahi[mdnsresponder-compat] )
 	!openntpd? ( !net-misc/openntpd )
@@ -59,13 +59,16 @@ src_configure() {
 		--with-lineeditlibs=readline,edit,editline \
 		--with-yielding-select \
 		--disable-local-libevent \
+		--docdir="${EPREFIX}/usr/share/doc/${PF}" \
+		--htmldir="${EPREFIX}/usr/share/doc/${PF}/html" \
 		$(use_enable caps linuxcaps) \
 		$(use_enable parse-clocks) \
 		$(use_enable ipv6) \
 		$(use_enable debug debugging) \
 		$(use_enable samba ntp-signd) \
 		$(use_with snmp ntpsnmpd) \
-		$(use_with ssl crypto)
+		$(use_with ssl crypto) \
+		$(use_enable threads thread-support)
 }
 
 src_install() {
@@ -76,14 +79,13 @@ src_install() {
 
 	dodoc INSTALL WHERE-TO-START
 	doman "${WORKDIR}"/man/*.[58]
-	use doc && dohtml -r html/*
 
 	insinto /usr/share/ntp
 	doins "${FILESDIR}"/ntp.conf
+	systemd_newtmpfilesd "${FILESDIR}"/ntp.tmpfiles ntp.conf
 
 	keepdir /var/lib/ntp
 	use prefix || fowners ntp:ntp /var/lib/ntp
-	systemd_newtmpfilesd "${FILESDIR}"/ntp.tmpfiles ntp.conf
 
 	if use openntpd ; then
 		cd "${ED}"
@@ -94,7 +96,6 @@ src_install() {
 		systemd_dounit "${FILESDIR}"/ntpd.service
 		use caps && sed -i '/ExecStart/ s|$| -u ntp:ntp|' "${ED}"/usr/lib/systemd/system/ntpd.service
 		systemd_enable_ntpunit 60-ntpd ntpd.service
-		systemd_enable_service multi-user.target ntpd.service
 	fi
 
 	systemd_dounit "${FILESDIR}"/ntpdate.service
