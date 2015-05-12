@@ -6,10 +6,9 @@
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_MULTI_RANGE_HTTP_FETCHER_H__
 
 #include <deque>
+#include <memory>
 #include <utility>
 #include <vector>
-
-#include <base/memory/scoped_ptr.h>
 
 #include "update_engine/http_fetcher.h"
 
@@ -124,7 +123,7 @@ class MultiRangeHttpFetcher : public HttpFetcher, public HttpFetcherDelegate {
 
   void Reset();
 
-  scoped_ptr<HttpFetcher> base_fetcher_;
+  std::unique_ptr<HttpFetcher> base_fetcher_;
 
   // If true, do not send any more data or TransferComplete to the delegate.
   bool base_fetcher_active_;

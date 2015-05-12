@@ -7,6 +7,8 @@
 
 #include <update_engine/system_state.h>
 
+#include <memory>
+
 #include <update_engine/payload_state.h>
 #include <update_engine/prefs.h>
 #include <update_engine/update_attempter.h>
@@ -55,7 +57,7 @@ private:
   ConcreteDbusGlib dbus_;
 
   // Pointer to the update attempter object.
-  scoped_ptr<UpdateAttempter> update_attempter_;
+  std::unique_ptr<UpdateAttempter> update_attempter_;
 
   // Common parameters for all Omaha requests.
   OmahaRequestParams request_params_;

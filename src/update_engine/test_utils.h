@@ -5,11 +5,11 @@
 #ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_TEST_UTILS_H__
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_TEST_UTILS_H__
 
+#include <memory>
 #include <set>
 #include <string>
 #include <vector>
 
-#include <base/memory/scoped_ptr.h>
 #include <gtest/gtest.h>
 
 #include "update_engine/action.h"
@@ -165,7 +165,7 @@ class ScopedTempFile {
   const std::string& GetPath() { return path_; }
  private:
   std::string path_;
-  scoped_ptr<ScopedPathUnlinker> unlinker_;
+  std::unique_ptr<ScopedPathUnlinker> unlinker_;
 };
 
 // Useful actions for test
@@ -249,9 +249,9 @@ class ScopedLoopMounter {
   //   ScopedFilesystemUnmounter (the file system must be unmounted first)
   //   ScopedLoopbackDeviceBinder (then the loop device can be deleted)
   //   ScopedDirRemover (then the mount point can be deleted)
-  scoped_ptr<ScopedDirRemover> dir_remover_;
-  scoped_ptr<ScopedLoopbackDeviceBinder> loop_binder_;
-  scoped_ptr<ScopedFilesystemUnmounter> unmounter_;
+  std::unique_ptr<ScopedDirRemover> dir_remover_;
+  std::unique_ptr<ScopedLoopbackDeviceBinder> loop_binder_;
+  std::unique_ptr<ScopedFilesystemUnmounter> unmounter_;
 };
 
 }  // namespace chromeos_update_engine

@@ -8,7 +8,6 @@
 #include <gmock/gmock.h>
 
 #include "update_engine/mock_dbus_interface.h"
-#include "update_engine/mock_system_state.h"
 #include "update_engine/update_attempter.h"
 
 namespace chromeos_update_engine {
@@ -18,8 +17,7 @@ class MockSystemState;
 class UpdateAttempterMock : public UpdateAttempter {
  public:
   explicit UpdateAttempterMock(MockSystemState* mock_system_state,
-                               MockDbusGlib* dbus)
-      : UpdateAttempter(mock_system_state, dbus) {}
+                               MockDbusGlib* dbus);
 
   MOCK_METHOD1(Update, void(bool interactive));
 };

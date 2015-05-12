@@ -14,12 +14,12 @@ MockSystemState::MockSystemState()
     prefs_(&mock_prefs_) {
   request_params_ = &default_request_params_;
   mock_payload_state_.Initialize(&mock_prefs_);
-  mock_update_attempter_ = new testing::NiceMock<UpdateAttempterMock>(
-      this, &dbus_);
+  mock_update_attempter_.reset(
+      new testing::NiceMock<UpdateAttempterMock>(this, &dbus_));
 }
 
 UpdateAttempter* MockSystemState::update_attempter() {
-  return mock_update_attempter_;
+  return mock_update_attempter_.get();
 }
 
 } // namespeace chromeos_update_engine

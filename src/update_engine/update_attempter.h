@@ -219,7 +219,7 @@ class UpdateAttempter : public ActionProcessorDelegate,
   base::TimeTicks last_notify_time_;
 
   std::vector<std::shared_ptr<AbstractAction> > actions_;
-  scoped_ptr<ActionProcessor> processor_;
+  std::unique_ptr<ActionProcessor> processor_;
 
   // External state of the system outside the update_engine process
   // carved out separately to mock out easily in unit tests.
@@ -244,7 +244,7 @@ class UpdateAttempter : public ActionProcessorDelegate,
   UpdateCheckScheduler* update_check_scheduler_;
 
   // Pending error event, if any.
-  scoped_ptr<OmahaEvent> error_event_;
+  std::unique_ptr<OmahaEvent> error_event_;
 
   // If we should request a reboot even tho we failed the update
   bool fake_update_success_;

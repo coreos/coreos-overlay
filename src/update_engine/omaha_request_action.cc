@@ -6,6 +6,7 @@
 
 #include <inttypes.h>
 
+#include <memory>
 #include <sstream>
 #include <string>
 
@@ -54,8 +55,7 @@ const string kGupdateVersion("CoreOSUpdateEngine-0.1.0.0");
 // This is handy for passing strings into libxml2
 #define ConstXMLStr(x) (reinterpret_cast<const xmlChar*>(x))
 
-// These are for scoped_ptr_malloc, which is like scoped_ptr, but allows
-// a custom free() function to be specified.
+// These are for std::unique_ptr
 class ScopedPtrXmlDocFree {
  public:
   inline void operator()(void* x) const {
@@ -215,15 +215,7 @@ string GetRequestXml(const OmahaEvent* event,
 // Encodes XML entities in a given string with libxml2. input must be
 // UTF-8 formatted. Output will be UTF-8 formatted.
 string XmlEncode(const string& input) {
-  //  // TODO(adlr): if allocating a new xmlDoc each time is taking up too much
-  //  // cpu, considering creating one and caching it.
-  //  scoped_ptr_malloc<xmlDoc, ScopedPtrXmlDocFree> xml_doc(
-  //      xmlNewDoc(ConstXMLStr("1.0")));
-  //  if (!xml_doc.get()) {
-  //    LOG(ERROR) << "Unable to create xmlDoc";
-  //    return "";
-  //  }
-  scoped_ptr_malloc<xmlChar, ScopedPtrXmlFree> str(
+  std::unique_ptr<xmlChar, ScopedPtrXmlFree> str(
       xmlEncodeEntitiesReentrant(NULL, ConstXMLStr(input.c_str())));
   return string(reinterpret_cast<const char *>(str.get()));
 }
@@ -280,7 +272,7 @@ namespace {
 xmlXPathObject* GetNodeSet(xmlDoc* doc, const xmlChar* xpath) {
   xmlXPathObject* result = NULL;
 
-  scoped_ptr_malloc<xmlXPathContext, ScopedPtrXmlXPathContextFree> context(
+  std::unique_ptr<xmlXPathContext, ScopedPtrXmlXPathContextFree> context(
       xmlXPathNewContext(doc));
   if (!context.get()) {
     LOG(ERROR) << "xmlXPathNewContext() returned NULL";
@@ -307,7 +299,7 @@ xmlXPathObject* GetNodeSet(xmlDoc* doc, const xmlChar* xpath) {
 string XmlGetProperty(xmlNode* node, const char* name) {
   if (!xmlHasProp(node, ConstXMLStr(name)))
     return "";
-  scoped_ptr_malloc<xmlChar, ScopedPtrXmlFree> str(
+  std::unique_ptr<xmlChar, ScopedPtrXmlFree> str(
       xmlGetProp(node, ConstXMLStr(name)));
   string ret(reinterpret_cast<const char *>(str.get()));
   return ret;
@@ -333,7 +325,7 @@ bool OmahaRequestAction::ParseResponse(xmlDoc* doc,
                                        ScopedActionCompleter* completer) {
   static const char* kUpdatecheckNodeXpath("/response/app/updatecheck");
 
-  scoped_ptr_malloc<xmlXPathObject, ScopedPtrXmlXPathObjectFree>
+  std::unique_ptr<xmlXPathObject, ScopedPtrXmlXPathObjectFree>
       xpath_nodeset(GetNodeSet(doc, ConstXMLStr(kUpdatecheckNodeXpath)));
   if (!xpath_nodeset.get()) {
     completer->set_code(kActionCodeOmahaResponseInvalid);
@@ -413,7 +405,7 @@ bool OmahaRequestAction::ParseUrls(xmlDoc* doc,
   // Get the update URL.
   static const char* kUpdateUrlNodeXPath("/response/app/updatecheck/urls/url");
 
-  scoped_ptr_malloc<xmlXPathObject, ScopedPtrXmlXPathObjectFree>
+  std::unique_ptr<xmlXPathObject, ScopedPtrXmlXPathObjectFree>
       xpath_nodeset(GetNodeSet(doc, ConstXMLStr(kUpdateUrlNodeXPath)));
   if (!xpath_nodeset.get()) {
     completer->set_code(kActionCodeOmahaResponseInvalid);
@@ -448,7 +440,7 @@ bool OmahaRequestAction::ParsePackage(xmlDoc* doc,
   static const char* kPackageNodeXPath(
       "/response/app/updatecheck/manifest/packages/package");
 
-  scoped_ptr_malloc<xmlXPathObject, ScopedPtrXmlXPathObjectFree>
+  std::unique_ptr<xmlXPathObject, ScopedPtrXmlXPathObjectFree>
       xpath_nodeset(GetNodeSet(doc, ConstXMLStr(kPackageNodeXPath)));
   if (!xpath_nodeset.get()) {
     completer->set_code(kActionCodeOmahaResponseInvalid);
@@ -503,7 +495,7 @@ bool OmahaRequestAction::ParseParams(xmlDoc* doc,
   static const char* kActionNodeXPath(
       "/response/app/updatecheck/manifest/actions/action");
 
-  scoped_ptr_malloc<xmlXPathObject, ScopedPtrXmlXPathObjectFree>
+  std::unique_ptr<xmlXPathObject, ScopedPtrXmlXPathObjectFree>
       xpath_nodeset(GetNodeSet(doc, ConstXMLStr(kActionNodeXPath)));
   if (!xpath_nodeset.get()) {
     completer->set_code(kActionCodeOmahaResponseInvalid);
@@ -597,7 +589,7 @@ void OmahaRequestAction::TransferComplete(HttpFetcher *fetcher,
   }
 
   // parse our response and fill the fields in the output object
-  scoped_ptr_malloc<xmlDoc, ScopedPtrXmlDocFree> doc(
+  std::unique_ptr<xmlDoc, ScopedPtrXmlDocFree> doc(
       xmlParseMemory(&response_buffer_[0], response_buffer_.size()));
   if (!doc.get()) {
     LOG(ERROR) << "Omaha response not valid XML";
