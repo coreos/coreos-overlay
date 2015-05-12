@@ -171,17 +171,6 @@ TEST(UtilsTest, PartitionNumberTest) {
   EXPECT_EQ("3", utils::PartitionNumber("/dev/mmc0p3"));
 }
 
-TEST(UtilsTest, CompareCpuSharesTest) {
-  EXPECT_LT(utils::CompareCpuShares(utils::kCpuSharesLow,
-                                    utils::kCpuSharesNormal), 0);
-  EXPECT_GT(utils::CompareCpuShares(utils::kCpuSharesNormal,
-                                    utils::kCpuSharesLow), 0);
-  EXPECT_EQ(utils::CompareCpuShares(utils::kCpuSharesNormal,
-                                    utils::kCpuSharesNormal), 0);
-  EXPECT_GT(utils::CompareCpuShares(utils::kCpuSharesHigh,
-                                    utils::kCpuSharesNormal), 0);
-}
-
 TEST(UtilsTest, FuzzIntTest) {
   static const unsigned int kRanges[] = { 0, 1, 2, 20 };
   for (size_t r = 0; r < arraysize(kRanges); ++r) {
