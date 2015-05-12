@@ -29,10 +29,6 @@ namespace utils {
 // Returns true if this is an official Chrome OS build, false otherwise.
 bool IsOfficialBuild();
 
-// Returns true if the boot mode is normal or if it's unable to determine the
-// boot mode. Returns false if the boot mode is developer.
-bool IsNormalBootMode();
-
 // Returns the HWID or an empty string on error.
 std::string GetHardwareClass();
 
