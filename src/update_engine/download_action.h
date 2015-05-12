@@ -9,9 +9,9 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include <memory>
 #include <string>
 
-#include <base/memory/scoped_ptr.h>
 #include <curl/curl.h>
 #include <google/protobuf/stubs/common.h>
 
@@ -104,13 +104,13 @@ class DownloadAction : public Action<DownloadAction>,
   SystemState* system_state_;
 
   // Pointer to the HttpFetcher that does the http work.
-  scoped_ptr<HttpFetcher> http_fetcher_;
+  std::unique_ptr<HttpFetcher> http_fetcher_;
 
   // The FileWriter that downloaded data should be written to. It will
   // either point to *decompressing_file_writer_ or *delta_performer_.
   FileWriter* writer_;
 
-  scoped_ptr<DeltaPerformer> delta_performer_;
+  std::unique_ptr<DeltaPerformer> delta_performer_;
 
   // Used by TransferTerminated to figure if this action terminated itself or
   // was terminated by the action processor.

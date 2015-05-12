@@ -12,13 +12,13 @@
 
 #include <algorithm>
 #include <map>
+#include <memory>
 #include <set>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include <base/logging.h>
-#include <base/memory/scoped_ptr.h>
 #include <base/string_util.h>
 #include <bzlib.h>
 
@@ -1343,7 +1343,7 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
 
   const string kTempFileTemplate("/tmp/CrAU_temp_data.XXXXXX");
   string temp_file_path;
-  scoped_ptr<ScopedPathUnlinker> temp_file_unlinker;
+  std::unique_ptr<ScopedPathUnlinker> temp_file_unlinker;
   off_t data_file_size = 0;
 
   LOG(INFO) << "Reading files...";

@@ -4,12 +4,12 @@
 
 #include <unistd.h>
 
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include <base/logging.h>
-#include <base/memory/scoped_ptr.h>
 #include <base/string_util.h>
 #include <base/time.h>
 #include <glib.h>
@@ -356,10 +356,10 @@ TYPED_TEST(HttpFetcherTest, SimpleTest) {
   {
     HttpFetcherTestDelegate delegate;
     delegate.loop_ = loop;
-    scoped_ptr<HttpFetcher> fetcher(this->test_.NewSmallFetcher());
+    std::unique_ptr<HttpFetcher> fetcher(this->test_.NewSmallFetcher());
     fetcher->set_delegate(&delegate);
 
-    scoped_ptr<HttpServer> server(this->test_.CreateServer());
+    std::unique_ptr<HttpServer> server(this->test_.CreateServer());
     ASSERT_TRUE(server->started_);
 
     StartTransferArgs start_xfer_args = {fetcher.get(), this->test_.SmallUrl()};
@@ -375,10 +375,10 @@ TYPED_TEST(HttpFetcherTest, SimpleBigTest) {
   {
     HttpFetcherTestDelegate delegate;
     delegate.loop_ = loop;
-    scoped_ptr<HttpFetcher> fetcher(this->test_.NewLargeFetcher());
+    std::unique_ptr<HttpFetcher> fetcher(this->test_.NewLargeFetcher());
     fetcher->set_delegate(&delegate);
 
-    scoped_ptr<HttpServer> server(this->test_.CreateServer());
+    std::unique_ptr<HttpServer> server(this->test_.CreateServer());
     ASSERT_TRUE(server->started_);
 
     StartTransferArgs start_xfer_args = {fetcher.get(), this->test_.BigUrl()};
@@ -402,10 +402,10 @@ TYPED_TEST(HttpFetcherTest, ErrorTest) {
     // Delegate should expect an error response.
     delegate.is_expect_error_ = true;
 
-    scoped_ptr<HttpFetcher> fetcher(this->test_.NewSmallFetcher());
+    std::unique_ptr<HttpFetcher> fetcher(this->test_.NewSmallFetcher());
     fetcher->set_delegate(&delegate);
 
-    scoped_ptr<HttpServer> server(this->test_.CreateServer());
+    std::unique_ptr<HttpServer> server(this->test_.CreateServer());
     ASSERT_TRUE(server->started_);
 
     StartTransferArgs start_xfer_args = {
@@ -469,13 +469,13 @@ TYPED_TEST(HttpFetcherTest, PauseTest) {
   GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
   {
     PausingHttpFetcherTestDelegate delegate;
-    scoped_ptr<HttpFetcher> fetcher(this->test_.NewLargeFetcher());
+    std::unique_ptr<HttpFetcher> fetcher(this->test_.NewLargeFetcher());
     delegate.paused_ = false;
     delegate.loop_ = loop;
     delegate.fetcher_ = fetcher.get();
     fetcher->set_delegate(&delegate);
 
-    scoped_ptr<HttpServer> server(this->test_.CreateServer());
+    std::unique_ptr<HttpServer> server(this->test_.CreateServer());
     ASSERT_TRUE(server->started_);
 
     guint callback_id = g_timeout_add(kHttpResponseInternalServerError,
@@ -515,7 +515,7 @@ class AbortingHttpFetcherTestDelegate : public HttpFetcherDelegate {
   }
   bool once_;
   bool callback_once_;
-  scoped_ptr<HttpFetcher> fetcher_;
+  std::unique_ptr<HttpFetcher> fetcher_;
   GMainLoop* loop_;
 };
 
@@ -542,7 +542,7 @@ TYPED_TEST(HttpFetcherTest, AbortTest) {
     delegate.loop_ = loop;
     delegate.fetcher_->set_delegate(&delegate);
 
-    scoped_ptr<HttpServer> server(this->test_.CreateServer());
+    std::unique_ptr<HttpServer> server(this->test_.CreateServer());
     this->test_.IgnoreServerAborting(server.get());
     ASSERT_TRUE(server->started_);
 
@@ -588,10 +588,10 @@ TYPED_TEST(HttpFetcherTest, FlakyTest) {
   {
     FlakyHttpFetcherTestDelegate delegate;
     delegate.loop_ = loop;
-    scoped_ptr<HttpFetcher> fetcher(this->test_.NewSmallFetcher());
+    std::unique_ptr<HttpFetcher> fetcher(this->test_.NewSmallFetcher());
     fetcher->set_delegate(&delegate);
 
-    scoped_ptr<HttpServer> server(this->test_.CreateServer());
+    std::unique_ptr<HttpServer> server(this->test_.CreateServer());
     ASSERT_TRUE(server->started_);
 
     StartTransferArgs start_xfer_args = {
@@ -660,7 +660,7 @@ TYPED_TEST(HttpFetcherTest, FailureTest) {
   {
     FailureHttpFetcherTestDelegate delegate(NULL);
     delegate.loop_ = loop;
-    scoped_ptr<HttpFetcher> fetcher(this->test_.NewSmallFetcher());
+    std::unique_ptr<HttpFetcher> fetcher(this->test_.NewSmallFetcher());
     fetcher->set_delegate(&delegate);
 
     StartTransferArgs start_xfer_args = {
@@ -683,7 +683,7 @@ TYPED_TEST(HttpFetcherTest, ServerDiesTest) {
   {
     FailureHttpFetcherTestDelegate delegate(new PythonHttpServer);
     delegate.loop_ = loop;
-    scoped_ptr<HttpFetcher> fetcher(this->test_.NewSmallFetcher());
+    std::unique_ptr<HttpFetcher> fetcher(this->test_.NewSmallFetcher());
     fetcher->set_delegate(&delegate);
 
     StartTransferArgs start_xfer_args = {
@@ -742,7 +742,7 @@ void RedirectTest(bool expected_successful,
   {
     RedirectHttpFetcherTestDelegate delegate(expected_successful);
     delegate.loop_ = loop;
-    scoped_ptr<HttpFetcher> fetcher(http_fetcher);
+    std::unique_ptr<HttpFetcher> fetcher(http_fetcher);
     fetcher->set_delegate(&delegate);
 
     StartTransferArgs start_xfer_args =
@@ -767,7 +767,7 @@ TYPED_TEST(HttpFetcherTest, SimpleRedirectTest) {
   if (this->test_.IsMock())
     return;
 
-  scoped_ptr<HttpServer> server(this->test_.CreateServer());
+  std::unique_ptr<HttpServer> server(this->test_.CreateServer());
   ASSERT_TRUE(server->started_);
 
   for (size_t c = 0; c < arraysize(kRedirectCodes); ++c) {
@@ -782,7 +782,7 @@ TYPED_TEST(HttpFetcherTest, MaxRedirectTest) {
   if (this->test_.IsMock())
     return;
 
-  scoped_ptr<HttpServer> server(this->test_.CreateServer());
+  std::unique_ptr<HttpServer> server(this->test_.CreateServer());
   ASSERT_TRUE(server->started_);
 
   string url;
@@ -798,7 +798,7 @@ TYPED_TEST(HttpFetcherTest, BeyondMaxRedirectTest) {
   if (this->test_.IsMock())
     return;
 
-  scoped_ptr<HttpServer> server(this->test_.CreateServer());
+  std::unique_ptr<HttpServer> server(this->test_.CreateServer());
   ASSERT_TRUE(server->started_);
 
   string url;
@@ -836,7 +836,7 @@ class MultiHttpFetcherTestDelegate : public HttpFetcherDelegate {
     ADD_FAILURE();
   }
 
-  scoped_ptr<HttpFetcher> fetcher_;
+  std::unique_ptr<HttpFetcher> fetcher_;
   int expected_response_code_;
   string data;
   GMainLoop* loop_;
@@ -890,7 +890,7 @@ TYPED_TEST(HttpFetcherTest, MultiHttpFetcherSimpleTest) {
   if (!this->test_.IsMulti())
     return;
 
-  scoped_ptr<HttpServer> server(this->test_.CreateServer());
+  std::unique_ptr<HttpServer> server(this->test_.CreateServer());
   ASSERT_TRUE(server->started_);
 
   vector<pair<off_t, off_t> > ranges;
@@ -908,7 +908,7 @@ TYPED_TEST(HttpFetcherTest, MultiHttpFetcherLengthLimitTest) {
   if (!this->test_.IsMulti())
     return;
 
-  scoped_ptr<HttpServer> server(this->test_.CreateServer());
+  std::unique_ptr<HttpServer> server(this->test_.CreateServer());
   ASSERT_TRUE(server->started_);
 
   vector<pair<off_t, off_t> > ranges;
@@ -925,7 +925,7 @@ TYPED_TEST(HttpFetcherTest, MultiHttpFetcherMultiEndTest) {
   if (!this->test_.IsMulti())
     return;
 
-  scoped_ptr<HttpServer> server(this->test_.CreateServer());
+  std::unique_ptr<HttpServer> server(this->test_.CreateServer());
   ASSERT_TRUE(server->started_);
 
   vector<pair<off_t, off_t> > ranges;
@@ -943,7 +943,7 @@ TYPED_TEST(HttpFetcherTest, MultiHttpFetcherInsufficientTest) {
   if (!this->test_.IsMulti())
     return;
 
-  scoped_ptr<HttpServer> server(this->test_.CreateServer());
+  std::unique_ptr<HttpServer> server(this->test_.CreateServer());
   ASSERT_TRUE(server->started_);
 
   vector<pair<off_t, off_t> > ranges;
@@ -984,7 +984,7 @@ TYPED_TEST(HttpFetcherTest, BlockedTransferTest) {
     return;
 
   for (int i = 0; i < 2; i++) {
-    scoped_ptr<HttpServer> server(this->test_.CreateServer());
+    std::unique_ptr<HttpServer> server(this->test_.CreateServer());
     ASSERT_TRUE(server->started_);
 
     GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
@@ -992,7 +992,7 @@ TYPED_TEST(HttpFetcherTest, BlockedTransferTest) {
       BlockedTransferTestDelegate delegate;
       delegate.loop_ = loop;
 
-      scoped_ptr<HttpFetcher> fetcher(this->test_.NewLargeFetcher());
+      std::unique_ptr<HttpFetcher> fetcher(this->test_.NewLargeFetcher());
 
       bool is_official_build = (i == 1);
       LOG(INFO) << "is_official_build: " << is_official_build;

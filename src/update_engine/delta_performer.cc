@@ -9,10 +9,10 @@
 
 #include <algorithm>
 #include <cstring>
+#include <memory>
 #include <string>
 #include <vector>
 
-#include <base/memory/scoped_ptr.h>
 #include <base/string_util.h>
 #include <google/protobuf/repeated_field.h>
 
@@ -455,7 +455,7 @@ bool DeltaPerformer::PerformReplaceOperation(
 
   DirectExtentWriter direct_writer;
   ZeroPadExtentWriter zero_pad_writer(&direct_writer);
-  scoped_ptr<BzipExtentWriter> bzip_writer;
+  std::unique_ptr<BzipExtentWriter> bzip_writer;
 
   // Since bzip decompression is optional, we have a variable writer that will
   // point to one of the ExtentWriter objects above.

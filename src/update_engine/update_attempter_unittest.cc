@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+#include <memory>
+
 #include <base/file_util.h>
 #include <gtest/gtest.h>
 
@@ -85,7 +87,7 @@ class UpdateAttempterTest : public ::testing::Test {
 };
 
 TEST_F(UpdateAttempterTest, ActionCompletedDownloadTest) {
-  scoped_ptr<MockHttpFetcher> fetcher(new MockHttpFetcher("", 0));
+  std::unique_ptr<MockHttpFetcher> fetcher(new MockHttpFetcher("", 0));
   fetcher->FailTransfer(503);  // Sets the HTTP response code.
   DownloadAction action(prefs_, NULL, fetcher.release());
   EXPECT_CALL(*prefs_, GetInt64(kPrefsDeltaUpdateFailures, _)).Times(0);
@@ -106,7 +108,7 @@ TEST_F(UpdateAttempterTest, ActionCompletedErrorTest) {
 }
 
 TEST_F(UpdateAttempterTest, ActionCompletedOmahaRequestTest) {
-  scoped_ptr<MockHttpFetcher> fetcher(new MockHttpFetcher("", 0));
+  std::unique_ptr<MockHttpFetcher> fetcher(new MockHttpFetcher("", 0));
   fetcher->FailTransfer(500);  // Sets the HTTP response code.
   OmahaRequestAction action(&mock_system_state_, NULL,
                             fetcher.release(), false);
