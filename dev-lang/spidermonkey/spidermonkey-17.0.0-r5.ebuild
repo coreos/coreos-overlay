@@ -17,7 +17,7 @@ SRC_URI="http://ftp.mozilla.org/pub/mozilla.org/js/${MY_PN}${PV}.tar.gz"
 LICENSE="NPL-1.1"
 SLOT="17"
 # "MIPS, MacroAssembler is not supported" wrt #491294 for -mips
-KEYWORDS="alpha amd64 arm -hppa ia64 -mips ppc ppc64 ~s390 ~sh sparc x86 ~x86-fbsd"
+KEYWORDS="alpha amd64 arm arm64 -hppa ia64 -mips ppc ppc64 ~s390 ~sh sparc x86 ~x86-fbsd"
 IUSE="debug jit minimal static-libs test"
 
 REQUIRED_USE="debug? ( jit )"
@@ -45,6 +45,7 @@ src_prepare() {
 	epatch "${FILESDIR}"/${PN}-${SLOT}-js-config-shebang.patch
 	epatch "${FILESDIR}"/${PN}-${SLOT}-ia64-mmap.patch
 	epatch "${FILESDIR}"/${PN}-17.0.0-fix-file-permissions.patch
+	epatch "${FILESDIR}"/${PN}-mfbt-Add-aarch64-to-double-conversion.patch
 	# Remove obsolete jsuword bug #506160
 	sed -i -e '/jsuword/d' "${BUILDDIR}"/jsval.h ||die "sed failed"
 	epatch_user

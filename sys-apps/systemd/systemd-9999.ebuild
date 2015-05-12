@@ -9,10 +9,10 @@ CROS_WORKON_REPO="git://github.com"
 
 if [[ "${PV}" == 9999 ]]; then
 	# Use ~arch instead of empty keywords for compatibility with cros-workon
-	KEYWORDS="~amd64 ~arm ~x86"
+	KEYWORDS="~amd64 ~arm64 ~arm ~x86"
 else
 	CROS_WORKON_COMMIT="97aee7c7c052214617bfe13390e92e2e9fb256bf"
-	KEYWORDS="amd64 ~arm ~x86"
+	KEYWORDS="amd64 arm64 ~arm ~x86"
 fi
 
 # cros-workon must be imported first, in cases where cros-workon and
