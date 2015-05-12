@@ -43,4 +43,7 @@ src_prepare() {
 src_install() {
 	insinto "/usr/share/oem"
 	doins ${T}/cloud-config.yml
+	if use ec2 ; then
+		newins ${FILESDIR}/grub-ec2.cfg grub.cfg
+	fi
 }
