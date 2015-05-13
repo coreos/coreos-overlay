@@ -1,6 +1,6 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/app-shells/bash/bash-4.2_p50-r1.ebuild,v 1.4 2014/10/01 16:41:27 pinkbyte Exp $
+# $Header: /var/cvsroot/gentoo-x86/app-shells/bash/bash-4.2_p53.ebuild,v 1.4 2014/10/08 06:21:18 armin76 Exp $
 
 EAPI="4"
 
@@ -34,7 +34,7 @@ SRC_URI="mirror://gnu/bash/${MY_P}.tar.gz $(patches)"
 
 LICENSE="GPL-3"
 SLOT="0"
-KEYWORDS="alpha amd64 arm ~arm64 ~hppa ia64 ~m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
+KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
 IUSE="afs bashlogger examples mem-scramble +net nls plugins +readline vanilla"
 
 DEPEND=">=sys-libs/ncurses-5.2-r2
@@ -84,7 +84,6 @@ src_prepare() {
 	if ! use vanilla ; then
 		epatch "${FILESDIR}"/${PN}-4.2-speed-up-read-N.patch
 	fi
-	epatch "${FILESDIR}"/${PN}-redir-stack-overflow.patch #523742
 
 	epatch_user
 }
@@ -154,15 +153,11 @@ src_install() {
 	mv "${ED}"/usr/bin/bash "${ED}"/bin/ || die
 	dosym bash /bin/rbash
 
-	insinto /usr/share/bash
-	for f in bash{_logout,rc} ; do
-		doins "${FILESDIR}"/${f}
-		dosym ../../usr/share/bash/${f} /etc/bash/${f}
-	done
-	insinto /usr/share/skel
+	insinto /etc/bash
+	doins "${FILESDIR}"/{bashrc,bash_logout}
+	insinto /etc/skel
 	for f in bash{_logout,_profile,rc} ; do
 		newins "${FILESDIR}"/dot-${f} .${f}
-		dosym ../../usr/share/skel/.${f} /etc/skel/.${f}
 	done
 
 	local sed_args=(
@@ -177,8 +172,8 @@ src_install() {
 	fi
 	sed -i \
 		"${sed_args[@]}" \
-		"${ED}"/usr/share/skel/.bashrc \
-		"${ED}"/usr/share/bash/bashrc || die
+		"${ED}"/etc/skel/.bashrc \
+		"${ED}"/etc/bash/bashrc || die
 
 	if use plugins ; then
 		exeinto /usr/$(get_libdir)/bash
