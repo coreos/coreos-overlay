@@ -153,11 +153,15 @@ src_install() {
 	mv "${ED}"/usr/bin/bash "${ED}"/bin/ || die
 	dosym bash /bin/rbash
 
-	insinto /etc/bash
-	doins "${FILESDIR}"/{bashrc,bash_logout}
-	insinto /etc/skel
+	insinto /usr/share/bash
+	for f in bash{_logout,rc} ; do
+		doins "${FILESDIR}"/${f}
+		dosym ../../usr/share/bash/${f} /etc/bash/${f}
+	done
+	insinto /usr/share/skel
 	for f in bash{_logout,_profile,rc} ; do
 		newins "${FILESDIR}"/dot-${f} .${f}
+		dosym ../../usr/share/skel/.${f} /etc/skel/.${f}
 	done
 
 	local sed_args=(
@@ -172,8 +176,8 @@ src_install() {
 	fi
 	sed -i \
 		"${sed_args[@]}" \
-		"${ED}"/etc/skel/.bashrc \
-		"${ED}"/etc/bash/bashrc || die
+		"${ED}"/usr/share/skel/.bashrc \
+		"${ED}"/usr/share/bash/bashrc || die
 
 	if use plugins ; then
 		exeinto /usr/$(get_libdir)/bash
