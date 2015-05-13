@@ -83,7 +83,7 @@ void FilesystemCopierAction::PerformAction() {
   string source = verify_hash_ ? destination : copy_source_;
   if (source.empty()) {
     source = copying_kernel_install_path_ ?
-        utils::BootKernelDevice(utils::BootDevice()) :
+        utils::BootKernelName(utils::BootDevice()) :
         utils::BootDevice();
   }
   int src_fd = open(source.c_str(), O_RDONLY);
@@ -283,7 +283,8 @@ void FilesystemCopierAction::SpawnAsyncActions() {
       LOG(INFO) << "Hash: " << hasher_.hash();
       if (verify_hash_) {
         if (copying_kernel_install_path_) {
-          if (install_plan_.kernel_hash != hasher_.raw_hash()) {
+          if (install_plan_.kernel_size &&
+	      (install_plan_.kernel_hash != hasher_.raw_hash())) {
             code = kActionCodeNewKernelVerificationError;
             LOG(ERROR) << "New kernel verification failed.";
           }

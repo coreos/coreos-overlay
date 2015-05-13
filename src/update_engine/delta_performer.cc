@@ -201,7 +201,10 @@ bool DeltaPerformer::OpenKernel(const char* kernel_path) {
 
 int DeltaPerformer::Close() {
   int err = 0;
-
+  if (close(kernel_fd_) == -1) {
+    err = errno;
+    PLOG(ERROR) << "Unable to close kernel fd:";
+  }
   if (close(fd_) == -1) {
     err = errno;
     PLOG(ERROR) << "Unable to close rootfs fd:";
@@ -356,10 +359,10 @@ bool DeltaPerformer::Write(const void* bytes, size_t count,
   }
 
   while (next_operation_num_ < num_total_operations_) {
-    const bool is_kernel_partition =
+    const bool is_kernel =
         (next_operation_num_ >= num_rootfs_operations_);
     const DeltaArchiveManifest_InstallOperation &op =
-        is_kernel_partition ?
+        is_kernel ?
         manifest_.kernel_install_operations(
             next_operation_num_ - num_rootfs_operations_) :
         manifest_.install_operations(next_operation_num_);
@@ -390,21 +393,21 @@ bool DeltaPerformer::Write(const void* bytes, size_t count,
     // Log every thousandth operation, and also the first and last ones
     if (op.type() == DeltaArchiveManifest_InstallOperation_Type_REPLACE ||
         op.type() == DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ) {
-      if (!PerformReplaceOperation(op, is_kernel_partition)) {
+      if (!PerformReplaceOperation(op, is_kernel)) {
         LOG(ERROR) << "Failed to perform replace operation "
                    << next_operation_num_;
         *error = kActionCodeDownloadOperationExecutionError;
         return false;
       }
     } else if (op.type() == DeltaArchiveManifest_InstallOperation_Type_MOVE) {
-      if (!PerformMoveOperation(op, is_kernel_partition)) {
+      if (!PerformMoveOperation(op, is_kernel)) {
         LOG(ERROR) << "Failed to perform move operation "
                    << next_operation_num_;
         *error = kActionCodeDownloadOperationExecutionError;
         return false;
       }
     } else if (op.type() == DeltaArchiveManifest_InstallOperation_Type_BSDIFF) {
-      if (!PerformBsdiffOperation(op, is_kernel_partition)) {
+      if (!PerformBsdiffOperation(op, is_kernel)) {
         LOG(ERROR) << "Failed to perform bsdiff operation "
                    << next_operation_num_;
         *error = kActionCodeDownloadOperationExecutionError;
@@ -439,7 +442,7 @@ bool DeltaPerformer::CanPerformInstallOperation(
 
 bool DeltaPerformer::PerformReplaceOperation(
     const DeltaArchiveManifest_InstallOperation& operation,
-    bool is_kernel_partition) {
+    bool is_kernel) {
   CHECK(operation.type() == \
         DeltaArchiveManifest_InstallOperation_Type_REPLACE || \
         operation.type() == \
@@ -461,10 +464,18 @@ bool DeltaPerformer::PerformReplaceOperation(
   // point to one of the ExtentWriter objects above.
   ExtentWriter* writer = NULL;
   if (operation.type() == DeltaArchiveManifest_InstallOperation_Type_REPLACE) {
-    writer = &zero_pad_writer;
+    if (is_kernel) {
+      writer = &direct_writer;
+    } else {
+      writer = &zero_pad_writer;
+    }
   } else if (operation.type() ==
              DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ) {
-    bzip_writer.reset(new BzipExtentWriter(&zero_pad_writer));
+    if (is_kernel) {
+      bzip_writer.reset(new BzipExtentWriter(&direct_writer));
+    } else {
+      bzip_writer.reset(new BzipExtentWriter(&zero_pad_writer));
+    }
     writer = bzip_writer.get();
   } else {
     NOTREACHED();
@@ -476,12 +487,11 @@ bool DeltaPerformer::PerformReplaceOperation(
     extents.push_back(operation.dst_extents(i));
   }
 
-  int fd = is_kernel_partition ? kernel_fd_ : fd_;
+  int fd = is_kernel ? kernel_fd_ : fd_;
 
   TEST_AND_RETURN_FALSE(writer->Init(fd, extents, block_size_));
   TEST_AND_RETURN_FALSE(writer->Write(&buffer_[0], operation.data_length()));
   TEST_AND_RETURN_FALSE(writer->End());
-
   // Update buffer
   buffer_offset_ += operation.data_length();
   DiscardBufferHeadBytes(operation.data_length());
@@ -490,7 +500,7 @@ bool DeltaPerformer::PerformReplaceOperation(
 
 bool DeltaPerformer::PerformMoveOperation(
     const DeltaArchiveManifest_InstallOperation& operation,
-    bool is_kernel_partition) {
+    bool is_kernel) {
   // Calculate buffer size. Note, this function doesn't do a sliding
   // window to copy in case the source and destination blocks overlap.
   // If we wanted to do a sliding window, we could program the server
@@ -507,7 +517,7 @@ bool DeltaPerformer::PerformMoveOperation(
   DCHECK_EQ(blocks_to_write, blocks_to_read);
   vector<char> buf(blocks_to_write * block_size_);
 
-  int fd = is_kernel_partition ? kernel_fd_ : fd_;
+  int fd = is_kernel ? kernel_fd_ : fd_;
 
   // Read in bytes.
   ssize_t bytes_read = 0;
@@ -576,7 +586,7 @@ bool DeltaPerformer::ExtentsToBsdiffPositionsString(
 
 bool DeltaPerformer::PerformBsdiffOperation(
     const DeltaArchiveManifest_InstallOperation& operation,
-    bool is_kernel_partition) {
+    bool is_kernel) {
   // Since we delete data off the beginning of the buffer as we use it,
   // the data we need should be exactly at the beginning of the buffer.
   TEST_AND_RETURN_FALSE(buffer_offset_ == operation.data_offset());
@@ -605,7 +615,7 @@ bool DeltaPerformer::PerformBsdiffOperation(
         utils::WriteAll(fd, &buffer_[0], operation.data_length()));
   }
 
-  int fd = is_kernel_partition ? kernel_fd_ : fd_;
+  int fd = is_kernel ? kernel_fd_ : fd_;
   const string& path = StringPrintf("/dev/fd/%d", fd);
 
   // If this is a non-idempotent operation, request a delayed exit and clear the
@@ -829,8 +839,7 @@ bool DeltaPerformer::GetNewPartitionInfo(uint64_t* kernel_size,
                                          uint64_t* rootfs_size,
                                          vector<char>* rootfs_hash) {
   TEST_AND_RETURN_FALSE(manifest_valid_ &&
-                        manifest_.has_new_rootfs_info());
-
+			manifest_.has_new_rootfs_info());
   *rootfs_size = manifest_.new_rootfs_info().size();
   vector<char> new_rootfs_hash(manifest_.new_rootfs_info().hash().begin(),
                                manifest_.new_rootfs_info().hash().end());
@@ -839,10 +848,10 @@ bool DeltaPerformer::GetNewPartitionInfo(uint64_t* kernel_size,
   if (manifest_.has_new_kernel_info()) {
     *kernel_size = manifest_.new_kernel_info().size();
     vector<char> new_kernel_hash(manifest_.new_kernel_info().hash().begin(),
-                               manifest_.new_kernel_info().hash().end());
+				 manifest_.new_kernel_info().hash().end());
     kernel_hash->swap(new_kernel_hash);
   }
-
+      
   return true;
 }
 

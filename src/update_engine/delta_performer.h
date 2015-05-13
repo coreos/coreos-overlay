@@ -206,13 +206,13 @@ class DeltaPerformer : public FileWriter {
   // These perform a specific type of operation and return true on success.
   bool PerformReplaceOperation(
       const DeltaArchiveManifest_InstallOperation& operation,
-      bool is_kernel_partition);
+      bool is_kernel);
   bool PerformMoveOperation(
       const DeltaArchiveManifest_InstallOperation& operation,
-      bool is_kernel_partition);
+      bool is_kernel);
   bool PerformBsdiffOperation(
       const DeltaArchiveManifest_InstallOperation& operation,
-      bool is_kernel_partition);
+      bool is_kernel);
 
   // Returns true if the payload signature message has been extracted from
   // |operation|, false otherwise.
