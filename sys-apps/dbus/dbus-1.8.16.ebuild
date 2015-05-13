@@ -1,10 +1,10 @@
-# Copyright 1999-2014 Gentoo Foundation
+# Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-apps/dbus/dbus-1.8.10.ebuild,v 1.8 2014/11/20 15:47:59 ago Exp $
+# $Header: /var/cvsroot/gentoo-x86/sys-apps/dbus/dbus-1.8.16.ebuild,v 1.12 2015/04/18 07:57:20 pacho Exp $
 
 EAPI=5
 PYTHON_COMPAT=( python2_7 )
-inherit autotools eutils linux-info flag-o-matic multilib-minimal python-any-r1 systemd virtualx user
+inherit autotools eutils linux-info flag-o-matic python-any-r1 readme.gentoo systemd virtualx user multilib-minimal
 
 DESCRIPTION="A message bus system, a simple way for applications to talk to each other"
 HOMEPAGE="http://dbus.freedesktop.org/"
@@ -12,7 +12,7 @@ SRC_URI="http://dbus.freedesktop.org/releases/dbus/${P}.tar.gz"
 
 LICENSE="|| ( AFL-2.1 GPL-2 )"
 SLOT="0"
-KEYWORDS="alpha amd64 arm ~arm64 hppa ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc x86 ~amd64-fbsd ~x86-fbsd ~x64-freebsd ~x86-freebsd ~amd64-linux ~arm-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~sparc-solaris ~x86-solaris"
+KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~x86-fbsd ~x64-freebsd ~x86-freebsd ~amd64-linux ~arm-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~sparc-solaris ~x86-solaris"
 IUSE="debug doc selinux static-libs systemd test X"
 
 CDEPEND=">=dev-libs/expat-2
@@ -41,6 +41,11 @@ RDEPEND="${CDEPEND}
 	selinux? ( sec-policy/selinux-dbus )
 "
 
+DOC_CONTENTS="
+	Some applications require a session bus in addition to the system
+	bus. Please see \`man dbus-launch\` for more information.
+"
+
 # out of sources build dir for make check
 TBD=${WORKDIR}/${P}-tests-build
 
@@ -57,8 +62,6 @@ pkg_setup() {
 }
 
 src_prepare() {
-	epatch "${FILESDIR}"/${PN}-1.6.x-add-explicit-etc-path.patch
-
 	# Tests were restricted because of this
 	sed -i \
 		-e 's/.*bus_dispatch_test.*/printf ("Disabled due to excess noise\\n");/' \
@@ -88,7 +91,6 @@ multilib_src_configure() {
 	# libaudit is *only* used in DBus wrt SELinux support, so disable it, if
 	# not on an SELinux profile.
 	myconf=(
-		--sysconfdir=/usr/share
 		--localstatedir="${EPREFIX}/var"
 		--docdir="${EPREFIX}/usr/share/doc/${PF}"
 		--htmldir="${EPREFIX}/usr/share/doc/${PF}/html"
@@ -209,31 +211,19 @@ multilib_src_install_all() {
 	rm -rf "${ED}"/var/run
 
 	dodoc AUTHORS ChangeLog HACKING NEWS README doc/TODO
+	readme.gentoo_create_doc
+
 	prune_libtool_files --all
 }
 
 pkg_postinst() {
-	if [ "$(rc-config list default | grep dbus)" = "" ] ; then
-		elog "To start the D-Bus system-wide messagebus by default"
-		elog "you should add it to the default runlevel :"
-		elog "\`rc-update add dbus default\`"
-		elog
-	fi
+	readme.gentoo_print_elog
 
-	elog "Some applications require a session bus in addition to the system"
-	elog "bus. Please see \`man dbus-launch\` for more information."
-	elog
-
-	if [ "$(rc-status | grep dbus | grep started)" ] ; then
-		elog "You can restart D-Bus \`/etc/init.d/dbus restart\` to run"
-		elog "the new version of the daemon."
-	fi
-
-	# Put a "known" machine id into /etc/machine-id so that when we boot,
-	# if it matches, then we can override it with a unique one.
-	# TODO(marineam): Remove this once we double check it is safe to do so.
-	echo "42000000000000000000000000000042" > "${EROOT}"/etc/machine-id
-	ln -sf ../../../etc/machine-id "${EROOT}"/var/lib/dbus/machine-id
+	# Ensure unique id is generated and put it in /etc wrt #370451 but symlink
+	# for DBUS_MACHINE_UUID_FILE (see tools/dbus-launch.c) and reverse
+	# dependencies with hardcoded paths (although the known ones got fixed already)
+	dbus-uuidgen --ensure="${EROOT%/}"/etc/machine-id
+	ln -sf "${EROOT%/}"/etc/machine-id "${EROOT%/}"/var/lib/dbus/machine-id
 
 	if [[ ${CHOST} == *-darwin* ]]; then
 		local plist="org.freedesktop.dbus-session.plist"
