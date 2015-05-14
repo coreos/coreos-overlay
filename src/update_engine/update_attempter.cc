@@ -502,9 +502,6 @@ void UpdateAttempter::BroadcastStatus() {
 uint32_t UpdateAttempter::GetErrorCodeFlags()  {
   uint32_t flags = 0;
 
-  if (!utils::IsNormalBootMode())
-    flags |= kActionCodeDevModeFlag;
-
   if (response_handler_action_.get() &&
       response_handler_action_->install_plan().is_resume)
     flags |= kActionCodeResumedFlag;
