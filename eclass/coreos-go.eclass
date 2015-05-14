@@ -9,7 +9,7 @@
 # @DESCRIPTION:
 # Name of the Go package unpacked to ${S}, this is required.
 
-[[ ${EAPI} != "5" ]] && die "Only EAPI=5 is supported"
+[[ ${EAPI} != "5" ]] && die "${ECLASS}: Only EAPI=5 is supported"
 
 inherit flag-o-matic multiprocessing toolchain-funcs
 
@@ -20,14 +20,14 @@ DEPEND="dev-lang/go"
 go_build() {
 	debug-print-function ${FUNCNAME} "$@"
 
-	[[ $# -eq 0 || $# -gt 2 ]] && die "go_install: incorrect # of arguments"
+	[[ $# -eq 0 || $# -gt 2 ]] && die "${ECLASS}: go_install: incorrect # of arguments"
 	local package_name="$1"
 	local binary_name="${package_name##*/}"
 
 	go build -x -p "$(makeopts_jobs)" \
 		-ldflags "-extldflags '${LDFLAGS}'" \
 		-o "${GOPATH}/bin/${binary_name}" "${package_name}" \
-		|| die "go build failed"
+		|| die "${ECLASS}: go build failed"
 }
 
 coreos-go_src_prepare() {
@@ -35,15 +35,15 @@ coreos-go_src_prepare() {
 
 	export GOPATH="${WORKDIR}/gopath"
 	export GOBIN="${GOPATH}/bin"
-	mkdir -p "${GOBIN}" || die
+	mkdir -p "${GOBIN}" || die "${ECLASS}: bad path: ${GOBIN}"
 
 	if [[ -z "${COREOS_GO_PACKAGE}" ]]; then
-		die "COREOS_GO_PACKAGE must be defined by the ebuild"
+		die "${ECLASS}: COREOS_GO_PACKAGE must be defined by the ebuild"
 	fi
 
 	local package_path="${GOPATH}/src/${COREOS_GO_PACKAGE}"
-	mkdir -p "${package_path%/*}" || die
-	ln -sT "${S}" "${package_path}" || die
+	mkdir -p "${package_path%/*}" || die "${ECLASS}: bad path: ${package_path%/*}"
+	ln -sT "${S}" "${package_path}" || die "${ECLASS}: bad path: ${S}"
 
 	# Go's 6l linker does not support PIE, disable so cgo binaries
 	# which use 6l+gcc for linking can be built correctly.
