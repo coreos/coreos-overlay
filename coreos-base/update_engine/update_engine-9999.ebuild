@@ -5,13 +5,11 @@ EAPI=5
 CROS_WORKON_PROJECT="coreos/update_engine"
 CROS_WORKON_REPO="git://github.com"
 AUTOTOOLS_AUTORECONF=1
-# TODO: this can be disabled once -I.. is no longer used
-AUTOTOOLS_IN_SOURCE_BUILD=1
 
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~arm64 ~x86"
 else
-	CROS_WORKON_COMMIT="c88492c39ec0ad81bb26ae6efde7b4fc46a9804a"
+	CROS_WORKON_COMMIT="f79c8f95dd8bd2a0c532d1922869e2e602be8037"
 	KEYWORDS="amd64 arm arm64 x86"
 fi
 
