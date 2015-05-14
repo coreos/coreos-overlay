@@ -15,6 +15,12 @@ inherit flag-o-matic multiprocessing toolchain-funcs
 
 DEPEND="dev-lang/go"
 
+# @FUNCTION: go_get_arch
+# @USAGE: export GOARCH=$(go_get_arch)
+go_get_arch() {
+	echo ${ARCH}
+}
+
 # @FUNCTION: go_build
 # @USAGE: <package-name> [<binary-name>]
 go_build() {
@@ -33,6 +39,7 @@ go_build() {
 coreos-go_src_prepare() {
 	debug-print-function ${FUNCNAME} "$@"
 
+	export GOARCH=$(go_get_arch)
 	export GOPATH="${WORKDIR}/gopath"
 	export GOBIN="${GOPATH}/bin"
 	mkdir -p "${GOBIN}" || die "${ECLASS}: bad path: ${GOBIN}"
