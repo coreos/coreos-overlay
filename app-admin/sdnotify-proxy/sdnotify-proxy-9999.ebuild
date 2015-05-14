@@ -15,7 +15,7 @@ fi
 
 inherit cros-workon
 
-DESCRIPTION="fleet"
+DESCRIPTION="sdnotify-proxy"
 HOMEPAGE="https://github.com/coreos/sdnotify-proxy"
 SRC_URI=""
 
