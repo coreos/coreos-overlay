@@ -10,7 +10,7 @@ inherit eutils toolchain-funcs
 
 SRC_URI="https://storage.googleapis.com/golang/go${PV}.src.tar.gz"
 # Upstream only supports go on amd64, arm and x86 architectures.
-KEYWORDS="-* ~amd64 ~arm ~x86 ~amd64-fbsd ~x86-fbsd ~x64-macos ~x86-macos"
+KEYWORDS="-* amd64 ~arm ~x86 ~amd64-fbsd ~x86-fbsd ~x64-macos ~x86-macos"
 
 DESCRIPTION="Version of go compiler used for bootstrapping"
 HOMEPAGE="http://www.golang.org"
@@ -35,6 +35,9 @@ S="${WORKDIR}"/go
 src_prepare()
 {
 	sed -i -e 's/"-Werror",//g' src/cmd/dist/build.c
+
+	# Fix-up for dev-lang/go file collisions when FEATURES=splitdebug.
+	rm src/debug/dwarf/testdata/typedef.elf
 }
 
 src_compile()
@@ -63,7 +66,7 @@ src_install()
 {
 	dodir /usr/lib/go1.4
 	exeinto /usr/lib/go1.4/bin
-doexe bin/*
+	doexe bin/*
 	insinto /usr/lib/go1.4
 	doins -r lib pkg src
 	fperms -R +x /usr/lib/go1.4/pkg/tool
