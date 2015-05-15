@@ -23,7 +23,6 @@
 #include <base/file_util.h>
 #include <base/logging.h>
 #include <base/posix/eintr_wrapper.h>
-#include <base/string_number_conversions.h>
 #include <base/string_util.h>
 #include <glib.h>
 #include <google/protobuf/stubs/common.h>
@@ -781,7 +780,7 @@ string CodeToString(ActionExitCode code) {
     // error codes which should be added here.
   }
 
-  return "Unknown error: " + base::UintToString(static_cast<unsigned>(code));
+  return StringPrintf("Unknown error: %u", code);
 }
 
 }  // namespace utils

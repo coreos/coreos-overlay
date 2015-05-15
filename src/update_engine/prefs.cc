@@ -6,9 +6,9 @@
 
 #include <base/file_util.h>
 #include <base/logging.h>
-#include <base/string_number_conversions.h>
 #include <base/string_util.h>
 
+#include "strings/string_number_conversions.h"
 #include "update_engine/utils.h"
 
 using std::string;
@@ -69,12 +69,12 @@ bool Prefs::GetInt64(const string& key, int64_t* value) {
   if (!GetString(key, &str_value))
     return false;
   TrimWhitespaceASCII(str_value, TRIM_ALL, &str_value);
-  TEST_AND_RETURN_FALSE(base::StringToInt64(str_value, value));
+  TEST_AND_RETURN_FALSE(strings::StringToInt64(str_value, value));
   return true;
 }
 
 bool Prefs::SetInt64(const string& key, const int64_t value) {
-  return SetString(key, base::Int64ToString(value));
+  return SetString(key, std::to_string(value));
 }
 
 bool Prefs::Exists(const string& key) {

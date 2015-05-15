@@ -11,12 +11,12 @@
 #include <string>
 
 #include <base/logging.h>
-#include <base/string_number_conversions.h>
 #include <base/string_util.h>
 #include <base/time.h>
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
 
+#include "strings/string_number_conversions.h"
 #include "strings/string_printf.h"
 #include "update_engine/action_pipe.h"
 #include "update_engine/omaha_request_params.h"
@@ -347,8 +347,9 @@ bool OmahaRequestAction::ParseResponse(xmlDoc* doc,
   // Note: The parsing for PollInterval happens even before parsing
   // of the status because we may want to specify the PollInterval even when
   // there's no update.
-  base::StringToInt(XmlGetProperty(update_check_node, "PollInterval"),
-                    &output_object->poll_interval);
+  if (!strings::StringToInt(XmlGetProperty(update_check_node, "PollInterval"),
+                            &output_object->poll_interval))
+    output_object->poll_interval = 0;
 
   if (!ParseStatus(update_check_node, output_object, completer))
     return false;
@@ -544,7 +545,7 @@ bool OmahaRequestAction::ParseParams(xmlDoc* doc,
   output_object->deadline = XmlGetProperty(pie_action_node, kTagDeadline);
 
   string max = XmlGetProperty(pie_action_node, kTagMaxFailureCountPerUrl);
-  if (!base::StringToUint(max, &output_object->max_failure_count_per_url))
+  if (!strings::StringToUint(max, &output_object->max_failure_count_per_url))
     output_object->max_failure_count_per_url = kDefaultMaxFailureCountPerUrl;
 
   output_object->is_delta_payload =

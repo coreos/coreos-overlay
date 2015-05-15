@@ -15,11 +15,11 @@
 
 #include <base/command_line.h>
 #include <base/logging.h>
-#include <base/string_number_conversions.h>
 #include <base/string_split.h>
 #include <gflags/gflags.h>
 #include <glib.h>
 
+#include "strings/string_number_conversions.h"
 #include "update_engine/delta_diff_generator.h"
 #include "update_engine/delta_performer.h"
 #include "update_engine/payload_signer.h"
@@ -87,7 +87,7 @@ void ParseSignatureSizes(vector<int>* sizes) {
   base::SplitString(FLAGS_signature_size, ':', &strsizes);
   for (const string& str : strsizes) {
     int size = 0;
-    bool parsing_successful = base::StringToInt(str, &size);
+    bool parsing_successful = strings::StringToInt(str, &size);
     LOG_IF(FATAL, !parsing_successful)
         << "Invalid signature size: " << str;
     sizes->push_back(size);

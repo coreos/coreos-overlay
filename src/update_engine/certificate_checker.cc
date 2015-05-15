@@ -6,13 +6,13 @@
 
 #include <string>
 
-#include <base/string_number_conversions.h>
 #include <base/string_util.h>
 #include <base/logging.h>
 #include <curl/curl.h>
 #include <openssl/evp.h>
 #include <openssl/ssl.h>
 
+#include "strings/string_number_conversions.h"
 #include "strings/string_printf.h"
 #include "update_engine/prefs_interface.h"
 #include "update_engine/utils.h"
@@ -131,7 +131,7 @@ bool CertificateChecker::CheckCertificateChange(
 
   // We convert the raw bytes of the digest to an hex string, for storage in
   // prefs.
-  string digest_string = base::HexEncode(digest, digest_length);
+  string digest_string = strings::HexEncode(digest, digest_length);
 
   string storage_key = StringPrintf("%s-%d-%d",
                                     kPrefsUpdateServerCertificate,
