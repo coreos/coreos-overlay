@@ -38,7 +38,6 @@ RDEPEND="${RDEPEND}
 	app-text/texi2html
 	coreos-base/cros-devutils[cros_host]
 	coreos-base/cros-testutils
-	coreos-base/vboot_reference
 	=dev-lang/python-2*
 	dev-python/setuptools
 	dev-lang/nasm

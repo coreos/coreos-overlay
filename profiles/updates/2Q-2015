@@ -1,1 +1,2 @@
 move app-emulation/rocket app-emulation/rkt
+move coreos-base/vboot_reference sys-apps/seismograph

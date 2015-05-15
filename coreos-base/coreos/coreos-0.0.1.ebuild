@@ -105,7 +105,6 @@ RDEPEND="${RDEPEND}
 	app-arch/unzip
 	app-arch/zip
 	app-shells/bash
-	coreos-base/vboot_reference
 	coreos-base/update_engine
 	coreos-base/coreos-init
 	coreos-base/coreos-cloudinit
@@ -131,6 +130,7 @@ RDEPEND="${RDEPEND}
 	sys-apps/pciutils
 	sys-apps/rootdev
 	sys-apps/sed
+	sys-apps/seismograph
 	sys-apps/shadow
 	sys-apps/systemd
 	sys-apps/usbutils
