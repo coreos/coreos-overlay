@@ -14,6 +14,7 @@
 #include <gtest/gtest.h>
 
 #include "strings/string_printf.h"
+#include "update_engine/omaha_request_params.h"
 #include "update_engine/postinstall_runner_action.h"
 #include "update_engine/test_utils.h"
 #include "update_engine/utils.h"
@@ -141,7 +142,7 @@ void PostinstallRunnerActionTest::DoTest(bool do_losetup, int err_code) {
   InstallPlan install_plan;
   install_plan.install_path = dev;
   feeder_action.set_obj(install_plan);
-  PostinstallRunnerAction runner_action;
+  PostinstallRunnerAction runner_action(OmahaRequestParams::kAppId);
   BondActions(&feeder_action, &runner_action);
   ObjectCollectorAction<InstallPlan> collector_action;
   BondActions(&runner_action, &collector_action);
@@ -185,7 +186,7 @@ void PostinstallRunnerActionTest::DoTest(bool do_losetup, int err_code) {
 // Death tests don't seem to be working on Hardy
 TEST_F(PostinstallRunnerActionTest, DISABLED_RunAsRootDeathTest) {
   ASSERT_EQ(0, getuid());
-  PostinstallRunnerAction runner_action;
+  PostinstallRunnerAction runner_action(OmahaRequestParams::kAppId);
   ASSERT_DEATH({ runner_action.TerminateProcessing(); },
                "postinstall_runner_action.h:.*] Check failed");
 }
