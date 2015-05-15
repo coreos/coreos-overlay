@@ -1,10 +1,9 @@
-# Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
+# Copyright (c) 2015 The CoreOS OS Authors. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI="4"
-CROS_WORKON_PROJECT="coreos/vboot_reference"
+EAPI=5
+CROS_WORKON_PROJECT="coreos/seismograph"
 CROS_WORKON_REPO="git://github.com"
-CROS_WORKON_LOCALDIR="src/platform"
 AUTOTOOLS_AUTORECONF=1
 
 if [[ "${PV}" == 9999 ]]; then
@@ -21,5 +20,6 @@ LICENSE="BSD"
 SLOT="0"
 IUSE=""
 
-RDEPEND="sys-apps/util-linux"
+RDEPEND="!coreos-base/vboot_reference
+	sys-apps/util-linux"
 DEPEND="${RDEPEND}"
