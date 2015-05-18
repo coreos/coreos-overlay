@@ -94,7 +94,9 @@ bool Prefs::GetFileNameForKey(const std::string& key, FilePath* filename) {
   TEST_AND_RETURN_FALSE(!key.empty());
   for (size_t i = 0; i < key.size(); ++i) {
     char c = key.at(i);
-    TEST_AND_RETURN_FALSE(IsAsciiAlpha(c) || IsAsciiDigit(c) ||
+    TEST_AND_RETURN_FALSE(('A' <= c && c <= 'Z') ||
+                          ('a' <= c && c <= 'z') ||
+                          ('0' <= c && c <= '9') ||
                           c == '_' || c == '-');
   }
   *filename = prefs_dir_.Append(key);
