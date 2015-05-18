@@ -152,7 +152,7 @@ TEST_F(UpdateAttempterTest, GetErrorCodeForActionTest) {
   FilesystemCopierAction filesystem_copier_action(false, false);
   EXPECT_EQ(kActionCodeFilesystemCopierError,
             GetErrorCodeForAction(&filesystem_copier_action, kActionCodeError));
-  PostinstallRunnerAction postinstall_runner_action;
+  PostinstallRunnerAction postinstall_runner_action(OmahaRequestParams::kAppId);
   EXPECT_EQ(kActionCodePostinstallRunnerError,
             GetErrorCodeForAction(&postinstall_runner_action,
                                   kActionCodeError));
