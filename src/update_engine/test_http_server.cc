@@ -27,7 +27,6 @@
 
 #include <base/logging.h>
 #include <base/string_split.h>
-#include <base/string_util.h>
 
 #include "strings/string_printf.h"
 #include "update_engine/http_common.h"
@@ -44,6 +43,22 @@ using strings::StringPrintf;
 
 
 namespace chromeos_update_engine {
+
+namespace {
+
+bool StartsWith(const string& str, const string& search) {
+  return str.compare(0, search.length(), search) == 0;
+}
+
+bool EndsWith(const string& str, const string& search) {
+  size_t str_length = str.length();
+  size_t search_length = search.length();
+  if (search_length > str_length)
+    return false;
+  return str.compare(str_length - search_length, search_length, search) == 0;
+}
+
+}  // namespace
 
 struct HttpRequest {
   HttpRequest()
@@ -65,7 +80,7 @@ bool ParseRequest(int fd, HttpRequest* request) {
       exit(1);
     }
     headers.append(buf, r);
-  } while (!EndsWith(headers, EOL EOL, true));
+  } while (!EndsWith(headers, EOL EOL));
 
   LOG(INFO) << "got headers:\n--8<------8<------8<------8<----\n"
             << headers
@@ -94,8 +109,7 @@ bool ParseRequest(int fd, HttpRequest* request) {
       CHECK_EQ(terms.size(), static_cast<vector<string>::size_type>(2));
       string &range = terms[1];
       LOG(INFO) << "range attribute: " << range;
-      CHECK(StartsWithASCII(range, "bytes=", true) &&
-            range.find('-') != string::npos);
+      CHECK(StartsWith(range, "bytes=") && range.find('-') != string::npos);
       request->start_offset = atoll(range.c_str() + strlen("bytes="));
       // Decode end offset and increment it by one (so it is non-inclusive).
       if (range.find('-') < range.length() - 1)
@@ -476,10 +490,10 @@ void HandleConnection(int fd) {
   LOG(INFO) << "pid(" << getpid() <<  "): handling url " << url;
   if (url == "/quitquitquit") {
     HandleQuit(fd);
-  } else if (StartsWithASCII(url, "/download/", true)) {
+  } else if (StartsWith(url, "/download/")) {
     const UrlTerms terms(url, 2);
     HandleGet(fd, request, terms.GetLong(1));
-  } else if (StartsWithASCII(url, "/flaky/", true)) {
+  } else if (StartsWith(url, "/flaky/")) {
     const UrlTerms terms(url, 5);
     HandleGet(fd, request, terms.GetLong(1), terms.GetLong(2), terms.GetLong(3),
               terms.GetLong(4));
@@ -487,7 +501,7 @@ void HandleConnection(int fd) {
     HandleRedirect(fd, request);
   } else if (url == "/error") {
     HandleError(fd, request);
-  } else if (StartsWithASCII(url, "/error-if-offset/", true)) {
+  } else if (StartsWith(url, "/error-if-offset/")) {
     const UrlTerms terms(url, 3);
     HandleErrorIfOffset(fd, request, terms.GetLong(1), terms.GetInt(2));
   } else {

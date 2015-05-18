@@ -15,7 +15,6 @@
 #include <string>
 #include <vector>
 
-#include "base/string_util.h"
 #include "base/logging.h"
 
 #include "strings/string_printf.h"
@@ -150,7 +149,7 @@ bool BindToUnusedLoopDevice(const string& filename, string* lo_dev_name_p) {
   // Bind to an unused loopback device, sanity check the device name.
   lo_dev_name_p->clear();
   if (!(utils::ReadPipe("losetup --show -f " + filename, lo_dev_name_p) &&
-        StartsWithASCII(*lo_dev_name_p, "/dev/loop", true))) {
+        (*lo_dev_name_p).compare(0, sizeof("/dev/loop")-1, "/dev/loop") == 0)) {
     ADD_FAILURE();
     return false;
   }
