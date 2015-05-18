@@ -55,12 +55,17 @@ const int kUnmountRetryIntervalInMicroseconds = 200 * 1000;  // 200 ms
 
 namespace utils {
 
+static const char kHTTPS[] = "https://";
 static const char kBootId[] = "/proc/sys/kernel/random/boot_id";
 static const char kMachineId[] = "/etc/machine-id";
 static const char kDevImageMarker[] = "/root/.dev_mode";
 
 bool IsOfficialBuild() {
   return !file_util::PathExists(FilePath(kDevImageMarker));
+}
+
+bool IsHTTPS(const string& url) {
+  return strncasecmp(url.c_str(), kHTTPS, sizeof(kHTTPS)-1) == 0;
 }
 
 string GetBootId() {

@@ -29,6 +29,9 @@ namespace utils {
 // Returns true if this is an official Chrome OS build, false otherwise.
 bool IsOfficialBuild();
 
+// Returns true if string starts with https://
+bool IsHTTPS(const std::string& url);
+
 // Returns the HWID or an empty string on error.
 std::string GetHardwareClass();
 

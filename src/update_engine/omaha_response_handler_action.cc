@@ -7,7 +7,6 @@
 #include <string>
 
 #include <base/logging.h>
-#include "base/string_util.h"
 
 #include "update_engine/payload_processor.h"
 #include "update_engine/payload_state_interface.h"
@@ -121,7 +120,7 @@ bool OmahaResponseHandlerAction::AreHashChecksMandatory(
   // on. It's really hard to do book-keeping based on each byte being
   // downloaded to see whether we only used HTTPS throughout.
   for (size_t i = 0; i < response.payload_urls.size(); i++) {
-    if (!StartsWithASCII(response.payload_urls[i], "https://", false)) {
+    if (!utils::IsHTTPS(response.payload_urls[i])) {
       LOG(INFO) << "Mandating payload hash checks since Omaha response "
                 << "contains non-HTTPS URL(s)";
       return true;

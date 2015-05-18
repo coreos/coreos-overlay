@@ -31,6 +31,14 @@ TEST(UtilsTest, IsOfficialBuild) {
   EXPECT_TRUE(utils::IsOfficialBuild());
 }
 
+TEST(UtilsTest, IsHTTPS) {
+  EXPECT_TRUE(utils::IsHTTPS("https://"));
+  EXPECT_TRUE(utils::IsHTTPS("https://host"));
+  EXPECT_TRUE(utils::IsHTTPS("HTTPS://host"));
+  EXPECT_FALSE(utils::IsHTTPS("http://host"));
+  EXPECT_FALSE(utils::IsHTTPS("bogus"));
+}
+
 TEST(UtilsTest, NormalizePathTest) {
   EXPECT_EQ("", utils::NormalizePath("", false));
   EXPECT_EQ("", utils::NormalizePath("", true));
