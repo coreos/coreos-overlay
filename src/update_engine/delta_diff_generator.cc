@@ -19,7 +19,6 @@
 #include <vector>
 
 #include <base/logging.h>
-#include <base/string_util.h>
 #include <bzlib.h>
 
 #include "strings/string_printf.h"

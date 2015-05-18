@@ -3,10 +3,11 @@
 // found in the LICENSE file.
 
 #include "update_engine/cycle_breaker.h"
+
 #include <inttypes.h>
+
 #include <set>
 #include <utility>
-#include "base/string_util.h"
 
 #include "strings/string_printf.h"
 #include "update_engine/graph_utils.h"

@@ -9,7 +9,6 @@
 #include <string>
 #include <vector>
 
-#include <base/string_util.h>
 #include <base/time.h>
 #include <glib.h>
 #include <gtest/gtest.h>

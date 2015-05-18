@@ -5,7 +5,6 @@
 #include "update_engine/payload_signer.h"
 
 #include <base/logging.h>
-#include <base/string_util.h>
 #include <openssl/pem.h>
 
 #include "update_engine/delta_diff_generator.h"

@@ -10,7 +10,6 @@
 #include <vector>
 
 #include <base/logging.h>
-#include <base/string_util.h>
 #include <base/time.h>
 #include <glib.h>
 #include <gmock/gmock.h>

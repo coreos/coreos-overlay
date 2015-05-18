@@ -9,7 +9,6 @@
 #include <vector>
 
 #include <base/posix/eintr_wrapper.h>
-#include <base/string_util.h>
 #include <glib.h>
 #include <gtest/gtest.h>
 

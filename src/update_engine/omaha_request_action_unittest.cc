@@ -7,7 +7,6 @@
 
 #include <glib.h>
 
-#include "base/string_util.h"
 #include "base/time.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"

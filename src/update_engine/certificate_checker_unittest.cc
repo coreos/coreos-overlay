@@ -4,7 +4,6 @@
 
 #include <string>
 
-#include <base/string_util.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 

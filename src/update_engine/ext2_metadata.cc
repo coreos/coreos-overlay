@@ -6,7 +6,6 @@
 #include <string>
 #include <vector>
 
-#include <base/string_util.h>
 #include <et/com_err.h>
 #include <ext2fs/ext2_io.h>
 #include <ext2fs/ext2fs.h>

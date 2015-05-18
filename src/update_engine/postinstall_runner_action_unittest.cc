@@ -10,7 +10,6 @@
 #include <string>
 #include <vector>
 
-#include <base/string_util.h>
 #include <gtest/gtest.h>
 
 #include "strings/string_printf.h"
