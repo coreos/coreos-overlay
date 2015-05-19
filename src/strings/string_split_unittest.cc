@@ -156,4 +156,23 @@ TEST(StringSplitTest, SplitStringAlongWhitespace) {
   }
 }
 
+TEST(StringSplitTest, TrimWhitespace) {
+  struct {
+    const char* input;
+    const char* output;
+  } data[] = {
+    {"Google Video ", "Google Video"},
+    {" Google Video", "Google Video"},
+    {" Google Video ", "Google Video"},
+    {"Google Video", "Google Video"},
+    {"", ""},
+    {"  ", ""},
+    {"\t\rTest String\n", "Test String"},
+  };
+
+  for (size_t i = 0; i < arraysize(data); ++i) {
+    EXPECT_EQ(data[i].output, TrimWhitespace(data[i].input));
+  }
+}
+
 }  // namespace base

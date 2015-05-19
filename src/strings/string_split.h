@@ -33,6 +33,9 @@ std::vector<std::string> SplitDontTrim(const std::string& str, char delim);
 void SplitStringAlongWhitespace(const std::string& str,
                                 std::vector<std::string>* result);
 
+// Trims any ASCII whitespace from either end of the input string.
+std::string TrimWhitespace(const std::string& input);
+
 }  // namespace strings
 
 #endif  // STRINGS_STRING_SPLIT_H_
