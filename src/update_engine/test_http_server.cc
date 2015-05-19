@@ -26,9 +26,9 @@
 #include <vector>
 
 #include <base/logging.h>
-#include <base/string_split.h>
 
 #include "strings/string_printf.h"
+#include "strings/string_split.h"
 #include "update_engine/http_common.h"
 #include "update_engine/http_fetcher_unittest.h"
 
@@ -87,13 +87,11 @@ bool ParseRequest(int fd, HttpRequest* request) {
             << "\n--8<------8<------8<------8<----";
 
   // Break header into lines.
-  std::vector<string> lines;
-  base::SplitStringUsingSubstr(
-      headers.substr(0, headers.length() - strlen(EOL EOL)), EOL, &lines);
+  std::vector<string> lines = strings::SplitAndTrim(
+      headers.substr(0, headers.length() - strlen(EOL EOL)), EOL);
 
   // Decode URL line.
-  std::vector<string> terms;
-  base::SplitStringAlongWhitespace(lines[0], &terms);
+  std::vector<string> terms = strings::SplitWords(lines[0]);
   CHECK_EQ(terms.size(), static_cast<vector<string>::size_type>(3));
   CHECK_EQ(terms[0], "GET");
   request->url = terms[1];
@@ -102,8 +100,7 @@ bool ParseRequest(int fd, HttpRequest* request) {
   // Decode remaining lines.
   size_t i;
   for (i = 1; i < lines.size(); i++) {
-    std::vector<string> terms;
-    base::SplitStringAlongWhitespace(lines[i], &terms);
+    std::vector<string> terms = strings::SplitWords(lines[i]);
 
     if (terms[0] == "Range:") {
       CHECK_EQ(terms.size(), static_cast<vector<string>::size_type>(2));
@@ -459,7 +456,7 @@ class UrlTerms {
     CHECK_EQ(url[0], '/');
 
     // Split it into terms delimited by slashes, omitting the preceeding slash.
-    base::SplitStringDontTrim(url.substr(1), '/', &terms);
+    terms = strings::SplitDontTrim(url.substr(1), '/');
 
     // Ensure expected length.
     CHECK_EQ(terms.size(), num_terms);

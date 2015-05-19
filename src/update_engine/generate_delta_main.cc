@@ -15,11 +15,11 @@
 
 #include <base/command_line.h>
 #include <base/logging.h>
-#include <base/string_split.h>
 #include <gflags/gflags.h>
 #include <glib.h>
 
 #include "strings/string_number_conversions.h"
+#include "strings/string_split.h"
 #include "update_engine/delta_diff_generator.h"
 #include "update_engine/payload_processor.h"
 #include "update_engine/payload_signer.h"
@@ -81,8 +81,7 @@ bool IsDir(const char* path) {
 void ParseSignatureSizes(vector<int>* sizes) {
   LOG_IF(FATAL, FLAGS_signature_size.empty())
       << "Must pass --signature_size to calculate hash for signing.";
-  vector<string> strsizes;
-  base::SplitString(FLAGS_signature_size, ':', &strsizes);
+  vector<string> strsizes = strings::SplitAndTrim(FLAGS_signature_size, ':');
   for (const string& str : strsizes) {
     int size = 0;
     bool parsing_successful = strings::StringToInt(str, &size);
@@ -143,8 +142,7 @@ void SignPayload() {
   LOG_IF(FATAL, FLAGS_signature_file.empty())
       << "Must pass --signature_file to sign payload.";
   vector<vector<char> > signatures;
-  vector<string> signature_files;
-  base::SplitString(FLAGS_signature_file, ':', &signature_files);
+  vector<string> signature_files = strings::SplitAndTrim(FLAGS_signature_file, ':');
   for (vector<string>::iterator it = signature_files.begin(),
            e = signature_files.end(); it != e; ++it) {
     vector<char> signature;

@@ -23,11 +23,11 @@
 #include <base/file_util.h>
 #include <base/logging.h>
 #include <base/posix/eintr_wrapper.h>
-#include <base/string_util.h>
 #include <glib.h>
 #include <google/protobuf/stubs/common.h>
 
 #include "strings/string_printf.h"
+#include "strings/string_split.h"
 #include "update_engine/file_writer.h"
 #include "update_engine/omaha_request_params.h"
 #include "update_engine/subprocess.h"
@@ -75,7 +75,7 @@ string GetBootId() {
     LOG(ERROR) << "Unable to read boot_id";
     return "";
   }
-  TrimWhitespaceASCII(id, TRIM_ALL, &id);
+  id = strings::TrimWhitespace(id);
 
   // Make it look like the other UUIDs in the payload
   guid.append(1, '{');
@@ -90,7 +90,7 @@ string GetMachineId() {
     LOG(ERROR) << "Unable to read machine_id";
     return "";
   }
-  TrimWhitespaceASCII(id, TRIM_ALL, &id);
+  id = strings::TrimWhitespace(id);
 
   return id;
 }
@@ -351,7 +351,7 @@ bool IsRemovableDevice(const std::string& device) {
                                    &removable)) {
     return false;
   }
-  TrimWhitespaceASCII(removable, TRIM_ALL, &removable);
+  removable = strings::TrimWhitespace(removable);
   return removable == "1";
 }
 
