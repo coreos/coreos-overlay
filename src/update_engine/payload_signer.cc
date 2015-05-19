@@ -5,7 +5,6 @@
 #include "update_engine/payload_signer.h"
 
 #include <base/logging.h>
-#include <base/string_split.h>
 #include <base/string_util.h>
 #include <openssl/pem.h>
 
@@ -187,14 +186,10 @@ bool PayloadSigner::SignHash(const vector<char>& hash,
 
   // This runs on the server, so it's okay to cop out and call openssl
   // executable rather than properly use the library
-  vector<string> cmd;
-  base::SplitString("openssl rsautl -raw -sign -inkey x -in x -out x",
-                    ' ',
-                    &cmd);
-  cmd[cmd.size() - 5] = private_key_path;
-  cmd[cmd.size() - 3] = hash_path;
-  cmd[cmd.size() - 1] = sig_path;
-
+  vector<string> cmd = {"openssl", "rsautl", "-raw", "-sign",
+                        "-inkey", private_key_path,
+                        "-in", hash_path,
+                        "-out", sig_path};
   int return_code = 0;
   TEST_AND_RETURN_FALSE(Subprocess::SynchronousExec(cmd, &return_code, NULL));
   TEST_AND_RETURN_FALSE(return_code == 0);
