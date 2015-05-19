@@ -22,16 +22,9 @@ std::vector<std::string> SplitAndTrim(const std::string& str,
 // The same as SplitAndTrim, but don't trim white space.
 std::vector<std::string> SplitDontTrim(const std::string& str, char delim);
 
-// WARNING: this uses whitespace as defined by the HTML5 spec. If you need
-// a function similar to this but want to trim all types of whitespace, then
-// factor this out into a function that takes a string containing the characters
-// that are treated as whitespace.
-//
-// Splits the string along whitespace (where whitespace is the five space
-// characters defined by HTML 5). Each contiguous block of non-whitespace
-// characters is added to result.
-void SplitStringAlongWhitespace(const std::string& str,
-                                std::vector<std::string>* result);
+// Splits the string along ASCII whitespace.
+// Each contiguous block of non-whitespace characters is added to result.
+std::vector<std::string> SplitWords(const std::string& str);
 
 // Trims any ASCII whitespace from either end of the input string.
 std::string TrimWhitespace(const std::string& input);

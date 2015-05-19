@@ -124,7 +124,7 @@ TEST(StringSplitTest, SplitDontTrim) {
   EXPECT_EQ(r[1], "b\tcc");
 }
 
-TEST(StringSplitTest, SplitStringAlongWhitespace) {
+TEST(StringSplitTest, SplitWords) {
   struct TestData {
     const char* input;
     const size_t expected_result_count;
@@ -146,8 +146,7 @@ TEST(StringSplitTest, SplitStringAlongWhitespace) {
     { "b\t at",  2, "b",  "at" },
   };
   for (size_t i = 0; i < arraysize(data); ++i) {
-    std::vector<std::string> results;
-    SplitStringAlongWhitespace(data[i].input, &results);
+    std::vector<std::string> results = SplitWords(data[i].input);
     ASSERT_EQ(data[i].expected_result_count, results.size());
     if (data[i].expected_result_count > 0)
       ASSERT_EQ(data[i].output1, results[0]);

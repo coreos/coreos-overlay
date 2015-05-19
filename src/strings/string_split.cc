@@ -4,6 +4,7 @@
 
 #include "strings/string_split.h"
 
+#include <algorithm>
 #include <utility>
 
 namespace strings {
@@ -56,45 +57,23 @@ std::string Trim(const std::string& input, const std::string& trim_chars) {
 
 }  // namespace
 
-void SplitStringAlongWhitespace(const std::string& str,
-                                std::vector<std::string>* result) {
-  result->clear();
-  const size_t length = str.length();
-  if (!length)
-    return;
+std::vector<std::string> SplitWords(const std::string& str) {
+  std::vector<std::string> result;
 
-  bool last_was_ws = false;
-  size_t last_non_ws_start = 0;
-  for (size_t i = 0; i < length; ++i) {
-    switch (str[i]) {
-      // HTML 5 defines whitespace as: space, tab, LF, line tab, FF, or CR.
-      case L' ':
-      case L'\t':
-      case L'\xA':
-      case L'\xB':
-      case L'\xC':
-      case L'\xD':
-        if (!last_was_ws) {
-          if (i > 0) {
-            result->push_back(
-                str.substr(last_non_ws_start, i - last_non_ws_start));
-          }
-          last_was_ws = true;
-        }
-        break;
+  for (auto it = str.begin(); it != str.end();) {
+    auto first = std::find_if(it, str.end(), [](char c) {
+      return kWhitespaceASCII.find(c) == std::string::npos;
+    });
+    auto last = std::find_if(first, str.end(), [](char c) {
+      return kWhitespaceASCII.find(c) != std::string::npos;
+    });
+    if (first != last)
+      result.push_back(std::string(first, last));
 
-      default:  // Not a space character.
-        if (last_was_ws) {
-          last_was_ws = false;
-          last_non_ws_start = i;
-        }
-        break;
-    }
+    it = last;
   }
-  if (!last_was_ws) {
-    result->push_back(
-        str.substr(last_non_ws_start, length - last_non_ws_start));
-  }
+
+  return result;
 }
 
 std::vector<std::string> SplitAndTrim(const std::string& str,
