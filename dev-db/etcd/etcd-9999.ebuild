@@ -14,7 +14,7 @@ inherit coreos-doc coreos-go toolchain-funcs cros-workon systemd
 if [[ "${PV}" == 9999 ]]; then
     KEYWORDS="~amd64"
 else
-    CROS_WORKON_COMMIT="fbaef0588533149aa5cdb5091a2053c2bc328575" # v2.0.10
+    CROS_WORKON_COMMIT="0678329cd64a64d7478eae6c35ed0bea0346da86" # v2.0.11
     KEYWORDS="amd64"
 fi
 
@@ -31,6 +31,7 @@ RDEPEND="!dev-db/etcd:0
 	!dev-db/etcdctl"
 
 src_compile() {
+	GO_LDFLAGS="-X ${COREOS_GO_PACKAGE}/version.GitSHA ${CROS_WORKON_COMMIT:0:7}"
 	go_build "${COREOS_GO_PACKAGE}"
 	go_build "${COREOS_GO_PACKAGE}/etcdctl"
 }
