@@ -5,15 +5,15 @@ EAPI=5
 CROS_WORKON_PROJECT="coreos/updateservicectl"
 CROS_WORKON_LOCALNAME="updateservicectl"
 CROS_WORKON_REPO="git://github.com"
+COREOS_GO_PACKAGE="github.com/coreos/updateservicectl"
+inherit cros-workon coreos-go
 
 if [[ "${PV}" == 9999 ]]; then
-	KEYWORDS="~amd64"
+	KEYWORDS="~amd64 ~arm64"
 else
 	CROS_WORKON_COMMIT="f9a7976a09697a15c41a1affb4866790ef714332"  # tag v1.3.0
-	KEYWORDS="amd64"
+	KEYWORDS="amd64 arm64"
 fi
-
-inherit cros-workon
 
 DESCRIPTION="CoreUpdate Management CLI"
 HOMEPAGE="https://github.com/coreos/updateservicectl"
@@ -23,13 +23,9 @@ LICENSE="Apache-2.0"
 SLOT="0"
 IUSE=""
 
-DEPEND=">=dev-lang/go-1.2"
 RDEPEND="!app-admin/updatectl"
 
-src_compile() {
-	./build || die
-}
-
-src_install() {
-	dobin bin/updateservicectl
+src_prepare() {
+	coreos-go_src_prepare
+	GOPATH+=":${S}/Godeps/_workspace"
 }

@@ -26,13 +26,13 @@ go_get_arch() {
 go_build() {
 	debug-print-function ${FUNCNAME} "$@"
 
-	[[ $# -eq 0 || $# -gt 2 ]] && die "${ECLASS}: go_install: incorrect # of arguments"
+	[[ $# -eq 0 || $# -gt 2 ]] && die "${ECLASS}: ${FUNCNAME}: incorrect # of arguments"
 	local package_name="$1"
 	local binary_name="${package_name##*/}"
 
 	go build -x -p "$(makeopts_jobs)" \
 		-ldflags "${GO_LDFLAGS} -extldflags '${LDFLAGS}'" \
-		-o "${GOPATH}/bin/${binary_name}" "${package_name}" \
+		-o "${GOBIN}/${binary_name}" "${package_name}" \
 		|| die "${ECLASS}: go build failed"
 }
 
@@ -42,6 +42,11 @@ coreos-go_src_prepare() {
 	export GOARCH=$(go_get_arch)
 	export GOPATH="${WORKDIR}/gopath"
 	export GOBIN="${GOPATH}/bin"
+	
+	debug-print "${FUNCNAME}: GOARCH=${GOARCH}"
+	debug-print "${FUNCNAME}: GOPATH=${GOPATH}"
+	debug-print "${FUNCNAME}: GOBIN=${GOBIN}"
+
 	mkdir -p "${GOBIN}" || die "${ECLASS}: bad path: ${GOBIN}"
 
 	if [[ -z "${COREOS_GO_PACKAGE}" ]]; then
@@ -59,7 +64,7 @@ coreos-go_src_prepare() {
 	fi
 
 	export CC=$(tc-getCC)
-	export CGO_ENABLED=1
+	export CGO_ENABLED=${CGO_ENABLED:-1}
 	export CGO_CFLAGS="${CFLAGS}"
 	export CGO_CPPFLAGS="${CPPFLAGS}"
 	export CGO_CXXFLAGS="${CXXFLAGS}"

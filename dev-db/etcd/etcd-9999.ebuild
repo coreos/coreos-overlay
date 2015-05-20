@@ -12,10 +12,10 @@ COREOS_GO_PACKAGE="github.com/coreos/etcd"
 inherit coreos-doc coreos-go toolchain-funcs cros-workon systemd
 
 if [[ "${PV}" == 9999 ]]; then
-    KEYWORDS="~amd64"
+    KEYWORDS="~amd64 ~arm64"
 else
     CROS_WORKON_COMMIT="0678329cd64a64d7478eae6c35ed0bea0346da86" # v2.0.11
-    KEYWORDS="amd64"
+    KEYWORDS="amd64 arm64"
 fi
 
 DESCRIPTION="etcd"
@@ -26,7 +26,6 @@ LICENSE="Apache-2.0"
 SLOT="2"
 IUSE=""
 
-DEPEND=">=dev-lang/go-1.3"
 RDEPEND="!dev-db/etcd:0
 	!dev-db/etcdctl"
 

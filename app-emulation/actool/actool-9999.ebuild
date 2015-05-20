@@ -4,16 +4,15 @@
 EAPI=5
 CROS_WORKON_PROJECT="appc/spec"
 CROS_WORKON_REPO="git://github.com"
-# name of directory git repo is checked out into by manifest
 CROS_WORKON_LOCALNAME="appc-spec"
 COREOS_GO_PACKAGE="github.com/appc/spec"
 inherit coreos-go cros-workon
 
 if [[ "${PV}" == 9999 ]]; then
-    KEYWORDS="~amd64"
+    KEYWORDS="~amd64 ~arm64"
 else
     CROS_WORKON_COMMIT="9a448f73b7fa765a60eade4bcca41e18bfe613aa" # v0.5.1
-    KEYWORDS="amd64"
+    KEYWORDS="amd64 arm64"
 fi
 
 DESCRIPTION="App Container builder and validator"
@@ -23,8 +22,6 @@ SRC_URI=""
 LICENSE="Apache-2.0"
 SLOT="0"
 IUSE=""
-
-DEPEND=">=dev-lang/go-1.3"
 
 src_compile() {
 	go_build "${COREOS_GO_PACKAGE}/actool"

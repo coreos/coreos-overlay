@@ -7,7 +7,7 @@ CROS_WORKON_LOCALNAME="ignition"
 CROS_WORKON_REPO="git://github.com"
 COREOS_GO_PACKAGE="github.com/coreos/ignition"
 
-KEYWORDS="~amd64"
+KEYWORDS="~amd64 arm64"
 
 inherit coreos-doc coreos-go cros-workon systemd
 
@@ -19,15 +19,12 @@ LICENSE="Apache-2.0"
 SLOT="0"
 IUSE=""
 
-DEPEND=">=dev-lang/go-1.2"
-RDEPEND=""
-
 src_compile() {
-	go_build "${COREOS_GO_PACKAGE}"
+	go_build "${COREOS_GO_PACKAGE}/src"
 }
 
 src_install() {
-	dobin "${S}/bin/${PN}"
+	dobin ${GOBIN}/*
 
 	systemd_dounit "${FILESDIR}"/coreos-metadata.target
 

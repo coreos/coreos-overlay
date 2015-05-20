@@ -1,19 +1,19 @@
 # Copyright (c) 2014 CoreOS, Inc.. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=4
+EAPI=5
 CROS_WORKON_PROJECT="coreos/locksmith"
 CROS_WORKON_LOCALNAME="locksmith"
 CROS_WORKON_REPO="git://github.com"
+COREOS_GO_PACKAGE="github.com/coreos/locksmith"
+inherit cros-workon systemd coreos-go
 
 if [[ "${PV}" == 9999 ]]; then
-	KEYWORDS="~amd64"
+	KEYWORDS="~amd64 ~arm64"
 else
 	CROS_WORKON_COMMIT="bee1358eb3a65387333ee3adc8a3fdfc0feac656" # v0.3.0 git tag
-	KEYWORDS="amd64"
+	KEYWORDS="amd64 arm64"
 fi
-
-inherit cros-workon systemd
 
 DESCRIPTION="locksmith"
 HOMEPAGE="https://github.com/coreos/locksmith"
@@ -23,20 +23,12 @@ LICENSE="Apache-2.0"
 SLOT="0"
 IUSE=""
 
-DEPEND=">=dev-lang/go-1.2"
-
 src_compile() {
-	# work around gentoo hardened gcc incompatibilities with cgo
-	# see https://bugs.gentoo.org/show_bug.cgi?id=493328
-	if gcc-specs-pie; then
-		GOLDFLAGS="-extldflags -fno-PIC"
-	fi
-
-	GOLDFLAGS=${GOLDFLAGS} ./build || die
+	go_build "${COREOS_GO_PACKAGE}/locksmithctl"
 }
 
 src_install() {
-	dobin ${S}/bin/locksmithctl
+	dobin ${GOBIN}/locksmithctl
 	dodir /usr/lib/locksmith
 	dosym ../../../bin/locksmithctl /usr/lib/locksmith/locksmithd
 

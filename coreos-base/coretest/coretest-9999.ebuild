@@ -5,15 +5,15 @@ EAPI=5
 CROS_WORKON_PROJECT="coreos/coretest"
 CROS_WORKON_LOCALNAME="coretest"
 CROS_WORKON_REPO="git://github.com"
+COREOS_GO_PACKAGE="github.com/coreos/coretest"
+inherit cros-workon coreos-go
 
 if [[ "${PV}" == 9999 ]]; then
-	KEYWORDS="~amd64 ~arm ~x86"
+	KEYWORDS="~amd64 ~arm64 ~x86"
 else
 	CROS_WORKON_COMMIT="7ddccba648523fd041c0f729bcaec48c6e253c1a"
-	KEYWORDS="amd64 arm x86"
+	KEYWORDS="amd64 arm64 x86"
 fi
-
-inherit cros-workon
 
 DESCRIPTION="Sanity tests for CoreOS"
 HOMEPAGE="https://github.com/coreos/coretest"
@@ -23,12 +23,13 @@ LICENSE="Apache-2.0"
 SLOT="0"
 IUSE=""
 
-DEPEND=">=dev-lang/go-1.1"
-
-src_compile() {
-	./build || die
+src_prepare() {
+	coreos-go_src_prepare
+	GOPATH+=":${S}/third_party"
 }
 
 src_install() {
-	dobin "${S}/${PN}"
+	go test -i -c -o "${GOBIN}/coretest" "github.com/coreos/coretest" \
+		|| die "go test failed"
+	dobin "${GOBIN}/coretest"
 }

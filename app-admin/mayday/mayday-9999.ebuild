@@ -12,10 +12,10 @@ COREOS_GO_PACKAGE="github.com/coreos/mayday"
 inherit coreos-go cros-workon
 
 if [[ "${PV}" == 9999 ]]; then
-    KEYWORDS="~amd64"
+    KEYWORDS="~amd64 ~arm64"
 else
     CROS_WORKON_COMMIT="eaff09119f3a5b911908e4d3200272034466fe5d" # v0.1.0
-    KEYWORDS="amd64"
+    KEYWORDS="amd64 arm64"
 fi
 
 DESCRIPTION="mayday"
@@ -26,13 +26,11 @@ LICENSE="Apache-2.0"
 SLOT="0"
 IUSE=""
 
-DEPEND=">=dev-lang/go-1.2"
-
 src_compile() {
 	go_build "${COREOS_GO_PACKAGE}/cmd"
 }
 
 src_install() {
-	newbin ${WORKDIR}/gopath/bin/cmd mayday
+	newbin ${GOBIN}/cmd mayday
 }
 
