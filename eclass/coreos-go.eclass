@@ -32,7 +32,7 @@ go_build() {
 
 	go build -x -p "$(makeopts_jobs)" \
 		-ldflags "${GO_LDFLAGS} -extldflags '${LDFLAGS}'" \
-		-o "${GOPATH}/bin/${binary_name}" "${package_name}" \
+		-o "${GOBIN}/${binary_name}" "${package_name}" \
 		|| die "${ECLASS}: go build failed"
 }
 
