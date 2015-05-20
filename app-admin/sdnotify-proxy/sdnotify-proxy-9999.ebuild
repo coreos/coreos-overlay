@@ -23,13 +23,8 @@ LICENSE="Apache-2.0"
 SLOT="0"
 IUSE=""
 
-DEPEND=">=dev-lang/go-1.3"
-
-src_compile() {
-	go_build "${COREOS_GO_PACKAGE}"
-}
-
 src_install() {
+	# Put sdnotify-proxy into its well-know location.
 	exeinto /usr/libexec
 	doexe ${GOBIN}/sdnotify-proxy
 }
