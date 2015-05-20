@@ -3,14 +3,15 @@
 
 EAPI=5
 CROS_WORKON_PROJECT="coreos/mantle"
+CROS_WORKON_LOCALNAME="mantle"
 CROS_WORKON_REPO="git://github.com"
 COREOS_GO_PACKAGE="github.com/coreos/mantle"
 
 if [[ "${PV}" == 9999 ]]; then
-	KEYWORDS="~amd64"
+	KEYWORDS="~amd64 ~arm64"
 else
 	CROS_WORKON_COMMIT="47fb7ad56a42e336546742258513fb1344f0105c"
-	KEYWORDS="amd64"
+	KEYWORDS="amd64 arm64"
 fi
 
 inherit coreos-go cros-workon
