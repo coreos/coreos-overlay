@@ -26,7 +26,7 @@ go_get_arch() {
 go_build() {
 	debug-print-function ${FUNCNAME} "$@"
 
-	[[ $# -eq 0 || $# -gt 2 ]] && die "${ECLASS}: go_install: incorrect # of arguments"
+	[[ $# -eq 0 || $# -gt 2 ]] && die "${ECLASS}: ${FUNCNAME}: incorrect # of arguments"
 	local package_name="$1"
 	local binary_name="${package_name##*/}"
 
