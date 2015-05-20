@@ -64,7 +64,7 @@ coreos-go_src_prepare() {
 	fi
 
 	export CC=$(tc-getCC)
-	export CGO_ENABLED=1
+	export CGO_ENABLED=${CGO_ENABLED:-1}
 	export CGO_CFLAGS="${CFLAGS}"
 	export CGO_CPPFLAGS="${CPPFLAGS}"
 	export CGO_CXXFLAGS="${CXXFLAGS}"
