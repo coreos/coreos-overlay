@@ -42,6 +42,11 @@ coreos-go_src_prepare() {
 	export GOARCH=$(go_get_arch)
 	export GOPATH="${WORKDIR}/gopath"
 	export GOBIN="${GOPATH}/bin"
+	
+	debug-print "${FUNCNAME}: GOARCH=${GOARCH}"
+	debug-print "${FUNCNAME}: GOPATH=${GOPATH}"
+	debug-print "${FUNCNAME}: GOBIN=${GOBIN}"
+
 	mkdir -p "${GOBIN}" || die "${ECLASS}: bad path: ${GOBIN}"
 
 	if [[ -z "${COREOS_GO_PACKAGE}" ]]; then
