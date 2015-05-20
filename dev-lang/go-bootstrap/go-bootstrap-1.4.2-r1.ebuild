@@ -37,6 +37,7 @@ src_prepare()
 	sed -i -e 's/"-Werror",//g' src/cmd/dist/build.c
 
 	# Fix-up for dev-lang/go file collisions when FEATURES=splitdebug.
+	# https://bugs.gentoo.org/show_bug.cgi?id=549598
 	rm src/debug/dwarf/testdata/typedef.elf
 }
 
