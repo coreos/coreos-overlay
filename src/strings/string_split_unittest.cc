@@ -12,130 +12,113 @@ using ::testing::ElementsAre;
 
 namespace strings {
 
-TEST(SplitStringUsingSubstrTest, EmptyString) {
-  std::vector<std::string> results;
-  SplitStringUsingSubstr(std::string(), "DELIMITER", &results);
-  ASSERT_EQ(1u, results.size());
-  EXPECT_THAT(results, ElementsAre(""));
-}
-
-TEST(StringSplitTest, SplitString) {
+TEST(StringSplitTest, SplitAndTrimChar) {
   std::vector<std::string> r;
 
-  SplitString(std::string(), ',', &r);
+  r = SplitAndTrim(std::string(), ',');
   EXPECT_EQ(0U, r.size());
-  r.clear();
 
-  SplitString("a,b,c", ',', &r);
+  r = SplitAndTrim("a,b,c", ',');
   ASSERT_EQ(3U, r.size());
   EXPECT_EQ(r[0], "a");
   EXPECT_EQ(r[1], "b");
   EXPECT_EQ(r[2], "c");
-  r.clear();
 
-  SplitString("a, b, c", ',', &r);
+  r = SplitAndTrim("a, b, c", ',');
   ASSERT_EQ(3U, r.size());
   EXPECT_EQ(r[0], "a");
   EXPECT_EQ(r[1], "b");
   EXPECT_EQ(r[2], "c");
-  r.clear();
 
-  SplitString("a,,c", ',', &r);
+  r = SplitAndTrim("a,,c", ',');
   ASSERT_EQ(3U, r.size());
   EXPECT_EQ(r[0], "a");
   EXPECT_EQ(r[1], "");
   EXPECT_EQ(r[2], "c");
-  r.clear();
 
-  SplitString("   ", '*', &r);
+  r = SplitAndTrim("   ", '*');
   EXPECT_EQ(0U, r.size());
-  r.clear();
 
-  SplitString("foo", '*', &r);
+  r = SplitAndTrim("foo", '*');
   ASSERT_EQ(1U, r.size());
   EXPECT_EQ(r[0], "foo");
-  r.clear();
 
-  SplitString("foo ,", ',', &r);
+  r = SplitAndTrim("foo ,", ',');
   ASSERT_EQ(2U, r.size());
   EXPECT_EQ(r[0], "foo");
   EXPECT_EQ(r[1], "");
-  r.clear();
 
-  SplitString(",", ',', &r);
+  r = SplitAndTrim(",", ',');
   ASSERT_EQ(2U, r.size());
   EXPECT_EQ(r[0], "");
   EXPECT_EQ(r[1], "");
-  r.clear();
 
-  SplitString("\t\ta\t", '\t', &r);
+  r = SplitAndTrim("\t\ta\t", '\t');
   ASSERT_EQ(4U, r.size());
   EXPECT_EQ(r[0], "");
   EXPECT_EQ(r[1], "");
   EXPECT_EQ(r[2], "a");
   EXPECT_EQ(r[3], "");
-  r.clear();
 
-  SplitString("\ta\t\nb\tcc", '\n', &r);
+  r = SplitAndTrim("\ta\t\nb\tcc", '\n');
   ASSERT_EQ(2U, r.size());
   EXPECT_EQ(r[0], "a");
   EXPECT_EQ(r[1], "b\tcc");
-  r.clear();
 }
 
-TEST(SplitStringUsingSubstrTest, StringWithNoDelimiter) {
-  std::vector<std::string> results;
-  SplitStringUsingSubstr("alongwordwithnodelimiter", "DELIMITER", &results);
+TEST(StringSplitTest, SplitAndTrimEmptyString) {
+  std::vector<std::string> results = SplitAndTrim(
+      std::string(), "DELIMITER");
+  ASSERT_EQ(0u, results.size());
+}
+
+TEST(StringSplitTest, SplitAndTrimNoDelimiter) {
+  std::vector<std::string> results = SplitAndTrim(
+      "alongwordwithnodelimiter", "DELIMITER");
   ASSERT_EQ(1u, results.size());
   EXPECT_THAT(results, ElementsAre("alongwordwithnodelimiter"));
 }
 
-TEST(SplitStringUsingSubstrTest, LeadingDelimitersSkipped) {
-  std::vector<std::string> results;
-  SplitStringUsingSubstr(
+TEST(StringSplitTest, SplitAndTrimLeadingDelimitersSkipped) {
+  std::vector<std::string> results = SplitAndTrim(
       "DELIMITERDELIMITERDELIMITERoneDELIMITERtwoDELIMITERthree",
-      "DELIMITER",
-      &results);
+      "DELIMITER");
   ASSERT_EQ(6u, results.size());
   EXPECT_THAT(results, ElementsAre("", "", "", "one", "two", "three"));
 }
 
-TEST(SplitStringUsingSubstrTest, ConsecutiveDelimitersSkipped) {
-  std::vector<std::string> results;
-  SplitStringUsingSubstr(
+TEST(StringSplitTest, SplitAndTrimConsecutiveDelimitersSkipped) {
+  std::vector<std::string> results = SplitAndTrim(
       "unoDELIMITERDELIMITERDELIMITERdosDELIMITERtresDELIMITERDELIMITERcuatro",
-      "DELIMITER",
-      &results);
+      "DELIMITER");
   ASSERT_EQ(7u, results.size());
   EXPECT_THAT(results, ElementsAre("uno", "", "", "dos", "tres", "", "cuatro"));
 }
 
-TEST(SplitStringUsingSubstrTest, TrailingDelimitersSkipped) {
-  std::vector<std::string> results;
-  SplitStringUsingSubstr(
+TEST(StringSplitTest, SplitAndTrimTrailingDelimitersSkipped) {
+  std::vector<std::string> results = SplitAndTrim(
       "unDELIMITERdeuxDELIMITERtroisDELIMITERquatreDELIMITERDELIMITERDELIMITER",
-      "DELIMITER",
-      &results);
+      "DELIMITER");
   ASSERT_EQ(7u, results.size());
   EXPECT_THAT(
       results, ElementsAre("un", "deux", "trois", "quatre", "", "", ""));
 }
 
-TEST(StringSplitTest, StringSplitDontTrim) {
+TEST(StringSplitTest, SplitDontTrim) {
   std::vector<std::string> r;
 
-  SplitStringDontTrim("   ", '*', &r);
+  r = SplitDontTrim("   ", '*');
   ASSERT_EQ(1U, r.size());
   EXPECT_EQ(r[0], "   ");
 
-  SplitStringDontTrim("\t  \ta\t ", '\t', &r);
+  r = SplitDontTrim("\t  \ta\t ", '\t');
   ASSERT_EQ(4U, r.size());
   EXPECT_EQ(r[0], "");
   EXPECT_EQ(r[1], "  ");
   EXPECT_EQ(r[2], "a");
   EXPECT_EQ(r[3], " ");
 
-  SplitStringDontTrim("\ta\t\nb\tcc", '\n', &r);
+  r = SplitDontTrim("\ta\t\nb\tcc", '\n');
   ASSERT_EQ(2U, r.size());
   EXPECT_EQ(r[0], "\ta\t");
   EXPECT_EQ(r[1], "b\tcc");

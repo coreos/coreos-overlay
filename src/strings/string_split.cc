@@ -4,60 +4,40 @@
 
 #include "strings/string_split.h"
 
-#include <base/logging.h>
+#include <utility>
+
 #include <base/string_util.h>
 
 namespace strings {
 
 namespace {
 
-void SplitString(const std::string& str,
-                 char s,
-                 bool trim_whitespace,
-                 std::vector<std::string>* r) {
-  DCHECK_GE(s, 0);
-  DCHECK_LT(s, 0x7F);
-
-  r->clear();
-  size_t last = 0;
-  size_t c = str.size();
-  for (size_t i = 0; i <= c; ++i) {
-    if (i == c || str[i] == s) {
-      std::string tmp(str, last, i - last);
+std::vector<std::string> Split(const std::string& str,
+                               const std::string& delim,
+                               bool trim_whitespace) {
+  std::vector<std::string> r;
+  size_t begin_index = 0;
+  while (true) {
+    size_t end_index = str.find(delim, begin_index);
+    if (end_index == std::string::npos) {
+      std::string tmp = str.substr(begin_index);
       if (trim_whitespace)
         TrimWhitespace(tmp, TRIM_ALL, &tmp);
       // Avoid converting an empty or all-whitespace source string into a vector
       // of one empty string.
-      if (i != c || !r->empty() || !tmp.empty())
-        r->push_back(tmp);
-      last = i + 1;
+      if (!r.empty() || !tmp.empty())
+        r.push_back(std::move(tmp));
+      return r;
     }
+    std::string tmp = str.substr(begin_index, end_index - begin_index);
+    if (trim_whitespace)
+      TrimWhitespace(tmp, TRIM_ALL, &tmp);
+    r.push_back(std::move(tmp));
+    begin_index = end_index + delim.size();
   }
 }
 
 }  // namespace
-
-void SplitStringUsingSubstr(const std::string& str,
-                            const std::string& s,
-                            std::vector<std::string>* r) {
-  r->clear();
-  size_t begin_index = 0;
-  while (true) {
-    size_t end_index = str.find(s, begin_index);
-    if (end_index == std::string::npos) {
-      const std::string term = str.substr(begin_index);
-      std::string tmp;
-      TrimWhitespace(term, TRIM_ALL, &tmp);
-      r->push_back(tmp);
-      return;
-    }
-    const std::string term = str.substr(begin_index, end_index - begin_index);
-    std::string tmp;
-    TrimWhitespace(term, TRIM_ALL, &tmp);
-    r->push_back(tmp);
-    begin_index = end_index + s.size();
-  }
-}
 
 void SplitStringAlongWhitespace(const std::string& str,
                                 std::vector<std::string>* result) {
@@ -100,16 +80,17 @@ void SplitStringAlongWhitespace(const std::string& str,
   }
 }
 
-void SplitString(const std::string& str,
-                 char c,
-                 std::vector<std::string>* r) {
-  SplitString(str, c, true, r);
+std::vector<std::string> SplitAndTrim(const std::string& str,
+                                      const std::string &delim) {
+  return Split(str, delim, true);
 }
 
-void SplitStringDontTrim(const std::string& str,
-                         char c,
-                         std::vector<std::string>* r) {
-  SplitString(str, c, false, r);
+std::vector<std::string> SplitAndTrim(const std::string& str, char delim) {
+  return Split(str, std::string{delim}, true);
+}
+
+std::vector<std::string> SplitDontTrim(const std::string& str, char delim) {
+  return Split(str, std::string{delim}, false);
 }
 
 }  // namespace strings

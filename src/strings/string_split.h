@@ -10,23 +10,17 @@
 
 namespace strings {
 
-// Splits |str| into a vector of strings delimited by |c|, placing the results
-// in |r|. If several instances of |c| are contiguous, or if |str| begins with
-// or ends with |c|, then an empty string is inserted.
+// Splits |str| into a vector of strings delimited by |delim|. If several
+// instances of |delim| are contiguous, or if |str| begins with or ends
+// with |delim|, then an empty string is inserted.
 //
 // Every substring is trimmed of any leading or trailing white space.
-// Note: |c| must be in the ASCII range.
-void SplitString(const std::string& str, char c,
-                 std::vector<std::string>* r);
+std::vector<std::string> SplitAndTrim(const std::string& str, char delim);
+std::vector<std::string> SplitAndTrim(const std::string& str,
+                                      const std::string& delim);
 
-// The same as SplitString, but use a substring delimiter instead of a char.
-void SplitStringUsingSubstr(const std::string& str, const std::string& s,
-                            std::vector<std::string>* r);
-
-// The same as SplitString, but don't trim white space.
-// Note: |c| must be in the ASCII range.
-void SplitStringDontTrim(const std::string& str, char c,
-                         std::vector<std::string>* r);
+// The same as SplitAndTrim, but don't trim white space.
+std::vector<std::string> SplitDontTrim(const std::string& str, char delim);
 
 // WARNING: this uses whitespace as defined by the HTML5 spec. If you need
 // a function similar to this but want to trim all types of whitespace, then
