@@ -191,12 +191,11 @@ int DeltaPerformer::Open(const char* path, int flags, mode_t mode) {
   return -err;
 }
 
-bool DeltaPerformer::OpenKernel(const char* kernel_path) {
+int DeltaPerformer::OpenKernel(const char* kernel_path) {
   int err;
-  bool success = OpenFile(kernel_path, &kernel_fd_, &err);
-  if (success)
+  if (OpenFile(kernel_path, &kernel_fd_, &err))
     kernel_path_ = kernel_path;
-  return success;
+  return -err;
 }
 
 int DeltaPerformer::Close() {
@@ -361,6 +360,21 @@ bool DeltaPerformer::Write(const void* bytes, size_t count,
   while (next_operation_num_ < num_total_operations_) {
     const bool is_kernel =
         (next_operation_num_ >= num_rootfs_operations_);
+
+    if (is_kernel && kernel_fd_ == -1) {
+      if (OpenKernel(install_plan_->kernel_install_path.c_str()) < 0) {
+	LOG(ERROR) << "Unable to open output file " << install_plan_->kernel_install_path;
+	return false;
+      }
+    } else if (fd_ == -1) {
+      if (Open(install_plan_->install_path.c_str(),
+	       O_TRUNC | O_WRONLY | O_CREAT | O_LARGEFILE,
+	       0644) < 0) {
+	LOG(ERROR) << "Unable to open output file " << install_plan_->install_path;
+	return false;
+      }
+    }
+
     const DeltaArchiveManifest_InstallOperation &op =
         is_kernel ?
         manifest_.kernel_install_operations(

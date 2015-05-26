@@ -45,29 +45,20 @@ void DownloadAction::PerformAction() {
 
   if (writer_) {
     LOG(INFO) << "Using writer for test.";
+    int rc = writer_->Open(install_plan_.install_path.c_str(),
+			   O_TRUNC | O_WRONLY | O_CREAT | O_LARGEFILE,
+			   0644);
+    if (rc < 0) {
+      LOG(ERROR) << "Unable to open output file " << install_plan_.install_path;
+      // report error to processor
+      processor_->ActionComplete(this, kActionCodeInstallDeviceOpenError);
+      return;
+    }    
   } else {
     delta_performer_.reset(new DeltaPerformer(prefs_,
                                               system_state_,
                                               &install_plan_));
     writer_ = delta_performer_.get();
-  }
-  int rc = writer_->Open(install_plan_.install_path.c_str(),
-                         O_TRUNC | O_WRONLY | O_CREAT | O_LARGEFILE,
-                         0644);
-  if (rc < 0) {
-    LOG(ERROR) << "Unable to open output file " << install_plan_.install_path;
-    // report error to processor
-    processor_->ActionComplete(this, kActionCodeInstallDeviceOpenError);
-    return;
-  }
-  if (delta_performer_.get() &&
-      !delta_performer_->OpenKernel(
-          install_plan_.kernel_install_path.c_str())) {
-    LOG(ERROR) << "Unable to open kernel file "
-               << install_plan_.kernel_install_path;
-    writer_->Close();
-    processor_->ActionComplete(this, kActionCodeKernelDeviceOpenError);
-    return;
   }
   if (delegate_) {
     delegate_->SetDownloadStatus(true);  // Set to active.

@@ -76,7 +76,7 @@ class DeltaPerformer : public FileWriter {
 
   // Opens the kernel. Should be called before or after Open(), but before
   // Write(). The kernel file will be close()d when Close() is called.
-  bool OpenKernel(const char* kernel_path);
+  int OpenKernel(const char* kernel_path);
 
   // flags and mode ignored. Once Close()d, a DeltaPerformer can't be
   // Open()ed again.

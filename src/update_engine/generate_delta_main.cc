@@ -195,7 +195,7 @@ void ApplyDelta() {
                                   root_info.hash().end());
   DeltaPerformer performer(&prefs, NULL, &install_plan);
   CHECK_EQ(performer.Open(FLAGS_old_image.c_str(), 0, 0), 0);
-  CHECK(performer.OpenKernel(FLAGS_old_kernel.c_str()));
+  CHECK_EQ(performer.OpenKernel(FLAGS_old_kernel.c_str()), 0);
   vector<char> buf(1024 * 1024);
   int fd = open(FLAGS_in_file.c_str(), O_RDONLY, 0);
   CHECK_GE(fd, 0);
