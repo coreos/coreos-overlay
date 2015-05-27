@@ -93,63 +93,7 @@ src_install() {
 	fi
 }
 
-get_TIMEZONE() {
-	local tz src="${EROOT}etc/timezone"
-	if [[ -e ${src} ]] ; then
-		tz=$(sed -e 's:#.*::' -e 's:[[:space:]]*::g' -e '/^$/d' "${src}")
-	else
-		tz="FOOKABLOIE"
-	fi
-	[[ -z ${tz} ]] && return 1 || echo "${tz}"
-}
-
-pkg_preinst() {
-	local tz=$(get_TIMEZONE)
-	if ! use right_timezone && [[ ${tz} == right/* ]] ; then
-		eerror "Your timezone is set to '${tz}' but you have USE=-right_timezone."
-		die "Please fix your USE or timezone"
-	fi
-}
-
-pkg_config() {
-	# make sure the /etc/localtime file does not get stale #127899
-	local tz src="${EROOT}etc/timezone" etc_lt="${EROOT}etc/localtime"
-
-	tz=$(get_TIMEZONE) || return 0
-	if [[ ${tz} == "FOOKABLOIE" ]] ; then
-		elog "You do not have TIMEZONE set in ${src}."
-
-		if [[ ! -e ${etc_lt} ]] ; then
-			# if /etc/localtime is a symlink somewhere, assume they
-			# know what they're doing and they're managing it themselves
-			if [[ ! -L ${etc_lt} ]] ; then
-				cp -f "${EROOT}"/usr/share/zoneinfo/Factory "${etc_lt}"
-				elog "Setting ${etc_lt} to Factory."
-			else
-				elog "Assuming your ${etc_lt} symlink is what you want; skipping update."
-			fi
-		else
-			elog "Skipping auto-update of ${etc_lt}."
-		fi
-		return 0
-	fi
-
-	if [[ ! -e ${EROOT}/usr/share/zoneinfo/${tz} ]] ; then
-		elog "You have an invalid TIMEZONE setting in ${src}"
-		elog "Your ${etc_lt} has been reset to Factory; enjoy!"
-		tz="Factory"
-	fi
-	if [[ -L ${etc_lt} ]]; then
-		einfo "Skipping symlinked ${etc_lt}"
-	else
-		einfo "Updating ${etc_lt} with ${EROOT}usr/share/zoneinfo/${tz}"
-		cp -f "${EROOT}"/usr/share/zoneinfo/"${tz}" "${etc_lt}"
-	fi
-}
-
 pkg_postinst() {
-	rm -rf "${EROOT}"/usr/share/zoneinfo/.gentoo-upgrade &
-	pkg_config
-	wait
+	rm -rf "${EROOT}"/usr/share/zoneinfo/.gentoo-upgrade
 }
 
