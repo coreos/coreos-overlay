@@ -5,7 +5,7 @@ EAPI=5
 CROS_WORKON_PROJECT="coreos/rkt"
 CROS_WORKON_LOCALNAME="rkt"
 CROS_WORKON_REPO="git://github.com"
-inherit cros-workon
+inherit cros-workon systemd
 
 if [[ "${PV}" == 9999 ]]; then
     KEYWORDS="~amd64"
@@ -51,4 +51,7 @@ src_install() {
 
 	insinto /usr/share/rkt
 	doins "${S}/bin/stage1.aci"
+
+	systemd_dounit "${FILESDIR}"/${PN}-gc.service
+	systemd_dounit "${FILESDIR}"/${PN}-gc.timer
 }
