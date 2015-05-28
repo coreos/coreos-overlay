@@ -128,6 +128,7 @@ RDEPEND="${RDEPEND}
 	sys-apps/less
 	sys-apps/net-tools
 	sys-apps/pciutils
+	sys-apps/rng-tools
 	sys-apps/rootdev
 	sys-apps/sed
 	sys-apps/seismograph
