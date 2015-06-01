@@ -20,8 +20,8 @@ SLOT="0"
 KEYWORDS="amd64 ~arm ~x86"
 IUSE=""
 
-DEPENDS="${PYTHON_DEPS}"
-RDEPENDS=""
+DEPEND="${PYTHON_DEPS}"
+RDEPEND=""
 
 pkg_setup() {
 	python-any-r1_pkg_setup
