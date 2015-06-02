@@ -24,14 +24,11 @@ src_compile() {
 }
 
 src_install() {
-	dobin ${GOBIN}/*
+	newbin ${GOBIN}/src ignition
 
 	systemd_dounit "${FILESDIR}"/coreos-metadata.target
-
-	systemd_dounit "${FILESDIR}"/ignition@.service
-	systemd_dounit "${FILESDIR}"/ignition-prepivot.target
-
-	systemd_enable_service initrd.target ignition-prepivot.target
+	systemd_dounit "${FILESDIR}"/ignition.service
+	systemd_enable_service initrd.target ignition.service
 
 	coreos-dodoc -r doc/*
 }
