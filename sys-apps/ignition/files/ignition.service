@@ -10,7 +10,7 @@ Type=oneshot
 RemainAfterExit=yes
 Environment=OEM_NAME=pxe
 EnvironmentFile=-/usr/share/oem/environment
-ExecStart=/usr/bin/ignition --root=/sysroot --oem=${OEM_NAME} --stage=%i
+ExecStart=/usr/bin/ignition --root=/sysroot --oem=${OEM_NAME}
 
 [Install]
 WantedBy=initrd.target
