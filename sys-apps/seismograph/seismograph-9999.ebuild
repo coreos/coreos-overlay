@@ -21,5 +21,6 @@ SLOT="0"
 IUSE=""
 
 RDEPEND="!coreos-base/vboot_reference
-	sys-apps/util-linux"
+	sys-apps/util-linux
+	sys-fs/e2fsprogs"
 DEPEND="${RDEPEND}"
