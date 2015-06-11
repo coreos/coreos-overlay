@@ -10,6 +10,9 @@ require_relative 'configure_networks.rb'
 require_relative 'base_mac.rb'
 
 Vagrant.configure("2") do |config|
+  # always use Vagrants insecure key
+  config.ssh.insert_key = false
+
   # SSH in as the default 'core' user, it has the vagrant ssh key.
   config.ssh.username = "core"
 

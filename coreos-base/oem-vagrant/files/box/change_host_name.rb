@@ -26,7 +26,7 @@ module VagrantPlugins
             temp.close
 
             path = "/var/tmp/hostname.yml"
-            path_esc = path.gsub("/", "-")
+            path_esc = path.gsub("/", "-")[1..-1]
             comm.upload(temp.path, path)
             comm.sudo("systemctl start system-cloudinit@#{path_esc}.service")
           end
