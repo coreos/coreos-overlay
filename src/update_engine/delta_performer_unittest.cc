@@ -491,7 +491,7 @@ static void ApplyDeltaFile(bool full_kernel, bool full_rootfs, bool noop,
                                                  &install_plan.kernel_hash));
 
   EXPECT_EQ(0, (*performer)->Open(state->a_img.c_str(), 0, 0));
-  EXPECT_TRUE((*performer)->OpenKernel(state->old_kernel.c_str()));
+  EXPECT_EQ(0, (*performer)->OpenKernel(state->old_kernel.c_str()));
 
   ActionExitCode expected_error, actual_error;
   bool continue_writing;
@@ -712,7 +712,7 @@ TEST(DeltaPerformerTest, BadDeltaMagicTest) {
   MockSystemState mock_system_state;
   DeltaPerformer performer(&prefs, &mock_system_state, &install_plan);
   EXPECT_EQ(0, performer.Open("/dev/null", 0, 0));
-  EXPECT_TRUE(performer.OpenKernel("/dev/null"));
+  EXPECT_EQ(0, performer.OpenKernel("/dev/null"));
   EXPECT_TRUE(performer.Write("junk", 4));
   EXPECT_TRUE(performer.Write("morejunk", 8));
   EXPECT_FALSE(performer.Write("morejunk", 8));
@@ -741,7 +741,7 @@ TEST(DeltaPerformerTest, WriteUpdatesPayloadState) {
   MockSystemState mock_system_state;
   DeltaPerformer performer(&prefs, &mock_system_state, &install_plan);
   EXPECT_EQ(0, performer.Open("/dev/null", 0, 0));
-  EXPECT_TRUE(performer.OpenKernel("/dev/null"));
+  EXPECT_EQ(0, performer.OpenKernel("/dev/null"));
 
   EXPECT_CALL(*(mock_system_state.mock_payload_state()),
               DownloadProgress(4)).Times(1);

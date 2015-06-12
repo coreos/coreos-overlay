@@ -77,6 +77,14 @@ void FilesystemCopierAction::PerformAction() {
     return;
   }
 
+  if (copying_kernel_install_path_ && !install_plan_.kernel_size) {
+    // No kernel to install
+    if (HasOutputPipe())
+      SetOutputObject(install_plan_);
+    abort_action_completer.set_code(kActionCodeSuccess);
+    return;
+  }
+
   const string destination = copying_kernel_install_path_ ?
       install_plan_.kernel_install_path :
       install_plan_.install_path;
