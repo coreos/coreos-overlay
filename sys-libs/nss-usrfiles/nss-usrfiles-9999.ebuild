@@ -7,10 +7,10 @@ CROS_WORKON_LOCALNAME="nss-altfiles"
 CROS_WORKON_REPO="git://github.com"
 
 if [[ "${PV}" == 9999 ]]; then
-	KEYWORDS="~amd64 ~arm ~x86"
+	KEYWORDS="~amd64 ~arm ~arm64 ~x86"
 else
 	CROS_WORKON_COMMIT="508d986e38c70bd0636740d287d2fe807822fb57" # v2.18.1
-	KEYWORDS="amd64 arm x86"
+	KEYWORDS="amd64 arm arm64 x86"
 fi
 
 inherit cros-workon
