@@ -83,7 +83,6 @@ RDEPEND="${RDEPEND}
 	sys-apps/systemd
 	!sys-apps/nih-dbus-tool
 	=sys-devel/automake-1.10*
-	sys-fs/sshfs-fuse
 	sys-libs/libnih
 	sys-libs/nss-usrfiles
 	sys-power/iasl
@@ -121,7 +120,6 @@ RDEPEND="${RDEPEND}
 # Host dependencies that are needed to create and sign images
 # TODO:	sys-apps/mosys
 RDEPEND="${RDEPEND}
-	sys-fs/libfat
 	sys-fs/squashfs-tools
 	"
 
