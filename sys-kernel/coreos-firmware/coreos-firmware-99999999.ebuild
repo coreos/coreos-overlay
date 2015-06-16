@@ -16,7 +16,7 @@ if [[ ${PV} == 99999999* ]]; then
 	KEYWORDS=""
 else
 	SRC_URI="mirror://gentoo/linux-firmware-${PV}.tar.xz"
-	KEYWORDS="amd64"
+	KEYWORDS="amd64 arm64"
 fi
 
 DESCRIPTION="Linux firmware files"

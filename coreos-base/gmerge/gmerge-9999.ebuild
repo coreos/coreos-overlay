@@ -8,10 +8,10 @@ CROS_WORKON_LOCALNAME="dev"
 CROS_WORKON_LOCALDIR="src/platform"
 
 if [[ "${PV}" == 9999 ]]; then
-	KEYWORDS="~amd64 ~arm ~x86"
+	KEYWORDS="~amd64 ~arm ~arm64 ~x86"
 else
 	CROS_WORKON_COMMIT="66e206c20f22e002bbdaed1982b08b18a9b7f730"
-	KEYWORDS="amd64 arm x86"
+	KEYWORDS="amd64 arm arm64 x86"
 fi
 
 inherit cros-workon

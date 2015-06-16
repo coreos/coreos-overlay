@@ -22,7 +22,7 @@ SRC_URI=""
 
 LICENSE="BSD"
 SLOT="${PV}"
-KEYWORDS="amd64 arm x86"
+KEYWORDS="amd64 arm arm64 x86"
 IUSE="cros_host"
 
 RDEPEND="dev-libs/glib

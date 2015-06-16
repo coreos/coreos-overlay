@@ -11,7 +11,7 @@ SRC_URI="http://www.cabextract.org.uk/libmspack/${MY_P}.tar.gz"
 
 LICENSE="LGPL-2"
 SLOT="0"
-KEYWORDS="amd64"
+KEYWORDS="amd64 arm64"
 IUSE="static-libs"
 
 S="${WORKDIR}/${MY_P}"

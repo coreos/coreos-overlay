@@ -17,7 +17,7 @@ if [[ ${PV} == *9999 ]]; then
 else
 	CROS_WORKON_COMMIT="7c8fca2ddb58c8d2c4fb4df31c242886df7dd257" # v1.6.2
 	DOCKER_GITCOMMIT="${CROS_WORKON_COMMIT:0:7}"
-	KEYWORDS="amd64"
+	KEYWORDS="amd64 arm64"
 fi
 
 inherit bash-completion-r1 linux-info multilib systemd udev user cros-workon
