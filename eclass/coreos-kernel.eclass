@@ -128,6 +128,10 @@ coreos-kernel_src_prepare() {
 coreos-kernel_src_configure() {
 	# Use default for any options not explitly set in defconfig
 	yes "" | kmake oldconfig
+
+	# For convinence, generate a minimal defconfig of the build
+	kmake savedefconfig
+	einfo "Saving minimal kernel defconfig as ${KBUILD_OUTPUT}/defconfig"
 }
 
 coreos-kernel_src_compile() {
