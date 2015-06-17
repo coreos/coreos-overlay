@@ -12,7 +12,7 @@ CROS_WORKON_LOCALNAME="docker"
 CROS_WORKON_REPO="git://github.com"
 
 if [[ ${PV} == *9999 ]]; then
-	DOCKER_GITCOMMIT=""
+	DOCKER_GITCOMMIT="unknown"
 	KEYWORDS=""
 else
 	CROS_WORKON_COMMIT="0baf60984522744eed290348f33f396c046b2f3a" # v1.7.0
