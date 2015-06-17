@@ -65,7 +65,7 @@ get_bootengine_lib() {
 # @FUNCTION: update_bootengine_cpio
 # @DESCRIPTION:
 # Append files in the given directory to the bootengine cpio.
-# Allows us to stick kernel modules into the initramfs built into bzImage.
+# Allows us to stick kernel modules into the initramfs built into the image.
 update_bootengine_cpio() {
 	local extra_root="$1"
 	local cpio_path="${KBUILD_OUTPUT}/bootengine.cpio"
@@ -153,7 +153,7 @@ coreos-kernel_src_compile() {
 	update_bootengine_cpio "${bootengine_root}"
 
 	# Build the final kernel image
-	kmake bzImage
+	kmake
 }
 
 coreos-kernel_src_install() {
