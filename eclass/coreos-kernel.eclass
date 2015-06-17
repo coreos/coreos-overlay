@@ -84,7 +84,7 @@ update_bootengine_cpio() {
 
 kmake() {
 	local kernel_arch=$(tc-arch-kernel)
-	emake ARCH="${kernel_arch}" CROSS_COMPILE="${CHOST}-" "$@"
+	emake LDFLAGS="" ARCH="${kernel_arch}" CROSS_COMPILE="${CHOST}-" "$@"
 }
 
 # Discard the module signing key, we use new keys for each build.
