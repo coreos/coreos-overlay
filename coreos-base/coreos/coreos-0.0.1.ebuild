@@ -91,7 +91,7 @@ RDEPEND="${RDEPEND}
 	app-emulation/actool
 	app-emulation/rkt
 	app-emulation/xenstore
-	app-emulation/xenserver-pv-version
+	amd64? ( app-emulation/xenserver-pv-version )
 	sys-apps/findutils
 	sys-apps/which
 	app-admin/flannel
