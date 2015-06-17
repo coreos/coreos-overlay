@@ -154,6 +154,10 @@ src_prepare() {
 	epatch_user
 }
 
+go_get_arch() {
+	echo ${ARCH}
+}
+
 src_compile() {
 	# if we treat them right, Docker's build scripts will set up a
 	# reasonable GOPATH for us
@@ -189,6 +193,11 @@ src_compile() {
 	else
 		unset DOCKER_EXPERIMENTAL
 	fi
+
+	export GOARCH=$(go_get_arch)
+	export CGO_ENABLED=1
+	export CC=$(tc-getCC)
+	export CXX=$(tc-getCXX)
 
 	# time to build!
 	./hack/make.sh dynbinary || die 'dynbinary failed'
