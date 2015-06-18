@@ -1,0 +1,11 @@
+diff -pur fuse-1.4.orig/util/Makefile.in fuse-1.4/util/Makefile.in
+--- fuse-1.4.orig/util/Makefile.in	2005-01-02 21:09:09.000000000 +0100
++++ fuse-1.4/util/Makefile.in	2005-01-03 08:49:25.333258992 +0100
+@@ -36,6 +36,7 @@ NORMAL_UNINSTALL = :
+ PRE_UNINSTALL = :
+ POST_UNINSTALL = :
+ ACLOCAL = @ACLOCAL@
++AM_CFLAGS=-Wl,-z,now
+ AMTAR = @AMTAR@
+ AR = @AR@
+ AUTOCONF = @AUTOCONF@

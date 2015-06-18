@@ -1,0 +1,66 @@
+diff -purN fuse-2.8.5.orig/lib/fuse.c fuse-2.8.5/lib/fuse.c
+--- fuse-2.8.5.orig/lib/fuse.c	2011-07-27 12:57:39.580516283 -0700
++++ fuse-2.8.5/lib/fuse.c	2011-07-27 13:00:12.920525842 -0700
+@@ -3947,11 +3947,11 @@ struct fuse *fuse_new_compat1(int fd, in
+ 				      11);
+ }
+ 
+-FUSE_SYMVER(".symver fuse_exited,__fuse_exited@");
+-FUSE_SYMVER(".symver fuse_process_cmd,__fuse_process_cmd@");
+-FUSE_SYMVER(".symver fuse_read_cmd,__fuse_read_cmd@");
+-FUSE_SYMVER(".symver fuse_set_getcontext_func,__fuse_set_getcontext_func@");
+-FUSE_SYMVER(".symver fuse_new_compat2,fuse_new@");
++FUSE_SYMVER(".symver fuse_exited,__fuse_exited@FUSE_UNVERSIONED");
++FUSE_SYMVER(".symver fuse_process_cmd,__fuse_process_cmd@FUSE_UNVERSIONED");
++FUSE_SYMVER(".symver fuse_read_cmd,__fuse_read_cmd@FUSE_UNVERSIONED");
++FUSE_SYMVER(".symver fuse_set_getcontext_func,__fuse_set_getcontext_func@FUSE_UNVERSIONED");
++FUSE_SYMVER(".symver fuse_new_compat2,fuse_new@FUSE_UNVERSIONED");
+ FUSE_SYMVER(".symver fuse_new_compat22,fuse_new@FUSE_2.2");
+ 
+ #endif /* __FreeBSD__ */
+diff -purN fuse-2.8.5.orig/lib/fuse_mt.c fuse-2.8.5/lib/fuse_mt.c
+--- fuse-2.8.5.orig/lib/fuse_mt.c	2011-07-27 12:57:39.580516283 -0700
++++ fuse-2.8.5/lib/fuse_mt.c	2011-07-27 13:01:08.011292778 -0700
+@@ -113,4 +113,4 @@ int fuse_loop_mt(struct fuse *f)
+ 	return fuse_session_loop_mt(fuse_get_session(f));
+ }
+ 
+-FUSE_SYMVER(".symver fuse_loop_mt_proc,__fuse_loop_mt@");
++FUSE_SYMVER(".symver fuse_loop_mt_proc,__fuse_loop_mt@FUSE_UNVERSIONED");
+diff -purN fuse-2.8.5.orig/lib/fuse_session.c fuse-2.8.5/lib/fuse_session.c
+--- fuse-2.8.5.orig/lib/fuse_session.c	2011-07-27 12:57:39.580516283 -0700
++++ fuse-2.8.5/lib/fuse_session.c	2011-07-27 13:02:22.181708010 -0700
+@@ -202,4 +202,6 @@ void fuse_chan_destroy(struct fuse_chan 
+ 
+ #ifndef __FreeBSD__
+ FUSE_SYMVER(".symver fuse_chan_new_compat24,fuse_chan_new@FUSE_2.4");
++#else
++FUSE_SYMVER(".symver fuse_chan_new,fuse_chan_new@FUSE_2.4");
+ #endif
+diff -purN fuse-2.8.5.orig/lib/fuse_versionscript fuse-2.8.5/lib/fuse_versionscript
+--- fuse-2.8.5.orig/lib/fuse_versionscript	2011-07-27 12:57:39.580516283 -0700
++++ fuse-2.8.5/lib/fuse_versionscript	2011-07-27 13:05:21.620513909 -0700
+@@ -1,3 +1,6 @@
++FUSE_UNVERSIONED {
++};
++
+ FUSE_2.2 {
+ 	global:
+ 		fuse_destroy;
+diff -purN fuse-2.8.5.orig/lib/helper.c fuse-2.8.5/lib/helper.c
+--- fuse-2.8.5.orig/lib/helper.c	2011-07-27 12:57:39.580516283 -0700
++++ fuse-2.8.5/lib/helper.c	2011-07-27 13:06:26.560513148 -0700
+@@ -409,10 +409,10 @@ int fuse_mount_compat1(const char *mount
+ 	return fuse_mount_compat22(mountpoint, NULL);
+ }
+ 
+-FUSE_SYMVER(".symver fuse_setup_compat2,__fuse_setup@");
++FUSE_SYMVER(".symver fuse_setup_compat2,__fuse_setup@FUSE_UNVERSIONED");
+ FUSE_SYMVER(".symver fuse_setup_compat22,fuse_setup@FUSE_2.2");
+-FUSE_SYMVER(".symver fuse_teardown,__fuse_teardown@");
+-FUSE_SYMVER(".symver fuse_main_compat2,fuse_main@");
++FUSE_SYMVER(".symver fuse_teardown,__fuse_teardown@FUSE_UNVERSIONED");
++FUSE_SYMVER(".symver fuse_main_compat2,fuse_main@FUSE_UNVERSIONED");
+ FUSE_SYMVER(".symver fuse_main_real_compat22,fuse_main_real@FUSE_2.2");
+ 
+ #endif /* __FreeBSD__ */
