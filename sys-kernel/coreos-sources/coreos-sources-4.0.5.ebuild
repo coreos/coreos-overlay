@@ -12,7 +12,7 @@ DESCRIPTION="Full sources for the Linux kernel"
 HOMEPAGE="http://www.kernel.org"
 SRC_URI="${KERNEL_URI}"
 
-KEYWORDS="amd64"
+KEYWORDS="amd64 arm64"
 IUSE=""
 
 # This ebuild is essentially equivalent to the upstream vanilla-sources

@@ -5,4 +5,4 @@ EAPI=5
 inherit coreos-kernel
 
 DESCRIPTION="CoreOS Linux kernel"
-KEYWORDS="amd64"
+KEYWORDS="amd64 arm64"
