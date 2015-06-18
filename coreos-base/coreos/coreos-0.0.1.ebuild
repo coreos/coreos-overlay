@@ -104,6 +104,7 @@ RDEPEND="${RDEPEND}
 	app-arch/tar
 	app-arch/unzip
 	app-arch/zip
+	app-misc/jq
 	app-shells/bash
 	coreos-base/update_engine
 	coreos-base/coreos-init

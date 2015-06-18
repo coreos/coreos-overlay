@@ -117,3 +117,5 @@ dev-util/checkbashisms
 # fix for https://github.com/coreos/bugs/issues/324
 =net-misc/curl-7.41
 
+# link jq binary dynamically
+=app-misc/jq-1.4-r1
