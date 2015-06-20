@@ -24,7 +24,7 @@ src_compile() {
 }
 
 src_install() {
-	newbin ${GOBIN}/src ignition
+	newbin ${GOBIN}/src ${PN}
 
 	systemd_dounit "${FILESDIR}"/coreos-metadata.target
 	systemd_dounit "${FILESDIR}"/ignition.service
