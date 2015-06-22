@@ -1,6 +1,6 @@
-# Copyright 1999-2014 Gentoo Foundation
+# Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/app-emulation/docker/docker-1.4.0.ebuild,v 1.1 2014/12/12 18:53:23 xarthisius Exp $
+# $Header: $
 
 EAPI=5
 
@@ -15,7 +15,7 @@ if [[ ${PV} == *9999 ]]; then
 	DOCKER_GITCOMMIT=""
 	KEYWORDS=""
 else
-	CROS_WORKON_COMMIT="7c8fca2ddb58c8d2c4fb4df31c242886df7dd257" # v1.6.2
+	CROS_WORKON_COMMIT="0baf60984522744eed290348f33f396c046b2f3a" # v1.7.0
 	DOCKER_GITCOMMIT="${CROS_WORKON_COMMIT:0:7}"
 	KEYWORDS="amd64 arm64"
 fi
@@ -24,11 +24,10 @@ inherit bash-completion-r1 linux-info multilib systemd udev user cros-workon
 
 LICENSE="Apache-2.0"
 SLOT="0"
-IUSE="aufs +btrfs contrib +device-mapper doc lxc +overlay vim-syntax zsh-completion"
+IUSE="aufs +btrfs contrib +device-mapper doc experimental lxc +overlay vim-syntax zsh-completion"
 
 # https://github.com/docker/docker/blob/master/hack/PACKAGERS.md#build-dependencies
 CDEPEND="
-	>=sys-kernel/coreos-kernel-3.18.0
 	>=dev-db/sqlite-3.7.9:3
 	device-mapper? (
 		>=sys-fs/lvm2-2.02.89[thin]
@@ -37,7 +36,7 @@ CDEPEND="
 
 DEPEND="
 	${CDEPEND}
-	>=dev-lang/go-1.3
+	>=dev-lang/go-1.4
 	btrfs? (
 		>=sys-fs/btrfs-progs-3.16.1
 	)
@@ -60,6 +59,7 @@ RDEPEND="
 	aufs? (
 		|| (
 			sys-fs/aufs3
+			sys-fs/aufs4
 			sys-kernel/aufs-sources
 		)
 	)
@@ -91,11 +91,11 @@ ERROR_CGROUP_PERF="CONFIG_CGROUP_PERF: is optional for container statistics gath
 ERROR_CFS_BANDWIDTH="CONFIG_CFS_BANDWIDTH: is optional for container statistics gathering"
 
 pkg_setup() {
-	if kernel_is lt 3 8; then
+	if kernel_is lt 3 10; then
 		eerror ""
-		eerror "Using Docker with kernels older than 3.8 is unstable and unsupported."
+		eerror "Using Docker with kernels older than 3.10 is unstable and unsupported."
 		eerror " - http://docs.docker.com/installation/binaries/#check-kernel-dependencies"
-		die 'Kernel is too old - need 3.8 or above'
+		die 'Kernel is too old - need 3.10 or above'
 	fi
 
 	# for where these kernel versions come from, see:
@@ -178,10 +178,17 @@ src_compile() {
 		fi
 	done
 
+	# https://github.com/docker/docker/pull/13338
+	if use experimental; then
+		export DOCKER_EXPERIMENTAL=1
+	else
+		unset DOCKER_EXPERIMENTAL
+	fi
+
 	# time to build!
 	./hack/make.sh dynbinary || die 'dynbinary failed'
 
-	# TODO get go-md2man and then include the man pages using docs/man/md2man-all.sh
+	# TODO get go-md2man and then include the man pages using man/md2man-all.sh
 }
 
 src_install() {
@@ -209,11 +216,11 @@ src_install() {
 
 	dodoc AUTHORS CONTRIBUTING.md CHANGELOG.md NOTICE README.md
 	if use doc; then
-		# TODO doman contrib/man/man*/*
+		# TODO doman man/man*/*
 
 		docompress -x /usr/share/doc/${PF}/md
 		docinto md
-		dodoc -r docs/sources/*
+		dodoc -r docs/*
 	fi
 
 	dobashcomp contrib/completion/bash/*
