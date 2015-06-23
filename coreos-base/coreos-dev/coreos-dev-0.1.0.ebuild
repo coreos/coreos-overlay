@@ -22,8 +22,6 @@ RDEPEND="
 	coreos-base/coreos-experimental
 	coreos-base/gmerge
 	dev-lang/python
-	dev-python/dbus-python
-	dev-python/pygobject
 	dev-util/strace
 	dev-vcs/repo
 	net-analyzer/netperf

@@ -53,16 +53,13 @@ RDEPEND="${RDEPEND}
 	dev-libs/protobuf
 	dev-python/cherrypy
 	dev-python/ctypesgen
-	dev-python/dbus-python
 	dev-python/imaging
 	dev-python/m2crypto
 	dev-python/mako
 	dev-python/netifaces
-	dev-python/pygobject
 	dev-python/pyinotify
 	dev-python/pyopenssl
 	dev-python/python-daemon
-	dev-python/pyudev
 	dev-python/pyusb
 	dev-python/setproctitle
 	dev-python/ws4py
