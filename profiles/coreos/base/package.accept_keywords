@@ -119,3 +119,6 @@ dev-util/checkbashisms
 
 # link jq binary dynamically
 =app-misc/jq-1.4-r1
+
+# https://bugs.gentoo.org/show_bug.cgi?id=548158
+=sys-apps/gentoo-functions-0.10
