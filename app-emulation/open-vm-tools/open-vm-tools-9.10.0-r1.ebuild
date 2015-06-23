@@ -35,6 +35,10 @@ RDEPEND="dnet? ( dev-libs/libdnet )
 
 S="${WORKDIR}/${PN}"
 
+PATCHES=(
+	"${FILESDIR}/${P}-0001-configure-Add-options-for-fuse-and-hgfs.patch"
+)
+
 #pkg_setup() {
 #	enewgroup vmware
 #}
