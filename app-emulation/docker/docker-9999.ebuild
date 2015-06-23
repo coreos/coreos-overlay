@@ -42,6 +42,11 @@ DEPEND="
 	)
 "
 
+# For CoreOS builds coreos-kernel must be installed because this ebuild
+# checks the kernel config. The kernel config is left by the kernel compile
+# or an explicit copy when installing binary packages. See coreos-kernel.eclass
+DEPEND+="sys-kernel/coreos-kernel"
+
 # https://github.com/docker/docker/blob/master/hack/PACKAGERS.md#runtime-dependencies
 # https://github.com/docker/docker/blob/master/hack/PACKAGERS.md#optional-dependencies
 RDEPEND="
