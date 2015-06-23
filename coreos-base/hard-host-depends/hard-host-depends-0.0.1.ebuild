@@ -53,7 +53,6 @@ RDEPEND="${RDEPEND}
 	dev-libs/protobuf
 	dev-python/cherrypy
 	dev-python/ctypesgen
-	dev-python/imaging
 	dev-python/m2crypto
 	dev-python/mako
 	dev-python/netifaces
@@ -74,7 +73,6 @@ RDEPEND="${RDEPEND}
 	>=dev-vcs/git-1.7.2
 	dev-vcs/mercurial
 	dev-vcs/subversion[-dso]
-	>=media-libs/freetype-2.2.1
 	net-misc/gsutil
 	sys-apps/usbutils
 	sys-apps/systemd
