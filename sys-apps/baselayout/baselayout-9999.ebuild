@@ -31,7 +31,7 @@ DEPEND="sys-apps/systemd
 
 # Make sure coreos-init is not installed in the SDK
 RDEPEND="${DEPEND}
-	sys-apps/efunctions
+	>=sys-apps/gentoo-functions-0.10
 	cros_host? ( !coreos-base/coreos-init )"
 
 declare -A LIB_SYMS		# list of /lib->lib64 symlinks
@@ -185,5 +185,12 @@ pkg_postinst() {
 	if use cros_host; then
 		touch "${ROOT}/etc/"{group,gshadow,passwd,shadow}
 		chmod 640 "${ROOT}/etc/"{gshadow,shadow}
+	fi
+	# compat symlink for packages that haven't migrated to gentoo-functions
+	local func=../../lib/gentoo/functions.sh
+	if [[ "$(readlink "${ROOT}/etc/init.d/functions.sh")" != "${func}" ]]; then
+		elog "Creating /etc/init.d/functions.sh symlink..."
+		mkdir -p "${ROOT}/etc/init.d"
+		ln -sf "${func}" "${ROOT}/etc/init.d/functions.sh"
 	fi
 }

@@ -1,4 +1,4 @@
 # Add systemd to the 'system' set
-*sys-apps/efunctions
+*sys-apps/gentoo-functions
 *sys-apps/systemd
 -*sys-apps/openrc
