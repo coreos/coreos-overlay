@@ -8,7 +8,6 @@ dev-libs/dbus-glib	tools
 dev-libs/elfutils	-utils
 dev-libs/nss		-utils
 dev-libs/openssl	pkcs11
-dev-python/pyudev	pygobject
 dev-util/perf		-doc -demangle -tui -ncurses -perl -python
 dev-util/perf-next	-doc -demangle -tui -ncurses -perl -python
 net-analyzer/tcpdump	-chroot
