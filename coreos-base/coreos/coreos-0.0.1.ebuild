@@ -127,6 +127,7 @@ RDEPEND="${RDEPEND}
 	sys-apps/iproute2
 	sys-apps/kexec-tools
 	sys-apps/less
+	sys-apps/lshw
 	sys-apps/net-tools
 	sys-apps/pciutils
 	sys-apps/rng-tools
