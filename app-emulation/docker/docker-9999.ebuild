@@ -12,7 +12,7 @@ CROS_WORKON_LOCALNAME="docker"
 CROS_WORKON_REPO="git://github.com"
 
 if [[ ${PV} == *9999 ]]; then
-	DOCKER_GITCOMMIT=""
+	DOCKER_GITCOMMIT="unknown"
 	KEYWORDS=""
 else
 	CROS_WORKON_COMMIT="0baf60984522744eed290348f33f396c046b2f3a" # v1.7.0
@@ -154,6 +154,10 @@ src_prepare() {
 	epatch_user
 }
 
+go_get_arch() {
+	echo ${ARCH}
+}
+
 src_compile() {
 	# if we treat them right, Docker's build scripts will set up a
 	# reasonable GOPATH for us
@@ -189,6 +193,11 @@ src_compile() {
 	else
 		unset DOCKER_EXPERIMENTAL
 	fi
+
+	export GOARCH=$(go_get_arch)
+	export CGO_ENABLED=1
+	export CC=$(tc-getCC)
+	export CXX=$(tc-getCXX)
 
 	# time to build!
 	./hack/make.sh dynbinary || die 'dynbinary failed'
