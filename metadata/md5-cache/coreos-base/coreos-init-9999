@@ -1,13 +1,13 @@
-DEFINED_PHASES=info install setup unpack
-DEPEND=app-emulation/docker net-misc/openssh !<dev-db/etcd-0.0.1-r6 !coreos-base/oem-service test? ( dev-lang/python:2.7 ) dev-vcs/git virtual/pkgconfig
+DEFINED_PHASES=info install unpack
+DEPEND=app-emulation/docker net-misc/openssh !<dev-db/etcd-0.0.1-r6 !coreos-base/oem-service test? ( dev-lang/python:2.7 ) >=dev-vcs/git-1.8.2.1 virtual/pkgconfig
 DESCRIPTION=Init scripts for CoreOS
 EAPI=4
 HOMEPAGE=http://www.coreos.com/
 IUSE=test symlink-usr cros_workon_tree_* profiling
-KEYWORDS=~amd64 ~arm ~x86
+KEYWORDS=~amd64 ~arm ~arm64 ~x86
 LICENSE=BSD
 RDEPEND=app-emulation/docker net-misc/openssh !<dev-db/etcd-0.0.1-r6 !coreos-base/oem-service test? ( dev-lang/python:2.7 ) sys-block/parted sys-apps/gptfdisk >=sys-apps/systemd-207-r5 >=coreos-base/coreos-cloudinit-0.1.2-r5
 REQUIRED_USE=symlink-usr
 SLOT=0
-_eclasses_=cros-workon	371c4d0af591fe21f1a019af07137224	eutils	6faef4c127028ccbba3a11400d24ae34	flag-o-matic	eda1c0b5ba85b3eeb555a071d69eb819	git-2	e28f0d8a9b321431b1e699782851b827	multilib	3bf24e6abb9b76d9f6c20600f0b716bf	systemd	090342761f573a8280dd5aa6b0345f3b	toolchain-funcs	0dfbfa13f57c6184f4728d12ac002aac
-_md5_=f6617ff50ccdae7407b4a25ef8804bd0
+_eclasses_=cros-workon	95ff57bae980ffcda8051a50f820179c	eutils	9fb270e417e0e83d64ca52586c4a79de	git-r3	ab80045e5d080584334f33013f4df21d	multilib	62927b3db3a589b0806255f3a002d5d3	systemd	090342761f573a8280dd5aa6b0345f3b	toolchain-funcs	42408102d713fbad60ca21349865edb4
+_md5_=0d142be36e116106904b8e66cf31cfb4

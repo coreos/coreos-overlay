@@ -1,11 +1,11 @@
-DEFINED_PHASES=compile info install setup unpack
-DEPEND=>=dev-lang/go-1.1 dev-vcs/git
+DEFINED_PHASES=compile info install prepare unpack
+DEPEND=>=dev-vcs/git-1.8.2.1 dev-lang/go
 DESCRIPTION=Sanity tests for CoreOS
 EAPI=5
 HOMEPAGE=https://github.com/coreos/coretest
 IUSE=cros_workon_tree_* profiling
-KEYWORDS=~amd64 ~arm ~x86
+KEYWORDS=~amd64 ~arm64 ~x86
 LICENSE=Apache-2.0
 SLOT=0
-_eclasses_=cros-workon	371c4d0af591fe21f1a019af07137224	eutils	6faef4c127028ccbba3a11400d24ae34	flag-o-matic	eda1c0b5ba85b3eeb555a071d69eb819	git-2	e28f0d8a9b321431b1e699782851b827	multilib	3bf24e6abb9b76d9f6c20600f0b716bf	toolchain-funcs	0dfbfa13f57c6184f4728d12ac002aac
-_md5_=6ad416729d94fcd60f5081c194184445
+_eclasses_=coreos-go	d4a4813965bfaf74512500dfc8913714	cros-workon	95ff57bae980ffcda8051a50f820179c	eutils	9fb270e417e0e83d64ca52586c4a79de	flag-o-matic	c9602887773166fe300444712fc7ff98	git-r3	ab80045e5d080584334f33013f4df21d	multilib	62927b3db3a589b0806255f3a002d5d3	multiprocessing	d7f2985a2c76c365ee20269db5261414	toolchain-funcs	42408102d713fbad60ca21349865edb4
+_md5_=162c59190a101a7002ea4e6882cf1cf3

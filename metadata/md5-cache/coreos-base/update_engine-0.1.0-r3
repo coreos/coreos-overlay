@@ -1,0 +1,12 @@
+DEFINED_PHASES=compile configure info install prepare test unpack
+DEPEND=dev-cpp/gmock dev-cpp/gtest !coreos-base/coreos-installer app-arch/bzip2 coreos-base/coreos-au-key coreos-base/libchrome:180609[cros-debug=] dev-cpp/gflags dev-libs/dbus-glib dev-libs/glib dev-libs/libxml2 dev-libs/openssl dev-libs/protobuf dev-util/bsdiff net-misc/curl sys-fs/e2fsprogs !<sys-devel/gettext-0.18.1.1-r3 || ( >=sys-devel/automake-1.14.1:1.14 >=sys-devel/automake-1.15:1.15 ) >=sys-devel/autoconf-2.69 >=sys-devel/libtool-2.4 >=dev-vcs/git-1.8.2.1 virtual/pkgconfig
+DESCRIPTION=CoreOS OS Update Engine
+EAPI=5
+HOMEPAGE=https://github.com/coreos/update_engine
+IUSE=cros-debug cros_host -delta_generator symlink-usr cros_workon_tree_* profiling
+KEYWORDS=amd64 arm arm64 x86
+LICENSE=BSD
+RDEPEND=!coreos-base/coreos-installer app-arch/bzip2 coreos-base/coreos-au-key coreos-base/libchrome:180609[cros-debug=] dev-cpp/gflags dev-libs/dbus-glib dev-libs/glib dev-libs/libxml2 dev-libs/openssl dev-libs/protobuf dev-util/bsdiff net-misc/curl sys-fs/e2fsprogs
+SLOT=0
+_eclasses_=autotools	a9597abac7226d89ad9d010abeef6cfb	autotools-utils	dbce0f7913bd240fdf0ef428149855c0	cros-workon	95ff57bae980ffcda8051a50f820179c	eutils	9fb270e417e0e83d64ca52586c4a79de	flag-o-matic	c9602887773166fe300444712fc7ff98	git-r3	ab80045e5d080584334f33013f4df21d	libtool	52d0e17251d04645ffaa61bfdd858944	multilib	62927b3db3a589b0806255f3a002d5d3	systemd	090342761f573a8280dd5aa6b0345f3b	toolchain-funcs	42408102d713fbad60ca21349865edb4
+_md5_=86ff1b5fcf1d92cd00de78b8fb998b8b
