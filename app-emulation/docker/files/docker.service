@@ -5,7 +5,6 @@ After=docker.socket early-docker.target network.target
 Requires=docker.socket early-docker.target
 
 [Service]
-Environment=TMPDIR=/var/tmp
 EnvironmentFile=-/run/flannel_docker_opts.env
 MountFlags=slave
 LimitNOFILE=1048576
