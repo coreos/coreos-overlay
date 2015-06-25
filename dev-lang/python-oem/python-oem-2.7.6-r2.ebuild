@@ -19,7 +19,7 @@ SRC_URI="http://www.python.org/ftp/python/${PV}/${MY_P}.tar.xz
 
 LICENSE="PSF-2"
 SLOT="2.7"
-KEYWORDS="~alpha amd64 ~arm ~arm64 hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
+KEYWORDS="~alpha amd64 ~arm arm64 hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
 IUSE="hardened"
 
 # Do not add a dependency on dev-lang/python to this ebuild.
@@ -49,6 +49,9 @@ src_prepare() {
 
 	# Fix for linux_distribution()
 	epatch "${FILESDIR}/python-2.7.6-add_os_release_support.patch"
+
+	# Fix for arm64 builds
+	epatch "${FILESDIR}/python-2.7-aarch64-fix.patch"
 
 	sed -i -e "s:@@GENTOO_LIBDIR@@:$(get_libdir):g" \
 		Lib/distutils/command/install.py \
