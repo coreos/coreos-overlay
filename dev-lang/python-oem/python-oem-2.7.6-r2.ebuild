@@ -50,6 +50,9 @@ src_prepare() {
 	# Fix for linux_distribution()
 	epatch "${FILESDIR}/python-2.7.6-add_os_release_support.patch"
 
+	# Fix for arm64 builds
+	epatch "${FILESDIR}/python-2.7-aarch64-fix.patch"
+
 	sed -i -e "s:@@GENTOO_LIBDIR@@:$(get_libdir):g" \
 		Lib/distutils/command/install.py \
 		Lib/distutils/sysconfig.py \

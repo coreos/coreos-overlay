@@ -1,0 +1,19 @@
+Fixes build errors like these when building for arm64:
+
+  File "build/temp.linux2-aarch64-2.7/libffi/fficonfig.py"
+      ffi_sources += ffi_platforms['AARCH64']
+  KeyError: 'AARCH64'
+  Makefile:475: recipe for target 'sharedmods' failed
+
+Signed-off-by: Geoff Levand <geoff@infradead.org>
+
+--- a/Modules/_ctypes/libffi/fficonfig.py.in
++++ b/Modules/_ctypes/libffi/fficonfig.py.in
+@@ -4,6 +4,7 @@
+ """.split()
+ 
+ ffi_platforms = {
++    'AARCH64': ['src/aarch64/ffi.c', 'src/aarch64/sysv.S'],
+     'MIPS_IRIX': ['src/mips/ffi.c', 'src/mips/o32.S', 'src/mips/n32.S'],
+     'MIPS_LINUX': ['src/mips/ffi.c', 'src/mips/o32.S'],
+     'X86': ['src/x86/ffi.c', 'src/x86/sysv.S'],
