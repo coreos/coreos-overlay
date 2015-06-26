@@ -51,6 +51,8 @@ src_prepare() {
 		epatch
 	fi
 
+	epatch "${FILESDIR}/kernel_mcs.diff"
+
 	cd "${S}/refpolicy"
 	make bare
 
@@ -134,6 +136,7 @@ src_install() {
 	for i in ${POLICY_TYPES}; do
 		cd "${S}/${i}"
 
+
 		make DESTDIR="${D}" install \
 			|| die "${i} install failed."
 
@@ -166,6 +169,12 @@ src_install() {
 
 	insinto /etc/selinux/mcs/contexts
 	doins "${FILESDIR}/lxc_contexts"
+
+	mkdir -p "${D}/usr/lib/selinux"
+	for i in ${POLICY_TYPES}; do
+		mv "${D}/etc/selinux/${i}" "${D}/usr/lib/selinux"
+		dosym "../../usr/lib/selinux/${i}" "/etc/selinux/${i}"
+	done
 }
 
 pkg_preinst() {

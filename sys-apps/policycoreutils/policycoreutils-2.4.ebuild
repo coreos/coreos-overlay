@@ -155,8 +155,8 @@ src_install() {
 	dosym /$(get_libdir)/rc/runscript_selinux.so /$(get_libdir)/rcscripts/runscript_selinux.so
 
 	# location for policy definitions
-	dodir /var/lib/selinux
-	keepdir /var/lib/selinux
+	dodir /usr/lib/selinux/policy
+	dosym ../../usr/lib/selinux/policy /var/lib/selinux
 
 	if use python ; then
 		# Set version-specific scripts
@@ -168,6 +168,7 @@ src_install() {
 		done
 	fi
 
+	systemd_dotmpfilesd "${FILESDIR}/tmpfiles.d/policycoreutils.conf"
 	dodir /usr/share/doc/${PF}/mcstrans/examples
 	cp -dR "${S1}"/mcstrans/share/examples/* "${D}/usr/share/doc/${PF}/mcstrans/examples"
 }

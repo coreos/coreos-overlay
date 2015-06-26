@@ -10,6 +10,8 @@ inherit selinux-policy-2
 
 DESCRIPTION="SELinux policy for virt"
 
+POLICY_PATCH="${FILESDIR}/virt.diff"
+
 if [[ $PV == 9999* ]] ; then
 	KEYWORDS=""
 else
