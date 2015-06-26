@@ -99,7 +99,7 @@ src_prepare() {
 
 src_compile() {
 	for i in ${POLICY_TYPES}; do
-		emake NAME=$i -C "${S}"/${i} || die "${i} compile failed"
+		emake SHAREDIR="${ROOT}/usr/share/selinux" NAME=$i -C "${S}"/${i} || die "${i} compile failed"
 	done
 }
 

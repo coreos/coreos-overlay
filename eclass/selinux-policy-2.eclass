@@ -230,9 +230,9 @@ selinux-policy-2_src_compile() {
 		export M4PARAM="${makeuse}"
 		if [[ ${BASEPOL} == 2.20140311* ]]; then
 			# Parallel builds are broken in 2.20140311-r7 and earlier, bug 530178
-			emake -j1 NAME=$i -C "${S}"/${i} || die "${i} compile failed"
+			emake -j1 NAME=$i SHAREDIR="${ROOT}/usr/share/selinux" -C "${S}"/${i} || die "${i} compile failed"
 		else
-			emake NAME=$i -C "${S}"/${i} || die "${i} compile failed"
+			emake NAME=$i SHAREDIR="${ROOT}/usr/share/selinux" -C "${S}"/${i} || die "${i} compile failed"
 		fi
 	done
 }

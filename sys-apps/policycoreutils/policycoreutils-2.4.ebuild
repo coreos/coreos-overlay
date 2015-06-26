@@ -15,7 +15,7 @@ SEMNG_VER="${PV}"
 SELNX_VER="${PV}"
 SEPOL_VER="${PV}"
 
-IUSE="audit pam dbus"
+IUSE="audit pam dbus python"
 
 DESCRIPTION="SELinux core utilities"
 HOMEPAGE="https://github.com/SELinuxProject/selinux/wiki"
@@ -26,28 +26,35 @@ LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="amd64 x86"
 
-DEPEND=">=sys-libs/libselinux-${SELNX_VER}[python]
+DEPEND=">=sys-libs/libselinux-${SELNX_VER}[python?]
 	>=sys-libs/glibc-2.4
 	>=sys-libs/libcap-1.10-r10
-	>=sys-libs/libsemanage-${SEMNG_VER}[python]
+	>=sys-libs/libsemanage-${SEMNG_VER}[python?]
 	sys-libs/libcap-ng
 	>=sys-libs/libsepol-${SEPOL_VER}
 	sys-devel/gettext
-	dev-python/ipy[${PYTHON_USEDEP}]
+	python? (
+		dev-python/ipy[${PYTHON_USEDEP}]
+	)
 	dbus? (
 		sys-apps/dbus
 		dev-libs/dbus-glib
 	)
 	audit? ( >=sys-process/audit-1.5.1 )
 	pam? ( sys-libs/pam )
-	${PYTHON_DEPS}"
+	python? (
+		${PYTHON_DEPS}
+	)"
 
 ### libcgroup -> seunshare
 ### dbus -> restorecond
 
 # pax-utils for scanelf used by rlpkg
 RDEPEND="${DEPEND}
-	dev-python/sepolgen
+	python? (
+		dev-python/sepolgen
+	)
+	app-admin/setools
 	app-misc/pax-utils"
 
 S="${WORKDIR}/${MY_P}"
@@ -71,13 +78,17 @@ src_prepare() {
 
 	epatch_user
 
-	python_copy_sources
-	# Our extra code is outside the regular directory, so set it to the extra
-	# directory. We really should optimize this as it is ugly, but the extra
-	# code is needed for Gentoo at the same time that policycoreutils is present
-	# (so we cannot use an additional package for now).
-	S="${S2}"
-	python_copy_sources
+        find -name Makefile -exec sed s/-Werror//g -i '{}' + 
+
+	if use python ; then
+		python_copy_sources
+		# Our extra code is outside the regular directory, so set it to the extra
+		# directory. We really should optimize this as it is ugly, but the extra
+		# code is needed for Gentoo at the same time that policycoreutils is present
+		# (so we cannot use an additional package for now).
+		S="${S2}"
+		python_copy_sources
+	fi
 }
 
 src_compile() {
@@ -92,10 +103,17 @@ src_compile() {
 			PYLIBVER="${EPYTHON}" \
 			LIBDIR="\$(PREFIX)/$(get_libdir)"
 	}
-	S="${S1}" # Regular policycoreutils
-	python_foreach_impl building
-	S="${S2}" # Extra set
-	python_foreach_impl building
+	if use python ; then
+		S="${S1}" # Regular policycoreutils
+		python_foreach_impl building
+		S="${S2}" # Extra set
+		python_foreach_impl building
+	else
+		BUILD_DIR="${S1}"
+		building
+		BUILD_DIR="${S2}"
+		building
+	fi
 }
 
 src_install() {
@@ -103,39 +121,52 @@ src_install() {
 	installation-policycoreutils() {
 		einfo "Installing policycoreutils"
 		emake -C "${BUILD_DIR}" DESTDIR="${D}" AUDITH="$(usex audit)" PAMH="$(usex pam)" INOTIFYH="$(usex dbus)" SESANDBOX="n" AUDIT_LOG_PRIV="y" PYLIBVER="${EPYTHON}" install
-		python_optimize
+		if use python ; then
+			python_optimize
+		fi
 	}
 
 	installation-extras() {
 		einfo "Installing policycoreutils-extra"
 		emake -C "${BUILD_DIR}" DESTDIR="${D}" INOTIFYH="$(usex dbus)" SHLIBDIR="${D}$(get_libdir)/rc" install
-		python_optimize
+		if use python ; then
+			python_optimize
+		fi
 	}
 
-	S="${S1}" # policycoreutils
-	python_foreach_impl installation-policycoreutils
-	S="${S2}" # extras
-	python_foreach_impl installation-extras
-	S="${S1}" # back for later
+	if use python ; then
+		S="${S1}" # policycoreutils
+		python_foreach_impl installation-policycoreutils
+		S="${S2}" # extras
+		python_foreach_impl installation-extras
+		S="${S1}" # back for later
+	else
+		BUILD_DIR="${S1}"
+		installation-policycoreutils
+		BUILD_DIR="${S2}"
+		installation-extras
+	fi
 
 	# remove redhat-style init script
 	rm -fR "${D}/etc/rc.d"
 
 	# compatibility symlinks
-	dosym /sbin/setfiles /usr/sbin/setfiles
+#	dosym /sbin/setfiles /usr/sbin/setfiles
 	dosym /$(get_libdir)/rc/runscript_selinux.so /$(get_libdir)/rcscripts/runscript_selinux.so
 
 	# location for policy definitions
 	dodir /var/lib/selinux
 	keepdir /var/lib/selinux
 
-	# Set version-specific scripts
-	for pyscript in audit2allow sepolgen-ifgen sepolicy chcat; do
-	  python_replicate_script "${ED}/usr/bin/${pyscript}"
-	done
-	for pyscript in semanage rlpkg; do
-	  python_replicate_script "${ED}/usr/sbin/${pyscript}"
-	done
+	if use python ; then
+		# Set version-specific scripts
+		for pyscript in audit2allow sepolgen-ifgen sepolicy chcat; do
+		  python_replicate_script "${ED}/usr/bin/${pyscript}"
+		done
+		for pyscript in semanage rlpkg; do
+		  python_replicate_script "${ED}/usr/sbin/${pyscript}"
+		done
+	fi
 
 	dodir /usr/share/doc/${PF}/mcstrans/examples
 	cp -dR "${S1}"/mcstrans/share/examples/* "${D}/usr/share/doc/${PF}/mcstrans/examples"

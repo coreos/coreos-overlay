@@ -156,12 +156,16 @@ src_install() {
 
 	done
 
+	systemd_dotmpfilesd "${FILESDIR}/tmpfiles.d/selinux-base.conf"
 	dodoc doc/Makefile.example doc/example.{te,fc,if}
 
 	doman man/man8/*.8;
 
 	insinto /etc/selinux
 	doins "${FILESDIR}/config"
+
+	insinto /etc/selinux/mcs/contexts
+	doins "${FILESDIR}/lxc_contexts"
 }
 
 pkg_preinst() {

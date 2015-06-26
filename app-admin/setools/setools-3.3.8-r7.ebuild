@@ -52,6 +52,8 @@ pkg_setup() {
 }
 
 src_prepare() {
+	epatch "${FILESDIR}/support-cross-build.patch"
+
 	EPATCH_MULTI_MSG="Applying various (Gentoo) setool fixes... " \
 	EPATCH_SUFFIX="patch" \
 	EPATCH_SOURCE="${WORKDIR}/gentoo-patches" \
