@@ -18,6 +18,9 @@ ETCD_PROTOCOLS="1 2"
 # Extra use flags for CoreOS SDK
 USE="${USE} cros_host expat -introspection -cups -tcpd -pcre -berkdb"
 
+# Never install cron or cron jobs
+USE="${USE} -cron"
+
 # No need for zeroconf, that's a desktop world thing.
 # Namely dhcpcd shoudln't make up random ipv4 addresses using ipv4ll
 USE="${USE} -zeroconf"
@@ -61,11 +64,9 @@ CONFIG_PROTECT="
 
 # Remove libtool .la files for non-plugin libraries.
 # Remove Gentoo init files since we use systemd.
-# Remove logrotate.d files since we don't use logrotate.
 INSTALL_MASK="
   /usr/lib*/*.la
   /etc/init.d /etc/conf.d
-  /etc/logrotate.d
 "
 
 # Keep the default languages small.
