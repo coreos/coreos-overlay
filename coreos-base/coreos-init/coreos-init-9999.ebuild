@@ -10,7 +10,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~arm64 ~x86"
 else
-	CROS_WORKON_COMMIT="af207c09eff3b8447d457c5e534a0b7ff3aae514"
+	CROS_WORKON_COMMIT="d301028d546e4a774345dab69d0429f6bc527ae0"
 	KEYWORDS="amd64 arm arm64 x86"
 fi
 
@@ -36,6 +36,7 @@ DEPEND="
 	test? ( dev-lang/python:2.7 )
 	"
 RDEPEND="${DEPEND}
+	app-admin/logrotate
 	sys-block/parted
 	sys-apps/gptfdisk
 	>=sys-apps/systemd-207-r5
