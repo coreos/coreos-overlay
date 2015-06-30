@@ -6,7 +6,7 @@ EAPI="5"
 PYTHON_COMPAT=( python2_7 )
 PYTHON_REQ_USE="xml"
 
-inherit multilib python-r1 toolchain-funcs eutils
+inherit multilib python-r1 toolchain-funcs eutils systemd
 
 MY_P="${P//_/-}"
 
@@ -100,6 +100,7 @@ src_compile() {
 			INOTIFYH="$(usex dbus)" \
 			SESANDBOX="n" \
 			CC="$(tc-getCC)" \
+			PREFIX="${ROOT}" \
 			PYLIBVER="${EPYTHON}" \
 			LIBDIR="\$(PREFIX)/$(get_libdir)"
 	}

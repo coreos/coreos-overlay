@@ -3,7 +3,7 @@
 # $Header: /var/cvsroot/gentoo-x86/sec-policy/selinux-base/selinux-base-2.20141203-r5.ebuild,v 1.3 2015/06/05 16:10:26 perfinion Exp $
 EAPI="5"
 
-inherit eutils
+inherit eutils systemd
 
 if [[ ${PV} == 9999* ]]; then
 	EGIT_REPO_URI="${SELINUX_GIT_REPO:-git://anongit.gentoo.org/proj/hardened-refpolicy.git https://anongit.gentoo.org/git/proj/hardened-refpolicy.git}"
