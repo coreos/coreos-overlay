@@ -87,6 +87,7 @@ src_configure() {
 		--with-java-prefix=${JAVA_HOME} \
 		--disable-selinux-check \
 		--disable-bwidget-check \
+		--with-sepol-devel=${ROOT}/usr \
 		$(use_enable python swig-python) \
 		$(use_enable java swig-java) \
 		$(use_enable X swig-tcl) \
