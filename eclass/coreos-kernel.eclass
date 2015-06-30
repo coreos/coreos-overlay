@@ -2,6 +2,14 @@
 # Copyright 2012 The Chromium OS Authors.
 # Distributed under the terms of the GNU General Public License v2
 
+# @ECLASS-VARIABLE: COREOS_SOURCE_REVISION
+# @DESCRIPTION:
+# Revision of the source ebuild, e.g. -r1. default is ""
+: ${COREOS_SOURCE_REVISION:=}
+
+COREOS_SOURCE_VERSION="${PV}${COREOS_SOURCE_REVISION}"
+COREOS_SOURCE_NAME="linux-${PV}-coreos${COREOS_SOURCE_REVISION}"
+
 [[ ${EAPI} != "5" ]] && die "Only EAPI=5 is supported"
 
 inherit linux-info toolchain-funcs
@@ -11,14 +19,14 @@ LICENSE="GPL-2 freedist"
 SLOT="0/${PVR}"
 SRC_URI=""
 
-DEPEND="~sys-kernel/coreos-sources-${PV}
+DEPEND="=sys-kernel/coreos-sources-${COREOS_SOURCE_VERSION}
 	sys-kernel/bootengine:="
 
 # Do not analyze or strip installed files
 RESTRICT="binchecks strip"
 
 # Use source installed by coreos-sources
-KERNEL_DIR="${SYSROOT}/usr/src/linux-${PV}"
+KERNEL_DIR="${SYSROOT}/usr/src/${COREOS_SOURCE_NAME}"
 S="${KERNEL_DIR}"
 # Cache kernel build tree under /var
 KBUILD_OUTPUT="${SYSROOT}/var/cache/portage/${CATEGORY}/${PN}"
