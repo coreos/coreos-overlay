@@ -119,6 +119,7 @@ RDEPEND="${RDEPEND}
 	net-misc/ntp
 	net-misc/rsync
 	net-misc/wget
+	sec-policy/selinux-virt
 	sys-apps/coreutils
 	sys-apps/dbus
 	sys-apps/ethtool
