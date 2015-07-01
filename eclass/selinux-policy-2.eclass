@@ -122,7 +122,7 @@ case "${EAPI:-0}" in
 	*) : ;;
 esac
 
-EXPORT_FUNCTIONS "src_unpack src_prepare src_compile src_install pkg_postinst pkg_postrm"
+EXPORT_FUNCTIONS "src_unpack src_prepare src_compile src_install pkg_postrm"
 
 # @FUNCTION: selinux-policy-2_src_unpack
 # @DESCRIPTION:
@@ -232,7 +232,7 @@ selinux-policy-2_src_compile() {
 			# Parallel builds are broken in 2.20140311-r7 and earlier, bug 530178
 			emake -j1 NAME=$i SHAREDIR="${ROOT}/usr/share/selinux" -C "${S}"/${i} || die "${i} compile failed"
 		else
-			emake NAME=$i SHAREDIR="${ROOT}/usr/share/selinux" -C "${S}"/${i} || die "${i} compile failed"
+			emake NAME=$i BINDIR="${ROOT}/usr/bin" SHAREDIR="${ROOT}/usr/share/selinux" -C "${S}"/${i} || die "${i} compile failed"
 		fi
 	done
 }
@@ -257,74 +257,6 @@ selinux-policy-2_src_install() {
 			fi
 		done
 	done
-}
-
-# @FUNCTION: selinux-policy-2_pkg_postinst
-# @DESCRIPTION:
-# Install the built .pp files in the SELinux policy stores, effectively
-# activating the policy on the system.
-selinux-policy-2_pkg_postinst() {
-	# build up the command in the case of multiple modules
-	local COMMAND
-	for i in ${MODS}; do
-		COMMAND="-i ${i}.pp ${COMMAND}"
-	done
-
-	for i in ${POLICY_TYPES}; do
-		if [ "${i}" == "strict" ] && [ "${MODS}" = "unconfined" ];
-		then
-			einfo "Ignoring loading of unconfined module in strict module store.";
-			continue;
-		fi
-		einfo "Inserting the following modules into the $i module store: ${MODS}"
-
-		cd /usr/share/selinux/${i} || die "Could not enter /usr/share/selinux/${i}"
-		semodule -s ${i} ${COMMAND}
-		if [ $? -ne 0 ];
-		then
-			ewarn "SELinux module load failed. Trying full reload...";
-			if [ "${i}" == "targeted" ];
-			then
-				semodule -s ${i} -b base.pp -i $(ls *.pp | grep -v base.pp);
-			else
-				semodule -s ${i} -b base.pp -i $(ls *.pp | grep -v base.pp | grep -v unconfined.pp);
-			fi
-			if [ $? -ne 0 ];
-			then
-				ewarn "Failed to reload SELinux policies."
-				ewarn ""
-				ewarn "If this is *not* the last SELinux module package being installed,"
-				ewarn "then you can safely ignore this as the reloads will be retried"
-				ewarn "with other, recent modules."
-				ewarn ""
-				ewarn "If it is the last SELinux module package being installed however,"
-				ewarn "then it is advised to look at the error above and take appropriate"
-				ewarn "action since the new SELinux policies are not loaded until the"
-				ewarn "command finished succesfully."
-				ewarn ""
-				ewarn "To reload, run the following command from within /usr/share/selinux/${i}:"
-				ewarn "  semodule -b base.pp -i \$(ls *.pp | grep -v base.pp)"
-				ewarn "or"
-				ewarn "  semodule -b base.pp -i \$(ls *.pp | grep -v base.pp | grep -v unconfined.pp)"
-				ewarn "depending on if you need the unconfined domain loaded as well or not."
-			else
-				einfo "SELinux modules reloaded succesfully."
-			fi
-		else
-			einfo "SELinux modules loaded succesfully."
-		fi
-	done
-
-	# Relabel depending packages
-	PKGSET="";
-	if [ -x /usr/bin/qdepends ] ; then
-	  PKGSET=$(/usr/bin/qdepends -Cq -r -Q ${CATEGORY}/${PN} | grep -v "sec-policy/selinux-");
-	elif [ -x /usr/bin/equery ] ; then
-	  PKGSET=$(/usr/bin/equery -Cq depends ${CATEGORY}/${PN} | grep -v "sec-policy/selinux-");
-	fi
-    if [ -n "${PKGSET}" ] ; then
-	  rlpkg ${PKGSET};
-	fi
 }
 
 # @FUNCTION: selinux-policy-2_pkg_postrm

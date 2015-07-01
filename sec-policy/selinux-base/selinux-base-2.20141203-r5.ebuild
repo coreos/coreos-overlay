@@ -123,7 +123,7 @@ src_compile() {
 
 	for i in ${POLICY_TYPES}; do
 		cd "${S}/${i}"
-		emake base || die "${i} compile failed"
+		emake base BINDIR="${ROOT}/usr/bin" || die "${i} compile failed"
 		if use doc; then
 			make html || die
 		fi
