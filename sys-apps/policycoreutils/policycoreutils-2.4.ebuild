@@ -88,6 +88,8 @@ src_prepare() {
 		# (so we cannot use an additional package for now).
 		S="${S2}"
 		python_copy_sources
+	else
+		sed s/sepolicy// -i Makefile
 	fi
 }
 
