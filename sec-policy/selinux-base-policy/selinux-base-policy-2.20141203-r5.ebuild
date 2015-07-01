@@ -99,7 +99,7 @@ src_prepare() {
 
 src_compile() {
 	for i in ${POLICY_TYPES}; do
-		emake SHAREDIR="${ROOT}/usr/share/selinux" NAME=$i -C "${S}"/${i} || die "${i} compile failed"
+		emake BINDIR="${ROOT}/usr/bin" SHAREDIR="${ROOT}/usr/share/selinux" NAME=$i -C "${S}"/${i} || die "${i} compile failed"
 	done
 }
 
@@ -115,29 +115,3 @@ src_install() {
 	done
 }
 
-pkg_postinst() {
-	# Override the command from the eclass, we need to load in base as well here
-	local COMMAND
-	for i in ${MODS}; do
-		COMMAND="-i ${i}.pp ${COMMAND}"
-	done
-
-	for i in ${POLICY_TYPES}; do
-		einfo "Inserting the following modules, with base, into the $i module store: ${MODS}"
-
-		cd /usr/share/selinux/${i} || die "Could not enter /usr/share/selinux/${i}"
-
-		semodule -s ${i} -b base.pp ${COMMAND} || die "Failed to load in base and modules ${MODS} in the $i policy store"
-	done
-
-	# Relabel depending packages
-	local PKGSET="";
-	if [ -x /usr/bin/qdepends ] ; then
-		PKGSET=$(/usr/bin/qdepends -Cq -r -Q ${CATEGORY}/${PN} | grep -v 'sec-policy/selinux-');
-	elif [ -x /usr/bin/equery ] ; then
-		PKGSET=$(/usr/bin/equery -Cq depends ${CATEGORY}/${PN} | grep -v 'sec-policy/selinux-');
-	fi
-	if [ -n "${PKGSET}" ] ; then
-		rlpkg ${PKGSET};
-	fi
-}
