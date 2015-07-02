@@ -30,7 +30,6 @@ src_install() {
 	dobin ${FILESDIR}/exoscale-ssh-key
 	dobin ${FILESDIR}/exoscale-coreos-cloudinit
 	dobin ${FILESDIR}/coreos-setup-environment
-	dobin ${FILESDIR}/exoscale-setup-network
 
 	insinto "/usr/share/oem"
 	doins ${T}/cloud-config.yml
