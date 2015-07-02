@@ -37,7 +37,7 @@ net-analyzer/nmap ncat -lua
 app-admin/sudo -sendmail
 
 # avoid pulling in gnutls, disable gentoo-only bits, enable journal upload
-sys-apps/systemd -ssl curl vanilla -lz4 lzma gcrypt selinux
+sys-apps/systemd -ssl curl vanilla -lz4 lzma gcrypt
 
 # disable kernel config detection and module building
 net-firewall/ipset -modules

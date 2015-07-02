@@ -18,6 +18,7 @@ HOMEPAGE="http://www.kernel.org"
 LICENSE="GPL-2 freedist"
 SLOT="0/${PVR}"
 SRC_URI=""
+IUSE="selinux"
 
 DEPEND="=sys-kernel/coreos-sources-${COREOS_SOURCE_VERSION}
 	sys-kernel/bootengine:="
@@ -134,6 +135,13 @@ coreos-kernel_src_prepare() {
 }
 
 coreos-kernel_src_configure() {
+	if ! use selinux; then
+		sed -i -e '/CONFIG_SECURITY_SELINUX_BOOTPARAM_VALUE/d' \
+			"${KBUILD_OUTPUT}/.config" || die
+		echo CONFIG_SECURITY_SELINUX_BOOTPARAM_VALUE=0 >> \
+			"${KBUILD_OUTPUT}/.config" || die
+	fi
+
 	# Use default for any options not explitly set in defconfig
 	yes "" | kmake oldconfig
 
