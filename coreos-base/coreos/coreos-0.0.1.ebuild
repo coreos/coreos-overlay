@@ -9,7 +9,7 @@ HOMEPAGE="http://coreos.com"
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="amd64 arm arm64 x86"
-IUSE="etcd_protocols_1 etcd_protocols_2"
+IUSE="etcd_protocols_1 etcd_protocols_2 selinux"
 
 
 ################################################################################
@@ -87,6 +87,13 @@ RDEPEND="${RDEPEND}
 	etcd_protocols_2? ( dev-db/etcd:2 )
 	"
 
+# Optionally enable SELinux and pull in policy for containers
+RDEPEND="${RDEPEND}
+	sys-apps/systemd[selinux?]
+	selinux? (
+		sec-policy/selinux-virt
+	)"
+
 RDEPEND="${RDEPEND}
 	app-emulation/actool
 	app-emulation/rkt
@@ -119,7 +126,6 @@ RDEPEND="${RDEPEND}
 	net-misc/ntp
 	net-misc/rsync
 	net-misc/wget
-	sec-policy/selinux-virt
 	sys-apps/coreutils
 	sys-apps/dbus
 	sys-apps/ethtool
@@ -136,7 +142,6 @@ RDEPEND="${RDEPEND}
 	sys-apps/sed
 	sys-apps/seismograph
 	sys-apps/shadow
-	sys-apps/systemd
 	sys-apps/usbutils
 	sys-apps/util-linux
 	sys-fs/btrfs-progs
