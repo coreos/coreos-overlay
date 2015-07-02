@@ -1,0 +1,35 @@
+From: Josh Boyer <jwboyer@redhat.com>
+Date: Mon, 25 Jun 2012 19:57:30 -0400
+Subject: [PATCH] acpi: Ignore acpi_rsdp kernel parameter when module loading
+ is restricted
+
+This option allows userspace to pass the RSDP address to the kernel, which
+makes it possible for a user to circumvent any restrictions imposed on
+loading modules. Disable it in that case.
+
+Signed-off-by: Josh Boyer <jwboyer@redhat.com>
+---
+ drivers/acpi/osl.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
+index 5aa1f6e281d2..58ae459937a4 100644
+--- a/drivers/acpi/osl.c
++++ b/drivers/acpi/osl.c
+@@ -44,6 +44,7 @@
+ #include <linux/list.h>
+ #include <linux/jiffies.h>
+ #include <linux/semaphore.h>
++#include <linux/module.h>
+ 
+ #include <asm/io.h>
+ #include <asm/uaccess.h>
+@@ -252,7 +253,7 @@ early_param("acpi_rsdp", setup_acpi_rsdp);
+ acpi_physical_address __init acpi_os_get_root_pointer(void)
+ {
+ #ifdef CONFIG_KEXEC
+-	if (acpi_rsdp)
++	if (acpi_rsdp && !secure_modules())
+ 		return acpi_rsdp;
+ #endif
+ 
