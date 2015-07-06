@@ -9,7 +9,7 @@ AUTOTOOLS_AUTORECONF=1
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~arm64 ~x86"
 else
-	CROS_WORKON_COMMIT="f9fa3b17bfe7ab390765fc328a639c456b57b38d"
+	CROS_WORKON_COMMIT="e408b6cacbd31eda4d64adda00727e9c724fa516"
 	KEYWORDS="amd64 arm arm64 x86"
 fi
 
