@@ -266,6 +266,11 @@ multilib_src_configure() {
 
 		--with-ntp-servers="0.coreos.pool.ntp.org 1.coreos.pool.ntp.org 2.coreos.pool.ntp.org 3.coreos.pool.ntp.org"
 
+		# The CoreOS epoch, Mon Jul  1 00:00:00 UTC 2013. Used by timesyncd
+		# as a sanity check for the minimum acceptable time. Explicitly set
+		# to avoid using the current build time.
+		--with-time-epoch=1372636800
+
 		# no default name servers
 		--with-dns-servers=
 	)
