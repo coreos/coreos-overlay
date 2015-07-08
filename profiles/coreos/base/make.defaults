@@ -80,13 +80,17 @@ LINGUAS="en"
 PORTAGE_BZIP2_COMMAND="lbzip2"
 PORTAGE_BUNZIP2_COMMAND="lbunzip2"
 
-# 2.5G seems to be roughly enough to cache a full CoreOS build.
-CCACHE_SIZE="2.5G"
+# Compression allows keeping a much more complete cache, otherwise the
+# kernel alone will eat 1.2GB instead of 455MB. Using /var/tmp/ccache
+# instead of ${ROOT}/var/tmp/ccache enables sharing results across
+# setup_board --force and between different boards of the same arch.
+CCACHE_COMPRESS=1
+CCACHE_DIR="/var/tmp/ccache"
 
 # Always build binary packages, remove old build logs, avoid running as root.
 FEATURES="buildpkg clean-logs compressdebug parallel-install splitdebug
           userfetch userpriv usersandbox ipc-sandbox network-sandbox
-          -merge-sync"
+          ccache -merge-sync"
 
 # No need to restrict access to build directories in dev environments.
 PORTAGE_WORKDIR_MODE="0755"

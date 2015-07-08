@@ -36,8 +36,8 @@ IUSE="acl apparmor audit cryptsetup curl doc elfutils gcrypt gnuefi gudev http
 	idn +importd introspection kdbus +kmod +lz4 lzma +nat pam policykit python
 	qrcode +seccomp selinux ssl sysv-utils terminal test vanilla xkb"
 
-# Gentoo removed the nls use flag, we'll keep it for now
-IUSE+=" nls symlink-usr"
+# CoreOS specific use flags
+IUSE+=" man symlink-usr"
 
 REQUIRED_USE="importd? ( curl gcrypt lzma )"
 
@@ -115,10 +115,10 @@ DEPEND="${COMMON_DEPEND}
 
 # Not required when building from unpatched tarballs, but we build from git.
 DEPEND="${DEPEND}
-	app-text/docbook-xml-dtd:4.2
-	app-text/docbook-xml-dtd:4.5
-	app-text/docbook-xsl-stylesheets
-	dev-libs/libxslt:0
+	man? ( app-text/docbook-xml-dtd:4.2
+		app-text/docbook-xml-dtd:4.5
+		app-text/docbook-xsl-stylesheets
+		dev-libs/libxslt:0 )
 	dev-libs/gobject-introspection
 	>=dev-libs/libgcrypt-1.4.5:0"
 
@@ -209,8 +209,6 @@ multilib_src_configure() {
 		# no deps
 		--enable-efi
 		--enable-ima
-		# used for stacktraces in log messages, leave off for now
-		--disable-elfutils
 
 		# Optional components/dependencies
 		$(multilib_native_use_enable acl)
@@ -234,8 +232,8 @@ multilib_src_configure() {
 		$(multilib_native_use_enable kmod)
 		$(use_enable lz4)
 		$(use_enable lzma xz)
+		$(multilib_native_use_enable man manpages)
 		$(multilib_native_use_enable nat libiptc)
-		$(use_enable nls)
 		$(multilib_native_use_enable pam)
 		$(multilib_native_use_enable policykit polkit)
 		$(multilib_native_use_with python)
@@ -262,9 +260,13 @@ multilib_src_configure() {
 		--with-dbuspolicydir="${EPREFIX}/usr/share/dbus-1/system.d"
 		--with-dbussessionservicedir="${EPREFIX}/usr/share/dbus-1/services"
 		--with-dbussystemservicedir="${EPREFIX}/usr/share/dbus-1/system-services"
-		--with-dbusinterfacedir="${EPREFIX}/usr/share/dbus-1/interfaces"
 
 		--with-ntp-servers="0.coreos.pool.ntp.org 1.coreos.pool.ntp.org 2.coreos.pool.ntp.org 3.coreos.pool.ntp.org"
+
+		# The CoreOS epoch, Mon Jul  1 00:00:00 UTC 2013. Used by timesyncd
+		# as a sanity check for the minimum acceptable time. Explicitly set
+		# to avoid using the current build time.
+		--with-time-epoch=1372636800
 
 		# no default name servers
 		--with-dns-servers=
@@ -355,7 +357,7 @@ multilib_src_install_all() {
 			dosym "${ROOTPREFIX-/usr}/bin/systemctl" ${prefix}/sbin/${app}
 		done
 		dosym "${ROOTPREFIX-/usr}/lib/systemd/systemd" ${prefix}/sbin/init
-	else
+	elif use man; then
 		# we just keep sysvinit tools, so no need for the mans
 		rm "${D}"/usr/share/man/man8/{halt,poweroff,reboot,runlevel,shutdown,telinit}.8 \
 			|| die

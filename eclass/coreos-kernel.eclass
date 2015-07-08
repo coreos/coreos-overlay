@@ -92,8 +92,12 @@ update_bootengine_cpio() {
 }
 
 kmake() {
-	local kernel_arch=$(tc-arch-kernel)
-	emake LDFLAGS="" ARCH="${kernel_arch}" CROSS_COMPILE="${CHOST}-" "$@"
+	local kernel_arch=$(tc-arch-kernel) kernel_cflags=
+	if gcc-specs-pie; then
+		kernel_cflags="-nopie"
+	fi
+	emake ARCH="${kernel_arch}" CROSS_COMPILE="${CHOST}-" \
+		KCFLAGS="${kernel_cflags}" LDFLAGS="" "$@"
 }
 
 # Discard the module signing key, we use new keys for each build.
