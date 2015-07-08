@@ -37,7 +37,7 @@ IUSE="acl apparmor audit cryptsetup curl doc elfutils gcrypt gnuefi gudev http
 	qrcode +seccomp selinux ssl sysv-utils terminal test vanilla xkb"
 
 # Gentoo removed the nls use flag, we'll keep it for now
-IUSE+=" nls symlink-usr"
+IUSE+=" man nls symlink-usr"
 
 REQUIRED_USE="importd? ( curl gcrypt lzma )"
 
@@ -115,10 +115,10 @@ DEPEND="${COMMON_DEPEND}
 
 # Not required when building from unpatched tarballs, but we build from git.
 DEPEND="${DEPEND}
-	app-text/docbook-xml-dtd:4.2
-	app-text/docbook-xml-dtd:4.5
-	app-text/docbook-xsl-stylesheets
-	dev-libs/libxslt:0
+	man? ( app-text/docbook-xml-dtd:4.2
+		app-text/docbook-xml-dtd:4.5
+		app-text/docbook-xsl-stylesheets
+		dev-libs/libxslt:0 )
 	dev-libs/gobject-introspection
 	>=dev-libs/libgcrypt-1.4.5:0"
 
@@ -232,6 +232,7 @@ multilib_src_configure() {
 		$(multilib_native_use_enable kmod)
 		$(use_enable lz4)
 		$(use_enable lzma xz)
+		$(multilib_native_use_enable man manpages)
 		$(multilib_native_use_enable nat libiptc)
 		$(use_enable nls)
 		$(multilib_native_use_enable pam)
@@ -357,7 +358,7 @@ multilib_src_install_all() {
 			dosym "${ROOTPREFIX-/usr}/bin/systemctl" ${prefix}/sbin/${app}
 		done
 		dosym "${ROOTPREFIX-/usr}/lib/systemd/systemd" ${prefix}/sbin/init
-	else
+	elif use man; then
 		# we just keep sysvinit tools, so no need for the mans
 		rm "${D}"/usr/share/man/man8/{halt,poweroff,reboot,runlevel,shutdown,telinit}.8 \
 			|| die

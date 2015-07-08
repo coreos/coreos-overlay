@@ -1,4 +1,4 @@
-USE="-pam"
+USE="man -pam"
 
 # Used by some old goo in profiles/coreos/base/profile.bashrc
 # TODO: clean up that old goo
