@@ -209,8 +209,6 @@ multilib_src_configure() {
 		# no deps
 		--enable-efi
 		--enable-ima
-		# used for stacktraces in log messages, leave off for now
-		--disable-elfutils
 
 		# Optional components/dependencies
 		$(multilib_native_use_enable acl)
@@ -262,7 +260,6 @@ multilib_src_configure() {
 		--with-dbuspolicydir="${EPREFIX}/usr/share/dbus-1/system.d"
 		--with-dbussessionservicedir="${EPREFIX}/usr/share/dbus-1/services"
 		--with-dbussystemservicedir="${EPREFIX}/usr/share/dbus-1/system-services"
-		--with-dbusinterfacedir="${EPREFIX}/usr/share/dbus-1/interfaces"
 
 		--with-ntp-servers="0.coreos.pool.ntp.org 1.coreos.pool.ntp.org 2.coreos.pool.ntp.org 3.coreos.pool.ntp.org"
 
