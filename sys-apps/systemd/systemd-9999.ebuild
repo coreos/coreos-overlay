@@ -36,8 +36,8 @@ IUSE="acl apparmor audit cryptsetup curl doc elfutils gcrypt gnuefi gudev http
 	idn +importd introspection kdbus +kmod +lz4 lzma +nat pam policykit python
 	qrcode +seccomp selinux ssl sysv-utils terminal test vanilla xkb"
 
-# Gentoo removed the nls use flag, we'll keep it for now
-IUSE+=" man nls symlink-usr"
+# CoreOS specific use flags
+IUSE+=" man symlink-usr"
 
 REQUIRED_USE="importd? ( curl gcrypt lzma )"
 
@@ -234,7 +234,6 @@ multilib_src_configure() {
 		$(use_enable lzma xz)
 		$(multilib_native_use_enable man manpages)
 		$(multilib_native_use_enable nat libiptc)
-		$(use_enable nls)
 		$(multilib_native_use_enable pam)
 		$(multilib_native_use_enable policykit polkit)
 		$(multilib_native_use_with python)
