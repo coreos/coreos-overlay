@@ -22,8 +22,8 @@ sys-libs/ncurses	minimal
 sys-libs/pam        -berkdb
 sys-libs/gdbm		berkdb
 
-
-sys-apps/systemd http
+# enable journal gateway and container features, avoid pulling in gnutls
+sys-apps/systemd importd http nat -ssl
 net-libs/libmicrohttpd -ssl
 
 sys-boot/syslinux       -custom-cflags
