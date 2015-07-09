@@ -116,14 +116,11 @@ DEPEND+="
 	man? ( app-text/docbook-xml-dtd:4.2
 		app-text/docbook-xml-dtd:4.5
 		app-text/docbook-xsl-stylesheets
-		dev-libs/libxslt:0
-		${PYTHON_DEPS} )
+		dev-libs/libxslt:0 )
 	terminal? ( ${PYTHON_DEPS} )
 	>=dev-libs/libgcrypt-1.4.5:0"
 
-REQUIRED_USE+="
-	man? ( ${PYTHON_REQUIRED_USE} )
-	terminal? ( ${PYTHON_REQUIRED_USE} )"
+REQUIRED_USE+=" terminal? ( ${PYTHON_REQUIRED_USE} )"
 
 pkg_pretend() {
 	local CONFIG_CHECK="~AUTOFS4_FS ~BLK_DEV_BSG ~CGROUPS
@@ -180,7 +177,9 @@ src_configure() {
 	# Fix systems broken by bug #509454.
 	[[ ${MY_UDEVDIR} ]] || MY_UDEVDIR=/lib/udev
 
-	python_setup
+	if use python || use terminal; then
+		python_setup
+	fi
 
 	multilib-minimal_src_configure
 }
