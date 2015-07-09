@@ -12,15 +12,23 @@ DESCRIPTION="VMware tools for distribution via /usr/share/oem"
 HOMEPAGE="http://open-vm-tools.sourceforge.net/"
 
 EGIT_REPO_URI="https://github.com/vmware/open-vm-tools"
-EGIT_COMMIT="0696234c3905bf91cfba2cf909dbf92fc30ee6fc"
+EGIT_COMMIT="7bac35f4e8787553f68972feae7966b0236c06ac"
 EGIT_SOURCEDIR="${WORKDIR}"
 
 LICENSE="LGPL-2"
 SLOT="0"
 KEYWORDS="amd64 ~x86"
-IUSE="+dnet +pic +deploypkg" # TODO: pam
+IUSE="+dnet +pic +deploypkg +vgauth" # TODO: pam
 
-DEPEND="dev-libs/glib:2
+COMMON_DEPEND="
+	vgauth? (
+		dev-libs/openssl:0
+		dev-libs/xerces-c
+		dev-libs/xml-security-c
+	)"
+
+DEPEND="${COMMON_DEPEND}
+	dev-libs/glib:2
 	sys-process/procps
 	deploypkg? ( dev-libs/libmspack )
 	dnet? ( dev-libs/libdnet )"
@@ -30,7 +38,8 @@ DEPEND="dev-libs/glib:2
 #	sys-apps/ethtool
 #	sys-process/procps
 #	pam? ( virtual/pam )
-RDEPEND="dnet? ( dev-libs/libdnet )
+RDEPEND="${COMMON_DEPEND}
+	dnet? ( dev-libs/libdnet )
 	deploypkg? ( dev-libs/libmspack )"
 
 S="${WORKDIR}/${PN}"
@@ -94,7 +103,7 @@ src_configure() {
 		--without-kernel-modules
 		--without-pam
 		--without-x
-		--disable-vgauth
+		$(use_enable vgauth)
 		$(use_with dnet)
 		$(use_with pic)
 	)
