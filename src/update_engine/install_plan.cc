@@ -16,21 +16,17 @@ InstallPlan::InstallPlan(bool is_resume,
                          const string& url,
                          uint64_t payload_size,
                          const string& payload_hash,
-                         const string& install_path,
-                         const string& kernel_install_path)
+                         const string& install_path)
     : is_resume(is_resume),
       download_url(url),
       payload_size(payload_size),
       payload_hash(payload_hash),
       install_path(install_path),
-      kernel_install_path(kernel_install_path),
-      kernel_size(0),
       rootfs_size(0),
       hash_checks_mandatory(false) {}
 
 InstallPlan::InstallPlan() : is_resume(false),
                              payload_size(0),
-                             kernel_size(0),
                              rootfs_size(0),
                              hash_checks_mandatory(false) {}
 
@@ -40,8 +36,7 @@ bool InstallPlan::operator==(const InstallPlan& that) const {
           (download_url == that.download_url) &&
           (payload_size == that.payload_size) &&
           (payload_hash == that.payload_hash) &&
-          (install_path == that.install_path) &&
-          (kernel_install_path == that.kernel_install_path));
+          (install_path == that.install_path));
 }
 
 bool InstallPlan::operator!=(const InstallPlan& that) const {
@@ -55,7 +50,6 @@ void InstallPlan::Dump() const {
             << ", payload size: " << payload_size
             << ", payload hash: " << payload_hash
             << ", install_path: " << install_path
-            << ", kernel_install_path: " << kernel_install_path
             << ", hash_checks_mandatory: " << utils::ToString(
                 hash_checks_mandatory);
 }

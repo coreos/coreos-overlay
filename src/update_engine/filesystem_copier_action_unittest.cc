@@ -34,7 +34,6 @@ class FilesystemCopierActionTest : public ::testing::Test {
   // Returns true iff test has completed successfully.
   bool DoTest(bool run_out_of_space,
               bool terminate_early,
-              bool use_kernel_partition,
               int verify_hash);
   void SetUp() {
   }
@@ -106,17 +105,11 @@ gboolean StartProcessorInRunLoop(gpointer data) {
 // issue with the chroot environiment, library versions we use, etc.
 TEST_F(FilesystemCopierActionTest, DISABLED_RunAsRootSimpleTest) {
   ASSERT_EQ(0, getuid());
-  bool test = DoTest(false, false, false, 0);
-  EXPECT_TRUE(test);
-  if (!test)
-    return;
-  test = DoTest(false, false, true, 0);
-  EXPECT_TRUE(test);
+  EXPECT_TRUE(DoTest(false, false, 0));
 }
 
 bool FilesystemCopierActionTest::DoTest(bool run_out_of_space,
                                         bool terminate_early,
-                                        bool use_kernel_partition,
                                         int verify_hash) {
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
 
@@ -167,38 +160,22 @@ bool FilesystemCopierActionTest::DoTest(bool run_out_of_space,
   // Set up the action objects
   InstallPlan install_plan;
   if (verify_hash) {
-    if (use_kernel_partition) {
-      install_plan.kernel_install_path = a_dev;
-      install_plan.kernel_size =
-          kLoopFileSize - ((verify_hash == 2) ? 1 : 0);
-      if (!OmahaHashCalculator::RawHashOfData(a_loop_data,
-                                              &install_plan.kernel_hash)) {
-        ADD_FAILURE();
-        success = false;
-      }
-    } else {
-      install_plan.install_path = a_dev;
-      install_plan.rootfs_size =
-          kLoopFileSize - ((verify_hash == 2) ? 1 : 0);
-      if (!OmahaHashCalculator::RawHashOfData(a_loop_data,
-                                              &install_plan.rootfs_hash)) {
-        ADD_FAILURE();
-        success = false;
-      }
+    install_plan.install_path = a_dev;
+    install_plan.rootfs_size =
+        kLoopFileSize - ((verify_hash == 2) ? 1 : 0);
+    if (!OmahaHashCalculator::RawHashOfData(a_loop_data,
+                                            &install_plan.rootfs_hash)) {
+      ADD_FAILURE();
+      success = false;
     }
   } else {
-    if (use_kernel_partition) {
-      install_plan.kernel_install_path = b_dev;
-    } else {
-      install_plan.install_path = b_dev;
-    }
+    install_plan.install_path = b_dev;
   }
 
   ActionProcessor processor;
 
   ObjectFeederAction<InstallPlan> feeder_action;
-  FilesystemCopierAction copier_action(use_kernel_partition,
-                                       verify_hash != 0);
+  FilesystemCopierAction copier_action(verify_hash != 0);
   ObjectCollectorAction<InstallPlan> collector_action;
 
   BondActions(&feeder_action, &copier_action);
@@ -235,9 +212,7 @@ bool FilesystemCopierActionTest::DoTest(bool run_out_of_space,
   }
   if (verify_hash == 2) {
     ActionExitCode expected_exit_code =
-        (use_kernel_partition ?
-         kActionCodeNewKernelVerificationError :
-         kActionCodeNewRootfsVerificationError);
+        kActionCodeNewRootfsVerificationError;
     EXPECT_EQ(expected_exit_code, delegate.code());
     return (expected_exit_code == delegate.code());
   }
@@ -291,7 +266,7 @@ TEST_F(FilesystemCopierActionTest, MissingInputObjectTest) {
 
   processor.set_delegate(&delegate);
 
-  FilesystemCopierAction copier_action(false, false);
+  FilesystemCopierAction copier_action(false);
   ObjectCollectorAction<InstallPlan> collector_action;
 
   BondActions(&copier_action, &collector_action);
@@ -312,9 +287,9 @@ TEST_F(FilesystemCopierActionTest, ResumeTest) {
 
   ObjectFeederAction<InstallPlan> feeder_action;
   const char* kUrl = "http://some/url";
-  InstallPlan install_plan(true, kUrl, 0, "", "", "");
+  InstallPlan install_plan(true, kUrl, 0, "", "");
   feeder_action.set_obj(install_plan);
-  FilesystemCopierAction copier_action(false, false);
+  FilesystemCopierAction copier_action(false);
   ObjectCollectorAction<InstallPlan> collector_action;
 
   BondActions(&feeder_action, &copier_action);
@@ -341,10 +316,9 @@ TEST_F(FilesystemCopierActionTest, NonExistentDriveTest) {
                            "",
                            0,
                            "",
-                           "/no/such/file",
                            "/no/such/file");
   feeder_action.set_obj(install_plan);
-  FilesystemCopierAction copier_action(false, false);
+  FilesystemCopierAction copier_action(false);
   ObjectCollectorAction<InstallPlan> collector_action;
 
   BondActions(&copier_action, &collector_action);
@@ -360,24 +334,22 @@ TEST_F(FilesystemCopierActionTest, NonExistentDriveTest) {
 
 TEST_F(FilesystemCopierActionTest, RunAsRootVerifyHashTest) {
   ASSERT_EQ(0, getuid());
-  EXPECT_TRUE(DoTest(false, false, false, 1));
-  EXPECT_TRUE(DoTest(false, false, true, 1));
+  EXPECT_TRUE(DoTest(false, false, 1));
 }
 
 TEST_F(FilesystemCopierActionTest, RunAsRootVerifyHashFailTest) {
   ASSERT_EQ(0, getuid());
-  EXPECT_TRUE(DoTest(false, false, false, 2));
-  EXPECT_TRUE(DoTest(false, false, true, 2));
+  EXPECT_TRUE(DoTest(false, false, 2));
 }
 
 TEST_F(FilesystemCopierActionTest, RunAsRootNoSpaceTest) {
   ASSERT_EQ(0, getuid());
-  EXPECT_TRUE(DoTest(true, false, false, 0));
+  EXPECT_TRUE(DoTest(true, false, 0));
 }
 
 TEST_F(FilesystemCopierActionTest, RunAsRootTerminateEarlyTest) {
   ASSERT_EQ(0, getuid());
-  EXPECT_TRUE(DoTest(false, true, false, 0));
+  EXPECT_TRUE(DoTest(false, true, 0));
 }
 
 TEST_F(FilesystemCopierActionTest, RunAsRootDetermineFilesystemSizeTest) {
@@ -391,19 +363,15 @@ TEST_F(FilesystemCopierActionTest, RunAsRootDetermineFilesystemSizeTest) {
       img.c_str())));
   EXPECT_EQ(20 * 1024 * 1024, utils::FileSize(img));
 
-  for (int i = 0; i < 2; ++i) {
-    bool is_kernel = i == 1;
-    FilesystemCopierAction action(is_kernel, false);
-    EXPECT_EQ(kint64max, action.filesystem_size_);
-    {
-      int fd = HANDLE_EINTR(open(img.c_str(), O_RDONLY));
-      EXPECT_TRUE(fd > 0);
-      ScopedFdCloser fd_closer(&fd);
-      action.DetermineFilesystemSize(fd);
-    }
-    EXPECT_EQ(is_kernel ? kint64max : 10 * 1024 * 1024,
-              action.filesystem_size_);
+  FilesystemCopierAction action(false);
+  EXPECT_EQ(kint64max, action.filesystem_size_);
+  {
+    int fd = HANDLE_EINTR(open(img.c_str(), O_RDONLY));
+    EXPECT_TRUE(fd > 0);
+    ScopedFdCloser fd_closer(&fd);
+    action.DetermineFilesystemSize(fd);
   }
+  EXPECT_EQ(10 * 1024 * 1024, action.filesystem_size_);
 }
 
 

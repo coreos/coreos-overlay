@@ -19,8 +19,7 @@ struct InstallPlan {
               const std::string& url,
               uint64_t payload_size,
               const std::string& payload_hash,
-              const std::string& install_path,
-              const std::string& kernel_install_path);
+              const std::string& install_path);
 
   // Default constructor: Initialize all members which don't have a class
   // initializer.
@@ -37,9 +36,8 @@ struct InstallPlan {
   uint64_t payload_size;                 // size of the payload
   std::string payload_hash ;             // SHA256 hash of the payload
   std::string install_path;              // path to install device
-  std::string kernel_install_path;       // path to kernel install device
 
-  // The fields below are used for kernel and rootfs verification. The flow is:
+  // The fields below are used for rootfs verification. The flow is:
   //
   // 1. FilesystemCopierAction(verify_hash=false) computes and fills in the
   // source partition sizes and hashes.
@@ -50,9 +48,7 @@ struct InstallPlan {
   //
   // 4. FilesystemCopierAction(verify_hashes=true) computes and verifies the
   // applied partition sizes and hashes against the expected values.
-  uint64_t kernel_size;
   uint64_t rootfs_size;
-  std::vector<char> kernel_hash;
   std::vector<char> rootfs_hash;
 
   // True if payload hash checks are mandatory based on the system state and

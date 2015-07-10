@@ -62,8 +62,6 @@ void OmahaResponseHandlerAction::PerformAction() {
   TEST_AND_RETURN(GetInstallDev(
       (!boot_device_.empty() ? boot_device_ : utils::BootDevice()),
       &install_plan_.install_path));
-  install_plan_.kernel_install_path =
-      utils::BootKernelName(install_plan_.install_path);
 
   TEST_AND_RETURN(HasOutputPipe());
   if (HasOutputPipe())
