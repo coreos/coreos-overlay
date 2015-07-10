@@ -351,7 +351,7 @@ bool DeltaPerformer::Write(const void* bytes, size_t count,
 
     num_rootfs_operations_ = manifest_.install_operations_size();
     num_total_operations_ =
-        num_rootfs_operations_ + manifest_.kernel_install_operations_size();
+        num_rootfs_operations_ + manifest_.noop_operations_size();
     if (next_operation_num_ > 0)
       UpdateOverallProgress(true, "Resuming after ");
     LOG(INFO) << "Starting to apply update payload operations";
@@ -377,7 +377,7 @@ bool DeltaPerformer::Write(const void* bytes, size_t count,
 
     const DeltaArchiveManifest_InstallOperation &op =
         is_kernel ?
-        manifest_.kernel_install_operations(
+        manifest_.noop_operations(
             next_operation_num_ - num_rootfs_operations_) :
         manifest_.install_operations(next_operation_num_);
     if (!CanPerformInstallOperation(op)) {

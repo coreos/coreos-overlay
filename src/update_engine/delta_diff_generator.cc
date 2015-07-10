@@ -379,7 +379,7 @@ void InstallOperationsToManifest(
       continue;
     }
     DeltaArchiveManifest_InstallOperation* op =
-        out_manifest->add_kernel_install_operations();
+        out_manifest->add_noop_operations();
     *op = add_op;
   }
 }
@@ -458,11 +458,11 @@ void ReportPayloadUsage(const DeltaArchiveManifest& manifest,
     total_size += op.data_length();
   }
 
-  // Kernel install operations.
-  for (int i = 0; i < manifest.kernel_install_operations_size(); ++i) {
+  // Dummy install operations for compatibility with older clients.
+  for (int i = 0; i < manifest.noop_operations_size(); ++i) {
     const DeltaArchiveManifest_InstallOperation& op =
-        manifest.kernel_install_operations(i);
-    objects.push_back(DeltaObject(StringPrintf("<kernel-operation-%d>", i),
+        manifest.noop_operations(i);
+    objects.push_back(DeltaObject(StringPrintf("<noop-operation-%d>", i),
                                   op.type(),
                                   op.data_length()));
     total_size += op.data_length();
@@ -1152,12 +1152,12 @@ bool DeltaDiffGenerator::ReorderDataBlobs(
   uint64_t out_file_size = 0;
 
   for (int i = 0; i < (manifest->install_operations_size() +
-                       manifest->kernel_install_operations_size()); i++) {
+                       manifest->noop_operations_size()); i++) {
     DeltaArchiveManifest_InstallOperation* op = NULL;
     if (i < manifest->install_operations_size()) {
       op = manifest->mutable_install_operations(i);
     } else {
-      op = manifest->mutable_kernel_install_operations(
+      op = manifest->mutable_noop_operations(
           i - manifest->install_operations_size());
     }
     if (!op->has_data_offset())
@@ -1465,11 +1465,11 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
   uint64_t next_blob_offset = 0;
   {
     for (int i = 0; i < (manifest.install_operations_size() +
-                         manifest.kernel_install_operations_size()); i++) {
+                         manifest.noop_operations_size()); i++) {
       DeltaArchiveManifest_InstallOperation* op =
           i < manifest.install_operations_size() ?
           manifest.mutable_install_operations(i) :
-          manifest.mutable_kernel_install_operations(
+          manifest.mutable_noop_operations(
               i - manifest.install_operations_size());
       if (op->has_data_offset()) {
         if (op->data_offset() != next_blob_offset) {
@@ -1647,7 +1647,7 @@ void DeltaDiffGenerator::AddSignatureOp(uint64_t signature_blob_offset,
   LOG(INFO) << "set? " << manifest.has_signatures_offset();
   // Add a dummy op at the end to appease older clients
   DeltaArchiveManifest_InstallOperation* dummy_op =
-      manifest.add_kernel_install_operations();
+      manifest.add_noop_operations();
   dummy_op->set_type(DeltaArchiveManifest_InstallOperation_Type_REPLACE);
   dummy_op->set_data_offset(signature_blob_offset);
   manifest.set_signatures_offset(signature_blob_offset);
