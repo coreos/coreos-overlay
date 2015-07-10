@@ -85,6 +85,7 @@ PORTAGE_BUNZIP2_COMMAND="lbunzip2"
 # instead of ${ROOT}/var/tmp/ccache enables sharing results across
 # setup_board --force and between different boards of the same arch.
 CCACHE_COMPRESS=1
+CCACHE_COMPILERCHECK=content
 CCACHE_DIR="/var/tmp/ccache"
 
 # Always build binary packages, remove old build logs, avoid running as root.
