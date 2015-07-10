@@ -941,8 +941,8 @@ bool DeltaPerformer::VerifySourcePartitions() {
                install_plan_->rootfs_hash.size()) == 0;
     if (!valid) {
       LogVerifyError(false,
-                     StringForHashBytes(install_plan_->kernel_hash.data(),
-                                        install_plan_->kernel_hash.size()),
+                     StringForHashBytes(install_plan_->rootfs_hash.data(),
+                                        install_plan_->rootfs_hash.size()),
                      StringForHashBytes(info.hash().data(),
                                         info.hash().size()));
     }
