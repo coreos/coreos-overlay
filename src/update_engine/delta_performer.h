@@ -58,7 +58,6 @@ class DeltaPerformer : public FileWriter {
         system_state_(system_state),
         install_plan_(install_plan),
         fd_(-1),
-        kernel_fd_(-1),
         manifest_valid_(false),
         manifest_metadata_size_(0),
         next_operation_num_(0),
@@ -73,10 +72,6 @@ class DeltaPerformer : public FileWriter {
         last_progress_chunk_(0),
         forced_progress_log_wait_(
             base::TimeDelta::FromSeconds(kProgressLogTimeoutSeconds)) {}
-
-  // Opens the kernel. Should be called before or after Open(), but before
-  // Write(). The kernel file will be close()d when Close() is called.
-  int OpenKernel(const char* kernel_path);
 
   // flags and mode ignored. Once Close()d, a DeltaPerformer can't be
   // Open()ed again.
@@ -94,7 +89,6 @@ class DeltaPerformer : public FileWriter {
   bool Write(const void* bytes, size_t count, ActionExitCode *error);
 
   // Wrapper around close. Returns 0 on success or -errno on error.
-  // Closes both 'path' given to Open() and the kernel path.
   int Close();
 
   // Verifies the downloaded payload against the signed hash included in the
@@ -107,15 +101,13 @@ class DeltaPerformer : public FileWriter {
   ActionExitCode VerifyPayload(const std::string& update_check_response_hash,
                                const uint64_t update_check_response_size);
 
-  // Reads from the update manifest the expected sizes and hashes of the target
-  // kernel and rootfs partitions. These values can be used for applied update
+  // Reads from the update manifest the expected size and hash of the target
+  // rootfs partition. These values can be used for applied update
   // hash verification. This method must be called after the update manifest has
   // been parsed (e.g., after closing the stream). Returns true on success, and
   // false on failure (e.g., when the values are not present in the update
   // manifest).
-  bool GetNewPartitionInfo(uint64_t* kernel_size,
-                           std::vector<char>* kernel_hash,
-                           uint64_t* rootfs_size,
+  bool GetNewPartitionInfo(uint64_t* rootfs_size,
                            std::vector<char>* rootfs_hash);
 
   // Converts an ordered collection of Extent objects which contain data of
@@ -182,11 +174,11 @@ class DeltaPerformer : public FileWriter {
   static bool IsIdempotentOperation(
       const DeltaArchiveManifest_InstallOperation& op);
 
-  // Verifies that the expected source partition hashes (if present) match the
-  // hashes for the current partitions. Returns true if there're no expected
-  // hashes in the payload (e.g., if it's a new-style full update) or if the
+  // Verifies that the expected source partition hash (if present) match the
+  // hash for the current partition. Returns true if there're no expected
+  // hash in the payload (e.g., if it's a new-style full update) or if the
   // hashes match; returns false otherwise.
-  bool VerifySourcePartitions();
+  bool VerifySourcePartition();
 
   // Returns true if enough of the delta file has been passed via Write()
   // to be able to perform a given install operation.
@@ -205,14 +197,11 @@ class DeltaPerformer : public FileWriter {
 
   // These perform a specific type of operation and return true on success.
   bool PerformReplaceOperation(
-      const DeltaArchiveManifest_InstallOperation& operation,
-      bool is_kernel);
+      const DeltaArchiveManifest_InstallOperation& operation);
   bool PerformMoveOperation(
-      const DeltaArchiveManifest_InstallOperation& operation,
-      bool is_kernel);
+      const DeltaArchiveManifest_InstallOperation& operation);
   bool PerformBsdiffOperation(
-      const DeltaArchiveManifest_InstallOperation& operation,
-      bool is_kernel);
+      const DeltaArchiveManifest_InstallOperation& operation);
 
   // Returns true if the payload signature message has been extracted from
   // |operation|, false otherwise.
@@ -244,11 +233,7 @@ class DeltaPerformer : public FileWriter {
   // File descriptor of open device.
   int fd_;
 
-  // File descriptor of the kernel device
-  int kernel_fd_;
-
   std::string path_;  // Path that fd_ refers to.
-  std::string kernel_path_;  // Path that kernel_fd_ refers to.
 
   DeltaArchiveManifest manifest_;
   bool manifest_valid_;

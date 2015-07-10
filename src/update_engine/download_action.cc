@@ -117,8 +117,6 @@ void DownloadAction::TransferComplete(HttpFetcher *fetcher, bool successful) {
       LOG(ERROR) << "Download of " << install_plan_.download_url
                  << " failed due to payload verification error.";
     } else if (!delta_performer_->GetNewPartitionInfo(
-        &install_plan_.kernel_size,
-        &install_plan_.kernel_hash,
         &install_plan_.rootfs_size,
         &install_plan_.rootfs_hash)) {
       LOG(ERROR) << "Unable to get new partition hash info.";

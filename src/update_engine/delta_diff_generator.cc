@@ -353,12 +353,10 @@ bool WriteUint64AsBigEndian(FileWriter* writer, const uint64_t value) {
 
 // Adds each operation from |graph| to |out_manifest| in the order specified by
 // |order| while building |out_op_name_map| with operation to name
-// mappings. Adds all |kernel_ops| to |out_manifest|. Filters out no-op
-// operations.
+// mappings. Filters out no-op operations.
 void InstallOperationsToManifest(
     const Graph& graph,
     const vector<Vertex::Index>& order,
-    const vector<DeltaArchiveManifest_InstallOperation>& kernel_ops,
     DeltaArchiveManifest* out_manifest,
     OperationNameMap* out_op_name_map) {
   for (Vertex::Index vertex_index : order) {
@@ -372,61 +370,12 @@ void InstallOperationsToManifest(
     *op = add_op;
     (*out_op_name_map)[op] = &vertex.file_name;
   }
-  for (vector<DeltaArchiveManifest_InstallOperation>::const_iterator it =
-           kernel_ops.begin(); it != kernel_ops.end(); ++it) {
-    const DeltaArchiveManifest_InstallOperation& add_op = *it;
-    if (DeltaDiffGenerator::IsNoopOperation(add_op)) {
-      continue;
-    }
-    DeltaArchiveManifest_InstallOperation* op =
-        out_manifest->add_noop_operations();
-    *op = add_op;
-  }
 }
 
 void CheckGraph(const Graph& graph) {
   for (const Vertex& v : graph) {
     CHECK(v.op.has_type());
   }
-}
-
-// Delta compresses a kernel partition |new_kernel_part| with knowledge of the
-// old kernel partition |old_kernel_part|. If |old_kernel_part| is an empty
-// string, generates a full update of the partition.
-bool DeltaCompressKernelPartition(
-    const string& old_kernel_part,
-    const string& new_kernel_part,
-    vector<DeltaArchiveManifest_InstallOperation>* ops,
-    int blobs_fd,
-    off_t* blobs_length) {
-  LOG(INFO) << "Delta compressing kernel partition...";
-  LOG_IF(INFO, old_kernel_part.empty()) << "Generating full kernel update...";
-
-  // Add a new install operation
-  ops->resize(1);
-  DeltaArchiveManifest_InstallOperation* op = &(*ops)[0];
-
-  vector<char> data;
-  TEST_AND_RETURN_FALSE(
-      DeltaDiffGenerator::ReadFileToDiff(old_kernel_part,
-                                         new_kernel_part,
-                                         true, // bsdiff_allowed
-                                         &data,
-                                         op,
-                                         false));
-
-  // Write the data
-  if (op->type() != DeltaArchiveManifest_InstallOperation_Type_MOVE) {
-    op->set_data_offset(*blobs_length);
-    op->set_data_length(data.size());
-  }
-
-  TEST_AND_RETURN_FALSE(utils::WriteAll(blobs_fd, &data[0], data.size()));
-  *blobs_length += data.size();
-
-  LOG(INFO) << "Done delta compressing kernel partition: "
-            << kInstallOperationTypes[op->type()];
-  return true;
 }
 
 struct DeltaObject {
@@ -586,19 +535,14 @@ bool DeltaDiffGenerator::ReadFileToDiff(
   return true;
 }
 
-bool DeltaDiffGenerator::InitializePartitionInfo(bool is_kernel,
-                                                 const string& partition,
+bool DeltaDiffGenerator::InitializePartitionInfo(const string& partition,
                                                  PartitionInfo* info) {
   int64_t size = 0;
-  if (is_kernel) {
-    size = utils::FileSize(partition);
-  } else {
-    int block_count = 0, block_size = 0;
-    TEST_AND_RETURN_FALSE(utils::GetFilesystemSize(partition,
-                                                   &block_count,
-                                                   &block_size));
-    size = static_cast<int64_t>(block_count) * block_size;
-  }
+  int block_count = 0, block_size = 0;
+  TEST_AND_RETURN_FALSE(utils::GetFilesystemSize(partition,
+                                                 &block_count,
+                                                 &block_size));
+  size = static_cast<int64_t>(block_count) * block_size;
   TEST_AND_RETURN_FALSE(size > 0);
   info->set_size(size);
   OmahaHashCalculator hasher;
@@ -610,31 +554,15 @@ bool DeltaDiffGenerator::InitializePartitionInfo(bool is_kernel,
   return true;
 }
 
-bool InitializePartitionInfos(const string& old_kernel,
-                              const string& new_kernel,
-                              const string& old_rootfs,
+bool InitializePartitionInfos(const string& old_rootfs,
                               const string& new_rootfs,
                               DeltaArchiveManifest& manifest) {
-  if (!old_kernel.empty()) {
-    TEST_AND_RETURN_FALSE(DeltaDiffGenerator::InitializePartitionInfo(
-        true,
-        old_kernel,
-        manifest.mutable_old_kernel_info()));
-  }
-  if (!new_kernel.empty()) {
-    TEST_AND_RETURN_FALSE(DeltaDiffGenerator::InitializePartitionInfo(
-        true,
-        new_kernel,
-        manifest.mutable_new_kernel_info()));
-  }
   if (!old_rootfs.empty()) {
     TEST_AND_RETURN_FALSE(DeltaDiffGenerator::InitializePartitionInfo(
-        false,
         old_rootfs,
         manifest.mutable_old_rootfs_info()));
   }
   TEST_AND_RETURN_FALSE(DeltaDiffGenerator::InitializePartitionInfo(
-      false,
       new_rootfs,
       manifest.mutable_new_rootfs_info()));
   return true;
@@ -1307,8 +1235,6 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
     const string& old_image,
     const string& new_root,
     const string& new_image,
-    const string& old_kernel_part,
-    const string& new_kernel_part,
     const string& output_path,
     const string& private_key_path,
     uint64_t* metadata_size) {
@@ -1324,11 +1250,6 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
     TEST_AND_RETURN_FALSE(old_image_block_size == new_image_block_size);
     LOG_IF(WARNING, old_image_block_count != new_image_block_count)
         << "Old and new images have different block counts.";
-  }
-
-  if (!new_kernel_part.empty()) {
-    // Sanity check kernel partition arg
-    TEST_AND_RETURN_FALSE(utils::FileSize(new_kernel_part) >= 0);
   }
 
   vector<Block> blocks(max(old_image_block_count, new_image_block_count));
@@ -1347,8 +1268,6 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
   off_t data_file_size = 0;
 
   LOG(INFO) << "Reading files...";
-
-  vector<DeltaArchiveManifest_InstallOperation> kernel_ops;
 
   vector<Vertex::Index> final_order;
   Vertex::Index scratch_vertex = Vertex::kInvalidIndex;
@@ -1397,16 +1316,6 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
                           &graph.back());
       }
 
-      if (!new_kernel_part.empty()) {
-        // Read kernel partition
-        TEST_AND_RETURN_FALSE(DeltaCompressKernelPartition(old_kernel_part,
-                                                         new_kernel_part,
-                                                         &kernel_ops,
-                                                         fd,
-                                                         &data_file_size));
-        LOG(INFO) << "done reading kernel";
-      }
-
       CheckGraph(graph);
 
       LOG(INFO) << "Creating edges...";
@@ -1425,14 +1334,12 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
       off_t new_image_size =
           static_cast<off_t>(new_image_block_count) * new_image_block_size;
       TEST_AND_RETURN_FALSE(FullUpdateGenerator::Run(&graph,
-                                                     new_kernel_part,
                                                      new_image,
                                                      new_image_size,
                                                      fd,
                                                      &data_file_size,
                                                      kFullUpdateChunkSize,
                                                      kBlockSize,
-                                                     &kernel_ops,
                                                      &final_order));
     }
   }
@@ -1443,7 +1350,6 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
   CheckGraph(graph);
   InstallOperationsToManifest(graph,
                               final_order,
-                              kernel_ops,
                               &manifest,
                               &op_name_map);
   CheckGraph(graph);
@@ -1491,9 +1397,7 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
     AddSignatureOp(next_blob_offset, signature_blob_length, manifest);
   }
 
-  TEST_AND_RETURN_FALSE(InitializePartitionInfos(old_kernel_part,
-                                                 new_kernel_part,
-                                                 old_image,
+  TEST_AND_RETURN_FALSE(InitializePartitionInfos(old_image,
                                                  new_image,
                                                  manifest));
 

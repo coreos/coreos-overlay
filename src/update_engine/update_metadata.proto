@@ -162,9 +162,9 @@ message DeltaArchiveManifest {
   optional uint64 signatures_offset = 4;
   optional uint64 signatures_size = 5;
 
+  // Deprecated IDs 6 and 7, do not reuse.
+
   // Partition data that can be used to validate the update.
-  optional PartitionInfo old_kernel_info = 6;
-  optional PartitionInfo new_kernel_info = 7;
   optional PartitionInfo old_rootfs_info = 8;
   optional PartitionInfo new_rootfs_info = 9;
 }
