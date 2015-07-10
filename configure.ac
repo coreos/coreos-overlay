@@ -8,7 +8,8 @@ AC_CONFIG_SRCDIR([src/update_engine/main.cc])
 AC_USE_SYSTEM_EXTENSIONS
 AC_SYS_LARGEFILE
 
-AM_INIT_AUTOMAKE([foreign 1.13 -Wall -Wno-portability silent-rules serial-tests])
+AM_INIT_AUTOMAKE([foreign 1.13 -Wall -Wno-portability
+                  serial-tests silent-rules subdir-objects])
 AM_SILENT_RULES([yes])
 
 # Checks for programs.
