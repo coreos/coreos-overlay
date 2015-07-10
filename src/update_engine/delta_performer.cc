@@ -343,15 +343,6 @@ bool DeltaPerformer::Write(const void* bytes, size_t count,
   }
 
   while (next_operation_num_ < num_total_operations_) {
-    if (fd_ == -1) {
-      if (Open(install_plan_->install_path.c_str(),
-	       O_TRUNC | O_WRONLY | O_CREAT | O_LARGEFILE,
-	       0644) < 0) {
-	LOG(ERROR) << "Unable to open output file " << install_plan_->install_path;
-	return false;
-      }
-    }
-
     const bool is_noop =
         (next_operation_num_ >= num_rootfs_operations_);
     const DeltaArchiveManifest_InstallOperation &op =
