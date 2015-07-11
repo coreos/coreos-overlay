@@ -10,7 +10,7 @@ OEM_MNT="/usr/share/oem"
 
 INSTALL_MNT=$(dirname "$0")
 INSTALL_DEV="$1"
-APP_ID="${2:-{e96281a6-d1af-4bde-9a0a-97b76e56dc57}}"
+APP_ID="${2:-"{e96281a6-d1af-4bde-9a0a-97b76e56dc57}"}"
 
 # Figure out if the slot id is A or B
 INSTALL_LABEL=$(lsblk -n -o PARTLABEL "${INSTALL_DEV}")
@@ -139,8 +139,6 @@ call_cgpt add -S0 -T1 "${INSTALL_DEV}"
 call_cgpt prioritize "${INSTALL_DEV}"
 call_cgpt show "${INSTALL_DEV}"
 
-grep ^COREOS_RELEASE_VERSION "${INSTALL_MNT}/share/coreos/release" || \
-    grep ^COREOS_RELEASE_VERSION "${INSTALL_MNT}/etc/lsb-release" || \
-    echo "Unknown COREOS_RELEASE_VERSION" >&2
-
+cat "${INSTALL_MNT}/share/coreos/release"
+echo "COREOS_RELEASE_APPID=$APP_ID"
 echo "Setup ${INSTALL_LABEL} (${INSTALL_DEV}) for next boot."
