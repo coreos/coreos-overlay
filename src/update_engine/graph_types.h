@@ -55,7 +55,7 @@ struct Vertex {
   std::vector<Vertex>::size_type lowlink;
 
   // Other Vertex properties:
-  DeltaArchiveManifest_InstallOperation op;
+  InstallOperation op;
   std::string file_name;
 
   typedef std::vector<Vertex>::size_type Index;

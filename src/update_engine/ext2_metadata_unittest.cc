@@ -145,7 +145,7 @@ TEST_F(Ext2MetadataTest, RunAsRootReadMetadata) {
 
   for (int i = 0; i < num_exp_results; i++) {
     Vertex& vertex = graph[i];
-    DeltaArchiveManifest_InstallOperation& op = vertex.op;
+    InstallOperation& op = vertex.op;
 
     EXPECT_STRCASEEQ(vertex.file_name.c_str(),
                      exp_results[i].metadata_name.c_str());

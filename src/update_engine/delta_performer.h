@@ -172,7 +172,7 @@ class DeltaPerformer : public FileWriter {
   void UpdateOverallProgress(bool force_log, const char* message_prefix);
 
   static bool IsIdempotentOperation(
-      const DeltaArchiveManifest_InstallOperation& op);
+      const InstallOperation& op);
 
   // Verifies that the expected source partition hash (if present) match the
   // hash for the current partition. Returns true if there're no expected
@@ -183,30 +183,30 @@ class DeltaPerformer : public FileWriter {
   // Returns true if enough of the delta file has been passed via Write()
   // to be able to perform a given install operation.
   bool CanPerformInstallOperation(
-      const DeltaArchiveManifest_InstallOperation& operation);
+      const InstallOperation& operation);
 
   // Validates that the hash of the blobs corresponding to the given |operation|
   // matches what's specified in the manifest in the payload.
   // Returns kActionCodeSuccess on match or a suitable error code otherwise.
   ActionExitCode ValidateOperationHash(
-      const DeltaArchiveManifest_InstallOperation& operation);
+      const InstallOperation& operation);
 
   // Returns true on success.
   bool PerformInstallOperation(
-      const DeltaArchiveManifest_InstallOperation& operation);
+      const InstallOperation& operation);
 
   // These perform a specific type of operation and return true on success.
   bool PerformReplaceOperation(
-      const DeltaArchiveManifest_InstallOperation& operation);
+      const InstallOperation& operation);
   bool PerformMoveOperation(
-      const DeltaArchiveManifest_InstallOperation& operation);
+      const InstallOperation& operation);
   bool PerformBsdiffOperation(
-      const DeltaArchiveManifest_InstallOperation& operation);
+      const InstallOperation& operation);
 
   // Returns true if the payload signature message has been extracted from
   // |operation|, false otherwise.
   bool ExtractSignatureMessage(
-      const DeltaArchiveManifest_InstallOperation& operation);
+      const InstallOperation& operation);
 
   // Updates the hash calculator with |count| bytes at the head of |buffer_| and
   // then discards them.

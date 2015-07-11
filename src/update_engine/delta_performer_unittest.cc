@@ -645,7 +645,7 @@ TEST(DeltaPerformerTest, BadDeltaMagicTest) {
 }
 
 TEST(DeltaPerformerTest, IsIdempotentOperationTest) {
-  DeltaArchiveManifest_InstallOperation op;
+  InstallOperation op;
   EXPECT_TRUE(DeltaPerformer::IsIdempotentOperation(op));
   *(op.add_dst_extents()) = ExtentForRange(0, 5);
   EXPECT_TRUE(DeltaPerformer::IsIdempotentOperation(op));

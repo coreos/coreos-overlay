@@ -67,7 +67,7 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootMoveSmallTest) {
                                reinterpret_cast<const char*>(kRandomString),
                                sizeof(kRandomString)));
   vector<char> data;
-  DeltaArchiveManifest_InstallOperation op;
+  InstallOperation op;
   EXPECT_TRUE(DeltaDiffGenerator::ReadFileToDiff(old_path(),
                                                  new_path(),
                                                  true, // bsdiff_allowed
@@ -77,7 +77,7 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootMoveSmallTest) {
   EXPECT_TRUE(data.empty());
 
   EXPECT_TRUE(op.has_type());
-  EXPECT_EQ(DeltaArchiveManifest_InstallOperation_Type_MOVE, op.type());
+  EXPECT_EQ(InstallOperation_Type_MOVE, op.type());
   EXPECT_FALSE(op.has_data_offset());
   EXPECT_FALSE(op.has_data_length());
   EXPECT_EQ(1, op.src_extents_size());
@@ -97,7 +97,7 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootBsdiffSmallTest) {
                                reinterpret_cast<const char*>(kRandomString),
                                sizeof(kRandomString)));
   vector<char> data;
-  DeltaArchiveManifest_InstallOperation op;
+  InstallOperation op;
   EXPECT_TRUE(DeltaDiffGenerator::ReadFileToDiff(old_path(),
                                                  new_path(),
                                                  true, // bsdiff_allowed
@@ -107,7 +107,7 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootBsdiffSmallTest) {
   EXPECT_FALSE(data.empty());
 
   EXPECT_TRUE(op.has_type());
-  EXPECT_EQ(DeltaArchiveManifest_InstallOperation_Type_BSDIFF, op.type());
+  EXPECT_EQ(InstallOperation_Type_BSDIFF, op.type());
   EXPECT_FALSE(op.has_data_offset());
   EXPECT_FALSE(op.has_data_length());
   EXPECT_EQ(1, op.src_extents_size());
@@ -127,7 +127,7 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootBsdiffNotAllowedTest) {
                                reinterpret_cast<const char*>(kRandomString),
                                sizeof(kRandomString)));
   vector<char> data;
-  DeltaArchiveManifest_InstallOperation op;
+  InstallOperation op;
 
   EXPECT_TRUE(DeltaDiffGenerator::ReadFileToDiff(old_path(),
                                                  new_path(),
@@ -140,7 +140,7 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootBsdiffNotAllowedTest) {
   // The point of this test is that we don't use BSDIFF the way the above
   // did. The rest of the details are to be caught in other tests.
   EXPECT_TRUE(op.has_type());
-  EXPECT_NE(DeltaArchiveManifest_InstallOperation_Type_BSDIFF, op.type());
+  EXPECT_NE(InstallOperation_Type_BSDIFF, op.type());
 }
 
 TEST_F(DeltaDiffGeneratorTest, RunAsRootBsdiffNotAllowedMoveTest) {
@@ -151,7 +151,7 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootBsdiffNotAllowedMoveTest) {
                                reinterpret_cast<const char*>(kRandomString),
                                sizeof(kRandomString)));
   vector<char> data;
-  DeltaArchiveManifest_InstallOperation op;
+  InstallOperation op;
 
   EXPECT_TRUE(DeltaDiffGenerator::ReadFileToDiff(old_path(),
                                                  new_path(),
@@ -164,7 +164,7 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootBsdiffNotAllowedMoveTest) {
   // The point of this test is that we can still use a MOVE for a file
   // that is blacklisted.
   EXPECT_TRUE(op.has_type());
-  EXPECT_EQ(DeltaArchiveManifest_InstallOperation_Type_MOVE, op.type());
+  EXPECT_EQ(InstallOperation_Type_MOVE, op.type());
 }
 
 TEST_F(DeltaDiffGeneratorTest, RunAsRootReplaceSmallTest) {
@@ -177,7 +177,7 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootReplaceSmallTest) {
                                  &new_data[0],
                                  new_data.size()));
     vector<char> data;
-    DeltaArchiveManifest_InstallOperation op;
+    InstallOperation op;
     EXPECT_TRUE(DeltaDiffGenerator::ReadFileToDiff(old_path(),
                                                    new_path(),
                                                    true, // bsdiff_allowed
@@ -187,9 +187,9 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootReplaceSmallTest) {
     EXPECT_FALSE(data.empty());
 
     EXPECT_TRUE(op.has_type());
-    const DeltaArchiveManifest_InstallOperation_Type expected_type =
-        (i == 0 ? DeltaArchiveManifest_InstallOperation_Type_REPLACE :
-         DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ);
+    const InstallOperation_Type expected_type =
+        (i == 0 ? InstallOperation_Type_REPLACE :
+         InstallOperation_Type_REPLACE_BZ);
     EXPECT_EQ(expected_type, op.type());
     EXPECT_FALSE(op.has_data_offset());
     EXPECT_FALSE(op.has_data_length());
@@ -209,7 +209,7 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootBsdiffNoGatherExtentsSmallTest) {
                                reinterpret_cast<const char*>(kRandomString),
                                sizeof(kRandomString)));
   vector<char> data;
-  DeltaArchiveManifest_InstallOperation op;
+  InstallOperation op;
   EXPECT_TRUE(DeltaDiffGenerator::ReadFileToDiff(old_path(),
                                                  new_path(),
                                                  true, // bsdiff_allowed
@@ -219,7 +219,7 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootBsdiffNoGatherExtentsSmallTest) {
   EXPECT_FALSE(data.empty());
 
   EXPECT_TRUE(op.has_type());
-  EXPECT_EQ(DeltaArchiveManifest_InstallOperation_Type_BSDIFF, op.type());
+  EXPECT_EQ(InstallOperation_Type_BSDIFF, op.type());
   EXPECT_FALSE(op.has_data_offset());
   EXPECT_FALSE(op.has_data_length());
   EXPECT_EQ(1, op.src_extents_size());
@@ -238,7 +238,7 @@ void AppendExtent(vector<Extent>* vect, uint64_t start, uint64_t length) {
   vect->back().set_start_block(start);
   vect->back().set_num_blocks(length);
 }
-void OpAppendExtent(DeltaArchiveManifest_InstallOperation* op,
+void OpAppendExtent(InstallOperation* op,
                     uint64_t start,
                     uint64_t length) {
   Extent* extent = op->add_src_extents();
@@ -255,7 +255,7 @@ TEST_F(DeltaDiffGeneratorTest, SubstituteBlocksTest) {
   AppendExtent(&replace_blocks, 10, 2);
   AppendExtent(&replace_blocks, 13, 2);
   Vertex vertex;
-  DeltaArchiveManifest_InstallOperation& op = vertex.op;
+  InstallOperation& op = vertex.op;
   OpAppendExtent(&op, 4, 3);
   OpAppendExtent(&op, kSparseHole, 4);  // Sparse hole in file
   OpAppendExtent(&op, 3, 1);
@@ -287,7 +287,7 @@ TEST_F(DeltaDiffGeneratorTest, CutEdgesTest) {
   // Create nodes in graph
   {
     graph.resize(graph.size() + 1);
-    graph.back().op.set_type(DeltaArchiveManifest_InstallOperation_Type_MOVE);
+    graph.back().op.set_type(InstallOperation_Type_MOVE);
     // Reads from blocks 3, 5, 7
     vector<Extent> extents;
     graph_utils::AppendBlockToExtents(&extents, 3);
@@ -312,7 +312,7 @@ TEST_F(DeltaDiffGeneratorTest, CutEdgesTest) {
   }
   {
     graph.resize(graph.size() + 1);
-    graph.back().op.set_type(DeltaArchiveManifest_InstallOperation_Type_MOVE);
+    graph.back().op.set_type(InstallOperation_Type_MOVE);
     // Reads from blocks 1, 2, 4
     vector<Extent> extents;
     graph_utils::AppendBlockToExtents(&extents, 1);
@@ -354,7 +354,7 @@ TEST_F(DeltaDiffGeneratorTest, CutEdgesTest) {
   EXPECT_EQ(3, graph.size());
 
   // Check new node in graph:
-  EXPECT_EQ(DeltaArchiveManifest_InstallOperation_Type_MOVE,
+  EXPECT_EQ(InstallOperation_Type_MOVE,
             graph.back().op.type());
   EXPECT_EQ(2, graph.back().op.src_extents_size());
   EXPECT_EQ(1, graph.back().op.dst_extents_size());
@@ -414,7 +414,7 @@ TEST_F(DeltaDiffGeneratorTest, ReorderBlobsTest) {
       utils::MakeTempFile("ReorderBlobsTest.new.XXXXXX", &new_blobs, NULL));
 
   DeltaArchiveManifest manifest;
-  DeltaArchiveManifest_InstallOperation* op =
+  InstallOperation* op =
       manifest.add_install_operations();
   op->set_data_offset(1);
   op->set_data_length(3);
@@ -442,13 +442,13 @@ TEST_F(DeltaDiffGeneratorTest, ReorderBlobsTest) {
 TEST_F(DeltaDiffGeneratorTest, MoveFullOpsToBackTest) {
   Graph graph(4);
   graph[0].file_name = "A";
-  graph[0].op.set_type(DeltaArchiveManifest_InstallOperation_Type_REPLACE);
+  graph[0].op.set_type(InstallOperation_Type_REPLACE);
   graph[1].file_name = "B";
-  graph[1].op.set_type(DeltaArchiveManifest_InstallOperation_Type_BSDIFF);
+  graph[1].op.set_type(InstallOperation_Type_BSDIFF);
   graph[2].file_name = "C";
-  graph[2].op.set_type(DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ);
+  graph[2].op.set_type(InstallOperation_Type_REPLACE_BZ);
   graph[3].file_name = "D";
-  graph[3].op.set_type(DeltaArchiveManifest_InstallOperation_Type_MOVE);
+  graph[3].op.set_type(InstallOperation_Type_MOVE);
 
   vector<Vertex::Index> vect(graph.size());
 
@@ -465,16 +465,16 @@ TEST_F(DeltaDiffGeneratorTest, MoveFullOpsToBackTest) {
 
 namespace {
 
-#define OP_BSDIFF DeltaArchiveManifest_InstallOperation_Type_BSDIFF
-#define OP_MOVE DeltaArchiveManifest_InstallOperation_Type_MOVE
-#define OP_REPLACE DeltaArchiveManifest_InstallOperation_Type_REPLACE
-#define OP_REPLACE_BZ DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ
+#define OP_BSDIFF InstallOperation_Type_BSDIFF
+#define OP_MOVE InstallOperation_Type_MOVE
+#define OP_REPLACE InstallOperation_Type_REPLACE
+#define OP_REPLACE_BZ InstallOperation_Type_REPLACE_BZ
 
 void GenVertex(Vertex* out,
                const vector<Extent>& src_extents,
                const vector<Extent>& dst_extents,
                const string& path,
-               DeltaArchiveManifest_InstallOperation_Type type) {
+               InstallOperation_Type type) {
   out->op.set_type(type);
   out->file_name = path;
   DeltaDiffGenerator::StoreExtents(src_extents, out->op.mutable_src_extents());
@@ -646,10 +646,10 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootAssignTempBlocksTest) {
 }
 
 TEST_F(DeltaDiffGeneratorTest, IsNoopOperationTest) {
-  DeltaArchiveManifest_InstallOperation op;
-  op.set_type(DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ);
+  InstallOperation op;
+  op.set_type(InstallOperation_Type_REPLACE_BZ);
   EXPECT_FALSE(DeltaDiffGenerator::IsNoopOperation(op));
-  op.set_type(DeltaArchiveManifest_InstallOperation_Type_MOVE);
+  op.set_type(InstallOperation_Type_MOVE);
   EXPECT_TRUE(DeltaDiffGenerator::IsNoopOperation(op));
   *(op.add_src_extents()) = ExtentForRange(3, 2);
   *(op.add_dst_extents()) = ExtentForRange(3, 2);
@@ -781,7 +781,7 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootAssignTempBlocksReuseTest) {
 TEST_F(DeltaDiffGeneratorTest, CreateScratchNodeTest) {
   Vertex vertex;
   DeltaDiffGenerator::CreateScratchNode(12, 34, &vertex);
-  EXPECT_EQ(DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ,
+  EXPECT_EQ(InstallOperation_Type_REPLACE_BZ,
             vertex.op.type());
   EXPECT_EQ(0, vertex.op.data_offset());
   EXPECT_EQ(0, vertex.op.data_length());

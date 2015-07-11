@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+package chromeos_update_engine;
+
 // Update file format: A delta update file contains all the deltas needed
 // to update a system from one specific version to another specific
 // version. The update format is represented by this struct pseudocode:
@@ -44,8 +46,40 @@
 // - BSDIFF: Read src_length bytes from src_extents into memory, perform
 //   bspatch with attached data, write new data to dst_extents, zero padding
 //   to block size.
+message InstallOperation {
+  enum Type {
+    REPLACE = 0;  // Replace destination extents w/ attached data
+    REPLACE_BZ = 1;  // Replace destination extents w/ attached bzipped data
+    MOVE = 2;  // Move source extents to destination extents
+    BSDIFF = 3;  // The data is a bsdiff binary diff
+  }
+  required Type type = 1;
+  // The offset into the delta file (after the protobuf)
+  // where the data (if any) is stored
+  optional uint32 data_offset = 2;
+  // The length of the data in the delta file
+  optional uint32 data_length = 3;
 
-package chromeos_update_engine;
+  // Ordered list of extents that are read from (if any) and written to.
+  repeated Extent src_extents = 4;
+  // Byte length of src, not necessarily block aligned. It's only used for
+  // BSDIFF, because we need to pass that external program the number
+  // of bytes to read from the blocks we pass it.
+  optional uint64 src_length = 5;
+
+  repeated Extent dst_extents = 6;
+  // byte length of dst, not necessarily block aligned. It's only used for
+  // BSDIFF, because we need to fill in the rest of the last block
+  // that bsdiff writes with '\0' bytes.
+  optional uint64 dst_length = 7;
+
+  // Optional SHA 256 hash of the blob associated with this operation.
+  // This is used as a primary validation for http-based downloads and
+  // as a defense-in-depth validation for https-based downloads. If
+  // the operation doesn't refer to any blob, this field will have
+  // zero bytes.
+  optional bytes data_sha256_hash = 8;
+}
 
 // Data is packed into blocks on disk, always starting from the beginning
 // of the block. If a file's data is too large for one block, it overflows
@@ -59,6 +93,10 @@ package chromeos_update_engine;
 // run-length encoding).
 // A sentinel value (kuint64max) as the start block denotes a sparse-hole
 // in a file whose block-length is specified by num_blocks.
+message Extent {
+  optional uint64 start_block = 1;
+  optional uint64 num_blocks = 2;
+}
 
 // Signatures: Updates may be signed by the OS vendor. The client verifies
 // an update's signature by hashing the entire download. The section of the
@@ -71,12 +109,6 @@ package chromeos_update_engine;
 // selects a Signature message and uses that, along with a known public key,
 // to verify the download. The public key is expected to be part of the
 // client.
-
-message Extent {
-  optional uint64 start_block = 1;
-  optional uint64 num_blocks = 2;
-}
-
 message Signatures {
   message Signature {
     optional uint32 version = 1;
@@ -85,46 +117,14 @@ message Signatures {
   repeated Signature signatures = 1;
 }
 
+// PartitionInfo is used to validate source device prior to the update or
+// the destination device after the list of InstallOperations has run.
 message PartitionInfo {
   optional uint64 size = 1;
   optional bytes hash = 2;
 }
 
 message DeltaArchiveManifest {
-  message InstallOperation {
-    enum Type {
-      REPLACE = 0;  // Replace destination extents w/ attached data
-      REPLACE_BZ = 1;  // Replace destination extents w/ attached bzipped data
-      MOVE = 2;  // Move source extents to destination extents
-      BSDIFF = 3;  // The data is a bsdiff binary diff
-    }
-    required Type type = 1;
-    // The offset into the delta file (after the protobuf)
-    // where the data (if any) is stored
-    optional uint32 data_offset = 2;
-    // The length of the data in the delta file
-    optional uint32 data_length = 3;
-
-    // Ordered list of extents that are read from (if any) and written to.
-    repeated Extent src_extents = 4;
-    // Byte length of src, not necessarily block aligned. It's only used for
-    // BSDIFF, because we need to pass that external program the number
-    // of bytes to read from the blocks we pass it.
-    optional uint64 src_length = 5;
-
-    repeated Extent dst_extents = 6;
-    // byte length of dst, not necessarily block aligned. It's only used for
-    // BSDIFF, because we need to fill in the rest of the last block
-    // that bsdiff writes with '\0' bytes.
-    optional uint64 dst_length = 7;
-
-    // Optional SHA 256 hash of the blob associated with this operation.
-    // This is used as a primary validation for http-based downloads and
-    // as a defense-in-depth validation for https-based downloads. If
-    // the operation doesn't refer to any blob, this field will have
-    // zero bytes.
-    optional bytes data_sha256_hash = 8;
-  }
   repeated InstallOperation install_operations = 1;
 
   // This field is maintained for compatibility with older update_engine

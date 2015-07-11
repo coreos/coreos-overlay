@@ -68,8 +68,8 @@ TEST(FullUpdateGeneratorTest, RunTest) {
     EXPECT_EQ(kChunkSize / kBlockSize,
               graph[i].op.dst_extents(0).num_blocks());
     if (graph[i].op.type() !=
-        DeltaArchiveManifest_InstallOperation_Type_REPLACE) {
-      EXPECT_EQ(DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ,
+        InstallOperation_Type_REPLACE) {
+      EXPECT_EQ(InstallOperation_Type_REPLACE_BZ,
                 graph[i].op.type());
     }
   }

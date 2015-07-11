@@ -152,15 +152,15 @@ bool FullUpdateGenerator::Run(
     graph->resize(graph->size() + 1);
     graph->back().file_name =
         StringPrintf("<rootfs-operation-%" PRIi64 ">", counter++);
-    DeltaArchiveManifest_InstallOperation* op = &graph->back().op;
+    InstallOperation* op = &graph->back().op;
     final_order->push_back(graph->size() - 1);
 
     const bool compress = processor->ShouldCompress();
     const vector<char>& use_buf =
         compress ? processor->buffer_compressed() : processor->buffer_in();
     op->set_type(compress ?
-                 DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ :
-                 DeltaArchiveManifest_InstallOperation_Type_REPLACE);
+                 InstallOperation_Type_REPLACE_BZ :
+                 InstallOperation_Type_REPLACE);
     op->set_data_offset(*data_file_size);
     TEST_AND_RETURN_FALSE(utils::WriteAll(fd, &use_buf[0], use_buf.size()));
     *data_file_size += use_buf.size();

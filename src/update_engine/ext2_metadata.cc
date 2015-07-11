@@ -125,7 +125,7 @@ bool AddMetadataExtents(Graph* graph,
                         int data_fd,
                         off_t* data_file_size) {
   vector<char> data;  // Data blob that will be written to delta file.
-  DeltaArchiveManifest_InstallOperation op;
+  InstallOperation op;
 
   {
     // Read in the metadata blocks from the old and new image.
@@ -142,18 +142,18 @@ bool AddMetadataExtents(Graph* graph,
 
     size_t current_best_size = 0;
     if (new_data.size() <= new_data_bz.size()) {
-      op.set_type(DeltaArchiveManifest_InstallOperation_Type_REPLACE);
+      op.set_type(InstallOperation_Type_REPLACE);
       current_best_size = new_data.size();
       data = new_data;
     } else {
-      op.set_type(DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ);
+      op.set_type(InstallOperation_Type_REPLACE_BZ);
       current_best_size = new_data_bz.size();
       data = new_data_bz;
     }
 
     if (old_data == new_data) {
       // No change in data.
-      op.set_type(DeltaArchiveManifest_InstallOperation_Type_MOVE);
+      op.set_type(InstallOperation_Type_MOVE);
       current_best_size = 0;
       data.clear();
     } else {
@@ -165,7 +165,7 @@ bool AddMetadataExtents(Graph* graph,
       CHECK_GT(bsdiff_delta.size(), static_cast<vector<char>::size_type>(0));
 
       if (bsdiff_delta.size() < current_best_size) {
-        op.set_type(DeltaArchiveManifest_InstallOperation_Type_BSDIFF);
+        op.set_type(InstallOperation_Type_BSDIFF);
         current_best_size = bsdiff_delta.size();
         data = bsdiff_delta;
       }
@@ -175,8 +175,8 @@ bool AddMetadataExtents(Graph* graph,
 
     // Set the source and dest extents to be the same since the filesystem
     // structures are identical
-    if (op.type() == DeltaArchiveManifest_InstallOperation_Type_MOVE ||
-        op.type() == DeltaArchiveManifest_InstallOperation_Type_BSDIFF) {
+    if (op.type() == InstallOperation_Type_MOVE ||
+        op.type() == InstallOperation_Type_BSDIFF) {
       DeltaDiffGenerator::StoreExtents(extents, op.mutable_src_extents());
       op.set_src_length(old_data.size());
     }
@@ -186,7 +186,7 @@ bool AddMetadataExtents(Graph* graph,
   }
 
   // Write data to output file
-  if (op.type() != DeltaArchiveManifest_InstallOperation_Type_MOVE) {
+  if (op.type() != InstallOperation_Type_MOVE) {
     op.set_data_offset(*data_file_size);
     op.set_data_length(data.size());
   }

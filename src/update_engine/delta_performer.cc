@@ -169,7 +169,7 @@ void DeltaPerformer::UpdateOverallProgress(bool force_log,
 // Returns true if |op| is idempotent -- i.e., if we can interrupt it and repeat
 // it safely. Returns false otherwise.
 bool DeltaPerformer::IsIdempotentOperation(
-    const DeltaArchiveManifest_InstallOperation& op) {
+    const InstallOperation& op) {
   if (op.src_extents_size() == 0) {
     return true;
   }
@@ -345,7 +345,7 @@ bool DeltaPerformer::Write(const void* bytes, size_t count,
   while (next_operation_num_ < num_total_operations_) {
     const bool is_noop =
         (next_operation_num_ >= num_rootfs_operations_);
-    const DeltaArchiveManifest_InstallOperation &op =
+    const InstallOperation &op =
         is_noop ?
         manifest_.noop_operations(
             next_operation_num_ - num_rootfs_operations_) :
@@ -378,22 +378,22 @@ bool DeltaPerformer::Write(const void* bytes, size_t count,
     ScopedTerminatorExitUnblocker exit_unblocker =
         ScopedTerminatorExitUnblocker();  // Avoids a compiler unused var bug.
     // Log every thousandth operation, and also the first and last ones
-    if (op.type() == DeltaArchiveManifest_InstallOperation_Type_REPLACE ||
-        op.type() == DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ) {
+    if (op.type() == InstallOperation_Type_REPLACE ||
+        op.type() == InstallOperation_Type_REPLACE_BZ) {
       if (!PerformReplaceOperation(op)) {
         LOG(ERROR) << "Failed to perform replace operation "
                    << next_operation_num_;
         *error = kActionCodeDownloadOperationExecutionError;
         return false;
       }
-    } else if (op.type() == DeltaArchiveManifest_InstallOperation_Type_MOVE) {
+    } else if (op.type() == InstallOperation_Type_MOVE) {
       if (!PerformMoveOperation(op)) {
         LOG(ERROR) << "Failed to perform move operation "
                    << next_operation_num_;
         *error = kActionCodeDownloadOperationExecutionError;
         return false;
       }
-    } else if (op.type() == DeltaArchiveManifest_InstallOperation_Type_BSDIFF) {
+    } else if (op.type() == InstallOperation_Type_BSDIFF) {
       if (!PerformBsdiffOperation(op)) {
         LOG(ERROR) << "Failed to perform bsdiff operation "
                    << next_operation_num_;
@@ -410,11 +410,11 @@ bool DeltaPerformer::Write(const void* bytes, size_t count,
 }
 
 bool DeltaPerformer::CanPerformInstallOperation(
-    const chromeos_update_engine::DeltaArchiveManifest_InstallOperation&
+    const chromeos_update_engine::InstallOperation&
     operation) {
   // Move operations don't require any data blob, so they can always
   // be performed
-  if (operation.type() == DeltaArchiveManifest_InstallOperation_Type_MOVE)
+  if (operation.type() == InstallOperation_Type_MOVE)
     return true;
 
   // See if we have the entire data blob in the buffer
@@ -428,11 +428,11 @@ bool DeltaPerformer::CanPerformInstallOperation(
 }
 
 bool DeltaPerformer::PerformReplaceOperation(
-    const DeltaArchiveManifest_InstallOperation& operation) {
+    const InstallOperation& operation) {
   CHECK(operation.type() == \
-        DeltaArchiveManifest_InstallOperation_Type_REPLACE || \
+        InstallOperation_Type_REPLACE || \
         operation.type() == \
-        DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ);
+        InstallOperation_Type_REPLACE_BZ);
 
   // Since we delete data off the beginning of the buffer as we use it,
   // the data we need should be exactly at the beginning of the buffer.
@@ -449,10 +449,10 @@ bool DeltaPerformer::PerformReplaceOperation(
   // Since bzip decompression is optional, we have a variable writer that will
   // point to one of the ExtentWriter objects above.
   ExtentWriter* writer = NULL;
-  if (operation.type() == DeltaArchiveManifest_InstallOperation_Type_REPLACE) {
+  if (operation.type() == InstallOperation_Type_REPLACE) {
     writer = &zero_pad_writer;
   } else if (operation.type() ==
-             DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ) {
+             InstallOperation_Type_REPLACE_BZ) {
     bzip_writer.reset(new BzipExtentWriter(&zero_pad_writer));
     writer = bzip_writer.get();
   } else {
@@ -475,7 +475,7 @@ bool DeltaPerformer::PerformReplaceOperation(
 }
 
 bool DeltaPerformer::PerformMoveOperation(
-    const DeltaArchiveManifest_InstallOperation& operation) {
+    const InstallOperation& operation) {
   // Calculate buffer size. Note, this function doesn't do a sliding
   // window to copy in case the source and destination blocks overlap.
   // If we wanted to do a sliding window, we could program the server
@@ -558,7 +558,7 @@ bool DeltaPerformer::ExtentsToBsdiffPositionsString(
 }
 
 bool DeltaPerformer::PerformBsdiffOperation(
-    const DeltaArchiveManifest_InstallOperation& operation) {
+    const InstallOperation& operation) {
   // Since we delete data off the beginning of the buffer as we use it,
   // the data we need should be exactly at the beginning of the buffer.
   TEST_AND_RETURN_FALSE(buffer_offset_ == operation.data_offset());
@@ -633,8 +633,8 @@ bool DeltaPerformer::PerformBsdiffOperation(
 }
 
 bool DeltaPerformer::ExtractSignatureMessage(
-    const DeltaArchiveManifest_InstallOperation& operation) {
-  if (operation.type() != DeltaArchiveManifest_InstallOperation_Type_REPLACE ||
+    const InstallOperation& operation) {
+  if (operation.type() != InstallOperation_Type_REPLACE ||
       !manifest_.has_signatures_offset() ||
       manifest_.signatures_offset() != operation.data_offset()) {
     return false;
@@ -674,7 +674,7 @@ bool DeltaPerformer::ExtractSignatureMessage(
 }
 
 ActionExitCode DeltaPerformer::ValidateOperationHash(
-    const DeltaArchiveManifest_InstallOperation& operation) {
+    const InstallOperation& operation) {
 
   if (!operation.data_sha256_hash().size()) {
     if (!operation.data_length()) {
