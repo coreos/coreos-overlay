@@ -30,11 +30,11 @@
 #include "update_engine/utils.h"
 
 DEFINE_string(old_dir, "",
-              "Directory where the old rootfs is loop mounted read-only");
+              "Directory where the old partition is loop mounted read-only");
 DEFINE_string(new_dir, "",
-              "Directory where the new rootfs is loop mounted read-only");
-DEFINE_string(old_image, "", "Path to the old rootfs");
-DEFINE_string(new_image, "", "Path to the new rootfs");
+              "Directory where the new partition is loop mounted read-only");
+DEFINE_string(old_image, "", "Path to the old partition");
+DEFINE_string(new_image, "", "Path to the new partition");
 DEFINE_string(in_file, "",
               "Path to input delta payload file used to hash/sign payloads "
               "and apply delta over old_image (for debugging)");

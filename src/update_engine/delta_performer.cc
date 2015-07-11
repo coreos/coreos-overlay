@@ -195,7 +195,7 @@ int DeltaPerformer::Close() {
   int err = 0;
   if (close(fd_) == -1) {
     err = errno;
-    PLOG(ERROR) << "Unable to close rootfs fd:";
+    PLOG(ERROR) << "Unable to close partition fd:";
   }
   LOG_IF(ERROR, !hash_calculator_.Finalize()) << "Unable to finalize the hash.";
   fd_ = -2;  // Set to invalid so that calls to Open() will fail.
@@ -819,25 +819,22 @@ bool DeltaPerformer::GetNewPartitionInfo(uint64_t* rootfs_size,
 namespace {
 void LogVerifyError(const string& local_hash,
                     const string& expected_hash) {
-  const char* type = "rootfs";
   LOG(ERROR) << "This is a server-side error due to "
              << "mismatched delta update image!";
-  LOG(ERROR) << "The delta I've been given contains a " << type << " delta "
-             << "update that must be applied over a " << type << " with "
-             << "a specific checksum, but the " << type << " we're starting "
+  LOG(ERROR) << "The delta I've been given contains a partition delta "
+             << "update that must be applied over a partition with "
+             << "a specific checksum, but the partition we're starting "
              << "with doesn't have that checksum! This means that "
              << "the delta I've been given doesn't match my existing "
-             << "system. The " << type << " partition I have has hash: "
+             << "system. The partition I have has hash: "
              << local_hash << " but the update expected me to have "
              << expected_hash << " .";
-  LOG(INFO) << "To get the checksum of a rootfs partition on a "
+  LOG(INFO) << "To get the checksum of a partition on a "
             << "booted machine, run this command (change /dev/sda3 "
             << "as needed): dd if=/dev/sda3 bs=1M count=$(( "
             << "$(dumpe2fs /dev/sda3  2>/dev/null | grep 'Block count' "
             << "| sed 's/[^0-9]*//') / 256 )) | "
             << "openssl dgst -sha256 -binary | openssl base64";
-  LOG(INFO) << "To get the checksum of partitions in a bin file, "
-            << "run: .../src/scripts/sha256_partitions.sh .../file.bin";
 }
 
 string StringForHashBytes(const void* bytes, size_t size) {

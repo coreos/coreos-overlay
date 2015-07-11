@@ -217,7 +217,7 @@ bool ReadFilesystemMetadata(Graph* graph,
                             const ext2_filsys fs_new,
                             int data_fd,
                             off_t* data_file_size) {
-  LOG(INFO) << "Processing <rootfs-metadata>";
+  LOG(INFO) << "Processing <fs-metadata>";
 
   // Read all the extents that belong to the main file system metadata.
   // The metadata blocks are at the start of each block group and goes
@@ -249,7 +249,7 @@ bool ReadFilesystemMetadata(Graph* graph,
       vector<Extent> extents;
       extents.push_back(extent);
 
-      string metadata_name = StringPrintf("<rootfs-bg-%d-%d-metadata>",
+      string metadata_name = StringPrintf("<fs-bg-%d-%d-metadata>",
                                           bg, chunk);
 
       LOG(INFO) << "Processing " << metadata_name;
@@ -418,7 +418,7 @@ bool ReadInodeMetadata(Graph* graph,
 
     // We have identical inode metadata blocks, we can now add them to
     // our graph and blocks vector
-    string metadata_name = StringPrintf("<rootfs-inode-%d-metadata>", ino);
+    string metadata_name = StringPrintf("<fs-inode-%d-metadata>", ino);
     TEST_AND_RETURN_FALSE(AddMetadataExtents(graph,
                                              blocks,
                                              fs_old,

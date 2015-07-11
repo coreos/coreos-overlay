@@ -238,7 +238,7 @@ bool ReadUnwrittenBlocks(const vector<Block>& blocks,
                          off_t* blobs_length,
                          const string& image_path,
                          Vertex* vertex) {
-  vertex->file_name = "<rootfs-non-file-data>";
+  vertex->file_name = "<fs-non-file-data>";
 
   InstallOperation* out_op = &vertex->op;
   int image_fd = open(image_path.c_str(), O_RDONLY, 000);
@@ -330,7 +330,7 @@ bool ReadUnwrittenBlocks(const vector<Block>& blocks,
   out_op->set_type(InstallOperation_Type_REPLACE_BZ);
   out_op->set_data_offset(*blobs_length);
   out_op->set_data_length(compressed_data.size());
-  LOG(INFO) << "Rootfs non-data blocks compressed take up "
+  LOG(INFO) << "fs non-data blocks compressed take up "
             << compressed_data.size();
   *blobs_length += compressed_data.size();
   out_op->set_dst_length(kBlockSize * block_count);
