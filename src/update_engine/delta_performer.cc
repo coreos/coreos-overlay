@@ -211,7 +211,7 @@ int DeltaPerformer::Close() {
 
 namespace {
 
-void LogPartitionInfoHash(const PartitionInfo& info, const string& tag) {
+void LogPartitionInfoHash(const BlobInfo& info, const string& tag) {
   string sha256;
   if (OmahaHashCalculator::Base64Encode(info.hash().data(),
                                         info.hash().size(),
@@ -224,10 +224,10 @@ void LogPartitionInfoHash(const PartitionInfo& info, const string& tag) {
 }
 
 void LogPartitionInfo(const DeltaArchiveManifest& manifest) {
-  if (manifest.has_old_rootfs_info())
-    LogPartitionInfoHash(manifest.old_rootfs_info(), "old_rootfs_info");
-  if (manifest.has_new_rootfs_info())
-    LogPartitionInfoHash(manifest.new_rootfs_info(), "new_rootfs_info");
+  if (manifest.has_old_partition_info())
+    LogPartitionInfoHash(manifest.old_partition_info(), "old_partition_info");
+  if (manifest.has_new_partition_info())
+    LogPartitionInfoHash(manifest.new_partition_info(), "new_partition_info");
 }
 
 }  // namespace {}
@@ -334,7 +334,7 @@ bool DeltaPerformer::Write(const void* bytes, size_t count,
       return false;
     }
 
-    num_rootfs_operations_ = manifest_.install_operations_size();
+    num_rootfs_operations_ = manifest_.partition_operations_size();
     num_total_operations_ =
         num_rootfs_operations_ + manifest_.noop_operations_size();
     if (next_operation_num_ > 0)
@@ -349,7 +349,7 @@ bool DeltaPerformer::Write(const void* bytes, size_t count,
         is_noop ?
         manifest_.noop_operations(
             next_operation_num_ - num_rootfs_operations_) :
-        manifest_.install_operations(next_operation_num_);
+        manifest_.partition_operations(next_operation_num_);
     if (!CanPerformInstallOperation(op)) {
       // This means we don't have enough bytes received yet to carry out the
       // next operation.
@@ -808,10 +808,10 @@ ActionExitCode DeltaPerformer::VerifyPayload(
 bool DeltaPerformer::GetNewPartitionInfo(uint64_t* rootfs_size,
                                          vector<char>* rootfs_hash) {
   TEST_AND_RETURN_FALSE(manifest_valid_ &&
-			manifest_.has_new_rootfs_info());
-  *rootfs_size = manifest_.new_rootfs_info().size();
-  vector<char> new_rootfs_hash(manifest_.new_rootfs_info().hash().begin(),
-                               manifest_.new_rootfs_info().hash().end());
+			manifest_.has_new_partition_info());
+  *rootfs_size = manifest_.new_partition_info().size();
+  vector<char> new_rootfs_hash(manifest_.new_partition_info().hash().begin(),
+                               manifest_.new_partition_info().hash().end());
   rootfs_hash->swap(new_rootfs_hash);
   return true;
 }
@@ -853,8 +853,8 @@ bool DeltaPerformer::VerifySourcePartition() {
   LOG(INFO) << "Verifying source partition.";
   CHECK(manifest_valid_);
   CHECK(install_plan_);
-  if (manifest_.has_old_rootfs_info()) {
-    const PartitionInfo& info = manifest_.old_rootfs_info();
+  if (manifest_.has_old_partition_info()) {
+    const BlobInfo& info = manifest_.old_partition_info();
     bool valid =
         !install_plan_->rootfs_hash.empty() &&
         install_plan_->rootfs_hash.size() == info.hash().size() &&

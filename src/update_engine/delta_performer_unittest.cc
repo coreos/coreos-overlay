@@ -387,20 +387,20 @@ static void ApplyDeltaFile(bool full_rootfs, bool noop,
     }
 
     if (noop) {
-      EXPECT_EQ(1, manifest.install_operations_size());
+      EXPECT_EQ(1, manifest.partition_operations_size());
       EXPECT_EQ(1, manifest.noop_operations_size());
     }
 
     if (full_rootfs) {
-      EXPECT_FALSE(manifest.has_old_rootfs_info());
+      EXPECT_FALSE(manifest.has_old_partition_info());
     } else {
-      EXPECT_EQ(state->image_size, manifest.old_rootfs_info().size());
-      EXPECT_FALSE(manifest.old_rootfs_info().hash().empty());
+      EXPECT_EQ(state->image_size, manifest.old_partition_info().size());
+      EXPECT_FALSE(manifest.old_partition_info().hash().empty());
     }
 
-    EXPECT_EQ(state->image_size, manifest.new_rootfs_info().size());
+    EXPECT_EQ(state->image_size, manifest.new_partition_info().size());
 
-    EXPECT_FALSE(manifest.new_rootfs_info().hash().empty());
+    EXPECT_FALSE(manifest.new_partition_info().hash().empty());
   }
 
   PrefsMock prefs;

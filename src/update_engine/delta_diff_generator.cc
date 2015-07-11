@@ -366,7 +366,7 @@ void InstallOperationsToManifest(
       continue;
     }
     InstallOperation* op =
-        out_manifest->add_install_operations();
+        out_manifest->add_partition_operations();
     *op = add_op;
     (*out_op_name_map)[op] = &vertex.file_name;
   }
@@ -398,9 +398,9 @@ void ReportPayloadUsage(const DeltaArchiveManifest& manifest,
   off_t total_size = 0;
 
   // Rootfs install operations.
-  for (int i = 0; i < manifest.install_operations_size(); ++i) {
+  for (int i = 0; i < manifest.partition_operations_size(); ++i) {
     const InstallOperation& op =
-        manifest.install_operations(i);
+        manifest.partition_operations(i);
     objects.push_back(DeltaObject(*op_name_map.find(&op)->second,
                                   op.type(),
                                   op.data_length()));
@@ -536,7 +536,7 @@ bool DeltaDiffGenerator::ReadFileToDiff(
 }
 
 bool DeltaDiffGenerator::InitializePartitionInfo(const string& partition,
-                                                 PartitionInfo* info) {
+                                                 BlobInfo* info) {
   int64_t size = 0;
   int block_count = 0, block_size = 0;
   TEST_AND_RETURN_FALSE(utils::GetFilesystemSize(partition,
@@ -560,11 +560,11 @@ bool InitializePartitionInfos(const string& old_rootfs,
   if (!old_rootfs.empty()) {
     TEST_AND_RETURN_FALSE(DeltaDiffGenerator::InitializePartitionInfo(
         old_rootfs,
-        manifest.mutable_old_rootfs_info()));
+        manifest.mutable_old_partition_info()));
   }
   TEST_AND_RETURN_FALSE(DeltaDiffGenerator::InitializePartitionInfo(
       new_rootfs,
-      manifest.mutable_new_rootfs_info()));
+      manifest.mutable_new_partition_info()));
   return true;
 }
 
@@ -1079,14 +1079,14 @@ bool DeltaDiffGenerator::ReorderDataBlobs(
   ScopedFileWriterCloser writer_closer(&writer);
   uint64_t out_file_size = 0;
 
-  for (int i = 0; i < (manifest->install_operations_size() +
+  for (int i = 0; i < (manifest->partition_operations_size() +
                        manifest->noop_operations_size()); i++) {
     InstallOperation* op = NULL;
-    if (i < manifest->install_operations_size()) {
-      op = manifest->mutable_install_operations(i);
+    if (i < manifest->partition_operations_size()) {
+      op = manifest->mutable_partition_operations(i);
     } else {
       op = manifest->mutable_noop_operations(
-          i - manifest->install_operations_size());
+          i - manifest->partition_operations_size());
     }
     if (!op->has_data_offset())
       continue;
@@ -1370,13 +1370,13 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
   // Check that install op blobs are in order.
   uint64_t next_blob_offset = 0;
   {
-    for (int i = 0; i < (manifest.install_operations_size() +
+    for (int i = 0; i < (manifest.partition_operations_size() +
                          manifest.noop_operations_size()); i++) {
       InstallOperation* op =
-          i < manifest.install_operations_size() ?
-          manifest.mutable_install_operations(i) :
+          i < manifest.partition_operations_size() ?
+          manifest.mutable_partition_operations(i) :
           manifest.mutable_noop_operations(
-              i - manifest.install_operations_size());
+              i - manifest.partition_operations_size());
       if (op->has_data_offset()) {
         if (op->data_offset() != next_blob_offset) {
           LOG(FATAL) << "bad blob offset! " << op->data_offset() << " != "

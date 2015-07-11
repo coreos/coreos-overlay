@@ -180,7 +180,7 @@ void ApplyDelta() {
       << "Failed to initialize preferences.";
   // Get original checksums
   LOG(INFO) << "Calculating original checksums";
-  PartitionInfo kern_info, root_info;
+  BlobInfo root_info;
   CHECK(DeltaDiffGenerator::InitializePartitionInfo(FLAGS_old_image,
                                                     &root_info));
   install_plan.rootfs_hash.assign(root_info.hash().begin(),

@@ -415,10 +415,10 @@ TEST_F(DeltaDiffGeneratorTest, ReorderBlobsTest) {
 
   DeltaArchiveManifest manifest;
   InstallOperation* op =
-      manifest.add_install_operations();
+      manifest.add_partition_operations();
   op->set_data_offset(1);
   op->set_data_length(3);
-  op = manifest.add_install_operations();
+  op = manifest.add_partition_operations();
   op->set_data_offset(0);
   op->set_data_length(1);
 
@@ -429,11 +429,11 @@ TEST_F(DeltaDiffGeneratorTest, ReorderBlobsTest) {
   string new_data;
   EXPECT_TRUE(utils::ReadFile(new_blobs, &new_data));
   EXPECT_EQ("bcda", new_data);
-  EXPECT_EQ(2, manifest.install_operations_size());
-  EXPECT_EQ(0, manifest.install_operations(0).data_offset());
-  EXPECT_EQ(3, manifest.install_operations(0).data_length());
-  EXPECT_EQ(3, manifest.install_operations(1).data_offset());
-  EXPECT_EQ(1, manifest.install_operations(1).data_length());
+  EXPECT_EQ(2, manifest.partition_operations_size());
+  EXPECT_EQ(0, manifest.partition_operations(0).data_offset());
+  EXPECT_EQ(3, manifest.partition_operations(0).data_length());
+  EXPECT_EQ(3, manifest.partition_operations(1).data_offset());
+  EXPECT_EQ(1, manifest.partition_operations(1).data_length());
 
   unlink(orig_blobs.c_str());
   unlink(new_blobs.c_str());

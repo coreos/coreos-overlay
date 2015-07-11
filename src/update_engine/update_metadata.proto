@@ -117,15 +117,17 @@ message Signatures {
   repeated Signature signatures = 1;
 }
 
-// PartitionInfo is used to validate source device prior to the update or
-// the destination device after the list of InstallOperations has run.
-message PartitionInfo {
+// BlobInfo is used to validate the source prior to the update or
+// the destination after the list of InstallOperations has run.
+message BlobInfo {
   optional uint64 size = 1;
   optional bytes hash = 2;
 }
 
 message DeltaArchiveManifest {
-  repeated InstallOperation install_operations = 1;
+  // The update procedure for the main partition (USR-A or USR-B). Once
+  // complete it should match the hash specified in new_partition_info.
+  repeated InstallOperation partition_operations = 1;
 
   // This field is maintained for compatibility with older update_engine
   // clients. In the ChromeOS days it covered the kernel partition but in
@@ -165,6 +167,6 @@ message DeltaArchiveManifest {
   // Deprecated IDs 6 and 7, do not reuse.
 
   // Partition data that can be used to validate the update.
-  optional PartitionInfo old_rootfs_info = 8;
-  optional PartitionInfo new_rootfs_info = 9;
+  optional BlobInfo old_partition_info = 8;
+  optional BlobInfo new_partition_info = 9;
 }

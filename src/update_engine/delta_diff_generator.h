@@ -218,7 +218,7 @@ class DeltaDiffGenerator {
   static bool IsNoopOperation(const InstallOperation& op);
 
   static bool InitializePartitionInfo(const std::string& partition,
-                                      PartitionInfo* info);
+                                      BlobInfo* info);
 
   // Runs the bsdiff tool on two files and returns the resulting delta in
   // |out|. Returns true on success.
