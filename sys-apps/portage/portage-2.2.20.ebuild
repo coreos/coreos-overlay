@@ -79,6 +79,12 @@ TARBALL_PV=${PV}
 SRC_URI="mirror://gentoo/${PN}-${TARBALL_PV}.tar.bz2
 	$(prefix_src_archives ${PN}-${TARBALL_PV}.tar.bz2)"
 
+PATCHES=(
+	"${FILESDIR}/${PN}-2.2.18-0001-portage-repository-config.py-add-disabled-attribute-.patch"
+	"${FILESDIR}/${PN}-2.2.18-0002-environment-Filter-EROOT-for-all-EAPIs.patch"
+	"${FILESDIR}/${PN}-2.2.18-0003-depgraph-ensure-slot-rebuilds-happen-in-the-correct-.patch"
+)
+
 python_prepare_all() {
 	distutils-r1_python_prepare_all
 
