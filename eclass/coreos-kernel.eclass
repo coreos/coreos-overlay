@@ -94,7 +94,7 @@ update_bootengine_cpio() {
 kmake() {
 	local kernel_arch=$(tc-arch-kernel) kernel_cflags=
 	if gcc-specs-pie; then
-		kernel_cflags="-nopie"
+		kernel_cflags="-nopie -fstack-check=no"
 	fi
 	emake ARCH="${kernel_arch}" CROSS_COMPILE="${CHOST}-" \
 		KCFLAGS="${kernel_cflags}" LDFLAGS="" "$@"
@@ -182,10 +182,12 @@ coreos-kernel_src_install() {
 	# Install firmware to a temporary (bogus) location.
 	# The linux-firmware package will be used instead.
 	# Stripping must be done here, not portage, to preserve sigs.
+	# Uncomment vdso_install for easy access to debug symbols in gdb:
+	#   set debug-file-directory /lib/modules/4.0.7-coreos-r2/vdso/
 	kmake INSTALL_MOD_PATH="${D}" \
 		  INSTALL_MOD_STRIP="--strip-unneeded" \
 		  INSTALL_FW_PATH="${T}/fw" \
-		  modules_install
+		  modules_install # vdso_install
 
 	local version=$(kmake -s --no-print-directory kernelrelease)
 	dosym "vmlinuz-${version}" /usr/boot/vmlinuz
