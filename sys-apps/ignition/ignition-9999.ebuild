@@ -6,10 +6,14 @@ CROS_WORKON_PROJECT="coreos/ignition"
 CROS_WORKON_LOCALNAME="ignition"
 CROS_WORKON_REPO="git://github.com"
 COREOS_GO_PACKAGE="github.com/coreos/ignition"
+inherit coreos-doc coreos-go cros-workon systemd udev
 
-KEYWORDS="~amd64 arm64"
-
-inherit coreos-doc coreos-go cros-workon systemd
+if [[ "${PV}" == 9999 ]]; then
+	KEYWORDS="~amd64 ~arm64"
+else
+	CROS_WORKON_COMMIT="ec2f23129f29abdb654ae651f349b9edde846adb" # tag v0.1.0
+	KEYWORDS="amd64 arm64"
+fi
 
 DESCRIPTION="Pre-boot provisioning utility"
 HOMEPAGE="https://github.com/coreos/ignition"
