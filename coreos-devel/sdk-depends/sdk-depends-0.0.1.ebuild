@@ -23,7 +23,6 @@ DEPEND="
 	coreos-base/hard-host-depends
 	coreos-base/coreos-sb-keys
 	coreos-devel/mantle
-	dev-perl/Capture-Tiny
 	dev-python/setuptools
 	dev-util/boost-build
 	dev-util/checkbashisms
