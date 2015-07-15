@@ -1,0 +1,8 @@
+[Unit]
+DefaultDependencies=false
+Conflicts=initrd-switch-root.target
+Before=initrd-switch-root.target
+
+[Mount]
+What=/dev/disk/by-label/OEM
+Where=/mnt/oem
