@@ -3,7 +3,7 @@
 CROS_BUILD_BOARD_TREE="${SYSROOT}/build"
 CROS_BUILD_BOARD_BIN="${CROS_BUILD_BOARD_TREE}/bin"
 
-CROS_ADDONS_TREE="/usr/local/portage/coreos/coreos"
+CROS_ADDONS_TREE="/mnt/host/source/src/third_party/coreos-overlay/coreos"
 
 # Are we merging for the board sysroot, or for the cros sdk, or for
 # the target hardware?  Returns a string:
