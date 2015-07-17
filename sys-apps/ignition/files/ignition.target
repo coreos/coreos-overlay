@@ -12,5 +12,10 @@ After=ignition-disks.service
 Requires=ignition-files.service
 After=ignition-files.service
 
-Requires=systemd-networkd.service
-After=systemd-networkd.service
+# setup networking
+Requires=initrd-systemd-networkd.service
+After=initrd-systemd-networkd.service
+
+# generate resolv.conf
+Requires=initrd-systemd-resolved.service
+After=initrd-systemd-resolved.service
