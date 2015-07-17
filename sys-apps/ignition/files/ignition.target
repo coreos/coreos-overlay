@@ -11,3 +11,6 @@ After=ignition-disks.service
 
 Requires=ignition-files.service
 After=ignition-files.service
+
+Requires=systemd-networkd.service
+After=systemd-networkd.service
