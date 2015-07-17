@@ -21,6 +21,10 @@ IUSE=""
 
 DEPEND="sys-libs/ncurses"
 
+src_prepare() {
+	epatch "${FILESDIR}"/ktop-arm64-syscall-fixes.diff
+}
+
 src_compile() {
 	tc-export CC
 	emake || die
