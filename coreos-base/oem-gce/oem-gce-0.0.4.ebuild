@@ -22,17 +22,17 @@ RDEPEND="
 
 src_prepare() {
 	sed -e "s\\@@OEM_VERSION_ID@@\\${PVR}\\g" \
-	    ${FILESDIR}/cloud-config.yml > ${T}/cloud-config.yml || die
+	    "${FILESDIR}/cloud-config.yml" > "${T}/cloud-config.yml" || die
 }
 
 src_install() {
 	into "/usr/share/oem"
-	dobin ${FILESDIR}/gce-ssh-key
-	dobin ${FILESDIR}/gce-coreos-cloudinit
-	dobin ${FILESDIR}/gce-add-metadata-host
-	dobin ${FILESDIR}/coreos-setup-environment
+	dobin "${FILESDIR}/gce-ssh-key"
+	dobin "${FILESDIR}/gce-coreos-cloudinit"
+	dobin "${FILESDIR}/gce-add-metadata-host"
+	dobin "${FILESDIR}/coreos-setup-environment"
 
 	insinto "/usr/share/oem"
-	doins ${T}/cloud-config.yml
-	doins ${FILESDIR}/grub.cfg
+	doins "${T}/cloud-config.yml"
+	doins "${FILESDIR}/grub.cfg"
 }
