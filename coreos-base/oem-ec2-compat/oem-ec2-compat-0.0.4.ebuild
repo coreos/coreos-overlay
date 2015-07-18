@@ -45,5 +45,10 @@ src_install() {
 	doins "${T}/cloud-config.yml"
 	if use ec2 ; then
 		newins "${FILESDIR}/grub-ec2.cfg" grub.cfg
+		newins "${FILESDIR}/oem-release-ec2" oem-release
+	elif use openstack ; then
+		newins "${FILESDIR}/oem-release-openstack" oem-release
+	elif use brightbox ; then
+		newins "${FILESDIR}/oem-release-brightbox" oem-release
 	fi
 }

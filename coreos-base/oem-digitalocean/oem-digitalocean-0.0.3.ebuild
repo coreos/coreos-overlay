@@ -22,4 +22,5 @@ src_prepare() {
 src_install() {
 	insinto "/usr/share/oem"
 	doins "${T}/cloud-config.yml"
+	doins "${FILESDIR}/oem-release"
 }

@@ -18,4 +18,5 @@ S="${WORKDIR}"
 src_install() {
 	insinto "/usr/share/oem"
 	doins "${FILESDIR}/cloud-config.yml"
+	doins "${FILESDIR}/oem-release"
 }

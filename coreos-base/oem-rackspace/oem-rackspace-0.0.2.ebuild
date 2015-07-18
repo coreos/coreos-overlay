@@ -34,6 +34,7 @@ src_install() {
 	rsync --exclude=".git" -aq "${S}/" "${D}/usr/share/oem/nova-agent/" || die
 	insinto "/usr/share/oem"
 	doins "${T}/cloud-config.yml"
+	doins "${FILESDIR}/oem-release"
 
 	into "/usr/share/oem"
 	dobin "${FILESDIR}/coreos-setup-environment"

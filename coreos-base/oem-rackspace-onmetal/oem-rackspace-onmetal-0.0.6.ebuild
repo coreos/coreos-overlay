@@ -27,4 +27,5 @@ src_install() {
 	insinto "/usr/share/oem"
 	doins "${T}/cloud-config.yml"
 	doins "${FILESDIR}/grub.cfg"
+	doins "${FILESDIR}/oem-release"
 }
