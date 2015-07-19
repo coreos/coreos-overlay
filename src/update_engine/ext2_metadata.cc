@@ -14,9 +14,9 @@
 #include "strings/string_printf.h"
 #include "update_engine/bzip.h"
 #include "update_engine/delta_diff_generator.h"
+#include "update_engine/ext2_metadata.h"
 #include "update_engine/extent_ranges.h"
 #include "update_engine/graph_utils.h"
-#include "update_engine/metadata.h"
 #include "update_engine/utils.h"
 
 using std::min;
@@ -30,6 +30,17 @@ namespace {
 const size_t kBlockSize = 4096;
 
 typedef DeltaDiffGenerator::Block Block;
+
+// Utility class to close a file system
+class ScopedExt2fsCloser {
+ public:
+  explicit ScopedExt2fsCloser(ext2_filsys filsys) : filsys_(filsys) {}
+  ~ScopedExt2fsCloser() { ext2fs_close(filsys_); }
+
+ private:
+  ext2_filsys filsys_;
+  DISALLOW_COPY_AND_ASSIGN(ScopedExt2fsCloser);
+};
 
 // Read data from the specified extents.
 bool ReadExtentsData(const ext2_filsys fs,
@@ -433,12 +444,12 @@ bool ReadInodeMetadata(Graph* graph,
 // accordingly. It also adds the required operation to the graph and adds the
 // metadata extents to blocks.
 // Returns true on success.
-bool Metadata::DeltaReadMetadata(Graph* graph,
-                                 vector<Block>* blocks,
-                                 const string& old_image,
-                                 const string& new_image,
-                                 int data_fd,
-                                 off_t* data_file_size) {
+bool Ext2Metadata::DeltaReadMetadata(Graph* graph,
+                                     vector<Block>* blocks,
+                                     const string& old_image,
+                                     const string& new_image,
+                                     int data_fd,
+                                     off_t* data_file_size) {
   // Open the two file systems.
   ext2_filsys fs_old;
   TEST_AND_RETURN_FALSE_ERRCODE(ext2fs_open(old_image.c_str(), 0, 0, 0,

@@ -13,9 +13,9 @@
 #include <gtest/gtest.h>
 
 #include "strings/string_printf.h"
-#include "update_engine/graph_types.h"
 #include "update_engine/delta_diff_generator.h"
-#include "update_engine/metadata.h"
+#include "update_engine/ext2_metadata.h"
+#include "update_engine/graph_types.h"
 #include "update_engine/test_utils.h"
 #include "update_engine/utils.h"
 
@@ -27,10 +27,10 @@ namespace chromeos_update_engine {
 
 typedef DeltaDiffGenerator::Block Block;
 
-class MetadataTest : public ::testing::Test {
+class Ext2MetadataTest : public ::testing::Test {
 };
 
-TEST_F(MetadataTest, RunAsRootReadMetadataDissimilarFileSystems) {
+TEST_F(Ext2MetadataTest, RunAsRootReadMetadataDissimilarFileSystems) {
   string a_img, b_img;
   EXPECT_TRUE(utils::MakeTempFile("/tmp/a_img.XXXXXX", &a_img, NULL));
   ScopedPathUnlinker a_img_unlinker(a_img);
@@ -42,12 +42,12 @@ TEST_F(MetadataTest, RunAsRootReadMetadataDissimilarFileSystems) {
 
   Graph graph;
   vector<Block> blocks;
-  EXPECT_TRUE(Metadata::DeltaReadMetadata(&graph,
-                                          &blocks,
-                                          a_img,
-                                          b_img,
-                                          0,
-                                          NULL));
+  EXPECT_TRUE(Ext2Metadata::DeltaReadMetadata(&graph,
+                                              &blocks,
+                                              a_img,
+                                              b_img,
+                                              0,
+                                              NULL));
   EXPECT_EQ(graph.size(), 0);
 
   CreateEmptyExtImageAtPath(a_img, 10485759, 4096);
@@ -55,16 +55,16 @@ TEST_F(MetadataTest, RunAsRootReadMetadataDissimilarFileSystems) {
 
   graph.clear();
   blocks.clear();
-  EXPECT_TRUE(Metadata::DeltaReadMetadata(&graph,
-                                          &blocks,
-                                          a_img,
-                                          b_img,
-                                          0,
-                                          NULL));
+  EXPECT_TRUE(Ext2Metadata::DeltaReadMetadata(&graph,
+                                              &blocks,
+                                              a_img,
+                                              b_img,
+                                              0,
+                                              NULL));
   EXPECT_EQ(graph.size(), 0);
 }
 
-TEST_F(MetadataTest, RunAsRootReadMetadata) {
+TEST_F(Ext2MetadataTest, RunAsRootReadMetadata) {
   string a_img, b_img, data_file;
   EXPECT_TRUE(utils::MakeTempFile("/tmp/a_img.XXXXXX", &a_img, NULL));
   ScopedPathUnlinker a_img_unlinker(a_img);
@@ -94,12 +94,12 @@ TEST_F(MetadataTest, RunAsRootReadMetadata) {
   Graph graph;
   vector<Block> blocks(image_size / block_size);
   off_t data_file_size;
-  EXPECT_TRUE(Metadata::DeltaReadMetadata(&graph,
-                                          &blocks,
-                                          a_img,
-                                          b_img,
-                                          fd,
-                                          &data_file_size));
+  EXPECT_TRUE(Ext2Metadata::DeltaReadMetadata(&graph,
+                                              &blocks,
+                                              a_img,
+                                              b_img,
+                                              fd,
+                                              &data_file_size));
 
   // There are 12 metadata that we look for:
   //   - Block group 0 metadata (superblock, group descriptor, bitmaps, etc)

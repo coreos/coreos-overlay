@@ -25,6 +25,7 @@
 #include "strings/string_printf.h"
 #include "update_engine/bzip.h"
 #include "update_engine/cycle_breaker.h"
+#include "update_engine/ext2_metadata.h"
 #include "update_engine/extent_mapper.h"
 #include "update_engine/extent_ranges.h"
 #include "update_engine/file_writer.h"
@@ -32,7 +33,6 @@
 #include "update_engine/full_update_generator.h"
 #include "update_engine/graph_types.h"
 #include "update_engine/graph_utils.h"
-#include "update_engine/metadata.h"
 #include "update_engine/omaha_hash_calculator.h"
 #include "update_engine/payload_signer.h"
 #include "update_engine/subprocess.h"
@@ -1291,12 +1291,12 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
       CheckGraph(graph);
 
       LOG(INFO) << "Starting metadata processing";
-      TEST_AND_RETURN_FALSE(Metadata::DeltaReadMetadata(&graph,
-                                                        &blocks,
-                                                        old_image,
-                                                        new_image,
-                                                        fd,
-                                                        &data_file_size));
+      TEST_AND_RETURN_FALSE(Ext2Metadata::DeltaReadMetadata(&graph,
+                                                            &blocks,
+                                                            old_image,
+                                                            new_image,
+                                                            fd,
+                                                            &data_file_size));
       LOG(INFO) << "Done metadata processing";
       CheckGraph(graph);
 
