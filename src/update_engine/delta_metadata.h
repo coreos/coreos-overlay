@@ -7,6 +7,11 @@
 
 #include <inttypes.h>
 
+#include <vector>
+
+#include <update_engine/action_processor.h>
+#include <update_engine/update_metadata.pb.h>
+
 namespace chromeos_update_engine {
 
 // Update payload header field values and sizes.
@@ -21,6 +26,30 @@ const uint64_t kDeltaManifestSizeSize = sizeof(uint64_t);
 const uint64_t kDeltaVersionOffset = kDeltaMagicSize;
 const uint64_t kDeltaManifestSizeOffset = kDeltaVersionOffset + kDeltaVersionSize;
 const uint64_t kDeltaManifestOffset = kDeltaManifestSizeOffset + kDeltaManifestSizeSize;
+
+class DeltaMetadata {
+ public:
+  enum ParseResult {
+    kParseSuccess,
+    kParseError,
+    kParseInsufficientData,
+  };
+
+  // Attempts to parse the update metadata starting from the beginning of
+  // |payload| into |manifest|. On success, sets |metadata_size| to the total
+  // metadata bytes (including the delta magic and metadata size fields), and
+  // returns kParseSuccess. Returns kParseInsufficientData if more data is
+  // needed to parse the complete metadata. Returns kParseError if the metadata
+  // can't be parsed given the payload.
+  static ParseResult ParsePayload(
+      const std::vector<char>& payload,
+      DeltaArchiveManifest* manifest,
+      uint64_t* metadata_size,
+      ActionExitCode* error);
+
+ private:
+  DISALLOW_IMPLICIT_CONSTRUCTORS(DeltaMetadata);
+};
 
 };  // namespace chromeos_update_engine
 

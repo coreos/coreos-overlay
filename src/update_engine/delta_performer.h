@@ -28,11 +28,6 @@ class PrefsInterface;
 
 class DeltaPerformer : public FileWriter {
  public:
-  enum MetadataParseResult {
-    kMetadataParseSuccess,
-    kMetadataParseError,
-    kMetadataParseInsufficientData,
-  };
 
   static const char kUpdatePayloadPublicKeyPath[];
 
@@ -133,18 +128,6 @@ class DeltaPerformer : public FileWriter {
   // true, otherwise resets all progress-related update state. Returns true on
   // success, false otherwise.
   static bool ResetUpdateProgress(PrefsInterface* prefs, bool quick);
-
-  // Attempts to parse the update metadata starting from the beginning of
-  // |payload| into |manifest|. On success, sets |metadata_size| to the total
-  // metadata bytes (including the delta magic and metadata size fields), and
-  // returns kMetadataParseSuccess. Returns kMetadataParseInsufficientData if
-  // more data is needed to parse the complete metadata. Returns
-  // kMetadataParseError if the metadata can't be parsed given the payload.
-  MetadataParseResult ParsePayloadMetadata(
-      const std::vector<char>& payload,
-      DeltaArchiveManifest* manifest,
-      uint64_t* metadata_size,
-      ActionExitCode* error);
 
   void set_public_key_path(const std::string& public_key_path) {
     public_key_path_ = public_key_path;

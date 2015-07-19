@@ -230,53 +230,6 @@ void LogPartitionInfo(const DeltaArchiveManifest& manifest) {
 
 }  // namespace {}
 
-DeltaPerformer::MetadataParseResult DeltaPerformer::ParsePayloadMetadata(
-    const std::vector<char>& payload,
-    DeltaArchiveManifest* manifest,
-    uint64_t* metadata_size,
-    ActionExitCode* error) {
-  *error = kActionCodeSuccess;
-
-  if (payload.size() < kDeltaManifestOffset) {
-    // Don't have enough bytes to even know the manifest size.
-    return kMetadataParseInsufficientData;
-  }
-
-  // Validate the magic string.
-  if (memcmp(payload.data(), kDeltaMagic, strlen(kDeltaMagic)) != 0) {
-    LOG(ERROR) << "Bad payload format -- invalid delta magic.";
-    *error = kActionCodeDownloadInvalidMetadataMagicString;
-    return kMetadataParseError;
-  }
-
-  // TODO(jaysri): Compare the version number and skip unknown manifest
-  // versions. We don't check the version at all today.
-
-  // Next, parse the manifest size.
-  uint64_t manifest_size;
-  COMPILE_ASSERT(sizeof(manifest_size) == kDeltaManifestSizeSize,
-                 manifest_size_size_mismatch);
-  memcpy(&manifest_size,
-         &payload[kDeltaManifestSizeOffset],
-         kDeltaManifestSizeSize);
-  manifest_size = be64toh(manifest_size);  // switch big endian to host
-
-  // We should wait for the full metadata to be read in before we can parse it.
-  *metadata_size = kDeltaManifestOffset + manifest_size;
-  if (payload.size() < *metadata_size) {
-    return kMetadataParseInsufficientData;
-  }
-
-  // The metadata in |payload| is deemed valid. So, it's now safe to
-  // parse the protobuf.
-  if (!manifest->ParseFromArray(&payload[kDeltaManifestOffset], manifest_size)) {
-    LOG(ERROR) << "Unable to parse manifest in update file.";
-    *error = kActionCodeDownloadManifestParseError;
-    return kMetadataParseError;
-  }
-  return kMetadataParseSuccess;
-}
-
 
 // Wrapper around write. Returns true if all requested bytes
 // were written, or false on any error, regardless of progress
@@ -294,16 +247,14 @@ bool DeltaPerformer::Write(const void* bytes, size_t count,
   UpdateOverallProgress(false, "Completed ");
 
   if (!manifest_valid_) {
-    MetadataParseResult result = ParsePayloadMetadata(buffer_,
-                                                      &manifest_,
-                                                      &manifest_metadata_size_,
-                                                      error);
-    if (result == kMetadataParseError) {
-      return false;
+    DeltaMetadata::ParseResult result = DeltaMetadata::ParsePayload(
+        buffer_, &manifest_, &manifest_metadata_size_, error);
+    switch (result) {
+      case DeltaMetadata::kParseError: return false;
+      case DeltaMetadata::kParseInsufficientData: return true;
+      case DeltaMetadata::kParseSuccess: break;
     }
-    if (result == kMetadataParseInsufficientData) {
-      return true;
-    }
+
     // Remove protobuf and header info from buffer_, so buffer_ contains
     // just data blobs
     DiscardBufferHeadBytes(manifest_metadata_size_);
