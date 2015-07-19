@@ -73,6 +73,7 @@ libupdate_engine_a_SOURCES = \
 	src/update_engine/cycle_breaker.cc \
 	src/update_engine/dbus_service.cc \
 	src/update_engine/delta_diff_generator.cc \
+	src/update_engine/delta_metadata.cc \
 	src/update_engine/delta_performer.cc \
 	src/update_engine/download_action.cc \
 	src/update_engine/ext2_metadata.cc \

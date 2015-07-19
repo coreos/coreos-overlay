@@ -18,7 +18,7 @@
 
 #include "strings/string_printf.h"
 #include "update_engine/bzip_extent_writer.h"
-#include "update_engine/delta_diff_generator.h"
+#include "update_engine/delta_metadata.h"
 #include "update_engine/extent_ranges.h"
 #include "update_engine/extent_writer.h"
 #include "update_engine/graph_types.h"
@@ -36,8 +36,6 @@ using strings::StringPrintf;
 
 namespace chromeos_update_engine {
 
-const uint64_t DeltaPerformer::kDeltaVersionSize = 8;
-const uint64_t DeltaPerformer::kDeltaManifestSizeSize = 8;
 const char DeltaPerformer::kUpdatePayloadPublicKeyPath[] =
     "/usr/share/update_engine/update-payload-key.pub.pem";
 const unsigned DeltaPerformer::kProgressLogMaxChunks = 10;
@@ -232,17 +230,6 @@ void LogPartitionInfo(const DeltaArchiveManifest& manifest) {
 
 }  // namespace {}
 
-uint64_t DeltaPerformer::GetManifestSizeOffset() {
- // Manifest size is stored right after the magic string and the version.
- return strlen(kDeltaMagic) + kDeltaVersionSize;
-}
-
-uint64_t DeltaPerformer::GetManifestOffset() {
- // Actual manifest begins right after the manifest size field.
- return GetManifestSizeOffset() + kDeltaManifestSizeSize;
-}
-
-
 DeltaPerformer::MetadataParseResult DeltaPerformer::ParsePayloadMetadata(
     const std::vector<char>& payload,
     DeltaArchiveManifest* manifest,
@@ -250,9 +237,7 @@ DeltaPerformer::MetadataParseResult DeltaPerformer::ParsePayloadMetadata(
     ActionExitCode* error) {
   *error = kActionCodeSuccess;
 
-  // manifest_offset is the byte offset where the manifest protobuf begins.
-  const uint64_t manifest_offset = GetManifestOffset();
-  if (payload.size() < manifest_offset) {
+  if (payload.size() < kDeltaManifestOffset) {
     // Don't have enough bytes to even know the manifest size.
     return kMetadataParseInsufficientData;
   }
@@ -272,19 +257,19 @@ DeltaPerformer::MetadataParseResult DeltaPerformer::ParsePayloadMetadata(
   COMPILE_ASSERT(sizeof(manifest_size) == kDeltaManifestSizeSize,
                  manifest_size_size_mismatch);
   memcpy(&manifest_size,
-         &payload[GetManifestSizeOffset()],
+         &payload[kDeltaManifestSizeOffset],
          kDeltaManifestSizeSize);
   manifest_size = be64toh(manifest_size);  // switch big endian to host
 
   // We should wait for the full metadata to be read in before we can parse it.
-  *metadata_size = manifest_offset + manifest_size;
+  *metadata_size = kDeltaManifestOffset + manifest_size;
   if (payload.size() < *metadata_size) {
     return kMetadataParseInsufficientData;
   }
 
   // The metadata in |payload| is deemed valid. So, it's now safe to
   // parse the protobuf.
-  if (!manifest->ParseFromArray(&payload[manifest_offset], manifest_size)) {
+  if (!manifest->ParseFromArray(&payload[kDeltaManifestOffset], manifest_size)) {
     LOG(ERROR) << "Unable to parse manifest in update file.";
     *error = kActionCodeDownloadManifestParseError;
     return kMetadataParseError;

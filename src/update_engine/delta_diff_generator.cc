@@ -25,6 +25,7 @@
 #include "strings/string_printf.h"
 #include "update_engine/bzip.h"
 #include "update_engine/cycle_breaker.h"
+#include "update_engine/delta_metadata.h"
 #include "update_engine/ext2_metadata.h"
 #include "update_engine/extent_mapper.h"
 #include "update_engine/extent_ranges.h"
@@ -63,7 +64,6 @@ const string kNonexistentPath = "";
 // TODO(adlr): switch from 1GiB to 2GiB when we no longer care about old
 // clients:
 const size_t kRootFSPartitionSize = 1 * 1024 * 1024 * 1024;  // bytes
-const uint64_t kVersionNumber = 1;
 const uint64_t kFullUpdateChunkSize = 1024 * 1024;  // bytes
 
 static const char* kInstallOperationTypes[] = {
@@ -1419,7 +1419,7 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
   TEST_AND_RETURN_FALSE(writer.Write(kDeltaMagic, strlen(kDeltaMagic)));
 
   // Write version number
-  TEST_AND_RETURN_FALSE(WriteUint64AsBigEndian(&writer, kVersionNumber));
+  TEST_AND_RETURN_FALSE(WriteUint64AsBigEndian(&writer, kDeltaVersion));
 
   // Write protobuf length
   TEST_AND_RETURN_FALSE(WriteUint64AsBigEndian(&writer,
@@ -1566,6 +1566,5 @@ void DeltaDiffGenerator::AddSignatureOp(uint64_t signature_blob_offset,
 
 const char* const kBsdiffPath = "bsdiff";
 const char* const kBspatchPath = "bspatch";
-const char* const kDeltaMagic = "CrAU";
 
 };  // namespace chromeos_update_engine

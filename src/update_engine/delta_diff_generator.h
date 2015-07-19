@@ -252,7 +252,6 @@ class DeltaDiffGenerator {
 
 extern const char* const kBsdiffPath;
 extern const char* const kBspatchPath;
-extern const char* const kDeltaMagic;
 
 };  // namespace chromeos_update_engine
 
