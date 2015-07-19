@@ -44,8 +44,8 @@ void DownloadAction::PerformAction() {
   if (writer_) {
     LOG(INFO) << "Using writer for test.";
   } else {
-    delta_performer_.reset(new DeltaPerformer(prefs_, &install_plan_));
-    writer_ = delta_performer_.get();
+    payload_processor_.reset(new PayloadProcessor(prefs_, &install_plan_));
+    writer_ = payload_processor_.get();
   }
   int rc = writer_->Open(install_plan_.install_path.c_str(),
                          O_TRUNC | O_WRONLY | O_CREAT | O_LARGEFILE,
@@ -88,8 +88,8 @@ void DownloadAction::ReceivedBytes(HttpFetcher *fetcher,
                              bytes_downloaded_,
                              install_plan_.payload_size);
   if (writer_ && !writer_->Write(bytes, length, &code_)) {
-    LOG(ERROR) << "Error " << code_ << " in DeltaPerformer's Write method when "
-               << "processing the received payload -- Terminating processing";
+    LOG(ERROR) << "Error " << code_ << " while processing the received payload"
+               << " -- Terminating processing";
     // Don't tell the action processor that the action is complete until we get
     // the TransferTerminated callback. Otherwise, this and the HTTP fetcher
     // objects may get destroyed before all callbacks are complete.
@@ -108,13 +108,13 @@ void DownloadAction::TransferComplete(HttpFetcher *fetcher, bool successful) {
   }
   ActionExitCode code =
       successful ? kActionCodeSuccess : kActionCodeDownloadTransferError;
-  if (code == kActionCodeSuccess && delta_performer_.get()) {
-    code = delta_performer_->VerifyPayload(install_plan_.payload_hash,
-                                           install_plan_.payload_size);
+  if (code == kActionCodeSuccess && payload_processor_.get()) {
+    code = payload_processor_->VerifyPayload(install_plan_.payload_hash,
+                                             install_plan_.payload_size);
     if (code != kActionCodeSuccess) {
       LOG(ERROR) << "Download of " << install_plan_.download_url
                  << " failed due to payload verification error.";
-    } else if (!delta_performer_->GetNewPartitionInfo(
+    } else if (!payload_processor_->GetNewPartitionInfo(
         &install_plan_.rootfs_size,
         &install_plan_.rootfs_hash)) {
       LOG(ERROR) << "Unable to get new partition hash info.";

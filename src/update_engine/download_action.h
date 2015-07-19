@@ -16,9 +16,9 @@
 #include <google/protobuf/stubs/common.h>
 
 #include "update_engine/action.h"
-#include "update_engine/delta_performer.h"
 #include "update_engine/http_fetcher.h"
 #include "update_engine/install_plan.h"
+#include "update_engine/payload_processor.h"
 
 // The Download Action downloads a specified url to disk. The url should point
 // to an update in a delta payload format. The payload will be piped into a
@@ -103,10 +103,10 @@ class DownloadAction : public Action<DownloadAction>,
   std::unique_ptr<HttpFetcher> http_fetcher_;
 
   // The FileWriter that downloaded data should be written to. It will
-  // either point to *decompressing_file_writer_ or *delta_performer_.
+  // either point to *decompressing_file_writer_ or *manifest_processor_;
   FileWriter* writer_;
 
-  std::unique_ptr<DeltaPerformer> delta_performer_;
+  std::unique_ptr<PayloadProcessor> payload_processor_;
 
   // Used by TransferTerminated to figure if this action terminated itself or
   // was terminated by the action processor.
