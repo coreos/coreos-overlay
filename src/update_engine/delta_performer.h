@@ -16,7 +16,6 @@
 #include "update_engine/file_writer.h"
 #include "update_engine/install_plan.h"
 #include "update_engine/omaha_hash_calculator.h"
-#include "update_engine/system_state.h"
 #include "update_engine/update_metadata.pb.h"
 
 namespace chromeos_update_engine {
@@ -45,10 +44,8 @@ class DeltaPerformer : public FileWriter {
   static const unsigned kProgressOperationsWeight;
 
   DeltaPerformer(PrefsInterface* prefs,
-                 SystemState* system_state,
                  InstallPlan* install_plan)
       : prefs_(prefs),
-        system_state_(system_state),
         install_plan_(install_plan),
         fd_(-1),
         manifest_valid_(false),
@@ -195,9 +192,6 @@ class DeltaPerformer : public FileWriter {
 
   // Update Engine preference store.
   PrefsInterface* prefs_;
-
-  // Global context of the system.
-  SystemState* system_state_;
 
   // Install Plan based on Omaha Response.
   InstallPlan* install_plan_;

@@ -122,7 +122,7 @@ class UpdateAttempter : public ActionProcessorDelegate,
 
   // DownloadActionDelegate methods
   void SetDownloadStatus(bool active);
-  void BytesReceived(uint64_t bytes_received, uint64_t total);
+  void BytesReceived(uint64_t received, uint64_t progress, uint64_t total);
 
   // Broadcasts the current status over D-Bus.
   void BroadcastStatus();
@@ -136,6 +136,7 @@ class UpdateAttempter : public ActionProcessorDelegate,
   FRIEND_TEST(UpdateAttempterTest, ActionCompletedDownloadTest);
   FRIEND_TEST(UpdateAttempterTest, ActionCompletedErrorTest);
   FRIEND_TEST(UpdateAttempterTest, ActionCompletedOmahaRequestTest);
+  FRIEND_TEST(UpdateAttempterTest, BytesReceivedTest);
   FRIEND_TEST(UpdateAttempterTest, CreatePendingErrorEventTest);
   FRIEND_TEST(UpdateAttempterTest, CreatePendingErrorEventResumedTest);
   FRIEND_TEST(UpdateAttempterTest, DisableDeltaUpdateIfNeededTest);

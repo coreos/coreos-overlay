@@ -19,7 +19,6 @@
 #include "update_engine/delta_performer.h"
 #include "update_engine/http_fetcher.h"
 #include "update_engine/install_plan.h"
-#include "update_engine/system_state.h"
 
 // The Download Action downloads a specified url to disk. The url should point
 // to an update in a delta payload format. The payload will be piped into a
@@ -35,10 +34,12 @@ class DownloadActionDelegate {
   virtual void SetDownloadStatus(bool active) = 0;
 
   // Called periodically after bytes are received. This method will be
-  // invoked only if the download is active. |bytes_received| is the
-  // number of bytes downloaded thus far. |total| is the number of
-  // bytes expected.
-  virtual void BytesReceived(uint64_t bytes_received, uint64_t total) = 0;
+  // invoked only if the download is active. |received| is the number of
+  // bytes just received, |progress| is the total number of bytes
+  // downloaded thus far. |total| is the number of bytes expected.
+  virtual void BytesReceived(uint64_t received,
+                             uint64_t progress,
+                             uint64_t total) = 0;
 };
 
 class DownloadAction;
@@ -58,10 +59,8 @@ class DownloadAction : public Action<DownloadAction>,
  public:
   // Takes ownership of the passed in HttpFetcher. Useful for testing.
   // A good calling pattern is:
-  // DownloadAction(prefs, system_state, new WhateverHttpFetcher);
-  DownloadAction(PrefsInterface* prefs,
-                 SystemState* system_state,
-                 HttpFetcher* http_fetcher);
+  // DownloadAction(prefs, new WhateverHttpFetcher);
+  DownloadAction(PrefsInterface* prefs, HttpFetcher* http_fetcher);
   virtual ~DownloadAction();
   typedef ActionTraits<DownloadAction>::InputObjectType InputObjectType;
   typedef ActionTraits<DownloadAction>::OutputObjectType OutputObjectType;
@@ -100,9 +99,6 @@ class DownloadAction : public Action<DownloadAction>,
   // Update Engine preference store.
   PrefsInterface* prefs_;
 
-  // Global context for the system.
-  SystemState* system_state_;
-
   // Pointer to the HttpFetcher that does the http work.
   std::unique_ptr<HttpFetcher> http_fetcher_;
 
@@ -118,7 +114,7 @@ class DownloadAction : public Action<DownloadAction>,
 
   // For reporting status to outsiders
   DownloadActionDelegate* delegate_;
-  uint64_t bytes_received_;
+  uint64_t bytes_downloaded_;
 
   DISALLOW_COPY_AND_ASSIGN(DownloadAction);
 };

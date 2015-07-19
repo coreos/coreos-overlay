@@ -21,15 +21,13 @@ namespace chromeos_update_engine {
 const size_t kFileWriterBufferSize = 128 * 1024;  // 128 KiB
 
 DownloadAction::DownloadAction(PrefsInterface* prefs,
-                               SystemState* system_state,
                                HttpFetcher* http_fetcher)
     : prefs_(prefs),
-      system_state_(system_state),
       http_fetcher_(http_fetcher),
       writer_(NULL),
       code_(kActionCodeSuccess),
       delegate_(NULL),
-      bytes_received_(0) {}
+      bytes_downloaded_(0) {}
 
 DownloadAction::~DownloadAction() {}
 
@@ -39,16 +37,14 @@ void DownloadAction::PerformAction() {
   // Get the InstallPlan and read it
   CHECK(HasInputObject());
   install_plan_ = GetInputObject();
-  bytes_received_ = 0;
+  bytes_downloaded_ = 0;
 
   install_plan_.Dump();
 
   if (writer_) {
     LOG(INFO) << "Using writer for test.";
   } else {
-    delta_performer_.reset(new DeltaPerformer(prefs_,
-                                              system_state_,
-                                              &install_plan_));
+    delta_performer_.reset(new DeltaPerformer(prefs_, &install_plan_));
     writer_ = delta_performer_.get();
   }
   int rc = writer_->Open(install_plan_.install_path.c_str(),
@@ -80,15 +76,17 @@ void DownloadAction::TerminateProcessing() {
 }
 
 void DownloadAction::SeekToOffset(off_t offset) {
-  bytes_received_ = offset;
+  bytes_downloaded_ = offset;
 }
 
 void DownloadAction::ReceivedBytes(HttpFetcher *fetcher,
                                    const char* bytes,
                                    int length) {
-  bytes_received_ += length;
+  bytes_downloaded_ += length;
   if (delegate_)
-    delegate_->BytesReceived(bytes_received_, install_plan_.payload_size);
+    delegate_->BytesReceived(length,
+                             bytes_downloaded_,
+                             install_plan_.payload_size);
   if (writer_ && !writer_->Write(bytes, length, &code_)) {
     LOG(ERROR) << "Error " << code_ << " in DeltaPerformer's Write method when "
                << "processing the received payload -- Terminating processing";

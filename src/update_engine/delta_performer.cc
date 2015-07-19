@@ -23,7 +23,6 @@
 #include "update_engine/extent_writer.h"
 #include "update_engine/graph_types.h"
 #include "update_engine/payload_signer.h"
-#include "update_engine/payload_state_interface.h"
 #include "update_engine/prefs_interface.h"
 #include "update_engine/subprocess.h"
 #include "update_engine/terminator.h"
@@ -240,7 +239,6 @@ bool DeltaPerformer::Write(const void* bytes, size_t count,
 
   const char* c_bytes = reinterpret_cast<const char*>(bytes);
   buffer_.insert(buffer_.end(), c_bytes, c_bytes + count);
-  system_state_->payload_state()->DownloadProgress(count);
 
   // Update the total byte downloaded count and the progress logs.
   total_bytes_received_ += count;
@@ -730,13 +728,6 @@ ActionExitCode DeltaPerformer::VerifyPayload(
     utils::HexDumpVector(hash_data);
     return kActionCodeDownloadPayloadPubKeyVerificationError;
   }
-
-  // At this point, we are guaranteed to have downloaded a full payload, i.e
-  // the one whose size matches the size mentioned in Omaha response. If any
-  // errors happen after this, it's likely a problem with the payload itself or
-  // the state of the system and not a problem with the URL or network.  So,
-  // indicate that to the payload state so that AU can backoff appropriately.
-  system_state_->payload_state()->DownloadComplete();
 
   return kActionCodeSuccess;
 }

@@ -31,7 +31,8 @@ namespace {
 class DownloadActionDelegateMock : public DownloadActionDelegate {
  public:
   MOCK_METHOD1(SetDownloadStatus, void(bool active));
-  MOCK_METHOD2(BytesReceived, void(uint64_t bytes_received, uint64_t total));
+  MOCK_METHOD3(BytesReceived,
+               void(uint64_t received, uint64_t progress, uint64_t total));
 };
 
 class DownloadActionTestProcessorDelegate : public ActionProcessorDelegate {
@@ -140,7 +141,7 @@ void TestWithData(const vector<char>& data,
   PrefsMock prefs;
   MockHttpFetcher* http_fetcher = new MockHttpFetcher(&data[0], data.size());
   // takes ownership of passed in HttpFetcher
-  DownloadAction download_action(&prefs, NULL, http_fetcher);
+  DownloadAction download_action(&prefs, http_fetcher);
   download_action.SetTestFileWriter(&writer);
   BondActions(&feeder_action, &download_action);
   DownloadActionDelegateMock download_delegate;
@@ -150,8 +151,8 @@ void TestWithData(const vector<char>& data,
     EXPECT_CALL(download_delegate, SetDownloadStatus(true)).Times(1);
     if (data.size() > kMockHttpFetcherChunkSize)
       EXPECT_CALL(download_delegate,
-                  BytesReceived(1 + kMockHttpFetcherChunkSize, _));
-    EXPECT_CALL(download_delegate, BytesReceived(_, _)).Times(AtLeast(1));
+                  BytesReceived(_, 1 + kMockHttpFetcherChunkSize, _));
+    EXPECT_CALL(download_delegate, BytesReceived(_, _, _)).Times(AtLeast(1));
     EXPECT_CALL(download_delegate, SetDownloadStatus(false)).Times(1);
   }
   ActionExitCode expected_code = kActionCodeSuccess;
@@ -250,7 +251,7 @@ void TestTerminateEarly(bool use_download_delegate) {
     InstallPlan install_plan(false, "", 0, "", temp_file.GetPath());
     feeder_action.set_obj(install_plan);
     PrefsMock prefs;
-    DownloadAction download_action(&prefs, NULL,
+    DownloadAction download_action(&prefs,
                                    new MockHttpFetcher(&data[0], data.size()));
     download_action.SetTestFileWriter(&writer);
     DownloadActionDelegateMock download_delegate;
@@ -353,7 +354,7 @@ TEST(DownloadActionTest, PassObjectOutTest) {
   ObjectFeederAction<InstallPlan> feeder_action;
   feeder_action.set_obj(install_plan);
   PrefsMock prefs;
-  DownloadAction download_action(&prefs, NULL,
+  DownloadAction download_action(&prefs,
                                  new MockHttpFetcher("x", 1));
   download_action.SetTestFileWriter(&writer);
 
@@ -388,7 +389,7 @@ TEST(DownloadActionTest, BadOutFileTest) {
   ObjectFeederAction<InstallPlan> feeder_action;
   feeder_action.set_obj(install_plan);
   PrefsMock prefs;
-  DownloadAction download_action(&prefs, NULL,
+  DownloadAction download_action(&prefs,
                                  new MockHttpFetcher("x", 1));
   download_action.SetTestFileWriter(&writer);
 

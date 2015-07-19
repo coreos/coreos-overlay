@@ -188,7 +188,6 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
   download_fetcher->set_check_certificate(CertificateChecker::kDownload);
   shared_ptr<DownloadAction> download_action(
       new DownloadAction(prefs_,
-                         system_state_,
                          new MultiRangeHttpFetcher(
                              download_fetcher)));  // passes ownership
   shared_ptr<OmahaRequestAction> download_finished_action(
@@ -368,6 +367,12 @@ void UpdateAttempter::ActionCompleted(ActionProcessor* processor,
     SetStatusAndNotify(UPDATE_STATUS_UPDATE_AVAILABLE,
                        kUpdateNoticeUnspecified);
   } else if (type == DownloadAction::StaticType()) {
+    // At this point, we are guaranteed to have downloaded a full payload, i.e
+    // the one whose size matches the size mentioned in Omaha response. If any
+    // errors happen after this, it's likely a problem with the payload itself or
+    // the state of the system and not a problem with the URL or network.  So,
+    // indicate that to the payload state so that AU can backoff appropriately.
+    system_state_->payload_state()->DownloadComplete();
     SetStatusAndNotify(UPDATE_STATUS_FINALIZING, kUpdateNoticeUnspecified);
   }
 }
@@ -377,21 +382,25 @@ void UpdateAttempter::SetDownloadStatus(bool active) {
   LOG(INFO) << "Download status: " << (active ? "active" : "inactive");
 }
 
-void UpdateAttempter::BytesReceived(uint64_t bytes_received, uint64_t total) {
+void UpdateAttempter::BytesReceived(uint64_t received,
+                                    uint64_t progress,
+                                    uint64_t total) {
   if (!download_active_) {
     LOG(ERROR) << "BytesReceived called while not downloading.";
     return;
   }
-  double progress = static_cast<double>(bytes_received) /
-      static_cast<double>(total);
+
+  system_state_->payload_state()->DownloadProgress(received);
+
+  double pct = static_cast<double>(progress) / static_cast<double>(total);
   // Self throttle based on progress. Also send notifications if
   // progress is too slow.
   const double kDeltaPercent = 0.01;  // 1%
   if (status_ != UPDATE_STATUS_DOWNLOADING ||
-      bytes_received == total ||
-      progress - download_progress_ >= kDeltaPercent ||
+      progress == total ||
+      pct - download_progress_ >= kDeltaPercent ||
       TimeTicks::Now() - last_notify_time_ >= TimeDelta::FromSeconds(10)) {
-    download_progress_ = progress;
+    download_progress_ = pct;
     SetStatusAndNotify(UPDATE_STATUS_DOWNLOADING, kUpdateNoticeUnspecified);
   }
 }
