@@ -288,11 +288,9 @@ const string kActionTypes[] = {
   OmahaRequestAction::StaticType(),
   OmahaResponseHandlerAction::StaticType(),
   FilesystemCopierAction::StaticType(),
-  FilesystemCopierAction::StaticType(),
   OmahaRequestAction::StaticType(),
   DownloadAction::StaticType(),
   OmahaRequestAction::StaticType(),
-  FilesystemCopierAction::StaticType(),
   FilesystemCopierAction::StaticType(),
   PostinstallRunnerAction::StaticType(),
   OmahaRequestAction::StaticType()
@@ -323,14 +321,13 @@ void UpdateAttempterTest::UpdateTestVerify() {
   EXPECT_EQ(attempter_.response_handler_action_.get(),
             attempter_.actions_[1].get());
   DownloadAction* download_action =
-      dynamic_cast<DownloadAction*>(attempter_.actions_[5].get());
+      dynamic_cast<DownloadAction*>(attempter_.actions_[4].get());
   ASSERT_TRUE(download_action != NULL);
   EXPECT_EQ(&attempter_, download_action->delegate());
   EXPECT_EQ(UPDATE_STATUS_CHECKING_FOR_UPDATE, attempter_.status());
   g_main_loop_quit(loop_);
 }
 
-/*
 TEST_F(UpdateAttempterTest, UpdateTest) {
   loop_ = g_main_loop_new(g_main_context_default(), FALSE);
   g_idle_add(&StaticUpdateTestStart, this);
@@ -338,7 +335,6 @@ TEST_F(UpdateAttempterTest, UpdateTest) {
   g_main_loop_unref(loop_);
   loop_ = NULL;
 }
-*/
 
 void UpdateAttempterTest::PingOmahaTestStart() {
   EXPECT_CALL(*processor_,
