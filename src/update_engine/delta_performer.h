@@ -9,7 +9,6 @@
 
 #include <vector>
 
-#include <base/time.h>
 #include <google/protobuf/repeated_field.h>
 #include <gtest/gtest_prod.h>  // for FRIEND_TEST
 
@@ -30,19 +29,6 @@ class DeltaPerformer : public FileWriter {
 
   static const char kUpdatePayloadPublicKeyPath[];
 
-  // Defines the granularity of progress logging in terms of how many "completed
-  // chunks" we want to report at the most.
-  static const unsigned kProgressLogMaxChunks;
-  // Defines a timeout since the last progress was logged after which we want to
-  // force another log message (even if the current chunk was not completed).
-  static const unsigned kProgressLogTimeoutSeconds;
-  // These define the relative weights (0-100) we give to the different work
-  // components associated with an update when computing an overall progress.
-  // Currently they include the download progress and the number of completed
-  // operations. They must add up to one hundred (100).
-  static const unsigned kProgressDownloadWeight;
-  static const unsigned kProgressOperationsWeight;
-
   DeltaPerformer(PrefsInterface* prefs,
                  InstallPlan* install_plan)
       : prefs_(prefs),
@@ -55,13 +41,8 @@ class DeltaPerformer : public FileWriter {
         last_updated_buffer_offset_(kuint64max),
         block_size_(0),
         public_key_path_(kUpdatePayloadPublicKeyPath),
-        total_bytes_received_(0),
         num_rootfs_operations_(0),
-        num_total_operations_(0),
-        overall_progress_(0),
-        last_progress_chunk_(0),
-        forced_progress_log_wait_(
-            base::TimeDelta::FromSeconds(kProgressLogTimeoutSeconds)) {}
+        num_total_operations_(0) {}
 
   // flags and mode ignored. Once Close()d, a DeltaPerformer can't be
   // Open()ed again.
@@ -133,12 +114,6 @@ class DeltaPerformer : public FileWriter {
  private:
   friend class DeltaPerformerTest;
   FRIEND_TEST(DeltaPerformerTest, IsIdempotentOperationTest);
-
-  // Logs the progress of downloading/applying an update.
-  void LogProgress(const char* message_prefix);
-
-  // Update overall progress metrics, log as necessary.
-  void UpdateOverallProgress(bool force_log, const char* message_prefix);
 
   static bool IsIdempotentOperation(
       const InstallOperation& op);
@@ -235,24 +210,9 @@ class DeltaPerformer : public FileWriter {
   // override with test keys.
   std::string public_key_path_;
 
-  // The number of bytes received so far, used for progress tracking.
-  size_t total_bytes_received_;
-
   // The number rootfs and total operations in a payload, once we know them.
   size_t num_rootfs_operations_;
   size_t num_total_operations_;
-
-  // An overall progress counter, which should reflect both download progress
-  // and the ratio of applied operations. Range is 0-100.
-  unsigned overall_progress_;
-
-  // The last progress chunk recorded.
-  unsigned last_progress_chunk_;
-
-  // The timeout after which we should force emitting a progress log (constant),
-  // and the actual point in time for the next forced log to be emitted.
-  const base::TimeDelta forced_progress_log_wait_;
-  base::Time forced_progress_log_time_;
 
   DISALLOW_COPY_AND_ASSIGN(DeltaPerformer);
 };

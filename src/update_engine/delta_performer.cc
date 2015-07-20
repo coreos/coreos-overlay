@@ -37,10 +37,6 @@ namespace chromeos_update_engine {
 
 const char DeltaPerformer::kUpdatePayloadPublicKeyPath[] =
     "/usr/share/update_engine/update-payload-key.pub.pem";
-const unsigned DeltaPerformer::kProgressLogMaxChunks = 10;
-const unsigned DeltaPerformer::kProgressLogTimeoutSeconds = 30;
-const unsigned DeltaPerformer::kProgressDownloadWeight = 50;
-const unsigned DeltaPerformer::kProgressOperationsWeight = 50;
 
 namespace {
 const int kUpdateStateOperationInvalid = -1;
@@ -65,103 +61,6 @@ bool OpenFile(const char* path, int* fd, int* err) {
 }
 
 }  // namespace {}
-
-
-// Computes the ratio of |part| and |total|, scaled to |norm|, using integer
-// arithmetic.
-static uint64_t IntRatio(uint64_t part, uint64_t total, uint64_t norm) {
-  return part * norm / total;
-}
-
-void DeltaPerformer::LogProgress(const char* message_prefix) {
-  // Format operations total count and percentage.
-  string total_operations_str("?");
-  string completed_percentage_str("");
-  if (num_total_operations_) {
-    total_operations_str = StringPrintf("%zu", num_total_operations_);
-    // Upcasting to 64-bit to avoid overflow, back to size_t for formatting.
-    completed_percentage_str =
-        StringPrintf(" (%" PRIu64 "%%)",
-                     IntRatio(next_operation_num_, num_total_operations_,
-                              100));
-  }
-
-  // Format download total count and percentage.
-  size_t payload_size = install_plan_->payload_size;
-  string payload_size_str("?");
-  string downloaded_percentage_str("");
-  if (payload_size) {
-    payload_size_str = StringPrintf("%zu", payload_size);
-    // Upcasting to 64-bit to avoid overflow, back to size_t for formatting.
-    downloaded_percentage_str =
-        StringPrintf(" (%" PRIu64 "%%)",
-                     IntRatio(total_bytes_received_, payload_size, 100));
-  }
-
-  LOG(INFO) << (message_prefix ? message_prefix : "") << next_operation_num_
-            << "/" << total_operations_str << " operations"
-            << completed_percentage_str << ", " << total_bytes_received_
-            << "/" << payload_size_str << " bytes downloaded"
-            << downloaded_percentage_str << ", overall progress "
-            << overall_progress_ << "%";
-}
-
-void DeltaPerformer::UpdateOverallProgress(bool force_log,
-                                           const char* message_prefix) {
-  // Compute our download and overall progress.
-  unsigned new_overall_progress = 0;
-  COMPILE_ASSERT(kProgressDownloadWeight + kProgressOperationsWeight == 100,
-                 progress_weight_dont_add_up);
-  // Only consider download progress if its total size is known; otherwise
-  // adjust the operations weight to compensate for the absence of download
-  // progress. Also, make sure to cap the download portion at
-  // kProgressDownloadWeight, in case we end up downloading more than we
-  // initially expected (this indicates a problem, but could generally happen).
-  // TODO(garnold) the correction of operations weight when we do not have the
-  // total payload size, as well as the conditional guard below, should both be
-  // eliminated once we ensure that the payload_size in the install plan is
-  // always given and is non-zero. This currently isn't the case during unit
-  // tests (see chromium-os:37969).
-  size_t payload_size = install_plan_->payload_size;
-  unsigned actual_operations_weight = kProgressOperationsWeight;
-  if (payload_size)
-    new_overall_progress += min(
-        static_cast<unsigned>(IntRatio(total_bytes_received_, payload_size,
-                                       kProgressDownloadWeight)),
-        kProgressDownloadWeight);
-  else
-    actual_operations_weight += kProgressDownloadWeight;
-
-  // Only add completed operations if their total number is known; we definitely
-  // expect an update to have at least one operation, so the expectation is that
-  // this will eventually reach |actual_operations_weight|.
-  if (num_total_operations_)
-    new_overall_progress += IntRatio(next_operation_num_, num_total_operations_,
-                                     actual_operations_weight);
-
-  // Progress ratio cannot recede, unless our assumptions about the total
-  // payload size, total number of operations, or the monotonicity of progress
-  // is breached.
-  if (new_overall_progress < overall_progress_) {
-    LOG(WARNING) << "progress counter receded from " << overall_progress_
-                 << "% down to " << new_overall_progress << "%; this is a bug";
-    force_log = true;
-  }
-  overall_progress_ = new_overall_progress;
-
-  // Update chunk index, log as needed: if forced by called, or we completed a
-  // progress chunk, or a timeout has expired.
-  base::Time curr_time = base::Time::Now();
-  unsigned curr_progress_chunk =
-      overall_progress_ * kProgressLogMaxChunks / 100;
-  if (force_log || curr_progress_chunk > last_progress_chunk_ ||
-      curr_time > forced_progress_log_time_) {
-    forced_progress_log_time_ = curr_time + forced_progress_log_wait_;
-    LogProgress(message_prefix);
-  }
-  last_progress_chunk_ = curr_progress_chunk;
-}
-
 
 // Returns true if |op| is idempotent -- i.e., if we can interrupt it and repeat
 // it safely. Returns false otherwise.
@@ -240,10 +139,6 @@ bool DeltaPerformer::Write(const void* bytes, size_t count,
   const char* c_bytes = reinterpret_cast<const char*>(bytes);
   buffer_.insert(buffer_.end(), c_bytes, c_bytes + count);
 
-  // Update the total byte downloaded count and the progress logs.
-  total_bytes_received_ += count;
-  UpdateOverallProgress(false, "Completed ");
-
   if (!manifest_valid_) {
     DeltaMetadata::ParseResult result = DeltaMetadata::ParsePayload(
         buffer_, &manifest_, &manifest_metadata_size_, error);
@@ -272,7 +167,7 @@ bool DeltaPerformer::Write(const void* bytes, size_t count,
     num_total_operations_ =
         num_rootfs_operations_ + manifest_.noop_operations_size();
     if (next_operation_num_ > 0)
-      UpdateOverallProgress(true, "Resuming after ");
+      LOG(INFO) << "Resuming after " << next_operation_num_ << " operations";
     LOG(INFO) << "Starting to apply update payload operations";
   }
 
@@ -337,7 +232,9 @@ bool DeltaPerformer::Write(const void* bytes, size_t count,
     }
 
     next_operation_num_++;
-    UpdateOverallProgress(false, "Completed ");
+    LOG(INFO) << "Completed " << next_operation_num_ << "/"
+              << num_total_operations_ << " operations ("
+              << (next_operation_num_ * 100 / num_total_operations_) << "%)";
     CheckpointUpdateProgress();
   }
   return true;
@@ -912,10 +809,6 @@ bool DeltaPerformer::PrimeUpdateState() {
                                          &manifest_metadata_size) &&
                         manifest_metadata_size > 0);
   manifest_metadata_size_ = manifest_metadata_size;
-
-  // Advance the download progress to reflect what doesn't need to be
-  // re-downloaded.
-  total_bytes_received_ += buffer_offset_;
 
   // Speculatively count the resume as a failure.
   int64_t resumed_update_failures;
