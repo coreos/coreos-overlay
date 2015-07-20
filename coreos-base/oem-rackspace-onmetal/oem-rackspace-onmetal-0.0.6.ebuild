@@ -16,15 +16,16 @@ S="${WORKDIR}"
 
 src_prepare() {
 	sed -e "s\\@@OEM_VERSION_ID@@\\${PVR}\\g" \
-	    ${FILESDIR}/cloud-config.yml > ${T}/cloud-config.yml || die
+	    "${FILESDIR}/cloud-config.yml" > "${T}/cloud-config.yml" || die
 }
 
 src_install() {
 	into "/usr/share/oem"
-	dobin ${FILESDIR}/netname.sh
-	dobin ${FILESDIR}/rename-interfaces.sh
+	dobin "${FILESDIR}/netname.sh"
+	dobin "${FILESDIR}/rename-interfaces.sh"
 
 	insinto "/usr/share/oem"
-	doins ${T}/cloud-config.yml
-	doins ${FILESDIR}/grub.cfg
+	doins "${T}/cloud-config.yml"
+	doins "${FILESDIR}/grub.cfg"
+	doins "${FILESDIR}/oem-release"
 }

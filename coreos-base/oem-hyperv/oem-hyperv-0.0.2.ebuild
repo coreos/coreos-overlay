@@ -3,7 +3,7 @@
 
 EAPI=5
 
-DESCRIPTION="OEM suite for Azure"
+DESCRIPTION="OEM suite for Hyper-V"
 HOMEPAGE=""
 SRC_URI=""
 
@@ -15,15 +15,13 @@ IUSE=""
 # no source directory
 S="${WORKDIR}"
 
-RDEPEND="app-emulation/wa-linux-agent"
-
 src_prepare() {
     sed -e "s\\@@OEM_VERSION_ID@@\\${PVR}\\g" \
-        ${FILESDIR}/cloud-config.yml > ${T}/cloud-config.yml || die
+        "${FILESDIR}/cloud-config.yml" > "${T}/cloud-config.yml" || die
 }
 
 src_install() {
 	insinto "/usr/share/oem"
-	doins ${T}/cloud-config.yml
-	doins ${FILESDIR}/grub.cfg
+	doins "${T}/cloud-config.yml"
+	doins "${FILESDIR}/oem-release"
 }

@@ -37,13 +37,18 @@ src_prepare() {
 	    -e "s\\@@OEM_NAME@@\\${NAME}\\g" \
 	    -e "s\\@@OEM_VERSION_ID@@\\${PVR}\\g" \
 	    -e "s\\@@OEM_HOME_URL@@\\${HOME_URL}\\g" \
-	    ${FILESDIR}/cloud-config.yml > ${T}/cloud-config.yml || die
+	    "${FILESDIR}/cloud-config.yml" > "${T}/cloud-config.yml" || die
 }
 
 src_install() {
 	insinto "/usr/share/oem"
-	doins ${T}/cloud-config.yml
+	doins "${T}/cloud-config.yml"
 	if use ec2 ; then
-		newins ${FILESDIR}/grub-ec2.cfg grub.cfg
+		newins "${FILESDIR}/grub-ec2.cfg" grub.cfg
+		newins "${FILESDIR}/oem-release-ec2" oem-release
+	elif use openstack ; then
+		newins "${FILESDIR}/oem-release-openstack" oem-release
+	elif use brightbox ; then
+		newins "${FILESDIR}/oem-release-brightbox" oem-release
 	fi
 }

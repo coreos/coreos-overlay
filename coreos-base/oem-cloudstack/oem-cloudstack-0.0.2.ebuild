@@ -7,7 +7,7 @@
 
 EAPI=5
 
-DESCRIPTION="OEM suite for Exoscale images"
+DESCRIPTION="OEM suite for CloudStack images"
 HOMEPAGE=""
 SRC_URI=""
 
@@ -21,16 +21,17 @@ S="${WORKDIR}"
 
 src_prepare() {
 	sed -e "s\\@@OEM_VERSION_ID@@\\${PVR}\\g" \
-	    ${FILESDIR}/cloud-config.yml > ${T}/cloud-config.yml || die
+	    "${FILESDIR}/cloud-config.yml" > "${T}/cloud-config.yml" || die
 }
 
 src_install() {
 	into "/usr/share/oem"
-	dobin ${FILESDIR}/exoscale-dhcp
-	dobin ${FILESDIR}/exoscale-ssh-key
-	dobin ${FILESDIR}/exoscale-coreos-cloudinit
-	dobin ${FILESDIR}/coreos-setup-environment
+	dobin "${FILESDIR}/cloudstack-dhcp"
+	dobin "${FILESDIR}/cloudstack-ssh-key"
+	dobin "${FILESDIR}/cloudstack-coreos-cloudinit"
+	dobin "${FILESDIR}/coreos-setup-environment"
 
 	insinto "/usr/share/oem"
-	doins ${T}/cloud-config.yml
+	doins "${T}/cloud-config.yml"
+	doins "${FILESDIR}/oem-release"
 }
