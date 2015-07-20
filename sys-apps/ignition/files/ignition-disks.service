@@ -1,8 +1,6 @@
 [Unit]
 Description=Ignition
 DefaultDependencies=false
-Conflicts=initrd-switch-root.target
-Before=initrd-switch-root.target
 
 Requires=local-fs-pre.target
 Before=local-fs-pre.target
