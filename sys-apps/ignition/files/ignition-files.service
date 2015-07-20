@@ -13,7 +13,7 @@ After=mnt-oem.mount
 [Service]
 Type=oneshot
 TimeoutStartSec=30s
-Environment=OEM_NAME=pxe
+Environment=OEM_ID=pxe
 Environment=FETCH_TIMEOUT=1m
-EnvironmentFile=-/mnt/oem/environment
-ExecStart=/usr/bin/ignition --root=/sysroot --oem=${OEM_NAME} --stage=files --fetchtimeout=${FETCH_TIMEOUT}
+EnvironmentFile=-/mnt/oem/oem-release
+ExecStart=/usr/bin/ignition --root=/sysroot --oem=${OEM_ID} --stage=files --fetchtimeout=${FETCH_TIMEOUT}
