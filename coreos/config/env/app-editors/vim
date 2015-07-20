@@ -1,4 +1,0 @@
-# automatic terminal library selection doesn't work when cross-compiling
-# Gentoo bug: https://bugs.gentoo.org/show_bug.cgi?id=473372
-# Reportedly fixed in app-editors/vim-7.4.430 but we haven't updated yet.
-EXTRA_ECONF="--with-tlib=ncurses"
