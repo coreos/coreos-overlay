@@ -303,8 +303,10 @@ bool DeltaPerformer::PerformReplaceOperation(
   return true;
 }
 
-bool DeltaPerformer::PerformMoveOperation(
-    const InstallOperation& operation) {
+bool DeltaPerformer::PerformMoveOperation(const InstallOperation& operation) {
+  // Sanity check the operation definition.
+  TEST_AND_RETURN_FALSE(operation.data_length() == 0);
+
   // Calculate buffer size. Note, this function doesn't do a sliding
   // window to copy in case the source and destination blocks overlap.
   // If we wanted to do a sliding window, we could program the server
