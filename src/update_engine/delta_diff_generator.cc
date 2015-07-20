@@ -1071,11 +1071,8 @@ bool DeltaDiffGenerator::ReorderDataBlobs(
   TEST_AND_RETURN_FALSE_ERRNO(in_fd >= 0);
   ScopedFdCloser in_fd_closer(&in_fd);
 
-  DirectFileWriter writer;
-  TEST_AND_RETURN_FALSE(
-      writer.Open(new_data_blobs_path.c_str(),
-                  O_WRONLY | O_TRUNC | O_CREAT,
-                  0644) == 0);
+  DirectFileWriter writer(new_data_blobs_path.c_str());
+  TEST_AND_RETURN_FALSE_ERRNO(writer.Open() == 0);
   ScopedFileWriterCloser writer_closer(&writer);
   uint64_t out_file_size = 0;
 
@@ -1409,10 +1406,8 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
   CheckGraph(graph);
 
   LOG(INFO) << "Writing final delta file header...";
-  DirectFileWriter writer;
-  TEST_AND_RETURN_FALSE_ERRNO(writer.Open(output_path.c_str(),
-                                          O_WRONLY | O_CREAT | O_TRUNC,
-                                          0644) == 0);
+  DirectFileWriter writer(output_path.c_str());
+  TEST_AND_RETURN_FALSE_ERRNO(writer.Open() == 0);
   ScopedFileWriterCloser writer_closer(&writer);
 
   // Write header

@@ -79,7 +79,10 @@ class DownloadActionTestProcessorDelegate : public ActionProcessorDelegate {
 
 class TestDirectFileWriter : public DirectFileWriter {
  public:
-  TestDirectFileWriter() : fail_write_(0), current_write_(0) {}
+  TestDirectFileWriter(const std::string path)
+      : DirectFileWriter(path),
+        fail_write_(0),
+        current_write_(0) {}
   void set_fail_write(int fail_write) { fail_write_ = fail_write; }
 
   virtual bool Write(const void* bytes, size_t count) {
@@ -123,7 +126,7 @@ void TestWithData(const vector<char>& data,
 
   // TODO(adlr): see if we need a different file for build bots
   ScopedTempFile output_temp_file;
-  TestDirectFileWriter writer;
+  TestDirectFileWriter writer(output_temp_file.GetPath());
   writer.set_fail_write(fail_write);
 
   // We pull off the first byte from data and seek past it.
@@ -244,7 +247,7 @@ void TestTerminateEarly(bool use_download_delegate) {
 
   ScopedTempFile temp_file;
   {
-    DirectFileWriter writer;
+    DirectFileWriter writer(temp_file.GetPath());
 
     // takes ownership of passed in HttpFetcher
     ObjectFeederAction<InstallPlan> feeder_action;
@@ -343,7 +346,7 @@ gboolean PassObjectOutTestStarter(gpointer data) {
 TEST(DownloadActionTest, PassObjectOutTest) {
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
 
-  DirectFileWriter writer;
+  DirectFileWriter writer("/dev/null");
 
   // takes ownership of passed in HttpFetcher
   InstallPlan install_plan(false,
@@ -382,7 +385,7 @@ TEST(DownloadActionTest, BadOutFileTest) {
   GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
 
   const string path("/fake/path/that/cant/be/created/because/of/missing/dirs");
-  DirectFileWriter writer;
+  DirectFileWriter writer(path);
 
   // takes ownership of passed in HttpFetcher
   InstallPlan install_plan(false, "", 0, "", path);

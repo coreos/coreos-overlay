@@ -26,10 +26,9 @@ class PayloadProcessor : public FileWriter {
   PayloadProcessor(PrefsInterface* prefs, InstallPlan* install_plan)
       : delta_performer_(prefs, install_plan) {}
 
-  // flags and mode ignored. Once Close()d, a PayloadProcessor can't be
-  // Open()ed again.
-  int Open(const char* path, int flags, mode_t mode) {
-    return delta_performer_.Open(path, flags, mode);
+  // Once Close()d, a PayloadProcessor can't be Open()ed again.
+  int Open() {
+    return delta_performer_.Open();
   }
 
   // FileWriter's Write implementation where caller doesn't care about

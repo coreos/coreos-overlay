@@ -419,6 +419,7 @@ static void ApplyDeltaFile(bool full_rootfs, bool noop,
   // Update the A image in place.
   InstallPlan install_plan;
   install_plan.hash_checks_mandatory = hash_checks_mandatory;
+  install_plan.install_path = state->a_img;
 
   *performer = new DeltaPerformer(&prefs, &install_plan);
   EXPECT_TRUE(utils::FileExists(kUnittestPublicKeyPath));
@@ -429,7 +430,7 @@ static void ApplyDeltaFile(bool full_rootfs, bool noop,
                                                state->image_size,
                                                &install_plan.rootfs_hash));
 
-  EXPECT_EQ(0, (*performer)->Open(state->a_img.c_str(), 0, 0));
+  EXPECT_EQ(0, (*performer)->Open());
 
   ActionExitCode expected_error, actual_error;
   bool continue_writing;
@@ -624,8 +625,9 @@ TEST(DeltaPerformerTest, RunAsRootSmallImageSignGeneratedTest) {
 TEST(DeltaPerformerTest, BadDeltaMagicTest) {
   PrefsMock prefs;
   InstallPlan install_plan;
+  install_plan.install_path = "/dev/null";
   DeltaPerformer performer(&prefs, &install_plan);
-  EXPECT_EQ(0, performer.Open("/dev/null", 0, 0));
+  EXPECT_EQ(0, performer.Open());
   EXPECT_TRUE(performer.Write("junk", 4));
   EXPECT_TRUE(performer.Write("morejunk", 8));
   EXPECT_FALSE(performer.Write("morejunk", 8));

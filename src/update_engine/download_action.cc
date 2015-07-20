@@ -47,9 +47,7 @@ void DownloadAction::PerformAction() {
     payload_processor_.reset(new PayloadProcessor(prefs_, &install_plan_));
     writer_ = payload_processor_.get();
   }
-  int rc = writer_->Open(install_plan_.install_path.c_str(),
-                         O_TRUNC | O_WRONLY | O_CREAT | O_LARGEFILE,
-                         0644);
+  int rc = writer_->Open();
   if (rc < 0) {
     LOG(ERROR) << "Unable to open output file " << install_plan_.install_path;
     // report error to processor

@@ -44,9 +44,8 @@ class DeltaPerformer : public FileWriter {
         num_rootfs_operations_(0),
         num_total_operations_(0) {}
 
-  // flags and mode ignored. Once Close()d, a DeltaPerformer can't be
-  // Open()ed again.
-  int Open(const char* path, int flags, mode_t mode);
+  // Once Close()d, a DeltaPerformer can't be Open()ed again.
+  int Open();
 
   // FileWriter's Write implementation where caller doesn't care about
   // error codes.
@@ -173,8 +172,6 @@ class DeltaPerformer : public FileWriter {
 
   // File descriptor of open device.
   int fd_;
-
-  std::string path_;  // Path that fd_ refers to.
 
   DeltaArchiveManifest manifest_;
   bool manifest_valid_;

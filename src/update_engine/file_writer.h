@@ -26,7 +26,7 @@ class FileWriter {
   virtual ~FileWriter() {}
 
   // Wrapper around open. Returns 0 on success or -errno on error.
-  virtual int Open(const char* path, int flags, mode_t mode) = 0;
+  virtual int Open() = 0;
 
   // Wrapper around write. Returns true if all requested bytes
   // were written, or false on any error, reguardless of progress.
@@ -55,16 +55,27 @@ class FileWriter {
 
 class DirectFileWriter : public FileWriter {
  public:
-  DirectFileWriter() : fd_(-1) {}
+  DirectFileWriter(
+      const std::string path,
+      int flags = O_TRUNC | O_WRONLY | O_CREAT | O_LARGEFILE,
+      mode_t mode = 0644)
+      : path_(path),
+        flags_(flags),
+        mode_(mode),
+        fd_(-1) {}
+  DirectFileWriter() = delete;
   virtual ~DirectFileWriter() {}
 
-  virtual int Open(const char* path, int flags, mode_t mode);
+  virtual int Open();
   virtual bool Write(const void* bytes, size_t count);
   virtual int Close();
 
   int fd() const { return fd_; }
 
  private:
+  const std::string path_;
+  const int flags_;
+  const mode_t mode_;
   int fd_;
 
   DISALLOW_COPY_AND_ASSIGN(DirectFileWriter);

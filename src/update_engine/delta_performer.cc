@@ -80,10 +80,9 @@ bool DeltaPerformer::IsIdempotentOperation(
   return block_count == src_ranges.blocks();
 }
 
-int DeltaPerformer::Open(const char* path, int flags, mode_t mode) {
+int DeltaPerformer::Open() {
   int err;
-  if (OpenFile(path, &fd_, &err))
-    path_ = path;
+  OpenFile(install_plan_->install_path.c_str(), &fd_, &err);
   return -err;
 }
 
@@ -95,7 +94,6 @@ int DeltaPerformer::Close() {
   }
   LOG_IF(ERROR, !hash_calculator_.Finalize()) << "Unable to finalize the hash.";
   fd_ = -2;  // Set to invalid so that calls to Open() will fail.
-  path_ = "";
   if (!buffer_.empty()) {
     LOG(ERROR) << "Called Close() while buffer not empty!";
     if (err >= 0) {
