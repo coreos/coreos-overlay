@@ -170,7 +170,16 @@ bool DeltaPerformer::Write(const void* bytes, size_t count,
   while (next_operation_num_ < num_total_operations_) {
     const InstallOperation &op =
         manifest_.partition_operations(next_operation_num_);
-    if (!CanPerformInstallOperation(op)) {
+
+    if (op.data_length() && op.data_offset() != buffer_offset_) {
+      LOG(ERROR) << "Operation " << next_operation_num_
+                 << " skipped to unexpected data offset " << op.data_offset()
+                 << ", expected " << buffer_offset_;
+      *error = kActionCodeDownloadOperationExecutionError;
+      return false;
+    }
+
+    if (op.data_length() > buffer_.size()) {
       // This means we don't have enough bytes received yet to carry out the
       // next operation.
       return true;
@@ -238,24 +247,6 @@ ActionExitCode DeltaPerformer::PerformOperation(
   }
 
   return kActionCodeSuccess;
-}
-
-bool DeltaPerformer::CanPerformInstallOperation(
-    const chromeos_update_engine::InstallOperation&
-    operation) {
-  // Move operations don't require any data blob, so they can always
-  // be performed
-  if (operation.type() == InstallOperation_Type_MOVE)
-    return true;
-
-  // See if we have the entire data blob in the buffer
-  if (operation.data_offset() < buffer_offset_) {
-    LOG(ERROR) << "we threw away data it seems?";
-    return false;
-  }
-
-  return (operation.data_offset() + operation.data_length()) <=
-      (buffer_offset_ + buffer_.size());
 }
 
 bool DeltaPerformer::PerformReplaceOperation(

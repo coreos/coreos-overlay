@@ -122,11 +122,6 @@ class DeltaPerformer : public FileWriter {
   // hashes match; returns false otherwise.
   bool VerifySourcePartition();
 
-  // Returns true if enough of the delta file has been passed via Write()
-  // to be able to perform a given install operation.
-  bool CanPerformInstallOperation(
-      const InstallOperation& operation);
-
   // Validates that the hash of the blobs corresponding to the given |operation|
   // matches what's specified in the manifest in the payload.
   // Returns kActionCodeSuccess on match or a suitable error code otherwise.
