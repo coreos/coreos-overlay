@@ -134,9 +134,8 @@ class DeltaPerformer : public FileWriter {
   ActionExitCode ValidateOperationHash(
       const InstallOperation& operation);
 
-  // Returns true on success.
-  bool PerformInstallOperation(
-      const InstallOperation& operation);
+  // Processes a single operation on the target partition.
+  ActionExitCode PerformOperation(const InstallOperation& operation);
 
   // These perform a specific type of operation and return true on success.
   bool PerformReplaceOperation(

@@ -183,50 +183,15 @@ bool DeltaPerformer::Write(const void* bytes, size_t count,
       return true;
     }
 
-    // Note: Validate must be called only if CanPerformInstallOperation is
-    // called. Otherwise, we might be failing operations before even if there
-    // isn't sufficient data to compute the proper hash.
-    *error = ValidateOperationHash(op);
-    if (*error != kActionCodeSuccess) {
-      if (install_plan_->hash_checks_mandatory) {
-        LOG(ERROR) << "Mandatory operation hash check failed";
-        return false;
-      }
-
-      // For non-mandatory cases, just log a warning.
-      LOG(WARNING) << "Ignoring operation validation errors";
-      *error = kActionCodeSuccess;
-    }
-
-    // TODO(marineam): Add a PerformNoopOperation and call it here instead
-    // of assuming PerformReplaceOperation will safely noop.
-
     // Makes sure we unblock exit when this operation completes.
     ScopedTerminatorExitUnblocker exit_unblocker =
         ScopedTerminatorExitUnblocker();  // Avoids a compiler unused var bug.
-    // Log every thousandth operation, and also the first and last ones
-    if (op.type() == InstallOperation_Type_REPLACE ||
-        op.type() == InstallOperation_Type_REPLACE_BZ) {
-      if (!PerformReplaceOperation(op)) {
-        LOG(ERROR) << "Failed to perform replace operation "
-                   << next_operation_num_;
-        *error = kActionCodeDownloadOperationExecutionError;
-        return false;
-      }
-    } else if (op.type() == InstallOperation_Type_MOVE) {
-      if (!PerformMoveOperation(op)) {
-        LOG(ERROR) << "Failed to perform move operation "
-                   << next_operation_num_;
-        *error = kActionCodeDownloadOperationExecutionError;
-        return false;
-      }
-    } else if (op.type() == InstallOperation_Type_BSDIFF) {
-      if (!PerformBsdiffOperation(op)) {
-        LOG(ERROR) << "Failed to perform bsdiff operation "
-                   << next_operation_num_;
-        *error = kActionCodeDownloadOperationExecutionError;
-        return false;
-      }
+
+    *error = PerformOperation(op);
+    if (*error != kActionCodeSuccess) {
+      LOG(ERROR) << "Aborting install procedure at operation "
+                 << num_total_operations_;
+      return false;
     }
 
     next_operation_num_++;
@@ -236,6 +201,49 @@ bool DeltaPerformer::Write(const void* bytes, size_t count,
     CheckpointUpdateProgress();
   }
   return true;
+}
+
+ActionExitCode DeltaPerformer::PerformOperation(
+    const InstallOperation& operation) {
+  // Note: Validate must be called only if CanPerformInstallOperation is
+  // called. Otherwise, we might be failing operations before even if there
+  // isn't sufficient data to compute the proper hash.
+  ActionExitCode error = ValidateOperationHash(operation);
+  if (error != kActionCodeSuccess) {
+    if (install_plan_->hash_checks_mandatory) {
+      LOG(ERROR) << "Mandatory operation hash check failed";
+      return error;
+    }
+
+    // For non-mandatory cases, just log a warning.
+    LOG(WARNING) << "Ignoring operation validation errors";
+  }
+
+  // TODO(marineam): Add a PerformNoopOperation and call it here instead
+  // of assuming PerformReplaceOperation will safely noop.
+
+  // Log every thousandth operation, and also the first and last ones
+  if (operation.type() == InstallOperation_Type_REPLACE ||
+      operation.type() == InstallOperation_Type_REPLACE_BZ) {
+    if (!PerformReplaceOperation(operation)) {
+      LOG(ERROR) << "Failed to perform replace operation";
+      return kActionCodeDownloadOperationExecutionError;
+    }
+  } else if (operation.type() == InstallOperation_Type_MOVE) {
+    if (!PerformMoveOperation(operation)) {
+      LOG(ERROR) << "Failed to perform move operation";
+      return kActionCodeDownloadOperationExecutionError;
+    }
+  } else if (operation.type() == InstallOperation_Type_BSDIFF) {
+    if (!PerformBsdiffOperation(operation)) {
+      LOG(ERROR) << "Failed to perform bsdiff operation";
+      return kActionCodeDownloadOperationExecutionError;
+    }
+  } else {
+    NOTREACHED();
+  }
+
+  return kActionCodeSuccess;
 }
 
 bool DeltaPerformer::CanPerformInstallOperation(
