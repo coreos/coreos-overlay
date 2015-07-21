@@ -41,7 +41,6 @@ class DeltaPerformer : public FileWriter {
         last_updated_buffer_offset_(kuint64max),
         block_size_(0),
         public_key_path_(kUpdatePayloadPublicKeyPath),
-        num_rootfs_operations_(0),
         num_total_operations_(0) {}
 
   // Once Close()d, a DeltaPerformer can't be Open()ed again.
@@ -146,9 +145,8 @@ class DeltaPerformer : public FileWriter {
       const InstallOperation& operation);
 
   // Returns true if the payload signature message has been extracted from
-  // |operation|, false otherwise.
-  bool ExtractSignatureMessage(
-      const InstallOperation& operation);
+  // payload, false otherwise.
+  bool ExtractSignatureMessage();
 
   // Updates the hash calculator with |count| bytes at the head of |buffer_| and
   // then discards them.
@@ -206,8 +204,7 @@ class DeltaPerformer : public FileWriter {
   // override with test keys.
   std::string public_key_path_;
 
-  // The number rootfs and total operations in a payload, once we know them.
-  size_t num_rootfs_operations_;
+  // The number of total operations in a payload, once we know them.
   size_t num_total_operations_;
 
   DISALLOW_COPY_AND_ASSIGN(DeltaPerformer);

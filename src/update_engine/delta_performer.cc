@@ -161,21 +161,14 @@ bool DeltaPerformer::Write(const void* bytes, size_t count,
       return false;
     }
 
-    num_rootfs_operations_ = manifest_.partition_operations_size();
-    num_total_operations_ =
-        num_rootfs_operations_ + manifest_.noop_operations_size();
+    num_total_operations_ = manifest_.partition_operations_size();
     if (next_operation_num_ > 0)
       LOG(INFO) << "Resuming after " << next_operation_num_ << " operations";
     LOG(INFO) << "Starting to apply update payload operations";
   }
 
   while (next_operation_num_ < num_total_operations_) {
-    const bool is_noop =
-        (next_operation_num_ >= num_rootfs_operations_);
     const InstallOperation &op =
-        is_noop ?
-        manifest_.noop_operations(
-            next_operation_num_ - num_rootfs_operations_) :
         manifest_.partition_operations(next_operation_num_);
     if (!CanPerformInstallOperation(op)) {
       // This means we don't have enough bytes received yet to carry out the
@@ -200,6 +193,10 @@ bool DeltaPerformer::Write(const void* bytes, size_t count,
               << (next_operation_num_ * 100 / num_total_operations_) << "%)";
     CheckpointUpdateProgress();
   }
+
+  // Extract the signature if present.
+  ExtractSignatureMessage();
+
   return true;
 }
 
@@ -218,9 +215,6 @@ ActionExitCode DeltaPerformer::PerformOperation(
     // For non-mandatory cases, just log a warning.
     LOG(WARNING) << "Ignoring operation validation errors";
   }
-
-  // TODO(marineam): Add a PerformNoopOperation and call it here instead
-  // of assuming PerformReplaceOperation will safely noop.
 
   // Log every thousandth operation, and also the first and last ones
   if (operation.type() == InstallOperation_Type_REPLACE ||
@@ -275,9 +269,6 @@ bool DeltaPerformer::PerformReplaceOperation(
   // the data we need should be exactly at the beginning of the buffer.
   TEST_AND_RETURN_FALSE(buffer_offset_ == operation.data_offset());
   TEST_AND_RETURN_FALSE(buffer_.size() >= operation.data_length());
-
-  // Extract the signature message if it's in this operation.
-  ExtractSignatureMessage(operation);
 
   DirectExtentWriter direct_writer;
   ZeroPadExtentWriter zero_pad_writer(&direct_writer);
@@ -471,15 +462,9 @@ bool DeltaPerformer::PerformBsdiffOperation(
   return true;
 }
 
-bool DeltaPerformer::ExtractSignatureMessage(
-    const InstallOperation& operation) {
-  if (operation.type() != InstallOperation_Type_REPLACE ||
-      !manifest_.has_signatures_offset() ||
-      manifest_.signatures_offset() != operation.data_offset()) {
-    return false;
-  }
-  TEST_AND_RETURN_FALSE(manifest_.has_signatures_size() &&
-                        manifest_.signatures_size() == operation.data_length());
+bool DeltaPerformer::ExtractSignatureMessage() {
+  TEST_AND_RETURN_FALSE(manifest_.has_signatures_offset());
+  TEST_AND_RETURN_FALSE(manifest_.has_signatures_size());
   TEST_AND_RETURN_FALSE(signatures_message_data_.empty());
   TEST_AND_RETURN_FALSE(buffer_offset_ == manifest_.signatures_offset());
   TEST_AND_RETURN_FALSE(buffer_.size() >= manifest_.signatures_size());
@@ -509,6 +494,9 @@ bool DeltaPerformer::ExtractSignatureMessage(
   LOG(INFO) << "Extracted signature data of size "
             << manifest_.signatures_size() << " at "
             << manifest_.signatures_offset();
+
+  buffer_offset_ += manifest_.signatures_size();
+  DiscardBufferHeadBytes(manifest_.signatures_size());
   return true;
 }
 
@@ -529,25 +517,16 @@ ActionExitCode DeltaPerformer::ValidateOperationHash(
     // corresponding update should have been produced with the operation
     // hashes. So if it happens it means either we've turned operation hash
     // generation off in DeltaDiffGenerator or it's a regression of some sort.
-    // One caveat though: The last operation is a dummy signature operation
-    // that doesn't have a hash at the time the manifest is created. So we
-    // should not complaint about that operation. This operation can be
-    // recognized by the fact that it's offset is mentioned in the manifest.
-    if (manifest_.signatures_offset() &&
-        manifest_.signatures_offset() == operation.data_offset()) {
-      LOG(INFO) << "Skipping hash verification for signature operation "
-                << next_operation_num_ + 1;
-    } else {
-      if (install_plan_->hash_checks_mandatory) {
-        LOG(ERROR) << "Missing mandatory operation hash for operation "
-                   << next_operation_num_ + 1;
-        return kActionCodeDownloadOperationHashMissingError;
-      }
-
-      // For non-mandatory cases, just log a warning.
-      LOG(WARNING) << "Cannot validate operation " << next_operation_num_ + 1
-                   << " as there's no operation hash in manifest";
+    if (install_plan_->hash_checks_mandatory) {
+      LOG(ERROR) << "Missing mandatory operation hash for operation "
+                 << next_operation_num_ + 1;
+      return kActionCodeDownloadOperationHashMissingError;
     }
+
+    // For non-mandatory cases, just log a warning.
+    LOG(WARNING) << "Cannot validate operation " << next_operation_num_ + 1
+                 << " as there's no operation hash in manifest";
+
     return kActionCodeSuccess;
   }
 
