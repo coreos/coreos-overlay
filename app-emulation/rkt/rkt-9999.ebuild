@@ -1,57 +1,106 @@
-# Copyright (c) 2015 CoreOS, Inc.
+# Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
+# $Header: $
 
 EAPI=5
+
+AUTOTOOLS_AUTORECONF=yes
+AUTOTOOLS_IN_SOURCE_BUILD=yes
+
+inherit autotools-utils flag-o-matic systemd toolchain-funcs
+inherit cros-workon
+
 CROS_WORKON_PROJECT="coreos/rkt"
 CROS_WORKON_LOCALNAME="rkt"
 CROS_WORKON_REPO="git://github.com"
-inherit cros-workon systemd
 
-if [[ "${PV}" == 9999 ]]; then
-    KEYWORDS="~amd64"
-else
-    CROS_WORKON_COMMIT="40ced98c320c056e343fe9c3eaeb90a4ff248936" # v0.5.5
-    KEYWORDS="amd64"
+if [[ "${PV}" == "9999" ]]; then
+	KEYWORDS="~amd64"
+	PXE_VERSION="738.1.0"
+
+elif [[ "${PV}" == "0.7.0" ]]; then
+	KEYWORDS="amd64"
+	PXE_VERSION="709.0.0"
+	CROS_WORKON_COMMIT="9579f4bf57851a1a326c81ec2ab0ed2fdfab8d24"
 fi
 
-# Must be in sync with stage1/rootfs/usr_from_coreos/cache.sh
-IMG_RELEASE="444.5.0"
-IMG_URL="http://stable.release.core-os.net/amd64-usr/${IMG_RELEASE}/coreos_production_pxe_image.cpio.gz"
+PXE_URI="http://alpha.release.core-os.net/amd64-usr/${PXE_VERSION}/coreos_production_pxe_image.cpio.gz"
+PXE_FILE="${PN}-pxe-${PXE_VERSION}.img"
 
-DESCRIPTION="App Container runtime"
+SRC_URI="rkt_stage1_coreos? ( $PXE_URI -> $PXE_FILE )"
+
+DESCRIPTION="A CLI for running app containers, and an implementation of the App
+Container Spec."
 HOMEPAGE="https://github.com/coreos/rkt"
-SRC_URI="${IMG_URL} -> pxe-${IMG_RELEASE}.img"
 
 LICENSE="Apache-2.0"
 SLOT="0"
-IUSE=""
+IUSE="doc examples +rkt_stage1_coreos rkt_stage1_host rkt_stage1_src +actool"
+REQUIRED_USE="^^ ( rkt_stage1_coreos rkt_stage1_host rkt_stage1_src )"
 
-DEPEND=">=dev-lang/go-1.3
+DEPEND=">=dev-lang/go-1.4.1
 	app-arch/cpio
-	sys-fs/squashfs-tools"
-RDEPEND="!app-emulation/rocket"
+	sys-fs/squashfs-tools
+	dev-perl/Capture-Tiny
+	rkt_stage1_src? (
+		>=sys-apps/systemd-220
+		app-shells/bash
+	)"
+RDEPEND="!app-emulation/rocket
+	rkt_stage1_host? (
+		>=sys-apps/systemd-220
+		app-shells/bash
+	)"
 
-src_unpack() {
-	local cache="${S}/stage1/rootfs/usr_from_coreos/cache"
+BUILDDIR="build-${P}"
 
-	cros-workon_src_unpack
+src_configure() {
+	local myeconfargs=(
+		--with-stage1-image-path="/usr/share/rkt/stage1.aci"
+	)
 
-	mkdir -p "${cache}" || die
-	cp "${DISTDIR}/pxe-${IMG_RELEASE}.img" "${cache}/pxe.img" || die
-}
+	if use rkt_stage1_host; then
+		myeconfargs+=( --with-stage1="host" )
+	fi
+	if use rkt_stage1_src; then
+		myeconfargs+=( --with-stage1="src" )
+	fi
+	if use rkt_stage1_coreos; then
+		myeconfargs+=( --with-stage1="coreos" )
+		mkdir -p "${BUILDDIR}/tmp/usr_from_coreos/" || die
+		cp "${DISTDIR}/${PXE_FILE}" "${BUILDDIR}/tmp/usr_from_coreos/pxe.img" || die
+	fi
 
-# TODO: Use or adapt coreos-go.eclass so we have half a chance of
-# cross-compiling builds working
-src_compile() {
-	RKT_STAGE1_IMAGE=/usr/share/rkt/stage1.aci CGO_ENABLED=0 ./build || die
+	# Go's 6l linker does not support PIE, disable so cgo binaries
+	# which use 6l+gcc for linking can be built correctly.
+	if gcc-specs-pie; then
+		append-ldflags -nopie
+	fi
+
+	export CC=$(tc-getCC)
+	export CGO_ENABLED=1
+	export CGO_CFLAGS="${CFLAGS}"
+	export CGO_CPPFLAGS="${CPPFLAGS}"
+	export CGO_CXXFLAGS="${CXXFLAGS}"
+	export CGO_LDFLAGS="${LDFLAGS}"
+	export BUILDDIR
+
+	autotools-utils_src_configure
 }
 
 src_install() {
-	dobin "${S}/bin/rkt"
+	dodoc README.md
+	use doc && dodoc -r Documentation
+	use examples && dodoc -r examples
+	use actool && dobin "${S}/${BUILDDIR}/bin/actool"
 
-	insinto /usr/share/rkt
-	doins "${S}/bin/stage1.aci"
+	dobin "${S}/${BUILDDIR}/bin/rkt"
+
+	insinto /usr/share/rkt/
+	doins "${S}/${BUILDDIR}/bin/stage1.aci"
 
 	systemd_dounit "${FILESDIR}"/${PN}-gc.service
 	systemd_dounit "${FILESDIR}"/${PN}-gc.timer
+	systemd_dounit "${S}"/dist/init/systemd/${PN}-metadata.service
+	systemd_dounit "${S}"/dist/init/systemd/${PN}-metadata.socket
 }
