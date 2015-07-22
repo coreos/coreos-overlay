@@ -95,6 +95,7 @@ libupdate_engine_a_SOURCES = \
 	src/update_engine/omaha_request_action.cc \
 	src/update_engine/omaha_request_params.cc \
 	src/update_engine/omaha_response_handler_action.cc \
+	src/update_engine/payload_processor.cc \
 	src/update_engine/payload_signer.cc \
 	src/update_engine/payload_state.cc \
 	src/update_engine/postinstall_runner_action.cc \
@@ -141,6 +142,7 @@ update_engine_unittests_SOURCES = \
 	src/update_engine/omaha_request_action_unittest.cc \
 	src/update_engine/omaha_request_params_unittest.cc \
 	src/update_engine/omaha_response_handler_action_unittest.cc \
+	src/update_engine/payload_processor_unittest.cc \
 	src/update_engine/payload_signer_unittest.cc \
 	src/update_engine/payload_state_unittest.cc \
 	src/update_engine/postinstall_runner_action_unittest.cc \

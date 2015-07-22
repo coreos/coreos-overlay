@@ -288,7 +288,7 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
     prefs_->SetInt64(kPrefsDeltaUpdateFailures, 0);
     prefs_->SetString(kPrefsPreviousVersion,
                       omaha_request_params_->app_version());
-    DeltaPerformer::ResetUpdateProgress(prefs_, false);
+    PayloadProcessor::ResetUpdateProgress(prefs_, false);
 
     LOG(INFO) << "Update successfully applied, waiting to reboot.";
 
@@ -610,7 +610,7 @@ void UpdateAttempter::DisableDeltaUpdateIfNeeded() {
 
 void UpdateAttempter::MarkDeltaUpdateFailure() {
   // Don't try to resume a failed delta update.
-  DeltaPerformer::ResetUpdateProgress(prefs_, false);
+  PayloadProcessor::ResetUpdateProgress(prefs_, false);
   int64_t delta_failures;
   if (!prefs_->GetInt64(kPrefsDeltaUpdateFailures, &delta_failures) ||
       delta_failures < 0) {

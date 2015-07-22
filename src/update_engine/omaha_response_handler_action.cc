@@ -9,7 +9,7 @@
 #include <base/logging.h>
 #include "base/string_util.h"
 
-#include "update_engine/delta_performer.h"
+#include "update_engine/payload_processor.h"
 #include "update_engine/payload_state_interface.h"
 #include "update_engine/prefs_interface.h"
 #include "update_engine/utils.h"
@@ -25,7 +25,7 @@ OmahaResponseHandlerAction::OmahaResponseHandlerAction(
     SystemState* system_state)
     : system_state_(system_state),
       got_no_update_response_(false),
-      key_path_(DeltaPerformer::kUpdatePayloadPublicKeyPath) {}
+      key_path_(PayloadProcessor::kUpdatePayloadPublicKeyPath) {}
 
 void OmahaResponseHandlerAction::PerformAction() {
   CHECK(HasInputObject());
@@ -49,9 +49,9 @@ void OmahaResponseHandlerAction::PerformAction() {
   install_plan_.payload_hash = response.hash;
   install_plan_.hash_checks_mandatory = AreHashChecksMandatory(response);
   install_plan_.is_resume =
-      DeltaPerformer::CanResumeUpdate(system_state_->prefs(), response.hash);
+      PayloadProcessor::CanResumeUpdate(system_state_->prefs(), response.hash);
   if (!install_plan_.is_resume) {
-    LOG_IF(WARNING, !DeltaPerformer::ResetUpdateProgress(
+    LOG_IF(WARNING, !PayloadProcessor::ResetUpdateProgress(
         system_state_->prefs(), false))
         << "Unable to reset the update progress.";
     LOG_IF(WARNING, !system_state_->prefs()->SetString(

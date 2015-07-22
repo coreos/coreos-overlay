@@ -21,7 +21,7 @@
 
 #include "strings/string_number_conversions.h"
 #include "update_engine/delta_diff_generator.h"
-#include "update_engine/delta_performer.h"
+#include "update_engine/payload_processor.h"
 #include "update_engine/payload_signer.h"
 #include "update_engine/prefs.h"
 #include "update_engine/subprocess.h"
@@ -186,7 +186,7 @@ void ApplyDelta() {
   install_plan.rootfs_hash.assign(root_info.hash().begin(),
                                   root_info.hash().end());
   install_plan.install_path = FLAGS_old_image;
-  DeltaPerformer performer(&prefs, &install_plan);
+  PayloadProcessor performer(&prefs, &install_plan);
   CHECK_EQ(performer.Open(), 0);
   vector<char> buf(1024 * 1024);
   int fd = open(FLAGS_in_file.c_str(), O_RDONLY, 0);
@@ -200,7 +200,7 @@ void ApplyDelta() {
     CHECK_EQ(performer.Write(&buf[0], bytes_read), bytes_read);
   }
   CHECK_EQ(performer.Close(), 0);
-  DeltaPerformer::ResetUpdateProgress(&prefs, false);
+  PayloadProcessor::ResetUpdateProgress(&prefs, false);
   LOG(INFO) << "Done applying delta.";
 }
 

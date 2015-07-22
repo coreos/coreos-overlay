@@ -9,12 +9,10 @@
 
 #include <vector>
 
-#include <google/protobuf/repeated_field.h>
 #include <gtest/gtest_prod.h>  // for FRIEND_TEST
 
-#include "update_engine/file_writer.h"
+#include "update_engine/action_processor.h"
 #include "update_engine/install_plan.h"
-#include "update_engine/omaha_hash_calculator.h"
 #include "update_engine/update_metadata.pb.h"
 
 namespace chromeos_update_engine {
@@ -24,38 +22,22 @@ class PrefsInterface;
 // This class performs the actions in a delta update synchronously. The delta
 // update itself should be passed in in chunks as it is received.
 
-class DeltaPerformer : public FileWriter {
+class DeltaPerformer {
  public:
-
-  static const char kUpdatePayloadPublicKeyPath[];
 
   DeltaPerformer(PrefsInterface* prefs,
                  InstallPlan* install_plan)
       : prefs_(prefs),
         install_plan_(install_plan),
         fd_(-1),
-        manifest_valid_(false),
-        manifest_metadata_size_(0),
-        next_operation_num_(0),
-        buffer_offset_(0),
-        last_updated_buffer_offset_(kuint64max),
-        block_size_(0),
-        public_key_path_(kUpdatePayloadPublicKeyPath),
-        num_total_operations_(0) {}
+        block_size_(0) {}
 
   // Once Close()d, a DeltaPerformer can't be Open()ed again.
   int Open();
 
-  // FileWriter's Write implementation where caller doesn't care about
-  // error codes.
-  bool Write(const void* bytes, size_t count) {
-    ActionExitCode error;
-    return Write(bytes, count, &error);
-  }
-
-  // FileWriter's Write implementation that returns a more specific |error| code
-  // in case of failures in Write operation.
-  bool Write(const void* bytes, size_t count, ActionExitCode *error);
+  // Processes a single operation on the target partition.
+  ActionExitCode PerformOperation(const InstallOperation& operation,
+                                  const std::vector<char>& data);
 
   // Wrapper around close. Returns 0 on success or -errno on error.
   int Close();
@@ -94,19 +76,9 @@ class DeltaPerformer : public FileWriter {
       uint64_t full_length,
       std::string* positions_string);
 
-  // Returns true if a previous update attempt can be continued based on the
-  // persistent preferences and the new update check response hash.
-  static bool CanResumeUpdate(PrefsInterface* prefs,
-                              std::string update_check_response_hash);
-
-  // Resets the persistent update progress state to indicate that an update
-  // can't be resumed. Performs a quick update-in-progress reset if |quick| is
-  // true, otherwise resets all progress-related update state. Returns true on
-  // success, false otherwise.
-  static bool ResetUpdateProgress(PrefsInterface* prefs, bool quick);
-
-  void set_public_key_path(const std::string& public_key_path) {
-    public_key_path_ = public_key_path;
+  // Set block size specified by the manifest.
+  void SetBlockSize(uint32_t size) {
+    block_size_ = size;
   }
 
  private:
@@ -116,21 +88,11 @@ class DeltaPerformer : public FileWriter {
   static bool IsIdempotentOperation(
       const InstallOperation& op);
 
-  // Verifies that the expected source partition hash (if present) match the
-  // hash for the current partition. Returns true if there're no expected
-  // hash in the payload (e.g., if it's a new-style full update) or if the
-  // hashes match; returns false otherwise.
-  bool VerifySourcePartition();
-
   // Validates that the hash of the blobs corresponding to the given |operation|
   // matches what's specified in the manifest in the payload.
   // Returns kActionCodeSuccess on match or a suitable error code otherwise.
   ActionExitCode ValidateOperationHash(const InstallOperation& operation,
                                        const std::vector<char>& data);
-
-  // Processes a single operation on the target partition.
-  ActionExitCode PerformOperation(const InstallOperation& operation,
-                                  const std::vector<char>& data);
 
   // These perform a specific type of operation and return true on success.
   bool PerformReplaceOperation(const InstallOperation& operation,
@@ -138,23 +100,6 @@ class DeltaPerformer : public FileWriter {
   bool PerformMoveOperation(const InstallOperation& operation);
   bool PerformBsdiffOperation(const InstallOperation& operation,
                               const std::vector<char>& data);
-
-  // Returns true if the payload signature message has been extracted from
-  // payload, false otherwise.
-  bool ExtractSignatureMessage(const std::vector<char>& data);
-
-  // Updates the hash calculator with |count| bytes at the head of |buffer_| and
-  // then discards them.
-  void DiscardBufferHeadBytes(size_t count);
-
-  // Checkpoints the update progress into persistent storage to allow this
-  // update attempt to be resumed after reboot.
-  bool CheckpointUpdateProgress();
-
-  // Primes the required update state. Returns true if the update state was
-  // successfully initialized to a saved resume state or if the update is a new
-  // update. Returns false otherwise.
-  bool PrimeUpdateState();
 
   // Update Engine preference store.
   PrefsInterface* prefs_;
@@ -165,42 +110,8 @@ class DeltaPerformer : public FileWriter {
   // File descriptor of open device.
   int fd_;
 
-  DeltaArchiveManifest manifest_;
-  bool manifest_valid_;
-  uint64_t manifest_metadata_size_;
-
-  // Index of the next operation to perform in the manifest.
-  size_t next_operation_num_;
-
-  // buffer_ is a window of the data that's been downloaded. At first,
-  // it contains the beginning of the download, but after the protobuf
-  // has been downloaded and parsed, it contains a sliding window of
-  // data blobs.
-  std::vector<char> buffer_;
-  // Offset of buffer_ in the binary blobs section of the update.
-  uint64_t buffer_offset_;
-
-  // Last |buffer_offset_| value updated as part of the progress update.
-  uint64_t last_updated_buffer_offset_;
-
   // The block size (parsed from the manifest).
   uint32_t block_size_;
-
-  // Calculates the payload hash.
-  OmahaHashCalculator hash_calculator_;
-
-  // Saves the signed hash context.
-  std::string signed_hash_context_;
-
-  // Signatures message blob extracted directly from the payload.
-  std::vector<char> signatures_message_data_;
-
-  // The public key to be used. Provided as a member so that tests can
-  // override with test keys.
-  std::string public_key_path_;
-
-  // The number of total operations in a payload, once we know them.
-  size_t num_total_operations_;
 
   DISALLOW_COPY_AND_ASSIGN(DeltaPerformer);
 };
