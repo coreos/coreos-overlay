@@ -13,7 +13,7 @@ CROS_WORKON_REPO="git://github.com"
 
 if [[ ${PV} == *9999 ]]; then
 	DOCKER_GITCOMMIT="unknown"
-	KEYWORDS=""
+	KEYWORDS="~amd64 ~arm64"
 else
 	CROS_WORKON_COMMIT="786b29d4db80a6175e72b47a794ee044918ba734" # v1.7.1
 	DOCKER_GITCOMMIT="${CROS_WORKON_COMMIT:0:7}"
