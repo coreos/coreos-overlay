@@ -125,23 +125,23 @@ class DeltaPerformer : public FileWriter {
   // Validates that the hash of the blobs corresponding to the given |operation|
   // matches what's specified in the manifest in the payload.
   // Returns kActionCodeSuccess on match or a suitable error code otherwise.
-  ActionExitCode ValidateOperationHash(
-      const InstallOperation& operation);
+  ActionExitCode ValidateOperationHash(const InstallOperation& operation,
+                                       const std::vector<char>& data);
 
   // Processes a single operation on the target partition.
-  ActionExitCode PerformOperation(const InstallOperation& operation);
+  ActionExitCode PerformOperation(const InstallOperation& operation,
+                                  const std::vector<char>& data);
 
   // These perform a specific type of operation and return true on success.
-  bool PerformReplaceOperation(
-      const InstallOperation& operation);
-  bool PerformMoveOperation(
-      const InstallOperation& operation);
-  bool PerformBsdiffOperation(
-      const InstallOperation& operation);
+  bool PerformReplaceOperation(const InstallOperation& operation,
+                               const std::vector<char>& data);
+  bool PerformMoveOperation(const InstallOperation& operation);
+  bool PerformBsdiffOperation(const InstallOperation& operation,
+                              const std::vector<char>& data);
 
   // Returns true if the payload signature message has been extracted from
   // payload, false otherwise.
-  bool ExtractSignatureMessage();
+  bool ExtractSignatureMessage(const std::vector<char>& data);
 
   // Updates the hash calculator with |count| bytes at the head of |buffer_| and
   // then discards them.

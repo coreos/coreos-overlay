@@ -189,12 +189,15 @@ bool DeltaPerformer::Write(const void* bytes, size_t count,
     ScopedTerminatorExitUnblocker exit_unblocker =
         ScopedTerminatorExitUnblocker();  // Avoids a compiler unused var bug.
 
-    *error = PerformOperation(op);
+    *error = PerformOperation(op, buffer_);
     if (*error != kActionCodeSuccess) {
       LOG(ERROR) << "Aborting install procedure at operation "
                  << num_total_operations_;
       return false;
     }
+
+    buffer_offset_ += op.data_length();
+    DiscardBufferHeadBytes(op.data_length());
 
     next_operation_num_++;
     LOG(INFO) << "Completed " << next_operation_num_ << "/"
@@ -203,18 +206,30 @@ bool DeltaPerformer::Write(const void* bytes, size_t count,
     CheckpointUpdateProgress();
   }
 
-  // Extract the signature if present.
-  ExtractSignatureMessage();
+  // Make sure the operations consumed exactly the right amount of data.
+  if (manifest_.has_signatures_offset() &&
+      manifest_.signatures_offset() != buffer_offset_) {
+    LOG(ERROR) << "Signatures located at an unexpected data offset "
+               << manifest_.signatures_offset()
+               << ", expected " << buffer_offset_;
+    *error = kActionCodeDownloadOperationExecutionError;
+    return false;
+  }
+
+  // Any issues with the signature will be reported by VerifyPayload.
+  if (ExtractSignatureMessage(buffer_)) {
+    buffer_offset_ += manifest_.signatures_size();
+    DiscardBufferHeadBytes(manifest_.signatures_size());
+  }
 
   return true;
 }
 
 ActionExitCode DeltaPerformer::PerformOperation(
-    const InstallOperation& operation) {
-  // Note: Validate must be called only if CanPerformInstallOperation is
-  // called. Otherwise, we might be failing operations before even if there
-  // isn't sufficient data to compute the proper hash.
-  ActionExitCode error = ValidateOperationHash(operation);
+    const InstallOperation& operation,
+    const vector<char>& data) {
+
+  ActionExitCode error = ValidateOperationHash(operation, data);
   if (error != kActionCodeSuccess) {
     if (install_plan_->hash_checks_mandatory) {
       LOG(ERROR) << "Mandatory operation hash check failed";
@@ -228,7 +243,7 @@ ActionExitCode DeltaPerformer::PerformOperation(
   // Log every thousandth operation, and also the first and last ones
   if (operation.type() == InstallOperation_Type_REPLACE ||
       operation.type() == InstallOperation_Type_REPLACE_BZ) {
-    if (!PerformReplaceOperation(operation)) {
+    if (!PerformReplaceOperation(operation, data)) {
       LOG(ERROR) << "Failed to perform replace operation";
       return kActionCodeDownloadOperationExecutionError;
     }
@@ -238,7 +253,7 @@ ActionExitCode DeltaPerformer::PerformOperation(
       return kActionCodeDownloadOperationExecutionError;
     }
   } else if (operation.type() == InstallOperation_Type_BSDIFF) {
-    if (!PerformBsdiffOperation(operation)) {
+    if (!PerformBsdiffOperation(operation, data)) {
       LOG(ERROR) << "Failed to perform bsdiff operation";
       return kActionCodeDownloadOperationExecutionError;
     }
@@ -250,16 +265,14 @@ ActionExitCode DeltaPerformer::PerformOperation(
 }
 
 bool DeltaPerformer::PerformReplaceOperation(
-    const InstallOperation& operation) {
+    const InstallOperation& operation,
+    const vector<char>& data) {
   CHECK(operation.type() == \
         InstallOperation_Type_REPLACE || \
         operation.type() == \
         InstallOperation_Type_REPLACE_BZ);
 
-  // Since we delete data off the beginning of the buffer as we use it,
-  // the data we need should be exactly at the beginning of the buffer.
-  TEST_AND_RETURN_FALSE(buffer_offset_ == operation.data_offset());
-  TEST_AND_RETURN_FALSE(buffer_.size() >= operation.data_length());
+  TEST_AND_RETURN_FALSE(data.size() >= operation.data_length());
 
   DirectExtentWriter direct_writer;
   ZeroPadExtentWriter zero_pad_writer(&direct_writer);
@@ -285,11 +298,8 @@ bool DeltaPerformer::PerformReplaceOperation(
   }
 
   TEST_AND_RETURN_FALSE(writer->Init(fd_, extents, block_size_));
-  TEST_AND_RETURN_FALSE(writer->Write(&buffer_[0], operation.data_length()));
+  TEST_AND_RETURN_FALSE(writer->Write(&data[0], operation.data_length()));
   TEST_AND_RETURN_FALSE(writer->End());
-  // Update buffer
-  buffer_offset_ += operation.data_length();
-  DiscardBufferHeadBytes(operation.data_length());
   return true;
 }
 
@@ -379,11 +389,9 @@ bool DeltaPerformer::ExtentsToBsdiffPositionsString(
 }
 
 bool DeltaPerformer::PerformBsdiffOperation(
-    const InstallOperation& operation) {
-  // Since we delete data off the beginning of the buffer as we use it,
-  // the data we need should be exactly at the beginning of the buffer.
-  TEST_AND_RETURN_FALSE(buffer_offset_ == operation.data_offset());
-  TEST_AND_RETURN_FALSE(buffer_.size() >= operation.data_length());
+    const InstallOperation& operation,
+    const vector<char>& data) {
+  TEST_AND_RETURN_FALSE(data.size() >= operation.data_length());
 
   string input_positions;
   TEST_AND_RETURN_FALSE(ExtentsToBsdiffPositionsString(operation.src_extents(),
@@ -405,7 +413,7 @@ bool DeltaPerformer::PerformBsdiffOperation(
     int fd = open(temp_filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
     ScopedFdCloser fd_closer(&fd);
     TEST_AND_RETURN_FALSE(
-        utils::WriteAll(fd, &buffer_[0], operation.data_length()));
+        utils::WriteAll(fd, &data[0], operation.data_length()));
   }
 
   const string& path = StringPrintf("/dev/fd/%d", fd_);
@@ -447,21 +455,17 @@ bool DeltaPerformer::PerformBsdiffOperation(
         utils::PWriteAll(fd_, &zeros[0], end_byte - begin_byte, begin_byte));
   }
 
-  // Update buffer.
-  buffer_offset_ += operation.data_length();
-  DiscardBufferHeadBytes(operation.data_length());
   return true;
 }
 
-bool DeltaPerformer::ExtractSignatureMessage() {
+bool DeltaPerformer::ExtractSignatureMessage(const vector<char>& data) {
   TEST_AND_RETURN_FALSE(manifest_.has_signatures_offset());
   TEST_AND_RETURN_FALSE(manifest_.has_signatures_size());
   TEST_AND_RETURN_FALSE(signatures_message_data_.empty());
-  TEST_AND_RETURN_FALSE(buffer_offset_ == manifest_.signatures_offset());
-  TEST_AND_RETURN_FALSE(buffer_.size() >= manifest_.signatures_size());
+  TEST_AND_RETURN_FALSE(data.size() >= manifest_.signatures_size());
   signatures_message_data_.assign(
-      buffer_.begin(),
-      buffer_.begin() + manifest_.signatures_size());
+      data.begin(),
+      data.begin() + manifest_.signatures_size());
 
   // Save the signature blob because if the update is interrupted after the
   // download phase we don't go through this path anymore. Some alternatives to
@@ -486,13 +490,12 @@ bool DeltaPerformer::ExtractSignatureMessage() {
             << manifest_.signatures_size() << " at "
             << manifest_.signatures_offset();
 
-  buffer_offset_ += manifest_.signatures_size();
-  DiscardBufferHeadBytes(manifest_.signatures_size());
   return true;
 }
 
 ActionExitCode DeltaPerformer::ValidateOperationHash(
-    const InstallOperation& operation) {
+    const InstallOperation& operation,
+    const vector<char>& data) {
 
   if (!operation.data_sha256_hash().size()) {
     if (!operation.data_length()) {
@@ -527,7 +530,7 @@ ActionExitCode DeltaPerformer::ValidateOperationHash(
                            operation.data_sha256_hash().size()));
 
   OmahaHashCalculator operation_hasher;
-  operation_hasher.Update(&buffer_[0], operation.data_length());
+  operation_hasher.Update(&data[0], operation.data_length());
   if (!operation_hasher.Finalize()) {
     LOG(ERROR) << "Unable to compute actual hash of operation "
                << next_operation_num_;
