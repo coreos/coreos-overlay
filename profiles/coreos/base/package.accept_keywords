@@ -119,3 +119,8 @@ dev-util/checkbashisms
 =app-eselect/eselect-rust-0.3_pre20150428 ~amd64
 =dev-lang/rust-bin-1.1.0 ~amd64
 =dev-rust/cargo-0.3.0 ~amd64
+
+# Provides useful new pages like loop(4)
+=sys-apps/man-pages-4.00
+# Fixes conflict with man-pages 4.00
+=sys-apps/attr-2.4.47-r2
