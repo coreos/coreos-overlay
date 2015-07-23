@@ -30,19 +30,23 @@ src_prepare() {
 
 	# https://code.google.com/p/serf/issues/detail?id=133
 	sed -e "/env.Append(CCFLAGS=\['-O2'\])/d" -i SConstruct
+
+	# Accept C++ comments in system headers.
+	# Fixes error: expected identifier or '(' before '/' token
+	sed -e "s/-std=c89//" -i SConstruct
 }
 
 src_compile() {
 	local myesconsargs=(
 		PREFIX="${EPREFIX}/usr"
 		LIBDIR="${EPREFIX}/usr/$(get_libdir)"
-		APR="${EPREFIX}/usr/bin/apr-1-config"
-		APU="${EPREFIX}/usr/bin/apu-1-config"
-		OPENSSL="${EPREFIX}/usr"
+		APR="${EROOT}usr/bin/apr-1-config"
+		APU="${EROOT}usr/bin/apu-1-config"
+		OPENSSL="${EROOT}usr"
 		CC="$(tc-getCC)"
 		CPPFLAGS="${CPPFLAGS}"
 		CFLAGS="${CFLAGS}"
-		LINKFLAGS="${LDFLAGS}"
+		LINKFLAGS="${LDFLAGS} --sysroot=${SYSROOT}"
 	)
 
 	if use kerberos; then
