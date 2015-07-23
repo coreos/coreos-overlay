@@ -97,7 +97,7 @@ CONFIG_CRASH_DUMP=y
 CONFIG_KEXEC_JUMP=y
 CONFIG_PHYSICAL_ALIGN=0x1000000
 CONFIG_CMDLINE_BOOL=y
-CONFIG_CMDLINE="init=/usr/lib/systemd/systemd rootflags=rw mount.usrflags=ro"
+CONFIG_CMDLINE="init=/usr/lib/systemd/systemd rootflags=rw mount.usrflags=ro audit=0"
 CONFIG_HIBERNATION=y
 # CONFIG_ACPI_AC is not set
 # CONFIG_ACPI_BATTERY is not set
