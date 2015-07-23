@@ -4,7 +4,7 @@
 
 EAPI="4"
 
-inherit eutils toolchain-funcs multilib
+inherit autotools eutils toolchain-funcs multilib
 
 DESCRIPTION="xfs filesystem utilities"
 HOMEPAGE="http://oss.sgi.com/projects/xfs/"
@@ -39,6 +39,9 @@ pkg_setup() {
 src_prepare() {
 	epatch "${FILESDIR}"/${PN}-3.2.2-sharedlibs.patch
 
+	# http://oss.sgi.com/bugzilla/show_bug.cgi?id=1114
+	epatch "${FILESDIR}"/${PN}-3.2.2-Fix-cross-compile-builds.patch
+
 	sed -i \
 		-e "/^PKG_DOC_DIR/s:@pkg_name@:${PF}:" \
 		include/builddefs.in || die
@@ -59,8 +62,13 @@ src_prepare() {
 		sed -i \
 			-e 's|-lreadline|\0 -lncurses|' \
 			-e 's|-lblkid|\0 -luuid|' \
-			configure || die
+			configure.ac || die
 	fi
+
+	eautoreconf
+
+	# xfsprogs has a custom install-sh.
+	cp include/install-sh .
 }
 
 src_configure() {
