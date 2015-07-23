@@ -133,6 +133,13 @@ src_prepare() {
 	sed -i -e '1c\#!/usr/bin/env sh' build/transform_libtool_scripts.sh || \
 		die "/bin/sh is not POSIX shell!"
 
+	# Avoid AC_RUN_IFELSE in MacOS tests.
+	sed -i \
+		-e "s/SVN_LIB_MACHO_ITERATE//g" \
+		-e "s/SVN_LIB_MACOS_PLIST//g" \
+		-e "s/SVN_LIB_MACOS_KEYCHAIN//g" \
+		configure.ac
+
 	eautoconf
 	elibtoolize
 
