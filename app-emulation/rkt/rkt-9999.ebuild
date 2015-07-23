@@ -5,22 +5,19 @@ EAPI=5
 CROS_WORKON_PROJECT="coreos/rkt"
 CROS_WORKON_LOCALNAME="rkt"
 CROS_WORKON_REPO="git://github.com"
-inherit cros-workon systemd
+AUTOTOOLS_AUTORECONF=yes
+AUTOTOOLS_IN_SOURCE_BUILD=yes
+inherit autotools-utils cros-workon flag-o-matic systemd toolchain-funcs
 
 if [[ "${PV}" == 9999 ]]; then
     KEYWORDS="~amd64"
 else
-    CROS_WORKON_COMMIT="40ced98c320c056e343fe9c3eaeb90a4ff248936" # v0.5.5
+    CROS_WORKON_COMMIT="9579f4bf57851a1a326c81ec2ab0ed2fdfab8d24" # v0.7.0
     KEYWORDS="amd64"
 fi
 
-# Must be in sync with stage1/rootfs/usr_from_coreos/cache.sh
-IMG_RELEASE="444.5.0"
-IMG_URL="http://stable.release.core-os.net/amd64-usr/${IMG_RELEASE}/coreos_production_pxe_image.cpio.gz"
-
 DESCRIPTION="App Container runtime"
 HOMEPAGE="https://github.com/coreos/rkt"
-SRC_URI="${IMG_URL} -> pxe-${IMG_RELEASE}.img"
 
 LICENSE="Apache-2.0"
 SLOT="0"
@@ -28,30 +25,41 @@ IUSE=""
 
 DEPEND=">=dev-lang/go-1.3
 	app-arch/cpio
-	sys-fs/squashfs-tools"
+	sys-fs/squashfs-tools
+	dev-perl/Capture-Tiny"
 RDEPEND="!app-emulation/rocket"
 
-src_unpack() {
-	local cache="${S}/stage1/rootfs/usr_from_coreos/cache"
+src_configure() {
+	local myeconfargs=(
+		--with-stage1=host
+	)
 
-	cros-workon_src_unpack
+	# Go's 6l linker does not support PIE, disable so cgo binaries
+	# which use 6l+gcc for linking can be built correctly.
+	if gcc-specs-pie; then
+		append-ldflags -nopie
+	fi
 
-	mkdir -p "${cache}" || die
-	cp "${DISTDIR}/pxe-${IMG_RELEASE}.img" "${cache}/pxe.img" || die
-}
+	export CC=$(tc-getCC)
+	export CGO_ENABLED=1
+	export CGO_CFLAGS="${CFLAGS}"
+	export CGO_CPPFLAGS="${CPPFLAGS}"
+	export CGO_CXXFLAGS="${CXXFLAGS}"
+	export CGO_LDFLAGS="${LDFLAGS}"
 
-# TODO: Use or adapt coreos-go.eclass so we have half a chance of
-# cross-compiling builds working
-src_compile() {
-	RKT_STAGE1_IMAGE=/usr/share/rkt/stage1.aci CGO_ENABLED=0 ./build || die
+	autotools-utils_src_configure
 }
 
 src_install() {
-	dobin "${S}/bin/rkt"
+	dobin "${S}/build-${P}/bin/rkt"
 
 	insinto /usr/share/rkt
-	doins "${S}/bin/stage1.aci"
+	dobin "${S}/build-${P}/bin/stage1.aci"
 
 	systemd_dounit "${FILESDIR}"/${PN}-gc.service
 	systemd_dounit "${FILESDIR}"/${PN}-gc.timer
+	systemd_dounit "${S}"/dist/init/systemd/${PN}-metadata.service
+	systemd_dounit "${S}"/dist/init/systemd/${PN}-metadata.socket
+
+	systemd_enable_service sockets.target ${PN}-metadata.socket
 }
