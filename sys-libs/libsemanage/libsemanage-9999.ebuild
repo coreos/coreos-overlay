@@ -71,6 +71,7 @@ src_prepare() {
 	echo "# Reduce memory usage for bzip2 compression and" >> "${S}/src/semanage.conf"
 	echo "# decompression of modules in the module store." >> "${S}/src/semanage.conf"
 	echo "bzip-small=true" >> "${S}/src/semanage.conf"
+	echo "handle-unknown=allow" >> "${S}/src/semanage.conf"
 
 	if [[ ${PV} != 9999 ]] ; then
 		# If wanted for live builds, please use /etc/portage/patches
