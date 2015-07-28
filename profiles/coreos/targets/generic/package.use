@@ -3,6 +3,7 @@
 
 app-admin/rsyslog	-ssl
 app-editors/vim		minimal
+coreos-base/coreos	selinux
 dev-lang/python		-berkdb gdbm
 dev-libs/dbus-glib	tools
 dev-libs/elfutils	-utils
@@ -15,15 +16,18 @@ net-misc/dhcp	        -server
 net-misc/iperf		threads
 net-misc/ntp            caps
 sys-apps/busybox	-pam -selinux
+sys-apps/dbus		selinux
 sys-apps/smartmontools	minimal
 sys-block/parted        device-mapper
 sys-fs/lvm2		-lvm1 -readline
+sys-kernel/coreos-kernel selinux
 sys-libs/ncurses	minimal
 sys-libs/pam        -berkdb
 sys-libs/gdbm		berkdb
 
 # enable journal gateway and container features, avoid pulling in gnutls
-sys-apps/systemd audit importd http nat -ssl
+sys-apps/systemd audit importd http nat -ssl selinux
+
 net-libs/libmicrohttpd -ssl
 
 sys-boot/syslinux       -custom-cflags
