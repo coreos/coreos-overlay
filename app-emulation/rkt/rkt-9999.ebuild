@@ -102,6 +102,8 @@ src_install() {
 
 	systemd_dounit "${FILESDIR}"/${PN}-gc.service
 	systemd_dounit "${FILESDIR}"/${PN}-gc.timer
+	systemd_enable_service multi-user.target ${PN}-gc.timer
 	systemd_dounit "${S}"/dist/init/systemd/${PN}-metadata.service
 	systemd_dounit "${S}"/dist/init/systemd/${PN}-metadata.socket
+	systemd_enable_service sockets.target ${PN}-metadata.socket
 }
