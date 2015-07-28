@@ -114,24 +114,3 @@ multilib_src_install() {
 		python_foreach_impl installation_py
 	fi
 }
-
-pkg_postinst() {
-	# Migrate the SELinux semanage configuration store if not done already
-	local selinuxtype=$(awk -F'=' '/SELINUXTYPE=/ {print $2}' /etc/selinux/config);
-	if [ -n "${selinuxtype}" ] && [ ! -d /var/lib/selinux/${mcs}/active ] ; then
-		ewarn "Since the 2.4 SELinux userspace, the policy module store is moved"
-		ewarn "from /etc/selinux to /var/lib/selinux. The migration will be run now."
-		ewarn "If there are any issues, it can be done manually by running:"
-		ewarn "/usr/libexec/selinux/semanage_migrate_store"
-		ewarn "For more information, please see"
-		ewarn "- https://github.com/SELinuxProject/selinux/wiki/Policy-Store-Migration"
-	fi
-
-	# Run the store migration without rebuilds
-	for POLICY_TYPE in ${POLICY_TYPES} ; do
-		if [ ! -d "${ROOT}/var/lib/selinux/${POLICY_TYPE}/active" ] ; then
-			einfo "Migrating store ${POLICY_TYPE} (without policy rebuild)."
-			/usr/libexec/selinux/semanage_migrate_store -n -s "${POLICY_TYPE}" || die "Failed to migrate store ${POLICY_TYPE}"
-		fi
-	done
-}
