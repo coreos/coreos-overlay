@@ -124,6 +124,19 @@ message BlobInfo {
   optional bytes hash = 2;
 }
 
+// Manifest defines the update procedure for any files that exist
+message InstallBlob {
+  enum Type {
+    KERNEL = 0;  // A kernel image to install to the boot partition.
+  }
+  required Type type = 1;
+
+  repeated InstallOperation operations = 2;
+
+  optional BlobInfo old_info = 3;
+  optional BlobInfo new_info = 4;
+}
+
 message DeltaArchiveManifest {
   // The update procedure for the main partition (USR-A or USR-B). Once
   // complete it should match the hash specified in new_partition_info.
@@ -169,4 +182,10 @@ message DeltaArchiveManifest {
   // Partition data that can be used to validate the update.
   optional BlobInfo old_partition_info = 8;
   optional BlobInfo new_partition_info = 9;
+
+  // In addition to the partition update, process updates for additional
+  // files, such as kernels. Versions of update_engine that can interpret
+  // this list *MUST* ignore noop_operations and properly account for the
+  // signature data at the end of the payload.
+  repeated InstallBlob blobs = 10;
 }
