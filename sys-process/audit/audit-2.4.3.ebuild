@@ -39,24 +39,6 @@ pkg_setup() {
 src_prepare() {
 	epatch_user
 
-	# Do not build GUI tools
-	sed -i \
-		-e '/AC_CONFIG_SUBDIRS.*system-config-audit/d' \
-		"${S}"/configure.ac || die
-	sed -i \
-		-e 's,system-config-audit,,g' \
-		"${S}"/Makefile.am || die
-	rm -rf "${S}"/system-config-audit
-
-	if ! use ldap; then
-		sed -i \
-			-e '/^AC_OUTPUT/s,audisp/plugins/zos-remote/Makefile,,g' \
-			"${S}"/configure.ac || die
-		sed -i \
-			-e '/^SUBDIRS/s,zos-remote,,g' \
-			"${S}"/audisp/plugins/Makefile.am || die
-	fi
-
 	# Don't build static version of Python module.
 	epatch "${FILESDIR}"/${PN}-2.4.3-python.patch
 
@@ -65,15 +47,8 @@ src_prepare() {
 	# don't need the OTHER definitions in fpu.h.
 	epatch "${FILESDIR}"/${PN}-2.1.3-ia64-compile-fix.patch
 
-	# there is no --without-golang conf option
-	sed -e "/^SUBDIRS =/s/ @gobind_dir@//" -i bindings/Makefile.am || die
-
 	# Regenerate autotooling
 	eautoreconf
-
-	# Bug 352198: Avoid parallel build fail
-	cd "${S}"/src/mt
-	[[ ! -s private.h ]] && ln -s ../../lib/private.h .
 }
 
 multilib_src_configure() {
@@ -81,6 +56,8 @@ multilib_src_configure() {
 	econf \
 		--sbindir=/sbin \
 		--enable-systemd \
+		$(use_enable ldap zos-remote) \
+		--without-golang \
 		--without-python \
 		--without-python3
 
