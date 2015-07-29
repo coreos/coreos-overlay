@@ -15,20 +15,22 @@ SRC_URI="http://people.redhat.com/sgrubb/audit/${P}.tar.gz"
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~alpha ~amd64 ~arm ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sparc ~x86"
-IUSE="ldap python"
+IUSE="daemon ldap python"
 # Testcases are pretty useless as they are built for RedHat users/groups and
 # kernels.
 RESTRICT="test"
 
 RDEPEND="ldap? ( net-nds/openldap )
-		 sys-libs/libcap-ng"
+	sys-apps/diffutils
+	sys-libs/libcap-ng"
 DEPEND="${RDEPEND}
 	python? ( ${PYTHON_DEPS}
 		dev-lang/swig )
 	>=sys-kernel/linux-headers-2.6.34"
 # Do not use os-headers as this is linux specific
 
-REQUIRED_USE="python? ( ${PYTHON_REQUIRED_USE} )"
+REQUIRED_USE="ldap? ( daemon )
+	python? ( ${PYTHON_REQUIRED_USE} )"
 
 CONFIG_CHECK="~AUDIT"
 
@@ -46,6 +48,18 @@ src_prepare() {
 	# This patch is a horribly workaround that is only valid as long as you
 	# don't need the OTHER definitions in fpu.h.
 	epatch "${FILESDIR}"/${PN}-2.1.3-ia64-compile-fix.patch
+
+	if ! use daemon; then
+		sed -e '/^SUBDIRS =/s/audisp//' \
+			-i Makefile.am || die
+		sed -e '/${DESTDIR}${initdir}/d' \
+			-e '/${DESTDIR}${legacydir}/d' \
+			-i init.d/Makefile.am || die
+		sed -e '/^sbin_PROGRAMS =/s/auditd//' \
+			-e '/^sbin_PROGRAMS =/s/aureport//' \
+			-e '/^sbin_PROGRAMS =/s/ausearch//' \
+			-i src/Makefile.am || die
+	fi
 
 	# Regenerate autotooling
 	eautoreconf
@@ -154,23 +168,26 @@ multilib_src_install_all() {
 	dodoc AUTHORS ChangeLog README* THANKS TODO
 	docinto contrib
 	dodoc contrib/{*.rules,avc_snap,skeleton.c}
-	docinto contrib/plugin
-	dodoc contrib/plugin/*
 
-	newinitd "${FILESDIR}"/auditd-init.d-2.1.3 auditd
-	newconfd "${FILESDIR}"/auditd-conf.d-2.1.3 auditd
+	if use daemon; then
+		docinto contrib/plugin
+		dodoc contrib/plugin/*
 
-	[ -f "${D}"/sbin/audisp-remote ] && \
-	dodir /usr/sbin && \
-	mv "${D}"/{sbin,usr/sbin}/audisp-remote || die
+		newinitd "${FILESDIR}"/auditd-init.d-2.1.3 auditd
+		newconfd "${FILESDIR}"/auditd-conf.d-2.1.3 auditd
+
+		[ -f "${D}"/sbin/audisp-remote ] && \
+		dodir /usr/sbin && \
+		mv "${D}"/{sbin,usr/sbin}/audisp-remote || die
+
+		# audit logs go here
+		keepdir /var/log/audit/
+	fi
 
 	# Gentoo rules
 	insinto /etc/audit/
 	newins "${FILESDIR}"/audit.rules-2.1.3 audit.rules
-	doins "${FILESDIR}"/audit.rules.stop*
-
-	# audit logs go here
-	keepdir /var/log/audit/
+	use daemon && doins "${FILESDIR}"/audit.rules.stop*
 
 	# Security
 	lockdown_perms "${D}"
