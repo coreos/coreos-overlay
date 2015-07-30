@@ -35,11 +35,8 @@ namespace {
 const off_t kCopyFileBufferSize = 128 * 1024;
 }  // namespace {}
 
-FilesystemCopierAction::FilesystemCopierAction(
-    bool copying_kernel_install_path,
-    bool verify_hash)
-    : copying_kernel_install_path_(copying_kernel_install_path),
-      verify_hash_(verify_hash),
+FilesystemCopierAction::FilesystemCopierAction(bool verify_hash)
+    : verify_hash_(verify_hash),
       src_stream_(NULL),
       dst_stream_(NULL),
       read_done_(false),
@@ -77,22 +74,9 @@ void FilesystemCopierAction::PerformAction() {
     return;
   }
 
-  if (copying_kernel_install_path_ && !install_plan_.kernel_size) {
-    // No kernel to install
-    if (HasOutputPipe())
-      SetOutputObject(install_plan_);
-    abort_action_completer.set_code(kActionCodeSuccess);
-    return;
-  }
-
-  const string destination = copying_kernel_install_path_ ?
-      install_plan_.kernel_install_path :
-      install_plan_.install_path;
-  string source = verify_hash_ ? destination : copy_source_;
+  string source = verify_hash_ ? install_plan_.install_path : copy_source_;
   if (source.empty()) {
-    source = copying_kernel_install_path_ ?
-        utils::BootKernelName(utils::BootDevice()) :
-        utils::BootDevice();
+    source = utils::BootDevice();
   }
   int src_fd = open(source.c_str(), O_RDONLY);
   if (src_fd < 0) {
@@ -101,7 +85,7 @@ void FilesystemCopierAction::PerformAction() {
   }
 
   if (!verify_hash_) {
-    int dst_fd = open(destination.c_str(),
+    int dst_fd = open(install_plan_.install_path.c_str(),
                       O_WRONLY | O_TRUNC | O_CREAT,
                     0644);
     if (dst_fd < 0) {
@@ -290,24 +274,12 @@ void FilesystemCopierAction::SpawnAsyncActions() {
     if (hasher_.Finalize()) {
       LOG(INFO) << "Hash: " << hasher_.hash();
       if (verify_hash_) {
-        if (copying_kernel_install_path_) {
-          if (install_plan_.kernel_size &&
-	      (install_plan_.kernel_hash != hasher_.raw_hash())) {
-            code = kActionCodeNewKernelVerificationError;
-            LOG(ERROR) << "New kernel verification failed.";
-          }
-        } else {
-          if (install_plan_.rootfs_hash != hasher_.raw_hash()) {
-            code = kActionCodeNewRootfsVerificationError;
-            LOG(ERROR) << "New rootfs verification failed.";
-          }
+        if (install_plan_.rootfs_hash != hasher_.raw_hash()) {
+          code = kActionCodeNewRootfsVerificationError;
+          LOG(ERROR) << "New rootfs verification failed.";
         }
       } else {
-        if (copying_kernel_install_path_) {
-          install_plan_.kernel_hash = hasher_.raw_hash();
-        } else {
-          install_plan_.rootfs_hash = hasher_.raw_hash();
-        }
+        install_plan_.rootfs_hash = hasher_.raw_hash();
       }
     } else {
       LOG(ERROR) << "Unable to finalize the hash.";
@@ -319,15 +291,13 @@ void FilesystemCopierAction::SpawnAsyncActions() {
 
 void FilesystemCopierAction::DetermineFilesystemSize(int fd) {
   if (verify_hash_) {
-    filesystem_size_ = copying_kernel_install_path_ ?
-        install_plan_.kernel_size : install_plan_.rootfs_size;
+    filesystem_size_ = install_plan_.rootfs_size;
     LOG(INFO) << "Filesystem size: " << filesystem_size_;
     return;
   }
   filesystem_size_ = kint64max;
   int block_count = 0, block_size = 0;
-  if (!copying_kernel_install_path_ &&
-      utils::GetFilesystemSizeFromFD(fd, &block_count, &block_size)) {
+  if (utils::GetFilesystemSizeFromFD(fd, &block_count, &block_size)) {
     filesystem_size_ = static_cast<int64_t>(block_count) * block_size;
     LOG(INFO) << "Filesystem size: " << filesystem_size_ << " bytes ("
               << block_count << "x" << block_size << ").";

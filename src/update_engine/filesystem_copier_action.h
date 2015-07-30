@@ -37,7 +37,7 @@ class ActionTraits<FilesystemCopierAction> {
 
 class FilesystemCopierAction : public Action<FilesystemCopierAction> {
  public:
-  FilesystemCopierAction(bool copying_kernel_install_path, bool verify_hash);
+  FilesystemCopierAction(bool verify_hash);
 
   typedef ActionTraits<FilesystemCopierAction>::InputObjectType
   InputObjectType;
@@ -97,10 +97,6 @@ class FilesystemCopierAction : public Action<FilesystemCopierAction> {
   // whole partition. Currently this supports only the root file system assuming
   // it's ext3-compatible.
   void DetermineFilesystemSize(int fd);
-
-  // If true, this action is copying to the kernel_install_path from
-  // the install plan, otherwise it's copying just to the install_path.
-  const bool copying_kernel_install_path_;
 
   // If true, this action is running in applied update hash verification mode --
   // it computes a hash for the target install path and compares it against the

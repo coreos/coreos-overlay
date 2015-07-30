@@ -126,7 +126,30 @@ message DeltaArchiveManifest {
     optional bytes data_sha256_hash = 8;
   }
   repeated InstallOperation install_operations = 1;
-  repeated InstallOperation kernel_install_operations = 2;
+
+  // This field is maintained for compatibility with older update_engine
+  // clients. In the ChromeOS days it covered the kernel partition but in
+  // CoreOS it has only been used to insert a dummy operation to account for
+  // the signatures tacked onto the end of the payload. The code was not smart
+  // enough to stop passing data to the filesystem writer code after the
+  // signatures_offset had been reached, instead using the magic punch-hole
+  // value to skip over the extra data. Since CoreOS versions of update_engine
+  // only partially removed support kernel partitions passing anything other
+  // than dummy operations will trigger broken code paths but omitting the
+  // dummy operations will fail when the filesystem writer receives unexpected
+  // data. Therefore to work with old versions it strictly *must* look like:
+  //
+  //   noop_operations: {
+  //     type: REPLACE
+  //     data_offset: signatures_offset
+  //     data_length: signatures_size
+  //     dst_extents: {
+  //       start_block: UINT64_MAX
+  //       num_blocks: (signature_size + block_size - 1) / block_size
+  //     }
+  //   }
+  //
+  repeated InstallOperation noop_operations = 2;
 
   // (At time of writing) usually 4096
   optional uint32 block_size = 3 [default = 4096];
@@ -139,9 +162,9 @@ message DeltaArchiveManifest {
   optional uint64 signatures_offset = 4;
   optional uint64 signatures_size = 5;
 
+  // Deprecated IDs 6 and 7, do not reuse.
+
   // Partition data that can be used to validate the update.
-  optional PartitionInfo old_kernel_info = 6;
-  optional PartitionInfo new_kernel_info = 7;
   optional PartitionInfo old_rootfs_info = 8;
   optional PartitionInfo new_rootfs_info = 9;
 }

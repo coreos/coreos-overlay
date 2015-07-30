@@ -177,9 +177,7 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
   shared_ptr<OmahaResponseHandlerAction> response_handler_action(
       new OmahaResponseHandlerAction(system_state_));
   shared_ptr<FilesystemCopierAction> filesystem_copier_action(
-      new FilesystemCopierAction(false, false));
-  shared_ptr<FilesystemCopierAction> kernel_filesystem_copier_action(
-      new FilesystemCopierAction(true, false));
+      new FilesystemCopierAction(false));
   shared_ptr<OmahaRequestAction> download_started_action(
       new OmahaRequestAction(system_state_,
                              new OmahaEvent(
@@ -200,9 +198,7 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
                              new LibcurlHttpFetcher(),
                              false));
   shared_ptr<FilesystemCopierAction> filesystem_verifier_action(
-      new FilesystemCopierAction(false, true));
-  shared_ptr<FilesystemCopierAction> kernel_filesystem_verifier_action(
-      new FilesystemCopierAction(true, true));
+      new FilesystemCopierAction(true));
   shared_ptr<PostinstallRunnerAction> postinstall_runner_action(
       new PostinstallRunnerAction(omaha_request_params_->app_id()));
   shared_ptr<OmahaRequestAction> update_complete_action(
@@ -218,14 +214,10 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
   actions_.push_back(shared_ptr<AbstractAction>(update_check_action));
   actions_.push_back(shared_ptr<AbstractAction>(response_handler_action));
   actions_.push_back(shared_ptr<AbstractAction>(filesystem_copier_action));
-  actions_.push_back(shared_ptr<AbstractAction>(
-      kernel_filesystem_copier_action));
   actions_.push_back(shared_ptr<AbstractAction>(download_started_action));
   actions_.push_back(shared_ptr<AbstractAction>(download_action));
   actions_.push_back(shared_ptr<AbstractAction>(download_finished_action));
   actions_.push_back(shared_ptr<AbstractAction>(filesystem_verifier_action));
-  actions_.push_back(shared_ptr<AbstractAction>(
-      kernel_filesystem_verifier_action));
   actions_.push_back(shared_ptr<AbstractAction>(postinstall_runner_action));
   actions_.push_back(shared_ptr<AbstractAction>(update_complete_action));
 
@@ -241,14 +233,10 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
   BondActions(response_handler_action.get(),
               filesystem_copier_action.get());
   BondActions(filesystem_copier_action.get(),
-              kernel_filesystem_copier_action.get());
-  BondActions(kernel_filesystem_copier_action.get(),
               download_action.get());
   BondActions(download_action.get(),
               filesystem_verifier_action.get());
   BondActions(filesystem_verifier_action.get(),
-              kernel_filesystem_verifier_action.get());
-  BondActions(kernel_filesystem_verifier_action.get(),
               postinstall_runner_action.get());
 }
 

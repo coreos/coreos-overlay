@@ -45,20 +45,20 @@ void DownloadAction::PerformAction() {
 
   if (writer_) {
     LOG(INFO) << "Using writer for test.";
-    int rc = writer_->Open(install_plan_.install_path.c_str(),
-			   O_TRUNC | O_WRONLY | O_CREAT | O_LARGEFILE,
-			   0644);
-    if (rc < 0) {
-      LOG(ERROR) << "Unable to open output file " << install_plan_.install_path;
-      // report error to processor
-      processor_->ActionComplete(this, kActionCodeInstallDeviceOpenError);
-      return;
-    }    
   } else {
     delta_performer_.reset(new DeltaPerformer(prefs_,
                                               system_state_,
                                               &install_plan_));
     writer_ = delta_performer_.get();
+  }
+  int rc = writer_->Open(install_plan_.install_path.c_str(),
+                         O_TRUNC | O_WRONLY | O_CREAT | O_LARGEFILE,
+                         0644);
+  if (rc < 0) {
+    LOG(ERROR) << "Unable to open output file " << install_plan_.install_path;
+    // report error to processor
+    processor_->ActionComplete(this, kActionCodeInstallDeviceOpenError);
+    return;
   }
   if (delegate_) {
     delegate_->SetDownloadStatus(true);  // Set to active.
@@ -117,8 +117,6 @@ void DownloadAction::TransferComplete(HttpFetcher *fetcher, bool successful) {
       LOG(ERROR) << "Download of " << install_plan_.download_url
                  << " failed due to payload verification error.";
     } else if (!delta_performer_->GetNewPartitionInfo(
-        &install_plan_.kernel_size,
-        &install_plan_.kernel_hash,
         &install_plan_.rootfs_size,
         &install_plan_.rootfs_hash)) {
       LOG(ERROR) << "Unable to get new partition hash info.";

@@ -43,9 +43,6 @@ extern const char* kUnittestPublicKey2Path;
 
 static const size_t kBlockSize = 4096;
 
-static const int kDefaultKernelSize = 4096; // Something small for a test
-static const char* kNewDataString = "This is new data.";
-
 namespace {
 struct DeltaState {
   string a_img;
@@ -54,12 +51,6 @@ struct DeltaState {
 
   string delta_path;
   uint64_t metadata_size;
-
-  string old_kernel;
-  vector<char> old_kernel_data;
-
-  string new_kernel;
-  vector<char> new_kernel_data;
 
   // The in-memory copy of delta file.
   vector<char> delta;
@@ -239,8 +230,7 @@ static void SignGeneratedShellPayload(SignatureTest signature_test,
   }
 }
 
-static void GenerateDeltaFile(bool full_kernel,
-                              bool full_rootfs,
+static void GenerateDeltaFile(bool full_rootfs,
                               bool noop,
                               SignatureTest signature_test,
                               DeltaState *state) {
@@ -317,36 +307,6 @@ static void GenerateDeltaFile(bool full_kernel,
                                  sizeof(kRandomString)));
   }
 
-  string old_kernel;
-  EXPECT_TRUE(utils::MakeTempFile("/tmp/old_kernel.XXXXXX",
-                                  &state->old_kernel,
-                                  NULL));
-
-  string new_kernel;
-  EXPECT_TRUE(utils::MakeTempFile("/tmp/new_kernel.XXXXXX",
-                                  &state->new_kernel,
-                                  NULL));
-
-  state->old_kernel_data.resize(kDefaultKernelSize);
-  state->new_kernel_data.resize(state->old_kernel_data.size());
-  FillWithData(&state->old_kernel_data);
-  FillWithData(&state->new_kernel_data);
-
-  // change the new kernel data
-  strcpy(&state->new_kernel_data[0], kNewDataString);
-
-  if (noop) {
-    state->old_kernel_data = state->new_kernel_data;
-  }
-
-  // Write kernels to disk
-  EXPECT_TRUE(utils::WriteFile(state->old_kernel.c_str(),
-                               &state->old_kernel_data[0],
-                               state->old_kernel_data.size()));
-  EXPECT_TRUE(utils::WriteFile(state->new_kernel.c_str(),
-                               &state->new_kernel_data[0],
-                               state->new_kernel_data.size()));
-
   EXPECT_TRUE(utils::MakeTempFile("/tmp/delta.XXXXXX",
                                   &state->delta_path,
                                   NULL));
@@ -363,8 +323,6 @@ static void GenerateDeltaFile(bool full_kernel,
             full_rootfs ? "" : state->a_img,
             b_mnt,
             state->b_img,
-            full_kernel ? "" : state->old_kernel,
-            state->new_kernel,
             state->delta_path,
             private_key,
             &state->metadata_size));
@@ -383,7 +341,7 @@ static void GenerateDeltaFile(bool full_kernel,
   }
 }
 
-static void ApplyDeltaFile(bool full_kernel, bool full_rootfs, bool noop,
+static void ApplyDeltaFile(bool full_rootfs, bool noop,
                            SignatureTest signature_test, DeltaState* state,
                            bool hash_checks_mandatory,
                            OperationHashTest op_hash_test,
@@ -430,15 +388,7 @@ static void ApplyDeltaFile(bool full_kernel, bool full_rootfs, bool noop,
 
     if (noop) {
       EXPECT_EQ(1, manifest.install_operations_size());
-      EXPECT_EQ(1, manifest.kernel_install_operations_size());
-    }
-
-    if (full_kernel) {
-      EXPECT_FALSE(manifest.has_old_kernel_info());
-    } else {
-      EXPECT_EQ(state->old_kernel_data.size(),
-                manifest.old_kernel_info().size());
-      EXPECT_FALSE(manifest.old_kernel_info().hash().empty());
+      EXPECT_EQ(1, manifest.noop_operations_size());
     }
 
     if (full_rootfs) {
@@ -448,10 +398,8 @@ static void ApplyDeltaFile(bool full_kernel, bool full_rootfs, bool noop,
       EXPECT_FALSE(manifest.old_rootfs_info().hash().empty());
     }
 
-    EXPECT_EQ(state->new_kernel_data.size(), manifest.new_kernel_info().size());
     EXPECT_EQ(state->image_size, manifest.new_rootfs_info().size());
 
-    EXPECT_FALSE(manifest.new_kernel_info().hash().empty());
     EXPECT_FALSE(manifest.new_rootfs_info().hash().empty());
   }
 
@@ -487,11 +435,8 @@ static void ApplyDeltaFile(bool full_kernel, bool full_rootfs, bool noop,
             OmahaHashCalculator::RawHashOfFile(state->a_img,
                                                state->image_size,
                                                &install_plan.rootfs_hash));
-  EXPECT_TRUE(OmahaHashCalculator::RawHashOfData(state->old_kernel_data,
-                                                 &install_plan.kernel_hash));
 
   EXPECT_EQ(0, (*performer)->Open(state->a_img.c_str(), 0, 0));
-  EXPECT_EQ(0, (*performer)->OpenKernel(state->old_kernel.c_str()));
 
   ActionExitCode expected_error, actual_error;
   bool continue_writing;
@@ -574,27 +519,12 @@ void VerifyPayloadResult(DeltaPerformer* performer,
     return;
   }
 
-  CompareFilesByBlock(state->old_kernel, state->new_kernel);
   CompareFilesByBlock(state->a_img, state->b_img);
 
-  vector<char> updated_kernel_partition;
-  EXPECT_TRUE(utils::ReadFile(state->old_kernel, &updated_kernel_partition));
-  EXPECT_EQ(0, strncmp(&updated_kernel_partition[0], kNewDataString,
-                       strlen(kNewDataString)));
-
-  uint64_t new_kernel_size;
-  vector<char> new_kernel_hash;
   uint64_t new_rootfs_size;
   vector<char> new_rootfs_hash;
-  EXPECT_TRUE(performer->GetNewPartitionInfo(&new_kernel_size,
-                                            &new_kernel_hash,
-                                            &new_rootfs_size,
-                                            &new_rootfs_hash));
-  EXPECT_EQ(kDefaultKernelSize, new_kernel_size);
-  vector<char> expected_new_kernel_hash;
-  EXPECT_TRUE(OmahaHashCalculator::RawHashOfData(state->new_kernel_data,
-                                                 &expected_new_kernel_hash));
-  EXPECT_TRUE(expected_new_kernel_hash == new_kernel_hash);
+  EXPECT_TRUE(performer->GetNewPartitionInfo(&new_rootfs_size,
+                                             &new_rootfs_hash));
   EXPECT_EQ(state->image_size, new_rootfs_size);
   vector<char> expected_new_rootfs_hash;
   EXPECT_EQ(state->image_size,
@@ -621,18 +551,16 @@ void VerifyPayload(DeltaPerformer* performer,
   VerifyPayloadResult(performer, state, expected_result);
 }
 
-void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop,
+void DoSmallImageTest(bool full_rootfs, bool noop,
                       SignatureTest signature_test,
                       bool hash_checks_mandatory) {
   DeltaState state;
   DeltaPerformer *performer;
-  GenerateDeltaFile(full_kernel, full_rootfs, noop, signature_test, &state);
+  GenerateDeltaFile(full_rootfs, noop, signature_test, &state);
   ScopedPathUnlinker a_img_unlinker(state.a_img);
   ScopedPathUnlinker b_img_unlinker(state.b_img);
   ScopedPathUnlinker delta_unlinker(state.delta_path);
-  ScopedPathUnlinker old_kernel_unlinker(state.old_kernel);
-  ScopedPathUnlinker new_kernel_unlinker(state.new_kernel);
-  ApplyDeltaFile(full_kernel, full_rootfs, noop, signature_test,
+  ApplyDeltaFile(full_rootfs, noop, signature_test,
                  &state, hash_checks_mandatory, kValidOperationData,
                  &performer);
   VerifyPayload(performer, &state, signature_test);
@@ -641,14 +569,12 @@ void DoSmallImageTest(bool full_kernel, bool full_rootfs, bool noop,
 void DoOperationHashMismatchTest(OperationHashTest op_hash_test,
                                  bool hash_checks_mandatory) {
   DeltaState state;
-  GenerateDeltaFile(true, true, false, kSignatureGenerated, &state);
+  GenerateDeltaFile(true, false, kSignatureGenerated, &state);
   ScopedPathUnlinker a_img_unlinker(state.a_img);
   ScopedPathUnlinker b_img_unlinker(state.b_img);
   ScopedPathUnlinker delta_unlinker(state.delta_path);
-  ScopedPathUnlinker old_kernel_unlinker(state.old_kernel);
-  ScopedPathUnlinker new_kernel_unlinker(state.new_kernel);
   DeltaPerformer *performer;
-  ApplyDeltaFile(true, true, false, kSignatureGenerated,
+  ApplyDeltaFile(true, false, kSignatureGenerated,
                  &state, hash_checks_mandatory, op_hash_test, &performer);
 }
 
@@ -678,31 +604,31 @@ TEST(DeltaPerformerTest, ExtentsToByteStringTest) {
 
 TEST(DeltaPerformerTest, RunAsRootSmallImageTest) {
   bool hash_checks_mandatory = false;
-  DoSmallImageTest(false, false, false, kSignatureGenerator,
+  DoSmallImageTest(false, false, kSignatureGenerator,
                    hash_checks_mandatory);
 }
 
 TEST(DeltaPerformerTest, RunAsRootFullSmallImageTest) {
   bool hash_checks_mandatory = true;
-  DoSmallImageTest(true, true, false, kSignatureGenerator,
+  DoSmallImageTest(true, false, kSignatureGenerator,
                    hash_checks_mandatory);
 }
 
 TEST(DeltaPerformerTest, RunAsRootNoopSmallImageTest) {
   bool hash_checks_mandatory = false;
-  DoSmallImageTest(false, false, true, kSignatureGenerator,
+  DoSmallImageTest(false, true, kSignatureGenerator,
                    hash_checks_mandatory);
 }
 
 TEST(DeltaPerformerTest, RunAsRootSmallImageSignNoneTest) {
   bool hash_checks_mandatory = false;
-  DoSmallImageTest(false, false, false, kSignatureNone,
+  DoSmallImageTest(false, false, kSignatureNone,
                    hash_checks_mandatory);
 }
 
 TEST(DeltaPerformerTest, RunAsRootSmallImageSignGeneratedTest) {
   bool hash_checks_mandatory = true;
-  DoSmallImageTest(false, false, false, kSignatureGenerated,
+  DoSmallImageTest(false, false, kSignatureGenerated,
                    hash_checks_mandatory);
 }
 
@@ -712,7 +638,6 @@ TEST(DeltaPerformerTest, BadDeltaMagicTest) {
   MockSystemState mock_system_state;
   DeltaPerformer performer(&prefs, &mock_system_state, &install_plan);
   EXPECT_EQ(0, performer.Open("/dev/null", 0, 0));
-  EXPECT_EQ(0, performer.OpenKernel("/dev/null"));
   EXPECT_TRUE(performer.Write("junk", 4));
   EXPECT_TRUE(performer.Write("morejunk", 8));
   EXPECT_FALSE(performer.Write("morejunk", 8));
@@ -741,7 +666,6 @@ TEST(DeltaPerformerTest, WriteUpdatesPayloadState) {
   MockSystemState mock_system_state;
   DeltaPerformer performer(&prefs, &mock_system_state, &install_plan);
   EXPECT_EQ(0, performer.Open("/dev/null", 0, 0));
-  EXPECT_EQ(0, performer.OpenKernel("/dev/null"));
 
   EXPECT_CALL(*(mock_system_state.mock_payload_state()),
               DownloadProgress(4)).Times(1);

@@ -109,14 +109,12 @@ bool ChunkProcessor::ReadAndCompress() {
 
 bool FullUpdateGenerator::Run(
     Graph* graph,
-    const std::string& new_kernel_part,
     const std::string& new_image,
     off_t image_size,
     int fd,
     off_t* data_file_size,
     off_t chunk_size,
     off_t block_size,
-    vector<DeltaArchiveManifest_InstallOperation>* kernel_ops,
     std::vector<Vertex::Index>* final_order) {
   TEST_AND_RETURN_FALSE(chunk_size > 0);
   TEST_AND_RETURN_FALSE((chunk_size % block_size) == 0);
@@ -124,83 +122,61 @@ bool FullUpdateGenerator::Run(
   size_t max_threads = max(sysconf(_SC_NPROCESSORS_ONLN), 4L);
   LOG(INFO) << "Max threads: " << max_threads;
 
-  // Get the sizes early in the function, so we can fail fast if the user
-  // passed us bad paths.
   TEST_AND_RETURN_FALSE(image_size >= 0 &&
                         image_size <= utils::FileSize(new_image));
-  // Always do the root image, the kernel may not be used in all cases
-  int partitions = 1;
 
-  off_t kernel_size = 0;
-  if (!new_kernel_part.empty()) {
-    kernel_size = utils::FileSize(new_kernel_part);
-    partitions++;
-  }
+  LOG(INFO) << "compressing " << new_image;
+  int in_fd = open(new_image.c_str(), O_RDONLY, 0);
+  TEST_AND_RETURN_FALSE(in_fd >= 0);
+  ScopedFdCloser in_fd_closer(&in_fd);
+  deque<shared_ptr<ChunkProcessor> > threads;
+  int last_progress_update = INT_MIN;
+  off_t bytes_left = image_size, counter = 0, offset = 0;
+  while (bytes_left > 0 || !threads.empty()) {
+    // Check and start new chunk processors if possible.
+    while (threads.size() < max_threads && bytes_left > 0) {
+      shared_ptr<ChunkProcessor> processor(
+          new ChunkProcessor(in_fd, offset, min(bytes_left, chunk_size)));
+      threads.push_back(processor);
+      TEST_AND_RETURN_FALSE(processor->Start());
+      bytes_left -= chunk_size;
+      offset += chunk_size;
+    }
 
-  off_t part_sizes[] = { image_size, kernel_size };
-  string paths[] = { new_image, new_kernel_part };
+    // Need to wait for a chunk processor to complete and process its ouput
+    // before spawning new processors.
+    shared_ptr<ChunkProcessor> processor = threads.front();
+    threads.pop_front();
+    TEST_AND_RETURN_FALSE(processor->Wait());
 
-  for (int partition = 0; partition < partitions; ++partition) {
-    const string& path = paths[partition];
-    LOG(INFO) << "compressing " << path;
-    int in_fd = open(path.c_str(), O_RDONLY, 0);
-    TEST_AND_RETURN_FALSE(in_fd >= 0);
-    ScopedFdCloser in_fd_closer(&in_fd);
-    deque<shared_ptr<ChunkProcessor> > threads;
-    int last_progress_update = INT_MIN;
-    off_t bytes_left = part_sizes[partition], counter = 0, offset = 0;
-    while (bytes_left > 0 || !threads.empty()) {
-      // Check and start new chunk processors if possible.
-      while (threads.size() < max_threads && bytes_left > 0) {
-        shared_ptr<ChunkProcessor> processor(
-            new ChunkProcessor(in_fd, offset, min(bytes_left, chunk_size)));
-        threads.push_back(processor);
-        TEST_AND_RETURN_FALSE(processor->Start());
-        bytes_left -= chunk_size;
-        offset += chunk_size;
-      }
+    graph->resize(graph->size() + 1);
+    graph->back().file_name =
+        StringPrintf("<rootfs-operation-%" PRIi64 ">", counter++);
+    DeltaArchiveManifest_InstallOperation* op = &graph->back().op;
+    final_order->push_back(graph->size() - 1);
 
-      // Need to wait for a chunk processor to complete and process its ouput
-      // before spawning new processors.
-      shared_ptr<ChunkProcessor> processor = threads.front();
-      threads.pop_front();
-      TEST_AND_RETURN_FALSE(processor->Wait());
+    const bool compress = processor->ShouldCompress();
+    const vector<char>& use_buf =
+        compress ? processor->buffer_compressed() : processor->buffer_in();
+    op->set_type(compress ?
+                 DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ :
+                 DeltaArchiveManifest_InstallOperation_Type_REPLACE);
+    op->set_data_offset(*data_file_size);
+    TEST_AND_RETURN_FALSE(utils::WriteAll(fd, &use_buf[0], use_buf.size()));
+    *data_file_size += use_buf.size();
+    op->set_data_length(use_buf.size());
+    Extent* dst_extent = op->add_dst_extents();
+    dst_extent->set_start_block(processor->offset() / block_size);
+    dst_extent->set_num_blocks(chunk_size / block_size);
 
-      DeltaArchiveManifest_InstallOperation* op = NULL;
-      if (partition == 0) {
-        graph->resize(graph->size() + 1);
-        graph->back().file_name =
-            StringPrintf("<rootfs-operation-%" PRIi64 ">", counter++);
-        op = &graph->back().op;
-        final_order->push_back(graph->size() - 1);
-      } else {
-        kernel_ops->resize(kernel_ops->size() + 1);
-        op = &kernel_ops->back();
-      }
-
-      const bool compress = processor->ShouldCompress();
-      const vector<char>& use_buf =
-          compress ? processor->buffer_compressed() : processor->buffer_in();
-      op->set_type(compress ?
-                   DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ :
-                   DeltaArchiveManifest_InstallOperation_Type_REPLACE);
-      op->set_data_offset(*data_file_size);
-      TEST_AND_RETURN_FALSE(utils::WriteAll(fd, &use_buf[0], use_buf.size()));
-      *data_file_size += use_buf.size();
-      op->set_data_length(use_buf.size());
-      Extent* dst_extent = op->add_dst_extents();
-      dst_extent->set_start_block(processor->offset() / block_size);
-      dst_extent->set_num_blocks(chunk_size / block_size);
-
-      int progress = static_cast<int>(
-          (processor->offset() + processor->buffer_in().size()) * 100.0 /
-          part_sizes[partition]);
-      if (last_progress_update < progress &&
-          (last_progress_update + 10 <= progress || progress == 100)) {
-        LOG(INFO) << progress << "% complete (output size: "
-                  << *data_file_size << ")";
-        last_progress_update = progress;
-      }
+    int progress = static_cast<int>(
+        (processor->offset() + processor->buffer_in().size()) * 100.0 /
+        image_size);
+    if (last_progress_update < progress &&
+        (last_progress_update + 10 <= progress || progress == 100)) {
+      LOG(INFO) << progress << "% complete (output size: "
+                << *data_file_size << ")";
+      last_progress_update = progress;
     }
   }
 

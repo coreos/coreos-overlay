@@ -12,8 +12,9 @@
 # Build/test generated files
 *.gcda
 *.gcno
+.deps/
+.dirstamp
 /*.pub.pem
-/.deps/
 /Makefile
 /Makefile.in
 /aclocal.m4

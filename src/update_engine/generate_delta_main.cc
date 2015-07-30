@@ -35,8 +35,6 @@ DEFINE_string(new_dir, "",
               "Directory where the new rootfs is loop mounted read-only");
 DEFINE_string(old_image, "", "Path to the old rootfs");
 DEFINE_string(new_image, "", "Path to the new rootfs");
-DEFINE_string(old_kernel, "", "Path to the old kernel partition image");
-DEFINE_string(new_kernel, "", "Path to the new kernel partition image");
 DEFINE_string(in_file, "",
               "Path to input delta payload file used to hash/sign payloads "
               "and apply delta over old_image (for debugging)");
@@ -183,19 +181,12 @@ void ApplyDelta() {
   // Get original checksums
   LOG(INFO) << "Calculating original checksums";
   PartitionInfo kern_info, root_info;
-  CHECK(DeltaDiffGenerator::InitializePartitionInfo(true,  // is_kernel
-                                                    FLAGS_old_kernel,
-                                                    &kern_info));
-  CHECK(DeltaDiffGenerator::InitializePartitionInfo(false,  // is_kernel
-                                                    FLAGS_old_image,
+  CHECK(DeltaDiffGenerator::InitializePartitionInfo(FLAGS_old_image,
                                                     &root_info));
-  install_plan.kernel_hash.assign(kern_info.hash().begin(),
-                                  kern_info.hash().end());
   install_plan.rootfs_hash.assign(root_info.hash().begin(),
                                   root_info.hash().end());
   DeltaPerformer performer(&prefs, NULL, &install_plan);
   CHECK_EQ(performer.Open(FLAGS_old_image.c_str(), 0, 0), 0);
-  CHECK_EQ(performer.OpenKernel(FLAGS_old_kernel.c_str()), 0);
   vector<char> buf(1024 * 1024);
   int fd = open(FLAGS_in_file.c_str(), O_RDONLY, 0);
   CHECK_GE(fd, 0);
@@ -266,8 +257,6 @@ int Main(int argc, char** argv) {
                                                    FLAGS_old_image,
                                                    FLAGS_new_dir,
                                                    FLAGS_new_image,
-                                                   FLAGS_old_kernel,
-                                                   FLAGS_new_kernel,
                                                    FLAGS_out_file,
                                                    FLAGS_private_key,
                                                    &metadata_size)) {

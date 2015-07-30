@@ -56,8 +56,6 @@ class DeltaDiffGenerator {
   // This is the only function that external users of the class should call.
   // old_image and new_image are paths to two image files. They should be
   // mounted read-only at paths old_root and new_root respectively.
-  // {old,new}_kernel_part are paths to the old and new kernel partition
-  // images, respectively.
   // private_key_path points to a private key used to sign the update.
   // Pass empty string to not sign the update.
   // output_path is the filename where the delta update should be written.
@@ -67,8 +65,6 @@ class DeltaDiffGenerator {
                                       const std::string& old_image,
                                       const std::string& new_root,
                                       const std::string& new_image,
-                                      const std::string& old_kernel_part,
-                                      const std::string& new_kernel_part,
                                       const std::string& output_path,
                                       const std::string& private_key_path,
                                       uint64_t* metadata_size);
@@ -221,8 +217,7 @@ class DeltaDiffGenerator {
   // (e.g., a move operation that copies blocks onto themselves).
   static bool IsNoopOperation(const DeltaArchiveManifest_InstallOperation& op);
 
-  static bool InitializePartitionInfo(bool is_kernel,
-                                      const std::string& partition,
+  static bool InitializePartitionInfo(const std::string& partition,
                                       PartitionInfo* info);
 
   // Runs the bsdiff tool on two files and returns the resulting delta in

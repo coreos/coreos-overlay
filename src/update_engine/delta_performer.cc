@@ -191,19 +191,8 @@ int DeltaPerformer::Open(const char* path, int flags, mode_t mode) {
   return -err;
 }
 
-int DeltaPerformer::OpenKernel(const char* kernel_path) {
-  int err;
-  if (OpenFile(kernel_path, &kernel_fd_, &err))
-    kernel_path_ = kernel_path;
-  return -err;
-}
-
 int DeltaPerformer::Close() {
   int err = 0;
-  if (close(kernel_fd_) == -1) {
-    err = errno;
-    PLOG(ERROR) << "Unable to close kernel fd:";
-  }
   if (close(fd_) == -1) {
     err = errno;
     PLOG(ERROR) << "Unable to close rootfs fd:";
@@ -235,12 +224,8 @@ void LogPartitionInfoHash(const PartitionInfo& info, const string& tag) {
 }
 
 void LogPartitionInfo(const DeltaArchiveManifest& manifest) {
-  if (manifest.has_old_kernel_info())
-    LogPartitionInfoHash(manifest.old_kernel_info(), "old_kernel_info");
   if (manifest.has_old_rootfs_info())
     LogPartitionInfoHash(manifest.old_rootfs_info(), "old_rootfs_info");
-  if (manifest.has_new_kernel_info())
-    LogPartitionInfoHash(manifest.new_kernel_info(), "new_kernel_info");
   if (manifest.has_new_rootfs_info())
     LogPartitionInfoHash(manifest.new_rootfs_info(), "new_rootfs_info");
 }
@@ -351,33 +336,18 @@ bool DeltaPerformer::Write(const void* bytes, size_t count,
 
     num_rootfs_operations_ = manifest_.install_operations_size();
     num_total_operations_ =
-        num_rootfs_operations_ + manifest_.kernel_install_operations_size();
+        num_rootfs_operations_ + manifest_.noop_operations_size();
     if (next_operation_num_ > 0)
       UpdateOverallProgress(true, "Resuming after ");
     LOG(INFO) << "Starting to apply update payload operations";
   }
 
   while (next_operation_num_ < num_total_operations_) {
-    const bool is_kernel =
+    const bool is_noop =
         (next_operation_num_ >= num_rootfs_operations_);
-
-    if (is_kernel && kernel_fd_ == -1) {
-      if (OpenKernel(install_plan_->kernel_install_path.c_str()) < 0) {
-	LOG(ERROR) << "Unable to open output file " << install_plan_->kernel_install_path;
-	return false;
-      }
-    } else if (fd_ == -1) {
-      if (Open(install_plan_->install_path.c_str(),
-	       O_TRUNC | O_WRONLY | O_CREAT | O_LARGEFILE,
-	       0644) < 0) {
-	LOG(ERROR) << "Unable to open output file " << install_plan_->install_path;
-	return false;
-      }
-    }
-
     const DeltaArchiveManifest_InstallOperation &op =
-        is_kernel ?
-        manifest_.kernel_install_operations(
+        is_noop ?
+        manifest_.noop_operations(
             next_operation_num_ - num_rootfs_operations_) :
         manifest_.install_operations(next_operation_num_);
     if (!CanPerformInstallOperation(op)) {
@@ -401,27 +371,30 @@ bool DeltaPerformer::Write(const void* bytes, size_t count,
       *error = kActionCodeSuccess;
     }
 
+    // TODO(marineam): Add a PerformNoopOperation and call it here instead
+    // of assuming PerformReplaceOperation will safely noop.
+
     // Makes sure we unblock exit when this operation completes.
     ScopedTerminatorExitUnblocker exit_unblocker =
         ScopedTerminatorExitUnblocker();  // Avoids a compiler unused var bug.
     // Log every thousandth operation, and also the first and last ones
     if (op.type() == DeltaArchiveManifest_InstallOperation_Type_REPLACE ||
         op.type() == DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ) {
-      if (!PerformReplaceOperation(op, is_kernel)) {
+      if (!PerformReplaceOperation(op)) {
         LOG(ERROR) << "Failed to perform replace operation "
                    << next_operation_num_;
         *error = kActionCodeDownloadOperationExecutionError;
         return false;
       }
     } else if (op.type() == DeltaArchiveManifest_InstallOperation_Type_MOVE) {
-      if (!PerformMoveOperation(op, is_kernel)) {
+      if (!PerformMoveOperation(op)) {
         LOG(ERROR) << "Failed to perform move operation "
                    << next_operation_num_;
         *error = kActionCodeDownloadOperationExecutionError;
         return false;
       }
     } else if (op.type() == DeltaArchiveManifest_InstallOperation_Type_BSDIFF) {
-      if (!PerformBsdiffOperation(op, is_kernel)) {
+      if (!PerformBsdiffOperation(op)) {
         LOG(ERROR) << "Failed to perform bsdiff operation "
                    << next_operation_num_;
         *error = kActionCodeDownloadOperationExecutionError;
@@ -455,8 +428,7 @@ bool DeltaPerformer::CanPerformInstallOperation(
 }
 
 bool DeltaPerformer::PerformReplaceOperation(
-    const DeltaArchiveManifest_InstallOperation& operation,
-    bool is_kernel) {
+    const DeltaArchiveManifest_InstallOperation& operation) {
   CHECK(operation.type() == \
         DeltaArchiveManifest_InstallOperation_Type_REPLACE || \
         operation.type() == \
@@ -478,18 +450,10 @@ bool DeltaPerformer::PerformReplaceOperation(
   // point to one of the ExtentWriter objects above.
   ExtentWriter* writer = NULL;
   if (operation.type() == DeltaArchiveManifest_InstallOperation_Type_REPLACE) {
-    if (is_kernel) {
-      writer = &direct_writer;
-    } else {
-      writer = &zero_pad_writer;
-    }
+    writer = &zero_pad_writer;
   } else if (operation.type() ==
              DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ) {
-    if (is_kernel) {
-      bzip_writer.reset(new BzipExtentWriter(&direct_writer));
-    } else {
-      bzip_writer.reset(new BzipExtentWriter(&zero_pad_writer));
-    }
+    bzip_writer.reset(new BzipExtentWriter(&zero_pad_writer));
     writer = bzip_writer.get();
   } else {
     NOTREACHED();
@@ -501,9 +465,7 @@ bool DeltaPerformer::PerformReplaceOperation(
     extents.push_back(operation.dst_extents(i));
   }
 
-  int fd = is_kernel ? kernel_fd_ : fd_;
-
-  TEST_AND_RETURN_FALSE(writer->Init(fd, extents, block_size_));
+  TEST_AND_RETURN_FALSE(writer->Init(fd_, extents, block_size_));
   TEST_AND_RETURN_FALSE(writer->Write(&buffer_[0], operation.data_length()));
   TEST_AND_RETURN_FALSE(writer->End());
   // Update buffer
@@ -513,8 +475,7 @@ bool DeltaPerformer::PerformReplaceOperation(
 }
 
 bool DeltaPerformer::PerformMoveOperation(
-    const DeltaArchiveManifest_InstallOperation& operation,
-    bool is_kernel) {
+    const DeltaArchiveManifest_InstallOperation& operation) {
   // Calculate buffer size. Note, this function doesn't do a sliding
   // window to copy in case the source and destination blocks overlap.
   // If we wanted to do a sliding window, we could program the server
@@ -531,14 +492,12 @@ bool DeltaPerformer::PerformMoveOperation(
   DCHECK_EQ(blocks_to_write, blocks_to_read);
   vector<char> buf(blocks_to_write * block_size_);
 
-  int fd = is_kernel ? kernel_fd_ : fd_;
-
   // Read in bytes.
   ssize_t bytes_read = 0;
   for (int i = 0; i < operation.src_extents_size(); i++) {
     ssize_t bytes_read_this_iteration = 0;
     const Extent& extent = operation.src_extents(i);
-    TEST_AND_RETURN_FALSE(utils::PReadAll(fd,
+    TEST_AND_RETURN_FALSE(utils::PReadAll(fd_,
                                           &buf[bytes_read],
                                           extent.num_blocks() * block_size_,
                                           extent.start_block() * block_size_,
@@ -561,7 +520,7 @@ bool DeltaPerformer::PerformMoveOperation(
   ssize_t bytes_written = 0;
   for (int i = 0; i < operation.dst_extents_size(); i++) {
     const Extent& extent = operation.dst_extents(i);
-    TEST_AND_RETURN_FALSE(utils::PWriteAll(fd,
+    TEST_AND_RETURN_FALSE(utils::PWriteAll(fd_,
                                            &buf[bytes_written],
                                            extent.num_blocks() * block_size_,
                                            extent.start_block() * block_size_));
@@ -599,8 +558,7 @@ bool DeltaPerformer::ExtentsToBsdiffPositionsString(
 }
 
 bool DeltaPerformer::PerformBsdiffOperation(
-    const DeltaArchiveManifest_InstallOperation& operation,
-    bool is_kernel) {
+    const DeltaArchiveManifest_InstallOperation& operation) {
   // Since we delete data off the beginning of the buffer as we use it,
   // the data we need should be exactly at the beginning of the buffer.
   TEST_AND_RETURN_FALSE(buffer_offset_ == operation.data_offset());
@@ -629,8 +587,7 @@ bool DeltaPerformer::PerformBsdiffOperation(
         utils::WriteAll(fd, &buffer_[0], operation.data_length()));
   }
 
-  int fd = is_kernel ? kernel_fd_ : fd_;
-  const string& path = StringPrintf("/dev/fd/%d", fd);
+  const string& path = StringPrintf("/dev/fd/%d", fd_);
 
   // If this is a non-idempotent operation, request a delayed exit and clear the
   // update state in case the operation gets interrupted. Do this as late as
@@ -666,7 +623,7 @@ bool DeltaPerformer::PerformBsdiffOperation(
         end_byte - (block_size_ - operation.dst_length() % block_size_);
     vector<char> zeros(end_byte - begin_byte);
     TEST_AND_RETURN_FALSE(
-        utils::PWriteAll(fd, &zeros[0], end_byte - begin_byte, begin_byte));
+        utils::PWriteAll(fd_, &zeros[0], end_byte - begin_byte, begin_byte));
   }
 
   // Update buffer.
@@ -848,9 +805,7 @@ ActionExitCode DeltaPerformer::VerifyPayload(
   return kActionCodeSuccess;
 }
 
-bool DeltaPerformer::GetNewPartitionInfo(uint64_t* kernel_size,
-                                         vector<char>* kernel_hash,
-                                         uint64_t* rootfs_size,
+bool DeltaPerformer::GetNewPartitionInfo(uint64_t* rootfs_size,
                                          vector<char>* rootfs_hash) {
   TEST_AND_RETURN_FALSE(manifest_valid_ &&
 			manifest_.has_new_rootfs_info());
@@ -858,22 +813,13 @@ bool DeltaPerformer::GetNewPartitionInfo(uint64_t* kernel_size,
   vector<char> new_rootfs_hash(manifest_.new_rootfs_info().hash().begin(),
                                manifest_.new_rootfs_info().hash().end());
   rootfs_hash->swap(new_rootfs_hash);
-
-  if (manifest_.has_new_kernel_info()) {
-    *kernel_size = manifest_.new_kernel_info().size();
-    vector<char> new_kernel_hash(manifest_.new_kernel_info().hash().begin(),
-				 manifest_.new_kernel_info().hash().end());
-    kernel_hash->swap(new_kernel_hash);
-  }
-      
   return true;
 }
 
 namespace {
-void LogVerifyError(bool is_kern,
-                    const string& local_hash,
+void LogVerifyError(const string& local_hash,
                     const string& expected_hash) {
-  const char* type = is_kern ? "kernel" : "rootfs";
+  const char* type = "rootfs";
   LOG(ERROR) << "This is a server-side error due to "
              << "mismatched delta update image!";
   LOG(ERROR) << "The delta I've been given contains a " << type << " delta "
@@ -884,19 +830,12 @@ void LogVerifyError(bool is_kern,
              << "system. The " << type << " partition I have has hash: "
              << local_hash << " but the update expected me to have "
              << expected_hash << " .";
-  if (is_kern) {
-    LOG(INFO) << "To get the checksum of a kernel partition on a "
-              << "booted machine, run this command (change /dev/sda2 "
-              << "as needed): dd if=/dev/sda2 bs=1M 2>/dev/null | "
-              << "openssl dgst -sha256 -binary | openssl base64";
-  } else {
-    LOG(INFO) << "To get the checksum of a rootfs partition on a "
-              << "booted machine, run this command (change /dev/sda3 "
-              << "as needed): dd if=/dev/sda3 bs=1M count=$(( "
-              << "$(dumpe2fs /dev/sda3  2>/dev/null | grep 'Block count' "
-              << "| sed 's/[^0-9]*//') / 256 )) | "
-              << "openssl dgst -sha256 -binary | openssl base64";
-  }
+  LOG(INFO) << "To get the checksum of a rootfs partition on a "
+            << "booted machine, run this command (change /dev/sda3 "
+            << "as needed): dd if=/dev/sda3 bs=1M count=$(( "
+            << "$(dumpe2fs /dev/sda3  2>/dev/null | grep 'Block count' "
+            << "| sed 's/[^0-9]*//') / 256 )) | "
+            << "openssl dgst -sha256 -binary | openssl base64";
   LOG(INFO) << "To get the checksum of partitions in a bin file, "
             << "run: .../src/scripts/sha256_partitions.sh .../file.bin";
 }
@@ -910,27 +849,10 @@ string StringForHashBytes(const void* bytes, size_t size) {
 }
 }  // namespace
 
-bool DeltaPerformer::VerifySourcePartitions() {
-  LOG(INFO) << "Verifying source partitions.";
+bool DeltaPerformer::VerifySourcePartition() {
+  LOG(INFO) << "Verifying source partition.";
   CHECK(manifest_valid_);
   CHECK(install_plan_);
-  if (manifest_.has_old_kernel_info()) {
-    const PartitionInfo& info = manifest_.old_kernel_info();
-    bool valid =
-        !install_plan_->kernel_hash.empty() &&
-        install_plan_->kernel_hash.size() == info.hash().size() &&
-        memcmp(install_plan_->kernel_hash.data(),
-               info.hash().data(),
-               install_plan_->kernel_hash.size()) == 0;
-    if (!valid) {
-      LogVerifyError(true,
-                     StringForHashBytes(install_plan_->kernel_hash.data(),
-                                        install_plan_->kernel_hash.size()),
-                     StringForHashBytes(info.hash().data(),
-                                        info.hash().size()));
-    }
-    TEST_AND_RETURN_FALSE(valid);
-  }
   if (manifest_.has_old_rootfs_info()) {
     const PartitionInfo& info = manifest_.old_rootfs_info();
     bool valid =
@@ -940,9 +862,8 @@ bool DeltaPerformer::VerifySourcePartitions() {
                info.hash().data(),
                install_plan_->rootfs_hash.size()) == 0;
     if (!valid) {
-      LogVerifyError(false,
-                     StringForHashBytes(install_plan_->kernel_hash.data(),
-                                        install_plan_->kernel_hash.size()),
+      LogVerifyError(StringForHashBytes(install_plan_->rootfs_hash.data(),
+                                        install_plan_->rootfs_hash.size()),
                      StringForHashBytes(info.hash().data(),
                                         info.hash().size()));
     }
@@ -1035,7 +956,7 @@ bool DeltaPerformer::PrimeUpdateState() {
       next_operation == kUpdateStateOperationInvalid ||
       next_operation <= 0) {
     // Initiating a new update, no more state needs to be initialized.
-    TEST_AND_RETURN_FALSE(VerifySourcePartitions());
+    TEST_AND_RETURN_FALSE(VerifySourcePartition());
     return true;
   }
   next_operation_num_ = next_operation;
