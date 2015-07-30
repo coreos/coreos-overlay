@@ -18,7 +18,7 @@ HOMEPAGE="http://www.kernel.org"
 LICENSE="GPL-2 freedist"
 SLOT="0/${PVR}"
 SRC_URI=""
-IUSE="selinux"
+IUSE="audit selinux"
 
 DEPEND="=sys-kernel/coreos-sources-${COREOS_SOURCE_VERSION}
 	sys-kernel/bootengine:="
@@ -139,6 +139,10 @@ coreos-kernel_src_prepare() {
 }
 
 coreos-kernel_src_configure() {
+	if ! use audit; then
+		sed -i -e '/^CONFIG_CMDLINE=/s/"$/ audit=0"/' \
+			"${KBUILD_OUTPUT}/.config" || die
+	fi
 	if ! use selinux; then
 		sed -i -e '/CONFIG_SECURITY_SELINUX_BOOTPARAM_VALUE/d' \
 			"${KBUILD_OUTPUT}/.config" || die
