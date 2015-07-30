@@ -1,0 +1,3 @@
+# First rule - delete all
+# This is to clear out old rules, so we don't append to them.
+-D

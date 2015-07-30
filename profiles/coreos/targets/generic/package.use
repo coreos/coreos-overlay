@@ -23,7 +23,7 @@ sys-libs/pam        -berkdb
 sys-libs/gdbm		berkdb
 
 # enable journal gateway and container features, avoid pulling in gnutls
-sys-apps/systemd importd http nat -ssl
+sys-apps/systemd audit importd http nat -ssl
 net-libs/libmicrohttpd -ssl
 
 sys-boot/syslinux       -custom-cflags
@@ -35,3 +35,6 @@ dev-util/pkgconfig internal-glib
 
 # minimize risk removing unneeded patches and networking support
 app-shells/bash -net vanilla
+
+# enable audit subsystem by default
+sys-kernel/coreos-kernel audit
