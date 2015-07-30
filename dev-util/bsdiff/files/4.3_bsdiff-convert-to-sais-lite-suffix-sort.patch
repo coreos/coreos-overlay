@@ -1,0 +1,754 @@
+From f220517e188924e67040c6171ca7e0dede16c6b4 Mon Sep 17 00:00:00 2001
+From: Geoff Levand <geoff@infradead.org>
+Date: Tue, 14 Jul 2015 14:29:21 -0700
+Subject: [PATCH 2/2] bsdiff: Convert to sais-lite suffix sort
+
+Convert the bsdiff suffix sort algorithm from its own qsufsort implementation to
+the sais-lite suffix sort algorithm from [1].  Fixes problems with slow
+operation and program hangs as reported in [2] through [4].
+
+ [1] https://sites.google.com/site/yuta256/sais
+ [2] https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=409664
+ [3] https://github.com/sparkle-project/Sparkle/pull/515
+ [4] https://chromium.googlesource.com/chromiumos/third_party/bsdiff/+/e2b85ce4ea246ca804ee2a9e18005c44e193d868
+
+Signed-off-by: Geoff Levand <geoff@infradead.org>
+---
+ bsdiff.c | 104 +------------
+ sais.c   | 534 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ sais.h   |  59 +++++++
+ 3 files changed, 597 insertions(+), 100 deletions(-)
+ create mode 100644 sais.c
+ create mode 100644 sais.h
+
+diff --git a/bsdiff.c b/bsdiff.c
+index 150a7f7..5c6c94f 100644
+--- a/bsdiff.c
++++ b/bsdiff.c
+@@ -38,106 +38,9 @@ __FBSDID("$FreeBSD: src/usr.bin/bsdiff/bsdiff/bsdiff.c,v 1.1 2005/08/06 01:59:05
+ #include <string.h>
+ #include <unistd.h>
+ 
+-#define MIN(x,y) (((x)<(y)) ? (x) : (y))
+-
+-static void split(off_t *I,off_t *V,off_t start,off_t len,off_t h)
+-{
+-	off_t i,j,k,x,tmp,jj,kk;
+-
+-	if(len<16) {
+-		for(k=start;k<start+len;k+=j) {
+-			j=1;x=V[I[k]+h];
+-			for(i=1;k+i<start+len;i++) {
+-				if(V[I[k+i]+h]<x) {
+-					x=V[I[k+i]+h];
+-					j=0;
+-				};
+-				if(V[I[k+i]+h]==x) {
+-					tmp=I[k+j];I[k+j]=I[k+i];I[k+i]=tmp;
+-					j++;
+-				};
+-			};
+-			for(i=0;i<j;i++) V[I[k+i]]=k+j-1;
+-			if(j==1) I[k]=-1;
+-		};
+-		return;
+-	};
+-
+-	x=V[I[start+len/2]+h];
+-	jj=0;kk=0;
+-	for(i=start;i<start+len;i++) {
+-		if(V[I[i]+h]<x) jj++;
+-		if(V[I[i]+h]==x) kk++;
+-	};
+-	jj+=start;kk+=jj;
+-
+-	i=start;j=0;k=0;
+-	while(i<jj) {
+-		if(V[I[i]+h]<x) {
+-			i++;
+-		} else if(V[I[i]+h]==x) {
+-			tmp=I[i];I[i]=I[jj+j];I[jj+j]=tmp;
+-			j++;
+-		} else {
+-			tmp=I[i];I[i]=I[kk+k];I[kk+k]=tmp;
+-			k++;
+-		};
+-	};
+-
+-	while(jj+j<kk) {
+-		if(V[I[jj+j]+h]==x) {
+-			j++;
+-		} else {
+-			tmp=I[jj+j];I[jj+j]=I[kk+k];I[kk+k]=tmp;
+-			k++;
+-		};
+-	};
+-
+-	if(jj>start) split(I,V,start,jj-start,h);
+-
+-	for(i=0;i<kk-jj;i++) V[I[jj+i]]=kk-1;
+-	if(jj==kk-1) I[jj]=-1;
+-
+-	if(start+len>kk) split(I,V,kk,start+len-kk,h);
+-}
++#include "sais.h"
+ 
+-static void qsufsort(off_t *I,off_t *V,u_char *old,off_t oldsize)
+-{
+-	off_t buckets[256];
+-	off_t i,h,len;
+-
+-	for(i=0;i<256;i++) buckets[i]=0;
+-	for(i=0;i<oldsize;i++) buckets[old[i]]++;
+-	for(i=1;i<256;i++) buckets[i]+=buckets[i-1];
+-	for(i=255;i>0;i--) buckets[i]=buckets[i-1];
+-	buckets[0]=0;
+-
+-	for(i=0;i<oldsize;i++) I[++buckets[old[i]]]=i;
+-	I[0]=oldsize;
+-	for(i=0;i<oldsize;i++) V[i]=buckets[old[i]];
+-	V[oldsize]=0;
+-	for(i=1;i<256;i++) if(buckets[i]==buckets[i-1]+1) I[buckets[i]]=-1;
+-	I[0]=-1;
+-
+-	for(h=1;I[0]!=-(oldsize+1);h+=h) {
+-		len=0;
+-		for(i=0;i<oldsize+1;) {
+-			if(I[i]<0) {
+-				len-=I[i];
+-				i-=I[i];
+-			} else {
+-				if(len) I[i-len]=-len;
+-				len=V[I[i]]+1-i;
+-				split(I,V,i,len,h);
+-				i+=len;
+-				len=0;
+-			};
+-		};
+-		if(len) I[i-len]=-len;
+-	};
+-
+-	for(i=0;i<oldsize+1;i++) I[V[i]]=i;
+-}
++#define MIN(x,y) (((x)<(y)) ? (x) : (y))
+ 
+ static off_t matchlen(u_char *old,off_t oldsize,u_char *new,off_t newsize)
+ {
+@@ -227,7 +130,8 @@ int main(int argc,char *argv[])
+ 	if(((I=malloc((oldsize+1)*sizeof(off_t)))==NULL) ||
+ 		((V=malloc((oldsize+1)*sizeof(off_t)))==NULL)) err(1,NULL);
+ 
+-	qsufsort(I,V,old,oldsize);
++	I[0] = oldsize;
++	sais(old, I+1, oldsize);
+ 
+ 	free(V);
+ 
+diff --git a/sais.c b/sais.c
+new file mode 100644
+index 0000000..39b57e6
+--- /dev/null
++++ b/sais.c
+@@ -0,0 +1,534 @@
++/*
++ * sais.c for sais-lite
++ * Copyright (c) 2008-2010 Yuta Mori All Rights Reserved.
++ *
++ * Permission is hereby granted, free of charge, to any person
++ * obtaining a copy of this software and associated documentation
++ * files (the "Software"), to deal in the Software without
++ * restriction, including without limitation the rights to use,
++ * copy, modify, merge, publish, distribute, sublicense, and/or sell
++ * copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following
++ * conditions:
++ *
++ * The above copyright notice and this permission notice shall be
++ * included in all copies or substantial portions of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
++ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
++ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
++ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
++ * OTHER DEALINGS IN THE SOFTWARE.
++ */
++
++#include <assert.h>
++#include <stdlib.h>
++#include "sais.h"
++
++#ifndef UCHAR_SIZE
++# define UCHAR_SIZE 256
++#endif
++#ifndef MINBUCKETSIZE
++# define MINBUCKETSIZE 256
++#endif
++
++#define sais_bool_type  int
++#define SAIS_LMSSORT2_LIMIT 0x3fffffff
++
++#define SAIS_MYMALLOC(_num, _type) ((_type *)malloc((_num) * sizeof(_type)))
++#define SAIS_MYFREE(_ptr, _num, _type) free((_ptr))
++#define chr(_a) (cs == sizeof(sais_index_type) ? ((sais_index_type *)T)[(_a)] : ((unsigned char *)T)[(_a)])
++
++/* find the start or end of each bucket */
++static
++void
++getCounts(const void *T, sais_index_type *C, sais_index_type n, sais_index_type k, int cs) {
++  sais_index_type i;
++  for(i = 0; i < k; ++i) { C[i] = 0; }
++  for(i = 0; i < n; ++i) { ++C[chr(i)]; }
++}
++static
++void
++getBuckets(const sais_index_type *C, sais_index_type *B, sais_index_type k, sais_bool_type end) {
++  sais_index_type i, sum = 0;
++  if(end) { for(i = 0; i < k; ++i) { sum += C[i]; B[i] = sum; } }
++  else { for(i = 0; i < k; ++i) { sum += C[i]; B[i] = sum - C[i]; } }
++}
++
++/* sort all type LMS suffixes */
++static
++void
++LMSsort1(const void *T, sais_index_type *SA,
++         sais_index_type *C, sais_index_type *B,
++         sais_index_type n, sais_index_type k, int cs) {
++  sais_index_type *b, i, j;
++  sais_index_type c0, c1;
++
++  /* compute SAl */
++  if(C == B) { getCounts(T, C, n, k, cs); }
++  getBuckets(C, B, k, 0); /* find starts of buckets */
++  j = n - 1;
++  b = SA + B[c1 = chr(j)];
++  --j;
++  *b++ = (chr(j) < c1) ? ~j : j;
++  for(i = 0; i < n; ++i) {
++    if(0 < (j = SA[i])) {
++      assert(chr(j) >= chr(j + 1));
++      if((c0 = chr(j)) != c1) { B[c1] = b - SA; b = SA + B[c1 = c0]; }
++      assert(i < (b - SA));
++      --j;
++      *b++ = (chr(j) < c1) ? ~j : j;
++      SA[i] = 0;
++    } else if(j < 0) {
++      SA[i] = ~j;
++    }
++  }
++  /* compute SAs */
++  if(C == B) { getCounts(T, C, n, k, cs); }
++  getBuckets(C, B, k, 1); /* find ends of buckets */
++  for(i = n - 1, b = SA + B[c1 = 0]; 0 <= i; --i) {
++    if(0 < (j = SA[i])) {
++      assert(chr(j) <= chr(j + 1));
++      if((c0 = chr(j)) != c1) { B[c1] = b - SA; b = SA + B[c1 = c0]; }
++      assert((b - SA) <= i);
++      --j;
++      *--b = (chr(j) > c1) ? ~(j + 1) : j;
++      SA[i] = 0;
++    }
++  }
++}
++static
++sais_index_type
++LMSpostproc1(const void *T, sais_index_type *SA,
++             sais_index_type n, sais_index_type m, int cs) {
++  sais_index_type i, j, p, q, plen, qlen, name;
++  sais_index_type c0, c1;
++  sais_bool_type diff;
++
++  /* compact all the sorted substrings into the first m items of SA
++      2*m must be not larger than n (proveable) */
++  assert(0 < n);
++  for(i = 0; (p = SA[i]) < 0; ++i) { SA[i] = ~p; assert((i + 1) < n); }
++  if(i < m) {
++    for(j = i, ++i;; ++i) {
++      assert(i < n);
++      if((p = SA[i]) < 0) {
++        SA[j++] = ~p; SA[i] = 0;
++        if(j == m) { break; }
++      }
++    }
++  }
++
++  /* store the length of all substrings */
++  i = n - 1; j = n - 1; c0 = chr(n - 1);
++  do { c1 = c0; } while((0 <= --i) && ((c0 = chr(i)) >= c1));
++  for(; 0 <= i;) {
++    do { c1 = c0; } while((0 <= --i) && ((c0 = chr(i)) <= c1));
++    if(0 <= i) {
++      SA[m + ((i + 1) >> 1)] = j - i; j = i + 1;
++      do { c1 = c0; } while((0 <= --i) && ((c0 = chr(i)) >= c1));
++    }
++  }
++
++  /* find the lexicographic names of all substrings */
++  for(i = 0, name = 0, q = n, qlen = 0; i < m; ++i) {
++    p = SA[i], plen = SA[m + (p >> 1)], diff = 1;
++    if((plen == qlen) && ((q + plen) < n)) {
++      for(j = 0; (j < plen) && (chr(p + j) == chr(q + j)); ++j) { }
++      if(j == plen) { diff = 0; }
++    }
++    if(diff != 0) { ++name, q = p, qlen = plen; }
++    SA[m + (p >> 1)] = name;
++  }
++
++  return name;
++}
++static
++void
++LMSsort2(const void *T, sais_index_type *SA,
++         sais_index_type *C, sais_index_type *B, sais_index_type *D,
++         sais_index_type n, sais_index_type k, int cs) {
++  sais_index_type *b, i, j, t, d;
++  sais_index_type c0, c1;
++  assert(C != B);
++
++  /* compute SAl */
++  getBuckets(C, B, k, 0); /* find starts of buckets */
++  j = n - 1;
++  b = SA + B[c1 = chr(j)];
++  --j;
++  t = (chr(j) < c1);
++  j += n;
++  *b++ = (t & 1) ? ~j : j;
++  for(i = 0, d = 0; i < n; ++i) {
++    if(0 < (j = SA[i])) {
++      if(n <= j) { d += 1; j -= n; }
++      assert(chr(j) >= chr(j + 1));
++      if((c0 = chr(j)) != c1) { B[c1] = b - SA; b = SA + B[c1 = c0]; }
++      assert(i < (b - SA));
++      --j;
++      t = c0; t = (t << 1) | (chr(j) < c1);
++      if(D[t] != d) { j += n; D[t] = d; }
++      *b++ = (t & 1) ? ~j : j;
++      SA[i] = 0;
++    } else if(j < 0) {
++      SA[i] = ~j;
++    }
++  }
++  for(i = n - 1; 0 <= i; --i) {
++    if(0 < SA[i]) {
++      if(SA[i] < n) {
++        SA[i] += n;
++        for(j = i - 1; SA[j] < n; --j) { }
++        SA[j] -= n;
++        i = j;
++      }
++    }
++  }
++
++  /* compute SAs */
++  getBuckets(C, B, k, 1); /* find ends of buckets */
++  for(i = n - 1, d += 1, b = SA + B[c1 = 0]; 0 <= i; --i) {
++    if(0 < (j = SA[i])) {
++      if(n <= j) { d += 1; j -= n; }
++      assert(chr(j) <= chr(j + 1));
++      if((c0 = chr(j)) != c1) { B[c1] = b - SA; b = SA + B[c1 = c0]; }
++      assert((b - SA) <= i);
++      --j;
++      t = c0; t = (t << 1) | (chr(j) > c1);
++      if(D[t] != d) { j += n; D[t] = d; }
++      *--b = (t & 1) ? ~(j + 1) : j;
++      SA[i] = 0;
++    }
++  }
++}
++static
++sais_index_type
++LMSpostproc2(sais_index_type *SA, sais_index_type n, sais_index_type m) {
++  sais_index_type i, j, d, name;
++
++  /* compact all the sorted LMS substrings into the first m items of SA */
++  assert(0 < n);
++  for(i = 0, name = 0; (j = SA[i]) < 0; ++i) {
++    j = ~j;
++    if(n <= j) { name += 1; }
++    SA[i] = j;
++    assert((i + 1) < n);
++  }
++  if(i < m) {
++    for(d = i, ++i;; ++i) {
++      assert(i < n);
++      if((j = SA[i]) < 0) {
++        j = ~j;
++        if(n <= j) { name += 1; }
++        SA[d++] = j; SA[i] = 0;
++        if(d == m) { break; }
++      }
++    }
++  }
++  if(name < m) {
++    /* store the lexicographic names */
++    for(i = m - 1, d = name + 1; 0 <= i; --i) {
++      if(n <= (j = SA[i])) { j -= n; --d; }
++      SA[m + (j >> 1)] = d;
++    }
++  } else {
++    /* unset flags */
++    for(i = 0; i < m; ++i) {
++      if(n <= (j = SA[i])) { j -= n; SA[i] = j; }
++    }
++  }
++
++  return name;
++}
++
++/* compute SA and BWT */
++static
++void
++induceSA(const void *T, sais_index_type *SA,
++         sais_index_type *C, sais_index_type *B,
++         sais_index_type n, sais_index_type k, int cs) {
++  sais_index_type *b, i, j;
++  sais_index_type c0, c1;
++  /* compute SAl */
++  if(C == B) { getCounts(T, C, n, k, cs); }
++  getBuckets(C, B, k, 0); /* find starts of buckets */
++  j = n - 1;
++  b = SA + B[c1 = chr(j)];
++  *b++ = ((0 < j) && (chr(j - 1) < c1)) ? ~j : j;
++  for(i = 0; i < n; ++i) {
++    j = SA[i], SA[i] = ~j;
++    if(0 < j) {
++      --j;
++      assert(chr(j) >= chr(j + 1));
++      if((c0 = chr(j)) != c1) { B[c1] = b - SA; b = SA + B[c1 = c0]; }
++      assert(i < (b - SA));
++      *b++ = ((0 < j) && (chr(j - 1) < c1)) ? ~j : j;
++    }
++  }
++  /* compute SAs */
++  if(C == B) { getCounts(T, C, n, k, cs); }
++  getBuckets(C, B, k, 1); /* find ends of buckets */
++  for(i = n - 1, b = SA + B[c1 = 0]; 0 <= i; --i) {
++    if(0 < (j = SA[i])) {
++      --j;
++      assert(chr(j) <= chr(j + 1));
++      if((c0 = chr(j)) != c1) { B[c1] = b - SA; b = SA + B[c1 = c0]; }
++      assert((b - SA) <= i);
++      *--b = ((j == 0) || (chr(j - 1) > c1)) ? ~j : j;
++    } else {
++      SA[i] = ~j;
++    }
++  }
++}
++static
++sais_index_type
++computeBWT(const void *T, sais_index_type *SA,
++           sais_index_type *C, sais_index_type *B,
++           sais_index_type n, sais_index_type k, int cs) {
++  sais_index_type *b, i, j, pidx = -1;
++  sais_index_type c0, c1;
++  /* compute SAl */
++  if(C == B) { getCounts(T, C, n, k, cs); }
++  getBuckets(C, B, k, 0); /* find starts of buckets */
++  j = n - 1;
++  b = SA + B[c1 = chr(j)];
++  *b++ = ((0 < j) && (chr(j - 1) < c1)) ? ~j : j;
++  for(i = 0; i < n; ++i) {
++    if(0 < (j = SA[i])) {
++      --j;
++      assert(chr(j) >= chr(j + 1));
++      SA[i] = ~((sais_index_type)(c0 = chr(j)));
++      if(c0 != c1) { B[c1] = b - SA; b = SA + B[c1 = c0]; }
++      assert(i < (b - SA));
++      *b++ = ((0 < j) && (chr(j - 1) < c1)) ? ~j : j;
++    } else if(j != 0) {
++      SA[i] = ~j;
++    }
++  }
++  /* compute SAs */
++  if(C == B) { getCounts(T, C, n, k, cs); }
++  getBuckets(C, B, k, 1); /* find ends of buckets */
++  for(i = n - 1, b = SA + B[c1 = 0]; 0 <= i; --i) {
++    if(0 < (j = SA[i])) {
++      --j;
++      assert(chr(j) <= chr(j + 1));
++      SA[i] = (c0 = chr(j));
++      if(c0 != c1) { B[c1] = b - SA; b = SA + B[c1 = c0]; }
++      assert((b - SA) <= i);
++      *--b = ((0 < j) && (chr(j - 1) > c1)) ? ~((sais_index_type)chr(j - 1)) : j;
++    } else if(j != 0) {
++      SA[i] = ~j;
++    } else {
++      pidx = i;
++    }
++  }
++  return pidx;
++}
++
++/* find the suffix array SA of T[0..n-1] in {0..255}^n */
++static
++sais_index_type
++sais_main(const void *T, sais_index_type *SA,
++          sais_index_type fs, sais_index_type n, sais_index_type k, int cs,
++          sais_bool_type isbwt) {
++  sais_index_type *C, *B, *D, *RA, *b;
++  sais_index_type i, j, m, p, q, t, name, pidx = 0, newfs;
++  sais_index_type c0, c1;
++  unsigned int flags;
++
++  assert((T != NULL) && (SA != NULL));
++  assert((0 <= fs) && (0 < n) && (1 <= k));
++
++  if(k <= MINBUCKETSIZE) {
++    if((C = SAIS_MYMALLOC((size_t)k, sais_index_type)) == NULL) { return -2; }
++    if(k <= fs) {
++      B = SA + (n + fs - k);
++      flags = 1;
++    } else {
++      if((B = SAIS_MYMALLOC((size_t)k, sais_index_type)) == NULL) { SAIS_MYFREE(C, k, sais_index_type); return -2; }
++      flags = 3;
++    }
++  } else if(k <= fs) {
++    C = SA + (n + fs - k);
++    if(k <= (fs - k)) {
++      B = C - k;
++      flags = 0;
++    } else if(k <= (MINBUCKETSIZE * 4)) {
++      if((B = SAIS_MYMALLOC((size_t)k, sais_index_type)) == NULL) { return -2; }
++      flags = 2;
++    } else {
++      B = C;
++      flags = 8;
++    }
++  } else {
++    if((C = B = SAIS_MYMALLOC((size_t)k, sais_index_type)) == NULL) { return -2; }
++    flags = 4 | 8;
++  }
++  if((n <= SAIS_LMSSORT2_LIMIT) && (2 <= (n / k))) {
++    if(flags & 1) { flags |= ((k * 2) <= (fs - k)) ? 32 : 16; }
++    else if((flags == 0) && ((k * 2) <= (fs - k * 2))) { flags |= 32; }
++  }
++
++  /* stage 1: reduce the problem by at least 1/2
++     sort all the LMS-substrings */
++  getCounts(T, C, n, k, cs); getBuckets(C, B, k, 1); /* find ends of buckets */
++  for(i = 0; i < n; ++i) { SA[i] = 0; }
++  b = &t; i = n - 1; j = n; m = 0; c0 = chr(n - 1);
++  do { c1 = c0; } while((0 <= --i) && ((c0 = chr(i)) >= c1));
++  for(; 0 <= i;) {
++    do { c1 = c0; } while((0 <= --i) && ((c0 = chr(i)) <= c1));
++    if(0 <= i) {
++      *b = j; b = SA + --B[c1]; j = i; ++m;
++      do { c1 = c0; } while((0 <= --i) && ((c0 = chr(i)) >= c1));
++    }
++  }
++
++  if(1 < m) {
++    if(flags & (16 | 32)) {
++      if(flags & 16) {
++        if((D = SAIS_MYMALLOC((size_t)k * 2, sais_index_type)) == NULL) {
++          if(flags & (1 | 4)) { SAIS_MYFREE(C, k, sais_index_type); }
++          if(flags & 2) { SAIS_MYFREE(B, k, sais_index_type); }
++          return -2;
++        }
++      } else {
++        D = B - k * 2;
++      }
++      assert((j + 1) < n);
++      ++B[chr(j + 1)];
++      for(i = 0, j = 0; i < k; ++i) {
++        j += C[i];
++        if(B[i] != j) { assert(SA[B[i]] != 0); SA[B[i]] += n; }
++        D[i] = D[i + k] = 0;
++      }
++      LMSsort2(T, SA, C, B, D, n, k, cs);
++      name = LMSpostproc2(SA, n, m);
++      if(flags & 16) { SAIS_MYFREE(D, k * 2, sais_index_type); }
++    } else {
++      LMSsort1(T, SA, C, B, n, k, cs);
++      name = LMSpostproc1(T, SA, n, m, cs);
++    }
++  } else if(m == 1) {
++    *b = j + 1;
++    name = 1;
++  } else {
++    name = 0;
++  }
++
++  /* stage 2: solve the reduced problem
++     recurse if names are not yet unique */
++  if(name < m) {
++    if(flags & 4) { SAIS_MYFREE(C, k, sais_index_type); }
++    if(flags & 2) { SAIS_MYFREE(B, k, sais_index_type); }
++    newfs = (n + fs) - (m * 2);
++    if((flags & (1 | 4 | 8)) == 0) {
++      if((k + name) <= newfs) { newfs -= k; }
++      else { flags |= 8; }
++    }
++    assert((n >> 1) <= (newfs + m));
++    RA = SA + m + newfs;
++    for(i = m + (n >> 1) - 1, j = m - 1; m <= i; --i) {
++      if(SA[i] != 0) {
++        RA[j--] = SA[i] - 1;
++      }
++    }
++    if(sais_main(RA, SA, newfs, m, name, sizeof(sais_index_type), 0) != 0) {
++      if(flags & 1) { SAIS_MYFREE(C, k, sais_index_type); }
++      return -2;
++    }
++
++    i = n - 1; j = m - 1; c0 = chr(n - 1);
++    do { c1 = c0; } while((0 <= --i) && ((c0 = chr(i)) >= c1));
++    for(; 0 <= i;) {
++      do { c1 = c0; } while((0 <= --i) && ((c0 = chr(i)) <= c1));
++      if(0 <= i) {
++        RA[j--] = i + 1;
++        do { c1 = c0; } while((0 <= --i) && ((c0 = chr(i)) >= c1));
++      }
++    }
++    for(i = 0; i < m; ++i) { SA[i] = RA[SA[i]]; }
++    if(flags & 4) {
++      if((C = B = SAIS_MYMALLOC((size_t)k, sais_index_type)) == NULL) { return -2; }
++    }
++    if(flags & 2) {
++      if((B = SAIS_MYMALLOC((size_t)k, sais_index_type)) == NULL) {
++        if(flags & 1) { SAIS_MYFREE(C, k, sais_index_type); }
++        return -2;
++      }
++    }
++  }
++
++  /* stage 3: induce the result for the original problem */
++  if(flags & 8) { getCounts(T, C, n, k, cs); }
++  /* put all left-most S characters into their buckets */
++  if(1 < m) {
++    getBuckets(C, B, k, 1); /* find ends of buckets */
++    i = m - 1, j = n, p = SA[m - 1], c1 = chr(p);
++    do {
++      q = B[c0 = c1];
++      while(q < j) { SA[--j] = 0; }
++      do {
++        SA[--j] = p;
++        if(--i < 0) { break; }
++        p = SA[i];
++      } while((c1 = chr(p)) == c0);
++    } while(0 <= i);
++    while(0 < j) { SA[--j] = 0; }
++  }
++  if(isbwt == 0) { induceSA(T, SA, C, B, n, k, cs); }
++  else { pidx = computeBWT(T, SA, C, B, n, k, cs); }
++  if(flags & (1 | 4)) { SAIS_MYFREE(C, k, sais_index_type); }
++  if(flags & 2) { SAIS_MYFREE(B, k, sais_index_type); }
++
++  return pidx;
++}
++
++/*---------------------------------------------------------------------------*/
++
++sais_index_type
++sais(const unsigned char *T, sais_index_type *SA, int n) {
++  if((T == NULL) || (SA == NULL) || (n < 0)) { return -1; }
++  if(n <= 1) { if(n == 1) { SA[0] = 0; } return 0; }
++  return sais_main(T, SA, 0, n, UCHAR_SIZE, sizeof(unsigned char), 0);
++}
++
++sais_index_type
++sais_int(const int *T, sais_index_type *SA, int n, int k) {
++  if((T == NULL) || (SA == NULL) || (n < 0) || (k <= 0)) { return -1; }
++  if(n <= 1) { if(n == 1) { SA[0] = 0; } return 0; }
++  return sais_main(T, SA, 0, n, k, sizeof(int), 0);
++}
++
++sais_index_type
++sais_bwt(const unsigned char *T, unsigned char *U, sais_index_type *A, int n) {
++  int i;
++  sais_index_type pidx;
++  if((T == NULL) || (U == NULL) || (A == NULL) || (n < 0)) { return -1; }
++  if(n <= 1) { if(n == 1) { U[0] = T[0]; } return n; }
++  pidx = sais_main(T, A, 0, n, UCHAR_SIZE, sizeof(unsigned char), 1);
++  if(pidx < 0) { return pidx; }
++  U[0] = T[n - 1];
++  for(i = 0; i < pidx; ++i) { U[i + 1] = (unsigned char)A[i]; }
++  for(i += 1; i < n; ++i) { U[i] = (unsigned char)A[i]; }
++  pidx += 1;
++  return pidx;
++}
++
++sais_index_type
++sais_int_bwt(const sais_index_type *T, sais_index_type *U, sais_index_type *A, int n, int k) {
++  int i;
++  sais_index_type pidx;
++  if((T == NULL) || (U == NULL) || (A == NULL) || (n < 0) || (k <= 0)) { return -1; }
++  if(n <= 1) { if(n == 1) { U[0] = T[0]; } return n; }
++  pidx = sais_main(T, A, 0, n, k, sizeof(int), 1);
++  if(pidx < 0) { return pidx; }
++  U[0] = T[n - 1];
++  for(i = 0; i < pidx; ++i) { U[i + 1] = A[i]; }
++  for(i += 1; i < n; ++i) { U[i] = A[i]; }
++  pidx += 1;
++  return pidx;
++}
+diff --git a/sais.h b/sais.h
+new file mode 100644
+index 0000000..1abd0af
+--- /dev/null
++++ b/sais.h
+@@ -0,0 +1,59 @@
++/*
++ * sais.h for sais-lite
++ * Copyright (c) 2008-2010 Yuta Mori All Rights Reserved.
++ *
++ * Permission is hereby granted, free of charge, to any person
++ * obtaining a copy of this software and associated documentation
++ * files (the "Software"), to deal in the Software without
++ * restriction, including without limitation the rights to use,
++ * copy, modify, merge, publish, distribute, sublicense, and/or sell
++ * copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following
++ * conditions:
++ *
++ * The above copyright notice and this permission notice shall be
++ * included in all copies or substantial portions of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
++ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
++ * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
++ * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
++ * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
++ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
++ * OTHER DEALINGS IN THE SOFTWARE.
++ */
++
++#ifndef _SAIS_H
++#define _SAIS_H 1
++
++#ifdef __cplusplus
++extern "C" {
++#endif /* __cplusplus */
++
++#include <sys/types.h>
++
++#define sais_index_type off_t
++
++/* find the suffix array SA of T[0..n-1]
++   use a working space (excluding T and SA) of at most 2n+O(lg n) */
++sais_index_type
++sais(const unsigned char *T, sais_index_type *SA, int n);
++
++/* find the suffix array SA of T[0..n-1] in {0..k-1}^n
++   use a working space (excluding T and SA) of at most MAX(4k,2n) */
++sais_index_type
++sais_int(const int *T, sais_index_type *SA, int n, int k);
++
++/* burrows-wheeler transform */
++sais_index_type
++sais_bwt(const unsigned char *T, unsigned char *U, sais_index_type *A, int n);
++sais_index_type
++sais_int_bwt(const sais_index_type *T, sais_index_type *U, sais_index_type *A, int n, int k);
++
++
++#ifdef __cplusplus
++} /* extern "C" */
++#endif /* __cplusplus */
++
++#endif /* _SAIS_H */
+-- 
+2.1.0
+
