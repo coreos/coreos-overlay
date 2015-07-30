@@ -1,0 +1,5 @@
+# Always report changes to the audit subsystem itself.
+-a exclude,never -F msgtype=CONFIG_CHANGE
+
+# Ignore everything else.
+-a exclude,always -F msgtype>0

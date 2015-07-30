@@ -1,0 +1,16 @@
+[Unit]
+Description=Load Security Auditing Rules
+DefaultDependencies=no
+After=local-fs.target systemd-tmpfiles-setup.service
+Conflicts=shutdown.target
+Before=sysinit.target shutdown.target
+ConditionSecurity=audit
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/sbin/augenrules --load
+ExecStop=-/sbin/auditctl -D
+
+[Install]
+WantedBy=multi-user.target
