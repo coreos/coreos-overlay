@@ -10,7 +10,7 @@
 #include <openssl/pem.h>
 
 #include "update_engine/delta_diff_generator.h"
-#include "update_engine/delta_performer.h"
+#include "update_engine/delta_metadata.h"
 #include "update_engine/omaha_hash_calculator.h"
 #include "update_engine/subprocess.h"
 #include "update_engine/update_metadata.pb.h"
@@ -156,11 +156,9 @@ bool PayloadSigner::LoadPayload(const string& payload_path,
   TEST_AND_RETURN_FALSE(utils::ReadFile(payload_path, &payload));
   LOG(INFO) << "Payload size: " << payload.size();
   ActionExitCode error = kActionCodeSuccess;
-  InstallPlan install_plan;
-  DeltaPerformer delta_performer(NULL, NULL, &install_plan);
-  TEST_AND_RETURN_FALSE(delta_performer.ParsePayloadMetadata(
+  TEST_AND_RETURN_FALSE(DeltaMetadata::ParsePayload(
       payload, out_manifest, out_metadata_size, &error) ==
-                        DeltaPerformer::kMetadataParseSuccess);
+                        DeltaMetadata::kParseSuccess);
   LOG(INFO) << "Metadata size: " << *out_metadata_size;
   out_payload->swap(payload);
   return true;

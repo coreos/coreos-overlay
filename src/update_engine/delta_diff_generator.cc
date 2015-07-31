@@ -25,6 +25,8 @@
 #include "strings/string_printf.h"
 #include "update_engine/bzip.h"
 #include "update_engine/cycle_breaker.h"
+#include "update_engine/delta_metadata.h"
+#include "update_engine/ext2_metadata.h"
 #include "update_engine/extent_mapper.h"
 #include "update_engine/extent_ranges.h"
 #include "update_engine/file_writer.h"
@@ -32,7 +34,6 @@
 #include "update_engine/full_update_generator.h"
 #include "update_engine/graph_types.h"
 #include "update_engine/graph_utils.h"
-#include "update_engine/metadata.h"
 #include "update_engine/omaha_hash_calculator.h"
 #include "update_engine/payload_signer.h"
 #include "update_engine/subprocess.h"
@@ -53,7 +54,7 @@ using strings::StringPrintf;
 namespace chromeos_update_engine {
 
 typedef DeltaDiffGenerator::Block Block;
-typedef map<const DeltaArchiveManifest_InstallOperation*,
+typedef map<const InstallOperation*,
             const string*> OperationNameMap;
 
 namespace {
@@ -63,7 +64,6 @@ const string kNonexistentPath = "";
 // TODO(adlr): switch from 1GiB to 2GiB when we no longer care about old
 // clients:
 const size_t kRootFSPartitionSize = 1 * 1024 * 1024 * 1024;  // bytes
-const uint64_t kVersionNumber = 1;
 const uint64_t kFullUpdateChunkSize = 1024 * 1024;  // bytes
 
 static const char* kInstallOperationTypes[] = {
@@ -99,7 +99,7 @@ bool DeltaReadFile(Graph* graph,
                    int data_fd,
                    off_t* data_file_size) {
   vector<char> data;
-  DeltaArchiveManifest_InstallOperation operation;
+  InstallOperation operation;
 
   string old_path = (old_root == kNonexistentPath) ? kNonexistentPath :
       old_root + path;
@@ -121,7 +121,7 @@ bool DeltaReadFile(Graph* graph,
                                                            true));
 
   // Write the data
-  if (operation.type() != DeltaArchiveManifest_InstallOperation_Type_MOVE) {
+  if (operation.type() != InstallOperation_Type_MOVE) {
     operation.set_data_offset(*data_file_size);
     operation.set_data_length(data.size());
   }
@@ -238,9 +238,9 @@ bool ReadUnwrittenBlocks(const vector<Block>& blocks,
                          off_t* blobs_length,
                          const string& image_path,
                          Vertex* vertex) {
-  vertex->file_name = "<rootfs-non-file-data>";
+  vertex->file_name = "<fs-non-file-data>";
 
-  DeltaArchiveManifest_InstallOperation* out_op = &vertex->op;
+  InstallOperation* out_op = &vertex->op;
   int image_fd = open(image_path.c_str(), O_RDONLY, 000);
   TEST_AND_RETURN_FALSE_ERRNO(image_fd >= 0);
   ScopedFdCloser image_fd_closer(&image_fd);
@@ -327,10 +327,10 @@ bool ReadUnwrittenBlocks(const vector<Block>& blocks,
   TEST_AND_RETURN_FALSE(unlink(temp_file_path.c_str()) == 0);
 
   // Add node to graph to write these blocks
-  out_op->set_type(DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ);
+  out_op->set_type(InstallOperation_Type_REPLACE_BZ);
   out_op->set_data_offset(*blobs_length);
   out_op->set_data_length(compressed_data.size());
-  LOG(INFO) << "Rootfs non-data blocks compressed take up "
+  LOG(INFO) << "fs non-data blocks compressed take up "
             << compressed_data.size();
   *blobs_length += compressed_data.size();
   out_op->set_dst_length(kBlockSize * block_count);
@@ -361,12 +361,12 @@ void InstallOperationsToManifest(
     OperationNameMap* out_op_name_map) {
   for (Vertex::Index vertex_index : order) {
     const Vertex& vertex = graph[vertex_index];
-    const DeltaArchiveManifest_InstallOperation& add_op = vertex.op;
+    const InstallOperation& add_op = vertex.op;
     if (DeltaDiffGenerator::IsNoopOperation(add_op)) {
       continue;
     }
-    DeltaArchiveManifest_InstallOperation* op =
-        out_manifest->add_install_operations();
+    InstallOperation* op =
+        out_manifest->add_partition_operations();
     *op = add_op;
     (*out_op_name_map)[op] = &vertex.file_name;
   }
@@ -398,9 +398,9 @@ void ReportPayloadUsage(const DeltaArchiveManifest& manifest,
   off_t total_size = 0;
 
   // Rootfs install operations.
-  for (int i = 0; i < manifest.install_operations_size(); ++i) {
-    const DeltaArchiveManifest_InstallOperation& op =
-        manifest.install_operations(i);
+  for (int i = 0; i < manifest.partition_operations_size(); ++i) {
+    const InstallOperation& op =
+        manifest.partition_operations(i);
     objects.push_back(DeltaObject(*op_name_map.find(&op)->second,
                                   op.type(),
                                   op.data_length()));
@@ -409,7 +409,7 @@ void ReportPayloadUsage(const DeltaArchiveManifest& manifest,
 
   // Dummy install operations for compatibility with older clients.
   for (int i = 0; i < manifest.noop_operations_size(); ++i) {
-    const DeltaArchiveManifest_InstallOperation& op =
+    const InstallOperation& op =
         manifest.noop_operations(i);
     objects.push_back(DeltaObject(StringPrintf("<noop-operation-%d>", i),
                                   op.type(),
@@ -443,7 +443,7 @@ bool DeltaDiffGenerator::ReadFileToDiff(
     const string& new_filename,
     bool bsdiff_allowed,
     vector<char>* out_data,
-    DeltaArchiveManifest_InstallOperation* out_op,
+    InstallOperation* out_op,
     bool gather_extents) {
   // Read new data in
   vector<char> new_data;
@@ -457,14 +457,14 @@ bool DeltaDiffGenerator::ReadFileToDiff(
 
   vector<char> data;  // Data blob that will be written to delta file.
 
-  DeltaArchiveManifest_InstallOperation operation;
+  InstallOperation operation;
   size_t current_best_size = 0;
   if (new_data.size() <= new_data_bz.size()) {
-    operation.set_type(DeltaArchiveManifest_InstallOperation_Type_REPLACE);
+    operation.set_type(InstallOperation_Type_REPLACE);
     current_best_size = new_data.size();
     data = new_data;
   } else {
-    operation.set_type(DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ);
+    operation.set_type(InstallOperation_Type_REPLACE_BZ);
     current_best_size = new_data_bz.size();
     data = new_data_bz;
   }
@@ -484,7 +484,7 @@ bool DeltaDiffGenerator::ReadFileToDiff(
     TEST_AND_RETURN_FALSE(utils::ReadFile(old_filename, &old_data));
     if (old_data == new_data) {
       // No change in data.
-      operation.set_type(DeltaArchiveManifest_InstallOperation_Type_MOVE);
+      operation.set_type(InstallOperation_Type_MOVE);
       current_best_size = 0;
       data.clear();
     } else if (bsdiff_allowed) {
@@ -495,7 +495,7 @@ bool DeltaDiffGenerator::ReadFileToDiff(
           BsdiffFiles(old_filename, new_filename, &bsdiff_delta));
       CHECK_GT(bsdiff_delta.size(), static_cast<vector<char>::size_type>(0));
       if (bsdiff_delta.size() < current_best_size) {
-        operation.set_type(DeltaArchiveManifest_InstallOperation_Type_BSDIFF);
+        operation.set_type(InstallOperation_Type_BSDIFF);
         current_best_size = bsdiff_delta.size();
         data = bsdiff_delta;
       }
@@ -505,8 +505,8 @@ bool DeltaDiffGenerator::ReadFileToDiff(
   // Set parameters of the operations
   CHECK_EQ(data.size(), current_best_size);
 
-  if (operation.type() == DeltaArchiveManifest_InstallOperation_Type_MOVE ||
-      operation.type() == DeltaArchiveManifest_InstallOperation_Type_BSDIFF) {
+  if (operation.type() == InstallOperation_Type_MOVE ||
+      operation.type() == InstallOperation_Type_BSDIFF) {
     if (gather_extents) {
       TEST_AND_RETURN_FALSE(
           GatherExtents(old_filename, operation.mutable_src_extents()));
@@ -536,7 +536,7 @@ bool DeltaDiffGenerator::ReadFileToDiff(
 }
 
 bool DeltaDiffGenerator::InitializePartitionInfo(const string& partition,
-                                                 PartitionInfo* info) {
+                                                 BlobInfo* info) {
   int64_t size = 0;
   int block_count = 0, block_size = 0;
   TEST_AND_RETURN_FALSE(utils::GetFilesystemSize(partition,
@@ -560,11 +560,11 @@ bool InitializePartitionInfos(const string& old_rootfs,
   if (!old_rootfs.empty()) {
     TEST_AND_RETURN_FALSE(DeltaDiffGenerator::InitializePartitionInfo(
         old_rootfs,
-        manifest.mutable_old_rootfs_info()));
+        manifest.mutable_old_partition_info()));
   }
   TEST_AND_RETURN_FALSE(DeltaDiffGenerator::InitializePartitionInfo(
       new_rootfs,
-      manifest.mutable_new_rootfs_info()));
+      manifest.mutable_new_partition_info()));
   return true;
 }
 
@@ -671,7 +671,7 @@ bool DeltaDiffGenerator::CutEdges(Graph* graph,
                                                    cut_edge_properties));
 
     // Set src/dst extents and other proto variables for copy operation
-    graph->back().op.set_type(DeltaArchiveManifest_InstallOperation_Type_MOVE);
+    graph->back().op.set_type(InstallOperation_Type_MOVE);
     DeltaDiffGenerator::StoreExtents(
         cut_edge_properties.extents,
         graph->back().op.mutable_src_extents());
@@ -784,10 +784,10 @@ void DeltaDiffGenerator::MoveFullOpsToBack(Graph* graph,
   ret.reserve(op_indexes->size());
   for (vector<Vertex::Index>::size_type i = 0, e = op_indexes->size(); i != e;
        ++i) {
-    DeltaArchiveManifest_InstallOperation_Type type =
+    InstallOperation_Type type =
         (*graph)[(*op_indexes)[i]].op.type();
-    if (type == DeltaArchiveManifest_InstallOperation_Type_REPLACE ||
-        type == DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ) {
+    if (type == InstallOperation_Type_REPLACE ||
+        type == InstallOperation_Type_REPLACE_BZ) {
       full_ops.push_back((*op_indexes)[i]);
     } else {
       ret.push_back((*op_indexes)[i]);
@@ -968,7 +968,7 @@ bool AssignBlockForAdjoiningCuts(
     // Fix the new node w/ the real blocks. Since the new node is just a
     // copy operation, we can replace all the dest extents w/ the real
     // blocks.
-    DeltaArchiveManifest_InstallOperation& op = (*graph)[cut.new_vertex].op;
+    InstallOperation& op = (*graph)[cut.new_vertex].op;
     op.clear_dst_extents();
     DeltaDiffGenerator::StoreExtents(real_extents, op.mutable_dst_extents());
   }
@@ -980,8 +980,8 @@ bool AssignBlockForAdjoiningCuts(
 // Returns true if |op| is a no-op operation that doesn't do any useful work
 // (e.g., a move operation that copies blocks onto themselves).
 bool DeltaDiffGenerator::IsNoopOperation(
-    const DeltaArchiveManifest_InstallOperation& op) {
-  return (op.type() == DeltaArchiveManifest_InstallOperation_Type_MOVE &&
+    const InstallOperation& op) {
+  return (op.type() == InstallOperation_Type_MOVE &&
           ExpandExtents(op.src_extents()) == ExpandExtents(op.dst_extents()));
 }
 
@@ -1042,7 +1042,7 @@ bool DeltaDiffGenerator::NoTempBlocksRemain(const Graph& graph) {
        ++it, ++idx) {
     if (!it->valid)
       continue;
-    const DeltaArchiveManifest_InstallOperation& op = it->op;
+    const InstallOperation& op = it->op;
     if (TempBlocksExistInExtents(op.dst_extents()) ||
         TempBlocksExistInExtents(op.src_extents())) {
       LOG(INFO) << "bad extents in node " << idx;
@@ -1071,22 +1071,19 @@ bool DeltaDiffGenerator::ReorderDataBlobs(
   TEST_AND_RETURN_FALSE_ERRNO(in_fd >= 0);
   ScopedFdCloser in_fd_closer(&in_fd);
 
-  DirectFileWriter writer;
-  TEST_AND_RETURN_FALSE(
-      writer.Open(new_data_blobs_path.c_str(),
-                  O_WRONLY | O_TRUNC | O_CREAT,
-                  0644) == 0);
+  DirectFileWriter writer(new_data_blobs_path.c_str());
+  TEST_AND_RETURN_FALSE_ERRNO(writer.Open() == 0);
   ScopedFileWriterCloser writer_closer(&writer);
   uint64_t out_file_size = 0;
 
-  for (int i = 0; i < (manifest->install_operations_size() +
+  for (int i = 0; i < (manifest->partition_operations_size() +
                        manifest->noop_operations_size()); i++) {
-    DeltaArchiveManifest_InstallOperation* op = NULL;
-    if (i < manifest->install_operations_size()) {
-      op = manifest->mutable_install_operations(i);
+    InstallOperation* op = NULL;
+    if (i < manifest->partition_operations_size()) {
+      op = manifest->mutable_partition_operations(i);
     } else {
       op = manifest->mutable_noop_operations(
-          i - manifest->install_operations_size());
+          i - manifest->partition_operations_size());
     }
     if (!op->has_data_offset())
       continue;
@@ -1106,7 +1103,7 @@ bool DeltaDiffGenerator::ReorderDataBlobs(
 }
 
 bool DeltaDiffGenerator::AddOperationHash(
-    DeltaArchiveManifest_InstallOperation* op,
+    InstallOperation* op,
     const vector<char>& buf) {
   OmahaHashCalculator hasher;
 
@@ -1127,9 +1124,9 @@ bool DeltaDiffGenerator::ConvertCutToFullOp(Graph* graph,
 
   // Keep all outgoing edges
   if ((*graph)[cut.old_dst].op.type() !=
-      DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ &&
+      InstallOperation_Type_REPLACE_BZ &&
       (*graph)[cut.old_dst].op.type() !=
-      DeltaArchiveManifest_InstallOperation_Type_REPLACE) {
+      InstallOperation_Type_REPLACE) {
     Vertex::EdgeMap out_edges = (*graph)[cut.old_dst].out_edges;
     graph_utils::DropWriteBeforeDeps(&out_edges);
 
@@ -1222,7 +1219,7 @@ void DeltaDiffGenerator::CreateScratchNode(uint64_t start_block,
                                            uint64_t num_blocks,
                                            Vertex* vertex) {
   vertex->file_name = "<scratch>";
-  vertex->op.set_type(DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ);
+  vertex->op.set_type(InstallOperation_Type_REPLACE_BZ);
   vertex->op.set_data_offset(0);
   vertex->op.set_data_length(0);
   Extent* extent = vertex->op.add_dst_extents();
@@ -1291,12 +1288,12 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
       CheckGraph(graph);
 
       LOG(INFO) << "Starting metadata processing";
-      TEST_AND_RETURN_FALSE(Metadata::DeltaReadMetadata(&graph,
-                                                        &blocks,
-                                                        old_image,
-                                                        new_image,
-                                                        fd,
-                                                        &data_file_size));
+      TEST_AND_RETURN_FALSE(Ext2Metadata::DeltaReadMetadata(&graph,
+                                                            &blocks,
+                                                            old_image,
+                                                            new_image,
+                                                            fd,
+                                                            &data_file_size));
       LOG(INFO) << "Done metadata processing";
       CheckGraph(graph);
 
@@ -1370,13 +1367,13 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
   // Check that install op blobs are in order.
   uint64_t next_blob_offset = 0;
   {
-    for (int i = 0; i < (manifest.install_operations_size() +
+    for (int i = 0; i < (manifest.partition_operations_size() +
                          manifest.noop_operations_size()); i++) {
-      DeltaArchiveManifest_InstallOperation* op =
-          i < manifest.install_operations_size() ?
-          manifest.mutable_install_operations(i) :
+      InstallOperation* op =
+          i < manifest.partition_operations_size() ?
+          manifest.mutable_partition_operations(i) :
           manifest.mutable_noop_operations(
-              i - manifest.install_operations_size());
+              i - manifest.partition_operations_size());
       if (op->has_data_offset()) {
         if (op->data_offset() != next_blob_offset) {
           LOG(FATAL) << "bad blob offset! " << op->data_offset() << " != "
@@ -1409,17 +1406,15 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
   CheckGraph(graph);
 
   LOG(INFO) << "Writing final delta file header...";
-  DirectFileWriter writer;
-  TEST_AND_RETURN_FALSE_ERRNO(writer.Open(output_path.c_str(),
-                                          O_WRONLY | O_CREAT | O_TRUNC,
-                                          0644) == 0);
+  DirectFileWriter writer(output_path.c_str());
+  TEST_AND_RETURN_FALSE_ERRNO(writer.Open() == 0);
   ScopedFileWriterCloser writer_closer(&writer);
 
   // Write header
   TEST_AND_RETURN_FALSE(writer.Write(kDeltaMagic, strlen(kDeltaMagic)));
 
   // Write version number
-  TEST_AND_RETURN_FALSE(WriteUint64AsBigEndian(&writer, kVersionNumber));
+  TEST_AND_RETURN_FALSE(WriteUint64AsBigEndian(&writer, kDeltaVersion));
 
   // Write protobuf length
   TEST_AND_RETURN_FALSE(WriteUint64AsBigEndian(&writer,
@@ -1502,7 +1497,7 @@ bool DeltaDiffGenerator::BsdiffFiles(const string& old_file,
 // |graph| is not strictly necessary, but useful for printing out
 // error messages.
 bool DeltaDiffGenerator::AddInstallOpToBlocksVector(
-    const DeltaArchiveManifest_InstallOperation& operation,
+    const InstallOperation& operation,
     const Graph& graph,
     Vertex::Index vertex,
     vector<Block>* blocks) {
@@ -1550,9 +1545,9 @@ void DeltaDiffGenerator::AddSignatureOp(uint64_t signature_blob_offset,
   manifest.set_signatures_offset(signature_blob_offset);
   LOG(INFO) << "set? " << manifest.has_signatures_offset();
   // Add a dummy op at the end to appease older clients
-  DeltaArchiveManifest_InstallOperation* dummy_op =
+  InstallOperation* dummy_op =
       manifest.add_noop_operations();
-  dummy_op->set_type(DeltaArchiveManifest_InstallOperation_Type_REPLACE);
+  dummy_op->set_type(InstallOperation_Type_REPLACE);
   dummy_op->set_data_offset(signature_blob_offset);
   manifest.set_signatures_offset(signature_blob_offset);
   dummy_op->set_data_length(signature_blob_length);
@@ -1566,6 +1561,5 @@ void DeltaDiffGenerator::AddSignatureOp(uint64_t signature_blob_offset,
 
 const char* const kBsdiffPath = "bsdiff";
 const char* const kBspatchPath = "bspatch";
-const char* const kDeltaMagic = "CrAU";
 
 };  // namespace chromeos_update_engine

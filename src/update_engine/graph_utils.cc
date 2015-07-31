@@ -142,16 +142,16 @@ void DumpGraph(const Graph& graph) {
   for (Graph::size_type i = 0, e = graph.size(); i != e; ++i) {
     string type_str = "UNK";
     switch(graph[i].op.type()) {
-      case DeltaArchiveManifest_InstallOperation_Type_BSDIFF:
+      case InstallOperation_Type_BSDIFF:
         type_str = "BSDIFF";
         break;
-      case DeltaArchiveManifest_InstallOperation_Type_MOVE:
+      case InstallOperation_Type_MOVE:
         type_str = "MOVE";
         break;
-      case DeltaArchiveManifest_InstallOperation_Type_REPLACE:
+      case InstallOperation_Type_REPLACE:
         type_str = "REPLACE";
         break;
-      case DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ:
+      case InstallOperation_Type_REPLACE_BZ:
         type_str = "REPLACE_BZ";
         break;
     }

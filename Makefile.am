@@ -73,8 +73,10 @@ libupdate_engine_a_SOURCES = \
 	src/update_engine/cycle_breaker.cc \
 	src/update_engine/dbus_service.cc \
 	src/update_engine/delta_diff_generator.cc \
+	src/update_engine/delta_metadata.cc \
 	src/update_engine/delta_performer.cc \
 	src/update_engine/download_action.cc \
+	src/update_engine/ext2_metadata.cc \
 	src/update_engine/extent_mapper.cc \
 	src/update_engine/extent_ranges.cc \
 	src/update_engine/extent_writer.cc \
@@ -88,12 +90,12 @@ libupdate_engine_a_SOURCES = \
 	src/update_engine/install_plan.cc \
 	src/update_engine/libcurl_http_fetcher.cc \
 	src/update_engine/marshal.glibmarshal.c \
-	src/update_engine/metadata.cc \
 	src/update_engine/multi_range_http_fetcher.cc \
 	src/update_engine/omaha_hash_calculator.cc \
 	src/update_engine/omaha_request_action.cc \
 	src/update_engine/omaha_request_params.cc \
 	src/update_engine/omaha_response_handler_action.cc \
+	src/update_engine/payload_processor.cc \
 	src/update_engine/payload_signer.cc \
 	src/update_engine/payload_state.cc \
 	src/update_engine/postinstall_runner_action.cc \
@@ -124,6 +126,7 @@ update_engine_unittests_SOURCES = \
 	src/update_engine/delta_diff_generator_unittest.cc \
 	src/update_engine/delta_performer_unittest.cc \
 	src/update_engine/download_action_unittest.cc \
+	src/update_engine/ext2_metadata_unittest.cc \
 	src/update_engine/extent_mapper_unittest.cc \
 	src/update_engine/extent_ranges_unittest.cc \
 	src/update_engine/extent_writer_unittest.cc \
@@ -133,13 +136,13 @@ update_engine_unittests_SOURCES = \
 	src/update_engine/full_update_generator_unittest.cc \
 	src/update_engine/graph_utils_unittest.cc \
 	src/update_engine/http_fetcher_unittest.cc \
-	src/update_engine/metadata_unittest.cc \
 	src/update_engine/mock_http_fetcher.cc \
 	src/update_engine/mock_system_state.cc \
 	src/update_engine/omaha_hash_calculator_unittest.cc \
 	src/update_engine/omaha_request_action_unittest.cc \
 	src/update_engine/omaha_request_params_unittest.cc \
 	src/update_engine/omaha_response_handler_action_unittest.cc \
+	src/update_engine/payload_processor_unittest.cc \
 	src/update_engine/payload_signer_unittest.cc \
 	src/update_engine/payload_state_unittest.cc \
 	src/update_engine/postinstall_runner_action_unittest.cc \

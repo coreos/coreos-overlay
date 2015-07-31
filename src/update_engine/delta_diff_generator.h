@@ -99,7 +99,7 @@ class DeltaDiffGenerator {
                              const std::string& new_filename,
                              bool bsdiff_allowed,
                              std::vector<char>* out_data,
-                             DeltaArchiveManifest_InstallOperation* out_op,
+                             InstallOperation* out_op,
                              bool gather_extents);
 
   // Creates a dummy REPLACE_BZ node in the given |vertex|. This can be used
@@ -174,7 +174,7 @@ class DeltaDiffGenerator {
   // dummy operation for signature blob because the contents of the signature
   // blob will not be available at payload creation time. So, update_engine will
   // gracefully ignore the dummy signature operation.
-  static bool AddOperationHash(DeltaArchiveManifest_InstallOperation* op,
+  static bool AddOperationHash(InstallOperation* op,
                                const std::vector<char>& buf);
 
   // Handles allocation of temp blocks to a cut edge by converting the
@@ -215,10 +215,10 @@ class DeltaDiffGenerator {
 
   // Returns true if |op| is a no-op operation that doesn't do any useful work
   // (e.g., a move operation that copies blocks onto themselves).
-  static bool IsNoopOperation(const DeltaArchiveManifest_InstallOperation& op);
+  static bool IsNoopOperation(const InstallOperation& op);
 
   static bool InitializePartitionInfo(const std::string& partition,
-                                      PartitionInfo* info);
+                                      BlobInfo* info);
 
   // Runs the bsdiff tool on two files and returns the resulting delta in
   // |out|. Returns true on success.
@@ -234,7 +234,7 @@ class DeltaDiffGenerator {
   // |graph| is not strictly necessary, but useful for printing out
   // error messages.
   static bool AddInstallOpToBlocksVector(
-      const DeltaArchiveManifest_InstallOperation& operation,
+      const InstallOperation& operation,
       const Graph& graph,
       Vertex::Index vertex,
       std::vector<DeltaDiffGenerator::Block>* blocks);
@@ -252,7 +252,6 @@ class DeltaDiffGenerator {
 
 extern const char* const kBsdiffPath;
 extern const char* const kBspatchPath;
-extern const char* const kDeltaMagic;
 
 };  // namespace chromeos_update_engine
 

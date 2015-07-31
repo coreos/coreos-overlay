@@ -47,7 +47,13 @@ class UpdateAttempterTest : public ::testing::Test {
  protected:
   UpdateAttempterTest()
       : attempter_(&mock_system_state_, &dbus_),
-        loop_(NULL) {}
+        loop_(NULL) {
+    // We set the set_good_partition command to a non-existent path so it fails
+    // to run it. This avoids the async call to the command and continues the
+    // update process right away. Tests testing that behavior can override the
+    // default set_good_partition command if needed.
+    attempter_.set_good_partition_cmd_ = "/path/to/non-existent/command";
+  }
 
   virtual void SetUp() {
     EXPECT_EQ(NULL, attempter_.dbus_service_);
@@ -87,8 +93,10 @@ class UpdateAttempterTest : public ::testing::Test {
 TEST_F(UpdateAttempterTest, ActionCompletedDownloadTest) {
   std::unique_ptr<MockHttpFetcher> fetcher(new MockHttpFetcher("", 0));
   fetcher->FailTransfer(503);  // Sets the HTTP response code.
-  DownloadAction action(prefs_, NULL, fetcher.release());
+  DownloadAction action(prefs_, fetcher.release());
   EXPECT_CALL(*prefs_, GetInt64(kPrefsDeltaUpdateFailures, _)).Times(0);
+  EXPECT_CALL(*(mock_system_state_.mock_payload_state()),
+              DownloadComplete()).Times(1);
   attempter_.ActionCompleted(NULL, &action, kActionCodeSuccess);
   EXPECT_EQ(503, attempter_.http_response_code());
   EXPECT_EQ(UPDATE_STATUS_FINALIZING, attempter_.status());
@@ -101,6 +109,8 @@ TEST_F(UpdateAttempterTest, ActionCompletedErrorTest) {
   attempter_.status_ = UPDATE_STATUS_DOWNLOADING;
   EXPECT_CALL(*prefs_, GetInt64(kPrefsDeltaUpdateFailures, _))
       .WillOnce(Return(false));
+  EXPECT_CALL(*(mock_system_state_.mock_payload_state()),
+              DownloadComplete()).Times(0);
   attempter_.ActionCompleted(NULL, &action, kActionCodeError);
   ASSERT_TRUE(attempter_.error_event_.get() != NULL);
 }
@@ -118,11 +128,24 @@ TEST_F(UpdateAttempterTest, ActionCompletedOmahaRequestTest) {
   UpdateCheckScheduler scheduler(&attempter_, &mock_system_state_);
   attempter_.set_update_check_scheduler(&scheduler);
   EXPECT_CALL(*prefs_, GetInt64(kPrefsDeltaUpdateFailures, _)).Times(0);
+  EXPECT_CALL(*(mock_system_state_.mock_payload_state()),
+              DownloadComplete()).Times(0);
   attempter_.ActionCompleted(NULL, &action, kActionCodeSuccess);
   EXPECT_EQ(500, attempter_.http_response_code());
   EXPECT_EQ(UPDATE_STATUS_IDLE, attempter_.status());
   EXPECT_EQ(234, scheduler.poll_interval());
   ASSERT_TRUE(attempter_.error_event_.get() == NULL);
+}
+
+TEST_F(UpdateAttempterTest, BytesReceivedTest) {
+  EXPECT_FALSE(attempter_.download_active_);
+  attempter_.SetDownloadStatus(true);
+  EXPECT_TRUE(attempter_.download_active_);
+  EXPECT_CALL(*(mock_system_state_.mock_payload_state()),
+              DownloadProgress(4)).Times(1);
+  attempter_.BytesReceived(4, 4, 8);
+  EXPECT_EQ(0.5, attempter_.download_progress_);
+  EXPECT_EQ(UPDATE_STATUS_DOWNLOADING, attempter_.status());
 }
 
 TEST_F(UpdateAttempterTest, RunAsRootConstructWithUpdatedMarkerTest) {
@@ -282,11 +305,9 @@ const string kActionTypes[] = {
   OmahaRequestAction::StaticType(),
   OmahaResponseHandlerAction::StaticType(),
   FilesystemCopierAction::StaticType(),
-  FilesystemCopierAction::StaticType(),
   OmahaRequestAction::StaticType(),
   DownloadAction::StaticType(),
   OmahaRequestAction::StaticType(),
-  FilesystemCopierAction::StaticType(),
   FilesystemCopierAction::StaticType(),
   PostinstallRunnerAction::StaticType(),
   OmahaRequestAction::StaticType()
@@ -317,14 +338,13 @@ void UpdateAttempterTest::UpdateTestVerify() {
   EXPECT_EQ(attempter_.response_handler_action_.get(),
             attempter_.actions_[1].get());
   DownloadAction* download_action =
-      dynamic_cast<DownloadAction*>(attempter_.actions_[5].get());
+      dynamic_cast<DownloadAction*>(attempter_.actions_[4].get());
   ASSERT_TRUE(download_action != NULL);
   EXPECT_EQ(&attempter_, download_action->delegate());
   EXPECT_EQ(UPDATE_STATUS_CHECKING_FOR_UPDATE, attempter_.status());
   g_main_loop_quit(loop_);
 }
 
-/*
 TEST_F(UpdateAttempterTest, UpdateTest) {
   loop_ = g_main_loop_new(g_main_context_default(), FALSE);
   g_idle_add(&StaticUpdateTestStart, this);
@@ -332,7 +352,6 @@ TEST_F(UpdateAttempterTest, UpdateTest) {
   g_main_loop_unref(loop_);
   loop_ = NULL;
 }
-*/
 
 void UpdateAttempterTest::PingOmahaTestStart() {
   EXPECT_CALL(*processor_,

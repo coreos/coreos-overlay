@@ -13,9 +13,9 @@
 #include <gtest/gtest.h>
 
 #include "strings/string_printf.h"
-#include "update_engine/graph_types.h"
 #include "update_engine/delta_diff_generator.h"
-#include "update_engine/metadata.h"
+#include "update_engine/ext2_metadata.h"
+#include "update_engine/graph_types.h"
 #include "update_engine/test_utils.h"
 #include "update_engine/utils.h"
 
@@ -27,10 +27,10 @@ namespace chromeos_update_engine {
 
 typedef DeltaDiffGenerator::Block Block;
 
-class MetadataTest : public ::testing::Test {
+class Ext2MetadataTest : public ::testing::Test {
 };
 
-TEST_F(MetadataTest, RunAsRootReadMetadataDissimilarFileSystems) {
+TEST_F(Ext2MetadataTest, RunAsRootReadMetadataDissimilarFileSystems) {
   string a_img, b_img;
   EXPECT_TRUE(utils::MakeTempFile("/tmp/a_img.XXXXXX", &a_img, NULL));
   ScopedPathUnlinker a_img_unlinker(a_img);
@@ -42,12 +42,12 @@ TEST_F(MetadataTest, RunAsRootReadMetadataDissimilarFileSystems) {
 
   Graph graph;
   vector<Block> blocks;
-  EXPECT_TRUE(Metadata::DeltaReadMetadata(&graph,
-                                          &blocks,
-                                          a_img,
-                                          b_img,
-                                          0,
-                                          NULL));
+  EXPECT_TRUE(Ext2Metadata::DeltaReadMetadata(&graph,
+                                              &blocks,
+                                              a_img,
+                                              b_img,
+                                              0,
+                                              NULL));
   EXPECT_EQ(graph.size(), 0);
 
   CreateEmptyExtImageAtPath(a_img, 10485759, 4096);
@@ -55,16 +55,16 @@ TEST_F(MetadataTest, RunAsRootReadMetadataDissimilarFileSystems) {
 
   graph.clear();
   blocks.clear();
-  EXPECT_TRUE(Metadata::DeltaReadMetadata(&graph,
-                                          &blocks,
-                                          a_img,
-                                          b_img,
-                                          0,
-                                          NULL));
+  EXPECT_TRUE(Ext2Metadata::DeltaReadMetadata(&graph,
+                                              &blocks,
+                                              a_img,
+                                              b_img,
+                                              0,
+                                              NULL));
   EXPECT_EQ(graph.size(), 0);
 }
 
-TEST_F(MetadataTest, RunAsRootReadMetadata) {
+TEST_F(Ext2MetadataTest, RunAsRootReadMetadata) {
   string a_img, b_img, data_file;
   EXPECT_TRUE(utils::MakeTempFile("/tmp/a_img.XXXXXX", &a_img, NULL));
   ScopedPathUnlinker a_img_unlinker(a_img);
@@ -94,12 +94,12 @@ TEST_F(MetadataTest, RunAsRootReadMetadata) {
   Graph graph;
   vector<Block> blocks(image_size / block_size);
   off_t data_file_size;
-  EXPECT_TRUE(Metadata::DeltaReadMetadata(&graph,
-                                          &blocks,
-                                          a_img,
-                                          b_img,
-                                          fd,
-                                          &data_file_size));
+  EXPECT_TRUE(Ext2Metadata::DeltaReadMetadata(&graph,
+                                              &blocks,
+                                              a_img,
+                                              b_img,
+                                              fd,
+                                              &data_file_size));
 
   // There are 12 metadata that we look for:
   //   - Block group 0 metadata (superblock, group descriptor, bitmaps, etc)
@@ -115,37 +115,37 @@ TEST_F(MetadataTest, RunAsRootReadMetadata) {
     off_t start_block; // Set to -1 to skip start block verification
     off_t num_blocks; // Set to -1 to skip num blocks verification
   } exp_results[] =
-      {{"<rootfs-bg-0-0-metadata>", 0, 104},
-       {"<rootfs-bg-0-1-metadata>", 104, 104},
-       {"<rootfs-bg-0-2-metadata>", 208, 104},
-       {"<rootfs-bg-0-3-metadata>", 312, 104},
-       {"<rootfs-bg-0-4-metadata>", 416, 104},
-       {"<rootfs-bg-0-5-metadata>", 520, 104},
-       {"<rootfs-bg-0-6-metadata>", 624, 104},
-       {"<rootfs-bg-0-7-metadata>", 728, 104},
-       {"<rootfs-bg-0-8-metadata>", 832, 104},
-       {"<rootfs-bg-0-9-metadata>", 936, 107},
-       {"<rootfs-bg-1-0-metadata>", 32768, 104},
-       {"<rootfs-bg-1-1-metadata>", 32872, 104},
-       {"<rootfs-bg-1-2-metadata>", 32976, 104},
-       {"<rootfs-bg-1-3-metadata>", 33080, 104},
-       {"<rootfs-bg-1-4-metadata>", 33184, 104},
-       {"<rootfs-bg-1-5-metadata>", 33288, 104},
-       {"<rootfs-bg-1-6-metadata>", 33392, 104},
-       {"<rootfs-bg-1-7-metadata>", 33496, 104},
-       {"<rootfs-bg-1-8-metadata>", 33600, 104},
-       {"<rootfs-bg-1-9-metadata>", 33704, 107},
-       {"<rootfs-inode-2-metadata>", -1, 1},
-       {"<rootfs-inode-8-metadata>", -1, 4101},
-       {"<rootfs-inode-11-metadata>", -1, 4},
-       {"<rootfs-inode-12-metadata>", -1, 1}};
+      {{"<fs-bg-0-0-metadata>", 0, 104},
+       {"<fs-bg-0-1-metadata>", 104, 104},
+       {"<fs-bg-0-2-metadata>", 208, 104},
+       {"<fs-bg-0-3-metadata>", 312, 104},
+       {"<fs-bg-0-4-metadata>", 416, 104},
+       {"<fs-bg-0-5-metadata>", 520, 104},
+       {"<fs-bg-0-6-metadata>", 624, 104},
+       {"<fs-bg-0-7-metadata>", 728, 104},
+       {"<fs-bg-0-8-metadata>", 832, 104},
+       {"<fs-bg-0-9-metadata>", 936, 107},
+       {"<fs-bg-1-0-metadata>", 32768, 104},
+       {"<fs-bg-1-1-metadata>", 32872, 104},
+       {"<fs-bg-1-2-metadata>", 32976, 104},
+       {"<fs-bg-1-3-metadata>", 33080, 104},
+       {"<fs-bg-1-4-metadata>", 33184, 104},
+       {"<fs-bg-1-5-metadata>", 33288, 104},
+       {"<fs-bg-1-6-metadata>", 33392, 104},
+       {"<fs-bg-1-7-metadata>", 33496, 104},
+       {"<fs-bg-1-8-metadata>", 33600, 104},
+       {"<fs-bg-1-9-metadata>", 33704, 107},
+       {"<fs-inode-2-metadata>", -1, 1},
+       {"<fs-inode-8-metadata>", -1, 4101},
+       {"<fs-inode-11-metadata>", -1, 4},
+       {"<fs-inode-12-metadata>", -1, 1}};
 
   int num_exp_results = sizeof(exp_results) / sizeof(exp_results[0]);
   EXPECT_EQ(graph.size(), num_exp_results);
 
   for (int i = 0; i < num_exp_results; i++) {
     Vertex& vertex = graph[i];
-    DeltaArchiveManifest_InstallOperation& op = vertex.op;
+    InstallOperation& op = vertex.op;
 
     EXPECT_STRCASEEQ(vertex.file_name.c_str(),
                      exp_results[i].metadata_name.c_str());

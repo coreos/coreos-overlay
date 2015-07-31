@@ -21,7 +21,7 @@
 
 #include "strings/string_number_conversions.h"
 #include "update_engine/delta_diff_generator.h"
-#include "update_engine/delta_performer.h"
+#include "update_engine/payload_processor.h"
 #include "update_engine/payload_signer.h"
 #include "update_engine/prefs.h"
 #include "update_engine/subprocess.h"
@@ -30,11 +30,11 @@
 #include "update_engine/utils.h"
 
 DEFINE_string(old_dir, "",
-              "Directory where the old rootfs is loop mounted read-only");
+              "Directory where the old partition is loop mounted read-only");
 DEFINE_string(new_dir, "",
-              "Directory where the new rootfs is loop mounted read-only");
-DEFINE_string(old_image, "", "Path to the old rootfs");
-DEFINE_string(new_image, "", "Path to the new rootfs");
+              "Directory where the new partition is loop mounted read-only");
+DEFINE_string(old_image, "", "Path to the old partition");
+DEFINE_string(new_image, "", "Path to the new partition");
 DEFINE_string(in_file, "",
               "Path to input delta payload file used to hash/sign payloads "
               "and apply delta over old_image (for debugging)");
@@ -180,13 +180,14 @@ void ApplyDelta() {
       << "Failed to initialize preferences.";
   // Get original checksums
   LOG(INFO) << "Calculating original checksums";
-  PartitionInfo kern_info, root_info;
+  BlobInfo root_info;
   CHECK(DeltaDiffGenerator::InitializePartitionInfo(FLAGS_old_image,
                                                     &root_info));
   install_plan.rootfs_hash.assign(root_info.hash().begin(),
                                   root_info.hash().end());
-  DeltaPerformer performer(&prefs, NULL, &install_plan);
-  CHECK_EQ(performer.Open(FLAGS_old_image.c_str(), 0, 0), 0);
+  install_plan.install_path = FLAGS_old_image;
+  PayloadProcessor performer(&prefs, &install_plan);
+  CHECK_EQ(performer.Open(), 0);
   vector<char> buf(1024 * 1024);
   int fd = open(FLAGS_in_file.c_str(), O_RDONLY, 0);
   CHECK_GE(fd, 0);
@@ -199,7 +200,7 @@ void ApplyDelta() {
     CHECK_EQ(performer.Write(&buf[0], bytes_read), bytes_read);
   }
   CHECK_EQ(performer.Close(), 0);
-  DeltaPerformer::ResetUpdateProgress(&prefs, false);
+  PayloadProcessor::ResetUpdateProgress(&prefs, false);
   LOG(INFO) << "Done applying delta.";
 }
 

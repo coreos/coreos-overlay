@@ -20,33 +20,26 @@ namespace chromeos_update_engine {
 class FileWriterTest : public ::testing::Test { };
 
 TEST(FileWriterTest, SimpleTest) {
-  DirectFileWriter file_writer;
-  const string path("/tmp/FileWriterTest");
-  EXPECT_EQ(0, file_writer.Open(path.c_str(),
-                                O_CREAT | O_LARGEFILE | O_TRUNC | O_WRONLY,
-                                0644));
+  ScopedTempFile temp_file;
+  DirectFileWriter file_writer(temp_file.GetPath());
+  EXPECT_EQ(0, file_writer.Open());
   EXPECT_TRUE(file_writer.Write("test", 4));
   vector<char> actual_data;
-  EXPECT_TRUE(utils::ReadFile(path, &actual_data));
+  EXPECT_TRUE(utils::ReadFile(temp_file.GetPath(), &actual_data));
 
   EXPECT_FALSE(memcmp("test", &actual_data[0], actual_data.size()));
   EXPECT_EQ(0, file_writer.Close());
-  unlink(path.c_str());
 }
 
 TEST(FileWriterTest, ErrorTest) {
-  DirectFileWriter file_writer;
-  const string path("/tmp/ENOENT/FileWriterTest");
-  EXPECT_EQ(-ENOENT, file_writer.Open(path.c_str(),
-                                      O_CREAT | O_LARGEFILE | O_TRUNC, 0644));
+  DirectFileWriter file_writer("/tmp/ENOENT/FileWriterTest");
+  EXPECT_EQ(-ENOENT, file_writer.Open());
 }
 
 TEST(FileWriterTest, WriteErrorTest) {
-  DirectFileWriter file_writer;
-  const string path("/tmp/FileWriterTest");
-  EXPECT_EQ(0, file_writer.Open(path.c_str(),
-                                O_CREAT | O_LARGEFILE | O_TRUNC | O_RDONLY,
-                                0644));
+  ScopedTempFile temp_file;
+  DirectFileWriter file_writer(temp_file.GetPath(), O_CREAT | O_RDONLY, 0644);
+  EXPECT_EQ(0, file_writer.Open());
   EXPECT_FALSE(file_writer.Write("x", 1));
   EXPECT_EQ(0, file_writer.Close());
 }

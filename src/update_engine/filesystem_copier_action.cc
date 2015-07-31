@@ -276,7 +276,7 @@ void FilesystemCopierAction::SpawnAsyncActions() {
       if (verify_hash_) {
         if (install_plan_.rootfs_hash != hasher_.raw_hash()) {
           code = kActionCodeNewRootfsVerificationError;
-          LOG(ERROR) << "New rootfs verification failed.";
+          LOG(ERROR) << "New partition verification failed.";
         }
       } else {
         install_plan_.rootfs_hash = hasher_.raw_hash();

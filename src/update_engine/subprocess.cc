@@ -149,6 +149,7 @@ uint32_t Subprocess::Exec(const vector<string>& cmd,
   record->callback = callback;
   record->callback_data = p;
   gint stdout_fd = -1;
+  GError* error = nullptr;
   bool success = g_spawn_async_with_pipes(
       NULL,  // working directory
       argv.get(),
@@ -160,10 +161,10 @@ uint32_t Subprocess::Exec(const vector<string>& cmd,
       NULL,
       &stdout_fd,
       NULL,
-      NULL);
+      &error);
   FreeArgv(argv.get());
   if (!success) {
-    LOG(ERROR) << "g_spawn_async failed";
+    LOG(ERROR) << "g_spawn_async failed: " << utils::GetAndFreeGError(&error);
     return 0;
   }
   record->tag =

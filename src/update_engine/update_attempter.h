@@ -122,7 +122,7 @@ class UpdateAttempter : public ActionProcessorDelegate,
 
   // DownloadActionDelegate methods
   void SetDownloadStatus(bool active);
-  void BytesReceived(uint64_t bytes_received, uint64_t total);
+  void BytesReceived(uint64_t received, uint64_t progress, uint64_t total);
 
   // Broadcasts the current status over D-Bus.
   void BroadcastStatus();
@@ -136,6 +136,7 @@ class UpdateAttempter : public ActionProcessorDelegate,
   FRIEND_TEST(UpdateAttempterTest, ActionCompletedDownloadTest);
   FRIEND_TEST(UpdateAttempterTest, ActionCompletedErrorTest);
   FRIEND_TEST(UpdateAttempterTest, ActionCompletedOmahaRequestTest);
+  FRIEND_TEST(UpdateAttempterTest, BytesReceivedTest);
   FRIEND_TEST(UpdateAttempterTest, CreatePendingErrorEventTest);
   FRIEND_TEST(UpdateAttempterTest, CreatePendingErrorEventResumedTest);
   FRIEND_TEST(UpdateAttempterTest, DisableDeltaUpdateIfNeededTest);
@@ -256,6 +257,9 @@ class UpdateAttempter : public ActionProcessorDelegate,
   // will be no more changes to these flags.
   bool updated_boot_flags_;  // True if UpdateBootFlags has completed.
   bool update_boot_flags_running_;  // True if UpdateBootFlags is running.
+
+  // The command to run to set the current system as good.
+  std::string set_good_partition_cmd_ = "/usr/sbin/coreos-setgoodroot";
 
   // True if the action processor needs to be started by the boot flag updater.
   bool start_action_processor_;

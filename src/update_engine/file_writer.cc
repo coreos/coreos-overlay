@@ -7,9 +7,9 @@
 
 namespace chromeos_update_engine {
 
-int DirectFileWriter::Open(const char* path, int flags, mode_t mode) {
+int DirectFileWriter::Open() {
   CHECK_EQ(fd_, -1);
-  fd_ = open(path, flags, mode);
+  fd_ = open(path_.c_str(), flags_, mode_);
   if (fd_ < 0)
     return -errno;
   return 0;

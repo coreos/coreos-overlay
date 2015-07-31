@@ -2,15 +2,15 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_METADATA_H__
-#define CHROMEOS_PLATFORM_UPDATE_ENGINE_METADATA_H__
+#ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_EXT2_METADATA_H__
+#define CHROMEOS_PLATFORM_UPDATE_ENGINE_EXT2_METADATA_H__
 
 #include "update_engine/delta_diff_generator.h"
 #include "update_engine/graph_types.h"
 
 namespace chromeos_update_engine {
 
-class Metadata {
+class Ext2Metadata {
  public:
   // Reads metadata from old image and new image and determines
   // the smallest way to encode the metadata for the diff.
@@ -29,9 +29,9 @@ class Metadata {
 
  private:
   // This should never be constructed.
-  DISALLOW_IMPLICIT_CONSTRUCTORS(Metadata);
+  DISALLOW_IMPLICIT_CONSTRUCTORS(Ext2Metadata);
 };
 
 };  // namespace chromeos_update_engine
 
-#endif  // CHROMEOS_PLATFORM_UPDATE_ENGINE_METADATA_H__
+#endif  // CHROMEOS_PLATFORM_UPDATE_ENGINE_EXT2_METADATA_H__

@@ -14,9 +14,9 @@
 #include "strings/string_printf.h"
 #include "update_engine/bzip.h"
 #include "update_engine/delta_diff_generator.h"
+#include "update_engine/ext2_metadata.h"
 #include "update_engine/extent_ranges.h"
 #include "update_engine/graph_utils.h"
-#include "update_engine/metadata.h"
 #include "update_engine/utils.h"
 
 using std::min;
@@ -30,6 +30,17 @@ namespace {
 const size_t kBlockSize = 4096;
 
 typedef DeltaDiffGenerator::Block Block;
+
+// Utility class to close a file system
+class ScopedExt2fsCloser {
+ public:
+  explicit ScopedExt2fsCloser(ext2_filsys filsys) : filsys_(filsys) {}
+  ~ScopedExt2fsCloser() { ext2fs_close(filsys_); }
+
+ private:
+  ext2_filsys filsys_;
+  DISALLOW_COPY_AND_ASSIGN(ScopedExt2fsCloser);
+};
 
 // Read data from the specified extents.
 bool ReadExtentsData(const ext2_filsys fs,
@@ -114,7 +125,7 @@ bool AddMetadataExtents(Graph* graph,
                         int data_fd,
                         off_t* data_file_size) {
   vector<char> data;  // Data blob that will be written to delta file.
-  DeltaArchiveManifest_InstallOperation op;
+  InstallOperation op;
 
   {
     // Read in the metadata blocks from the old and new image.
@@ -131,18 +142,18 @@ bool AddMetadataExtents(Graph* graph,
 
     size_t current_best_size = 0;
     if (new_data.size() <= new_data_bz.size()) {
-      op.set_type(DeltaArchiveManifest_InstallOperation_Type_REPLACE);
+      op.set_type(InstallOperation_Type_REPLACE);
       current_best_size = new_data.size();
       data = new_data;
     } else {
-      op.set_type(DeltaArchiveManifest_InstallOperation_Type_REPLACE_BZ);
+      op.set_type(InstallOperation_Type_REPLACE_BZ);
       current_best_size = new_data_bz.size();
       data = new_data_bz;
     }
 
     if (old_data == new_data) {
       // No change in data.
-      op.set_type(DeltaArchiveManifest_InstallOperation_Type_MOVE);
+      op.set_type(InstallOperation_Type_MOVE);
       current_best_size = 0;
       data.clear();
     } else {
@@ -154,7 +165,7 @@ bool AddMetadataExtents(Graph* graph,
       CHECK_GT(bsdiff_delta.size(), static_cast<vector<char>::size_type>(0));
 
       if (bsdiff_delta.size() < current_best_size) {
-        op.set_type(DeltaArchiveManifest_InstallOperation_Type_BSDIFF);
+        op.set_type(InstallOperation_Type_BSDIFF);
         current_best_size = bsdiff_delta.size();
         data = bsdiff_delta;
       }
@@ -164,8 +175,8 @@ bool AddMetadataExtents(Graph* graph,
 
     // Set the source and dest extents to be the same since the filesystem
     // structures are identical
-    if (op.type() == DeltaArchiveManifest_InstallOperation_Type_MOVE ||
-        op.type() == DeltaArchiveManifest_InstallOperation_Type_BSDIFF) {
+    if (op.type() == InstallOperation_Type_MOVE ||
+        op.type() == InstallOperation_Type_BSDIFF) {
       DeltaDiffGenerator::StoreExtents(extents, op.mutable_src_extents());
       op.set_src_length(old_data.size());
     }
@@ -175,7 +186,7 @@ bool AddMetadataExtents(Graph* graph,
   }
 
   // Write data to output file
-  if (op.type() != DeltaArchiveManifest_InstallOperation_Type_MOVE) {
+  if (op.type() != InstallOperation_Type_MOVE) {
     op.set_data_offset(*data_file_size);
     op.set_data_length(data.size());
   }
@@ -206,7 +217,7 @@ bool ReadFilesystemMetadata(Graph* graph,
                             const ext2_filsys fs_new,
                             int data_fd,
                             off_t* data_file_size) {
-  LOG(INFO) << "Processing <rootfs-metadata>";
+  LOG(INFO) << "Processing <fs-metadata>";
 
   // Read all the extents that belong to the main file system metadata.
   // The metadata blocks are at the start of each block group and goes
@@ -238,7 +249,7 @@ bool ReadFilesystemMetadata(Graph* graph,
       vector<Extent> extents;
       extents.push_back(extent);
 
-      string metadata_name = StringPrintf("<rootfs-bg-%d-%d-metadata>",
+      string metadata_name = StringPrintf("<fs-bg-%d-%d-metadata>",
                                           bg, chunk);
 
       LOG(INFO) << "Processing " << metadata_name;
@@ -407,7 +418,7 @@ bool ReadInodeMetadata(Graph* graph,
 
     // We have identical inode metadata blocks, we can now add them to
     // our graph and blocks vector
-    string metadata_name = StringPrintf("<rootfs-inode-%d-metadata>", ino);
+    string metadata_name = StringPrintf("<fs-inode-%d-metadata>", ino);
     TEST_AND_RETURN_FALSE(AddMetadataExtents(graph,
                                              blocks,
                                              fs_old,
@@ -433,12 +444,12 @@ bool ReadInodeMetadata(Graph* graph,
 // accordingly. It also adds the required operation to the graph and adds the
 // metadata extents to blocks.
 // Returns true on success.
-bool Metadata::DeltaReadMetadata(Graph* graph,
-                                 vector<Block>* blocks,
-                                 const string& old_image,
-                                 const string& new_image,
-                                 int data_fd,
-                                 off_t* data_file_size) {
+bool Ext2Metadata::DeltaReadMetadata(Graph* graph,
+                                     vector<Block>* blocks,
+                                     const string& old_image,
+                                     const string& new_image,
+                                     int data_fd,
+                                     off_t* data_file_size) {
   // Open the two file systems.
   ext2_filsys fs_old;
   TEST_AND_RETURN_FALSE_ERRCODE(ext2fs_open(old_image.c_str(), 0, 0, 0,
