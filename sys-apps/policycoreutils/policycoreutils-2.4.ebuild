@@ -171,7 +171,6 @@ src_install() {
 		done
 	fi
 
-	systemd_dotmpfilesd "${FILESDIR}/tmpfiles.d/policycoreutils.conf"
 	dodir /usr/share/doc/${PF}/mcstrans/examples
 	cp -dR "${S1}"/mcstrans/share/examples/* "${D}/usr/share/doc/${PF}/mcstrans/examples"
 }
