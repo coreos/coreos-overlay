@@ -136,6 +136,13 @@ coreos-kernel_src_prepare() {
 
 	# make sure no keys are cached from a previous build
 	shred_keys
+
+	# HACK: generated syscall headers aren't always regenerated when jumping
+	# from 4.0.x to 4.1.x causing errors like this:
+	#  arch/x86/built-in.o:(.rodata+0xb40): undefined reference to `stub_iopl'
+	#  arch/x86/built-in.o:(.rodata+0x1388): undefined reference to `sys32_vm86_warning'
+	#  arch/x86/built-in.o:(.rodata+0x1530): undefined reference to `sys32_vm86_warning'
+	rm -rf "${KBUILD_OUTPUT}/arch/x86/include/generated" || die
 }
 
 coreos-kernel_src_configure() {
