@@ -12,7 +12,7 @@ COREOS_SOURCE_NAME="linux-${PV}-coreos${COREOS_SOURCE_REVISION}"
 
 [[ ${EAPI} != "5" ]] && die "Only EAPI=5 is supported"
 
-inherit linux-info toolchain-funcs
+inherit linux-info savedconfig toolchain-funcs
 
 HOMEPAGE="http://www.kernel.org"
 LICENSE="GPL-2 freedist"
@@ -28,9 +28,6 @@ RESTRICT="binchecks strip"
 
 # Use source installed by coreos-sources
 KERNEL_DIR="${SYSROOT}/usr/src/${COREOS_SOURCE_NAME}"
-S="${KERNEL_DIR}"
-# Cache kernel build tree under /var
-KBUILD_OUTPUT="${SYSROOT}/var/cache/portage/${CATEGORY}/${PN}"
 
 # Search for an apropriate defconfig in ${FILESDIR}. The config should reflect
 # the kernel version but partial matching is allowed if the config is
@@ -65,8 +62,7 @@ find_defconfig() {
 # As if using cpio isn't bad enough already.
 # If lib doesn't exist or isn't a symlink then nothing is returned.
 get_bootengine_lib() {
-	local cpio_path="${KBUILD_OUTPUT}/bootengine.cpio"
-	cpio -itv --quiet < "${cpio_path}" | \
+	cpio -itv --quiet < bootengine.cpio | \
 		awk '$1 ~ /^l/ && $9 == "lib" { print $11 }'
 	assert
 }
@@ -77,17 +73,18 @@ get_bootengine_lib() {
 # Allows us to stick kernel modules into the initramfs built into the image.
 update_bootengine_cpio() {
 	local extra_root="$1"
-	local cpio_path="${KBUILD_OUTPUT}/bootengine.cpio"
-	local cpio_args=(--create --append --null
+	local cpio_args=(
+		--create --append --null
 		# dracut uses the 'newc' cpio format
 		--format=newc
 		# squash file ownership to root for new files.
 		--owner=root:root
+		# append to our local copy of bootengine
+		-F "${S}/bootengine.cpio"
 	)
 
 	echo "Updating bootengine.cpio"
-	(cd "${extra_root}" && \
-		find . -print0 | cpio "${cpio_args[@]}" -F "${cpio_path}") || \
+	(cd "${extra_root}" && find . -print0 | cpio "${cpio_args[@]}") || \
 		die "cpio update failed!"
 }
 
@@ -96,73 +93,59 @@ kmake() {
 	if gcc-specs-pie; then
 		kernel_cflags="-nopie -fstack-check=no"
 	fi
-	emake ARCH="${kernel_arch}" CROSS_COMPILE="${CHOST}-" \
-		KCFLAGS="${kernel_cflags}" LDFLAGS="" "$@"
+	emake -C "${KERNEL_DIR}" \
+		ARCH="${kernel_arch}" \
+		CROSS_COMPILE="${CHOST}-" \
+		KBUILD_OUTPUT="${S}" \
+		KCFLAGS="${kernel_cflags}" \
+		LDFLAGS="" \
+		"$@"
 }
 
 # Discard the module signing key, we use new keys for each build.
 shred_keys() {
-	if [[ -e "${KBUILD_OUTPUT}"/signing_key.priv ]]; then
-		shred -u "${KBUILD_OUTPUT}"/signing_key.* || die
-		rm -f "${KBUILD_OUTPUT}"/x509.genkey || die
+	if [[ -e signing_key.priv ]]; then
+		shred -u signing_key.* || die
+		rm -f x509.genkey || die
 	fi
 }
 
-coreos-kernel_pkg_setup() {
-	export KBUILD_OUTPUT
-	addwrite "${KBUILD_OUTPUT}"
-	mkdir -p -m 755 "${KBUILD_OUTPUT}" || die
-	chown ${PORTAGE_USERNAME:-portage}:${PORTAGE_GRPNAME:-portage} \
-		"${KBUILD_OUTPUT}" "${KBUILD_OUTPUT%/*}" || die
-
-	# Let linux-info detect the kernel version,
-	# otherwise tc-arch-kernel outputs lots of warnings.
-	get_version
+coreos-kernel_src_unpack() {
+	mkdir "${S}" || die
 }
 
 coreos-kernel_src_prepare() {
 	if [[ -f ".config" || -d "include/config" ]]
 	then
-		die "Source is not clean! Run make mrproper in ${S}"
+		die "Source is not clean! Run make mrproper in ${KERNEL_DIR}"
 	fi
 
-	local config="$(find_defconfig)"
-	elog "Using kernel config: ${config}"
-	cp -f "${config}" "${KBUILD_OUTPUT}/.config" || die
+	restore_config .config
+	if [[ ! -f .config ]]; then
+		local config="$(find_defconfig)"
+		elog "Building using default config ${config}"
+		cp "${config}" .config || die
+	fi
 
 	# copy the cpio initrd to the output build directory so we can tack it
 	# onto the kernel image itself.
-	cp "${ROOT}"/usr/share/bootengine/bootengine.cpio "${KBUILD_OUTPUT}" || die
-
-	# make sure no keys are cached from a previous build
-	shred_keys
-
-	# HACK: generated syscall headers aren't always regenerated when jumping
-	# from 4.0.x to 4.1.x causing errors like this:
-	#  arch/x86/built-in.o:(.rodata+0xb40): undefined reference to `stub_iopl'
-	#  arch/x86/built-in.o:(.rodata+0x1388): undefined reference to `sys32_vm86_warning'
-	#  arch/x86/built-in.o:(.rodata+0x1530): undefined reference to `sys32_vm86_warning'
-	rm -rf "${KBUILD_OUTPUT}/arch/x86/include/generated" || die
+	cp "${ROOT}"/usr/share/bootengine/bootengine.cpio bootengine.cpio || die
 }
 
 coreos-kernel_src_configure() {
 	if ! use audit; then
-		sed -i -e '/^CONFIG_CMDLINE=/s/"$/ audit=0"/' \
-			"${KBUILD_OUTPUT}/.config" || die
+		sed -i -e '/^CONFIG_CMDLINE=/s/"$/ audit=0"/' .config || die
 	fi
 	if ! use selinux; then
-		sed -i -e '/CONFIG_SECURITY_SELINUX_BOOTPARAM_VALUE/d' \
-			"${KBUILD_OUTPUT}/.config" || die
-		echo CONFIG_SECURITY_SELINUX_BOOTPARAM_VALUE=0 >> \
-			"${KBUILD_OUTPUT}/.config" || die
+		sed -i -e '/CONFIG_SECURITY_SELINUX_BOOTPARAM_VALUE/d' .config || die
+		echo CONFIG_SECURITY_SELINUX_BOOTPARAM_VALUE=0 >> .config || die
 	fi
 
 	# Use default for any options not explitly set in defconfig
-	yes "" | kmake oldconfig
+	kmake olddefconfig
 
 	# For convinence, generate a minimal defconfig of the build
 	kmake savedefconfig
-	einfo "Saving minimal kernel defconfig as ${KBUILD_OUTPUT}/defconfig"
 }
 
 coreos-kernel_src_compile() {
@@ -190,12 +173,13 @@ coreos-kernel_src_compile() {
 coreos-kernel_src_install() {
 	dodir /usr/boot
 	kmake INSTALL_PATH="${D}/usr/boot" install
+	# Install modules to /usr, assuming USE=symlink-usr
 	# Install firmware to a temporary (bogus) location.
 	# The linux-firmware package will be used instead.
 	# Stripping must be done here, not portage, to preserve sigs.
 	# Uncomment vdso_install for easy access to debug symbols in gdb:
 	#   set debug-file-directory /lib/modules/4.0.7-coreos-r2/vdso/
-	kmake INSTALL_MOD_PATH="${D}" \
+	kmake INSTALL_MOD_PATH="${D}/usr" \
 		  INSTALL_MOD_STRIP="--strip-unneeded" \
 		  INSTALL_FW_PATH="${T}/fw" \
 		  modules_install # vdso_install
@@ -204,10 +188,24 @@ coreos-kernel_src_install() {
 	dosym "vmlinuz-${version}" /usr/boot/vmlinuz
 	dosym "config-${version}" /usr/boot/config
 
+	# build and source must cleaned up to avoid referencing $ROOT
+	rm "${D}/usr/lib/modules/${version}"/{build,source} || die
+	dosym "../../../src/linux-${version}" "/usr/lib/modules/${version}/source"
+
+	# this is just here for linux-info.eclass, mask from prod images
+	dodir "/usr/lib/modules/${version}/build"
+	dosym "../../../../boot/config-${version}" \
+		"/usr/lib/modules/${version}/build/.config"
+
+	save_config defconfig
+
 	shred_keys
 }
 
+# TODO(marineam): remove this function once KBUILD_OUTPUT is removed
+# from src/scripts/setup_board
 coreos-kernel_pkg_postinst() {
+	[[ -n "${KBUILD_OUTPUT}" ]] || return 0
 	# linux-info always expects to be able to find the current .config
 	# so copy it into the build tree if it isn't already there.
 	if ! cmp --quiet "${ROOT}/usr/boot/config" "${KBUILD_OUTPUT}/.config"; then
@@ -217,4 +215,4 @@ coreos-kernel_pkg_postinst() {
 	fi
 }
 
-EXPORT_FUNCTIONS pkg_setup src_prepare src_configure src_compile src_install pkg_postinst
+EXPORT_FUNCTIONS src_unpack src_prepare src_configure src_compile src_install pkg_postinst
