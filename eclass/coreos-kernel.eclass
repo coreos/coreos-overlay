@@ -29,8 +29,7 @@ RESTRICT="binchecks strip"
 # Use source installed by coreos-sources
 KERNEL_DIR="${SYSROOT}/usr/src/${COREOS_SOURCE_NAME}"
 S="${KERNEL_DIR}"
-# Cache kernel build tree under /var
-KBUILD_OUTPUT="${SYSROOT}/var/cache/portage/${CATEGORY}/${PN}"
+KBUILD_OUTPUT="${WORKDIR}/${P}"
 
 # Search for an apropriate defconfig in ${FILESDIR}. The config should reflect
 # the kernel version but partial matching is allowed if the config is
@@ -108,16 +107,9 @@ shred_keys() {
 	fi
 }
 
-coreos-kernel_pkg_setup() {
+coreos-kernel_src_unpack() {
 	export KBUILD_OUTPUT
-	addwrite "${KBUILD_OUTPUT}"
-	mkdir -p -m 755 "${KBUILD_OUTPUT}" || die
-	chown ${PORTAGE_USERNAME:-portage}:${PORTAGE_GRPNAME:-portage} \
-		"${KBUILD_OUTPUT}" "${KBUILD_OUTPUT%/*}" || die
-
-	# Let linux-info detect the kernel version,
-	# otherwise tc-arch-kernel outputs lots of warnings.
-	get_version
+	mkdir "${KBUILD_OUTPUT}" || die
 }
 
 coreos-kernel_src_prepare() {
@@ -137,16 +129,6 @@ coreos-kernel_src_prepare() {
 	# copy the cpio initrd to the output build directory so we can tack it
 	# onto the kernel image itself.
 	cp "${ROOT}"/usr/share/bootengine/bootengine.cpio "${KBUILD_OUTPUT}" || die
-
-	# make sure no keys are cached from a previous build
-	shred_keys
-
-	# HACK: generated syscall headers aren't always regenerated when jumping
-	# from 4.0.x to 4.1.x causing errors like this:
-	#  arch/x86/built-in.o:(.rodata+0xb40): undefined reference to `stub_iopl'
-	#  arch/x86/built-in.o:(.rodata+0x1388): undefined reference to `sys32_vm86_warning'
-	#  arch/x86/built-in.o:(.rodata+0x1530): undefined reference to `sys32_vm86_warning'
-	rm -rf "${KBUILD_OUTPUT}/arch/x86/include/generated" || die
 }
 
 coreos-kernel_src_configure() {
@@ -222,7 +204,10 @@ coreos-kernel_src_install() {
 	shred_keys
 }
 
+# TODO(marineam): remove this function once KBUILD_OUTPUT is removed
+# from src/scripts/setup_board
 coreos-kernel_pkg_postinst() {
+	local KBUILD_OUTPUT="${SYSROOT}/var/cache/portage/${CATEGORY}/${PN}"
 	# linux-info always expects to be able to find the current .config
 	# so copy it into the build tree if it isn't already there.
 	if ! cmp --quiet "${ROOT}/usr/boot/config" "${KBUILD_OUTPUT}/.config"; then
@@ -232,4 +217,4 @@ coreos-kernel_pkg_postinst() {
 	fi
 }
 
-EXPORT_FUNCTIONS pkg_setup src_prepare src_configure src_compile src_install pkg_postinst
+EXPORT_FUNCTIONS src_unpack src_prepare src_configure src_compile src_install pkg_postinst
