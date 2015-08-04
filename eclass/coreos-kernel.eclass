@@ -12,7 +12,7 @@ COREOS_SOURCE_NAME="linux-${PV}-coreos${COREOS_SOURCE_REVISION}"
 
 [[ ${EAPI} != "5" ]] && die "Only EAPI=5 is supported"
 
-inherit linux-info toolchain-funcs
+inherit linux-info savedconfig toolchain-funcs
 
 HOMEPAGE="http://www.kernel.org"
 LICENSE="GPL-2 freedist"
@@ -126,9 +126,13 @@ coreos-kernel_src_prepare() {
 		die "Source is not clean! Run make mrproper in ${S}"
 	fi
 
-	local config="$(find_defconfig)"
-	elog "Using kernel config: ${config}"
-	cp -f "${config}" "${KBUILD_OUTPUT}/.config" || die
+	rm -f "${KBUILD_OUTPUT}/.config" || die
+	restore_config "${KBUILD_OUTPUT}/.config"
+	if [[ ! -f "${KBUILD_OUTPUT}/.config" ]]; then
+		local config="$(find_defconfig)"
+		elog "Building using default config ${config}"
+		cp "${config}" "${KBUILD_OUTPUT}/.config" || die
+	fi
 
 	# copy the cpio initrd to the output build directory so we can tack it
 	# onto the kernel image itself.
@@ -162,7 +166,6 @@ coreos-kernel_src_configure() {
 
 	# For convinence, generate a minimal defconfig of the build
 	kmake savedefconfig
-	einfo "Saving minimal kernel defconfig as ${KBUILD_OUTPUT}/defconfig"
 }
 
 coreos-kernel_src_compile() {
@@ -203,6 +206,8 @@ coreos-kernel_src_install() {
 	local version=$(kmake -s --no-print-directory kernelrelease)
 	dosym "vmlinuz-${version}" /usr/boot/vmlinuz
 	dosym "config-${version}" /usr/boot/config
+
+	save_config "${KBUILD_OUTPUT}/defconfig"
 
 	shred_keys
 }
