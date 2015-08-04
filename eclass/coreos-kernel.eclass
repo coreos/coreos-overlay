@@ -193,12 +193,13 @@ coreos-kernel_src_compile() {
 coreos-kernel_src_install() {
 	dodir /usr/boot
 	kmake INSTALL_PATH="${D}/usr/boot" install
+	# Install modules to /usr, assuming USE=symlink-usr
 	# Install firmware to a temporary (bogus) location.
 	# The linux-firmware package will be used instead.
 	# Stripping must be done here, not portage, to preserve sigs.
 	# Uncomment vdso_install for easy access to debug symbols in gdb:
 	#   set debug-file-directory /lib/modules/4.0.7-coreos-r2/vdso/
-	kmake INSTALL_MOD_PATH="${D}" \
+	kmake INSTALL_MOD_PATH="${D}/usr" \
 		  INSTALL_MOD_STRIP="--strip-unneeded" \
 		  INSTALL_FW_PATH="${T}/fw" \
 		  modules_install # vdso_install
@@ -206,6 +207,15 @@ coreos-kernel_src_install() {
 	local version=$(kmake -s --no-print-directory kernelrelease)
 	dosym "vmlinuz-${version}" /usr/boot/vmlinuz
 	dosym "config-${version}" /usr/boot/config
+
+	# build and source must cleaned up to avoid referencing $ROOT
+	rm "${D}/usr/lib/modules/${version}"/{build,source} || die
+	dosym "../../../src/linux-${version}" "/usr/lib/modules/${version}/source"
+
+	# this is just here for linux-info.eclass, mask from prod images
+	dodir "/usr/lib/modules/${version}/build"
+	dosym "../../../../boot/config-${version}" \
+		"/usr/lib/modules/${version}/build/.config"
 
 	save_config "${KBUILD_OUTPUT}/defconfig"
 

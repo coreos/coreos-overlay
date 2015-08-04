@@ -25,3 +25,8 @@ INSTALL_MASK="${INSTALL_MASK}
   /usr/share/ncat
   /usr/share/nmap
 "
+
+# These kernel paths are just noise without sources
+INSTALL_MASK="${INSTALL_MASK}
+  /usr/lib/modules/*/{build,source}
+"
