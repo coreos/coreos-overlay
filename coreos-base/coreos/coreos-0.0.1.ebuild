@@ -89,6 +89,7 @@ RDEPEND="${RDEPEND}
 
 # Optionally enable SELinux and pull in policy for containers
 RDEPEND="${RDEPEND}
+	sys-apps/dbus[selinux?]
 	sys-apps/systemd[selinux?]
 	selinux? (
 		sec-policy/selinux-virt
