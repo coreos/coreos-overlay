@@ -28,8 +28,6 @@ RESTRICT="binchecks strip"
 
 # Use source installed by coreos-sources
 KERNEL_DIR="${SYSROOT}/usr/src/${COREOS_SOURCE_NAME}"
-S="${KERNEL_DIR}"
-KBUILD_OUTPUT="${WORKDIR}/${P}"
 
 # Search for an apropriate defconfig in ${FILESDIR}. The config should reflect
 # the kernel version but partial matching is allowed if the config is
@@ -64,8 +62,7 @@ find_defconfig() {
 # As if using cpio isn't bad enough already.
 # If lib doesn't exist or isn't a symlink then nothing is returned.
 get_bootengine_lib() {
-	local cpio_path="${KBUILD_OUTPUT}/bootengine.cpio"
-	cpio -itv --quiet < "${cpio_path}" | \
+	cpio -itv --quiet < bootengine.cpio | \
 		awk '$1 ~ /^l/ && $9 == "lib" { print $11 }'
 	assert
 }
@@ -76,17 +73,18 @@ get_bootengine_lib() {
 # Allows us to stick kernel modules into the initramfs built into the image.
 update_bootengine_cpio() {
 	local extra_root="$1"
-	local cpio_path="${KBUILD_OUTPUT}/bootengine.cpio"
-	local cpio_args=(--create --append --null
+	local cpio_args=(
+		--create --append --null
 		# dracut uses the 'newc' cpio format
 		--format=newc
 		# squash file ownership to root for new files.
 		--owner=root:root
+		# append to our local copy of bootengine
+		-F "${S}/bootengine.cpio"
 	)
 
 	echo "Updating bootengine.cpio"
-	(cd "${extra_root}" && \
-		find . -print0 | cpio "${cpio_args[@]}" -F "${cpio_path}") || \
+	(cd "${extra_root}" && find . -print0 | cpio "${cpio_args[@]}") || \
 		die "cpio update failed!"
 }
 
@@ -95,52 +93,52 @@ kmake() {
 	if gcc-specs-pie; then
 		kernel_cflags="-nopie -fstack-check=no"
 	fi
-	emake ARCH="${kernel_arch}" CROSS_COMPILE="${CHOST}-" \
-		KCFLAGS="${kernel_cflags}" LDFLAGS="" "$@"
+	emake -C "${KERNEL_DIR}" \
+		ARCH="${kernel_arch}" \
+		CROSS_COMPILE="${CHOST}-" \
+		KBUILD_OUTPUT="${S}" \
+		KCFLAGS="${kernel_cflags}" \
+		LDFLAGS="" \
+		"$@"
 }
 
 # Discard the module signing key, we use new keys for each build.
 shred_keys() {
-	if [[ -e "${KBUILD_OUTPUT}"/signing_key.priv ]]; then
-		shred -u "${KBUILD_OUTPUT}"/signing_key.* || die
-		rm -f "${KBUILD_OUTPUT}"/x509.genkey || die
+	if [[ -e signing_key.priv ]]; then
+		shred -u signing_key.* || die
+		rm -f x509.genkey || die
 	fi
 }
 
 coreos-kernel_src_unpack() {
-	export KBUILD_OUTPUT
-	mkdir "${KBUILD_OUTPUT}" || die
+	mkdir "${S}" || die
 }
 
 coreos-kernel_src_prepare() {
 	if [[ -f ".config" || -d "include/config" ]]
 	then
-		die "Source is not clean! Run make mrproper in ${S}"
+		die "Source is not clean! Run make mrproper in ${KERNEL_DIR}"
 	fi
 
-	rm -f "${KBUILD_OUTPUT}/.config" || die
-	restore_config "${KBUILD_OUTPUT}/.config"
-	if [[ ! -f "${KBUILD_OUTPUT}/.config" ]]; then
+	restore_config .config
+	if [[ ! -f .config ]]; then
 		local config="$(find_defconfig)"
 		elog "Building using default config ${config}"
-		cp "${config}" "${KBUILD_OUTPUT}/.config" || die
+		cp "${config}" .config || die
 	fi
 
 	# copy the cpio initrd to the output build directory so we can tack it
 	# onto the kernel image itself.
-	cp "${ROOT}"/usr/share/bootengine/bootengine.cpio "${KBUILD_OUTPUT}" || die
+	cp "${ROOT}"/usr/share/bootengine/bootengine.cpio bootengine.cpio || die
 }
 
 coreos-kernel_src_configure() {
 	if ! use audit; then
-		sed -i -e '/^CONFIG_CMDLINE=/s/"$/ audit=0"/' \
-			"${KBUILD_OUTPUT}/.config" || die
+		sed -i -e '/^CONFIG_CMDLINE=/s/"$/ audit=0"/' .config || die
 	fi
 	if ! use selinux; then
-		sed -i -e '/CONFIG_SECURITY_SELINUX_BOOTPARAM_VALUE/d' \
-			"${KBUILD_OUTPUT}/.config" || die
-		echo CONFIG_SECURITY_SELINUX_BOOTPARAM_VALUE=0 >> \
-			"${KBUILD_OUTPUT}/.config" || die
+		sed -i -e '/CONFIG_SECURITY_SELINUX_BOOTPARAM_VALUE/d' .config || die
+		echo CONFIG_SECURITY_SELINUX_BOOTPARAM_VALUE=0 >> .config || die
 	fi
 
 	# Use default for any options not explitly set in defconfig
@@ -199,7 +197,7 @@ coreos-kernel_src_install() {
 	dosym "../../../../boot/config-${version}" \
 		"/usr/lib/modules/${version}/build/.config"
 
-	save_config "${KBUILD_OUTPUT}/defconfig"
+	save_config defconfig
 
 	shred_keys
 }
@@ -207,7 +205,7 @@ coreos-kernel_src_install() {
 # TODO(marineam): remove this function once KBUILD_OUTPUT is removed
 # from src/scripts/setup_board
 coreos-kernel_pkg_postinst() {
-	local KBUILD_OUTPUT="${SYSROOT}/var/cache/portage/${CATEGORY}/${PN}"
+	[[ -n "${KBUILD_OUTPUT}" ]] || return 0
 	# linux-info always expects to be able to find the current .config
 	# so copy it into the build tree if it isn't already there.
 	if ! cmp --quiet "${ROOT}/usr/boot/config" "${KBUILD_OUTPUT}/.config"; then
