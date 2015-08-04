@@ -13,7 +13,7 @@ on the ebuild version and revision. For example version 3.12.4-r2:
  - amd64_defconfig
 
 To modify the defconfig to .config in the kernel source and run:
-  yes "" | make oldconfig
+  make olddefconfig
   make menuconfig
   make savedefconfig
 and copy defconfig back to coreos-kernel/files

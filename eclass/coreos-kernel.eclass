@@ -162,7 +162,7 @@ coreos-kernel_src_configure() {
 	fi
 
 	# Use default for any options not explitly set in defconfig
-	yes "" | kmake oldconfig
+	kmake olddefconfig
 
 	# For convinence, generate a minimal defconfig of the build
 	kmake savedefconfig
