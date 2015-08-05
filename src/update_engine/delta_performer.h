@@ -42,25 +42,6 @@ class DeltaPerformer {
   // Wrapper around close. Returns 0 on success or -errno on error.
   int Close();
 
-  // Verifies the downloaded payload against the signed hash included in the
-  // payload, against the update check hash (which is in base64 format)  and
-  // size using the public key and returns kActionCodeSuccess on success, an
-  // error code on failure.  This method should be called after closing the
-  // stream. Note this method skips the signed hash check if the public key is
-  // unavailable; it returns kActionCodeSignedDeltaPayloadExpectedError if the
-  // public key is available but the delta payload doesn't include a signature.
-  ActionExitCode VerifyPayload(const std::string& update_check_response_hash,
-                               const uint64_t update_check_response_size);
-
-  // Reads from the update manifest the expected size and hash of the target
-  // rootfs partition. These values can be used for applied update
-  // hash verification. This method must be called after the update manifest has
-  // been parsed (e.g., after closing the stream). Returns true on success, and
-  // false on failure (e.g., when the values are not present in the update
-  // manifest).
-  bool GetNewPartitionInfo(uint64_t* rootfs_size,
-                           std::vector<char>* rootfs_hash);
-
   // Set block size specified by the manifest.
   void SetBlockSize(uint32_t size) {
     block_size_ = size;
