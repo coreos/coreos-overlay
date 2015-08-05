@@ -11,3 +11,6 @@ After=fleet.socket
 ExecStart=/usr/bin/fleetd
 Restart=always
 RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target
