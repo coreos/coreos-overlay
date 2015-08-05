@@ -61,6 +61,16 @@ class DeltaPerformer {
   bool GetNewPartitionInfo(uint64_t* rootfs_size,
                            std::vector<char>* rootfs_hash);
 
+  // Set block size specified by the manifest.
+  void SetBlockSize(uint32_t size) {
+    block_size_ = size;
+  }
+
+ private:
+  friend class DeltaPerformerTest;
+  FRIEND_TEST(DeltaPerformerTest, ExtentsToByteStringTest);
+  FRIEND_TEST(DeltaPerformerTest, IsIdempotentOperationTest);
+
   // Converts an ordered collection of Extent objects which contain data of
   // length full_length to a comma-separated string. For each Extent, the
   // string will have the start offset and then the length in bytes.
@@ -75,15 +85,6 @@ class DeltaPerformer {
       uint64_t block_size,
       uint64_t full_length,
       std::string* positions_string);
-
-  // Set block size specified by the manifest.
-  void SetBlockSize(uint32_t size) {
-    block_size_ = size;
-  }
-
- private:
-  friend class DeltaPerformerTest;
-  FRIEND_TEST(DeltaPerformerTest, IsIdempotentOperationTest);
 
   static bool IsIdempotentOperation(
       const InstallOperation& op);
