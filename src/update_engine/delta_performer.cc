@@ -77,7 +77,7 @@ bool DeltaPerformer::IsIdempotentOperation(
 
 int DeltaPerformer::Open() {
   int err;
-  OpenFile(install_plan_->install_path.c_str(), &fd_, &err);
+  OpenFile(path_.c_str(), &fd_, &err);
   return -err;
 }
 

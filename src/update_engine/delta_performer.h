@@ -7,6 +7,7 @@
 
 #include <inttypes.h>
 
+#include <string>
 #include <vector>
 
 #include <gtest/gtest_prod.h>  // for FRIEND_TEST
@@ -29,6 +30,7 @@ class DeltaPerformer {
                  InstallPlan* install_plan)
       : prefs_(prefs),
         install_plan_(install_plan),
+        path_(install_plan_->install_path),
         fd_(-1),
         block_size_(0) {}
 
@@ -88,6 +90,9 @@ class DeltaPerformer {
 
   // Install Plan based on Omaha Response.
   InstallPlan* install_plan_;
+
+  // Path to device or file to operate on.
+  std::string path_;
 
   // File descriptor of open device.
   int fd_;
