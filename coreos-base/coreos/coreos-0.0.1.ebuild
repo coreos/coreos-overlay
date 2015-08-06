@@ -117,7 +117,9 @@ RDEPEND="${RDEPEND}
 	coreos-base/coreos-init
 	coreos-base/coreos-cloudinit
 	coreos-base/coretest
+	dev-util/strace
 	net-analyzer/nmap
+	net-dns/bind-tools
 	net-firewall/ebtables
 	net-firewall/ipset
 	net-firewall/iptables
@@ -126,6 +128,7 @@ RDEPEND="${RDEPEND}
 	net-misc/ntp
 	net-misc/rsync
 	net-misc/wget
+	net-misc/whois
 	sys-apps/coreutils
 	sys-apps/dbus
 	sys-apps/ethtool
