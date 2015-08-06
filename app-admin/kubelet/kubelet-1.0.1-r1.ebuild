@@ -6,7 +6,7 @@
 
 EAPI=5
 
-inherit flag-o-matic toolchain-funcs
+inherit flag-o-matic systemd toolchain-funcs
 
 DESCRIPTION="Kubernetes Container Manager"
 HOMEPAGE="http://kubernetes.io/"
@@ -42,4 +42,6 @@ src_compile() {
 
 src_install() {
 	dobin "${S}/_output/local/bin/linux/${ARCH}/${PN}"
+
+	systemd_dounit "${FILESDIR}/kubelet.service"
 }
