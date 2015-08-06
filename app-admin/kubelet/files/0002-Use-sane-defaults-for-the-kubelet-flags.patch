@@ -1,0 +1,34 @@
+From 7df44760eed9482e73695001c2bce90a006c52e1 Mon Sep 17 00:00:00 2001
+From: Alex Crawford <alex.crawford@coreos.com>
+Date: Wed, 5 Aug 2015 19:50:10 -0700
+Subject: [PATCH] Use sane defaults for the kubelet flags
+
+---
+ cmd/kubelet/app/server.go | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/cmd/kubelet/app/server.go b/cmd/kubelet/app/server.go
+index 37e5558..70a982f 100644
+--- a/cmd/kubelet/app/server.go
++++ b/cmd/kubelet/app/server.go
+@@ -151,7 +151,7 @@ func NewKubeletServer() *KubeletServer {
+ 		FileCheckFrequency:          20 * time.Second,
+ 		HTTPCheckFrequency:          20 * time.Second,
+ 		EnableServer:                true,
+-		Address:                     util.IP(net.ParseIP("0.0.0.0")),
++		Address:                     util.IP(net.ParseIP("127.0.0.1")),
+ 		Port:                        ports.KubeletPort,
+ 		ReadOnlyPort:                ports.KubeletReadOnlyPort,
+ 		PodInfraContainerImage:      dockertools.PodInfraContainerImage,
+@@ -196,7 +196,7 @@ func (s *KubeletServer) AddFlags(fs *pflag.FlagSet) {
+ 	fs.StringVar(&s.ManifestURL, "manifest-url", s.ManifestURL, "URL for accessing the container manifest")
+ 	fs.StringVar(&s.ManifestURLHeader, "manifest-url-header", s.ManifestURLHeader, "HTTP header to use when accessing the manifest URL, with the key separated from the value with a ':', as in 'key:value'")
+ 	fs.BoolVar(&s.EnableServer, "enable-server", s.EnableServer, "Enable the Kubelet's server")
+-	fs.Var(&s.Address, "address", "The IP address for the Kubelet to serve on (set to 0.0.0.0 for all interfaces)")
++	fs.Var(&s.Address, "address", "The IP address for the Kubelet to serve on, defaulting to 127.0.0.1 (set to 0.0.0.0 for all interfaces)")
+ 	fs.UintVar(&s.Port, "port", s.Port, "The port for the Kubelet to serve on. Note that \"kubectl logs\" will not work if you set this flag.") // see #9325
+ 	fs.UintVar(&s.ReadOnlyPort, "read-only-port", s.ReadOnlyPort, "The read-only port for the Kubelet to serve on (set to 0 to disable)")
+ 	fs.StringVar(&s.TLSCertFile, "tls-cert-file", s.TLSCertFile, ""+
+-- 
+2.3.6
+

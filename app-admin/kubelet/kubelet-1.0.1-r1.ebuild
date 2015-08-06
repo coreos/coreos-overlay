@@ -23,6 +23,7 @@ RDEPEND="net-misc/socat"
 
 src_prepare() {
 	epatch "${FILESDIR}/0001-Plumb-linker-flags-through-from-the-Makefile.patch"
+	epatch "${FILESDIR}/0002-Use-sane-defaults-for-the-kubelet-flags.patch"
 
 	if gcc-specs-pie; then
 		append-ldflags -nopie
