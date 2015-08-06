@@ -10,11 +10,11 @@ Environment=CONFIG=/etc/kubernetes/manifests
 Environment=LOGGING=2
 
 ExecStart=/usr/bin/kubelet \
-	--address=$ADDRESS \
-	--api-servers=$API_SERVERS \
-	--allow-privileged=$ALLOW_PRIVILEGED \
-	--config=$CONFIG \
-	--v=$LOGGING
+	--address=${ADDRESS} \
+	--api-servers=${API_SERVERS} \
+	--allow-privileged=${ALLOW_PRIVILEGED} \
+	--config=${CONFIG} \
+	--v=${LOGGING}
 
 Restart=on-failure
 RestartSec=5
