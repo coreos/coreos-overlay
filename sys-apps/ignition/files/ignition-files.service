@@ -1,7 +1,7 @@
 [Unit]
 Description=Ignition
 DefaultDependencies=false
-Before=initrd-switch-root.target
+Before=initrd-parse-etc.service
 
 Requires=initrd-root-fs.target
 After=initrd-root-fs.target
