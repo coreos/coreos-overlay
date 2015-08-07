@@ -62,7 +62,7 @@ find_defconfig() {
 # As if using cpio isn't bad enough already.
 # If lib doesn't exist or isn't a symlink then nothing is returned.
 get_bootengine_lib() {
-	cpio -itv --quiet < bootengine.cpio | \
+	cpio -itv --quiet < build/bootengine.cpio | \
 		awk '$1 ~ /^l/ && $9 == "lib" { print $11 }'
 	assert
 }
@@ -80,7 +80,7 @@ update_bootengine_cpio() {
 		# squash file ownership to root for new files.
 		--owner=root:root
 		# append to our local copy of bootengine
-		-F "${S}/bootengine.cpio"
+		-F "${S}/build/bootengine.cpio"
 	)
 
 	echo "Updating bootengine.cpio"
@@ -93,10 +93,10 @@ kmake() {
 	if gcc-specs-pie; then
 		kernel_cflags="-nopie -fstack-check=no"
 	fi
-	emake -C "${KERNEL_DIR}" \
+	emake \
 		ARCH="${kernel_arch}" \
 		CROSS_COMPILE="${CHOST}-" \
-		KBUILD_OUTPUT="${S}" \
+		KBUILD_OUTPUT="build" \
 		KCFLAGS="${kernel_cflags}" \
 		LDFLAGS="" \
 		"$@"
@@ -111,7 +111,8 @@ shred_keys() {
 }
 
 coreos-kernel_src_unpack() {
-	mkdir "${S}" || die
+	mkdir -p "${S}/build" || die
+	ln -s "${KERNEL_DIR}"/* "${S}/" || die
 }
 
 coreos-kernel_src_prepare() {
@@ -120,25 +121,26 @@ coreos-kernel_src_prepare() {
 		die "Source is not clean! Run make mrproper in ${KERNEL_DIR}"
 	fi
 
-	restore_config .config
-	if [[ ! -f .config ]]; then
+	restore_config build/.config
+	if [[ ! -f build/.config ]]; then
 		local config="$(find_defconfig)"
 		elog "Building using default config ${config}"
-		cp "${config}" .config || die
+		cp "${config}" build/.config || die
 	fi
 
 	# copy the cpio initrd to the output build directory so we can tack it
 	# onto the kernel image itself.
-	cp "${ROOT}"/usr/share/bootengine/bootengine.cpio bootengine.cpio || die
+	cp "${ROOT}"/usr/share/bootengine/bootengine.cpio build/bootengine.cpio \
+		|| die "cp bootengine.cpio failed, try emerge-\$BOARD bootengine"
 }
 
 coreos-kernel_src_configure() {
 	if ! use audit; then
-		sed -i -e '/^CONFIG_CMDLINE=/s/"$/ audit=0"/' .config || die
+		sed -i -e '/^CONFIG_CMDLINE=/s/"$/ audit=0"/' build/.config || die
 	fi
 	if ! use selinux; then
-		sed -i -e '/CONFIG_SECURITY_SELINUX_BOOTPARAM_VALUE/d' .config || die
-		echo CONFIG_SECURITY_SELINUX_BOOTPARAM_VALUE=0 >> .config || die
+		sed -i -e '/CONFIG_SECURITY_SELINUX_BOOTPARAM_VALUE/d' build/.config || die
+		echo CONFIG_SECURITY_SELINUX_BOOTPARAM_VALUE=0 >> build/.config || die
 	fi
 
 	# Use default for any options not explitly set in defconfig
@@ -197,22 +199,9 @@ coreos-kernel_src_install() {
 	dosym "../../../../boot/config-${version}" \
 		"/usr/lib/modules/${version}/build/.config"
 
-	save_config defconfig
+	save_config build/defconfig
 
 	shred_keys
 }
 
-# TODO(marineam): remove this function once KBUILD_OUTPUT is removed
-# from src/scripts/setup_board
-coreos-kernel_pkg_postinst() {
-	[[ -n "${KBUILD_OUTPUT}" ]] || return 0
-	# linux-info always expects to be able to find the current .config
-	# so copy it into the build tree if it isn't already there.
-	if ! cmp --quiet "${ROOT}/usr/boot/config" "${KBUILD_OUTPUT}/.config"; then
-		cp "${ROOT}/usr/boot/config" "${KBUILD_OUTPUT}/.config"
-		chown ${PORTAGE_USERNAME:-portage}:${PORTAGE_GRPNAME:-portage} \
-			"${KBUILD_OUTPUT}/.config"
-	fi
-}
-
-EXPORT_FUNCTIONS src_unpack src_prepare src_configure src_compile src_install pkg_postinst
+EXPORT_FUNCTIONS src_unpack src_prepare src_configure src_compile src_install
