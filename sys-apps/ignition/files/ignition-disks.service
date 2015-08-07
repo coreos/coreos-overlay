@@ -1,5 +1,5 @@
 [Unit]
-Description=Ignition
+Description=Ignition (disks)
 DefaultDependencies=false
 
 Requires=local-fs-pre.target
