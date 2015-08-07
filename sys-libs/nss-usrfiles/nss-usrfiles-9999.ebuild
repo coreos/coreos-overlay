@@ -27,7 +27,7 @@ DEPEND=""
 RDEPEND=""
 
 src_configure() {
-	: # Don't bother with the custom configure script.
+	tc-export CC
 }
 
 src_compile() {
