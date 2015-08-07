@@ -1,5 +1,5 @@
 [Unit]
-Description=Ignition
+Description=Ignition (files)
 DefaultDependencies=false
 Before=initrd-parse-etc.service
 
