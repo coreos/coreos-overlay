@@ -103,6 +103,7 @@ RDEPEND="${RDEPEND}
 	sys-apps/which
 	app-admin/flannel
 	app-admin/fleet
+	app-admin/kubelet
 	app-admin/locksmith
 	app-admin/mayday
 	app-admin/sudo
