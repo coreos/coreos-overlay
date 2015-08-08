@@ -1,0 +1,547 @@
+diff --git a/cargo-0.3.0/Cargo.toml b/cargo-0.3.0/Cargo.toml
+index 65da372..e8ac7f7 100644
+--- a/cargo-0.3.0/Cargo.toml
++++ b/cargo-0.3.0/Cargo.toml
+@@ -10,37 +10,28 @@ name = "cargo"
+ path = "src/cargo/lib.rs"
+ 
+ [dependencies]
+-advapi32-sys = "0.1"
+-curl = "0.2"
+-docopt = "0.6"
+-env_logger = "0.3"
+-filetime = "0.1"
+-flate2 = "0.2"
+-git2 = "0.2"
+-git2-curl = "0.2"
+-glob = "0.2"
+-kernel32-sys = "0.1"
+-libc = "0.1"
+-libgit2-sys = "0.2"
+-log = "0.3"
+-num_cpus = "0.2"
+-regex = "0.1"
++curl = { version = "0.2.10", path = "../curl-0.2.10" }
++docopt = { version = "0.6.67", path = "../docopt-0.6.67" }
++env_logger = { version = "0.3.1", path = "../env_logger-0.3.1" }
++filetime = { version = "0.1.4", path = "../filetime-0.1.4" }
++flate2 = { version = "0.2.7", path = "../flate2-0.2.7" }
++git2 = { version = "0.2.11", path = "../git2-0.2.11" }
++git2-curl = { version = "0.2.4", path = "../git2-curl-0.2.4" }
++glob = { version = "0.2.10", path = "../glob-0.2.10" }
++libc = { version = "0.1.8", path = "../libc-0.1.8" }
++libgit2-sys = { version = "0.2.17", path = "../libgit2-sys-0.2.17" }
++log = { version = "0.3.1", path = "../log-0.3.1" }
++num_cpus = { version = "0.2.6", path = "../num_cpus-0.2.6" }
++regex = { version = "0.1.30", path = "../regex-0.1.30" }
+ registry = { path = "src/registry" }
+-rustc-serialize = "0.3"
+-semver = "0.1"
+-tar = { version = "0.2", features = ["nightly"] }
+-term = "0.2"
+-threadpool = "0.1"
+-time = "0.1"
+-toml = "0.1"
+-url = "0.2"
+-winapi = "0.1"
+-
+-[dev-dependencies]
+-tempdir = "0.3"
+-hamcrest = { git = "https://github.com/carllerche/hamcrest-rust.git" }
+-bufstream = "0.1"
+-filetime = "0.1"
++rustc-serialize = { version = "0.3.14", path = "../rustc-serialize-0.3.14" }
++semver = { version = "0.1.19", path = "../semver-0.1.19" }
++tar = { version = "0.2.14", path = "../tar-0.2.14", features = ["nightly"] }
++term = { version = "0.2.9", path = "../term-0.2.9" }
++threadpool = { version = "0.1.4", path = "../threadpool-0.1.4" }
++time = { version = "0.1.26", path = "../time-0.1.26" }
++toml = { version = "0.1.21", path = "../toml-0.1.21" }
++url = { version = "0.2.35", path = "../url-0.2.35" }
+ 
+ [[bin]]
+ name = "cargo"
+diff --git a/cargo-0.3.0/src/registry/Cargo.toml b/cargo-0.3.0/src/registry/Cargo.toml
+index 622f99e..15bea5b 100644
+--- a/cargo-0.3.0/src/registry/Cargo.toml
++++ b/cargo-0.3.0/src/registry/Cargo.toml
+@@ -8,5 +8,5 @@ name = "registry"
+ path = "lib.rs"
+ 
+ [dependencies]
+-curl = "0.2"
+-rustc-serialize = "0.3"
++curl = { version = "0.2.10", path = "../../../curl-0.2.10" }
++rustc-serialize = { version = "0.3.14", path = "../../../rustc-serialize-0.3.14" }
+diff --git a/curl-0.2.10/Cargo.toml b/curl-0.2.10/Cargo.toml
+index 16b72c3..f6a449e 100644
+--- a/curl-0.2.10/Cargo.toml
++++ b/curl-0.2.10/Cargo.toml
+@@ -8,33 +8,30 @@ repository = "https://github.com/carllerche/curl-rust"
+ description = "Rust bindings to libcurl for making HTTP requests"
+ 
+ [dependencies]
+-url = "0.2.0"
+-log = "0.3.0"
+-libc = "0.1"
+-curl-sys = { path = "curl-sys", version = "0.1.0" }
+-
+-[dev-dependencies]
+-env_logger = "0.3.0"
++url = { version = "0.2.35", path = "../url-0.2.35" }
++log = { version = "0.3.1", path = "../log-0.3.1" }
++libc = { version = "0.1.8", path = "../libc-0.1.8" }
++curl-sys = { path = "../curl-sys-0.1.24", version = "0.1.24" }
+ 
+ # Unix platforms use OpenSSL for now to provide SSL functionality
+ [target.i686-apple-darwin.dependencies]
+-openssl-sys = "0.6.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
+ [target.x86_64-apple-darwin.dependencies]
+-openssl-sys = "0.6.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
+ [target.i686-unknown-linux-gnu.dependencies]
+-openssl-sys = "0.6.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
+ [target.x86_64-unknown-linux-gnu.dependencies]
+-openssl-sys = "0.6.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
+ [target.arm-unknown-linux-gnueabihf.dependencies]
+-openssl-sys = "0.6.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
+ [target.aarch64-unknown-linux-gnu.dependencies]
+-openssl-sys = "0.6.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
+ [target.i686-unknown-freebsd.dependencies]
+-openssl-sys = "0.6.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
+ [target.x86_64-unknown-freebsd.dependencies]
+-openssl-sys = "0.6.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
+ [target.x86_64-unknown-bitrig.dependencies]
+-openssl-sys = "0.6.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
+ 
+ [[test]]
+ 
+diff --git a/curl-sys-0.1.24/Cargo.toml b/curl-sys-0.1.24/Cargo.toml
+index 6e99e16..3d3ea44 100644
+--- a/curl-sys-0.1.24/Cargo.toml
++++ b/curl-sys-0.1.24/Cargo.toml
+@@ -9,32 +9,32 @@ repository = "https://github.com/carllerche/curl-rust"
+ description = "Native bindings to the libcurl library"
+ 
+ [build-dependencies]
+-pkg-config = "0.3"
++pkg-config = { version = "0.3.4", path = "../pkg-config-0.3.4" }
+ 
+ [lib]
+ name = "curl_sys"
+ path = "lib.rs"
+ 
+ [dependencies]
+-libz-sys = "0.1.0"
+-libc = "0.1"
++libz-sys = { version = "0.1.6", path = "../libz-sys-0.1.6" }
++libc = { version = "0.1.8", path = "../libc-0.1.8" }
+ 
+ # Unix platforms use OpenSSL for now to provide SSL functionality
+ [target.i686-apple-darwin.dependencies]
+-openssl-sys = "0.6.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
+ [target.x86_64-apple-darwin.dependencies]
+-openssl-sys = "0.6.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
+ [target.i686-unknown-linux-gnu.dependencies]
+-openssl-sys = "0.6.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
+ [target.x86_64-unknown-linux-gnu.dependencies]
+-openssl-sys = "0.6.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
+ [target.arm-unknown-linux-gnueabihf.dependencies]
+-openssl-sys = "0.6.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
+ [target.aarch64-unknown-linux-gnu.dependencies]
+-openssl-sys = "0.6.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
+ [target.i686-unknown-freebsd.dependencies]
+-openssl-sys = "0.6.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
+ [target.x86_64-unknown-freebsd.dependencies]
+-openssl-sys = "0.6.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
+ [target.x86_64-unknown-bitrig.dependencies]
+-openssl-sys = "0.6.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
+diff --git a/docopt-0.6.67/Cargo.toml b/docopt-0.6.67/Cargo.toml
+index 8c2f8fe..fdeaa81 100644
+--- a/docopt-0.6.67/Cargo.toml
++++ b/docopt-0.6.67/Cargo.toml
+@@ -20,6 +20,6 @@ doc = false
+ test = false
+ 
+ [dependencies]
+-regex = "*"
+-rustc-serialize = "0.3"
+-strsim = "0.3"
++regex = { version = "0.1.30", path = "../regex-0.1.30" }
++rustc-serialize = { version = "0.3.14", path = "../rustc-serialize-0.3.14" }
++strsim = { version = "0.3.0", path = "../strsim-0.3.0" }
+diff --git a/env_logger-0.3.1/Cargo.toml b/env_logger-0.3.1/Cargo.toml
+index 57f46e5..8bde230 100644
+--- a/env_logger-0.3.1/Cargo.toml
++++ b/env_logger-0.3.1/Cargo.toml
+@@ -12,8 +12,8 @@ variable.
+ """
+ 
+ [dependencies.log]
+-version = "0.3"
+-path = ".."
++version = "0.3.1"
++path = "../log-0.3.1"
+ 
+ [dependencies]
+-regex = "0.1"
++regex = { version = "0.1.30", path = "../regex-0.1.30" }
+diff --git a/flate2-0.2.7/Cargo.toml b/flate2-0.2.7/Cargo.toml
+index 608608d..0dcaa77 100644
+--- a/flate2-0.2.7/Cargo.toml
++++ b/flate2-0.2.7/Cargo.toml
+@@ -16,8 +16,8 @@ streams.
+ """
+ 
+ [dependencies]
+-libc = "0.1"
+-miniz-sys = { path = "miniz-sys", version = "0.1" }
++libc = { version = "0.1.8", path = "../libc-0.1.8" }
++miniz-sys = { path = "../miniz-sys-0.1.5", version = "0.1.5" }
+ 
+ [dev-dependencies]
+ rand = "0.3"
+diff --git a/git2-0.2.11/Cargo.toml b/git2-0.2.11/Cargo.toml
+index 2d19961..9e834a3 100644
+--- a/git2-0.2.11/Cargo.toml
++++ b/git2-0.2.11/Cargo.toml
+@@ -16,16 +16,10 @@ repositories.
+ """
+ 
+ [dependencies]
+-url = "0.2"
+-bitflags = "0.1"
+-libc = "0.1"
+-libgit2-sys = { path = "libgit2-sys", version = "0.2.3" }
+-
+-[dev-dependencies]
+-docopt = "0.6"
+-rustc-serialize = "0.3"
+-time = "0.1"
+-tempdir = "0.3"
++url = { version = "0.2.35", path = "../url-0.2.35" }
++bitflags = { version = "0.1.1", path = "../bitflags-0.1.1" }
++libc = { version = "0.1.8", path = "../libc-0.1.8" }
++libgit2-sys = { path = "../libgit2-sys-0.2.17", version = "0.2.17" }
+ 
+ [features]
+ unstable = []
+diff --git a/git2-curl-0.2.4/Cargo.toml b/git2-curl-0.2.4/Cargo.toml
+index 9f1c71e..4a32226 100644
+--- a/git2-curl-0.2.4/Cargo.toml
++++ b/git2-curl-0.2.4/Cargo.toml
+@@ -14,19 +14,13 @@ Intended to be used with the git2 crate.
+ """
+ 
+ [dependencies]
+-curl = "0.2"
+-url = "0.2"
+-log = "0.3"
++curl = { version = "0.2.10", path = "../curl-0.2.10" }
++url = { version = "0.2.35", path = "../url-0.2.35" }
++log = { version = "0.3.1", path = "../log-0.3.1" }
+ 
+ [dependencies.git2]
+-path = ".."
+-version = "0.2"
+-
+-[dev-dependencies]
+-civet = "0.7"
+-conduit = "0.7"
+-conduit-git-http-backend = "0.7"
+-tempdir = "0.3"
++path = "../git2-0.2.11"
++version = "0.2.11"
+ 
+ [[test]]
+ name = "all"
+diff --git a/libgit2-sys-0.2.17/Cargo.toml b/libgit2-sys-0.2.17/Cargo.toml
+index 9c0aa6c..db51f35 100644
+--- a/libgit2-sys-0.2.17/Cargo.toml
++++ b/libgit2-sys-0.2.17/Cargo.toml
+@@ -14,42 +14,42 @@ description = "Native bindings to the libgit2 library"
+   path = "lib.rs"
+ 
+ [dependencies]
+-libssh2-sys = "0.1.0"
+-libc = "0.1"
++libssh2-sys = { version = "0.1.25", path = "../libssh2-sys-0.1.25" }
++libc = { version = "0.1.8", path = "../libc-0.1.8" }
+ 
+ [build-dependencies]
+-pkg-config = "0.3"
++pkg-config = { version = "0.3.4", path = "../pkg-config-0.3.4" }
+ 
+ [target.i686-apple-darwin.dependencies]
+-openssl-sys = "0.6.0"
+-libz-sys = "0.1.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
++libz-sys = { version = "0.1.6", path = "../libz-sys-0.1.6" }
+ [target.x86_64-apple-darwin.dependencies]
+-openssl-sys = "0.6.0"
+-libz-sys = "0.1.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
++libz-sys = { version = "0.1.6", path = "../libz-sys-0.1.6" }
+ [target.i686-unknown-linux-gnu.dependencies]
+-openssl-sys = "0.6.0"
+-libz-sys = "0.1.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
++libz-sys = { version = "0.1.6", path = "../libz-sys-0.1.6" }
+ [target.x86_64-unknown-linux-gnu.dependencies]
+-openssl-sys = "0.6.0"
+-libz-sys = "0.1.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
++libz-sys = { version = "0.1.6", path = "../libz-sys-0.1.6" }
+ [target.aarch64-unknown-linux-gnu.dependencies]
+-openssl-sys = "0.6.0"
+-libz-sys = "0.1.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
++libz-sys = { version = "0.1.6", path = "../libz-sys-0.1.6" }
+ [target.arm-unknown-linux-gnueabihf.dependencies]
+-openssl-sys = "0.6.0"
+-libz-sys = "0.1.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
++libz-sys = { version = "0.1.6", path = "../libz-sys-0.1.6" }
+ [target.i686-unknown-freebsd.dependencies]
+-openssl-sys = "0.6.0"
+-libz-sys = "0.1.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
++libz-sys = { version = "0.1.6", path = "../libz-sys-0.1.6" }
+ [target.x86_64-unknown-freebsd.dependencies]
+-openssl-sys = "0.6.0"
+-libz-sys = "0.1.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
++libz-sys = { version = "0.1.6", path = "../libz-sys-0.1.6" }
+ [target.x86_64-unknown-bitrig.dependencies]
+-openssl-sys = "0.6.0"
+-libz-sys = "0.1.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
++libz-sys = { version = "0.1.6", path = "../libz-sys-0.1.6" }
+ [target.x86_64-unknown-openbsd.dependencies]
+-openssl-sys = "0.6.0"
+-libz-sys = "0.1.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
++libz-sys = { version = "0.1.6", path = "../libz-sys-0.1.6" }
+ [target.x86_64-unknown-dragonfly.dependencies]
+-openssl-sys = "0.6.0"
+-libz-sys = "0.1.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
++libz-sys = { version = "0.1.6", path = "../libz-sys-0.1.6" }
+diff --git a/libssh2-sys-0.1.25/Cargo.toml b/libssh2-sys-0.1.25/Cargo.toml
+index 501bba5..73d9438 100644
+--- a/libssh2-sys-0.1.25/Cargo.toml
++++ b/libssh2-sys-0.1.25/Cargo.toml
+@@ -13,31 +13,31 @@ name = "libssh2_sys"
+ path = "lib.rs"
+ 
+ [dependencies]
+-libz-sys = "0.1.0"
+-libc = "0.1"
++libz-sys = { version = "0.1.6", path = "../libz-sys-0.1.6" }
++libc = { version = "0.1.8", path = "../libc-0.1.8" }
+ 
+ [target.i686-apple-darwin.dependencies]
+-openssl-sys = "0.6.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
+ [target.x86_64-apple-darwin.dependencies]
+-openssl-sys = "0.6.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
+ [target.i686-unknown-linux-gnu.dependencies]
+-openssl-sys = "0.6.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
+ [target.x86_64-unknown-linux-gnu.dependencies]
+-openssl-sys = "0.6.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
+ [target.aarch64-unknown-linux-gnu.dependencies]
+-openssl-sys = "0.6.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
+ [target.arm-unknown-linux-gnueabihf.dependencies]
+-openssl-sys = "0.6.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
+ [target.i686-unknown-freebsd.dependencies]
+-openssl-sys = "0.6.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
+ [target.x86_64-unknown-freebsd.dependencies]
+-openssl-sys = "0.6.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
+ [target.x86_64-unknown-dragonfly.dependencies]
+-openssl-sys = "0.6.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
+ [target.x86_64-unknown-bitrig.dependencies]
+-openssl-sys = "0.6.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
+ [target.x86_64-unknown-openbsd.dependencies]
+-openssl-sys = "0.6.0"
++openssl-sys = { version = "0.6.2", path = "../openssl-sys-0.6.2" }
+ 
+ [build-dependencies]
+-pkg-config = "0.3"
++pkg-config = { version = "0.3.4", path = "../pkg-config-0.3.4" }
+diff --git a/libz-sys-0.1.6/Cargo.toml b/libz-sys-0.1.6/Cargo.toml
+index a6d1fa6..d4cfcda 100644
+--- a/libz-sys-0.1.6/Cargo.toml
++++ b/libz-sys-0.1.6/Cargo.toml
+@@ -12,7 +12,7 @@ Bindings to the system libz library (also known as zlib).
+ """
+ 
+ [dependencies]
+-libc = "0.1"
++libc = { version = "0.1.8", path = "../libc-0.1.8" }
+ 
+ [build-dependencies]
+-pkg-config = "0.3"
++pkg-config = { version = "0.3.4", path = "../pkg-config-0.3.4" }
+diff --git a/log-0.3.1/Cargo.toml b/log-0.3.1/Cargo.toml
+index 4d61c32..7fb2459 100644
+--- a/log-0.3.1/Cargo.toml
++++ b/log-0.3.1/Cargo.toml
+@@ -17,4 +17,4 @@ name = "filters"
+ harness = false
+ 
+ [dependencies]
+-libc = "0.1"
++libc = { version = "0.1.8", path = "../libc-0.1.8" }
+diff --git a/miniz-sys-0.1.5/Cargo.toml b/miniz-sys-0.1.5/Cargo.toml
+index f68115b..3323dc4 100644
+--- a/miniz-sys-0.1.5/Cargo.toml
++++ b/miniz-sys-0.1.5/Cargo.toml
+@@ -16,7 +16,7 @@ name = "miniz_sys"
+ path = "lib.rs"
+ 
+ [dependencies]
+-libc = "0.1"
++libc = { version = "0.1.8", path = "../libc-0.1.8" }
+ 
+ [build-dependencies]
+-gcc = "0.3"
++gcc = { version = "0.3.8", path = "../gcc-0.3.8" }
+diff --git a/num_cpus-0.2.6/Cargo.toml b/num_cpus-0.2.6/Cargo.toml
+index 298261d..38bd6ee 100644
+--- a/num_cpus-0.2.6/Cargo.toml
++++ b/num_cpus-0.2.6/Cargo.toml
+@@ -9,4 +9,4 @@ repository = "https://github.com/seanmonstar/num_cpus"
+ 
+ 
+ [dependencies]
+-libc = "0.1.7"
++libc = { version = "0.1.8", path = "../libc-0.1.8" }
+diff --git a/openssl-sys-0.6.2/Cargo.toml b/openssl-sys-0.6.2/Cargo.toml
+index fd1e425..a58ca7f 100644
+--- a/openssl-sys-0.6.2/Cargo.toml
++++ b/openssl-sys-0.6.2/Cargo.toml
+@@ -21,17 +21,8 @@ aes_xts = []
+ npn = []
+ 
+ [dependencies]
+-libc = "0.1"
++libc = { version = "0.1.8", path = "../libc-0.1.8" }
+ 
+ [build-dependencies]
+-pkg-config = "0.3"
+-gcc = "0.3"
+-
+-[target.le32-unknown-nacl.dependencies]
+-libressl-pnacl-sys = "2.1.0"
+-[target.x86_64-unknown-nacl.dependencies]
+-libressl-pnacl-sys = "2.1.0"
+-[target.i686-unknown-nacl.dependencies]
+-libressl-pnacl-sys = "2.1.0"
+-[target.arm-unknown-nacl.dependencies]
+-libressl-pnacl-sys = "2.1.0"
++pkg-config = { version = "0.3.4", path = "../pkg-config-0.3.4" }
++gcc = { version = "0.3.8", path = "../gcc-0.3.8" }
+diff --git a/tar-0.2.14/Cargo.toml b/tar-0.2.14/Cargo.toml
+index d10d1ea..04b3b60 100644
+--- a/tar-0.2.14/Cargo.toml
++++ b/tar-0.2.14/Cargo.toml
+@@ -18,10 +18,7 @@ contents are never required to be entirely resident in memory all at once.
+ """
+ 
+ [dependencies]
+-libc = "0.1"
++libc = { version = "0.1.8", path = "../libc-0.1.8" }
+ 
+ [features]
+ nightly = []
+-
+-[dev-dependencies]
+-tempdir = "0.3"
+diff --git a/term-0.2.9/Cargo.toml b/term-0.2.9/Cargo.toml
+index df21e09..6fcb9f6 100644
+--- a/term-0.2.9/Cargo.toml
++++ b/term-0.2.9/Cargo.toml
+@@ -11,10 +11,3 @@ documentation = "http://doc.rust-lang.org/term"
+ description = """
+ A terminal formatting library
+ """
+-
+-[target.i686-pc-windows-gnu]
+-dependencies = { winapi = "0.1", kernel32-sys = "0.1" }
+-[target.x86_64-pc-windows-gnu]
+-dependencies = { winapi = "0.1", kernel32-sys = "0.1" }
+-[target.x86_64-pc-windows-msvc]
+-dependencies = { winapi = "0.1", kernel32-sys = "0.1" }
+diff --git a/time-0.1.26/Cargo.toml b/time-0.1.26/Cargo.toml
+index 84ed4bb..c969181 100644
+--- a/time-0.1.26/Cargo.toml
++++ b/time-0.1.26/Cargo.toml
+@@ -13,11 +13,8 @@ Utilities for working with time-related functions in Rust.
+ """
+ 
+ [dependencies]
+-libc = "0.1"
+-rustc-serialize = { version = "0.3", optional = true }
++libc = { version = "0.1.8", path = "../libc-0.1.8" }
++rustc-serialize = { version = "0.3.14", optional = true, path = "../rustc-serialize-0.3.14" }
+ 
+ [build-dependencies]
+-gcc = "0.3"
+-
+-[dev-dependencies]
+-log = "0.3"
++gcc = { version = "0.3.8", path = "../gcc-0.3.8" }
+diff --git a/toml-0.1.21/Cargo.toml b/toml-0.1.21/Cargo.toml
+index c3ce3b7..28452b1 100644
+--- a/toml-0.1.21/Cargo.toml
++++ b/toml-0.1.21/Cargo.toml
+@@ -16,10 +16,7 @@ facilitate deserializing and serializing Rust structures.
+ """
+ 
+ [dependencies]
+-rustc-serialize = { optional = true, version = "0.3.0" }
++rustc-serialize = { optional = true, version = "0.3.14", path = "../rustc-serialize-0.3.14" }
+ 
+ [features]
+ default = ["rustc-serialize"]
+-
+-[dev-dependencies]
+-rustc-serialize = "0.3"
+diff --git a/url-0.2.35/Cargo.toml b/url-0.2.35/Cargo.toml
+index dd0a863..8526d76 100644
+--- a/url-0.2.35/Cargo.toml
++++ b/url-0.2.35/Cargo.toml
+@@ -21,5 +21,5 @@ version = "0.2"
+ optional = true
+ 
+ [dependencies]
+-rustc-serialize = "0.3"
+-matches = "0.1"
++rustc-serialize = { version = "0.3.14", path = "../rustc-serialize-0.3.14" }
++matches = { version = "0.1.2", path = "../matches-0.1.2" }
