@@ -42,6 +42,8 @@ GRUB_ALL_PLATFORMS=(
 	coreboot multiboot efi-32 pc qemu xen
 	# amd64, ia64:
 	efi-64
+	# arm64:
+	arm64
 )
 IUSE+=" ${GRUB_ALL_PLATFORMS[@]/#/grub_platforms_}"
 
@@ -72,6 +74,7 @@ DEPEND="${RDEPEND}
 	grub_platforms_ieee1275? ( media-libs/freetype:2 )
 	grub_platforms_loongson? ( media-libs/freetype:2 )
 	grub_platforms_xen? ( app-emulation/xen-tools )
+	grub_platforms_arm64? ( cross-aarch64-cros-linux-gnu/gcc )
 	static? (
 		app-arch/xz-utils[static-libs(+)]
 		truetype? (
@@ -85,6 +88,7 @@ DEPEND="${RDEPEND}
 		sys-fs/squashfs-tools[lzo,xz]
 		grub_platforms_efi-64? ( app-emulation/qemu[qemu_softmmu_targets_x86_64] )
 		grub_platforms_pc? ( app-emulation/qemu[qemu_softmmu_targets_i386] )
+		grub_platforms_arm64? ( app-emulation/qemu[qemu_softmmu_targets_aarch64] )
 	)
 	truetype? ( app-arch/unzip )
 "
@@ -180,6 +184,12 @@ grub_configure() {
 				local TARGET_CPPFLAGS="-march=x86-64 ${TARGET_CPPFLAGS}"
 				export TARGET_CFLAGS TARGET_CPPFLAGS
 			fi ;;
+		arm64)
+			# FIXME(andrejro): mixed architecture binaries are generated
+			# while prepallstrip uses the native strip executable. This
+			# causes errors trying to strip aarch64 grub modules.
+			platform=efi
+			local CTARGET=aarch64-cros-linux-gnu ;;
 		guessed) ;;
 		*)	platform=${MULTIBUILD_VARIANT} ;;
 	esac
@@ -231,7 +241,6 @@ src_configure() {
 	fi
 
 	tc-export CC NM OBJCOPY STRIP
-	export TARGET_CC=${TARGET_CC:-${CC}}
 	tc-export BUILD_CC # Bug 485592
 
 	# Portage will take care of cleaning up GRUB_PLATFORMS
