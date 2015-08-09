@@ -38,5 +38,6 @@ DEPEND="
 	sys-firmware/edk2-ovmf
 	sys-fs/btrfs-progs
 	sys-fs/cryptsetup
+	dev-rust/cargo
 	"
 RDEPEND="${DEPEND}"
