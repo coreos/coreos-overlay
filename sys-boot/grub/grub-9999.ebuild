@@ -74,6 +74,7 @@ DEPEND="${RDEPEND}
 	grub_platforms_ieee1275? ( media-libs/freetype:2 )
 	grub_platforms_loongson? ( media-libs/freetype:2 )
 	grub_platforms_xen? ( app-emulation/xen-tools )
+	grub_platforms_arm64? ( cross-aarch64-cros-linux-gnu/gcc )
 	static? (
 		app-arch/xz-utils[static-libs(+)]
 		truetype? (
@@ -122,19 +123,6 @@ QA_PRESTRIPPED="
 "
 
 pkg_pretend() {
-	if [[ ${GRUB_PLATFORMS} =~ "arm64" ]] ; then
-		ebegin "Checking for aarch64-cros-linux-gnu-gcc"
-		if type -p aarch64-cros-linux-gnu-gcc > /dev/null ; then
-			eend 0
-		else
-			eend 1
-			eerror "Failed to locate 'aarch64-cros-linux-gnu-gcc' in \$PATH."
-			eerror "You can install an AARCH64 toolchain using:"
-			eerror "  $ crossdev -t aarch64-cros-linux-gnu"
-			die "AARCH64 toolchain not found"
-		fi
-	fi
-
 	if [[ ${MERGE_TYPE} != binary ]]; then
 		# Bug 439082
 		if ! version_is_at_least 4.8 "$(gcc-version)" &&
