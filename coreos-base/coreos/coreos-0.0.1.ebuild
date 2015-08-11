@@ -117,6 +117,7 @@ RDEPEND="${RDEPEND}
 	coreos-base/update_engine
 	coreos-base/coreos-init
 	coreos-base/coreos-cloudinit
+	coreos-base/coreos-metadata
 	coreos-base/coretest
 	dev-util/strace
 	net-analyzer/nmap
