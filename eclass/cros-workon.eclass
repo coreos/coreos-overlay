@@ -72,10 +72,12 @@ local_copy() {
 	debug-print-function ${FUNCNAME} "$@"
 
 	local path="$(get_path)"
-	einfo "Copying source from ${path}"
 
-	mkdir -p "${S}" || return 1
-	rsync -a "${path}/" "${S}" || return 1
+	einfo "Cloning ${path}"
+	git clone -sn "${path}" "${S}" || die "Can't clone ${path}"
+
+	einfo "Copying source from ${path}"
+	rsync -a --exclude=.git "${path}/" "${S}" || return 1
 }
 
 local_clone() {
