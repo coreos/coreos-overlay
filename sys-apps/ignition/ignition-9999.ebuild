@@ -24,6 +24,7 @@ SLOT="0"
 IUSE=""
 
 src_compile() {
+	GO_LDFLAGS="-X main.version $(git describe --dirty)" || die
 	go_build "${COREOS_GO_PACKAGE}/src"
 }
 
