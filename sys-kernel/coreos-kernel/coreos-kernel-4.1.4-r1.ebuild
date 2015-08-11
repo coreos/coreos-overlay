@@ -6,4 +6,4 @@ COREOS_SOURCE_REVISION="-r1"
 inherit coreos-kernel
 
 DESCRIPTION="CoreOS Linux kernel"
-KEYWORDS="amd64"
+KEYWORDS="amd64 arm64"
