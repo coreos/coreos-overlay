@@ -20,10 +20,6 @@ src_prepare() {
 }
 
 src_install() {
-	into "/usr/share/oem"
-	dobin "${FILESDIR}/netname.sh"
-	dobin "${FILESDIR}/rename-interfaces.sh"
-
 	insinto "/usr/share/oem"
 	doins "${T}/cloud-config.yml"
 	doins "${FILESDIR}/grub.cfg"
