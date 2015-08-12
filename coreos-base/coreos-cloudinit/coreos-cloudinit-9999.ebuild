@@ -38,6 +38,11 @@ src_prepare() {
 	fi
 }
 
+src_compile() {
+	GO_LDFLAGS="-X main.version $(git describe --dirty)" || die
+	coreos-go_src_compile
+}
+
 src_install() {
 	dobin ${GOBIN}/coreos-cloudinit
 	udev_dorules units/*.rules
