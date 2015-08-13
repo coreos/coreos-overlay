@@ -12,7 +12,7 @@ ExecStart=/usr/bin/kubelet \
  --config=/etc/kubernetes/manifests \
  --v=2 \
  --cadvisor-port=0 \
- ${KUBELET_OPTS}
+ $KUBELET_OPTS
 
 Restart=on-failure
 RestartSec=5
