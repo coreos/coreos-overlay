@@ -34,7 +34,10 @@ src_prepare() {
 }
 
 src_compile() {
-	emake CC="$(tc-getCC)" YACC="bison -y" LIBDIR="\$(PREFIX)/$(get_libdir)"
+	emake CC="$(tc-getCC)" YACC="bison -y" \
+		INCLUDEDIR="${ROOT}\$(PREFIX)/include"
+		LIBDIR="\$(PREFIX)/$(get_libdir)" \
+		LDLIBS="${ROOT}\$(LIBDIR)/libsepol.a -lfl"
 }
 
 src_install() {
