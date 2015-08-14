@@ -24,7 +24,7 @@ else
 	KEYWORDS="-* amd64"
 fi
 
-OPENSSL_PV="0.9.8zb"
+OPENSSL_PV="1.0.2d"
 OPENSSL_P="openssl-${OPENSSL_PV}"
 SRC_URI+=" mirror://openssl/source/${OPENSSL_P}.tar.gz"
 
