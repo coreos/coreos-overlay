@@ -15,12 +15,12 @@ SEMNG_VER="${PV}"
 SELNX_VER="${PV}"
 SEPOL_VER="${PV}"
 
-IUSE="audit pam dbus python"
+IUSE="audit extra nls pam dbus python"
 
 DESCRIPTION="SELinux core utilities"
 HOMEPAGE="https://github.com/SELinuxProject/selinux/wiki"
 SRC_URI="https://raw.githubusercontent.com/wiki/SELinuxProject/selinux/files/releases/20150202/${MY_P}.tar.gz
-	mirror://gentoo/policycoreutils-extra-${EXTRAS_VER}.tar.bz2"
+	extra? ( mirror://gentoo/policycoreutils-extra-${EXTRAS_VER}.tar.bz2 )"
 
 LICENSE="GPL-2"
 SLOT="0"
@@ -32,7 +32,7 @@ DEPEND=">=sys-libs/libselinux-${SELNX_VER}[python?]
 	>=sys-libs/libsemanage-${SEMNG_VER}[python?]
 	sys-libs/libcap-ng
 	>=sys-libs/libsepol-${SEPOL_VER}
-	sys-devel/gettext
+	nls? ( sys-devel/gettext )
 	python? (
 		dev-python/ipy[${PYTHON_USEDEP}]
 	)
@@ -86,11 +86,18 @@ src_prepare() {
 		# directory. We really should optimize this as it is ugly, but the extra
 		# code is needed for Gentoo at the same time that policycoreutils is present
 		# (so we cannot use an additional package for now).
-		S="${S2}"
-		python_copy_sources
+		if use extra ; then
+			S="${S2}"
+			python_copy_sources
+		fi
 	else
-		sed s/sepolicy// -i Makefile
+		for dir in audit2allow gui scripts \
+			semanage sepolicy sepolgen-ifgen
+		do
+			sed -e "s/ $dir / /" -i Makefile || die
+		done
 	fi
+	use nls || sed -e "s/ po / /" -i Makefile || die
 }
 
 src_compile() {
@@ -109,13 +116,17 @@ src_compile() {
 	if use python ; then
 		S="${S1}" # Regular policycoreutils
 		python_foreach_impl building
-		S="${S2}" # Extra set
-		python_foreach_impl building
+		if use extra ; then
+			S="${S2}" # Extra set
+			python_foreach_impl building
+		fi
 	else
 		BUILD_DIR="${S1}"
 		building
-		BUILD_DIR="${S2}"
-		building
+		if use extra ; then
+			BUILD_DIR="${S2}"
+			building
+		fi
 	fi
 }
 
@@ -140,22 +151,27 @@ src_install() {
 	if use python ; then
 		S="${S1}" # policycoreutils
 		python_foreach_impl installation-policycoreutils
-		S="${S2}" # extras
-		python_foreach_impl installation-extras
-		S="${S1}" # back for later
+		if use extra ; then
+			S="${S2}" # extras
+			python_foreach_impl installation-extras
+			S="${S1}" # back for later
+		fi
 	else
 		BUILD_DIR="${S1}"
 		installation-policycoreutils
-		BUILD_DIR="${S2}"
-		installation-extras
+		if use extra ; then
+			BUILD_DIR="${S2}"
+			installation-extras
+		fi
 	fi
 
 	# remove redhat-style init script
 	rm -fR "${D}/etc/rc.d"
 
 	# compatibility symlinks
-#	dosym /sbin/setfiles /usr/sbin/setfiles
-	dosym /$(get_libdir)/rc/runscript_selinux.so /$(get_libdir)/rcscripts/runscript_selinux.so
+	if use extra ; then
+		dosym /$(get_libdir)/rc/runscript_selinux.so /$(get_libdir)/rcscripts/runscript_selinux.so
+	fi
 
 	# location for policy definitions
 	dodir /usr/lib/selinux/policy
@@ -166,9 +182,8 @@ src_install() {
 		for pyscript in audit2allow sepolgen-ifgen sepolicy chcat; do
 		  python_replicate_script "${ED}/usr/bin/${pyscript}"
 		done
-		for pyscript in semanage rlpkg; do
-		  python_replicate_script "${ED}/usr/sbin/${pyscript}"
-		done
+		python_replicate_script "${ED}/usr/sbin/semanage"
+		use extra && python_replicate_script "${ED}/usr/sbin/rlpkg"
 	fi
 
 	dodir /usr/share/doc/${PF}/mcstrans/examples
@@ -177,5 +192,5 @@ src_install() {
 
 pkg_postinst() {
 	# The selinux_gentoo init script is no longer needed with recent OpenRC
-	elog "The selinux_gentoo init script will be removed in future versions since it is not needed with OpenRC 0.13."
+	use extra && elog "The selinux_gentoo init script will be removed in future versions since it is not needed with OpenRC 0.13."
 }

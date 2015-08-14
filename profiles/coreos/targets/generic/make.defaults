@@ -35,3 +35,10 @@ INSTALL_MASK="${INSTALL_MASK}
   /etc/wgetrc
   /etc/xinetd.d
 "
+
+# Exclude ustr's source code and debug library
+INSTALL_MASK="${INSTALL_MASK}
+  /usr/bin/ustr-import
+  /usr/lib*/libustr-debug*
+  /usr/share/ustr-*
+"
