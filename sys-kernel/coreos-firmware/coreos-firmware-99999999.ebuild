@@ -115,6 +115,10 @@ src_prepare() {
 }
 
 src_install() {
+	local list=$(find -type f) || die
+
+	[[ -n "${list}" ]] || die "No firmware files found to install."
+
 	insinto /lib/firmware/
-	doins -r *
+	doins -r ${list}
 }
