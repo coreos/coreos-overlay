@@ -37,9 +37,7 @@ DEPEND="${CDEPEND}
 		>=dev-libs/glib-2.24
 		${PYTHON_DEPS}
 		)"
-RDEPEND="${CDEPEND}
-	selinux? ( sec-policy/selinux-dbus )
-"
+RDEPEND="${CDEPEND}"
 
 DOC_CONTENTS="
 	Some applications require a session bus in addition to the system
