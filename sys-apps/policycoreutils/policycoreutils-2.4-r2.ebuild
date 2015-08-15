@@ -109,7 +109,7 @@ src_compile() {
 			INOTIFYH="$(usex dbus)" \
 			SESANDBOX="n" \
 			CC="$(tc-getCC)" \
-			PREFIX="${ROOT}" \
+			DESTDIR="${ROOT}" \
 			PYLIBVER="${EPYTHON}" \
 			LIBDIR="\$(PREFIX)/$(get_libdir)"
 	}
