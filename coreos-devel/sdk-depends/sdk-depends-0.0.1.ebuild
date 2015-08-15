@@ -40,4 +40,11 @@ DEPEND="
 	sys-fs/cryptsetup
 	dev-rust/cargo
 	"
+
+# Must match the build-time dependencies listed in selinux-policy-2.eclass
+DEPEND="${DEPEND}
+	>=sys-apps/checkpolicy-2.0.21
+	>=sys-apps/policycoreutils-2.0.82
+	sys-devel/m4"
+
 RDEPEND="${DEPEND}"
