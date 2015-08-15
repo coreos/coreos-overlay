@@ -232,7 +232,7 @@ selinux-policy-2_src_compile() {
 			# Parallel builds are broken in 2.20140311-r7 and earlier, bug 530178
 			emake -j1 NAME=$i SHAREDIR="${ROOT}/usr/share/selinux" -C "${S}"/${i} || die "${i} compile failed"
 		else
-			emake NAME=$i BINDIR="${ROOT}/usr/bin" SHAREDIR="${ROOT}/usr/share/selinux" -C "${S}"/${i} || die "${i} compile failed"
+			emake NAME=$i SHAREDIR="${ROOT}/usr/share/selinux" -C "${S}"/${i} || die "${i} compile failed"
 		fi
 	done
 }
