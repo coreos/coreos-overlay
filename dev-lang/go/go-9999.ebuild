@@ -24,9 +24,9 @@ HOMEPAGE="http://www.golang.org"
 
 LICENSE="BSD"
 SLOT="0/${PV}"
-IUSE=""
+IUSE="cros_host"
 
-DEPEND=">=dev-lang/go-bootstrap-1.4.1"
+DEPEND="cros_host? ( >=dev-lang/go-bootstrap-1.4.1 )"
 RDEPEND=""
 
 # These test data objects have writable/executable stacks.
