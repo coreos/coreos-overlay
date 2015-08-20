@@ -9,6 +9,14 @@ After=initrd-root-fs.target
 Requires=mnt-oem.mount
 After=mnt-oem.mount
 
+# setup networking
+Wants=initrd-systemd-networkd.service
+After=initrd-systemd-networkd.service
+
+# generate resolv.conf
+Wants=initrd-systemd-resolved.service
+After=initrd-systemd-resolved.service
+
 [Service]
 Type=oneshot
 TimeoutStartSec=30s
