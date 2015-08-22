@@ -1,59 +1,136 @@
 # Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header:  $
+# $Id$
 
 EAPI=5
 
+export CBUILD=${CBUILD:-${CHOST}}
+export CTARGET=${CTARGET:-${CHOST}}
+
 inherit eutils toolchain-funcs
 
-EGIT_REPO_URI="git://github.com/golang/go.git"
-inherit git-r3
-KEYWORDS="-* ~amd64 arm64"
+if [[ ${PV} = 9999 ]]; then
+	EGIT_REPO_URI="git://github.com/golang/go.git"
+	inherit git-r3
+else
+	SRC_URI="https://storage.googleapis.com/golang/go${PV}.src.tar.gz"
+	# arm64 only works when cross-compiling in the SDK
+	KEYWORDS="-* ~amd64 ~arm arm64 ~x86 ~amd64-fbsd ~x86-fbsd ~x64-macos ~x86-macos"
+fi
 
 DESCRIPTION="A concurrent garbage collected and typesafe programming language"
 HOMEPAGE="http://www.golang.org"
 
 LICENSE="BSD"
-SLOT="0"
-IUSE=""
+SLOT="0/${PV}"
+IUSE="cros_host"
 
-DEPEND=""
+DEPEND="cros_host? ( >=dev-lang/go-bootstrap-1.4.1 )"
 RDEPEND=""
+
+# These test data objects have writable/executable stacks.
+QA_EXECSTACK="usr/lib/go/src/debug/elf/testdata/*.obj"
 
 # The tools in /usr/lib/go should not cause the multilib-strict check to fail.
 QA_MULTILIB_PATHS="usr/lib/go/pkg/tool/.*/.*"
 
 # The go language uses *.a files which are _NOT_ libraries and should not be
-# stripped.
-STRIP_MASK="/usr/lib/go/pkg/linux*/*.a /usr/lib/go/pkg/freebsd*/*.a /usr/lib/go/pkg/darwin*/*.a"
+# stripped. The test data objects should also be left alone and unstripped.
+STRIP_MASK="/usr/lib/go/pkg/*.a
+	/usr/lib/go/src/debug/elf/testdata/*
+	/usr/lib/go/src/debug/dwarf/testdata/*
+	/usr/lib/go/src/runtime/race/*.syso"
 
-build_arch()
+if [[ ${PV} != 9999 ]]; then
+	S="${WORKDIR}"/go
+fi
+
+go_arch()
 {
-    case "$CBUILD" in
-        aarch64*)   echo arm64;;
-        x86_64*)    echo amd64;;
-    esac
+	# By chance most portage arch names match Go
+	local portage_arch=$(tc-arch $@)
+	case "${portage_arch}" in
+		x86)	echo 386;;
+		*)		echo "${portage_arch}";;
+	esac
 }
 
-same_arch()
+go_arm()
 {
-	[[ "${ARCH}" = "$(build_arch)" ]]
+	case "${1:-${CHOST}}" in
+		armv5)	echo 5;;
+		armv6)	echo 6;;
+		armv7)	echo 7;;
+		*)
+			die "unknown GOARM for ${1:-${CHOST}}"
+			;;
+	esac
+}
+
+go_os()
+{
+	case "${1:-${CHOST}}" in
+		*-linux*)	echo linux;;
+		*-darwin*)	echo darwin;;
+		*-freebsd*)	echo freebsd;;
+		*-netbsd*)	echo netbsd;;
+		*-openbsd*)	echo openbsd;;
+		*-solaris*)	echo solaris;;
+		*-cygwin*|*-interix*|*-winnt*)
+			echo windows
+			;;
+		*)
+			die "unknown GOOS for ${1:-${CHOST}}"
+			;;
+	esac
+}
+
+go_tuple()
+{
+	echo "$(go_os $@)_$(go_arch $@)"
+}
+
+go_cross_compile()
+{
+	[[ $(go_tuple ${CBUILD}) != $(go_tuple) ]]
+}
+
+pkg_pretend()
+{
+	# make.bash does not understand cross-compiling a cross-compiler
+	if [[ $(go_tuple) != $(go_tuple ${CTARGET}) ]]; then
+		die "CHOST CTARGET pair unsupported: CHOST=${CHOST} CTARGET=${CTARGET}"
+	fi
 }
 
 src_prepare()
 {
-
+	if [[ ${PV} != 9999 ]]; then
+		sed -i -e 's/"-Werror",//g' src/cmd/dist/build.go ||
+			die 'sed failed'
+	fi
 	epatch_user
 }
 
 src_compile()
 {
-	export GOOS="linux"
-	export GOARCH="${ARCH}"
-	export GOROOT_BOOTSTRAP="/usr/lib/go1.4"
+	export GOROOT_BOOTSTRAP="${EPREFIX}"/usr/lib/go1.4
 	export GOROOT_FINAL="${EPREFIX}"/usr/lib/go
 	export GOROOT="$(pwd)"
-	export GOBIN=${GOROOT}/bin
+	export GOBIN="${GOROOT}/bin"
+
+	# Go's build script does not use BUILD/HOST/TARGET consistently. :(
+	export GOHOSTARCH=$(go_arch ${CBUILD})
+	export GOHOSTOS=$(go_os ${CBUILD})
+	export CC=$(tc-getBUILD_CC)
+
+	export GOARCH=$(go_arch)
+	export GOOS=$(go_os)
+	export CC_FOR_TARGET=$(tc-getCC)
+	export CXX_FOR_TARGET=$(tc-getCXX)
+	if [[ ${ARCH} == arm ]]; then
+		export GOARM=$(go_arm)
+	fi
 
 	cd src
 	./make.bash || die "build failed"
@@ -61,35 +138,44 @@ src_compile()
 
 src_test()
 {
-	$(same_arch) || return 0;
+	go_cross_compile && return 0
 
 	cd src
 	PATH="${GOBIN}:${PATH}" \
-		./run.bash --no-rebuild --banner || die "tests failed"
+		./run.bash -no-rebuild || die "tests failed"
 }
 
 src_install()
 {
-	local bin_path
-
-	if $(same_arch); then
-		bin_path=${GOBIN}
-	else
-		bin_path=${GOBIN}/${GOOS}_${GOARCH}
+	local bin_path="${GOBIN}"
+	if go_cross_compile; then
+		bin_path="${GOBIN}/$(go_tuple)"
 	fi
-
-	dobin ${bin_path}/*
+	dobin "${bin_path}"/*
 	dodoc AUTHORS CONTRIBUTORS PATENTS README.md
 
-	dodir /usr/lib/go
+	dodir /usr/lib/go /usr/lib/go/pkg /usr/lib/go/pkg/tool
 	insinto /usr/lib/go
 
 	# There is a known issue which requires the source tree to be installed [1].
 	# Once this is fixed, we can consider using the doc use flag to control
 	# installing the doc and src directories.
 	# [1] https://golang.org/issue/2775
-	doins -r doc lib pkg src
+	doins -r doc lib src
+
+	# Selectively install pkg directory to exclude the bootstrap build
+	insinto /usr/lib/go/pkg
+	doins -r pkg/include "pkg/$(go_tuple)"
+	insinto /usr/lib/go/pkg/tool
+	doins -r "pkg/tool/$(go_tuple)"
 	fperms -R +x /usr/lib/go/pkg/tool
+}
+
+pkg_preinst()
+{
+	has_version '<dev-lang/go-1.4' &&
+		export had_support_files=true ||
+		export had_support_files=false
 }
 
 pkg_postinst()
@@ -103,4 +189,19 @@ pkg_postinst()
 	find "${EROOT}"usr/lib/go -type f \
 		-exec touch -r "${EROOT}"${tref} {} \;
 	eend $?
+
+	if [[ ${PV} != 9999 && -n ${REPLACING_VERSIONS} &&
+		${REPLACING_VERSIONS} != ${PV} ]]; then
+		elog "Release notes are located at http://golang.org/doc/go${PV}"
+	fi
+
+	if $had_support_files; then
+		ewarn
+		ewarn "All editor support, IDE support, shell completion"
+		ewarn "support, etc has been removed from the go package"
+		ewarn "upstream."
+		ewarn "For more information on which support is available, see"
+		ewarn "the following URL:"
+		ewarn "https://github.com/golang/go/wiki/IDEsAndTextEditorPlugins"
+	fi
 }
