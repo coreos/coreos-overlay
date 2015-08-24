@@ -156,11 +156,14 @@ src_install() {
 
 	done
 
+	systemd_dotmpfilesd "${FILESDIR}/tmpfiles.d/selinux-base.conf"
+	systemd-tmpfiles --root="${D}" --create selinux-base.conf
+
 	dodoc doc/Makefile.example doc/example.{te,fc,if}
 
 	doman man/man8/*.8;
 
-	insinto /etc/selinux
+	insinto /usr/lib/selinux
 	doins "${FILESDIR}/config"
 }
 
