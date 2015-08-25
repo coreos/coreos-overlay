@@ -9,6 +9,13 @@ After=initrd-root-fs.target
 Requires=mnt-oem.mount
 After=mnt-oem.mount
 
+Requires=ignition-disks.service
+After=ignition-disks.service
+
+# setup the root filesystem before we try do things like create users on it.
+Requires=initrd-setup-root.service
+After=initrd-setup-root.service
+
 # setup networking
 Wants=initrd-systemd-networkd.service
 After=initrd-systemd-networkd.service
