@@ -75,33 +75,12 @@ bool PayloadProcessor::Write(const void* bytes, size_t count,
   buffer_.insert(buffer_.end(), c_bytes, c_bytes + count);
 
   if (!manifest_valid_) {
-    *error = DeltaMetadata::ParsePayload(
-        buffer_, &manifest_, &manifest_metadata_size_);
+    *error = LoadManifest();
     if (*error == kActionCodeDownloadIncomplete) {
       *error = kActionCodeSuccess;
       return true;
     } else if (*error != kActionCodeSuccess)
       return false;
-
-    // Remove protobuf and header info from buffer_, so buffer_ contains
-    // just data blobs
-    DiscardBufferHeadBytes(manifest_metadata_size_);
-    LOG_IF(WARNING, !prefs_->SetInt64(kPrefsManifestMetadataSize,
-                                      manifest_metadata_size_))
-        << "Unable to save the manifest metadata size.";
-    manifest_valid_ = true;
-
-    LogPartitionInfo(manifest_);
-    if (!PrimeUpdateState()) {
-      *error = kActionCodeDownloadStateInitializationError;
-      LOG(ERROR) << "Unable to prime the update state.";
-      return false;
-    }
-
-    num_total_operations_ = manifest_.partition_operations_size();
-    if (next_operation_num_ > 0)
-      LOG(INFO) << "Resuming after " << next_operation_num_ << " operations";
-    LOG(INFO) << "Starting to apply update payload operations";
   }
 
   while (next_operation_num_ < num_total_operations_) {
@@ -160,6 +139,36 @@ bool PayloadProcessor::Write(const void* bytes, size_t count,
   }
 
   return true;
+}
+
+ActionExitCode PayloadProcessor::LoadManifest() {
+  DCHECK(!manifest_valid_);
+
+  ActionExitCode error = DeltaMetadata::ParsePayload(
+      buffer_, &manifest_, &manifest_metadata_size_);
+  if (error != kActionCodeSuccess)
+    return error;
+
+  // Remove protobuf and header info from buffer_, so buffer_ contains
+  // just data blobs
+  DiscardBufferHeadBytes(manifest_metadata_size_);
+  LOG_IF(WARNING, !prefs_->SetInt64(kPrefsManifestMetadataSize,
+                                    manifest_metadata_size_))
+      << "Unable to save the manifest metadata size.";
+  manifest_valid_ = true;
+
+  LogPartitionInfo(manifest_);
+  if (!PrimeUpdateState()) {
+    LOG(ERROR) << "Unable to prime the update state.";
+    return kActionCodeDownloadStateInitializationError;
+  }
+
+  num_total_operations_ = manifest_.partition_operations_size();
+  if (next_operation_num_ > 0)
+    LOG(INFO) << "Resuming after " << next_operation_num_ << " operations";
+  LOG(INFO) << "Starting to apply update payload operations";
+
+  return kActionCodeSuccess;
 }
 
 bool PayloadProcessor::ExtractSignatureMessage(const vector<char>& data) {

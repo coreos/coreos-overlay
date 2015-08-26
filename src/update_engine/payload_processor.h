@@ -94,6 +94,10 @@ class PayloadProcessor : public FileWriter {
   }
 
  private:
+  // Parses the manifest and finishes any initialization that needs info from
+  // the manifest. Result may be kActionCodeDownloadIncomplete.
+  ActionExitCode LoadManifest();
+
   // Verifies that the expected source partition hash (if present) match the
   // hash for the current partition. Returns true if there're no expected
   // hash in the payload (e.g., if it's a new-style full update) or if the
