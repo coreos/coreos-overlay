@@ -18,7 +18,12 @@ DEPEND="dev-lang/go"
 # @FUNCTION: go_get_arch
 # @USAGE: export GOARCH=$(go_get_arch)
 go_get_arch() {
-	echo ${ARCH}
+	# By chance most portage arch names match Go
+	local portage_arch=$(tc-arch ${CHOST})
+	case "${portage_arch}" in
+		x86)	echo 386;;
+		*)	echo "${portage_arch}";;
+	esac
 }
 
 # @FUNCTION: go_build
