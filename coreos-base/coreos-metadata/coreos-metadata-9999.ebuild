@@ -6,7 +6,7 @@ CROS_WORKON_PROJECT="coreos/coreos-metadata"
 CROS_WORKON_LOCALNAME="coreos-metadata"
 CROS_WORKON_REPO="git://github.com"
 COREOS_GO_PACKAGE="github.com/coreos/coreos-metadata"
-inherit cros-workon systemd
+inherit coreos-go cros-workon systemd
 
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64"
@@ -24,6 +24,6 @@ SLOT="0"
 IUSE=""
 
 src_install() {
-	dobin "${S}/bin/${PN}"
+	dobin "${GOBIN}/${PN}"
 	systemd_dounit "${FILESDIR}/coreos-metadata.service"
 }
