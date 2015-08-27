@@ -1,0 +1,62 @@
+From 10e2eb878f3ca07ac2f05fa5ca5e6c4c9174a27a Mon Sep 17 00:00:00 2001
+From: Eric Dumazet <edumazet@google.com>
+Date: Sat, 1 Aug 2015 12:14:33 +0200
+Subject: [PATCH] udp: fix dst races with multicast early demux
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Multicast dst are not cached. They carry DST_NOCACHE.
+
+As mentioned in commit f8864972126899 ("ipv4: fix dst race in
+sk_dst_get()"), these dst need special care before caching them
+into a socket.
+
+Caching them is allowed only if their refcnt was not 0, ie we
+must use atomic_inc_not_zero()
+
+Also, we must use READ_ONCE() to fetch sk->sk_rx_dst, as mentioned
+in commit d0c294c53a771 ("tcp: prevent fetching dst twice in early demux
+code")
+
+Fixes: 421b3885bf6d ("udp: ipv4: Add udp early demux")
+Tested-by: Gregory Hoggarth <Gregory.Hoggarth@alliedtelesis.co.nz>
+Signed-off-by: Eric Dumazet <edumazet@google.com>
+Reported-by: Gregory Hoggarth <Gregory.Hoggarth@alliedtelesis.co.nz>
+Reported-by: Alex Gartrell <agartrell@fb.com>
+Cc: Michal Kubeček <mkubecek@suse.cz>
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ net/ipv4/udp.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/net/ipv4/udp.c b/net/ipv4/udp.c
+index 83aa604..1b8c5ba 100644
+--- a/net/ipv4/udp.c
++++ b/net/ipv4/udp.c
+@@ -1995,12 +1995,19 @@ void udp_v4_early_demux(struct sk_buff *skb)
+ 
+ 	skb->sk = sk;
+ 	skb->destructor = sock_efree;
+-	dst = sk->sk_rx_dst;
++	dst = READ_ONCE(sk->sk_rx_dst);
+ 
+ 	if (dst)
+ 		dst = dst_check(dst, 0);
+-	if (dst)
+-		skb_dst_set_noref(skb, dst);
++	if (dst) {
++		/* DST_NOCACHE can not be used without taking a reference */
++		if (dst->flags & DST_NOCACHE) {
++			if (likely(atomic_inc_not_zero(&dst->__refcnt)))
++				skb_dst_set(skb, dst);
++		} else {
++			skb_dst_set_noref(skb, dst);
++		}
++	}
+ }
+ 
+ int udp_rcv(struct sk_buff *skb)
+-- 
+2.4.6
+
