@@ -42,3 +42,8 @@ INSTALL_MASK="${INSTALL_MASK}
   /usr/lib*/libustr-debug*
   /usr/share/ustr-*
 "
+
+# Remove selinuxenabled because it triggers breakage in Ansible
+INSTALL_MASK="${INSTALL_MASK}
+  /usr/sbin/selinuxenabled
+"
