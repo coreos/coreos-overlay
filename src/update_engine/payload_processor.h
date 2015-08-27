@@ -98,6 +98,9 @@ class PayloadProcessor : public FileWriter {
   // the manifest. Result may be kActionCodeDownloadIncomplete.
   ActionExitCode LoadManifest();
 
+  // Execute a single operation. Result may be kActionCodeDownloadIncomplete.
+  ActionExitCode PerformOperation();
+
   // Verifies that the expected source partition hash (if present) match the
   // hash for the current partition. Returns true if there're no expected
   // hash in the payload (e.g., if it's a new-style full update) or if the
