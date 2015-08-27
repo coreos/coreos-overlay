@@ -93,6 +93,8 @@ kmake() {
 	if gcc-specs-pie; then
 		kernel_cflags="-nopie -fstack-check=no"
 	fi
+	# this can be removed once it is exported globally again
+	export CCACHE_BASEDIR="${S}"
 	emake \
 		ARCH="${kernel_arch}" \
 		CROSS_COMPILE="${CHOST}-" \
