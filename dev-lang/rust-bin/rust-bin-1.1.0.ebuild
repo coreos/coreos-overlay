@@ -22,7 +22,6 @@ DEPEND=">=app-eselect/eselect-rust-0.3_pre20150425
 	!dev-lang/rust:0
 "
 RDEPEND="${DEPEND}"
-REQUIRES_EXCLUDE="lib*"
 
 src_unpack() {
 	default

@@ -117,7 +117,7 @@ dev-util/checkbashisms
 
 # Needed for Rust
 =app-eselect/eselect-rust-0.3_pre20150428 ~amd64
-=dev-lang/rust-bin-1.1.0-r1 ~amd64
+=dev-lang/rust-bin-1.1.0 ~amd64
 =dev-rust/cargo-0.3.0 ~amd64
 
 # Provides useful new pages like loop(4)
