@@ -11,7 +11,7 @@ inherit cros-workon systemd
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64"
 else
-	CROS_WORKON_COMMIT=""
+	CROS_WORKON_COMMIT="416392f69e60bcd96507cb626a9d3fe380f0af1e" # v0.1.0
 	KEYWORDS="amd64"
 fi
 
