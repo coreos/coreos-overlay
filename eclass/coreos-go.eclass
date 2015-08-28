@@ -18,7 +18,12 @@ DEPEND="dev-lang/go"
 # @FUNCTION: go_get_arch
 # @USAGE: export GOARCH=$(go_get_arch)
 go_get_arch() {
-	echo ${ARCH}
+	# By chance most portage arch names match Go
+	local portage_arch=$(tc-arch ${CHOST})
+	case "${portage_arch}" in
+		x86)	echo 386;;
+		*)	echo "${portage_arch}";;
+	esac
 }
 
 # @FUNCTION: go_build
@@ -30,10 +35,18 @@ go_build() {
 	local package_name="$1"
 	local binary_name="${package_name##*/}"
 
-	go build -x -p "$(makeopts_jobs)" \
+	ebegin "go build ${package_name}"
+	debug-print $(go env)
+
+	go build -v \
+		-p "$(makeopts_jobs)" \
 		-ldflags "${GO_LDFLAGS} -extldflags '${LDFLAGS}'" \
-		-o "${GOBIN}/${binary_name}" "${package_name}" \
-		|| die "${ECLASS}: go build failed"
+		-o "${GOBIN}/${binary_name}" \
+		"${package_name}"
+
+	local e=${?}
+	local msg="${FUNCNAME}: ${package_name} failed (${e})."
+	eend ${e} "${msg}" || die "${msg}"
 }
 
 coreos-go_src_prepare() {
@@ -42,10 +55,6 @@ coreos-go_src_prepare() {
 	export GOARCH=$(go_get_arch)
 	export GOPATH="${WORKDIR}/gopath"
 	export GOBIN="${GOPATH}/bin"
-	
-	debug-print "${FUNCNAME}: GOARCH=${GOARCH}"
-	debug-print "${FUNCNAME}: GOPATH=${GOPATH}"
-	debug-print "${FUNCNAME}: GOBIN=${GOBIN}"
 
 	mkdir -p "${GOBIN}" || die "${ECLASS}: bad path: ${GOBIN}"
 
