@@ -23,7 +23,7 @@ HOMEPAGE="http://www.golang.org"
 
 LICENSE="BSD"
 SLOT="0/${PV}"
-IUSE="cros_host"
+IUSE="cros_host +arm64-extras"
 
 DEPEND="cros_host? ( >=dev-lang/go-bootstrap-1.4.1 )"
 RDEPEND=""
@@ -40,6 +40,10 @@ STRIP_MASK="/usr/lib/go/pkg/*.a
 	/usr/lib/go/src/debug/elf/testdata/*
 	/usr/lib/go/src/debug/dwarf/testdata/*
 	/usr/lib/go/src/runtime/race/*.syso"
+
+if use cros_host && use arm64-extras; then
+	STRIP_MASK+="/usr/lib/go/pkg/tool/linux_arm64/*"
+fi
 
 if [[ ${PV} != 9999 ]]; then
 	S="${WORKDIR}"/go
@@ -123,17 +127,30 @@ src_compile()
 	export GOHOSTARCH=$(go_arch ${CBUILD})
 	export GOHOSTOS=$(go_os ${CBUILD})
 	export CC=$(tc-getBUILD_CC)
-
-	export GOARCH=$(go_arch)
 	export GOOS=$(go_os)
+
+	cd src
+
+	# Build the target support first.
+	if use cros_host && use arm64-extras; then
+		export GOARCH="arm64"
+		export CC_FOR_TARGET="aarch64-cros-linux-gnu-gcc"
+		export CXX_FOR_TARGET="aarch64-cros-linux-gnu-g++"
+		ebegin "Building for GOARCH=${GOARCH}..."
+		./make.bash --no-clean --no-test
+		eend $? "Build for GOARCH=${GOARCH} failed." || die
+	fi
+
+	# Build the host last to get the correct settings in the go environment.
+	export GOARCH=$(go_arch)
 	export CC_FOR_TARGET=$(tc-getCC)
 	export CXX_FOR_TARGET=$(tc-getCXX)
 	if [[ ${ARCH} == arm ]]; then
 		export GOARM=$(go_arm)
 	fi
-
-	cd src
-	./make.bash || die "build failed"
+	ebegin "Building for GOARCH=${GOARCH}..."
+	./make.bash --no-clean --no-test
+	eend $? "Build for GOARCH=${GOARCH} failed." || die
 }
 
 src_test()
@@ -151,7 +168,7 @@ src_install()
 	if go_cross_compile; then
 		bin_path="${GOBIN}/$(go_tuple)"
 	fi
-	dobin "${bin_path}"/*
+	dobin "${bin_path}"/go "${bin_path}"/gofmt
 	dodoc AUTHORS CONTRIBUTORS PATENTS README.md
 
 	dodir /usr/lib/go /usr/lib/go/pkg /usr/lib/go/pkg/tool
@@ -169,6 +186,11 @@ src_install()
 	insinto /usr/lib/go/pkg/tool
 	doins -r "pkg/tool/$(go_tuple)"
 	fperms -R +x /usr/lib/go/pkg/tool
+
+	if use cros_host && use arm64-extras; then
+		insinto /usr/lib/go/pkg
+		doins -r pkg/linux_arm64
+	fi
 }
 
 pkg_preinst()
