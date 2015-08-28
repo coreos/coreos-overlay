@@ -21,7 +21,7 @@ After=disk-uuid.service
 
 [Service]
 Type=oneshot
-TimeoutStartSec=30s
+TimeoutStartSec=2m
 Environment=OEM_ID=pxe
 Environment=FETCH_TIMEOUT=1m
 EnvironmentFile=-/mnt/oem/oem-release
