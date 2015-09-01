@@ -31,8 +31,6 @@ src_compile() {
 src_install() {
 	newbin ${GOBIN}/src ${PN}
 
-	udev_dorules "${FILESDIR}"/90-ignition.rules
-
 	systemd_dounit "${FILESDIR}"/mnt-oem.mount
 	systemd_dounit "${FILESDIR}"/ignition.target
 	systemd_dounit "${FILESDIR}"/ignition-disks.service
