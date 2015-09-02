@@ -10,7 +10,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~arm64 ~x86"
 else
-	CROS_WORKON_COMMIT="3fd35b67f0855d1c1d571219e14866f3e4b746ef"
+	CROS_WORKON_COMMIT="85b3790205ca5b9f70b3aaa7a7cfaef802f3d20c"
 	KEYWORDS="amd64 arm arm64 x86"
 fi
 
@@ -28,10 +28,8 @@ DEPEND="
 	sys-apps/coreutils
 	sys-apps/findutils
 	sys-apps/grep
-	sys-apps/ignition
 	sys-apps/less
 	sys-apps/sed
-	sys-apps/shadow
 	sys-apps/systemd
 	sys-apps/util-linux
 	sys-fs/btrfs-progs
