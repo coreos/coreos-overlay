@@ -1,12 +1,11 @@
 # Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-apps/systemd/systemd-9999.ebuild,v 1.179 2015/07/11 16:39:36 floppym Exp $
+# $Header: /var/cvsroot/gentoo-x86/sys-apps/systemd/systemd-9999.ebuild,v 1.184 2015/08/01 15:10:12 floppym Exp $
 
 EAPI=5
 
 AUTOTOOLS_AUTORECONF=yes
 AUTOTOOLS_PRUNE_LIBTOOL_FILES=all
-PYTHON_COMPAT=( python{2_7,3_3,3_4} )
 CROS_WORKON_PROJECT="coreos/systemd"
 CROS_WORKON_REPO="git://github.com"
 
@@ -14,11 +13,9 @@ if [[ ${PV} == 9999 ]]; then
 	# Use ~arch instead of empty keywords for compatibility with cros-workon
 	KEYWORDS="~amd64 ~arm64 ~arm ~x86"
 else
-	CROS_WORKON_COMMIT="e28edc741ad20597c56d33124a10ab6d6adaec01"
+	CROS_WORKON_COMMIT="e1439a1472c5f691733b8ef10e702beac2496a63" # tag v225
 	KEYWORDS="amd64 arm64 ~arm ~x86"
 fi
-UNIFONT=unifont-8.0.01
-SRC_URI="terminal? ( http://unifoundry.com/pub/${UNIFONT}/font-builds/${UNIFONT}.hex.gz )"
 
 # cros-workon must be imported first, in cases where cros-workon and
 # another eclass exports the same function (say src_compile) we want
@@ -26,8 +23,7 @@ SRC_URI="terminal? ( http://unifoundry.com/pub/${UNIFONT}/font-builds/${UNIFONT}
 inherit cros-workon
 
 inherit autotools-utils bash-completion-r1 linux-info multilib \
-	multilib-minimal pam python-any-r1 systemd toolchain-funcs udev \
-	user
+	multilib-minimal pam systemd toolchain-funcs udev user
 
 DESCRIPTION="System and service manager for Linux"
 HOMEPAGE="http://www.freedesktop.org/wiki/Software/systemd"
@@ -36,7 +32,7 @@ LICENSE="GPL-2 LGPL-2.1 MIT public-domain"
 SLOT="0/2"
 IUSE="acl apparmor audit cryptsetup curl elfutils gcrypt gnuefi http
 	idn importd +kdbus +kmod +lz4 lzma nat pam policykit
-	qrcode +seccomp selinux ssl sysv-utils terminal test vanilla xkb"
+	qrcode +seccomp selinux ssl sysv-utils test vanilla xkb"
 
 # CoreOS specific use flags
 IUSE+=" man symlink-usr"
@@ -45,8 +41,8 @@ REQUIRED_USE="importd? ( curl gcrypt lzma )"
 
 MINKV="3.8"
 
-COMMON_DEPEND=">=sys-apps/util-linux-2.26:0=
-	sys-libs/libcap:0=
+COMMON_DEPEND=">=sys-apps/util-linux-2.26:0=[${MULTILIB_USEDEP}]
+	sys-libs/libcap:0=[${MULTILIB_USEDEP}]
 	!<sys-libs/glibc-2.16
 	acl? ( sys-apps/acl:0= )
 	apparmor? ( sys-libs/libapparmor:0= )
@@ -75,9 +71,6 @@ COMMON_DEPEND=">=sys-apps/util-linux-2.26:0=
 	sysv-utils? (
 		!sys-apps/systemd-sysv-utils
 		!sys-apps/sysvinit )
-	terminal? ( >=dev-libs/libevdev-1.2:0=
-		>=x11-libs/libxkbcommon-0.5:0=
-		>=x11-libs/libdrm-2.4:0= )
 	xkb? ( >=x11-libs/libxkbcommon-0.4.1:0= )
 	abi_x86_32? ( !<=app-emulation/emul-linux-x86-baselibs-20130224-r9
 		!app-emulation/emul-linux-x86-baselibs[-abi_x86_32(-)] )"
@@ -91,7 +84,7 @@ RDEPEND="${COMMON_DEPEND}
 
 # sys-apps/dbus: the daemon only (+ build-time lib dep for tests)
 PDEPEND=">=sys-apps/dbus-1.6.8-r1:0[systemd]
-	>=sys-apps/hwids-20130717-r1[udev]
+	>=sys-apps/hwids-20150417[udev]
 	policykit? ( sys-auth/polkit )
 	!vanilla? ( sys-apps/gentoo-systemd-integration )"
 
@@ -107,7 +100,6 @@ DEPEND="${COMMON_DEPEND}
 	ia64? ( >=sys-kernel/linux-headers-3.9 )
 	virtual/pkgconfig
 	gnuefi? ( >=sys-boot/gnu-efi-3.0.2 )
-	terminal? ( ${PYTHON_DEPS} )
 	test? ( >=sys-apps/dbus-1.6.8-r1:0 )"
 
 # Not required when building from unpatched tarballs, but we build from git.
@@ -178,10 +170,6 @@ src_configure() {
 	# Fix systems broken by bug #509454.
 	[[ ${MY_UDEVDIR} ]] || MY_UDEVDIR=/lib/udev
 
-	if use terminal; then
-		python_setup
-	fi
-
 	multilib-minimal_src_configure
 }
 
@@ -211,8 +199,6 @@ multilib_src_configure() {
 		# no deps
 		--enable-efi
 		--enable-ima
-		# Moved to dev-python/python-systemd
-		--disable-python-devel
 		--without-python
 
 		# Optional components/dependencies
@@ -241,8 +227,6 @@ multilib_src_configure() {
 		$(multilib_native_use_enable qrcode qrencode)
 		$(multilib_native_use_enable seccomp)
 		$(multilib_native_use_enable selinux)
-		$(multilib_native_use_enable terminal)
-		$(multilib_native_use_with terminal unifont "${WORKDIR}/${UNIFONT}.hex")
 		$(multilib_native_use_enable test tests)
 		$(multilib_native_use_enable test dbus)
 		$(multilib_native_use_enable xkb xkbcommon)
@@ -269,15 +253,6 @@ multilib_src_configure() {
 		# no default name servers
 		--with-dns-servers=
 	)
-
-	if ! multilib_is_native_abi; then
-		myeconfargs+=(
-			MOUNT_{CFLAGS,LIBS}=' '
-
-			ac_cv_search_cap_init=
-			ac_cv_header_sys_capability_h=yes
-		)
-	fi
 
 	# Work around bug 463846.
 	tc-export CC
