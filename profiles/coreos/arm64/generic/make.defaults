@@ -1,2 +1,2 @@
-CFLAGS="-O2 -pipe -mtune=generic"
+CFLAGS="-O2 -pipe -mtune=generic -g"
 CXXFLAGS="${CFLAGS}"
