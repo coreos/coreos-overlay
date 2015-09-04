@@ -1,0 +1,88 @@
+# arm64 keywords
+
+net-misc/curl ~arm64
+dev-libs/nspr ~arm64
+sys-apps/coreutils ~arm64
+app-text/asciidoc ~arm64
+
+=net-libs/libmicrohttpd-0.9.40 **
+=app-misc/ca-certificates-3.19.1 **
+
+=net-misc/iputils-20121221-r1 **
+
+=dev-cpp/gmock-1.6.0 **
+=dev-cpp/gtest-1.6.0-r2 **
+
+dev-vcs/git ~arm64
+sys-fs/squashfs-tools ~arm64
+net-dns/dnsmasq ~arm64
+
+app-emulation/rkt ~amd64
+
+dev-libs/libevent ~arm64
+net-misc/ntp ~arm64
+
+net-libs/libpcap ~arm64
+=net-analyzer/nmap-6.49_beta2 **
+
+app-crypt/pinentry ~arm64
+net-analyzer/tcpdump ~arm64
+dev-libs/dbus-glib ~arm64
+sys-block/parted ~arm64
+sys-fs/btrfs-progs ~arm64
+sys-apps/gptfdisk ~arm64
+dev-libs/protobuf ~arm64
+sys-apps/usbutils ~arm64
+net-misc/bridge-utils ~arm64
+net-libs/serf ~arm64
+dev-vcs/subversion ~arm64
+sys-libs/libseccomp ~arm64
+
+=dev-libs/apr-1.5.2 ~arm64
+=dev-libs/apr-util-1.5.4 ~arm64
+
+sys-process/lsof ~arm64
+
+net-fs/nfs-utils ~arm64
+
+=dev-db/sqlite-3.8.10.2 ~arm64
+
+#=sys-apps/smartmontools-9999 **
+=sys-apps/smartmontools-6.4 **
+
+
+=sys-block/thin-provisioning-tools-0.4.1 **
+=sys-fs/cryptsetup-1.6.7 **
+=sys-fs/xfsprogs-3.2.2-r1 **
+=sys-apps/i2c-tools-3.1.1-r1 **
+=sys-apps/ethtool-3.18 **
+=sys-apps/lshw-02.17b-r1 **
+=net-firewall/ebtables-2.0.10.4-r1 **
+=net-firewall/ipset-6.24 **
+=sys-fs/mdadm-3.3.2-r1 **
+=sys-apps/rng-tools-5 **
+=app-misc/jq-1.4-r1 **
+
+=net-misc/iperf-3.0.7 **
+=dev-libs/liblinear-196-r1 **
+
+=sys-libs/libsemanage-9999 **
+=sec-policy/selinux-base-policy-9999 **
+=sys-process/audit-2.4.1-r1 **
+=sec-policy/selinux-virt-9999 **
+=app-admin/setools-3.3.8-r7 **
+=sys-libs/libselinux-9999 **
+=sec-policy/selinux-unconfined-9999 **
+=sys-apps/policycoreutils-2.4 **
+=sys-libs/libsepol-9999 **
+=sec-policy/selinux-base-9999 **
+=sys-apps/checkpolicy-9999 **
+
+=virtual/acl-0-r1 **
+=net-misc/whois-5.2.10 **
+=net-misc/socat-2.0.0_beta8 **
+=app-admin/kubelet-1.0.1-r2 **
+
+=net-wireless/wireless-tools-30_pre9 ~arm64
+=net-wireless/iw-4.0 **
+
