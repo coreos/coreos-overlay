@@ -1,0 +1,64 @@
+#!/bin/bash
+
+ENV=$1
+leases_dir="/run/systemd/netif/leases"
+
+if [[ -z "$ENV" ]]; then
+    echo "usage: $0 /etc/environment" >&2
+    exit 1
+fi
+
+# Make sure that the file is writable
+touch $ENV
+if [[ $? -ne 0 ]]; then
+    echo "$0: unable to modify ${ENV}" >&2
+    exit 1
+fi
+
+# Clean up values
+sed -i -e '/^COREOS_PUBLIC_IPV4=/d' \
+    -e '/^COREOS_PRIVATE_IPV4=/d' \
+    "${ENV}"
+
+sed -i -e '/^NIC_[0-9]*_IPV4=/d' \
+    -e '/^NIC_[0-9]*_GATEWAY=/d' \
+    "${ENV}"
+
+# Fetch number of NIC
+nic_count=$(ip link show | grep ens | wc -l)
+
+# Loop until all lease files ready
+while true; do
+  if [[ $(find "${leases_dir}" -maxdepth 1 -type f -size +1c | wc -l) -ge $nic_count ]]; then
+    break
+  fi
+  sleep .5
+done
+
+# Get leases in var
+leases=$(find "${leases_dir}" -type f | sort)
+
+# Take first lease which should be the default NIC
+default_lease=$(echo "${leases}" | head -n1)
+DHCP_SERVER=$(cat $default_lease | awk -F= '/SERVER_ADDRESS/ { print $2 }')
+METADATA_URL="http://${DHCP_SERVER}/latest/meta-data/"
+
+block-until-url "${METADATA_URL}"
+
+PUBLIC_IP=$(curl --fail -s "${METADATA_URL}public-ipv4")
+echo COREOS_PUBLIC_IPV4=${PUBLIC_IP} >> $ENV
+
+PRIVATE_IP=$(curl --fail -s "${METADATA_URL}local-ipv4")
+echo COREOS_PRIVATE_IPV4=${PRIVATE_IP} >> $ENV
+
+# Loop to export interoute style info into ENV
+count=1
+for lease in $leases;
+do
+  ip=$(cat $lease | awk -F= '/^ADDRESS/ { print $2 }')
+  gateway=$(cat $lease | awk -F= '/SERVER_ADDRESS/ { print $2 }')
+  echo "NIC_${count}_IPV4"=${ip} >> $ENV
+  echo "NIC_${count}_GATEWAY"=${gateway} >> $ENV
+  count=$(expr $count + 1)
+done
+

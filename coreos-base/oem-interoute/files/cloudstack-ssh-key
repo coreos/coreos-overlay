@@ -1,0 +1,7 @@
+#!/bin/bash
+
+DHCP_SERVER=${NIC_1_GATEWAY}
+KEY_URL="http://${DHCP_SERVER}/latest/meta-data/public-keys"
+
+block-until-url "${KEY_URL}"
+curl --fail -s "${KEY_URL}" | update-ssh-keys -a cloudstack
