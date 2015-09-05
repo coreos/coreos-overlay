@@ -1,0 +1,7 @@
+#!/bin/bash
+
+DHCP_SERVER=${NIC_1_GATEWAY}
+USERDATA_URL="http://${DHCP_SERVER}/latest/user-data"
+
+block-until-url "${USERDATA_URL}"
+coreos-cloudinit --from-url="${USERDATA_URL}"

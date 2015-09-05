@@ -1,0 +1,61 @@
+#cloud-config
+
+coreos:
+    units:
+      - name: vmtoolsd.service
+        command: start
+        content: |
+          [Unit]
+          Description=VMware Tools Agent
+          Documentation=http://open-vm-tools.sourceforge.net/
+          ConditionVirtualization=vmware
+
+          [Service]
+          ExecStartPre=/usr/bin/ln -sfT /usr/share/oem/vmware-tools /etc/vmware-tools
+          ExecStart=/usr/share/oem/bin/vmtoolsd
+          TimeoutStopSec=5
+      - name: cloudstack-ssh-key.service
+        command: restart
+        runtime: yes
+        content: |
+          [Unit]
+          Description=Sets SSH key from metadata
+          Requires=coreos-setup-environment.service
+          After=coreos-setup-environment.service
+
+          [Service]
+          Type=oneshot
+          StandardOutput=journal+console
+          EnvironmentFile=/etc/environment
+          ExecStart=/usr/share/oem/bin/cloudstack-ssh-key
+      - name: cloudstack-cloudinit.service
+        command: restart
+        runtime: yes
+        content: |
+          [Unit]
+          Description=Cloudinit from CloudStack-style metadata
+          Requires=coreos-setup-environment.service
+          After=coreos-setup-environment.service
+
+          [Service]
+          Type=oneshot
+          EnvironmentFile=/etc/environment
+          ExecStart=/usr/share/oem/bin/cloudstack-coreos-cloudinit
+      - name: cloudstack-set-guest-password.service
+        runtime: yes
+        content: |
+          [Unit]
+          Description=CloudStack Guest Password Reset
+          Requires=coreos-setup-environment.service
+          After=coreos-setup-environment.service
+
+          [Service]
+          Type=oneshot
+          ExecStart=/usr/share/oem/bin/cloudstack-set-guest-password
+          EnvironmentFile=/etc/environment
+    oem:
+      id: interoute
+      name: Interoute 
+      version-id: @@OEM_VERSION_ID@@
+      home-url: http://interoute.com/
+      bug-report-url: https://github.com/coreos/bugs/issues
