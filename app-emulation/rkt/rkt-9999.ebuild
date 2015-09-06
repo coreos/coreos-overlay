@@ -14,16 +14,16 @@ CROS_WORKON_PROJECT="coreos/rkt"
 CROS_WORKON_LOCALNAME="rkt"
 CROS_WORKON_REPO="git://github.com"
 
+
 if [[ "${PV}" == "9999" ]]; then
 	KEYWORDS="~amd64"
-	PXE_VERSION="738.1.0"
-
-elif [[ "${PV}" == "0.7.0" ]]; then
+elif [[ "${PV}" == "0.8.1" ]]; then
 	KEYWORDS="amd64"
-	PXE_VERSION="709.0.0"
-	CROS_WORKON_COMMIT="9579f4bf57851a1a326c81ec2ab0ed2fdfab8d24"
+	CROS_WORKON_COMMIT="a4b17f07700afd4e24be0153ca4fc73c35e14c31"
 fi
 
+PXE_VERSION="794.1.0"
+PXE_SYSTEMD_VERSION="222"
 PXE_URI="http://alpha.release.core-os.net/amd64-usr/${PXE_VERSION}/coreos_production_pxe_image.cpio.gz"
 PXE_FILE="${PN}-pxe-${PXE_VERSION}.img"
 
@@ -35,7 +35,7 @@ HOMEPAGE="https://github.com/coreos/rkt"
 
 LICENSE="Apache-2.0"
 SLOT="0"
-IUSE="doc examples +rkt_stage1_coreos rkt_stage1_host rkt_stage1_src +actool"
+IUSE="doc examples +rkt_stage1_coreos rkt_stage1_host rkt_stage1_src +actool systemd"
 REQUIRED_USE="^^ ( rkt_stage1_coreos rkt_stage1_host rkt_stage1_src )"
 
 DEPEND=">=dev-lang/go-1.4.1
@@ -43,13 +43,13 @@ DEPEND=">=dev-lang/go-1.4.1
 	sys-fs/squashfs-tools
 	dev-perl/Capture-Tiny
 	rkt_stage1_src? (
-		>=sys-apps/systemd-220
+		>=sys-apps/systemd-222
 		app-shells/bash
 	)"
 RDEPEND="!app-emulation/rocket
 	actool? ( !app-emulation/actool )
 	rkt_stage1_host? (
-		>=sys-apps/systemd-220
+		~sys-apps/systemd-222
 		app-shells/bash
 	)"
 
@@ -62,14 +62,12 @@ src_configure() {
 
 	if use rkt_stage1_host; then
 		myeconfargs+=( --with-stage1="host" )
-	fi
-	if use rkt_stage1_src; then
+	elif use rkt_stage1_src; then
 		myeconfargs+=( --with-stage1="src" )
-	fi
-	if use rkt_stage1_coreos; then
+	elif use rkt_stage1_coreos; then
 		myeconfargs+=( --with-stage1="coreos" )
-		mkdir -p "${BUILDDIR}/tmp/usr_from_coreos/" || die
-		cp "${DISTDIR}/${PXE_FILE}" "${BUILDDIR}/tmp/usr_from_coreos/pxe.img" || die
+		myeconfargs+=( --with-coreos-local-pxe-image-path="${DISTDIR}/${PXE_FILE}" )
+		myeconfargs+=( --with-coreos-local-pxe-image-systemd-version=v"${PXE_SYSTEMD_VERSION}" )
 	fi
 
 	# Go's 6l linker does not support PIE, disable so cgo binaries
