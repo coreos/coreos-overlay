@@ -119,3 +119,8 @@ dev-util/checkbashisms
 =sys-apps/man-pages-4.00
 # Fixes conflict with man-pages 4.00
 =sys-apps/attr-2.4.47-r2
+
+# Upgrade to GCC 4.9, improves arm64 support, adds -fstack-protector-strong
+=sys-devel/gcc-4.9.3
+=cross-aarch64-cros-linux-gnu/gcc-4.9.3
+=cross-x86_64-cros-linux-gnu/gcc-4.9.3
