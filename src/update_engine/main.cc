@@ -8,7 +8,6 @@
 #include <base/command_line.h>
 #include <base/file_util.h>
 #include <base/logging.h>
-#include <base/string_util.h>
 #include <gflags/gflags.h>
 #include <glib.h>
 #include <sys/types.h>

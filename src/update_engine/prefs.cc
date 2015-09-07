@@ -6,9 +6,9 @@
 
 #include <base/file_util.h>
 #include <base/logging.h>
-#include <base/string_util.h>
 
 #include "strings/string_number_conversions.h"
+#include "strings/string_split.h"
 #include "update_engine/utils.h"
 
 using std::string;
@@ -68,7 +68,7 @@ bool Prefs::GetInt64(const string& key, int64_t* value) {
   string str_value;
   if (!GetString(key, &str_value))
     return false;
-  TrimWhitespaceASCII(str_value, TRIM_ALL, &str_value);
+  str_value = strings::TrimWhitespace(str_value);
   TEST_AND_RETURN_FALSE(strings::StringToInt64(str_value, value));
   return true;
 }
@@ -94,7 +94,9 @@ bool Prefs::GetFileNameForKey(const std::string& key, FilePath* filename) {
   TEST_AND_RETURN_FALSE(!key.empty());
   for (size_t i = 0; i < key.size(); ++i) {
     char c = key.at(i);
-    TEST_AND_RETURN_FALSE(IsAsciiAlpha(c) || IsAsciiDigit(c) ||
+    TEST_AND_RETURN_FALSE(('A' <= c && c <= 'Z') ||
+                          ('a' <= c && c <= 'z') ||
+                          ('0' <= c && c <= '9') ||
                           c == '_' || c == '-');
   }
   *filename = prefs_dir_.Append(key);

@@ -12,7 +12,6 @@
 #include <string>
 #include <vector>
 
-#include <base/string_util.h>
 #include <google/protobuf/repeated_field.h>
 
 #include "strings/string_printf.h"

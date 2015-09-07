@@ -11,7 +11,6 @@
 #include <string>
 
 #include <base/logging.h>
-#include <base/string_util.h>
 #include <base/time.h>
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>

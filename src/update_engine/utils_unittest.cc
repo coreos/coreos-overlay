@@ -10,7 +10,6 @@
 #include <string>
 #include <vector>
 
-#include <base/string_util.h>
 #include <gtest/gtest.h>
 
 #include "strings/string_printf.h"
@@ -29,6 +28,14 @@ class UtilsTest : public ::testing::Test { };
 TEST(UtilsTest, IsOfficialBuild) {
   // Pretty lame test...
   EXPECT_TRUE(utils::IsOfficialBuild());
+}
+
+TEST(UtilsTest, IsHTTPS) {
+  EXPECT_TRUE(utils::IsHTTPS("https://"));
+  EXPECT_TRUE(utils::IsHTTPS("https://host"));
+  EXPECT_TRUE(utils::IsHTTPS("HTTPS://host"));
+  EXPECT_FALSE(utils::IsHTTPS("http://host"));
+  EXPECT_FALSE(utils::IsHTTPS("bogus"));
 }
 
 TEST(UtilsTest, NormalizePathTest) {

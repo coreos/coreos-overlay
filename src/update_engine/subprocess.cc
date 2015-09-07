@@ -13,7 +13,6 @@
 #include <vector>
 
 #include <base/logging.h>
-#include <base/string_util.h>
 
 #include "strings/string_printf.h"
 #include "update_engine/utils.h"

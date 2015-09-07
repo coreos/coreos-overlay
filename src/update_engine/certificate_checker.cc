@@ -6,7 +6,6 @@
 
 #include <string>
 
-#include <base/string_util.h>
 #include <base/logging.h>
 #include <curl/curl.h>
 #include <openssl/evp.h>

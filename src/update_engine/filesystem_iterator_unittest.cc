@@ -5,11 +5,12 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+
 #include <set>
 #include <string>
 #include <vector>
+
 #include <gtest/gtest.h>
-#include "base/string_util.h"
 
 #include "strings/string_printf.h"
 #include "update_engine/filesystem_iterator.h"

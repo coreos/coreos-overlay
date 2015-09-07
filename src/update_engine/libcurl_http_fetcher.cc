@@ -8,7 +8,6 @@
 #include <string>
 
 #include <base/logging.h>
-#include <base/string_util.h>
 
 #include "strings/string_printf.h"
 #include "update_engine/certificate_checker.h"
@@ -135,10 +134,10 @@ void LibcurlHttpFetcher::ResumeTransfer(const std::string& url) {
   // For the sake of security if this is an official build lock down
   // the appropriate curl options for HTTP or HTTPS depending on the url.
   if (IsOfficialBuild()) {
-    if (StartsWithASCII(url_, "http://", false))
-      SetCurlOptionsForHttp();
-    else
+    if (utils::IsHTTPS(url_))
       SetCurlOptionsForHttps();
+    else
+      SetCurlOptionsForHttp();
   } else {
     LOG(INFO) << "Not setting http(s) curl options because we are in "
               << "test mode or running a dev/test image";

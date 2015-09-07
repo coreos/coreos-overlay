@@ -8,7 +8,6 @@
 
 #include "base/basictypes.h"
 #include "base/file_util.h"
-#include "base/string_util.h"
 #include "gtest/gtest.h"
 
 #include "strings/string_printf.h"
