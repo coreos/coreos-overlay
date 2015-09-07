@@ -10,12 +10,14 @@
 #include <string>
 #include <vector>
 
+#include <base/time.h>
 #include <gtest/gtest.h>
 
 #include "strings/string_printf.h"
 #include "update_engine/test_utils.h"
 #include "update_engine/utils.h"
 
+using base::TimeDelta;
 using std::map;
 using std::string;
 using std::vector;
@@ -220,6 +222,15 @@ TEST(UtilsTest, RunAsRootGetFilesystemSizeTest) {
   EXPECT_TRUE(utils::GetFilesystemSize(img, &block_count, &block_size));
   EXPECT_EQ(4096, block_size);
   EXPECT_EQ(10 * 1024 * 1024 / 4096, block_count);
+}
+
+TEST(UtilsTest, FormatTimeDeltaTest) {
+  EXPECT_EQ("1d0h0m0s", utils::FormatTimeDelta(TimeDelta::FromDays(1)));
+  EXPECT_EQ("1h0m0s", utils::FormatTimeDelta(TimeDelta::FromHours(1)));
+  EXPECT_EQ("1m0s", utils::FormatTimeDelta(TimeDelta::FromMinutes(1)));
+  EXPECT_EQ("1s", utils::FormatTimeDelta(TimeDelta::FromSeconds(1)));
+  EXPECT_EQ("0.000001s", utils::FormatTimeDelta(TimeDelta::FromMicroseconds(1)));
+  EXPECT_EQ("23h59m59s", utils::FormatTimeDelta(TimeDelta::FromSeconds(86399)));
 }
 
 }  // namespace chromeos_update_engine
