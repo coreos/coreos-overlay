@@ -121,6 +121,7 @@ dev-util/checkbashisms
 =sys-apps/attr-2.4.47-r2
 
 # Upgrade to GCC 4.9, improves arm64 support, adds -fstack-protector-strong
+# Note: ~arch for cross compilers much be explicit.
 =sys-devel/gcc-4.9.3
-=cross-aarch64-cros-linux-gnu/gcc-4.9.3
-=cross-x86_64-cros-linux-gnu/gcc-4.9.3
+=cross-aarch64-cros-linux-gnu/gcc-4.9.3 ~arm64
+=cross-x86_64-cros-linux-gnu/gcc-4.9.3  ~amd64
