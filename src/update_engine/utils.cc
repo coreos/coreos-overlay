@@ -15,9 +15,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <algorithm>
+#include <chrono>
+#include <ratio>
+#include <sstream>
 
 #include <base/file_path.h>
 #include <base/file_util.h>
@@ -609,40 +613,54 @@ gboolean GlibRunClosure(gpointer data) {
 }
 
 string FormatSecs(unsigned secs) {
-  return FormatTimeDelta(TimeDelta::FromSeconds(secs));
+  return ToString(std::chrono::seconds(secs));
 }
 
 string FormatTimeDelta(TimeDelta delta) {
-  // Canonicalize into days, hours, minutes, seconds and microseconds.
-  unsigned days = delta.InDays();
-  delta -= TimeDelta::FromDays(days);
-  unsigned hours = delta.InHours();
-  delta -= TimeDelta::FromHours(hours);
-  unsigned mins = delta.InMinutes();
-  delta -= TimeDelta::FromMinutes(mins);
-  unsigned secs = delta.InSeconds();
-  delta -= TimeDelta::FromSeconds(secs);
-  unsigned usecs = delta.InMicroseconds();
+  std::chrono::microseconds us(delta.InMicroseconds());
+  return ToString(us);
+}
 
-  // Construct and return string.
+string ToString(std::chrono::microseconds delta) {
+  using std::chrono::duration_cast;
+
+  std::ostringstream ss;
+  if (delta < delta.zero()) {
+    ss << "-";
+    delta = -delta;
+  }
+
+  // Canonicalize into days, hours, minutes, seconds and microseconds.
+  auto days = duration_cast<days_t>(delta);
+  delta -= days;
+  auto hours = duration_cast<std::chrono::hours>(delta);
+  delta -= hours;
+  auto mins = duration_cast<std::chrono::minutes>(delta);
+  delta -= mins;
+  auto secs = duration_cast<std::chrono::seconds>(delta);
+  delta -= secs;
+
   string str;
-  if (days)
-    str += StringPrintf("%ud", days);
-  if (days || hours)
-    str += StringPrintf("%uh", hours);
-  if (days || hours || mins)
-    str += StringPrintf("%um", mins);
-  str += StringPrintf("%u", secs);
+  if (days.count())
+    ss << days.count() << "d";
+  if (days.count() || hours.count())
+    ss << hours.count() << "h";
+  if (days.count() || hours.count() || mins.count())
+    ss << mins.count() << "m";
+  ss << secs.count();
+
+  unsigned usecs = delta.count();
   if (usecs) {
     int width = 6;
     while ((usecs / 10) * 10 == usecs) {
       usecs /= 10;
       width--;
     }
-    str += StringPrintf(".%0*u", width, usecs);
+    ss << StringPrintf(".%0*u", width, usecs);
   }
-  str += "s";
-  return str;
+
+  ss << "s";
+  return ss.str();
 }
 
 string ToString(const Time utc_time) {
@@ -655,6 +673,15 @@ string ToString(const Time utc_time) {
                       exp_time.hour,
                       exp_time.minute,
                       exp_time.second);
+}
+
+string ToString(const std::chrono::system_clock::time_point& tp) {
+  time_t tt = std::chrono::system_clock::to_time_t(tp);
+  char str[30];
+  struct tm utc;
+  gmtime_r(&tt, &utc);
+  strftime(str, sizeof(str), "%D %T UTC", &utc);
+  return string(str);
 }
 
 string ToString(bool b) {
