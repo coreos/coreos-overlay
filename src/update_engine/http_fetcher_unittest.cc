@@ -4,13 +4,14 @@
 
 #include <unistd.h>
 
+#include <chrono>
 #include <memory>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
 #include <base/logging.h>
-#include <base/time.h>
 #include <glib.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -28,7 +29,6 @@ using std::pair;
 using std::string;
 using std::vector;
 
-using base::TimeDelta;
 using strings::StringPrintf;
 using testing::_;
 using testing::SetArgumentPointee;
@@ -96,14 +96,14 @@ class PythonHttpServer : public HttpServer {
     }
     LOG(INFO) << "started http server with pid " << pid_;
     int rc = 1;
-    const TimeDelta kMaxSleep = TimeDelta::FromMinutes(60);
-    TimeDelta timeout = TimeDelta::FromMilliseconds(15);
+    const std::chrono::seconds kMaxSleep(60);
+    std::chrono::milliseconds timeout(15);
     started_ = true;
     while (rc && timeout < kMaxSleep) {
       // Wait before the first attempt also as it takes a while for the
       // test_http_server to be ready.
-      LOG(INFO) << "waiting for " << utils::FormatTimeDelta(timeout);
-      g_usleep(timeout.InMicroseconds());
+      LOG(INFO) << "waiting for " << utils::ToString(timeout);
+      std::this_thread::sleep_for(timeout);
       timeout *= 2;
 
       LOG(INFO) << "running wget to start";
