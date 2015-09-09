@@ -14,6 +14,18 @@ coreos:
         ExecStartPre=/usr/bin/ln -sfT /usr/share/oem/vmware-tools /etc/vmware-tools
         ExecStart=/usr/share/oem/bin/vmtoolsd
         TimeoutStopSec=5
+
+    - name: oem-cloudinit.service
+      command: restart
+      runtime: yes
+      content: |
+        [Unit]
+        Description=Cloudinit from VMware Backdoor
+
+        [Service]
+        Type=oneshot
+        ExecStart=/usr/bin/coreos-cloudinit --oem=vmware
+
   oem:
     bug-report-url: "https://github.com/coreos/bugs/issues"
     id: vmware
