@@ -14,7 +14,7 @@ if [[ ${PV} == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64 ~arm ~x86"
 else
 	CROS_WORKON_COMMIT="3a44d5510e53738177c0b2c1456f16c53b236b84"
-	KEYWORDS="amd64 arm64 ~arm ~x86"
+	KEYWORDS="~amd64 ~arm64 ~arm ~x86"
 fi
 
 # cros-workon must be imported first, in cases where cros-workon and
