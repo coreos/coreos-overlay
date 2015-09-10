@@ -28,6 +28,5 @@ After=initrd-systemd-resolved.service
 Type=oneshot
 TimeoutStartSec=30s
 Environment=OEM_ID=pxe
-Environment=FETCH_TIMEOUT=1m
 EnvironmentFile=-/mnt/oem/oem-release
-ExecStart=/usr/bin/ignition --root=/sysroot --oem=${OEM_ID} --stage=files --fetchtimeout=${FETCH_TIMEOUT}
+ExecStart=/usr/bin/ignition --root=/sysroot --oem=${OEM_ID} --stage=files --online-timeout=1m
