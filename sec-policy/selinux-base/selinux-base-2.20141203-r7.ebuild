@@ -52,6 +52,8 @@ src_prepare() {
 	fi
 
 	epatch "${FILESDIR}/kernel_mcs.diff"
+	epatch "${FILESDIR}/mcs_create.diff"
+	epatch "${FILESDIR}/mcs_range_target.diff"
 
 	cd "${S}/refpolicy"
 	make bare
