@@ -1,4 +1,4 @@
-From e029a605d5db033c5349142ef8a051658f586238 Mon Sep 17 00:00:00 2001
+From 0925cb3f7afbf104e9b5df5dea02dd0d8cdb0c2e Mon Sep 17 00:00:00 2001
 From: Josh Boyer <jwboyer@fedoraproject.org>
 Date: Tue, 27 Aug 2013 13:33:03 -0400
 Subject: [PATCH 13/14] efi: Add EFI_SECURE_BOOT bit
@@ -13,10 +13,10 @@ Signed-off-by: Josh Boyer <jwboyer@fedoraproject.org>
  2 files changed, 3 insertions(+)
 
 diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index 88dad73..d99c8c3 100644
+index c2e4f52..5def6b4 100644
 --- a/arch/x86/kernel/setup.c
 +++ b/arch/x86/kernel/setup.c
-@@ -1158,7 +1158,9 @@ void __init setup_arch(char **cmdline_p)
+@@ -1162,7 +1162,9 @@ void __init setup_arch(char **cmdline_p)
  
  #ifdef CONFIG_EFI_SECURE_BOOT_SIG_ENFORCE
  	if (boot_params.secure_boot) {
@@ -27,10 +27,10 @@ index 88dad73..d99c8c3 100644
  #endif
  
 diff --git a/include/linux/efi.h b/include/linux/efi.h
-index af5be03..aa4ee20 100644
+index 85ef051..de3e450 100644
 --- a/include/linux/efi.h
 +++ b/include/linux/efi.h
-@@ -943,6 +943,7 @@ extern int __init efi_setup_pcdp_console(char *);
+@@ -959,6 +959,7 @@ extern int __init efi_setup_pcdp_console(char *);
  #define EFI_PARAVIRT		6	/* Access is via a paravirt interface */
  #define EFI_ARCH_1		7	/* First arch-specific bit */
  #define EFI_DBG			8	/* Print additional debug info at runtime */
@@ -39,5 +39,5 @@ index af5be03..aa4ee20 100644
  #ifdef CONFIG_EFI
  /*
 -- 
-2.3.6
+2.4.3
 

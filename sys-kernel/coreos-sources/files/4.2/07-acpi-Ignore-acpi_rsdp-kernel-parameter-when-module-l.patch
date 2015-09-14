@@ -1,4 +1,4 @@
-From a9f8a4bbb86570f8f418e400eb9cfe284b8f62ea Mon Sep 17 00:00:00 2001
+From 9f838b6efbbabccbef59f278c13381c332e5b992 Mon Sep 17 00:00:00 2001
 From: Josh Boyer <jwboyer@redhat.com>
 Date: Mon, 25 Jun 2012 19:57:30 -0400
 Subject: [PATCH 07/14] acpi: Ignore acpi_rsdp kernel parameter when module
@@ -14,7 +14,7 @@ Signed-off-by: Josh Boyer <jwboyer@redhat.com>
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
-index 7ccba39..9cbdbcc 100644
+index 3b8963f..a5ae6a7 100644
 --- a/drivers/acpi/osl.c
 +++ b/drivers/acpi/osl.c
 @@ -44,6 +44,7 @@
@@ -25,7 +25,7 @@ index 7ccba39..9cbdbcc 100644
  
  #include <asm/io.h>
  #include <asm/uaccess.h>
-@@ -252,7 +253,7 @@ early_param("acpi_rsdp", setup_acpi_rsdp);
+@@ -255,7 +256,7 @@ early_param("acpi_rsdp", setup_acpi_rsdp);
  acpi_physical_address __init acpi_os_get_root_pointer(void)
  {
  #ifdef CONFIG_KEXEC
@@ -35,5 +35,5 @@ index 7ccba39..9cbdbcc 100644
  #endif
  
 -- 
-2.3.6
+2.4.3
 

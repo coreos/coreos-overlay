@@ -1,4 +1,4 @@
-From a79e89146431a294b7afe9ad4f170c9e263f36c2 Mon Sep 17 00:00:00 2001
+From 9b3e6387aadd3baa76e5c1abd7c9071b4871885a Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Fri, 9 Aug 2013 03:33:56 -0400
 Subject: [PATCH 08/14] kexec: Disable at runtime if the kernel enforces module
@@ -14,7 +14,7 @@ Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
  1 file changed, 8 insertions(+)
 
 diff --git a/kernel/kexec.c b/kernel/kexec.c
-index 7a36fdc..22d30d7 100644
+index a785c10..81d6b40 100644
 --- a/kernel/kexec.c
 +++ b/kernel/kexec.c
 @@ -36,6 +36,7 @@
@@ -25,7 +25,7 @@ index 7a36fdc..22d30d7 100644
  
  #include <asm/page.h>
  #include <asm/uaccess.h>
-@@ -1247,6 +1248,13 @@ SYSCALL_DEFINE4(kexec_load, unsigned long, entry, unsigned long, nr_segments,
+@@ -1258,6 +1259,13 @@ SYSCALL_DEFINE4(kexec_load, unsigned long, entry, unsigned long, nr_segments,
  		return -EPERM;
  
  	/*
@@ -40,5 +40,5 @@ index 7a36fdc..22d30d7 100644
  	 * This leaves us room for future extensions.
  	 */
 -- 
-2.3.6
+2.4.3
 

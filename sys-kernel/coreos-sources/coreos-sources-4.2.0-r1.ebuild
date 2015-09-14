@@ -27,6 +27,4 @@ ${PATCH_DIR}/10-Add-option-to-automatically-enforce-module-signature.patch \
 ${PATCH_DIR}/12-efi-Make-EFI_SECURE_BOOT_SIG_ENFORCE-depend-on-EFI.patch \
 ${PATCH_DIR}/13-efi-Add-EFI_SECURE_BOOT-bit.patch \
 ${PATCH_DIR}/14-hibernate-Disable-in-a-signed-modules-environment.patch \
-${PATCH_DIR}/15-cpuset-use-trialcs-mems_allowed-as-a-temp-variable.patch \
-${PATCH_DIR}/udp-fix-dst-races-with-multicast-early-demux.patch \
 ${PATCH_DIR}/net-wireless-wl18xx-Add-missing-MODULE_FIRMWARE.patch"
