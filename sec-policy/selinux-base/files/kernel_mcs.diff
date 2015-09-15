@@ -5,8 +5,8 @@ diff -ur refpolicy.orig/policy/modules/kernel/kernel.te refpolicy/policy/modules
  	#dev_manage_all_dev_nodes(kernel_t)
  	dev_setattr_generic_chr_files(kernel_t)
  ')
-+
++mcs_killall(kernel_t)
 +mcs_file_read_all(kernel_t)
 +mcs_file_write_all(kernel_t)
 +mcs_process_set_categories(kernel_t)
-+
++mcs_ptrace_all(kernel_t)

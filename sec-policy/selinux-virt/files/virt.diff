@@ -1,90 +1,34 @@
-diff -ur policy.orig/modules/contrib/virt.te policy/modules/contrib/virt.te
---- policy.orig/modules/contrib/virt.te	2015-06-24 14:19:59.049728749 -0700
-+++ policy/modules/contrib/virt.te	2015-06-24 14:21:57.426003987 -0700
-@@ -1243,3 +1243,86 @@
+diff -ur refpolicy.orig/policy/modules/contrib/virt.te refpolicy/policy/modules/contrib/virt.te
+--- refpolicy.orig/policy/modules/contrib/virt.te	2015-09-14 17:51:09.718791305 -0700
++++ refpolicy/policy/modules/contrib/virt.te	2015-09-14 17:49:19.560126433 -0700
+@@ -1243,3 +1243,30 @@
  files_pid_filetrans(virt_leaseshelper_t, virt_var_run_t, file)
  
  kernel_dontaudit_read_system_state(virt_leaseshelper_t)
 +
 +require {
-+        type unlabeled_t;
-+        type devpts_t;
 +        type kernel_t;
-+        type svirt_lxc_net_t;
-+        type svirt_lxc_file_t;
-+        type tmpfs_t;
-+        type proc_t;
-+        type sysfs_t;
-+        type var_lib_t;
-+        type init_var_run_t;
-+        type sysctl_t;
-+        type ptmx_t;
-+        type sysctl_kernel_t;
-+        type proc_kmsg_t;
-+        class fifo_file { write setattr read create unlink open };
-+        class process { execmem getcap transition sigchld };
-+        class chr_file { setattr read create getattr mounton write ioctl open };
-+        class capability { sys_chroot mknod };
-+        class fd use;
-+        class file { rename read lock execute_no_trans mounton ioctl unlink open append execute create write entrypoint };
-+        class filesystem { unmount mount remount };
-+        class sock_file { write create };
-+        class lnk_file { read create };
-+	class unix_stream_socket { connectto };
-+        class dir { rename setattr relabelfrom create reparent mounton write remove_name relabelto add_name };
++	type tmpfs_t;
++	type var_lib_t;
 +}
 +
 +allow kernel_t svirt_lxc_net_t:process transition;
-+allow svirt_lxc_net_t devpts_t:chr_file { write ioctl setattr read open getattr };
-+allow svirt_lxc_net_t devpts_t:filesystem mount;
-+allow svirt_lxc_net_t init_var_run_t:file { read open };
-+allow svirt_lxc_net_t kernel_t:fd use;
-+allow svirt_lxc_net_t kernel_t:process sigchld;
-+allow svirt_lxc_net_t kernel_t:unix_stream_socket { connectto };
++fs_manage_tmpfs_chr_files(svirt_lxc_net_t)
++fs_manage_tmpfs_dirs(svirt_lxc_net_t)
++fs_manage_tmpfs_files(svirt_lxc_net_t)
++fs_manage_tmpfs_sockets(svirt_lxc_net_t)
++fs_manage_tmpfs_symlinks(svirt_lxc_net_t)
++fs_remount_tmpfs(svirt_lxc_net_t)
 +kernel_read_messages(svirt_lxc_net_t)
-+allow svirt_lxc_net_t proc_kmsg_t:file mounton;
-+allow svirt_lxc_net_t proc_t:filesystem { mount remount };
-+
-+#!!!! The source type 'svirt_lxc_net_t' can write to a 'chr_file' of the following types:
-+# svirt_lxc_file_t, user_devpts_t, zero_device_t, null_device_t, devtty_t
-+
-+allow svirt_lxc_net_t ptmx_t:chr_file { read write ioctl open };
-+allow svirt_lxc_net_t self:capability { sys_chroot mknod };
++kernel_sigchld(svirt_lxc_net_t)
++kernel_use_fds(svirt_lxc_net_t)
 +allow svirt_lxc_net_t self:process getcap;
-+allow svirt_lxc_net_t svirt_lxc_file_t:file mounton;
-+allow svirt_lxc_net_t sysctl_kernel_t:file mounton;
-+allow svirt_lxc_net_t sysctl_t:dir mounton;
-+allow svirt_lxc_net_t sysfs_t:dir mounton;
-+allow svirt_lxc_net_t sysfs_t:filesystem mount;
-+allow svirt_lxc_net_t tmpfs_t:chr_file { read write create open mounton };
-+allow svirt_lxc_net_t tmpfs_t:dir { write remove_name create add_name mounton };
-+
-+#!!!! The source type 'svirt_lxc_net_t' can write to a 'fifo_file' of the following type:
-+# svirt_lxc_file_t
-+
-+allow svirt_lxc_net_t tmpfs_t:fifo_file { write setattr read create unlink open };
-+
-+#!!!! The source type 'svirt_lxc_net_t' can write to a 'file' of the following type:
-+# svirt_lxc_file_t
-+
-+allow svirt_lxc_net_t tmpfs_t:file { write read create unlink open };
-+allow svirt_lxc_net_t tmpfs_t:filesystem { mount remount };
-+allow svirt_lxc_net_t tmpfs_t:lnk_file { read create };
-+allow svirt_lxc_net_t tmpfs_t:sock_file create;
-+allow svirt_lxc_net_t unlabeled_t:dir mounton;
-+allow svirt_lxc_net_t unlabeled_t:file { read execute open };
-+allow svirt_lxc_net_t unlabeled_t:lnk_file read;
-+allow svirt_lxc_net_t var_run_t:sock_file write;
-+allow svirt_lxc_net_t var_lib_t:dir { rename setattr relabelfrom create reparent write relabelto remove_name add_name };
-+allow svirt_lxc_net_t var_lib_t:file { rename execute read lock create execute_no_trans write entrypoint unlink open append };
-+allow svirt_lxc_net_t var_lib_t:lnk_file create;
-+allow svirt_lxc_net_t devpts_t:filesystem unmount;
-+allow svirt_lxc_net_t proc_t:filesystem unmount;
++files_read_var_lib_files(svirt_lxc_net_t)
++files_read_var_lib_symlinks(svirt_lxc_net_t)
++term_use_generic_ptys(svirt_lxc_net_t)
++allow svirt_lxc_net_t tmpfs_t:chr_file { read write open };
++allow svirt_lxc_net_t self:capability sys_chroot;
 +allow svirt_lxc_net_t self:process getpgid;
-+allow svirt_lxc_net_t svirt_lxc_file_t:filesystem unmount;
-+allow svirt_lxc_net_t sysfs_t:filesystem unmount;
-+allow svirt_lxc_net_t tmpfs_t:chr_file ioctl;
-+allow svirt_lxc_net_t tmpfs_t:filesystem unmount;
-+allow svirt_lxc_net_t tmpfs_t:sock_file write;
-+allow svirt_lxc_net_t var_lib_t:file ioctl;
++allow svirt_lxc_net_t svirt_lxc_file_t:file { entrypoint mounton };
++allow svirt_lxc_net_t var_lib_t:file { execute execute_no_trans };
 +

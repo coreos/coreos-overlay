@@ -1,0 +1,20 @@
+diff -ur refpolicy.orig/policy/mcs refpolicy/policy/mcs
+--- refpolicy.orig/policy/mcs	2014-06-16 10:44:12.000000000 -0700
++++ refpolicy/policy/mcs	2015-09-09 16:40:55.212940234 -0700
+@@ -99,14 +99,14 @@
+ # New filesystem object labels must be dominated by the relabeling subject
+ # clearance, also the objects are single-level.
+ mlsconstrain file { create relabelto }
+-	(( h1 dom h2 ) and ( l2 eq h2 ));
++	((( h1 dom h2 ) and ( l2 eq h2 )) or (t1 == mcswriteall));
+ 
+ # new file labels must be dominated by the relabeling subject clearance
+ mlsconstrain { dir file lnk_file chr_file blk_file sock_file fifo_file } { relabelfrom }
+ 	( h1 dom h2 );
+ 
+ mlsconstrain { dir file lnk_file chr_file blk_file sock_file fifo_file } { create relabelto }
+-	(( h1 dom h2 ) and ( l2 eq h2 ));
++	((( h1 dom h2 ) and ( l2 eq h2 )) or (t1 == mcswriteall));
+ 
+ mlsconstrain process { transition dyntransition }
+ 	(( h1 dom h2 ) or ( t1 == mcssetcats ));

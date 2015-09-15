@@ -1,4 +1,4 @@
-From 4c471f14d2964118b1cbc7ec4440872215701c5f Mon Sep 17 00:00:00 2001
+From f77ad7f8cdc798a27a4e1f3f1951df958547265f Mon Sep 17 00:00:00 2001
 From: Josh Boyer <jwboyer@fedoraproject.org>
 Date: Fri, 20 Jun 2014 08:53:24 -0400
 Subject: [PATCH 14/14] hibernate: Disable in a signed modules environment
@@ -14,7 +14,7 @@ Signed-off-by: Josh Boyer <jwboyer@fedoraproject.org>
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/kernel/power/hibernate.c b/kernel/power/hibernate.c
-index 2329daa..48a8e82 100644
+index 690f78f..037303a 100644
 --- a/kernel/power/hibernate.c
 +++ b/kernel/power/hibernate.c
 @@ -29,6 +29,7 @@
@@ -35,5 +35,5 @@ index 2329daa..48a8e82 100644
  
  /**
 -- 
-2.3.6
+2.4.3
 
