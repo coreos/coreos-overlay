@@ -17,9 +17,9 @@ CROS_WORKON_REPO="git://github.com"
 
 if [[ "${PV}" == "9999" ]]; then
 	KEYWORDS="~amd64"
-elif [[ "${PV}" == "0.8.1" ]]; then
+else
 	KEYWORDS="amd64"
-	CROS_WORKON_COMMIT="a4b17f07700afd4e24be0153ca4fc73c35e14c31"
+	CROS_WORKON_COMMIT="a4b17f07700afd4e24be0153ca4fc73c35e14c31" # v0.8.1
 fi
 
 PXE_VERSION="794.1.0"
