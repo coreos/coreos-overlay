@@ -98,8 +98,8 @@ src_install() {
 	insinto /usr/share/rkt/
 	doins "${S}/${BUILDDIR}/bin/stage1.aci"
 
-	systemd_dounit "${FILESDIR}"/${PN}-gc.service
-	systemd_dounit "${FILESDIR}"/${PN}-gc.timer
+	systemd_dounit "${S}"/dist/init/systemd/${PN}-gc.service
+	systemd_dounit "${S}"/dist/init/systemd/${PN}-gc.timer
 	systemd_enable_service multi-user.target ${PN}-gc.timer
 	systemd_dounit "${S}"/dist/init/systemd/${PN}-metadata.service
 	systemd_dounit "${S}"/dist/init/systemd/${PN}-metadata.socket
