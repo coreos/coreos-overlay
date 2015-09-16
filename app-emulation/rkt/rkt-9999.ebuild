@@ -35,7 +35,7 @@ HOMEPAGE="https://github.com/coreos/rkt"
 
 LICENSE="Apache-2.0"
 SLOT="0"
-IUSE="doc examples +rkt_stage1_coreos rkt_stage1_host rkt_stage1_src +actool systemd"
+IUSE="doc examples +rkt_stage1_coreos rkt_stage1_host rkt_stage1_src +actool"
 REQUIRED_USE="^^ ( rkt_stage1_coreos rkt_stage1_host rkt_stage1_src )"
 
 DEPEND=">=dev-lang/go-1.4.1
