@@ -29,7 +29,7 @@ pkg_setup() {
 	linux-info_pkg_setup
 
 	if kernel_is -lt 2 6 16; then
-		die "Sorry, your kernel must be 2.6.16-rc5 or newer!"
+		ewarn "Sorry, your kernel must be 2.6.16-rc5 or newer!"
 	fi
 
 	# Needs to be done, as iscsid currently only starts, when having the iSCSI
