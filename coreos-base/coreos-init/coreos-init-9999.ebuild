@@ -31,6 +31,7 @@ REQUIRED_USE="symlink-usr"
 DEPEND="
 	app-emulation/docker
 	net-misc/openssh
+	net-nds/rpcbind
 	!<dev-db/etcd-0.0.1-r6
 	!coreos-base/oem-service
 	test? ( dev-lang/python:2.7 )
@@ -49,4 +50,7 @@ src_install() {
 	# Enable some sockets that aren't enabled by their own ebuilds.
 	systemd_enable_service sockets.target sshd.socket
 	systemd_enable_service sockets.target docker.socket
+
+	# Enable some services that aren't enabled elsewhere.
+	systemd_enable_service rpcbind.target rpcbind.service
 }

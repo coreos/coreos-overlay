@@ -1,8 +1,8 @@
-# Copyright 1999-2014 Gentoo Foundation
+# Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/net-fs/nfs-utils/nfs-utils-1.2.9-r3.ebuild,v 1.7 2014/08/11 13:38:48 vapier Exp $
+# $Id$
 
-EAPI="4"
+EAPI="5"
 
 inherit eutils flag-o-matic multilib autotools systemd
 
@@ -12,7 +12,7 @@ SRC_URI="mirror://sourceforge/nfs/${P}.tar.bz2"
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="alpha amd64 arm arm64 hppa ia64 ~mips ppc ppc64 s390 sh sparc x86"
+KEYWORDS="~alpha amd64 ~arm arm64 ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86"
 IUSE="caps ipv6 kerberos +libmount nfsdcld +nfsidmap +nfsv4 nfsv41 selinux tcpd +uuid"
 REQUIRED_USE="kerberos? ( nfsv4 )"
 RESTRICT="test" #315573
@@ -29,7 +29,7 @@ DEPEND_COMMON="tcpd? ( sys-apps/tcp-wrappers )
 	libmount? ( sys-apps/util-linux )
 	nfsdcld? ( >=dev-db/sqlite-3.3 )
 	nfsv4? (
-		>=dev-libs/libevent-1.0b
+		dev-libs/libevent
 		>=net-libs/libnfsidmap-0.21-r1
 		kerberos? (
 			>=net-libs/libtirpc-0.2.4-r1[kerberos]
@@ -37,29 +37,34 @@ DEPEND_COMMON="tcpd? ( sys-apps/tcp-wrappers )
 		)
 		nfsidmap? (
 			>=net-libs/libnfsidmap-0.24
-			sys-apps/keyutils
+			>=sys-apps/keyutils-1.5.9
 		)
 	)
 	nfsv41? (
 		sys-fs/lvm2
 	)
+	uuid? ( sys-apps/util-linux )"
+RDEPEND="${DEPEND_COMMON}
+	!net-nds/portmap
+	!<sys-apps/openrc-0.13.9
 	selinux? (
 		sec-policy/selinux-rpc
 		sec-policy/selinux-rpcbind
 	)
-	uuid? ( sys-apps/util-linux )"
-RDEPEND="${DEPEND_COMMON} !net-nds/portmap"
+"
 DEPEND="${DEPEND_COMMON}
 	virtual/pkgconfig"
 
 src_prepare() {
 	epatch "${FILESDIR}"/${PN}-1.1.4-mtab-sym.patch
 	epatch "${FILESDIR}"/${PN}-1.2.8-cross-build.patch
+	epatch "${FILESDIR}"/${PN}-1.3.2-background-statd.patch
 
 	sed \
 		-e "/^sbindir/s:= := \"${EPREFIX}\":g" \
 		-i utils/*/Makefile.am || die
 
+	epatch_user
 	eautoreconf
 }
 
@@ -110,12 +115,24 @@ src_install() {
 	fi
 
 	systemd_dotmpfilesd "${FILESDIR}"/nfs-utils.conf
-	systemd_dounit "${FILESDIR}"/nfsd.service
-	systemd_dounit "${FILESDIR}"/rpc-statd.service
-	systemd_dounit "${FILESDIR}"/rpc-mountd.service
-	systemd_dounit "${FILESDIR}"/rpc-idmapd.service
-	systemd_dounit "${FILESDIR}"/{proc-fs-nfsd,var-lib-nfs-rpc_pipefs}.mount
-	use nfsv4 && use kerberos && systemd_dounit "${FILESDIR}"/rpc-{gssd,svcgssd}.service
+	systemd_dounit systemd/*.{mount,service,target}
+	if ! use nfsv4 || ! use kerberos ; then
+		rm "${D}$(systemd_get_unitdir)"/rpc-{gssd,svcgssd}.service || die
+	fi
+	if ! use nfsv41 ; then
+		rm "${D}$(systemd_get_unitdir)"/nfs-blkmap.* || die
+	fi
+	rm "${D}$(systemd_get_unitdir)"/nfs-config.service || die
+	sed -i -r \
+		-e "/^EnvironmentFile=/d" \
+		-e '/^(After|Wants)=nfs-config.service$/d' \
+		-e 's:/usr/sbin/rpc.statd:/sbin/rpc.statd:' \
+		"${D}$(systemd_get_unitdir)"/* || die
+
+	# maintain compatibility with the old gentoo systemd unit names, since nfs-utils has units upstream now.
+	dosym nfs-server.service "$(systemd_get_unitdir)"/nfsd.service
+	dosym nfs-idmapd.service "$(systemd_get_unitdir)"/rpc-idmapd.service
+	dosym nfs-mountd.service "$(systemd_get_unitdir)"/rpc-mountd.service
 }
 
 pkg_postinst() {
@@ -129,4 +146,17 @@ pkg_postinst() {
 		einfo "Copying default ${f##*/} from ${EPREFIX}/usr/$(get_libdir)/nfs to ${EPREFIX}/var/lib/nfs"
 		cp -pPR "${f}" "${EROOT}"/var/lib/nfs/
 	done
+
+	if systemd_is_booted; then
+		if [[ ${REPLACING_VERSIONS} < 1.3.0 ]]; then
+			ewarn "We have switched to upstream systemd unit files. Since"
+			ewarn "they got renamed, you should probably enable the new ones."
+			ewarn "You can run 'equery files nfs-utils | grep systemd'"
+			ewarn "to know what services you need to enable now."
+		fi
+	else
+		ewarn "If you use OpenRC, the nfsmount service has been replaced with nfsclient."
+		ewarn "If you were using nfsmount, please add nfsclient and netmount to the"
+		ewarn "same runlevel as nfsmount."
+	fi
 }
