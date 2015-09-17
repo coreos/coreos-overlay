@@ -47,6 +47,7 @@ pkg_setup() {
 
 src_prepare() {
 	epatch "${FILESDIR}"/${P}-Makefiles.patch
+	epatch "${FILESDIR}"/${P}-remove-kernel-version-check.patch
 
 	sed -i -e 's:^\(iscsid.startup\)\s*=.*:\1 = /usr/sbin/iscsid:' etc/iscsid.conf || die
 }
@@ -62,7 +63,7 @@ src_configure() {
 src_compile() {
 	use debug && append-flags -DDEBUG_TCP -DDEBUG_SCSI
 
-	KSRC="${KV_DIR}" CFLAGS="" \
+	CFLAGS="" \
 	emake \
 		OPTFLAGS="${CFLAGS}" \
 		AR="$(tc-getAR)" CC="$(tc-getCC)" \
