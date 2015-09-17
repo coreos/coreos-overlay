@@ -86,7 +86,7 @@ src_install() {
 	doins "${FILESDIR}"/iscsidev.sh
 	insopts -m0644
 
-	keepdir /var/db/iscsi
-	fperms 700 /var/db/iscsi
+	systemd_dotmpfilesd "${FILESDIR}"/open-iscsi.conf
+
 	fperms 600 /etc/iscsi/iscsid.conf
 }
