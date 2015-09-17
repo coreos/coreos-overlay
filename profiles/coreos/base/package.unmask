@@ -1,2 +1,7 @@
 # masked upstream due to lua dep, but we don't enable lua support
 ~net-analyzer/nmap-6.40
+
+# masked in portage-stable, but is unmasked in upstream.
+# remove this when upstream portage-stable package.mask is sync'd.
+=sys-block/open-iscsi-2.0.873
+
