@@ -46,7 +46,7 @@ select_docker_driver() {
         btrfs)
             export DOCKER_DRIVER=btrfs
             ;;
-        ext4|tmpfs) # As of 3.18
+        ext4|tmpfs|xfs) # As of 4.1
             export DOCKER_DRIVER=overlay
             ;;
         *)
