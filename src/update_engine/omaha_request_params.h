@@ -9,7 +9,6 @@
 #include <vector>
 
 #include <base/basictypes.h>
-#include <base/time.h>
 #include <gtest/gtest_prod.h>  // for FRIEND_TEST
 
 // This gathers local system information and prepares info used by the
