@@ -6,17 +6,11 @@
 
 namespace files {
 
-#if defined(FILE_PATH_USES_WIN_SEPARATORS)
-const FilePath::CharType FilePath::kSeparators[] = FILE_PATH_LITERAL("\\/");
-#else  // FILE_PATH_USES_WIN_SEPARATORS
 const FilePath::CharType FilePath::kSeparators[] = FILE_PATH_LITERAL("/");
-#endif  // FILE_PATH_USES_WIN_SEPARATORS
 
 const size_t FilePath::kSeparatorsLength = arraysize(kSeparators);
 
 const FilePath::CharType FilePath::kCurrentDirectory[] = FILE_PATH_LITERAL(".");
 const FilePath::CharType FilePath::kParentDirectory[] = FILE_PATH_LITERAL("..");
-
-const FilePath::CharType FilePath::kExtensionSeparator = FILE_PATH_LITERAL('.');
 
 }  // namespace files

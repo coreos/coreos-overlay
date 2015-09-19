@@ -7,7 +7,6 @@
 
 #include <stdio.h>
 
-#include "base/logging.h"
 #include "base/memory/scoped_ptr.h"
 #include "base/scoped_generic.h"
 #include "build/build_config.h"

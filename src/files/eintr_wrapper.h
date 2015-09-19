@@ -8,17 +8,11 @@
 // that should be masked) to go unnoticed, there is a limit after which the
 // caller will nonetheless see an EINTR in Debug builds.
 //
-// On Windows, this wrapper macro does nothing.
-//
 // Don't wrap close calls in HANDLE_EINTR. Use IGNORE_EINTR if the return
 // value of close is significant. See http://crbug.com/269623.
 
 #ifndef FILES_EINTR_WRAPPER_H_
 #define FILES_EINTR_WRAPPER_H_
-
-#include "build/build_config.h"
-
-#if defined(OS_POSIX)
 
 #include <errno.h>
 
@@ -56,12 +50,5 @@
   } while (0); \
   eintr_wrapper_result; \
 })
-
-#else
-
-#define HANDLE_EINTR(x) (x)
-#define IGNORE_EINTR(x) (x)
-
-#endif  // OS_POSIX
 
 #endif  // FILES_EINTR_WRAPPER_H_

@@ -4,8 +4,6 @@
 
 #include "files/file_enumerator.h"
 
-#include "files/file_util.h"
-
 namespace files {
 
 FileEnumerator::FileInfo::~FileInfo() {

@@ -109,41 +109,14 @@
 #include <vector>
 
 #include "base/compiler_specific.h"
-#include "base/containers/hash_tables.h"
-#include "base/strings/string16.h"
-#include "base/strings/string_piece.h"
-#include "build/build_config.h"
-
-// Windows-style drive letter support and pathname separator characters can be
-// enabled and disabled independently, to aid testing.  These #defines are
-// here so that the same setting can be used in both the implementation and
-// in the unit test.
-#if defined(OS_WIN)
-#define FILE_PATH_USES_DRIVE_LETTERS
-#define FILE_PATH_USES_WIN_SEPARATORS
-#endif  // OS_WIN
 
 namespace files {
-
-class Pickle;
-class PickleIterator;
 
 // An abstraction to isolate users from the differences between native
 // pathnames on different platforms.
 class FilePath {
  public:
-#if defined(OS_POSIX)
-  // On most platforms, native pathnames are char arrays, and the encoding
-  // may or may not be specified.  On Mac OS X, native pathnames are encoded
-  // in UTF-8.
   typedef std::string StringType;
-#elif defined(OS_WIN)
-  // On Windows, for Unicode-aware applications, native pathnames are wchar_t
-  // arrays encoded in UTF-16.
-  typedef std::wstring StringType;
-#endif  // OS_WIN
-
-  typedef BasicStringPiece<StringType> StringPieceType;
   typedef StringType::value_type CharType;
 
   // Null-terminated array of separators used to separate components in
@@ -160,9 +133,6 @@ class FilePath {
 
   // A special path component meaning "the parent directory."
   static const CharType kParentDirectory[];
-
-  // The character used to identify a file extension.
-  static const CharType kExtensionSeparator;
 
   FilePath();
   FilePath(const FilePath& that);
@@ -230,62 +200,6 @@ class FilePath {
   // this is the only situation in which BaseName will return an absolute path.
   FilePath BaseName() const WARN_UNUSED_RESULT;
 
-  // Returns ".jpg" for path "C:\pics\jojo.jpg", or an empty string if
-  // the file has no extension.  If non-empty, Extension() will always start
-  // with precisely one ".".  The following code should always work regardless
-  // of the value of path.  For common double-extensions like .tar.gz and
-  // .user.js, this method returns the combined extension.  For a single
-  // component, use FinalExtension().
-  // new_path = path.RemoveExtension().value().append(path.Extension());
-  // ASSERT(new_path == path.value());
-  // NOTE: this is different from the original file_util implementation which
-  // returned the extension without a leading "." ("jpg" instead of ".jpg")
-  StringType Extension() const WARN_UNUSED_RESULT;
-
-  // Returns the path's file extension, as in Extension(), but will
-  // never return a double extension.
-  //
-  // TODO(davidben): Check all our extension-sensitive code to see if
-  // we can rename this to Extension() and the other to something like
-  // LongExtension(), defaulting to short extensions and leaving the
-  // long "extensions" to logic like base::GetUniquePathNumber().
-  StringType FinalExtension() const WARN_UNUSED_RESULT;
-
-  // Returns "C:\pics\jojo" for path "C:\pics\jojo.jpg"
-  // NOTE: this is slightly different from the similar file_util implementation
-  // which returned simply 'jojo'.
-  FilePath RemoveExtension() const WARN_UNUSED_RESULT;
-
-  // Removes the path's file extension, as in RemoveExtension(), but
-  // ignores double extensions.
-  FilePath RemoveFinalExtension() const WARN_UNUSED_RESULT;
-
-  // Inserts |suffix| after the file name portion of |path| but before the
-  // extension.  Returns "" if BaseName() == "." or "..".
-  // Examples:
-  // path == "C:\pics\jojo.jpg" suffix == " (1)", returns "C:\pics\jojo (1).jpg"
-  // path == "jojo.jpg"         suffix == " (1)", returns "jojo (1).jpg"
-  // path == "C:\pics\jojo"     suffix == " (1)", returns "C:\pics\jojo (1)"
-  // path == "C:\pics.old\jojo" suffix == " (1)", returns "C:\pics.old\jojo (1)"
-  FilePath InsertBeforeExtension(
-      StringPieceType suffix) const WARN_UNUSED_RESULT;
-  FilePath InsertBeforeExtensionASCII(
-      StringPiece suffix) const WARN_UNUSED_RESULT;
-
-  // Adds |extension| to |file_name|. Returns the current FilePath if
-  // |extension| is empty. Returns "" if BaseName() == "." or "..".
-  FilePath AddExtension(StringPieceType extension) const WARN_UNUSED_RESULT;
-
-  // Replaces the extension of |file_name| with |extension|.  If |file_name|
-  // does not have an extension, then |extension| is added.  If |extension| is
-  // empty, then the extension is removed from |file_name|.
-  // Returns "" if BaseName() == "." or "..".
-  FilePath ReplaceExtension(StringPieceType extension) const WARN_UNUSED_RESULT;
-
-  // Returns true if the file path matches the specified extension. The test is
-  // case insensitive. Don't forget the leading period if appropriate.
-  bool MatchesExtension(StringPieceType extension) const;
-
   // Returns a FilePath by appending a separator and the supplied path
   // component to this object's path.  Append takes care to avoid adding
   // excessive separators if this object's path already ends with a separator.
@@ -324,103 +238,6 @@ class FilePath {
   // directory (e.g. has a path component that is "..").
   bool ReferencesParent() const;
 
-  // Return a Unicode human-readable version of this path.
-  // Warning: you can *not*, in general, go from a display name back to a real
-  // path.  Only use this when displaying paths to users, not just when you
-  // want to stuff a string16 into some other API.
-  string16 LossyDisplayName() const;
-
-  // Return the path as ASCII, or the empty string if the path is not ASCII.
-  // This should only be used for cases where the FilePath is representing a
-  // known-ASCII filename.
-  std::string MaybeAsASCII() const;
-
-  // Return the path as UTF-8.
-  //
-  // This function is *unsafe* as there is no way to tell what encoding is
-  // used in file names on POSIX systems other than Mac and Chrome OS,
-  // although UTF-8 is practically used everywhere these days. To mitigate
-  // the encoding issue, this function internally calls
-  // SysNativeMBToWide() on POSIX systems other than Mac and Chrome OS,
-  // per assumption that the current locale's encoding is used in file
-  // names, but this isn't a perfect solution.
-  //
-  // Once it becomes safe to to stop caring about non-UTF-8 file names,
-  // the SysNativeMBToWide() hack will be removed from the code, along
-  // with "Unsafe" in the function name.
-  std::string AsUTF8Unsafe() const;
-
-  // Similar to AsUTF8Unsafe, but returns UTF-16 instead.
-  string16 AsUTF16Unsafe() const;
-
-  // Returns a FilePath object from a path name in UTF-8. This function
-  // should only be used for cases where you are sure that the input
-  // string is UTF-8.
-  //
-  // Like AsUTF8Unsafe(), this function is unsafe. This function
-  // internally calls SysWideToNativeMB() on POSIX systems other than Mac
-  // and Chrome OS, to mitigate the encoding issue. See the comment at
-  // AsUTF8Unsafe() for details.
-  static FilePath FromUTF8Unsafe(const std::string& utf8);
-
-  // Similar to FromUTF8Unsafe, but accepts UTF-16 instead.
-  static FilePath FromUTF16Unsafe(const string16& utf16);
-
-  void WriteToPickle(Pickle* pickle) const;
-  bool ReadFromPickle(PickleIterator* iter);
-
-  // Normalize all path separators to backslash on Windows
-  // (if FILE_PATH_USES_WIN_SEPARATORS is true), or do nothing on POSIX systems.
-  FilePath NormalizePathSeparators() const;
-
-  // Normalize all path separattors to given type on Windows
-  // (if FILE_PATH_USES_WIN_SEPARATORS is true), or do nothing on POSIX systems.
-  FilePath NormalizePathSeparatorsTo(CharType separator) const;
-
-  // Compare two strings in the same way the file system does.
-  // Note that these always ignore case, even on file systems that are case-
-  // sensitive. If case-sensitive comparison is ever needed, add corresponding
-  // methods here.
-  // The methods are written as a static method so that they can also be used
-  // on parts of a file path, e.g., just the extension.
-  // CompareIgnoreCase() returns -1, 0 or 1 for less-than, equal-to and
-  // greater-than respectively.
-  static int CompareIgnoreCase(StringPieceType string1,
-                               StringPieceType string2);
-  static bool CompareEqualIgnoreCase(StringPieceType string1,
-                                     StringPieceType string2) {
-    return CompareIgnoreCase(string1, string2) == 0;
-  }
-  static bool CompareLessIgnoreCase(StringPieceType string1,
-                                    StringPieceType string2) {
-    return CompareIgnoreCase(string1, string2) < 0;
-  }
-
-#if defined(OS_MACOSX)
-  // Returns the string in the special canonical decomposed form as defined for
-  // HFS, which is close to, but not quite, decomposition form D. See
-  // http://developer.apple.com/mac/library/technotes/tn/tn1150.html#UnicodeSubtleties
-  // for further comments.
-  // Returns the epmty string if the conversion failed.
-  static StringType GetHFSDecomposedForm(StringPieceType string);
-
-  // Special UTF-8 version of FastUnicodeCompare. Cf:
-  // http://developer.apple.com/mac/library/technotes/tn/tn1150.html#StringComparisonAlgorithm
-  // IMPORTANT: The input strings must be in the special HFS decomposed form!
-  // (cf. above GetHFSDecomposedForm method)
-  static int HFSFastUnicodeCompare(StringPieceType string1,
-                                   StringPieceType string2);
-#endif
-
-#if defined(OS_ANDROID)
-  // On android, file selection dialog can return a file with content uri
-  // scheme(starting with content://). Content uri needs to be opened with
-  // ContentResolver to guarantee that the app has appropriate permissions
-  // to access it.
-  // Returns true if the path is a content uri, or false otherwise.
-  bool IsContentUri() const;
-#endif
-
  private:
   // Remove trailing separators from this object.  If the path is absolute, it
   // will never be stripped any more than to refer to the absolute root
@@ -440,27 +257,7 @@ void PrintTo(const FilePath& path, std::ostream* out);
 
 }  // namespace files
 
-// Macros for string literal initialization of FilePath::CharType[], and for
-// using a FilePath::CharType[] in a printf-style format string.
-#if defined(OS_POSIX)
 #define FILE_PATH_LITERAL(x) x
 #define PRFilePath "s"
-#elif defined(OS_WIN)
-#define FILE_PATH_LITERAL(x) L ## x
-#define PRFilePath "ls"
-#endif  // OS_WIN
-
-// Provide a hash function so that hash_sets and maps can contain FilePath
-// objects.
-namespace BASE_HASH_NAMESPACE {
-
-template<>
-struct hash<base::FilePath> {
-  size_t operator()(const base::FilePath& f) const {
-    return hash<base::FilePath::StringType>()(f.value());
-  }
-};
-
-}  // namespace BASE_HASH_NAMESPACE
 
 #endif  // FILES_FILE_PATH_H_

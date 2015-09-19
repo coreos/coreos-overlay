@@ -6,7 +6,6 @@
 
 #include <gtest/gtest.h>
 
-#include "base/files/file.h"
 #include "files/file_util.h"
 #include "files/scoped_temp_dir.h"
 
@@ -93,21 +92,5 @@ TEST(ScopedTempDir, MultipleInvocations) {
   EXPECT_FALSE(dir.CreateUniqueTempDir());
   EXPECT_FALSE(other_dir.CreateUniqueTempDir());
 }
-
-#if defined(OS_WIN)
-TEST(ScopedTempDir, LockedTempDir) {
-  ScopedTempDir dir;
-  EXPECT_TRUE(dir.CreateUniqueTempDir());
-  base::File file(dir.path().Append(FILE_PATH_LITERAL("temp")),
-                  base::File::FLAG_CREATE_ALWAYS | base::File::FLAG_WRITE);
-  EXPECT_TRUE(file.IsValid());
-  EXPECT_EQ(base::File::FILE_OK, file.error_details());
-  EXPECT_FALSE(dir.Delete());  // We should not be able to delete.
-  EXPECT_FALSE(dir.path().empty());  // We should still have a valid path.
-  file.Close();
-  // Now, we should be able to delete.
-  EXPECT_TRUE(dir.Delete());
-}
-#endif  // defined(OS_WIN)
 
 }  // namespace files

@@ -9,7 +9,6 @@
 #include <fnmatch.h>
 
 #include "base/logging.h"
-#include "base/threading/thread_restrictions.h"
 
 namespace files {
 
@@ -29,10 +28,6 @@ FilePath FileEnumerator::FileInfo::GetName() const {
 
 int64 FileEnumerator::FileInfo::GetSize() const {
   return stat_.st_size;
-}
-
-base::Time FileEnumerator::FileInfo::GetLastModifiedTime() const {
-  return base::Time::FromTimeT(stat_.st_mtime);
 }
 
 // FileEnumerator --------------------------------------------------------------
@@ -118,13 +113,11 @@ FileEnumerator::FileInfo FileEnumerator::GetInfo() const {
 
 bool FileEnumerator::ReadDirectory(std::vector<FileInfo>* entries,
                                    const FilePath& source, bool show_links) {
-  base::ThreadRestrictions::AssertIOAllowed();
   DIR* dir = opendir(source.value().c_str());
   if (!dir)
     return false;
 
-#if !defined(OS_LINUX) && !defined(OS_MACOSX) && !defined(OS_BSD) && \
-    !defined(OS_SOLARIS) && !defined(OS_ANDROID)
+#if 0
   #error Port warning: depending on the definition of struct dirent, \
          additional space for pathname may be needed
 #endif

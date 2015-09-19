@@ -10,15 +10,9 @@
 
 #include "base/basictypes.h"
 #include "files/file_path.h"
-#include "base/time/time.h"
-#include "build/build_config.h"
 
-#if defined(OS_WIN)
-#include <windows.h>
-#elif defined(OS_POSIX)
 #include <sys/stat.h>
 #include <unistd.h>
-#endif
 
 namespace files {
 
@@ -49,35 +43,21 @@ class FileEnumerator {
     FilePath GetName() const;
 
     int64 GetSize() const;
-    Time GetLastModifiedTime() const;
 
-#if defined(OS_WIN)
-    // Note that the cAlternateFileName (used to hold the "short" 8.3 name)
-    // of the WIN32_FIND_DATA will be empty. Since we don't use short file
-    // names, we tell Windows to omit it which speeds up the query slightly.
-    const WIN32_FIND_DATA& find_data() const { return find_data_; }
-#elif defined(OS_POSIX)
     const struct stat& stat() const { return stat_; }
-#endif
 
    private:
     friend class FileEnumerator;
 
-#if defined(OS_WIN)
-    WIN32_FIND_DATA find_data_;
-#elif defined(OS_POSIX)
     struct stat stat_;
     FilePath filename_;
-#endif
   };
 
   enum FileType {
     FILES                 = 1 << 0,
     DIRECTORIES           = 1 << 1,
     INCLUDE_DOT_DOT       = 1 << 2,
-#if defined(OS_POSIX)
     SHOW_SYM_LINKS        = 1 << 4,
-#endif
   };
 
   // |root_path| is the starting directory to search for. It may or may not end
@@ -123,13 +103,6 @@ class FileEnumerator {
   // Returns true if the given path should be skipped in enumeration.
   bool ShouldSkip(const FilePath& path);
 
-#if defined(OS_WIN)
-  // True when find_data_ is valid.
-  bool has_find_data_;
-  WIN32_FIND_DATA find_data_;
-  HANDLE find_handle_;
-#elif defined(OS_POSIX)
-
   // Read the filenames in source into the vector of DirectoryEntryInfo's
   static bool ReadDirectory(std::vector<FileInfo>* entries,
                             const FilePath& source, bool show_links);
@@ -139,7 +112,6 @@ class FileEnumerator {
 
   // The next entry to use from the directory_entries_ vector
   size_t current_directory_entry_;
-#endif
 
   FilePath root_path_;
   bool recursive_;

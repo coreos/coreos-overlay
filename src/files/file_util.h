@@ -8,15 +8,7 @@
 #ifndef FILES_FILE_UTIL_H_
 #define FILES_FILE_UTIL_H_
 
-#include "build/build_config.h"
-
-#if defined(OS_WIN)
-#include <windows.h>
-#elif defined(OS_POSIX)
 #include <sys/stat.h>
-#include <unistd.h>
-#endif
-
 #include <stdio.h>
 
 #include <set>
@@ -27,17 +19,9 @@
 #include "base/files/file.h"
 #include "files/file_path.h"
 #include "base/memory/scoped_ptr.h"
-#include "base/strings/string16.h"
-
-#if defined(OS_POSIX)
-#include "base/file_descriptor_posix.h"
-#include "base/logging.h"
 #include "files/eintr_wrapper.h"
-#endif
 
 namespace files {
-
-class Time;
 
 //-----------------------------------------------------------------------------
 // Functions that involve filesystem access or modification:
@@ -46,13 +30,6 @@ class Time;
 // error. On POSIX, this function fails if the path does not exist. This
 // function can result in I/O so it can be slow.
 FilePath MakeAbsoluteFilePath(const FilePath& input);
-
-// Returns the total number of bytes used by all the files under |root_path|.
-// If the path does not exist the function returns 0.
-//
-// This function is implemented using the FileEnumerator class so it is not
-// particularly speedy in any platform.
-int64 ComputeDirectorySize(const FilePath& root_path);
 
 // Deletes the given path, whether it's a file or a directory.
 // If it's a directory, it's perfectly happy to delete all of the
@@ -67,15 +44,6 @@ int64 ComputeDirectorySize(const FilePath& root_path);
 // WARNING: USING THIS WITH recursive==true IS EQUIVALENT
 //          TO "rm -rf", SO USE WITH CAUTION.
 bool DeleteFile(const FilePath& path, bool recursive);
-
-#if defined(OS_WIN)
-// Schedules to delete the given path, whether it's a file or a directory, until
-// the operating system is restarted.
-// Note:
-// 1) The file/directory to be deleted should exist in a temp folder.
-// 2) The directory to be deleted must be empty.
-bool DeleteFileAfterReboot(const FilePath& path);
-#endif
 
 // Moves the given path, whether it's a file or a directory.
 // If a simple rename is not possible, such as in the case where the paths are
@@ -125,16 +93,6 @@ bool PathIsWritable(const FilePath& path);
 // Returns true if the given path exists and is a directory, false otherwise.
 bool DirectoryExists(const FilePath& path);
 
-// Returns true if the contents of the two files given are equal, false
-// otherwise.  If either file can't be read, returns false.
-bool ContentsEqual(const FilePath& filename1,
-                               const FilePath& filename2);
-
-// Returns true if the contents of the two text files given are equal, false
-// otherwise.  This routine treats "\r\n" and "\n" as equivalent.
-bool TextContentsEqual(const FilePath& filename1,
-                                   const FilePath& filename2);
-
 // Reads the file at |path| into |contents| and returns true on success and
 // false on error.  For security reasons, a |path| containing path traversal
 // components ('..') is treated as a read error and |contents| is set to empty.
@@ -156,8 +114,6 @@ bool ReadFileToString(const FilePath& path, std::string* contents);
 bool ReadFileToString(const FilePath& path,
                       std::string* contents,
                       size_t max_size);
-
-#if defined(OS_POSIX)
 
 // Read exactly |bytes| bytes from file descriptor |fd|, storing the result
 // in |buffer|. This function is protected against EINTR and partial reads.
@@ -198,8 +154,6 @@ bool GetPosixFilePermissions(const FilePath& path, int* mode);
 // the permission of a file which the symlink points to.
 bool SetPosixFilePermissions(const FilePath& path, int mode);
 
-#endif  // OS_POSIX
-
 // Returns true if the given directory is empty
 bool IsDirectoryEmpty(const FilePath& dir_path);
 
@@ -210,14 +164,6 @@ bool IsDirectoryEmpty(const FilePath& dir_path);
 // permissions are set so that other users on the system can't edit them while
 // they're open (which can lead to security issues).
 bool GetTempDir(FilePath* path);
-
-// Get the home directory. This is more complicated than just getenv("HOME")
-// as it knows to fall back on getpwent() etc.
-//
-// You should not generally call this directly. Instead use DIR_HOME with the
-// path service which will use this function but cache the value.
-// Path service may also override DIR_HOME.
-FilePath GetHomeDir();
 
 // Creates a temporary file. The full path is placed in |path|, and the
 // function returns true if was successful in creating the file. The file will
@@ -271,42 +217,14 @@ bool GetFileSize(const FilePath& file_path, int64* file_size);
 // or if |real_path| would be longer than MAX_PATH characters.
 bool NormalizeFilePath(const FilePath& path, FilePath* real_path);
 
-#if defined(OS_WIN)
-
-// Given a path in NT native form ("\Device\HarddiskVolumeXX\..."),
-// return in |drive_letter_path| the equivalent path that starts with
-// a drive letter ("C:\...").  Return false if no such path exists.
-bool DevicePathToDriveLetterPath(const FilePath& device_path,
-                                             FilePath* drive_letter_path);
-
-// Given an existing file in |path|, set |real_path| to the path
-// in native NT format, of the form "\Device\HarddiskVolumeXX\..".
-// Returns false if the path can not be found. Empty files cannot
-// be resolved with this function.
-bool NormalizeToNativeFilePath(const FilePath& path,
-                                           FilePath* nt_path);
-#endif
-
 // This function will return if the given file is a symlink or not.
 bool IsLink(const FilePath& file_path);
-
-// Returns information about the given file path.
-bool GetFileInfo(const FilePath& file_path, File::Info* info);
-
-// Sets the time of the last access and the time of the last modification.
-bool TouchFile(const FilePath& path,
-                           const Time& last_accessed,
-                           const Time& last_modified);
 
 // Wrapper for fopen-like calls. Returns non-NULL FILE* on success.
 FILE* OpenFile(const FilePath& filename, const char* mode);
 
 // Closes file opened by OpenFile. Returns true on success.
 bool CloseFile(FILE* file);
-
-// Associates a standard FILE stream with an existing File. Note that this
-// functions take ownership of the existing File.
-FILE* FileToFILE(File file, const char* mode);
 
 // Truncates an open file to end at the location of the current file pointer.
 // This is a cross-platform analog to Windows' SetEndOfFile() function.
@@ -320,90 +238,13 @@ int ReadFile(const FilePath& filename, char* data, int max_size);
 // previously there.  Returns the number of bytes written, or -1 on error.
 int WriteFile(const FilePath& filename, const char* data, int size);
 
-#if defined(OS_POSIX)
 // Appends |data| to |fd|. Does not close |fd| when done.  Returns true iff
 // |size| bytes of |data| were written to |fd|.
 bool WriteFileDescriptor(const int fd, const char* data, int size);
-#endif
 
 // Appends |data| to |filename|.  Returns true iff |size| bytes of |data| were
 // written to |filename|.
 bool AppendToFile(const FilePath& filename, const char* data, int size);
-
-// Gets the current working directory for the process.
-bool GetCurrentDirectory(FilePath* path);
-
-// Sets the current working directory for the process.
-bool SetCurrentDirectory(const FilePath& path);
-
-// Attempts to find a number that can be appended to the |path| to make it
-// unique. If |path| does not exist, 0 is returned.  If it fails to find such
-// a number, -1 is returned. If |suffix| is not empty, also checks the
-// existence of it with the given suffix.
-int GetUniquePathNumber(const FilePath& path,
-                                    const FilePath::StringType& suffix);
-
-#if defined(OS_POSIX)
-// Test that |path| can only be changed by a given user and members of
-// a given set of groups.
-// Specifically, test that all parts of |path| under (and including) |base|:
-// * Exist.
-// * Are owned by a specific user.
-// * Are not writable by all users.
-// * Are owned by a member of a given set of groups, or are not writable by
-//   their group.
-// * Are not symbolic links.
-// This is useful for checking that a config file is administrator-controlled.
-// |base| must contain |path|.
-bool VerifyPathControlledByUser(const base::FilePath& base,
-                                            const base::FilePath& path,
-                                            uid_t owner_uid,
-                                            const std::set<gid_t>& group_gids);
-#endif  // defined(OS_POSIX)
-
-#if defined(OS_MACOSX) && !defined(OS_IOS)
-// Is |path| writable only by a user with administrator privileges?
-// This function uses Mac OS conventions.  The super user is assumed to have
-// uid 0, and the administrator group is assumed to be named "admin".
-// Testing that |path|, and every parent directory including the root of
-// the filesystem, are owned by the superuser, controlled by the group
-// "admin", are not writable by all users, and contain no symbolic links.
-// Will return false if |path| does not exist.
-bool VerifyPathControlledByAdmin(const base::FilePath& path);
-#endif  // defined(OS_MACOSX) && !defined(OS_IOS)
-
-// Returns the maximum length of path component on the volume containing
-// the directory |path|, in the number of FilePath::CharType, or -1 on failure.
-int GetMaximumPathComponentLength(const base::FilePath& path);
-
-#if defined(OS_LINUX)
-// Broad categories of file systems as returned by statfs() on Linux.
-enum FileSystemType {
-  FILE_SYSTEM_UNKNOWN,  // statfs failed.
-  FILE_SYSTEM_0,        // statfs.f_type == 0 means unknown, may indicate AFS.
-  FILE_SYSTEM_ORDINARY,       // on-disk filesystem like ext2
-  FILE_SYSTEM_NFS,
-  FILE_SYSTEM_SMB,
-  FILE_SYSTEM_CODA,
-  FILE_SYSTEM_MEMORY,         // in-memory file system
-  FILE_SYSTEM_CGROUP,         // cgroup control.
-  FILE_SYSTEM_OTHER,          // any other value.
-  FILE_SYSTEM_TYPE_COUNT
-};
-
-// Attempts determine the FileSystemType for |path|.
-// Returns false if |path| doesn't exist.
-bool GetFileSystemType(const FilePath& path, FileSystemType* type);
-#endif
-
-#if defined(OS_POSIX)
-// Get a temporary directory for shared memory files. The directory may depend
-// on whether the destination is intended for executable files, which in turn
-// depends on how /dev/shmem was mounted. As a result, you must supply whether
-// you intend to create executable shmem segments so this function can find
-// an appropriate location.
-bool GetShmemTempDir(bool executable, FilePath* path);
-#endif
 
 // Internal --------------------------------------------------------------------
 
@@ -412,15 +253,6 @@ namespace internal {
 // Same as Move but allows paths with traversal components.
 // Use only with extreme care.
 bool MoveUnsafe(const FilePath& from_path, const FilePath& to_path);
-
-#if defined(OS_WIN)
-// Copy from_path to to_path recursively and then delete from_path recursively.
-// Returns true if all operations succeed.
-// This function simulates Move(), but unlike Move() it works across volumes.
-// This function is not transactional.
-bool CopyAndDeleteDirectory(const FilePath& from_path,
-                                        const FilePath& to_path);
-#endif  // defined(OS_WIN)
 
 }  // namespace internal
 }  // namespace files
