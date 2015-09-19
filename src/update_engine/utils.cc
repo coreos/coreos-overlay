@@ -38,8 +38,6 @@
 #include "update_engine/system_state.h"
 #include "update_engine/update_attempter.h"
 
-using base::Time;
-using base::TimeDelta;
 using std::min;
 using std::string;
 using std::vector;
@@ -616,11 +614,6 @@ string FormatSecs(unsigned secs) {
   return ToString(std::chrono::seconds(secs));
 }
 
-string FormatTimeDelta(TimeDelta delta) {
-  std::chrono::microseconds us(delta.InMicroseconds());
-  return ToString(us);
-}
-
 string ToString(std::chrono::microseconds delta) {
   using std::chrono::duration_cast;
 
@@ -661,18 +654,6 @@ string ToString(std::chrono::microseconds delta) {
 
   ss << "s";
   return ss.str();
-}
-
-string ToString(const Time utc_time) {
-  Time::Exploded exp_time;
-  utc_time.UTCExplode(&exp_time);
-  return StringPrintf("%d/%d/%d %d:%02d:%02d GMT",
-                      exp_time.month,
-                      exp_time.day_of_month,
-                      exp_time.year,
-                      exp_time.hour,
-                      exp_time.minute,
-                      exp_time.second);
 }
 
 string ToString(const std::chrono::system_clock::time_point& tp) {

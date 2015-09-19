@@ -15,7 +15,6 @@
 #include <vector>
 
 #include <base/posix/eintr_wrapper.h>
-#include <base/time.h>
 #include <ext2fs/ext2fs.h>
 #include <glib.h>
 
@@ -155,7 +154,6 @@ bool GetFilesystemSizeFromFD(int fd,
 
 // Returns the string representation of the given UTC time.
 // such as "11/14/2011 14:05:30 UTC".
-std::string ToString(const base::Time utc_time);
 std::string ToString(const std::chrono::system_clock::time_point& tp);
 
 // Returns true or false depending on the value of b.
@@ -255,9 +253,6 @@ std::string FormatSecs(unsigned secs);
 // for fractions. Seconds are always shown, but fractions thereof are only shown
 // when applicable.
 std::string ToString(std::chrono::microseconds delta);
-
-// Deprecated, use ToString(std::chrono::microseconds)
-std::string FormatTimeDelta(base::TimeDelta delta);
 
 // This method transforms the given error code to be suitable for
 // error classification purposes by removing the higher order bits and
