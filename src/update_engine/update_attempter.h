@@ -7,11 +7,11 @@
 
 #include <time.h>
 
+#include <chrono>
 #include <memory>
 #include <string>
 #include <vector>
 
-#include <base/time.h>
 #include <glib.h>
 #include <gtest/gtest_prod.h>  // for FRIEND_TEST
 
@@ -198,9 +198,9 @@ class UpdateAttempter : public ActionProcessorDelegate,
   void BuildUpdateActions(bool interactive);
 
   // Last status notification timestamp used for throttling. Use monotonic
-  // TimeTicks to ensure that notifications are sent even if the system clock is
-  // set back in the middle of an update.
-  base::TimeTicks last_notify_time_;
+  // steady_clock to ensure that notifications are sent even if the system
+  // clock is set back in the middle of an update.
+  std::chrono::steady_clock::time_point last_notify_time_;
 
   std::vector<std::shared_ptr<AbstractAction> > actions_;
   std::unique_ptr<ActionProcessor> processor_;

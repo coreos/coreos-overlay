@@ -33,9 +33,8 @@
 #include "update_engine/system_state.h"
 #include "update_engine/update_check_scheduler.h"
 
-using base::TimeDelta;
-using base::TimeTicks;
 using google::protobuf::NewPermanentCallback;
+using std::chrono::steady_clock;
 using std::make_pair;
 using std::shared_ptr;
 using std::set;
@@ -399,7 +398,7 @@ void UpdateAttempter::BytesReceived(uint64_t received,
   if (status_ != UPDATE_STATUS_DOWNLOADING ||
       progress == total ||
       pct - download_progress_ >= kDeltaPercent ||
-      TimeTicks::Now() - last_notify_time_ >= TimeDelta::FromSeconds(10)) {
+      steady_clock::now() - last_notify_time_ >= std::chrono::seconds(10)) {
     download_progress_ = pct;
     SetStatusAndNotify(UPDATE_STATUS_DOWNLOADING, kUpdateNoticeUnspecified);
   }
@@ -486,7 +485,7 @@ void UpdateAttempter::BroadcastStatus() {
   if (!dbus_service_) {
     return;
   }
-  last_notify_time_ = TimeTicks::Now();
+  last_notify_time_ = steady_clock::now();
   update_engine_service_emit_status_update(
       dbus_service_,
       last_checked_time_,
