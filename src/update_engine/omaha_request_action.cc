@@ -11,7 +11,6 @@
 #include <string>
 
 #include <base/logging.h>
-#include <base/time.h>
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
 
@@ -23,8 +22,6 @@
 #include "update_engine/prefs_interface.h"
 #include "update_engine/utils.h"
 
-using base::Time;
-using base::TimeDelta;
 using std::string;
 using strings::StringPrintf;
 

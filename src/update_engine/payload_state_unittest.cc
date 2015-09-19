@@ -14,8 +14,7 @@
 #include "update_engine/test_utils.h"
 #include "update_engine/utils.h"
 
-using base::Time;
-using base::TimeDelta;
+using std::chrono::system_clock;
 using std::string;
 using strings::StringPrintf;
 using testing::_;
@@ -377,19 +376,19 @@ TEST(PayloadStateTest, NoBackoffForDeltaPayloads) {
 
 static void CheckPayloadBackoffState(PayloadState* payload_state,
                                      int expected_attempt_number,
-                                     TimeDelta expected_days) {
+                                     utils::days_t expected_days) {
   payload_state->DownloadComplete();
   EXPECT_EQ(expected_attempt_number, payload_state->GetPayloadAttemptNumber());
   EXPECT_TRUE(payload_state->ShouldBackoffDownload());
-  Time backoff_expiry_time = payload_state->GetBackoffExpiryTime();
+  auto backoff_expiry_time = payload_state->GetBackoffExpiryTime();
   // Add 1 hour extra to the 6 hour fuzz check to tolerate edge cases.
-  TimeDelta max_fuzz_delta = TimeDelta::FromHours(7);
-  Time expected_min_time = Time::Now() + expected_days - max_fuzz_delta;
-  Time expected_max_time = Time::Now() + expected_days + max_fuzz_delta;
-  EXPECT_LT(expected_min_time.ToInternalValue(),
-            backoff_expiry_time.ToInternalValue());
-  EXPECT_GT(expected_max_time.ToInternalValue(),
-            backoff_expiry_time.ToInternalValue());
+  std::chrono::hours max_fuzz_delta(7);
+  auto expected_min_time = system_clock::now() + expected_days - max_fuzz_delta;
+  auto expected_max_time = system_clock::now() + expected_days + max_fuzz_delta;
+  EXPECT_LT(system_clock::to_time_t(expected_min_time),
+            system_clock::to_time_t(backoff_expiry_time));
+  EXPECT_GT(system_clock::to_time_t(expected_max_time),
+            system_clock::to_time_t(backoff_expiry_time));
 }
 
 TEST(PayloadStateTest, BackoffPeriodsAreInCorrectRange) {
@@ -401,16 +400,16 @@ TEST(PayloadStateTest, BackoffPeriodsAreInCorrectRange) {
   EXPECT_TRUE(payload_state.Initialize(&prefs));
   SetupPayloadStateWith2Urls("Hash8939", &payload_state, &response);
 
-  CheckPayloadBackoffState(&payload_state, 1,  TimeDelta::FromDays(1));
-  CheckPayloadBackoffState(&payload_state, 2,  TimeDelta::FromDays(2));
-  CheckPayloadBackoffState(&payload_state, 3,  TimeDelta::FromDays(4));
-  CheckPayloadBackoffState(&payload_state, 4,  TimeDelta::FromDays(8));
-  CheckPayloadBackoffState(&payload_state, 5,  TimeDelta::FromDays(16));
-  CheckPayloadBackoffState(&payload_state, 6,  TimeDelta::FromDays(16));
-  CheckPayloadBackoffState(&payload_state, 7,  TimeDelta::FromDays(16));
-  CheckPayloadBackoffState(&payload_state, 8,  TimeDelta::FromDays(16));
-  CheckPayloadBackoffState(&payload_state, 9,  TimeDelta::FromDays(16));
-  CheckPayloadBackoffState(&payload_state, 10,  TimeDelta::FromDays(16));
+  CheckPayloadBackoffState(&payload_state, 1,  utils::days_t(1));
+  CheckPayloadBackoffState(&payload_state, 2,  utils::days_t(2));
+  CheckPayloadBackoffState(&payload_state, 3,  utils::days_t(4));
+  CheckPayloadBackoffState(&payload_state, 4,  utils::days_t(8));
+  CheckPayloadBackoffState(&payload_state, 5,  utils::days_t(16));
+  CheckPayloadBackoffState(&payload_state, 6,  utils::days_t(16));
+  CheckPayloadBackoffState(&payload_state, 7,  utils::days_t(16));
+  CheckPayloadBackoffState(&payload_state, 8,  utils::days_t(16));
+  CheckPayloadBackoffState(&payload_state, 9,  utils::days_t(16));
+  CheckPayloadBackoffState(&payload_state, 10, utils::days_t(16));
 }
 
 TEST(PayloadStateTest, BackoffLogicCanBeDisabled) {

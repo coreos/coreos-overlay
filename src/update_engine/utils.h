@@ -5,15 +5,16 @@
 #ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_UTILS_H__
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_UTILS_H__
 
-#include <algorithm>
 #include <errno.h>
+
+#include <algorithm>
+#include <chrono>
 #include <set>
 #include <string>
 #include <unistd.h>
 #include <vector>
 
 #include <base/posix/eintr_wrapper.h>
-#include <base/time.h>
 #include <ext2fs/ext2fs.h>
 #include <glib.h>
 
@@ -25,6 +26,9 @@ namespace chromeos_update_engine {
 class SystemState;
 
 namespace utils {
+
+// Days doesn't have an standard type but it is a common unit in our code.
+using days_t = std::chrono::duration<int, std::ratio<86400>>;
 
 // Returns true if this is an official Chrome OS build, false otherwise.
 bool IsOfficialBuild();
@@ -149,8 +153,8 @@ bool GetFilesystemSizeFromFD(int fd,
                              int* out_block_size);
 
 // Returns the string representation of the given UTC time.
-// such as "11/14/2011 14:05:30 GMT".
-std::string ToString(const base::Time utc_time);
+// such as "11/14/2011 14:05:30 UTC".
+std::string ToString(const std::chrono::system_clock::time_point& tp);
 
 // Returns true or false depending on the value of b.
 std::string ToString(bool b);
@@ -242,13 +246,13 @@ gboolean GlibRunClosure(gpointer data);
 // shown in the result.
 std::string FormatSecs(unsigned secs);
 
-// Converts a TimeDelta into human readable notation including days, hours,
+// Converts a duration into human readable notation including days, hours,
 // minutes, seconds and fractions of a second down to microsecond granularity,
 // as necessary; for example, an output of 5d2h0m15.053s means that the input
 // time was precise to the milliseconds only. Zero padding not applied, except
 // for fractions. Seconds are always shown, but fractions thereof are only shown
 // when applicable.
-std::string FormatTimeDelta(base::TimeDelta delta);
+std::string ToString(std::chrono::microseconds delta);
 
 // This method transforms the given error code to be suitable for
 // error classification purposes by removing the higher order bits and

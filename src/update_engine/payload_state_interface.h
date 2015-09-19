@@ -5,6 +5,7 @@
 #ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_PAYLOAD_STATE_INTERFACE_H__
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_PAYLOAD_STATE_INTERFACE_H__
 
+#include <chrono>
 #include <string>
 
 #include "update_engine/action_processor.h"
@@ -62,7 +63,7 @@ class PayloadStateInterface {
   virtual uint32_t GetUrlFailureCount() = 0;
 
   // Returns the expiry time for the current backoff period.
-  virtual base::Time GetBackoffExpiryTime() = 0;
+  virtual std::chrono::system_clock::time_point GetBackoffExpiryTime() = 0;
  };
 
 }  // namespace chromeos_update_engine

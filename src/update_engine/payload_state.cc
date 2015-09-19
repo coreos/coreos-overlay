@@ -12,8 +12,7 @@
 #include "update_engine/prefs.h"
 #include "update_engine/utils.h"
 
-using base::Time;
-using base::TimeDelta;
+using std::chrono::system_clock;
 using std::min;
 using std::string;
 using strings::StringPrintf;
@@ -220,13 +219,14 @@ bool PayloadState::ShouldBackoffDownload() {
     return false;
   }
 
-  if (backoff_expiry_time_.is_null()) {
+  const auto since_epoch = backoff_expiry_time_.time_since_epoch();
+  if (since_epoch == since_epoch.zero()) {
     LOG(INFO) << "No backoff expiry time has been set. "
               << "Can proceed with the download";
     return false;
   }
 
-  if (backoff_expiry_time_ < Time::Now()) {
+  if (backoff_expiry_time_ < system_clock::now()) {
     LOG(INFO) << "The backoff expiry time ("
               << utils::ToString(backoff_expiry_time_)
               << ") has elapsed. Can proceed with the download";
@@ -281,12 +281,12 @@ void PayloadState::IncrementFailureCount() {
 void PayloadState::UpdateBackoffExpiryTime() {
   if (response_.disable_payload_backoff) {
     LOG(INFO) << "Resetting backoff expiry time as payload backoff is disabled";
-    SetBackoffExpiryTime(Time());
+    SetBackoffExpiryTime(system_clock::time_point());
     return;
   }
 
   if (GetPayloadAttemptNumber() == 0) {
-    SetBackoffExpiryTime(Time());
+    SetBackoffExpiryTime(system_clock::time_point());
     return;
   }
 
@@ -307,11 +307,10 @@ void PayloadState::UpdateBackoffExpiryTime() {
   // We don't want all retries to happen exactly at the same time when
   // retrying after backoff. So add some random minutes to fuzz.
   int fuzz_minutes = utils::FuzzInt(0, kMaxBackoffFuzzMinutes);
-  TimeDelta next_backoff_interval = TimeDelta::FromDays(num_days) +
-                                    TimeDelta::FromMinutes(fuzz_minutes);
+  std::chrono::minutes next_backoff_interval(num_days*24*60 + fuzz_minutes);
   LOG(INFO) << "Incrementing the backoff expiry time by "
-            << utils::FormatTimeDelta(next_backoff_interval);
-  SetBackoffExpiryTime(Time::Now() + next_backoff_interval);
+            << utils::ToString(next_backoff_interval);
+  SetBackoffExpiryTime(system_clock::now() + next_backoff_interval);
 }
 
 void PayloadState::ResetPersistedState() {
@@ -433,23 +432,23 @@ void PayloadState::LoadBackoffExpiryTime() {
   if (!prefs_->GetInt64(kPrefsBackoffExpiryTime, &stored_value))
     return;
 
-  Time stored_time = Time::FromInternalValue(stored_value);
-  if (stored_time > Time::Now() + TimeDelta::FromDays(kMaxBackoffDays)) {
+  auto stored_time = system_clock::from_time_t(stored_value);
+  if (stored_time > system_clock::now() + utils::days_t(kMaxBackoffDays)) {
     LOG(ERROR) << "Invalid backoff expiry time ("
                << utils::ToString(stored_time)
                << ") in persisted state. Resetting.";
-    stored_time = Time();
+    stored_time = system_clock::now();
   }
   SetBackoffExpiryTime(stored_time);
 }
 
-void PayloadState::SetBackoffExpiryTime(const Time& new_time) {
+void PayloadState::SetBackoffExpiryTime(const system_clock::time_point& new_time) {
   CHECK(prefs_);
   backoff_expiry_time_ = new_time;
   LOG(INFO) << "Backoff Expiry Time = "
             << utils::ToString(backoff_expiry_time_);
   prefs_->SetInt64(kPrefsBackoffExpiryTime,
-                   backoff_expiry_time_.ToInternalValue());
+                   system_clock::to_time_t(backoff_expiry_time_));
 }
 
 }  // namespace chromeos_update_engine

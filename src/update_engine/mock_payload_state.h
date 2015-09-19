@@ -29,7 +29,7 @@ class MockPayloadState: public PayloadStateInterface {
   MOCK_METHOD0(GetPayloadAttemptNumber, uint32_t());
   MOCK_METHOD0(GetUrlIndex, uint32_t());
   MOCK_METHOD0(GetUrlFailureCount, uint32_t());
-  MOCK_METHOD0(GetBackoffExpiryTime, base::Time());
+  MOCK_METHOD0(GetBackoffExpiryTime, std::chrono::system_clock::time_point());
 };
 
 }  // namespace chromeos_update_engine

@@ -5,7 +5,7 @@
 #ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_PAYLOAD_STATE_H__
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_PAYLOAD_STATE_H__
 
-#include <base/time.h>
+#include <chrono>
 
 #include "update_engine/payload_state_interface.h"
 #include "update_engine/prefs_interface.h"
@@ -59,7 +59,7 @@ class PayloadState : public PayloadStateInterface {
     return url_failure_count_;
   }
 
-  virtual inline base::Time GetBackoffExpiryTime() {
+  virtual inline std::chrono::system_clock::time_point GetBackoffExpiryTime() {
     return backoff_expiry_time_;
   }
 
@@ -130,7 +130,7 @@ class PayloadState : public PayloadStateInterface {
   // Sets the backoff expiry time to the given value. Also persists the value
   // being set so that we resume from the same value in case of a process
   // restart.
-  void SetBackoffExpiryTime(const base::Time& new_time);
+  void SetBackoffExpiryTime(const std::chrono::system_clock::time_point& new_time);
 
   // Interface object with which we read/write persisted state. This must
   // be set by calling the Initialize method before calling any other method.
@@ -166,7 +166,7 @@ class PayloadState : public PayloadStateInterface {
 
   // The timestamp until which we've to wait before attempting to download the
   // payload again, so as to backoff repeated downloads.
-  base::Time backoff_expiry_time_;
+  std::chrono::system_clock::time_point backoff_expiry_time_;
 
   // Returns the number of URLs in the current response.
   // Note: This value will be 0 if this method is called before we receive

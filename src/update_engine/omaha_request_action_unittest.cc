@@ -7,7 +7,6 @@
 
 #include <glib.h>
 
-#include "base/time.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
@@ -22,8 +21,6 @@
 #include "update_engine/test_utils.h"
 #include "update_engine/utils.h"
 
-using base::Time;
-using base::TimeDelta;
 using std::string;
 using std::vector;
 using strings::StringPrintf;

@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <errno.h>
 
+#include <chrono>
 #include <map>
 #include <string>
 #include <vector>
@@ -16,6 +17,10 @@
 #include "update_engine/test_utils.h"
 #include "update_engine/utils.h"
 
+using std::chrono::hours;
+using std::chrono::minutes;
+using std::chrono::seconds;
+using std::chrono::microseconds;
 using std::map;
 using std::string;
 using std::vector;
@@ -220,6 +225,15 @@ TEST(UtilsTest, RunAsRootGetFilesystemSizeTest) {
   EXPECT_TRUE(utils::GetFilesystemSize(img, &block_count, &block_size));
   EXPECT_EQ(4096, block_size);
   EXPECT_EQ(10 * 1024 * 1024 / 4096, block_count);
+}
+
+TEST(UtilsTest, DurationToStringTest) {
+  EXPECT_EQ("1d0h0m0s", utils::ToString(utils::days_t(1)));
+  EXPECT_EQ("1h0m0s", utils::ToString(hours(1)));
+  EXPECT_EQ("1m0s", utils::ToString(minutes(1)));
+  EXPECT_EQ("1s", utils::ToString(seconds(1)));
+  EXPECT_EQ("0.000001s", utils::ToString(microseconds(1)));
+  EXPECT_EQ("23h59m59s", utils::ToString(seconds(86399)));
 }
 
 }  // namespace chromeos_update_engine
