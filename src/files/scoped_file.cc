@@ -6,19 +6,15 @@
 
 #include "base/logging.h"
 
-#if defined(OS_POSIX)
 #include <unistd.h>
 
 #include "files/eintr_wrapper.h"
-#endif
 
 namespace files {
-namespace internal {
 
-#if defined(OS_POSIX)
-
-// static
-void ScopedFDCloseTraits::Free(int fd) {
+ScopedFD::~ScopedFD() {
+  if (fd_ < 0)
+    return;
   // It's important to crash here.
   // There are security implications to not closing a file descriptor
   // properly. As file descriptors are "capabilities", keeping them open
@@ -26,10 +22,7 @@ void ScopedFDCloseTraits::Free(int fd) {
   // Chrome relies on being able to "drop" such access.
   // It's especially problematic on Linux with the setuid sandbox, where
   // a single open directory would bypass the entire security model.
-  PCHECK(0 == IGNORE_EINTR(close(fd)));
+  PCHECK(0 == IGNORE_EINTR(close(fd_)));
 }
 
-#endif  // OS_POSIX
-
-}  // namespace internal
 }  // namespace files

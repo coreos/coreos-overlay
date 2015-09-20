@@ -9,21 +9,11 @@
 
 #include <memory>
 
-#include "base/scoped_generic.h"
-#include "build/build_config.h"
+#include "base/basictypes.h"
 
 namespace files {
 
 namespace internal {
-
-#if defined(OS_POSIX)
-struct ScopedFDCloseTraits {
-  static int InvalidValue() {
-    return -1;
-  }
-  static void Free(int fd);
-};
-#endif
 
 // Functor for |ScopedFILE| (below).
 struct ScopedFILECloser {
@@ -35,25 +25,22 @@ struct ScopedFILECloser {
 
 }  // namespace internal
 
-// -----------------------------------------------------------------------------
-
-#if defined(OS_POSIX)
-// A low-level Posix file descriptor closer class. Use this when writing
-// platform-specific code, especially that does non-file-like things with the
-// FD (like sockets).
-//
-// If you're writing low-level Windows code, see base/win/scoped_handle.h
-// which provides some additional functionality.
-//
-// If you're writing cross-platform code that deals with actual files, you
-// should generally use base::File instead which can be constructed with a
-// handle, and in addition to handling ownership, has convenient cross-platform
-// file manipulation functions on it.
-typedef ScopedGeneric<int, internal::ScopedFDCloseTraits> ScopedFD;
-#endif
-
 // Automatically closes |FILE*|s.
 typedef std::unique_ptr<FILE, internal::ScopedFILECloser> ScopedFILE;
+
+// Automatically closes a file descriptor.
+class ScopedFD {
+ public:
+  explicit ScopedFD(int fd) : fd_(fd) {}
+  ~ScopedFD();
+
+  int get() const { return fd_; }
+  bool is_valid() const { return fd_ >= 0; }
+
+ private:
+  int fd_;
+  DISALLOW_IMPLICIT_CONSTRUCTORS(ScopedFD);
+};
 
 }  // namespace files
 
