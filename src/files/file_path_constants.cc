@@ -4,6 +4,8 @@
 
 #include "files/file_path.h"
 
+#include "base/basictypes.h" // arraysize
+
 namespace files {
 
 const FilePath::CharType FilePath::kSeparators[] = FILE_PATH_LITERAL("/");
