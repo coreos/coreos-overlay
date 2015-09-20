@@ -15,6 +15,8 @@
 // (CreateUniqueTempDir, CreateUniqueTempDirUnderPath, and Set) must have
 // intervening calls to Delete or Take, or the calls will fail.
 
+#include "base/basictypes.h"
+
 #include "files/file_path.h"
 
 namespace files {

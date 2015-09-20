@@ -71,6 +71,7 @@ libupdate_engine_a_SOURCES = \
 	src/files/file_util.cc \
 	src/files/file_util_posix.cc \
 	src/files/scoped_file.cc \
+	src/files/scoped_temp_dir.cc \
 	src/strings/string_number_conversions.cc \
 	src/strings/string_printf.cc \
 	src/strings/string_split.cc \
@@ -124,6 +125,8 @@ update_engine_unittests_LDADD = libupdate_engine.a \
 update_engine_unittests_SOURCES = \
 	src/update_engine/testrunner.cc \
 	src/files/file_path_unittest.cc \
+	src/files/file_util_unittest.cc \
+	src/files/scoped_temp_dir_unittest.cc \
 	src/strings/string_number_conversions_unittest.cc \
 	src/strings/string_printf_unittest.cc \
 	src/strings/string_split_unittest.cc \
