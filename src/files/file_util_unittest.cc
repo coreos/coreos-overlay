@@ -123,7 +123,7 @@ TEST_F(FileUtilTest, CreateAndReadSymlinks) {
 }
 
 TEST_F(FileUtilTest, DeleteNonExistent) {
-  FilePath non_existent = temp_dir_.path().AppendASCII("bogus_file_dne.foobar");
+  FilePath non_existent = temp_dir_.path().Append("bogus_file_dne.foobar");
   ASSERT_FALSE(PathExists(non_existent));
 
   EXPECT_TRUE(DeleteFile(non_existent, false));
@@ -133,8 +133,8 @@ TEST_F(FileUtilTest, DeleteNonExistent) {
 }
 
 TEST_F(FileUtilTest, DeleteNonExistentWithNonExistentParent) {
-  FilePath non_existent = temp_dir_.path().AppendASCII("bogus_topdir");
-  non_existent = non_existent.AppendASCII("bogus_subdir");
+  FilePath non_existent = temp_dir_.path().Append("bogus_topdir");
+  non_existent = non_existent.Append("bogus_subdir");
   ASSERT_FALSE(PathExists(non_existent));
 
   EXPECT_TRUE(DeleteFile(non_existent, false));
@@ -884,13 +884,13 @@ TEST_F(FileUtilTest, CopyFile) {
 
   // Try to copy the file to another location using '..' in the path.
   FilePath dest_file2(dir_name_from);
-  dest_file2 = dest_file2.AppendASCII("..");
-  dest_file2 = dest_file2.AppendASCII("DestFile.txt");
+  dest_file2 = dest_file2.Append("..");
+  dest_file2 = dest_file2.Append("DestFile.txt");
   ASSERT_FALSE(CopyFile(file_name_from, dest_file2));
 
   FilePath dest_file2_test(dir_name_from);
   dest_file2_test = dest_file2_test.DirName();
-  dest_file2_test = dest_file2_test.AppendASCII("DestFile.txt");
+  dest_file2_test = dest_file2_test.Append("DestFile.txt");
 
   // Check expected copy results.
   EXPECT_TRUE(PathExists(file_name_from));

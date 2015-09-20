@@ -136,7 +136,7 @@ class FilePath {
 
   FilePath();
   FilePath(const FilePath& that);
-  explicit FilePath(StringPieceType path);
+  explicit FilePath(const StringType& path);
   ~FilePath();
   FilePath& operator=(const FilePath& that);
 
@@ -206,16 +206,8 @@ class FilePath {
   // If this object's path is kCurrentDirectory, a new FilePath corresponding
   // only to |component| is returned.  |component| must be a relative path;
   // it is an error to pass an absolute path.
-  FilePath Append(StringPieceType component) const WARN_UNUSED_RESULT;
+  FilePath Append(const StringType& component) const WARN_UNUSED_RESULT;
   FilePath Append(const FilePath& component) const WARN_UNUSED_RESULT;
-
-  // Although Windows StringType is std::wstring, since the encoding it uses for
-  // paths is well defined, it can handle ASCII path components as well.
-  // Mac uses UTF8, and since ASCII is a subset of that, it works there as well.
-  // On Linux, although it can use any 8-bit encoding for paths, we assume that
-  // ASCII is a valid subset, regardless of the encoding, since many operating
-  // system paths will always be ASCII.
-  FilePath AppendASCII(StringPiece component) const WARN_UNUSED_RESULT;
 
   // Returns true if this FilePath contains an absolute path.  On Windows, an
   // absolute path begins with either a drive letter specification followed by

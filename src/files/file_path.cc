@@ -48,8 +48,7 @@ FilePath::FilePath() {
 FilePath::FilePath(const FilePath& that) : path_(that.path_) {
 }
 
-FilePath::FilePath(StringPieceType path) {
-  path.CopyToString(&path_);
+FilePath::FilePath(const StringType& path) : path_(path) {
   StringType::size_type nul_pos = path_.find(kStringTerminator);
   if (nul_pos != StringType::npos)
     path_.erase(nul_pos, StringType::npos);
@@ -215,15 +214,12 @@ FilePath FilePath::BaseName() const {
   return new_path;
 }
 
-FilePath FilePath::Append(StringPieceType component) const {
-  StringPieceType appended = component;
-  StringType without_nuls;
+FilePath FilePath::Append(const StringType& component) const {
+  StringType appended(component);
 
   StringType::size_type nul_pos = component.find(kStringTerminator);
-  if (nul_pos != StringPieceType::npos) {
-    component.substr(0, nul_pos).CopyToString(&without_nuls);
-    appended = StringPieceType(without_nuls);
-  }
+  if (nul_pos != StringType::npos)
+    appended = component.substr(0, nul_pos);
 
   DCHECK(!IsPathAbsolute(appended));
 
@@ -255,21 +251,12 @@ FilePath FilePath::Append(StringPieceType component) const {
     }
   }
 
-  appended.AppendToString(&new_path.path_);
+  new_path.path_ += appended;
   return new_path;
 }
 
 FilePath FilePath::Append(const FilePath& component) const {
   return Append(component.value());
-}
-
-FilePath FilePath::AppendASCII(StringPiece component) const {
-  DCHECK(base::IsStringASCII(component));
-#if defined(OS_WIN)
-  return Append(ASCIIToUTF16(component));
-#elif defined(OS_POSIX)
-  return Append(component);
-#endif
 }
 
 bool FilePath::IsAbsolute() const {
