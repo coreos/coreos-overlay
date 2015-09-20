@@ -5,14 +5,16 @@
 #include "files/file_util.h"
 
 #include <stdio.h>
+#include <unistd.h>
 
 #include <fstream>
 #include <limits>
 #include <memory>
 
+#include "base/logging.h"
+
 #include "files/file_enumerator.h"
 #include "files/file_path.h"
-#include "base/logging.h"
 
 namespace files {
 

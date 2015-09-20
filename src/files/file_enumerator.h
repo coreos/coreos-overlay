@@ -5,14 +5,14 @@
 #ifndef FILES_FILE_ENUMERATOR_H_
 #define FILES_FILE_ENUMERATOR_H_
 
+#include <sys/stat.h>
+
 #include <stack>
 #include <vector>
 
 #include "base/basictypes.h"
-#include "files/file_path.h"
 
-#include <sys/stat.h>
-#include <unistd.h>
+#include "files/file_path.h"
 
 namespace files {
 

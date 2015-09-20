@@ -4,9 +4,9 @@
 
 #include "files/scoped_file.h"
 
-#include "base/logging.h"
-
 #include <unistd.h>
+
+#include "base/logging.h"
 
 #include "files/eintr_wrapper.h"
 

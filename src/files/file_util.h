@@ -8,16 +8,16 @@
 #ifndef FILES_FILE_UTIL_H_
 #define FILES_FILE_UTIL_H_
 
-#include <sys/stat.h>
 #include <stdio.h>
+#include <sys/stat.h>
 
 #include <set>
 #include <string>
 #include <vector>
 
 #include "base/basictypes.h"
+
 #include "files/file_path.h"
-#include "files/eintr_wrapper.h"
 
 namespace files {
 

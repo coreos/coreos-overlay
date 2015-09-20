@@ -17,10 +17,12 @@
 #include <unistd.h>
 
 #include "base/basictypes.h"
+#include "base/logging.h"
+
 #include "files/file_enumerator.h"
 #include "files/file_path.h"
 #include "files/scoped_file.h"
-#include "base/logging.h"
+#include "files/eintr_wrapper.h"
 
 namespace files {
 

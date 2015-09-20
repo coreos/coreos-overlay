@@ -4,8 +4,9 @@
 
 #include "files/scoped_temp_dir.h"
 
-#include "files/file_util.h"
 #include "base/logging.h"
+
+#include "files/file_util.h"
 
 namespace files {
 

@@ -7,6 +7,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fnmatch.h>
+#include <string.h>
 
 #include "base/logging.h"
 

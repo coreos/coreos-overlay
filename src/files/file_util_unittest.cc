@@ -18,6 +18,7 @@
 #include "files/file_util.h"
 #include "files/scoped_file.h"
 #include "files/scoped_temp_dir.h"
+#include "files/eintr_wrapper.h"
 
 // This macro helps avoid wrapped lines in the test structs.
 #define FPL(x) FILE_PATH_LITERAL(x)

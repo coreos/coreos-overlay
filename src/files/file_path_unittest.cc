@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 
 #include "base/basictypes.h"
+
 #include "files/file_path.h"
 
 // This macro helps avoid wrapped lines in the test structs.
