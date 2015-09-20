@@ -7,7 +7,8 @@
 
 #include <stdio.h>
 
-#include "base/memory/scoped_ptr.h"
+#include <memory>
+
 #include "base/scoped_generic.h"
 #include "build/build_config.h"
 
@@ -52,7 +53,7 @@ typedef ScopedGeneric<int, internal::ScopedFDCloseTraits> ScopedFD;
 #endif
 
 // Automatically closes |FILE*|s.
-typedef scoped_ptr<FILE, internal::ScopedFILECloser> ScopedFILE;
+typedef std::unique_ptr<FILE, internal::ScopedFILECloser> ScopedFILE;
 
 }  // namespace files
 
