@@ -9,10 +9,10 @@
 #include <string>
 #include <vector>
 
-#include <base/file_util.h>
 #include <google/protobuf/repeated_field.h>
 #include <gtest/gtest.h>
 
+#include "files/file_util.h"
 #include "strings/string_printf.h"
 #include "update_engine/delta_diff_generator.h"
 #include "update_engine/extent_ranges.h"
@@ -260,8 +260,8 @@ static void GenerateDeltaFile(bool full_rootfs,
   }
 
   if (noop) {
-    EXPECT_TRUE(file_util::CopyFile(FilePath(state->a_img),
-                                    FilePath(state->b_img)));
+    EXPECT_TRUE(files::CopyFile(files::FilePath(state->a_img),
+                                files::FilePath(state->b_img)));
   } else {
     CreateExtImageAtPath(state->b_img, NULL);
     EXPECT_EQ(0, System(StringPrintf(

@@ -2,8 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <base/file_util.h>
-
+#include "files/file_path.h"
 #include "update_engine/real_system_state.h"
 
 namespace chromeos_update_engine {
@@ -14,7 +13,7 @@ RealSystemState::RealSystemState()
     : request_params_(this) {}
 
 bool RealSystemState::Initialize() {
-  if (!prefs_.Init(FilePath(kPrefsDirectory))) {
+  if (!prefs_.Init(files::FilePath(kPrefsDirectory))) {
     LOG(ERROR) << "Failed to initialize preferences.";
     return false;
   }

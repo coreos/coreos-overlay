@@ -14,9 +14,9 @@
 #include <memory>
 #include <vector>
 
-#include <base/file_util.h>
 #include <glib.h>
 
+#include "files/file_util.h"
 #include "update_engine/certificate_checker.h"
 #include "update_engine/dbus_service.h"
 #include "update_engine/download_action.h"
@@ -420,8 +420,8 @@ bool UpdateAttempter::ResetStatus() {
       // also remove the reboot marker so that if the machine is rebooted
       // after resetting to idle state, it doesn't go back to
       // UPDATE_STATUS_UPDATED_NEED_REBOOT state.
-      const FilePath kUpdateCompletedMarkerPath(kUpdateCompletedMarker);
-      return file_util::Delete(kUpdateCompletedMarkerPath, false);
+      const files::FilePath kUpdateCompletedMarkerPath(kUpdateCompletedMarker);
+      return files::DeleteFile(kUpdateCompletedMarkerPath, false);
     }
 
     default:

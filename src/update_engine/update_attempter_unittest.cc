@@ -4,9 +4,9 @@
 
 #include <memory>
 
-#include <base/file_util.h>
 #include <gtest/gtest.h>
 
+#include "files/file_util.h"
 #include "update_engine/action_mock.h"
 #include "update_engine/action_processor_mock.h"
 #include "update_engine/filesystem_copier_action.h"
@@ -150,11 +150,11 @@ TEST_F(UpdateAttempterTest, BytesReceivedTest) {
 
 TEST_F(UpdateAttempterTest, RunAsRootConstructWithUpdatedMarkerTest) {
   extern const char* kUpdateCompletedMarker;
-  const FilePath kMarker(kUpdateCompletedMarker);
-  EXPECT_EQ(0, file_util::WriteFile(kMarker, "", 0));
+  const files::FilePath kMarker(kUpdateCompletedMarker);
+  EXPECT_EQ(0, files::WriteFile(kMarker, "", 0));
   UpdateAttempterUnderTest attempter(&mock_system_state_, &dbus_);
   EXPECT_EQ(UPDATE_STATUS_UPDATED_NEED_REBOOT, attempter.status());
-  EXPECT_TRUE(file_util::Delete(kMarker, false));
+  EXPECT_TRUE(files::DeleteFile(kMarker, false));
 }
 
 TEST_F(UpdateAttempterTest, GetErrorCodeForActionTest) {

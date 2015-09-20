@@ -4,9 +4,9 @@
 
 #include "update_engine/prefs.h"
 
-#include <base/file_util.h>
 #include <base/logging.h>
 
+#include "files/file_util.h"
 #include "strings/string_number_conversions.h"
 #include "strings/string_split.h"
 #include "update_engine/utils.h"
@@ -39,15 +39,15 @@ const char kPrefsCurrentUrlFailureCount[] = "current-url-failure-count";
 const char kPrefsBackoffExpiryTime[] = "backoff-expiry-time";
 const char kPrefsAlephVersion[] = "aleph-version";
 
-bool Prefs::Init(const FilePath& prefs_dir) {
+bool Prefs::Init(const files::FilePath& prefs_dir) {
   prefs_dir_ = prefs_dir;
   return true;
 }
 
 bool Prefs::GetString(const string& key, string* value) {
-  FilePath filename;
+  files::FilePath filename;
   TEST_AND_RETURN_FALSE(GetFileNameForKey(key, &filename));
-  if (!file_util::ReadFileToString(filename, value)) {
+  if (!files::ReadFileToString(filename, value)) {
     LOG(INFO) << key << " not present in " << prefs_dir_.value();
     return false;
   }
@@ -55,11 +55,11 @@ bool Prefs::GetString(const string& key, string* value) {
 }
 
 bool Prefs::SetString(const std::string& key, const std::string& value) {
-  FilePath filename;
+  files::FilePath filename;
   TEST_AND_RETURN_FALSE(GetFileNameForKey(key, &filename));
-  TEST_AND_RETURN_FALSE(file_util::CreateDirectory(filename.DirName()));
+  TEST_AND_RETURN_FALSE(files::CreateDirectory(filename.DirName()));
   TEST_AND_RETURN_FALSE(
-      file_util::WriteFile(filename, value.data(), value.size()) ==
+      files::WriteFile(filename, value.data(), value.size()) ==
       static_cast<int>(value.size()));
   return true;
 }
@@ -78,18 +78,18 @@ bool Prefs::SetInt64(const string& key, const int64_t value) {
 }
 
 bool Prefs::Exists(const string& key) {
-  FilePath filename;
+  files::FilePath filename;
   TEST_AND_RETURN_FALSE(GetFileNameForKey(key, &filename));
-  return file_util::PathExists(filename);
+  return files::PathExists(filename);
 }
 
 bool Prefs::Delete(const string& key) {
-  FilePath filename;
+  files::FilePath filename;
   TEST_AND_RETURN_FALSE(GetFileNameForKey(key, &filename));
-  return file_util::Delete(filename, false);
+  return files::DeleteFile(filename, false);
 }
 
-bool Prefs::GetFileNameForKey(const std::string& key, FilePath* filename) {
+bool Prefs::GetFileNameForKey(const std::string& key, files::FilePath* filename) {
   // Allows only non-empty keys containing [A-Za-z0-9_-].
   TEST_AND_RETURN_FALSE(!key.empty());
   for (size_t i = 0; i < key.size(); ++i) {

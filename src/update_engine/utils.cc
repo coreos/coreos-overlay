@@ -23,13 +23,12 @@
 #include <ratio>
 #include <sstream>
 
-#include <base/file_path.h>
-#include <base/file_util.h>
 #include <base/logging.h>
-#include <base/posix/eintr_wrapper.h>
 #include <glib.h>
 #include <google/protobuf/stubs/common.h>
 
+#include "files/eintr_wrapper.h"
+#include "files/file_util.h"
 #include "strings/string_printf.h"
 #include "strings/string_split.h"
 #include "update_engine/file_writer.h"
@@ -63,7 +62,7 @@ static const char kMachineId[] = "/etc/machine-id";
 static const char kDevImageMarker[] = "/root/.dev_mode";
 
 bool IsOfficialBuild() {
-  return !file_util::PathExists(FilePath(kDevImageMarker));
+  return !files::PathExists(files::FilePath(kDevImageMarker));
 }
 
 bool IsHTTPS(const string& url) {
@@ -73,7 +72,7 @@ bool IsHTTPS(const string& url) {
 string GetBootId() {
   string id;
   string guid;
-  if (!file_util::ReadFileToString(FilePath(kBootId), &id)) {
+  if (!files::ReadFileToString(files::FilePath(kBootId), &id)) {
     LOG(ERROR) << "Unable to read boot_id";
     return "";
   }
@@ -88,7 +87,7 @@ string GetBootId() {
 
 string GetMachineId() {
   string id;
-  if (!file_util::ReadFileToString(FilePath(kMachineId), &id)) {
+  if (!files::ReadFileToString(files::FilePath(kMachineId), &id)) {
     LOG(ERROR) << "Unable to read machine_id";
     return "";
   }
@@ -311,7 +310,7 @@ bool RecursiveUnlinkDir(const std::string& path) {
 }
 
 string RootDevice(const string& partition_device) {
-  FilePath device_path(partition_device);
+  files::FilePath device_path(partition_device);
   if (device_path.DirName().value() != "/dev") {
     return "";
   }
@@ -338,19 +337,19 @@ string PartitionNumber(const string& partition_device) {
 }
 
 string SysfsBlockDevice(const string& device) {
-  FilePath device_path(device);
+  files::FilePath device_path(device);
   if (device_path.DirName().value() != "/dev") {
     return "";
   }
-  return FilePath("/sys/block").Append(device_path.BaseName()).value();
+  return files::FilePath("/sys/block").Append(device_path.BaseName()).value();
 }
 
 bool IsRemovableDevice(const std::string& device) {
   string sysfs_block = SysfsBlockDevice(device);
   string removable;
   if (sysfs_block.empty() ||
-      !file_util::ReadFileToString(FilePath(sysfs_block).Append("removable"),
-                                   &removable)) {
+      !files::ReadFileToString(files::FilePath(sysfs_block).Append("removable"),
+                               &removable)) {
     return false;
   }
   removable = strings::TrimWhitespace(removable);

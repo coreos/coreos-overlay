@@ -6,8 +6,8 @@
 
 #include <string>
 
-#include "base/file_util.h"
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
+
 #include "update_engine/install_plan.h"
 #include "update_engine/mock_system_state.h"
 #include "update_engine/omaha_request_params.h"

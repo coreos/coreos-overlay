@@ -8,10 +8,10 @@
 #include <string>
 #include <vector>
 
-#include <base/posix/eintr_wrapper.h>
 #include <glib.h>
 #include <gtest/gtest.h>
 
+#include "files/eintr_wrapper.h"
 #include "strings/string_printf.h"
 #include "update_engine/filesystem_copier_action.h"
 #include "update_engine/filesystem_iterator.h"

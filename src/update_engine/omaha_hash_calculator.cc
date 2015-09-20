@@ -7,11 +7,11 @@
 #include <fcntl.h>
 
 #include <base/logging.h>
-#include <base/posix/eintr_wrapper.h>
 #include <openssl/bio.h>
 #include <openssl/buffer.h>
 #include <openssl/evp.h>
 
+#include "files/eintr_wrapper.h"
 #include "update_engine/utils.h"
 
 using std::string;

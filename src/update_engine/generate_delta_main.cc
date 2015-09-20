@@ -18,6 +18,7 @@
 #include <gflags/gflags.h>
 #include <glib.h>
 
+#include "files/file_path.h"
 #include "strings/string_number_conversions.h"
 #include "strings/string_split.h"
 #include "update_engine/delta_diff_generator.h"
@@ -174,7 +175,7 @@ void ApplyDelta() {
   Prefs prefs;
   InstallPlan install_plan;
   LOG(INFO) << "Setting up preferences under: " << FLAGS_prefs_dir;
-  LOG_IF(ERROR, !prefs.Init(FilePath(FLAGS_prefs_dir)))
+  LOG_IF(ERROR, !prefs.Init(files::FilePath(FLAGS_prefs_dir)))
       << "Failed to initialize preferences.";
   // Get original checksums
   LOG(INFO) << "Calculating original checksums";
