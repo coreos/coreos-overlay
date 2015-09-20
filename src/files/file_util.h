@@ -18,7 +18,6 @@
 #include "base/basictypes.h"
 #include "base/files/file.h"
 #include "files/file_path.h"
-#include "base/memory/scoped_ptr.h"
 #include "files/eintr_wrapper.h"
 
 namespace files {

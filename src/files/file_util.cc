@@ -8,6 +8,7 @@
 
 #include <fstream>
 #include <limits>
+#include <memory>
 
 #include "files/file_enumerator.h"
 #include "files/file_path.h"
@@ -34,7 +35,7 @@ bool ReadFileToString(const FilePath& path,
   }
 
   const size_t kBufferSize = 1 << 16;
-  scoped_ptr<char[]> buf(new char[kBufferSize]);
+  std::unique_ptr<char[]> buf(new char[kBufferSize]);
   size_t len;
   size_t size = 0;
   bool read_status = true;
