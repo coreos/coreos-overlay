@@ -4,6 +4,8 @@
 
 #include "files/file_path.h"
 
+#include <ostream>
+
 #include "base/basictypes.h"
 #include "base/logging.h"
 
@@ -339,6 +341,10 @@ void FilePath::StripTrailingSeparatorsInternal() {
       last_stripped = pos;
     }
   }
+}
+
+void PrintTo(const FilePath& path, std::ostream* out) {
+  *out << path.value();
 }
 
 }  // namespace files
