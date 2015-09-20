@@ -23,18 +23,19 @@
 #include <set>
 #include <vector>
 
+#include <gtest/gtest.h>
+
 #include "base/base_paths.h"
-#include "base/files/file_enumerator.h"
-#include "base/files/file_path.h"
-#include "base/files/file_util.h"
-#include "base/files/scoped_file.h"
-#include "base/files/scoped_temp_dir.h"
+#include "files/file_enumerator.h"
+#include "files/file_path.h"
+#include "files/file_util.h"
+#include "files/scoped_file.h"
+#include "files/scoped_temp_dir.h"
 #include "base/path_service.h"
 #include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/test/test_file_util.h"
 #include "base/threading/platform_thread.h"
-#include "testing/gtest/include/gtest/gtest.h"
 #include "testing/platform_test.h"
 
 #if defined(OS_WIN)
@@ -49,7 +50,7 @@
 // This macro helps avoid wrapped lines in the test structs.
 #define FPL(x) FILE_PATH_LITERAL(x)
 
-namespace base {
+namespace files {
 
 namespace {
 
@@ -181,12 +182,9 @@ const wchar_t bogus_content[] = L"I'm cannon fodder.";
 const int FILES_AND_DIRECTORIES =
     FileEnumerator::FILES | FileEnumerator::DIRECTORIES;
 
-// file_util winds up using autoreleased objects on the Mac, so this needs
-// to be a PlatformTest
-class FileUtilTest : public PlatformTest {
+class FileUtilTest : public testing::Test {
  protected:
   void SetUp() override {
-    PlatformTest::SetUp();
     ASSERT_TRUE(temp_dir_.CreateUniqueTempDir());
   }
 
@@ -2524,4 +2522,4 @@ TEST(ScopedFD, ScopedFDCrashesOnCloseFailure) {
 
 }  // namespace
 
-}  // namespace base
+}  // namespace files

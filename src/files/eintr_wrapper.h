@@ -13,8 +13,8 @@
 // Don't wrap close calls in HANDLE_EINTR. Use IGNORE_EINTR if the return
 // value of close is significant. See http://crbug.com/269623.
 
-#ifndef BASE_POSIX_EINTR_WRAPPER_H_
-#define BASE_POSIX_EINTR_WRAPPER_H_
+#ifndef FILES_EINTR_WRAPPER_H_
+#define FILES_EINTR_WRAPPER_H_
 
 #include "build/build_config.h"
 
@@ -64,4 +64,4 @@
 
 #endif  // OS_POSIX
 
-#endif  // BASE_POSIX_EINTR_WRAPPER_H_
+#endif  // FILES_EINTR_WRAPPER_H_

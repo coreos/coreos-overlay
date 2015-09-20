@@ -99,8 +99,8 @@
 //    paths (sometimes)?", available at:
 //    http://blogs.msdn.com/oldnewthing/archive/2005/11/22/495740.aspx
 
-#ifndef BASE_FILES_FILE_PATH_H_
-#define BASE_FILES_FILE_PATH_H_
+#ifndef FILES_FILE_PATH_H_
+#define FILES_FILE_PATH_H_
 
 #include <stddef.h>
 
@@ -108,7 +108,6 @@
 #include <string>
 #include <vector>
 
-#include "base/base_export.h"
 #include "base/compiler_specific.h"
 #include "base/containers/hash_tables.h"
 #include "base/strings/string16.h"
@@ -124,14 +123,14 @@
 #define FILE_PATH_USES_WIN_SEPARATORS
 #endif  // OS_WIN
 
-namespace base {
+namespace files {
 
 class Pickle;
 class PickleIterator;
 
 // An abstraction to isolate users from the differences between native
 // pathnames on different platforms.
-class BASE_EXPORT FilePath {
+class FilePath {
  public:
 #if defined(OS_POSIX)
   // On most platforms, native pathnames are char arrays, and the encoding
@@ -439,7 +438,7 @@ class BASE_EXPORT FilePath {
 // This should not be used in production code - call ToString() instead.
 void PrintTo(const FilePath& path, std::ostream* out);
 
-}  // namespace base
+}  // namespace files
 
 // Macros for string literal initialization of FilePath::CharType[], and for
 // using a FilePath::CharType[] in a printf-style format string.
@@ -464,4 +463,4 @@ struct hash<base::FilePath> {
 
 }  // namespace BASE_HASH_NAMESPACE
 
-#endif  // BASE_FILES_FILE_PATH_H_
+#endif  // FILES_FILE_PATH_H_

@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "base/files/file_path.h"
+#include "files/file_path.h"
 
-namespace base {
+namespace files {
 
 #if defined(FILE_PATH_USES_WIN_SEPARATORS)
 const FilePath::CharType FilePath::kSeparators[] = FILE_PATH_LITERAL("\\/");
@@ -19,4 +19,4 @@ const FilePath::CharType FilePath::kParentDirectory[] = FILE_PATH_LITERAL("..");
 
 const FilePath::CharType FilePath::kExtensionSeparator = FILE_PATH_LITERAL('.');
 
-}  // namespace base
+}  // namespace files

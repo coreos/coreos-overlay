@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "base/files/file_path.h"
+#include "files/file_path.h"
 
 #include <string.h>
 #include <algorithm>
@@ -26,7 +26,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 #endif
 
-namespace base {
+namespace files {
 
 using StringType = FilePath::StringType;
 using StringPieceType = FilePath::StringPieceType;
@@ -1318,4 +1318,4 @@ bool FilePath::IsContentUri() const {
 }
 #endif
 
-}  // namespace base
+}  // namespace files

@@ -2,15 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef BASE_FILES_FILE_ENUMERATOR_H_
-#define BASE_FILES_FILE_ENUMERATOR_H_
+#ifndef FILES_FILE_ENUMERATOR_H_
+#define FILES_FILE_ENUMERATOR_H_
 
 #include <stack>
 #include <vector>
 
-#include "base/base_export.h"
 #include "base/basictypes.h"
-#include "base/files/file_path.h"
+#include "files/file_path.h"
 #include "base/time/time.h"
 #include "build/build_config.h"
 
@@ -21,7 +20,7 @@
 #include <unistd.h>
 #endif
 
-namespace base {
+namespace files {
 
 // A class for enumerating the files in a provided path. The order of the
 // results is not guaranteed.
@@ -30,14 +29,14 @@ namespace base {
 //
 // Example:
 //
-//   base::FileEnumerator enum(my_dir, false, base::FileEnumerator::FILES,
-//                             FILE_PATH_LITERAL("*.txt"));
-//   for (base::FilePath name = enum.Next(); !name.empty(); name = enum.Next())
+//   files::FileEnumerator enum(my_dir, false, files::FileEnumerator::FILES,
+//                              FILE_PATH_LITERAL("*.txt"));
+//   for (files::FilePath name = enum.Next(); !name.empty(); name = enum.Next())
 //     ...
-class BASE_EXPORT FileEnumerator {
+class FileEnumerator {
  public:
   // Note: copy & assign supported.
-  class BASE_EXPORT FileInfo {
+  class FileInfo {
    public:
     FileInfo();
     ~FileInfo();
@@ -154,6 +153,6 @@ class BASE_EXPORT FileEnumerator {
   DISALLOW_COPY_AND_ASSIGN(FileEnumerator);
 };
 
-}  // namespace base
+}  // namespace files
 
-#endif  // BASE_FILES_FILE_ENUMERATOR_H_
+#endif  // FILES_FILE_ENUMERATOR_H_

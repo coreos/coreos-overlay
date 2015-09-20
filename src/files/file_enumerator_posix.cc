@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "base/files/file_enumerator.h"
+#include "files/file_enumerator.h"
 
 #include <dirent.h>
 #include <errno.h>
@@ -11,7 +11,7 @@
 #include "base/logging.h"
 #include "base/threading/thread_restrictions.h"
 
-namespace base {
+namespace files {
 
 // FileEnumerator::FileInfo ----------------------------------------------------
 
@@ -157,4 +157,4 @@ bool FileEnumerator::ReadDirectory(std::vector<FileInfo>* entries,
   return true;
 }
 
-}  // namespace base
+}  // namespace files

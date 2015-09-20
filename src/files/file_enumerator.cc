@@ -2,11 +2,11 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "base/files/file_enumerator.h"
+#include "files/file_enumerator.h"
 
-#include "base/files/file_util.h"
+#include "files/file_util.h"
 
-namespace base {
+namespace files {
 
 FileEnumerator::FileInfo::~FileInfo() {
 }
@@ -18,4 +18,4 @@ bool FileEnumerator::ShouldSkip(const FilePath& path) {
           !(INCLUDE_DOT_DOT & file_type_));
 }
 
-}  // namespace base
+}  // namespace files

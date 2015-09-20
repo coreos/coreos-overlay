@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "base/files/file_util.h"
+#include "files/file_util.h"
 
 #include <dirent.h>
 #include <errno.h>
@@ -27,14 +27,14 @@
 #endif
 
 #include "base/basictypes.h"
-#include "base/files/file_enumerator.h"
-#include "base/files/file_path.h"
-#include "base/files/scoped_file.h"
+#include "files/file_enumerator.h"
+#include "files/file_path.h"
+#include "files/scoped_file.h"
 #include "base/logging.h"
 #include "base/memory/scoped_ptr.h"
 #include "base/memory/singleton.h"
 #include "base/path_service.h"
-#include "base/posix/eintr_wrapper.h"
+#include "files/eintr_wrapper.h"
 #include "base/stl_util.h"
 #include "base/strings/string_util.h"
 #include "base/strings/stringprintf.h"
@@ -53,7 +53,7 @@
 #include <grp.h>
 #endif
 
-namespace base {
+namespace files {
 
 namespace {
 
@@ -145,7 +145,7 @@ std::string TempFileName() {
 // This function does NOT unlink() the file.
 int CreateAndOpenFdForTemporaryFile(FilePath directory, FilePath* path) {
   ThreadRestrictions::AssertIOAllowed();  // For call to mkstemp().
-  *path = directory.Append(base::TempFileName());
+  *path = directory.Append(TempFileName());
   const std::string& tmpdir_string = path->value();
   // this should be OK since mkstemp just replaces characters in place
   char* buffer = const_cast<char*>(tmpdir_string.c_str());
@@ -920,4 +920,4 @@ bool MoveUnsafe(const FilePath& from_path, const FilePath& to_path) {
 }  // namespace internal
 
 #endif  // !defined(OS_NACL_NONSFI)
-}  // namespace base
+}  // namespace files

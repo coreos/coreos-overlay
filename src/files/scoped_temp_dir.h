@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef BASE_FILES_SCOPED_TEMP_DIR_H_
-#define BASE_FILES_SCOPED_TEMP_DIR_H_
+#ifndef FILES_SCOPED_TEMP_DIR_H_
+#define FILES_SCOPED_TEMP_DIR_H_
 
 // An object representing a temporary / scratch directory that should be cleaned
 // up (recursively) when this object goes out of scope.  Note that since
@@ -15,12 +15,11 @@
 // (CreateUniqueTempDir, CreateUniqueTempDirUnderPath, and Set) must have
 // intervening calls to Delete or Take, or the calls will fail.
 
-#include "base/base_export.h"
-#include "base/files/file_path.h"
+#include "files/file_path.h"
 
-namespace base {
+namespace files {
 
-class BASE_EXPORT ScopedTempDir {
+class ScopedTempDir {
  public:
   // No directory is owned/created initially.
   ScopedTempDir();
@@ -57,6 +56,6 @@ class BASE_EXPORT ScopedTempDir {
   DISALLOW_COPY_AND_ASSIGN(ScopedTempDir);
 };
 
-}  // namespace base
+}  // namespace files
 
-#endif  // BASE_FILES_SCOPED_TEMP_DIR_H_
+#endif  // FILES_SCOPED_TEMP_DIR_H_

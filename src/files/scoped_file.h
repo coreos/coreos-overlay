@@ -2,23 +2,22 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef BASE_FILES_SCOPED_FILE_H_
-#define BASE_FILES_SCOPED_FILE_H_
+#ifndef FILES_SCOPED_FILE_H_
+#define FILES_SCOPED_FILE_H_
 
 #include <stdio.h>
 
-#include "base/base_export.h"
 #include "base/logging.h"
 #include "base/memory/scoped_ptr.h"
 #include "base/scoped_generic.h"
 #include "build/build_config.h"
 
-namespace base {
+namespace files {
 
 namespace internal {
 
 #if defined(OS_POSIX)
-struct BASE_EXPORT ScopedFDCloseTraits {
+struct ScopedFDCloseTraits {
   static int InvalidValue() {
     return -1;
   }
@@ -56,6 +55,6 @@ typedef ScopedGeneric<int, internal::ScopedFDCloseTraits> ScopedFD;
 // Automatically closes |FILE*|s.
 typedef scoped_ptr<FILE, internal::ScopedFILECloser> ScopedFILE;
 
-}  // namespace base
+}  // namespace files
 
-#endif  // BASE_FILES_SCOPED_FILE_H_
+#endif  // FILES_SCOPED_FILE_H_

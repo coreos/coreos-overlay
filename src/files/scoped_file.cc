@@ -2,17 +2,17 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "base/files/scoped_file.h"
+#include "files/scoped_file.h"
 
 #include "base/logging.h"
 
 #if defined(OS_POSIX)
 #include <unistd.h>
 
-#include "base/posix/eintr_wrapper.h"
+#include "files/eintr_wrapper.h"
 #endif
 
-namespace base {
+namespace files {
 namespace internal {
 
 #if defined(OS_POSIX)
@@ -32,4 +32,4 @@ void ScopedFDCloseTraits::Free(int fd) {
 #endif  // OS_POSIX
 
 }  // namespace internal
-}  // namespace base
+}  // namespace files

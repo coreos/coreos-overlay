@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include "base/files/file_util.h"
+#include "files/file_util.h"
 
 #if defined(OS_WIN)
 #include <io.h>
@@ -12,15 +12,15 @@
 #include <fstream>
 #include <limits>
 
-#include "base/files/file_enumerator.h"
-#include "base/files/file_path.h"
+#include "files/file_enumerator.h"
+#include "files/file_path.h"
 #include "base/logging.h"
 #include "base/strings/string_piece.h"
 #include "base/strings/string_util.h"
 #include "base/strings/stringprintf.h"
 #include "base/strings/utf_string_conversions.h"
 
-namespace base {
+namespace files {
 
 #if !defined(OS_NACL_NONSFI)
 namespace {
@@ -258,4 +258,4 @@ int GetUniquePathNumber(const FilePath& path,
 }
 #endif  // !defined(OS_NACL_NONSFI)
 
-}  // namespace base
+}  // namespace files

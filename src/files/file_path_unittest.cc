@@ -4,10 +4,11 @@
 
 #include <sstream>
 
+#include <gtest/gtest.h>
+
 #include "base/basictypes.h"
-#include "base/files/file_path.h"
+#include "files/file_path.h"
 #include "base/strings/utf_string_conversions.h"
-#include "testing/gtest/include/gtest/gtest.h"
 #include "testing/platform_test.h"
 
 #if defined(OS_POSIX)
@@ -20,7 +21,7 @@
 // This macro constructs strings which can contain NULs.
 #define FPS(x) FilePath::StringType(FPL(x), arraysize(FPL(x)) - 1)
 
-namespace base {
+namespace files {
 
 struct UnaryTestData {
   const FilePath::CharType* input;
@@ -52,9 +53,7 @@ struct UTF8TestData {
   const char* utf8;
 };
 
-// file_util winds up using autoreleased objects on the Mac, so this needs
-// to be a PlatformTest
-typedef PlatformTest FilePathTest;
+typedef testing::Test FilePathTest;
 
 TEST_F(FilePathTest, DirName) {
   const struct UnaryTestData cases[] = {
@@ -1288,8 +1287,8 @@ TEST_F(FilePathTest, ContentUriTest) {
 TEST_F(FilePathTest, PrintTo) {
   std::stringstream ss;
   FilePath fp(FPL("foo"));
-  base::PrintTo(fp, &ss);
+  PrintTo(fp, &ss);
   EXPECT_EQ("foo", ss.str());
 }
 
-}  // namespace base
+}  // namespace files
