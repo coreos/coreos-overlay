@@ -16,7 +16,6 @@
 #include <vector>
 
 #include "base/basictypes.h"
-#include "base/files/file.h"
 #include "files/file_path.h"
 #include "files/eintr_wrapper.h"
 
@@ -54,12 +53,8 @@ bool Move(const FilePath& from_path, const FilePath& to_path);
 // Renames file |from_path| to |to_path|. Both paths must be on the same
 // volume, or the function will fail. Destination file will be created
 // if it doesn't exist. Prefer this function over Move when dealing with
-// temporary files. On Windows it preserves attributes of the target file.
-// Returns true on success, leaving *error unchanged.
-// Returns false on failure and sets *error appropriately, if it is non-NULL.
-bool ReplaceFile(const FilePath& from_path,
-                             const FilePath& to_path,
-                             File::Error* error);
+// temporary files.
+bool ReplaceFile(const FilePath& from_path, const FilePath& to_path);
 
 // Copies a single file. Use CopyDirectory to copy directories.
 // This function fails if either path contains traversal components ('..').
@@ -197,12 +192,6 @@ bool CreateTemporaryDirInDir(const FilePath& base_dir,
 // Creates a directory, as well as creating any parent directories, if they
 // don't exist. Returns 'true' on successful creation, or if the directory
 // already exists.  The directory is only readable by the current user.
-// Returns true on success, leaving *error unchanged.
-// Returns false on failure and sets *error appropriately, if it is non-NULL.
-bool CreateDirectoryAndGetError(const FilePath& full_path,
-                                            File::Error* error);
-
-// Backward-compatible convenience method for the above.
 bool CreateDirectory(const FilePath& full_path);
 
 // Returns the file size. Returns true on success.

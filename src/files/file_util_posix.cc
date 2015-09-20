@@ -99,13 +99,9 @@ bool DeleteFile(const FilePath& path, bool recursive) {
   return success;
 }
 
-bool ReplaceFile(const FilePath& from_path,
-                 const FilePath& to_path,
-                 File::Error* error) {
+bool ReplaceFile(const FilePath& from_path, const FilePath& to_path) {
   if (rename(from_path.value().c_str(), to_path.value().c_str()) == 0)
     return true;
-  if (error)
-    *error = File::OSErrorToFileError(errno);
   return false;
 }
 
@@ -366,8 +362,7 @@ bool CreateNewTempDirectory(const FilePath::StringType& prefix,
   return CreateTemporaryDirInDirImpl(tmpdir, TempFileName(), new_temp_path);
 }
 
-bool CreateDirectoryAndGetError(const FilePath& full_path,
-                                File::Error* error) {
+bool CreateDirectory(const FilePath& full_path) {
   std::vector<FilePath> subpaths;
 
   // Collect a list of all parent directories.
@@ -480,50 +475,34 @@ bool AppendToFile(const FilePath& filename, const char* data, int size) {
 }
 
 bool CopyFile(const FilePath& from_path, const FilePath& to_path) {
-  ThreadRestrictions::AssertIOAllowed();
-  File infile;
-#if defined(OS_ANDROID)
-  if (from_path.IsContentUri()) {
-    infile = OpenContentUriForRead(from_path);
-  } else {
-    infile = File(from_path, File::FLAG_OPEN | File::FLAG_READ);
-  }
-#else
-  infile = File(from_path, File::FLAG_OPEN | File::FLAG_READ);
-#endif
-  if (!infile.IsValid())
+  if (to_path.ReferencesParent())
     return false;
 
-  File outfile(to_path, File::FLAG_WRITE | File::FLAG_CREATE_ALWAYS);
-  if (!outfile.IsValid())
+  ScopedFD infile(HANDLE_EINTR(
+      open(from_path.value().c_str(), O_RDONLY)));
+  if (!infile.is_valid())
+    return false;
+
+  ScopedFD outfile(HANDLE_EINTR(
+      open(to_path.value().c_str(), O_WRONLY|O_CREAT|O_TRUNC, 0600)));
+  if (!outfile.is_valid())
     return false;
 
   const size_t kBufferSize = 32768;
   std::vector<char> buffer(kBufferSize);
-  bool result = true;
 
-  while (result) {
-    ssize_t bytes_read = infile.ReadAtCurrentPos(&buffer[0], buffer.size());
-    if (bytes_read < 0) {
-      result = false;
-      break;
-    }
+  while (true) {
+    ssize_t bytes_read = HANDLE_EINTR(
+        read(infile.get(), &buffer[0], buffer.size()));
+    if (bytes_read < 0)
+      return false;
     if (bytes_read == 0)
       break;
-    // Allow for partial writes
-    ssize_t bytes_written_per_read = 0;
-    do {
-      ssize_t bytes_written_partial = outfile.WriteAtCurrentPos(
-          &buffer[bytes_written_per_read], bytes_read - bytes_written_per_read);
-      if (bytes_written_partial < 0) {
-        result = false;
-        break;
-      }
-      bytes_written_per_read += bytes_written_partial;
-    } while (bytes_written_per_read < bytes_read);
+    if (!WriteFileDescriptor(outfile.get(), &buffer[0], bytes_read))
+      return false;
   }
 
-  return result;
+  return true;
 }
 
 // -----------------------------------------------------------------------------

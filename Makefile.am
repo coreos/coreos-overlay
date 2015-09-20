@@ -68,6 +68,8 @@ libupdate_engine_a_SOURCES = \
 	src/files/file_enumerator_posix.cc \
 	src/files/file_path.cc \
 	src/files/file_path_constants.cc \
+	src/files/file_util.cc \
+	src/files/file_util_posix.cc \
 	src/files/scoped_file.cc \
 	src/strings/string_number_conversions.cc \
 	src/strings/string_printf.cc \
