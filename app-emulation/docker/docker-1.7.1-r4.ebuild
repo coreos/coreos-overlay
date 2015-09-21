@@ -15,9 +15,9 @@ if [[ ${PV} == *9999 ]]; then
 	DOCKER_GITCOMMIT="unknown"
 	KEYWORDS="~amd64 ~arm64"
 else
-	CROS_WORKON_COMMIT="fae44362ed4c7e161ab52f6bba6d5ee93ffbc28f" # v1.8.2 with backports
+	CROS_WORKON_COMMIT="df2f73db381b1fa09ffc173179dc92f490f8c23c" # v1.7.1 with backports
 	DOCKER_GITCOMMIT="${CROS_WORKON_COMMIT:0:7}"
-	KEYWORDS="amd64"
+	KEYWORDS="amd64 arm64"
 fi
 
 inherit bash-completion-r1 linux-info multilib systemd udev user cros-workon
@@ -216,7 +216,7 @@ src_install() {
 	newconfd contrib/init/openrc/docker.confd docker
 
 	exeinto /usr/lib/coreos
-	doexe "${FILESDIR}/dockerd"
+	newexe "${FILESDIR}/dockerd-1.7" dockerd
 
 	systemd_dounit "${FILESDIR}/docker.service"
 	systemd_dounit "${FILESDIR}/docker.socket"

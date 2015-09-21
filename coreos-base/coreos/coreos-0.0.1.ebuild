@@ -96,7 +96,7 @@ RDEPEND="${RDEPEND}
 	)"
 
 RDEPEND="${RDEPEND}
-	app-emulation/rkt[actool]
+	amd64? ( app-emulation/rkt[actool] )
 	app-emulation/xenstore
 	amd64? ( app-emulation/xenserver-pv-version )
 	sys-apps/findutils
