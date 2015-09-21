@@ -21,7 +21,6 @@ After=disk-uuid.service
 
 [Service]
 Type=oneshot
-TimeoutStartSec=2m
 Environment=OEM_ID=pxe
 EnvironmentFile=-/mnt/oem/oem-release
-ExecStart=/usr/bin/ignition --root=/sysroot --oem=${OEM_ID} --stage=disks --online-timeout=1m
+ExecStart=/usr/bin/ignition --root=/sysroot --oem=${OEM_ID} --stage=disks
