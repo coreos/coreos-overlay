@@ -9,7 +9,7 @@ Environment=TMPDIR=/var/tmp
 MountFlags=slave
 LimitNOFILE=1048576
 LimitNPROC=1048576
-ExecStart=/usr/lib/coreos/dockerd daemon --host=fd:// --bridge=none --iptables=false --ip-masq=false --graph=/var/lib/early-docker --pidfile=/var/run/early-docker.pid --log-driver=journald
+ExecStart=/usr/lib/coreos/dockerd daemon --host=fd:// --bridge=none --iptables=false --ip-masq=false --graph=/var/lib/early-docker --pidfile=/var/run/early-docker.pid
 
 [Install]
 WantedBy=early-docker.target
