@@ -10,9 +10,12 @@ inherit coreos-doc cros-workon systemd toolchain-funcs udev coreos-go
 
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64"
+elif [[ "${PV}" == "1.5.1" ]]; then
+	CROS_WORKON_COMMIT="fac805dc11951d32fe68a77200988828fa1ce48d" # tag v1.5.1
+	KEYWORDS="amd64 arm64"
 else
 	CROS_WORKON_COMMIT="f816819c6dd562196a9e416829561ba849879f58" # tag v1.6.0
-	KEYWORDS="amd64 arm64"
+	KEYWORDS="amd64 ~arm64"
 fi
 
 DESCRIPTION="coreos-cloudinit"
