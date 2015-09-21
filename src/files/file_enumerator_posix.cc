@@ -139,8 +139,8 @@ bool FileEnumerator::ReadDirectory(std::vector<FileInfo>* entries,
       // Print the stat() error message unless it was ENOENT and we're
       // following symlinks.
       if (!(errno == ENOENT && !show_links)) {
-        DPLOG(ERROR) << "Couldn't stat "
-                     << source.Append(dent->d_name).value();
+        PLOG(WARNING) << "Couldn't stat "
+                      << source.Append(dent->d_name).value();
       }
       memset(&info.stat_, 0, sizeof(info.stat_));
     }
