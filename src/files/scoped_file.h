@@ -17,10 +17,7 @@ namespace internal {
 
 // Functor for |ScopedFILE| (below).
 struct ScopedFILECloser {
-  inline void operator()(FILE* x) const {
-    if (x)
-      fclose(x);
-  }
+  void operator()(FILE* x) const;
 };
 
 }  // namespace internal

@@ -12,17 +12,29 @@
 
 namespace files {
 
+namespace internal {
+
+// The eintr wrappers check for -1 while the stdio API defines EOF as the
+// return value for errors. It *should* be -1 but lets just make sure.
+static_assert(EOF == -1, "fclose's error value is not -1");
+
+void ScopedFILECloser::operator()(FILE* x) const {
+  if (x == nullptr)
+    return;
+
+  int fd = fileno(x);
+  if (IGNORE_EINTR(fclose(x)) == EOF)
+    PLOG(ERROR) << "Error while closing file descriptor " << fd;
+}
+
+}  // namespace internal
+
 ScopedFD::~ScopedFD() {
   if (fd_ < 0)
     return;
-  // It's important to crash here.
-  // There are security implications to not closing a file descriptor
-  // properly. As file descriptors are "capabilities", keeping them open
-  // would make the current process keep access to a resource. Much of
-  // Chrome relies on being able to "drop" such access.
-  // It's especially problematic on Linux with the setuid sandbox, where
-  // a single open directory would bypass the entire security model.
-  PCHECK(0 == IGNORE_EINTR(close(fd_)));
+
+  if (IGNORE_EINTR(close(fd_)) == -1)
+    PLOG(ERROR) << "Error while closing file descriptor " << fd_;
 }
 
 }  // namespace files

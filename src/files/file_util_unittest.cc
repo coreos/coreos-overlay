@@ -2,10 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#include <errno.h>
-#include <fcntl.h>
-#include <unistd.h>
-
 #include <algorithm>
 #include <fstream>
 #include <set>
@@ -16,9 +12,7 @@
 #include "files/file_enumerator.h"
 #include "files/file_path.h"
 #include "files/file_util.h"
-#include "files/scoped_file.h"
 #include "files/scoped_temp_dir.h"
-#include "files/eintr_wrapper.h"
 
 // This macro helps avoid wrapped lines in the test structs.
 #define FPL(x) FILE_PATH_LITERAL(x)
@@ -1286,43 +1280,6 @@ TEST_F(FileUtilTest, IsDirectoryEmpty) {
   ASSERT_TRUE(WriteFile(foo, bar.c_str(), bar.length()));
 
   EXPECT_FALSE(IsDirectoryEmpty(empty_dir));
-}
-
-TEST(ScopedFD, ScopedFDDoesClose) {
-  int fds[2];
-  char c = 0;
-  ASSERT_EQ(0, pipe(fds));
-  const int write_end = fds[1];
-  ScopedFD read_end_closer(fds[0]);
-  {
-    ScopedFD write_end_closer(fds[1]);
-  }
-  // This is the only thread. This file descriptor should no longer be valid.
-  int ret = close(write_end);
-  EXPECT_EQ(-1, ret);
-  EXPECT_EQ(EBADF, errno);
-  // Make sure read(2) won't block.
-  ASSERT_EQ(0, fcntl(fds[0], F_SETFL, O_NONBLOCK));
-  // Reading the pipe should EOF.
-  EXPECT_EQ(0, read(fds[0], &c, 1));
-}
-
-#if defined(GTEST_HAS_DEATH_TEST)
-void CloseWithScopedFD(int fd) {
-  ScopedFD fd_closer(fd);
-}
-#endif
-
-TEST(ScopedFD, ScopedFDCrashesOnCloseFailure) {
-  int fds[2];
-  ASSERT_EQ(0, pipe(fds));
-  ScopedFD read_end_closer(fds[0]);
-  EXPECT_EQ(0, IGNORE_EINTR(close(fds[1])));
-#if defined(GTEST_HAS_DEATH_TEST)
-  // This is the only thread. This file descriptor should no longer be valid.
-  // Trying to close it should crash. This is important for security.
-  EXPECT_DEATH(CloseWithScopedFD(fds[1]), "");
-#endif
 }
 
 }  // namespace

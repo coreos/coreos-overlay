@@ -126,6 +126,7 @@ update_engine_unittests_SOURCES = \
 	src/update_engine/testrunner.cc \
 	src/files/file_path_unittest.cc \
 	src/files/file_util_unittest.cc \
+	src/files/scoped_file_unittest.cc \
 	src/files/scoped_temp_dir_unittest.cc \
 	src/strings/string_number_conversions_unittest.cc \
 	src/strings/string_printf_unittest.cc \
