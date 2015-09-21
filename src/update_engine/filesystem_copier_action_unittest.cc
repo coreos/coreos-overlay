@@ -12,6 +12,7 @@
 #include <gtest/gtest.h>
 
 #include "files/eintr_wrapper.h"
+#include "files/scoped_file.h"
 #include "strings/string_printf.h"
 #include "update_engine/filesystem_copier_action.h"
 #include "update_engine/filesystem_iterator.h"
@@ -367,7 +368,7 @@ TEST_F(FilesystemCopierActionTest, RunAsRootDetermineFilesystemSizeTest) {
   {
     int fd = HANDLE_EINTR(open(img.c_str(), O_RDONLY));
     EXPECT_TRUE(fd > 0);
-    ScopedFdCloser fd_closer(&fd);
+    files::ScopedFD fd_closer(fd);
     action.DetermineFilesystemSize(fd);
   }
   EXPECT_EQ(10 * 1024 * 1024, action.filesystem_size_);

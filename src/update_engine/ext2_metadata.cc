@@ -10,6 +10,7 @@
 #include <ext2fs/ext2_io.h>
 #include <ext2fs/ext2fs.h>
 
+#include "files/scoped_file.h"
 #include "strings/string_printf.h"
 #include "update_engine/bzip.h"
 #include "update_engine/delta_diff_generator.h"
@@ -89,7 +90,7 @@ bool ComputeMetadataBsdiff(const vector<char>& old_metadata,
       utils::MakeTempFile(kTempFileTemplate, &temp_old_file_path, &old_fd));
   TEST_AND_RETURN_FALSE(old_fd >= 0);
   ScopedPathUnlinker temp_old_file_path_unlinker(temp_old_file_path);
-  ScopedFdCloser old_fd_closer(&old_fd);
+  files::ScopedFD old_fd_closer(old_fd);
   TEST_AND_RETURN_FALSE(utils::WriteAll(old_fd,
                                         &old_metadata[0],
                                         old_metadata.size()));
@@ -100,7 +101,7 @@ bool ComputeMetadataBsdiff(const vector<char>& old_metadata,
       utils::MakeTempFile(kTempFileTemplate, &temp_new_file_path, &new_fd));
   TEST_AND_RETURN_FALSE(new_fd >= 0);
   ScopedPathUnlinker temp_new_file_path_unlinker(temp_new_file_path);
-  ScopedFdCloser new_fd_closer(&new_fd);
+  files::ScopedFD new_fd_closer(new_fd);
   TEST_AND_RETURN_FALSE(utils::WriteAll(new_fd,
                                         &new_metadata[0],
                                         new_metadata.size()));

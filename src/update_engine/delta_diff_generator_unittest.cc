@@ -16,6 +16,7 @@
 #include <base/logging.h>
 #include <gtest/gtest.h>
 
+#include "files/scoped_file.h"
 #include "update_engine/cycle_breaker.h"
 #include "update_engine/delta_diff_generator.h"
 #include "update_engine/delta_performer.h"
@@ -565,7 +566,7 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootAssignTempBlocksTest) {
   EXPECT_TRUE(utils::MakeTempFile("/tmp/AssignTempBlocksTestData.XXXXXX",
                                   NULL,
                                   &fd));
-  ScopedFdCloser fd_closer(&fd);
+  files::ScopedFD fd_closer(fd);
   off_t data_file_size = 0;
 
 
@@ -759,7 +760,7 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootAssignTempBlocksReuseTest) {
   EXPECT_TRUE(utils::MakeTempFile("/tmp/AssignTempBlocksReuseTest.XXXXXX",
                                   NULL,
                                   &fd));
-  ScopedFdCloser fd_closer(&fd);
+  files::ScopedFD fd_closer(fd);
   off_t data_file_size = 0;
 
   EXPECT_TRUE(DeltaDiffGenerator::AssignTempBlocks(&graph,

@@ -14,6 +14,7 @@
 
 #include <google/protobuf/repeated_field.h>
 
+#include "files/scoped_file.h"
 #include "strings/string_printf.h"
 #include "update_engine/bzip_extent_writer.h"
 #include "update_engine/delta_metadata.h"
@@ -279,7 +280,7 @@ bool DeltaPerformer::PerformBsdiffOperation(
   ScopedPathUnlinker path_unlinker(temp_filename);
   {
     int fd = open(temp_filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    ScopedFdCloser fd_closer(&fd);
+    files::ScopedFD fd_closer(fd);
     TEST_AND_RETURN_FALSE(
         utils::WriteAll(fd, &data[0], operation.data_length()));
   }

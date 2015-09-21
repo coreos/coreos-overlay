@@ -9,6 +9,7 @@
 
 #include <memory>
 
+#include "files/scoped_file.h"
 #include "strings/string_printf.h"
 #include "update_engine/bzip.h"
 #include "update_engine/utils.h"
@@ -126,7 +127,7 @@ bool FullUpdateGenerator::Run(
   LOG(INFO) << "compressing " << new_image;
   int in_fd = open(new_image.c_str(), O_RDONLY, 0);
   TEST_AND_RETURN_FALSE(in_fd >= 0);
-  ScopedFdCloser in_fd_closer(&in_fd);
+  files::ScopedFD in_fd_closer(in_fd);
   deque<shared_ptr<ChunkProcessor> > threads;
   int last_progress_update = INT_MIN;
   off_t bytes_left = image_size, counter = 0, offset = 0;
