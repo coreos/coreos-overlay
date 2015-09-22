@@ -153,7 +153,7 @@ RDEPEND="${RDEPEND}
 	sys-fs/e2fsprogs
 	sys-fs/mdadm
 	sys-fs/xfsprogs
-	sys-kernel/coreos-firmware
+	amd64? ( sys-kernel/coreos-firmware )
 	sys-kernel/coreos-kernel
 	sys-libs/glibc
 	sys-libs/nss-usrfiles
