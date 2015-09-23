@@ -216,11 +216,11 @@ src_install() {
 	newconfd contrib/init/openrc/docker.confd docker
 
 	exeinto /usr/lib/coreos
-	newexe "${FILESDIR}/dockerd-1.7" dockerd
+	doexe "${FILESDIR}/dockerd"
 
-	systemd_dounit "${FILESDIR}/docker.service"
+	systemd_newunit "${FILESDIR}/docker.service-1.7" docker.service
 	systemd_dounit "${FILESDIR}/docker.socket"
-	systemd_dounit "${FILESDIR}/early-docker.service"
+	systemd_newunit "${FILESDIR}/early-docker.service-1.7" early-docker.service
 	systemd_dounit "${FILESDIR}/early-docker.socket"
 	systemd_dounit "${FILESDIR}/early-docker.target"
 
