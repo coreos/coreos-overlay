@@ -11,7 +11,7 @@ inherit coreos-go cros-workon systemd
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64"
 else
-	CROS_WORKON_COMMIT="416392f69e60bcd96507cb626a9d3fe380f0af1e" # v0.1.0
+	CROS_WORKON_COMMIT="aff2fffff26260974eac95855d5fb0d0bf4f43b3" # v0.2.1
 	KEYWORDS="amd64 arm64"
 fi
 
@@ -23,7 +23,12 @@ LICENSE="Apache-2.0"
 SLOT="0"
 IUSE=""
 
+src_compile() {
+	GO_LDFLAGS="-X main.version $(git describe --dirty)" || die
+	go_build "${COREOS_GO_PACKAGE}/src"
+}
+
 src_install() {
-	dobin "${GOBIN}/${PN}"
+	newbin "${GOBIN}/src" "${PN}"
 	systemd_dounit "${FILESDIR}/coreos-metadata.service"
 }
