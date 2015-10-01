@@ -8,6 +8,7 @@ Wants=fleet.socket
 After=fleet.socket
 
 [Service]
+Environment=GOMAXPROCS=1
 ExecStart=/usr/bin/fleetd
 Restart=always
 RestartSec=10s
