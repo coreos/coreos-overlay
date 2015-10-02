@@ -184,14 +184,12 @@ FilePath FilePath::BaseName() const {
   return new_path;
 }
 
-FilePath FilePath::Append(const StringType& component) const {
-  StringType appended(component);
+FilePath FilePath::Append(StringType component) const {
+  DCHECK(!IsPathAbsolute(component));
 
   StringType::size_type nul_pos = component.find(kStringTerminator);
   if (nul_pos != StringType::npos)
-    appended = component.substr(0, nul_pos);
-
-  DCHECK(!IsPathAbsolute(appended));
+    component.resize(nul_pos);
 
   if (path_.compare(kCurrentDirectory) == 0) {
     // Append normally doesn't do any normalization, but as a special case,
@@ -201,7 +199,7 @@ FilePath FilePath::Append(const StringType& component) const {
     // it's likely in practice to wind up with FilePath objects containing
     // only kCurrentDirectory when calling DirName on a single relative path
     // component.
-    return FilePath(appended);
+    return FilePath(component);
   }
 
   FilePath new_path(path_);
@@ -210,7 +208,7 @@ FilePath FilePath::Append(const StringType& component) const {
   // Don't append a separator if the path is empty (indicating the current
   // directory) or if the path component is empty (indicating nothing to
   // append).
-  if (appended.length() > 0 && new_path.path_.length() > 0) {
+  if (component.length() > 0 && new_path.path_.length() > 0) {
     // Don't append a separator if the path still ends with a trailing
     // separator after stripping (indicating the root directory).
     if (!IsSeparator(new_path.path_[new_path.path_.length() - 1])) {
@@ -218,7 +216,7 @@ FilePath FilePath::Append(const StringType& component) const {
     }
   }
 
-  new_path.path_ += appended;
+  new_path.path_ += component;
   return new_path;
 }
 
