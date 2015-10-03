@@ -136,7 +136,7 @@ class FilePath {
 
   FilePath();
   FilePath(const FilePath& that);
-  explicit FilePath(const StringType& path);
+  explicit FilePath(StringType path);
   ~FilePath();
   FilePath& operator=(const FilePath& that);
 

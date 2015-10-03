@@ -5,6 +5,7 @@
 #include "files/file_path.h"
 
 #include <ostream>
+#include <utility>
 
 #include "base/basictypes.h"
 #include "base/logging.h"
@@ -39,7 +40,7 @@ FilePath::FilePath() {
 FilePath::FilePath(const FilePath& that) : path_(that.path_) {
 }
 
-FilePath::FilePath(const StringType& path) : path_(path) {
+FilePath::FilePath(StringType path) : path_(std::move(path)) {
   StringType::size_type nul_pos = path_.find(kStringTerminator);
   if (nul_pos != StringType::npos)
     path_.erase(nul_pos, StringType::npos);
