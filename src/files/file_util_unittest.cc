@@ -214,7 +214,7 @@ TEST_F(FileUtilTest, ChangeFilePermissionsAndRead) {
   EXPECT_TRUE(PathExists(file_name));
 
   // Make sure the file is readable.
-  int32 mode = 0;
+  int mode = 0;
   EXPECT_TRUE(GetPosixFilePermissions(file_name, &mode));
   EXPECT_TRUE(mode & FILE_PERMISSION_READ_BY_USER);
 

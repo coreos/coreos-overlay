@@ -27,7 +27,7 @@ FilePath FileEnumerator::FileInfo::GetName() const {
   return filename_;
 }
 
-int64 FileEnumerator::FileInfo::GetSize() const {
+off_t FileEnumerator::FileInfo::GetSize() const {
   return stat_.st_size;
 }
 
