@@ -13,8 +13,9 @@
 #include <string>
 #include <type_traits>
 
-#include <base/basictypes.h>
 #include <glog/logging.h>
+
+#include "macros.h"
 
 // The structure of these classes (Action, ActionPipe, ActionProcessor, etc.)
 // is based on the KSAction* classes from the Google Update Engine code at

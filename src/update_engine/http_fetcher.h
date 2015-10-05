@@ -9,12 +9,12 @@
 #include <string>
 #include <vector>
 
-#include <base/basictypes.h>
 #include <glib.h>
 #include <glog/logging.h>
 #include <google/protobuf/stubs/common.h>
 
 #include "http_common.h"
+#include "macros.h"
 
 // This class is a simple wrapper around an HTTP library (libcurl). We can
 // easily mock out this interface for testing.

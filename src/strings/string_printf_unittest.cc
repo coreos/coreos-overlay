@@ -7,8 +7,6 @@
 #include <errno.h>
 #include <gtest/gtest.h>
 
-#include "base/basictypes.h"  // for arraysize()
-
 namespace strings {
 
 namespace {

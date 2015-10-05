@@ -7,7 +7,6 @@
 #include <ostream>
 #include <utility>
 
-#include "base/basictypes.h"
 #include <glog/logging.h>
 
 namespace files {

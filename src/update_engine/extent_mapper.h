@@ -7,7 +7,7 @@
 
 #include <string>
 #include <vector>
-#include "base/basictypes.h"
+
 #include "update_engine/update_metadata.pb.h"
 
 namespace chromeos_update_engine {

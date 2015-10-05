@@ -73,7 +73,6 @@ PKG_CHECK_MODULES([DEPS],
                   [dbus-1
                    dbus-glib-1
                    ext2fs
-                   libchrome-180609
                    libcrypto
                    libcurl
                    libglog

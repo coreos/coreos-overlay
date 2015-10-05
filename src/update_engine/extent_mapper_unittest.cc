@@ -5,11 +5,14 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+
 #include <set>
 #include <string>
 #include <vector>
+
 #include <gtest/gtest.h>
-#include "base/basictypes.h"
+
+#include "macros.h"
 #include "update_engine/extent_mapper.h"
 #include "update_engine/graph_types.h"
 #include "update_engine/utils.h"

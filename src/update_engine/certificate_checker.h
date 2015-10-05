@@ -7,11 +7,11 @@
 
 #include <string>
 
-#include <base/basictypes.h>
 #include <curl/curl.h>
 #include <gtest/gtest_prod.h>  // for FRIEND_TEST
 #include <openssl/ssl.h>
 
+#include "macros.h"
 #include "update_engine/system_state.h"
 
 namespace chromeos_update_engine {

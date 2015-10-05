@@ -7,7 +7,8 @@
 
 #include <string>
 #include <vector>
-#include "base/basictypes.h"
+
+#include "macros.h"
 #include "update_engine/graph_types.h"
 #include "update_engine/update_metadata.pb.h"
 

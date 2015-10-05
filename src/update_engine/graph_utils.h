@@ -6,7 +6,7 @@
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_GRAPH_UTILS_H__
 
 #include <vector>
-#include "base/basictypes.h"
+
 #include "update_engine/graph_types.h"
 #include "update_engine/update_metadata.pb.h"
 

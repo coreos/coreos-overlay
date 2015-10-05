@@ -15,8 +15,6 @@
 #include <string>
 #include <vector>
 
-#include "base/basictypes.h"
-
 #include "files/file_path.h"
 
 namespace files {

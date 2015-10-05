@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#include <base/basictypes.h>
+#include "macros.h"
 #include "update_engine/update_metadata.pb.h"
 
 // This class encapsulates methods used for payload signing and signature

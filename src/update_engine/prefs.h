@@ -5,10 +5,10 @@
 #ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_PREFS_H__
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_PREFS_H__
 
-#include <base/basictypes.h>
 #include <gtest/gtest_prod.h>  // for FRIEND_TEST
 
 #include "files/file_path.h"
+#include "macros.h"
 #include "update_engine/prefs_interface.h"
 
 namespace chromeos_update_engine {
