@@ -6,6 +6,7 @@
 
 #include <inttypes.h>
 
+#include <limits>
 #include <set>
 #include <utility>
 
@@ -94,7 +95,7 @@ void CycleBreaker::HandleCircuit() {
   CHECK_GE(stack_.size(),
            static_cast<std::vector<Vertex::Index>::size_type>(2));
   Edge min_edge = make_pair(stack_[0], stack_[1]);
-  uint64_t min_edge_weight = kuint64max;
+  uint64_t min_edge_weight = std::numeric_limits<uint64_t>::max();
   size_t edges_considered = 0;
   for (vector<Vertex::Index>::const_iterator it = stack_.begin();
        it != (stack_.end() - 1); ++it) {

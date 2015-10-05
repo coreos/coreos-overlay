@@ -8,6 +8,8 @@
 
 #include <inttypes.h>
 
+#include <limits>
+
 #include "update_engine/delta_performer.h"
 #include "update_engine/file_writer.h"
 #include "update_engine/omaha_hash_calculator.h"
@@ -35,7 +37,7 @@ class PayloadProcessor : public FileWriter {
         manifest_metadata_size_(0),
         next_operation_num_(0),
         buffer_offset_(0),
-        last_updated_buffer_offset_(kuint64max),
+        last_updated_buffer_offset_(std::numeric_limits<uint64_t>::max()),
         public_key_path_(kUpdatePayloadPublicKeyPath),
         num_total_operations_(0) {}
 

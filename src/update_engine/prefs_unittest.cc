@@ -138,18 +138,18 @@ TEST_F(PrefsTest, GetInt64BadValue) {
 
 TEST_F(PrefsTest, GetInt64Max) {
   const char kKey[] = "test-key";
-  ASSERT_TRUE(SetValue(kKey, StringPrintf("%" PRIi64, kint64max)));
+  ASSERT_TRUE(SetValue(kKey, StringPrintf("%" PRIi64, INT64_MAX)));
   int64_t value;
   EXPECT_TRUE(prefs_.GetInt64(kKey, &value));
-  EXPECT_EQ(kint64max, value);
+  EXPECT_EQ(INT64_MAX, value);
 }
 
 TEST_F(PrefsTest, GetInt64Min) {
   const char kKey[] = "test-key";
-  ASSERT_TRUE(SetValue(kKey, StringPrintf("%" PRIi64, kint64min)));
+  ASSERT_TRUE(SetValue(kKey, StringPrintf("%" PRIi64, INT64_MAX)));
   int64_t value;
   EXPECT_TRUE(prefs_.GetInt64(kKey, &value));
-  EXPECT_EQ(kint64min, value);
+  EXPECT_EQ(INT64_MIN, value);
 }
 
 TEST_F(PrefsTest, GetInt64Negative) {
@@ -181,18 +181,18 @@ TEST_F(PrefsTest, SetInt64BadKey) {
 
 TEST_F(PrefsTest, SetInt64Max) {
   const char kKey[] = "test-max-int";
-  EXPECT_TRUE(prefs_.SetInt64(kKey, kint64max));
+  EXPECT_TRUE(prefs_.SetInt64(kKey, INT64_MAX));
   string value;
   EXPECT_TRUE(files::ReadFileToString(prefs_dir_.Append(kKey), &value));
-  EXPECT_EQ(StringPrintf("%" PRIi64, kint64max), value);
+  EXPECT_EQ(StringPrintf("%" PRIi64, INT64_MAX), value);
 }
 
 TEST_F(PrefsTest, SetInt64Min) {
   const char kKey[] = "test-min-int";
-  EXPECT_TRUE(prefs_.SetInt64(kKey, kint64min));
+  EXPECT_TRUE(prefs_.SetInt64(kKey, INT64_MIN));
   string value;
   EXPECT_TRUE(files::ReadFileToString(prefs_dir_.Append(kKey), &value));
-  EXPECT_EQ(StringPrintf("%" PRIi64, kint64min), value);
+  EXPECT_EQ(StringPrintf("%" PRIi64, INT64_MIN), value);
 }
 
 TEST_F(PrefsTest, ExistsWorks) {
