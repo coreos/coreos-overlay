@@ -21,6 +21,7 @@
 #include <base/logging.h>
 #include <bzlib.h>
 
+#include "files/scoped_file.h"
 #include "strings/string_printf.h"
 #include "update_engine/bzip.h"
 #include "update_engine/cycle_breaker.h"
@@ -242,7 +243,7 @@ bool ReadUnwrittenBlocks(const vector<Block>& blocks,
   InstallOperation* out_op = &vertex->op;
   int image_fd = open(image_path.c_str(), O_RDONLY, 000);
   TEST_AND_RETURN_FALSE_ERRNO(image_fd >= 0);
-  ScopedFdCloser image_fd_closer(&image_fd);
+  files::ScopedFD image_fd_closer(image_fd);
 
   string temp_file_path;
   TEST_AND_RETURN_FALSE(utils::MakeTempFile("/tmp/CrAU_temp_data.XXXXXX",
@@ -1068,7 +1069,7 @@ bool DeltaDiffGenerator::ReorderDataBlobs(
     const std::string& new_data_blobs_path) {
   int in_fd = open(data_blobs_path.c_str(), O_RDONLY, 0);
   TEST_AND_RETURN_FALSE_ERRNO(in_fd >= 0);
-  ScopedFdCloser in_fd_closer(&in_fd);
+  files::ScopedFD in_fd_closer(in_fd);
 
   DirectFileWriter writer(new_data_blobs_path.c_str());
   TEST_AND_RETURN_FALSE_ERRNO(writer.Open() == 0);
@@ -1273,7 +1274,7 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
         utils::MakeTempFile(kTempFileTemplate, &temp_file_path, &fd));
     temp_file_unlinker.reset(new ScopedPathUnlinker(temp_file_path));
     TEST_AND_RETURN_FALSE(fd >= 0);
-    ScopedFdCloser fd_closer(&fd);
+    files::ScopedFD fd_closer(fd);
     if (!old_image.empty()) {
       // Delta update
 
@@ -1428,7 +1429,7 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
   // Append the data blobs
   LOG(INFO) << "Writing final delta file data blobs...";
   int blobs_fd = open(ordered_blobs_path.c_str(), O_RDONLY, 0);
-  ScopedFdCloser blobs_fd_closer(&blobs_fd);
+  files::ScopedFD blobs_fd_closer(blobs_fd);
   TEST_AND_RETURN_FALSE(blobs_fd >= 0);
   for (;;) {
     char buf[kBlockSize];

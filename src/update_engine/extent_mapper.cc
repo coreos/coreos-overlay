@@ -16,6 +16,7 @@
 
 #include <linux/fs.h>
 
+#include "files/scoped_file.h"
 #include "update_engine/graph_types.h"
 #include "update_engine/graph_utils.h"
 #include "update_engine/utils.h"
@@ -37,11 +38,11 @@ bool ExtentsForFileFibmap(const std::string& path, std::vector<Extent>* out) {
   int rc = stat(path.c_str(), &stbuf);
   TEST_AND_RETURN_FALSE_ERRNO(rc == 0);
   TEST_AND_RETURN_FALSE(S_ISREG(stbuf.st_mode));
-  
+
   int fd = open(path.c_str(), O_RDONLY, 0);
   TEST_AND_RETURN_FALSE_ERRNO(fd >= 0);
-  ScopedFdCloser fd_closer(&fd);
-  
+  files::ScopedFD fd_closer(fd);
+
   // Get file size in blocks
   rc = fstat(fd, &stbuf);
   if (rc < 0) {
@@ -68,7 +69,7 @@ bool ExtentsForFileFibmap(const std::string& path, std::vector<Extent>* out) {
 bool GetFilesystemBlockSize(const std::string& path, uint32_t* out_blocksize) {
   int fd = open(path.c_str(), O_RDONLY, 0);
   TEST_AND_RETURN_FALSE_ERRNO(fd >= 0);
-  ScopedFdCloser fd_closer(&fd);
+  files::ScopedFD fd_closer(fd);
   int rc = ioctl(fd, FIGETBSZ, out_blocksize);
   TEST_AND_RETURN_FALSE_ERRNO(rc != -1);
   return true;

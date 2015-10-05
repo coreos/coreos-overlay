@@ -64,6 +64,14 @@ update_engine_client_LDADD = libupdate_engine.a $(LDADD)
 update_engine_client_SOURCES = src/update_engine/update_engine_client.cc
 
 libupdate_engine_a_SOURCES = \
+	src/files/file_enumerator.cc \
+	src/files/file_enumerator_posix.cc \
+	src/files/file_path.cc \
+	src/files/file_path_constants.cc \
+	src/files/file_util.cc \
+	src/files/file_util_posix.cc \
+	src/files/scoped_file.cc \
+	src/files/scoped_temp_dir.cc \
 	src/strings/string_number_conversions.cc \
 	src/strings/string_printf.cc \
 	src/strings/string_split.cc \
@@ -116,6 +124,10 @@ update_engine_unittests_LDADD = libupdate_engine.a \
 				-lgtest -lgmock $(LDADD)
 update_engine_unittests_SOURCES = \
 	src/update_engine/testrunner.cc \
+	src/files/file_path_unittest.cc \
+	src/files/file_util_unittest.cc \
+	src/files/scoped_file_unittest.cc \
+	src/files/scoped_temp_dir_unittest.cc \
 	src/strings/string_number_conversions_unittest.cc \
 	src/strings/string_printf_unittest.cc \
 	src/strings/string_split_unittest.cc \

@@ -5,8 +5,10 @@
 #ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_PREFS_H__
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_PREFS_H__
 
-#include "base/file_path.h"
-#include "gtest/gtest_prod.h"  // for FRIEND_TEST
+#include <base/basictypes.h>
+#include <gtest/gtest_prod.h>  // for FRIEND_TEST
+
+#include "files/file_path.h"
 #include "update_engine/prefs_interface.h"
 
 namespace chromeos_update_engine {
@@ -22,7 +24,7 @@ class Prefs : public PrefsInterface {
   // Initializes the store by associating this object with |prefs_dir|
   // as the preference store directory. Returns true on success, false
   // otherwise.
-  bool Init(const FilePath& prefs_dir);
+  bool Init(const files::FilePath& prefs_dir);
 
   // PrefsInterface methods.
   bool GetString(const std::string& key, std::string* value);
@@ -40,10 +42,10 @@ class Prefs : public PrefsInterface {
 
   // Sets |filename| to the full path to the file containing the data
   // associated with |key|. Returns true on success, false otherwise.
-  bool GetFileNameForKey(const std::string& key, FilePath* filename);
+  bool GetFileNameForKey(const std::string& key, files::FilePath* filename);
 
   // Preference store directory.
-  FilePath prefs_dir_;
+  files::FilePath prefs_dir_;
 
   DISALLOW_COPY_AND_ASSIGN(Prefs);
 };

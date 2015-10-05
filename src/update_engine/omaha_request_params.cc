@@ -12,8 +12,6 @@
 #include <string>
 #include <vector>
 
-#include <base/file_util.h>
-
 #include "update_engine/simple_key_value_store.h"
 #include "update_engine/system_state.h"
 #include "update_engine/prefs_interface.h"

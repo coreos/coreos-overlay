@@ -18,6 +18,8 @@
 #include <gflags/gflags.h>
 #include <glib.h>
 
+#include "files/file_path.h"
+#include "files/scoped_file.h"
 #include "strings/string_number_conversions.h"
 #include "strings/string_split.h"
 #include "update_engine/delta_diff_generator.h"
@@ -174,7 +176,7 @@ void ApplyDelta() {
   Prefs prefs;
   InstallPlan install_plan;
   LOG(INFO) << "Setting up preferences under: " << FLAGS_prefs_dir;
-  LOG_IF(ERROR, !prefs.Init(FilePath(FLAGS_prefs_dir)))
+  LOG_IF(ERROR, !prefs.Init(files::FilePath(FLAGS_prefs_dir)))
       << "Failed to initialize preferences.";
   // Get original checksums
   LOG(INFO) << "Calculating original checksums";
@@ -189,7 +191,7 @@ void ApplyDelta() {
   vector<char> buf(1024 * 1024);
   int fd = open(FLAGS_in_file.c_str(), O_RDONLY, 0);
   CHECK_GE(fd, 0);
-  ScopedFdCloser fd_closer(&fd);
+  files::ScopedFD fd_closer(fd);
   for (off_t offset = 0;; offset += buf.size()) {
     ssize_t bytes_read;
     CHECK(utils::PReadAll(fd, &buf[0], buf.size(), offset, &bytes_read));

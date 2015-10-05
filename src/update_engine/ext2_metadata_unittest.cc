@@ -11,6 +11,7 @@
 
 #include <gtest/gtest.h>
 
+#include "files/scoped_file.h"
 #include "strings/string_printf.h"
 #include "update_engine/delta_diff_generator.h"
 #include "update_engine/ext2_metadata.h"
@@ -88,7 +89,7 @@ TEST_F(Ext2MetadataTest, RunAsRootReadMetadata) {
 
   int fd = open(data_file.c_str(), O_RDWR | O_CREAT, S_IRWXU);
   EXPECT_NE(fd, -1);
-  ScopedFdCloser fd_closer(&fd);
+  files::ScopedFD fd_closer(fd);
 
   Graph graph;
   vector<Block> blocks(image_size / block_size);

@@ -6,13 +6,13 @@
 #include <vector>
 
 #include <base/command_line.h>
-#include <base/file_util.h>
 #include <base/logging.h>
 #include <gflags/gflags.h>
 #include <glib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include "files/file_util.h"
 #include "strings/string_printf.h"
 #include "update_engine/certificate_checker.h"
 #include "update_engine/dbus_constants.h"
@@ -90,9 +90,9 @@ void SetupLogSymlink(const string& symlink_path, const string& log_path) {
   // we stop caring about the old-style logs.
   if (utils::FileExists(symlink_path.c_str()) &&
       !utils::IsSymlink(symlink_path.c_str())) {
-    file_util::ReplaceFile(FilePath(symlink_path), FilePath(log_path));
+    files::ReplaceFile(files::FilePath(symlink_path), files::FilePath(log_path));
   }
-  file_util::Delete(FilePath(symlink_path), true);
+  files::DeleteFile(files::FilePath(symlink_path), true);
   if (symlink(log_path.c_str(), symlink_path.c_str()) == -1) {
     PLOG(ERROR) << "Unable to create symlink " << symlink_path
                 << " pointing at " << log_path;

@@ -7,6 +7,7 @@
 
 #include <gtest/gtest.h>
 
+#include "files/scoped_file.h"
 #include "update_engine/full_update_generator.h"
 #include "update_engine/test_utils.h"
 
@@ -43,7 +44,7 @@ TEST(FullUpdateGeneratorTest, RunTest) {
                                   &out_blobs_path,
                                   &out_blobs_fd));
   ScopedPathUnlinker out_blobs_path_unlinker(out_blobs_path);
-  ScopedFdCloser out_blobs_fd_closer(&out_blobs_fd);
+  files::ScopedFD out_blobs_fd_closer(out_blobs_fd);
 
   off_t out_blobs_length = 0;
 

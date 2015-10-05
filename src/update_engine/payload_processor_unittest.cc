@@ -9,10 +9,11 @@
 #include <string>
 #include <vector>
 
-#include <base/file_util.h>
 #include <google/protobuf/repeated_field.h>
 #include <gtest/gtest.h>
 
+#include "files/file_util.h"
+#include "files/scoped_file.h"
 #include "strings/string_printf.h"
 #include "update_engine/delta_diff_generator.h"
 #include "update_engine/extent_ranges.h"
@@ -89,7 +90,7 @@ static void CompareFilesByBlock(const string& a_file, const string& b_file) {
 static bool WriteSparseFile(const string& path, off_t size) {
   int fd = open(path.c_str(), O_CREAT | O_TRUNC | O_WRONLY, 0644);
   TEST_AND_RETURN_FALSE_ERRNO(fd >= 0);
-  ScopedFdCloser fd_closer(&fd);
+  files::ScopedFD fd_closer(fd);
   off_t rc = lseek(fd, size + 1, SEEK_SET);
   TEST_AND_RETURN_FALSE_ERRNO(rc != static_cast<off_t>(-1));
   int return_code = ftruncate(fd, size);
@@ -260,8 +261,8 @@ static void GenerateDeltaFile(bool full_rootfs,
   }
 
   if (noop) {
-    EXPECT_TRUE(file_util::CopyFile(FilePath(state->a_img),
-                                    FilePath(state->b_img)));
+    EXPECT_TRUE(files::CopyFile(files::FilePath(state->a_img),
+                                files::FilePath(state->b_img)));
   } else {
     CreateExtImageAtPath(state->b_img, NULL);
     EXPECT_EQ(0, System(StringPrintf(

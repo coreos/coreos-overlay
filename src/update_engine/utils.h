@@ -14,7 +14,6 @@
 #include <unistd.h>
 #include <vector>
 
-#include <base/posix/eintr_wrapper.h>
 #include <ext2fs/ext2fs.h>
 #include <glib.h>
 
@@ -284,40 +283,6 @@ class ScopedFilesystemUnmounter {
   const std::string mountpoint_;
   bool should_unmount_;
   DISALLOW_COPY_AND_ASSIGN(ScopedFilesystemUnmounter);
-};
-
-// Utility class to close a file descriptor
-class ScopedFdCloser {
- public:
-  explicit ScopedFdCloser(int* fd) : fd_(fd), should_close_(true) {}
-  ~ScopedFdCloser() {
-    if (should_close_ && fd_ && (*fd_ >= 0)) {
-      if (!close(*fd_))
-        *fd_ = -1;
-    }
-  }
-  void set_should_close(bool should_close) { should_close_ = should_close; }
- private:
-  int* fd_;
-  bool should_close_;
-  DISALLOW_COPY_AND_ASSIGN(ScopedFdCloser);
-};
-
-// An EINTR-immune file descriptor closer.
-class ScopedEintrSafeFdCloser {
- public:
-  explicit ScopedEintrSafeFdCloser(int* fd) : fd_(fd), should_close_(true) {}
-  ~ScopedEintrSafeFdCloser() {
-    if (should_close_ && fd_ && (*fd_ >= 0)) {
-      if (!HANDLE_EINTR(close(*fd_)))
-        *fd_ = -1;
-    }
-  }
-  void set_should_close(bool should_close) { should_close_ = should_close; }
- private:
-  int* fd_;
-  bool should_close_;
-  DISALLOW_COPY_AND_ASSIGN(ScopedEintrSafeFdCloser);
 };
 
 // Utility class to delete a file when it goes out of scope.
