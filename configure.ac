@@ -58,7 +58,8 @@ AM_CONDITIONAL([ENABLE_DELTA_GENERATOR],
 
 AC_ARG_ENABLE([debug],
               [AS_HELP_STRING([--enable-debug],
-                              [build with debug options])])
+                              [build with debug options])],
+              [], [enable_debug=yes])
 AM_CONDITIONAL([ENABLE_DEBUG], [test "x$enable_debug" = "xyes"])
 
 AC_ARG_ENABLE([gcov],
