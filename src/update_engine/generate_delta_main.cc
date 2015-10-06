@@ -205,7 +205,7 @@ void ApplyDelta() {
 }
 
 int Main(int argc, char** argv) {
-  google::ParseCommandLineFlags(&argc, &argv, true);
+  GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
   CommandLine::Init(argc, argv);
   Terminator::Init();
   Subprocess::Init();

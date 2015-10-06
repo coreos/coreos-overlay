@@ -33,6 +33,38 @@ AC_CHECK_LIB([bz2], [BZ2_bzDecompressInit], [],
 AC_CHECK_HEADERS([bzlib.h], [],
                  [AC_MSG_ERROR([*** bzlib.h not found])])
 
+# Detect libgflags presence and namespace. (may be gflags or google)
+# autoconf's C++ mode is only enabled for this test because other
+# macros like AM_PATH_GLIB_2_0 assume the default C mode.
+LIBS="$LIBS -lgflags"
+AC_LANG_PUSH([C++])
+AC_CHECK_HEADERS([gflags/gflags.h], [],
+                 [AC_MSG_ERROR([*** gflags/gflags.h not found])])
+AC_CACHE_CHECK(
+ [gflags namespace],
+ [ac_cv_gflags_namespace],
+ [ac_cv_gflags_namespace="no"
+  # gflags prior to 2.1.2 does not define GFLAGS_NAMESPACE
+  AC_PREPROC_IFELSE([AC_LANG_SOURCE([[#include <gflags/gflags.h>
+                     #ifndef GFLAGS_NAMESPACE
+                     #error GFLAGS_NAMESPACE
+                     #endif]])],
+                    [try_gflags_namespaces=GFLAGS_NAMESPACE],
+                    [try_gflags_namespaces="gflags google"])
+  for try_gflags_ns in $try_gflags_namespaces
+  do
+    AC_LINK_IFELSE([AC_LANG_SOURCE([[#include <gflags/gflags.h>
+      int main(int argc, char** argv) {
+        return ${try_gflags_ns}::ParseCommandLineFlags(&argc, &argv, true);
+      }]])],
+      [ac_cv_gflags_namespace="$try_gflags_ns"; break])
+  done])
+AC_LANG_POP([C++])
+AS_IF([test "x${ac_cv_gflags_namespace}" = "xno"],
+      [AC_MSG_ERROR([*** gflags not found])])
+AS_IF([test "x${ac_cv_gflags_namespace}" != "xGFLAGS_NAMESPACE"],
+      [AC_DEFINE_UNQUOTED([GFLAGS_NAMESPACE], [$ac_cv_gflags_namespace])])
+
 AM_PATH_GLIB_2_0([2.36.0], [],
                  [AC_MSG_ERROR([*** glib >= 2.36 not found])],
                  gthread gio gio-unix)
@@ -44,7 +76,6 @@ PKG_CHECK_MODULES([DEPS],
                    libchrome-180609
                    libcrypto
                    libcurl
-                   libgflags
                    libssl
                    libxml-2.0
                    protobuf])

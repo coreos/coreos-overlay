@@ -212,7 +212,7 @@ int main(int argc, char** argv) {
   // Boilerplate init commands.
   dbus_threads_init_default();
   chromeos_update_engine::Subprocess::Init();
-  google::ParseCommandLineFlags(&argc, &argv, true);
+  GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
 
   // Update the status if requested.
   if (FLAGS_reset_status) {
