@@ -146,7 +146,7 @@ TEST_F(PrefsTest, GetInt64Max) {
 
 TEST_F(PrefsTest, GetInt64Min) {
   const char kKey[] = "test-key";
-  ASSERT_TRUE(SetValue(kKey, StringPrintf("%" PRIi64, INT64_MAX)));
+  ASSERT_TRUE(SetValue(kKey, StringPrintf("%" PRIi64, INT64_MIN)));
   int64_t value;
   EXPECT_TRUE(prefs_.GetInt64(kKey, &value));
   EXPECT_EQ(INT64_MIN, value);
