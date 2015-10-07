@@ -20,7 +20,6 @@ AM_CFLAGS = -fno-exceptions \
 	    -Wsign-compare \
 	    -Wtype-limits \
 	    -Wuninitialized \
-	    -Wno-error=unused-local-typedefs \
 	    -D__STDC_FORMAT_MACROS=1 \
 	    -D_FILE_OFFSET_BITS=64 \
 	    $(GLIB_CFLAGS) $(DEPS_CFLAGS)
