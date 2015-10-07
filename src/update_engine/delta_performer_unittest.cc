@@ -20,7 +20,7 @@ using std::string;
 
 TEST(DeltaPerformerTest, ExtentsToByteStringTest) {
   uint64_t test[] = {1, 1, 4, 2, kSparseHole, 1, 0, 1};
-  COMPILE_ASSERT(arraysize(test) % 2 == 0, array_size_uneven);
+  static_assert(arraysize(test) % 2 == 0, "array size uneven");
   const uint64_t block_size = 4096;
   const uint64_t file_length = 5 * block_size - 13;
 

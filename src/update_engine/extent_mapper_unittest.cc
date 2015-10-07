@@ -62,7 +62,7 @@ TEST(ExtentMapperTest, RunAsRootSparseFileTest) {
       "/tmp/ExtentMapperTest.RunAsRootSparseFileTest.XXXXXX";
   char buf[sizeof(tmp_name_template)];
   strncpy(buf, tmp_name_template, sizeof(buf));
-  COMPILE_ASSERT(sizeof(buf) > 8, buf_size_incorrect);
+  static_assert(sizeof(buf) > 8, "buf size incorrect");
   ASSERT_EQ('\0', buf[sizeof(buf) - 1]);
 
   int fd = mkstemp(buf);

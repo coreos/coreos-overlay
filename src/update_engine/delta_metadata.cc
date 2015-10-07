@@ -38,8 +38,8 @@ DeltaMetadata::ParseResult DeltaMetadata::ParsePayload(
 
   // Next, parse the manifest size.
   uint64_t manifest_size;
-  COMPILE_ASSERT(sizeof(manifest_size) == kDeltaManifestSizeSize,
-                 manifest_size_size_mismatch);
+  static_assert(sizeof(manifest_size) == kDeltaManifestSizeSize,
+                "manifest_size size mismatch");
   memcpy(&manifest_size,
          &payload[kDeltaManifestSizeOffset],
          kDeltaManifestSizeSize);

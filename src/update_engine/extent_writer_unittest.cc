@@ -20,7 +20,7 @@ using std::vector;
 
 namespace chromeos_update_engine {
 
-COMPILE_ASSERT(sizeof(off_t) == 8, off_t_not_64_bit);
+static_assert(sizeof(off_t) == 8, "off_t not 64 bit");
 
 namespace {
 const char kPathTemplate[] = "./ExtentWriterTest-file.XXXXXX";

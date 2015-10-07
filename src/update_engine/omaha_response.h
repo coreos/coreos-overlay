@@ -59,7 +59,7 @@ struct OmahaResponse {
   // on the client altogether. False otherwise.
   bool disable_payload_backoff;
 };
-COMPILE_ASSERT(sizeof(off_t) == 8, off_t_not_64bit);
+static_assert(sizeof(off_t) == 8, "off_t not 64 bit");
 
 }  // namespace chromeos_update_engine
 
