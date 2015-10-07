@@ -167,6 +167,8 @@ class ActionTraits<OutputObjectCollectorAction> {
 class OutputObjectCollectorAction : public Action<OutputObjectCollectorAction> {
  public:
   OutputObjectCollectorAction() : has_input_object_(false) {}
+  typedef ActionTraits<OutputObjectCollectorAction>::InputObjectType InputObjectType;
+  typedef ActionTraits<OutputObjectCollectorAction>::OutputObjectType OutputObjectType;
   void PerformAction() {
     // copy input object
     has_input_object_ = HasInputObject();
