@@ -645,6 +645,188 @@ TEST_F(DeltaDiffGeneratorTest, RunAsRootAssignTempBlocksTest) {
   }
 }
 
+// Test that sparse holes are not used as scratch. More specifically, test that
+// if all full operations write to sparse holes and there's no extra scratch
+// space, delta operations that need scratch are converted to full. See
+// crbug.com/238440.
+TEST_F(DeltaDiffGeneratorTest, RunAsRootNoSparseAsTempTest) {
+  Graph graph(3);
+  const vector<Extent> kEmpty;
+  const string kFilename = "/foo";
+
+  // Make sure this sparse hole is not used as scratch.
+  GenVertex(&graph[0], kEmpty, VectOfExt(kSparseHole, 1), "", OP_REPLACE);
+
+  // Create a single-block cycle.
+  GenVertex(&graph[1], VectOfExt(0, 1), VectOfExt(1, 1), "", OP_BSDIFF);
+  graph[1].out_edges[2] = EdgeWithReadDep(VectOfExt(1, 1));
+  GenVertex(&graph[2], VectOfExt(1, 1), VectOfExt(0, 1), kFilename, OP_BSDIFF);
+  graph[2].out_edges[1] = EdgeWithReadDep(VectOfExt(0, 1));
+
+  graph_utils::DumpGraph(graph);
+
+  vector<Vertex::Index> final_order;
+
+  // Prepare the filesystem with the minimum required for this to work.
+  string temp_dir;
+  EXPECT_TRUE(utils::MakeTempDirectory("/tmp/NoSparseAsTempTest.XXXXXX",
+                                       &temp_dir));
+  ScopedDirRemover temp_dir_remover(temp_dir);
+
+  const size_t kBlockSize = 4096;
+  vector<char> temp_data(kBlockSize);
+  FillWithData(&temp_data);
+  EXPECT_TRUE(WriteFileVector(temp_dir + kFilename, temp_data));
+  ScopedPathUnlinker filename_unlinker(temp_dir + kFilename);
+
+  int fd = -1;
+  EXPECT_TRUE(utils::MakeTempFile("/tmp/NoSparseAsTempTestData.XXXXXX",
+                                  NULL,
+                                  &fd));
+  files::ScopedFD fd_closer(fd);
+  off_t data_file_size = 0;
+
+  EXPECT_TRUE(DeltaDiffGenerator::ConvertGraphToDag(&graph,
+                                                    temp_dir,
+                                                    fd,
+                                                    &data_file_size,
+                                                    &final_order,
+                                                    Vertex::kInvalidIndex));
+
+  ASSERT_EQ(4, graph.size());
+
+  // The second BSDIFF operation must have been converted to a full operation
+  // (due to insufficient scratch space).
+  EXPECT_TRUE(graph[2].op.type() == OP_REPLACE ||
+              graph[2].op.type() == OP_REPLACE_BZ);
+
+  // The temporary node created for breaking the cycle must have been marked as
+  // invalid.
+  EXPECT_FALSE(graph[3].valid);
+}
+
+// Test that sparse holes are not used as scratch. More specifically, test that
+// if scratch space comes only from full operations writing to real blocks as
+// well as sparse holes, only the real blocks are utilized. See
+// crbug.com/238440.
+TEST_F(DeltaDiffGeneratorTest, NoSparseAsTempTest) {
+  Graph graph;
+  vector<Block> blocks(4);
+
+  // Create nodes in |graph|.
+  {
+    graph.resize(graph.size() + 1);
+    graph.back().op.set_type(InstallOperation_Type_REPLACE);
+
+    // Write to a sparse hole -- basically a no-op to ensure sparse holes are
+    // not used as scratch.
+    vector<Extent> extents;
+    graph_utils::AppendBlockToExtents(&extents, kSparseHole);
+    DeltaDiffGenerator::StoreExtents(extents,
+                                     graph.back().op.mutable_dst_extents());
+  }
+  {
+    graph.resize(graph.size() + 1);
+    graph.back().op.set_type(OP_REPLACE);
+
+    // Scratch space: write to block 0 with sparse holes around.
+    vector<Extent> extents;
+    graph_utils::AppendBlockToExtents(&extents, kSparseHole);
+    graph_utils::AppendBlockToExtents(&extents, 0);
+    graph_utils::AppendBlockToExtents(&extents, kSparseHole);
+    DeltaDiffGenerator::StoreExtents(extents,
+                                     graph.back().op.mutable_dst_extents());
+    blocks[0].writer = graph.size() - 1;
+  }
+  {
+    graph.resize(graph.size() + 1);
+    graph.back().op.set_type(OP_REPLACE);
+
+    // Write to a sparse hole.
+    vector<Extent> extents;
+    graph_utils::AppendBlockToExtents(&extents, kSparseHole);
+    DeltaDiffGenerator::StoreExtents(extents,
+                                     graph.back().op.mutable_dst_extents());
+  }
+  // Create a two-node cycle between (2, sparse, sparse) and (1, sparse, 3).
+  {
+    graph.resize(graph.size() + 1);
+    graph.back().op.set_type(OP_MOVE);
+    // Read from (2, sparse, sparse).
+    vector<Extent> extents;
+    graph_utils::AppendBlockToExtents(&extents, 2);
+    graph_utils::AppendBlockToExtents(&extents, kSparseHole);
+    graph_utils::AppendBlockToExtents(&extents, kSparseHole);
+    DeltaDiffGenerator::StoreExtents(extents,
+                                     graph.back().op.mutable_src_extents());
+    blocks[2].reader = graph.size() - 1;
+
+    // Write to (1, sparse, 3).
+    extents.clear();
+    graph_utils::AppendBlockToExtents(&extents, 1);
+    graph_utils::AppendBlockToExtents(&extents, kSparseHole);
+    graph_utils::AppendBlockToExtents(&extents, 3);
+    DeltaDiffGenerator::StoreExtents(extents,
+                                     graph.back().op.mutable_dst_extents());
+    blocks[1].writer = graph.size() - 1;
+    blocks[3].writer = graph.size() - 1;
+  }
+  {
+    graph.resize(graph.size() + 1);
+    graph.back().op.set_type(OP_MOVE);
+    // Read from (1, sparse, 3).
+    vector<Extent> extents;
+    graph_utils::AppendBlockToExtents(&extents, 1);
+    graph_utils::AppendBlockToExtents(&extents, kSparseHole);
+    graph_utils::AppendBlockToExtents(&extents, 3);
+    DeltaDiffGenerator::StoreExtents(extents,
+                                     graph.back().op.mutable_src_extents());
+    blocks[1].reader = graph.size() - 1;
+    blocks[3].reader = graph.size() - 1;
+
+    // Write to (2, sparse, sparse).
+    extents.clear();
+    graph_utils::AppendBlockToExtents(&extents, 2);
+    graph_utils::AppendBlockToExtents(&extents, kSparseHole);
+    graph_utils::AppendBlockToExtents(&extents, kSparseHole);
+    DeltaDiffGenerator::StoreExtents(extents,
+                                     graph.back().op.mutable_dst_extents());
+    blocks[2].writer = graph.size() - 1;
+  }
+
+  graph_utils::DumpGraph(graph);
+
+  // Create edges
+  DeltaDiffGenerator::CreateEdges(&graph, blocks);
+
+  graph_utils::DumpGraph(graph);
+
+  vector<Vertex::Index> final_order;
+  off_t data_file_size = 0;
+  EXPECT_TRUE(DeltaDiffGenerator::ConvertGraphToDag(&graph,
+                                                    "/non/existent/dir",
+                                                    -1,
+                                                    &data_file_size,
+                                                    &final_order,
+                                                    Vertex::kInvalidIndex));
+
+  // Check for a single temporary node writing to scratch.
+  ASSERT_EQ(6, graph.size());
+  EXPECT_EQ(InstallOperation_Type_MOVE, graph[5].op.type());
+  EXPECT_EQ(1, graph[5].op.src_extents_size());
+  ASSERT_EQ(1, graph[5].op.dst_extents_size());
+  EXPECT_EQ(0, graph[5].op.dst_extents(0).start_block());
+  EXPECT_EQ(1, graph[5].op.dst_extents(0).num_blocks());
+
+  // Make sure the cycle nodes still read from and write to sparse holes.
+  for (int i = 3; i < 5; i++) {
+    ASSERT_GE(graph[i].op.src_extents_size(), 2);
+    EXPECT_EQ(kSparseHole, graph[i].op.src_extents(1).start_block());
+    ASSERT_GE(graph[i].op.dst_extents_size(), 2);
+    EXPECT_EQ(kSparseHole, graph[i].op.dst_extents(1).start_block());
+  }
+}
+
 TEST_F(DeltaDiffGeneratorTest, IsNoopOperationTest) {
   InstallOperation op;
   op.set_type(InstallOperation_Type_REPLACE_BZ);

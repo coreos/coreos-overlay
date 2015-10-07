@@ -33,21 +33,17 @@ uint64_t EdgeWeight(const Graph& graph, const Edge& edge) {
 }
 
 void AppendBlockToExtents(vector<Extent>* extents, uint64_t block) {
+  // First try to extend the last extent in |extents|, if any.
   if (!extents->empty()) {
     Extent& extent = extents->back();
-    if (block == kSparseHole) {
-      if (extent.start_block() == kSparseHole) {
-        // Extend sparse hole extent
-        extent.set_num_blocks(extent.num_blocks() + 1);
-        return;
-      } else {
-        // Create new extent below outer 'if'
-      }
-    } else if (extent.start_block() + extent.num_blocks() == block) {
+    uint64_t next_block = extent.start_block() == kSparseHole ?
+        kSparseHole : extent.start_block() + extent.num_blocks();
+    if (next_block == block) {
       extent.set_num_blocks(extent.num_blocks() + 1);
       return;
     }
   }
+  // If unable to extend the last extent, append a new single-block extent.
   Extent new_extent;
   new_extent.set_start_block(block);
   new_extent.set_num_blocks(1);
