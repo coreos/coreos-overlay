@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include <limits>
 #include <map>
 #include <string>
 #include <vector>
@@ -42,7 +43,7 @@ FilesystemCopierAction::FilesystemCopierAction(bool verify_hash)
       read_done_(false),
       failed_(false),
       cancelled_(false),
-      filesystem_size_(kint64max) {
+      filesystem_size_(std::numeric_limits<int64_t>::max()) {
   // A lot of code works on the implicit assumption that processing is done on
   // exactly 2 ping-pong buffers.
   COMPILE_ASSERT(arraysize(buffer_) == 2 &&
@@ -295,7 +296,7 @@ void FilesystemCopierAction::DetermineFilesystemSize(int fd) {
     LOG(INFO) << "Filesystem size: " << filesystem_size_;
     return;
   }
-  filesystem_size_ = kint64max;
+  filesystem_size_ = std::numeric_limits<int64_t>::max();
   int block_count = 0, block_size = 0;
   if (utils::GetFilesystemSizeFromFD(fd, &block_count, &block_size)) {
     filesystem_size_ = static_cast<int64_t>(block_count) * block_size;

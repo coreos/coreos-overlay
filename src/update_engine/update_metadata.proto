@@ -91,7 +91,7 @@ message InstallOperation {
 // In general, files are stored sequentially on disk, so it's more efficient
 // to use extents to encode the block lists (this is effectively
 // run-length encoding).
-// A sentinel value (kuint64max) as the start block denotes a sparse-hole
+// A sentinel value (UINT64_MAX) as the start block denotes a sparse-hole
 // in a file whose block-length is specified by num_blocks.
 message Extent {
   optional uint64 start_block = 1;

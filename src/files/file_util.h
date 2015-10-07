@@ -194,9 +194,6 @@ bool CreateTemporaryDirInDir(const FilePath& base_dir,
 // already exists.  The directory is only readable by the current user.
 bool CreateDirectory(const FilePath& full_path);
 
-// Returns the file size. Returns true on success.
-bool GetFileSize(const FilePath& file_path, int64* file_size);
-
 // Sets |real_path| to |path| with symbolic links and junctions expanded.
 // On windows, make sure the path starts with a lettered drive.
 // |path| must reference a file.  Function will fail if |path| points to

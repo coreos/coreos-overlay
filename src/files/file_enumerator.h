@@ -42,7 +42,7 @@ class FileEnumerator {
     // includes the |root_path| passed into the FileEnumerator constructor.
     FilePath GetName() const;
 
-    int64 GetSize() const;
+    off_t GetSize() const;
 
     const struct stat& stat() const { return stat_; }
 

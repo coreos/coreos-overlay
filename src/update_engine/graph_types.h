@@ -5,6 +5,7 @@
 #ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_GRAPH_TYPES_H__
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_GRAPH_TYPES_H__
 
+#include <limits>
 #include <map>
 #include <set>
 #include <string>
@@ -66,7 +67,7 @@ typedef std::vector<Vertex> Graph;
 
 typedef std::pair<Vertex::Index, Vertex::Index> Edge;
 
-const uint64_t kSparseHole = kuint64max;
+const uint64_t kSparseHole = std::numeric_limits<uint64_t>::max();
 const uint64_t kTempBlockStart = 1ULL << 60;
 COMPILE_ASSERT(kTempBlockStart != 0, kTempBlockStart_invalid);
 
