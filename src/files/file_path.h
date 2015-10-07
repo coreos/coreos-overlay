@@ -108,8 +108,6 @@
 #include <string>
 #include <vector>
 
-#include "base/compiler_specific.h"
-
 namespace files {
 
 // An abstraction to isolate users from the differences between native
@@ -192,13 +190,13 @@ class FilePath {
   // only contains one component, returns a FilePath identifying
   // kCurrentDirectory.  If this object already refers to the root directory,
   // returns a FilePath identifying the root directory.
-  FilePath DirName() const WARN_UNUSED_RESULT;
+  [[gnu::warn_unused_result]] FilePath DirName() const;
 
   // Returns a FilePath corresponding to the last path component of this
   // object, either a file or a directory.  If this object already refers to
   // the root directory, returns a FilePath identifying the root directory;
   // this is the only situation in which BaseName will return an absolute path.
-  FilePath BaseName() const WARN_UNUSED_RESULT;
+  [[gnu::warn_unused_result]] FilePath BaseName() const;
 
   // Returns a FilePath by appending a separator and the supplied path
   // component to this object's path.  Append takes care to avoid adding
@@ -206,8 +204,8 @@ class FilePath {
   // If this object's path is kCurrentDirectory, a new FilePath corresponding
   // only to |component| is returned.  |component| must be a relative path;
   // it is an error to pass an absolute path.
-  FilePath Append(StringType component) const WARN_UNUSED_RESULT;
-  FilePath Append(const FilePath& component) const WARN_UNUSED_RESULT;
+  [[gnu::warn_unused_result]] FilePath Append(StringType component) const;
+  [[gnu::warn_unused_result]] FilePath Append(const FilePath& component) const;
 
   // Returns true if this FilePath contains an absolute path.  On Windows, an
   // absolute path begins with either a drive letter specification followed by
@@ -216,15 +214,15 @@ class FilePath {
   bool IsAbsolute() const;
 
   // Returns true if the patch ends with a path separator character.
-  bool EndsWithSeparator() const WARN_UNUSED_RESULT;
+  [[gnu::warn_unused_result]] bool EndsWithSeparator() const;
 
   // Returns a copy of this FilePath that ends with a trailing separator. If
   // the input path is empty, an empty FilePath will be returned.
-  FilePath AsEndingWithSeparator() const WARN_UNUSED_RESULT;
+  [[gnu::warn_unused_result]] FilePath AsEndingWithSeparator() const;
 
   // Returns a copy of this FilePath that does not end with a trailing
   // separator.
-  FilePath StripTrailingSeparators() const WARN_UNUSED_RESULT;
+  [[gnu::warn_unused_result]] FilePath StripTrailingSeparators() const;
 
   // Returns true if this FilePath contains an attempt to reference a parent
   // directory (e.g. has a path component that is "..").

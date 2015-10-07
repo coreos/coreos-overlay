@@ -31,17 +31,17 @@ class ScopedTempDir {
 
   // Creates a unique directory in TempPath, and takes ownership of it.
   // See file_util::CreateNewTemporaryDirectory.
-  bool CreateUniqueTempDir() WARN_UNUSED_RESULT;
+  [[gnu::warn_unused_result]] bool CreateUniqueTempDir();
 
   // Creates a unique directory under a given path, and takes ownership of it.
-  bool CreateUniqueTempDirUnderPath(const FilePath& path) WARN_UNUSED_RESULT;
+  [[gnu::warn_unused_result]] bool CreateUniqueTempDirUnderPath(const FilePath& path);
 
   // Takes ownership of directory at |path|, creating it if necessary.
   // Don't call multiple times unless Take() has been called first.
-  bool Set(const FilePath& path) WARN_UNUSED_RESULT;
+  [[gnu::warn_unused_result]] bool Set(const FilePath& path);
 
   // Deletes the temporary directory wrapped by this object.
-  bool Delete() WARN_UNUSED_RESULT;
+  [[gnu::warn_unused_result]] bool Delete();
 
   // Caller takes ownership of the temporary directory so it won't be destroyed
   // when this object goes out of scope.
