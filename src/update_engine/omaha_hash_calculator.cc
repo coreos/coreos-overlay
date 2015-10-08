@@ -61,8 +61,8 @@ OmahaHashCalculator::OmahaHashCalculator() : valid_(false) {
 bool OmahaHashCalculator::Update(const char* data, size_t length) {
   TEST_AND_RETURN_FALSE(valid_);
   TEST_AND_RETURN_FALSE(hash_.empty());
-  COMPILE_ASSERT(sizeof(size_t) <= sizeof(unsigned long),
-                 length_param_may_be_truncated_in_SHA256_Update);
+  static_assert(sizeof(size_t) <= sizeof(unsigned long),
+                "length param may be truncated in SHA256_Update");
   TEST_AND_RETURN_FALSE(SHA256_Update(&ctx_, data, length) == 1);
   return true;
 }

@@ -121,7 +121,7 @@ class DownloadAction : public Action<DownloadAction>,
 
 // We want to be sure that we're compiled with large file support on linux,
 // just in case we find ourselves downloading large images.
-COMPILE_ASSERT(8 == sizeof(off_t), off_t_not_64_bit);
+static_assert(8 == sizeof(off_t), "off_t not 64 bit");
 
 }  // namespace chromeos_update_engine
 

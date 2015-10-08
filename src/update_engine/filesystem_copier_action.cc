@@ -46,11 +46,11 @@ FilesystemCopierAction::FilesystemCopierAction(bool verify_hash)
       filesystem_size_(std::numeric_limits<int64_t>::max()) {
   // A lot of code works on the implicit assumption that processing is done on
   // exactly 2 ping-pong buffers.
-  COMPILE_ASSERT(arraysize(buffer_) == 2 &&
-                 arraysize(buffer_state_) == 2 &&
-                 arraysize(buffer_valid_size_) == 2 &&
-                 arraysize(canceller_) == 2,
-                 ping_pong_buffers_not_two);
+  static_assert(arraysize(buffer_) == 2 &&
+                arraysize(buffer_state_) == 2 &&
+                arraysize(buffer_valid_size_) == 2 &&
+                arraysize(canceller_) == 2,
+                "ping-pong buffers not two");
   for (int i = 0; i < 2; ++i) {
     buffer_state_[i] = kBufferStateEmpty;
     buffer_valid_size_[i] = 0;
