@@ -4,6 +4,7 @@
 
 #include <fcntl.h>
 
+#include <limits>
 #include <set>
 #include <string>
 #include <vector>
@@ -364,7 +365,7 @@ TEST_F(FilesystemCopierActionTest, RunAsRootDetermineFilesystemSizeTest) {
   EXPECT_EQ(20 * 1024 * 1024, utils::FileSize(img));
 
   FilesystemCopierAction action(false);
-  EXPECT_EQ(kint64max, action.filesystem_size_);
+  EXPECT_EQ(std::numeric_limits<int64_t>::max(), action.filesystem_size_);
   {
     int fd = HANDLE_EINTR(open(img.c_str(), O_RDONLY));
     EXPECT_TRUE(fd > 0);

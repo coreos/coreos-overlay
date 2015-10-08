@@ -12,19 +12,19 @@
 namespace strings {
 
 // Return a C++ string given printf-like input.
-std::string StringPrintf(const char* format, ...)
-    __attribute__((format(printf, 1, 2)))
-    __attribute__((warn_unused_result));
+[[gnu::warn_unused_result]]
+[[gnu::format(printf, 1, 2)]]
+std::string StringPrintf(const char* format, ...);
 
 // Return a C++ string given vprintf-like input.
-std::string StringPrintV(const char* format, va_list ap)
-    __attribute__((format(printf, 1, 0)))
-    __attribute__((warn_unused_result));
+[[gnu::warn_unused_result]]
+[[gnu::format(printf, 1, 0)]]
+std::string StringPrintV(const char* format, va_list ap);
 
 // Lower-level routine that takes a va_list and appends to a specified
 // string.  All other routines are just convenience wrappers around it.
-void StringAppendV(std::string* dst, const char* format, va_list ap)
-    __attribute__((format(printf, 2, 0)));
+[[gnu::format(printf, 2, 0)]]
+void StringAppendV(std::string* dst, const char* format, va_list ap);
 
 }  // namespace strings
 
