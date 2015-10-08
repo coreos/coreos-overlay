@@ -4,7 +4,7 @@
 
 #include "update_engine/prefs.h"
 
-#include <base/logging.h>
+#include <glog/logging.h>
 
 #include "files/file_util.h"
 #include "strings/string_number_conversions.h"

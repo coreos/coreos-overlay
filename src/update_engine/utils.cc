@@ -23,8 +23,8 @@
 #include <ratio>
 #include <sstream>
 
-#include <base/logging.h>
 #include <glib.h>
+#include <glog/logging.h>
 #include <google/protobuf/stubs/common.h>
 
 #include "files/eintr_wrapper.h"

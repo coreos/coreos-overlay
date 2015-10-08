@@ -9,7 +9,7 @@
 #include <vector>
 
 #include <base/basictypes.h>
-#include <base/logging.h>
+#include <glog/logging.h>
 
 using std::make_pair;
 using std::pair;

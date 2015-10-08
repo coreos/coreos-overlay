@@ -7,8 +7,8 @@
 
 #include <vector>
 
-#include <base/logging.h>
 #include <glib.h>
+#include <glog/logging.h>
 
 #include "update_engine/http_fetcher.h"
 

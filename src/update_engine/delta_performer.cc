@@ -124,7 +124,7 @@ ActionExitCode DeltaPerformer::PerformOperation(
       return kActionCodeDownloadOperationExecutionError;
     }
   } else {
-    NOTREACHED();
+    DCHECK(false);
   }
 
   return kActionCodeSuccess;
@@ -154,7 +154,7 @@ bool DeltaPerformer::PerformReplaceOperation(
     bzip_writer.reset(new BzipExtentWriter(&zero_pad_writer));
     writer = bzip_writer.get();
   } else {
-    NOTREACHED();
+    DCHECK(false);
   }
 
   // Create a vector of extents to pass to the ExtentWriter.

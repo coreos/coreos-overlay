@@ -4,7 +4,7 @@
 
 #include "update_engine/payload_signer.h"
 
-#include <base/logging.h>
+#include <glog/logging.h>
 #include <openssl/pem.h>
 
 #include "update_engine/delta_diff_generator.h"

@@ -4,7 +4,7 @@
 
 #include "files/scoped_temp_dir.h"
 
-#include "base/logging.h"
+#include <glog/logging.h>
 
 #include "files/file_util.h"
 

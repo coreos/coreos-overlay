@@ -6,7 +6,7 @@
 
 #include <algorithm>
 
-#include <base/logging.h>
+#include <glog/logging.h>
 #include <gtest/gtest.h>
 
 // This is a mock implementation of HttpFetcher which is useful for testing.

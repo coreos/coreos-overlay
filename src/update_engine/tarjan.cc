@@ -4,7 +4,7 @@
 
 #include <algorithm>
 #include <vector>
-#include "base/logging.h"
+#include <glog/logging.h>
 #include "update_engine/tarjan.h"
 #include "update_engine/utils.h"
 

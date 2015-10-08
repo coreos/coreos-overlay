@@ -13,10 +13,9 @@
 #include <vector>
 #include <iostream>
 
-#include <base/command_line.h>
-#include <base/logging.h>
 #include <gflags/gflags.h>
 #include <glib.h>
+#include <glog/logging.h>
 
 #include "files/file_path.h"
 #include "files/scoped_file.h"
@@ -206,14 +205,9 @@ void ApplyDelta() {
 
 int Main(int argc, char** argv) {
   GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
-  CommandLine::Init(argc, argv);
   Terminator::Init();
   Subprocess::Init();
-  logging::InitLogging("delta_generator.log",
-                       logging::LOG_ONLY_TO_SYSTEM_DEBUG_LOG,
-                       logging::DONT_LOCK_LOG_FILE,
-                       logging::APPEND_TO_OLD_LOG_FILE,
-                       logging::DISABLE_DCHECK_FOR_NON_OFFICIAL_RELEASE_BUILDS);
+  google::InitGoogleLogging(argv[0]);
   if (!FLAGS_signature_size.empty()) {
     bool work_done = false;
     if (!FLAGS_out_hash_file.empty()) {

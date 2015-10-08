@@ -4,19 +4,14 @@
 
 // based on pam_google_testrunner.cc
 
-#include <base/command_line.h>
-#include <dbus/dbus-glib.h>
-#include <dbus/dbus-glib-bindings.h>
-#include <dbus/dbus-glib-lowlevel.h>
-#include <glib.h>
-#include <glib-object.h>
+#include <dbus/dbus.h>
+#include <glog/logging.h>
 #include <gtest/gtest.h>
 
 #include "update_engine/subprocess.h"
 #include "update_engine/terminator.h"
 
 int main(int argc, char **argv) {
-  LOG(INFO) << "started";
   dbus_threads_init_default();
   // TODO(garnold) temporarily cause the unittest binary to exit with status
   // code 2 upon catching a SIGTERM. This will help diagnose why the unittest
@@ -25,8 +20,7 @@ int main(int argc, char **argv) {
   // terminator_unittest.cc.
   chromeos_update_engine::Terminator::Init(2);
   chromeos_update_engine::Subprocess::Init();
-  LOG(INFO) << "parsing command line arguments";
-  CommandLine::Init(argc, argv);
+  google::InitGoogleLogging(argv[0]);
   LOG(INFO) << "initializing gtest";
   ::testing::InitGoogleTest(&argc, argv);
   LOG(INFO) << "running unit tests";

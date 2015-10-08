@@ -11,7 +11,7 @@
 #include <limits>
 #include <memory>
 
-#include "base/logging.h"
+#include <glog/logging.h>
 
 #include "files/file_enumerator.h"
 #include "files/file_path.h"

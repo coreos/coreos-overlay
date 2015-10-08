@@ -15,7 +15,7 @@
 #include <string>
 #include <vector>
 
-#include "base/logging.h"
+#include <glog/logging.h>
 
 #include "strings/string_printf.h"
 #include "update_engine/file_writer.h"

@@ -17,7 +17,7 @@
 #include <unistd.h>
 
 #include "base/basictypes.h"
-#include "base/logging.h"
+#include <glog/logging.h>
 
 #include "files/file_enumerator.h"
 #include "files/file_path.h"
@@ -340,7 +340,7 @@ static bool CreateTemporaryDirInDirImpl(const FilePath& base_dir,
   char* buffer = const_cast<char*>(sub_dir_string.c_str());
   char* dtemp = mkdtemp(buffer);
   if (!dtemp) {
-    DPLOG(ERROR) << "mkdtemp";
+    PLOG(ERROR) << "mkdtemp failed";
     return false;
   }
   *new_dir = FilePath(dtemp);
@@ -458,18 +458,18 @@ bool AppendToFile(const FilePath& filename, const char* data, int size) {
   bool ret = true;
   int fd = HANDLE_EINTR(open(filename.value().c_str(), O_WRONLY | O_APPEND));
   if (fd < 0) {
-    VPLOG(1) << "Unable to create file " << filename.value();
+    PLOG(WARNING) << "Unable to create file " << filename.value();
     return false;
   }
 
   // This call will either write all of the data or return false.
   if (!WriteFileDescriptor(fd, data, size)) {
-    VPLOG(1) << "Error while writing to file " << filename.value();
+    PLOG(WARNING) << "Error while writing to file " << filename.value();
     ret = false;
   }
 
   if (IGNORE_EINTR(close(fd)) < 0) {
-    VPLOG(1) << "Error while closing file " << filename.value();
+    PLOG(WARNING) << "Error while closing file " << filename.value();
     return false;
   }
 

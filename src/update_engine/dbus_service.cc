@@ -6,7 +6,7 @@
 
 #include <string>
 
-#include <base/logging.h>
+#include <glog/logging.h>
 
 #include "update_engine/marshal.glibmarshal.h"
 #include "update_engine/omaha_request_params.h"

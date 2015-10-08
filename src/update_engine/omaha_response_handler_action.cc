@@ -6,7 +6,7 @@
 
 #include <string>
 
-#include <base/logging.h>
+#include <glog/logging.h>
 
 #include "update_engine/payload_processor.h"
 #include "update_engine/payload_state_interface.h"

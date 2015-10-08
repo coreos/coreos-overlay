@@ -10,8 +10,8 @@
 #include <vector>
 
 #include <base/basictypes.h>
-#include <base/logging.h>
 #include <glib.h>
+#include <glog/logging.h>
 #include <google/protobuf/stubs/common.h>
 
 #include "http_common.h"

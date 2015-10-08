@@ -6,7 +6,7 @@
 
 #include <unistd.h>
 
-#include "base/logging.h"
+#include <glog/logging.h>
 
 #include "files/eintr_wrapper.h"
 

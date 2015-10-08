@@ -4,7 +4,7 @@
 
 #include "update_engine/action_processor.h"
 #include <string>
-#include "base/logging.h"
+#include <glog/logging.h>
 #include "update_engine/action.h"
 
 using std::string;

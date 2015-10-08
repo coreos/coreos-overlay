@@ -3,8 +3,8 @@
 // found in the LICENSE file.
 
 #include <utility>
+#include <glog/logging.h>
 #include <gtest/gtest.h>
-#include "base/logging.h"
 #include "update_engine/graph_types.h"
 #include "update_engine/tarjan.h"
 #include "update_engine/utils.h"

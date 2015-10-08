@@ -9,9 +9,9 @@
 #include <unistd.h>
 #include <vector>
 
-#include <openssl/sha.h>
 #include <base/basictypes.h>
-#include <base/logging.h>
+#include <glog/logging.h>
+#include <openssl/sha.h>
 
 // Omaha uses base64 encoded SHA-256 as the hash. This class provides a simple
 // wrapper around OpenSSL providing such a formatted hash of data passed in.
