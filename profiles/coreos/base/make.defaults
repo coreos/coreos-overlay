@@ -16,7 +16,7 @@ USE_EXPAND="${USE_EXPAND} ETCD_PROTOCOLS"
 ETCD_PROTOCOLS="1 2"
 
 # Extra use flags for CoreOS SDK
-USE="${USE} cros_host expat -introspection -cups -tcpd -pcre -berkdb"
+USE="${USE} cros_host expat -introspection -cups -tcpd -berkdb"
 
 # Never install cron or cron jobs
 USE="${USE} -cron"
