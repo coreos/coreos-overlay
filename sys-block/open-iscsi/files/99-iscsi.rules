@@ -1,0 +1,1 @@
+KERNEL=="sd*", SUBSYSTEMS=="block", RUN{program}="/usr/lib/udev/scripts/iscsidev.sh"
