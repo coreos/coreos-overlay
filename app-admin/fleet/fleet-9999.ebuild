@@ -34,6 +34,15 @@ src_install() {
 
 	systemd_dounit "${FILESDIR}"/${PN}.service
 	systemd_dounit "${FILESDIR}"/${PN}.socket
+	systemd_dotmpfilesd "${FILESDIR}/tmpfiles.d/${PN}.conf"
+
+	# Grant systemd1 access for fleet user
+	insinto /usr/share/polkit-1/rules.d
+	doins "${FILESDIR}"/98-fleet-org.freedesktop.systemd1.rules
+
+	# Install sysusers.d snippet which adds fleet group and adds core user into it
+	insinto /usr/lib/sysusers.d/
+	newins "${FILESDIR}"/sysusers.d/${PN}.conf ${PN}.conf
 
 	coreos-dodoc -r Documentation/*
 }
