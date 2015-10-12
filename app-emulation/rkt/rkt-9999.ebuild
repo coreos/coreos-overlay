@@ -19,7 +19,7 @@ if [[ "${PV}" == "9999" ]]; then
 	KEYWORDS="~amd64"
 else
 	KEYWORDS="amd64"
-	CROS_WORKON_COMMIT="a4b17f07700afd4e24be0153ca4fc73c35e14c31" # v0.8.1
+	CROS_WORKON_COMMIT="000c9b7614d98007fde675b56bb426bf7e4fbcbd" # v0.9.0
 fi
 
 PXE_VERSION="794.1.0"
@@ -56,19 +56,19 @@ RDEPEND="!app-emulation/rocket
 BUILDDIR="build-${P}"
 
 src_configure() {
-	local myeconfargs=(
-		--with-stage1-image-path="/usr/share/rkt/stage1.aci"
-	)
+	local myeconfargs=()
 
 	if use rkt_stage1_host; then
-		myeconfargs+=( --with-stage1="host" )
+		STAGE1FLAVOR="host"
 	elif use rkt_stage1_src; then
-		myeconfargs+=( --with-stage1="src" )
+		STAGE1FLAVOR="src"
 	elif use rkt_stage1_coreos; then
-		myeconfargs+=( --with-stage1="coreos" )
+		STAGE1FLAVOR="coreos"
 		myeconfargs+=( --with-coreos-local-pxe-image-path="${DISTDIR}/${PXE_FILE}" )
 		myeconfargs+=( --with-coreos-local-pxe-image-systemd-version=v"${PXE_SYSTEMD_VERSION}" )
 	fi
+	myeconfargs+=( --with-stage1="${STAGE1FLAVOR}" )
+	myeconfargs+=( --with-stage1-image-path="/usr/share/rkt/stage1-${STAGE1FLAVOR}.aci" )
 
 	# Go's 6l linker does not support PIE, disable so cgo binaries
 	# which use 6l+gcc for linking can be built correctly.
@@ -96,7 +96,7 @@ src_install() {
 	dobin "${S}/${BUILDDIR}/bin/rkt"
 
 	insinto /usr/share/rkt/
-	doins "${S}/${BUILDDIR}/bin/stage1.aci"
+	doins "${S}/${BUILDDIR}/bin/stage1-${STAGE1FLAVOR}.aci"
 
 	systemd_dounit "${S}"/dist/init/systemd/${PN}-gc.service
 	systemd_dounit "${S}"/dist/init/systemd/${PN}-gc.timer
