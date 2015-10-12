@@ -58,6 +58,8 @@ src_prepare() {
 	epatch "${FILESDIR}"/${PN}-1.8.5-isfinite.patch
 	# https://bugs.gentoo.org/show_bug.cgi?id=552786
 	epatch "${FILESDIR}"/${PN}-perl-defined-array-check.patch
+	# fix builds for alternate $ROOT locations
+	epatch "${FILESDIR}"/${P}-no-link-lib-deps.patch
 
 	epatch_user
 
