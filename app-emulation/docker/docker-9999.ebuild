@@ -15,7 +15,7 @@ if [[ ${PV} == *9999 ]]; then
 	DOCKER_GITCOMMIT="unknown"
 	KEYWORDS="~amd64 ~arm64"
 else
-	CROS_WORKON_COMMIT="fae44362ed4c7e161ab52f6bba6d5ee93ffbc28f" # v1.8.2 with backports
+	CROS_WORKON_COMMIT="cedd53482c5a3ce88f3bb98d1d325dae4c95d9b6" # v1.8.3 with backports
 	DOCKER_GITCOMMIT="${CROS_WORKON_COMMIT:0:7}"
 	KEYWORDS="amd64"
 fi
