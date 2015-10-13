@@ -6,7 +6,6 @@
 
 #include <string>
 
-#include <base/basictypes.h>
 #include <gtest/gtest.h>
 
 #include "files/file_util.h"

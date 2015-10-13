@@ -4,8 +4,7 @@
 
 // Implementation of common HTTP related functions.
 
-#include "base/basictypes.h"
-
+#include "macros.h"
 #include "update_engine/http_common.h"
 
 
@@ -41,7 +40,7 @@ const char *GetHttpResponseDescription(HttpResponseCode code) {
 
   bool is_found = false;
   size_t i;
-  for (i = 0; i < ARRAYSIZE_UNSAFE(http_response_table); i++)
+  for (i = 0; i < arraysize(http_response_table); i++)
     if ((is_found = (http_response_table[i].code == code)))
       break;
 
@@ -63,7 +62,7 @@ const char *GetHttpContentTypeString(HttpContentType type) {
 
   bool is_found = false;
   size_t i;
-  for (i = 0; i < ARRAYSIZE_UNSAFE(http_content_type_table); i++)
+  for (i = 0; i < arraysize(http_content_type_table); i++)
     if ((is_found = (http_content_type_table[i].type == type)))
       break;
 

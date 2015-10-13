@@ -16,13 +16,13 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "base/basictypes.h"
 #include <glog/logging.h>
 
 #include "files/file_enumerator.h"
 #include "files/file_path.h"
 #include "files/scoped_file.h"
 #include "files/eintr_wrapper.h"
+#include "macros.h"
 
 namespace files {
 

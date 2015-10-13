@@ -5,7 +5,7 @@
 #ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_MOCK_FILE_WRITER_H__
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_MOCK_FILE_WRITER_H__
 
-#include "base/basictypes.h"
+#include "macros.h"
 #include "update_engine/file_writer.h"
 
 // MockFileWriter is an implementation of FileWriter. It will succeed

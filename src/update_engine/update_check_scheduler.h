@@ -5,10 +5,10 @@
 #ifndef CHROMEOS_PLATFORM_UPDATE_ENGINE_UPDATE_CHECK_SCHEDULER_H__
 #define CHROMEOS_PLATFORM_UPDATE_ENGINE_UPDATE_CHECK_SCHEDULER_H__
 
-#include <base/basictypes.h>
 #include <glib.h>
 #include <gtest/gtest_prod.h>  // for FRIEND_TEST
 
+#include "macros.h"
 #include "update_engine/update_attempter.h"
 #include "update_engine/system_state.h"
 

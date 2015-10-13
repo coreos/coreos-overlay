@@ -9,7 +9,7 @@
 
 #include <memory>
 
-#include "base/basictypes.h"
+#include "macros.h"
 
 namespace files {
 

@@ -8,7 +8,6 @@
 #include <utility>
 #include <vector>
 
-#include <base/basictypes.h>
 #include <glog/logging.h>
 
 using std::make_pair;

@@ -6,9 +6,9 @@
 
 #include <limits.h>
 
-#include <base/basictypes.h>  // for arraysize()
 #include <gtest/gtest.h>
 
+#include "macros.h"
 #include "strings/string_printf.h"
 
 namespace strings {

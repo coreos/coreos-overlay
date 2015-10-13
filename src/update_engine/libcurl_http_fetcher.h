@@ -8,11 +8,11 @@
 #include <map>
 #include <string>
 
-#include <base/basictypes.h>
 #include <curl/curl.h>
 #include <glib.h>
 #include <glog/logging.h>
 
+#include "macros.h"
 #include "update_engine/certificate_checker.h"
 #include "update_engine/http_fetcher.h"
 

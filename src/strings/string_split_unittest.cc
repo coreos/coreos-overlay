@@ -4,9 +4,10 @@
 
 #include "strings/string_split.h"
 
-#include <base/basictypes.h>  // for arraysize
 #include <gmock/gmock.h>  // for EXPECT_THAT
 #include <gtest/gtest.h>
+
+#include "macros.h"
 
 using ::testing::ElementsAre;
 

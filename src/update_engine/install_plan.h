@@ -8,8 +8,6 @@
 #include <string>
 #include <vector>
 
-#include <base/basictypes.h>
-
 // InstallPlan is a simple struct that contains relevant info for many
 // parts of the update system about the install that should happen.
 namespace chromeos_update_engine {

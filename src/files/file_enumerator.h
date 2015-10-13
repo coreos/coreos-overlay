@@ -10,9 +10,8 @@
 #include <stack>
 #include <vector>
 
-#include "base/basictypes.h"
-
 #include "files/file_path.h"
+#include "macros.h"
 
 namespace files {
 

@@ -5,9 +5,9 @@
 #include <map>
 #include <string>
 
-#include <base/basictypes.h>  // for arraysize
 #include <gtest/gtest.h>
 
+#include "macros.h"
 #include "update_engine/simple_key_value_store.h"
 
 using std::map;

@@ -11,7 +11,8 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "base/basictypes.h"
+
+#include "macros.h"
 #include "update_engine/update_metadata.pb.h"
 
 // A few classes that help in generating delta images use these types

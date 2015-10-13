@@ -4,7 +4,7 @@
 
 #include "files/file_path.h"
 
-#include "base/basictypes.h" // arraysize
+#include "macros.h"
 
 namespace files {
 
