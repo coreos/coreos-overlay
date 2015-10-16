@@ -25,7 +25,8 @@ sys-libs/gdbm		berkdb
 # enable journal gateway and container features, avoid pulling in gnutls
 sys-apps/systemd audit importd http nat -ssl
 
-net-libs/libmicrohttpd -ssl
+# epoll is needed for systemd-journal-remote to work. coreos/bugs#919
+net-libs/libmicrohttpd epoll -ssl
 
 sys-boot/syslinux       -custom-cflags
 
