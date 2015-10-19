@@ -22,13 +22,11 @@ InstallPlan::InstallPlan(bool is_resume,
       payload_size(payload_size),
       payload_hash(payload_hash),
       install_path(install_path),
-      rootfs_size(0),
-      hash_checks_mandatory(false) {}
+      rootfs_size(0) {}
 
 InstallPlan::InstallPlan() : is_resume(false),
                              payload_size(0),
-                             rootfs_size(0),
-                             hash_checks_mandatory(false) {}
+                             rootfs_size(0) {}
 
 
 bool InstallPlan::operator==(const InstallPlan& that) const {
@@ -49,9 +47,7 @@ void InstallPlan::Dump() const {
             << ", url: " << download_url
             << ", payload size: " << payload_size
             << ", payload hash: " << payload_hash
-            << ", install_path: " << install_path
-            << ", hash_checks_mandatory: " << utils::ToString(
-                hash_checks_mandatory);
+            << ", install_path: " << install_path;
 }
 
 }  // namespace chromeos_update_engine

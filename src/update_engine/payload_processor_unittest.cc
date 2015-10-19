@@ -338,7 +338,6 @@ static void GenerateDeltaFile(bool full_rootfs,
 
 static void ApplyDeltaFile(bool full_rootfs, bool noop,
                            SignatureTest signature_test, DeltaState* state,
-                           bool hash_checks_mandatory,
                            OperationHashTest op_hash_test,
                            PayloadProcessor** performer) {
   // Check the metadata.
@@ -418,7 +417,6 @@ static void ApplyDeltaFile(bool full_rootfs, bool noop,
 
   // Update the A image in place.
   InstallPlan install_plan;
-  install_plan.hash_checks_mandatory = hash_checks_mandatory;
   install_plan.install_path = state->a_img;
 
   *performer = new PayloadProcessor(&prefs, &install_plan);
@@ -542,8 +540,7 @@ void VerifyPayload(PayloadProcessor* performer,
 }
 
 void DoSmallImageTest(bool full_rootfs, bool noop,
-                      SignatureTest signature_test,
-                      bool hash_checks_mandatory) {
+                      SignatureTest signature_test) {
   DeltaState state;
   PayloadProcessor *performer;
   GenerateDeltaFile(full_rootfs, noop, signature_test, &state);
@@ -551,13 +548,12 @@ void DoSmallImageTest(bool full_rootfs, bool noop,
   ScopedPathUnlinker b_img_unlinker(state.b_img);
   ScopedPathUnlinker delta_unlinker(state.delta_path);
   ApplyDeltaFile(full_rootfs, noop, signature_test,
-                 &state, hash_checks_mandatory, kValidOperationData,
+                 &state, kValidOperationData,
                  &performer);
   VerifyPayload(performer, &state, signature_test);
 }
 
-void DoOperationHashMismatchTest(OperationHashTest op_hash_test,
-                                 bool hash_checks_mandatory) {
+void DoOperationHashMismatchTest(OperationHashTest op_hash_test) {
   DeltaState state;
   GenerateDeltaFile(true, false, kSignatureGenerated, &state);
   ScopedPathUnlinker a_img_unlinker(state.a_img);
@@ -565,39 +561,29 @@ void DoOperationHashMismatchTest(OperationHashTest op_hash_test,
   ScopedPathUnlinker delta_unlinker(state.delta_path);
   PayloadProcessor *performer;
   ApplyDeltaFile(true, false, kSignatureGenerated,
-                 &state, hash_checks_mandatory, op_hash_test, &performer);
+                 &state, op_hash_test, &performer);
 }
 
 class PayloadProcessorTest : public ::testing::Test { };
 
 TEST(PayloadProcessorTest, RunAsRootSmallImageTest) {
-  bool hash_checks_mandatory = false;
-  DoSmallImageTest(false, false, kSignatureGenerator,
-                   hash_checks_mandatory);
+  DoSmallImageTest(false, false, kSignatureGenerator);
 }
 
 TEST(PayloadProcessorTest, RunAsRootFullSmallImageTest) {
-  bool hash_checks_mandatory = true;
-  DoSmallImageTest(true, false, kSignatureGenerator,
-                   hash_checks_mandatory);
+  DoSmallImageTest(true, false, kSignatureGenerator);
 }
 
 TEST(PayloadProcessorTest, RunAsRootNoopSmallImageTest) {
-  bool hash_checks_mandatory = false;
-  DoSmallImageTest(false, true, kSignatureGenerator,
-                   hash_checks_mandatory);
+  DoSmallImageTest(false, true, kSignatureGenerator);
 }
 
 TEST(PayloadProcessorTest, RunAsRootSmallImageSignNoneTest) {
-  bool hash_checks_mandatory = false;
-  DoSmallImageTest(false, false, kSignatureNone,
-                   hash_checks_mandatory);
+  DoSmallImageTest(false, false, kSignatureNone);
 }
 
 TEST(PayloadProcessorTest, RunAsRootSmallImageSignGeneratedTest) {
-  bool hash_checks_mandatory = true;
-  DoSmallImageTest(false, false, kSignatureGenerated,
-                   hash_checks_mandatory);
+  DoSmallImageTest(false, false, kSignatureGenerated);
 }
 
 TEST(PayloadProcessorTest, BadDeltaMagicTest) {
@@ -612,8 +598,8 @@ TEST(PayloadProcessorTest, BadDeltaMagicTest) {
   EXPECT_LT(performer.Close(), 0);
 }
 
-TEST(PayloadProcessorTest, RunAsRootMandatoryOperationHashMismatchTest) {
-  DoOperationHashMismatchTest(kInvalidOperationData, true);
+TEST(PayloadProcessorTest, RunAsRootOperationHashMismatchTest) {
+  DoOperationHashMismatchTest(kInvalidOperationData);
 }
 
 }  // namespace chromeos_update_engine

@@ -48,10 +48,6 @@ struct InstallPlan {
   // applied partition sizes and hashes against the expected values.
   uint64_t rootfs_size;
   std::vector<char> rootfs_hash;
-
-  // True if payload hash checks are mandatory based on the system state and
-  // the Omaha response.
-  bool hash_checks_mandatory;
 };
 
 }  // namespace chromeos_update_engine

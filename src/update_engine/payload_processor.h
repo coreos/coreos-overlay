@@ -12,6 +12,7 @@
 
 #include "update_engine/delta_performer.h"
 #include "update_engine/file_writer.h"
+#include "update_engine/install_plan.h"
 #include "update_engine/omaha_hash_calculator.h"
 #include "update_engine/update_metadata.pb.h"
 
@@ -19,7 +20,6 @@ namespace chromeos_update_engine {
 
 class PrefsInterface;
 class SystemState;
-class InstallPlan;
 
 // This class processes an update payload, dispatching install operations
 // in the manifest to FileWriters as the payload data is received.
@@ -30,7 +30,7 @@ class PayloadProcessor : public FileWriter {
   static const char kUpdatePayloadPublicKeyPath[];
 
   PayloadProcessor(PrefsInterface* prefs, InstallPlan* install_plan)
-      : delta_performer_(prefs, install_plan),
+      : delta_performer_(prefs, install_plan->install_path),
         prefs_(prefs),
         install_plan_(install_plan),
         manifest_valid_(false),

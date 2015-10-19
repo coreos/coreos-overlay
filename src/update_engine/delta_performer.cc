@@ -77,7 +77,7 @@ bool DeltaPerformer::IsIdempotentOperation(
 
 int DeltaPerformer::Open() {
   int err;
-  OpenFile(install_plan_->install_path.c_str(), &fd_, &err);
+  OpenFile(path_.c_str(), &fd_, &err);
   return -err;
 }
 
@@ -97,13 +97,8 @@ ActionExitCode DeltaPerformer::PerformOperation(
 
   ActionExitCode error = ValidateOperationHash(operation, data);
   if (error != kActionCodeSuccess) {
-    if (install_plan_->hash_checks_mandatory) {
-      LOG(ERROR) << "Mandatory operation hash check failed";
-      return error;
-    }
-
-    // For non-mandatory cases, just log a warning.
-    LOG(WARNING) << "Ignoring operation validation errors";
+    LOG(ERROR) << "Operation hash check failed";
+    return error;
   }
 
   // Log every thousandth operation, and also the first and last ones
@@ -336,7 +331,7 @@ ActionExitCode DeltaPerformer::ValidateOperationHash(
       // Operations that do not have any data blob won't have any operation hash
       // either. So, these operations are always considered validated since the
       // metadata that contains all the non-data-blob portions of the operation
-      // has already been validated. This is true for both HTTP and HTTPS cases.
+      // has already been validated.
       return kActionCodeSuccess;
     }
 
@@ -345,15 +340,8 @@ ActionExitCode DeltaPerformer::ValidateOperationHash(
     // corresponding update should have been produced with the operation
     // hashes. So if it happens it means either we've turned operation hash
     // generation off in DeltaDiffGenerator or it's a regression of some sort.
-    if (install_plan_->hash_checks_mandatory) {
-      LOG(ERROR) << "Missing mandatory operation hash for operation";
-      return kActionCodeDownloadOperationHashMissingError;
-    }
-
-    // For non-mandatory cases, just log a warning.
-    LOG(WARNING) << "Cannot validate operation as there's no operation hash";
-
-    return kActionCodeSuccess;
+    LOG(ERROR) << "Missing operation hash for operation";
+    return kActionCodeDownloadOperationHashMissingError;
   }
 
   vector<char> expected_op_hash;

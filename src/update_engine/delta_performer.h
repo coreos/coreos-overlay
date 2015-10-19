@@ -7,12 +7,12 @@
 
 #include <inttypes.h>
 
+#include <string>
 #include <vector>
 
 #include <gtest/gtest_prod.h>  // for FRIEND_TEST
 
 #include "update_engine/action_processor.h"
-#include "update_engine/install_plan.h"
 #include "update_engine/update_metadata.pb.h"
 
 namespace chromeos_update_engine {
@@ -26,9 +26,9 @@ class DeltaPerformer {
  public:
 
   DeltaPerformer(PrefsInterface* prefs,
-                 InstallPlan* install_plan)
+                 std::string install_path)
       : prefs_(prefs),
-        install_plan_(install_plan),
+        path_(install_path),
         fd_(-1),
         block_size_(0) {}
 
@@ -42,24 +42,15 @@ class DeltaPerformer {
   // Wrapper around close. Returns 0 on success or -errno on error.
   int Close();
 
-  // Verifies the downloaded payload against the signed hash included in the
-  // payload, against the update check hash (which is in base64 format)  and
-  // size using the public key and returns kActionCodeSuccess on success, an
-  // error code on failure.  This method should be called after closing the
-  // stream. Note this method skips the signed hash check if the public key is
-  // unavailable; it returns kActionCodeSignedDeltaPayloadExpectedError if the
-  // public key is available but the delta payload doesn't include a signature.
-  ActionExitCode VerifyPayload(const std::string& update_check_response_hash,
-                               const uint64_t update_check_response_size);
+  // Set block size specified by the manifest.
+  void SetBlockSize(uint32_t size) {
+    block_size_ = size;
+  }
 
-  // Reads from the update manifest the expected size and hash of the target
-  // rootfs partition. These values can be used for applied update
-  // hash verification. This method must be called after the update manifest has
-  // been parsed (e.g., after closing the stream). Returns true on success, and
-  // false on failure (e.g., when the values are not present in the update
-  // manifest).
-  bool GetNewPartitionInfo(uint64_t* rootfs_size,
-                           std::vector<char>* rootfs_hash);
+ private:
+  friend class DeltaPerformerTest;
+  FRIEND_TEST(DeltaPerformerTest, ExtentsToByteStringTest);
+  FRIEND_TEST(DeltaPerformerTest, IsIdempotentOperationTest);
 
   // Converts an ordered collection of Extent objects which contain data of
   // length full_length to a comma-separated string. For each Extent, the
@@ -75,15 +66,6 @@ class DeltaPerformer {
       uint64_t block_size,
       uint64_t full_length,
       std::string* positions_string);
-
-  // Set block size specified by the manifest.
-  void SetBlockSize(uint32_t size) {
-    block_size_ = size;
-  }
-
- private:
-  friend class DeltaPerformerTest;
-  FRIEND_TEST(DeltaPerformerTest, IsIdempotentOperationTest);
 
   static bool IsIdempotentOperation(
       const InstallOperation& op);
@@ -104,8 +86,8 @@ class DeltaPerformer {
   // Update Engine preference store.
   PrefsInterface* prefs_;
 
-  // Install Plan based on Omaha Response.
-  InstallPlan* install_plan_;
+  // Path to device or file to operate on.
+  std::string path_;
 
   // File descriptor of open device.
   int fd_;
