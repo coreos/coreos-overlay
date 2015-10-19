@@ -13,7 +13,6 @@
 #include <gtest/gtest_prod.h>  // for FRIEND_TEST
 
 #include "update_engine/action_processor.h"
-#include "update_engine/install_plan.h"
 #include "update_engine/update_metadata.pb.h"
 
 namespace chromeos_update_engine {
@@ -27,10 +26,9 @@ class DeltaPerformer {
  public:
 
   DeltaPerformer(PrefsInterface* prefs,
-                 InstallPlan* install_plan)
+                 std::string install_path)
       : prefs_(prefs),
-        install_plan_(install_plan),
-        path_(install_plan_->install_path),
+        path_(install_path),
         fd_(-1),
         block_size_(0) {}
 
@@ -87,9 +85,6 @@ class DeltaPerformer {
 
   // Update Engine preference store.
   PrefsInterface* prefs_;
-
-  // Install Plan based on Omaha Response.
-  InstallPlan* install_plan_;
 
   // Path to device or file to operate on.
   std::string path_;
