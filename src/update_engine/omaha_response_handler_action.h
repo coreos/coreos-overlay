@@ -66,10 +66,6 @@ class OmahaResponseHandlerAction : public Action<OmahaResponseHandlerAction> {
   static bool GetInstallDev(const std::string& boot_dev,
                             std::string* install_dev);
 
-  // Returns true if payload hash checks are mandatory based on the state
-  // of the system and the contents of the Omaha response. False otherwise.
-  bool AreHashChecksMandatory(const OmahaResponse& response);
-
   // Global system context.
   SystemState* system_state_;
 
