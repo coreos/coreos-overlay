@@ -75,13 +75,13 @@ bool PayloadProcessor::Write(const void* bytes, size_t count,
   buffer_.insert(buffer_.end(), c_bytes, c_bytes + count);
 
   if (!manifest_valid_) {
-    DeltaMetadata::ParseResult result = DeltaMetadata::ParsePayload(
-        buffer_, &manifest_, &manifest_metadata_size_, error);
-    switch (result) {
-      case DeltaMetadata::kParseError: return false;
-      case DeltaMetadata::kParseInsufficientData: return true;
-      case DeltaMetadata::kParseSuccess: break;
-    }
+    *error = DeltaMetadata::ParsePayload(
+        buffer_, &manifest_, &manifest_metadata_size_);
+    if (*error == kActionCodeDownloadIncomplete) {
+      *error = kActionCodeSuccess;
+      return true;
+    } else if (*error != kActionCodeSuccess)
+      return false;
 
     // Remove protobuf and header info from buffer_, so buffer_ contains
     // just data blobs
