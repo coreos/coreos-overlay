@@ -1,7 +1,0 @@
-[Unit]
-DefaultDependencies=false
-Before=initrd-switch-root.target
-
-[Mount]
-What=/dev/disk/by-label/OEM
-Where=/mnt/oem
