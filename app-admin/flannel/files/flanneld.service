@@ -3,6 +3,7 @@ Description=Network fabric for containers
 Documentation=https://github.com/coreos/flannel
 Requires=early-docker.service
 After=etcd.service etcd2.service early-docker.service
+Wants=etcd.service etcd2.service
 Before=early-docker.target
 
 [Service]
