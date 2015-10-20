@@ -6,9 +6,6 @@ Before=initrd-parse-etc.service
 Requires=initrd-root-fs.target
 After=initrd-root-fs.target
 
-Requires=mnt-oem.mount
-After=mnt-oem.mount
-
 Requires=ignition-disks.service
 After=ignition-disks.service
 
@@ -26,6 +23,5 @@ After=initrd-systemd-resolved.service
 
 [Service]
 Type=oneshot
-Environment=OEM_ID=pxe
-EnvironmentFile=-/mnt/oem/oem-release
+EnvironmentFile=/run/ignition.env
 ExecStart=/usr/bin/ignition --root=/sysroot --oem=${OEM_ID} --stage=files
