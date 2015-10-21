@@ -3,8 +3,7 @@ Description=CoreOS Metadata Agent
 
 [Service]
 Type=oneshot
-EnvironmentFile=/usr/share/oem/oem-release
-ExecStart=/usr/bin/coreos-metadata --provider=${OEM_ID} --output=/run/metadata/coreos
+ExecStart=/usr/bin/coreos-metadata --cmdline --output=/run/metadata/coreos
 
 [Install]
 RequiredBy=metadata.target
