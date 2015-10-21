@@ -32,4 +32,5 @@ ${PATCH_DIR}/overlayfs/0002-Overlayfs-Use-copy-up-security-hooks.patch \
 ${PATCH_DIR}/overlayfs/0003-SELinux-Stub-in-copy-up-handling.patch \
 ${PATCH_DIR}/overlayfs/0004-SELinux-Handle-opening-of-a-unioned-file.patch \
 ${PATCH_DIR}/overlayfs/0005-SELinux-Check-against-union-label-for-file-operation.patch \
+${PATCH_DIR}/overlayfs/0006-overlayfs-use-a-minimal-buffer-in-ovl_copy_xattr.patch \
 ${PATCH_DIR}/net-wireless-wl18xx-Add-missing-MODULE_FIRMWARE.patch"
