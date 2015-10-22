@@ -21,6 +21,7 @@ coreos:
       content: |
         [Unit]
         Description=Cloudinit from VMware Backdoor
+        ConditionVirtualization=vmware
 
         [Service]
         Type=oneshot
