@@ -5,9 +5,6 @@ DefaultDependencies=false
 Requires=local-fs-pre.target
 Before=local-fs-pre.target
 
-Requires=mnt-oem.mount
-After=mnt-oem.mount
-
 # setup networking
 Wants=initrd-systemd-networkd.service
 After=initrd-systemd-networkd.service
@@ -21,6 +18,5 @@ After=disk-uuid.service
 
 [Service]
 Type=oneshot
-Environment=OEM_ID=pxe
-EnvironmentFile=-/mnt/oem/oem-release
+EnvironmentFile=/run/ignition.env
 ExecStart=/usr/bin/ignition --root=/sysroot --oem=${OEM_ID} --stage=disks
