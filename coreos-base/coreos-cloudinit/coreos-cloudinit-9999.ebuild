@@ -14,7 +14,7 @@ elif [[ "${PV}" == "1.5.1" ]]; then
 	CROS_WORKON_COMMIT="fac805dc11951d32fe68a77200988828fa1ce48d" # tag v1.5.1
 	KEYWORDS="amd64 arm64"
 else
-	CROS_WORKON_COMMIT="3c2b5e6636da75c163ec980fd4edb0992081a6bc" # tag v1.6.2
+	CROS_WORKON_COMMIT="1d962916b9c783e27531496fe76812b8fb8e3dfb" # tag v1.7.0
 	KEYWORDS="amd64"
 fi
 
