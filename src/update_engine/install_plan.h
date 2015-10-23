@@ -40,6 +40,7 @@ struct InstallPlan {
   // hash is computed by FilesystemCopierAction(verify_hash=false) and
   // later validated by PayloadProcessor once it receives the manifest.
   std::vector<char> old_partition_hash;
+  std::vector<char> old_kernel_hash;
 
   // For verifying the update applied successfully. Values filled in by
   // PayloadProcessor once the update payload has been verified.
@@ -47,6 +48,8 @@ struct InstallPlan {
   // partition size and hash.
   uint64_t new_partition_size;
   std::vector<char> new_partition_hash;
+  uint64_t new_kernel_size;
+  std::vector<char> new_kernel_hash;
 };
 
 }  // namespace chromeos_update_engine
