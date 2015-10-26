@@ -22,6 +22,7 @@ InstallPlan::InstallPlan(bool is_resume,
       payload_size(payload_size),
       payload_hash(payload_hash),
       install_path(install_path),
+      kernel_path(utils::BootKernelName(install_path)),
       rootfs_size(0) {}
 
 InstallPlan::InstallPlan() : is_resume(false),
@@ -34,7 +35,8 @@ bool InstallPlan::operator==(const InstallPlan& that) const {
           (download_url == that.download_url) &&
           (payload_size == that.payload_size) &&
           (payload_hash == that.payload_hash) &&
-          (install_path == that.install_path));
+          (install_path == that.install_path) &&
+          (kernel_path == that.kernel_path));
 }
 
 bool InstallPlan::operator!=(const InstallPlan& that) const {
@@ -47,7 +49,8 @@ void InstallPlan::Dump() const {
             << ", url: " << download_url
             << ", payload size: " << payload_size
             << ", payload hash: " << payload_hash
-            << ", install_path: " << install_path;
+            << ", install_path: " << install_path
+            << ", kernel_path: " << kernel_path;
 }
 
 }  // namespace chromeos_update_engine
