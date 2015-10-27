@@ -11,7 +11,7 @@ inherit coreos-doc coreos-go cros-workon systemd udev
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64"
 else
-	CROS_WORKON_COMMIT="0c8045addae2cf3fe5339825822bc421e6000abe" # tag v0.2.1
+	CROS_WORKON_COMMIT="5baf8f8bcab7c51bef7b8b1b6b7e07ec69602272" # tag v0.2.2
 	KEYWORDS="amd64 arm64"
 fi
 
@@ -31,7 +31,6 @@ src_compile() {
 src_install() {
 	newbin ${GOBIN}/src ${PN}
 
-	systemd_dounit "${FILESDIR}"/mnt-oem.mount
 	systemd_dounit "${FILESDIR}"/ignition.target
 	systemd_dounit "${FILESDIR}"/ignition-disks.service
 	systemd_dounit "${FILESDIR}"/ignition-files.service
