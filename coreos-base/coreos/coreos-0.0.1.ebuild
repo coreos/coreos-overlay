@@ -149,6 +149,7 @@ RDEPEND="${RDEPEND}
 	sys-apps/shadow
 	sys-apps/usbutils
 	sys-apps/util-linux
+	sys-block/open-iscsi
 	sys-fs/btrfs-progs
 	sys-fs/e2fsprogs
 	sys-fs/mdadm
