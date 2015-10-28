@@ -33,15 +33,14 @@
 sys-kernel/dracut ~amd64
 
 # Needed by gsutil
-=dev-python/boto-2.31.1
-=dev-python/crcmod-1.7-r1
-=dev-python/gcs-oauth2-boto-plugin-1.8
-=dev-python/google-api-python-client-1.1
-=dev-python/httplib2-0.8
-=dev-python/python-gflags-2.0
-=dev-python/retry-decorator-1.0.0
-=dev-python/socksipy-1.02
-=net-misc/gsutil-4.6
+dev-python/boto
+dev-python/gcs-oauth2-boto-plugin
+dev-python/google-api-python-client
+dev-python/google-apitools
+dev-python/httplib2
+dev-python/oauth2client
+dev-python/protorpc
+net-misc/gsutil
 
 # Fixes XML validation failure and python eclass usage
 =dev-lang/yasm-1.2.0-r1
