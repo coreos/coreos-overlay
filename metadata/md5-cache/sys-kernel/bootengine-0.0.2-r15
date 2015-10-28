@@ -1,0 +1,11 @@
+DEFINED_PHASES=info install postinst unpack
+DEPEND=app-arch/gzip app-shells/bash sys-apps/coreutils sys-apps/findutils sys-apps/grep sys-apps/ignition sys-apps/less sys-apps/sed sys-apps/shadow sys-apps/systemd sys-apps/util-linux sys-fs/btrfs-progs sys-fs/mdadm sys-kernel/dracut virtual/udev >=dev-vcs/git-1.8.2.1
+DESCRIPTION=CoreOS Bootengine
+EAPI=5
+IUSE=cros_workon_tree_* profiling cros-debug
+KEYWORDS=amd64 arm arm64 x86
+LICENSE=BSD
+RDEPEND=app-arch/gzip app-shells/bash sys-apps/coreutils sys-apps/findutils sys-apps/grep sys-apps/ignition sys-apps/less sys-apps/sed sys-apps/shadow sys-apps/systemd sys-apps/util-linux sys-fs/btrfs-progs sys-fs/mdadm sys-kernel/dracut virtual/udev
+SLOT=0/0.0.2-r15
+_eclasses_=cros-au	f9ae34f03ddcc4a8450e4f603ffef8f8	cros-debug	deb4c0b1259db4d092692c4c46fe072b	cros-workon	0792a7d98dd0d1627a411449b45b8b25	eutils	9fb270e417e0e83d64ca52586c4a79de	flag-o-matic	c9602887773166fe300444712fc7ff98	git-r3	ab80045e5d080584334f33013f4df21d	multilib	62927b3db3a589b0806255f3a002d5d3	toolchain-funcs	42408102d713fbad60ca21349865edb4
+_md5_=54ab96ed98c5bb42b11abd8bf0fd9399

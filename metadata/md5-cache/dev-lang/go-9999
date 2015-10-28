@@ -1,10 +1,10 @@
-DEFINED_PHASES=compile install postinst prepare test unpack
-DEPEND=>=dev-vcs/git-1.8.2.1
+DEFINED_PHASES=compile install postinst preinst prepare pretend test unpack
+DEPEND=cros_host? ( >=dev-lang/go-bootstrap-1.4.1 ) >=dev-vcs/git-1.8.2.1
 DESCRIPTION=A concurrent garbage collected and typesafe programming language
 EAPI=5
 HOMEPAGE=http://www.golang.org
-KEYWORDS=-* ~amd64 arm64
+IUSE=cros_host +arm64-extras
 LICENSE=BSD
-SLOT=0
+SLOT=0/9999
 _eclasses_=eutils	9fb270e417e0e83d64ca52586c4a79de	git-r3	ab80045e5d080584334f33013f4df21d	multilib	62927b3db3a589b0806255f3a002d5d3	toolchain-funcs	42408102d713fbad60ca21349865edb4
-_md5_=6b7701ced653e38bf854d491c2a3fee4
+_md5_=c0fec9a0d93991de34a650629330fd04
