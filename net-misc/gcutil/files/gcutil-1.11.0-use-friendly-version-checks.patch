@@ -1,0 +1,42 @@
+From 6fe56f08bfb93c1a93fb275a292ce8043ab05494 Mon Sep 17 00:00:00 2001
+From: Michael Marineau <mike@marineau.org>
+Date: Wed, 20 Nov 2013 13:12:43 -0800
+Subject: [PATCH] Use friendly version checks
+
+---
+ setup.py | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/setup.py b/setup.py
+index b88cb50..b9b3c09 100755
+--- a/setup.py
++++ b/setup.py
+@@ -23,18 +23,18 @@ except ImportError:
+ ROOT = os.path.dirname(os.path.realpath(__file__))
+ 
+ REQUIREMENTS = [
+-    'google-api-python-client==1.2',
+-    'google-apputils==0.4.0',
+-    'httplib2==0.8',
+-    'ipaddr==2.1.10',
+-    'iso8601==0.1.4',
+-    'python-gflags==2.0'
++    'google-api-python-client>=1.2',
++    'google-apputils>=0.4.0',
++    'httplib2>=0.8',
++    'ipaddr>=2.1.10',
++    'iso8601>=0.1.4',
++    'python-gflags>=2.0'
+ ]
+ 
+ try:
+   import argparse
+ except ImportError:
+-  REQUIREMENTS.append('argparse==1.2.1')
++  REQUIREMENTS.append('argparse>=1.2.1')
+ 
+ 
+ def GetVersion():
+-- 
+1.8.1.5
+
