@@ -33,7 +33,7 @@ std::string XmlEncode(const std::string& input);
 
 // This struct encapsulates the Omaha event information. For a
 // complete list of defined event types and results, see
-// http://code.google.com/p/omaha/wiki/ServerProtocol#event
+// https://github.com/google/omaha/blob/wiki/ServerProtocol.md#event-element
 struct OmahaEvent {
   // The Type values correspond to EVENT_TYPE values of Omaha.
   enum Type {
