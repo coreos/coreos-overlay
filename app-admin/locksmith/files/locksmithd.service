@@ -1,0 +1,18 @@
+[Unit]
+Description=Cluster reboot manager
+ConditionVirtualization=!container
+ConditionPathExists=!/usr/.noupdate
+
+[Service]
+CPUShares=16
+MemoryLimit=32M
+PrivateDevices=true
+Environment=GOMAXPROCS=1
+EnvironmentFile=-/usr/share/coreos/update.conf
+EnvironmentFile=-/etc/coreos/update.conf
+ExecStart=/usr/lib/locksmith/locksmithd
+Restart=always
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target
