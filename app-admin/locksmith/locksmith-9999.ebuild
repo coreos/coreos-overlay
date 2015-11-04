@@ -32,6 +32,6 @@ src_install() {
 	dodir /usr/lib/locksmith
 	dosym ../../../bin/locksmithctl /usr/lib/locksmith/locksmithd
 
-	systemd_dounit "${S}"/systemd/locksmithd.service
+	systemd_dounit "${FILESDIR}"/locksmithd.service
 	systemd_enable_service multi-user.target locksmithd.service
 }
