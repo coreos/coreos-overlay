@@ -1,11 +1,8 @@
-# Copyright 1999-2014 Gentoo Foundation
+# Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/app-emulation/docker/docker-1.4.0.ebuild,v 1.1 2014/12/12 18:53:23 xarthisius Exp $
+# $Id$
 
 EAPI=5
-
-DESCRIPTION="Docker complements kernel namespacing with a high-level API which operates at the process level"
-HOMEPAGE="https://www.docker.com"
 
 CROS_WORKON_PROJECT="coreos/docker"
 CROS_WORKON_LOCALNAME="docker"
@@ -20,26 +17,28 @@ else
 	KEYWORDS="amd64"
 fi
 
-inherit bash-completion-r1 linux-info multilib systemd udev user cros-workon
+inherit bash-completion-r1 eutils linux-info multilib systemd udev user cros-workon
 
+DESCRIPTION="Docker complements kernel namespacing with a high-level API which operates at the process level"
+HOMEPAGE="https://dockerproject.org"
 LICENSE="Apache-2.0"
 SLOT="0"
-IUSE="aufs +btrfs contrib +device-mapper doc experimental lxc +overlay vim-syntax zsh-completion"
+IUSE="apparmor aufs +btrfs contrib +device-mapper experimental lxc +overlay vim-syntax zsh-completion"
 
 # https://github.com/docker/docker/blob/master/hack/PACKAGERS.md#build-dependencies
 CDEPEND="
-	>=sys-kernel/coreos-kernel-3.18.0
 	>=dev-db/sqlite-3.7.9:3
 	device-mapper? (
 		>=sys-fs/lvm2-2.02.89[thin]
 	)
 "
 
+#dev-go/go-md2man
 DEPEND="
 	${CDEPEND}
-	>=dev-lang/go-1.3
+
 	btrfs? (
-		>=sys-fs/btrfs-progs-3.16.1
+		>=sys-fs/btrfs-progs-3.8
 	)
 "
 
@@ -62,11 +61,9 @@ RDEPEND="
 	lxc? (
 		>=app-emulation/lxc-1.0.7
 	)
-	aufs? (
-		|| (
-			sys-fs/aufs3
-			sys-kernel/aufs-sources
-		)
+
+	apparmor? (
+		sys-libs/libapparmor[static-libs]
 	)
 "
 
@@ -76,32 +73,37 @@ RESTRICT="installsources strip"
 CONFIG_CHECK="
 	~NAMESPACES ~NET_NS ~PID_NS ~IPC_NS ~UTS_NS
 	~DEVPTS_MULTIPLE_INSTANCES
-	~CGROUPS ~CGROUP_CPUACCT ~CGROUP_DEVICE ~CGROUP_FREEZER ~CGROUP_SCHED
-	~CPUSETS
-	~MACVLAN ~VETH ~BRIDGE
+	~CGROUPS ~CGROUP_CPUACCT ~CGROUP_DEVICE ~CGROUP_FREEZER ~CGROUP_SCHED ~CPUSETS ~MEMCG
+	~MACVLAN ~VETH ~BRIDGE ~BRIDGE_NETFILTER
 	~NF_NAT_IPV4 ~IP_NF_FILTER ~IP_NF_TARGET_MASQUERADE
 	~NETFILTER_XT_MATCH_ADDRTYPE ~NETFILTER_XT_MATCH_CONNTRACK
 	~NF_NAT ~NF_NAT_NEEDED
 
 	~POSIX_MQUEUE
 
-	~MEMCG_SWAP ~MEMCG_SWAP_ENABLED
-	~RESOURCE_COUNTERS
+	~MEMCG_KMEM ~MEMCG_SWAP ~MEMCG_SWAP_ENABLED
+
+	~BLK_CGROUP ~IOSCHED_CFQ
 	~CGROUP_PERF
-	~CFS_BANDWIDTH
+	~CGROUP_HUGETLB
+	~NET_CLS_CGROUP
+	~CFS_BANDWIDTH ~FAIR_GROUP_SCHED ~RT_GROUP_SCHED
 "
 
+ERROR_MEMCG_KMEM="CONFIG_MEMCG_KMEM: is optional"
 ERROR_MEMCG_SWAP="CONFIG_MEMCG_SWAP: is required if you wish to limit swap usage of containers"
 ERROR_RESOURCE_COUNTERS="CONFIG_RESOURCE_COUNTERS: is optional for container statistics gathering"
+
+ERROR_BLK_CGROUP="CONFIG_BLK_CGROUP: is optional for container statistics gathering"
+ERROR_IOSCHED_CFQ="CONFIG_IOSCHED_CFQ: is optional for container statistics gathering"
 ERROR_CGROUP_PERF="CONFIG_CGROUP_PERF: is optional for container statistics gathering"
 ERROR_CFS_BANDWIDTH="CONFIG_CFS_BANDWIDTH: is optional for container statistics gathering"
 
 pkg_setup() {
-	if kernel_is lt 3 8; then
-		eerror ""
-		eerror "Using Docker with kernels older than 3.8 is unstable and unsupported."
-		eerror " - http://docs.docker.com/installation/binaries/#check-kernel-dependencies"
-		die 'Kernel is too old - need 3.8 or above'
+	if kernel_is lt 3 10; then
+		ewarn ""
+		ewarn "Using Docker with kernels older than 3.10 is unstable and unsupported."
+		ewarn " - http://docs.docker.com/installation/binaries/#check-kernel-dependencies"
 	fi
 
 	# for where these kernel versions come from, see:
@@ -119,14 +121,28 @@ pkg_setup() {
 		ewarn "See also https://github.com/docker/docker/issues/2960"
 	fi
 
+	if kernel_is le 3 18; then
+		CONFIG_CHECK+="
+			~RESOURCE_COUNTERS
+		"
+	fi
+
+	if kernel_is le 3 13; then
+		CONFIG_CHECK+="
+			~NETPRIO_CGROUP
+		"
+	else
+		CONFIG_CHECK+="
+			~CGROUP_NET_PRIO
+		"
+	fi
+
 	if use aufs; then
 		CONFIG_CHECK+="
 			~AUFS_FS
 			~EXT4_FS_POSIX_ACL ~EXT4_FS_SECURITY
 		"
-		# TODO there must be a way to detect "sys-kernel/aufs-sources" so we don't warn "sys-fs/aufs3" users about this
-		# an even better solution would be to check if the current kernel sources include CONFIG_AUFS_FS as an option, but that sounds hairy and error-prone
-		ERROR_AUFS_FS="CONFIG_AUFS_FS: is required to be set if and only if aufs-sources are used"
+		ERROR_AUFS_FS="CONFIG_AUFS_FS: is required to be set if and only if aufs-sources are used instead of aufs4/aufs3"
 	fi
 
 	if use btrfs; then
@@ -148,6 +164,9 @@ pkg_setup() {
 	fi
 
 	linux-info_pkg_setup
+
+	# create docker group for the code checking for it in /etc/group
+	enewgroup docker
 }
 
 src_prepare() {
@@ -188,6 +207,10 @@ src_compile() {
 		fi
 	done
 
+	if use apparmor; then
+		DOCKER_BUILDTAGS+=' apparmor'
+	fi
+
 	# https://github.com/docker/docker/pull/13338
 	if use experimental; then
 		export DOCKER_EXPERIMENTAL=1
@@ -203,14 +226,15 @@ src_compile() {
 	# time to build!
 	./hack/make.sh dynbinary || die 'dynbinary failed'
 
-	# TODO get go-md2man and then include the man pages using docs/man/md2man-all.sh
+	# build the man pages too
+	#./man/md2man-all.sh || die "unable to generate man pages"
 }
 
 src_install() {
-	VERSION=$(cat VERSION)
-	newbin bundles/$VERSION/dynbinary/docker-$VERSION docker
+	VERSION="$(cat VERSION)"
+	newbin "bundles/$VERSION/dynbinary/docker-$VERSION" docker
 	exeinto /usr/libexec/docker
-	newexe bundles/$VERSION/dynbinary/dockerinit-$VERSION dockerinit
+	newexe "bundles/$VERSION/dynbinary/dockerinit-$VERSION" dockerinit
 
 	newinitd contrib/init/openrc/docker.initd docker
 	newconfd contrib/init/openrc/docker.confd docker
@@ -230,13 +254,8 @@ src_install() {
 	udev_dorules contrib/udev/*.rules
 
 	dodoc AUTHORS CONTRIBUTING.md CHANGELOG.md NOTICE README.md
-	if use doc; then
-		# TODO doman contrib/man/man*/*
-
-		docompress -x /usr/share/doc/${PF}/md
-		docinto md
-		dodoc -r docs/sources/*
-	fi
+	dodoc -r docs/*
+	#doman man/man*/*
 
 	dobashcomp contrib/completion/bash/*
 
@@ -252,6 +271,7 @@ src_install() {
 	fi
 
 	if use contrib; then
+		# note: intentionally not using "doins" so that we preserve +x bits
 		mkdir -p "${D}/usr/share/${PN}/contrib"
 		cp -R contrib/* "${D}/usr/share/${PN}/contrib"
 	fi
@@ -260,18 +280,14 @@ src_install() {
 pkg_postinst() {
 	udev_reload
 
-	elog ""
+	elog
 	elog "To use Docker, the Docker daemon must be running as root. To automatically"
 	elog "start the Docker daemon at boot, add Docker to the default runlevel:"
 	elog "  rc-update add docker default"
 	elog "Similarly for systemd:"
 	elog "  systemctl enable docker.service"
-	elog ""
-
-	# create docker group if the code checking for it in /etc/group exists
-	enewgroup docker
-
+	elog
 	elog "To use Docker as a non-root user, add yourself to the 'docker' group:"
 	elog "  usermod -aG docker youruser"
-	elog ""
+	elog
 }
