@@ -24,7 +24,7 @@ inherit bash-completion-r1 linux-info multilib systemd udev user cros-workon
 
 LICENSE="Apache-2.0"
 SLOT="0"
-IUSE="aufs +btrfs contrib +device-mapper doc experimental lxc +overlay vim-syntax zsh-completion"
+IUSE="aufs +btrfs contrib +device-mapper doc experimental lxc +overlay +selinux vim-syntax zsh-completion"
 
 # https://github.com/docker/docker/blob/master/hack/PACKAGERS.md#build-dependencies
 CDEPEND="
@@ -187,6 +187,10 @@ src_compile() {
 			DOCKER_BUILDTAGS+=" exclude_graphdriver_${gd//-/}"
 		fi
 	done
+
+	if use selinux; then
+		DOCKER_BUILDTAGS+=" selinux"
+	fi
 
 	# https://github.com/docker/docker/pull/13338
 	if use experimental; then
