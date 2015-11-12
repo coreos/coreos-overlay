@@ -182,6 +182,7 @@ void PayloadState::UpdateFailed(ActionExitCode error) {
     case kActionCodeResumedFlag:                        // not an error code
     case kActionCodeTestImageFlag:                      // not an error code
     case kActionCodeTestOmahaUrlFlag:                   // not an error code
+    case kActionCodeDownloadIncomplete:                 // not an error code
     case kSpecialFlags:                                 // not an error code
       // These shouldn't happen. Enumerating these  explicitly here so that we
       // can let the compiler warn about new error codes that are added to

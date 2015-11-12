@@ -33,7 +33,8 @@ struct InstallPlan {
 
   uint64_t payload_size;                 // size of the payload
   std::string payload_hash ;             // SHA256 hash of the payload
-  std::string install_path;              // path to install device
+  std::string install_path;              // path to main partition device
+  std::string kernel_path;               // path to kernel image
 
   // The fields below are used for rootfs verification. The flow is:
   //

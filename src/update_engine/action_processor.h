@@ -66,6 +66,11 @@ enum ActionExitCode {
   kActionCodeOmahaUpdateDeferredForBackoff = 40,
   kActionCodePostinstallPowerwashError = 41,
 
+  // DownloadIncomplete isn't an error to report, it is analogous to EAGAIN
+  // and for internal use to indicate that the processing must pause until
+  // more data has been received.
+  kActionCodeDownloadIncomplete = 100,
+
   // Note: When adding new error codes, please remember to add the
   // error into one of the buckets in PayloadState::UpdateFailed method so
   // that the retries across URLs and the payload backoff mechanism work

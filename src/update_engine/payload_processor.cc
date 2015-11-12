@@ -75,72 +75,22 @@ bool PayloadProcessor::Write(const void* bytes, size_t count,
   buffer_.insert(buffer_.end(), c_bytes, c_bytes + count);
 
   if (!manifest_valid_) {
-    DeltaMetadata::ParseResult result = DeltaMetadata::ParsePayload(
-        buffer_, &manifest_, &manifest_metadata_size_, error);
-    switch (result) {
-      case DeltaMetadata::kParseError: return false;
-      case DeltaMetadata::kParseInsufficientData: return true;
-      case DeltaMetadata::kParseSuccess: break;
-    }
-
-    // Remove protobuf and header info from buffer_, so buffer_ contains
-    // just data blobs
-    DiscardBufferHeadBytes(manifest_metadata_size_);
-    LOG_IF(WARNING, !prefs_->SetInt64(kPrefsManifestMetadataSize,
-                                      manifest_metadata_size_))
-        << "Unable to save the manifest metadata size.";
-    manifest_valid_ = true;
-
-    LogPartitionInfo(manifest_);
-    if (!PrimeUpdateState()) {
-      *error = kActionCodeDownloadStateInitializationError;
-      LOG(ERROR) << "Unable to prime the update state.";
+    *error = LoadManifest();
+    if (*error == kActionCodeDownloadIncomplete) {
+      *error = kActionCodeSuccess;
+      return true;
+    } else if (*error != kActionCodeSuccess)
       return false;
-    }
-
-    num_total_operations_ = manifest_.partition_operations_size();
-    if (next_operation_num_ > 0)
-      LOG(INFO) << "Resuming after " << next_operation_num_ << " operations";
-    LOG(INFO) << "Starting to apply update payload operations";
   }
 
   while (next_operation_num_ < num_total_operations_) {
-    const InstallOperation &op =
-        manifest_.partition_operations(next_operation_num_);
-
-    if (op.data_length() && op.data_offset() != buffer_offset_) {
-      LOG(ERROR) << "Operation " << next_operation_num_
-                 << " skipped to unexpected data offset " << op.data_offset()
-                 << ", expected " << buffer_offset_;
-      *error = kActionCodeDownloadOperationExecutionError;
-      return false;
-    }
-
-    if (op.data_length() > buffer_.size()) {
-      // This means we don't have enough bytes received yet to carry out the
-      // next operation.
+    *error = PerformOperation();
+    if (*error == kActionCodeDownloadIncomplete) {
+      *error = kActionCodeSuccess;
       return true;
-    }
-
-    // Makes sure we unblock exit when this operation completes.
-    ScopedTerminatorExitUnblocker exit_unblocker =
-        ScopedTerminatorExitUnblocker();  // Avoids a compiler unused var bug.
-
-    *error = delta_performer_.PerformOperation(op, buffer_);
-    if (*error != kActionCodeSuccess) {
-      LOG(ERROR) << "Aborting install procedure at operation "
-                 << num_total_operations_;
+    } else if (*error != kActionCodeSuccess) {
       return false;
     }
-
-    buffer_offset_ += op.data_length();
-    DiscardBufferHeadBytes(op.data_length());
-
-    next_operation_num_++;
-    LOG(INFO) << "Completed " << next_operation_num_ << "/"
-              << num_total_operations_ << " operations ("
-              << (next_operation_num_ * 100 / num_total_operations_) << "%)";
-    CheckpointUpdateProgress();
   }
 
   // Make sure the operations consumed exactly the right amount of data.
@@ -160,6 +110,75 @@ bool PayloadProcessor::Write(const void* bytes, size_t count,
   }
 
   return true;
+}
+
+ActionExitCode PayloadProcessor::LoadManifest() {
+  DCHECK(!manifest_valid_);
+
+  ActionExitCode error = DeltaMetadata::ParsePayload(
+      buffer_, &manifest_, &manifest_metadata_size_);
+  if (error != kActionCodeSuccess)
+    return error;
+
+  // Remove protobuf and header info from buffer_, so buffer_ contains
+  // just data blobs
+  DiscardBufferHeadBytes(manifest_metadata_size_);
+  LOG_IF(WARNING, !prefs_->SetInt64(kPrefsManifestMetadataSize,
+                                    manifest_metadata_size_))
+      << "Unable to save the manifest metadata size.";
+  manifest_valid_ = true;
+
+  LogPartitionInfo(manifest_);
+  if (!PrimeUpdateState()) {
+    LOG(ERROR) << "Unable to prime the update state.";
+    return kActionCodeDownloadStateInitializationError;
+  }
+
+  num_total_operations_ = manifest_.partition_operations_size();
+  if (next_operation_num_ > 0)
+    LOG(INFO) << "Resuming after " << next_operation_num_ << " operations";
+  LOG(INFO) << "Starting to apply update payload operations";
+
+  return kActionCodeSuccess;
+}
+
+ActionExitCode PayloadProcessor::PerformOperation() {
+  DCHECK(next_operation_num_ < num_total_operations_);
+
+  const InstallOperation &op =
+      manifest_.partition_operations(next_operation_num_);
+
+  if (op.data_length() && op.data_offset() != buffer_offset_) {
+    LOG(ERROR) << "Operation " << next_operation_num_
+               << " skipped to unexpected data offset " << op.data_offset()
+               << ", expected " << buffer_offset_;
+    return kActionCodeDownloadOperationExecutionError;
+  }
+
+  if (op.data_length() > buffer_.size())
+    return kActionCodeDownloadIncomplete;
+
+  // Makes sure we unblock exit when this operation completes.
+  ScopedTerminatorExitUnblocker exit_unblocker =
+      ScopedTerminatorExitUnblocker();  // Avoids a compiler unused var bug.
+
+  ActionExitCode error = delta_performer_.PerformOperation(op, buffer_);
+  if (error != kActionCodeSuccess) {
+    LOG(ERROR) << "Aborting install procedure at operation "
+               << next_operation_num_;
+    return error;
+  }
+
+  buffer_offset_ += op.data_length();
+  DiscardBufferHeadBytes(op.data_length());
+  next_operation_num_++;
+
+  LOG(INFO) << "Completed " << next_operation_num_ << "/"
+            << num_total_operations_ << " operations ("
+            << (next_operation_num_ * 100 / num_total_operations_) << "%)";
+  CheckpointUpdateProgress();
+
+  return kActionCodeSuccess;
 }
 
 bool PayloadProcessor::ExtractSignatureMessage(const vector<char>& data) {
