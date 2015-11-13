@@ -124,3 +124,8 @@ dev-util/checkbashisms
 =sys-devel/gcc-4.9.3
 =cross-aarch64-cros-linux-gnu/gcc-4.9.3 ~arm64
 =cross-x86_64-cros-linux-gnu/gcc-4.9.3  ~amd64
+
+# go 1.4.3 includes a number of security fixes.
+# https://github.com/golang/go/issues?q=milestone%3AGo1.4.3
+=dev-lang/go-1.4.3 ~amd64
+
