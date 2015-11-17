@@ -55,6 +55,17 @@ select_docker_driver() {
     esac
 }
 
+maybe_disable_selinux() {
+    case "${DOCKER_DRIVER}" in
+        btrfs)
+            USE_SELINUX=""
+            ;;
+        *)
+            # Leave enabled for everything else.
+            ;;
+    esac
+}
+
 ARG_ROOT="/var/lib/docker"
 ARG_DRIVER=""
 parse_docker_args "$@"
@@ -64,4 +75,8 @@ if [[ -z "${ARG_DRIVER}" && -z "${DOCKER_DRIVER}" ]]; then
     select_docker_driver
 fi
 
-exec docker "$@"
+# Enable selinux except when known to be unsupported (btrfs).
+USE_SELINUX="--selinux-enabled"
+maybe_disable_selinux
+
+exec docker "$@" "${USE_SELINUX}"
