@@ -1,0 +1,39 @@
+From a380cc22a956afb1370cf8f4c6708a25b2d6d1f5 Mon Sep 17 00:00:00 2001
+From: Jiri Pirko <jiri@mellanox.com>
+Date: Thu, 3 Sep 2015 14:04:17 +0200
+Subject: [PATCH 21/22] switchdev: fix return value of switchdev_port_fdb_dump
+ in case of error
+
+switchdev_port_fdb_dump is used as .ndo_fdb_dump. Its return value is
+idx, so we cannot return errval.
+
+Fixes: 45d4122ca7cd ("switchdev: add support for fdb add/del/dump via switchdev_port_obj ops.")
+Signed-off-by: Jiri Pirko <jiri@mellanox.com>
+Acked-by: Sridhar Samudrala <sridhar.samudrala@intel.com>
+Acked-by: Scott Feldman<sfeldma@gmail.com>
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ net/switchdev/switchdev.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
+
+diff --git a/net/switchdev/switchdev.c b/net/switchdev/switchdev.c
+index 9f2add3..6a566cd 100644
+--- a/net/switchdev/switchdev.c
++++ b/net/switchdev/switchdev.c
+@@ -853,12 +853,8 @@ int switchdev_port_fdb_dump(struct sk_buff *skb, struct netlink_callback *cb,
+ 		.cb = cb,
+ 		.idx = idx,
+ 	};
+-	int err;
+-
+-	err = switchdev_port_obj_dump(dev, &dump.obj);
+-	if (err)
+-		return err;
+ 
++	switchdev_port_obj_dump(dev, &dump.obj);
+ 	return dump.idx;
+ }
+ EXPORT_SYMBOL_GPL(switchdev_port_fdb_dump);
+-- 
+2.4.6
+
