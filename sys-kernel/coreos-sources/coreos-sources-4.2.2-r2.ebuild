@@ -33,4 +33,6 @@ ${PATCH_DIR}/overlayfs/0003-SELinux-Stub-in-copy-up-handling.patch \
 ${PATCH_DIR}/overlayfs/0004-SELinux-Handle-opening-of-a-unioned-file.patch \
 ${PATCH_DIR}/overlayfs/0005-SELinux-Check-against-union-label-for-file-operation.patch \
 ${PATCH_DIR}/overlayfs/0006-overlayfs-use-a-minimal-buffer-in-ovl_copy_xattr.patch \
-${PATCH_DIR}/net-wireless-wl18xx-Add-missing-MODULE_FIRMWARE.patch"
+${PATCH_DIR}/net-wireless-wl18xx-Add-missing-MODULE_FIRMWARE.patch \
+${PATCH_DIR}/0021-switchdev-fix-return-value-of-switchdev_port_fdb_dum.patch \
+${PATCH_DIR}/0022-net-switchdev-fix-return-code-of-fdb_dump-stub.patch"
