@@ -23,7 +23,7 @@ HOMEPAGE="http://www.golang.org"
 
 LICENSE="BSD"
 SLOT="0/${PV}"
-IUSE="cros_host +arm64-extras"
+IUSE="cros_host arm64-extras"
 
 DEPEND="cros_host? ( >=dev-lang/go-bootstrap-1.4.1 )"
 RDEPEND=""
