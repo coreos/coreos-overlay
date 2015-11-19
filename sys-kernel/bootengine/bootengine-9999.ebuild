@@ -22,25 +22,6 @@ SRC_URI=""
 LICENSE="BSD"
 SLOT="0/${PVR}"
 
-DEPEND="
-	app-arch/gzip
-	app-shells/bash
-	sys-apps/coreutils
-	sys-apps/findutils
-	sys-apps/grep
-	sys-apps/ignition
-	sys-apps/less
-	sys-apps/sed
-	sys-apps/shadow
-	sys-apps/systemd
-	sys-apps/util-linux
-	sys-fs/btrfs-progs
-	sys-fs/mdadm
-	sys-kernel/dracut
-	virtual/udev
-	"
-RDEPEND="${DEPEND}"
-
 src_install() {
 	insinto /usr/lib/dracut/modules.d/
 	doins -r dracut/.
@@ -53,15 +34,4 @@ src_install() {
 		"${D}"/usr/lib/dracut/modules.d/30ignition/ignition-generator \
 		"${D}"/usr/lib/dracut/modules.d/99setup-root/initrd-setup-root \
 		|| die chmod
-}
-
-# We are bad, we want to get around the sandbox.  So do the creation of the
-# cpio image in pkg_postinst() where we are free to mount filesystems, chroot,
-# and other fun stuff.
-pkg_postinst() {
-	if [[ "${ROOT:-/}" != / ]]; then
-		${ROOT}/usr/sbin/update-bootengine -m -c ${ROOT} || die
-	else
-		update-bootengine || die
-	fi
 }

@@ -20,8 +20,27 @@ SLOT="0/${PVR}"
 SRC_URI=""
 IUSE="audit selinux"
 
-DEPEND="=sys-kernel/coreos-sources-${COREOS_SOURCE_VERSION}
-	sys-kernel/bootengine:="
+DEPEND="
+	app-arch/gzip
+	app-shells/bash
+	sys-apps/coreutils
+	sys-apps/findutils
+	sys-apps/grep
+	sys-apps/ignition:=
+	sys-apps/less
+	sys-apps/sed
+	sys-apps/shadow
+	sys-apps/systemd
+	sys-apps/util-linux
+	sys-fs/btrfs-progs
+	sys-fs/e2fsprogs
+	sys-fs/mdadm
+	sys-fs/xfsprogs
+	=sys-kernel/coreos-sources-${COREOS_SOURCE_VERSION}
+	sys-kernel/bootengine:=
+	sys-kernel/dracut
+	virtual/udev
+"
 
 # Do not analyze or strip installed files
 RESTRICT="binchecks strip"
@@ -206,4 +225,17 @@ coreos-kernel_src_install() {
 	shred_keys
 }
 
-EXPORT_FUNCTIONS src_unpack src_prepare src_configure src_compile src_install
+# We are bad, we want to get around the sandbox.  So do the creation of the
+# cpio image in pkg_setup() where we are free to mount filesystems, chroot,
+# and other fun stuff.
+coreos-kernel_pkg_setup() {
+	[[ "${MERGE_TYPE}" == binary ]] && return
+
+	if [[ "${ROOT:-/}" != / ]]; then
+		${ROOT}/usr/sbin/update-bootengine -m -c ${ROOT} || die
+	else
+		update-bootengine || die
+	fi
+}
+
+EXPORT_FUNCTIONS src_unpack src_prepare src_configure src_compile src_install pkg_setup
