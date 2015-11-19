@@ -149,6 +149,8 @@ src_install() {
 	if use cros_host; then
 		# Provided by vim in the SDK
 		rm -r "${D}"/etc/vim || die
+		# Undesirable in the SDK
+		rm "${D}"/etc/profile.d/coreos-profile.sh || die
 	else
 		# Don't install /etc/issue since it is handled by coreos-init right now
 		rm "${D}"/etc/issue || die
