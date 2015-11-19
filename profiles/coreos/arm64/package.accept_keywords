@@ -4,7 +4,11 @@ net-misc/curl ~arm64
 dev-libs/nspr ~arm64
 sys-apps/coreutils ~arm64
 app-text/asciidoc ~arm64
+app-admin/sudo ~arm64
+net-misc/dhcpcd ~arm64
 
+=app-editors/vim-7.4.769 ~arm64
+=sys-apps/util-linux-2.26.2 ~arm64
 =net-libs/libmicrohttpd-0.9.42 ~arm64
 =app-misc/ca-certificates-3.19.1 **
 
@@ -85,4 +89,4 @@ net-fs/nfs-utils ~arm64
 
 =net-wireless/wireless-tools-30_pre9 ~arm64
 =net-wireless/iw-4.0 **
-
+=net-libs/libmicrohttpd-0.9.44 **
