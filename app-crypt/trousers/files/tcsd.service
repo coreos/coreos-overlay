@@ -1,0 +1,11 @@
+[Unit]
+Description=TCG Core Services Daemon
+ConditionPathExists=/dev/tpm0
+
+[Service]
+User=tss
+ExecStart=/usr/sbin/tcsd -f
+
+[Install]
+WantedBy=multi-user.target
+
