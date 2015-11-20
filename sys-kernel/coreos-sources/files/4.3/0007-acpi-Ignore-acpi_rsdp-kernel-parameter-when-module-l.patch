@@ -1,7 +1,7 @@
-From 9f838b6efbbabccbef59f278c13381c332e5b992 Mon Sep 17 00:00:00 2001
+From 9822ba15eaa928b83bfc8faef740b55b82b309b9 Mon Sep 17 00:00:00 2001
 From: Josh Boyer <jwboyer@redhat.com>
 Date: Mon, 25 Jun 2012 19:57:30 -0400
-Subject: [PATCH 07/14] acpi: Ignore acpi_rsdp kernel parameter when module
+Subject: [PATCH 07/21] acpi: Ignore acpi_rsdp kernel parameter when module
  loading is restricted
 
 This option allows userspace to pass the RSDP address to the kernel, which
@@ -14,10 +14,10 @@ Signed-off-by: Josh Boyer <jwboyer@redhat.com>
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
-index 3b8963f..a5ae6a7 100644
+index 739a4a6..9ef2a02 100644
 --- a/drivers/acpi/osl.c
 +++ b/drivers/acpi/osl.c
-@@ -44,6 +44,7 @@
+@@ -40,6 +40,7 @@
  #include <linux/list.h>
  #include <linux/jiffies.h>
  #include <linux/semaphore.h>
@@ -25,7 +25,7 @@ index 3b8963f..a5ae6a7 100644
  
  #include <asm/io.h>
  #include <asm/uaccess.h>
-@@ -255,7 +256,7 @@ early_param("acpi_rsdp", setup_acpi_rsdp);
+@@ -253,7 +254,7 @@ early_param("acpi_rsdp", setup_acpi_rsdp);
  acpi_physical_address __init acpi_os_get_root_pointer(void)
  {
  #ifdef CONFIG_KEXEC
@@ -35,5 +35,5 @@ index 3b8963f..a5ae6a7 100644
  #endif
  
 -- 
-2.4.3
+2.4.10
 

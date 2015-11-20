@@ -1,7 +1,7 @@
-From 1d82a694eb7508eef1e25c4c4dfe5e4ae9206454 Mon Sep 17 00:00:00 2001
+From e1479978a5b79f053368c011304e528355b43757 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Thu, 8 Mar 2012 10:10:38 -0500
-Subject: [PATCH 02/14] PCI: Lock down BAR access when module security is
+Subject: [PATCH 02/21] PCI: Lock down BAR access when module security is
  enabled
 
 Any hardware that can potentially generate DMA has to be locked down from
@@ -18,7 +18,7 @@ Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
  3 files changed, 19 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 312f23a..93e6ac1 100644
+index 9261868..9e99a3c 100644
 --- a/drivers/pci/pci-sysfs.c
 +++ b/drivers/pci/pci-sysfs.c
 @@ -30,6 +30,7 @@
@@ -114,5 +114,5 @@ index b91c4da..98f5637 100644
  
  	dev = pci_get_bus_and_slot(bus, dfn);
 -- 
-2.4.3
+2.4.10
 

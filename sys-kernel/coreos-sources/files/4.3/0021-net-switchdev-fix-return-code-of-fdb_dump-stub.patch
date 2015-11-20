@@ -1,7 +1,7 @@
-From d5eda9e85df6d1894d0d16155e0900daadb4ce1b Mon Sep 17 00:00:00 2001
+From adab4d12ddd30b27b1d620cb73f9ac31c189c386 Mon Sep 17 00:00:00 2001
 From: Dragos Tatulea <dragos@endocode.com>
 Date: Mon, 16 Nov 2015 10:52:48 +0100
-Subject: [PATCH 22/22] net: switchdev: fix return code of fdb_dump stub
+Subject: [PATCH 21/21] net: switchdev: fix return code of fdb_dump stub
 
 rtnl_fdb_dump always expects an index to be returned by the ndo_fdb_dump op,
 but when CONFIG_NET_SWITCHDEV is off, it returns an error.
@@ -21,10 +21,10 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/include/net/switchdev.h b/include/net/switchdev.h
-index d5671f1..0b91979 100644
+index 319baab..731c40e 100644
 --- a/include/net/switchdev.h
 +++ b/include/net/switchdev.h
-@@ -268,7 +268,7 @@ static inline int switchdev_port_fdb_dump(struct sk_buff *skb,
+@@ -272,7 +272,7 @@ static inline int switchdev_port_fdb_dump(struct sk_buff *skb,
  					  struct net_device *filter_dev,
  					  int idx)
  {
@@ -32,7 +32,7 @@ index d5671f1..0b91979 100644
 +       return idx;
  }
  
- #endif
+ static inline void switchdev_port_fwd_mark_set(struct net_device *dev,
 -- 
-2.4.6
+2.4.10
 
