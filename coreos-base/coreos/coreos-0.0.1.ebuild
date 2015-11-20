@@ -112,6 +112,7 @@ RDEPEND="${RDEPEND}
 	app-arch/tar
 	app-arch/unzip
 	app-arch/zip
+	app-crypt/go-tspi
 	app-misc/jq
 	app-shells/bash
 	coreos-base/update_engine

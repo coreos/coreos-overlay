@@ -1,0 +1,10 @@
+[Unit]
+Description=TPM remote access daemon
+Requires=tcsd.service
+
+[Service]
+User=tss
+ExecStart=/bin/tpmd
+
+[Install]
+WantedBy=multi-user.target
