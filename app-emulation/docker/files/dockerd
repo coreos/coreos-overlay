@@ -79,4 +79,4 @@ fi
 USE_SELINUX="--selinux-enabled"
 maybe_disable_selinux
 
-exec docker "$@" "${USE_SELINUX}"
+exec docker "$@" ${USE_SELINUX}
