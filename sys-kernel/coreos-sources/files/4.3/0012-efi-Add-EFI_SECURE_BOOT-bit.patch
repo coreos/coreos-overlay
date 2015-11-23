@@ -1,7 +1,7 @@
-From 0925cb3f7afbf104e9b5df5dea02dd0d8cdb0c2e Mon Sep 17 00:00:00 2001
+From 589d649aad69a64dfc8802211dd5eeab11e29ba4 Mon Sep 17 00:00:00 2001
 From: Josh Boyer <jwboyer@fedoraproject.org>
 Date: Tue, 27 Aug 2013 13:33:03 -0400
-Subject: [PATCH 13/14] efi: Add EFI_SECURE_BOOT bit
+Subject: [PATCH 12/21] efi: Add EFI_SECURE_BOOT bit
 
 UEFI machines can be booted in Secure Boot mode.  Add a EFI_SECURE_BOOT bit
 for use with efi_enabled.
@@ -13,10 +13,10 @@ Signed-off-by: Josh Boyer <jwboyer@fedoraproject.org>
  2 files changed, 3 insertions(+)
 
 diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index c2e4f52..5def6b4 100644
+index bddbfa7..2015f84 100644
 --- a/arch/x86/kernel/setup.c
 +++ b/arch/x86/kernel/setup.c
-@@ -1162,7 +1162,9 @@ void __init setup_arch(char **cmdline_p)
+@@ -1137,7 +1137,9 @@ void __init setup_arch(char **cmdline_p)
  
  #ifdef CONFIG_EFI_SECURE_BOOT_SIG_ENFORCE
  	if (boot_params.secure_boot) {
@@ -39,5 +39,5 @@ index 85ef051..de3e450 100644
  #ifdef CONFIG_EFI
  /*
 -- 
-2.4.3
+2.4.10
 
