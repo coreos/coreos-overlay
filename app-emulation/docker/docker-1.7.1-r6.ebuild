@@ -188,6 +188,10 @@ src_compile() {
 		fi
 	done
 
+	# Docker uses the host files when testing, so force docker
+	# to not use dm_task_deferred_remove to cover cross builds.
+	DOCKER_BUILDTAGS+=' libdm_no_deferred_remove'
+
 	# https://github.com/docker/docker/pull/13338
 	if use experimental; then
 		export DOCKER_EXPERIMENTAL=1
