@@ -19,7 +19,7 @@ if [[ "${PV}" == "9999" ]]; then
 	KEYWORDS="~amd64"
 else
 	KEYWORDS="amd64"
-	CROS_WORKON_COMMIT="000c9b7614d98007fde675b56bb426bf7e4fbcbd" # v0.9.0
+	CROS_WORKON_COMMIT="8ac43b860d9404b41886f89639cb460078662ad6" # v0.11.0
 fi
 
 PXE_VERSION="794.1.0"
@@ -67,8 +67,8 @@ src_configure() {
 		myeconfargs+=( --with-coreos-local-pxe-image-path="${DISTDIR}/${PXE_FILE}" )
 		myeconfargs+=( --with-coreos-local-pxe-image-systemd-version=v"${PXE_SYSTEMD_VERSION}" )
 	fi
-	myeconfargs+=( --with-stage1="${STAGE1FLAVOR}" )
-	myeconfargs+=( --with-stage1-image-path="/usr/share/rkt/stage1-${STAGE1FLAVOR}.aci" )
+	myeconfargs+=( --with-stage1-flavors="${STAGE1FLAVOR}" )
+	myeconfargs+=( --with-stage1-default-location="/usr/share/rkt/stage1-${STAGE1FLAVOR}.aci" )
 
 	# Go's 6l linker does not support PIE, disable so cgo binaries
 	# which use 6l+gcc for linking can be built correctly.
