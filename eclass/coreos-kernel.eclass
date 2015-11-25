@@ -7,6 +7,16 @@
 # Revision of the source ebuild, e.g. -r1. default is ""
 : ${COREOS_SOURCE_REVISION:=}
 
+# @ECLASS-VARIABLE: COREOS_TARGET_BOARD
+# @DESCRIPTION:
+# Target board name, e.g. "hikey". default is ""
+: ${COREOS_TARGET_BOARD:=}
+
+# @ECLASS-VARIABLE: COREOS_TARGET_DTB
+# @DESCRIPTION:
+# Devicetree blob to install, e.g. "hi6220-hikey". default is ""
+: ${COREOS_TARGET_DTB:=}
+
 COREOS_SOURCE_VERSION="${PV}${COREOS_SOURCE_REVISION}"
 COREOS_SOURCE_NAME="linux-${PV}-coreos${COREOS_SOURCE_REVISION}"
 
@@ -59,7 +69,11 @@ KERNEL_DIR="${SYSROOT}/usr/src/${COREOS_SOURCE_NAME}"
 #  - amd64_defconfig
 # The first matching config is used, die otherwise.
 find_defconfig() {
-	local base_path="${FILESDIR}/${ARCH}_defconfig"
+        if [[ ${COREOS_TARGET_BOARD} != "" ]]; then
+	    local base_path="${FILESDIR}/${ARCH}_${COREOS_TARGET_BOARD}_defconfig"
+        else
+	    local base_path="${FILESDIR}/${ARCH}_defconfig"
+        fi
 	local try_suffix try_path
 	for try_suffix in "-${PVR}" "-${PV}" "-${PV%.*}" ""; do
 		try_path="${base_path}${try_suffix}"
@@ -210,6 +224,13 @@ coreos-kernel_src_install() {
 	local version=$(kmake -s --no-print-directory kernelrelease)
 	dosym "vmlinuz-${version}" /usr/boot/vmlinuz
 	dosym "config-${version}" /usr/boot/config
+
+	# Install the target devicetree blob
+	if [[ ${COREOS_TARGET_DTB} != "" ]]; then
+		cp "${S}/build/arch/${ARCH}/boot/dts/${COREOS_TARGET_DTB}" \
+			"${D}/usr/boot/${COREOS_TARGET_DTB}"
+		dosym "${COREOS_TARGET_DTB}" /usr/boot/devicetree
+	fi
 
 	# build and source must cleaned up to avoid referencing $ROOT
 	rm "${D}/usr/lib/modules/${version}"/{build,source} || die
