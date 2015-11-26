@@ -48,7 +48,6 @@ src_install() {
 	emake DESTDIR="${D}" install
 
 	# Enable some sockets that aren't enabled by their own ebuilds.
-	systemd_enable_service sockets.target sshd.socket
 	systemd_enable_service sockets.target docker.socket
 
 	# Enable some services that aren't enabled elsewhere.
