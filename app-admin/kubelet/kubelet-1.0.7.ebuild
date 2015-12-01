@@ -22,8 +22,6 @@ DEPEND="dev-lang/go"
 RDEPEND="net-misc/socat"
 
 src_prepare() {
-	epatch "${FILESDIR}/0001-Plumb-linker-flags-through-from-the-Makefile.patch"
-
 	if gcc-specs-pie; then
 		append-ldflags -nopie
 	fi
