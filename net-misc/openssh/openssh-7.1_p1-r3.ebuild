@@ -157,6 +157,10 @@ src_prepare() {
 	)
 	sed -i "${sed_args[@]}" configure{.ac,} || die
 
+	# in CoreOS, we wish to keep ssh-dss around for a while longer while we give
+	# users time to get rid of their ssh-dss keys.
+	epatch "${FILESDIR}"/${PN}-7.1_p1-enable-dss.patch
+
 	epatch_user #473004
 
 	# Now we can build a sane merged version.h
