@@ -125,3 +125,8 @@ dev-util/checkbashisms
 =sys-devel/gcc-4.9.3
 =cross-aarch64-cros-linux-gnu/gcc-4.9.3 ~arm64
 =cross-x86_64-cros-linux-gnu/gcc-4.9.3  ~amd64
+
+# 1.0.2e contains some security fixes.
+# https://bugs.gentoo.org/show_bug.cgi?id=567476
+=app-misc/c_rehash-1.7-r1 ~amd64 ~arm64
+=dev-libs/openssl-1.0.2e ~amd64 ~arm64
