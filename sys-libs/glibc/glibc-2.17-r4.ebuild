@@ -1,1 +1,0 @@
-glibc-2.17.ebuild
