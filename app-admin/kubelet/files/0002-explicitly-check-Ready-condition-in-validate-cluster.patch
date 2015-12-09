@@ -1,7 +1,7 @@
-From 1fdd876287ed3454df939d15602d6f8037ff3156 Mon Sep 17 00:00:00 2001
+From 48d7f5314be4903c6ffc2fb4be542d61b7241b8b Mon Sep 17 00:00:00 2001
 From: Aaron Levy <aaron.levy@coreos.com>
 Date: Thu, 19 Nov 2015 19:06:39 -0800
-Subject: [PATCH 2/3] explicitly check "Ready" condition in validate-cluster
+Subject: [PATCH 2/4] explicitly check "Ready" condition in validate-cluster
 
 ---
  cluster/validate-cluster.sh | 2 +-
