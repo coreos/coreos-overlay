@@ -1,7 +1,7 @@
-From 0180f019c7575a5cfe8344ecab14e9c3da883ac7 Mon Sep 17 00:00:00 2001
+From 6195a477686ce589f0568d9f0e6e44e7a9e146e3 Mon Sep 17 00:00:00 2001
 From: Aaron Levy <aaron.levy@coreos.com>
 Date: Tue, 17 Nov 2015 13:05:53 -0800
-Subject: [PATCH 1/3] kubelet: report NodeReady last in status list
+Subject: [PATCH 1/4] kubelet: report NodeReady last in status list
 
 Addresses a version skew issue where the last condition status is always
 evaluated as the NodeReady status. As a workaround force the NodeReady

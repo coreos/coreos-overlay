@@ -25,6 +25,7 @@ src_prepare() {
 	epatch "${FILESDIR}/0001-kubelet-report-NodeReady-last-in-status-list.patch"
 	epatch "${FILESDIR}/0002-explicitly-check-Ready-condition-in-validate-cluster.patch"
 	epatch "${FILESDIR}/0003-kubelet-check-node-condition-by-type-rather-than-by-.patch"
+	epatch "${FILESDIR}/0004-pkg-kubelet-force-NodeReady-condition-to-be-last-on-.patch"
 
 	if gcc-specs-pie; then
 		append-ldflags -nopie
