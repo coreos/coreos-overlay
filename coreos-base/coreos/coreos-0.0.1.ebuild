@@ -117,6 +117,7 @@ RDEPEND="${RDEPEND}
 	app-shells/bash
 	coreos-base/update_engine
 	coreos-base/coreos-init
+	coreos-base/castle-init
 	coreos-base/coreos-cloudinit
 	coreos-base/coreos-metadata
 	coreos-base/coretest
@@ -162,6 +163,7 @@ RDEPEND="${RDEPEND}
 	sys-process/lsof
 	sys-process/procps
 	app-emulation/docker
+	app-emulation/systemd-docker
 	app-misc/ca-certificates
 	app-crypt/gnupg
 	virtual/udev
