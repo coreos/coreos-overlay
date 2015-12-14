@@ -114,10 +114,10 @@ kmake() {
 	fi
 	# this can be removed once it is exported globally again
 	export CCACHE_BASEDIR="${S}"
-	emake \
+	emake "--directory=${S}/source" \
 		ARCH="${kernel_arch}" \
 		CROSS_COMPILE="${CHOST}-" \
-		KBUILD_OUTPUT="build" \
+		KBUILD_OUTPUT="../build" \
 		KCFLAGS="${kernel_cflags}" \
 		LDFLAGS="" \
 		"$@"
@@ -131,9 +131,50 @@ shred_keys() {
 	fi
 }
 
+# Populate /lib/modules/$(uname -r)/{build,source}
+prepare-lib-modules-release-dirs() {
+	# build and source must cleaned up to avoid referencing $ROOT
+	rm "${D}/usr/lib/modules/${version}"/{build,source} || die
+
+	# XXX: For some reason tc-arch-kernel is returning x86_64 on > 2.6.24
+	local kernel_arch=$(tc-arch-kernel)
+	if [ "${kernel_arch}" == "x86_64" ]; then
+		kernel_arch="x86"
+	fi
+
+	# Install a stripped source for out-of-tree module builds (Debian-derived)
+	{
+		echo source/Makefile
+		find source/arch/${kernel_arch} -follow -maxdepth 1 -name 'Makefile*' -print
+		find source/arch/${kernel_arch} -follow \( -name 'module.lds' -o -name 'Kbuild.platforms' -o -name 'Platform' \) -print
+		find $(find source/arch/${kernel_arch} -follow \( -name include -o -name scripts \) -follow -type d -print) -print
+		find source/include source/scripts -follow -print
+	} | cpio -pd \
+		--preserve-modification-time \
+		--owner=root:root \
+		--dereference \
+		"${D}/usr/lib/modules/${version}" || die
+
+	# Clean up the build tree and install for out-of-tree module builds
+	kmake clean
+	find "build/" -type d -empty -delete || die
+	rm --recursive \
+		"build/bootengine.cpio" \
+		"build/.config.old" \
+		"build/certs" \
+		|| die
+
+	find "build/" -print | cpio -pd \
+		--preserve-modification-time \
+		--owner=root:root \
+		"${D}/usr/lib/modules/${version}" || die
+}
+
 coreos-kernel_src_unpack() {
+	# we more or less reproduce the layout in /lib/modules/$(uname -r)/
 	mkdir -p "${S}/build" || die
-	ln -s "${KERNEL_DIR}"/* "${S}/" || die
+	mkdir -p "${S}/source" || die
+	ln -s "${KERNEL_DIR}"/* "${S}/source/" || die
 }
 
 coreos-kernel_src_prepare() {
@@ -211,16 +252,7 @@ coreos-kernel_src_install() {
 	dosym "vmlinuz-${version}" /usr/boot/vmlinuz
 	dosym "config-${version}" /usr/boot/config
 
-	# build and source must cleaned up to avoid referencing $ROOT
-	rm "${D}/usr/lib/modules/${version}"/{build,source} || die
-	dosym "../../../src/linux-${version}" "/usr/lib/modules/${version}/source"
-
-	# this is just here for linux-info.eclass, mask from prod images
-	dodir "/usr/lib/modules/${version}/build"
-	dosym "../../../../boot/config-${version}" \
-		"/usr/lib/modules/${version}/build/.config"
-
-	save_config build/defconfig
+	prepare-lib-modules-release-dirs
 
 	shred_keys
 }
