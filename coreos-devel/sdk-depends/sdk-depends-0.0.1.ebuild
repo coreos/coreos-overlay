@@ -19,6 +19,7 @@ DEPEND="
 	app-arch/pbzip2
 	app-emulation/open-vmdk
 	app-misc/jq
+	app-portage/eix
 	app-shells/bash-completion
 	coreos-base/hard-host-depends
 	coreos-base/coreos-sb-keys
