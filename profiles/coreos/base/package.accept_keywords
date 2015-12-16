@@ -9,7 +9,6 @@
 =dev-util/shflags-1.0.3 ~amd64
 =dev-util/perf-3.4 ~amd64
 =sys-libs/libnih-1.0.3 ~amd64
-=dev-python/pyusb-1.0.0_alpha3 ~amd64
 
 # Get updated core code
 =sys-auth/pam_pwdfile-0.99-r1 ~amd64
