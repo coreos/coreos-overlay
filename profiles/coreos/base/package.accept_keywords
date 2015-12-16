@@ -42,11 +42,6 @@ net-misc/gsutil
 # no version marked stable upstream
 dev-util/checkbashisms
 
-# Current systemd git requires >= 3.10 to build,
-# use 3.13 since Gentoo is starting to stabilize that one:
-# https://bugs.gentoo.org/show_bug.cgi?id=507096
-=sys-kernel/linux-headers-3.13
-
 # 106 and 107 ebuilds improve systemd integration
 =sys-fs/lvm2-2.02.107
 =sys-block/thin-provisioning-tools-0.3.2
