@@ -39,9 +39,6 @@ net-misc/gsutil
 # Fixes euse: https://bugs.gentoo.org/show_bug.cgi?id=473760
 =app-portage/gentoolkit-0.3.0.8
 
-# Docker dependencies are needed
-=dev-util/boost-build-1.52.0-r1 ~amd64
-
 # Assorted bugfixes, avoids corrupting filesystems by updating UUID
 =sys-fs/e2fsprogs-1.42.9 ~amd64
 ~sys-libs/e2fsprogs-libs-1.42.9 ~amd64
