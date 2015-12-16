@@ -91,7 +91,6 @@ dev-util/checkbashisms
 =dev-python/pylint-0.23.0          amd64
 =dev-python/pyusb-0.4.3            amd64
 
-=app-text/xmlto-0.0.24-r1	amd64 arm x86
 =dev-lang/nasm-2.09.10		amd64 x86
 =net-libs/libpcap-1.1.1-r1	amd64 arm x86
 
