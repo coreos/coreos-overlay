@@ -1,4 +1,4 @@
-From 8b75d9cbe2df89e63af7914534b63717024328fb Mon Sep 17 00:00:00 2001
+From 50bd32982e4a967cf77f1020c191f6d5d3f0c941 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <mjg59@coreos.com>
 Date: Thu, 19 Nov 2015 18:55:53 -0800
 Subject: [PATCH 08/21] kexec: Disable at runtime if the kernel enforces module
