@@ -2,11 +2,6 @@
 # Copyright (c) 2013 The CoreOS Authors. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
-# Requires custom patches before unmasking
-=dev-libs/nspr-4.9.2 -* ~arm ~x86 ~amd64
-=dev-libs/nss-3.14 -* ~arm ~x86 ~amd64
-=app-crypt/nss-3.14 -* ~arm ~x86 ~amd64
-
 =dev-python/ws4py-0.2.4 ~amd64
 =dev-embedded/smdk-dltool-0.20-r3 ~amd64
 =dev-cpp/gflags-2.0 ~amd64
@@ -147,7 +142,3 @@ dev-util/checkbashisms
 =dev-lang/nasm-2.09.10		amd64 x86
 =net-libs/libpcap-1.1.1-r1	amd64 arm x86
 
-# Requires custom patches before unmasking
-=dev-libs/nspr-4.9.2 -* ~arm ~x86 ~amd64
-=dev-libs/nss-3.14 -* ~arm ~x86 ~amd64
-=app-crypt/nss-3.14 -* ~arm ~x86 ~amd64
