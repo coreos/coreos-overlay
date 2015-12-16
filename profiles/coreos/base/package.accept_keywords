@@ -138,3 +138,16 @@ dev-util/checkbashisms
 # https://github.com/coreos/bugs/issues/923
 =sys-fs/btrfs-progs-4.2.2 ~amd64 ~arm64
 
+# Get a newer version of pylint
+=dev-python/astng-0.21.1           amd64
+=dev-python/pylint-0.23.0          amd64
+=dev-python/pyusb-0.4.3            amd64
+
+=app-text/xmlto-0.0.24-r1	amd64 arm x86
+=dev-lang/nasm-2.09.10		amd64 x86
+=net-libs/libpcap-1.1.1-r1	amd64 arm x86
+
+# Requires custom patches before unmasking
+=dev-libs/nspr-4.9.2 -* ~arm ~x86 ~amd64
+=dev-libs/nss-3.14 -* ~arm ~x86 ~amd64
+=app-crypt/nss-3.14 -* ~arm ~x86 ~amd64
