@@ -11,7 +11,6 @@
 =sys-libs/libnih-1.0.3 ~amd64
 
 # Get updated core code
-=sys-auth/pam_pwdfile-0.99-r1 ~amd64
 =net-misc/tlsdate-0.0.5 ~amd64
 =dev-libs/libgpg-error-1.10-r1 ~amd64
 =net-misc/dhcp-4.2.2-r1 ~amd64
