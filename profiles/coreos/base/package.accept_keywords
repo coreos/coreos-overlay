@@ -50,9 +50,6 @@ dev-util/checkbashisms
 # Fixes a few bugs but has not yet been marked stable upstream.
 =app-arch/lbzip2-2.5
 
-# >=3.16 required by docker 1.4
-=sys-fs/btrfs-progs-3.17.3
-
 # Fixes findmnt with overlay and btrfs filesystems
 =sys-apps/util-linux-2.26.1
 
