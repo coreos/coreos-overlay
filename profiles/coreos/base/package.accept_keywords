@@ -39,9 +39,6 @@ net-misc/gsutil
 # Fixes euse: https://bugs.gentoo.org/show_bug.cgi?id=473760
 =app-portage/gentoolkit-0.3.0.8
 
-# Kills an annoying warning
-=app-admin/eselect-1.4
-
 # no version marked stable upstream
 dev-util/checkbashisms
 
