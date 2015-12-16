@@ -6,7 +6,6 @@
 =dev-embedded/smdk-dltool-0.20-r3 ~amd64
 =dev-cpp/gflags-2.0 ~amd64
 =sys-devel/smatch-1.57-r1 ~amd64
-=dev-lang/closure-compiler-bin-20120305 ~amd64
 =dev-util/shflags-1.0.3 ~amd64
 =dev-util/perf-3.4 ~amd64
 =sys-libs/libnih-1.0.3 ~amd64
