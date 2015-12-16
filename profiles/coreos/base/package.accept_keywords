@@ -39,9 +39,6 @@ net-misc/gsutil
 # Fixes euse: https://bugs.gentoo.org/show_bug.cgi?id=473760
 =app-portage/gentoolkit-0.3.0.8
 
-# Really really hoping this fixes our compile issues
-=dev-lang/python-2.7.6 ~amd64
-
 # Kills an annoying warning
 =app-admin/eselect-1.4
 
