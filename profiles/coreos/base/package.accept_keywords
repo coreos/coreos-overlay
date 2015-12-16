@@ -42,10 +42,6 @@ net-misc/gsutil
 # no version marked stable upstream
 dev-util/checkbashisms
 
-# 106 and 107 ebuilds improve systemd integration
-=sys-fs/lvm2-2.02.107
-=sys-block/thin-provisioning-tools-0.3.2
-
 # current stable (4.3.x) xen-tools doesn't build without multilib
 ~app-emulation/xen-4.4.1
 ~app-emulation/xen-tools-4.4.1
