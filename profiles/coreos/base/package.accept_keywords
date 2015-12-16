@@ -2,31 +2,18 @@
 # Copyright (c) 2013 The CoreOS Authors. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
-# Requires custom patches before unmasking
-=dev-libs/nspr-4.9.2 -* ~arm ~x86 ~amd64
-=dev-libs/nss-3.14 -* ~arm ~x86 ~amd64
-=app-crypt/nss-3.14 -* ~arm ~x86 ~amd64
-
 =dev-python/ws4py-0.2.4 ~amd64
 =dev-embedded/smdk-dltool-0.20-r3 ~amd64
 =dev-cpp/gflags-2.0 ~amd64
 =sys-devel/smatch-1.57-r1 ~amd64
-=dev-lang/closure-compiler-bin-20120305 ~amd64
 =dev-util/shflags-1.0.3 ~amd64
 =dev-util/perf-3.4 ~amd64
 =sys-libs/libnih-1.0.3 ~amd64
-=dev-python/pyusb-1.0.0_alpha3 ~amd64
 
 # Get updated core code
-=sys-auth/pam_pwdfile-0.99-r1 ~amd64
 =net-misc/tlsdate-0.0.5 ~amd64
 =dev-libs/libgpg-error-1.10-r1 ~amd64
 =net-misc/dhcp-4.2.2-r1 ~amd64
-=app-benchmarks/i7z-0.27-r1 ~amd64
-=dev-libs/opencryptoki-2.4.2 ~amd64
-
-# CRIU dependencies
-=dev-libs/protobuf-c-0.15 ~amd64
 
 # Everything needed for the boot engine
 >=sys-apps/kexec-tools-2.0.4-r1 ~amd64
@@ -52,36 +39,8 @@ net-misc/gsutil
 # Fixes euse: https://bugs.gentoo.org/show_bug.cgi?id=473760
 =app-portage/gentoolkit-0.3.0.8
 
-# Docker dependencies are needed
-=dev-util/boost-build-1.52.0-r1 ~amd64
-
-# Assorted bugfixes, avoids corrupting filesystems by updating UUID
-=sys-fs/e2fsprogs-1.42.9 ~amd64
-~sys-libs/e2fsprogs-libs-1.42.9 ~amd64
-
-# Really really hoping this fixes our compile issues
-=dev-lang/python-2.7.6 ~amd64
-
-# Kills an annoying warning
-=app-admin/eselect-1.4
-
 # no version marked stable upstream
 dev-util/checkbashisms
-
-# masked upstream due to lua dep, but we don't enable lua support
-=net-analyzer/nmap-6.40-r1
-
-# this version does not segfault when a user isn't in sudoers
-=app-admin/sudo-1.8.10_p2
-
-# Current systemd git requires >= 3.10 to build,
-# use 3.13 since Gentoo is starting to stabilize that one:
-# https://bugs.gentoo.org/show_bug.cgi?id=507096
-=sys-kernel/linux-headers-3.13
-
-# 106 and 107 ebuilds improve systemd integration
-=sys-fs/lvm2-2.02.107
-=sys-block/thin-provisioning-tools-0.3.2
 
 # current stable (4.3.x) xen-tools doesn't build without multilib
 ~app-emulation/xen-4.4.1
@@ -91,14 +50,8 @@ dev-util/checkbashisms
 # Fixes a few bugs but has not yet been marked stable upstream.
 =app-arch/lbzip2-2.5
 
-# >=3.16 required by docker 1.4
-=sys-fs/btrfs-progs-3.17.3
-
 # Fixes findmnt with overlay and btrfs filesystems
 =sys-apps/util-linux-2.26.1
-
-# fix for https://github.com/coreos/bugs/issues/324
-=net-misc/curl-7.41
 
 # link jq binary dynamically
 =app-misc/jq-1.4-r1
@@ -108,11 +61,6 @@ dev-util/checkbashisms
 
 # Avoid cross compile error with amd64 stable (elfutils-0.158).
 =dev-libs/elfutils-0.161 ~amd64
-
-# Pickup upstream cross-compile fix
-# https://bugs.gentoo.org/show_bug.cgi?id=473372
-=app-editors/vim-7.4.712
-=app-editors/vim-core-7.4.712
 
 # Provides useful new pages like loop(4)
 =sys-apps/man-pages-4.00
@@ -137,4 +85,11 @@ dev-util/checkbashisms
 # newer btrfs-progs improve things like preserving capabilities in send/receive
 # https://github.com/coreos/bugs/issues/923
 =sys-fs/btrfs-progs-4.2.2 ~amd64 ~arm64
+
+# Get a newer version of pylint
+=dev-python/astng-0.21.1           amd64
+=dev-python/pylint-0.23.0          amd64
+=dev-python/pyusb-0.4.3            amd64
+
+=dev-lang/nasm-2.09.10		amd64 x86
 
