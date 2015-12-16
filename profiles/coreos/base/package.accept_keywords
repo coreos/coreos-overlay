@@ -62,11 +62,6 @@ dev-util/checkbashisms
 # Avoid cross compile error with amd64 stable (elfutils-0.158).
 =dev-libs/elfutils-0.161 ~amd64
 
-# Pickup upstream cross-compile fix
-# https://bugs.gentoo.org/show_bug.cgi?id=473372
-=app-editors/vim-7.4.712
-=app-editors/vim-core-7.4.712
-
 # Provides useful new pages like loop(4)
 =sys-apps/man-pages-4.00
 # Fixes conflict with man-pages 4.00
