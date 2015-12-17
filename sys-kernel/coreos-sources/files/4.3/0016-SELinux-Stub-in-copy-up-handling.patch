@@ -1,4 +1,4 @@
-From 7e806ccf4d8426a9247aaf5b1652f6e8c15658a4 Mon Sep 17 00:00:00 2001
+From 2961980326ed02cc918c7d19e54704bd0bf34aa9 Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Tue, 16 Jun 2015 14:14:32 +0100
 Subject: [PATCH 16/21] SELinux: Stub in copy-up handling

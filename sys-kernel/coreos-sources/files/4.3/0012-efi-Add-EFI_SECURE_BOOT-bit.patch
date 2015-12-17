@@ -1,4 +1,4 @@
-From 589d649aad69a64dfc8802211dd5eeab11e29ba4 Mon Sep 17 00:00:00 2001
+From 445832078f9062e87f67480b19107a69e34c071e Mon Sep 17 00:00:00 2001
 From: Josh Boyer <jwboyer@fedoraproject.org>
 Date: Tue, 27 Aug 2013 13:33:03 -0400
 Subject: [PATCH 12/21] efi: Add EFI_SECURE_BOOT bit
@@ -13,7 +13,7 @@ Signed-off-by: Josh Boyer <jwboyer@fedoraproject.org>
  2 files changed, 3 insertions(+)
 
 diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index bddbfa7..2015f84 100644
+index eddb9aa..49be9a2 100644
 --- a/arch/x86/kernel/setup.c
 +++ b/arch/x86/kernel/setup.c
 @@ -1137,7 +1137,9 @@ void __init setup_arch(char **cmdline_p)

@@ -1,4 +1,4 @@
-From 354ecea4775bda0643a9b2ef5d45e67e046ddb9a Mon Sep 17 00:00:00 2001
+From e26f71a6701bb47d43247ace523d967d471fc2f0 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Fri, 9 Aug 2013 18:36:30 -0400
 Subject: [PATCH 10/21] Add option to automatically enforce module signatures
@@ -130,7 +130,7 @@ index 3292543..b61f853 100644
  	 * The sentinel is set to a nonzero value (0xff) in header.S.
  	 *
 diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index a3cccbf..bddbfa7 100644
+index 37c8ea8..eddb9aa 100644
 --- a/arch/x86/kernel/setup.c
 +++ b/arch/x86/kernel/setup.c
 @@ -1135,6 +1135,12 @@ void __init setup_arch(char **cmdline_p)
