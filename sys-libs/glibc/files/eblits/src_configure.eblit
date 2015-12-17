@@ -1,6 +1,6 @@
 # Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-libs/glibc/files/eblits/src_configure.eblit,v 1.6 2015/03/17 00:06:40 vapier Exp $
+# $Id$
 
 dump_toolchain_settings() {
 	echo
@@ -205,6 +205,14 @@ toolchain-glibc_headers_configure() {
 		einfo " ${v}"
 		export ${v}
 	done
+
+	# Blow away some random CC settings that screw things up. #550192
+	if [[ -d ${S}/sysdeps/mips ]]; then
+		pushd "${S}"/sysdeps/mips >/dev/null
+		sed -i -e '/^CC +=/s:=.*:= -D_MIPS_SZPTR=32:' mips32/Makefile mips64/n32/Makefile || die
+		sed -i -e '/^CC +=/s:=.*:= -D_MIPS_SZPTR=64:' mips64/n64/Makefile || die
+		popd >/dev/null
+	fi
 
 	local myconf=()
 	myconf+=(
