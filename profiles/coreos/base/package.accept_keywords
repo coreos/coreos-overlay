@@ -15,6 +15,9 @@
 =dev-libs/libgpg-error-1.10-r1 ~amd64
 =net-misc/dhcp-4.2.2-r1 ~amd64
 
+# CRIU dependencies
+=dev-libs/protobuf-c-0.15 ~amd64
+
 # Everything needed for the boot engine
 >=sys-apps/kexec-tools-2.0.4-r1 ~amd64
 sys-kernel/dracut ~amd64
