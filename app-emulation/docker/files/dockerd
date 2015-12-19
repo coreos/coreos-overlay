@@ -24,6 +24,10 @@ parse_docker_args() {
                 ARG_DRIVER="$1"
                 shift
                 ;;
+            --selinux-enabled)
+                ARG_SELINUX="$1"
+                shift
+                ;;
             *)
                 # ignore everything else
                 ;;
@@ -64,6 +68,9 @@ maybe_disable_selinux() {
             # Leave enabled for everything else.
             ;;
     esac
+    if [[ -n "${ARG_SELINUX}" ]]; then
+        USE_SELINUX=""
+    fi
 }
 
 ARG_ROOT="/var/lib/docker"
