@@ -1,4 +1,4 @@
-From c64b14da9495c0bcecd0d48e9fcde1898b6623b6 Mon Sep 17 00:00:00 2001
+From a83ff91c3c60b97c9fe67774c5d16cda5bca51ea Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Tue, 16 Jun 2015 14:14:32 +0100
 Subject: [PATCH 18/21] SELinux: Check against union label for file operations

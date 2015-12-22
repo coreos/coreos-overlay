@@ -36,7 +36,6 @@ UNIPATCH_LIST="
         ${PATCH_DIR}/0018-SELinux-Check-against-union-label-for-file-operation.patch \
         ${PATCH_DIR}/0019-net-wireless-wl18xx-Add-missing-MODULE_FIRMWARE.patch \
         ${PATCH_DIR}/0020-overlayfs-use-a-minimal-buffer-in-ovl_copy_xattr.patch \
-        ${PATCH_DIR}/0021-net-switchdev-fix-return-code-of-fdb_dump-stub.patch \
-        ${PATCH_DIR}/0022-kbuild-derive-relative-path-for-KBUILD_SRC-from-CURD.patch \
+        ${PATCH_DIR}/0021-kbuild-derive-relative-path-for-KBUILD_SRC-from-CURD.patch \
 "
 
