@@ -1,4 +1,4 @@
-From 3d01bf723f845693c95d3e7fe556cd13b1f41796 Mon Sep 17 00:00:00 2001
+From 0b21929c1e4e111d33ac3271bc638bf6bdab3885 Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Tue, 16 Jun 2015 14:14:31 +0100
 Subject: [PATCH 15/21] Overlayfs: Use copy-up security hooks

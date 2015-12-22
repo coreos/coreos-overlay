@@ -1,4 +1,4 @@
-From 09ffe104e8f518b7085638480a098f63ca36a346 Mon Sep 17 00:00:00 2001
+From 2eeca20d2e55fb2d328b4cf7a7ce21422476ecaf Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Fri, 9 Mar 2012 08:46:50 -0500
 Subject: [PATCH 05/21] asus-wmi: Restrict debugfs interface when module

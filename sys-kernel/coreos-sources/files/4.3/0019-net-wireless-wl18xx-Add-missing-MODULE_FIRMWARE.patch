@@ -1,4 +1,4 @@
-From c82a8afba2f38c29c95db14f4b73fed0bd9ebbf4 Mon Sep 17 00:00:00 2001
+From 8aabcd5265fa49c0d04a69803f215924501a8f1c Mon Sep 17 00:00:00 2001
 From: Geoff Levand <geoff@infradead.org>
 Date: Wed, 2 Sep 2015 16:08:30 -0700
 Subject: [PATCH 19/21] net/wireless/wl18xx: Add missing MODULE_FIRMWARE
