@@ -11,7 +11,6 @@ diff -ur refpolicy.orig/policy/modules/contrib/virt.te refpolicy/policy/modules/
 +	type tmpfs_t;
 +	type var_lib_t;
 +}
-+
 +allow kernel_t svirt_lxc_net_t:process transition;
 +fs_manage_tmpfs_chr_files(svirt_lxc_net_t)
 +fs_manage_tmpfs_dirs(svirt_lxc_net_t)
@@ -26,9 +25,10 @@ diff -ur refpolicy.orig/policy/modules/contrib/virt.te refpolicy/policy/modules/
 +files_read_var_lib_files(svirt_lxc_net_t)
 +files_read_var_lib_symlinks(svirt_lxc_net_t)
 +term_use_generic_ptys(svirt_lxc_net_t)
++term_setattr_generic_ptys(svirt_lxc_net_t)
 +allow svirt_lxc_net_t tmpfs_t:chr_file { read write open };
 +allow svirt_lxc_net_t self:capability sys_chroot;
 +allow svirt_lxc_net_t self:process getpgid;
 +allow svirt_lxc_net_t svirt_lxc_file_t:file { entrypoint mounton };
-+allow svirt_lxc_net_t var_lib_t:file { execute execute_no_trans };
++allow svirt_lxc_net_t var_lib_t:file { entrypoint execute execute_no_trans };
 +
