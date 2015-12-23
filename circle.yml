@@ -1,0 +1,18 @@
+checkout:
+  post:
+    - rm -rf ci-utils
+    - git clone git@github.com:quantum/ci-utils.git
+
+dependencies:
+  override:
+    - echo Skip
+
+test:
+  override:
+    - echo Skip
+
+deployment:
+  master:
+    branch: master
+    commands:
+      - sh ci-utils/trigger-build.sh quantum/coreos-manifest
