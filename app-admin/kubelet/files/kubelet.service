@@ -1,18 +1,47 @@
 [Unit]
 Description=Kubernetes Kubelet
-Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+Documentation=http://kubernetes.io
 
 [Service]
+
+# CLI flags to pass to the Kubelet binary
 Environment=KUBELET_OPTS=
 
-ExecStart=/usr/bin/kubelet \
- --address=127.0.0.1 \
- --api-servers=http://127.0.0.1:8080 \
- --allow-privileged=false \
- --config=/etc/kubernetes/manifests \
- --v=2 \
- --cadvisor-port=0 \
- $KUBELET_OPTS
+# If left empty the kubelet version will be determined by contacting the kube-apiserver.
+Environment=KUBELET_VERSION=
+
+# These are the default mount/volume options necessary for running the Kubelet in a rkt container.
+Environment='KUBELET_RKT_FLAGS=\
+  --volume etc-kubernetes,kind=host,source=/etc/kubernetes \
+  --volume etc-ssl-certs,kind=host,source=/usr/share/ca-certificates \
+  --volume var-lib-docker,kind=host,source=/var/lib/docker \
+  --volume var-lib-kubelet,kind=host,source=/var/lib/kubelet \
+  --volume run,kind=host,source=/run \
+  --mount volume=etc-kubernetes,target=/etc/kubernetes \
+  --mount volume=etc-ssl-certs,target=/etc/ssl/certs \
+  --mount volume=var-lib-docker,target=/var/lib/docker \
+  --mount volume=var-lib-kubelet,target=/var/lib/kubelet \
+  --mount volume=run,target=/run'
+
+ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests
+ExecStartPre=/usr/bin/mkdir -p /var/lib/docker
+ExecStartPre=/usr/bin/mkdir -p /var/lib/kubelet
+
+ExecStartPre=/usr/bin/rm -f /run/coreos/kubelet.env
+ExecStartPre=/bin/bash -c '[ -n "$KUBELET_VERSION" ] || \
+  rkt run VersionGetterThingy \
+    --mount volume=kubelet-env,kind=host,source=/run/coreos/kubelet.env \
+    --volume kubelet-env,target=kubelet.env'
+
+EnvironmentFile=-/run/coreos/kubelet.env
+ExecStart=/usr/bin/rkt run --stage1-image=/usr/local/rkt/stage1-fly.aci \
+  quay.io/coreos/hyperkube:${KUBELET_VERSION} $KUBELET_RKT_FLAGS --exec /hyperkube -- kubelet \
+    --address=127.0.0.1 \
+    --api-servers=http://127.0.0.1:8080 \
+    --allow-privileged=false \
+    --config=/etc/kubernetes/manifests \
+    --cadvisor-port=0 \
+    $KUBELET_OPTS
 
 Restart=on-failure
 RestartSec=5
