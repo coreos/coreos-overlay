@@ -20,4 +20,12 @@ deployment:
   master:
     branch: master
     commands:
-      - sh ci-utils/trigger-build.sh quantum/coreos-manifest
+      - |
+        params="\
+        \"COREOS_MANIFEST_BRANCH\": \"${CIRCLE_BRANCH}\",\
+        \"COREOS_MANIFEST_FILE\": \"default.xml\",\
+        \"COREOS_BUILD_CONTAINER_VERSION\": \"latest\",\
+        \"COREOS_OFFICIAL\": \"0\"\
+        "
+
+        ci-utils/trigger-build -p 1 -e "${params}" quantum/coreos-build | jq .
