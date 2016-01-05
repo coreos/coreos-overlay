@@ -172,6 +172,10 @@ pkg_setup() {
 src_prepare() {
 	# allow user patches (use sparingly - upstream won't support them)
 	epatch_user
+
+	# remove the .git directory so that hack/make.sh uses DOCKER_GITCOMMIT
+	# for the commit hash.
+	rm --recursive --force .git
 }
 
 go_get_arch() {
