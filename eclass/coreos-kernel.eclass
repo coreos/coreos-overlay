@@ -184,6 +184,19 @@ coreos-kernel_pkg_pretend() {
 	fi
 }
 
+# We are bad, we want to get around the sandbox.  So do the creation of the
+# cpio image in pkg_setup() where we are free to mount filesystems, chroot,
+# and other fun stuff.
+coreos-kernel_pkg_setup() {
+	[[ "${MERGE_TYPE}" == binary ]] && return
+
+	if [[ "${ROOT:-/}" != / ]]; then
+		${ROOT}/usr/sbin/update-bootengine -m -c ${ROOT} || die
+	else
+		update-bootengine || die
+	fi
+}
+
 coreos-kernel_src_unpack() {
 	# we more or less reproduce the layout in /lib/modules/$(uname -r)/
 	mkdir -p "${S}/build" || die
@@ -264,19 +277,6 @@ coreos-kernel_src_install() {
 	prepare-lib-modules-release-dirs
 
 	shred_keys
-}
-
-# We are bad, we want to get around the sandbox.  So do the creation of the
-# cpio image in pkg_setup() where we are free to mount filesystems, chroot,
-# and other fun stuff.
-coreos-kernel_pkg_setup() {
-	[[ "${MERGE_TYPE}" == binary ]] && return
-
-	if [[ "${ROOT:-/}" != / ]]; then
-		${ROOT}/usr/sbin/update-bootengine -m -c ${ROOT} || die
-	else
-		update-bootengine || die
-	fi
 }
 
 EXPORT_FUNCTIONS pkg_pretend pkg_setup src_unpack src_prepare src_configure src_compile src_install
