@@ -175,6 +175,15 @@ prepare-lib-modules-release-dirs() {
 		"${D}/usr/lib/modules/${version}" || die
 }
 
+coreos-kernel_pkg_pretend() {
+	[[ "${MERGE_TYPE}" == binary ]] && return
+
+	if [[ -f "${KERNEL_DIR}/.config" || -d "${KERNEL_DIR}/include/config" ]]
+	then
+		die "Source is not clean! Run make mrproper in ${KERNEL_DIR}"
+	fi
+}
+
 coreos-kernel_src_unpack() {
 	# we more or less reproduce the layout in /lib/modules/$(uname -r)/
 	mkdir -p "${S}/build" || die
@@ -183,11 +192,6 @@ coreos-kernel_src_unpack() {
 }
 
 coreos-kernel_src_prepare() {
-	if [[ -f ".config" || -d "include/config" ]]
-	then
-		die "Source is not clean! Run make mrproper in ${KERNEL_DIR}"
-	fi
-
 	restore_config build/.config
 	if [[ ! -f build/.config ]]; then
 		local config="$(find_defconfig)"
@@ -275,4 +279,4 @@ coreos-kernel_pkg_setup() {
 	fi
 }
 
-EXPORT_FUNCTIONS src_unpack src_prepare src_configure src_compile src_install pkg_setup
+EXPORT_FUNCTIONS pkg_pretend pkg_setup src_unpack src_prepare src_configure src_compile src_install
