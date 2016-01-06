@@ -18,7 +18,7 @@ HOMEPAGE="http://www.kernel.org"
 LICENSE="GPL-2 freedist"
 SLOT="0/${PVR}"
 SRC_URI=""
-IUSE="audit selinux"
+IUSE=""
 
 DEPEND="
 	app-arch/gzip
@@ -215,14 +215,6 @@ coreos-kernel_src_prepare() {
 }
 
 coreos-kernel_src_configure() {
-	if ! use audit; then
-		sed -i -e '/^CONFIG_CMDLINE=/s/"$/ audit=0"/' build/.config || die
-	fi
-	if ! use selinux; then
-		sed -i -e '/CONFIG_SECURITY_SELINUX_BOOTPARAM_VALUE/d' build/.config || die
-		echo CONFIG_SECURITY_SELINUX_BOOTPARAM_VALUE=0 >> build/.config || die
-	fi
-
 	# Use default for any options not explitly set in defconfig
 	kmake olddefconfig
 
