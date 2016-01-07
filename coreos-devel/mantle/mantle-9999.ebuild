@@ -28,3 +28,13 @@ src_compile() {
 		go_build "${COREOS_GO_PACKAGE}/cmd/${cmd}"
 	done
 }
+
+src_install() {
+	for cmd in cork kola ore plume; do
+		dobin "${GOBIN}"/"${cmd}"
+	done
+
+	exeinto /usr/lib/kola/"$(go_get_arch)"
+	doexe "${GOBIN}"/kolet
+}
+
