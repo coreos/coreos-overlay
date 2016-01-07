@@ -133,14 +133,10 @@ shred_keys() {
 
 # Populate /lib/modules/$(uname -r)/{build,source}
 prepare-lib-modules-release-dirs() {
+	local kernel_arch=$(tc-arch-kernel)
+
 	# build and source must cleaned up to avoid referencing $ROOT
 	rm "${D}/usr/lib/modules/${version}"/{build,source} || die
-
-	# XXX: For some reason tc-arch-kernel is returning x86_64 on > 2.6.24
-	local kernel_arch=$(tc-arch-kernel)
-	if [ "${kernel_arch}" == "x86_64" ]; then
-		kernel_arch="x86"
-	fi
 
 	# Install a stripped source for out-of-tree module builds (Debian-derived)
 	{
@@ -198,6 +194,9 @@ coreos-kernel_pkg_setup() {
 }
 
 coreos-kernel_src_unpack() {
+	# tc-arch-kernel requires a call to get_version from linux-info.eclass
+	get_version || die "Failed to detect kernel version in ${KERNEL_DIR}"
+
 	# we more or less reproduce the layout in /lib/modules/$(uname -r)/
 	mkdir -p "${S}/build" || die
 	mkdir -p "${S}/source" || die
