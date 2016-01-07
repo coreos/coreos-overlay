@@ -125,10 +125,7 @@ kmake() {
 
 # Discard the module signing key, we use new keys for each build.
 shred_keys() {
-	if [[ -e signing_key.priv ]]; then
-		shred -u signing_key.* || die
-		rm -f x509.genkey || die
-	fi
+	shred -u build/certs/signing_key.pem || die
 }
 
 # Populate /lib/modules/$(uname -r)/{build,source}
@@ -273,9 +270,8 @@ coreos-kernel_src_install() {
 	dosym "vmlinuz-${version}" /usr/boot/vmlinuz
 	dosym "config-${version}" /usr/boot/config
 
-	prepare-lib-modules-release-dirs
-
 	shred_keys
+	prepare-lib-modules-release-dirs
 }
 
 EXPORT_FUNCTIONS pkg_pretend pkg_setup src_unpack src_prepare src_configure src_compile src_install
