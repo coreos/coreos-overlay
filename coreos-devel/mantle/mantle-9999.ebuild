@@ -10,7 +10,7 @@ COREOS_GO_PACKAGE="github.com/coreos/mantle"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64"
 else
-	CROS_WORKON_COMMIT="f9ceb85455c249e9e3bfe2c29861b34d536f1188"
+	CROS_WORKON_COMMIT="ba5d6cd46eb6ec14a73f537902a1ac8f8776faad"
 	KEYWORDS="amd64 arm64"
 fi
 
@@ -24,7 +24,17 @@ SLOT="0"
 RDEPEND=">=net-dns/dnsmasq-2.72[dhcp,ipv6]"
 
 src_compile() {
-	for cmd in kola plume; do
+	for cmd in cork kola kolet ore plume; do
 		go_build "${COREOS_GO_PACKAGE}/cmd/${cmd}"
 	done
 }
+
+src_install() {
+	for cmd in cork kola ore plume; do
+		dobin "${GOBIN}"/"${cmd}"
+	done
+
+	exeinto /usr/lib/kola/"$(go_get_arch)"
+	doexe "${GOBIN}"/kolet
+}
+
