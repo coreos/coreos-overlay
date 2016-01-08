@@ -123,9 +123,61 @@ kmake() {
 		"$@"
 }
 
-# Discard the module signing key, we use new keys for each build.
+# Prints the value of a given kernel config option.
+# Quotes around string values are removed.
+getconfig() {
+	local value=$(getfilevar_noexec "CONFIG_$1" build/.config)
+	[[ -n "${value}" ]] || die "$1 is not in the kernel config"
+	[[ "${value}" == '"'*'"' ]] && value="${value:1:-1}"
+	echo "${value}"
+}
+
+# Generate the module signing key for this build.
+setup_keys() {
+	local sig_hash sig_key
+	sig_hash=$(getconfig MODULE_SIG_HASH)
+	sig_key="build/$(getconfig MODULE_SIG_KEY)"
+
+	if [[ "${sig_key}" == "build/certs/signing_key.pem" ]]; then
+		die "MODULE_SIG_KEY is using the default value"
+	fi
+
+	mkdir -p certs "${sig_key%/*}" || die
+
+	# based on the default config the kernel auto-generates
+	cat >certs/modules.cnf <<-EOF
+		[ req ]
+		default_bits = 4096
+		distinguished_name = req_distinguished_name
+		prompt = no
+		string_mask = utf8only
+		x509_extensions = myexts
+
+		[ req_distinguished_name ]
+		O = CoreOS, Inc
+		CN = Module signing key for ${KV_FULL}
+
+		[ myexts ]
+		basicConstraints=critical,CA:FALSE
+		keyUsage=digitalSignature
+		subjectKeyIdentifier=hash
+		authorityKeyIdentifier=keyid
+	EOF
+	openssl req -new -nodes -utf8 -days 36500 -batch -x509 \
+		"-${sig_hash}" -outform PEM \
+		-config certs/modules.cnf \
+		-out certs/modules.pub.pem \
+		-keyout certs/modules.key.pem \
+		|| die "Generating module signing key failed"
+	cat certs/modules.pub.pem certs/modules.key.pem > "${sig_key}"
+}
+
+# Discard the module signing key but keep public certificate.
 shred_keys() {
-	shred -u build/certs/signing_key.pem || die
+	local sig_key
+	sig_key="build/$(getconfig MODULE_SIG_KEY)"
+	shred -u certs/modules.key.pem "${sig_key}" || die
+	cp certs/modules.pub.pem "${sig_key}" || die
 }
 
 # Populate /lib/modules/$(uname -r)/{build,source}
@@ -159,7 +211,6 @@ prepare-lib-modules-release-dirs() {
 	rm --recursive \
 		"build/bootengine.cpio" \
 		"build/.config.old" \
-		"build/certs" \
 		|| die
 
 	find "build/" -print | cpio -pd \
@@ -223,6 +274,8 @@ coreos-kernel_src_configure() {
 }
 
 coreos-kernel_src_compile() {
+	setup_keys
+
 	# Build both vmlinux and modules (moddep checks symbols in vmlinux)
 	kmake vmlinux modules
 
