@@ -125,22 +125,15 @@ kmake() {
 
 # Discard the module signing key, we use new keys for each build.
 shred_keys() {
-	if [[ -e signing_key.priv ]]; then
-		shred -u signing_key.* || die
-		rm -f x509.genkey || die
-	fi
+	shred -u build/certs/signing_key.pem || die
 }
 
 # Populate /lib/modules/$(uname -r)/{build,source}
 prepare-lib-modules-release-dirs() {
+	local kernel_arch=$(tc-arch-kernel)
+
 	# build and source must cleaned up to avoid referencing $ROOT
 	rm "${D}/usr/lib/modules/${version}"/{build,source} || die
-
-	# XXX: For some reason tc-arch-kernel is returning x86_64 on > 2.6.24
-	local kernel_arch=$(tc-arch-kernel)
-	if [ "${kernel_arch}" == "x86_64" ]; then
-		kernel_arch="x86"
-	fi
 
 	# Install a stripped source for out-of-tree module builds (Debian-derived)
 	{
@@ -156,6 +149,11 @@ prepare-lib-modules-release-dirs() {
 		"${D}/usr/lib/modules/${version}" || die
 
 	# Clean up the build tree and install for out-of-tree module builds
+	find "build/" -follow -maxdepth 1 -name 'System.map' -print \
+		| cpio -pd \
+		--preserve-modification-time \
+		--owner=root:root \
+		"${D}/usr/lib/modules/${version}" || die
 	kmake clean
 	find "build/" -type d -empty -delete || die
 	rm --recursive \
@@ -170,7 +168,32 @@ prepare-lib-modules-release-dirs() {
 		"${D}/usr/lib/modules/${version}" || die
 }
 
+coreos-kernel_pkg_pretend() {
+	[[ "${MERGE_TYPE}" == binary ]] && return
+
+	if [[ -f "${KERNEL_DIR}/.config" || -d "${KERNEL_DIR}/include/config" ]]
+	then
+		die "Source is not clean! Run make mrproper in ${KERNEL_DIR}"
+	fi
+}
+
+# We are bad, we want to get around the sandbox.  So do the creation of the
+# cpio image in pkg_setup() where we are free to mount filesystems, chroot,
+# and other fun stuff.
+coreos-kernel_pkg_setup() {
+	[[ "${MERGE_TYPE}" == binary ]] && return
+
+	if [[ "${ROOT:-/}" != / ]]; then
+		${ROOT}/usr/sbin/update-bootengine -m -c ${ROOT} || die
+	else
+		update-bootengine || die
+	fi
+}
+
 coreos-kernel_src_unpack() {
+	# tc-arch-kernel requires a call to get_version from linux-info.eclass
+	get_version || die "Failed to detect kernel version in ${KERNEL_DIR}"
+
 	# we more or less reproduce the layout in /lib/modules/$(uname -r)/
 	mkdir -p "${S}/build" || die
 	mkdir -p "${S}/source" || die
@@ -178,11 +201,6 @@ coreos-kernel_src_unpack() {
 }
 
 coreos-kernel_src_prepare() {
-	if [[ -f ".config" || -d "include/config" ]]
-	then
-		die "Source is not clean! Run make mrproper in ${KERNEL_DIR}"
-	fi
-
 	restore_config build/.config
 	if [[ ! -f build/.config ]]; then
 		local config="$(find_defconfig)"
@@ -252,22 +270,8 @@ coreos-kernel_src_install() {
 	dosym "vmlinuz-${version}" /usr/boot/vmlinuz
 	dosym "config-${version}" /usr/boot/config
 
-	prepare-lib-modules-release-dirs
-
 	shred_keys
+	prepare-lib-modules-release-dirs
 }
 
-# We are bad, we want to get around the sandbox.  So do the creation of the
-# cpio image in pkg_setup() where we are free to mount filesystems, chroot,
-# and other fun stuff.
-coreos-kernel_pkg_setup() {
-	[[ "${MERGE_TYPE}" == binary ]] && return
-
-	if [[ "${ROOT:-/}" != / ]]; then
-		${ROOT}/usr/sbin/update-bootengine -m -c ${ROOT} || die
-	else
-		update-bootengine || die
-	fi
-}
-
-EXPORT_FUNCTIONS src_unpack src_prepare src_configure src_compile src_install pkg_setup
+EXPORT_FUNCTIONS pkg_pretend pkg_setup src_unpack src_prepare src_configure src_compile src_install
