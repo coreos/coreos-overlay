@@ -5,7 +5,7 @@ EAPI=5
 CROS_WORKON_PROJECT="quantum/coreos-mantle"
 CROS_WORKON_LOCALNAME="mantle"
 CROS_WORKON_REPO="git://github.com"
-COREOS_GO_PACKAGE="github.com/quantum/coreos-mantle"
+COREOS_GO_PACKAGE="github.com/coreos/mantle"
 
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64"
