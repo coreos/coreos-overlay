@@ -78,7 +78,11 @@ src_install() {
 
 	# Remove files from /etc, they will be symlinks to /usr instead.
 	rm -f "${D}"/etc/{limits,login.access,login.defs,securetty,default/useradd}
-	systemd_dotmpfilesd "${FILESDIR}"/tmpfiles.d/shadow.conf
+
+	# CoreOS: break shadow.conf into two files so that we only have to apply
+	# etc-shadow.conf in the initrd.
+	systemd_dotmpfilesd "${FILESDIR}"/tmpfiles.d/etc-shadow.conf
+	systemd_dotmpfilesd "${FILESDIR}"/tmpfiles.d/var-shadow.conf
 
 	insinto /usr/share/shadow
 	# Using a securetty with devfs device names added
