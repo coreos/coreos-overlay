@@ -1,4 +1,4 @@
-From 5ccba0f780b05a21f25c89be27153e00395ed8f2 Mon Sep 17 00:00:00 2001
+From 37f5217e456a13bb92814e515616b0524fbf0a89 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Fri, 9 Mar 2012 09:28:15 -0500
 Subject: [PATCH 06/21] Restrict /dev/mem and /dev/kmem when module loading is

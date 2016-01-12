@@ -1,4 +1,4 @@
-From e26f71a6701bb47d43247ace523d967d471fc2f0 Mon Sep 17 00:00:00 2001
+From f08b4a4b93bc28efe2d7aab38a6b44592d944dda Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Fri, 9 Aug 2013 18:36:30 -0400
 Subject: [PATCH 10/21] Add option to automatically enforce module signatures
@@ -34,10 +34,10 @@ index 95a4d34..b8527c6 100644
  290/040	ALL	edd_mbr_sig_buffer EDD MBR signatures
  2D0/A00	ALL	e820_map	E820 memory map table
 diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 96d058a..f7494bd 100644
+index db3622f..5578b6e 100644
 --- a/arch/x86/Kconfig
 +++ b/arch/x86/Kconfig
-@@ -1736,6 +1736,16 @@ config EFI_MIXED
+@@ -1720,6 +1720,16 @@ config EFI_MIXED
  
  	   If unsure, say N.
  
@@ -55,7 +55,7 @@ index 96d058a..f7494bd 100644
  	def_bool y
  	prompt "Enable seccomp to safely compute untrusted bytecode"
 diff --git a/arch/x86/boot/compressed/eboot.c b/arch/x86/boot/compressed/eboot.c
-index db51c1f..9dd115a 100644
+index 583d539..ca120ac 100644
 --- a/arch/x86/boot/compressed/eboot.c
 +++ b/arch/x86/boot/compressed/eboot.c
 @@ -12,6 +12,7 @@
@@ -66,7 +66,7 @@ index db51c1f..9dd115a 100644
  
  #include "../string.h"
  #include "eboot.h"
-@@ -831,6 +832,37 @@ out:
+@@ -847,6 +848,37 @@ out:
  	return status;
  }
  
@@ -104,7 +104,7 @@ index db51c1f..9dd115a 100644
  /*
   * See if we have Graphics Output Protocol
   */
-@@ -1416,6 +1448,10 @@ struct boot_params *efi_main(struct efi_config *c,
+@@ -1432,6 +1464,10 @@ struct boot_params *efi_main(struct efi_config *c,
  	else
  		setup_boot_services32(efi_early);
  
@@ -130,10 +130,10 @@ index 3292543..b61f853 100644
  	 * The sentinel is set to a nonzero value (0xff) in header.S.
  	 *
 diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index 37c8ea8..eddb9aa 100644
+index d2bbe34..a35c42f 100644
 --- a/arch/x86/kernel/setup.c
 +++ b/arch/x86/kernel/setup.c
-@@ -1135,6 +1135,12 @@ void __init setup_arch(char **cmdline_p)
+@@ -1143,6 +1143,12 @@ void __init setup_arch(char **cmdline_p)
  
  	io_delay_init();
  
@@ -164,10 +164,10 @@ index db38634..4b8df91 100644
  
  extern int modules_disabled; /* for sysctl */
 diff --git a/kernel/module.c b/kernel/module.c
-index 58e636c..6dd2bb3 100644
+index a8f8c64..3eb8c74 100644
 --- a/kernel/module.c
 +++ b/kernel/module.c
-@@ -4092,6 +4092,13 @@ void module_layout(struct module *mod,
+@@ -4098,6 +4098,13 @@ void module_layout(struct module *mod,
  EXPORT_SYMBOL(module_layout);
  #endif
  

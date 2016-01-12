@@ -1,4 +1,4 @@
-From a83ff91c3c60b97c9fe67774c5d16cda5bca51ea Mon Sep 17 00:00:00 2001
+From f60b70463bb7493f60a27ac2d06058da87b062d9 Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Tue, 16 Jun 2015 14:14:32 +0100
 Subject: [PATCH 18/21] SELinux: Check against union label for file operations
@@ -16,7 +16,7 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  1 file changed, 10 insertions(+), 2 deletions(-)
 
 diff --git a/security/selinux/hooks.c b/security/selinux/hooks.c
-index 522b070..ecc883b 100644
+index 5f0a11f..e33019e 100644
 --- a/security/selinux/hooks.c
 +++ b/security/selinux/hooks.c
 @@ -1682,6 +1682,7 @@ static int file_has_perm(const struct cred *cred,

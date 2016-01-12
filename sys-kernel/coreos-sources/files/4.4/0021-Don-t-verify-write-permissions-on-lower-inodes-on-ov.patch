@@ -1,7 +1,8 @@
-From 3f2106fe2342d05f79dcef78da4cccc22c572b3b Mon Sep 17 00:00:00 2001
+From 06ccab87d8c415e51bcf69e34bb27712bad8398f Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <mjg59@coreos.com>
 Date: Tue, 22 Dec 2015 07:43:52 +0000
-Subject: [PATCH] Don't verify write permissions on lower inodes on overlayfs
+Subject: [PATCH 21/21] Don't verify write permissions on lower inodes on
+ overlayfs
 
 If a user opens a file r/w on overlayfs, and if the underlying inode is
 currently still on the lower fs, right now we're verifying whether selinux
@@ -18,10 +19,10 @@ the selinux permissions check if that flag is set.
  3 files changed, 13 insertions(+)
 
 diff --git a/fs/overlayfs/inode.c b/fs/overlayfs/inode.c
-index ec0c2a0..3d66617 100644
+index 4060ffd..b6f02f2 100644
 --- a/fs/overlayfs/inode.c
 +++ b/fs/overlayfs/inode.c
-@@ -128,6 +128,9 @@ int ovl_permission(struct inode *inode, int mask)
+@@ -125,6 +125,9 @@ int ovl_permission(struct inode *inode, int mask)
  			goto out_dput;
  	}
  
@@ -32,7 +33,7 @@ index ec0c2a0..3d66617 100644
  out_dput:
  	dput(alias);
 diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 72d8a84..585042b 100644
+index 3aa5142..5712013 100644
 --- a/include/linux/fs.h
 +++ b/include/linux/fs.h
 @@ -82,6 +82,7 @@ typedef void (dax_iodone_t)(struct buffer_head *bh_map, int uptodate);
@@ -44,10 +45,10 @@ index 72d8a84..585042b 100644
  /*
   * flags in file.f_mode.  Note that FMODE_READ and FMODE_WRITE must correspond
 diff --git a/security/selinux/hooks.c b/security/selinux/hooks.c
-index ecc883b..47be196 100644
+index e33019e..48746ee 100644
 --- a/security/selinux/hooks.c
 +++ b/security/selinux/hooks.c
-@@ -2907,6 +2907,15 @@ static int selinux_inode_permission(struct inode *inode, int mask)
+@@ -2904,6 +2904,15 @@ static int selinux_inode_permission(struct inode *inode, int mask)
  	u32 audited, denied;
  
  	from_access = mask & MAY_ACCESS;
@@ -64,5 +65,5 @@ index ecc883b..47be196 100644
  
  	/* No permission to check.  Existence test. */
 -- 
-2.5.0
+2.4.10
 
