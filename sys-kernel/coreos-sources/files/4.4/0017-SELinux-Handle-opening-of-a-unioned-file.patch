@@ -1,4 +1,4 @@
-From 05a4a6e58b029d892c9ea5d561ca4c57c07c380a Mon Sep 17 00:00:00 2001
+From ce05f979bd98e5f267330f47d9a26bbb138dc54f Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Tue, 16 Jun 2015 14:14:32 +0100
 Subject: [PATCH 17/21] SELinux: Handle opening of a unioned file
@@ -26,10 +26,10 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  2 files changed, 70 insertions(+)
 
 diff --git a/security/selinux/hooks.c b/security/selinux/hooks.c
-index 7c1a44d..522b070 100644
+index d062209..5f0a11f 100644
 --- a/security/selinux/hooks.c
 +++ b/security/selinux/hooks.c
-@@ -3520,10 +3520,72 @@ static int selinux_file_receive(struct file *file)
+@@ -3518,10 +3518,72 @@ static int selinux_file_receive(struct file *file)
  	return file_has_perm(cred, file, file_to_av(file));
  }
  
@@ -102,7 +102,7 @@ index 7c1a44d..522b070 100644
  
  	fsec = file->f_security;
  	isec = file_inode(file)->i_security;
-@@ -3544,6 +3606,13 @@ static int selinux_file_open(struct file *file, const struct cred *cred)
+@@ -3542,6 +3604,13 @@ static int selinux_file_open(struct file *file, const struct cred *cred)
  	 * new inode label or new policy.
  	 * This check is not redundant - do not remove.
  	 */

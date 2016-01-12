@@ -1,4 +1,4 @@
-From 50bd32982e4a967cf77f1020c191f6d5d3f0c941 Mon Sep 17 00:00:00 2001
+From e227953c81434fb5156dd2504aeee7960c37a0ad Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <mjg59@coreos.com>
 Date: Thu, 19 Nov 2015 18:55:53 -0800
 Subject: [PATCH 08/21] kexec: Disable at runtime if the kernel enforces module
@@ -14,10 +14,10 @@ Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/kernel/kexec.c b/kernel/kexec.c
-index 4c5edc3..5920ebc 100644
+index d873b64..3d09642 100644
 --- a/kernel/kexec.c
 +++ b/kernel/kexec.c
-@@ -15,6 +15,7 @@
+@@ -17,6 +17,7 @@
  #include <linux/syscalls.h>
  #include <linux/vmalloc.h>
  #include <linux/slab.h>
@@ -25,7 +25,7 @@ index 4c5edc3..5920ebc 100644
  
  #include "kexec_internal.h"
  
-@@ -129,7 +130,7 @@ SYSCALL_DEFINE4(kexec_load, unsigned long, entry, unsigned long, nr_segments,
+@@ -131,7 +132,7 @@ SYSCALL_DEFINE4(kexec_load, unsigned long, entry, unsigned long, nr_segments,
  	int result;
  
  	/* We only trust the superuser with rebooting the system. */
