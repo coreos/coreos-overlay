@@ -29,7 +29,7 @@ ExecStart=/usr/libexec/sdnotify-proxy /run/flannel/sd.sock \
   --env=AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
   --env-file=${FLANNEL_ENV_FILE} \
   --volume=/usr/share/ca-certificates:/etc/ssl/certs:ro \
-  --volume=${ETCD_SSL_DIR}:/etc/ssl/etcd:ro \
+  --volume=${ETCD_SSL_DIR}:${ETCD_SSL_DIR}:ro \
   quay.io/coreos/flannel:${FLANNEL_VER} /opt/bin/flanneld --ip-masq=true
 
 # Update docker options
