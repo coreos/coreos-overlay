@@ -12,7 +12,7 @@ if [[ ${PV} == *9999 ]]; then
 	DOCKER_GITCOMMIT="unknown"
 	KEYWORDS="~amd64 ~arm64"
 else
-	CROS_WORKON_COMMIT="4419fdb3c51f39931f757e3ec8518c036cf514f9" # v1.9.1 with backports
+	CROS_WORKON_COMMIT="98946981f575c69f923b7db49159711381b7fe8e" # v1.9.1 with backports
 	DOCKER_GITCOMMIT="${CROS_WORKON_COMMIT:0:7}"
 	KEYWORDS="amd64"
 fi
@@ -172,6 +172,10 @@ pkg_setup() {
 src_prepare() {
 	# allow user patches (use sparingly - upstream won't support them)
 	epatch_user
+
+	# remove the .git directory so that hack/make.sh uses DOCKER_GITCOMMIT
+	# for the commit hash.
+	rm --recursive --force .git
 }
 
 go_get_arch() {

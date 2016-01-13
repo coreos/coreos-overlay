@@ -156,6 +156,11 @@ prepare-lib-modules-release-dirs() {
 		"${D}/usr/lib/modules/${version}" || die
 
 	# Clean up the build tree and install for out-of-tree module builds
+	find "build/" -follow -maxdepth 1 -name 'System.map' -print \
+		| cpio -pd \
+		--preserve-modification-time \
+		--owner=root:root \
+		"${D}/usr/lib/modules/${version}" || die
 	kmake clean
 	find "build/" -type d -empty -delete || die
 	rm --recursive \
