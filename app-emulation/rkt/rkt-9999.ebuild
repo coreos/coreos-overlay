@@ -37,6 +37,7 @@ SLOT="0"
 IUSE="doc examples +rkt_stage1_coreos +rkt_stage1_fly rkt_stage1_host rkt_stage1_src +actool"
 REQUIRED_USE="|| ( rkt_stage1_coreos rkt_stage1_fly rkt_stage1_host rkt_stage1_src )"
 
+COMMON_DEPEND="sys-apps/acl"
 DEPEND=">=dev-lang/go-1.4.1
 	app-arch/cpio
 	sys-fs/squashfs-tools
@@ -44,13 +45,15 @@ DEPEND=">=dev-lang/go-1.4.1
 	rkt_stage1_src? (
 		>=sys-apps/systemd-222
 		app-shells/bash
-	)"
+	)
+	${COMMON_DEPEND}"
 RDEPEND="!app-emulation/rocket
 	actool? ( !app-emulation/actool )
 	rkt_stage1_host? (
 		~sys-apps/systemd-222
 		app-shells/bash
-	)"
+	)
+	${COMMON_DEPEND}"
 
 BUILDDIR="build-${P}"
 
