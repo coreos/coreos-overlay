@@ -142,6 +142,8 @@ src_prepare() {
 		save_version HPN
 	fi
 
+	epatch "${FILESDIR}"/${PN}-7.1_p1-CVE-2016-0777.patch
+
 	tc-export PKG_CONFIG
 	local sed_args=(
 		-e "s:-lcrypto:$(${PKG_CONFIG} --libs openssl):"
