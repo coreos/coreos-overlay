@@ -1,19 +1,49 @@
 [Unit]
-Description=Kubernetes Kubelet
-Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+Description=Launches an agent that launches the kubelet and restarts when new versions are detected.
+Documentation=http://kubernetes.io
 
 [Service]
+
+# If left empty the kubelet version will be determined by contacting the kube-apiserver.
+Environment=KUBELET_PINNED_VERSION=
+
+# If left empty the App Container Image name will be:
+# coreos.com/hyperkube
+Environment=KUBELET_ACI=
+
+# CLI flags to pass to the Kubelet binary
 Environment=KUBELET_OPTS=
 
-ExecStart=/usr/bin/kubelet \
- --address=127.0.0.1 \
- --api-servers=http://127.0.0.1:8080 \
- --allow-privileged=false \
- --config=/etc/kubernetes/manifests \
- --v=2 \
- --cadvisor-port=0 \
- $KUBELET_OPTS
+# These are the default mount/volume options necessary for running the Kubelet in a rkt container.
+Environment='KUBELET_RKT_FLAGS=\
+  --volume etc-kubernetes,kind=host,source=/etc/kubernetes \
+  --volume etc-ssl-certs,kind=host,source=/usr/share/ca-certificates \
+  --volume var-lib-docker,kind=host,source=/var/lib/docker \
+  --volume var-lib-kubelet,kind=host,source=/var/lib/kubelet \
+  --volume run,kind=host,source=/run \
+  --mount volume=etc-kubernetes,target=/etc/kubernetes \
+  --mount volume=etc-ssl-certs,target=/etc/ssl/certs \
+  --mount volume=var-lib-docker,target=/var/lib/docker \
+  --mount volume=var-lib-kubelet,target=/var/lib/kubelet \
+  --mount volume=run,target=/run'
 
+ExecStartPre=/usr/bin/mkdir --parents /etc/kubernetes/manifests
+ExecStartPre=/usr/bin/mkdir --parents /var/lib/docker
+ExecStartPre=/usr/bin/mkdir --parents /var/lib/kubelet
+ExecStartPre=/usr/bin/mkdir --parents /run/kubelet
+
+# ENV options can be overridden here
+EnvironmentFile=-/run/kubelet/options.env
+
+ExecStart=usr/bin/kva $KUBELET_RKT_FLAGS \
+    --address=127.0.0.1 \
+    --api-servers=http://127.0.0.1:8080 \
+    --allow-privileged=false \
+    --config=/etc/kubernetes/manifests \
+    --cadvisor-port=0 \
+    $KUBELET_OPTS
+
+Type=notify
 Restart=on-failure
 RestartSec=5
 
