@@ -145,32 +145,32 @@ ActionExitCode PayloadProcessor::LoadManifest() {
 ActionExitCode PayloadProcessor::PerformOperation() {
   DCHECK(next_operation_num_ < num_total_operations_);
 
-  const InstallOperation &op =
-      manifest_.partition_operations(next_operation_num_);
+  const InstallOperation *op = &manifest_.partition_operations(next_operation_num_);
+  DeltaPerformer *performer = &delta_performer_;
 
-  if (op.data_length() && op.data_offset() != buffer_offset_) {
+  if (op->data_length() && op->data_offset() != buffer_offset_) {
     LOG(ERROR) << "Operation " << next_operation_num_
-               << " skipped to unexpected data offset " << op.data_offset()
+               << " skipped to unexpected data offset " << op->data_offset()
                << ", expected " << buffer_offset_;
     return kActionCodeDownloadOperationExecutionError;
   }
 
-  if (op.data_length() > buffer_.size())
+  if (op->data_length() > buffer_.size())
     return kActionCodeDownloadIncomplete;
 
   // Makes sure we unblock exit when this operation completes.
   ScopedTerminatorExitUnblocker exit_unblocker =
       ScopedTerminatorExitUnblocker();  // Avoids a compiler unused var bug.
 
-  ActionExitCode error = delta_performer_.PerformOperation(op, buffer_);
+  ActionExitCode error = performer->PerformOperation(*op, buffer_);
   if (error != kActionCodeSuccess) {
     LOG(ERROR) << "Aborting install procedure at operation "
                << next_operation_num_;
     return error;
   }
 
-  buffer_offset_ += op.data_length();
-  DiscardBufferHeadBytes(op.data_length());
+  buffer_offset_ += op->data_length();
+  DiscardBufferHeadBytes(op->data_length());
   next_operation_num_++;
 
   LOG(INFO) << "Completed " << next_operation_num_ << "/"
