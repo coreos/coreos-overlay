@@ -52,8 +52,25 @@ void LogPartitionInfo(const DeltaArchiveManifest& manifest) {
 
 }  // namespace {}
 
+PayloadProcessor::PayloadProcessor(PrefsInterface* prefs, InstallPlan* install_plan)
+  : partition_performer_(prefs, install_plan->install_path),
+    prefs_(prefs),
+    install_plan_(install_plan),
+    manifest_valid_(false),
+    manifest_metadata_size_(0),
+    next_operation_num_(0),
+    buffer_offset_(0),
+    last_updated_buffer_offset_(std::numeric_limits<uint64_t>::max()),
+    public_key_path_(kUpdatePayloadPublicKeyPath),
+    num_total_operations_(0) {
+}
+
+int PayloadProcessor::Open() {
+  return partition_performer_.Open();
+}
+
 int PayloadProcessor::Close() {
-  int err = delta_performer_.Close();
+  int err = partition_performer_.Close();
   LOG_IF(ERROR, !hash_calculator_.Finalize()) << "Unable to finalize the hash.";
   if (!buffer_.empty()) {
     LOG(ERROR) << "Called Close() while buffer not empty!";
@@ -135,6 +152,7 @@ ActionExitCode PayloadProcessor::LoadManifest() {
   }
 
   num_total_operations_ = manifest_.partition_operations_size();
+
   if (next_operation_num_ > 0)
     LOG(INFO) << "Resuming after " << next_operation_num_ << " operations";
   LOG(INFO) << "Starting to apply update payload operations";
@@ -146,7 +164,7 @@ ActionExitCode PayloadProcessor::PerformOperation() {
   DCHECK(next_operation_num_ < num_total_operations_);
 
   const InstallOperation *op = &manifest_.partition_operations(next_operation_num_);
-  DeltaPerformer *performer = &delta_performer_;
+  DeltaPerformer *performer = &partition_performer_;
 
   if (op->data_length() && op->data_offset() != buffer_offset_) {
     LOG(ERROR) << "Operation " << next_operation_num_
@@ -410,7 +428,7 @@ bool PayloadProcessor::CheckpointUpdateProgress() {
 
 bool PayloadProcessor::PrimeUpdateState() {
   CHECK(manifest_valid_);
-  delta_performer_.SetBlockSize(manifest_.block_size());
+  partition_performer_.SetBlockSize(manifest_.block_size());
 
   int64_t next_operation = kUpdateStateOperationInvalid;
   if (!prefs_->GetInt64(kPrefsUpdateStateNextOperation, &next_operation) ||

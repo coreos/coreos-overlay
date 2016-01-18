@@ -29,22 +29,10 @@ class PayloadProcessor : public FileWriter {
 
   static const char kUpdatePayloadPublicKeyPath[];
 
-  PayloadProcessor(PrefsInterface* prefs, InstallPlan* install_plan)
-      : delta_performer_(prefs, install_plan->install_path),
-        prefs_(prefs),
-        install_plan_(install_plan),
-        manifest_valid_(false),
-        manifest_metadata_size_(0),
-        next_operation_num_(0),
-        buffer_offset_(0),
-        last_updated_buffer_offset_(std::numeric_limits<uint64_t>::max()),
-        public_key_path_(kUpdatePayloadPublicKeyPath),
-        num_total_operations_(0) {}
+  PayloadProcessor(PrefsInterface* prefs, InstallPlan* install_plan);
 
   // Once Close()d, a PayloadProcessor can't be Open()ed again.
-  int Open() {
-    return delta_performer_.Open();
-  }
+  int Open();
 
   // FileWriter's Write implementation where caller doesn't care about
   // error codes.
@@ -125,7 +113,7 @@ class PayloadProcessor : public FileWriter {
   bool PrimeUpdateState();
 
   // Writer for the main partition to be updated.
-  DeltaPerformer delta_performer_;
+  DeltaPerformer partition_performer_;
 
   // Update Engine preference store.
   PrefsInterface* prefs_;
