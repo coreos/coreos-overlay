@@ -1293,14 +1293,13 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
                                               &data_file_size,
                                               &final_order));
     } else {
-      TEST_AND_RETURN_FALSE(FullUpdateGenerator::Run(&graph,
-                                                     new_image,
-                                                     new_image_size,
-                                                     fd,
-                                                     &data_file_size,
-                                                     kFullUpdateChunkSize,
-                                                     kBlockSize,
-                                                     &final_order));
+      FullUpdateGenerator generator(fd, kFullUpdateChunkSize, kBlockSize);
+
+      TEST_AND_RETURN_FALSE(generator.Partition(new_image,
+                                                new_image_size,
+                                                &graph,
+                                                &final_order));
+      data_file_size = generator.Size();
     }
   }
 

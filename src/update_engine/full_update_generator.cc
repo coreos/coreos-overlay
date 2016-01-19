@@ -116,26 +116,6 @@ FullUpdateGenerator::FullUpdateGenerator(
   CHECK((chunk_size_ % block_size_) == 0);
 }
 
-bool FullUpdateGenerator::Run(
-    Graph* graph,
-    const std::string& new_image,
-    off_t image_size,
-    int fd,
-    off_t* data_file_size,
-    off_t chunk_size,
-    off_t block_size,
-    std::vector<Vertex::Index>* final_order) {
-  TEST_AND_RETURN_FALSE(chunk_size > 0);
-  TEST_AND_RETURN_FALSE((chunk_size % block_size) == 0);
-
-  FullUpdateGenerator generator(fd, chunk_size, block_size);
-  if (!generator.Partition(new_image, image_size, graph, final_order))
-    return false;
-
-  *data_file_size = generator.Size();
-  return true;
-}
-
 bool FullUpdateGenerator::Partition(const string& new_image,
                                     off_t image_size,
                                     Graph* graph,

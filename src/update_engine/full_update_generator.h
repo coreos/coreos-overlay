@@ -20,16 +20,6 @@ class FullUpdateGenerator {
   // operations, and writes relevant data to |fd|, updating |data_file_size| as
   // it does. Only the first |image_size| bytes are read from |new_image|
   // assuming that this is the actual file system.
-  static bool Run(
-      Graph* graph,
-      const std::string& new_image,
-      off_t image_size,
-      int fd,
-      off_t* data_file_size,
-      off_t chunk_size,
-      off_t block_size,
-      std::vector<Vertex::Index>* final_order);
-
   bool Partition(const std::string& new_image,
                  off_t image_size,
                  Graph* graph,
