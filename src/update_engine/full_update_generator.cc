@@ -106,6 +106,16 @@ bool ChunkProcessor::ReadAndCompress() {
 
 }  // namespace
 
+FullUpdateGenerator::FullUpdateGenerator(
+    int fd, off_t chunk_size, off_t block_size)
+      : fd_(fd),
+        chunk_size_(chunk_size),
+        block_size_(block_size),
+        data_file_size_(0) {
+  CHECK(chunk_size_ > 0);
+  CHECK((chunk_size_ % block_size_) == 0);
+}
+
 bool FullUpdateGenerator::Run(
     Graph* graph,
     const std::string& new_image,
@@ -118,28 +128,63 @@ bool FullUpdateGenerator::Run(
   TEST_AND_RETURN_FALSE(chunk_size > 0);
   TEST_AND_RETURN_FALSE((chunk_size % block_size) == 0);
 
+  FullUpdateGenerator generator(fd, chunk_size, block_size);
+  if (!generator.Partition(new_image, image_size, graph, final_order))
+    return false;
+
+  *data_file_size = generator.Size();
+  return true;
+}
+
+bool FullUpdateGenerator::Partition(const string& new_image,
+                                    off_t image_size,
+                                    Graph* graph,
+                                    vector<Vertex::Index>* final_order) {
+  vector<InstallOperation> ops;
+  if (!Add(new_image, image_size, &ops))
+    return false;
+
+  off_t counter = 0;
+  for (const InstallOperation& op : ops) {
+    graph->resize(graph->size() + 1);
+    graph->back().file_name =
+        StringPrintf("<rootfs-operation-%" PRIi64 ">", counter++);
+    graph->back().op = op;
+    final_order->push_back(graph->size() - 1);
+  }
+
+  return true;
+}
+
+bool FullUpdateGenerator::Add(const string& path,
+                              vector<InstallOperation>* ops) {
+  return Add(path, utils::FileSize(path), ops);
+}
+
+bool FullUpdateGenerator::Add(const string& path, off_t size,
+                              vector<InstallOperation>* ops) {
+
   size_t max_threads = max(sysconf(_SC_NPROCESSORS_ONLN), 4L);
   LOG(INFO) << "Max threads: " << max_threads;
 
-  TEST_AND_RETURN_FALSE(image_size >= 0 &&
-                        image_size <= utils::FileSize(new_image));
+  TEST_AND_RETURN_FALSE(size >= 0 && size <= utils::FileSize(path));
 
-  LOG(INFO) << "compressing " << new_image;
-  int in_fd = open(new_image.c_str(), O_RDONLY, 0);
+  LOG(INFO) << "compressing " << path;
+  int in_fd = open(path.c_str(), O_RDONLY, 0);
   TEST_AND_RETURN_FALSE(in_fd >= 0);
   files::ScopedFD in_fd_closer(in_fd);
   deque<shared_ptr<ChunkProcessor> > threads;
   int last_progress_update = INT_MIN;
-  off_t bytes_left = image_size, counter = 0, offset = 0;
+  off_t bytes_left = size, offset = 0;
   while (bytes_left > 0 || !threads.empty()) {
     // Check and start new chunk processors if possible.
     while (threads.size() < max_threads && bytes_left > 0) {
       shared_ptr<ChunkProcessor> processor(
-          new ChunkProcessor(in_fd, offset, min(bytes_left, chunk_size)));
+          new ChunkProcessor(in_fd, offset, min(bytes_left, chunk_size_)));
       threads.push_back(processor);
       TEST_AND_RETURN_FALSE(processor->Start());
-      bytes_left -= chunk_size;
-      offset += chunk_size;
+      bytes_left -= chunk_size_;
+      offset += chunk_size_;
     }
 
     // Need to wait for a chunk processor to complete and process its ouput
@@ -148,33 +193,29 @@ bool FullUpdateGenerator::Run(
     threads.pop_front();
     TEST_AND_RETURN_FALSE(processor->Wait());
 
-    graph->resize(graph->size() + 1);
-    graph->back().file_name =
-        StringPrintf("<rootfs-operation-%" PRIi64 ">", counter++);
-    InstallOperation* op = &graph->back().op;
-    final_order->push_back(graph->size() - 1);
+    ops->resize(ops->size() + 1);
+    InstallOperation& op = ops->back();
 
     const bool compress = processor->ShouldCompress();
     const vector<char>& use_buf =
         compress ? processor->buffer_compressed() : processor->buffer_in();
-    op->set_type(compress ?
-                 InstallOperation_Type_REPLACE_BZ :
-                 InstallOperation_Type_REPLACE);
-    op->set_data_offset(*data_file_size);
-    TEST_AND_RETURN_FALSE(utils::WriteAll(fd, &use_buf[0], use_buf.size()));
-    *data_file_size += use_buf.size();
-    op->set_data_length(use_buf.size());
-    Extent* dst_extent = op->add_dst_extents();
-    dst_extent->set_start_block(processor->offset() / block_size);
-    dst_extent->set_num_blocks(chunk_size / block_size);
+    op.set_type(compress ?
+                InstallOperation_Type_REPLACE_BZ :
+                InstallOperation_Type_REPLACE);
+    op.set_data_offset(data_file_size_);
+    TEST_AND_RETURN_FALSE(utils::WriteAll(fd_, &use_buf[0], use_buf.size()));
+    data_file_size_ += use_buf.size();
+    op.set_data_length(use_buf.size());
+    Extent* dst_extent = op.add_dst_extents();
+    dst_extent->set_start_block(processor->offset() / block_size_);
+    dst_extent->set_num_blocks(chunk_size_ / block_size_);
 
     int progress = static_cast<int>(
-        (processor->offset() + processor->buffer_in().size()) * 100.0 /
-        image_size);
+        (processor->offset() + processor->buffer_in().size()) * 100.0 / size);
     if (last_progress_update < progress &&
         (last_progress_update + 10 <= progress || progress == 100)) {
       LOG(INFO) << progress << "% complete (output size: "
-                << *data_file_size << ")";
+                << data_file_size_ << ")";
       last_progress_update = progress;
     }
   }
