@@ -1,7 +1,7 @@
-From 3b1392d4ea14b7724a2166d79c9b505809715d0e Mon Sep 17 00:00:00 2001
+From 33a9f956a8e667a384648e2a9b19627778ae930c Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Tue, 16 Jun 2015 14:14:31 +0100
-Subject: [PATCH 14/21] Security: Provide copy-up security hooks for unioned
+Subject: [PATCH 14/23] Security: Provide copy-up security hooks for unioned
  files
 
 Provide two new security hooks for use with security files that are used when

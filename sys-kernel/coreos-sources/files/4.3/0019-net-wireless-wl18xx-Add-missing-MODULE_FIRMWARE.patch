@@ -1,7 +1,7 @@
-From 8aabcd5265fa49c0d04a69803f215924501a8f1c Mon Sep 17 00:00:00 2001
+From ed6d7670386020321cab7492c67619bc6ac6e4cf Mon Sep 17 00:00:00 2001
 From: Geoff Levand <geoff@infradead.org>
 Date: Wed, 2 Sep 2015 16:08:30 -0700
-Subject: [PATCH 19/21] net/wireless/wl18xx: Add missing MODULE_FIRMWARE
+Subject: [PATCH 19/23] net/wireless/wl18xx: Add missing MODULE_FIRMWARE
 
 Fixes the output of 'modinfo --field firmware'.
 
