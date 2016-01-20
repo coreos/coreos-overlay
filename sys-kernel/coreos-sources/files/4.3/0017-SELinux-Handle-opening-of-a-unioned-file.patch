@@ -1,7 +1,7 @@
-From 05a4a6e58b029d892c9ea5d561ca4c57c07c380a Mon Sep 17 00:00:00 2001
+From 3a1a35485a4681b5d797b20766d1adbd914b531c Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Tue, 16 Jun 2015 14:14:32 +0100
-Subject: [PATCH 17/21] SELinux: Handle opening of a unioned file
+Subject: [PATCH 17/23] SELinux: Handle opening of a unioned file
 
 Handle the opening of a unioned file by trying to derive the label that would
 be attached to the union-layer inode if it doesn't exist.
