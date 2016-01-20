@@ -1,7 +1,7 @@
-From 9b3e6387aadd3baa76e5c1abd7c9071b4871885a Mon Sep 17 00:00:00 2001
+From c68142a5e329f760096e2d378154645ccdcde097 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Fri, 9 Aug 2013 03:33:56 -0400
-Subject: [PATCH 08/14] kexec: Disable at runtime if the kernel enforces module
+Subject: [PATCH 08/23] kexec: Disable at runtime if the kernel enforces module
  loading restrictions
 
 kexec permits the loading and execution of arbitrary code in ring 0, which
@@ -40,5 +40,5 @@ index a785c10..81d6b40 100644
  	 * This leaves us room for future extensions.
  	 */
 -- 
-2.4.3
+2.4.10
 

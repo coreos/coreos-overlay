@@ -1,0 +1,38 @@
+From d5eda9e85df6d1894d0d16155e0900daadb4ce1b Mon Sep 17 00:00:00 2001
+From: Dragos Tatulea <dragos@endocode.com>
+Date: Mon, 16 Nov 2015 10:52:48 +0100
+Subject: [PATCH 22/23] net: switchdev: fix return code of fdb_dump stub
+
+rtnl_fdb_dump always expects an index to be returned by the ndo_fdb_dump op,
+but when CONFIG_NET_SWITCHDEV is off, it returns an error.
+
+Fix that by returning the given unmodified idx.
+
+A similar fix was 0890cf6cb6ab ("switchdev: fix return value of
+switchdev_port_fdb_dump in case of error") but for the CONFIG_NET_SWITCHDEV=y
+case.
+
+Fixes: 45d4122ca7cd ("switchdev: add support for fdb add/del/dump via switchdev_port_obj ops.")
+Signed-off-by: Dragos Tatulea <dragos@endocode.com>
+Acked-by: Jiri Pirko <jiri@mellanox.com>
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ include/net/switchdev.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/include/net/switchdev.h b/include/net/switchdev.h
+index d5671f1..0b91979 100644
+--- a/include/net/switchdev.h
++++ b/include/net/switchdev.h
+@@ -268,7 +268,7 @@ static inline int switchdev_port_fdb_dump(struct sk_buff *skb,
+ 					  struct net_device *filter_dev,
+ 					  int idx)
+ {
+-	return -EOPNOTSUPP;
++       return idx;
+ }
+ 
+ #endif
+-- 
+2.4.10
+
