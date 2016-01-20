@@ -57,6 +57,7 @@ class DeltaDiffGenerator {
   // This is the only function that external users of the class should call.
   // old_image and new_image are paths to two image files. They should be
   // mounted read-only at paths old_root and new_root respectively.
+  // {old,new}_kernel are paths to the old and new kernel images.
   // private_key_path points to a private key used to sign the update.
   // Pass empty string to not sign the update.
   // output_path is the filename where the delta update should be written.
@@ -66,6 +67,8 @@ class DeltaDiffGenerator {
                                       const std::string& old_image,
                                       const std::string& new_root,
                                       const std::string& new_image,
+                                      const std::string& old_kernel,
+                                      const std::string& new_kernel,
                                       const std::string& output_path,
                                       const std::string& private_key_path,
                                       uint64_t* metadata_size);
@@ -153,7 +156,8 @@ class DeltaDiffGenerator {
   // operations in the manifest. E.g. if manifest[0] has a data blob
   // "X" at offset 1, manifest[1] has a data blob "Y" at offset 0,
   // and data_blobs_path's file contains "YX", new_data_blobs_path
-  // will set to be a file that contains "XY".
+  // will set to be a file that contains "XY". The operations in
+  // are modified to refer to the new data blob locations.
   static bool ReorderDataBlobs(DeltaArchiveManifest* manifest,
                                const std::string& data_blobs_path,
                                const std::string& new_data_blobs_path);
@@ -207,8 +211,8 @@ class DeltaDiffGenerator {
   // (e.g., a move operation that copies blocks onto themselves).
   static bool IsNoopOperation(const InstallOperation& op);
 
-  static bool InitializePartitionInfo(const std::string& partition,
-                                      InstallInfo* info);
+  // Fill size and hash of the given device or file.
+  static bool InitializeInfo(const std::string& path, InstallInfo* info);
 
   // Runs the bsdiff tool on two files and returns the resulting delta in
   // |out|. Returns true on success.

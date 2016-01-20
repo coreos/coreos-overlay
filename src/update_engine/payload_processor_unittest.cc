@@ -44,6 +44,9 @@ extern const char* kUnittestPublicKey2Path;
 
 static const size_t kBlockSize = 4096;
 
+static const int kDefaultKernelSize = 500; // Something small for a test
+static const char* kNewDataString = "This is new data.";
+
 namespace {
 enum DeltaTest {
   kDeltaUpdate,  // Update by applying a diff.
@@ -76,6 +79,12 @@ struct DeltaState {
 
   string delta_path;
   uint64_t metadata_size;
+
+  string a_kernel;
+  vector<char> a_kernel_data;
+
+  string b_kernel;
+  vector<char> b_kernel_data;
 
   // The in-memory copy of delta file.
   vector<char> delta;
@@ -302,6 +311,32 @@ static void GenerateDeltaFile(DeltaState *state) {
                                  sizeof(kRandomString)));
   }
 
+  EXPECT_TRUE(utils::MakeTempFile("/tmp/a_kernel.XXXXXX",
+                                  &state->a_kernel,
+                                  NULL));
+
+  EXPECT_TRUE(utils::MakeTempFile("/tmp/b_kernel.XXXXXX",
+                                  &state->b_kernel,
+                                  NULL));
+
+  state->b_kernel_data.resize(kDefaultKernelSize);
+  FillWithData(&state->b_kernel_data);
+  // A known bit of data to test for later.
+  strcpy(&state->b_kernel_data[0], kNewDataString);
+
+  if (state->delta_test == kNoopUpdate)
+    state->a_kernel_data = state->b_kernel_data;
+  else
+    FillWithData(&state->a_kernel_data);
+
+  // Write kernels to disk
+  EXPECT_TRUE(utils::WriteFile(state->a_kernel.c_str(),
+                               &state->a_kernel_data[0],
+                               state->a_kernel_data.size()));
+  EXPECT_TRUE(utils::WriteFile(state->b_kernel.c_str(),
+                               &state->b_kernel_data[0],
+                               state->b_kernel_data.size()));
+
   EXPECT_TRUE(utils::MakeTempFile("/tmp/delta.XXXXXX",
                                   &state->delta_path,
                                   NULL));
@@ -310,16 +345,18 @@ static void GenerateDeltaFile(DeltaState *state) {
     string a_mnt, b_mnt;
     ScopedLoopMounter a_mounter(state->a_img, &a_mnt, MS_RDONLY);
     ScopedLoopMounter b_mounter(state->b_img, &b_mnt, MS_RDONLY);
-    const bool full_rootfs = state->delta_test == kFullUpdate;
+    const bool full_update = state->delta_test == kFullUpdate;
     const string private_key =
         state->signature_test == kSignatureGenerator
         ? kUnittestPrivateKeyPath : "";
     EXPECT_TRUE(
         DeltaDiffGenerator::GenerateDeltaUpdateFile(
-            full_rootfs ? "" : a_mnt,
-            full_rootfs ? "" : state->a_img,
+            full_update ? "" : a_mnt,
+            full_update ? "" : state->a_img,
             b_mnt,
             state->b_img,
+            full_update ? "" : state->a_kernel,
+            state->b_kernel,
             state->delta_path,
             private_key,
             &state->metadata_size));
@@ -344,6 +381,17 @@ static void GenerateDeltaFile(DeltaState *state) {
   }
 }
 
+static const InstallProcedure* GetProcedure(
+    const DeltaArchiveManifest& manifest,
+    InstallProcedure_Type type) {
+  for (const InstallProcedure& proc : manifest.procedures()) {
+    if (proc.type() == type) {
+      return &proc;
+    }
+  }
+  return nullptr;
+}
+
 static void ApplyDeltaFile(DeltaState* state,
                            OperationHashTest op_hash_test,
                            PayloadProcessor** performer) {
@@ -356,11 +404,15 @@ static void ApplyDeltaFile(DeltaState* state,
                                            &state->metadata_size));
     LOG(INFO) << "Metadata size: " << state->metadata_size;
 
+    // manifest.noop_operations contains dummy operations for everything
+    // in the new manifest.procedures list and one for the signature data.
+    int noop_operations_size = 0;
+
     if (state->signature_test == kSignatureNone) {
       EXPECT_FALSE(manifest.has_signatures_offset());
       EXPECT_FALSE(manifest.has_signatures_size());
-      EXPECT_EQ(0, manifest.noop_operations_size());
     } else {
+      noop_operations_size++; // one operation for signature data.
       EXPECT_TRUE(manifest.has_signatures_offset());
       EXPECT_TRUE(manifest.has_signatures_size());
       Signatures sigs_message;
@@ -386,28 +438,40 @@ static void ApplyDeltaFile(DeltaState* state,
           &expected_sig_data_length));
       EXPECT_EQ(expected_sig_data_length, manifest.signatures_size());
       EXPECT_FALSE(signature.data().empty());
-
-      // For compatibility with older versions of update_engine the signature
-      // covered by a fake operation.
-      EXPECT_EQ(1, manifest.noop_operations_size());
     }
+
+    const InstallProcedure* kernel_proc =
+        GetProcedure(manifest, InstallProcedure_Type_KERNEL);
+    ASSERT_NE(nullptr, kernel_proc);
+    noop_operations_size += kernel_proc->operations_size();
 
     switch (state->delta_test) {
       case kNoopUpdate:
+        // Computing the filesystem delta does not compare unallocated and
+        // out of bounds blocks, those simply get packed into a REPLACE_BZ
+        // operation to directly write out the data (mostly zero).
         EXPECT_EQ(1, manifest.partition_operations_size());
+        // Kernels on the other hand do not have any extra data like that.
+        EXPECT_EQ(0, kernel_proc->operations_size());
         // fallthrough
       case kDeltaUpdate:
         EXPECT_EQ(state->image_size, manifest.old_partition_info().size());
+        EXPECT_EQ(state->a_kernel_data.size(), kernel_proc->old_info().size());
         EXPECT_FALSE(manifest.old_partition_info().hash().empty());
+        EXPECT_FALSE(kernel_proc->old_info().hash().empty());
         break;
       case kFullUpdate:
         EXPECT_FALSE(manifest.has_old_partition_info());
+        EXPECT_FALSE(kernel_proc->has_old_info());
         break;
     }
 
     EXPECT_EQ(state->image_size, manifest.new_partition_info().size());
-
+    EXPECT_EQ(state->b_kernel_data.size(), kernel_proc->new_info().size());
     EXPECT_FALSE(manifest.new_partition_info().hash().empty());
+    EXPECT_FALSE(kernel_proc->new_info().hash().empty());
+
+    EXPECT_EQ(noop_operations_size, manifest.noop_operations_size());
   }
 
   PrefsMock prefs;
@@ -432,6 +496,7 @@ static void ApplyDeltaFile(DeltaState* state,
   // Update the A image in place.
   InstallPlan install_plan;
   install_plan.install_path = state->a_img;
+  // TODO: Kernel support in PayloadProcessor
 
   *performer = new PayloadProcessor(&prefs, &install_plan);
   EXPECT_TRUE(utils::FileExists(kUnittestPublicKeyPath));
