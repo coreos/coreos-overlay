@@ -536,7 +536,7 @@ bool DeltaDiffGenerator::ReadFileToDiff(
 }
 
 bool DeltaDiffGenerator::InitializePartitionInfo(const string& partition,
-                                                 BlobInfo* info) {
+                                                 InstallInfo* info) {
   int64_t size = 0;
   int block_count = 0, block_size = 0;
   TEST_AND_RETURN_FALSE(utils::GetFilesystemSize(partition,

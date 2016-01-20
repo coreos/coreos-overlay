@@ -31,7 +31,7 @@ namespace {
 const int kUpdateStateOperationInvalid = -1;
 const int kMaxResumedUpdateFailures = 10;
 
-void LogPartitionInfoHash(const BlobInfo& info, const string& tag) {
+void LogPartitionInfoHash(const InstallInfo& info, const string& tag) {
   string sha256;
   if (OmahaHashCalculator::Base64Encode(info.hash().data(),
                                         info.hash().size(),
@@ -315,7 +315,7 @@ bool PayloadProcessor::VerifySourcePartition() {
   CHECK(manifest_valid_);
   CHECK(install_plan_);
   if (manifest_.has_old_partition_info()) {
-    const BlobInfo& info = manifest_.old_partition_info();
+    const InstallInfo& info = manifest_.old_partition_info();
     bool valid =
         !install_plan_->rootfs_hash.empty() &&
         install_plan_->rootfs_hash.size() == info.hash().size() &&
