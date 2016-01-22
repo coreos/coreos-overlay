@@ -123,6 +123,9 @@ src_install() {
 		set_login_opt CRACKLIB_DICTPATH /usr/$(get_libdir)/cracklib_dict
 		set_login_opt LOGIN_RETRIES 3
 		set_login_opt ENCRYPT_METHOD SHA512
+
+		# CoreOS: increase the minimum password length to eight
+		set_login_opt PASS_MIN_LEN 8
 	else
 		dopamd "${FILESDIR}"/pam.d-include/shadow
 
