@@ -6,6 +6,11 @@ EAPI=5
 
 export CBUILD=${CBUILD:-${CHOST}}
 export CTARGET=${CTARGET:-${CHOST}}
+if [[ ${CTARGET} == ${CHOST} ]] ; then
+	if [[ ${CATEGORY} == cross-* ]] ; then
+		export CTARGET=${CATEGORY#cross-}
+	fi
+fi
 
 inherit eutils toolchain-funcs
 
@@ -23,27 +28,19 @@ HOMEPAGE="http://www.golang.org"
 
 LICENSE="BSD"
 SLOT="0/${PV}"
-IUSE="cros_host arm64-extras"
+IUSE="cros_host"
 
 DEPEND="cros_host? ( >=dev-lang/go-bootstrap-1.4.1 )"
 RDEPEND=""
 
 # These test data objects have writable/executable stacks.
-QA_EXECSTACK="usr/lib/go/src/debug/elf/testdata/*.obj"
+QA_EXECSTACK="usr/lib/go/${CTARGET}/src/debug/elf/testdata/*.obj"
 
 # The tools in /usr/lib/go should not cause the multilib-strict check to fail.
-QA_MULTILIB_PATHS="usr/lib/go/pkg/tool/.*/.*"
+QA_MULTILIB_PATHS="usr/lib/go/${CTARGET}/pkg/tool/.*/.*"
 
-# The go language uses *.a files which are _NOT_ libraries and should not be
-# stripped. The test data objects should also be left alone and unstripped.
-STRIP_MASK="/usr/lib/go/pkg/*.a
-	/usr/lib/go/src/debug/elf/testdata/*
-	/usr/lib/go/src/debug/dwarf/testdata/*
-	/usr/lib/go/src/runtime/race/*.syso"
-
-if use cros_host && use arm64-extras; then
-	STRIP_MASK+="/usr/lib/go/pkg/tool/linux_arm64/*"
-fi
+# Automatic stripping picks up a *lot* of things that should not be touched.
+RESTRICT="strip"
 
 if [[ ${PV} != 9999 ]]; then
 	S="${WORKDIR}"/go
@@ -100,11 +97,26 @@ go_cross_compile()
 	[[ $(go_tuple ${CBUILD}) != $(go_tuple) ]]
 }
 
+getTARGET_CC()
+{
+	[[ ${CHOST} == ${CTARGET} ]] && tc-getCC || echo "${CTARGET}-cc"
+}
+
+getTARGET_CXX()
+{
+	[[ ${CHOST} == ${CTARGET} ]] && tc-getCXX || echo "${CTARGET}-c++"
+}
+
 pkg_pretend()
 {
 	# make.bash does not understand cross-compiling a cross-compiler
-	if [[ $(go_tuple) != $(go_tuple ${CTARGET}) ]]; then
-		die "CHOST CTARGET pair unsupported: CHOST=${CHOST} CTARGET=${CTARGET}"
+	if [[ $(go_tuple) != $(go_tuple ${CBUILD}) ]] && \
+			[[ $(go_tuple) != $(go_tuple ${CTARGET}) ]]; then
+		eerror "Unsupported configuration:"
+		eerror " CBUILD:  ${CBUILD}"
+		eerror " CHOST:   ${CHOST}"
+		eerror " CTARGET: ${CTARGET}"
+		die "cross-compiling a cross-compiler"
 	fi
 }
 
@@ -116,38 +128,26 @@ src_prepare()
 src_compile()
 {
 	export GOROOT_BOOTSTRAP="${EPREFIX}"/usr/lib/go1.4
-	export GOROOT_FINAL="${EPREFIX}"/usr/lib/go
+	export GOROOT_FINAL="${EPREFIX}/usr/lib/go/${CTARGET}"
 	export GOROOT="$(pwd)"
 	export GOBIN="${GOROOT}/bin"
 
-	# Go's build script does not use BUILD/HOST/TARGET consistently. :(
+	## Go's build system doesn't differentiate between CBUILD and CHOST
+	# Handle CBUILD and CTARGET first, fill in CHOST if needed.
 	export GOHOSTARCH=$(go_arch ${CBUILD})
 	export GOHOSTOS=$(go_os ${CBUILD})
 	export CC=$(tc-getBUILD_CC)
-	export GOOS=$(go_os)
+
+	export GOARCH=$(go_arch ${CTARGET})
+	export GOOS=$(go_os ${CTARGET})
+	export CC_FOR_TARGET=$(getTARGET_CC)
+	export CXX_FOR_TARGET=$(getTARGET_CXX)
+	if [[ ${CTARGET} == armv* ]]; then
+		export GOARM=$(go_arm ${CTARGET})
+	fi
 
 	cd src
-
-	# Build the target support first.
-	if use cros_host && use arm64-extras; then
-		export GOARCH="arm64"
-		export CC_FOR_TARGET="aarch64-cros-linux-gnu-gcc"
-		export CXX_FOR_TARGET="aarch64-cros-linux-gnu-g++"
-		ebegin "Building for GOARCH=${GOARCH}..."
-		./make.bash --no-clean --no-test
-		eend $? "Build for GOARCH=${GOARCH} failed." || die
-	fi
-
-	# Build the host last to get the correct settings in the go environment.
-	export GOARCH=$(go_arch)
-	export CC_FOR_TARGET=$(tc-getCC)
-	export CXX_FOR_TARGET=$(tc-getCXX)
-	if [[ ${ARCH} == arm ]]; then
-		export GOARM=$(go_arm)
-	fi
-	ebegin "Building for GOARCH=${GOARCH}..."
-	./make.bash --no-clean --no-test
-	eend $? "Build for GOARCH=${GOARCH} failed." || die
+	./make.bash || die "build failed"
 }
 
 src_test()
@@ -161,32 +161,55 @@ src_test()
 
 src_install()
 {
-	local bin_path="${GOBIN}"
-	if go_cross_compile; then
-		bin_path="${GOBIN}/$(go_tuple)"
-	fi
-	dobin "${bin_path}"/go "${bin_path}"/gofmt
-	dodoc AUTHORS CONTRIBUTORS PATENTS README.md
+	dodir "${GOROOT_FINAL}"
+	insinto "${GOROOT_FINAL}"
 
-	dodir /usr/lib/go /usr/lib/go/pkg /usr/lib/go/pkg/tool
-	insinto /usr/lib/go
+	rm -r pkg/bootstrap || die
+	if go_cross_compile; then
+		# CBUILD should not be installed, delete it.
+		find bin -type f -maxdepth 1 -delete || die
+		rm -r "pkg/$(go_tuple ${CBUILD})" \
+			"pkg/tool/$(go_tuple ${CBUILD})" || die
+	else
+		# keep paths the same regardless of cross-compiling or not
+		mkdir "bin/$(go_tuple)" || die
+		find bin -type f -maxdepth 1 -exec mv {} "bin/$(go_tuple)" \; || die
+	fi
 
 	# There is a known issue which requires the source tree to be installed [1].
 	# Once this is fixed, we can consider using the doc use flag to control
 	# installing the doc and src directories.
 	# [1] https://golang.org/issue/2775
-	doins -r doc lib src
+	doins -r bin doc lib pkg src
+	fperms -R +x "${GOROOT_FINAL}/bin" "${GOROOT_FINAL}/pkg/tool"
 
-	# Selectively install pkg directory to exclude the bootstrap build
-	insinto /usr/lib/go/pkg
-	doins -r pkg/include "pkg/$(go_tuple)"
-	insinto /usr/lib/go/pkg/tool
-	doins -r "pkg/tool/$(go_tuple)"
-	fperms -R +x /usr/lib/go/pkg/tool
+	# selectively strip binaries
+	env RESTRICT="" prepstrip \
+		"${ED}${GOROOT_FINAL}/bin/$(go_tuple)" \
+		"${ED}${GOROOT_FINAL}/pkg/tool/$(go_tuple)"
+	if [[ ${CHOST} != ${CTARGET} ]]; then
+		env RESTRICT="" CHOST=${CTARGET} prepstrip \
+			"${ED}${GOROOT_FINAL}/bin/$(go_tuple ${CTARGET})" \
+			"${ED}${GOROOT_FINAL}/pkg/tool/$(go_tuple ${CTARGET})"
+	fi
 
-	if use cros_host && use arm64-extras; then
-		insinto /usr/lib/go/pkg
-		doins -r pkg/linux_arm64
+	local x f l
+	for x in "bin/$(go_tuple)"/*; do
+		f=${x##*/}
+		l="..${GOROOT_FINAL#/usr}/bin/${f}"
+		dosym "${l}" /usr/bin/${CTARGET}-${f}
+		if [[ ${CHOST} == ${CTARGET} ]]; then
+			dosym "${l}" /usr/bin/${f}
+		fi
+	done
+
+	dodir "${GOROOT_FINAL}/misc"
+	insinto "${GOROOT_FINAL}/misc"
+	doins -r misc/trace
+
+	# only for native packages to avoid conflicts
+	if [[ ${CHOST} == ${CTARGET} ]]; then
+		dodoc AUTHORS CONTRIBUTORS PATENTS README.md
 	fi
 }
 
@@ -204,8 +227,8 @@ pkg_postinst()
 	# packages for every build we need to fix the timestamps.  The compiler and
 	# linker are also checked - so we need to fix them too.
 	ebegin "fixing timestamps to avoid unnecessary rebuilds"
-	tref="usr/lib/go/pkg/*/runtime.a"
-	find "${EROOT}"usr/lib/go -type f \
+	tref="usr/lib/go/${CTARGET}/pkg/*/runtime.a"
+	find "${EROOT}usr/lib/go/${CTARGET}" -type f \
 		-exec touch -r "${EROOT}"${tref} {} \;
 	eend $?
 
