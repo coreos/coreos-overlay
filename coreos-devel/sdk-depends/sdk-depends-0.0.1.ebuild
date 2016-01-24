@@ -17,6 +17,7 @@ DEPEND="
 	app-admin/sudo
 	app-admin/updateservicectl
 	app-arch/pbzip2
+	app-emulation/acbuild
 	app-emulation/open-vmdk
 	app-misc/jq
 	app-shells/bash-completion
