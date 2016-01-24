@@ -78,6 +78,13 @@ int PayloadProcessor::Close() {
       err = -EBUSY;
     }
   }
+  if (next_operation_num_ != num_total_operations_) {
+    LOG(ERROR) << "Called Close() before completing operation "
+               << next_operation_num_ << "/" << num_total_operations_;
+    if (err == 0) {
+      err = -EBUSY;
+    }
+  }
   return err;
 }
 
