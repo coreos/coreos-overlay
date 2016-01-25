@@ -1,15 +1,14 @@
 # Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-apps/portage/portage-2.2.20.ebuild,v 1.7 2015/07/11 19:01:26 zmedico Exp $
+# $Id$
 
 EAPI=5
 
 PYTHON_COMPAT=(
 	pypy
-	python3_3 python3_4
+	python3_3 python3_4 python3_5
 	python2_7
 )
-# Note: substituted below
 PYTHON_REQ_USE='bzip2(+)'
 
 inherit distutils-r1 multilib
@@ -18,11 +17,11 @@ DESCRIPTION="Portage is the package management and distribution system for Gento
 HOMEPAGE="https://wiki.gentoo.org/wiki/Project:Portage"
 
 LICENSE="GPL-2"
-KEYWORDS="~alpha amd64 arm ~arm64 hppa ~ia64 ~m68k ~mips ~ppc ppc64 ~s390 ~sh ~sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
+KEYWORDS="alpha amd64 arm ~arm64 hppa ia64 ~m68k ~mips ppc ppc64 ~s390 ~sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
 SLOT="0"
 IUSE="build doc epydoc +ipc linguas_ru selinux xattr"
 
-DEPEND="!build? ( ${PYTHON_DEPS//bzip2(+)/ssl(+),bzip2(+)} )
+DEPEND="!build? ( $(python_gen_impl_dep 'ssl(+)') )
 	>=app-arch/tar-1.27
 	dev-lang/python-exec:2
 	>=sys-apps/sed-4.0.5 sys-devel/patch
@@ -64,7 +63,7 @@ PDEPEND="
 
 REQUIRED_USE="epydoc? ( $(python_gen_useflags 'python2*') )"
 
-SRC_ARCHIVES="http://dev.gentoo.org/~dolsen/releases/portage"
+SRC_ARCHIVES="https://dev.gentoo.org/~dolsen/releases/portage"
 
 prefix_src_archives() {
 	local x y
@@ -79,11 +78,9 @@ TARBALL_PV=${PV}
 SRC_URI="mirror://gentoo/${PN}-${TARBALL_PV}.tar.bz2
 	$(prefix_src_archives ${PN}-${TARBALL_PV}.tar.bz2)"
 
-PATCHES=(
-	"${FILESDIR}/${PN}-2.2.18-0001-portage-repository-config.py-add-disabled-attribute-.patch"
-	"${FILESDIR}/${PN}-2.2.18-0002-environment-Filter-EROOT-for-all-EAPIs.patch"
-	"${FILESDIR}/${PN}-2.2.18-0003-depgraph-ensure-slot-rebuilds-happen-in-the-correct-.patch"
-)
+pkg_setup() {
+	use epydoc && DISTUTILS_ALL_SUBPHASE_IMPLS=( python2.7 )
+}
 
 python_prepare_all() {
 	distutils-r1_python_prepare_all
@@ -359,13 +356,11 @@ pkg_postinst() {
 	fi
 
 	einfo ""
-	einfo "The 'websync' module has now been properly renamed to 'webrsync'"
-	einfo "Please update your repos.conf/gentoo.conf file if needed."
-	einfo ""
-	einfo "This release of portage removed the new squashfs sync module "
-	einfo "introduced in portage-2.2.19."
-	einfo "Look for it to be released as an installable portage module soon."
-	einfo "This will allow it to develop at it's own pace partially independant"
-	einfo "of portage"
+	einfo "This release of portage contains the new repoman code base"
+	einfo "This code base is still being developed.  So its API's are"
+	einfo "not to be considered stable and are subject to change."
+	einfo "The code released has been tested and considered ready for use."
+	einfo "This however does not guarantee it to be completely bug free."
+	einfo "Please report any bugs you may encounter."
 	einfo ""
 }
