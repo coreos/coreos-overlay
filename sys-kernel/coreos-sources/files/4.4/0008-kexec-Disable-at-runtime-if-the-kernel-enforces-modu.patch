@@ -1,0 +1,39 @@
+From e227953c81434fb5156dd2504aeee7960c37a0ad Mon Sep 17 00:00:00 2001
+From: Matthew Garrett <mjg59@coreos.com>
+Date: Thu, 19 Nov 2015 18:55:53 -0800
+Subject: [PATCH 08/22] kexec: Disable at runtime if the kernel enforces module
+ loading restrictions
+
+kexec permits the loading and execution of arbitrary code in ring 0, which
+is something that module signing enforcement is meant to prevent. It makes
+sense to disable kexec in this situation.
+
+Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
+---
+ kernel/kexec.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/kernel/kexec.c b/kernel/kexec.c
+index d873b64..3d09642 100644
+--- a/kernel/kexec.c
++++ b/kernel/kexec.c
+@@ -17,6 +17,7 @@
+ #include <linux/syscalls.h>
+ #include <linux/vmalloc.h>
+ #include <linux/slab.h>
++#include <linux/module.h>
+ 
+ #include "kexec_internal.h"
+ 
+@@ -131,7 +132,7 @@ SYSCALL_DEFINE4(kexec_load, unsigned long, entry, unsigned long, nr_segments,
+ 	int result;
+ 
+ 	/* We only trust the superuser with rebooting the system. */
+-	if (!capable(CAP_SYS_BOOT) || kexec_load_disabled)
++	if (!capable(CAP_SYS_BOOT) || kexec_load_disabled || secure_modules())
+ 		return -EPERM;
+ 
+ 	/*
+-- 
+2.4.10
+

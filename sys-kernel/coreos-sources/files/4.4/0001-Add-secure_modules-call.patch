@@ -1,0 +1,63 @@
+From ed3da1ded7b7581a9a1dc2b48f8ddc7975f3ea67 Mon Sep 17 00:00:00 2001
+From: Matthew Garrett <matthew.garrett@nebula.com>
+Date: Fri, 9 Aug 2013 17:58:15 -0400
+Subject: [PATCH 01/22] Add secure_modules() call
+
+Provide a single call to allow kernel code to determine whether the system
+has been configured to either disable module loading entirely or to load
+only modules signed with a trusted key.
+
+Bugzilla: N/A
+Upstream-status: Fedora mustard.  Replaced by securelevels, but that was nak'd
+
+Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
+---
+ include/linux/module.h |  6 ++++++
+ kernel/module.c        | 10 ++++++++++
+ 2 files changed, 16 insertions(+)
+
+diff --git a/include/linux/module.h b/include/linux/module.h
+index 3a19c79..db38634 100644
+--- a/include/linux/module.h
++++ b/include/linux/module.h
+@@ -635,6 +635,8 @@ static inline bool module_requested_async_probing(struct module *module)
+ 	return module && module->async_probe_requested;
+ }
+ 
++extern bool secure_modules(void);
++
+ #else /* !CONFIG_MODULES... */
+ 
+ /* Given an address, look for it in the exception tables. */
+@@ -751,6 +753,10 @@ static inline bool module_requested_async_probing(struct module *module)
+ 	return false;
+ }
+ 
++static inline bool secure_modules(void)
++{
++	return false;
++}
+ #endif /* CONFIG_MODULES */
+ 
+ #ifdef CONFIG_SYSFS
+diff --git a/kernel/module.c b/kernel/module.c
+index 38c7bd5..a8f8c64 100644
+--- a/kernel/module.c
++++ b/kernel/module.c
+@@ -4097,3 +4097,13 @@ void module_layout(struct module *mod,
+ }
+ EXPORT_SYMBOL(module_layout);
+ #endif
++
++bool secure_modules(void)
++{
++#ifdef CONFIG_MODULE_SIG
++	return (sig_enforce || modules_disabled);
++#else
++	return modules_disabled;
++#endif
++}
++EXPORT_SYMBOL(secure_modules);
+-- 
+2.4.10
+
