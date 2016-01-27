@@ -1,0 +1,31 @@
+From 15647227ed911e525339ece57b4af9d369390bb0 Mon Sep 17 00:00:00 2001
+From: Matthew Garrett <matthew.garrett@nebula.com>
+Date: Fri, 9 Mar 2012 08:39:37 -0500
+Subject: [PATCH 04/22] ACPI: Limit access to custom_method
+
+custom_method effectively allows arbitrary access to system memory, making
+it possible for an attacker to circumvent restrictions on module loading.
+Disable it if any such restrictions have been enabled.
+
+Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
+---
+ drivers/acpi/custom_method.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/acpi/custom_method.c b/drivers/acpi/custom_method.c
+index c68e724..4277938 100644
+--- a/drivers/acpi/custom_method.c
++++ b/drivers/acpi/custom_method.c
+@@ -29,6 +29,9 @@ static ssize_t cm_write(struct file *file, const char __user * user_buf,
+ 	struct acpi_table_header table;
+ 	acpi_status status;
+ 
++	if (secure_modules())
++		return -EPERM;
++
+ 	if (!(*ppos)) {
+ 		/* parse the table header to get the table length */
+ 		if (count <= sizeof(struct acpi_table_header))
+-- 
+2.4.10
+

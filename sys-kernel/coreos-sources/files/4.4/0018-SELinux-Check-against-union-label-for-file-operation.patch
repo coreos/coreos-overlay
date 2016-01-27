@@ -1,0 +1,50 @@
+From f60b70463bb7493f60a27ac2d06058da87b062d9 Mon Sep 17 00:00:00 2001
+From: David Howells <dhowells@redhat.com>
+Date: Tue, 16 Jun 2015 14:14:32 +0100
+Subject: [PATCH 18/22] SELinux: Check against union label for file operations
+
+File operations (eg. read, write) issued against a file that is attached to
+the lower layer of a union file needs to be checked against the union-layer
+label not the lower layer label.
+
+The union label is stored in the file_security_struct rather than being
+retrieved from one of the inodes.
+
+Signed-off-by: David Howells <dhowells@redhat.com>
+---
+ security/selinux/hooks.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/security/selinux/hooks.c b/security/selinux/hooks.c
+index 5f0a11f..e33019e 100644
+--- a/security/selinux/hooks.c
++++ b/security/selinux/hooks.c
+@@ -1682,6 +1682,7 @@ static int file_has_perm(const struct cred *cred,
+ 			 struct file *file,
+ 			 u32 av)
+ {
++	struct inode_security_struct *isec;
+ 	struct file_security_struct *fsec = file->f_security;
+ 	struct inode *inode = file_inode(file);
+ 	struct common_audit_data ad;
+@@ -1702,8 +1703,15 @@ static int file_has_perm(const struct cred *cred,
+ 
+ 	/* av is zero if only checking access to the descriptor. */
+ 	rc = 0;
+-	if (av)
+-		rc = inode_has_perm(cred, inode, av, &ad);
++	if (av && likely(!IS_PRIVATE(inode))) {
++		if (fsec->union_isid) {
++			isec = inode->i_security;
++			rc = avc_has_perm(sid, fsec->union_isid, isec->sclass,
++					  av, &ad);
++		}
++		if (!rc)
++			rc = inode_has_perm(cred, inode, av, &ad);
++	}
+ 
+ out:
+ 	return rc;
+-- 
+2.4.10
+

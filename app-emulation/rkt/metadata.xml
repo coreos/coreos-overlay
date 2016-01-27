@@ -10,6 +10,7 @@
 	<use>
 		<flag name="actool">Install the actool for ACI manipulation</flag>
 		<flag name="rkt_stage1_coreos">Download and use a prebuilt stage1.aci from CoreOS</flag>
+		<flag name="rkt_stage1_fly">Build the experimental fly stage1 for chroot-only isolation</flag>
 		<flag name="rkt_stage1_src">Build the stage1.aci from source</flag>
 		<flag name="rkt_stage1_host">Assemble stage1.aci from host binaries</flag>
 	</use>

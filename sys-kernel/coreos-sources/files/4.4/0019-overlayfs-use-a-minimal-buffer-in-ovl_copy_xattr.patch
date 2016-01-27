@@ -1,0 +1,76 @@
+From 116f798bcf3fd2ce4965cb15ec44c8180f0428c1 Mon Sep 17 00:00:00 2001
+From: Vito Caputo <vito.caputo@coreos.com>
+Date: Mon, 19 Oct 2015 17:53:12 -0700
+Subject: [PATCH 19/22] overlayfs: use a minimal buffer in ovl_copy_xattr
+
+Rather than always allocating the high-order XATTR_SIZE_MAX buffer
+which is costly and prone to failure, only allocate what is needed and
+realloc if necessary.
+
+Fixes https://github.com/coreos/bugs/issues/489
+---
+ fs/overlayfs/copy_up.c | 31 ++++++++++++++++++++++---------
+ 1 file changed, 22 insertions(+), 9 deletions(-)
+
+diff --git a/fs/overlayfs/copy_up.c b/fs/overlayfs/copy_up.c
+index f59e1d8..fff40c4 100644
+--- a/fs/overlayfs/copy_up.c
++++ b/fs/overlayfs/copy_up.c
+@@ -22,8 +22,8 @@
+ 
+ int ovl_copy_xattr(struct dentry *old, struct dentry *new)
+ {
+-	ssize_t list_size, size;
+-	char *buf, *name, *value;
++	ssize_t list_size, size, value_size = 0;
++	char *buf, *name, *value = NULL;
+ 	int error;
+ 
+ 	if (!old->d_inode->i_op->getxattr ||
+@@ -41,23 +41,36 @@ int ovl_copy_xattr(struct dentry *old, struct dentry *new)
+ 	if (!buf)
+ 		return -ENOMEM;
+ 
+-	error = -ENOMEM;
+-	value = kmalloc(XATTR_SIZE_MAX, GFP_KERNEL);
+-	if (!value)
+-		goto out;
+-
+ 	list_size = vfs_listxattr(old, buf, list_size);
+ 	if (list_size <= 0) {
+ 		error = list_size;
+-		goto out_free_value;
++		goto out;
+ 	}
+ 
+ 	for (name = buf; name < (buf + list_size); name += strlen(name) + 1) {
+-		size = vfs_getxattr(old, name, value, XATTR_SIZE_MAX);
++retry:
++		size = vfs_getxattr(old, name, value, value_size);
++		if (size == -ERANGE) {
++			size = vfs_getxattr(old, name, NULL, 0);
++		}
++
+ 		if (size <= 0) {
+ 			error = size;
+ 			goto out_free_value;
+ 		}
++
++		if (size > value_size) {
++			void *new;
++			new = krealloc(value, size, GFP_KERNEL);
++			if (!new) {
++				error = -ENOMEM;
++				goto out_free_value;
++			}
++			value = new;
++			value_size = size;
++			goto retry;
++		}
++
+ 		error = security_inode_copy_up_xattr(old, new,
+ 						     name, value, &size);
+ 		if (error < 0)
+-- 
+2.4.10
+
