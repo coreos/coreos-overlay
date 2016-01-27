@@ -34,6 +34,12 @@ RDEPEND="${DEPEND}
 	>=sys-apps/gentoo-functions-0.10
 	cros_host? ( !coreos-base/coreos-init )"
 
+MOUNT_POINTS=(
+	/dev
+	/proc
+	/sys
+)
+
 declare -A LIB_SYMS		# list of /lib->lib64 symlinks
 declare -A USR_SYMS		# list of /foo->usr/foo symlinks
 declare -a BASE_DIRS	# list of absolute paths that should be directories
@@ -116,6 +122,13 @@ src_install() {
 	# Fill in all other paths defined in tmpfiles configs
 	systemd-tmpfiles --root="${D}" --create
 
+	# The above created a few mount points but leave those out of the
+	# package since they may be mounted read-only. postinst can make them.
+	local mnt
+	for mnt in "${MOUNT_POINTS[@]}"; do
+		rmdir "${D}${mnt}" || die
+	done
+
 	doenvd "env.d/99coreos_ldpath"
 
 	# handle multilib paths.  do it here because we want this behavior
@@ -166,6 +179,11 @@ src_install() {
 }
 
 pkg_postinst() {
+	# best-effort creation of mount points
+	local mnt
+	for mnt in "${MOUNT_POINTS[@]}"; do
+		[[ -d "${ROOT}${mnt}" ]] || mkdir "${ROOT}${mnt}"
+	done
 	# Set up /usr/lib/debug to match the root filesystem layout
 	# FIXME: This is done in postinst right now and all errors are ignored
 	# as a transitional scheme, this isn't important enough to migrate
