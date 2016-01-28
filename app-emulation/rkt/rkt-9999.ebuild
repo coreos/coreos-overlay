@@ -18,7 +18,7 @@ if [[ "${PV}" == "9999" ]]; then
 	KEYWORDS="~amd64"
 else
 	KEYWORDS="amd64"
-	CROS_WORKON_COMMIT="36079186a84b27b3ac632c3732c7620f7ecb737c" # v0.15.0
+	CROS_WORKON_COMMIT="c742464af051aa7075819278ca8c30f701e2cf9c" # v0.16.0
 fi
 
 PXE_VERSION="794.1.0"
@@ -38,7 +38,7 @@ IUSE="doc examples +rkt_stage1_coreos +rkt_stage1_fly rkt_stage1_host rkt_stage1
 REQUIRED_USE="|| ( rkt_stage1_coreos rkt_stage1_fly rkt_stage1_host rkt_stage1_src )"
 
 COMMON_DEPEND="sys-apps/acl"
-DEPEND=">=dev-lang/go-1.4.1
+DEPEND="|| ( ~dev-lang/go-1.4.3 >=dev-lang/go-1.5.3 )
 	app-arch/cpio
 	sys-fs/squashfs-tools
 	dev-perl/Capture-Tiny
