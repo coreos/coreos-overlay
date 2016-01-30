@@ -37,3 +37,6 @@ ExecStart=/usr/libexec/sdnotify-proxy /run/flannel/sd.sock \
 ExecStartPost=/usr/bin/docker run --net=host --rm --volume=/run:/run \
   ${FLANNEL_IMG}:${FLANNEL_VER} \
   /opt/bin/mk-docker-opts.sh -d /run/flannel_docker_opts.env -i
+
+[Install]
+WantedBy=multi-user.target
