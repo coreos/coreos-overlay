@@ -129,4 +129,4 @@ dev-util/checkbashisms
 # 1.0.2e contains some security fixes.
 # https://bugs.gentoo.org/show_bug.cgi?id=567476
 =app-misc/c_rehash-1.7-r1 ~amd64 ~arm64
-=dev-libs/openssl-1.0.2e ~amd64 ~arm64
+=dev-libs/openssl-1.0.2f ~amd64 ~arm64
