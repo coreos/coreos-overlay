@@ -129,4 +129,7 @@ src_install() {
 	systemd_dounit "${S}"/dist/init/systemd/${PN}-metadata.service
 	systemd_dounit "${S}"/dist/init/systemd/${PN}-metadata.socket
 	systemd_enable_service sockets.target ${PN}-metadata.socket
+
+	insinto /usr/lib/sysusers.d/
+	newins "${FILESDIR}"/sysusers.conf ${PN}.conf
 }
