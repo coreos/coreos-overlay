@@ -34,10 +34,11 @@ HOMEPAGE="https://github.com/coreos/rkt"
 
 LICENSE="Apache-2.0"
 SLOT="0"
-IUSE="doc examples +rkt_stage1_coreos +rkt_stage1_fly rkt_stage1_host rkt_stage1_src +actool"
+IUSE="doc examples +rkt_stage1_coreos +rkt_stage1_fly rkt_stage1_host rkt_stage1_src +actool tpm"
 REQUIRED_USE="|| ( rkt_stage1_coreos rkt_stage1_fly rkt_stage1_host rkt_stage1_src )"
 
-COMMON_DEPEND="sys-apps/acl"
+COMMON_DEPEND="sys-apps/acl
+		tpm? ( app-crypt/trousers )"
 DEPEND="|| ( ~dev-lang/go-1.4.3 >=dev-lang/go-1.5.3 )
 	app-arch/cpio
 	sys-fs/squashfs-tools
@@ -87,6 +88,8 @@ src_configure() {
 	if use rkt_stage1_src; then
 		add_stage1 "src"
 	fi
+
+	myeconfargs+=( $(use_enable tpm) )
 
 	myeconfargs+=( --with-stage1-flavors="${STAGE1FLAVORS}" )
 	myeconfargs+=( --with-stage1-default-location="/usr/share/rkt/stage1-${STAGE1FIRST}.aci" )
