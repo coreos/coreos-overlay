@@ -166,4 +166,20 @@ cros-workon_pkg_info() {
 	echo "CROS_WORKON_PROJECT=(\"${CROS_WORKON_PROJECT}\")"
 }
 
+# get the semver of the git repo that is being built
+get_semver() {
+	# get git tag/sha
+	local v
+	v=$(git describe --long --dirty) || die
+
+	# strip a leading v from the tag
+	v=${v#v}
+
+	# replace first - with +, to attach git sha/dirty as semver metadata
+	v=${v/-/+}
+
+	echo ${v}
+}
+
 EXPORT_FUNCTIONS src_unpack pkg_info
+
