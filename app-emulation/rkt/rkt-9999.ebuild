@@ -18,7 +18,7 @@ if [[ "${PV}" == "9999" ]]; then
 	KEYWORDS="~amd64"
 else
 	KEYWORDS="amd64"
-	CROS_WORKON_COMMIT="c742464af051aa7075819278ca8c30f701e2cf9c" # v0.16.0
+	CROS_WORKON_COMMIT="1ddc36601c8688ff207210bc9ecbf973d09573fa" # v1.0.0
 fi
 
 PXE_VERSION="794.1.0"
@@ -34,10 +34,11 @@ HOMEPAGE="https://github.com/coreos/rkt"
 
 LICENSE="Apache-2.0"
 SLOT="0"
-IUSE="doc examples +rkt_stage1_coreos +rkt_stage1_fly rkt_stage1_host rkt_stage1_src +actool"
+IUSE="doc examples +rkt_stage1_coreos +rkt_stage1_fly rkt_stage1_host rkt_stage1_src +actool tpm"
 REQUIRED_USE="|| ( rkt_stage1_coreos rkt_stage1_fly rkt_stage1_host rkt_stage1_src )"
 
-COMMON_DEPEND="sys-apps/acl"
+COMMON_DEPEND="sys-apps/acl
+		tpm? ( app-crypt/trousers )"
 DEPEND="|| ( ~dev-lang/go-1.4.3 >=dev-lang/go-1.5.3 )
 	app-arch/cpio
 	sys-fs/squashfs-tools
@@ -88,6 +89,8 @@ src_configure() {
 		add_stage1 "src"
 	fi
 
+	myeconfargs+=( $(use_enable tpm) )
+
 	myeconfargs+=( --with-stage1-flavors="${STAGE1FLAVORS}" )
 	myeconfargs+=( --with-stage1-default-location="/usr/share/rkt/stage1-${STAGE1FIRST}.aci" )
 
@@ -129,6 +132,7 @@ src_install() {
 	systemd_dounit "${S}"/dist/init/systemd/${PN}-metadata.service
 	systemd_dounit "${S}"/dist/init/systemd/${PN}-metadata.socket
 	systemd_enable_service sockets.target ${PN}-metadata.socket
+	systemd_dotmpfilesd "${S}"/dist/init/systemd/tmpfiles.d/${PN}.conf
 
 	insinto /usr/lib/sysusers.d/
 	newins "${FILESDIR}"/sysusers.conf ${PN}.conf
