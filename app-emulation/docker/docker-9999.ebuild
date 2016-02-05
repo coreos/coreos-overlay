@@ -32,7 +32,7 @@ CDEPEND="
 		>=sys-fs/lvm2-2.02.89[thin]
 	)
 	seccomp? (
-		>=sys-libs/libseccomp-2.1.1[static-libs]
+		>=sys-libs/libseccomp-2.2.1[static-libs]
 	)
 "
 
