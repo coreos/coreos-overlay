@@ -40,7 +40,3 @@ app-shells/bash -net vanilla
 
 # enable audit subsystem by default
 sys-kernel/coreos-kernel audit
-
-# seccomp in docker requires static libseccomp
-app-emulation/docker seccomp
-sys-libs/libseccomp static-libs
