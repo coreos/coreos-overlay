@@ -7,7 +7,7 @@ EAPI=5
 AUTOTOOLS_AUTORECONF=yes
 AUTOTOOLS_IN_SOURCE_BUILD=yes
 
-inherit autotools-utils flag-o-matic systemd toolchain-funcs
+inherit autotools-utils flag-o-matic systemd toolchain-funcs multilib
 inherit cros-workon
 
 CROS_WORKON_PROJECT="coreos/rkt"
@@ -58,7 +58,7 @@ RDEPEND="!app-emulation/rocket
 
 BUILDDIR="build-${P}"
 
-STAGE1INSTALLDIR="/usr/share/rkt/"
+STAGE1INSTALLDIR="/usr/$(get_libdir)/rkt/stage1-images"
 STAGE1FIRST=""
 STAGE1FLAVORS=""
 
