@@ -14,11 +14,6 @@ inherit coreos-doc coreos-go toolchain-funcs cros-workon systemd
 if [[ "${PV}" == 9999 ]]; then
     CROS_WORKON_COMMIT=${CROS_WORKON_COMMIT:="HEAD"}
     KEYWORDS="~amd64 ~arm64"
-elif [[ "${ARCH}" == "arm64" ]]; then
-    # etcd-2.2.4 build fails for arm64
-    # https://github.com/coreos/etcd/issues/3623
-    CROS_WORKON_COMMIT="4669b899cca9a326731a10e03c76605bf26470f6"
-    KEYWORDS="arm64"
 else
     CROS_WORKON_COMMIT="bc9ddf260115d2680191c46977ae72b837785472" # v2.2.5
     KEYWORDS="amd64 arm64"
