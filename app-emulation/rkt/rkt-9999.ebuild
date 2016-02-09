@@ -92,7 +92,7 @@ src_configure() {
 	myeconfargs+=( $(use_enable tpm) )
 
 	myeconfargs+=( --with-stage1-flavors="${STAGE1FLAVORS}" )
-	myeconfargs+=( --with-stage1-default-location="/usr/share/rkt/stage1-${STAGE1FIRST}.aci" )
+	myeconfargs+=( --with-stage1-default-location="${STAGE1INSTALLDIR}/stage1-${STAGE1FIRST}.aci" )
 
 	# Go's 6l linker does not support PIE, disable so cgo binaries
 	# which use 6l+gcc for linking can be built correctly.
