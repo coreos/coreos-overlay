@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=5
-CROS_WORKON_PROJECT="coreos/mantle"
+CROS_WORKON_PROJECT="quantum/coreos-mantle"
 CROS_WORKON_LOCALNAME="mantle"
 CROS_WORKON_REPO="git://github.com"
 COREOS_GO_PACKAGE="github.com/coreos/mantle"
