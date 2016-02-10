@@ -26,6 +26,7 @@ exec /usr/bin/rkt run \
   --mount volume=var-lib-docker,target=/var/lib/docker \
   --mount volume=var-lib-kubelet,target=/var/lib/kubelet \
   --mount volume=run,target=/run \
+  --trust-keys-from-https \
   $RKT_OPTS \
   --stage1-path=/usr/share/rkt/stage1-fly.aci \
   ${KUBELET_ACI}:${KUBELET_VERSION} --exec=/kubelet -- "$@"
