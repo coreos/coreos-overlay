@@ -7,7 +7,7 @@ EAPI=5
 AUTOTOOLS_AUTORECONF=yes
 AUTOTOOLS_IN_SOURCE_BUILD=yes
 
-inherit autotools-utils flag-o-matic systemd toolchain-funcs
+inherit autotools-utils flag-o-matic systemd toolchain-funcs multilib
 inherit cros-workon
 
 CROS_WORKON_PROJECT="coreos/rkt"
@@ -58,7 +58,7 @@ RDEPEND="!app-emulation/rocket
 
 BUILDDIR="build-${P}"
 
-STAGE1INSTALLDIR="/usr/share/rkt/"
+STAGE1INSTALLDIR="/usr/$(get_libdir)/rkt/stage1-images"
 STAGE1FIRST=""
 STAGE1FLAVORS=""
 
@@ -92,7 +92,7 @@ src_configure() {
 	myeconfargs+=( $(use_enable tpm) )
 
 	myeconfargs+=( --with-stage1-flavors="${STAGE1FLAVORS}" )
-	myeconfargs+=( --with-stage1-default-location="/usr/share/rkt/stage1-${STAGE1FIRST}.aci" )
+	myeconfargs+=( --with-stage1-default-location="${STAGE1INSTALLDIR}/stage1-${STAGE1FIRST}.aci" )
 
 	# Go's 6l linker does not support PIE, disable so cgo binaries
 	# which use 6l+gcc for linking can be built correctly.
@@ -125,6 +125,9 @@ src_install() {
 		doins "${stage1aci}"
 		einfo $(basename "${stage1aci}")
 	done
+
+	# symlink old stage1 aci directory to the new install location
+	dosym ../$(get_libdir)/rkt/stage1-images /usr/share/rkt
 
 	systemd_dounit "${S}"/dist/init/systemd/${PN}-gc.service
 	systemd_dounit "${S}"/dist/init/systemd/${PN}-gc.timer
