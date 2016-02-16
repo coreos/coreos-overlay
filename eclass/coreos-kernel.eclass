@@ -120,6 +120,7 @@ kmake() {
 		KBUILD_OUTPUT="../build" \
 		KCFLAGS="${kernel_cflags}" \
 		LDFLAGS="" \
+		"V=1" \
 		"$@"
 }
 
