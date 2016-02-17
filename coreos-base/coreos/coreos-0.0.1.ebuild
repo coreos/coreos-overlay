@@ -63,18 +63,7 @@ IUSE="etcd_protocols_1 etcd_protocols_2 selinux"
 #
 ################################################################################
 
-RDEPEND="${RDEPEND}
-	virtual/linux-sources
-	"
-
-RDEPEND="${RDEPEND} >=sys-apps/baselayout-2.0.0"
-
-# Specifically include the editor we want to appear in chromeos images, so that
-# it is deterministic which editor is chosen by 'virtual/editor' dependencies
-# (such as in the 'sudo' package).  See crosbug.com/5777.
-RDEPEND="${RDEPEND}
-	app-editors/vim
-	"
+RDEPEND=">=sys-apps/baselayout-3.0.0"
 
 # Select between versions of etcd
 # If protocol 1 is installed it must be configured to provide the default
@@ -95,15 +84,20 @@ RDEPEND="${RDEPEND}
 		sec-policy/selinux-virt
 	)"
 
+# Only applicable or available on amd64
 RDEPEND="${RDEPEND}
-	amd64? ( app-emulation/rkt[actool] )
-	app-emulation/xenstore
-	amd64? ( app-emulation/xenserver-pv-version )
-	sys-apps/findutils
-	sys-apps/which
+	amd64? (
+		app-admin/kubelet
+		app-admin/kubelet-wrapper
+		app-crypt/go-tspi
+		app-emulation/rkt[actool]
+		app-emulation/xenserver-pv-version
+		app-emulation/xenstore
+	)"
+
+RDEPEND="${RDEPEND}
 	app-admin/flannel
 	app-admin/fleet
-	app-admin/kubelet
 	app-admin/locksmith
 	app-admin/mayday
 	app-admin/sudo
@@ -112,22 +106,28 @@ RDEPEND="${RDEPEND}
 	app-arch/tar
 	app-arch/unzip
 	app-arch/zip
-	app-crypt/go-tspi
+	app-crypt/gnupg
+	app-editors/vim
+	app-emulation/docker
+	app-misc/ca-certificates
 	app-misc/jq
 	app-shells/bash
-	coreos-base/update_engine
-	coreos-base/coreos-init
 	coreos-base/coreos-cloudinit
+	coreos-base/coreos-init
 	coreos-base/coreos-metadata
 	coreos-base/coretest
+	coreos-base/update_engine
 	dev-util/strace
+	dev-vcs/git
 	net-analyzer/nmap
 	net-dns/bind-tools
 	net-firewall/ebtables
 	net-firewall/ipset
 	net-firewall/iptables
+	net-fs/nfs-utils
 	net-misc/bridge-utils
 	net-misc/dhcpcd
+	net-misc/iputils
 	net-misc/ntp
 	net-misc/rsync
 	net-misc/wget
@@ -135,6 +135,7 @@ RDEPEND="${RDEPEND}
 	sys-apps/coreutils
 	sys-apps/dbus
 	sys-apps/ethtool
+	sys-apps/findutils
 	sys-apps/gawk
 	sys-apps/grep
 	sys-apps/iproute2
@@ -150,6 +151,7 @@ RDEPEND="${RDEPEND}
 	sys-apps/shadow
 	sys-apps/usbutils
 	sys-apps/util-linux
+	sys-apps/which
 	sys-fs/btrfs-progs
 	sys-fs/e2fsprogs
 	sys-fs/mdadm
@@ -161,11 +163,4 @@ RDEPEND="${RDEPEND}
 	sys-libs/timezone-data
 	sys-process/lsof
 	sys-process/procps
-	app-emulation/docker
-	app-misc/ca-certificates
-	app-crypt/gnupg
-	virtual/udev
-	net-fs/nfs-utils
-	net-misc/iputils
-	dev-vcs/git
 	"
