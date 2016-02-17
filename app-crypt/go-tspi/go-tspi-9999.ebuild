@@ -7,7 +7,7 @@ EGIT_REPO_URI="git://github.com/coreos/go-tspi.git"
 if [[ "${PV}" == 9999 ]]; then
         KEYWORDS="~amd64 ~arm64"
 else
-        EGIT_COMMIT="8d98d77f9fc5e3a93227cbcde7abb8bdf1a29869"
+        EGIT_COMMIT="1708d740a1fec08db39d9c15960ed6cc3a7e974a"
         KEYWORDS="amd64 arm64"
 fi
 
