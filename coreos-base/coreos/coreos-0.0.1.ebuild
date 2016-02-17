@@ -87,14 +87,16 @@ RDEPEND="${RDEPEND}
 # Only applicable or available on amd64
 RDEPEND="${RDEPEND}
 	amd64? (
+		app-admin/kubelet
+		app-crypt/go-tspi
 		app-emulation/rkt[actool]
 		app-emulation/xenserver-pv-version
+		app-emulation/xenstore
 	)"
 
 RDEPEND="${RDEPEND}
 	app-admin/flannel
 	app-admin/fleet
-	app-admin/kubelet
 	app-admin/locksmith
 	app-admin/mayday
 	app-admin/sudo
@@ -104,10 +106,8 @@ RDEPEND="${RDEPEND}
 	app-arch/unzip
 	app-arch/zip
 	app-crypt/gnupg
-	app-crypt/go-tspi
 	app-editors/vim
 	app-emulation/docker
-	app-emulation/xenstore
 	app-misc/ca-certificates
 	app-misc/jq
 	app-shells/bash
