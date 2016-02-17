@@ -18,5 +18,5 @@ RDEPEND=app-emulation/rkt
 
 src_install() {
 	exeinto /usr/lib/coreos
-	doexe "${FILESDIR}/kubelet-wrapper
+	doexe "${FILESDIR}"/kubelet-wrapper
 }
