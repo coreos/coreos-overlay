@@ -88,6 +88,7 @@ RDEPEND="${RDEPEND}
 RDEPEND="${RDEPEND}
 	amd64? (
 		app-admin/kubelet
+		app-admin/kubelet-wrapper
 		app-crypt/go-tspi
 		app-emulation/rkt[actool]
 		app-emulation/xenserver-pv-version
