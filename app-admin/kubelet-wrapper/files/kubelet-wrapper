@@ -1,5 +1,9 @@
 #!/bin/bash
-# Wrapper for launching kubelet via rkt-fly stage1
+# Wrapper for launching kubelet via rkt-fly stage1. 
+#
+# Make sure to set KUBELET_VERSION to an image tag published here:
+# https://quay.io/repository/coreos/hyperkube?tab=tags Alternatively,
+# override $KUBELET_ACI to a custom location.
 
 set -e
 
