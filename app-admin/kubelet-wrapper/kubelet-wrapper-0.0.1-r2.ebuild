@@ -16,6 +16,9 @@ IUSE=""
 
 RDEPEND=app-emulation/rkt
 
+# work around ${WORKDIR}/${P} not existing
+S=${WORKDIR}
+
 src_install() {
 	exeinto /usr/lib/coreos
 	doexe "${FILESDIR}"/kubelet-wrapper
