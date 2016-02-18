@@ -1,0 +1,63 @@
+From a2adc8f2c825216715b7b095858ef10dd18e5855 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Ond=C5=99ej=20B=C3=ADlka?= <neleai@seznam.cz>
+Date: Sat, 11 Jul 2015 17:44:10 +0200
+Subject: [PATCH 5/8] Handle overflow in __hcreate_r
+
+Hi,
+
+As in bugzilla entry there is overflow in hsearch when looking for prime
+number as SIZE_MAX - 1 is divisible by 5. We fix that by rejecting large
+inputs before looking for prime.
+
+	* misc/hsearch_r.c (__hcreate_r): Handle overflow.
+
+(cherry picked from commit 2f5c1750558fe64bac361f52d6827ab1bcfe52bc)
+(cherry picked from commit 51e762570e41074a7d9be5b0ee8761f037fc6e68)
+---
+ ChangeLog        | 5 +++++
+ misc/hsearch_r.c | 9 ++++++++-
+ 2 files changed, 13 insertions(+), 1 deletion(-)
+
+diff --git a/ChangeLog b/ChangeLog
+index 1375f90..88800fe 100644
+--- a/ChangeLog
++++ b/ChangeLog
+@@ -1,3 +1,8 @@
++2015-08-25  Ondřej Bílka  <neleai@seznam.cz>
++
++	[BZ #18240]
++	* misc/hsearch_r.c (__hcreate_r): Handle overflow.
++
+ 2015-09-26  Paul Pluzhnikov  <ppluzhnikov@google.com>
+ 
+ 	[BZ #18985]
+diff --git a/misc/hsearch_r.c b/misc/hsearch_r.c
+index 81c27d8..4414a25 100644
+--- a/misc/hsearch_r.c
++++ b/misc/hsearch_r.c
+@@ -19,7 +19,7 @@
+ #include <errno.h>
+ #include <malloc.h>
+ #include <string.h>
+-
++#include <stdint.h>
+ #include <search.h>
+ 
+ /* [Aho,Sethi,Ullman] Compilers: Principles, Techniques and Tools, 1986
+@@ -73,6 +73,13 @@ hcreate_r (nel, htab)
+       return 0;
+     }
+ 
++  if (nel >= SIZE_MAX / sizeof (_ENTRY))
++    {
++      __set_errno (ENOMEM);
++      return 0;
++    }
++
++
+   /* There is still another table active. Return with error. */
+   if (htab->table != NULL)
+     return 0;
+-- 
+2.4.10
+
