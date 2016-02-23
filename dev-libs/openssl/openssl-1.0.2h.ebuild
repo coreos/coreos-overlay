@@ -12,12 +12,9 @@ HOMEPAGE="http://www.openssl.org/"
 SRC_URI="mirror://openssl/source/${MY_P}.tar.gz"
 
 LICENSE="openssl"
-# subslot set to 1.0.2g version as this is the first release without SSLv2
-# support and thus breaks nearly every openssl consumer (see bug #575548)
 SLOT="0"
 KEYWORDS="~alpha amd64 ~arm arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd ~arm-linux ~x86-linux"
-IUSE="+asm bindist gmp kerberos rfc3779 sctp cpu_flags_x86_sse2 static-libs test +tls-heartbeat vanilla zlib"
-RESTRICT="!bindist? ( bindist )"
+IUSE="+asm gmp kerberos rfc3779 sctp cpu_flags_x86_sse2 static-libs test +tls-heartbeat vanilla zlib"
 
 RDEPEND=">=app-misc/c_rehash-1.7-r1
 	gmp? ( >=dev-libs/gmp-5.1.3-r1[static-libs(+)?,${MULTILIB_USEDEP}] )
@@ -108,13 +105,6 @@ multilib_src_configure() {
 
 	tc-export CC AR RANLIB RC
 
-	# Clean out patent-or-otherwise-encumbered code
-	# Camellia: Royalty Free            http://en.wikipedia.org/wiki/Camellia_(cipher)
-	# IDEA:     Expired                 http://en.wikipedia.org/wiki/International_Data_Encryption_Algorithm
-	# EC:       ????????? ??/??/2015    http://en.wikipedia.org/wiki/Elliptic_Curve_Cryptography
-	# MDC2:     Expired                 http://en.wikipedia.org/wiki/MDC-2
-	# RC5:      Expired                 http://en.wikipedia.org/wiki/RC5
-
 	use_ssl() { usex $1 "enable-${2:-$1}" "no-${2:-$1}" " ${*:3}" ; }
 	echoit() { echo "$@" ; "$@" ; }
 
@@ -124,11 +114,9 @@ multilib_src_configure() {
 	# friendly and can use the nicely optimized code paths. #460790
 	local ec_nistp_64_gcc_128
 	# Disable it for now though #469976
-	#if ! use bindist ; then
-	#	echo "__uint128_t i;" > "${T}"/128.c
-	#	if ${CC} ${CFLAGS} -c "${T}"/128.c -o /dev/null >&/dev/null ; then
-	#		ec_nistp_64_gcc_128="enable-ec_nistp_64_gcc_128"
-	#	fi
+	#echo "__uint128_t i;" > "${T}"/128.c
+	#if ${CC} ${CFLAGS} -c "${T}"/128.c -o /dev/null >&/dev/null ; then
+	#	ec_nistp_64_gcc_128="enable-ec_nistp_64_gcc_128"
 	#fi
 
 	local sslout=$(./gentoo.config)
@@ -141,7 +129,6 @@ multilib_src_configure() {
 		${sslout} \
 		$(use cpu_flags_x86_sse2 || echo "no-sse2") \
 		enable-camellia \
-		$(use_ssl !bindist ec) \
 		${ec_nistp_64_gcc_128} \
 		enable-idea \
 		enable-mdc2 \
@@ -242,18 +229,4 @@ multilib_src_install_all() {
 
 	diropts -m0700
 	keepdir ${SSL_CNF_DIR}/private
-}
-
-pkg_preinst() {
-	has_version ${CATEGORY}/${PN}:0.9.8 && return 0
-	preserve_old_lib /usr/$(get_libdir)/lib{crypto,ssl}.so.0.9.8
-}
-
-pkg_postinst() {
-	ebegin "Running 'c_rehash ${EROOT%/}${SSL_CNF_DIR}/certs/' to rebuild hashes #333069"
-	c_rehash "${EROOT%/}${SSL_CNF_DIR}/certs" >/dev/null
-	eend $?
-
-	has_version ${CATEGORY}/${PN}:0.9.8 && return 0
-	preserve_old_lib_notify /usr/$(get_libdir)/lib{crypto,ssl}.so.0.9.8
 }
