@@ -1,10 +1,7 @@
-#
 # Copyright (c) 2014 CoreOS, Inc. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
-#
 
 EAPI=5
-inherit toolchain-funcs systemd
 
 DESCRIPTION="Google Startup Scripts for Compute Engine"
 HOMEPAGE="https://github.com/GoogleCloudPlatform/compute-image-packages"

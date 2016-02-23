@@ -1,21 +1,17 @@
-#
 # Copyright (c) 2014 CoreOS, Inc.. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
-# $Header:$
-#
 
-EAPI=4
+EAPI=5
 
-EGIT_REPO_URI="git://github.com/Azure/WALinuxAgent"
-EGIT_COMMIT="54d4ebde1a626e6bd000abdfd518e150b0495f37" # WALinuxAgent-2.0.14
-EGIT_MASTER="2.0"
-
-inherit eutils toolchain-funcs git-2
+MY_PN="WALinuxAgent"
+MY_PV="WALinuxAgent-${PV}"
+MY_P="${MY_PN}-${MY_PV}"
+S="${WORKDIR}/${MY_P}"
 
 DESCRIPTION="Windows Azure Linux Agent"
 HOMEPAGE="https://github.com/Azure/WALinuxAgent"
 KEYWORDS="amd64"
-SRC_URI=""
+SRC_URI="${HOMEPAGE}/archive/${MY_PV}.tar.gz"
 
 LICENSE="Apache-2.0"
 SLOT="0"

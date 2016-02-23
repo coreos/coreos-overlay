@@ -6,7 +6,6 @@
 #
 
 EAPI=5
-inherit git-2
 
 DESCRIPTION="oem suite for rackspace images"
 HOMEPAGE=""
@@ -17,10 +16,8 @@ SLOT="0"
 KEYWORDS="amd64 x86"
 IUSE=""
 
-EGIT_REPO_URI="https://github.com/coreos/nova-agent-container.git"
-EGIT_COMMIT="44af5608e9a9e43fe83d05f03049a1f66d564930"
-
 RDEPEND="
+	coreos-base/nova-agent-container
 	coreos-base/nova-agent-watcher
 "
 
@@ -30,8 +27,6 @@ src_prepare() {
 }
 
 src_install() {
-	dodir /usr/share/oem/nova-agent
-	rsync --exclude=".git" -aq "${S}/" "${D}/usr/share/oem/nova-agent/" || die
 	insinto "/usr/share/oem"
 	doins "${T}/cloud-config.yml"
 	doins "${FILESDIR}/grub.cfg"
