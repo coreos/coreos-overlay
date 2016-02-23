@@ -30,7 +30,7 @@ LICENSE="BSD GPL-2"
 SLOT="0"
 KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd ~arm-linux ~x86-linux"
 # Probably want to drop ssl defaulting to on in a future version.
-IUSE="bindist debug ${HPN_PATCH:++}hpn kerberos kernel_linux ldap ldns libedit libressl pam +pie sctp selinux skey ssh1 +ssl static X X509"
+IUSE="debug ${HPN_PATCH:++}hpn kerberos kernel_linux ldap ldns libedit libressl pam +pie sctp selinux skey ssh1 +ssl static X X509"
 REQUIRED_USE="ldns? ( ssl )
 	pie? ( !static )
 	ssh1? ( ssl )
@@ -38,18 +38,14 @@ REQUIRED_USE="ldns? ( ssl )
 	X509? ( !ldap ssl )"
 
 LIB_DEPEND="
-	ldns? (
-		net-libs/ldns[static-libs(+)]
-		!bindist? ( net-libs/ldns[ecdsa,ssl] )
-		bindist? ( net-libs/ldns[-ecdsa,ssl] )
-	)
+	ldns? ( net-libs/ldns[ecdsa,ssl,static-libs(+)] )
 	libedit? ( dev-libs/libedit[static-libs(+)] )
 	sctp? ( net-misc/lksctp-tools[static-libs(+)] )
 	selinux? ( >=sys-libs/libselinux-1.28[static-libs(+)] )
 	skey? ( >=sys-auth/skey-1.1.5-r1[static-libs(+)] )
 	ssl? (
 		!libressl? (
-			>=dev-libs/openssl-0.9.8f:0[bindist=]
+			>=dev-libs/openssl-0.9.8f:0[-bindist(-)]
 			dev-libs/openssl:0[static-libs(+)]
 		)
 		libressl? ( dev-libs/libressl[static-libs(+)] )
