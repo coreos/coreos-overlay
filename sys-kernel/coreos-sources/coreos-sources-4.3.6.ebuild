@@ -38,6 +38,5 @@ UNIPATCH_LIST="
         ${PATCH_DIR}/0020-overlayfs-use-a-minimal-buffer-in-ovl_copy_xattr.patch \
         ${PATCH_DIR}/0021-kbuild-derive-relative-path-for-KBUILD_SRC-from-CURD.patch \
         ${PATCH_DIR}/0022-Don-t-verify-write-permissions-on-lower-inodes-on-ov.patch \
-        ${PATCH_DIR}/0023-KEYS-Fix-keyring-ref-leak-in-join_session_keyring.patch \
 "
 
