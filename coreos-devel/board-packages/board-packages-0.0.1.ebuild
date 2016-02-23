@@ -15,8 +15,15 @@ IUSE=""
 
 DEPEND=""
 RDEPEND="
-	amd64? ( app-emulation/open-vm-tools )
+	amd64? (
+		app-emulation/google-compute-daemon
+		app-emulation/google-startup-scripts
+		app-emulation/open-vm-tools
+		app-emulation/wa-linux-agent
+		coreos-base/nova-agent-container
+		coreos-base/nova-agent-watcher
+		dev-lang/python-oem
+	)
 	coreos-base/coreos
 	coreos-base/coreos-dev
-	dev-lang/python-oem
 	"
