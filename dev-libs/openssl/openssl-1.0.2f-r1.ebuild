@@ -249,17 +249,3 @@ multilib_src_install_all() {
 	diropts -m0700
 	keepdir ${SSL_CNF_DIR}/private
 }
-
-pkg_preinst() {
-	has_version ${CATEGORY}/${PN}:0.9.8 && return 0
-	preserve_old_lib /usr/$(get_libdir)/lib{crypto,ssl}.so.0.9.8
-}
-
-pkg_postinst() {
-	ebegin "Running 'c_rehash ${EROOT%/}${SSL_CNF_DIR}/certs/' to rebuild hashes #333069"
-	c_rehash "${EROOT%/}${SSL_CNF_DIR}/certs" >/dev/null
-	eend $?
-
-	has_version ${CATEGORY}/${PN}:0.9.8 && return 0
-	preserve_old_lib_notify /usr/$(get_libdir)/lib{crypto,ssl}.so.0.9.8
-}
