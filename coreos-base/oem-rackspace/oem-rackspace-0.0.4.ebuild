@@ -21,6 +21,8 @@ RDEPEND="
 	coreos-base/nova-agent-watcher
 "
 
+S="${WORKDIR}"
+
 src_prepare() {
 	sed -e "s\\@@OEM_VERSION_ID@@\\${PVR}\\g" \
 	    "${FILESDIR}/cloud-config.yml" > "${T}/cloud-config.yml" || die
