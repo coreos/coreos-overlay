@@ -1,10 +1,10 @@
-diff -ur refpolicy.orig/policy/modules/contrib/virt.te refpolicy/policy/modules/contrib/virt.te
---- refpolicy.orig/policy/modules/contrib/virt.te	2015-09-14 17:51:09.718791305 -0700
-+++ refpolicy/policy/modules/contrib/virt.te	2015-09-14 17:49:19.560126433 -0700
-@@ -1243,3 +1243,30 @@
- files_pid_filetrans(virt_leaseshelper_t, virt_var_run_t, file)
+diff -u contrib.orig/virt.te contrib/virt.te
+--- modules/contrib.orig/virt.te	2016-02-20 13:18:44.670955920 -0800
++++ modules/contrib/virt.te	2016-02-20 13:22:24.186318856 -0800
+@@ -1299,3 +1299,30 @@
  
- kernel_dontaudit_read_system_state(virt_leaseshelper_t)
+ virt_append_log(virtlockd_t)
+ virt_read_config(virtlockd_t)
 +
 +require {
 +        type kernel_t;
