@@ -200,6 +200,8 @@ multilib_src_configure() {
 		--enable-efi
 		--enable-ima
 		--without-python
+		# less verbose build output
+		--enable-silent-rules
 
 		# Optional components/dependencies
 		$(multilib_native_use_enable acl)
