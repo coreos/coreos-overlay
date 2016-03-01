@@ -133,6 +133,8 @@ multilib_src_configure() {
 	local config="Configure"
 	[[ -z ${sslout} ]] && config="config"
 
+	# we enable sslv2 here so that rebuilding openssl doesn't break other
+	# programs that linked to it.
 	echoit \
 	./${config} \
 		${sslout} \
@@ -143,6 +145,7 @@ multilib_src_configure() {
 		enable-mdc2 \
 		enable-rc5 \
 		enable-tlsext \
+		enable-ssl2 \
 		$(use_ssl asm) \
 		$(use_ssl gmp gmp -lgmp) \
 		$(use_ssl kerberos krb5 --with-krb5-flavor=${krb5}) \
