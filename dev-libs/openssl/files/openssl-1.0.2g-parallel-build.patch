@@ -1,5 +1,5 @@
---- openssl-1.0.2e/crypto/Makefile
-+++ openssl-1.0.2e/crypto/Makefile
+--- openssl-1.0.2g/crypto/Makefile
++++ openssl-1.0.2g/crypto/Makefile
 @@ -85,11 +85,11 @@
  	@if [ -z "$(THIS)" ]; then $(MAKE) -f $(TOP)/Makefile reflect THIS=$@; fi
  
@@ -41,8 +41,8 @@
  
  lint:
  	@target=lint; $(RECURSIVE_MAKE)
---- openssl-1.0.2e/engines/Makefile
-+++ openssl-1.0.2e/engines/Makefile
+--- openssl-1.0.2g/engines/Makefile
++++ openssl-1.0.2g/engines/Makefile
 @@ -72,7 +72,7 @@
  
  all:	lib subdirs
@@ -70,9 +70,9 @@
  
  tags:
  	ctags $(SRC)
---- openssl-1.0.2e/Makefile.org
-+++ openssl-1.0.2e/Makefile.org
-@@ -280,17 +280,17 @@
+--- openssl-1.0.2g/Makefile.org
++++ openssl-1.0.2g/Makefile.org
+@@ -279,17 +279,17 @@
  build_libssl: build_ssl libssl.pc
  
  build_crypto:
@@ -96,7 +96,7 @@
  
  all_testapps: build_libs build_testapps
  build_testapps:
-@@ -548,7 +548,7 @@
+@@ -544,7 +544,7 @@
  	(cp $$i $(INSTALL_PREFIX)$(INSTALLTOP)/include/openssl/$$i; \
  	chmod 644 $(INSTALL_PREFIX)$(INSTALLTOP)/include/openssl/$$i ); \
  	done;
@@ -105,8 +105,8 @@
  	@set -e; liblist="$(LIBS)"; for i in $$liblist ;\
  	do \
  		if [ -f "$$i" ]; then \
---- openssl-1.0.2e/Makefile.shared
-+++ openssl-1.0.2e/Makefile.shared
+--- openssl-1.0.2g/Makefile.shared
++++ openssl-1.0.2g/Makefile.shared
 @@ -105,6 +105,7 @@
      SHAREDFLAGS="$${SHAREDFLAGS:-$(CFLAGS) $(SHARED_LDFLAGS)}"; \
      LIBPATH=`for x in $$LIBDEPS; do echo $$x; done | sed -e 's/^ *-L//;t' -e d | uniq`; \
@@ -123,9 +123,9 @@
  			( $(SET_X); rm -f $$SHLIB$$SHLIB_SUFFIX; \
  			  ln -s $$prev $$SHLIB$$SHLIB_SUFFIX ); \
  		fi; \
---- openssl-1.0.2e/test/Makefile
-+++ openssl-1.0.2e/test/Makefile
-@@ -138,7 +138,7 @@
+--- openssl-1.0.2g/test/Makefile
++++ openssl-1.0.2g/test/Makefile
+@@ -139,7 +139,7 @@
  tags:
  	ctags $(SRC)
  
@@ -134,7 +134,7 @@
  
  apps:
  	@(cd ..; $(MAKE) DIRS=apps all)
-@@ -416,127 +416,127 @@
+@@ -421,130 +421,130 @@
  		link_app.$${shlib_target}
  
  $(RSATEST)$(EXE_EXT): $(RSATEST).o $(DLIBCRYPTO)
@@ -301,9 +301,13 @@
 -	@target=$(CLIENTHELLOTEST) $(BUILD_CMD)
 +	+@target=$(CLIENTHELLOTEST) $(BUILD_CMD)
  
+ $(SSLV2CONFTEST)$(EXE_EXT): $(SSLV2CONFTEST).o
+-	@target=$(SSLV2CONFTEST) $(BUILD_CMD)
++	+@target=$(SSLV2CONFTEST) $(BUILD_CMD)
+ 
  #$(AESTEST).o: $(AESTEST).c
  #	$(CC) -c $(CFLAGS) -DINTERMEDIATE_VALUE_KAT -DTRACE_KAT_MCT $(AESTEST).c
-@@ -549,7 +549,7 @@
+@@ -557,7 +557,7 @@
  #	fi
  
  dummytest$(EXE_EXT): dummytest.o $(DLIBCRYPTO)
