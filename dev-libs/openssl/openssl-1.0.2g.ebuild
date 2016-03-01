@@ -55,7 +55,7 @@ src_prepare() {
 	if ! use vanilla ; then
 		epatch "${FILESDIR}"/${PN}-1.0.0a-ldflags.patch #327421
 		epatch "${FILESDIR}"/${PN}-1.0.0d-windres.patch #373743
-		epatch "${FILESDIR}"/${PN}-1.0.2e-parallel-build.patch
+		epatch "${FILESDIR}"/${PN}-1.0.2g-parallel-build.patch
 		epatch "${FILESDIR}"/${PN}-1.0.2a-parallel-obj-headers.patch
 		epatch "${FILESDIR}"/${PN}-1.0.2a-parallel-install-dirs.patch
 		epatch "${FILESDIR}"/${PN}-1.0.2a-parallel-symlinking.patch #545028
@@ -133,6 +133,8 @@ multilib_src_configure() {
 	local config="Configure"
 	[[ -z ${sslout} ]] && config="config"
 
+	# we enable sslv2 here so that rebuilding openssl doesn't break other
+	# programs that linked to it.
 	echoit \
 	./${config} \
 		${sslout} \
@@ -143,6 +145,7 @@ multilib_src_configure() {
 		enable-mdc2 \
 		enable-rc5 \
 		enable-tlsext \
+		enable-ssl2 \
 		$(use_ssl asm) \
 		$(use_ssl gmp gmp -lgmp) \
 		$(use_ssl kerberos krb5 --with-krb5-flavor=${krb5}) \
