@@ -94,3 +94,7 @@ dev-util/checkbashisms
 # use this wget to get slotted openssl dep.
 =net-misc/wget-1.17.1-r1 ~amd64 ~arm64
 
+# avoid curl vulnerability 38/39
+# https://curl.haxx.se/docs/security.html
+=net-misc/curl-7.47.1 ~amd64 ~arm64
+
