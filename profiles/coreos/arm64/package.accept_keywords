@@ -1,6 +1,5 @@
 # arm64 keywords
 
-net-misc/curl ~arm64
 dev-libs/nspr ~arm64
 sys-apps/coreutils ~arm64
 app-text/asciidoc ~arm64
