@@ -12,7 +12,9 @@ HOMEPAGE="http://www.openssl.org/"
 SRC_URI="mirror://openssl/source/${MY_P}.tar.gz"
 
 LICENSE="openssl"
-SLOT="0"
+# subslot set to 1.0.2g version as this is the first release without SSLv2
+# support and thus breaks nearly every openssl consumer (see bug #575548)
+SLOT="0/1.0.2g"
 KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd ~arm-linux ~x86-linux"
 IUSE="+asm gmp kerberos rfc3779 sctp cpu_flags_x86_sse2 static-libs test +tls-heartbeat vanilla zlib"
 
@@ -133,8 +135,6 @@ multilib_src_configure() {
 	local config="Configure"
 	[[ -z ${sslout} ]] && config="config"
 
-	# we enable sslv2 here so that rebuilding openssl doesn't break other
-	# programs that linked to it.
 	echoit \
 	./${config} \
 		${sslout} \
@@ -145,7 +145,6 @@ multilib_src_configure() {
 		enable-mdc2 \
 		enable-rc5 \
 		enable-tlsext \
-		enable-ssl2 \
 		$(use_ssl asm) \
 		$(use_ssl gmp gmp -lgmp) \
 		$(use_ssl kerberos krb5 --with-krb5-flavor=${krb5}) \
