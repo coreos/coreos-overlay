@@ -91,3 +91,6 @@ dev-util/checkbashisms
 
 =dev-lang/nasm-2.09.10 ~amd64
 
+# use this wget to get slotted openssl dep.
+=net-misc/wget-1.17.1-r1 ~amd64 ~arm64
+
