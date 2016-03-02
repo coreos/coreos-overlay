@@ -34,7 +34,6 @@ UNIPATCH_LIST="
         ${PATCH_DIR}/0016-SELinux-Stub-in-copy-up-handling.patch \
         ${PATCH_DIR}/0017-SELinux-Handle-opening-of-a-unioned-file.patch \
         ${PATCH_DIR}/0018-SELinux-Check-against-union-label-for-file-operation.patch \
-        ${PATCH_DIR}/0019-overlayfs-use-a-minimal-buffer-in-ovl_copy_xattr.patch \
         ${PATCH_DIR}/0020-kbuild-derive-relative-path-for-KBUILD_SRC-from-CURD.patch \
         ${PATCH_DIR}/0021-Don-t-verify-write-permissions-on-lower-inodes-on-ov.patch \
 "
