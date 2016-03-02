@@ -65,7 +65,6 @@ net-fs/nfs-utils ~arm64
 =net-firewall/ipset-6.24 **
 =sys-fs/mdadm-3.3.2-r1 **
 =sys-apps/rng-tools-5 **
-=app-misc/jq-1.4-r1 **
 
 =net-misc/iperf-3.0.7 **
 =dev-libs/liblinear-196-r1 **

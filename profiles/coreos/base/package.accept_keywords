@@ -56,8 +56,8 @@ dev-util/checkbashisms
 # Fixes findmnt with overlay and btrfs filesystems
 =sys-apps/util-linux-2.26.1
 
-# link jq binary dynamically
-=app-misc/jq-1.4-r1
+# 1.5 has fixed version string. coreos/bugs#455
+=app-misc/jq-1.5-r1 ~amd64 ~arm64
 
 # https://bugs.gentoo.org/show_bug.cgi?id=548158
 =sys-apps/gentoo-functions-0.10
