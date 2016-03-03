@@ -1,7 +1,7 @@
-From 196c562e9a0ef9a1580f35c014ee7f4669cfb5d7 Mon Sep 17 00:00:00 2001
+From 18b8e9f92afd62598d454e68138dda551ce7d381 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <mjg59@coreos.com>
 Date: Tue, 22 Dec 2015 07:43:52 +0000
-Subject: [PATCH 21/21] Don't verify write permissions on lower inodes on
+Subject: [PATCH 20/21] Don't verify write permissions on lower inodes on
  overlayfs
 
 If a user opens a file r/w on overlayfs, and if the underlying inode is
@@ -19,10 +19,10 @@ the selinux permissions check if that flag is set.
  3 files changed, 13 insertions(+)
 
 diff --git a/fs/overlayfs/inode.c b/fs/overlayfs/inode.c
-index 4060ffd..b6f02f2 100644
+index b29036a..545b856 100644
 --- a/fs/overlayfs/inode.c
 +++ b/fs/overlayfs/inode.c
-@@ -125,6 +125,9 @@ int ovl_permission(struct inode *inode, int mask)
+@@ -138,6 +138,9 @@ int ovl_permission(struct inode *inode, int mask)
  			goto out_dput;
  	}
  
@@ -65,5 +65,5 @@ index e33019e..48746ee 100644
  
  	/* No permission to check.  Existence test. */
 -- 
-2.4.10
+2.4.6
 

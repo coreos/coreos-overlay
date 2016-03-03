@@ -1,4 +1,4 @@
-From 9cb22840851be7a7f842229e6603a6b4b25e824d Mon Sep 17 00:00:00 2001
+From 2302270e90b6a78ce6a0de8ec5fa18072875b01d Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Tue, 16 Jun 2015 14:14:31 +0100
 Subject: [PATCH 14/21] Security: Provide copy-up security hooks for unioned
@@ -136,5 +136,5 @@ index 46f405c..e33c5d5 100644
  		LIST_HEAD_INIT(security_hook_heads.file_permission),
  	.file_alloc_security =
 -- 
-2.4.10
+2.4.6
 

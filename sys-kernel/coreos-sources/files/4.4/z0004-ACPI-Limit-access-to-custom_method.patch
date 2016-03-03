@@ -1,4 +1,4 @@
-From 957b35947b86b16d1baadce8ec63db80bfb6466a Mon Sep 17 00:00:00 2001
+From b033a8984baef5309907d1bda6323063522a9e26 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Fri, 9 Mar 2012 08:39:37 -0500
 Subject: [PATCH 04/21] ACPI: Limit access to custom_method
@@ -27,5 +27,5 @@ index c68e724..4277938 100644
  		/* parse the table header to get the table length */
  		if (count <= sizeof(struct acpi_table_header))
 -- 
-2.4.10
+2.4.6
 

@@ -1,4 +1,4 @@
-From 8161285fced6623edd4c66f9c2d3ece69014a392 Mon Sep 17 00:00:00 2001
+From 444f189f7e20976a2464a8dfd9619f716b7f523c Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Thu, 8 Mar 2012 10:10:38 -0500
 Subject: [PATCH 02/21] PCI: Lock down BAR access when module security is
@@ -114,5 +114,5 @@ index b91c4da..98f5637 100644
  
  	dev = pci_get_bus_and_slot(bus, dfn);
 -- 
-2.4.10
+2.4.6
 

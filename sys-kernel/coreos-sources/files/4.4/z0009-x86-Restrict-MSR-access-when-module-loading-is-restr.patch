@@ -1,4 +1,4 @@
-From c682c72e808feb7c4dcb42ecaae7016c13ce5610 Mon Sep 17 00:00:00 2001
+From 5fe1e81ed7603157e00c8e333754225f5dcf8557 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Fri, 8 Feb 2013 11:12:13 -0800
 Subject: [PATCH 09/21] x86: Restrict MSR access when module loading is
@@ -40,5 +40,5 @@ index 113e707..26c2f83 100644
  			err = -EFAULT;
  			break;
 -- 
-2.4.10
+2.4.6
 
