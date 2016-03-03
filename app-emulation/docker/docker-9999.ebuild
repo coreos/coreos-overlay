@@ -40,6 +40,8 @@ CDEPEND="
 DEPEND="
 	${CDEPEND}
 
+	dev-lang/go:=
+
 	btrfs? (
 		>=sys-fs/btrfs-progs-3.16.1
 	)
