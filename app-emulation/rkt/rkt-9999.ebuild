@@ -39,7 +39,7 @@ REQUIRED_USE="|| ( rkt_stage1_coreos rkt_stage1_fly rkt_stage1_host rkt_stage1_s
 
 COMMON_DEPEND="sys-apps/acl
 		tpm? ( app-crypt/trousers )"
-DEPEND="|| ( ~dev-lang/go-1.4.3 >=dev-lang/go-1.5.3 )
+DEPEND="|| ( ~dev-lang/go-1.4.3:= >=dev-lang/go-1.5.3:= )
 	app-arch/cpio
 	sys-fs/squashfs-tools
 	dev-perl/Capture-Tiny

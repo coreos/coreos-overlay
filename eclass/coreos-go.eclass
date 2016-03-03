@@ -13,7 +13,7 @@
 
 inherit flag-o-matic multiprocessing toolchain-funcs
 
-DEPEND="dev-lang/go"
+DEPEND="dev-lang/go:="
 
 # @FUNCTION: go_get_arch
 # @USAGE: export GOARCH=$(go_get_arch)
