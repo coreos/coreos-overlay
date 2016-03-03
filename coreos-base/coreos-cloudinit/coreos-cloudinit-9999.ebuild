@@ -12,7 +12,7 @@ if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64"
 else
 	CROS_WORKON_COMMIT="6e9109eaa44da8734ea4c8b8aa9560fb1f6d57d3" # tag v1.9.2
-	KEYWORDS="amd64"
+	KEYWORDS="amd64 arm64"
 fi
 
 DESCRIPTION="coreos-cloudinit"
