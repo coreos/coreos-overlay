@@ -1,4 +1,4 @@
-From 3e6ccc54dd0383a8c57287f9e63f392595e28cb1 Mon Sep 17 00:00:00 2001
+From 3bdeb87a02c98c290c46aad2d16b1a70a28ee19e Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Tue, 16 Jun 2015 14:14:32 +0100
 Subject: [PATCH 17/21] SELinux: Handle opening of a unioned file
@@ -129,5 +129,5 @@ index 81fa718..f088c08 100644
  };
  
 -- 
-2.4.10
+2.4.6
 

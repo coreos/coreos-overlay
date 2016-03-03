@@ -1,4 +1,4 @@
-From f55838325eadbb393aaf61a61a177fd7ad2f0280 Mon Sep 17 00:00:00 2001
+From 2277563f06778502ded6abe65d843f2b60b3ce03 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Thu, 8 Mar 2012 10:35:59 -0500
 Subject: [PATCH 03/21] x86: Lock down IO port access when module security is
@@ -68,5 +68,5 @@ index 6b1721f..53fe675 100644
  		return -EFAULT;
  	while (count-- > 0 && i < 65536) {
 -- 
-2.4.10
+2.4.6
 

@@ -1,4 +1,4 @@
-From 38d19edb9bae02a9e78b26a7b2c4f0980ee13ee3 Mon Sep 17 00:00:00 2001
+From 98e460005ad53f5c92fc070a177bcb2f5daa8d7d Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Tue, 16 Jun 2015 14:14:32 +0100
 Subject: [PATCH 16/21] SELinux: Stub in copy-up handling
@@ -51,5 +51,5 @@ index d0cfaa9..d062209 100644
  	LSM_HOOK_INIT(file_permission, selinux_file_permission),
  	LSM_HOOK_INIT(file_alloc_security, selinux_file_alloc_security),
 -- 
-2.4.10
+2.4.6
 
