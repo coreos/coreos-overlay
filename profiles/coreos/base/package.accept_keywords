@@ -76,10 +76,6 @@ dev-util/checkbashisms
 =cross-aarch64-cros-linux-gnu/gcc-4.9.3 ~arm64
 =cross-x86_64-cros-linux-gnu/gcc-4.9.3  ~amd64
 
-# go 1.4.3 includes a number of security fixes.
-# https://github.com/golang/go/issues?q=milestone%3AGo1.4.3
-=dev-lang/go-1.4.3 ~amd64
-
 # newer btrfs-progs improve things like preserving capabilities in send/receive
 # https://github.com/coreos/bugs/issues/923
 =sys-fs/btrfs-progs-4.2.2 ~amd64 ~arm64

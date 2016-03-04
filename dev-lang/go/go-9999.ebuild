@@ -15,7 +15,7 @@ if [[ ${PV} = 9999 ]]; then
 else
 	SRC_URI="https://storage.googleapis.com/golang/go${PV}.src.tar.gz"
 	# arm64 only works when cross-compiling in the SDK
-	KEYWORDS="-* ~amd64 ~arm arm64 ~x86 ~amd64-fbsd ~x86-fbsd ~x64-macos ~x86-macos"
+	KEYWORDS="-* amd64 ~arm arm64 ~x86 ~amd64-fbsd ~x86-fbsd ~x64-macos ~x86-macos"
 fi
 
 DESCRIPTION="A concurrent garbage collected and typesafe programming language"
