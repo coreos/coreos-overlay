@@ -4,7 +4,7 @@
 # $Header:$
 #
 
-EAPI=4
+EAPI=5
 CROS_WORKON_PROJECT="coreos/etcd"
 CROS_WORKON_LOCALNAME="etcd"
 CROS_WORKON_REPO="git://github.com"
@@ -24,7 +24,7 @@ SRC_URI=""
 LICENSE="Apache-2.0"
 SLOT="1"
 
-DEPEND=">=dev-lang/go-1.2"
+DEPEND=">=dev-lang/go-1.2:="
 RDEPEND="!dev-db/etcd:0
 	!dev-db/etcd-starter"
 

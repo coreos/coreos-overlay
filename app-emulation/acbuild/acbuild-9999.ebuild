@@ -23,7 +23,6 @@ LICENSE="Apache-2.0"
 SLOT="0"
 IUSE=""
 
-DEPEND=">=dev-lang/go-1.4.3"
 RDEPEND="sys-apps/kmod
 	app-crypt/gnupg
 	sys-apps/systemd"

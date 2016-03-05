@@ -19,7 +19,7 @@ LICENSE="Apache-2.0"
 SLOT="0"
 IUSE=""
 
-DEPEND="dev-lang/go"
+DEPEND="dev-lang/go:="
 RDEPEND="net-misc/socat"
 
 src_prepare() {
