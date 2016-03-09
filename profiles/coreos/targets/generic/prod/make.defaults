@@ -3,9 +3,10 @@
 
 # Restrictive mask for production images.
 INSTALL_MASK="${INSTALL_MASK}
-  *.a *.la *.h *.hpp *.o
+  *.a *.la *.hpp *.o
   /etc/sandbox.d
   /usr/include
+  /usr/lib*/*/include
   /usr/lib/debug
   /usr/lib*/pkgconfig
   /usr/share/aclocal*
@@ -24,9 +25,4 @@ INSTALL_MASK="${INSTALL_MASK}
   /usr/bin/nmap
   /usr/share/ncat
   /usr/share/nmap
-"
-
-# These kernel paths are just noise without sources
-INSTALL_MASK="${INSTALL_MASK}
-  /usr/lib/modules/*/{build,source}
 "
