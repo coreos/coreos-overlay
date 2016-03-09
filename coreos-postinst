@@ -13,7 +13,7 @@ INSTALL_DEV="$1"
 APP_ID="${2:-"{e96281a6-d1af-4bde-9a0a-97b76e56dc57}"}"
 
 # Figure out if the slot id is A or B
-INSTALL_LABEL=$(lsblk -n -o PARTLABEL "${INSTALL_DEV}")
+INSTALL_LABEL=$(blkid -o value -s PARTLABEL "${INSTALL_DEV}")
 case "${INSTALL_LABEL}" in
     ROOT-A|USR-A)
         SLOT=A;;
