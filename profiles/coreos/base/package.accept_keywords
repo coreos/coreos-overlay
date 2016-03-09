@@ -91,3 +91,5 @@ dev-util/checkbashisms
 
 =dev-lang/nasm-2.09.10 ~amd64
 
+=app-misc/c_rehash-1.7-r1 ~amd64 ~arm64
+
