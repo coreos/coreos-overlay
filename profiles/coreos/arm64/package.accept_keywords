@@ -53,6 +53,7 @@ net-fs/nfs-utils ~arm64
 #=sys-apps/smartmontools-9999 **
 =sys-apps/smartmontools-6.4 **
 
+=sys-devel/bison-3.0.4-r1 ~arm64
 
 =sys-block/thin-provisioning-tools-0.4.1 **
 =sys-fs/cryptsetup-1.6.7 **
