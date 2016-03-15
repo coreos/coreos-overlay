@@ -53,8 +53,8 @@ dev-util/checkbashisms
 # Fixes a few bugs but has not yet been marked stable upstream.
 =app-arch/lbzip2-2.5
 
-# Fixes findmnt with overlay and btrfs filesystems
-=sys-apps/util-linux-2.26.1
+# required by systemd v229
+=sys-apps/util-linux-2.27.1
 
 # 1.5 has fixed version string. coreos/bugs#455
 =app-misc/jq-1.5-r1 ~amd64 ~arm64
