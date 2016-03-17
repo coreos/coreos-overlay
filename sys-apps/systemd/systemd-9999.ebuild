@@ -13,7 +13,7 @@ if [[ ${PV} == 9999 ]]; then
 	# Use ~arch instead of empty keywords for compatibility with cros-workon
 	KEYWORDS="~amd64 ~arm64 ~arm ~x86"
 else
-	CROS_WORKON_COMMIT="0a7a9494e1427adfae12396716dea7903c875405"
+	CROS_WORKON_COMMIT="1ff1bdfbf648a04d29b2f4b1e315fc6138fae707"
 	KEYWORDS="amd64 arm64 ~arm ~x86"
 fi
 
