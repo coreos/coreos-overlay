@@ -113,6 +113,22 @@ EOF
     systemctl start --no-block locksmithd-kicker.timer
 fi
 
+# since systemd v226, virtio_net devices have 'predictable interface names'.
+# maintain backward compatibility for upgrading systems.
+MAJORVERSION=$(sed --quiet --regexp-extended 's/^VERSION=([0-9]+)\.[0-9]+\.[0-9]+/\1/p' /usr/lib/os-release)
+if [[ ${MAJORVERSION} -lt 997 ]]; then
+	cat >/etc/systemd/network/10-virtio-compat.link <<EOF
+# systemd v226 introduced predictable interface names for virtio;
+# disable this for upgrades. You can remove this file if you update your
+# network configuration to move to the ens* names instead.
+[Match]
+Driver=virtio_net
+
+[Link]
+NamePolicy=onboard kernel
+EOF
+fi
+
 # use the cgpt binary from the image to ensure compatibility
 CGPT=
 for bindir in bin/old_bins bin sbin; do
