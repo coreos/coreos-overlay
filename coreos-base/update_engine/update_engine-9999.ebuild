@@ -31,6 +31,7 @@ RDEPEND="!coreos-base/coreos-installer
 	app-arch/bzip2
 	coreos-base/coreos-au-key
 	coreos-base/libchrome:${LIBCHROME_VERS}[cros-debug=]
+	dev-cpp/glog
 	dev-cpp/gflags
 	dev-libs/dbus-glib
 	dev-libs/glib
