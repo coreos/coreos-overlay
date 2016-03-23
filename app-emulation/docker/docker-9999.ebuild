@@ -12,7 +12,7 @@ if [[ ${PV} == *9999 ]]; then
 	DOCKER_GITCOMMIT="unknown"
 	KEYWORDS="~amd64 ~arm64"
 else
-	CROS_WORKON_COMMIT="eb1bdb10d6de88f0af19d6d6e22387f21a912777" # v1.10.2 + overlay fixes
+	CROS_WORKON_COMMIT="98946981f575c69f923b7db49159711381b7fe8e" # v1.9.1 with backports
 	DOCKER_GITCOMMIT="${CROS_WORKON_COMMIT:0:7}"
 	KEYWORDS="amd64"
 fi
@@ -23,7 +23,7 @@ DESCRIPTION="Docker complements kernel namespacing with a high-level API which o
 HOMEPAGE="https://dockerproject.org"
 LICENSE="Apache-2.0"
 SLOT="0"
-IUSE="apparmor aufs +btrfs contrib +device-mapper experimental +overlay seccomp +selinux vim-syntax zsh-completion"
+IUSE="apparmor aufs +btrfs contrib +device-mapper experimental lxc +overlay +selinux vim-syntax zsh-completion"
 
 # https://github.com/docker/docker/blob/master/hack/PACKAGERS.md#build-dependencies
 CDEPEND="
@@ -31,19 +31,14 @@ CDEPEND="
 	device-mapper? (
 		>=sys-fs/lvm2-2.02.89[thin]
 	)
-	seccomp? (
-		>=sys-libs/libseccomp-2.2.1[static-libs]
-	)
 "
 
 #dev-go/go-md2man
 DEPEND="
 	${CDEPEND}
 
-	dev-lang/go:=
-
 	btrfs? (
-		>=sys-fs/btrfs-progs-3.16.1
+		>=sys-fs/btrfs-progs-3.8
 	)
 "
 
@@ -62,6 +57,10 @@ RDEPEND="
 	sys-process/procps
 	>=dev-vcs/git-1.7
 	>=app-arch/xz-utils-4.9
+
+	lxc? (
+		>=app-emulation/lxc-1.0.7
+	)
 
 	apparmor? (
 		sys-libs/libapparmor[static-libs]
@@ -84,14 +83,13 @@ CONFIG_CHECK="
 
 	~MEMCG_KMEM ~MEMCG_SWAP ~MEMCG_SWAP_ENABLED
 
-	~BLK_CGROUP ~IOSCHED_CFQ ~BLK_DEV_THROTTLING
+	~BLK_CGROUP ~IOSCHED_CFQ
 	~CGROUP_PERF
 	~CGROUP_HUGETLB
 	~NET_CLS_CGROUP
 	~CFS_BANDWIDTH ~FAIR_GROUP_SCHED ~RT_GROUP_SCHED
 "
 
-ERROR_USER_NS="CONFIG_USER_NS: is optional"
 ERROR_MEMCG_KMEM="CONFIG_MEMCG_KMEM: is optional"
 ERROR_MEMCG_SWAP="CONFIG_MEMCG_SWAP: is required if you wish to limit swap usage of containers"
 ERROR_RESOURCE_COUNTERS="CONFIG_RESOURCE_COUNTERS: is optional for container statistics gathering"
@@ -165,12 +163,6 @@ pkg_setup() {
 		"
 	fi
 
-	if use seccomp; then
-		CONFIG_CHECK+="
-			~SECCOMP
-		"
-	fi
-
 	linux-info_pkg_setup
 
 	# create docker group for the code checking for it in /etc/group
@@ -219,9 +211,6 @@ src_compile() {
 		fi
 	done
 
-	if use seccomp; then
-		DOCKER_BUILDTAGS+=" seccomp"
-	fi
 	if use selinux; then
 		DOCKER_BUILDTAGS+=" selinux"
 	fi
@@ -240,9 +229,6 @@ src_compile() {
 	export CGO_ENABLED=1
 	export CC=$(tc-getCC)
 	export CXX=$(tc-getCXX)
-
-	# verbose building
-	export BUILDFLAGS="-x -v"
 
 	# time to build!
 	./hack/make.sh dynbinary || die 'dynbinary failed'
