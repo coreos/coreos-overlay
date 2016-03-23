@@ -5,12 +5,11 @@ After=docker.socket early-docker.target network.target
 Requires=docker.socket early-docker.target
 
 [Service]
-Environment="DOCKER_CGROUPS=--exec-opt native.cgroupdriver=systemd"
 EnvironmentFile=-/run/flannel_docker_opts.env
 MountFlags=slave
 LimitNOFILE=1048576
 LimitNPROC=1048576
-ExecStart=/usr/lib/coreos/dockerd daemon --host=fd:// $DOCKER_OPTS $DOCKER_CGROUPS $DOCKER_OPT_BIP $DOCKER_OPT_MTU $DOCKER_OPT_IPMASQ
+ExecStart=/usr/lib/coreos/dockerd daemon --host=fd:// $DOCKER_OPTS $DOCKER_OPT_BIP $DOCKER_OPT_MTU $DOCKER_OPT_IPMASQ
 
 [Install]
 WantedBy=multi-user.target
