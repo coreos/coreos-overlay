@@ -1,11 +1,9 @@
-# Copyright 1999-2015 Gentoo Foundation
+# Copyright 1999-2016 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-apps/systemd/systemd-9999.ebuild,v 1.184 2015/08/01 15:10:12 floppym Exp $
+# $Id$
 
-EAPI=5
+EAPI=6
 
-AUTOTOOLS_AUTORECONF=yes
-AUTOTOOLS_PRUNE_LIBTOOL_FILES=all
 CROS_WORKON_PROJECT="coreos/systemd"
 CROS_WORKON_REPO="git://github.com"
 
@@ -13,7 +11,7 @@ if [[ ${PV} == 9999 ]]; then
 	# Use ~arch instead of empty keywords for compatibility with cros-workon
 	KEYWORDS="~amd64 ~arm64 ~arm ~x86"
 else
-	CROS_WORKON_COMMIT="8f777d3a14b4af56d2a673888048f7b6e0e27c50"
+	CROS_WORKON_COMMIT="96cfba385877c6e545d85f261cd089e023507503" # v229-coreos
 	KEYWORDS="amd64 arm64 ~arm ~x86"
 fi
 
@@ -22,7 +20,7 @@ fi
 # the later eclass's version to win. Only need src_unpack from workon.
 inherit cros-workon
 
-inherit autotools-utils bash-completion-r1 linux-info multilib \
+inherit autotools bash-completion-r1 linux-info multilib \
 	multilib-minimal pam systemd toolchain-funcs udev user
 
 DESCRIPTION="System and service manager for Linux"
@@ -39,9 +37,9 @@ IUSE+=" man symlink-usr"
 
 REQUIRED_USE="importd? ( curl gcrypt lzma )"
 
-MINKV="3.8"
+MINKV="3.11"
 
-COMMON_DEPEND=">=sys-apps/util-linux-2.26:0=[${MULTILIB_USEDEP}]
+COMMON_DEPEND=">=sys-apps/util-linux-2.27.1:0=[${MULTILIB_USEDEP}]
 	sys-libs/libcap:0=[${MULTILIB_USEDEP}]
 	!<sys-libs/glibc-2.16
 	acl? ( sys-apps/acl:0= )
@@ -61,7 +59,7 @@ COMMON_DEPEND=">=sys-apps/util-linux-2.26:0=[${MULTILIB_USEDEP}]
 		sys-libs/zlib:0=
 	)
 	kmod? ( >=sys-apps/kmod-15:0= )
-	lz4? ( >=app-arch/lz4-0_p119:0=[${MULTILIB_USEDEP}] )
+	lz4? ( >=app-arch/lz4-0_p131:0=[${MULTILIB_USEDEP}] )
 	lzma? ( >=app-arch/xz-utils-5.0.5-r1:0=[${MULTILIB_USEDEP}] )
 	nat? ( net-firewall/iptables:0= )
 	pam? ( virtual/pam:= )
@@ -76,11 +74,13 @@ COMMON_DEPEND=">=sys-apps/util-linux-2.26:0=[${MULTILIB_USEDEP}]
 		!app-emulation/emul-linux-x86-baselibs[-abi_x86_32(-)] )"
 
 # baselayout-2.2 has /run
+# laptop-mode-tools: https://github.com/systemd/systemd/issues/2684
 RDEPEND="${COMMON_DEPEND}
 	>=sys-apps/baselayout-2.2
 	!sys-auth/nss-myhostname
 	!sys-fs/eudev
-	!sys-fs/udev"
+	!sys-fs/udev
+	!app-laptop/laptop-mode-tools"
 
 # sys-apps/dbus: the daemon only (+ build-time lib dep for tests)
 PDEPEND=">=sys-apps/dbus-1.6.8-r1:0[systemd]
@@ -97,7 +97,6 @@ DEPEND="${COMMON_DEPEND}
 	>=sys-devel/binutils-2.23.1
 	>=sys-devel/gcc-4.6
 	>=sys-kernel/linux-headers-${MINKV}
-	ia64? ( >=sys-kernel/linux-headers-3.9 )
 	virtual/pkgconfig
 	gnuefi? ( >=sys-boot/gnu-efi-3.0.2 )
 	test? ( >=sys-apps/dbus-1.6.8-r1:0 )"
@@ -107,8 +106,7 @@ DEPEND+="
 	man? ( app-text/docbook-xml-dtd:4.2
 		app-text/docbook-xml-dtd:4.5
 		app-text/docbook-xsl-stylesheets
-		dev-libs/libxslt:0 )
-	>=dev-libs/libgcrypt-1.4.5:0"
+		dev-libs/libxslt:0 )"
 
 pkg_pretend() {
 	local CONFIG_CHECK="~AUTOFS4_FS ~BLK_DEV_BSG ~CGROUPS
@@ -161,7 +159,11 @@ src_prepare() {
 	# Bug 463376
 	sed -i -e 's/GROUP="dialout"/GROUP="uucp"/' rules/*.rules || die
 
-	autotools-utils_src_prepare
+	[[ -d "${WORKDIR}"/patches ]] && PATCHES+=( "${WORKDIR}"/patches )
+
+	default
+
+	eautoreconf
 }
 
 src_configure() {
@@ -170,15 +172,27 @@ src_configure() {
 	# Fix systems broken by bug #509454.
 	[[ ${MY_UDEVDIR} ]] || MY_UDEVDIR=/lib/udev
 
+	# Prevent conflicts with i686 cross toolchain, bug 559726
+	tc-export AR CC NM OBJCOPY RANLIB
+
 	multilib-minimal_src_configure
 }
 
 multilib_src_configure() {
 	local myeconfargs=(
-		--with-pamconfdir=/usr/share/pam.d
+		# disable -flto since it is an optimization flag
+		# and makes distcc less effective
+		cc_cv_CFLAGS__flto=no
+		# disable -fuse-ld=gold since Gentoo supports explicit linker
+		# choice and forcing gold is undesired, #539998
+		# ld.gold may collide with user's LDFLAGS, #545168
+		# ld.gold breaks sparc, #573874
+		cc_cv_LDFLAGS__Wl__fuse_ld_gold=no
 
 		# Workaround for gcc-4.7, bug 554454.
 		cc_cv_CFLAGS__Werror_shadow=no
+
+		--with-pamconfdir=/usr/share/pam.d
 
 		# Workaround for bug 516346
 		--enable-dependency-tracking
@@ -257,7 +271,7 @@ multilib_src_configure() {
 	# Work around bug 463846.
 	tc-export CC
 
-	autotools-utils_src_configure
+	ECONF_SOURCE="${S}" econf "${myeconfargs[@]}"
 }
 
 multilib_src_compile() {
@@ -277,6 +291,10 @@ multilib_src_compile() {
 
 multilib_src_test() {
 	multilib_is_native_abi || continue
+
+	# Needed for bus-related tests
+	local -x SANDBOX_WRITE=${SANDBOX_WRITE}
+	addwrite /sys/fs/kdbus
 
 	default
 }
@@ -305,16 +323,10 @@ multilib_src_install() {
 
 		emake "${mymakeopts[@]}"
 	fi
-
-	# install compat pkg-config files
-	# Change dbus to >=sys-apps/dbus-1.8.8 if/when this is dropped.
-	local pcfiles=( src/compat-libs/libsystemd-{daemon,id128,journal,login}.pc )
-	emake "${mymakeopts[@]}" install-pkgconfiglibDATA \
-		pkgconfiglib_DATA="${pcfiles[*]}"
 }
 
 multilib_src_install_all() {
-	local unitdir=$(systemd_get_unitdir)
+	local unitdir=$(systemd_get_systemunitdir)
 
 	prune_libtool_files --modules
 	einstalldocs
@@ -463,6 +475,14 @@ migrate_net_name_slot() {
 	fi
 }
 
+reenable_unit() {
+	if systemctl is-enabled --root="${ROOT}" "$1" &> /dev/null; then
+		ebegin "Re-enabling $1"
+		systemctl reenable --root="${ROOT}" "$1"
+		eend $? || FAIL=1
+	fi
+}
+
 pkg_postinst() {
 	newusergroup() {
 		enewgroup "$1"
@@ -472,6 +492,7 @@ pkg_postinst() {
 	enewgroup input
 	enewgroup systemd-journal
 	newusergroup systemd-bus-proxy
+	newusergroup systemd-coredump
 	newusergroup systemd-journal-gateway
 	newusergroup systemd-journal-remote
 	newusergroup systemd-journal-upload
@@ -496,6 +517,9 @@ pkg_postinst() {
 
 	# Migrate 80-net-name-slot.rules -> 80-net-setup-link.rules
 	migrate_net_name_slot
+
+	# Re-enable systemd-networkd for socket activation
+	reenable_unit systemd-networkd.service
 
 	if [[ ${FAIL} ]]; then
 		eerror "One of the postinst commands failed. Please check the postinst output"
