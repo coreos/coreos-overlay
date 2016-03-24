@@ -4,6 +4,8 @@ Requires=tcsd.service
 
 [Service]
 ExecStart=/bin/tpmd 23179
+Restart=always
+RestartSec=0
 
 [Install]
 WantedBy=multi-user.target
