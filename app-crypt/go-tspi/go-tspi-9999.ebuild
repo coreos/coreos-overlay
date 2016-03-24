@@ -21,10 +21,10 @@ DEPEND="${RDEPEND}"
 
 src_compile() {
 	      go_build "${COREOS_GO_PACKAGE}/tpmd"
+      	      go_build "${COREOS_GO_PACKAGE}/tpmown"
 }
 
 src_install() {
 	dobin ${GOBIN}/*
 	systemd_dounit "${FILESDIR}"/tpmd.service
-	systemd_enable_service multi-user.target tpmd.service
 }
