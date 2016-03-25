@@ -17,7 +17,7 @@ DESCRIPTION="Portage is the package management and distribution system for Gento
 HOMEPAGE="https://wiki.gentoo.org/wiki/Project:Portage"
 
 LICENSE="GPL-2"
-KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
+KEYWORDS="~alpha amd64 ~arm arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
 SLOT="0"
 IUSE="build doc epydoc +ipc linguas_ru selinux xattr"
 
@@ -77,6 +77,12 @@ prefix_src_archives() {
 TARBALL_PV=${PV}
 SRC_URI="mirror://gentoo/${PN}-${TARBALL_PV}.tar.bz2
 	$(prefix_src_archives ${PN}-${TARBALL_PV}.tar.bz2)"
+
+PATCHES=(
+	"${FILESDIR}/${PN}-2.2.18-0001-portage-repository-config.py-add-disabled-attribute-.patch"
+	"${FILESDIR}/${PN}-2.2.18-0002-environment-Filter-EROOT-for-all-EAPIs.patch"
+	"${FILESDIR}/${PN}-2.2.18-0003-depgraph-ensure-slot-rebuilds-happen-in-the-correct-.patch"
+)
 
 pkg_setup() {
 	use epydoc && DISTUTILS_ALL_SUBPHASE_IMPLS=( python2.7 )
