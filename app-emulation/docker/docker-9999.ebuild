@@ -14,7 +14,7 @@ if [[ ${PV} == *9999 ]]; then
 else
 	CROS_WORKON_COMMIT="8acee1bc06813191ba5ea396137e1c17a7120bdf" # v1.10.3 + overlay fixes
 	DOCKER_GITCOMMIT="${CROS_WORKON_COMMIT:0:7}"
-	KEYWORDS="amd64"
+	KEYWORDS="amd64 arm64"
 fi
 
 inherit bash-completion-r1 eutils linux-info multilib systemd udev user cros-workon
@@ -227,6 +227,13 @@ src_compile() {
 	fi
 	if use apparmor; then
 		DOCKER_BUILDTAGS+=' apparmor'
+	fi
+
+	if has_version '<sys-fs/lvm2-2.02.110' ; then
+		# Docker uses the host files when testing features, so force
+		# docker to not use dm_task_deferred_remove to cover cross
+		# builds.
+		DOCKER_BUILDTAGS+=' libdm_no_deferred_remove'
 	fi
 
 	# https://github.com/docker/docker/pull/13338
