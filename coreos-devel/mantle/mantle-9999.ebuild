@@ -24,6 +24,7 @@ SLOT="0"
 RDEPEND=">=net-dns/dnsmasq-2.72[dhcp,ipv6]"
 
 src_compile() {
+	export GO15VENDOREXPERIMENT="1"
 	if [[ "${PV}" == 9999 ]]; then
 		GO_LDFLAGS="-X ${COREOS_GO_PACKAGE}/version.Version=$(get_semver)"
 	else
