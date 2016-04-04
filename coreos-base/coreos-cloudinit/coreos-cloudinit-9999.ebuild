@@ -11,7 +11,7 @@ inherit coreos-doc cros-workon systemd toolchain-funcs udev coreos-go
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64"
 else
-	CROS_WORKON_COMMIT="9a715eff2e45c94dfdc947c13760260e691a1708" # tag v1.9.3
+	CROS_WORKON_COMMIT="d17c76ccbbde684839c68a8aa3d601b4e21de668" # tag v1.10.0
 	KEYWORDS="amd64 arm64"
 fi
 
@@ -39,6 +39,7 @@ src_prepare() {
 }
 
 src_compile() {
+	export GO15VENDOREXPERIMENT="1"
 	GO_LDFLAGS="-X main.version $(git describe --dirty)" || die
 	coreos-go_src_compile
 }
