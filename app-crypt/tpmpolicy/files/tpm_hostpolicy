@@ -1,0 +1,33 @@
+#!/bin/bash
+
+set -e
+
+if [ ! -c /dev/tpm0 ]; then
+    >&2 echo "System has no TPM"
+    exit 1
+fi
+
+echo -n '{'
+VALUES=();
+while read PCR value type event; do
+    if [ $PCR = 4 ] && [ $type != 0d ]; then
+        VALUES+=("{\"value\": \"$value\", \"description\": \"$event\"}");
+    fi;
+done </sys/kernel/security/tpm0/ascii_bios_measurements
+IFS=, eval 'values="${VALUES[*]}"'
+
+echo '"4": {"binaryvalues": [{"values": ['${values}']}]},'
+
+while read PCR value; do
+    if [ $PCR = PCR-00: ] || [ $PCR = PCR-01: ] || [ $PCR = PCR-02: ] || [ $PCR = PCR-03: ] || [ $PCR = PCR-05: ] || [ $PCR = PCR-06: ] || [ $PCR = PCR-07: ]; then
+        PCR=`echo ${PCR/PCR-0/}`
+        PCR=`echo ${PCR/:/}`
+        value=`echo ${value// /}`
+        echo -n '"'$PCR'": {"rawvalues": [{"value": "'$value'", "description": "Initial boot PCR"}]}'
+        if [ $PCR != 7 ]; then
+            echo ","
+        fi
+fi
+done </sys/class/tpm/tpm0/device/pcrs
+echo '}'
+

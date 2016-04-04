@@ -107,6 +107,7 @@ RDEPEND="${RDEPEND}
 	app-arch/unzip
 	app-arch/zip
 	app-crypt/gnupg
+	app-crypt/tpmpolicy
 	app-editors/vim
 	app-emulation/docker
 	app-misc/ca-certificates
