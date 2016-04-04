@@ -11,7 +11,7 @@ AUTOTOOLS_IN_SOURCE_BUILD=1
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~arm64 ~x86"
 else
-	CROS_WORKON_COMMIT="c88492c39ec0ad81bb26ae6efde7b4fc46a9804a"
+	CROS_WORKON_COMMIT="10adf687e9645e3dffa13b6eb886d5b1f038ac06"
 	KEYWORDS="amd64 arm arm64 x86"
 fi
 
@@ -32,6 +32,7 @@ RDEPEND="!coreos-base/coreos-installer
 	coreos-base/coreos-au-key
 	coreos-base/libchrome:${LIBCHROME_VERS}[cros-debug=]
 	dev-cpp/gflags
+	dev-cpp/glog[gflags]
 	dev-libs/dbus-glib
 	dev-libs/glib
 	dev-libs/libxml2
