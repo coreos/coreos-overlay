@@ -11,7 +11,7 @@ inherit coreos-doc coreos-go cros-workon systemd udev
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64"
 else
-	CROS_WORKON_COMMIT="cdd6a92d02dc57a6202c2bcf8482ee8572b500a5" # tag v0.3.3
+	CROS_WORKON_COMMIT="9d0025b4d90d90122322b650c6cedc61cfc83eff" # tag v0.4.0
 	KEYWORDS="amd64 arm64"
 fi
 
@@ -24,12 +24,13 @@ SLOT="0/${PVR}"
 IUSE=""
 
 src_compile() {
-	GO_LDFLAGS="-X main.version $(git describe --dirty)" || die
-	go_build "${COREOS_GO_PACKAGE}/src"
+	export GO15VENDOREXPERIMENT="1"
+	GO_LDFLAGS="-X github.com/coreos/ignition/internal/version.Raw $(git describe --dirty)" || die
+	go_build "${COREOS_GO_PACKAGE}/internal"
 }
 
 src_install() {
-	newbin ${GOBIN}/src ${PN}
+	newbin ${GOBIN}/internal ${PN}
 
 	systemd_dounit "${FILESDIR}"/ignition.target
 	systemd_dounit "${FILESDIR}"/ignition-disks.service
