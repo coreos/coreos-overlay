@@ -1,4 +1,4 @@
-From dfaa3503791924a8ffebbed60073f5f8715093a3 Mon Sep 17 00:00:00 2001
+From 7c5c4e06a08f0f397e44bd88e8aff169fa407af6 Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Tue, 16 Jun 2015 14:14:32 +0100
 Subject: [PATCH 17/21] SELinux: Handle opening of a unioned file
