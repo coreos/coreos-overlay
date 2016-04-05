@@ -1,4 +1,4 @@
-From 4b0506ea0496f3fc847cdd7a6ef2966867d08f05 Mon Sep 17 00:00:00 2001
+From cebac394600acad86fac15fbafc01693ab6fdd5c Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <mjg59@coreos.com>
 Date: Thu, 19 Nov 2015 18:55:53 -0800
 Subject: [PATCH 08/21] kexec: Disable at runtime if the kernel enforces module
@@ -14,7 +14,7 @@ Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/kernel/kexec.c b/kernel/kexec.c
-index d873b64..3d09642 100644
+index ee70aef..755198b 100644
 --- a/kernel/kexec.c
 +++ b/kernel/kexec.c
 @@ -17,6 +17,7 @@
@@ -35,5 +35,5 @@ index d873b64..3d09642 100644
  
  	/*
 -- 
-2.4.6
+2.7.3
 

@@ -1,4 +1,4 @@
-From b8b4027d3d1666411c8f323236fe8c8c3a454137 Mon Sep 17 00:00:00 2001
+From 72e28365e6ab54a078af74a958ed25ad85228b31 Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Tue, 16 Jun 2015 14:14:31 +0100
 Subject: [PATCH 15/21] Overlayfs: Use copy-up security hooks
@@ -13,7 +13,7 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  1 file changed, 12 insertions(+)
 
 diff --git a/fs/overlayfs/copy_up.c b/fs/overlayfs/copy_up.c
-index eff6319..e153e17 100644
+index d894e7c..fa6610a 100644
 --- a/fs/overlayfs/copy_up.c
 +++ b/fs/overlayfs/copy_up.c
 @@ -70,6 +70,14 @@ retry:
@@ -23,7 +23,7 @@ index eff6319..e153e17 100644
 +		error = security_inode_copy_up_xattr(old, new,
 +						     name, value, &size);
 +		if (error < 0)
-+			break;
++			goto out_free_value;
 +		if (error == 1) {
 +			error = 0;
 +			continue; /* Discard */
@@ -43,5 +43,5 @@ index eff6319..e153e17 100644
  		struct path upperpath;
  		ovl_path_upper(dentry, &upperpath);
 -- 
-2.4.6
+2.7.3
 

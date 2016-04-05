@@ -1,4 +1,4 @@
-From 98e460005ad53f5c92fc070a177bcb2f5daa8d7d Mon Sep 17 00:00:00 2001
+From 7640e15f1c2473e7d698e5f66aa7290f4f1b5fcd Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Tue, 16 Jun 2015 14:14:32 +0100
 Subject: [PATCH 16/21] SELinux: Stub in copy-up handling
@@ -13,10 +13,10 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  1 file changed, 20 insertions(+)
 
 diff --git a/security/selinux/hooks.c b/security/selinux/hooks.c
-index d0cfaa9..d062209 100644
+index f1ab715..d361b74 100644
 --- a/security/selinux/hooks.c
 +++ b/security/selinux/hooks.c
-@@ -3188,6 +3188,24 @@ static void selinux_inode_getsecid(const struct inode *inode, u32 *secid)
+@@ -3253,6 +3253,24 @@ static void selinux_inode_getsecid(struct inode *inode, u32 *secid)
  	*secid = isec->sid;
  }
  
@@ -41,7 +41,7 @@ index d0cfaa9..d062209 100644
  /* file security operations */
  
  static int selinux_revalidate_file_permission(struct file *file, int mask)
-@@ -5919,6 +5937,8 @@ static struct security_hook_list selinux_hooks[] = {
+@@ -5996,6 +6014,8 @@ static struct security_hook_list selinux_hooks[] = {
  	LSM_HOOK_INIT(inode_setsecurity, selinux_inode_setsecurity),
  	LSM_HOOK_INIT(inode_listsecurity, selinux_inode_listsecurity),
  	LSM_HOOK_INIT(inode_getsecid, selinux_inode_getsecid),
@@ -51,5 +51,5 @@ index d0cfaa9..d062209 100644
  	LSM_HOOK_INIT(file_permission, selinux_file_permission),
  	LSM_HOOK_INIT(file_alloc_security, selinux_file_alloc_security),
 -- 
-2.4.6
+2.7.3
 

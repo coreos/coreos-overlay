@@ -1,4 +1,4 @@
-From f65b02e6559706984f60260fd7b56e62230c4a18 Mon Sep 17 00:00:00 2001
+From f8c98a5d526a3627cad4dd5b6cc81bf12f862326 Mon Sep 17 00:00:00 2001
 From: Josh Boyer <jwboyer@fedoraproject.org>
 Date: Tue, 27 Aug 2013 13:33:03 -0400
 Subject: [PATCH 12/21] efi: Add EFI_SECURE_BOOT bit
@@ -13,10 +13,10 @@ Signed-off-by: Josh Boyer <jwboyer@fedoraproject.org>
  2 files changed, 3 insertions(+)
 
 diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index a35c42f..e96398f 100644
+index 94eb7dd..7c9fc347 100644
 --- a/arch/x86/kernel/setup.c
 +++ b/arch/x86/kernel/setup.c
-@@ -1145,7 +1145,9 @@ void __init setup_arch(char **cmdline_p)
+@@ -1147,7 +1147,9 @@ void __init setup_arch(char **cmdline_p)
  
  #ifdef CONFIG_EFI_SECURE_BOOT_SIG_ENFORCE
  	if (boot_params.secure_boot) {
@@ -27,7 +27,7 @@ index a35c42f..e96398f 100644
  #endif
  
 diff --git a/include/linux/efi.h b/include/linux/efi.h
-index 569b5a8..4dc970e 100644
+index 47be3ad..9bf95e8 100644
 --- a/include/linux/efi.h
 +++ b/include/linux/efi.h
 @@ -980,6 +980,7 @@ extern int __init efi_setup_pcdp_console(char *);
@@ -39,5 +39,5 @@ index 569b5a8..4dc970e 100644
  #ifdef CONFIG_EFI
  /*
 -- 
-2.4.6
+2.7.3
 

@@ -1,4 +1,4 @@
-From 1a1dd3d6e85dc69e8eb5991dedf2c4030fb10366 Mon Sep 17 00:00:00 2001
+From 323216a1694f4d402ce89432d75b7d2756417b68 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Fri, 9 Aug 2013 18:36:30 -0400
 Subject: [PATCH 10/21] Add option to automatically enforce module signatures
@@ -34,10 +34,10 @@ index 95a4d34..b8527c6 100644
  290/040	ALL	edd_mbr_sig_buffer EDD MBR signatures
  2D0/A00	ALL	e820_map	E820 memory map table
 diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index db3622f..5578b6e 100644
+index c46662f..a10f771 100644
 --- a/arch/x86/Kconfig
 +++ b/arch/x86/Kconfig
-@@ -1720,6 +1720,16 @@ config EFI_MIXED
+@@ -1754,6 +1754,16 @@ config EFI_MIXED
  
  	   If unsure, say N.
  
@@ -130,10 +130,10 @@ index 3292543..b61f853 100644
  	 * The sentinel is set to a nonzero value (0xff) in header.S.
  	 *
 diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index d2bbe34..a35c42f 100644
+index d3d80e6..94eb7dd 100644
 --- a/arch/x86/kernel/setup.c
 +++ b/arch/x86/kernel/setup.c
-@@ -1143,6 +1143,12 @@ void __init setup_arch(char **cmdline_p)
+@@ -1145,6 +1145,12 @@ void __init setup_arch(char **cmdline_p)
  
  	io_delay_init();
  
@@ -147,7 +147,7 @@ index d2bbe34..a35c42f 100644
  	 * Parse the ACPI tables for possible boot-time SMP configuration.
  	 */
 diff --git a/include/linux/module.h b/include/linux/module.h
-index db38634..4b8df91 100644
+index ab13009..e072b84 100644
 --- a/include/linux/module.h
 +++ b/include/linux/module.h
 @@ -273,6 +273,12 @@ const struct exception_table_entry *search_exception_tables(unsigned long add);
@@ -164,10 +164,10 @@ index db38634..4b8df91 100644
  
  extern int modules_disabled; /* for sysctl */
 diff --git a/kernel/module.c b/kernel/module.c
-index 88bd7ec..e5117b67 100644
+index 7dfb91b..6eb3c6c 100644
 --- a/kernel/module.c
 +++ b/kernel/module.c
-@@ -4102,6 +4102,13 @@ void module_layout(struct module *mod,
+@@ -4113,6 +4113,13 @@ void module_layout(struct module *mod,
  EXPORT_SYMBOL(module_layout);
  #endif
  
@@ -182,5 +182,5 @@ index 88bd7ec..e5117b67 100644
  {
  #ifdef CONFIG_MODULE_SIG
 -- 
-2.4.6
+2.7.3
 
