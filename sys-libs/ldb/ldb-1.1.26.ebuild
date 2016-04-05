@@ -3,10 +3,8 @@
 # $Id$
 
 EAPI=6
-PYTHON_COMPAT=( python2_7 )
-PYTHON_REQ_USE="threads"
 
-inherit python-single-r1 waf-utils multilib-minimal eutils
+inherit waf-utils multilib-minimal eutils
 
 DESCRIPTION="An LDAP-like embedded database"
 HOMEPAGE="http://ldb.samba.org"
@@ -19,21 +17,18 @@ IUSE="doc"
 
 RDEPEND="!elibc_FreeBSD? ( dev-libs/libbsd[${MULTILIB_USEDEP}] )
 	dev-libs/popt[${MULTILIB_USEDEP}]
-	>=sys-libs/talloc-2.1.5[python,${MULTILIB_USEDEP}]
-	>=sys-libs/tevent-0.9.27[python(+),${MULTILIB_USEDEP}]
-	>=sys-libs/tdb-1.3.8[python,${MULTILIB_USEDEP}]
+	>=sys-libs/talloc-2.1.5[${MULTILIB_USEDEP}]
+	>=sys-libs/tevent-0.9.27[${MULTILIB_USEDEP}]
+	>=sys-libs/tdb-1.3.8[${MULTILIB_USEDEP}]
 	net-nds/openldap
 	!!<net-fs/samba-3.6.0[ldb]
 	!!>=net-fs/samba-4.0.0[ldb]
-	${PYTHON_DEPS}
 	"
 
 DEPEND="dev-libs/libxslt
 	doc? ( app-doc/doxygen )
 	virtual/pkgconfig
 	${RDEPEND}"
-
-REQUIRED_USE="${PYTHON_REQUIRED_USE}"
 
 WAF_BINARY="${S}/buildtools/bin/waf"
 
@@ -42,10 +37,6 @@ MULTILIB_WRAPPED_HEADERS=( /usr/include/pyldb.h )
 PATCHES=(
 	"${FILESDIR}"/${PN}-1.1.24-optional-python.patch
 )
-
-pkg_setup() {
-	python-single-r1_pkg_setup
-}
 
 src_prepare() {
 	default
@@ -57,11 +48,9 @@ multilib_src_configure() {
 		--disable-rpath \
 		--disable-rpath-install --bundled-libraries=NONE \
 		--with-modulesdir="${EPREFIX}"/usr/$(get_libdir)/samba \
-		--builtin-libraries=NONE
+		--builtin-libraries=NONE \
+		--disable-python
 	)
-	if ! multilib_is_native_abi; then
-		myconf+=( --disable-python )
-	fi
 	waf-utils_src_configure "${myconf[@]}"
 }
 
