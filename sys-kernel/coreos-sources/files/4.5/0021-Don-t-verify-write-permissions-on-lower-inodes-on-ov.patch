@@ -1,7 +1,7 @@
-From 18b8e9f92afd62598d454e68138dda551ce7d381 Mon Sep 17 00:00:00 2001
+From b9136a24769ff9012e96ca4936108ffc5995916e Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <mjg59@coreos.com>
 Date: Tue, 22 Dec 2015 07:43:52 +0000
-Subject: [PATCH 20/21] Don't verify write permissions on lower inodes on
+Subject: [PATCH 21/21] Don't verify write permissions on lower inodes on
  overlayfs
 
 If a user opens a file r/w on overlayfs, and if the underlying inode is
@@ -19,10 +19,10 @@ the selinux permissions check if that flag is set.
  3 files changed, 13 insertions(+)
 
 diff --git a/fs/overlayfs/inode.c b/fs/overlayfs/inode.c
-index b29036a..545b856 100644
+index a4ff5d0..6ba3443 100644
 --- a/fs/overlayfs/inode.c
 +++ b/fs/overlayfs/inode.c
-@@ -138,6 +138,9 @@ int ovl_permission(struct inode *inode, int mask)
+@@ -163,6 +163,9 @@ int ovl_permission(struct inode *inode, int mask)
  			goto out_dput;
  	}
  
@@ -33,10 +33,10 @@ index b29036a..545b856 100644
  out_dput:
  	dput(alias);
 diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 3aa5142..5712013 100644
+index ae68100..fb6e94b 100644
 --- a/include/linux/fs.h
 +++ b/include/linux/fs.h
-@@ -82,6 +82,7 @@ typedef void (dax_iodone_t)(struct buffer_head *bh_map, int uptodate);
+@@ -83,6 +83,7 @@ typedef void (dax_iodone_t)(struct buffer_head *bh_map, int uptodate);
  #define MAY_CHDIR		0x00000040
  /* called from RCU mode, don't block */
  #define MAY_NOT_BLOCK		0x00000080
@@ -45,10 +45,10 @@ index 3aa5142..5712013 100644
  /*
   * flags in file.f_mode.  Note that FMODE_READ and FMODE_WRITE must correspond
 diff --git a/security/selinux/hooks.c b/security/selinux/hooks.c
-index e33019e..48746ee 100644
+index a44cca7..f5ca93c 100644
 --- a/security/selinux/hooks.c
 +++ b/security/selinux/hooks.c
-@@ -2904,6 +2904,15 @@ static int selinux_inode_permission(struct inode *inode, int mask)
+@@ -2967,6 +2967,15 @@ static int selinux_inode_permission(struct inode *inode, int mask)
  	u32 audited, denied;
  
  	from_access = mask & MAY_ACCESS;
@@ -65,5 +65,5 @@ index e33019e..48746ee 100644
  
  	/* No permission to check.  Existence test. */
 -- 
-2.4.6
+2.7.3
 

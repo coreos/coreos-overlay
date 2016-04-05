@@ -1,4 +1,4 @@
-From 444f189f7e20976a2464a8dfd9619f716b7f523c Mon Sep 17 00:00:00 2001
+From 00d259d880af2beb8e40f54fc391f9bcff74dd8e Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Thu, 8 Mar 2012 10:10:38 -0500
 Subject: [PATCH 02/21] PCI: Lock down BAR access when module security is
@@ -18,7 +18,7 @@ Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
  3 files changed, 19 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index eead54c..bb59ecd 100644
+index 95d9e7b..0e249f1 100644
 --- a/drivers/pci/pci-sysfs.c
 +++ b/drivers/pci/pci-sysfs.c
 @@ -30,6 +30,7 @@
@@ -29,7 +29,7 @@ index eead54c..bb59ecd 100644
  #include "pci.h"
  
  static int sysfs_initialized;	/* = 0 */
-@@ -713,6 +714,9 @@ static ssize_t pci_write_config(struct file *filp, struct kobject *kobj,
+@@ -711,6 +712,9 @@ static ssize_t pci_write_config(struct file *filp, struct kobject *kobj,
  	loff_t init_off = off;
  	u8 *data = (u8 *) buf;
  
@@ -39,7 +39,7 @@ index eead54c..bb59ecd 100644
  	if (off > dev->cfg_size)
  		return 0;
  	if (off + count > dev->cfg_size) {
-@@ -1007,6 +1011,9 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
+@@ -998,6 +1002,9 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
  	resource_size_t start, end;
  	int i;
  
@@ -49,7 +49,7 @@ index eead54c..bb59ecd 100644
  	for (i = 0; i < PCI_ROM_RESOURCE; i++)
  		if (res == &pdev->resource[i])
  			break;
-@@ -1108,6 +1115,9 @@ static ssize_t pci_write_resource_io(struct file *filp, struct kobject *kobj,
+@@ -1098,6 +1105,9 @@ static ssize_t pci_write_resource_io(struct file *filp, struct kobject *kobj,
  				     struct bin_attribute *attr, char *buf,
  				     loff_t off, size_t count)
  {
@@ -114,5 +114,5 @@ index b91c4da..98f5637 100644
  
  	dev = pci_get_bus_and_slot(bus, dfn);
 -- 
-2.4.6
+2.7.3
 
