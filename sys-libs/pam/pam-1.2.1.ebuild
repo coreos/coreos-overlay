@@ -1,45 +1,45 @@
-# Copyright 1999-2013 Gentoo Foundation
+# Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-libs/pam/pam-1.1.6-r2.ebuild,v 1.10 2013/03/01 12:37:41 ago Exp $
+# $Id$
 
 EAPI=5
 
-inherit libtool multilib eutils pam toolchain-funcs flag-o-matic db-use autotools
+inherit libtool multilib multilib-minimal eutils pam toolchain-funcs flag-o-matic db-use
 
 MY_PN="Linux-PAM"
 MY_P="${MY_PN}-${PV}"
 
-HOMEPAGE="https://fedorahosted.org/linux-pam/"
 DESCRIPTION="Linux-PAM (Pluggable Authentication Modules)"
-
+HOMEPAGE="http://www.linux-pam.org/ https://fedorahosted.org/linux-pam/"
 SRC_URI="http://www.linux-pam.org/library/${MY_P}.tar.bz2
-	http://www.linux-pam.org/documentation/${MY_P}-docs.tar.bz2"
+	http://www.linux-pam.org/documentation/${MY_PN}-1.2.0-docs.tar.bz2"
 
 LICENSE="|| ( BSD GPL-2 )"
 SLOT="0"
-KEYWORDS="alpha amd64 arm hppa ia64 ~m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-linux ~ia64-linux ~x86-linux"
-IUSE="cracklib nls elibc_FreeBSD selinux vim-syntax audit test elibc_glibc debug berkdb nis"
+KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-linux ~ia64-linux ~x86-linux"
+IUSE="audit berkdb cracklib debug nis nls +pie selinux test vim-syntax"
 
-RDEPEND="nls? ( virtual/libintl )
-	cracklib? ( >=sys-libs/cracklib-2.8.3 )
-	audit? ( sys-process/audit )
-	selinux? ( >=sys-libs/libselinux-1.28 )
-	berkdb? ( sys-libs/db )
-	elibc_glibc? (
-		>=sys-libs/glibc-2.7
-		nis? ( || ( >=net-libs/libtirpc-0.2.2-r1 <sys-libs/glibc-2.14 ) )
-	)"
+RDEPEND="nls? ( >=virtual/libintl-0-r1[${MULTILIB_USEDEP}] )
+	cracklib? ( >=sys-libs/cracklib-2.9.1-r1[${MULTILIB_USEDEP}] )
+	audit? ( >=sys-process/audit-2.2.2[${MULTILIB_USEDEP}] )
+	selinux? ( >=sys-libs/libselinux-2.2.2-r4[${MULTILIB_USEDEP}] )
+	berkdb? ( >=sys-libs/db-4.8.30-r1[${MULTILIB_USEDEP}] )
+	nis? ( >=net-libs/libtirpc-0.2.4-r2[${MULTILIB_USEDEP}] )"
 DEPEND="${RDEPEND}
 	>=sys-devel/libtool-2
-	sys-devel/flex
+	>=sys-devel/flex-2.5.39-r1[${MULTILIB_USEDEP}]
 	nls? ( sys-devel/gettext )
-	virtual/pkgconfig"
+	nis? ( >=virtual/pkgconfig-0-r1[${MULTILIB_USEDEP}] )"
 PDEPEND="sys-auth/pambase
 	vim-syntax? ( app-vim/pam-syntax )"
 RDEPEND="${RDEPEND}
 	!<sys-apps/openrc-0.11.8
 	!sys-auth/openpam
-	!sys-auth/pam_userdb"
+	!sys-auth/pam_userdb
+	abi_x86_32? (
+		!<=app-emulation/emul-linux-x86-baselibs-20140508-r7
+		!app-emulation/emul-linux-x86-baselibs[-abi_x86_32(-)]
+	)"
 
 S="${WORKDIR}/${MY_P}"
 
@@ -55,7 +55,7 @@ check_old_modules() {
 		eerror "not be installed."
 		eerror "Please replace pam_stack usage with proper include directive usage,"
 		eerror "following the PAM Upgrade guide at the following URL"
-		eerror "  http://www.gentoo.org/proj/en/base/pam/upgrade-0.99.xml"
+		eerror "  https://www.gentoo.org/proj/en/base/pam/upgrade-0.99.xml"
 		eerror ""
 
 		retval=1
@@ -67,16 +67,16 @@ check_old_modules() {
 		eerror "that are not built or supported anymore:"
 		eerror "pam_pwdb, pam_console"
 		eerror "If you are in real need for these modules, please contact the maintainers"
-		eerror "of PAM through http://bugs.gentoo.org/ providing information about its"
+		eerror "of PAM through https://bugs.gentoo.org/ providing information about its"
 		eerror "use cases."
 		eerror "Please also make sure to read the PAM Upgrade guide at the following URL:"
-		eerror "  http://www.gentoo.org/proj/en/base/pam/upgrade-0.99.xml"
+		eerror "  https://www.gentoo.org/proj/en/base/pam/upgrade-0.99.xml"
 		eerror ""
 
 		retval=1
 	fi
 
-	return $retval
+	return ${retval}
 }
 
 pkg_pretend() {
@@ -85,74 +85,87 @@ pkg_pretend() {
 	check_old_modules
 }
 
-src_prepare() {
-	epatch "${FILESDIR}"/${MY_P}-destdir.patch
-	epatch "${FILESDIR}"/${MY_P}+glibc-2.16.patch
+src_unpack() {
+	# Upstream didn't release a new doc tarball (since nothing changed?).
+	unpack ${MY_PN}-1.2.0-docs.tar.bz2
+	mv Linux-PAM-1.2.{0,1} || die
+	unpack ${MY_P}.tar.bz2
+}
 
-	eautoreconf
+src_prepare() {
 	elibtoolize
 }
 
-src_configure() {
-	local myconf
-
-	if use hppa || use elibc_FreeBSD; then
-		myconf="${myconf} --disable-pie"
-	fi
+multilib_src_configure() {
+	# Do not let user's BROWSER setting mess us up. #549684
+	unset BROWSER
 
 	# Disable automatic detection of libxcrypt; we _don't_ want the
 	# user to link libxcrypt in by default, since we won't track the
 	# dependency and allow to break PAM this way.
 	export ac_cv_header_xcrypt_h=no
 
-	econf \
-		--enable-fast-install \
-		--libdir="${EPREFIX}"/usr/$(get_libdir) \
-		--docdir="${EPREFIX}"/usr/share/doc/${PF} \
-		--htmldir="${EPREFIX}"/usr/share/doc/${PF}/html \
-		--enable-securedir="${EPREFIX}"/$(get_libdir)/security \
-		--enable-isadir="${EPREFIX}"/$(get_libdir)/security \
-		$(use_enable nls) \
-		$(use_enable selinux) \
-		$(use_enable cracklib) \
-		$(use_enable audit) \
-		$(use_enable debug) \
-		$(use_enable berkdb db) \
-		$(use_enable nis) \
-		--with-db-uniquename=-$(db_findver sys-libs/db) \
-		--disable-prelude \
-		${myconf}
+	local myconf=(
+		--docdir='$(datarootdir)'/doc/${PF}
+		--htmldir='$(docdir)/html'
+		--libdir='$(prefix)'/$(get_libdir)
+		--enable-securedir="${EPREFIX}"/$(get_libdir)/security
+		--enable-isadir='.' #464016
+		$(use_enable nls)
+		$(use_enable selinux)
+		$(use_enable cracklib)
+		$(use_enable audit)
+		$(use_enable debug)
+		$(use_enable berkdb db)
+		$(use_enable nis)
+		$(use_enable pie)
+		--with-db-uniquename=-$(db_findver sys-libs/db)
+		--disable-prelude
+	)
+
+	ECONF_SOURCE=${S} \
+	econf "${myconf[@]}"
 }
 
-src_compile() {
+multilib_src_compile() {
 	emake sepermitlockdir="${EPREFIX}/run/sepermit"
 }
 
-src_test() {
-	# explicitly allow parallel-build during testing
-	emake sepermitlockdir="${EPREFIX}/run/sepermit" check
+multilib_src_install() {
+	emake DESTDIR="${D}" install \
+		sepermitlockdir="${EPREFIX}/run/sepermit"
+
+	local prefix
+	if multilib_is_native_abi; then
+		prefix=
+		gen_usr_ldscript -a pam pamc pam_misc
+	else
+		prefix=/usr
+	fi
+
+	# create extra symlinks just in case something depends on them...
+	local lib
+	for lib in pam pamc pam_misc; do
+		if ! [[ -f "${ED}"${prefix}/$(get_libdir)/lib${lib}$(get_libname) ]]; then
+			dosym lib${lib}$(get_libname 0) ${prefix}/$(get_libdir)/lib${lib}$(get_libname)
+		fi
+	done
 }
 
-src_install() {
-	local lib
+DOCS=( CHANGELOG ChangeLog README AUTHORS Copyright NEWS )
 
-	emake DESTDIR="${D}" install \
-		 sepermitlockdir="${EPREFIX}/run/sepermit"
+multilib_src_install_all() {
+	einstalldocs
+	prune_libtool_files --all
 
 	# Need to be suid
-	fperms u+s /sbin/unix_chkpwd
-
-	dodoc CHANGELOG ChangeLog README AUTHORS Copyright NEWS
+	fperms 4711 /sbin/unix_chkpwd
 
 	docinto modules
+	local dir
 	for dir in modules/pam_*; do
 		newdoc "${dir}"/README README."$(basename "${dir}")"
 	done
-
-	# Get rid of the .la files. We certainly don't need them for PAM
-	# modules, and libpam is installed as a shared object only, so we
-	# don't need them for static linking either.
-	find "${D}" -name '*.la' -delete
 
 	if use selinux; then
 		dodir /usr/lib/tmpfiles.d
@@ -177,7 +190,7 @@ pkg_postinst() {
 	ewarn "  lsof / | egrep -i 'del.*libpam\\.so'"
 	ewarn ""
 	ewarn "Alternatively, simply reboot your system."
-	if [ -x "${ROOT}"/var/log/tallylog ] ; then
+	if [[ -x "${EROOT}"/var/log/tallylog ]] ; then
 		elog ""
 		elog "Because of a bug present up to version 1.1.1-r2, you have"
 		elog "an executable /var/log/tallylog file. You can safely"
