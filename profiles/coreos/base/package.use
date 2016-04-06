@@ -58,3 +58,14 @@ sys-fs/squashfs-tools lzo xz
 
 # make the kernel version discoverable via the traditional gentoo symlink
 sys-kernel/coreos-sources symlink
+
+# set build options for ssdp
+net-nds/openldap minimal sasl
+sys-libs/glibc nscd
+net-dns/bind-tools gssapi
+
+# disable database build because otherwise it tries to generate a database in /etc
+dev-libs/cyrus-sasl kerberos -berkdb -gdbm
+
+# don't build manpages for sssd
+sys-auth/sssd -manpages -python

@@ -94,3 +94,5 @@ dev-util/checkbashisms
 # https://curl.haxx.se/docs/security.html
 =net-misc/curl-7.47.1 ~amd64 ~arm64
 
+# Older versions of sssd fail to build
+=sys-auth/sssd-1.13.1 ~amd64 ~arm64
