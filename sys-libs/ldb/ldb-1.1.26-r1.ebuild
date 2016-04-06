@@ -3,8 +3,10 @@
 # $Id$
 
 EAPI=6
+PYTHON_COMPAT=( python2_7 )
+PYTHON_REQ_USE="threads"
 
-inherit waf-utils multilib-minimal eutils
+inherit python-single-r1 waf-utils multilib-minimal eutils
 
 DESCRIPTION="An LDAP-like embedded database"
 HOMEPAGE="http://ldb.samba.org"
@@ -46,9 +48,8 @@ src_prepare() {
 multilib_src_configure() {
 	local myconf=(
 		--disable-rpath \
-		--disable-rpath-install --bundled-libraries=NONE \
+		--disable-rpath-install \
 		--with-modulesdir="${EPREFIX}"/usr/$(get_libdir)/samba \
-		--builtin-libraries=NONE \
 		--disable-python
 	)
 	waf-utils_src_configure "${myconf[@]}"
@@ -76,6 +77,8 @@ multilib_src_install() {
 		docinto html
 		dodoc -r apidocs/html/*
 	fi
+	rm ${D}/usr/bin/tdb*
+	rm ${D}/usr/lib/debug/usr/bin/tdb*
 }
 
 pkg_postinst() {
