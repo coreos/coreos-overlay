@@ -4,7 +4,7 @@
 
 EAPI=5
 
-inherit libtool multilib multilib-minimal eutils pam toolchain-funcs flag-o-matic db-use
+inherit libtool multilib multilib-minimal eutils pam toolchain-funcs flag-o-matic db-use systemd
 
 MY_PN="Linux-PAM"
 MY_P="${MY_PN}-${PV}"
@@ -93,6 +93,7 @@ src_unpack() {
 }
 
 src_prepare() {
+	epatch "${FILESDIR}"/pam-1.2.1-locked-accounts.patch
 	elibtoolize
 }
 
@@ -132,24 +133,10 @@ multilib_src_compile() {
 }
 
 multilib_src_install() {
-	emake DESTDIR="${D}" install \
+	emake SCONFIGDIR="/usr/lib/pam/" DESTDIR="${D}" install \
 		sepermitlockdir="${EPREFIX}/run/sepermit"
-
-	local prefix
-	if multilib_is_native_abi; then
-		prefix=
-		gen_usr_ldscript -a pam pamc pam_misc
-	else
-		prefix=/usr
-	fi
-
-	# create extra symlinks just in case something depends on them...
-	local lib
-	for lib in pam pamc pam_misc; do
-		if ! [[ -f "${ED}"${prefix}/$(get_libdir)/lib${lib}$(get_libname) ]]; then
-			dosym lib${lib}$(get_libname 0) ${prefix}/$(get_libdir)/lib${lib}$(get_libname)
-		fi
-	done
+        rm "${D}/etc/environment"
+	systemd_dotmpfilesd "${FILESDIR}/tmpfiles.d/pam.conf"
 }
 
 DOCS=( CHANGELOG ChangeLog README AUTHORS Copyright NEWS )

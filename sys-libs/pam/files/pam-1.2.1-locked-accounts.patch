@@ -1,0 +1,13 @@
+diff -ur Linux-PAM-1.2.1.orig/modules/pam_unix/pam_unix_acct.c Linux-PAM-1.2.1/modules/pam_unix/pam_unix_acct.c
+--- Linux-PAM-1.2.1.orig/modules/pam_unix/pam_unix_acct.c	2015-03-24 05:02:32.000000000 -0700
++++ Linux-PAM-1.2.1/modules/pam_unix/pam_unix_acct.c	2016-04-05 12:48:08.344913637 -0700
+@@ -219,6 +219,9 @@
+ 		return retval;
+ 	}
+ 
++	if (pwent->pw_passwd != NULL && pwent->pw_passwd[0] == '!')
++		return PAM_PERM_DENIED;
++	
+ 	if (retval == PAM_SUCCESS && spent == NULL)
+ 		return PAM_SUCCESS;
+ 
