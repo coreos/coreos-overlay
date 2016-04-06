@@ -14,7 +14,7 @@ SRC_URI="ftp://ftp.cyrusimap.org/cyrus-sasl/${P}.tar.gz"
 
 LICENSE="BSD-with-attribution"
 SLOT="2"
-KEYWORDS="alpha amd64 arm ~arm64 hppa ia64 ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
+KEYWORDS="alpha amd64 arm arm64 hppa ia64 ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
 IUSE="authdaemond berkdb gdbm kerberos ldapdb openldap mysql pam postgres sample selinux sqlite
 srp ssl static-libs urandom"
 
@@ -57,6 +57,7 @@ src_prepare() {
 	epatch "${FILESDIR}"/${PN}-2.1.26-send-imap-logout.patch
 	epatch "${FILESDIR}"/${PN}-2.1.26-canonuser-ldapdb-garbage-in-out-buffer.patch
 	epatch "${FILESDIR}"/${PN}-2.1.26-fix_dovecot_authentication.patch
+	epatch "${FILESDIR}"/${PN}-2.1.26-fix-cross-compiling.patch
 
 	# Get rid of the -R switch (runpath_switch for Sun)
 	# >=gcc-4.6 errors out with unknown option
