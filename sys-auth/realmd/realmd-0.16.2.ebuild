@@ -38,3 +38,8 @@ src_configure() {
 		--with-distro=defaults \
 		--disable-doc
 }
+
+src_install() {
+	systemd_dotmpfilesd "${FILESDIR}/tmpfiles.d/${PN}.conf"
+	autotools-utils_src_install DBUS_POLICY_DIR=/usr/share/dbus-1/system.d
+}
