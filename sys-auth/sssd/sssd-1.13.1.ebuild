@@ -95,16 +95,6 @@ src_configure() {
 }
 
 multilib_src_configure() {
-	# set initscript to sysv because the systemd option needs systemd to
-	# be installed. We provide our own systemd file anyway.
-	local myconf=()
-	if [[ "${PYTHON_TARGETS}" == *python2* ]]; then
-		myconf+=($(multilib_native_use_with python python2-bindings))
-	fi
-	if [[ "${PYTHON_TARGETS}" == *python3* ]]; then
-		myconf+=($(multilib_native_use_with python python3-bindings))
-	fi
-
 	myconf+=(
 		--localstatedir="${EPREFIX}"/var
 		--enable-nsslibdir="${EPREFIX}"/$(get_libdir)
@@ -131,8 +121,9 @@ multilib_src_configure() {
 		$(multilib_native_use_with ssh)
 		--with-crypto="libcrypto"
 		--with-initscript="sysv"
-
-		KRB5_CONFIG=/usr/bin/${CHOST}-krb5-config
+		--without-python2-bindings
+		--without-python3-bindings
+		KRB5_CONFIG=${ROOT}/usr/bin/${CHOST}-krb5-config
 		)
 
 	if ! multilib_is_native_abi; then
@@ -170,7 +161,7 @@ multilib_src_compile() {
 
 multilib_src_install() {
 	if multilib_is_native_abi; then
-		emake -j1 DESTDIR="${D}" "${_at_args[@]}" install
+		emake -j1 DESTDIR="${D}" sysconfdir="/usr/share" "${_at_args[@]}" install
 	else
 		# easier than playing with automake...
 		dopammod .libs/pam_sss.so
@@ -189,17 +180,13 @@ multilib_src_install_all() {
 	einstalldocs
 	prune_libtool_files --all
 
-	insinto /etc/sssd
+	insinto /usr/share/sssd
 	insopts -m600
 	doins "${S}"/src/examples/sssd-example.conf
 
-	insinto /etc/logrotate.d
-	insopts -m644
-	newins "${S}"/src/examples/logrotate sssd
-
-	newconfd "${FILESDIR}"/sssd.conf sssd
-
 	systemd_dounit "${FILESDIR}/${PN}.service"
+	systemd_dotmpfilesd "${FILESDIR}/tmpfiles.d/sssd.conf"
+	rm -rf "${D}/etc/rc.d"
 }
 
 multilib_src_test() {

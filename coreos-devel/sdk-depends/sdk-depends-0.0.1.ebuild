@@ -31,6 +31,7 @@ DEPEND="
 	dev-util/boost-build
 	dev-util/checkbashisms
 	dev-vcs/repo
+	net-dns/bind-tools
 	net-misc/curl
 	sys-apps/debianutils
 	sys-apps/iproute2
