@@ -31,6 +31,7 @@ DEPEND="
 	sys-apps/sed
 	sys-apps/shadow
 	sys-apps/systemd
+	sys-apps/seismograph
 	sys-apps/util-linux
 	sys-fs/btrfs-progs
 	sys-fs/e2fsprogs
