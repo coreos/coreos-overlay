@@ -18,6 +18,14 @@ cros_pre_pkg_preinst_wrap_old_config_scripts() {
 
 	local c w
 	for w in ${wrappers} ; do
+		# $CHOST-$CHOST-foo-config isn't helpful
+		if [[ ${w} == ${CHOST}-* ]]; then
+			continue
+		fi
+		# Skip anything that isn't a script, e.g. pkg-config
+		if ! head -n1 | egrep -q '^#!\s*/bin/(ba)?sh'; then
+			continue
+		fi
 		w="${wdir}/${CHOST}-${w}"
 		c="${CROS_ADDONS_TREE}/scripts/config_wrapper"
 		if [[ ! -e ${w} ]] ; then
