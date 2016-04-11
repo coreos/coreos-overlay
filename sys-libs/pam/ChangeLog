@@ -1,0 +1,126 @@
+# ChangeLog for sys-libs/pam
+# Copyright 1999-2016 Gentoo Foundation; Distributed under the GPL v2
+# (auto-generated from git log)
+
+*pam-1.2.1-r1 (09 Aug 2015)
+*pam-1.2.1 (09 Aug 2015)
+*pam-1.2.0 (09 Aug 2015)
+*pam-1.1.8-r3 (09 Aug 2015)
+*pam-1.1.8-r2 (09 Aug 2015)
+*pam-1.1.8-r1 (09 Aug 2015)
+*pam-1.1.8 (09 Aug 2015)
+*pam-1.1.6-r2 (09 Aug 2015)
+*pam-1.1.5 (09 Aug 2015)
+
+  09 Aug 2015; Robin H. Johnson <robbat2@gentoo.org>
+  +files/Linux-PAM-1.1.5+glibc-2.16.patch,
+  +files/Linux-PAM-1.1.6+glibc-2.16.patch,
+  +files/Linux-PAM-1.1.6-destdir.patch, +files/pam-1.1.8-CVE-2013-7041.patch,
+  +files/pam-1.1.8-CVE-2014-2583.patch, +files/pam-1.1.8-doc-install.patch,
+  +metadata.xml, +pam-1.1.5.ebuild, +pam-1.1.6-r2.ebuild, +pam-1.1.8.ebuild,
+  +pam-1.1.8-r1.ebuild, +pam-1.1.8-r2.ebuild, +pam-1.1.8-r3.ebuild,
+  +pam-1.2.0.ebuild, +pam-1.2.1.ebuild, +pam-1.2.1-r1.ebuild:
+  proj/gentoo: Initial commit
+
+  This commit represents a new era for Gentoo:
+  Storing the gentoo-x86 tree in Git, as converted from CVS.
+
+  This commit is the start of the NEW history.
+  Any historical data is intended to be grafted onto this point.
+
+  Creation process:
+  1. Take final CVS checkout snapshot
+  2. Remove ALL ChangeLog* files
+  3. Transform all Manifests to thin
+  4. Remove empty Manifests
+  5. Convert all stale $Header$/$Id$ CVS keywords to non-expanded Git $Id$
+  5.1. Do not touch files with -kb/-ko keyword flags.
+
+  Signed-off-by: Robin H. Johnson <robbat2@gentoo.org>
+  X-Thanks: Alec Warner <antarus@gentoo.org> - did the GSoC 2006 migration
+  tests
+  X-Thanks: Robin H. Johnson <robbat2@gentoo.org> - infra guy, herding this
+  project
+  X-Thanks: Nguyen Thai Ngoc Duy <pclouds@gentoo.org> - Former Gentoo
+  developer, wrote Git features for the migration
+  X-Thanks: Brian Harring <ferringb@gentoo.org> - wrote much python to improve
+  cvs2svn
+  X-Thanks: Rich Freeman <rich0@gentoo.org> - validation scripts
+  X-Thanks: Patrick Lauer <patrick@gentoo.org> - Gentoo dev, running new 2014
+  work in migration
+  X-Thanks: Michał Górny <mgorny@gentoo.org> - scripts, QA, nagging
+  X-Thanks: All of other Gentoo developers - many ideas and lots of paint on
+  the bikeshed
+
+  19 Aug 2015; Mike Frysinger <vapier@gentoo.org> pam-1.2.1.ebuild:
+  mark 1.2.1 stable for arm64/m68k/s390/sh
+
+  19 Aug 2015; Mike Frysinger <vapier@gentoo.org> pam-1.2.1.ebuild,
+  pam-1.2.1-r1.ebuild:
+  require pkgconfig only when USE=nis
+
+  The only library pam uses pkg-config to look up is libtirpc, and we
+  use that only when USE=nis.  Depend on pkg-config only when that is
+  enabled to avoid circular dependencies (especially when bootstrapping).
+
+  24 Aug 2015; Justin Lecher <jlec@gentoo.org> metadata.xml, pam-1.1.5.ebuild,
+  pam-1.1.6-r2.ebuild, pam-1.1.8.ebuild, pam-1.1.8-r1.ebuild,
+  pam-1.1.8-r2.ebuild, pam-1.1.8-r3.ebuild, pam-1.2.0.ebuild,
+  pam-1.2.1.ebuild, pam-1.2.1-r1.ebuild:
+  Use https by default
+
+  Convert all URLs for sites supporting encrypted connections from http to
+  https
+
+  Signed-off-by: Justin Lecher <jlec@gentoo.org>
+
+  24 Aug 2015; Justin Lecher <jlec@gentoo.org> pam-1.1.5.ebuild,
+  pam-1.1.6-r2.ebuild, pam-1.1.8.ebuild, pam-1.1.8-r1.ebuild,
+  pam-1.1.8-r2.ebuild, pam-1.1.8-r3.ebuild, pam-1.2.0.ebuild,
+  pam-1.2.1.ebuild, pam-1.2.1-r1.ebuild:
+  Use https by default
+
+  Convert all URLs for sites supporting encrypted connections from http to
+  https
+
+  Signed-off-by: Justin Lecher <jlec@gentoo.org>
+
+  24 Aug 2015; Mike Gilbert <floppym@gentoo.org> metadata.xml:
+  Revert DOCTYPE SYSTEM https changes in metadata.xml
+
+  repoman does not yet accept the https version.
+  This partially reverts eaaface92ee81f30a6ac66fe7acbcc42c00dc450.
+
+  Bug: https://bugs.gentoo.org/552720
+
+  08 Oct 2015; Markos Chandras <hwoarang@gentoo.org> metadata.xml:
+  audit: Switch to global 'audit' use flag where appropriate
+
+  Link: https://archives.gentoo.org/gentoo-
+  dev/message/32b1e333faa627491baa3c7492d64956
+
+  23 Dec 2015; Mike Frysinger <vapier@gentoo.org> pam-1.2.1-r1.ebuild:
+  avoid regenerating docs #569338
+
+  Since we're using the old doc tarball, the timestamps are older than
+  the new source tarball, so the code tries to rebuild everything.
+
+  24 Jan 2016; Michał Górny <mgorny@gentoo.org> metadata.xml:
+  Replace all herds with appropriate projects (GLEP 67)
+
+  Replace all uses of herd with appropriate project maintainers, or no
+  maintainers in case of herds requested to be disbanded.
+
+  24 Jan 2016; Michał Górny <mgorny@gentoo.org> metadata.xml:
+  Set appropriate maintainer types in metadata.xml (GLEP 67)
+
+  30 Mar 2016; Mike Frysinger <vapier@gentoo.org>
+  -files/Linux-PAM-1.1.5+glibc-2.16.patch,
+  -files/Linux-PAM-1.1.6+glibc-2.16.patch,
+  -files/Linux-PAM-1.1.6-destdir.patch, -files/pam-1.1.8-CVE-2013-7041.patch,
+  -files/pam-1.1.8-CVE-2014-2583.patch, -files/pam-1.1.8-doc-install.patch,
+  -pam-1.1.5.ebuild, -pam-1.1.6-r2.ebuild, -pam-1.1.8.ebuild,
+  -pam-1.1.8-r1.ebuild, -pam-1.1.8-r2.ebuild, -pam-1.1.8-r3.ebuild,
+  -pam-1.2.0.ebuild:
+  drop old <1.2.1 versions
+
