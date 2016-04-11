@@ -69,3 +69,6 @@ dev-libs/cyrus-sasl kerberos -berkdb -gdbm
 
 # don't build manpages for sssd
 sys-auth/sssd -manpages -python
+
+# needed for realmd build
+>=sys-auth/polkit-0.113 introspection
