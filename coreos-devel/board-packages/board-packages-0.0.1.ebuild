@@ -24,6 +24,9 @@ RDEPEND="
 		coreos-base/nova-agent-watcher
 		dev-lang/python-oem
 	)
+	arm64? (
+		sys-firmware/edk2-armvirt
+	)
 	coreos-base/coreos
 	coreos-base/coreos-dev
 	"

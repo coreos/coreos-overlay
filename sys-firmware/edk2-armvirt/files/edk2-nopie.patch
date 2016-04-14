@@ -1,0 +1,13 @@
+diff --git a/BaseTools/Source/C/Makefiles/header.makefile b/BaseTools/Source/C/Makefiles/header.makefile
+index 09d2bff..f3ca05d 100644
+--- a/BaseTools/Source/C/Makefiles/header.makefile
++++ b/BaseTools/Source/C/Makefiles/header.makefile
+@@ -51,7 +51,7 @@ CFLAGS = -MD -fshort-wchar -fno-strict-aliasing -Wall -Werror -Wno-deprecated-de
+ else
+ CFLAGS = -MD -fshort-wchar -fno-strict-aliasing -Wall -Werror -Wno-deprecated-declarations -nostdlib -c -g
+ endif
+-LFLAGS =
++LFLAGS = -nopie
+ 
+ ifeq ($(ARCH), IA32)
+ #
