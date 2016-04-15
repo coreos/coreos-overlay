@@ -4,7 +4,7 @@
 
 EAPI=5
 
-inherit versionator linux-info eutils flag-o-matic toolchain-funcs
+inherit versionator linux-info eutils flag-o-matic toolchain-funcs systemd
 
 MY_PV="${PN}-$(replace_version_separator 2 "-" $MY_PV)"
 
@@ -86,7 +86,10 @@ src_install() {
 	doins "${FILESDIR}"/iscsidev.sh
 	insopts -m0644
 
+	systemd_dounit "${FILESDIR}"/iscsid.service
+	systemd_dounit "${FILESDIR}"/iscsid.socket
 	systemd_dotmpfilesd "${FILESDIR}"/open-iscsi.conf
 
 	fperms 600 /etc/iscsi/iscsid.conf
+	mv "${D}"/etc/iscsi "${D}"/usr/share/iscsi
 }
