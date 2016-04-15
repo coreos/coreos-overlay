@@ -45,12 +45,13 @@ src_install() {
 		libudevdir='${prefix}'/"${udevdir}" \
 		install
 
-	insinto /etc
+	insinto /usr/share/multipath-tools
 	newins "${S}"/multipath.conf.annotated multipath.conf
 	# /etc/udev is reserved for user modified rules!
 	mv "${D}"/etc/udev/rules.d "${D}/${udevdir}"/ || die
 	fperms 644 "${udevdir}"/rules.d/66-kpartx.rules
 
+	systemd_dotmpfilesd "${FILESDIR}"/tmpfiles.d/multipath-tools.conf
 	dodoc multipath.conf.* AUTHOR ChangeLog FAQ
 	docinto kpartx
 	dodoc kpartx/ChangeLog kpartx/README
