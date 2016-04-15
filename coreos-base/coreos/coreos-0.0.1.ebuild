@@ -153,9 +153,11 @@ RDEPEND="${RDEPEND}
 	sys-apps/usbutils
 	sys-apps/util-linux
 	sys-apps/which
+	sys-block/open-iscsi
 	sys-fs/btrfs-progs
 	sys-fs/e2fsprogs
 	sys-fs/mdadm
+	sys-fs/multipath-tools
 	sys-fs/xfsprogs
 	sys-kernel/coreos-firmware
 	sys-kernel/coreos-kernel
