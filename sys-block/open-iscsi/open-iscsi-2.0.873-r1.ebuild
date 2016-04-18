@@ -50,6 +50,7 @@ src_prepare() {
 	epatch "${FILESDIR}"/${P}-remove-kernel-version-check.patch
 
 	sed -i -e 's:^\(iscsid.startup\)\s*=.*:\1 = /usr/sbin/iscsid:' etc/iscsid.conf || die
+	sed -i -e 's:^node.startup = manual:node.startup = automatic:' etc/iscsid.conf || die
 }
 
 src_configure() {
