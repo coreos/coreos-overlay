@@ -89,7 +89,7 @@ src_install() {
 
 	systemd_dounit "${FILESDIR}"/iscsid.service
 	systemd_dounit "${FILESDIR}"/iscsid.socket
-	systemd_dounit "${FILESDIR}/iscsid-initiatorname.service
+	systemd_dounit "${FILESDIR}"/iscsid-initiatorname.service
 	systemd_dotmpfilesd "${FILESDIR}"/open-iscsi.conf
 
 	fperms 600 /etc/iscsi/iscsid.conf
