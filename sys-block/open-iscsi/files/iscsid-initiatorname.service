@@ -1,0 +1,10 @@
+# Generate an iSCSI initiator name if one doesn't already exist
+[Unit]
+Description=iSCSI initiator name generator
+After=systemd-tmpfiles-setup.service
+ConditionPathExists=!/etc/iscsi/initiatorname.iscsi
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'echo InitiatorName=iqn.2016-04.com.coreos.iscsi:$(</etc/machine-id) >/etc/iscsi/initiatorname.iscsi'

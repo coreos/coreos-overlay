@@ -1,7 +1,8 @@
 [Unit]
 Description=Open-iSCSI
 Documentation=man:iscsid(8) man:iscsiuio(8) man:iscsiadm(8)
-After=network.target NetworkManager-wait-online.service iscsiuio.service tgtd.service targetcli.service
+After=network.target NetworkManager-wait-online.service iscsid-initiatorname.service iscsiuio.service tgtd.service targetcli.service
+Requires=iscsid-initiatorname.service
 
 [Service]
 Type=forking
