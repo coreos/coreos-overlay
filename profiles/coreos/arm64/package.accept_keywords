@@ -90,9 +90,6 @@ net-fs/nfs-utils ~arm64
 =net-wireless/iw-4.0 **
 =net-libs/libmicrohttpd-0.9.44 **
 
-+# required by sys-block/open-iscsi-2.0.873-r1::coreos
-+# required by coreos-base/coreos-0.0.1-r266::coreos
-+# required by coreos-base/coreos-dev-0.1.0-r75::coreos
-+# required by coreos-devel/board-packages-0.0.1-r4::coreos
-+# required by coreos-devel/board-packages (argument)
-+=sys-fs/lsscsi-0.28 **
+# required by sys-block/open-iscsi-2.0.873-r1::coreos
+=sys-fs/lsscsi-0.28 **
+
