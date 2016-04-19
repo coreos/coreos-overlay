@@ -42,5 +42,4 @@ UNIPATCH_LIST="
 		${PATCH_DIR}/0018-SELinux-Check-against-union-label-for-file-operation.patch \
 		${PATCH_DIR}/0019-kbuild-derive-relative-path-for-KBUILD_SRC-from-CURD.patch \
 		${PATCH_DIR}/0020-Don-t-verify-write-permissions-on-lower-inodes-on-ov.patch \
-		${PATCH_DIR}/0021-Fix-unallocated-memory-access-in-TPM-eventlog-code.patch \
 "
