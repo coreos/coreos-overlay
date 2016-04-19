@@ -1,5 +1,5 @@
---- openssh-6.3p1/Makefile.in
-+++ openssh-6.3p1/Makefile.in
+--- openssh-7.1p2/Makefile.in
++++ openssh-7.1p2/Makefile.in
 @@ -45,7 +45,7 @@
  CC=@CC@
  LD=@LD@
@@ -17,8 +17,8 @@
  AR=@AR@
  AWK=@AWK@
  RANLIB=@RANLIB@
---- openssh-6.3p1/sshconnect.c
-+++ openssh-6.3p1/sshconnect.c
+--- openssh-7.1p2/sshconnect.c
++++ openssh-7.1p2/sshconnect.c
 @@ -465,7 +465,7 @@
  {
  	/* Send our own protocol version identification. */
@@ -28,8 +28,8 @@
  		    PROTOCOL_MAJOR_2, PROTOCOL_MINOR_2, SSH_VERSION);
  	} else {
  		xasprintf(&client_version_string, "SSH-%d.%d-%.100s\n",
---- openssh-6.3p1/sshd.c
-+++ openssh-6.3p1/sshd.c
+--- openssh-7.1p2/sshd.c
++++ openssh-7.1p2/sshd.c
 @@ -472,8 +472,8 @@
  		comment = "";
  	}
@@ -41,11 +41,11 @@
  	    *options.version_addendum == '\0' ? "" : " ",
  	    options.version_addendum, newline);
  
---- openssh-6.3p1/version.h
-+++ openssh-6.3p1/version.h
+--- openssh-7.1p2/version.h
++++ openssh-7.1p2/version.h
 @@ -3,4 +3,5 @@
- #define SSH_VERSION	"OpenSSH_6.3"
+ #define SSH_VERSION	"OpenSSH_7.1"
  
- #define SSH_PORTABLE	"p1"
+ #define SSH_PORTABLE	"p2"
 +#define SSH_X509	" PKIX"
  #define SSH_RELEASE	SSH_VERSION SSH_PORTABLE
