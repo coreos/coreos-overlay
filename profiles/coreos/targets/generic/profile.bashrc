@@ -23,7 +23,7 @@ cros_pre_pkg_preinst_wrap_old_config_scripts() {
 			continue
 		fi
 		# Skip anything that isn't a script, e.g. pkg-config
-		if ! head -n1 | egrep -q '^#!\s*/bin/(ba)?sh'; then
+		if ! head -n1 "${D}/usr/bin/${w}" | egrep -q '^#!\s*/bin/(ba)?sh'; then
 			continue
 		fi
 		w="${wdir}/${CHOST}-${w}"
