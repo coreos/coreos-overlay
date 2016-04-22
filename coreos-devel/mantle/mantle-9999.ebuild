@@ -10,7 +10,7 @@ COREOS_GO_PACKAGE="github.com/coreos/mantle"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64"
 else
-	CROS_WORKON_COMMIT="87d89cfe2b178d8466711c123adb9062f1bd1134" # v0.0.10
+	CROS_WORKON_COMMIT="980a60e6a4f7c876f8658329cadbf6dde50093a8" # v0.1.0
 	KEYWORDS="amd64 arm64"
 fi
 
@@ -20,6 +20,8 @@ DESCRIPTION="Mantle: Gluing CoreOS together"
 HOMEPAGE="https://github.com/coreos/mantle"
 LICENSE="Apache-2"
 SLOT="0"
+# objcopy/split have trouble with our cross-compiled kolet
+STRIP_MASK="/*/kola/*/kolet"
 
 RDEPEND=">=net-dns/dnsmasq-2.72[dhcp,ipv6]"
 
@@ -31,8 +33,13 @@ src_compile() {
 		GO_LDFLAGS="-X ${COREOS_GO_PACKAGE}/version.Version=${PV}"
 	fi
 
-	for cmd in cork kola kolet ore plume; do
+	for cmd in cork kola ore plume; do
 		go_build "${COREOS_GO_PACKAGE}/cmd/${cmd}"
+	done
+
+	for a in amd64 arm64; do
+		mkdir -p "${GOBIN}/${a}"
+		CGO_ENABLED=0 GOBIN="${GOBIN}/${a}" GOARCH=${a} go_build "${COREOS_GO_PACKAGE}/cmd/kolet"
 	done
 }
 
@@ -41,7 +48,9 @@ src_install() {
 		dobin "${GOBIN}"/"${cmd}"
 	done
 
-	exeinto /usr/lib/kola/"$(go_get_arch)"
-	doexe "${GOBIN}"/kolet
+	for a in amd64 arm64; do
+		exeinto /usr/lib/kola/${a}
+		doexe "${GOBIN}/${a}/kolet"
+	done
 }
 
