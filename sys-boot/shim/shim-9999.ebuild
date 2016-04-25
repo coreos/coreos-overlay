@@ -6,13 +6,13 @@ CROS_WORKON_PROJECT="coreos/shim"
 CROS_WORKON_REPO="git://github.com"
 
 if [[ "${PV}" == 9999 ]]; then
-	KEYWORDS="~amd64"
+	KEYWORDS="~amd64 ~arm64"
 else
 	CROS_WORKON_COMMIT="03a1513b0985fd682b13a8d29fe3f1314a704c66"
-	KEYWORDS="amd64"
+	KEYWORDS="amd64 arm64"
 fi
 
-inherit cros-workon
+inherit cros-workon multilib
 
 DESCRIPTION="UEFI Shim loader"
 HOMEPAGE="https://github.com/rhinstaller/shim"
@@ -30,7 +30,11 @@ src_unpack() {
 }
 
 src_compile() {
-	make EFI_PATH=/usr/lib shim.efi
+	emake \
+		CROSS_COMPILE="${CHOST}-" \
+		EFI_INCLUDE="${ROOT}"usr/include/efi \
+		EFI_PATH="${ROOT}"usr/$(get_libdir) \
+		shim.efi || die
 }
 
 src_install() {

@@ -93,3 +93,6 @@ net-fs/nfs-utils ~arm64
 # required by sys-block/open-iscsi-2.0.873-r1::coreos
 =sys-fs/lsscsi-0.28 **
 
+# gnu-efi-3.0.3 has arm64 support
+=sys-boot/gnu-efi-3.0.3 **
+
