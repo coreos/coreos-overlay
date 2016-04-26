@@ -25,7 +25,8 @@ LICENSE="BSD"
 SLOT="0/${PV}"
 IUSE="cros_host arm64-extras"
 
-DEPEND="cros_host? ( >=dev-lang/go-bootstrap-1.4.1 )"
+# can't build go without go
+DEPEND=">=dev-lang/go-bootstrap-1.5.3"
 RDEPEND=""
 
 # These test data objects have writable/executable stacks.
@@ -115,7 +116,7 @@ src_prepare()
 
 src_compile()
 {
-	export GOROOT_BOOTSTRAP="${EPREFIX}"/usr/lib/go1.4
+	export GOROOT_BOOTSTRAP="${EPREFIX}"/usr/lib/go-bootstrap
 	export GOROOT_FINAL="${EPREFIX}"/usr/lib/go
 	export GOROOT="$(pwd)"
 	export GOBIN="${GOROOT}/bin"
