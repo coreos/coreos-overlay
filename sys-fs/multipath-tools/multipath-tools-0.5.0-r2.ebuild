@@ -25,6 +25,7 @@ DEPEND="${RDEPEND}
 src_prepare() {
 	epatch "${FILESDIR}"/${P}-makefile.patch
 	epatch "${FILESDIR}"/${P}-systemd-pkgconfig.patch
+	epatch "${FILESDIR}"/${P}-property-whitelist-SCSI_IDENT.patch
 	epatch_user
 }
 
