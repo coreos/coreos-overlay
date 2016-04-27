@@ -9,8 +9,7 @@ inherit autotools eutils toolchain-funcs flag-o-matic user systemd
 MY_P=${P/_p/p}
 DESCRIPTION="Network Time Protocol suite/programs"
 HOMEPAGE="http://www.ntp.org/"
-SRC_URI="http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-${PV:0:3}/${MY_P}.tar.gz
-	mirror://gentoo/${MY_P}-manpages.tar.bz2"
+SRC_URI="http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-${PV:0:3}/${MY_P}.tar.gz"
 
 LICENSE="HPND BSD ISC"
 SLOT="0"
@@ -83,7 +82,6 @@ src_install() {
 	mv "${ED}"/usr/bin/{ntpd,ntpdate} "${ED}"/usr/sbin/ || die "move to sbin"
 
 	dodoc INSTALL WHERE-TO-START
-	doman "${WORKDIR}"/man/*.[58]
 
 	insinto /usr/share/ntp
 	doins "${FILESDIR}"/ntp.conf
@@ -96,7 +94,6 @@ src_install() {
 		cd "${ED}"
 		rm usr/sbin/ntpd || die
 		rm -r var/lib
-		rm usr/share/man/*/ntpd.8 || die
 	else
 		systemd_dounit "${FILESDIR}"/ntpd.service
 		use caps && sed -i '/ExecStart/ s|$| -u ntp:ntp|' "${ED}"/usr/lib/systemd/system/ntpd.service
