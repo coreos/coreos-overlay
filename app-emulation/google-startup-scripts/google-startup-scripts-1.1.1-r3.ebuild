@@ -3,6 +3,8 @@
 
 EAPI=5
 
+inherit eutils
+
 DESCRIPTION="Google Startup Scripts for Compute Engine"
 HOMEPAGE="https://github.com/GoogleCloudPlatform/compute-image-packages"
 SRC_URI="https://github.com/GoogleCloudPlatform/compute-image-packages/releases/download/${PV}/${P}.tar.gz"
