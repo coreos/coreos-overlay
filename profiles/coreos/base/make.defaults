@@ -49,8 +49,8 @@ ACCEPT_LICENSE="* -@EULA -@CHROMEOS"
 
 # Favor our own mirrors over Gentoo's
 GENTOO_MIRRORS="
-    http://storage.core-os.net/mirror/portage-stable/
-    http://storage.core-os.net/mirror/coreos/
+    https://storage.core-os.net/mirror/portage-stable/
+    https://storage.core-os.net/mirror/coreos/
     http://distfiles.gentoo.org/
 "
 
