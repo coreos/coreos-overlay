@@ -3,6 +3,8 @@
 
 EAPI=5
 
+inherit eutils
+
 DESCRIPTION="Google Daemon for Compute Engine"
 HOMEPAGE="https://github.com/GoogleCloudPlatform/compute-image-packages"
 SRC_URI="https://github.com/GoogleCloudPlatform/compute-image-packages/releases/download/${PV}/google-daemon-${PV}.tar.gz"
