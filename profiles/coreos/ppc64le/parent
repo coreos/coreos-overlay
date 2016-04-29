@@ -1,2 +1,2 @@
-portage-stable:default/linux/powerpc/ppc64/13.0/64bit-userland/little-endian
+gentoo:default/linux/powerpc/ppc64/13.0/64bit-userland/little-endian
 :coreos/base

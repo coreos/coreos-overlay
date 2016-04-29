@@ -1,2 +1,2 @@
-portage-stable:targets/systemd
+gentoo:targets/systemd
 :features/systemd
