@@ -1,0 +1,10 @@
+[Unit]
+Description=CoreOS Metadata Agent (SSH Keys)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/coreos-metadata --cmdline --ssh-keys=%i
+
+[Install]
+DefaultInstance=core
+RequiredBy=multi-user.target
