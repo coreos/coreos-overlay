@@ -9,3 +9,8 @@ arm64   coreos/arm64/generic                dev
 arm64   coreos/arm64/generic/dev            dev
 arm64   coreos/arm64/generic/prod           dev
 arm64   coreos/arm64/sdk                    dev
+
+ppc64le   coreos/amd64/generic                dev
+ppc64le   coreos/amd64/generic/dev            dev
+ppc64le   coreos/amd64/generic/prod           dev
+ppc64le   coreos/amd64/sdk                    dev

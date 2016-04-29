@@ -1,0 +1,8 @@
+# Enable SELinux for amd64 targets
+coreos-base/coreos	    selinux
+sys-apps/dbus               selinux
+sys-apps/systemd            selinux
+sys-kernel/coreos-kernel    selinux
+
+# Enable SELinux for coreutils
+sys-apps/coreutils	    selinux

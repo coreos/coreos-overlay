@@ -1,0 +1,2 @@
+# Do not force this flag, we don't need XATTR_PAX
+sys-apps/portage -xattr
