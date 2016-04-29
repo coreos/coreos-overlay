@@ -11,7 +11,7 @@ inherit coreos-go cros-workon systemd
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64"
 else
-	CROS_WORKON_COMMIT="d976d664051f5b95ab60f7f1770b1b2bcc2877b2" # v0.3.0
+	CROS_WORKON_COMMIT="a40c25b40b6b57aa76a4a4b381136d4a0733edd6" # v0.4.0
 	KEYWORDS="amd64 arm64"
 fi
 
@@ -24,11 +24,13 @@ SLOT="0"
 IUSE=""
 
 src_compile() {
+	export GO15VENDOREXPERIMENT="1"
 	GO_LDFLAGS="-X main.version $(git describe --dirty)" || die
-	go_build "${COREOS_GO_PACKAGE}/src"
+	go_build "${COREOS_GO_PACKAGE}/internal"
 }
 
 src_install() {
-	newbin "${GOBIN}/src" "${PN}"
+	newbin "${GOBIN}/internal" "${PN}"
 	systemd_dounit "${FILESDIR}/coreos-metadata.service"
+	systemd_dounit "${FILESDIR}/coreos-metadata-sshkeys@.service"
 }
