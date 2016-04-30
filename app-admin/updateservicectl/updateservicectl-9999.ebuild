@@ -12,7 +12,7 @@ if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64"
 else
 	CROS_WORKON_COMMIT="f9a7976a09697a15c41a1affb4866790ef714332"  # tag v1.3.0
-	KEYWORDS="amd64 arm64"
+	KEYWORDS="amd64 arm64 ppc64"
 fi
 
 DESCRIPTION="CoreUpdate Management CLI"
