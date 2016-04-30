@@ -12,7 +12,7 @@ if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64"
 else
 	CROS_WORKON_COMMIT="e4943e4c447623209278aaf843734998af73c618" # v0.3.4 git tag
-	KEYWORDS="amd64 arm64"
+	KEYWORDS="amd64 arm64 ppc64"
 fi
 
 DESCRIPTION="locksmith"
