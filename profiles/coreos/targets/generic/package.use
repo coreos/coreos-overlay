@@ -40,3 +40,6 @@ app-shells/bash -net vanilla
 
 # enable audit subsystem by default
 sys-kernel/coreos-kernel audit
+
+# disable nss utilities
+dev-libs/nss -utils
