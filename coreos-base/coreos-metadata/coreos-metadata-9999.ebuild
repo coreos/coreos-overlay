@@ -12,7 +12,7 @@ if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64"
 else
 	CROS_WORKON_COMMIT="d976d664051f5b95ab60f7f1770b1b2bcc2877b2" # v0.3.0
-	KEYWORDS="amd64 arm64"
+	KEYWORDS="amd64 arm64 ppc64"
 fi
 
 DESCRIPTION="A simple cloud-provider metadata agent"
