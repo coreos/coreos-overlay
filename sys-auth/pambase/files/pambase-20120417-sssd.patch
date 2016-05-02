@@ -1,0 +1,39 @@
+diff -ur pambase-20140313.orig/system-auth.in pambase-20140313/system-auth.in
+--- pambase-20140313.orig/system-auth.in	2014-03-13 07:13:15.000000000 -0700
++++ pambase-20140313/system-auth.in	2016-05-02 12:57:35.437730031 -0700
+@@ -7,7 +7,8 @@
+ #if HAVE_KRB5
+ auth		KRB5_CONTROL	pam_krb5.so KRB5_PARAMS
+ #endif
+-auth		required	pam_unix.so try_first_pass LIKEAUTH nullok DEBUG
++auth		sufficient	pam_sss.so use_first_pass
++auth		sufficient	pam_unix.so try_first_pass LIKEAUTH nullok DEBUG
+ /* This is needed to make sure that the Kerberos skip-on-success won't cause a bad jump. */
+ auth		optional	pam_permit.so
+  
+@@ -16,6 +17,7 @@
+ #endif
+ account		required	pam_unix.so DEBUG
+ /* This is needed to make sure that the Kerberos skip-on-success won't cause a bad jump. */
++account		[default=bad success=ok user_unknown=ignore]	pam_sss.so
+ account		optional	pam_permit.so
+  
+ #if HAVE_CRACKLIB
+@@ -27,7 +29,8 @@
+ #if HAVE_KRB5
+ password	KRB5_CONTROL	pam_krb5.so KRB5_PARAMS
+ #endif
+-password	required	pam_unix.so try_first_pass UNIX_AUTHTOK nullok UNIX_EXTENDED_ENCRYPTION DEBUG
++password	sufficient	pam_unix.so try_first_pass UNIX_AUTHTOK nullok UNIX_EXTENDED_ENCRYPTION DEBUG
++password	sufficient	pam_sss.so use_authtok
+ /* This is needed to make sure that the Kerberos skip-on-success won't cause a bad jump. */
+ password	optional	pam_permit.so
+  
+diff -ur pambase-20140313.orig/system-session.inc pambase-20140313/system-session.inc
+--- pambase-20140313.orig/system-session.inc	2014-03-13 07:13:15.000000000 -0700
++++ pambase-20140313/system-session.inc	2016-05-02 12:57:59.723883487 -0700
+@@ -23,3 +23,4 @@
+ #endif
+ 
+ session		optional	pam_permit.so
++session		optional	pam_sss.so
