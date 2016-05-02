@@ -12,7 +12,7 @@ if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64 ~x86"
 else
 	CROS_WORKON_COMMIT="991faaf28eb21f185fed0708b526849a8bc128e6"
-	KEYWORDS="amd64 arm64 x86"
+	KEYWORDS="amd64 arm64 x86 ppc64"
 fi
 
 DESCRIPTION="Sanity tests for CoreOS"
