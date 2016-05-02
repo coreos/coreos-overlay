@@ -10,7 +10,7 @@ if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~arm64 ~x86"
 else
 	CROS_WORKON_COMMIT="e408b6cacbd31eda4d64adda00727e9c724fa516"
-	KEYWORDS="amd64 arm arm64 x86"
+	KEYWORDS="amd64 arm arm64 x86 ppc64"
 fi
 
 inherit autotools-utils cros-workon
