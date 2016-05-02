@@ -7,3 +7,5 @@ coreos-base/coreos -etcd_protocols_1
 sys-libs/ncurses unicode
 
 sys-apps/systemd -selinux
+
+sys-auth/polkit -introspection
