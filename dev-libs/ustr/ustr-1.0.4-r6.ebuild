@@ -12,7 +12,7 @@ SRC_URI="ftp://ftp.and.org/pub/james/ustr/${PV}/${P}.tar.bz2"
 
 LICENSE="|| ( BSD-2 MIT LGPL-2 )"
 SLOT="0"
-KEYWORDS="amd64 arm64"
+KEYWORDS="amd64 arm64 ppc64"
 IUSE=""
 
 DEPEND=""
