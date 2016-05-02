@@ -96,3 +96,8 @@ dev-util/checkbashisms
 
 # Older versions of sssd fail to build
 =sys-auth/sssd-1.13.1 ~amd64 ~arm64
+
+# heap overflow fix
+# https://bugs.gentoo.org/show_bug.cgi?id=580606
+=app-misc/jq-1.5-r2 ~amd64 ~arm64
+
