@@ -9,7 +9,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~arm64 ~x86"
 else
-	CROS_WORKON_COMMIT="139da2652de491ae70371413b45e189fe8e727f6"
+	CROS_WORKON_COMMIT="32a47835ee59f56a816474cccc2197ed1ffacee9"
 	KEYWORDS="amd64 arm arm64 x86"
 fi
 
@@ -158,6 +158,10 @@ src_install() {
 
 	# For compatibility with older SDKs which use 1000 for the core user.
 	fowners -R 500:500 /home/core || die
+
+	if use arm64; then
+		sed -i "${D}"/etc/nsswitch.conf 's/ sss//' || die
+	fi
 
 	if use cros_host; then
 		# Provided by vim in the SDK
