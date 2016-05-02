@@ -10,7 +10,7 @@ DESCRIPTION="Full sources for the CoreOS Linux kernel"
 HOMEPAGE="http://www.kernel.org"
 SRC_URI="${KERNEL_URI}"
 
-KEYWORDS="amd64 arm64"
+KEYWORDS="amd64 arm64 ppc64"
 IUSE=""
 
 PATCH_DIR="${FILESDIR}/${KV_MAJOR}.${KV_MINOR}"
