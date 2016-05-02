@@ -11,7 +11,7 @@ if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~arm64 ~x86"
 else
 	CROS_WORKON_COMMIT="d05fab1c8e5878129c3e365977f1a57fd11216a6"
-	KEYWORDS="amd64 arm arm64 x86"
+	KEYWORDS="amd64 arm arm64 x86 ppc64"
 fi
 
 inherit cros-workon systemd
