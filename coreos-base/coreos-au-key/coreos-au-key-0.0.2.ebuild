@@ -8,7 +8,7 @@ HOMEPAGE="http://github.com/coreos/"
 SRC_URI=""
 LICENSE="BSD"
 SLOT="0"
-KEYWORDS="amd64 arm arm64 x86"
+KEYWORDS="amd64 arm arm64 x86 ppc64"
 IUSE="cros_host official"
 
 # Do not enable offical and SDK at the same time,
