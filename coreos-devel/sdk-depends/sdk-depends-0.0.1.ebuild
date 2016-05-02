@@ -24,11 +24,14 @@ DEPEND="
 	coreos-base/hard-host-depends
 	coreos-base/coreos-sb-keys
 	coreos-devel/mantle
+	dev-libs/gobject-introspection
+	dev-libs/nss
 	dev-perl/Capture-Tiny
 	dev-python/setuptools
 	dev-util/boost-build
 	dev-util/checkbashisms
 	dev-vcs/repo
+	net-dns/bind-tools
 	net-misc/curl
 	sys-apps/debianutils
 	sys-apps/iproute2

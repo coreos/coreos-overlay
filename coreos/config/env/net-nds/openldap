@@ -1,0 +1,4 @@
+export ac_cv_func_memcmp_working=yes
+export ol_with_yielding_select=yes
+export with_yielding_select+set=yes
+export with_yielding_select=yes

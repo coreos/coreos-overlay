@@ -1,0 +1,117 @@
+# ChangeLog for dev-libs/cyrus-sasl
+# Copyright 1999-2016 Gentoo Foundation; Distributed under the GPL v2
+# (auto-generated from git log)
+
+*cyrus-sasl-2.1.26-r9 (09 Aug 2015)
+
+  09 Aug 2015; Robin H. Johnson <robbat2@gentoo.org>
+  +cyrus-sasl-2.1.26-r9.ebuild,
+  +files/cyrus-sasl-0001_versioned_symbols.patch,
+  +files/cyrus-sasl-0002_testsuite.patch,
+  +files/cyrus-sasl-0006_library_mutexes.patch,
+  +files/cyrus-sasl-0008_one_time_sasl_set_alloc.patch,
+  +files/cyrus-sasl-0010_maintainer_mode.patch,
+  +files/cyrus-sasl-0011_saslauthd_ac_prog_libtool.patch,
+  +files/cyrus-sasl-0012_xopen_crypt_prototype.patch,
+  +files/cyrus-sasl-0014_avoid_pic_overwrite.patch,
+  +files/cyrus-sasl-0016_pid_file_lock_creation_mask.patch,
+  +files/cyrus-sasl-0026_drop_krb5support_dependency.patch,
+  +files/cyrus-sasl-2.1.17-pgsql-include.patch,
+  +files/cyrus-sasl-2.1.19-checkpw.c.patch,
+  +files/cyrus-sasl-2.1.21-keytab.patch,
+  +files/cyrus-sasl-2.1.22-as-needed.patch,
+  +files/cyrus-sasl-2.1.22-crypt.patch, +files/cyrus-sasl-2.1.22-gcc44.patch,
+  +files/cyrus-sasl-2.1.22-qa.patch, +files/cyrus-sasl-2.1.23+db-5.0.patch,
+  +files/cyrus-sasl-2.1.23-CVE-2013-4122.patch,
+  +files/cyrus-sasl-2.1.23-authd-fix.patch,
+  +files/cyrus-sasl-2.1.23-gss_c_nt_hostbased_service.patch,
+  +files/cyrus-sasl-2.1.23-rimap-loop.patch,
+  +files/cyrus-sasl-2.1.25-as_needed.patch,
+  +files/cyrus-sasl-2.1.25-autotools_fixes.patch,
+  +files/cyrus-sasl-2.1.25-auxprop.patch,
+  +files/cyrus-sasl-2.1.25-avoid_pic_overwrite.patch,
+  +files/cyrus-sasl-2.1.25-fix_heimdal.patch,
+  +files/cyrus-sasl-2.1.25-missing_header.patch,
+  +files/cyrus-sasl-2.1.25-saslauthd_libtool.patch,
+  +files/cyrus-sasl-2.1.25-sasldb_al.patch,
+  +files/cyrus-sasl-2.1.25-service_keytabs.patch,
+  +files/cyrus-sasl-2.1.26-CVE-2013-4122.patch,
+  +files/cyrus-sasl-2.1.26-canonuser-ldapdb-garbage-in-out-buffer.patch,
+  +files/cyrus-sasl-2.1.26-fix_dovecot_authentication.patch,
+  +files/cyrus-sasl-2.1.26-missing-size_t.patch,
+  +files/cyrus-sasl-2.1.26-send-imap-logout.patch, +files/cyrus-sasl.conf,
+  +files/java.README.gentoo, +files/pwcheck.rc6, +files/pwcheck.service,
+  +files/saslauthd-2.1.21.conf, +files/saslauthd-2.1.26.conf,
+  +files/saslauthd.pam-include, +files/saslauthd.service,
+  +files/saslauthd2.rc6, +files/saslauthd2.rc7, +metadata.xml:
+  proj/gentoo: Initial commit
+
+  This commit represents a new era for Gentoo:
+  Storing the gentoo-x86 tree in Git, as converted from CVS.
+
+  This commit is the start of the NEW history.
+  Any historical data is intended to be grafted onto this point.
+
+  Creation process:
+  1. Take final CVS checkout snapshot
+  2. Remove ALL ChangeLog* files
+  3. Transform all Manifests to thin
+  4. Remove empty Manifests
+  5. Convert all stale $Header$/$Id$ CVS keywords to non-expanded Git $Id$
+  5.1. Do not touch files with -kb/-ko keyword flags.
+
+  Signed-off-by: Robin H. Johnson <robbat2@gentoo.org>
+  X-Thanks: Alec Warner <antarus@gentoo.org> - did the GSoC 2006 migration
+  tests
+  X-Thanks: Robin H. Johnson <robbat2@gentoo.org> - infra guy, herding this
+  project
+  X-Thanks: Nguyen Thai Ngoc Duy <pclouds@gentoo.org> - Former Gentoo
+  developer, wrote Git features for the migration
+  X-Thanks: Brian Harring <ferringb@gentoo.org> - wrote much python to improve
+  cvs2svn
+  X-Thanks: Rich Freeman <rich0@gentoo.org> - validation scripts
+  X-Thanks: Patrick Lauer <patrick@gentoo.org> - Gentoo dev, running new 2014
+  work in migration
+  X-Thanks: Michał Górny <mgorny@gentoo.org> - scripts, QA, nagging
+  X-Thanks: All of other Gentoo developers - many ideas and lots of paint on
+  the bikeshed
+
+  24 Aug 2015; Justin Lecher <jlec@gentoo.org> metadata.xml:
+  Use https by default
+
+  Convert all URLs for sites supporting encrypted connections from http to
+  https
+
+  Signed-off-by: Justin Lecher <jlec@gentoo.org>
+
+  24 Aug 2015; Mike Gilbert <floppym@gentoo.org> metadata.xml:
+  Revert DOCTYPE SYSTEM https changes in metadata.xml
+
+  repoman does not yet accept the https version.
+  This partially reverts eaaface92ee81f30a6ac66fe7acbcc42c00dc450.
+
+  Bug: https://bugs.gentoo.org/552720
+
+*cyrus-sasl-2.1.26-r10 (20 Sep 2015)
+
+  20 Sep 2015; Julian Ospald <hasufell@gentoo.org>
+  +cyrus-sasl-2.1.26-r10.ebuild:
+  add libressl support
+
+  24 Jan 2016; Michał Górny <mgorny@gentoo.org> metadata.xml:
+  Unify quoting in metadata.xml files for machine processing
+
+  Force unified quoting in all metadata.xml files since lxml does not
+  preserve original use of single and double quotes. Ensuring unified
+  quoting before the process allows distinguishing the GLEP 67-related
+  metadata.xml changes from unrelated quoting changes.
+
+  24 Jan 2016; Michał Górny <mgorny@gentoo.org> metadata.xml:
+  Replace all herds with appropriate projects (GLEP 67)
+
+  Replace all uses of herd with appropriate project maintainers, or no
+  maintainers in case of herds requested to be disbanded.
+
+  24 Jan 2016; Michał Górny <mgorny@gentoo.org> metadata.xml:
+  Set appropriate maintainer types in metadata.xml (GLEP 67)
+

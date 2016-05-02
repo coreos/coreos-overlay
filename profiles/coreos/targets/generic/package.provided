@@ -14,3 +14,6 @@ app-eselect/eselect-vi-1.1.7-r1
 
 # pulled in by app-admin/sudo
 app-misc/editor-wrapper-4
+
+# pulled in by dev-libs/cyrus-sasl
+net-mail/mailbase-1.1

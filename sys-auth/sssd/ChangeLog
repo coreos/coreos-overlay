@@ -1,0 +1,101 @@
+# ChangeLog for sys-auth/sssd
+# Copyright 1999-2016 Gentoo Foundation; Distributed under the GPL v2
+# (auto-generated from git log)
+
+*sssd-1.13.0 (09 Aug 2015)
+*sssd-1.12.5 (09 Aug 2015)
+*sssd-1.12.4 (09 Aug 2015)
+*sssd-1.12.1 (09 Aug 2015)
+*sssd-1.9.7 (09 Aug 2015)
+*sssd-1.9.6-r3 (09 Aug 2015)
+
+  09 Aug 2015; Robin H. Johnson <robbat2@gentoo.org>
+  +files/0001_add_pthread_to_fix_as-needed.patch,
+  +files/0002_allow_xdm_openrc.patch, +files/0003_new_krb5.patch,
+  +files/allow_xdm.patch, +files/sssd, +files/sssd-1.13.0-fix-init.patch,
+  +files/sssd-1.9.6-fix-init.patch, +files/sssd.conf, +files/sssd.service,
+  +metadata.xml, +sssd-1.9.6-r3.ebuild, +sssd-1.9.7.ebuild,
+  +sssd-1.12.1.ebuild, +sssd-1.12.4.ebuild, +sssd-1.12.5.ebuild,
+  +sssd-1.13.0.ebuild:
+  proj/gentoo: Initial commit
+
+  This commit represents a new era for Gentoo:
+  Storing the gentoo-x86 tree in Git, as converted from CVS.
+
+  This commit is the start of the NEW history.
+  Any historical data is intended to be grafted onto this point.
+
+  Creation process:
+  1. Take final CVS checkout snapshot
+  2. Remove ALL ChangeLog* files
+  3. Transform all Manifests to thin
+  4. Remove empty Manifests
+  5. Convert all stale $Header$/$Id$ CVS keywords to non-expanded Git $Id$
+  5.1. Do not touch files with -kb/-ko keyword flags.
+
+  Signed-off-by: Robin H. Johnson <robbat2@gentoo.org>
+  X-Thanks: Alec Warner <antarus@gentoo.org> - did the GSoC 2006 migration
+  tests
+  X-Thanks: Robin H. Johnson <robbat2@gentoo.org> - infra guy, herding this
+  project
+  X-Thanks: Nguyen Thai Ngoc Duy <pclouds@gentoo.org> - Former Gentoo
+  developer, wrote Git features for the migration
+  X-Thanks: Brian Harring <ferringb@gentoo.org> - wrote much python to improve
+  cvs2svn
+  X-Thanks: Rich Freeman <rich0@gentoo.org> - validation scripts
+  X-Thanks: Patrick Lauer <patrick@gentoo.org> - Gentoo dev, running new 2014
+  work in migration
+  X-Thanks: Michał Górny <mgorny@gentoo.org> - scripts, QA, nagging
+  X-Thanks: All of other Gentoo developers - many ideas and lots of paint on
+  the bikeshed
+
+  24 Aug 2015; Justin Lecher <jlec@gentoo.org> metadata.xml:
+  Use https by default
+
+  Convert all URLs for sites supporting encrypted connections from http to
+  https
+
+  Signed-off-by: Justin Lecher <jlec@gentoo.org>
+
+  24 Aug 2015; Mike Gilbert <floppym@gentoo.org> metadata.xml:
+  Revert DOCTYPE SYSTEM https changes in metadata.xml
+
+  repoman does not yet accept the https version.
+  This partially reverts eaaface92ee81f30a6ac66fe7acbcc42c00dc450.
+
+  Bug: https://bugs.gentoo.org/552720
+
+  28 Aug 2015; Lars Wendler <polynomial-c@gentoo.org> sssd-1.12.1.ebuild,
+  sssd-1.12.4.ebuild, sssd-1.12.5.ebuild:
+  Stick to automake-1.13 (bug #557436)
+
+  Committed on behalf of Markos Chandras (hwoarang)
+
+  Package-Manager: portage-2.2.20.1
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+*sssd-1.13.1 (04 Nov 2015)
+
+  04 Nov 2015; Markos Chandras <hwoarang@gentoo.org> +sssd-1.13.1.ebuild:
+  Version bump
+
+  Package-Manager: portage-2.2.23
+
+  14 Nov 2015; Jeroen Roovers <jer@gentoo.org> sssd-1.9.6-r3.ebuild,
+  sssd-1.9.7.ebuild, sssd-1.12.1.ebuild, sssd-1.12.4.ebuild,
+  sssd-1.12.5.ebuild, sssd-1.13.0.ebuild, sssd-1.13.1.ebuild:
+  Verbose build.
+
+  Package-Manager: portage-2.2.24
+
+  24 Jan 2016; Michał Górny <mgorny@gentoo.org> metadata.xml:
+  Unify quoting in metadata.xml files for machine processing
+
+  Force unified quoting in all metadata.xml files since lxml does not
+  preserve original use of single and double quotes. Ensuring unified
+  quoting before the process allows distinguishing the GLEP 67-related
+  metadata.xml changes from unrelated quoting changes.
+
+  24 Jan 2016; Michał Górny <mgorny@gentoo.org> metadata.xml:
+  Set appropriate maintainer types in metadata.xml (GLEP 67)
+
