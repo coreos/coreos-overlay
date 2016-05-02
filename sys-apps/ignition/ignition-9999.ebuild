@@ -12,7 +12,7 @@ if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64"
 else
 	CROS_WORKON_COMMIT="9d0025b4d90d90122322b650c6cedc61cfc83eff" # tag v0.4.0
-	KEYWORDS="amd64 arm64"
+	KEYWORDS="amd64 arm64 ppc64"
 fi
 
 DESCRIPTION="Pre-boot provisioning utility"
