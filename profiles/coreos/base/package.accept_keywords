@@ -94,3 +94,7 @@ dev-util/checkbashisms
 # https://curl.haxx.se/docs/security.html
 =net-misc/curl-7.47.1 ~amd64 ~arm64
 
+# heap overflow fix
+# https://bugs.gentoo.org/show_bug.cgi?id=580606
+=app-misc/jq-1.5-r2 ~amd64 ~arm64
+
