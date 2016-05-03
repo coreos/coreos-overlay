@@ -160,7 +160,7 @@ src_install() {
 	fowners -R 500:500 /home/core || die
 
 	if use arm64; then
-		sed -i "${D}"/usr/share/baselayout/nsswitch.conf 's/ sss//' || die
+		sed -i 's/ sss//' "${D}"/usr/share/baselayout/nsswitch.conf || die
 	fi
 
 	if use cros_host; then
