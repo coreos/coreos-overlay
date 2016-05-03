@@ -10,14 +10,18 @@ SRC_URI=""
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="amd64"
+KEYWORDS="amd64 ppc64"
 IUSE=""
 
 DEPEND="
 	app-admin/sudo
 	app-admin/updateservicectl
 	app-arch/pbzip2
-	app-emulation/acbuild
+	amd64? (
+		app-emulation/acbuild
+		sys-boot/shim
+		sys-firmware/edk2-ovmf
+	)
 	app-emulation/open-vmdk
 	app-misc/jq
 	app-shells/bash-completion
@@ -34,9 +38,7 @@ DEPEND="
 	sys-apps/iproute2
 	sys-apps/seismograph
 	sys-boot/grub
-	sys-boot/shim
 	sys-devel/crossdev
-	sys-firmware/edk2-ovmf
 	sys-fs/btrfs-progs
 	sys-fs/cryptsetup
 	"
