@@ -8,7 +8,7 @@ HOMEPAGE=""
 SRC_URI=""
 LICENSE="BSD"
 SLOT="0"
-KEYWORDS="amd64 arm x86"
+KEYWORDS="amd64 arm x86 ppc64"
 IUSE=""
 
 S="${WORKDIR}"
