@@ -1,0 +1,236 @@
+
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=coreos-base/cros-testutils-9999 **
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=dev-util/perf-4.4.4 **
+# required by dev-python/ws4py-9999::gentoo[server]
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=dev-python/cherrypy-3.8.0 **
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=sys-libs/libnih-1.0.3-r3 ~ppc64
+# required by net-misc/gcutil-1.16.5::coreos
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=dev-python/ipaddr-2.1.11 **
+# required by app-emulation/qemu-2.5.1::gentoo[qemu_softmmu_targets_x86_64,pin-upstream-blobs,qemu_softmmu_targets_i386]
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=sys-firmware/sgabios-0.1_pre8 ~ppc64
+# required by app-emulation/qemu-2.5.1::gentoo[qemu_softmmu_targets_x86_64,qemu_softmmu_targets_i386]
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=sys-firmware/ipxe-1.0.0_p20130925 **
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=dev-lang/yasm-9999 **
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=dev-lang/go-bootstrap-1.5.3 **
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=dev-python/python-daemon-2.1.1 **
+# required by sys-boot/syslinux-6.04_pre1::gentoo
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=dev-perl/Crypt-PasswdMD5-1.400.0 ~ppc64
+# required by net-misc/gsutil-4.19::gentoo
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=dev-python/boto-2.39.0 **
+# required by net-misc/gcutil-1.16.5::coreos
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=dev-python/oauth2client-1.4.12 **
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=dev-python/pyinotify-0.9.6 **
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=net-misc/gcutil-1.16.5 **
+# required by dev-python/google-apitools-0.5.2::gentoo
+# required by net-misc/gsutil-4.19::gentoo
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=dev-python/google-apputils-0.4.2-r1 ~ppc64
+# required by dev-python/google-api-python-client-1.5.0::gentoo
+# required by net-misc/gcutil-1.16.5::coreos
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=dev-python/uritemplate-0.6 **
+# required by coreos-base/cros-testutils-9999::coreos
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=app-emulation/qemu-2.5.1 ~ppc64
+# required by dev-python/gcs-oauth2-boto-plugin-1.12::gentoo
+# required by net-misc/gsutil-4.19::gentoo
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=dev-python/retry-decorator-1.0.0 **
+# required by net-misc/gsutil-4.19::gentoo
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=dev-python/google-apitools-0.5.2 **
+# required by net-misc/gcutil-1.16.5::coreos
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=dev-python/python-gflags-3.0.2 ~ppc64
+# required by dev-python/oauth2client-2.0.2::gentoo
+# required by dev-python/gcs-oauth2-boto-plugin-1.12::gentoo
+# required by net-misc/gsutil-4.19::gentoo
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=dev-python/rsa-3.3 **
+# required by virtual/os-headers-0::gentoo
+# required by net-misc/bridge-utils-1.5::gentoo
+# required by app-emulation/xen-tools-4.6.1-r1::gentoo
+# required by sys-boot/grub-9999-r1::gentoo[grub_platforms_xen]
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=sys-kernel/linux-headers-4.5 ~ppc64
+# required by dev-python/google-apitools-0.5.2::gentoo
+# required by net-misc/gsutil-4.19::gentoo
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=dev-python/setuptools-20.6.7 ~ppc64
+# required by coreos-base/update_engine-9999::coreos
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=coreos-base/libchrome-180609-r4 **
+# required by sys-boot/syslinux-6.04_pre1::gentoo
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=dev-lang/nasm-2.12.01 **
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=dev-python/ws4py-9999 **
+# required by net-misc/gsutil-4.19::gentoo
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=dev-python/crcmod-1.7-r2 **
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=dev-python/mako-1.0.3 ~ppc64
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=net-misc/gsutil-4.19 **
+# required by net-misc/gsutil-4.19::gentoo
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=dev-python/gcs-oauth2-boto-plugin-1.12 **
+# required by sys-firmware/vgabios-0.7a-r1::gentoo[-binary]
+# required by app-emulation/qemu-2.5.1::gentoo[qemu_softmmu_targets_x86_64,pin-upstream-blobs,qemu_softmmu_targets_i386]
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=sys-devel/dev86-0.16.21-r2 ~ppc64
+# required by dev-python/google-api-python-client-1.5.0::gentoo
+# required by net-misc/gcutil-1.16.5::coreos
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=dev-python/oauth2client-2.0.2 **
+# required by sys-devel/dev86-0.16.21-r2::gentoo
+# required by sys-firmware/vgabios-0.7a-r1::gentoo[-binary]
+# required by app-emulation/qemu-2.5.1::gentoo[qemu_softmmu_targets_x86_64,pin-upstream-blobs,qemu_softmmu_targets_i386]
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=sys-devel/bin86-0.16.21 ~ppc64
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=dev-embedded/u-boot-tools-2016.03 **
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=dev-python/mox-0.5.3-r1 ~ppc64
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=coreos-base/update_engine-9999 **
+# required by app-emulation/qemu-2.5.1::gentoo[qemu_softmmu_targets_x86_64,pin-upstream-blobs,qemu_softmmu_targets_i386]
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=sys-firmware/seabios-1.8.2 ~ppc64
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=app-arch/pigz-2.3.3 **
+# required by app-emulation/qemu-2.5.1::gentoo[qemu_softmmu_targets_x86_64,pin-upstream-blobs,qemu_softmmu_targets_i386]
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=sys-firmware/vgabios-0.7a-r1 ~ppc64
+# required by app-crypt/efitools-1.5.3_p20150420::coreos
+# required by coreos-base/cros-devutils-9999::coreos
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=app-crypt/sbsigntool-0.6-r2 **
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=dev-python/netifaces-0.10.4 **
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=sys-boot/syslinux-6.04_pre1 **
+# required by net-misc/gcutil-1.16.5::coreos
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=dev-python/google-api-python-client-1.5.0 **
+# required by dev-python/gcs-oauth2-boto-plugin-1.12::gentoo
+# required by net-misc/gsutil-4.19::gentoo
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=dev-python/PySocks-1.5.6 ~ppc64
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=sys-power/iasl-20150717 **
+# required by coreos-base/cros-devutils-9999::coreos[cros_host]
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=dev-util/crosutils-9999 **
+# required by coreos-base/hard-host-depends-0.0.1-r177::coreos
+# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
+# required by coreos-devel/sdk-depends (argument)
+=coreos-base/cros-devutils-9999 **

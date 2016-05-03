@@ -24,7 +24,7 @@ RDEPEND="${DEPEND}
 	>=dev-python/iso8601-0.1.4[${PYTHON_USEDEP}]
 	>=dev-python/google-apputils-0.4.0[${PYTHON_USEDEP}]
 	>=dev-python/python-gflags-2.0[${PYTHON_USEDEP}]
-	=dev-python/oauth2client-1.4*[${PYTHON_USEDEP}]
+	dev-python/oauth2client[${PYTHON_USEDEP}]
 	dev-python/pyyaml[${PYTHON_USEDEP}]
 	dev-python/setuptools[${PYTHON_USEDEP}]
 	"

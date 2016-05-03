@@ -151,7 +151,7 @@ RDEPEND="${RDEPEND}
 
 # Host dependencies for taking to dev boards
 RDEPEND="${RDEPEND}
-	dev-embedded/smdk-dltool
+	!ppc64? ( dev-embedded/smdk-dltool )
 	"
 
 # Host dependencies for HWID processing

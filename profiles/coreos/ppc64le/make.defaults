@@ -3,3 +3,12 @@
 # is enabled in hardened, the default profiles do not enable it.
 BOOTSTRAP_USE="${BOOTSTRAP_USE} -pax_kernel -xtpax"
 USE="-pax_kernel -urandom -xtpax"
+# Enable our assorted Grub targets, don't whine about /boot
+GRUB_PLATFORMS="efi-64 pc xen ieee1275"
+DONT_MOUNT_BOOT=1
+
+# Both x86_64 and i386 targets are required for grub testing
+QEMU_SOFTMMU_TARGETS="x86_64 i386 aarch64 ppc64le"
+
+# For cross build support.
+QEMU_USER_TARGETS="aarch64 ppc64le"
