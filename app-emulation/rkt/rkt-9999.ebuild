@@ -23,7 +23,7 @@ fi
 
 PXE_VERSION="794.1.0"
 PXE_SYSTEMD_VERSION="222"
-PXE_URI="http://alpha.release.core-os.net/amd64-usr/${PXE_VERSION}/coreos_production_pxe_image.cpio.gz"
+PXE_URI="https://alpha.release.core-os.net/amd64-usr/${PXE_VERSION}/coreos_production_pxe_image.cpio.gz"
 PXE_FILE="${PN}-pxe-${PXE_VERSION}.img"
 
 SRC_URI="rkt_stage1_coreos? ( $PXE_URI -> $PXE_FILE )"
