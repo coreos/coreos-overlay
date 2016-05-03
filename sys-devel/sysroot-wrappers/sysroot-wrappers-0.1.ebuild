@@ -9,7 +9,7 @@ SRC_URI="https://github.com/coreos/${PN}/releases/download/v${PV}/${P}.tar.gz"
 
 LICENSE="GPL-3"
 SLOT="0"
-KEYWORDS="amd64"
+KEYWORDS="amd64 ppc64"
 IUSE=""
 
 # Probably can be reduced in later versions but
