@@ -93,3 +93,7 @@ dev-util/checkbashisms
 
 =app-misc/c_rehash-1.7-r1 ~amd64 ~arm64
 
+# heap overflow fix
+# https://bugs.gentoo.org/show_bug.cgi?id=580606
+=app-misc/jq-1.5-r2 ~amd64 ~arm64
+
