@@ -8,7 +8,7 @@ HOMEPAGE="http://src.chromium.org"
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="amd64 x86"
+KEYWORDS="amd64 x86 ppc64"
 IUSE=""
 
 # Needed to run setup crossdev, run build scripts, and make a bootable image.
