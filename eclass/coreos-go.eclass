@@ -22,6 +22,9 @@ go_get_arch() {
 	local portage_arch=$(tc-arch ${CHOST})
 	case "${portage_arch}" in
 		x86)	echo 386;;
+		x64-*)	echo amd64;;
+		ppc64)
+			[[ "$(tc-endian)" = big ]] && echo ppc64 || echo ppc64le ;;
 		*)	echo "${portage_arch}";;
 	esac
 }
