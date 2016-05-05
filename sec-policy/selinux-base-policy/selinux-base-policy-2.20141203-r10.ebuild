@@ -15,7 +15,7 @@ if [[ ${PV} == 9999* ]]; then
 	KEYWORDS=""
 else
 	SRC_URI="https://raw.githubusercontent.com/wiki/TresysTechnology/refpolicy/files/refpolicy-${PV}.tar.bz2
-			http://dev.gentoo.org/~swift/patches/${PN}/patchbundle-${PN}-${PVR}.tar.bz2"
+			http://dev.gentoo.org/~swift/patches/${PN}/patchbundle-${PN}-2.20141203-r9.tar.bz2"
 	KEYWORDS="amd64 x86"
 fi
 
