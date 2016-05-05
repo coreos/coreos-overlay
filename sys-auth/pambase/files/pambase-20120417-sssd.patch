@@ -15,7 +15,7 @@ diff -ur pambase-20140313.orig/system-auth.in pambase-20140313/system-auth.in
  #endif
  account		required	pam_unix.so DEBUG
  /* This is needed to make sure that the Kerberos skip-on-success won't cause a bad jump. */
-+account		[default=bad success=ok user_unknown=ignore]	pam_sss.so
++account		sufficient	pam_sss.so
  account		optional	pam_permit.so
   
  #if HAVE_CRACKLIB
