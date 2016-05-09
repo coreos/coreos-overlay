@@ -3,3 +3,12 @@ USE="man -pam"
 # Used by some old goo in profiles/coreos/base/profile.bashrc
 # TODO: clean up that old goo
 CROS_SDK_HOST="cros-sdk-host"
+
+# Enable our assorted GRUB targets
+GRUB_PLATFORMS="efi-64 pc xen"
+
+# Both x86_64 and i386 targets are required for grub testing
+QEMU_SOFTMMU_TARGETS="x86_64 i386 aarch64"
+
+# For cross build support.
+QEMU_USER_TARGETS="aarch64"

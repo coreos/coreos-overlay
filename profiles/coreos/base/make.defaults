@@ -96,12 +96,5 @@ FEATURES="buildpkg clean-logs compressdebug parallel-install splitdebug
 # No need to restrict access to build directories in dev environments.
 PORTAGE_WORKDIR_MODE="0755"
 
-# Enable our assorted Grub targets, don't whine about /boot
-GRUB_PLATFORMS="efi-64 pc xen"
+# Don't let GRUB whine about /boot
 DONT_MOUNT_BOOT=1
-
-# Both x86_64 and i386 targets are required for grub testing
-QEMU_SOFTMMU_TARGETS="x86_64 i386 aarch64"
-
-# For cross build support.
-QEMU_USER_TARGETS="aarch64"
