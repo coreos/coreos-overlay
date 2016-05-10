@@ -25,6 +25,7 @@ RDEPEND="
 		dev-lang/python-oem
 	)
 	arm64? (
+		sys-boot/grub
 		sys-firmware/edk2-armvirt
 	)
 	coreos-base/coreos
