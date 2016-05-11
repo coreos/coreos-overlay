@@ -1,0 +1,7 @@
+DEFINED_PHASES=install
+DESCRIPTION=Tools for generating TPM policy
+EAPI=4
+KEYWORDS=amd64 x86 arm64
+LICENSE=GPL-2
+SLOT=0
+_md5_=4865ef5d2a661f1c08d9eb83424af8a3

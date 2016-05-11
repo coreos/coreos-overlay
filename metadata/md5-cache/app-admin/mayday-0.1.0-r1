@@ -1,0 +1,11 @@
+DEFINED_PHASES=compile info install prepare unpack
+DEPEND=dev-lang/go:= >=dev-vcs/git-1.8.2.1
+DESCRIPTION=mayday
+EAPI=5
+HOMEPAGE=https://github.com/coreos/mayday
+IUSE=cros_workon_tree_* profiling
+KEYWORDS=amd64 arm64
+LICENSE=Apache-2.0
+SLOT=0
+_eclasses_=coreos-go	9aec6d11d214fbb3064cc9de1bd64eb0	cros-workon	995fc284f005294b40380f96f8f96541	eutils	9d81603248f2ba3ec59124320d123e5e	flag-o-matic	d270fa247153df66074f795fa42dba3e	git-r3	ef66dfc3db09f327af21cf32f140fb2b	multilib	3972ca401cf7dbb430df9995f5d8d580	multiprocessing	e32940a7b2a9992ad217eccddb84d548	toolchain-funcs	7a212e5e01adfa4805c9978366e6ee85
+_md5_=e313fe1d1f5a81a98055ceb678a27b80

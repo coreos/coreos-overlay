@@ -1,0 +1,9 @@
+DEFINED_PHASES=install
+DESCRIPTION=Kubernetes Container Manager
+EAPI=5
+HOMEPAGE=http://kubernetes.io/
+KEYWORDS=amd64
+LICENSE=Apache-2.0
+RDEPEND=app-emulation/rkt
+SLOT=0
+_md5_=a8084ed3774db6155dbe46bf2e1a3916

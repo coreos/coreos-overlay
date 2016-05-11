@@ -1,5 +1,6 @@
 DEFINED_PHASES=-
 DESCRIPTION=Chrome OS perf virtual package
+EAPI=0
 HOMEPAGE=http://src.chromium.org
 IUSE=kernel_next
 KEYWORDS=amd64 arm x86

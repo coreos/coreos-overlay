@@ -1,9 +1,0 @@
-DEFINED_PHASES=-
-DESCRIPTION=Meta ebuild for building all binary packages.
-EAPI=5
-HOMEPAGE=http://coreos.com/docs/sdk/
-KEYWORDS=amd64 arm64
-LICENSE=GPL-2
-RDEPEND=amd64? ( app-emulation/open-vm-tools ) coreos-base/coreos coreos-base/coreos-dev dev-lang/python-oem
-SLOT=0
-_md5_=7bcf516a97ebf70fa645fc84aad134df
