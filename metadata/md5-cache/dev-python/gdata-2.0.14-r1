@@ -9,5 +9,5 @@ LICENSE=Apache-2.0
 RDEPEND=|| ( dev-lang/python:2.7[xml] dev-lang/python:2.6[xml] dev-lang/python:2.5[xml] dev-python/elementtree ) =dev-lang/python-2* =dev-lang/python-2*[ssl]
 SLOT=0
 SRC_URI=http://gdata-python-client.googlecode.com/files/gdata-2.0.14.tar.gz
-_eclasses_=distutils	92e738ea29389cb3f34778d7a349ac71	eutils	9fb270e417e0e83d64ca52586c4a79de	multilib	62927b3db3a589b0806255f3a002d5d3	python	3a270b7b1d1e679847ff0faeac25c5a3	toolchain-funcs	42408102d713fbad60ca21349865edb4
+_eclasses_=distutils	ad9e4720eb3e69090dd968b152fc611b	eutils	9d81603248f2ba3ec59124320d123e5e	multilib	3972ca401cf7dbb430df9995f5d8d580	python	efc1c55fc44c5b7272fc2ffba73c3e6f	toolchain-funcs	7a212e5e01adfa4805c9978366e6ee85
 _md5_=d0355ac0473cb3e06e52cbbc160f6159

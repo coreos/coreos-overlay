@@ -1,0 +1,10 @@
+DEFINED_PHASES=install
+DESCRIPTION=Windows Azure Linux Agent
+EAPI=5
+HOMEPAGE=https://github.com/Azure/WALinuxAgent
+KEYWORDS=amd64
+LICENSE=Apache-2.0
+RDEPEND=dev-lang/python-oem
+SLOT=0
+SRC_URI=https://github.com/Azure/WALinuxAgent/archive/WALinuxAgent-2.0.16.tar.gz
+_md5_=2078c19c867286c531dbecfe6eb18414

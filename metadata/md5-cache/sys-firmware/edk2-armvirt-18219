@@ -1,0 +1,11 @@
+DEFINED_PHASES=compile configure install prepare
+DESCRIPTION=EDK II Open Source UEFI Firmware
+EAPI=5
+HOMEPAGE=http://tianocore.sourceforge.net
+IUSE=debug +secure-boot
+KEYWORDS=-* arm64
+LICENSE=BSD-2
+SLOT=0
+SRC_URI=http://storage.core-os.net/mirror/snapshots/edk2-18219.tar.xz mirror://openssl/source/openssl-1.0.2d.tar.gz
+_eclasses_=eutils	9d81603248f2ba3ec59124320d123e5e	multilib	3972ca401cf7dbb430df9995f5d8d580	multiprocessing	e32940a7b2a9992ad217eccddb84d548	toolchain-funcs	7a212e5e01adfa4805c9978366e6ee85
+_md5_=a829cfa67bdc7af324148e94a6a4d0f2

@@ -1,5 +1,5 @@
 DEFINED_PHASES=compile info install prepare unpack
-DEPEND=>=dev-vcs/git-1.8.2.1 virtual/pkgconfig dev-lang/go
+DEPEND=>=dev-vcs/git-1.8.2.1 virtual/pkgconfig dev-lang/go:=
 DESCRIPTION=nova-agent-watcher
 EAPI=5
 HOMEPAGE=https://github.com/coreos/nova-agent-watcher
@@ -7,5 +7,5 @@ IUSE=cros_workon_tree_* profiling
 KEYWORDS=~amd64 ~arm64
 LICENSE=Apache-2.0
 SLOT=0
-_eclasses_=coreos-go	868c1eec3d6d831946c44413cd1dc272	cros-workon	0792a7d98dd0d1627a411449b45b8b25	eutils	9fb270e417e0e83d64ca52586c4a79de	flag-o-matic	c9602887773166fe300444712fc7ff98	git-r3	ab80045e5d080584334f33013f4df21d	multilib	62927b3db3a589b0806255f3a002d5d3	multiprocessing	d7f2985a2c76c365ee20269db5261414	systemd	090342761f573a8280dd5aa6b0345f3b	toolchain-funcs	42408102d713fbad60ca21349865edb4
+_eclasses_=coreos-go	9aec6d11d214fbb3064cc9de1bd64eb0	cros-workon	995fc284f005294b40380f96f8f96541	eutils	9d81603248f2ba3ec59124320d123e5e	flag-o-matic	d270fa247153df66074f795fa42dba3e	git-r3	ef66dfc3db09f327af21cf32f140fb2b	multilib	3972ca401cf7dbb430df9995f5d8d580	multiprocessing	e32940a7b2a9992ad217eccddb84d548	systemd	3165c885f3c71ffae7a867d931fb0e07	toolchain-funcs	7a212e5e01adfa4805c9978366e6ee85
 _md5_=5f033e01316562b13f6837d69b2042a8
