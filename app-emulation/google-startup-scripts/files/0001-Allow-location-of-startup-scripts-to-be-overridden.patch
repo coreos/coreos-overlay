@@ -1,0 +1,163 @@
+From 73c4917ef66a0be37b625f00d0c38dffe5cbc70c Mon Sep 17 00:00:00 2001
+From: Alex Crawford <alex.crawford@coreos.com>
+Date: Thu, 12 May 2016 14:28:01 -0700
+Subject: [PATCH] Allow location of startup scripts to be overridden
+
+---
+ google-startup-scripts/usr/share/google/fetch_script  |  3 ++-
+ google-startup-scripts/usr/share/google/first-boot    |  7 ++++---
+ google-startup-scripts/usr/share/google/onboot        | 19 ++++++++++---------
+ .../usr/share/google/run-shutdown-scripts             |  5 +++--
+ .../usr/share/google/run-startup-scripts              |  5 +++--
+ 5 files changed, 22 insertions(+), 17 deletions(-)
+
+diff --git a/google-startup-scripts/usr/share/google/fetch_script b/google-startup-scripts/usr/share/google/fetch_script
+index 72ba9ac..2946a71 100755
+--- a/google-startup-scripts/usr/share/google/fetch_script
++++ b/google-startup-scripts/usr/share/google/fetch_script
+@@ -24,6 +24,7 @@ fi
+ 
+ declare -r CURL_RETRY_LIMIT=10
+ declare -r CURL_TIMEOUT=10
++declare -r SCRIPTS_PREFIX=${GOOGLE_SCRIPTS_PREFIX:-/usr/share/google/}
+ 
+ function log() {
+   echo "$@" | ${LOGGER} -t google -p daemon.info
+@@ -109,7 +110,7 @@ function download_url() {
+ 
+ function get_metadata_attribute() {
+   local readonly varname=$1
+-  /usr/share/google/get_metadata_value "attributes/${varname}"
++  ${SCRIPTS_PREFIX}/get_metadata_value "attributes/${varname}"
+   return $?
+ }
+ 
+diff --git a/google-startup-scripts/usr/share/google/first-boot b/google-startup-scripts/usr/share/google/first-boot
+index b346b65..836857d 100755
+--- a/google-startup-scripts/usr/share/google/first-boot
++++ b/google-startup-scripts/usr/share/google/first-boot
+@@ -17,6 +17,7 @@
+ 
+ declare -r INSTANCE_FILE=${PREFIX}/var/lib/google/vm-instance-id
+ declare -r LOCK_FILE=${INSTANCE_FILE}.lock
++declare -r SCRIPTS_PREFIX=${GOOGLE_SCRIPTS_PREFIX:-/usr/share/google/}
+ 
+ mkdir -p ${PREFIX}/var/lib/google/per-instance
+ 
+@@ -29,7 +30,7 @@ function log() {
+ }
+ 
+ function get_instance_id() {
+-  ${PREFIX}/usr/share/google/get_metadata_value id 2>/dev/null
++  ${PREFIX}/${SCRIPTS_PREFIX}/get_metadata_value id 2>/dev/null
+ }
+ 
+ # Checks the instance id has changed.
+@@ -71,8 +72,8 @@ function manage_stored_instance_id() {
+     log "Running first-boot"
+ 
+     # Regenerate host keys for ssh.
+-    if [[ -x ${PREFIX}/usr/share/google/regenerate-host-keys ]]; then
+-      ${PREFIX}/usr/share/google/regenerate-host-keys
++    if [[ -x ${PREFIX}/${SCRIPTS_PREFIX}/regenerate-host-keys ]]; then
++      ${PREFIX}/${SCRIPTS_PREFIX}/regenerate-host-keys
+     fi
+ 
+     # We are booting this instance for the first time.
+diff --git a/google-startup-scripts/usr/share/google/onboot b/google-startup-scripts/usr/share/google/onboot
+index 482d384..a3df445 100755
+--- a/google-startup-scripts/usr/share/google/onboot
++++ b/google-startup-scripts/usr/share/google/onboot
+@@ -33,7 +33,8 @@ else
+     declare -r LOGGER=/bin/logger
+ fi
+ 
+-declare -r BOTO_SETUP_SCRIPT=/usr/share/google/boto/boot_setup.py
++declare -r SCRIPTS_PREFIX=${GOOGLE_SCRIPTS_PREFIX:-/usr/share/google/}
++declare -r BOTO_SETUP_SCRIPT=${SCRIPTS_PREFIX}/boto/boot_setup.py
+ declare -r GOOGLE_ENVIRONMENT=/var/run/google.environment
+ 
+ function log() {
+@@ -42,26 +43,26 @@ function log() {
+ }
+ 
+ function set_interrupts() {
+-  if [[ -x /usr/share/google/set-interrupts ]]; then
+-    /usr/share/google/set-interrupts
++  if [[ -x ${SCRIPTS_PREFIX}/set-interrupts ]]; then
++    ${SCRIPTS_PREFIX}/set-interrupts
+   fi
+ }
+ 
+ function virtionet_irq_affinity() {
+-  if [[ -x /usr/share/google/virtionet-irq-affinity ]]; then
+-    /usr/share/google/virtionet-irq-affinity
++  if [[ -x ${SCRIPTS_PREFIX}/virtionet-irq-affinity ]]; then
++    ${SCRIPTS_PREFIX}/virtionet-irq-affinity
+   fi
+ }
+ 
+ function first_boot() {
+-  if [[ -x /usr/share/google/first-boot ]]; then
+-    /usr/share/google/first-boot
++  if [[ -x ${SCRIPTS_PREFIX}/first-boot ]]; then
++    ${SCRIPTS_PREFIX}/first-boot
+   fi
+ }
+ 
+ function get_metadata_value() {
+   local readonly varname=$1
+-  /usr/share/google/get_metadata_value ${varname}
++  ${SCRIPTS_PREFIX}/get_metadata_value ${varname}
+   return $?
+ }
+ 
+@@ -119,7 +120,7 @@ function check_for_connection() {
+   log "Checking for metadata server connection."
+   while true; do
+     ((count++))
+-    MDS_TRIES=1 /usr/share/google/get_metadata_value "?recursive=True"
++    MDS_TRIES=1 ${SCRIPTS_PREFIX}/get_metadata_value "?recursive=True"
+     return_code=$?
+     case ${return_code} in
+       # No error.  Connection is active.
+diff --git a/google-startup-scripts/usr/share/google/run-shutdown-scripts b/google-startup-scripts/usr/share/google/run-shutdown-scripts
+index 61377e9..b81f49b 100755
+--- a/google-startup-scripts/usr/share/google/run-shutdown-scripts
++++ b/google-startup-scripts/usr/share/google/run-shutdown-scripts
+@@ -20,6 +20,7 @@
+ PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin
+ 
+ declare -r SHUTDOWN_SCRIPT=/var/run/google.shutdown.script
++declare -r SCRIPTS_PREFIX=${GOOGLE_SCRIPTS_PREFIX:-/usr/share/google/}
+ 
+ # NOTE
+ # Make sure that the shutdown script completes within 90 seconds, so
+@@ -27,5 +28,5 @@ declare -r SHUTDOWN_SCRIPT=/var/run/google.shutdown.script
+ # buffers to disk.
+ #
+ # The shutdown script blocks other shutdown operations from proceeding.
+-/usr/share/google/fetch_script ${SHUTDOWN_SCRIPT} shutdown
+-/usr/share/google/run-scripts ${SHUTDOWN_SCRIPT} shutdown
++${SCRIPTS_PREFIX}/fetch_script ${SHUTDOWN_SCRIPT} shutdown
++${SCRIPTS_PREFIX}/run-scripts ${SHUTDOWN_SCRIPT} shutdown
+diff --git a/google-startup-scripts/usr/share/google/run-startup-scripts b/google-startup-scripts/usr/share/google/run-startup-scripts
+index b9e2667..c9afddf 100755
+--- a/google-startup-scripts/usr/share/google/run-startup-scripts
++++ b/google-startup-scripts/usr/share/google/run-startup-scripts
+@@ -19,9 +19,10 @@
+ PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin
+ 
+ declare -r STARTUP_SCRIPT=/var/run/google.startup.script
++declare -r SCRIPTS_PREFIX=${GOOGLE_SCRIPTS_PREFIX:-/usr/share/google/}
+ 
+ # Make sure all udev changes settle before running startup scripts.
+ udevadm settle
+ 
+-/usr/share/google/fetch_script ${STARTUP_SCRIPT} startup
+-/usr/share/google/run-scripts ${STARTUP_SCRIPT} startup
++${SCRIPTS_PREFIX}/fetch_script ${STARTUP_SCRIPT} startup
++${SCRIPTS_PREFIX}/run-scripts ${STARTUP_SCRIPT} startup
+-- 
+2.7.3
+
