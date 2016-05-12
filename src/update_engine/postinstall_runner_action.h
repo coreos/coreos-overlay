@@ -29,7 +29,7 @@ class ActionTraits<PostinstallRunnerAction> {
 
 class PostinstallRunnerAction : public Action<PostinstallRunnerAction> {
  public:
-  explicit PostinstallRunnerAction(std::string app_id);
+  PostinstallRunnerAction() {}
   typedef ActionTraits<PostinstallRunnerAction>::InputObjectType
       InputObjectType;
   typedef ActionTraits<PostinstallRunnerAction>::OutputObjectType
@@ -51,7 +51,6 @@ class PostinstallRunnerAction : public Action<PostinstallRunnerAction> {
                                         void* p);
 
   std::string temp_rootfs_dir_;
-  std::string app_id_;
 
   DISALLOW_COPY_AND_ASSIGN(PostinstallRunnerAction);
 };
