@@ -196,7 +196,7 @@ void ApplyDelta() {
     CHECK(utils::PReadAll(fd, &buf[0], buf.size(), offset, &bytes_read));
     if (bytes_read == 0)
       break;
-    CHECK_EQ(performer.Write(&buf[0], bytes_read), bytes_read);
+    CHECK(performer.Write(&buf[0], bytes_read));
   }
   CHECK_EQ(performer.Close(), 0);
   PayloadProcessor::ResetUpdateProgress(&prefs, false);
