@@ -117,15 +117,17 @@ message Signatures {
   repeated Signature signatures = 1;
 }
 
-// BlobInfo is used to validate the source prior to the update or
+// Info is used to validate the source prior to the update or
 // the destination after the list of InstallOperations has run.
-message BlobInfo {
+
+message InstallInfo {
   optional uint64 size = 1;
   optional bytes hash = 2;
 }
 
-// Manifest defines the update procedure for any files that exist
-message InstallBlob {
+// InstallProcedure defines the update procedure for a single file or block
+// device (except for /usr which is in DeltaArchiveManifest).
+message InstallProcedure {
   enum Type {
     KERNEL = 0;  // A kernel image to install to the boot partition.
   }
@@ -133,8 +135,8 @@ message InstallBlob {
 
   repeated InstallOperation operations = 2;
 
-  optional BlobInfo old_info = 3;
-  optional BlobInfo new_info = 4;
+  optional InstallInfo old_info = 3;
+  optional InstallInfo new_info = 4;
 }
 
 message DeltaArchiveManifest {
@@ -180,12 +182,12 @@ message DeltaArchiveManifest {
   // Deprecated IDs 6 and 7, do not reuse.
 
   // Partition data that can be used to validate the update.
-  optional BlobInfo old_partition_info = 8;
-  optional BlobInfo new_partition_info = 9;
+  optional InstallInfo old_partition_info = 8;
+  optional InstallInfo new_partition_info = 9;
 
   // In addition to the partition update, process updates for additional
   // files, such as kernels. Versions of update_engine that can interpret
   // this list *MUST* ignore noop_operations and properly account for the
   // signature data at the end of the payload.
-  repeated InstallBlob blobs = 10;
+  repeated InstallProcedure procedures = 10;
 }
