@@ -34,5 +34,6 @@ exec /usr/bin/rkt run \
   --mount volume=run,target=/run \
   --trust-keys-from-https \
   $RKT_OPTS \
-  --stage1-path=/usr/share/rkt/stage1-fly.aci \
+  --stage1-from-dir=stage1-fly.aci \
   ${KUBELET_ACI}:${KUBELET_VERSION} --exec=/kubelet -- "$@"
+
