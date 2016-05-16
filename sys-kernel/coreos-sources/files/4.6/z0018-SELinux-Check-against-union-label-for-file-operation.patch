@@ -1,7 +1,7 @@
-From 92ca3f0e63d46f131f75f57ef2b6a44bd8acd2ab Mon Sep 17 00:00:00 2001
+From c847761aacd96fb03f6493ffc800ef9310d34ef7 Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Tue, 16 Jun 2015 14:14:32 +0100
-Subject: [PATCH 18/21] SELinux: Check against union label for file operations
+Subject: [PATCH 18/20] SELinux: Check against union label for file operations
 
 File operations (eg. read, write) issued against a file that is attached to
 the lower layer of a union file needs to be checked against the union-layer
@@ -16,7 +16,7 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  1 file changed, 10 insertions(+), 2 deletions(-)
 
 diff --git a/security/selinux/hooks.c b/security/selinux/hooks.c
-index 7186928..a44cca7 100644
+index e5d0e2d..c3f94dd 100644
 --- a/security/selinux/hooks.c
 +++ b/security/selinux/hooks.c
 @@ -1745,6 +1745,7 @@ static int file_has_perm(const struct cred *cred,
@@ -46,5 +46,5 @@ index 7186928..a44cca7 100644
  out:
  	return rc;
 -- 
-2.7.3
+2.8.2
 

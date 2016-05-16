@@ -1,7 +1,7 @@
-From eabd104a61199840d5dfe65a8a6eb353fc112600 Mon Sep 17 00:00:00 2001
+From 4eac8c9deb0ffddf8d71b6783675087a4ee6b436 Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Tue, 16 Jun 2015 14:14:31 +0100
-Subject: [PATCH 15/21] Overlayfs: Use copy-up security hooks
+Subject: [PATCH 15/20] Overlayfs: Use copy-up security hooks
 
 Use the copy-up security hooks previously provided to allow an LSM to adjust
 the security on a newly created copy and to filter the xattrs copied to that
@@ -13,10 +13,10 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  1 file changed, 12 insertions(+)
 
 diff --git a/fs/overlayfs/copy_up.c b/fs/overlayfs/copy_up.c
-index d894e7c..41ca95d 100644
+index cc514da..a181c7c 100644
 --- a/fs/overlayfs/copy_up.c
 +++ b/fs/overlayfs/copy_up.c
-@@ -70,6 +70,14 @@ retry:
+@@ -102,6 +102,14 @@ retry:
  			value_size = size;
  			goto retry;
  		}
@@ -31,7 +31,7 @@ index d894e7c..41ca95d 100644
  
  		error = vfs_setxattr(new, name, value, size, 0);
  		if (error)
-@@ -233,6 +241,10 @@ static int ovl_copy_up_locked(struct dentry *workdir, struct dentry *upperdir,
+@@ -265,6 +273,10 @@ static int ovl_copy_up_locked(struct dentry *workdir, struct dentry *upperdir,
  	if (err)
  		goto out2;
  
@@ -41,7 +41,7 @@ index d894e7c..41ca95d 100644
 +
  	if (S_ISREG(stat->mode)) {
  		struct path upperpath;
- 		ovl_path_upper(dentry, &upperpath);
+ 
 -- 
-2.7.3
+2.8.2
 

@@ -1,7 +1,7 @@
-From 6e0533e9784929c426d8b9b8566f28d7b79aa109 Mon Sep 17 00:00:00 2001
+From ec3ce7daf05ab4d0456a06235e5f91f09fc57268 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Fri, 9 Aug 2013 18:36:30 -0400
-Subject: [PATCH 10/21] Add option to automatically enforce module signatures
+Subject: [PATCH 10/20] Add option to automatically enforce module signatures
  when in Secure Boot mode
 
 UEFI Secure Boot provides a mechanism for ensuring that the firmware will
@@ -34,10 +34,10 @@ index 95a4d34..b8527c6 100644
  290/040	ALL	edd_mbr_sig_buffer EDD MBR signatures
  2D0/A00	ALL	e820_map	E820 memory map table
 diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index c46662f..a10f771 100644
+index 2dc18605..a701d09 100644
 --- a/arch/x86/Kconfig
 +++ b/arch/x86/Kconfig
-@@ -1754,6 +1754,16 @@ config EFI_MIXED
+@@ -1785,6 +1785,16 @@ config EFI_MIXED
  
  	   If unsure, say N.
  
@@ -130,10 +130,10 @@ index 3292543..b61f853 100644
  	 * The sentinel is set to a nonzero value (0xff) in header.S.
  	 *
 diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index d3d80e6..94eb7dd 100644
+index 2367ae0..1a78bf7 100644
 --- a/arch/x86/kernel/setup.c
 +++ b/arch/x86/kernel/setup.c
-@@ -1145,6 +1145,12 @@ void __init setup_arch(char **cmdline_p)
+@@ -1146,6 +1146,12 @@ void __init setup_arch(char **cmdline_p)
  
  	io_delay_init();
  
@@ -164,10 +164,10 @@ index ab13009..e072b84 100644
  
  extern int modules_disabled; /* for sysctl */
 diff --git a/kernel/module.c b/kernel/module.c
-index 7dfb91b..6eb3c6c 100644
+index 392ac8c..676c578 100644
 --- a/kernel/module.c
 +++ b/kernel/module.c
-@@ -4113,6 +4113,13 @@ void module_layout(struct module *mod,
+@@ -4081,6 +4081,13 @@ void module_layout(struct module *mod,
  EXPORT_SYMBOL(module_layout);
  #endif
  
@@ -182,5 +182,5 @@ index 7dfb91b..6eb3c6c 100644
  {
  #ifdef CONFIG_MODULE_SIG
 -- 
-2.7.3
+2.8.2
 
