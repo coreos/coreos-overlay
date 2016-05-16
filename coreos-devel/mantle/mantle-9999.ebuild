@@ -10,7 +10,7 @@ COREOS_GO_PACKAGE="github.com/coreos/mantle"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64"
 else
-	CROS_WORKON_COMMIT="6f9da6c7a0d9e31c1ff341254064234a223b06cb" # v0.1.3
+	CROS_WORKON_COMMIT="74ae41661c737c08c2dbe8636bec3f45c2db819b" # v0.1.4
 	KEYWORDS="amd64 arm64"
 fi
 
