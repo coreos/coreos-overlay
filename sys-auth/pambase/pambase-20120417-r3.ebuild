@@ -46,9 +46,6 @@ src_prepare() {
 	epatch "${FILESDIR}"/${P}-systemd.patch
 	epatch "${FILESDIR}"/${P}-lastlog-silent.patch
 	epatch "${FILESDIR}"/${P}-systemd-auth.patch # 485470
-	if ! use arm64; then
-		epatch "${FILESDIR}"/${P}-sssd.patch
-	fi
 }
 
 src_compile() {
