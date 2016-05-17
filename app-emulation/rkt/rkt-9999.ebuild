@@ -18,11 +18,11 @@ if [[ "${PV}" == "9999" ]]; then
 	KEYWORDS="~amd64"
 else
 	KEYWORDS="amd64"
-	CROS_WORKON_COMMIT="ba45abd0afc0afaae16f3fdd5e6894461a42cbeb" # v1.5.1
+	CROS_WORKON_COMMIT="14437382a98e5ebeb6cafb57cff445370e3f7d56" # v1.6.0
 fi
 
-PXE_VERSION="1010.1.0"
-PXE_SYSTEMD_VERSION="v225"
+PXE_VERSION="1032.0.0"
+PXE_SYSTEMD_VERSION="v229"
 PXE_URI="https://alpha.release.core-os.net/amd64-usr/${PXE_VERSION}/coreos_production_pxe_image.cpio.gz"
 PXE_FILE="${PN}-pxe-${PXE_VERSION}.img"
 
