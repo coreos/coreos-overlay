@@ -27,7 +27,6 @@ RDEPEND="
 	net-analyzer/netperf
 	net-analyzer/tcpdump
 	net-dialup/minicom
-	net-misc/dhcp
 	net-misc/iperf
 	net-misc/iputils
 	net-misc/openssh
