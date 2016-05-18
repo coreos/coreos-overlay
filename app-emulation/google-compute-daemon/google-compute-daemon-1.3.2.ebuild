@@ -19,13 +19,11 @@ RDEPEND="dev-lang/python-oem"
 S="${WORKDIR}"
 
 src_prepare() {
-	epatch "${FILESDIR}"/0001-Fixes-authorized_keys-file-permissions.patch
-	epatch "${FILESDIR}"/0001-fix-google-daemon-use-for-the-passwd-not.patch
-	epatch "${FILESDIR}"/0001-hack-address_manager-use-CoreOS-names-and-locations.patch
-	epatch "${FILESDIR}"/0001-feat-accounts-add-users-to-the-sudo-and-docker-group.patch
+	epatch "${FILESDIR}/0001-Add-users-to-docker-group-by-default.patch"
+	epatch "${FILESDIR}/0002-Use-ens4v1-instead-of-eth0.patch"
 }
 
 src_install() {
-	mkdir -p ${D}/usr/share/oem/google-compute-daemon/
-	cp -Ra ${WORKDIR}/usr/share/google/google_daemon/. ${D}/usr/share/oem/google-compute-daemon/ || die
+	insinto "/usr/share/oem/google-compute-daemon/"
+	doins -r "${S}/usr/share/google/google_daemon/."
 }

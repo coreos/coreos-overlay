@@ -1,16 +1,16 @@
-From 265f951bc8d55bfb988050dda6332511b58e72e8 Mon Sep 17 00:00:00 2001
-From: Brandon Philips <brandon@ifup.co>
-Date: Tue, 1 Apr 2014 15:18:20 -0700
-Subject: [PATCH] hack(address_manager): use CoreOS names and locations
+From 1eff70fe7f0083d7aee76e18c89e92fce278a57a Mon Sep 17 00:00:00 2001
+From: Alex Crawford <alex.crawford@coreos.com>
+Date: Tue, 10 May 2016 14:45:16 -0700
+Subject: [PATCH 2/3] Use ens4v1 instead of eth0
 
-ip is in /usr/bin/ip and the network interface is ens4v1 via
-http://www.freedesktop.org/wiki/Software/systemd/PredictableNetworkInterfaceNames/
+The network interface under systemd is ens4v1
+(http://www.freedesktop.org/wiki/Software/systemd/PredictableNetworkInterfaceNames/).
 ---
- .../share/google/google_daemon/address_manager.py  | 24 +++++++++++-----------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+ .../share/google/google_daemon/address_manager.py  | 22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
 
 diff --git a/google-daemon/usr/share/google/google_daemon/address_manager.py b/google-daemon/usr/share/google/google_daemon/address_manager.py
-index 1b3997c..568720d 100644
+index 7a0e911..ba3be6e 100644
 --- a/google-daemon/usr/share/google/google_daemon/address_manager.py
 +++ b/google-daemon/usr/share/google/google_daemon/address_manager.py
 @@ -15,16 +15,16 @@
@@ -33,18 +33,18 @@ index 1b3997c..568720d 100644
  """
  
  
-@@ -103,8 +103,8 @@ class AddressManager(object):
+@@ -106,8 +106,8 @@ class AddressManager(object):
      return self.ParseIPAddrs(addrs_data)
  
    def ReadLocalConfiguredAddrs(self):
 -    """Fetch list of addresses we've configured on eth0 already."""
--    cmd = ('/sbin/ip route ls table local type local dev eth0 scope host ' +
+-    cmd = ('{0} route ls table local type local dev eth0 scope host ' +
 +    """Fetch list of addresses we've configured on ens4v1 already."""
-+    cmd = ('/usr/bin/ip route ls table local type local dev ens4v1 scope host ' +
-            'proto %d' % GOOGLE_PROTO_ID)
++    cmd = ('{0} route ls table local type local dev ens4v1 scope host ' +
+            'proto {1:d}').format(self.ip_path, GOOGLE_PROTO_ID)
      result = self.system.RunCommand(cmd.split())
      if self.IPCommandFailed(result, cmd):
-@@ -132,27 +132,27 @@ class AddressManager(object):
+@@ -135,27 +135,27 @@ class AddressManager(object):
              to_remove or None))
  
    def AddAddresses(self, to_add):
@@ -55,10 +55,10 @@ index 1b3997c..568720d 100644
  
    def AddOneAddress(self, addr):
 -    """Configure one address on eth0."""
--    cmd = '/sbin/ip route add to local %s/32 dev eth0 proto %d' % (
+-    cmd = '%s route add to local %s/32 dev eth0 proto %d' % (
 +    """Configure one address on ens4v1."""
-+    cmd = '/usr/bin/ip route add to local %s/32 dev ens4v1 proto %d' % (
-         addr, GOOGLE_PROTO_ID)
++    cmd = '%s route add to local %s/32 dev ens4v1 proto %d' % (
+         self.ip_path, addr, GOOGLE_PROTO_ID)
      result = self.system.RunCommand(cmd.split())
      self.IPCommandFailed(result, cmd)  # Ignore return code
  
@@ -73,20 +73,11 @@ index 1b3997c..568720d 100644
 +    """Delete one address from ens4v1."""
      # This will fail if it doesn't match exactly the specs listed.
      # That'll help ensure we don't remove one added by someone else.
--    cmd = '/sbin/ip route delete to local %s/32 dev eth0 proto %d' % (
-+    cmd = '/usr/bin/ip route delete to local %s/32 dev ens4v1 proto %d' % (
-         addr, GOOGLE_PROTO_ID)
+-    cmd = '%s route delete to local %s/32 dev eth0 proto %d' % (
++    cmd = '%s route delete to local %s/32 dev ens4v1 proto %d' % (
+         self.ip_path, addr, GOOGLE_PROTO_ID)
      result = self.system.RunCommand(cmd.split())
      self.IPCommandFailed(result, cmd)  # Ignore return code
-@@ -168,7 +168,7 @@ class AddressManager(object):
-     return addrs
- 
-   def IPCommandFailed(self, result, cmd):
--    """If an /sbin/ip command failed, log and return True."""
-+    """If an /usr/bin/ip command failed, log and return True."""
-     if self.system.RunCommandFailed(
-         result, 'Non-zero exit status from: "%s"' % cmd):
-       return True
 -- 
-1.8.5.2 (Apple Git-48)
+2.7.3
 
