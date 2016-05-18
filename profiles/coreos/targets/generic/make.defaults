@@ -3,7 +3,7 @@
 
 USE="cros-debug acpi usb symlink-usr cryptsetup policykit"
 USE="${USE} -cros_host -expat -cairo -X -man"
-USE="${USE} -acl -cracklib -gpm -python -sha512"
+USE="${USE} -acl -cracklib -gpm -python"
 USE="${USE} -fortran -abiword -perl -cups -poppler-data -nls"
 
 # Exclude documentation
