@@ -122,11 +122,22 @@ if [[ -z "${CGPT}" ]]; then
     exit 1
 fi
 
+# locate the dynamic linker
+LDSO=
+for l in "${INSTALL_MNT}"/lib*/ld-2.??.so; do
+    if [[ -x "$l" ]]; then
+        LDSO="$l"
+        break
+    fi
+done
+if [[ -z "${LDSO}" ]]; then
+    echo "Failed to locate ld.so in ${INSTALL_MNT}" >&2
+    exit 1
+fi
+LIBS="${LDSO%/*}"
+
 call_cgpt() {
-    # safe to assume amd64 for now
-    "${INSTALL_MNT}/lib64/ld-linux-x86-64.so.2" \
-        --library-path "${INSTALL_MNT}/lib64" \
-        "${CGPT}" "$@"
+    "${LDSO}" --library-path "${LIBS}" "${CGPT}" "$@"
 }
 
 # Mark the new install with one try and the highest priority
