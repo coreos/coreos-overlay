@@ -101,3 +101,5 @@ dev-util/checkbashisms
 # https://bugs.gentoo.org/show_bug.cgi?id=580606
 =app-misc/jq-1.5-r2 ~amd64 ~arm64
 
+# Must use the same version across all architectures
+=dev-libs/protobuf-2.6.1-r3
