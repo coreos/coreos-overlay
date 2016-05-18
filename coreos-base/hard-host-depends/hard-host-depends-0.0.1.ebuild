@@ -82,7 +82,6 @@ RDEPEND="${RDEPEND}
 	sys-libs/nss-usrfiles
 	sys-power/iasl
 	virtual/udev
-	dev-libs/protobuf-c
 	app-text/asciidoc
 	app-text/xmlto
 	sys-apps/gptfdisk
