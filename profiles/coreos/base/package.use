@@ -72,3 +72,6 @@ sys-auth/sssd -manpages -python
 
 # needed for realmd build
 sys-auth/polkit introspection
+
+# enable logging command-line options in update_engine
+dev-cpp/glog gflags

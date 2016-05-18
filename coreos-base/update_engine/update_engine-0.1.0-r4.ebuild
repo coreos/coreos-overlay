@@ -5,13 +5,11 @@ EAPI=5
 CROS_WORKON_PROJECT="coreos/update_engine"
 CROS_WORKON_REPO="git://github.com"
 AUTOTOOLS_AUTORECONF=1
+# TODO: this can be disabled once -I.. is no longer used
+AUTOTOOLS_IN_SOURCE_BUILD=1
 
-if [[ "${PV}" == 9999 ]]; then
-	KEYWORDS="~amd64 ~arm ~arm64 ~x86"
-else
-	CROS_WORKON_COMMIT="c88492c39ec0ad81bb26ae6efde7b4fc46a9804a"
-	KEYWORDS="amd64 arm arm64 x86"
-fi
+CROS_WORKON_COMMIT="c88492c39ec0ad81bb26ae6efde7b4fc46a9804a"
+KEYWORDS="amd64 arm x86"
 
 inherit autotools-utils flag-o-matic toolchain-funcs cros-workon systemd
 
@@ -23,11 +21,13 @@ LICENSE="BSD"
 SLOT="0"
 IUSE="cros-debug cros_host -delta_generator symlink-usr"
 
+LIBCHROME_VERS="180609"
+
 RDEPEND="!coreos-base/coreos-installer
 	app-arch/bzip2
 	coreos-base/coreos-au-key
+	coreos-base/libchrome:${LIBCHROME_VERS}[cros-debug=]
 	dev-cpp/gflags
-	dev-cpp/glog[gflags]
 	dev-libs/dbus-glib
 	dev-libs/glib
 	dev-libs/libxml2
