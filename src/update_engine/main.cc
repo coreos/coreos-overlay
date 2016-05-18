@@ -74,11 +74,15 @@ void SetupDbusService(UpdateEngineService* service) {
 }  // namespace chromeos_update_engine
 
 int main(int argc, char** argv) {
+  // Disable glog's default behavior of logging to files.
+  FLAGS_logtostderr = true;
+  GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
+  google::InitGoogleLogging(argv[0]);
+
   dbus_threads_init_default();
   chromeos_update_engine::Terminator::Init();
   chromeos_update_engine::Subprocess::Init();
-  GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
-  google::InitGoogleLogging(argv[0]);
+
   if (!FLAGS_foreground)
     PLOG_IF(FATAL, daemon(0, 0) == 1) << "daemon() failed";
 

@@ -204,10 +204,14 @@ void ApplyDelta() {
 }
 
 int Main(int argc, char** argv) {
+  // Disable glog's default behavior of logging to files.
+  FLAGS_logtostderr = true;
   GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
+  google::InitGoogleLogging(argv[0]);
+
   Terminator::Init();
   Subprocess::Init();
-  google::InitGoogleLogging(argv[0]);
+
   if (!FLAGS_signature_size.empty()) {
     bool work_done = false;
     if (!FLAGS_out_hash_file.empty()) {
