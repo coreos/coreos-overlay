@@ -12,6 +12,10 @@
 #include "update_engine/terminator.h"
 
 int main(int argc, char **argv) {
+  // Disable glog's default behavior of logging to files.
+  FLAGS_logtostderr = true;
+  google::InitGoogleLogging(argv[0]);
+
   dbus_threads_init_default();
   // TODO(garnold) temporarily cause the unittest binary to exit with status
   // code 2 upon catching a SIGTERM. This will help diagnose why the unittest
@@ -20,7 +24,6 @@ int main(int argc, char **argv) {
   // terminator_unittest.cc.
   chromeos_update_engine::Terminator::Init(2);
   chromeos_update_engine::Subprocess::Init();
-  google::InitGoogleLogging(argv[0]);
   LOG(INFO) << "initializing gtest";
   ::testing::InitGoogleTest(&argc, argv);
   LOG(INFO) << "running unit tests";

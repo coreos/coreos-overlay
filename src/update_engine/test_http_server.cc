@@ -513,6 +513,10 @@ void HandleConnection(int fd) {
 using namespace chromeos_update_engine;
 
 int main(int argc, char** argv) {
+  // Disable glog's default behavior of logging to files.
+  FLAGS_logtostderr = true;
+  google::InitGoogleLogging(argv[0]);
+
   // Ignore SIGPIPE on write() to sockets.
   signal(SIGPIPE, SIG_IGN);
 
