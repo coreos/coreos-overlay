@@ -32,7 +32,7 @@ RDEPEND="!coreos-base/coreos-installer
 	dev-libs/glib
 	dev-libs/libxml2
 	dev-libs/openssl
-	dev-libs/protobuf
+	dev-libs/protobuf:=
 	dev-util/bsdiff
 	net-misc/curl
 	sys-fs/e2fsprogs"
