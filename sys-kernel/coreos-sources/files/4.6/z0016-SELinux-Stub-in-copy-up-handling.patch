@@ -1,7 +1,7 @@
-From 798fc50146e1c819932435bb2e0d92ef180fad81 Mon Sep 17 00:00:00 2001
+From f3798692115e472f7d508d725f8952b29250370e Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Tue, 16 Jun 2015 14:14:32 +0100
-Subject: [PATCH 16/21] SELinux: Stub in copy-up handling
+Subject: [PATCH 16/20] SELinux: Stub in copy-up handling
 
 Provide stubs for union/overlay copy-up handling.  The xattr copy up stub
 discards lower SELinux xattrs rather than letting them be copied up so that
@@ -13,7 +13,7 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  1 file changed, 20 insertions(+)
 
 diff --git a/security/selinux/hooks.c b/security/selinux/hooks.c
-index f1ab715..d361b74 100644
+index 912deee..b4e3e63 100644
 --- a/security/selinux/hooks.c
 +++ b/security/selinux/hooks.c
 @@ -3253,6 +3253,24 @@ static void selinux_inode_getsecid(struct inode *inode, u32 *secid)
@@ -51,5 +51,5 @@ index f1ab715..d361b74 100644
  	LSM_HOOK_INIT(file_permission, selinux_file_permission),
  	LSM_HOOK_INIT(file_alloc_security, selinux_file_alloc_security),
 -- 
-2.7.3
+2.8.2
 
