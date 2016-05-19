@@ -96,3 +96,5 @@ net-fs/nfs-utils ~arm64
 # gnu-efi-3.0.3 has arm64 support
 =sys-boot/gnu-efi-3.0.3 **
 
+# required for GLSA 201507-22
+=sys-libs/e2fsprogs-libs-1.42.13 ~arm64
