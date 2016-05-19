@@ -1,9 +1,0 @@
-#!/bin/bash
-
-entry="169.254.169.254 metadata"
-
-grep -qs "${entry}" /etc/hosts
-
-if [ $? -ne 0 ]; then
-	echo ${entry} >> /etc/hosts
-fi
