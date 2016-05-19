@@ -98,5 +98,5 @@ net-fs/nfs-utils ~arm64
 
 # required for GLSA 201507-22
 =sys-libs/e2fsprogs-libs-1.42.13 ~arm64
-=sys-libs/e2fsprogs-1.42.13 ~arm64
+=sys-fs/e2fsprogs-1.42.13 ~arm64
 
