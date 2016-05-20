@@ -34,7 +34,6 @@ dev-libs/dbus-glib ~arm64
 sys-block/parted ~arm64
 sys-fs/btrfs-progs ~arm64
 sys-apps/gptfdisk ~arm64
-dev-libs/protobuf ~arm64
 sys-apps/usbutils ~arm64
 net-misc/bridge-utils ~arm64
 net-libs/serf ~arm64
