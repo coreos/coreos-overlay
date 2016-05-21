@@ -9,6 +9,10 @@ inherit eutils toolchain-funcs
 BOOTSTRAP_DIST="https://dev.gentoo.org/~williamh/dist"
 SRC_URI="amd64? ( ${BOOTSTRAP_DIST}/go-linux-amd64-bootstrap.tbz )
 	arm64? ( ${BOOTSTRAP_DIST}/go-linux-arm64-bootstrap.tbz )
+	ppc64? (
+		${BOOTSTRAP_DIST}/go-linux-ppc64-bootstrap.tbz
+		${BOOTSTRAP_DIST}/go-linux-ppc64le-bootstrap.tbz
+	)
 "
 
 KEYWORDS="-* amd64 arm64"
@@ -40,6 +44,8 @@ go_arch()
 	case "${portage_arch}" in
 		x86)	echo 386;;
 		x64-*)	echo amd64;;
+		ppc64)
+			[[ "$(tc-endian)" = big ]] && echo ppc64 || echo ppc64le ;;
 		*)		echo "${portage_arch}";;
 	esac
 }
