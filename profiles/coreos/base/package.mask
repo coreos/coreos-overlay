@@ -10,7 +10,7 @@
 >=net-misc/tlsdate-0.0.6
 
 # Stick with python 2 for now
->=dev-lang/python-3
+#>=dev-lang/python-3
 
 # Require our ca-certificates package based directly on Mozilla's
 # certificate store provided in NSS rather than the Gentoo/Debian package.
