@@ -106,13 +106,6 @@
 # required by coreos-devel/sdk-depends-0.0.1-r23::coreos
 # required by coreos-devel/sdk-depends (argument)
 =dev-python/rsa-3.3 **
-# required by virtual/os-headers-0::gentoo
-# required by net-misc/bridge-utils-1.5::gentoo
-# required by app-emulation/xen-tools-4.6.1-r1::gentoo
-# required by sys-boot/grub-9999-r1::gentoo[grub_platforms_xen]
-# required by coreos-devel/sdk-depends-0.0.1-r23::coreos
-# required by coreos-devel/sdk-depends (argument)
-=sys-kernel/linux-headers-4.5 ~ppc64
 # required by dev-python/google-apitools-0.5.2::gentoo
 # required by net-misc/gsutil-4.19::gentoo
 # required by coreos-base/hard-host-depends-0.0.1-r177::coreos
@@ -237,4 +230,4 @@
 =sys-libs/libselinux-9999 **
 # required by =sys-libs/libsemanage-9999 (argument)
 =sys-libs/libsemanage-9999 **
-
+=dev-util/perf-4.1.5-r1 **
