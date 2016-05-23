@@ -31,6 +31,7 @@ RDEPEND="!coreos-base/coreos-installer
 	app-arch/bzip2
 	coreos-base/coreos-au-key
 	dev-cpp/gflags
+	dev-cpp/glog[gflags]
 	dev-libs/dbus-glib
 	dev-libs/glib
 	dev-libs/libxml2
@@ -49,8 +50,8 @@ src_configure() {
 	# https://code.google.com/p/chromium/issues/detail?id=394508
 	# https://code.google.com/p/chromium/issues/detail?id=394241
 	if use cros_host; then
-		append-flags -nopie
-		append-ldflags -nopie
+		append-flags --no-pie
+		append-ldflags --no-pie
 	fi
 
 	local myeconfargs=(
