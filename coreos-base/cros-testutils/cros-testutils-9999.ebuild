@@ -14,6 +14,7 @@ SLOT="0"
 KEYWORDS="~amd64 ~arm ~x86"
 
 CROS_WORKON_LOCALNAME="crostestutils"
+CROS_WORKON_LOCALDIR="src/platform"
 
 
 RDEPEND="app-emulation/qemu
