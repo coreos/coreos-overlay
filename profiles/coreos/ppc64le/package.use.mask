@@ -1,0 +1,3 @@
+# Mike Gilbert <floppym@gentoo.org> (05 Sep 2015)
+# sys-boot/gnu-efi is not supported on all archs.
+sys-apps/systemd gnuefi

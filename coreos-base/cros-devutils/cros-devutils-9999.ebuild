@@ -30,7 +30,6 @@ RDEPEND="cros_host? ( app-emulation/qemu )
 	dev-lang/python
 	dev-util/shflags
 	cros_host? ( dev-util/crosutils )
-	app-crypt/efitools
 	!coreos-base/coreos-installer
 	"
 # These are all either bash / python scripts.  No actual builds DEPS.
