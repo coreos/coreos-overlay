@@ -10,7 +10,6 @@ Environment=TMPDIR=/var/tmp
 MountFlags=slave
 LimitNOFILE=1048576
 LimitNPROC=1048576
-TasksMax=infinity
 ExecStart=/usr/lib/coreos/dockerd daemon --host=fd:// --bridge=none --iptables=false --ip-masq=false --graph=/var/lib/early-docker --pidfile=/var/run/early-docker.pid $DOCKER_OPTS $DOCKER_CGROUPS
 
 [Install]
