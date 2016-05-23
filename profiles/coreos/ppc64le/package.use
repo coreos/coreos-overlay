@@ -1,1 +1,4 @@
-sys-apps/systemd -gnuefi
+dev-libs/glib static-libs
+sys-apps/attr static-libs
+sys-libs/zlib static-libs
+app-emulation/qemu static-user
