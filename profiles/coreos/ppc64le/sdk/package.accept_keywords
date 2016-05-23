@@ -234,3 +234,7 @@
 # required by coreos-devel/sdk-depends-0.0.1-r23::coreos
 # required by coreos-devel/sdk-depends (argument)
 =coreos-base/cros-devutils-9999 **
+=sys-libs/libselinux-9999 **
+# required by =sys-libs/libsemanage-9999 (argument)
+=sys-libs/libsemanage-9999 **
+
