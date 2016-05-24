@@ -323,6 +323,12 @@ multilib_src_install() {
 
 		emake "${mymakeopts[@]}"
 	fi
+
+	# install compat pkg-config files
+	# Change dbus to >=sys-apps/dbus-1.8.8 if/when this is dropped.
+	local pcfiles=( src/compat-libs/libsystemd-{daemon,id128,journal,login}.pc )
+	emake "${mymakeopts[@]}" install-pkgconfiglibDATA \
+		pkgconfiglib_DATA="${pcfiles[*]}"
 }
 
 multilib_src_install_all() {
