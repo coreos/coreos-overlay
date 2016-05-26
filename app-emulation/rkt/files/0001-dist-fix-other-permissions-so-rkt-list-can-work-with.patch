@@ -1,0 +1,32 @@
+From ea619cab0fb916d7b2e6590b3109e28672e18537 Mon Sep 17 00:00:00 2001
+From: Nick Owens <mischief@coreos.com>
+Date: Wed, 25 May 2016 15:27:34 -0700
+Subject: [PATCH] dist: fix "other" permissions so rkt list can work without
+ root/rkt-admin
+
+without this, a user in the rkt group can't do an operation like 'rkt
+list' due to the permissions on /etc/rkt.
+
+core@core2 ~ $ id
+uid=500(core) gid=500(core) groups=500(core),10(wheel),233(docker),248(systemd-journal),250(portage),251(rkt),253(fleet) context=system_u:system_r:kernel_t:s0
+core@core2 ~ $ rkt list
+list: cannot get configuration: stat /etc/rkt/paths.d: permission denied
+core@core2 ~ $ ls -ld /etc/rkt
+drwxrws---. 3 root rkt-admin 4096 Jan 21 10:34 /etc/rkt
+---
+ dist/init/systemd/tmpfiles.d/rkt.conf | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/dist/init/systemd/tmpfiles.d/rkt.conf b/dist/init/systemd/tmpfiles.d/rkt.conf
+index 4061727..e24c8ad 100644
+--- a/dist/init/systemd/tmpfiles.d/rkt.conf
++++ b/dist/init/systemd/tmpfiles.d/rkt.conf
+@@ -23,4 +23,4 @@ d /var/lib/rkt/pods/run 2750 root rkt
+ d /var/lib/rkt/pods/exited-garbage 2750 root rkt
+ d /var/lib/rkt/pods/garbage 2750 root rkt
+ 
+-d /etc/rkt 2770 root rkt-admin
++d /etc/rkt 2775 root rkt-admin
+-- 
+2.7.3
+
