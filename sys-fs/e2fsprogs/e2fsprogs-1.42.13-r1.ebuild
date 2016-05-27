@@ -40,6 +40,7 @@ src_prepare() {
 	epatch "${FILESDIR}"/${PN}-1.42.13-fix-build-cflags.patch #516854
 	epatch "${FILESDIR}"/${PN}-1.42.13-subst-perms.patch #550986
 	epatch "${FILESDIR}"/${PN}-1.42.13-sysmacros.patch
+	epatch "${FILESDIR}"/${PN}-1.42.13-protect-existing-fs.patch
 
 	# blargh ... trick e2fsprogs into using e2fsprogs-libs
 	rm -rf doc
