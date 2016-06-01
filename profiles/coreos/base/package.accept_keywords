@@ -103,3 +103,7 @@ dev-util/checkbashisms
 
 # Must use the same version across all architectures
 =dev-libs/protobuf-2.6.1-r3
+
+# mtools 4.0.18 has '-i' flag for working with images
+=sys-fs/mtools-4.0.18
+
