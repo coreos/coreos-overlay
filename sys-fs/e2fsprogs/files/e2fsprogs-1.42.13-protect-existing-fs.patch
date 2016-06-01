@@ -1,0 +1,89 @@
+diff --git misc/mke2fs.8.in misc/mke2fs.8.in
+index 1002eae..9df1f09 100644
+--- misc/mke2fs.8.in
++++ misc/mke2fs.8.in
+@@ -67,6 +67,9 @@ mke2fs \- create an ext2/ext3/ext4 filesystem
+ [^]\fIfeature\fR[,...]
+ ]
+ [
++.B \-p
++]
++[
+ .B \-q
+ ]
+ [
+@@ -608,6 +611,13 @@ For more information about the features which can be set, please see
+ the manual page
+ .BR ext4 (5).
+ .TP
++.B \-p
++Protect existing partitions, even if not run from a tty. Prevents
++.B mke2fs
++from overwriting existing partitions. If a partition would be overridden,
++.B mke2fs
++will exit instead.
++.TP
+ .B \-q
+ Quiet execution.  Useful if
+ .B mke2fs
+diff --git misc/mke2fs.c misc/mke2fs.c
+index a14e62e..95fa99a 100644
+--- misc/mke2fs.c
++++ misc/mke2fs.c
+@@ -89,6 +89,7 @@ static int	super_only;
+ static int	discard = 1;	/* attempt to discard device before fs creation */
+ static int	direct_io;
+ static int	force;
++static int	protect;
+ static int	noaction;
+ static int	num_backups = 2; /* number of backup bg's for sparse_super2 */
+ static uid_t	root_uid;
+@@ -129,7 +130,7 @@ static void usage(void)
+ 	"[-M last-mounted-directory]\n\t[-O feature[,...]] "
+ 	"[-r fs-revision] [-E extended-option[,...]]\n"
+ 	"\t[-t fs-type] [-T usage-type ] [-U UUID] "
+-	"[-jnqvDFKSV] device [blocks-count]\n"),
++	"[-jnpqvDFKSV] device [blocks-count]\n"),
+ 		program_name);
+ 	exit(1);
+ }
+@@ -1512,7 +1513,7 @@ profile_error:
+ 	}
+ 
+ 	while ((c = getopt (argc, argv,
+-		    "b:cg:i:jl:m:no:qr:s:t:vC:DE:FG:I:J:KL:M:N:O:R:ST:U:V")) != EOF) {
++		    "b:cg:i:jl:m:no:pqr:s:t:vC:DE:FG:I:J:KL:M:N:O:R:ST:U:V")) != EOF) {
+ 		switch (c) {
+ 		case 'b':
+ 			blocksize = parse_num_blocks2(optarg, -1);
+@@ -1669,6 +1670,9 @@ profile_error:
+ 		case 'O':
+ 			fs_features = optarg;
+ 			break;
++		case 'p':
++			protect = 1;
++			break;
+ 		case 'q':
+ 			quiet = 1;
+ 			break;
+@@ -1792,14 +1796,18 @@ profile_error:
+ 
+ 	/* The isatty() test is so we don't break existing scripts */
+ 	flags = CREATE_FILE;
+-	if (isatty(0) && isatty(1))
++	if ((isatty(0) && isatty(1)) || protect)
+ 		flags |= CHECK_FS_EXIST;
+ 	if (!quiet)
+ 		flags |= VERBOSE_CREATE;
+ 	if (fs_blocks_count == 0)
+ 		flags |= NO_SIZE;
+ 	if (!check_plausibility(device_name, flags, &is_device) && !force)
+-		proceed_question(proceed_delay);
++		if (protect)
++			exit(1); // just exit, since protect is on
++		else
++			proceed_question(proceed_delay);
++	
+ 
+ 	check_mount(device_name, force, _("filesystem"));
+ 
