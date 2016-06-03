@@ -1,29 +1,32 @@
-# Copyright 1999-2015 Gentoo Foundation
+# Copyright 1999-2016 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/net-misc/ntp/ntp-4.2.8-r2.ebuild,v 1.2 2015/02/26 18:30:06 floppym Exp $
+# $Id$
 
-EAPI="4"
+EAPI="5"
 
-inherit autotools eutils toolchain-funcs flag-o-matic user systemd
+inherit eutils toolchain-funcs flag-o-matic user systemd
 
 MY_P=${P/_p/p}
 DESCRIPTION="Network Time Protocol suite/programs"
 HOMEPAGE="http://www.ntp.org/"
-SRC_URI="http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-${PV:0:3}/${MY_P}.tar.gz"
+SRC_URI="http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-${PV:0:3}/${MY_P}.tar.gz
+	https://dev.gentoo.org/~polynomial-c/${MY_P}-manpages.tar.xz"
 
 LICENSE="HPND BSD ISC"
 SLOT="0"
-KEYWORDS="~alpha amd64 ~arm ~arm64 ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd ~x86-freebsd ~amd64-linux ~ia64-linux ~x86-linux ~m68k-mint"
-IUSE="caps debug ipv6 openntpd parse-clocks perl samba selinux snmp ssl threads vim-syntax zeroconf"
+KEYWORDS="~alpha amd64 ~arm arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd ~x86-freebsd ~amd64-linux ~ia64-linux ~x86-linux ~m68k-mint"
+IUSE="caps debug ipv6 libressl openntpd parse-clocks perl readline samba selinux snmp ssl threads vim-syntax zeroconf"
 
-CDEPEND=">=sys-libs/ncurses-5.2
-	>=sys-libs/readline-4.1
+CDEPEND="readline? ( >=sys-libs/readline-4.1:0= )
 	>=dev-libs/libevent-2.0.9[threads?]
 	kernel_linux? ( caps? ( sys-libs/libcap ) )
 	zeroconf? ( net-dns/avahi[mdnsresponder-compat] )
 	!openntpd? ( !net-misc/openntpd )
 	snmp? ( net-analyzer/net-snmp )
-	ssl? ( dev-libs/openssl )
+	ssl? (
+		!libressl? ( dev-libs/openssl:0= )
+		libressl? ( dev-libs/libressl )
+	)
 	parse-clocks? ( net-misc/pps-tools )"
 DEPEND="${CDEPEND}
 	virtual/pkgconfig"
@@ -34,22 +37,25 @@ PDEPEND="openntpd? ( net-misc/openntpd )"
 
 S=${WORKDIR}/${MY_P}
 
+PATCHES=(
+	"${FILESDIR}"/${PN}-4.2.8-ipc-caps.patch #533966
+	"${FILESDIR}"/${PN}-4.2.8-sntp-test-pthreads.patch #563922
+	"${FILESDIR}"/${PN}-4.2.8-ntpd-test-signd.patch
+)
+
 pkg_setup() {
 	enewgroup ntp 123
 	enewuser ntp 123 -1 /dev/null ntp
 }
 
 src_prepare() {
-	epatch "${FILESDIR}"/${PN}-4.2.8-ipc-caps.patch #533966
-	epatch "${FILESDIR}"/${PN}-4.2.8-sntp-test-pthreads.patch #563922
-	epatch "${FILESDIR}"/${PN}-4.2.8-ntpd-test-signd.patch
+	epatch "${PATCHES[@]}"
 	use perl || epatch "${FILESDIR}"/${PN}-4.2.8-disable-perl-scripts.patch
 	append-cppflags -D_GNU_SOURCE #264109
 	# Make sure every build uses the same install layout. #539092
 	find sntp/loc/ -type f '!' -name legacy -delete || die
 	# Disable pointless checks.
 	touch .checkChangeLog .gcc-warning FRC.html html/.datecheck
-	eautoreconf
 }
 
 src_configure() {
@@ -59,16 +65,19 @@ src_configure() {
 	# blah, no real configure options #176333
 	export ac_cv_header_dns_sd_h=$(usex zeroconf)
 	export ac_cv_lib_dns_sd_DNSServiceRegister=${ac_cv_header_dns_sd_h}
+	# Increase the default memlimit from 32MiB to 128MiB.  #533232
 	econf \
 		--with-lineeditlibs=readline,edit,editline \
 		--with-yielding-select \
 		--disable-local-libevent \
-		--docdir="${EPREFIX}/usr/share/doc/${PF}" \
-		--htmldir="${EPREFIX}/usr/share/doc/${PF}/html" \
+		--docdir='$(datarootdir)'/doc/${PF} \
+		--htmldir='$(docdir)/html' \
+		--with-memlock=256 \
 		$(use_enable caps linuxcaps) \
 		$(use_enable parse-clocks) \
 		$(use_enable ipv6) \
 		$(use_enable debug debugging) \
+		$(use_with readline lineeditlibs readline) \
 		$(use_enable samba ntp-signd) \
 		$(use_with snmp ntpsnmpd) \
 		$(use_with ssl crypto) \
@@ -82,10 +91,12 @@ src_install() {
 	mv "${ED}"/usr/bin/{ntpd,ntpdate} "${ED}"/usr/sbin/ || die "move to sbin"
 
 	dodoc INSTALL WHERE-TO-START
+	doman "${WORKDIR}"/man/*.[58]
 
 	insinto /usr/share/ntp
 	doins "${FILESDIR}"/ntp.conf
 	systemd_newtmpfilesd "${FILESDIR}"/ntp.tmpfiles ntp.conf
+	use ipv6 || sed -i '/^restrict .*::1/d' "${ED}"/usr/share/ntp/ntp.conf #524726
 
 	keepdir /var/lib/ntp
 	use prefix || fowners ntp:ntp /var/lib/ntp
@@ -94,6 +105,7 @@ src_install() {
 		cd "${ED}"
 		rm usr/sbin/ntpd || die
 		rm -r var/lib
+		rm usr/share/man/*/ntpd.8 || die
 	else
 		systemd_dounit "${FILESDIR}"/ntpd.service
 		use caps && sed -i '/ExecStart/ s|$| -u ntp:ntp|' "${ED}"/usr/lib/systemd/system/ntpd.service
