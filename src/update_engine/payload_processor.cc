@@ -160,6 +160,11 @@ ActionExitCode PayloadProcessor::LoadManifest() {
   for (const InstallOperation &op : manifest_.partition_operations()) {
     operations_.emplace_back(nullptr, &op);
   }
+  for (const InstallProcedure &proc : manifest_.procedures()) {
+    for (const InstallOperation &op : manifest_.partition_operations()) {
+      operations_.emplace_back(&proc, &op);
+    }
+  }
 
   if (next_operation_num_ > 0)
     LOG(INFO) << "Resuming after " << next_operation_num_ << " operations";
@@ -171,8 +176,16 @@ ActionExitCode PayloadProcessor::LoadManifest() {
 ActionExitCode PayloadProcessor::PerformOperation() {
   DCHECK(next_operation_num_ < operations_.size());
 
+  const InstallProcedure *proc = operations_[next_operation_num_].first;
   const InstallOperation *op = operations_[next_operation_num_].second;
-  DeltaPerformer *performer = &partition_performer_;
+  DeltaPerformer *performer = nullptr;
+
+  // There is no InstallProcedure type for partitions, so it will be null.
+  if (proc == nullptr) {
+    performer = &partition_performer_;
+  } else {
+    // TODO(marineam): set performer based on proc.type()
+  }
 
   if (op->data_length() && op->data_offset() != buffer_offset_) {
     LOG(ERROR) << "Operation " << next_operation_num_
@@ -188,18 +201,21 @@ ActionExitCode PayloadProcessor::PerformOperation() {
   ScopedTerminatorExitUnblocker exit_unblocker =
       ScopedTerminatorExitUnblocker();  // Avoids a compiler unused var bug.
 
-  ActionExitCode error = performer->PerformOperation(*op, buffer_);
-  if (error != kActionCodeSuccess) {
-    LOG(ERROR) << "Aborting install procedure at operation "
-               << next_operation_num_;
-    return error;
+  if (performer != nullptr) {
+    ActionExitCode error = performer->PerformOperation(*op, buffer_);
+    if (error != kActionCodeSuccess) {
+      LOG(ERROR) << "Aborting install procedure at operation "
+                 << next_operation_num_;
+      return error;
+    }
   }
 
   buffer_offset_ += op->data_length();
   DiscardBufferHeadBytes(op->data_length());
   next_operation_num_++;
 
-  LOG(INFO) << "Completed " << next_operation_num_ << "/"
+  LOG(INFO) << (performer?"Completed ":"Skipped ")
+            << next_operation_num_ << "/"
             << operations_.size() << " operations ("
             << (next_operation_num_ * 100 / operations_.size()) << "%)";
   CheckpointUpdateProgress();
