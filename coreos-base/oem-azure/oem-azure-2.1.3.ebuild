@@ -15,7 +15,7 @@ IUSE=""
 # no source directory
 S="${WORKDIR}"
 
-RDEPEND="app-emulation/wa-linux-agent"
+RDEPEND="~app-emulation/wa-linux-agent-${PV}"
 
 src_prepare() {
     sed -e "s\\@@OEM_VERSION_ID@@\\${PVR}\\g" \
