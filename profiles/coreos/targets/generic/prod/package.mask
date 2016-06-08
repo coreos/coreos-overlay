@@ -1,0 +1,15 @@
+# Packages that we do not want to ship in production images. Masking these
+# is merely as a safe guard against pulling them in accidentally.
+
+# We don't want to support interpreted languages, changes/updates we make
+# would have a high risk of breaking users.
+dev-lang/perl
+# TODO dev-lang/python
+dev-lang/ruby
+
+# Since all SSL/TLS implementations are bad we minimize the number we ship.
+net-libs/gnutls
+
+# We do not configure/install grub like other distros so shipping the user
+# space tools would have limited utility.
+sys-boot/grub
