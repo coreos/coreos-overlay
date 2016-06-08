@@ -204,7 +204,7 @@ BUILT_SOURCES += src/update_engine/update_engine.dbusclient.h \
 EXTRA_DIST += src/update_engine/update_metadata.proto
 BUILT_SOURCES += src/update_engine/update_metadata.pb.cc \
 		 src/update_engine/update_metadata.pb.h
-%.pb.cc %.pb.h: %.proto
+src/%.pb.cc src/%.pb.h: src/%.proto
 	$(AM_V_GEN) $(PROTOC) --proto_path=$(srcdir) --cpp_out=$(builddir) $<
 
 # Only the test private key files are checked in
