@@ -101,13 +101,12 @@ TEST_F(Ext2MetadataTest, RunAsRootReadMetadata) {
                                               fd,
                                               &data_file_size));
 
-  // There are 12 metadata that we look for:
+  // The metadata that we look for:
   //   - Block group 0 metadata (superblock, group descriptor, bitmaps, etc)
   //       - Chunk 0, 1, 2, 3
   //   - Block group 1 metadata
   //       - Chunk 0, 1, 2, 3
   //   - Root directory (inode 2)
-  //   - Journal (inode 8)
   //   - lost+found directory (inode 11)
   //   - test_file indirect block (inode 12)
   struct {
@@ -136,7 +135,6 @@ TEST_F(Ext2MetadataTest, RunAsRootReadMetadata) {
        {"<fs-bg-1-8-metadata>", 33600, 104},
        {"<fs-bg-1-9-metadata>", 33704, 107},
        {"<fs-inode-2-metadata>", -1, 1},
-       {"<fs-inode-8-metadata>", -1, 4101},
        {"<fs-inode-11-metadata>", -1, 4},
        {"<fs-inode-12-metadata>", -1, 1}};
 

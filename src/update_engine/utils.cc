@@ -489,7 +489,7 @@ const string BootKernelName(const std::string& boot_device) {
 bool MountFilesystem(const string& device,
                      const string& mountpoint,
                      unsigned long mountflags) {
-  int rc = mount(device.c_str(), mountpoint.c_str(), "ext3", mountflags, NULL);
+  int rc = mount(device.c_str(), mountpoint.c_str(), "ext2", mountflags, NULL);
   if (rc < 0) {
     string msg = ErrnoNumberAsString(errno);
     LOG(ERROR) << "Unable to mount destination device: " << msg << ". "
