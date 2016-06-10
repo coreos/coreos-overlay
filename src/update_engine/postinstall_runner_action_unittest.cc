@@ -111,10 +111,7 @@ void PostinstallRunnerActionTest::DoTest(bool do_losetup, int err_code) {
 
   // put a postinst script in
   string script = StringPrintf("#!/bin/bash\n"
-                               "mount | grep au_postint_mount | grep ext2\n"
-                               "if [ $? -eq 0 ]; then\n"
-                               "  touch %s/postinst_called\n"
-                               "fi\n",
+                               "touch %s/postinst_called\n",
                                cwd.c_str());
   if (err_code) {
     script = StringPrintf("#!/bin/bash\nexit %d", err_code);
