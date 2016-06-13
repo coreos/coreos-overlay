@@ -9,7 +9,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~arm64 ~x86"
 else
-	CROS_WORKON_COMMIT="682d5264886b43dd510346b89b2c8b9ab67abfe4"
+	CROS_WORKON_COMMIT="7bfa89caad6dae2274e43be19d9ae7b5d5d445bf"
 	KEYWORDS="amd64 arm arm64 x86"
 fi
 
@@ -179,6 +179,11 @@ src_install() {
 		dosbin "scripts/coreos-tmpfiles"
 		systemd_dounit "scripts/coreos-tmpfiles.service"
 		systemd_enable_service sysinit.target coreos-tmpfiles.service
+	fi
+
+	# sssd not yet building on arm64
+	if use arm64; then
+		sed -i -e '/pam_sss.so/d' "${D}"/usr/lib/pam.d/* || die
 	fi
 }
 
