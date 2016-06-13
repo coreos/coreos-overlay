@@ -27,7 +27,7 @@ diff -u contrib.orig/virt.te contrib/virt.te
 +term_use_generic_ptys(svirt_lxc_net_t)
 +term_setattr_generic_ptys(svirt_lxc_net_t)
 +allow svirt_lxc_net_t tmpfs_t:chr_file { read write open };
-+allow svirt_lxc_net_t svirt_lxc_file_t:chr_file { manage_file_perm };
++allow svirt_lxc_net_t svirt_lxc_file_t:chr_file { manage_file_perms };
 +allow svirt_lxc_net_t self:capability sys_chroot;
 +allow svirt_lxc_net_t self:process getpgid;
 +allow svirt_lxc_net_t svirt_lxc_file_t:file { entrypoint mounton };
