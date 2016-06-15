@@ -23,7 +23,8 @@ DESCRIPTION="Docker complements kernel namespacing with a high-level API which o
 HOMEPAGE="https://dockerproject.org"
 LICENSE="Apache-2.0"
 SLOT="0"
-IUSE="apparmor aufs +btrfs contrib +device-mapper experimental +overlay seccomp +selinux vim-syntax zsh-completion"
+IUSE="apparmor aufs +btrfs contrib +device-mapper experimental +overlay seccomp
+	+selinux vim-syntax zsh-completion +journald"
 
 # https://github.com/docker/docker/blob/master/hack/PACKAGERS.md#build-dependencies
 CDEPEND="
@@ -33,6 +34,9 @@ CDEPEND="
 	)
 	seccomp? (
 		>=sys-libs/libseccomp-2.2.1[static-libs]
+	)
+	journald? (
+		>=sys-apps/systemd-225
 	)
 "
 
@@ -227,6 +231,9 @@ src_compile() {
 	fi
 	if use apparmor; then
 		DOCKER_BUILDTAGS+=' apparmor'
+	fi
+	if use journald; then
+		DOCKER_BUILDTAGS+=' journald'
 	fi
 
 	if has_version '<sys-fs/lvm2-2.02.110' ; then
