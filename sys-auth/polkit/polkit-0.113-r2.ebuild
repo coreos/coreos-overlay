@@ -18,7 +18,6 @@ CDEPEND="
 	dev-lang/spidermonkey:0/mozjs185[-debug]
 	>=dev-libs/glib-2.32:2
 	>=dev-libs/expat-2:=
-	introspection? ( >=dev-libs/gobject-introspection-1:= )
 	pam? (
 		sys-auth/pambase
 		virtual/pam
@@ -28,6 +27,7 @@ CDEPEND="
 DEPEND="${CDEPEND}
 	app-text/docbook-xml-dtd:4.1.2
 	app-text/docbook-xsl-stylesheets
+	introspection? ( >=dev-libs/gobject-introspection-1:= )
 	dev-libs/libxslt
 	dev-util/gtk-doc-am
 	dev-util/intltool
