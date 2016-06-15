@@ -4,7 +4,7 @@
 # We don't want to support interpreted languages, changes/updates we make
 # would have a high risk of breaking users.
 dev-lang/perl
-# TODO dev-lang/python
+dev-lang/python
 dev-lang/ruby
 
 # Since all SSL/TLS implementations are bad we minimize the number we ship.
