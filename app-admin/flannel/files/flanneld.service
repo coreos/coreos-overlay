@@ -12,7 +12,7 @@ RestartSec=5
 Environment="TMPDIR=/var/tmp/"
 Environment="DOCKER_HOST=unix:///var/run/early-docker.sock"
 Environment="FLANNEL_VER={{flannel_ver}}"
-Environment="FLANNEL_IMG=quay.io/coreos/flannel"
+Environment="FLANNEL_IMG={{flannel_img}}"
 Environment="ETCD_SSL_DIR=/etc/ssl/etcd"
 Environment="FLANNEL_ENV_FILE=/run/flannel/options.env"
 LimitNOFILE=40000

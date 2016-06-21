@@ -23,7 +23,16 @@ RDEPEND="app-admin/sdnotify-proxy"
 S="$WORKDIR"
 
 src_install() {
-	sed "s/{{flannel_ver}}/${PV}/" "${FILESDIR}"/flanneld.service >"${T}"/flanneld.service
+	case ${ARCH} in
+		amd64) flannel_img="quay.io/coreos/flannel" ;;
+		arm64) flannel_img="quay.io/coreos/arm64-flannel" ;;
+		*) die "unsupported arch: ${ARCH}" ;;
+	esac
+
+	cp "${FILESDIR}"/flanneld.service "${T}"/flanneld.service
+	sed --in-place "s|{{flannel_ver}}|${PV}|" "${T}"/flanneld.service
+	sed --in-place "s|{{flannel_img}}|${flannel_img}|" "${T}"/flanneld.service
+
 	systemd_dounit "${T}"/flanneld.service
 
 	insinto /usr/lib/systemd/network
