@@ -83,8 +83,6 @@ src_prepare() {
 	sed -i -r '/^(HS|RL)USER/s:=.*:=:' doc/Makefile.in || die
 	touch -r . doc/*
 
-	epatch "${FILESDIR}"/${PN}-4.3-compat-lvl.patch
-	epatch "${FILESDIR}"/${PN}-4.3-append-process-segfault.patch
 	epatch "${FILESDIR}"/${PN}-4.3-mapfile-improper-array-name-validation.patch
 	epatch "${FILESDIR}"/${PN}-4.3-arrayfunc.patch
 
