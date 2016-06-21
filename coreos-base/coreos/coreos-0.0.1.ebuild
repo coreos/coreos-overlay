@@ -160,6 +160,7 @@ RDEPEND="${RDEPEND}
 	sys-fs/e2fsprogs
 	sys-fs/mdadm
 	sys-fs/multipath-tools
+	sys-fs/quota
 	sys-fs/xfsprogs
 	sys-kernel/coreos-firmware
 	sys-kernel/coreos-kernel
