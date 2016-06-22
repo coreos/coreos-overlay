@@ -14,6 +14,10 @@ IUSE=""
 
 RDEPEND="dev-lang/python-oem"
 
+PATCHES=(
+	"${FILESDIR}/0001-fix-sudo-asking-for-password.patch"
+)
+
 S="${WORKDIR}/WALinuxAgent-${PV}"
 
 src_install() {
