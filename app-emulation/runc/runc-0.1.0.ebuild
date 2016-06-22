@@ -2,21 +2,22 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Id$
 
-EAPI=6
+EAPI=5
 
-inherit eutils multilib
+GITHUB_URI="github.com/opencontainers/runc"
+COREOS_GO_PACKAGE="${GITHUB_URI}"
+
+inherit eutils multilib coreos-go
 
 DESCRIPTION="runc container cli tools"
 HOMEPAGE="http://runc.io"
-
-GITHUB_URI="github.com/opencontainers/runc"
 
 if [[ ${PV} == *9999* ]]; then
 	EGIT_REPO_URI="git://${GITHUB_URI}.git"
 	inherit git-r3
 else
 	SRC_URI="https://${GITHUB_URI}/archive/v${PV}.tar.gz -> ${P}.tar.gz"
-	KEYWORDS="amd64"
+	KEYWORDS="amd64 arm64"
 fi
 
 LICENSE="Apache-2.0"
@@ -27,6 +28,12 @@ DEPEND=">=dev-lang/go-1.4:="
 RDEPEND="seccomp? ( sys-libs/libseccomp )"
 
 src_compile() {
+	# fix up cross-compiling variables
+	export GOARCH=$(go_get_arch)
+	export CGO_ENABLED=1
+	export CC=$(tc-getCC)
+	export CXX=$(tc-getCXX)
+
 	# Taken from app-emulation/docker-1.7.0-r1
 	export CGO_CFLAGS="-I${ROOT}/usr/include"
 	export CGO_LDFLAGS="-L${ROOT}/usr/$(get_libdir)"
