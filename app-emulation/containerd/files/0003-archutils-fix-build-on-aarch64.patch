@@ -1,0 +1,39 @@
+From 7c572f16734b69134b17c5f6c563d6d6a595e606 Mon Sep 17 00:00:00 2001
+From: Aleksa Sarai <asarai@suse.de>
+Date: Wed, 13 Apr 2016 19:29:20 +1000
+Subject: [PATCH 3/3] archutils: fix build on aarch64
+
+Due to an invalid architecture name (arm64), containerd could not build
+on aarch64 machines. Fix this by using the correct name of the
+architecture for conditional building.
+
+Signed-off-by: Aleksa Sarai <asarai@suse.de>
+---
+ archutils/epoll.go         | 3 ++-
+ archutils/epoll_aarch64.go | 2 +-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/archutils/epoll.go b/archutils/epoll.go
+index 6922b52..6bb6047 100644
+--- a/archutils/epoll.go
++++ b/archutils/epoll.go
+@@ -1,4 +1,5 @@
+-//+build !arm64,linux
++// +build linux,!aarch64
++
+ package archutils
+ 
+ import (
+diff --git a/archutils/epoll_aarch64.go b/archutils/epoll_aarch64.go
+index 73cd8ed..3d63147 100644
+--- a/archutils/epoll_aarch64.go
++++ b/archutils/epoll_aarch64.go
+@@ -1,4 +1,4 @@
+-// +build arm64,linux
++// +build linux,aarch64
+ 
+ package archutils
+ 
+-- 
+2.8.3
+
