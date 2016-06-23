@@ -79,6 +79,8 @@ src_prepare() {
 	if [ "${rkt_coreos_version}" != "${PXE_VERSION}" ]; then
 		die "CoreOS versions in ebuild and rkt build scripts are mismatched expecting ${rkt_stage1_coreos}!"
 	fi
+
+	autotools-utils_src_prepare
 }
 
 src_configure() {
