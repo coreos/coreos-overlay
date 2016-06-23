@@ -103,3 +103,6 @@ net-fs/nfs-utils ~arm64
 # required by systemd
 =net-libs/libmicrohttpd-0.9.47 **
 
+# match versions with amd64
+=sys-fs/quota-4.02 **
+

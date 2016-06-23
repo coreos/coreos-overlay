@@ -75,3 +75,7 @@ sys-auth/polkit introspection
 
 # enable logging command-line options in update_engine
 dev-cpp/glog gflags
+
+# enable rpc for rpc.rquotad
+sys-fs/quota rpc
+
