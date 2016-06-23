@@ -21,7 +21,7 @@ else
 	CROS_WORKON_COMMIT="d6874f787c60b3b4593e58030a2a20b55cc763e2" # v1.9.0
 fi
 
-PXE_VERSION="1032.0.0"
+PXE_VERSION="1068.0.0"
 PXE_SYSTEMD_VERSION="v229"
 PXE_URI="https://alpha.release.core-os.net/amd64-usr/${PXE_VERSION}/coreos_production_pxe_image.cpio.gz"
 PXE_FILE="${PN}-pxe-${PXE_VERSION}.img"
@@ -68,6 +68,16 @@ function add_stage1() {
 		STAGE1FLAVORS=$1
 	else
 		STAGE1FLAVORS="${STAGE1FLAVORS},$1"
+	fi
+}
+
+src_prepare() {
+	# ensure we use a CoreOS PXE image version that matches rkt's expectations.
+	local rkt_coreos_version
+
+	rkt_coreos_version=$(awk '/^CCN_IMG_RELEASE/ { print $3 }' stage1/usr_from_coreos/coreos-common.mk)
+	if [ "${rkt_coreos_version}" != "${PXE_VERSION}" ]; then
+		die "CoreOS versions in ebuild and rkt build scripts are mismatched expecting ${rkt_stage1_coreos}!"
 	fi
 }
 
