@@ -1,25 +1,25 @@
-# Copyright 1999-2015 Gentoo Foundation
+# Copyright 1999-2016 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Id$
 
-EAPI="4"
+EAPI="5"
+
 inherit eutils user flag-o-matic multilib autotools pam systemd versionator
 
 # Make it more portable between straight releases
 # and _p? releases.
 PARCH=${P/_}
 
-HPN_PATCH="${PARCH}-hpnssh14v9.tar.xz"
-LDAP_PATCH="${PN}-lpk-6.8p1-0.3.14.patch.xz"
-X509_VER="8.6" X509_PATCH="${PN}-${PV//_/}+x509-${X509_VER}.diff.gz"
+#HPN_PATCH="${PARCH}-hpnssh14v10.tar.xz"
+LDAP_PATCH="${PN}-lpk-7.2p2-0.3.14.patch.xz"
+X509_VER="8.9" X509_PATCH="${PN}-${PV/_}+x509-${X509_VER}.diff.gz"
 
 DESCRIPTION="Port of OpenBSD's free SSH release"
 HOMEPAGE="http://www.openssh.org/"
 SRC_URI="mirror://openbsd/OpenSSH/portable/${PARCH}.tar.gz
-	mirror://gentoo/${PN}-6.8_p1-sctp.patch.xz
+	mirror://gentoo/${PN}-7.2_p1-sctp.patch.xz
 	${HPN_PATCH:+hpn? (
 		mirror://gentoo/${HPN_PATCH}
-		https://dev.gentoo.org/~polynomial-c/${HPN_PATCH}
 		mirror://sourceforge/hpnssh/${HPN_PATCH}
 	)}
 	${LDAP_PATCH:+ldap? ( mirror://gentoo/${LDAP_PATCH} )}
@@ -112,33 +112,30 @@ src_prepare() {
 
 	if use X509 ; then
 		pushd .. >/dev/null
-		pushd ${HPN_PATCH%.*.*} >/dev/null
-		epatch "${FILESDIR}"/${PN}-7.1_p1-hpn-x509-glue.patch
-		popd >/dev/null
-		epatch "${FILESDIR}"/${PN}-7.0_p1-sctp-x509-glue.patch
+		if use hpn ; then
+			pushd ${HPN_PATCH%.*.*} >/dev/null
+			epatch "${FILESDIR}"/${PN}-7.1_p1-hpn-x509-glue.patch
+			popd >/dev/null
+		fi
+		epatch "${FILESDIR}"/${PN}-7.2_p1-sctp-x509-glue.patch
 		popd >/dev/null
 		epatch "${WORKDIR}"/${X509_PATCH%.*}
-		epatch "${FILESDIR}"/${PN}-6.3_p1-x509-hpn14v2-glue.patch
-		epatch "${FILESDIR}"/${PN}-6.9_p1-x509-warnings.patch
-		save_version X509
+		#epatch "${FILESDIR}"/${PN}-7.1_p2-x509-hpn14v10-glue.patch
+		#save_version X509
 	fi
 	if use ldap ; then
 		epatch "${WORKDIR}"/${LDAP_PATCH%.*}
 		save_version LPK
 	fi
-	epatch "${FILESDIR}"/${PN}-4.7_p1-GSSAPI-dns.patch #165444 integrated into gsskex
+	epatch "${FILESDIR}"/${PN}-7.2_p1-GSSAPI-dns.patch #165444 integrated into gsskex
 	epatch "${FILESDIR}"/${PN}-6.7_p1-openssl-ignore-status.patch
-	# The X509 patchset fixes this independently.
-	use X509 || epatch "${FILESDIR}"/${PN}-6.8_p1-ssl-engine-configure.patch
-	epatch "${WORKDIR}"/${PN}-6.8_p1-sctp.patch
+	epatch "${WORKDIR}"/${PN}-7.2_p1-sctp.patch
 	if use hpn ; then
 		EPATCH_FORCE="yes" EPATCH_SUFFIX="patch" \
 			EPATCH_MULTI_MSG="Applying HPN patchset ..." \
 			epatch "${WORKDIR}"/${HPN_PATCH%.*.*}
 		save_version HPN
 	fi
-
-	epatch "${FILESDIR}"/${PN}-7.1_p1-CVE-2016-0777.patch
 
 	tc-export PKG_CONFIG
 	local sed_args=(
@@ -195,8 +192,7 @@ src_configure() {
 		$(use_with selinux)
 		$(use_with skey)
 		$(use_with ssh1)
-		# The X509 patch deletes this option entirely.
-		$(use X509 || use_with ssl openssl)
+		$(use_with ssl openssl)
 		$(use_with ssl md5-passwords)
 		$(use_with ssl ssl-engine)
 	)
