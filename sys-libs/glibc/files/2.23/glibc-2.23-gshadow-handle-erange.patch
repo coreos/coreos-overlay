@@ -1,0 +1,31 @@
+--- gshadow/fgetsgent_r.c
++++ gshadow/fgetsgent_r.c
+@@ -37,6 +37,7 @@
+ 	       struct sgrp **result)
+ {
+   char *p;
++  int rc;
+ 
+   _IO_flockfile (stream);
+   do
+@@ -64,11 +65,18 @@
+     } while (*p == '\0' || *p == '#' ||	/* Ignore empty and comment lines.  */
+ 	     /* Parse the line.  If it is invalid, loop to
+ 		get the next line of the file to parse.  */
+-	     ! parse_line (buffer, (void *) resbuf, (void *) buffer, buflen,
+-			   &errno));
++	     !(rc = parse_line (buffer, (void *) resbuf,
++				(void *) buffer, buflen, &errno)));
+ 
+   _IO_funlockfile (stream);
+ 
++  if (rc < 0)
++    {
++      *result = NULL;
++      __set_errno (ERANGE);
++      return errno;
++    }
++
+   *result = resbuf;
+   return 0;
+ }
