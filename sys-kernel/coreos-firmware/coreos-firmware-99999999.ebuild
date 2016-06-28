@@ -23,10 +23,10 @@ DESCRIPTION="Linux firmware files"
 HOMEPAGE="http://git.kernel.org/?p=linux/kernel/git/firmware/linux-firmware.git"
 
 LICENSE="GPL-1 GPL-2 GPL-3 BSD freedist"
-SLOT="0"
+SLOT="0/${PVR}"
 IUSE=""
 
-CDEPEND=">=sys-kernel/coreos-kernel-3.17.6-r1:="
+CDEPEND=">=sys-kernel/coreos-modules-4.6.3-r1:="
 DEPEND="${CDEPEND}
 	sys-kernel/coreos-sources"
 RDEPEND="${CDEPEND}

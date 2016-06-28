@@ -38,8 +38,5 @@ dev-util/pkgconfig internal-glib
 # minimize risk removing unneeded patches and networking support
 app-shells/bash -net vanilla
 
-# enable audit subsystem by default
-sys-kernel/coreos-kernel audit
-
 # disable nss utilities
 dev-libs/nss -utils

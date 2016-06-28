@@ -12,36 +12,15 @@ COREOS_SOURCE_NAME="linux-${PV}-coreos${COREOS_SOURCE_REVISION}"
 
 [[ ${EAPI} != "5" ]] && die "Only EAPI=5 is supported"
 
-inherit linux-info savedconfig toolchain-funcs
+inherit linux-info toolchain-funcs
 
 HOMEPAGE="http://www.kernel.org"
 LICENSE="GPL-2 freedist"
 SLOT="0/${PVR}"
 SRC_URI=""
-IUSE="audit selinux"
+IUSE=""
 
-DEPEND="
-	app-arch/gzip
-	app-shells/bash
-	sys-apps/coreutils
-	sys-apps/findutils
-	sys-apps/grep
-	sys-apps/ignition:=
-	sys-apps/less
-	sys-apps/sed
-	sys-apps/shadow
-	sys-apps/systemd
-	sys-apps/seismograph
-	sys-apps/util-linux
-	sys-fs/btrfs-progs
-	sys-fs/e2fsprogs
-	sys-fs/mdadm
-	sys-fs/xfsprogs
-	=sys-kernel/coreos-sources-${COREOS_SOURCE_VERSION}
-	sys-kernel/bootengine:=
-	sys-kernel/dracut
-	virtual/udev
-"
+DEPEND="=sys-kernel/coreos-sources-${COREOS_SOURCE_VERSION}"
 
 # Do not analyze or strip installed files
 RESTRICT="binchecks strip"
@@ -73,39 +52,26 @@ find_defconfig() {
 	die "No defconfig found for ${ARCH} and ${PVR} in ${FILESDIR}"
 }
 
-# @FUNCTION: get_bootengine_lib
-# @DESCRIPTION:
-# Check if /lib is a symlink in the current cpio. If so we need to use
-# the target path (usually lib64) instead when adding new things.
-# When extracting with GNU cpio the first entry (the symlink) wins but
-# in the kernel the second entry (as a directory) definition wins.
-# As if using cpio isn't bad enough already.
-# If lib doesn't exist or isn't a symlink then nothing is returned.
-get_bootengine_lib() {
-	cpio -itv --quiet < build/bootengine.cpio | \
-		awk '$1 ~ /^l/ && $9 == "lib" { print $11 }'
-	assert
+config_update() {
+	key="${1%%=*}"
+	sed -i -e "/^${key}=/d" build/.config || die
+	echo "$1" >> build/.config || die
 }
 
-# @FUNCTION: update_bootengine_cpio
-# @DESCRIPTION:
-# Append files in the given directory to the bootengine cpio.
-# Allows us to stick kernel modules into the initramfs built into the image.
-update_bootengine_cpio() {
-	local extra_root="$1"
-	local cpio_args=(
-		--create --append --null
-		# dracut uses the 'newc' cpio format
-		--format=newc
-		# squash file ownership to root for new files.
-		--owner=root:root
-		# append to our local copy of bootengine
-		-F "${S}/build/bootengine.cpio"
-	)
+# Get the path to the architecture's kernel image.
+kernel_path() {
+	local kernel_arch=$(tc-arch-kernel)
+	case "${kernel_arch}" in
+		arm64)	echo build/arch/arm64/boot/Image;;
+		x86)	echo build/arch/x86/boot/bzImage;;
+		*)		die "Unsupported kernel arch '${kernel_arch}'";;
+	esac
+}
 
-	echo "Updating bootengine.cpio"
-	(cd "${extra_root}" && find . -print0 | cpio "${cpio_args[@]}") || \
-		die "cpio update failed!"
+# Get the make target to build the kernel image.
+kernel_target() {
+	local path=$(kernel_path)
+	echo "${path##*/}"
 }
 
 kmake() {
@@ -123,17 +89,69 @@ kmake() {
 		"$@"
 }
 
-# Discard the module signing key, we use new keys for each build.
+# Prints the value of a given kernel config option.
+# Quotes around string values are removed.
+getconfig() {
+	local value=$(getfilevar_noexec "CONFIG_$1" build/.config)
+	[[ -n "${value}" ]] || die "$1 is not in the kernel config"
+	[[ "${value}" == '"'*'"' ]] && value="${value:1:-1}"
+	echo "${value}"
+}
+
+# Generate the module signing key for this build.
+setup_keys() {
+	local sig_hash sig_key
+	sig_hash=$(getconfig MODULE_SIG_HASH)
+	sig_key="build/$(getconfig MODULE_SIG_KEY)"
+
+	if [[ "${sig_key}" == "build/certs/signing_key.pem" ]]; then
+		die "MODULE_SIG_KEY is using the default value"
+	fi
+
+	mkdir -p certs "${sig_key%/*}" || die
+
+	# based on the default config the kernel auto-generates
+	cat >certs/modules.cnf <<-EOF
+		[ req ]
+		default_bits = 4096
+		distinguished_name = req_distinguished_name
+		prompt = no
+		string_mask = utf8only
+		x509_extensions = myexts
+
+		[ req_distinguished_name ]
+		O = CoreOS, Inc
+		CN = Module signing key for ${KV_FULL}
+
+		[ myexts ]
+		basicConstraints=critical,CA:FALSE
+		keyUsage=digitalSignature
+		subjectKeyIdentifier=hash
+		authorityKeyIdentifier=keyid
+	EOF
+	openssl req -new -nodes -utf8 -days 36500 -batch -x509 \
+		"-${sig_hash}" -outform PEM \
+		-config certs/modules.cnf \
+		-out certs/modules.pub.pem \
+		-keyout certs/modules.key.pem \
+		|| die "Generating module signing key failed"
+	cat certs/modules.pub.pem certs/modules.key.pem > "${sig_key}"
+}
+
+# Discard the module signing key but keep public certificate.
 shred_keys() {
-	shred -u build/certs/signing_key.pem || die
+	local sig_key
+	sig_key="build/$(getconfig MODULE_SIG_KEY)"
+	shred -u certs/modules.key.pem "${sig_key}" || die
+	cp certs/modules.pub.pem "${sig_key}" || die
 }
 
 # Populate /lib/modules/$(uname -r)/{build,source}
-prepare-lib-modules-release-dirs() {
+install_build_source() {
 	local kernel_arch=$(tc-arch-kernel)
 
-	# build and source must cleaned up to avoid referencing $ROOT
-	rm "${D}/usr/lib/modules/${version}"/{build,source} || die
+	# remove the broken symlinks referencing $ROOT
+	rm "${D}/usr/lib/modules/${KV_FULL}"/{build,source} || die
 
 	# Install a stripped source for out-of-tree module builds (Debian-derived)
 	{
@@ -142,30 +160,12 @@ prepare-lib-modules-release-dirs() {
 		find source/arch/${kernel_arch} -follow \( -name 'module.lds' -o -name 'Kbuild.platforms' -o -name 'Platform' \) -print
 		find $(find source/arch/${kernel_arch} -follow \( -name include -o -name scripts \) -follow -type d -print) -print
 		find source/include source/scripts -follow -print
+		find build/ -print
 	} | cpio -pd \
 		--preserve-modification-time \
 		--owner=root:root \
 		--dereference \
-		"${D}/usr/lib/modules/${version}" || die
-
-	# Clean up the build tree and install for out-of-tree module builds
-	find "build/" -follow -maxdepth 1 -name 'System.map' -print \
-		| cpio -pd \
-		--preserve-modification-time \
-		--owner=root:root \
-		"${D}/usr/lib/modules/${version}" || die
-	kmake clean
-	find "build/" -type d -empty -delete || die
-	rm --recursive \
-		"build/bootengine.cpio" \
-		"build/.config.old" \
-		"build/certs" \
-		|| die
-
-	find "build/" -print | cpio -pd \
-		--preserve-modification-time \
-		--owner=root:root \
-		"${D}/usr/lib/modules/${version}" || die
+		"${D}/usr/lib/modules/${KV_FULL}" || die
 }
 
 coreos-kernel_pkg_pretend() {
@@ -177,52 +177,21 @@ coreos-kernel_pkg_pretend() {
 	fi
 }
 
-# We are bad, we want to get around the sandbox.  So do the creation of the
-# cpio image in pkg_setup() where we are free to mount filesystems, chroot,
-# and other fun stuff.
 coreos-kernel_pkg_setup() {
 	[[ "${MERGE_TYPE}" == binary ]] && return
 
-	if [[ "${ROOT:-/}" != / ]]; then
-		${ROOT}/usr/sbin/update-bootengine -m -c ${ROOT} || die
-	else
-		update-bootengine || die
-	fi
+	# tc-arch-kernel requires a call to get_version from linux-info.eclass
+	get_version || die "Failed to detect kernel version in ${KERNEL_DIR}"
 }
 
 coreos-kernel_src_unpack() {
-	# tc-arch-kernel requires a call to get_version from linux-info.eclass
-	get_version || die "Failed to detect kernel version in ${KERNEL_DIR}"
-
 	# we more or less reproduce the layout in /lib/modules/$(uname -r)/
 	mkdir -p "${S}/build" || die
 	mkdir -p "${S}/source" || die
 	ln -s "${KERNEL_DIR}"/* "${S}/source/" || die
 }
 
-coreos-kernel_src_prepare() {
-	restore_config build/.config
-	if [[ ! -f build/.config ]]; then
-		local config="$(find_defconfig)"
-		elog "Building using default config ${config}"
-		cp "${config}" build/.config || die
-	fi
-
-	# copy the cpio initrd to the output build directory so we can tack it
-	# onto the kernel image itself.
-	cp "${ROOT}"/usr/share/bootengine/bootengine.cpio build/bootengine.cpio \
-		|| die "cp bootengine.cpio failed, try emerge-\$BOARD bootengine"
-}
-
 coreos-kernel_src_configure() {
-	if ! use audit; then
-		sed -i -e '/^CONFIG_CMDLINE=/s/"$/ audit=0"/' build/.config || die
-	fi
-	if ! use selinux; then
-		sed -i -e '/CONFIG_SECURITY_SELINUX_BOOTPARAM_VALUE/d' build/.config || die
-		echo CONFIG_SECURITY_SELINUX_BOOTPARAM_VALUE=0 >> build/.config || die
-	fi
-
 	# Use default for any options not explitly set in defconfig
 	kmake olddefconfig
 
@@ -230,48 +199,4 @@ coreos-kernel_src_configure() {
 	kmake savedefconfig
 }
 
-coreos-kernel_src_compile() {
-	# Build both vmlinux and modules (moddep checks symbols in vmlinux)
-	kmake vmlinux modules
-
-	# Install modules and add them to the initramfs image
-	local bootengine_root="${T}/bootengine"
-	kmake INSTALL_MOD_PATH="${bootengine_root}" \
-		  INSTALL_MOD_STRIP="--strip-unneeded" \
-		  modules_install
-
-	local bootengine_lib=$(get_bootengine_lib)
-	if [[ -n "${bootengine_lib}" ]]; then
-		mkdir -p "$(dirname "${bootengine_root}/${bootengine_lib}")" || die
-		mv "${bootengine_root}/lib" \
-			"${bootengine_root}/${bootengine_lib}" || die
-	fi
-	update_bootengine_cpio "${bootengine_root}"
-
-	# Build the final kernel image
-	kmake
-}
-
-coreos-kernel_src_install() {
-	dodir /usr/boot
-	kmake INSTALL_PATH="${D}/usr/boot" install
-	# Install modules to /usr, assuming USE=symlink-usr
-	# Install firmware to a temporary (bogus) location.
-	# The linux-firmware package will be used instead.
-	# Stripping must be done here, not portage, to preserve sigs.
-	# Uncomment vdso_install for easy access to debug symbols in gdb:
-	#   set debug-file-directory /lib/modules/4.0.7-coreos-r2/vdso/
-	kmake INSTALL_MOD_PATH="${D}/usr" \
-		  INSTALL_MOD_STRIP="--strip-unneeded" \
-		  INSTALL_FW_PATH="${T}/fw" \
-		  modules_install # vdso_install
-
-	local version=$(kmake -s --no-print-directory kernelrelease)
-	dosym "vmlinuz-${version}" /usr/boot/vmlinuz
-	dosym "config-${version}" /usr/boot/config
-
-	shred_keys
-	prepare-lib-modules-release-dirs
-}
-
-EXPORT_FUNCTIONS pkg_pretend pkg_setup src_unpack src_prepare src_configure src_compile src_install
+EXPORT_FUNCTIONS pkg_pretend pkg_setup src_unpack src_configure
