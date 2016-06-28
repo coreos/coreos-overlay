@@ -87,7 +87,6 @@ RDEPEND="${RDEPEND}
 # Only applicable or available on amd64
 RDEPEND="${RDEPEND}
 	amd64? (
-		app-admin/kubelet
 		app-admin/kubelet-wrapper
 		app-crypt/go-tspi
 		app-emulation/rkt[actool]
