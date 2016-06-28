@@ -1,0 +1,91 @@
+From ae12702b9cd85d6c26af314fde23090a945ed298 Mon Sep 17 00:00:00 2001
+From: Florian Westphal <fw@strlen.de>
+Date: Tue, 22 Mar 2016 18:02:50 +0100
+Subject: [PATCH 21/23] netfilter: x_tables: make sure e->next_offset covers
+ remaining blob size
+
+Otherwise this function may read data beyond the ruleset blob.
+
+Signed-off-by: Florian Westphal <fw@strlen.de>
+Signed-off-by: Pablo Neira Ayuso <pablo@netfilter.org>
+---
+ net/ipv4/netfilter/arp_tables.c | 6 ++++--
+ net/ipv4/netfilter/ip_tables.c  | 6 ++++--
+ net/ipv6/netfilter/ip6_tables.c | 6 ++++--
+ 3 files changed, 12 insertions(+), 6 deletions(-)
+
+diff --git a/net/ipv4/netfilter/arp_tables.c b/net/ipv4/netfilter/arp_tables.c
+index b488cac..f5539e6 100644
+--- a/net/ipv4/netfilter/arp_tables.c
++++ b/net/ipv4/netfilter/arp_tables.c
+@@ -578,7 +578,8 @@ static inline int check_entry_size_and_hooks(struct arpt_entry *e,
+ 	unsigned int h;
+ 
+ 	if ((unsigned long)e % __alignof__(struct arpt_entry) != 0 ||
+-	    (unsigned char *)e + sizeof(struct arpt_entry) >= limit) {
++	    (unsigned char *)e + sizeof(struct arpt_entry) >= limit ||
++	    (unsigned char *)e + e->next_offset > limit) {
+ 		duprintf("Bad offset %p\n", e);
+ 		return -EINVAL;
+ 	}
+@@ -1233,7 +1234,8 @@ check_compat_entry_size_and_hooks(struct compat_arpt_entry *e,
+ 
+ 	duprintf("check_compat_entry_size_and_hooks %p\n", e);
+ 	if ((unsigned long)e % __alignof__(struct compat_arpt_entry) != 0 ||
+-	    (unsigned char *)e + sizeof(struct compat_arpt_entry) >= limit) {
++	    (unsigned char *)e + sizeof(struct compat_arpt_entry) >= limit ||
++	    (unsigned char *)e + e->next_offset > limit) {
+ 		duprintf("Bad offset %p, limit = %p\n", e, limit);
+ 		return -EINVAL;
+ 	}
+diff --git a/net/ipv4/netfilter/ip_tables.c b/net/ipv4/netfilter/ip_tables.c
+index b99affa..dc5581c 100644
+--- a/net/ipv4/netfilter/ip_tables.c
++++ b/net/ipv4/netfilter/ip_tables.c
+@@ -743,7 +743,8 @@ check_entry_size_and_hooks(struct ipt_entry *e,
+ 	unsigned int h;
+ 
+ 	if ((unsigned long)e % __alignof__(struct ipt_entry) != 0 ||
+-	    (unsigned char *)e + sizeof(struct ipt_entry) >= limit) {
++	    (unsigned char *)e + sizeof(struct ipt_entry) >= limit ||
++	    (unsigned char *)e + e->next_offset > limit) {
+ 		duprintf("Bad offset %p\n", e);
+ 		return -EINVAL;
+ 	}
+@@ -1493,7 +1494,8 @@ check_compat_entry_size_and_hooks(struct compat_ipt_entry *e,
+ 
+ 	duprintf("check_compat_entry_size_and_hooks %p\n", e);
+ 	if ((unsigned long)e % __alignof__(struct compat_ipt_entry) != 0 ||
+-	    (unsigned char *)e + sizeof(struct compat_ipt_entry) >= limit) {
++	    (unsigned char *)e + sizeof(struct compat_ipt_entry) >= limit ||
++	    (unsigned char *)e + e->next_offset > limit) {
+ 		duprintf("Bad offset %p, limit = %p\n", e, limit);
+ 		return -EINVAL;
+ 	}
+diff --git a/net/ipv6/netfilter/ip6_tables.c b/net/ipv6/netfilter/ip6_tables.c
+index 99425cf..415fb39 100644
+--- a/net/ipv6/netfilter/ip6_tables.c
++++ b/net/ipv6/netfilter/ip6_tables.c
+@@ -755,7 +755,8 @@ check_entry_size_and_hooks(struct ip6t_entry *e,
+ 	unsigned int h;
+ 
+ 	if ((unsigned long)e % __alignof__(struct ip6t_entry) != 0 ||
+-	    (unsigned char *)e + sizeof(struct ip6t_entry) >= limit) {
++	    (unsigned char *)e + sizeof(struct ip6t_entry) >= limit ||
++	    (unsigned char *)e + e->next_offset > limit) {
+ 		duprintf("Bad offset %p\n", e);
+ 		return -EINVAL;
+ 	}
+@@ -1505,7 +1506,8 @@ check_compat_entry_size_and_hooks(struct compat_ip6t_entry *e,
+ 
+ 	duprintf("check_compat_entry_size_and_hooks %p\n", e);
+ 	if ((unsigned long)e % __alignof__(struct compat_ip6t_entry) != 0 ||
+-	    (unsigned char *)e + sizeof(struct compat_ip6t_entry) >= limit) {
++	    (unsigned char *)e + sizeof(struct compat_ip6t_entry) >= limit ||
++	    (unsigned char *)e + e->next_offset > limit) {
+ 		duprintf("Bad offset %p, limit = %p\n", e, limit);
+ 		return -EINVAL;
+ 	}
+-- 
+2.8.3
+

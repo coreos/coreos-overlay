@@ -1,0 +1,200 @@
+From 48386a89f37aa1080678182e7dd3f218d8e8b8c2 Mon Sep 17 00:00:00 2001
+From: Florian Westphal <fw@strlen.de>
+Date: Tue, 22 Mar 2016 18:02:49 +0100
+Subject: [PATCH 22/23] netfilter: x_tables: validate e->target_offset early
+
+We should check that e->target_offset is sane before
+mark_source_chains gets called since it will fetch the target entry
+for loop detection.
+
+Signed-off-by: Florian Westphal <fw@strlen.de>
+Signed-off-by: Pablo Neira Ayuso <pablo@netfilter.org>
+---
+ net/ipv4/netfilter/arp_tables.c | 17 ++++++++---------
+ net/ipv4/netfilter/ip_tables.c  | 17 ++++++++---------
+ net/ipv6/netfilter/ip6_tables.c | 17 ++++++++---------
+ 3 files changed, 24 insertions(+), 27 deletions(-)
+
+diff --git a/net/ipv4/netfilter/arp_tables.c b/net/ipv4/netfilter/arp_tables.c
+index f5539e6..815868e0 100644
+--- a/net/ipv4/netfilter/arp_tables.c
++++ b/net/ipv4/netfilter/arp_tables.c
+@@ -474,14 +474,12 @@ next:
+ 	return 1;
+ }
+ 
+-static inline int check_entry(const struct arpt_entry *e, const char *name)
++static inline int check_entry(const struct arpt_entry *e)
+ {
+ 	const struct xt_entry_target *t;
+ 
+-	if (!arp_checkentry(&e->arp)) {
+-		duprintf("arp_tables: arp check failed %p %s.\n", e, name);
++	if (!arp_checkentry(&e->arp))
+ 		return -EINVAL;
+-	}
+ 
+ 	if (e->target_offset + sizeof(struct xt_entry_target) > e->next_offset)
+ 		return -EINVAL;
+@@ -522,10 +520,6 @@ find_check_entry(struct arpt_entry *e, const char *name, unsigned int size)
+ 	struct xt_target *target;
+ 	int ret;
+ 
+-	ret = check_entry(e, name);
+-	if (ret)
+-		return ret;
+-
+ 	e->counters.pcnt = xt_percpu_counter_alloc();
+ 	if (IS_ERR_VALUE(e->counters.pcnt))
+ 		return -ENOMEM;
+@@ -576,6 +570,7 @@ static inline int check_entry_size_and_hooks(struct arpt_entry *e,
+ 					     unsigned int valid_hooks)
+ {
+ 	unsigned int h;
++	int err;
+ 
+ 	if ((unsigned long)e % __alignof__(struct arpt_entry) != 0 ||
+ 	    (unsigned char *)e + sizeof(struct arpt_entry) >= limit ||
+@@ -591,6 +586,10 @@ static inline int check_entry_size_and_hooks(struct arpt_entry *e,
+ 		return -EINVAL;
+ 	}
+ 
++	err = check_entry(e);
++	if (err)
++		return err;
++
+ 	/* Check hooks & underflows */
+ 	for (h = 0; h < NF_ARP_NUMHOOKS; h++) {
+ 		if (!(valid_hooks & (1 << h)))
+@@ -1248,7 +1247,7 @@ check_compat_entry_size_and_hooks(struct compat_arpt_entry *e,
+ 	}
+ 
+ 	/* For purposes of check_entry casting the compat entry is fine */
+-	ret = check_entry((struct arpt_entry *)e, name);
++	ret = check_entry((struct arpt_entry *)e);
+ 	if (ret)
+ 		return ret;
+ 
+diff --git a/net/ipv4/netfilter/ip_tables.c b/net/ipv4/netfilter/ip_tables.c
+index dc5581c..0a81558 100644
+--- a/net/ipv4/netfilter/ip_tables.c
++++ b/net/ipv4/netfilter/ip_tables.c
+@@ -569,14 +569,12 @@ static void cleanup_match(struct xt_entry_match *m, struct net *net)
+ }
+ 
+ static int
+-check_entry(const struct ipt_entry *e, const char *name)
++check_entry(const struct ipt_entry *e)
+ {
+ 	const struct xt_entry_target *t;
+ 
+-	if (!ip_checkentry(&e->ip)) {
+-		duprintf("ip check failed %p %s.\n", e, name);
++	if (!ip_checkentry(&e->ip))
+ 		return -EINVAL;
+-	}
+ 
+ 	if (e->target_offset + sizeof(struct xt_entry_target) >
+ 	    e->next_offset)
+@@ -666,10 +664,6 @@ find_check_entry(struct ipt_entry *e, struct net *net, const char *name,
+ 	struct xt_mtchk_param mtpar;
+ 	struct xt_entry_match *ematch;
+ 
+-	ret = check_entry(e, name);
+-	if (ret)
+-		return ret;
+-
+ 	e->counters.pcnt = xt_percpu_counter_alloc();
+ 	if (IS_ERR_VALUE(e->counters.pcnt))
+ 		return -ENOMEM;
+@@ -741,6 +735,7 @@ check_entry_size_and_hooks(struct ipt_entry *e,
+ 			   unsigned int valid_hooks)
+ {
+ 	unsigned int h;
++	int err;
+ 
+ 	if ((unsigned long)e % __alignof__(struct ipt_entry) != 0 ||
+ 	    (unsigned char *)e + sizeof(struct ipt_entry) >= limit ||
+@@ -756,6 +751,10 @@ check_entry_size_and_hooks(struct ipt_entry *e,
+ 		return -EINVAL;
+ 	}
+ 
++	err = check_entry(e);
++	if (err)
++		return err;
++
+ 	/* Check hooks & underflows */
+ 	for (h = 0; h < NF_INET_NUMHOOKS; h++) {
+ 		if (!(valid_hooks & (1 << h)))
+@@ -1508,7 +1507,7 @@ check_compat_entry_size_and_hooks(struct compat_ipt_entry *e,
+ 	}
+ 
+ 	/* For purposes of check_entry casting the compat entry is fine */
+-	ret = check_entry((struct ipt_entry *)e, name);
++	ret = check_entry((struct ipt_entry *)e);
+ 	if (ret)
+ 		return ret;
+ 
+diff --git a/net/ipv6/netfilter/ip6_tables.c b/net/ipv6/netfilter/ip6_tables.c
+index 415fb39..69a4ebe 100644
+--- a/net/ipv6/netfilter/ip6_tables.c
++++ b/net/ipv6/netfilter/ip6_tables.c
+@@ -581,14 +581,12 @@ static void cleanup_match(struct xt_entry_match *m, struct net *net)
+ }
+ 
+ static int
+-check_entry(const struct ip6t_entry *e, const char *name)
++check_entry(const struct ip6t_entry *e)
+ {
+ 	const struct xt_entry_target *t;
+ 
+-	if (!ip6_checkentry(&e->ipv6)) {
+-		duprintf("ip_tables: ip check failed %p %s.\n", e, name);
++	if (!ip6_checkentry(&e->ipv6))
+ 		return -EINVAL;
+-	}
+ 
+ 	if (e->target_offset + sizeof(struct xt_entry_target) >
+ 	    e->next_offset)
+@@ -679,10 +677,6 @@ find_check_entry(struct ip6t_entry *e, struct net *net, const char *name,
+ 	struct xt_mtchk_param mtpar;
+ 	struct xt_entry_match *ematch;
+ 
+-	ret = check_entry(e, name);
+-	if (ret)
+-		return ret;
+-
+ 	e->counters.pcnt = xt_percpu_counter_alloc();
+ 	if (IS_ERR_VALUE(e->counters.pcnt))
+ 		return -ENOMEM;
+@@ -753,6 +747,7 @@ check_entry_size_and_hooks(struct ip6t_entry *e,
+ 			   unsigned int valid_hooks)
+ {
+ 	unsigned int h;
++	int err;
+ 
+ 	if ((unsigned long)e % __alignof__(struct ip6t_entry) != 0 ||
+ 	    (unsigned char *)e + sizeof(struct ip6t_entry) >= limit ||
+@@ -768,6 +763,10 @@ check_entry_size_and_hooks(struct ip6t_entry *e,
+ 		return -EINVAL;
+ 	}
+ 
++	err = check_entry(e);
++	if (err)
++		return err;
++
+ 	/* Check hooks & underflows */
+ 	for (h = 0; h < NF_INET_NUMHOOKS; h++) {
+ 		if (!(valid_hooks & (1 << h)))
+@@ -1520,7 +1519,7 @@ check_compat_entry_size_and_hooks(struct compat_ip6t_entry *e,
+ 	}
+ 
+ 	/* For purposes of check_entry casting the compat entry is fine */
+-	ret = check_entry((struct ip6t_entry *)e, name);
++	ret = check_entry((struct ip6t_entry *)e);
+ 	if (ret)
+ 		return ret;
+ 
+-- 
+2.8.3
+

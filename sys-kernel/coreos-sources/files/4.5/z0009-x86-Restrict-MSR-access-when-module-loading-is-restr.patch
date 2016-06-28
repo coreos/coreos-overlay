@@ -1,7 +1,7 @@
-From 0cf91ec9a013fe36fc934519e02d5ac3a281b907 Mon Sep 17 00:00:00 2001
+From 470bd15701b33c48355719f5b7223a2e59bc29ed Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Fri, 8 Feb 2013 11:12:13 -0800
-Subject: [PATCH 09/21] x86: Restrict MSR access when module loading is
+Subject: [PATCH 09/23] x86: Restrict MSR access when module loading is
  restricted
 
 Writing to MSRs should not be allowed if module loading is restricted,
@@ -40,5 +40,5 @@ index 64f9616..7fde015 100644
  			err = -EFAULT;
  			break;
 -- 
-2.7.3
+2.8.3
 

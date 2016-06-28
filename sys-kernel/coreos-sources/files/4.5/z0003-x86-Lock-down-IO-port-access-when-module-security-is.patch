@@ -1,7 +1,7 @@
-From fbcd2f7543b10fb9ff7075eab04aafc8ced67761 Mon Sep 17 00:00:00 2001
+From 1dd1d739c2ba0249c58e78f787f66f60e4a453e1 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Thu, 8 Mar 2012 10:35:59 -0500
-Subject: [PATCH 03/21] x86: Lock down IO port access when module security is
+Subject: [PATCH 03/23] x86: Lock down IO port access when module security is
  enabled
 
 IO port access would permit users to gain access to PCI configuration
@@ -16,7 +16,7 @@ Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
  2 files changed, 7 insertions(+), 2 deletions(-)
 
 diff --git a/arch/x86/kernel/ioport.c b/arch/x86/kernel/ioport.c
-index 37dae79..1ecc03c 100644
+index 589b319..ab83724 100644
 --- a/arch/x86/kernel/ioport.c
 +++ b/arch/x86/kernel/ioport.c
 @@ -15,6 +15,7 @@
@@ -36,7 +36,7 @@ index 37dae79..1ecc03c 100644
  		return -EPERM;
  
  	/*
-@@ -103,7 +104,7 @@ SYSCALL_DEFINE1(iopl, unsigned int, level)
+@@ -108,7 +109,7 @@ SYSCALL_DEFINE1(iopl, unsigned int, level)
  		return -EINVAL;
  	/* Trying to gain more privileges? */
  	if (level > old) {
@@ -44,7 +44,7 @@ index 37dae79..1ecc03c 100644
 +		if (!capable(CAP_SYS_RAWIO) || secure_modules())
  			return -EPERM;
  	}
- 	regs->flags = (regs->flags & ~X86_EFLAGS_IOPL) | (level << 12);
+ 	regs->flags = (regs->flags & ~X86_EFLAGS_IOPL) |
 diff --git a/drivers/char/mem.c b/drivers/char/mem.c
 index 4f6f94c..9d53d66 100644
 --- a/drivers/char/mem.c
@@ -68,5 +68,5 @@ index 4f6f94c..9d53d66 100644
  		return -EFAULT;
  	while (count-- > 0 && i < 65536) {
 -- 
-2.7.3
+2.8.3
 
