@@ -31,17 +31,6 @@ RDEPEND="app-emulation/runc
 
 S=${WORKDIR}/${P}/src/${EGO_PN}
 
-PATCHES=(
-	"${FILESDIR}"/0001-Use-flag-for-aarch64-EpollCreate1.patch
-	"${FILESDIR}"/0002-archutils-epoll_aarch64-fix-C-formatting.patch
-    "${FILESDIR}"/0003-archutils-fix-build-on-aarch64.patch
-	"${FILESDIR}"/0004-Correct-build-flag-for-arm64.patch
-)
-
-src_prepare() {
-	epatch "${PATCHES[@]}"
-}
-
 src_compile() {
 	export GOARCH=$(go_get_arch)
 	export CGO_ENABLED=1
@@ -56,3 +45,4 @@ src_compile() {
 src_install() {
 	dobin bin/containerd* bin/ctr
 }
+
