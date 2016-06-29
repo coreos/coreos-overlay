@@ -23,7 +23,7 @@ HOMEPAGE="https://containerd.tools"
 
 LICENSE="Apache-2.0"
 SLOT="0"
-IUSE="+seccomp"
+IUSE="seccomp"
 
 DEPEND=""
 RDEPEND="app-emulation/runc
