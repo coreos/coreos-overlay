@@ -31,7 +31,7 @@ coreos:
         Type=simple
         Restart=always
         RestartSec=5s
-        ExecStart=/usr/share/oem/python/bin/python /usr/share/oem/bin/waagent -daemon
+        ExecStart=/usr/share/oem/python/bin/python -u /usr/share/oem/bin/waagent -daemon
 
     - name: oem-cloudinit.service
       command: restart
