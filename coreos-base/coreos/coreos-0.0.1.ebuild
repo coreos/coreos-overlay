@@ -73,7 +73,13 @@ RDEPEND="${RDEPEND}
 		dev-db/etcd:1
 		!etcd_protocols_2? ( dev-db/etcdctl )
 	)
-	etcd_protocols_2? ( dev-db/etcd:2 )
+	etcd_protocols_2? (
+		dev-db/etcd:2
+		amd64? (
+			app-admin/etcd-wrapper:2
+			app-admin/etcd-wrapper:3
+		)
+	)
 	"
 
 # Optionally enable SELinux and pull in policy for containers
