@@ -23,24 +23,13 @@ HOMEPAGE="https://containerd.tools"
 
 LICENSE="Apache-2.0"
 SLOT="0"
-IUSE="+seccomp"
+IUSE="seccomp"
 
 DEPEND=""
 RDEPEND="app-emulation/runc
 	seccomp? ( sys-libs/libseccomp )"
 
 S=${WORKDIR}/${P}/src/${EGO_PN}
-
-PATCHES=(
-	"${FILESDIR}"/0001-Use-flag-for-aarch64-EpollCreate1.patch
-	"${FILESDIR}"/0002-archutils-epoll_aarch64-fix-C-formatting.patch
-    "${FILESDIR}"/0003-archutils-fix-build-on-aarch64.patch
-	"${FILESDIR}"/0004-Correct-build-flag-for-arm64.patch
-)
-
-src_prepare() {
-	epatch "${PATCHES[@]}"
-}
 
 src_compile() {
 	export GOARCH=$(go_get_arch)
@@ -56,3 +45,4 @@ src_compile() {
 src_install() {
 	dobin bin/containerd* bin/ctr
 }
+
