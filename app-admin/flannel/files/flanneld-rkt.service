@@ -2,6 +2,7 @@
 Description=Network fabric for containers
 Documentation=https://github.com/coreos/flannel
 After=etcd.service etcd2.service
+Before=docker.service
 
 [Service]
 Type=notify
@@ -31,6 +32,15 @@ ExecStart=/usr/bin/rkt run --net=host \
    --mount volume=ssl,target=${ETCD_SSL_DIR} \
    ${FLANNEL_IMG}:${FLANNEL_VER} \
    -- --ip-masq=true
+
+# Update docker options
+ExecStartPost=/usr/bin/rkt run --net=host \
+   --stage1-path=/usr/lib/rkt/stage1-images/stage1-fly.aci \
+   --insecure-options=image \
+   --volume runvol,kind=host,source=/run,readOnly=false \
+   --mount volume=runvol,target=/run \
+   ${FLANNEL_IMG}:${FLANNEL_VER} \
+   --exec /opt/bin/mk-docker-opts.sh -- -d /run/flannel_docker_opts.env -i
 
 ExecStopPost=/usr/bin/rkt gc --mark-only
 
