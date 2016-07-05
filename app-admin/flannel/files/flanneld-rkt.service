@@ -35,6 +35,7 @@ ExecStart=/usr/bin/rkt run --net=host \
    --mount volume=certs,target=/etc/ssl/certs \
    --mount volume=resolv,target=/etc/resolv.conf \
    ${FLANNEL_IMG}:${FLANNEL_VER} \
+   --exec /opt/bin/flanneld \
    -- --ip-masq=true
 
 # Update docker options
