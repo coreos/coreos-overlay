@@ -27,9 +27,11 @@ ExecStart=/usr/bin/rkt run --net=host \
    --volume runsystemd,kind=host,source=/run/systemd,readOnly=false \
    --volume runflannel,kind=host,source=/run/flannel,readOnly=false \
    --volume ssl,kind=host,source=${ETCD_SSL_DIR},readOnly=true \
+   --volume resolv,kind=host,source=/etc/resolv.conf,readOnly=true \
    --mount volume=runsystemd,target=/run/systemd \
    --mount volume=runflannel,target=/run/flannel \
    --mount volume=ssl,target=${ETCD_SSL_DIR} \
+   --mount volume=resolv,target=/etc/resolv.conf \
    ${FLANNEL_IMG}:${FLANNEL_VER} \
    -- --ip-masq=true
 
