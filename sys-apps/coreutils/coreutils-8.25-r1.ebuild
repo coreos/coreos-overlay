@@ -137,9 +137,6 @@ src_test() {
 src_install() {
 	default
 
-	insinto /etc
-	newins src/dircolors.hin DIR_COLORS
-
 	if [[ ${USERLAND} == "GNU" ]] && ! use symlink-usr; then
 		cd "${ED}"/usr/bin
 		dodir /bin
