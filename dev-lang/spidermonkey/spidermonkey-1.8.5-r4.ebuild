@@ -60,6 +60,9 @@ src_prepare() {
 	epatch "${FILESDIR}"/${PN}-perl-defined-array-check.patch
 	# fix builds for alternate $ROOT locations
 	epatch "${FILESDIR}"/${P}-no-link-lib-deps.patch
+	# Fix for CONFIG_ARM64_VA_BITS_48=y
+	# https://bugzilla.redhat.com/show_bug.cgi?id=1242326
+	epatch "${FILESDIR}/${P}-fix-arm64-va-48.patch"
 
 	epatch_user
 
