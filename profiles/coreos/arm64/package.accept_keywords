@@ -21,8 +21,6 @@ dev-vcs/git ~arm64
 sys-fs/squashfs-tools ~arm64
 net-dns/dnsmasq ~arm64
 
-app-emulation/rkt ~amd64
-
 dev-libs/libevent ~arm64
 net-misc/ntp ~arm64
 
