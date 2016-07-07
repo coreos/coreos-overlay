@@ -17,7 +17,7 @@ SRC_URI="ftp://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/${RTM_NAME}
 # NSS is licensed under the MPL, files/certdata2pem.py is GPL
 LICENSE="MPL-2.0 GPL-2"
 SLOT="0"
-KEYWORDS="amd64"
+KEYWORDS="amd64 arm64"
 IUSE=""
 
 RDEPEND="dev-libs/openssl
