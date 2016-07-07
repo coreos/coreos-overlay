@@ -27,7 +27,7 @@ dev-libs/libevent ~arm64
 net-misc/ntp ~arm64
 
 net-libs/libpcap ~arm64
-=net-analyzer/nmap-6.49_beta2 **
+=net-analyzer/nmap-7.12 ~arm64
 
 app-crypt/pinentry ~arm64
 net-analyzer/tcpdump ~arm64
