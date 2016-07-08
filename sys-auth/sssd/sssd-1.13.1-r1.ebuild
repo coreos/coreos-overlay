@@ -14,7 +14,7 @@ SRC_URI="http://fedorahosted.org/released/${PN}/${P}.tar.gz"
 
 LICENSE="GPL-3"
 SLOT="0"
-KEYWORDS="~amd64 ~arm ~hppa ~ppc ~ppc64 ~x86"
+KEYWORDS="amd64 arm64 ~hppa ~ppc ~ppc64 ~x86"
 IUSE="acl augeas autofs +locator netlink nfsv4 nls +manpages python samba selinux sudo ssh test"
 
 COMMON_DEP="
