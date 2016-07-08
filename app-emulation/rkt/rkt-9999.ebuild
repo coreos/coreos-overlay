@@ -15,18 +15,22 @@ CROS_WORKON_LOCALNAME="rkt"
 CROS_WORKON_REPO="git://github.com"
 
 if [[ "${PV}" == "9999" ]]; then
-	KEYWORDS="~amd64"
+	KEYWORDS="~amd64 ~arm64"
 else
-	KEYWORDS="amd64"
-	CROS_WORKON_COMMIT="886c62d84158b1164a91bef9b4ca68de4c4e0322" # v1.9.1
+	KEYWORDS="amd64 arm64"
+	CROS_WORKON_COMMIT="cb11bdfa3fa85239d321b937cdb1d0d9b834fbd6" # v1.10.0
 fi
 
 PXE_VERSION="1068.0.0"
 PXE_SYSTEMD_VERSION="v229"
-PXE_URI="https://alpha.release.core-os.net/amd64-usr/${PXE_VERSION}/coreos_production_pxe_image.cpio.gz"
-PXE_FILE="${PN}-pxe-${PXE_VERSION}.img"
+PXE_URI_TMPL="https://alpha.release.core-os.net/ARCH-usr/${PXE_VERSION}/coreos_production_pxe_image.cpio.gz"
+PXE_FILE_TMPL="${PN}-pxe-ARCH-${PXE_VERSION}.img"
+PXE_FILE="${PXE_FILE_TMPL/ARCH/${ARCH}}"
 
-SRC_URI="rkt_stage1_coreos? ( $PXE_URI -> $PXE_FILE )"
+SRC_URI="rkt_stage1_coreos? (
+  ${PXE_URI_TMPL/ARCH/amd64} -> ${PXE_FILE_TMPL/ARCH/amd64}
+  ${PXE_URI_TMPL/ARCH/arm64} -> ${PXE_FILE_TMPL/ARCH/arm64}
+)"
 
 DESCRIPTION="A CLI for running app containers, and an implementation of the App
 Container Spec."
@@ -127,13 +131,13 @@ src_install() {
 	dodoc README.md
 	use doc && dodoc -r Documentation
 	use examples && dodoc -r examples
-	use actool && dobin "${S}/${BUILDDIR}/bin/actool"
+	use actool && dobin "${S}/${BUILDDIR}/tools/actool"
 
-	dobin "${S}/${BUILDDIR}/bin/rkt"
+	dobin "${S}/${BUILDDIR}/target/bin/rkt"
 
 	einfo The following stage1 ACIs have been installed to ${STAGE1INSTALLDIR}:
 	insinto ${STAGE1INSTALLDIR}
-	for stage1aci in "${S}/${BUILDDIR}"/bin/stage1-*.aci; do
+	for stage1aci in "${S}/${BUILDDIR}"/target/bin/stage1-*.aci; do
 		doins "${stage1aci}"
 		einfo $(basename "${stage1aci}")
 	done
