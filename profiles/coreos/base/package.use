@@ -50,8 +50,8 @@ dev-libs/glib -mime
 # keep grub build simple
 sys-boot/grub -multislot -nls
 
-# disable "high performance ssh" patch
-net-misc/openssh -hpn
+# disable "high performance ssh" patch, turn on kerberos
+net-misc/openssh -hpn kerberos
 
 # xz and lzo are required to run grub tests
 sys-fs/squashfs-tools lzo xz
