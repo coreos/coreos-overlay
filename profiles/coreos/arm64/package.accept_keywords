@@ -21,8 +21,6 @@ dev-vcs/git ~arm64
 sys-fs/squashfs-tools ~arm64
 net-dns/dnsmasq ~arm64
 
-app-emulation/rkt ~amd64
-
 dev-libs/libevent ~arm64
 net-misc/ntp ~arm64
 
@@ -55,7 +53,6 @@ net-fs/nfs-utils ~arm64
 
 =sys-devel/bison-3.0.4-r1 ~arm64
 
-=sys-block/thin-provisioning-tools-0.4.1 **
 =sys-fs/cryptsetup-1.6.7 **
 =sys-fs/xfsprogs-3.2.2-r1 **
 =sys-apps/i2c-tools-3.1.1-r1 **
@@ -108,4 +105,3 @@ net-fs/nfs-utils ~arm64
 
 # https://bugs.gentoo.org/show_bug.cgi?id=585926 / CVE-2016-4971
 =net-misc/wget-1.18 **
-
