@@ -1,0 +1,72 @@
+#!/usr/bin/bash -e
+
+# Wrapper for launching etcd via rkt.
+
+SOURCE_FILES=${SOURCE_FILES:-{{SOURCE_FILES}}}
+
+for source_file in ${SOURCE_FILES}; do
+    if [[ -e "${source_file}" ]]; then
+        source "${source_file}"
+    fi
+done
+
+REQUIRED_ENV_VARS="ETCD_IMG ETCD_IMG_USER ETCD_DATA_DIR"
+for rev in $REQUIRED_ENV_VARS ; do
+    if [[ -z ${!rev} ]]; then
+        echo ${rev} is not set
+        exit 1
+    fi
+done
+
+SSL_CERTS_SRC=${SSL_CERTS_SRC:-/etc/ssl/certs}
+ETC_HOSTS_SRC=${ETC_HOSTS_SRC:-/etc/hosts}
+SYSTEMD_SYSTEM_DIR_SRC=${SYSTEMD_SYSTEM_DIR_SRC:-/run/systemd/system}
+
+RKT=${RKT:-/usr/bin/rkt}
+ETCD_IMG_EXEC=${ETCD_IMG_EXEC:-/etcd}
+
+RKT_STAGE1_ARG=${RKT_STAGE1_ARG:-"--stage1-from-dir=stage1-fly.aci"}
+
+if [[ ! -e ${ETCD_DATA_DIR} ]]; then
+    mkdir -p ${ETCD_DATA_DIR}
+    chown ${ETCD_IMG_USER} ${ETCD_DATA_DIR}
+fi
+
+if [[ ! -z ${ETCD_IMG_PUBKEY} ]]; then
+    ${RKT} trust ${RKT_TRUST_ARGS} \
+        --prefix=${ETCD_IMG_PREFIX} \
+        --skip-fingerprint-review \
+        ${ETCD_IMG_PUBKEY}
+fi
+
+if [[ -d ${SYSTEMD_SYSTEM_DIR_SRC} ]]; then
+    RKT_RUN_ARGS="${RKT_RUN_ARGS} \
+    --mount volume=systemd-dir,target=/run/systemd/system \
+    --volume systemd-dir,kind=host,source=${SYSTEMD_SYSTEM_DIR_SRC},readOnly=true \
+    "
+fi
+
+if [[ -S ${NOTIFY_SOCKET} ]]; then
+    RKT_RUN_ARGS="${RKT_RUN_ARGS} \
+    --mount volume=notify,target=/run/systemd/notify \
+    --volume notify,kind=host,source=${NOTIFY_SOCKET} \
+    --set-env=NOTIFY_SOCKET=/run/systemd/notify \
+    "
+fi
+
+set -x
+exec ${RKT} ${RKT_GLOBAL_ARGS} \
+    run ${RKT_RUN_ARGS} \
+    --volume data-dir,kind=host,source=${ETCD_DATA_DIR} \
+    \
+    --mount volume=etc-ssl-certs,target=/etc/ssl/certs \
+    --volume etc-ssl-certs,kind=host,source=${SSL_CERTS_SRC} \
+    \
+    --mount volume=etc-hosts,target=/etc/hosts  \
+    --volume etc-hosts,kind=host,source=${ETC_HOSTS_SRC} \
+    \
+    ${RKT_STAGE1_ARG} \
+    ${ETCD_IMG} ${ETCD_IMG_ARGS} \
+        --user=$(id -u ${ETCD_IMG_USER})
+        --exec=${ETCD_IMG_EXEC} -- \
+        "$@"
