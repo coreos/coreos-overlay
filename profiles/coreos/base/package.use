@@ -79,3 +79,6 @@ dev-cpp/glog gflags
 # enable rpc for rpc.rquotad
 sys-fs/quota rpc
 
+# support XZ compressed modules
+sys-apps/kmod lzma
+
