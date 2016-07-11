@@ -77,7 +77,7 @@ src_prepare() {
 
 	rkt_coreos_version=$(awk '/^CCN_IMG_RELEASE/ { print $3 }' stage1/usr_from_coreos/coreos-common.mk)
 	if [ "${rkt_coreos_version}" != "${PXE_VERSION}" ]; then
-		die "CoreOS versions in ebuild and rkt build scripts are mismatched expecting ${rkt_stage1_coreos}!"
+		die "CoreOS versions in ebuild and rkt build scripts are mismatched, expecting ${rkt_coreos_version}!"
 	fi
 
 	autotools-utils_src_prepare
