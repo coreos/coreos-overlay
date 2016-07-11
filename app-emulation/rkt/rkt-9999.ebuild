@@ -34,7 +34,7 @@ HOMEPAGE="https://github.com/coreos/rkt"
 
 LICENSE="Apache-2.0"
 SLOT="0"
-IUSE="doc examples +rkt_stage1_coreos +rkt_stage1_fly rkt_stage1_host rkt_stage1_src +actool tpm"
+IUSE="doc examples +rkt_stage1_coreos +rkt_stage1_fly rkt_stage1_host rkt_stage1_src tpm"
 REQUIRED_USE="|| ( rkt_stage1_coreos rkt_stage1_fly rkt_stage1_host rkt_stage1_src )"
 
 COMMON_DEPEND="sys-apps/acl
@@ -49,7 +49,6 @@ DEPEND="|| ( ~dev-lang/go-1.4.3:= >=dev-lang/go-1.5.3:= )
 	)
 	${COMMON_DEPEND}"
 RDEPEND="!app-emulation/rocket
-	actool? ( !app-emulation/actool )
 	rkt_stage1_host? (
 		~sys-apps/systemd-222
 		app-shells/bash
@@ -122,7 +121,6 @@ src_install() {
 	dodoc README.md
 	use doc && dodoc -r Documentation
 	use examples && dodoc -r examples
-	use actool && dobin "${S}/${BUILDDIR}/bin/actool"
 
 	dobin "${S}/${BUILDDIR}/bin/rkt"
 
