@@ -15,9 +15,9 @@ CROS_WORKON_LOCALNAME="rkt"
 CROS_WORKON_REPO="git://github.com"
 
 if [[ "${PV}" == "9999" ]]; then
-	KEYWORDS="~amd64"
+	KEYWORDS="~amd64 ~arm64"
 else
-	KEYWORDS="amd64"
+	KEYWORDS="amd64 arm64"
 	CROS_WORKON_COMMIT="cb11bdfa3fa85239d321b937cdb1d0d9b834fbd6" # v1.10.0
 fi
 
