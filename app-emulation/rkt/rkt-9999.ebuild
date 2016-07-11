@@ -23,10 +23,18 @@ fi
 
 PXE_VERSION="1068.0.0"
 PXE_SYSTEMD_VERSION="v229"
-PXE_URI="https://alpha.release.core-os.net/amd64-usr/${PXE_VERSION}/coreos_production_pxe_image.cpio.gz"
-PXE_FILE="${PN}-pxe-${PXE_VERSION}.img"
+PXE_FILE="${PN}-pxe-${ARCH}-usr-${PXE_VERSION}.img"
 
-SRC_URI="rkt_stage1_coreos? ( $PXE_URI -> $PXE_FILE )"
+PXE_URI_AMD64="https://alpha.release.core-os.net/amd64-usr/${PXE_VERSION}/coreos_production_pxe_image.cpio.gz"
+PXE_URI_ARM64="https://alpha.release.core-os.net/arm64-usr/${PXE_VERSION}/coreos_production_pxe_image.cpio.gz"
+
+PXE_FILE_AMD64="${PN}-pxe-amd64-usr-${PXE_VERSION}.img"
+PXE_FILE_ARM64="${PN}-pxe-arm64-usr-${PXE_VERSION}.img"
+
+SRC_URI="rkt_stage1_coreos? (
+	amd64? ( ${PXE_URI_AMD64} -> ${PXE_FILE_AMD64} )
+	arm64? ( ${PXE_URI_ARM64} -> ${PXE_FILE_ARM64} )
+)"
 
 DESCRIPTION="A CLI for running app containers, and an implementation of the App
 Container Spec."
