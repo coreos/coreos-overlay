@@ -7,7 +7,7 @@ Type=notify
 Environment=ETCD_NAME=%m
 Environment=ETCD_IMG_USER=etcd
 Environment="SOURCE_FILES={{SOURCE_FILES}}"
-ExecStart=/usr/bin/etcd{{SLOT}}-wrapped
+ExecStart=/usr/bin/etcd{{SLOT}}-wrapper
 Restart=always
 RestartSec=10s
 LimitNOFILE=40000
