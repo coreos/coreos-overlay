@@ -160,6 +160,9 @@ eblit-src_unpack-pre() {
 eblit-src_prepare-post() {
 	cd "${S}"
 
+	einfo "Patching to avoid segfaults on long /etc/gshadow lines"
+	epatch "${FILESDIR}"/2.23/glibc-2.23-gshadow-handle-erange.patch
+
 	if use hardened ; then
 		einfo "Patching to get working PIE binaries on PIE (hardened) platforms"
 		gcc-specs-pie && epatch "${FILESDIR}"/2.17/glibc-2.17-hardened-pie.patch
