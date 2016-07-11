@@ -18,7 +18,7 @@ if [[ "${PV}" == "9999" ]]; then
 	KEYWORDS="~amd64"
 else
 	KEYWORDS="amd64"
-	CROS_WORKON_COMMIT="886c62d84158b1164a91bef9b4ca68de4c4e0322" # v1.9.1
+	CROS_WORKON_COMMIT="cb11bdfa3fa85239d321b937cdb1d0d9b834fbd6" # v1.10.0
 fi
 
 PXE_VERSION="1068.0.0"
@@ -122,11 +122,11 @@ src_install() {
 	use doc && dodoc -r Documentation
 	use examples && dodoc -r examples
 
-	dobin "${S}/${BUILDDIR}/bin/rkt"
+	dobin "${S}/${BUILDDIR}/target/bin"/rkt
 
 	einfo The following stage1 ACIs have been installed to ${STAGE1INSTALLDIR}:
 	insinto ${STAGE1INSTALLDIR}
-	for stage1aci in "${S}/${BUILDDIR}"/bin/stage1-*.aci; do
+	for stage1aci in "${S}/${BUILDDIR}/target/bin"/stage1-*.aci; do
 		doins "${stage1aci}"
 		einfo $(basename "${stage1aci}")
 	done
