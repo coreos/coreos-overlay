@@ -119,6 +119,7 @@ src_configure() {
 	export CGO_CXXFLAGS="${CXXFLAGS}"
 	export CGO_LDFLAGS="${LDFLAGS}"
 	export BUILDDIR
+	export V=1
 
 	autotools-utils_src_configure
 }
