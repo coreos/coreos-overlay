@@ -89,7 +89,7 @@ src_configure() {
 	if use rkt_stage1_coreos; then
 		add_stage1 "coreos"
 		myeconfargs+=( --with-coreos-local-pxe-image-path="${DISTDIR}/${PXE_FILE}" )
-		myeconfargs+=( --with-coreos-local-pxe-image-systemd-version=v"${PXE_SYSTEMD_VERSION}" )
+		myeconfargs+=( --with-coreos-local-pxe-image-systemd-version="${PXE_SYSTEMD_VERSION}" )
 	fi
 	if use rkt_stage1_fly; then
 		add_stage1 "fly"
