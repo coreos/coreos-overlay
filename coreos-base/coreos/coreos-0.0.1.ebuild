@@ -95,7 +95,6 @@ RDEPEND="${RDEPEND}
 	amd64? (
 		app-admin/kubelet-wrapper
 		app-crypt/go-tspi
-		app-emulation/rkt[actool]
 		app-emulation/xenserver-pv-version
 		app-emulation/xenstore
 		sys-auth/realmd
@@ -117,6 +116,8 @@ RDEPEND="${RDEPEND}
 	app-crypt/tpmpolicy
 	app-editors/vim
 	app-emulation/docker
+	app-emulation/rkt
+	app-emulation/actool
 	app-misc/ca-certificates
 	app-misc/jq
 	app-shells/bash
