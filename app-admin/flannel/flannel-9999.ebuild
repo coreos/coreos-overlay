@@ -4,9 +4,9 @@
 EAPI=4
 
 if [[ "${PV}" == 9999 ]]; then
-	KEYWORDS="~amd64"
+	KEYWORDS="~amd64 ~arm64"
 else
-	KEYWORDS="amd64"
+	KEYWORDS="amd64 arm64"
 fi
 
 inherit systemd
@@ -19,11 +19,11 @@ LICENSE="Apache-2.0"
 SLOT="0"
 IUSE=""
 
-RDEPEND="app-emulation/rkt"
+RDEPEND="app-admin/sdnotify-proxy"
 S="$WORKDIR"
 
 src_install() {
-	sed "s/{{flannel_ver}}/${PV}/" "${FILESDIR}"/flanneld-rkt.service >"${T}"/flanneld.service
+	sed "s/{{flannel_ver}}/${PV}/" "${FILESDIR}"/flanneld.service >"${T}"/flanneld.service
 	systemd_dounit "${T}"/flanneld.service
 
 	insinto /usr/lib/systemd/network
