@@ -32,15 +32,6 @@ ExecStart=/usr/bin/rkt run --net=host \
    ${FLANNEL_IMG}:${FLANNEL_VER} \
    -- --ip-masq=true
 
-# Update docker options
-ExecStartPost=/usr/bin/rkt run --net=host \
-   --stage1-path=/usr/lib/rkt/stage1-images/stage1-fly.aci \
-   --insecure-options=image \
-   --volume runvol,kind=host,source=/run,readOnly=false \
-   --mount volume=runvol,target=/run \
-   ${FLANNEL_IMG}:${FLANNEL_VER} \
-   --exec /opt/bin/mk-docker-opts.sh -- -d /run/flannel_docker_opts.env -i
-
 ExecStopPost=/usr/bin/rkt gc --mark-only
 
 [Install]
