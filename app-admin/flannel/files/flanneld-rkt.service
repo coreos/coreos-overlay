@@ -2,7 +2,6 @@
 Description=Network fabric for containers
 Documentation=https://github.com/coreos/flannel
 After=etcd.service etcd2.service
-Before=docker.service
 
 [Service]
 Type=notify
