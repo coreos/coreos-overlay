@@ -1,0 +1,29 @@
+#!/usr/bin/bash
+
+# Wrapper for launching etcd via rkt.
+#
+# The version of etcd to be used can be set through ETCD_VERSION. The version
+# must be set to one of the tags published here:
+#
+#   https://github.com/coreos/etcd/releases
+#
+# If no version is provided, a default version of etcd is used.
+
+set -e
+
+ETCD_VERSION="${ETCD_VERSION:-v2.3.6}"
+ETCD_ACI="${ETCD_ACI:-coreos.com/etcd:${ETCD_VERSION}}"
+ETCD_DATA_DIR="${ETCD_DATA_DIR:-/var/lib/etcd}"
+
+exec /usr/bin/rkt run \
+	--volume data-dir,kind=host,source=${ETCD_DATA_DIR} \
+	--volume etc-ssl-certs,kind=host,source=/etc/ssl/certs \
+	--volume notify,kind=host,source=/run/systemd/notify \
+	--mount volume=etc-ssl-certs,target=/etc/ssl/certs \
+	--mount volume=notify,target=/run/systemd/notify \
+	--trust-keys-from-https \
+	--net=host \
+	--interactive \
+	$RKT_OPTS \
+	--stage1-from-dir=stage1-fly.aci \
+	${ETCD_ACI} --exec=/etcd -- "$@"
