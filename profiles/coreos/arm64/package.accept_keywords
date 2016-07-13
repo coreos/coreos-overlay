@@ -106,3 +106,6 @@ net-fs/nfs-utils ~arm64
 # https://bugs.gentoo.org/show_bug.cgi?id=585926 / CVE-2016-4971
 =net-misc/wget-1.18 **
 
+# dev-libs/libpcre: https://security.gentoo.org/glsa/201607-02
+=dev-libs/libpcre-8.38-r1
+
