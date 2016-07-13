@@ -4,7 +4,7 @@
 
 EAPI=5
 
-inherit eutils libtool multilib-minimal toolchain-funcs
+inherit autotools eutils libtool multilib-minimal toolchain-funcs
 
 DESCRIPTION="Contains error handling functions used by GnuPG software"
 HOMEPAGE="http://www.gnupg.org/related_software/libgpg-error"
@@ -31,7 +31,9 @@ MULTILIB_WRAPPED_HEADERS=(
 )
 
 src_prepare() {
+	epatch "${FILESDIR}"/${PN}-1.22-cross-compile-fix.patch
 	epatch_user
+	eautoreconf
 	elibtoolize
 }
 

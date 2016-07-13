@@ -1,0 +1,107 @@
+From: https://bugs.gentoo.org/show_bug.cgi?id=584052
+
+A patch for libgpg-error-1.22.ebuild (and potentially other versions) to enable
+proper cross-compiling by adding the correct symlink to
+"${S}"/src/syscfg/lock-obj-pub.linux-gnueabi.h.
+
+See also: https://bugs.gnupg.org/gnupg/issue1744
+
+Fixes errors like these:
+
+  'src/syscfg/lock-obj-pub.linux-gnu.h': No such file or directory
+
+--- a/configure.ac	2016-06-07 22:30:57.000000000 -0400
++++ b/configure.ac	2016-06-07 22:31:20.320303654 -0400
+@@ -533,6 +533,81 @@
+                      build_doc=$enableval, build_doc=yes)
+ AM_CONDITIONAL([BUILD_DOC], [test "x$build_doc" != xno])
+ 
++header_file_triplet=no
++
++case $ac_cv_host in
++aarch64*-apple-darwin)
++  header_file_triplet=aarch64-apple-darwin;;
++aarch64*-linux-gnu)
++  header_file_triplet=aarch64-unknown-linux-gnu;;
++alpha*-linux-gnu)
++  header_file_triplet=alpha-unknown-linux-gnu;;
++arm*-apple-darwin)
++  header_file_triplet=arm-apple-darwin;;
++arm*-linux-androideabi)
++  header_file_triplet=arm-unknown-linux-androideabi;;
++arm*-hardfloat-linux-gnueabi)
++  header_file_triplet=arm-unknown-linux-gnueabihf;;
++arm*-linux-gnueabihf)
++  header_file_triplet=arm-unknown-linux-gnueabihf;;
++arm*-hardfloat-linux-musleabi)
++  header_file_triplet=armv6-unknown-linux-musleabihf;;
++arm*-linux-musleabihf)
++  header_file_triplet=armv6-unknown-linux-musleabihf;;
++arm*-linux-musleabi)
++  header_file_triplet=armv5-unknown-linux-musleabi;;
++arm*-linux-gnueabi)
++  header_file_triplet=arm-unknown-linux-gnueabi;;
++hppa*-linux-gnu)
++  header_file_triplet=hppa-unknown-linux-gnu;;
++i?86*freebsd-gnu)
++  header_file_triplet=i686-pc-kfreebsd-gnu;;
++i?86*-linux-gnu)
++  header_file_triplet=i686-pc-linux-gnu;;
++i?86*-pc-gnu)
++  header_file_triplet=i686-pc-gnu;;
++m68*-linux-gnu)
++  header_file_triplet=m68k-unknown-linux-gnu;;
++mingw32*)
++  header_file_triplet=mingw32;;
++mips64el*-linux-gnuabi64)
++  header_file_triplet=mips64el-unknown-linux-gnuabi64;;
++mipsel*-linux-gnu)
++  header_file_triplet=mipsel-unknown-linux-gnu;;
++mips*-linux-gnu)
++  header_file_triplet=mips-unknown-linux-gnu;;
++nios2*-linux-gnu)
++  header_file_triplet=nios2-unknown-linux-gnu;;
++or1k*-linux-gnu)
++  header_file_triplet=or1k-unknown-linux-gnu;;
++powerpc64le*-linux-gnu)
++  header_file_triplet=powerpc64le-unknown-linux-gnu;;
++powerpc64*-linux-gnu)
++  header_file_triplet=powerpc64-unknown-linux-gnu;;
++powerpc*-linux-gnu)
++  header_file_triplet=powerpc-unknown-linux-gnu;;
++s390x*-linux-gnu)
++  header_file_triplet=s390x-ibm-linux-gnu;;
++sh4*-linux-gnu)
++  header_file_triplet=sh4-unknown-linux-gnu;;
++sparc64*-linux-gnu)
++  header_file_triplet=sparc64-unknown-linux-gnu;;
++sparc*-linux-gnu)
++  header_file_triplet=sparc-unknown-linux-gnu;;
++x86_64*freebsd-gnu)
++  header_file_triplet=x86_64-pc-kfreebsd-gnu;;
++x86_64*-linux-musl)
++  header_file_triplet=x86_64-pc-linux-musl;;
++x86_64*-linux-gnux32)
++  header_file_triplet=x86_64-pc-linux-gnux32;;
++x86_64*-linux-gnu)
++  header_file_triplet=x86_64-pc-linux-gnu;;
++esac
++ 
++AM_CONDITIONAL([FOUND_VALID_HEADER_TRIPLET],
++  [test "x$header_file_triplet" != xno])
++AM_COND_IF([FOUND_VALID_HEADER_TRIPLET],
++  [AC_CONFIG_LINKS([src/syscfg/lock-obj-pub.$host_os.h:src/syscfg/lock-obj-pub.$header_file_triplet.h])])
+ 
+ #
+ # Substitution
+--- a/src/mkheader.c	2016-04-22 03:05:37.000000000 -0400
++++ b/src/mkheader.c	2016-06-07 23:32:52.263369960 -0400
+@@ -506,7 +506,7 @@
+   else if (!strcmp (tag, "include:lock-obj"))
+     {
+       if (try_include_file (fname, lnr, "./lock-obj-pub.native.h", write_line))
+-        include_file (fname, lnr, "syscfg/lock-obj-pub.&.h", write_line);
++        include_file (fname, lnr, "./syscfg/lock-obj-pub.&.h", write_line);
+     }
+   else
+     return 0; /* Unknown tag.  */
