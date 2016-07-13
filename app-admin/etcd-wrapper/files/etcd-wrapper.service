@@ -1,0 +1,19 @@
+[Unit]
+Description=etcd (System Application Container)
+Conflicts=etcd.service
+Conflicts=etcd2.service
+
+[Service]
+Type=notify
+Environment=ETCD_NAME=%m
+Environment=ETCD_IMG_USER=etcd
+Environment=ETCD_DATA_DIR=/var/lib/etcd
+EnvironmentFile=-/var/lib/coreos/versions/etcd
+ExecStart=/usr/bin/etcd-wrapper $ETCD_OPTS
+Restart=always
+RestartSec=10s
+LimitNOFILE=40000
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target
