@@ -1,0 +1,149 @@
+# ChangeLog for dev-libs/libgpg-error
+# Copyright 1999-2016 Gentoo Foundation; Distributed under the GPL v2
+# (auto-generated from git log)
+
+*libgpg-error-1.19 (09 Aug 2015)
+*libgpg-error-1.18 (09 Aug 2015)
+*libgpg-error-1.13 (09 Aug 2015)
+
+  09 Aug 2015; Robin H. Johnson <robbat2@gentoo.org>
+  +libgpg-error-1.13.ebuild, +libgpg-error-1.18.ebuild,
+  +libgpg-error-1.19.ebuild, +metadata.xml:
+  proj/gentoo: Initial commit
+
+  This commit represents a new era for Gentoo:
+  Storing the gentoo-x86 tree in Git, as converted from CVS.
+
+  This commit is the start of the NEW history.
+  Any historical data is intended to be grafted onto this point.
+
+  Creation process:
+  1. Take final CVS checkout snapshot
+  2. Remove ALL ChangeLog* files
+  3. Transform all Manifests to thin
+  4. Remove empty Manifests
+  5. Convert all stale $Header$/$Id$ CVS keywords to non-expanded Git $Id$
+  5.1. Do not touch files with -kb/-ko keyword flags.
+
+  Signed-off-by: Robin H. Johnson <robbat2@gentoo.org>
+  X-Thanks: Alec Warner <antarus@gentoo.org> - did the GSoC 2006 migration
+  tests
+  X-Thanks: Robin H. Johnson <robbat2@gentoo.org> - infra guy, herding this
+  project
+  X-Thanks: Nguyen Thai Ngoc Duy <pclouds@gentoo.org> - Former Gentoo
+  developer, wrote Git features for the migration
+  X-Thanks: Brian Harring <ferringb@gentoo.org> - wrote much python to improve
+  cvs2svn
+  X-Thanks: Rich Freeman <rich0@gentoo.org> - validation scripts
+  X-Thanks: Patrick Lauer <patrick@gentoo.org> - Gentoo dev, running new 2014
+  work in migration
+  X-Thanks: Michał Górny <mgorny@gentoo.org> - scripts, QA, nagging
+  X-Thanks: All of other Gentoo developers - many ideas and lots of paint on
+  the bikeshed
+
+  24 Aug 2015; Justin Lecher <jlec@gentoo.org> metadata.xml:
+  Use https by default
+
+  Convert all URLs for sites supporting encrypted connections from http to
+  https
+
+  Signed-off-by: Justin Lecher <jlec@gentoo.org>
+
+  24 Aug 2015; Mike Gilbert <floppym@gentoo.org> metadata.xml:
+  Revert DOCTYPE SYSTEM https changes in metadata.xml
+
+  repoman does not yet accept the https version.
+  This partially reverts eaaface92ee81f30a6ac66fe7acbcc42c00dc450.
+
+  Bug: https://bugs.gentoo.org/552720
+
+  05 Sep 2015; Anthony G. Basile <blueness@gentoo.org>
+  libgpg-error-1.19.ebuild:
+  stable on ppc and ppc64, bug #552938
+
+  Package-Manager: portage-2.2.20.1
+
+  05 Sep 2015; Mikle Kolyada <zlogene@gentoo.org> libgpg-error-1.19.ebuild:
+  amd64 stable wrt bug #552938
+
+  Package-Manager: portage-2.2.20.1
+
+  05 Sep 2015; Anthony G. Basile <blueness@gentoo.org>
+  libgpg-error-1.19.ebuild:
+  stable on arm, bug #552938
+
+  Package-Manager: portage-2.2.20.1
+
+  06 Sep 2015; Pacho Ramos <pacho@gentoo.org> libgpg-error-1.19.ebuild:
+  sparc stable, bug #552938
+
+  Package-Manager: portage-2.2.20.1
+
+  06 Sep 2015; Pacho Ramos <pacho@gentoo.org> libgpg-error-1.19.ebuild:
+  x86 stable, bug #552938
+
+  Package-Manager: portage-2.2.20.1
+
+  08 Sep 2015; Jeroen Roovers <jer@gentoo.org> libgpg-error-1.19.ebuild:
+  Stable for HPPA (bug #552938).
+
+  Package-Manager: portage-2.2.20.1
+
+*libgpg-error-1.20 (10 Sep 2015)
+
+  10 Sep 2015; Alon Bar-Lev <alonbl@gentoo.org> +libgpg-error-1.20.ebuild:
+  version bump
+
+  Package-Manager: portage-2.2.20.1
+
+  11 Sep 2015; Tobias Klausmann <klausman@gentoo.org>
+  libgpg-error-1.19.ebuild:
+  add alpha keyword
+
+  Gentoo-Bug: 552938
+
+  Package-Manager: portage-2.2.20.1
+
+  24 Sep 2015; Agostino Sarubbo <ago@gentoo.org> libgpg-error-1.19.ebuild:
+  ia64 stable wrt bug #552938
+
+  Package-Manager: portage-2.2.20.1
+  RepoMan-Options: --include-arches="ia64"
+
+*libgpg-error-1.21 (19 Jan 2016)
+
+  19 Jan 2016; Manuel Rüger <mrueg@gentoo.org> +libgpg-error-1.21.ebuild:
+  Version bump
+
+  Package-Manager: portage-2.2.27
+
+  24 Jan 2016; Michał Górny <mgorny@gentoo.org> metadata.xml:
+  Replace all herds with appropriate projects (GLEP 67)
+
+  Replace all uses of herd with appropriate project maintainers, or no
+  maintainers in case of herds requested to be disbanded.
+
+  24 Jan 2016; Michał Górny <mgorny@gentoo.org> metadata.xml:
+  Set appropriate maintainer types in metadata.xml (GLEP 67)
+
+  29 Feb 2016; Steev Klimaszewski <steev@gentoo.org> libgpg-error-1.19.ebuild:
+  stable 1.19 for arm64
+
+  Package-Manager: portage-2.2.27
+
+*libgpg-error-1.22 (22 May 2016)
+
+  22 May 2016; Kristian Fiskerstrand <k_f@gentoo.org>
+  +libgpg-error-1.22.ebuild:
+  Version bump to 1.22
+
+  New upstream release. Threads is mandator, removed the use flag.
+
+  Fixes;
+  Gentoo-Bug: 576850
+
+  Package-Manager: portage-2.3.0_rc1
+
+  08 Jun 2016; Mike Frysinger <vapier@gentoo.org> libgpg-error-1.19.ebuild:
+  mark 1.19 m68k/s390/sh stable
+
