@@ -8,6 +8,7 @@ Type=notify
 Environment=ETCD_NAME=%m
 Environment=ETCD_IMG_USER=etcd
 Environment=ETCD_DATA_DIR=/var/lib/etcd
+Environment=ETCD_TAG=
 EnvironmentFile=-/var/lib/coreos/versions/etcd
 ExecStart=/usr/bin/etcd-wrapper $ETCD_OPTS
 Restart=always
