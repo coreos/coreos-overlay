@@ -1,1 +1,0 @@
-files/etcd-wrapper.ebuild
