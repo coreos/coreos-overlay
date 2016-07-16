@@ -3,7 +3,7 @@
 # $Id$
 
 EAPI=5
-inherit eutils multilib pam pax-utils systemd user
+inherit eutils multilib pam pax-utils toolchain-funcs systemd user
 
 DESCRIPTION="Policy framework for controlling privileges for system-wide services"
 HOMEPAGE="http://www.freedesktop.org/wiki/Software/polkit"
@@ -68,6 +68,7 @@ src_prepare() {
 }
 
 src_configure() {
+	tc-export CC
 	econf \
 		--localstatedir="${EPREFIX}"/var \
 		--disable-static \
