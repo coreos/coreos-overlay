@@ -71,6 +71,6 @@ exec ${RKT} ${RKT_GLOBAL_ARGS} \
     \
     ${RKT_STAGE1_ARG} \
     ${ETCD_IMG} ${ETCD_IMG_ARGS} \
-        --user=$(id -u ${ETCD_IMG_USER})
+        --user=$(id -u ${ETCD_IMG_USER}) \
         --exec=${ETCD_IMG_EXEC} -- \
         "$@"
