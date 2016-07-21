@@ -26,3 +26,24 @@ INSTALL_MASK="${INSTALL_MASK}
   /usr/share/ncat
   /usr/share/nmap
 "
+
+# Remove files which depend on interpreters not present in boards.
+INSTALL_MASK="${INSTALL_MASK}
+  /usr/share/git/contrib/*
+  /usr/bin/diff-highlight
+  /usr/bin/autoscan-2.13
+  /usr/bin/autoupdate-2.69
+  /usr/bin/autoreconf-2.69
+  /usr/bin/automake-1.14
+  /usr/bin/autom4te-2.69
+  /usr/bin/autoheader-2.69
+  /usr/bin/aclocal-1.14
+  /usr/bin/aclocal-1.15
+  /usr/bin/automake-1.15
+  /usr/bin/ifnames-2.69
+  /usr/bin/intltool-update
+  /usr/bin/intltool-merge
+  /usr/bin/intltool-prepare
+  /usr/bin/intltool-extract
+  /usr/bin/autoscan-2.69
+"
