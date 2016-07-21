@@ -105,6 +105,7 @@ multilib_src_configure() {
 		--with-unicode-lib="glib2"
 		--disable-rpath
 		--disable-silent-rules
+		--enable-sss-default-nss-plugin
 		--sbindir=/usr/sbin
 		$(multilib_native_use_with samba)
 		$(multilib_native_use_enable acl cifs-idmap-plugin)
