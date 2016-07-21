@@ -32,5 +32,5 @@ diff -u contrib.orig/virt.te contrib/virt.te
 +allow svirt_lxc_net_t self:process getpgid;
 +allow svirt_lxc_net_t svirt_lxc_file_t:file { entrypoint mounton };
 +allow svirt_lxc_net_t var_lib_t:file { entrypoint execute execute_no_trans };
-+allow svirt_lxc_net_t kernel_t:fifo_file {read write open };
++allow svirt_lxc_net_t kernel_t:fifo_file { getattr ioctl read write open };
 +
