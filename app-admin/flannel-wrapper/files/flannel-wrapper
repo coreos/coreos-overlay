@@ -1,0 +1,69 @@
+#!/bin/bash -e
+# Wrapper for launching flannel via rkt.
+
+function require_ev_all() {
+	for rev in $@ ; do
+		if [[ -z ${!rev} ]]; then
+			echo ${rev} is not set
+			exit 1
+		fi
+	done
+}
+
+function require_ev_one() {
+	for rev in $@ ; do
+		if [[ ! -z ${!rev} ]]; then
+			return
+		fi
+	done
+	echo One of $@ must be set
+	exit 1
+}
+
+require_ev_one FLANNEL_IMG FLANNEL_IMG_TAG
+
+if [[ ! -z ${FLANNEL_IMG_TAG} ]]; then
+	FLANNEL_IMG_URL=${FLANNEL_IMG_URL:-quay.io/coreos/flannel}
+	FLANNEL_IMG="${FLANNEL_IMG_URL}:${FLANNEL_IMG_TAG}"
+	RKT_RUN_ARGS="${RKT_RUN_ARGS} \
+		--trust-keys-from-https
+	"
+fi
+
+ETCD_SSL_DIR=${ETCD_SSL_DIR:-/etc/ssl/etcd}
+if [[ -d ${ETCD_SSL_DIR} ]]; then
+    RKT_RUN_ARGS="${RKT_RUN_ARGS} \
+       --volume ssl,kind=host,source=${ETCD_SSL_DIR},readOnly=true \
+       --mount volume=ssl,target=${ETCD_SSL_DIR} \
+   "
+fi
+
+if [[ -S ${NOTIFY_SOCKET} ]]; then
+    RKT_RUN_ARGS="${RKT_RUN_ARGS} \
+        --mount volume=notify,target=/run/systemd/notify \
+        --volume notify,kind=host,source=${NOTIFY_SOCKET} \
+        --set-env=NOTIFY_SOCKET=/run/systemd/notify \
+    "
+fi
+
+/usr/bin/mkdir -p /run/flannel
+
+RKT=${RKT:-/usr/bin/rkt}
+RKT_STAGE1_ARG=${RKT_STAGE1_ARG:-"--stage1-from-dir=stage1-fly.aci"}
+set -x
+exec ${RKT} ${RKT_GLOBAL_ARGS} \
+    run ${RKT_RUN_ARGS} \
+    \
+    --volume runflannel,kind=host,source=/run/flannel,readOnly=false \
+    --mount volume=runflannel,target=/run/flannel \
+    \
+    --volume certs,kind=host,source=/usr/share/ca-certificates,readOnly=true \
+    --mount volume=certs,target=/etc/ssl/certs \
+    \
+    --volume resolv,kind=host,source=/etc/resolv.conf,readOnly=true \
+    --mount volume=resolv,target=/etc/resolv.conf \
+    \
+    ${RKT_STAGE1_ARG} \
+    ${FLANNEL_IMG} ${FLANNEL_IMG_ARGS} \
+        --exec=${FLANNEL_IMG_EXEC:-/opt/bin/flanneld} -- \
+        "$@"

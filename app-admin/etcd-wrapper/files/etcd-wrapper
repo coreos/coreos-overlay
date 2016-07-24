@@ -20,11 +20,12 @@ function require_ev_one() {
     exit 1
 }
 
-require_ev_one ETCD_IMG ETCD_TAG
+require_ev_one ETCD_IMG ETCD_IMG_TAG
 require_ev_all ETCD_IMG_USER ETCD_DATA_DIR
 
-if [[ ! -z ${ETCD_TAG} ]]; then
-    ETCD_IMG="${ETCD_IMG:-coreos.com/etcd:${ETCD_TAG}}"
+if [[ ! -z ${ETCD_IMG_TAG} ]]; then
+    ETCD_IMG_URL=${ETCD_IMG_URL:-coreos.com/etcd}
+    ETCD_IMG="${ETCD_IMG_URL}:${ETCD_IMG_TAG}"
     RKT_RUN_ARGS="${RKT_RUN_ARGS} \
         --trust-keys-from-https
     "

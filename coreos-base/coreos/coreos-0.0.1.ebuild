@@ -98,10 +98,10 @@ RDEPEND="${RDEPEND}
 		app-emulation/xenstore
 		sys-auth/realmd
 		sys-auth/sssd
+		app-admin/flannel-wrapper
 	)"
 
 RDEPEND="${RDEPEND}
-	app-admin/flannel
 	app-admin/fleet
 	app-admin/locksmith
 	app-admin/mayday

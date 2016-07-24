@@ -4,22 +4,60 @@
 # Make sure to set KUBELET_VERSION to an image tag published here:
 # https://quay.io/repository/coreos/hyperkube?tab=tags Alternatively,
 # override $KUBELET_ACI to a custom location.
+#
 
 set -e
 
-if [ -z "${KUBELET_VERSION}" ]; then
-    echo "ERROR: must set KUBELET_VERSION"
+function require_ev_all() {
+    for rev in $@ ; do
+        if [[ -z ${!rev} ]]; then
+            echo ${rev} is not set
+            exit 1
+        fi
+    done
+}
+
+function require_ev_one() {
+    for rev in $@ ; do
+        if [[ ! -z ${!rev} ]]; then
+            return
+        fi
+    done
+    echo One of $@ must be set
     exit 1
+}
+
+if [[ ! -z ${KUBELET_VERSION} ]]; then
+    echo KUBELET_VERSION environment variable is deprecated, please use KUBELET_IMG_TAG instead
 fi
 
-KUBELET_ACI="${KUBELET_ACI:-quay.io/coreos/hyperkube}"
+if [[ ! -z ${KUBELET_ACI} ]]; then
+    echo KUBELET_ACI environment variable is deprecated, please use the KUBELET_IMG instead
+fi
+
+KUBELET_IMG_TAG="${KUBELET_IMG_TAG:-${KUBELET_VERSION}}"
+KUBELET_IMG="${KUBELET_ACI}"
+
+require_ev_one KUBELET_IMG KUBELET_IMG_TAG
+
+if [[ ! -z ${KUBELET_IMG_TAG} ]]; then
+    KUBELET_IMG_URL="quay.io/coreos/hypberkube"
+    KUBELET_IMG="${KUBELET_IMG_URL}:${KUBELET_IMG_TAG}"
+    RKT_RUN_ARGS="${RKT_RUN_ARGS} \
+        --trust-keys-from-https
+    "
+fi
 
 mkdir --parents /etc/kubernetes
 mkdir --parents /var/lib/docker
 mkdir --parents /var/lib/kubelet
 mkdir --parents /run/kubelet
 
-exec /usr/bin/rkt run \
+RKT=${RKT:-/usr/bin/rkt}
+RKT_STAGE1_ARG=${RKT_STAGE1_ARG:-"--stage1-from-dir=stage1-fly.aci"}
+set -x
+exec ${RKT} ${RKT_GLOBAL_ARGS} \
+  run ${RKT_RUN_ARGS} \
   --volume etc-kubernetes,kind=host,source=/etc/kubernetes \
   --volume etc-ssl-certs,kind=host,source=/usr/share/ca-certificates \
   --volume var-lib-docker,kind=host,source=/var/lib/docker \
@@ -32,8 +70,5 @@ exec /usr/bin/rkt run \
   --mount volume=var-lib-kubelet,target=/var/lib/kubelet \
   --mount volume=os-release,target=/etc/os-release \
   --mount volume=run,target=/run \
-  --trust-keys-from-https \
-  $RKT_OPTS \
-  --stage1-from-dir=stage1-fly.aci \
-  ${KUBELET_ACI}:${KUBELET_VERSION} --exec=/kubelet -- "$@"
-
+  ${RKT_STAGE1_ARG} \
+  ${KUBELET_IMG} --exec=/kubelet -- "$@"
