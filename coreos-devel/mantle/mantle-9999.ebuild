@@ -43,6 +43,10 @@ src_compile() {
 	done
 }
 
+src_test() {
+	./test
+}
+
 src_install() {
 	for cmd in cork kola ore plume; do
 		dobin "${GOBIN}"/"${cmd}"
