@@ -1,4 +1,4 @@
-From a92898f1e8f05643870686a48812d2898127cf8e Mon Sep 17 00:00:00 2001
+From bd55d2cfacdd370df7e5a8f03863f59cee591c47 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <mjg59@coreos.com>
 Date: Thu, 19 Nov 2015 18:55:53 -0800
 Subject: [PATCH 08/20] kexec: Disable at runtime if the kernel enforces module
@@ -14,7 +14,7 @@ Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/kernel/kexec.c b/kernel/kexec.c
-index ee70aef..755198b 100644
+index 4384672..0876783 100644
 --- a/kernel/kexec.c
 +++ b/kernel/kexec.c
 @@ -17,6 +17,7 @@
@@ -25,7 +25,7 @@ index ee70aef..755198b 100644
  
  #include "kexec_internal.h"
  
-@@ -131,7 +132,7 @@ SYSCALL_DEFINE4(kexec_load, unsigned long, entry, unsigned long, nr_segments,
+@@ -189,7 +190,7 @@ SYSCALL_DEFINE4(kexec_load, unsigned long, entry, unsigned long, nr_segments,
  	int result;
  
  	/* We only trust the superuser with rebooting the system. */
@@ -35,5 +35,5 @@ index ee70aef..755198b 100644
  
  	/*
 -- 
-2.8.2
+2.7.3
 

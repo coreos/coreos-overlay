@@ -1,4 +1,4 @@
-From c847761aacd96fb03f6493ffc800ef9310d34ef7 Mon Sep 17 00:00:00 2001
+From 4d316639da0c1a3cbe34b33cb7d2821b810020bf Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Tue, 16 Jun 2015 14:14:32 +0100
 Subject: [PATCH 18/20] SELinux: Check against union label for file operations
@@ -16,10 +16,10 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  1 file changed, 10 insertions(+), 2 deletions(-)
 
 diff --git a/security/selinux/hooks.c b/security/selinux/hooks.c
-index e5d0e2d..c3f94dd 100644
+index 74e4f4e..f6dc6b2 100644
 --- a/security/selinux/hooks.c
 +++ b/security/selinux/hooks.c
-@@ -1745,6 +1745,7 @@ static int file_has_perm(const struct cred *cred,
+@@ -1755,6 +1755,7 @@ static int file_has_perm(const struct cred *cred,
  			 struct file *file,
  			 u32 av)
  {
@@ -27,7 +27,7 @@ index e5d0e2d..c3f94dd 100644
  	struct file_security_struct *fsec = file->f_security;
  	struct inode *inode = file_inode(file);
  	struct common_audit_data ad;
-@@ -1765,8 +1766,15 @@ static int file_has_perm(const struct cred *cred,
+@@ -1775,8 +1776,15 @@ static int file_has_perm(const struct cred *cred,
  
  	/* av is zero if only checking access to the descriptor. */
  	rc = 0;
@@ -46,5 +46,5 @@ index e5d0e2d..c3f94dd 100644
  out:
  	return rc;
 -- 
-2.8.2
+2.7.3
 
