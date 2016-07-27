@@ -54,39 +54,21 @@ INSTALL_MASK="${INSTALL_MASK}
 
   /usr/lib/modules/*-coreos/source/scripts/*.pl
 
-  /usr/share/git/contrib/*
-
   /usr/share/rsync/*
 
-  /usr/bin/diff-highlight
   /usr/bin/glib-mkenums
   /usr/bin/afmtodit
   /usr/bin/decode-edid
-  /usr/bin/autoscan-2.13
   /usr/bin/gtkdoc-rebase
   /usr/bin/ddcmon
   /usr/bin/mtrace
-  /usr/bin/autoupdate-2.69
-  /usr/bin/autoreconf-2.69
-  /usr/bin/automake-1.14
   /usr/bin/import-tars
-  /usr/bin/autom4te-2.69
   /usr/bin/help2man
   /usr/bin/gropdf
   /usr/bin/mmroff
-  /usr/bin/autoheader-2.69
   /usr/bin/decode-dimms
-  /usr/bin/aclocal-1.14
   /usr/bin/pdfmom
-  /usr/bin/aclocal-1.15
   /usr/bin/decode-vaio
-  /usr/bin/ifnames-2.69
-  /usr/bin/automake-1.15
-  /usr/bin/intltool-update
-  /usr/bin/intltool-merge
-  /usr/bin/intltool-prepare
-  /usr/bin/intltool-extract
-  /usr/bin/autoscan-2.69
   /etc/ssl/misc/CA.pl
   /etc/ssl/misc/tsget
 "
