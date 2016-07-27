@@ -1,4 +1,4 @@
-From 21bb922ca499884980a7a98992bb0b00c05c223a Mon Sep 17 00:00:00 2001
+From cf7c941ac72cf28c9ed256ed6f7e77dd451819ec Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Tue, 16 Jun 2015 14:14:31 +0100
 Subject: [PATCH 14/20] Security: Provide copy-up security hooks for unioned
@@ -21,7 +21,7 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  3 files changed, 54 insertions(+)
 
 diff --git a/include/linux/lsm_hooks.h b/include/linux/lsm_hooks.h
-index cdee11c..adef596 100644
+index 7ae3976..b585466 100644
 --- a/include/linux/lsm_hooks.h
 +++ b/include/linux/lsm_hooks.h
 @@ -401,6 +401,24 @@
@@ -49,7 +49,7 @@ index cdee11c..adef596 100644
   *
   * Security hooks for file operations
   *
-@@ -1424,6 +1442,9 @@ union security_list_options {
+@@ -1425,6 +1443,9 @@ union security_list_options {
  	int (*inode_listsecurity)(struct inode *inode, char *buffer,
  					size_t buffer_size);
  	void (*inode_getsecid)(struct inode *inode, u32 *secid);
@@ -59,7 +59,7 @@ index cdee11c..adef596 100644
  
  	int (*file_permission)(struct file *file, int mask);
  	int (*file_alloc_security)(struct file *file);
-@@ -1695,6 +1716,8 @@ struct security_hook_heads {
+@@ -1696,6 +1717,8 @@ struct security_hook_heads {
  	struct list_head inode_setsecurity;
  	struct list_head inode_listsecurity;
  	struct list_head inode_getsecid;
@@ -69,10 +69,10 @@ index cdee11c..adef596 100644
  	struct list_head file_alloc_security;
  	struct list_head file_free_security;
 diff --git a/include/linux/security.h b/include/linux/security.h
-index 157f0cb..449f1b0 100644
+index 14df373..986265b 100644
 --- a/include/linux/security.h
 +++ b/include/linux/security.h
-@@ -276,6 +276,10 @@ int security_inode_getsecurity(struct inode *inode, const char *name, void **buf
+@@ -282,6 +282,10 @@ int security_inode_getsecurity(struct inode *inode, const char *name, void **buf
  int security_inode_setsecurity(struct inode *inode, const char *name, const void *value, size_t size, int flags);
  int security_inode_listsecurity(struct inode *inode, char *buffer, size_t buffer_size);
  void security_inode_getsecid(struct inode *inode, u32 *secid);
@@ -83,7 +83,7 @@ index 157f0cb..449f1b0 100644
  int security_file_permission(struct file *file, int mask);
  int security_file_alloc(struct file *file);
  void security_file_free(struct file *file);
-@@ -744,6 +748,16 @@ static inline void security_inode_getsecid(struct inode *inode, u32 *secid)
+@@ -758,6 +762,16 @@ static inline void security_inode_getsecid(struct inode *inode, u32 *secid)
  	*secid = 0;
  }
  
@@ -101,10 +101,10 @@ index 157f0cb..449f1b0 100644
  {
  	return 0;
 diff --git a/security/security.c b/security/security.c
-index 3644b03..8548340 100644
+index 7095693..77ec85b 100644
 --- a/security/security.c
 +++ b/security/security.c
-@@ -726,6 +726,19 @@ void security_inode_getsecid(struct inode *inode, u32 *secid)
+@@ -727,6 +727,19 @@ void security_inode_getsecid(struct inode *inode, u32 *secid)
  	call_void_hook(inode_getsecid, inode, secid);
  }
  
@@ -124,7 +124,7 @@ index 3644b03..8548340 100644
  int security_file_permission(struct file *file, int mask)
  {
  	int ret;
-@@ -1662,6 +1675,10 @@ struct security_hook_heads security_hook_heads = {
+@@ -1663,6 +1676,10 @@ struct security_hook_heads security_hook_heads = {
  		LIST_HEAD_INIT(security_hook_heads.inode_listsecurity),
  	.inode_getsecid =
  		LIST_HEAD_INIT(security_hook_heads.inode_getsecid),
@@ -136,5 +136,5 @@ index 3644b03..8548340 100644
  		LIST_HEAD_INIT(security_hook_heads.file_permission),
  	.file_alloc_security =
 -- 
-2.8.2
+2.7.3
 

@@ -1,4 +1,4 @@
-From d1440220844d8a0cca8168526fc2d6a74787283c Mon Sep 17 00:00:00 2001
+From 735f74a5d4919c155481ee8aca9074c5d53f4029 Mon Sep 17 00:00:00 2001
 From: Josh Boyer <jwboyer@fedoraproject.org>
 Date: Tue, 27 Aug 2013 13:33:03 -0400
 Subject: [PATCH 12/20] efi: Add EFI_SECURE_BOOT bit
@@ -13,10 +13,10 @@ Signed-off-by: Josh Boyer <jwboyer@fedoraproject.org>
  2 files changed, 3 insertions(+)
 
 diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index 1a78bf7..564921b 100644
+index bdb9881..a666b6c 100644
 --- a/arch/x86/kernel/setup.c
 +++ b/arch/x86/kernel/setup.c
-@@ -1148,7 +1148,9 @@ void __init setup_arch(char **cmdline_p)
+@@ -1154,7 +1154,9 @@ void __init setup_arch(char **cmdline_p)
  
  #ifdef CONFIG_EFI_SECURE_BOOT_SIG_ENFORCE
  	if (boot_params.secure_boot) {
@@ -27,10 +27,10 @@ index 1a78bf7..564921b 100644
  #endif
  
 diff --git a/include/linux/efi.h b/include/linux/efi.h
-index 1626474..2bd4516 100644
+index f196dd0..3b3909f 100644
 --- a/include/linux/efi.h
 +++ b/include/linux/efi.h
-@@ -1009,6 +1009,7 @@ extern int __init efi_setup_pcdp_console(char *);
+@@ -1062,6 +1062,7 @@ extern int __init efi_setup_pcdp_console(char *);
  #define EFI_ARCH_1		7	/* First arch-specific bit */
  #define EFI_DBG			8	/* Print additional debug info at runtime */
  #define EFI_NX_PE_DATA		9	/* Can runtime data regions be mapped non-executable? */
@@ -39,5 +39,5 @@ index 1626474..2bd4516 100644
  #ifdef CONFIG_EFI
  /*
 -- 
-2.8.2
+2.7.3
 

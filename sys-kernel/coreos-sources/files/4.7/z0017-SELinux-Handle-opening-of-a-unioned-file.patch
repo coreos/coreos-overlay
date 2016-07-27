@@ -1,4 +1,4 @@
-From 518b46aa4f4d0198593c2ffd9a3927db686d3c43 Mon Sep 17 00:00:00 2001
+From 9f1a7fa7a1db75f71d653863fd190e160535d9d1 Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Tue, 16 Jun 2015 14:14:32 +0100
 Subject: [PATCH 17/20] SELinux: Handle opening of a unioned file
@@ -26,10 +26,10 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  2 files changed, 70 insertions(+)
 
 diff --git a/security/selinux/hooks.c b/security/selinux/hooks.c
-index b4e3e63..e5d0e2d 100644
+index 19719b7..74e4f4e 100644
 --- a/security/selinux/hooks.c
 +++ b/security/selinux/hooks.c
-@@ -3584,10 +3584,72 @@ static int selinux_file_receive(struct file *file)
+@@ -3603,10 +3603,72 @@ static int selinux_file_receive(struct file *file)
  	return file_has_perm(cred, file, file_to_av(file));
  }
  
@@ -102,7 +102,7 @@ index b4e3e63..e5d0e2d 100644
  
  	fsec = file->f_security;
  	isec = inode_security(file_inode(file));
-@@ -3608,6 +3670,13 @@ static int selinux_file_open(struct file *file, const struct cred *cred)
+@@ -3627,6 +3689,13 @@ static int selinux_file_open(struct file *file, const struct cred *cred)
  	 * new inode label or new policy.
  	 * This check is not redundant - do not remove.
  	 */
@@ -117,10 +117,10 @@ index b4e3e63..e5d0e2d 100644
  }
  
 diff --git a/security/selinux/include/objsec.h b/security/selinux/include/objsec.h
-index a2ae054..54cce84 100644
+index c21e135..1c23b90 100644
 --- a/security/selinux/include/objsec.h
 +++ b/security/selinux/include/objsec.h
-@@ -60,6 +60,7 @@ struct file_security_struct {
+@@ -59,6 +59,7 @@ struct file_security_struct {
  	u32 sid;		/* SID of open file description */
  	u32 fown_sid;		/* SID of file owner (for SIGIO) */
  	u32 isid;		/* SID of inode at the time of file open */
@@ -129,5 +129,5 @@ index a2ae054..54cce84 100644
  };
  
 -- 
-2.8.2
+2.7.3
 
