@@ -14,12 +14,12 @@ Requires=initrd-setup-root.service
 After=initrd-setup-root.service
 
 # setup networking
-Wants=initrd-systemd-networkd.service
-After=initrd-systemd-networkd.service
+Wants=systemd-networkd.service
+After=systemd-networkd.service
 
 # generate resolv.conf
-Wants=initrd-systemd-resolved.service
-After=initrd-systemd-resolved.service
+Wants=systemd-resolved.service
+After=systemd-resolved.service
 
 [Service]
 Type=oneshot

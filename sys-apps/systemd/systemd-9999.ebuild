@@ -11,7 +11,7 @@ if [[ ${PV} == 9999 ]]; then
 	# Use ~arch instead of empty keywords for compatibility with cros-workon
 	KEYWORDS="~amd64 ~arm64 ~arm ~x86"
 else
-	CROS_WORKON_COMMIT="e9fa78159bf392f12347c9d7709053ff2146e88c" # v229-coreos
+	CROS_WORKON_COMMIT="c61275687fde881403986fff251270a949c38300" # v231-coreos
 	KEYWORDS="amd64 arm64 ~arm ~x86"
 fi
 
@@ -24,7 +24,7 @@ inherit autotools bash-completion-r1 linux-info multilib \
 	multilib-minimal pam systemd toolchain-funcs udev user
 
 DESCRIPTION="System and service manager for Linux"
-HOMEPAGE="http://www.freedesktop.org/wiki/Software/systemd"
+HOMEPAGE="https://www.freedesktop.org/wiki/Software/systemd"
 
 LICENSE="GPL-2 LGPL-2.1 MIT public-domain"
 SLOT="0/2"
@@ -74,16 +74,14 @@ COMMON_DEPEND=">=sys-apps/util-linux-2.27.1:0=[${MULTILIB_USEDEP}]
 		!app-emulation/emul-linux-x86-baselibs[-abi_x86_32(-)] )"
 
 # baselayout-2.2 has /run
-# laptop-mode-tools: https://github.com/systemd/systemd/issues/2684
 RDEPEND="${COMMON_DEPEND}
 	>=sys-apps/baselayout-2.2
 	!sys-auth/nss-myhostname
 	!sys-fs/eudev
-	!sys-fs/udev
-	!app-laptop/laptop-mode-tools"
+	!sys-fs/udev"
 
 # sys-apps/dbus: the daemon only (+ build-time lib dep for tests)
-PDEPEND=">=sys-apps/dbus-1.6.8-r1:0[systemd]
+PDEPEND=">=sys-apps/dbus-1.8.8:0[systemd]
 	>=sys-apps/hwids-20150417[udev]
 	policykit? ( sys-auth/polkit )
 	!vanilla? ( sys-apps/gentoo-systemd-integration )"
@@ -99,7 +97,8 @@ DEPEND="${COMMON_DEPEND}
 	>=sys-kernel/linux-headers-${MINKV}
 	virtual/pkgconfig
 	gnuefi? ( >=sys-boot/gnu-efi-3.0.2 )
-	test? ( >=sys-apps/dbus-1.6.8-r1:0 )"
+	test? ( >=sys-apps/dbus-1.6.8-r1:0 )
+"
 
 # Not required when building from unpatched tarballs, but we build from git.
 DEPEND+="
@@ -112,7 +111,7 @@ pkg_pretend() {
 	local CONFIG_CHECK="~AUTOFS4_FS ~BLK_DEV_BSG ~CGROUPS
 		~DEVPTS_MULTIPLE_INSTANCES ~DEVTMPFS ~DMIID ~EPOLL ~FANOTIFY ~FHANDLE
 		~INOTIFY_USER ~IPV6 ~NET ~NET_NS ~PROC_FS ~SECCOMP ~SIGNALFD ~SYSFS
-		~TIMERFD ~TMPFS_XATTR
+		~TIMERFD ~TMPFS_XATTR ~UNIX
 		~!FW_LOADER_USER_HELPER ~!GRKERNSEC_PROC ~!IDE ~!SYSFS_DEPRECATED
 		~!SYSFS_DEPRECATED_V2"
 
@@ -246,6 +245,7 @@ multilib_src_configure() {
 		$(multilib_native_use_enable xkb xkbcommon)
 
 		# hardcode a few paths to spare some deps
+		KILL=/bin/kill
 		QUOTAON=/usr/sbin/quotaon
 		QUOTACHECK=/usr/sbin/quotacheck
 
@@ -266,6 +266,9 @@ multilib_src_configure() {
 
 		# no default name servers
 		--with-dns-servers=
+
+		# Breaks screen, tmux, etc.
+		--without-kill-user-processes
 	)
 
 	# Work around bug 463846.
@@ -323,12 +326,6 @@ multilib_src_install() {
 
 		emake "${mymakeopts[@]}"
 	fi
-
-	# install compat pkg-config files
-	# Change dbus to >=sys-apps/dbus-1.8.8 if/when this is dropped.
-	local pcfiles=( src/compat-libs/libsystemd-{daemon,id128,journal,login}.pc )
-	emake "${mymakeopts[@]}" install-pkgconfiglibDATA \
-		pkgconfiglib_DATA="${pcfiles[*]}"
 }
 
 multilib_src_install_all() {
@@ -505,7 +502,6 @@ pkg_postinst() {
 	newusergroup systemd-network
 	newusergroup systemd-resolve
 	newusergroup systemd-timesync
-	use http && newusergroup systemd-journal-gateway
 
 	systemd_update_catalog
 
