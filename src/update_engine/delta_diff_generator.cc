@@ -61,9 +61,6 @@ namespace {
 const size_t kBlockSize = 4096;  // bytes
 const string kNonexistentPath = "";
 
-// TODO(adlr): switch from 1GiB to 2GiB when we no longer care about old
-// clients:
-const size_t kRootFSPartitionSize = 1 * 1024 * 1024 * 1024;  // bytes
 const uint64_t kFullUpdateChunkSize = 1024 * 1024;  // bytes
 
 static const char* kInstallOperationTypes[] = {
@@ -1159,8 +1156,7 @@ bool DeltaDiffGenerator::ConvertGraphToDag(Graph* graph,
                                            const string& new_root,
                                            int fd,
                                            off_t* data_file_size,
-                                           vector<Vertex::Index>* final_order,
-                                           Vertex::Index scratch_vertex) {
+                                           vector<Vertex::Index>* final_order) {
   CycleBreaker cycle_breaker;
   LOG(INFO) << "Finding cycles...";
   set<Edge> cut_edges;
@@ -1169,7 +1165,6 @@ bool DeltaDiffGenerator::ConvertGraphToDag(Graph* graph,
   CheckGraph(*graph);
 
   // Calculate number of scratch blocks needed
-
   LOG(INFO) << "Cutting cycles...";
   vector<CutEdgeVertexes> cuts;
   TEST_AND_RETURN_FALSE(CutEdges(graph, cut_edges, &cuts));
@@ -1200,31 +1195,10 @@ bool DeltaDiffGenerator::ConvertGraphToDag(Graph* graph,
                                            &inverse_final_order,
                                            cuts));
   LOG(INFO) << "Making sure all temp blocks have been allocated";
-
-  // Remove the scratch node, if any
-  if (scratch_vertex != Vertex::kInvalidIndex) {
-    final_order->erase(final_order->begin() +
-                       inverse_final_order[scratch_vertex]);
-    (*graph)[scratch_vertex].valid = false;
-    GenerateReverseTopoOrderMap(*final_order, &inverse_final_order);
-  }
-
   graph_utils::DumpGraph(*graph);
   CHECK(NoTempBlocksRemain(*graph));
   LOG(INFO) << "done making sure all temp blocks are allocated";
   return true;
-}
-
-void DeltaDiffGenerator::CreateScratchNode(uint64_t start_block,
-                                           uint64_t num_blocks,
-                                           Vertex* vertex) {
-  vertex->file_name = "<scratch>";
-  vertex->op.set_type(InstallOperation_Type_REPLACE_BZ);
-  vertex->op.set_data_offset(0);
-  vertex->op.set_data_length(0);
-  Extent* extent = vertex->op.add_dst_extents();
-  extent->set_start_block(start_block);
-  extent->set_num_blocks(num_blocks);
 }
 
 bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
@@ -1267,7 +1241,6 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
   LOG(INFO) << "Reading files...";
 
   vector<Vertex::Index> final_order;
-  Vertex::Index scratch_vertex = Vertex::kInvalidIndex;
   {
     int fd;
     TEST_AND_RETURN_FALSE(
@@ -1304,15 +1277,6 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
                                                 new_image,
                                                 &graph.back()));
 
-      // Final scratch block (if there's space)
-      if (blocks.size() < (kRootFSPartitionSize / kBlockSize)) {
-        scratch_vertex = graph.size();
-        graph.resize(graph.size() + 1);
-        CreateScratchNode(blocks.size(),
-                          (kRootFSPartitionSize / kBlockSize) - blocks.size(),
-                          &graph.back());
-      }
-
       CheckGraph(graph);
 
       LOG(INFO) << "Creating edges...";
@@ -1324,8 +1288,7 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
                                               new_root,
                                               fd,
                                               &data_file_size,
-                                              &final_order,
-                                              scratch_vertex));
+                                              &final_order));
     } else {
       // Full update
       off_t new_image_size =
