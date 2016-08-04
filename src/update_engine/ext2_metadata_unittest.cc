@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include <ext2fs/ext2fs.h>
 #include <gtest/gtest.h>
 
 #include "files/scoped_file.h"

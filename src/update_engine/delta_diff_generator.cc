@@ -534,13 +534,8 @@ bool DeltaDiffGenerator::ReadFileToDiff(
 
 bool DeltaDiffGenerator::InitializePartitionInfo(const string& partition,
                                                  InstallInfo* info) {
-  int64_t size = 0;
-  int block_count = 0, block_size = 0;
-  TEST_AND_RETURN_FALSE(utils::GetFilesystemSize(partition,
-                                                 &block_count,
-                                                 &block_size));
-  size = static_cast<int64_t>(block_count) * block_size;
-  TEST_AND_RETURN_FALSE(size > 0);
+  off_t size = 0;
+  TEST_AND_RETURN_FALSE(utils::GetDeviceSize(partition, &size));
   info->set_size(size);
   OmahaHashCalculator hasher;
   TEST_AND_RETURN_FALSE(hasher.UpdateFile(partition, size) == size);
@@ -1209,21 +1204,29 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
     const string& output_path,
     const string& private_key_path,
     uint64_t* metadata_size) {
-  int old_image_block_count = 0, old_image_block_size = 0;
-  int new_image_block_count = 0, new_image_block_size = 0;
-  TEST_AND_RETURN_FALSE(utils::GetFilesystemSize(new_image,
-                                                 &new_image_block_count,
-                                                 &new_image_block_size));
-  if (!old_image.empty()) {
-    TEST_AND_RETURN_FALSE(utils::GetFilesystemSize(old_image,
-                                                   &old_image_block_count,
-                                                   &old_image_block_size));
-    TEST_AND_RETURN_FALSE(old_image_block_size == new_image_block_size);
-    LOG_IF(WARNING, old_image_block_count != new_image_block_count)
-        << "Old and new images have different block counts.";
+  off_t new_image_size = 0, old_image_size = 0;
+  TEST_AND_RETURN_FALSE(utils::GetDeviceSize(new_image, &new_image_size));
+  if (new_image_size % kBlockSize != 0) {
+    LOG(ERROR) << "Size of " << new_image << " (" << new_image_size
+      << ") is not a multiple of " << kBlockSize;
+    return false;
   }
 
-  vector<Block> blocks(max(old_image_block_count, new_image_block_count));
+  if (!old_image.empty()) {
+    TEST_AND_RETURN_FALSE(utils::GetDeviceSize(old_image, &old_image_size));
+    if (old_image_size % kBlockSize != 0) {
+      LOG(ERROR) << "Size of " << old_image << " (" << old_image_size
+        << ") is not a multiple of " << kBlockSize;
+      return false;
+    }
+    if (old_image_size != new_image_size) {
+      LOG(ERROR) << "Old and new images have different sizes: "
+        << old_image_size << " != " << new_image_size;
+      return false;
+    }
+  }
+
+  vector<Block> blocks(new_image_size / kBlockSize);
   LOG(INFO) << "Invalid block index: " << Vertex::kInvalidIndex;
   LOG(INFO) << "Block count: " << blocks.size();
   for (vector<Block>::size_type i = 0; i < blocks.size(); i++) {
@@ -1290,9 +1293,6 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
                                               &data_file_size,
                                               &final_order));
     } else {
-      // Full update
-      off_t new_image_size =
-          static_cast<off_t>(new_image_block_count) * new_image_block_size;
       TEST_AND_RETURN_FALSE(FullUpdateGenerator::Run(&graph,
                                                      new_image,
                                                      new_image_size,

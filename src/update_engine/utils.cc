@@ -511,58 +511,31 @@ bool UnmountFilesystem(const string& mountpoint) {
   return true;
 }
 
-bool GetFilesystemSize(const std::string& device,
-                       int* out_block_count,
-                       int* out_block_size) {
+bool GetDeviceSize(const std::string& device, off_t* size) {
   int fd = HANDLE_EINTR(open(device.c_str(), O_RDONLY));
   TEST_AND_RETURN_FALSE(fd >= 0);
   files::ScopedFD fd_closer(fd);
-  return GetFilesystemSizeFromFD(fd, out_block_count, out_block_size);
+  return GetDeviceSizeFromFD(fd, size);
 }
 
-bool GetFilesystemSizeFromFD(int fd,
-                             int* out_block_count,
-                             int* out_block_size) {
+bool GetDeviceSizeFromFD(int fd, off_t* size) {
   TEST_AND_RETURN_FALSE(fd >= 0);
 
-  // Determine the ext3 filesystem size by directly reading the block count and
-  // block size information from the superblock. See include/linux/ext3_fs.h for
-  // more details on the structure.
-  ssize_t kBufferSize = 16 * sizeof(uint32_t);
-  char buffer[kBufferSize];
-  const int kSuperblockOffset = 1024;
-  if (HANDLE_EINTR(pread(fd, buffer, kBufferSize, kSuperblockOffset)) !=
-      kBufferSize) {
-    PLOG(ERROR) << "Unable to determine file system size:";
+  struct stat buf;
+  TEST_AND_RETURN_FALSE_ERRNO(fstat(fd, &buf) == 0);
+
+  if (S_ISREG(buf.st_mode)) {
+    *size = buf.st_size;
+    return true;
+  }
+
+  uint64_t blksize;
+  if (HANDLE_EINTR(ioctl(fd, BLKGETSIZE64, &blksize)) != 0) {
+    PLOG(ERROR) << "Unable to determine block device size:";
     return false;
   }
-  uint32_t block_count;  // ext3_fs.h: ext3_super_block.s_blocks_count
-  uint32_t log_block_size;  // ext3_fs.h: ext3_super_block.s_log_block_size
-  uint16_t magic;  // ext3_fs.h: ext3_super_block.s_magic
-  memcpy(&block_count, &buffer[1 * sizeof(int32_t)], sizeof(block_count));
-  memcpy(&log_block_size, &buffer[6 * sizeof(int32_t)], sizeof(log_block_size));
-  memcpy(&magic, &buffer[14 * sizeof(int32_t)], sizeof(magic));
-  block_count = le32toh(block_count);
-  const int kExt3MinBlockLogSize = 10;  // ext3_fs.h: EXT3_MIN_BLOCK_LOG_SIZE
-  log_block_size = le32toh(log_block_size) + kExt3MinBlockLogSize;
-  magic = le16toh(magic);
 
-  // Sanity check the parameters.
-  const uint16_t kExt3SuperMagic = 0xef53;  // ext3_fs.h: EXT3_SUPER_MAGIC
-  TEST_AND_RETURN_FALSE(magic == kExt3SuperMagic);
-  const int kExt3MinBlockSize = 1024;  // ext3_fs.h: EXT3_MIN_BLOCK_SIZE
-  const int kExt3MaxBlockSize = 4096;  // ext3_fs.h: EXT3_MAX_BLOCK_SIZE
-  int block_size = 1 << log_block_size;
-  TEST_AND_RETURN_FALSE(block_size >= kExt3MinBlockSize &&
-                        block_size <= kExt3MaxBlockSize);
-  TEST_AND_RETURN_FALSE(block_count > 0);
-
-  if (out_block_count) {
-    *out_block_count = block_count;
-  }
-  if (out_block_size) {
-    *out_block_size = block_size;
-  }
+  *size = static_cast<off_t>(blksize);
   return true;
 }
 
