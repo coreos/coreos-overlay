@@ -52,11 +52,34 @@ void LogPartitionInfo(const DeltaArchiveManifest& manifest) {
 
 }  // namespace {}
 
+PayloadProcessor::PayloadProcessor(PrefsInterface* prefs, InstallPlan* install_plan)
+  : partition_performer_(prefs, install_plan->install_path),
+    prefs_(prefs),
+    install_plan_(install_plan),
+    manifest_valid_(false),
+    manifest_metadata_size_(0),
+    next_operation_num_(0),
+    buffer_offset_(0),
+    last_updated_buffer_offset_(std::numeric_limits<uint64_t>::max()),
+    public_key_path_(kUpdatePayloadPublicKeyPath) {
+}
+
+int PayloadProcessor::Open() {
+  return partition_performer_.Open();
+}
+
 int PayloadProcessor::Close() {
-  int err = delta_performer_.Close();
+  int err = partition_performer_.Close();
   LOG_IF(ERROR, !hash_calculator_.Finalize()) << "Unable to finalize the hash.";
   if (!buffer_.empty()) {
     LOG(ERROR) << "Called Close() while buffer not empty!";
+    if (err == 0) {
+      err = -EBUSY;
+    }
+  }
+  if (next_operation_num_ != operations_.size()) {
+    LOG(ERROR) << "Called Close() before completing operation "
+               << next_operation_num_ << "/" << operations_.size();
     if (err == 0) {
       err = -EBUSY;
     }
@@ -83,7 +106,7 @@ bool PayloadProcessor::Write(const void* bytes, size_t count,
       return false;
   }
 
-  while (next_operation_num_ < num_total_operations_) {
+  while (next_operation_num_ < operations_.size()) {
     *error = PerformOperation();
     if (*error == kActionCodeDownloadIncomplete) {
       *error = kActionCodeSuccess;
@@ -134,7 +157,15 @@ ActionExitCode PayloadProcessor::LoadManifest() {
     return kActionCodeDownloadStateInitializationError;
   }
 
-  num_total_operations_ = manifest_.partition_operations_size();
+  for (const InstallOperation &op : manifest_.partition_operations()) {
+    operations_.emplace_back(nullptr, &op);
+  }
+  for (const InstallProcedure &proc : manifest_.procedures()) {
+    for (const InstallOperation &op : manifest_.partition_operations()) {
+      operations_.emplace_back(&proc, &op);
+    }
+  }
+
   if (next_operation_num_ > 0)
     LOG(INFO) << "Resuming after " << next_operation_num_ << " operations";
   LOG(INFO) << "Starting to apply update payload operations";
@@ -143,39 +174,50 @@ ActionExitCode PayloadProcessor::LoadManifest() {
 }
 
 ActionExitCode PayloadProcessor::PerformOperation() {
-  DCHECK(next_operation_num_ < num_total_operations_);
+  DCHECK(next_operation_num_ < operations_.size());
 
-  const InstallOperation &op =
-      manifest_.partition_operations(next_operation_num_);
+  const InstallProcedure *proc = operations_[next_operation_num_].first;
+  const InstallOperation *op = operations_[next_operation_num_].second;
+  DeltaPerformer *performer = nullptr;
 
-  if (op.data_length() && op.data_offset() != buffer_offset_) {
+  // There is no InstallProcedure type for partitions, so it will be null.
+  if (proc == nullptr) {
+    performer = &partition_performer_;
+  } else {
+    // TODO(marineam): set performer based on proc.type()
+  }
+
+  if (op->data_length() && op->data_offset() != buffer_offset_) {
     LOG(ERROR) << "Operation " << next_operation_num_
-               << " skipped to unexpected data offset " << op.data_offset()
+               << " skipped to unexpected data offset " << op->data_offset()
                << ", expected " << buffer_offset_;
     return kActionCodeDownloadOperationExecutionError;
   }
 
-  if (op.data_length() > buffer_.size())
+  if (op->data_length() > buffer_.size())
     return kActionCodeDownloadIncomplete;
 
   // Makes sure we unblock exit when this operation completes.
   ScopedTerminatorExitUnblocker exit_unblocker =
       ScopedTerminatorExitUnblocker();  // Avoids a compiler unused var bug.
 
-  ActionExitCode error = delta_performer_.PerformOperation(op, buffer_);
-  if (error != kActionCodeSuccess) {
-    LOG(ERROR) << "Aborting install procedure at operation "
-               << next_operation_num_;
-    return error;
+  if (performer != nullptr) {
+    ActionExitCode error = performer->PerformOperation(*op, buffer_);
+    if (error != kActionCodeSuccess) {
+      LOG(ERROR) << "Aborting install procedure at operation "
+                 << next_operation_num_;
+      return error;
+    }
   }
 
-  buffer_offset_ += op.data_length();
-  DiscardBufferHeadBytes(op.data_length());
+  buffer_offset_ += op->data_length();
+  DiscardBufferHeadBytes(op->data_length());
   next_operation_num_++;
 
-  LOG(INFO) << "Completed " << next_operation_num_ << "/"
-            << num_total_operations_ << " operations ("
-            << (next_operation_num_ * 100 / num_total_operations_) << "%)";
+  LOG(INFO) << (performer?"Completed ":"Skipped ")
+            << next_operation_num_ << "/"
+            << operations_.size() << " operations ("
+            << (next_operation_num_ * 100 / operations_.size()) << "%)";
   CheckpointUpdateProgress();
 
   return kActionCodeSuccess;
@@ -410,7 +452,7 @@ bool PayloadProcessor::CheckpointUpdateProgress() {
 
 bool PayloadProcessor::PrimeUpdateState() {
   CHECK(manifest_valid_);
-  delta_performer_.SetBlockSize(manifest_.block_size());
+  partition_performer_.SetBlockSize(manifest_.block_size());
 
   int64_t next_operation = kUpdateStateOperationInvalid;
   if (!prefs_->GetInt64(kPrefsUpdateStateNextOperation, &next_operation) ||

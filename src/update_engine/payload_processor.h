@@ -29,22 +29,10 @@ class PayloadProcessor : public FileWriter {
 
   static const char kUpdatePayloadPublicKeyPath[];
 
-  PayloadProcessor(PrefsInterface* prefs, InstallPlan* install_plan)
-      : delta_performer_(prefs, install_plan->install_path),
-        prefs_(prefs),
-        install_plan_(install_plan),
-        manifest_valid_(false),
-        manifest_metadata_size_(0),
-        next_operation_num_(0),
-        buffer_offset_(0),
-        last_updated_buffer_offset_(std::numeric_limits<uint64_t>::max()),
-        public_key_path_(kUpdatePayloadPublicKeyPath),
-        num_total_operations_(0) {}
+  PayloadProcessor(PrefsInterface* prefs, InstallPlan* install_plan);
 
   // Once Close()d, a PayloadProcessor can't be Open()ed again.
-  int Open() {
-    return delta_performer_.Open();
-  }
+  int Open();
 
   // FileWriter's Write implementation where caller doesn't care about
   // error codes.
@@ -125,7 +113,7 @@ class PayloadProcessor : public FileWriter {
   bool PrimeUpdateState();
 
   // Writer for the main partition to be updated.
-  DeltaPerformer delta_performer_;
+  DeltaPerformer partition_performer_;
 
   // Update Engine preference store.
   PrefsInterface* prefs_;
@@ -139,6 +127,11 @@ class PayloadProcessor : public FileWriter {
 
   // Index of the next operation to perform in the manifest.
   size_t next_operation_num_;
+
+  // Flattened list of operations found in the manifest. For partition
+  // operations the InstallProcedure is nullptr.
+  std::vector<std::pair<const InstallProcedure*,
+                        const InstallOperation*>> operations_;
 
   // buffer_ is a window of the data that's been downloaded. At first,
   // it contains the beginning of the download, but after the protobuf
@@ -163,9 +156,6 @@ class PayloadProcessor : public FileWriter {
   // The public key to be used. Provided as a member so that tests can
   // override with test keys.
   std::string public_key_path_;
-
-  // The number of total operations in a payload, once we know them.
-  size_t num_total_operations_;
 
   DISALLOW_COPY_AND_ASSIGN(PayloadProcessor);
 };

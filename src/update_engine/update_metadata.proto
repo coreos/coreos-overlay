@@ -131,7 +131,7 @@ message InstallProcedure {
   enum Type {
     KERNEL = 0;  // A kernel image to install to the boot partition.
   }
-  required Type type = 1;
+  optional Type type = 1;
 
   repeated InstallOperation operations = 2;
 
