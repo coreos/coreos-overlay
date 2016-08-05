@@ -61,8 +61,7 @@ PayloadProcessor::PayloadProcessor(PrefsInterface* prefs, InstallPlan* install_p
     next_operation_num_(0),
     buffer_offset_(0),
     last_updated_buffer_offset_(std::numeric_limits<uint64_t>::max()),
-    public_key_path_(kUpdatePayloadPublicKeyPath),
-    num_total_operations_(0) {
+    public_key_path_(kUpdatePayloadPublicKeyPath) {
 }
 
 int PayloadProcessor::Open() {
@@ -78,9 +77,9 @@ int PayloadProcessor::Close() {
       err = -EBUSY;
     }
   }
-  if (next_operation_num_ != num_total_operations_) {
+  if (next_operation_num_ != operations_.size()) {
     LOG(ERROR) << "Called Close() before completing operation "
-               << next_operation_num_ << "/" << num_total_operations_;
+               << next_operation_num_ << "/" << operations_.size();
     if (err == 0) {
       err = -EBUSY;
     }
@@ -107,7 +106,7 @@ bool PayloadProcessor::Write(const void* bytes, size_t count,
       return false;
   }
 
-  while (next_operation_num_ < num_total_operations_) {
+  while (next_operation_num_ < operations_.size()) {
     *error = PerformOperation();
     if (*error == kActionCodeDownloadIncomplete) {
       *error = kActionCodeSuccess;
@@ -158,7 +157,9 @@ ActionExitCode PayloadProcessor::LoadManifest() {
     return kActionCodeDownloadStateInitializationError;
   }
 
-  num_total_operations_ = manifest_.partition_operations_size();
+  for (const InstallOperation &op : manifest_.partition_operations()) {
+    operations_.emplace_back(nullptr, &op);
+  }
 
   if (next_operation_num_ > 0)
     LOG(INFO) << "Resuming after " << next_operation_num_ << " operations";
@@ -168,9 +169,9 @@ ActionExitCode PayloadProcessor::LoadManifest() {
 }
 
 ActionExitCode PayloadProcessor::PerformOperation() {
-  DCHECK(next_operation_num_ < num_total_operations_);
+  DCHECK(next_operation_num_ < operations_.size());
 
-  const InstallOperation *op = &manifest_.partition_operations(next_operation_num_);
+  const InstallOperation *op = operations_[next_operation_num_].second;
   DeltaPerformer *performer = &partition_performer_;
 
   if (op->data_length() && op->data_offset() != buffer_offset_) {
@@ -199,8 +200,8 @@ ActionExitCode PayloadProcessor::PerformOperation() {
   next_operation_num_++;
 
   LOG(INFO) << "Completed " << next_operation_num_ << "/"
-            << num_total_operations_ << " operations ("
-            << (next_operation_num_ * 100 / num_total_operations_) << "%)";
+            << operations_.size() << " operations ("
+            << (next_operation_num_ * 100 / operations_.size()) << "%)";
   CheckpointUpdateProgress();
 
   return kActionCodeSuccess;

@@ -128,6 +128,11 @@ class PayloadProcessor : public FileWriter {
   // Index of the next operation to perform in the manifest.
   size_t next_operation_num_;
 
+  // Flattened list of operations found in the manifest. For partition
+  // operations the InstallProcedure is nullptr.
+  std::vector<std::pair<const InstallProcedure*,
+                        const InstallOperation*>> operations_;
+
   // buffer_ is a window of the data that's been downloaded. At first,
   // it contains the beginning of the download, but after the protobuf
   // has been downloaded and parsed, it contains a sliding window of
@@ -151,9 +156,6 @@ class PayloadProcessor : public FileWriter {
   // The public key to be used. Provided as a member so that tests can
   // override with test keys.
   std::string public_key_path_;
-
-  // The number of total operations in a payload, once we know them.
-  size_t num_total_operations_;
 
   DISALLOW_COPY_AND_ASSIGN(PayloadProcessor);
 };
