@@ -7,9 +7,6 @@ dev-lang/perl
 dev-lang/python
 dev-lang/ruby
 
-# Since all SSL/TLS implementations are bad we minimize the number we ship.
-net-libs/gnutls
-
 # We do not configure/install grub like other distros so shipping the user
 # space tools would have limited utility.
 sys-boot/grub

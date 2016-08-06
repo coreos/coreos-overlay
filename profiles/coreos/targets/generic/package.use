@@ -22,11 +22,11 @@ sys-libs/ncurses	minimal
 sys-libs/pam        -berkdb
 sys-libs/gdbm		berkdb
 
-# enable journal gateway and container features, avoid pulling in gnutls
-sys-apps/systemd audit importd http nat -ssl
+# enable journal gateway and container features, ssl for journal-remote https
+sys-apps/systemd audit importd http nat ssl
 
 # epoll is needed for systemd-journal-remote to work. coreos/bugs#919
-net-libs/libmicrohttpd epoll -ssl
+net-libs/libmicrohttpd epoll ssl
 
 sys-boot/syslinux       -custom-cflags
 
@@ -40,3 +40,6 @@ app-shells/bash -net vanilla
 
 # disable nss utilities
 dev-libs/nss -utils
+
+# this is for systemd/journal-remote https support via libmicrohttpd, but disable all unnecessary stuff.
+net-libs/gnutls -cxx -dane -doc -guile -crywrap -nls -openssl -pkcs11 -tools

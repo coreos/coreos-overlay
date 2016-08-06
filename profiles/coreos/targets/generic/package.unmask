@@ -1,0 +1,3 @@
+# undo the mask of >= 3.4.0 in portage-stable so we can get 3.4.13
+# for libmicrohttpd.
+>=net-libs/gnutls-3.4.0
