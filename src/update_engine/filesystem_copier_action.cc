@@ -294,14 +294,10 @@ void FilesystemCopierAction::DetermineFilesystemSize(int fd) {
   if (verify_hash_) {
     filesystem_size_ = install_plan_.rootfs_size;
     LOG(INFO) << "Filesystem size: " << filesystem_size_;
-    return;
-  }
-  filesystem_size_ = std::numeric_limits<int64_t>::max();
-  int block_count = 0, block_size = 0;
-  if (utils::GetFilesystemSizeFromFD(fd, &block_count, &block_size)) {
-    filesystem_size_ = static_cast<int64_t>(block_count) * block_size;
-    LOG(INFO) << "Filesystem size: " << filesystem_size_ << " bytes ("
-              << block_count << "x" << block_size << ").";
+  } else if (utils::GetDeviceSizeFromFD(fd, &filesystem_size_)) {
+    LOG(INFO) << "Filesystem size: " << filesystem_size_;
+  } else {
+    filesystem_size_ = std::numeric_limits<int64_t>::max();
   }
 }
 

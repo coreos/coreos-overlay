@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
+#include <unistd.h>
 
 #include <chrono>
 #include <map>
@@ -210,21 +211,31 @@ TEST(UtilsTest, ApplyMapTest) {
   }
 }
 
-TEST(UtilsTest, RunAsRootGetFilesystemSizeTest) {
+TEST(UtilsTest, GetDeviceSizeTest) {
   string img;
   EXPECT_TRUE(utils::MakeTempFile("/tmp/img.XXXXXX", &img, NULL));
   ScopedPathUnlinker img_unlinker(img);
-  CreateExtImageAtPath(img, NULL);
-  // Extend the "partition" holding the file system from 10MiB to 20MiB.
-  EXPECT_EQ(0, System(StringPrintf(
-      "dd if=/dev/zero of=%s seek=20971519 bs=1 count=1",
-      img.c_str())));
-  EXPECT_EQ(20 * 1024 * 1024, utils::FileSize(img));
-  int block_count = 0;
-  int block_size = 0;
-  EXPECT_TRUE(utils::GetFilesystemSize(img, &block_count, &block_size));
-  EXPECT_EQ(4096, block_size);
-  EXPECT_EQ(10 * 1024 * 1024 / 4096, block_count);
+  EXPECT_EQ(0, truncate(img.c_str(), 4096));
+
+  off_t size = 0;
+  EXPECT_TRUE(utils::GetDeviceSize(img, &size));
+  EXPECT_EQ(4096, size);
+}
+
+TEST(UtilsTest, RunAsRootGetDeviceSizeTest) {
+  string img, dev;
+  EXPECT_TRUE(utils::MakeTempFile("/tmp/img.XXXXXX", &img, NULL));
+  ScopedPathUnlinker img_unlinker(img);
+  EXPECT_EQ(0, truncate(img.c_str(), 4096));
+
+  off_t size = 0;
+  EXPECT_TRUE(utils::GetDeviceSize(img, &size));
+  EXPECT_EQ(4096, size);
+
+  size = 0;
+  ScopedLoopbackDeviceBinder loop(img, &dev);
+  EXPECT_TRUE(utils::GetDeviceSize(dev, &size));
+  EXPECT_EQ(4096, size);
 }
 
 TEST(UtilsTest, DurationToStringTest) {

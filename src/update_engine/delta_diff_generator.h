@@ -78,15 +78,12 @@ class DeltaDiffGenerator {
   // The final order of the nodes is given in |final_order|
   // Some files may need to be reread from disk, thus |fd| and
   // |data_file_size| are be passed.
-  // If |scratch_vertex| is not kInvalidIndex, removes it from
-  // |final_order| before returning.
   // Returns true on success.
   static bool ConvertGraphToDag(Graph* graph,
                                 const std::string& new_root,
                                 int fd,
                                 off_t* data_file_size,
-                                std::vector<Vertex::Index>* final_order,
-                                Vertex::Index scratch_vertex);
+                                std::vector<Vertex::Index>* final_order);
 
   // Reads old_filename (if it exists) and a new_filename and determines
   // the smallest way to encode this file for the diff. It stores
@@ -102,14 +99,6 @@ class DeltaDiffGenerator {
                              std::vector<char>* out_data,
                              InstallOperation* out_op,
                              bool gather_extents);
-
-  // Creates a dummy REPLACE_BZ node in the given |vertex|. This can be used
-  // to provide scratch space. The node writes |num_blocks| blocks starting at
-  // |start_block|The node should be marked invalid before writing all nodes to
-  // the output file.
-  static void CreateScratchNode(uint64_t start_block,
-                                uint64_t num_blocks,
-                                Vertex* vertex);
 
   // Modifies blocks read by 'op' so that any blocks referred to by
   // 'remove_extents' are replaced with blocks from 'replace_extents'.

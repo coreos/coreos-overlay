@@ -14,7 +14,6 @@
 #include <unistd.h>
 #include <vector>
 
-#include <ext2fs/ext2fs.h>
 #include <glib.h>
 
 #include "update_engine/action.h"
@@ -140,16 +139,10 @@ bool MountFilesystem(const std::string& device, const std::string& mountpoint,
                      unsigned long flags);
 bool UnmountFilesystem(const std::string& mountpoint);
 
-// Returns the block count and the block byte size of the ext3 file system on
-// |device| (which may be a real device or a path to a filesystem image) or on
-// an opened file descriptor |fd|. The actual file-system size is |block_count|
-// * |block_size| bytes. Returns true on success, false otherwise.
-bool GetFilesystemSize(const std::string& device,
-                       int* out_block_count,
-                       int* out_block_size);
-bool GetFilesystemSizeFromFD(int fd,
-                             int* out_block_count,
-                             int* out_block_size);
+// Get the size in bytes of a block device or regular file.
+// Returns true on success, false otherwise.
+bool GetDeviceSize(const std::string& device, off_t* size);
+bool GetDeviceSizeFromFD(int fd, off_t* size);
 
 // Returns the string representation of the given UTC time.
 // such as "11/14/2011 14:05:30 UTC".

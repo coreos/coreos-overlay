@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include <fcntl.h>
+#include <unistd.h>
 
 #include <limits>
 #include <set>
@@ -353,16 +354,11 @@ TEST_F(FilesystemCopierActionTest, RunAsRootTerminateEarlyTest) {
   EXPECT_TRUE(DoTest(false, true, 0));
 }
 
-TEST_F(FilesystemCopierActionTest, RunAsRootDetermineFilesystemSizeTest) {
+TEST_F(FilesystemCopierActionTest, DetermineFilesystemSizeTest) {
   string img;
   EXPECT_TRUE(utils::MakeTempFile("/tmp/img.XXXXXX", &img, NULL));
   ScopedPathUnlinker img_unlinker(img);
-  CreateExtImageAtPath(img, NULL);
-  // Extend the "partition" holding the file system from 10MiB to 20MiB.
-  EXPECT_EQ(0, System(StringPrintf(
-      "dd if=/dev/zero of=%s seek=20971519 bs=1 count=1",
-      img.c_str())));
-  EXPECT_EQ(20 * 1024 * 1024, utils::FileSize(img));
+  EXPECT_EQ(0, truncate(img.c_str(), 10 * 1024 * 1024));
 
   FilesystemCopierAction action(false);
   EXPECT_EQ(std::numeric_limits<int64_t>::max(), action.filesystem_size_);

@@ -3,7 +3,9 @@
 // found in the LICENSE file.
 
 #include <sys/mount.h>
+#include <sys/types.h>
 #include <inttypes.h>
+#include <unistd.h>
 
 #include <algorithm>
 #include <string>
@@ -46,7 +48,7 @@ namespace {
 struct DeltaState {
   string a_img;
   string b_img;
-  int image_size;
+  off_t image_size;
 
   string delta_path;
   uint64_t metadata_size;
@@ -233,14 +235,11 @@ static void GenerateDeltaFile(bool full_rootfs,
   EXPECT_TRUE(utils::MakeTempFile("/tmp/b_img.XXXXXX", &state->b_img, NULL));
   CreateExtImageAtPath(state->a_img, NULL);
 
-  state->image_size = static_cast<int>(utils::FileSize(state->a_img));
+  state->image_size = utils::FileSize(state->a_img);
 
   // Extend the "partitions" holding the file system a bit.
-  EXPECT_EQ(0, System(StringPrintf(
-      "dd if=/dev/zero of=%s seek=%d bs=1 count=1",
-      state->a_img.c_str(),
-      state->image_size + 1024 * 1024 - 1)));
-  EXPECT_EQ(state->image_size + 1024 * 1024, utils::FileSize(state->a_img));
+  state->image_size += 1024 * 1024;
+  EXPECT_EQ(0, truncate(state->a_img.c_str(), state->image_size));
 
   // Make some changes to the A image.
   {
@@ -265,11 +264,7 @@ static void GenerateDeltaFile(bool full_rootfs,
                                 files::FilePath(state->b_img)));
   } else {
     CreateExtImageAtPath(state->b_img, NULL);
-    EXPECT_EQ(0, System(StringPrintf(
-        "dd if=/dev/zero of=%s seek=%d bs=1 count=1",
-        state->b_img.c_str(),
-        state->image_size + 1024 * 1024 - 1)));
-    EXPECT_EQ(state->image_size + 1024 * 1024, utils::FileSize(state->b_img));
+    EXPECT_EQ(0, truncate(state->b_img.c_str(), state->image_size));
 
     // Make some changes to the B image.
     string b_mnt;

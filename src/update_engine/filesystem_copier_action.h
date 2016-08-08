@@ -61,7 +61,7 @@ class FilesystemCopierAction : public Action<FilesystemCopierAction> {
 
  private:
   friend class FilesystemCopierActionTest;
-  FRIEND_TEST(FilesystemCopierActionTest, RunAsRootDetermineFilesystemSizeTest);
+  FRIEND_TEST(FilesystemCopierActionTest, DetermineFilesystemSizeTest);
 
   // Ping-pong buffers generally cycle through the following states:
   // Empty->Reading->Full->Writing->Empty. In hash verification mode the state
