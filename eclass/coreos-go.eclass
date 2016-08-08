@@ -43,7 +43,7 @@ go_build() {
 
 	go build -v \
 		-p "$(makeopts_jobs)" \
-		-ldflags "${GO_LDFLAGS} -extldflags '${LDFLAGS}'" \
+		-ldflags "${GO_LDFLAGS} -w -extldflags '${LDFLAGS}'" \
 		-o "${GOBIN}/${binary_name}" \
 		"${package_name}"
 
