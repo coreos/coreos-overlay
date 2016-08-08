@@ -400,6 +400,8 @@ void UpdateAttempter::BytesReceived(uint64_t received,
       pct - download_progress_ >= kDeltaPercent ||
       steady_clock::now() - last_notify_time_ >= std::chrono::seconds(10)) {
     download_progress_ = pct;
+    LOG(INFO) << "Downloaded " << progress << "/" << total
+              << " bytes (" << static_cast<int>(100.0*pct) << "%)";
     SetStatusAndNotify(UPDATE_STATUS_DOWNLOADING, kUpdateNoticeUnspecified);
   }
 }

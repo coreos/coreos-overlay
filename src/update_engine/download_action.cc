@@ -78,11 +78,6 @@ void DownloadAction::ReceivedBytes(HttpFetcher *fetcher,
                                    const char* bytes,
                                    int length) {
   bytes_downloaded_ += length;
-  uint64_t pct = 0;
-  if (install_plan_.payload_size)
-    pct = (bytes_downloaded_ * 100) / install_plan_.payload_size;
-  LOG(INFO) << "Downloaded " << bytes_downloaded_ << "/"
-            << install_plan_.payload_size << " bytes (" << pct << "%)";
   if (delegate_)
     delegate_->BytesReceived(length,
                              bytes_downloaded_,
