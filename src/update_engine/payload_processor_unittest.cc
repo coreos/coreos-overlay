@@ -347,6 +347,7 @@ static void ApplyDeltaFile(bool full_rootfs, bool noop,
     if (signature_test == kSignatureNone) {
       EXPECT_FALSE(manifest.has_signatures_offset());
       EXPECT_FALSE(manifest.has_signatures_size());
+      EXPECT_EQ(0, manifest.noop_operations_size());
     } else {
       EXPECT_TRUE(manifest.has_signatures_offset());
       EXPECT_TRUE(manifest.has_signatures_size());
@@ -373,11 +374,14 @@ static void ApplyDeltaFile(bool full_rootfs, bool noop,
           &expected_sig_data_length));
       EXPECT_EQ(expected_sig_data_length, manifest.signatures_size());
       EXPECT_FALSE(signature.data().empty());
+
+      // For compatibility with older versions of update_engine the signature
+      // covered by a fake operation.
+      EXPECT_EQ(1, manifest.noop_operations_size());
     }
 
     if (noop) {
       EXPECT_EQ(1, manifest.partition_operations_size());
-      EXPECT_EQ(1, manifest.noop_operations_size());
     }
 
     if (full_rootfs) {
