@@ -9,8 +9,8 @@ AUTOTOOLS_AUTORECONF=1
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~arm64 ~x86"
 else
-	CROS_WORKON_COMMIT="28195290fa5470232742cd2690beeab3400b2a96"
-	KEYWORDS="arm64"
+	CROS_WORKON_COMMIT="199c6c837a802d18d809c2f7396af53ed7f63a11"
+	KEYWORDS="amd64 arm64"
 fi
 
 inherit autotools-utils flag-o-matic toolchain-funcs cros-workon systemd
