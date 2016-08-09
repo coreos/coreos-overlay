@@ -4,7 +4,7 @@
 
 EAPI="4"
 
-DESCRIPTION="Tools for generating TPM policy"
+DESCRIPTION="Tools for generating and installing TPM policy"
 
 LICENSE="GPL-2"
 SLOT="0"
@@ -15,4 +15,5 @@ S="${WORKDIR}"
 
 src_install() {
     dosbin "${FILESDIR}"/tpm_hostpolicy
+    dosbin "${FILESDIR}"/policy_install
 }

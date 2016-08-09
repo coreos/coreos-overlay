@@ -1,0 +1,31 @@
+#!/bin/bash
+
+POLICYNAME=$1
+FILENAME=$2
+
+if [[ $# -ne 2 ]]; then
+  echo "USAGE: $0 POLICYNAME FILE"
+  exit 1
+fi
+
+POLICY=`cat $2`
+
+RESPONSE=$(echo \
+'{
+  "kind": "Policy",
+  "apiVersion": "tpm.coreos.com/v1",
+  "metadata": {
+    "name": "'$POLICYNAME'"
+  },
+  "policy":
+'$POLICY'
+}' | curl -H "Content-Type: application/json" -XPOST -d @- http://127.0.0.1:8080/apis/tpm.coreos.com/v1/namespaces/default/policies/ --fail --silent --write-out '%{http_code}\n' -o /dev/null)
+
+if [ x$RESPONSE = x409 ]; then
+  echo "Policy name $POLICYNAME already exists"
+  exit 1
+elif [ x$RESPONSE = x422 ]; then
+  echo "Policy name $POLICYNAME is invalid - must only include letters, numbers, . and -"
+  exit 2
+fi
+
