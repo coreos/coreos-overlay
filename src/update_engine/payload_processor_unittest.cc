@@ -45,16 +45,10 @@ extern const char* kUnittestPublicKey2Path;
 static const size_t kBlockSize = 4096;
 
 namespace {
-struct DeltaState {
-  string a_img;
-  string b_img;
-  off_t image_size;
-
-  string delta_path;
-  uint64_t metadata_size;
-
-  // The in-memory copy of delta file.
-  vector<char> delta;
+enum DeltaTest {
+  kDeltaUpdate,  // Update by applying a diff.
+  kFullUpdate,  // Update by writing full image.
+  kNoopUpdate,  // Update with an empty diff.
 };
 
 enum SignatureTest {
@@ -72,6 +66,20 @@ enum OperationHashTest {
   kValidOperationData,
 };
 
+struct DeltaState {
+  DeltaTest delta_test;
+  SignatureTest signature_test;
+
+  string a_img;
+  string b_img;
+  off_t image_size;
+
+  string delta_path;
+  uint64_t metadata_size;
+
+  // The in-memory copy of delta file.
+  vector<char> delta;
+};
 } // namespace {}
 
 static void CompareFilesByBlock(const string& a_file, const string& b_file) {
@@ -227,10 +235,7 @@ static void SignGeneratedShellPayload(SignatureTest signature_test,
   }
 }
 
-static void GenerateDeltaFile(bool full_rootfs,
-                              bool noop,
-                              SignatureTest signature_test,
-                              DeltaState *state) {
+static void GenerateDeltaFile(DeltaState *state) {
   EXPECT_TRUE(utils::MakeTempFile("/tmp/a_img.XXXXXX", &state->a_img, NULL));
   EXPECT_TRUE(utils::MakeTempFile("/tmp/b_img.XXXXXX", &state->b_img, NULL));
   CreateExtImageAtPath(state->a_img, NULL);
@@ -259,7 +264,7 @@ static void GenerateDeltaFile(bool full_rootfs,
                                  ones.size()));
   }
 
-  if (noop) {
+  if (state->delta_test == kNoopUpdate) {
     EXPECT_TRUE(files::CopyFile(files::FilePath(state->a_img),
                                 files::FilePath(state->b_img)));
   } else {
@@ -305,8 +310,10 @@ static void GenerateDeltaFile(bool full_rootfs,
     string a_mnt, b_mnt;
     ScopedLoopMounter a_mounter(state->a_img, &a_mnt, MS_RDONLY);
     ScopedLoopMounter b_mounter(state->b_img, &b_mnt, MS_RDONLY);
+    const bool full_rootfs = state->delta_test == kFullUpdate;
     const string private_key =
-        signature_test == kSignatureGenerator ? kUnittestPrivateKeyPath : "";
+        state->signature_test == kSignatureGenerator
+        ? kUnittestPrivateKeyPath : "";
     EXPECT_TRUE(
         DeltaDiffGenerator::GenerateDeltaUpdateFile(
             full_rootfs ? "" : a_mnt,
@@ -318,21 +325,26 @@ static void GenerateDeltaFile(bool full_rootfs,
             &state->metadata_size));
   }
 
-  if (signature_test == kSignatureGenerated) {
-    // Generate the signed payload and update the metadata size in state to
-    // reflect the new size after adding the signature operation to the
-    // manifest.
-    SignGeneratedPayload(state->delta_path, &state->metadata_size);
-  } else if (signature_test == kSignatureGeneratedShell ||
-             signature_test == kSignatureGeneratedShellBadKey ||
-             signature_test == kSignatureGeneratedShellRotateCl1 ||
-             signature_test == kSignatureGeneratedShellRotateCl2) {
-    SignGeneratedShellPayload(signature_test, state->delta_path);
+  switch (state->signature_test) {
+    case kSignatureGenerated:
+      // Generate the signed payload and update the metadata size in state to
+      // reflect the new size after adding the signature operation to the
+      // manifest.
+      SignGeneratedPayload(state->delta_path, &state->metadata_size);
+      break;
+    case kSignatureGeneratedShell:
+    case kSignatureGeneratedShellBadKey:
+    case kSignatureGeneratedShellRotateCl1:
+    case kSignatureGeneratedShellRotateCl2:
+      SignGeneratedShellPayload(state->signature_test, state->delta_path);
+      break;
+    case kSignatureNone:
+    case kSignatureGenerator:
+      break;
   }
 }
 
-static void ApplyDeltaFile(bool full_rootfs, bool noop,
-                           SignatureTest signature_test, DeltaState* state,
+static void ApplyDeltaFile(DeltaState* state,
                            OperationHashTest op_hash_test,
                            PayloadProcessor** performer) {
   // Check the metadata.
@@ -344,9 +356,10 @@ static void ApplyDeltaFile(bool full_rootfs, bool noop,
                                            &state->metadata_size));
     LOG(INFO) << "Metadata size: " << state->metadata_size;
 
-    if (signature_test == kSignatureNone) {
+    if (state->signature_test == kSignatureNone) {
       EXPECT_FALSE(manifest.has_signatures_offset());
       EXPECT_FALSE(manifest.has_signatures_size());
+      EXPECT_EQ(0, manifest.noop_operations_size());
     } else {
       EXPECT_TRUE(manifest.has_signatures_offset());
       EXPECT_TRUE(manifest.has_signatures_size());
@@ -354,8 +367,8 @@ static void ApplyDeltaFile(bool full_rootfs, bool noop,
       EXPECT_TRUE(sigs_message.ParseFromArray(
           &state->delta[state->metadata_size + manifest.signatures_offset()],
           manifest.signatures_size()));
-      if (signature_test == kSignatureGeneratedShellRotateCl1 ||
-          signature_test == kSignatureGeneratedShellRotateCl2)
+      if (state->signature_test == kSignatureGeneratedShellRotateCl1 ||
+          state->signature_test == kSignatureGeneratedShellRotateCl2)
         EXPECT_EQ(2, sigs_message.signatures_size());
       else
         EXPECT_EQ(1, sigs_message.signatures_size());
@@ -364,8 +377,8 @@ static void ApplyDeltaFile(bool full_rootfs, bool noop,
 
       uint64_t expected_sig_data_length = 0;
       vector<string> key_paths (1, kUnittestPrivateKeyPath);
-      if (signature_test == kSignatureGeneratedShellRotateCl1 ||
-          signature_test == kSignatureGeneratedShellRotateCl2) {
+      if (state->signature_test == kSignatureGeneratedShellRotateCl1 ||
+          state->signature_test == kSignatureGeneratedShellRotateCl2) {
         key_paths.push_back(kUnittestPrivateKey2Path);
       }
       EXPECT_TRUE(PayloadSigner::SignatureBlobLength(
@@ -373,18 +386,23 @@ static void ApplyDeltaFile(bool full_rootfs, bool noop,
           &expected_sig_data_length));
       EXPECT_EQ(expected_sig_data_length, manifest.signatures_size());
       EXPECT_FALSE(signature.data().empty());
-    }
 
-    if (noop) {
-      EXPECT_EQ(1, manifest.partition_operations_size());
+      // For compatibility with older versions of update_engine the signature
+      // covered by a fake operation.
       EXPECT_EQ(1, manifest.noop_operations_size());
     }
 
-    if (full_rootfs) {
-      EXPECT_FALSE(manifest.has_old_partition_info());
-    } else {
-      EXPECT_EQ(state->image_size, manifest.old_partition_info().size());
-      EXPECT_FALSE(manifest.old_partition_info().hash().empty());
+    switch (state->delta_test) {
+      case kNoopUpdate:
+        EXPECT_EQ(1, manifest.partition_operations_size());
+        // fallthrough
+      case kDeltaUpdate:
+        EXPECT_EQ(state->image_size, manifest.old_partition_info().size());
+        EXPECT_FALSE(manifest.old_partition_info().hash().empty());
+        break;
+      case kFullUpdate:
+        EXPECT_FALSE(manifest.has_old_partition_info());
+        break;
     }
 
     EXPECT_EQ(state->image_size, manifest.new_partition_info().size());
@@ -403,7 +421,8 @@ static void ApplyDeltaFile(bool full_rootfs, bool noop,
       .WillRepeatedly(Return(true));
   EXPECT_CALL(prefs, SetString(kPrefsUpdateStateSHA256Context, _))
       .WillRepeatedly(Return(true));
-  if (op_hash_test == kValidOperationData && signature_test != kSignatureNone) {
+  if (op_hash_test == kValidOperationData &&
+      state->signature_test != kSignatureNone) {
     EXPECT_CALL(prefs, SetString(kPrefsUpdateStateSignedSHA256Context, _))
         .WillOnce(Return(true));
     EXPECT_CALL(prefs, SetString(kPrefsUpdateStateSignatureBlob, _))
@@ -517,11 +536,9 @@ void VerifyPayloadResult(PayloadProcessor* performer,
   EXPECT_TRUE(expected_new_rootfs_hash == new_rootfs_hash);
 }
 
-void VerifyPayload(PayloadProcessor* performer,
-                   DeltaState* state,
-                   SignatureTest signature_test) {
+void VerifyPayload(PayloadProcessor* performer, DeltaState* state) {
   ActionExitCode expected_result = kActionCodeSuccess;
-  switch (signature_test) {
+  switch (state->signature_test) {
     case kSignatureNone:
       expected_result = kActionCodeSignedDeltaPayloadExpectedError;
       break;
@@ -534,51 +551,69 @@ void VerifyPayload(PayloadProcessor* performer,
   VerifyPayloadResult(performer, state, expected_result);
 }
 
-void DoSmallImageTest(bool full_rootfs, bool noop,
-                      SignatureTest signature_test) {
-  DeltaState state;
+void DoSmallImageTest(DeltaState *state) {
   PayloadProcessor *performer;
-  GenerateDeltaFile(full_rootfs, noop, signature_test, &state);
-  ScopedPathUnlinker a_img_unlinker(state.a_img);
-  ScopedPathUnlinker b_img_unlinker(state.b_img);
-  ScopedPathUnlinker delta_unlinker(state.delta_path);
-  ApplyDeltaFile(full_rootfs, noop, signature_test,
-                 &state, kValidOperationData,
-                 &performer);
-  VerifyPayload(performer, &state, signature_test);
+  GenerateDeltaFile(state);
+  ScopedPathUnlinker a_img_unlinker(state->a_img);
+  ScopedPathUnlinker b_img_unlinker(state->b_img);
+  ScopedPathUnlinker delta_unlinker(state->delta_path);
+  ApplyDeltaFile(state, kValidOperationData, &performer);
+  VerifyPayload(performer, state);
 }
 
 void DoOperationHashMismatchTest(OperationHashTest op_hash_test) {
   DeltaState state;
-  GenerateDeltaFile(true, false, kSignatureGenerated, &state);
+  state.delta_test = kFullUpdate;
+  state.signature_test = kSignatureGenerated;
+
+  GenerateDeltaFile(&state);
   ScopedPathUnlinker a_img_unlinker(state.a_img);
   ScopedPathUnlinker b_img_unlinker(state.b_img);
   ScopedPathUnlinker delta_unlinker(state.delta_path);
   PayloadProcessor *performer;
-  ApplyDeltaFile(true, false, kSignatureGenerated,
-                 &state, op_hash_test, &performer);
+  ApplyDeltaFile(&state, op_hash_test, &performer);
 }
 
 class PayloadProcessorTest : public ::testing::Test { };
 
 TEST(PayloadProcessorTest, RunAsRootSmallImageTest) {
-  DoSmallImageTest(false, false, kSignatureGenerator);
+  DeltaState state;
+  state.delta_test = kDeltaUpdate;
+  state.signature_test = kSignatureGenerator;
+
+  DoSmallImageTest(&state);
 }
 
 TEST(PayloadProcessorTest, RunAsRootFullSmallImageTest) {
-  DoSmallImageTest(true, false, kSignatureGenerator);
+  DeltaState state;
+  state.delta_test = kFullUpdate;
+  state.signature_test = kSignatureGenerator;
+
+  DoSmallImageTest(&state);
 }
 
 TEST(PayloadProcessorTest, RunAsRootNoopSmallImageTest) {
-  DoSmallImageTest(false, true, kSignatureGenerator);
+  DeltaState state;
+  state.delta_test = kNoopUpdate;
+  state.signature_test = kSignatureGenerator;
+
+  DoSmallImageTest(&state);
 }
 
 TEST(PayloadProcessorTest, RunAsRootSmallImageSignNoneTest) {
-  DoSmallImageTest(false, false, kSignatureNone);
+  DeltaState state;
+  state.delta_test = kDeltaUpdate;
+  state.signature_test = kSignatureNone;
+
+  DoSmallImageTest(&state);
 }
 
 TEST(PayloadProcessorTest, RunAsRootSmallImageSignGeneratedTest) {
-  DoSmallImageTest(false, false, kSignatureGenerated);
+  DeltaState state;
+  state.delta_test = kDeltaUpdate;
+  state.signature_test = kSignatureGenerated;
+
+  DoSmallImageTest(&state);
 }
 
 TEST(PayloadProcessorTest, BadDeltaMagicTest) {
