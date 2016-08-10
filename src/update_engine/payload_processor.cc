@@ -161,7 +161,7 @@ ActionExitCode PayloadProcessor::LoadManifest() {
     operations_.emplace_back(nullptr, &op);
   }
   for (const InstallProcedure &proc : manifest_.procedures()) {
-    for (const InstallOperation &op : manifest_.partition_operations()) {
+    for (const InstallOperation &op : proc.operations()) {
       operations_.emplace_back(&proc, &op);
     }
   }
