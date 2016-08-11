@@ -12,7 +12,7 @@ if [[ ${PV} == *9999 ]]; then
 	DOCKER_GITCOMMIT="unknown"
 	KEYWORDS="~amd64 ~arm64"
 else
-	CROS_WORKON_COMMIT="4a6e2b1e56ecd816ca066f71e7632f8a0171cada" # coreos-1.11.2
+	CROS_WORKON_COMMIT="f1e1b832d52e004c1c55406a965265a90e2504f8" # coreos-1.12.1
 	DOCKER_GITCOMMIT="${CROS_WORKON_COMMIT:0:7}"
 	KEYWORDS="amd64 arm64"
 fi
@@ -66,12 +66,8 @@ RDEPEND="
 	>=dev-vcs/git-1.7
 	>=app-arch/xz-utils-4.9
 
-	>=app-emulation/containerd-0.2.0
-	>=app-emulation/runc-0.1.0
-
-	apparmor? (
-		sys-libs/libapparmor[static-libs]
-	)
+	>=app-emulation/containerd-0.2.3[seccomp?]
+	>=app-emulation/runc-1.0.0_rc1_p20160615[apparmor?,seccomp?]
 "
 
 RESTRICT="installsources strip"
@@ -79,26 +75,28 @@ RESTRICT="installsources strip"
 # see "contrib/check-config.sh" from upstream's sources
 CONFIG_CHECK="
 	~NAMESPACES ~NET_NS ~PID_NS ~IPC_NS ~UTS_NS
-	~DEVPTS_MULTIPLE_INSTANCES
 	~CGROUPS ~CGROUP_CPUACCT ~CGROUP_DEVICE ~CGROUP_FREEZER ~CGROUP_SCHED ~CPUSETS ~MEMCG
 	~KEYS ~MACVLAN ~VETH ~BRIDGE ~BRIDGE_NETFILTER
-	~NF_NAT_IPV4 ~IP_NF_FILTER ~IP_NF_TARGET_MASQUERADE
+	~NF_NAT_IPV4 ~IP_NF_FILTER ~IP_NF_MANGLE ~IP_NF_TARGET_MASQUERADE
+	~IP_VS ~IP_VS_RR
 	~NETFILTER_XT_MATCH_ADDRTYPE ~NETFILTER_XT_MATCH_CONNTRACK
+	~NETFILTER_XT_MATCH_IPVS
+	~NETFILTER_XT_MARK ~NETFILTER_XT_TARGET_REDIRECT
 	~NF_NAT ~NF_NAT_NEEDED
 
 	~POSIX_MQUEUE
 
-	~MEMCG_KMEM ~MEMCG_SWAP ~MEMCG_SWAP_ENABLED
+	~MEMCG_SWAP ~MEMCG_SWAP_ENABLED
 
 	~BLK_CGROUP ~IOSCHED_CFQ
 	~CGROUP_PERF
 	~CGROUP_HUGETLB
 	~NET_CLS_CGROUP
 	~CFS_BANDWIDTH ~FAIR_GROUP_SCHED ~RT_GROUP_SCHED
+	~XFRM_ALGO ~XFRM_USER
 "
 
-ERROR_KEYS="CONFIG_KEYS: is mandatory, see bug 581348"
-ERROR_MEMCG_KMEM="CONFIG_MEMCG_KMEM: is optional"
+ERROR_KEYS="CONFIG_KEYS: is mandatory"
 ERROR_MEMCG_SWAP="CONFIG_MEMCG_SWAP: is required if you wish to limit swap usage of containers"
 ERROR_RESOURCE_COUNTERS="CONFIG_RESOURCE_COUNTERS: is optional for container statistics gathering"
 
@@ -106,6 +104,8 @@ ERROR_BLK_CGROUP="CONFIG_BLK_CGROUP: is optional for container statistics gather
 ERROR_IOSCHED_CFQ="CONFIG_IOSCHED_CFQ: is optional for container statistics gathering"
 ERROR_CGROUP_PERF="CONFIG_CGROUP_PERF: is optional for container statistics gathering"
 ERROR_CFS_BANDWIDTH="CONFIG_CFS_BANDWIDTH: is optional for container statistics gathering"
+ERROR_XFRM_ALGO="CONFIG_XFRM_ALGO: is optional for secure networks"
+ERROR_XFRM_USER="CONFIG_XFRM_USER: is optional for secure networks"
 
 pkg_setup() {
 	if kernel_is lt 3 10; then
@@ -142,6 +142,19 @@ pkg_setup() {
 	else
 		CONFIG_CHECK+="
 			~CGROUP_NET_PRIO
+		"
+	fi
+
+	if kernel_is lt 4 5; then
+		CONFIG_CHECK+="
+			~MEMCG_KMEM
+		"
+		ERROR_MEMCG_KMEM="CONFIG_MEMCG_KMEM: is optional"
+	fi
+
+	if kernel_is lt 4 7; then
+		CONFIG_CHECK+="
+			~DEVPTS_MULTIPLE_INSTANCES
 		"
 	fi
 
@@ -214,8 +227,11 @@ src_compile() {
 		grep -q -- '-fno-PIC' hack/make.sh || die 'hardened sed failed'
 
 		sed  "s/LDFLAGS_STATIC_DOCKER='/&-extldflags -fno-PIC /" \
-			-i hack/make/dynbinary || die
-		grep -q -- '-fno-PIC' hack/make/dynbinary || die 'hardened sed failed'
+			-i hack/make/dynbinary-client || die
+		sed  "s/LDFLAGS_STATIC_DOCKER='/&-extldflags -fno-PIC /" \
+			-i hack/make/dynbinary-daemon || die
+		grep -q -- '-fno-PIC' hack/make/dynbinary-daemon || die 'hardened sed failed'
+		grep -q -- '-fno-PIC' hack/make/dynbinary-client || die 'hardened sed failed'
 	fi
 
 	# let's set up some optional features :)
@@ -260,7 +276,12 @@ src_compile() {
 
 src_install() {
 	VERSION="$(cat VERSION)"
-	newbin "bundles/$VERSION/dynbinary/docker-$VERSION" docker
+	newbin "bundles/$VERSION/dynbinary-client/docker-$VERSION" docker
+	newbin "bundles/$VERSION/dynbinary-daemon/dockerd-$VERSION" dockerd
+	newbin "bundles/$VERSION/dynbinary-daemon/docker-proxy-$VERSION" docker-proxy
+	dosym containerd /usr/bin/docker-containerd
+	dosym containerd-shim /usr/bin/docker-containerd-shim
+	dosym runc /usr/bin/docker-runc
 
 	newinitd contrib/init/openrc/docker.initd docker
 	newconfd contrib/init/openrc/docker.confd docker
