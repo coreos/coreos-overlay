@@ -5,7 +5,6 @@ After=early-docker.socket
 Requires=early-docker.socket
 
 [Service]
-Environment="DOCKER_CGROUPS=--exec-opt native.cgroupdriver=systemd"
 Environment=TMPDIR=/var/tmp
 MountFlags=slave
 LimitNOFILE=1048576
