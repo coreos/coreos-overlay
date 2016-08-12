@@ -157,6 +157,8 @@ src_unpack() {
 src_prepare() {
 	# Bug 463376
 	sed -i -e 's/GROUP="dialout"/GROUP="uucp"/' rules/*.rules || die
+	# Bug https://github.com/systemd/systemd/issues/3826
+	sed -i -e 's,/usr/lib/systemd/resolv.conf,/run/systemd/resolve/resolv.conf,' tmpfiles.d/etc.conf.m4 || die
 
 	[[ -d "${WORKDIR}"/patches ]] && PATCHES+=( "${WORKDIR}"/patches )
 
