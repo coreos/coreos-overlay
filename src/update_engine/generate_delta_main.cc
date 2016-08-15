@@ -36,6 +36,8 @@ DEFINE_string(new_dir, "",
               "Directory where the new partition is loop mounted read-only");
 DEFINE_string(old_image, "", "Path to the old partition");
 DEFINE_string(new_image, "", "Path to the new partition");
+DEFINE_string(old_kernel, "", "Path to the old kernel image");
+DEFINE_string(new_kernel, "", "Path to the new kernel image");
 DEFINE_string(in_file, "",
               "Path to input delta payload file used to hash/sign payloads "
               "and apply delta over old_image (for debugging)");
@@ -180,11 +182,11 @@ void ApplyDelta() {
   // Get original checksums
   LOG(INFO) << "Calculating original checksums";
   InstallInfo root_info;
-  CHECK(DeltaDiffGenerator::InitializePartitionInfo(FLAGS_old_image,
-                                                    &root_info));
+  CHECK(DeltaDiffGenerator::InitializeInfo(FLAGS_old_image, &root_info));
   install_plan.rootfs_hash.assign(root_info.hash().begin(),
                                   root_info.hash().end());
   install_plan.install_path = FLAGS_old_image;
+  install_plan.kernel_path = FLAGS_old_kernel;
   PayloadProcessor performer(&prefs, &install_plan);
   CHECK_EQ(performer.Open(), 0);
   vector<char> buf(1024 * 1024);
@@ -256,6 +258,8 @@ int Main(int argc, char** argv) {
                                                    FLAGS_old_image,
                                                    FLAGS_new_dir,
                                                    FLAGS_new_image,
+                                                   FLAGS_old_kernel,
+                                                   FLAGS_new_kernel,
                                                    FLAGS_out_file,
                                                    FLAGS_private_key,
                                                    &metadata_size)) {

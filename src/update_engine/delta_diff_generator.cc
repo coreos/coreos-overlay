@@ -369,10 +369,98 @@ void InstallOperationsToManifest(
   }
 }
 
+// Adds all |kernel_ops| to |manifest|. Filters out no-op operations.
+// Computes hash for old and new kernel images.
+bool KernelProcedureToManifest(
+    const string& old_kernel_path,
+    const string& new_kernel_path,
+    const vector<InstallOperation>& kernel_ops,
+    DeltaArchiveManifest* manifest) {
+  DCHECK(!kernel_ops.empty());
+  DCHECK(!new_kernel_path.empty());
+
+  InstallProcedure* proc = manifest->add_procedures();
+  proc->set_type(InstallProcedure_Type_KERNEL);
+  for (const InstallOperation& add_op : kernel_ops) {
+    if (DeltaDiffGenerator::IsNoopOperation(add_op)) {
+      continue;
+    }
+    InstallOperation* op = proc->add_operations();
+    *op = add_op;
+  }
+
+  if (!old_kernel_path.empty()) {
+    TEST_AND_RETURN_FALSE(
+        DeltaDiffGenerator::InitializeInfo(old_kernel_path,
+                                           proc->mutable_old_info()));
+  }
+  TEST_AND_RETURN_FALSE(
+      DeltaDiffGenerator::InitializeInfo(new_kernel_path,
+                                         proc->mutable_new_info()));
+  return true;
+}
+
+// Create dummy operations to cover data required by extra InstallProcedures
+// in the noop_operations list for compatibility with old versions that did
+// not support the new procedures.
+void ProceduresToNoops(DeltaArchiveManifest* manifest) {
+  for (const InstallProcedure& proc : manifest->procedures()) {
+    for (const InstallOperation& op : proc.operations()) {
+      InstallOperation* noop = manifest->add_noop_operations();
+      noop->set_type(InstallOperation_Type_REPLACE);
+      noop->set_data_offset(op.data_offset());
+      noop->set_data_length(op.data_length());
+      // Tell the dummy op to write this data to a big sparse hole
+      Extent* extent = noop->add_dst_extents();
+      extent->set_start_block(kSparseHole);
+      extent->set_num_blocks((op.data_length() + kBlockSize - 1) / kBlockSize);
+    }
+  }
+}
+
 void CheckGraph(const Graph& graph) {
   for (const Vertex& v : graph) {
     CHECK(v.op.has_type());
   }
+}
+
+// Delta compresses a kernel partition |new_kernel| with knowledge of the
+// old kernel partition |old_kernel|. If |old_kernel| is an empty string,
+// generates a full update of the partition.
+bool DeltaCompressKernel(
+    const string& old_kernel,
+    const string& new_kernel,
+    vector<InstallOperation>* ops,
+    int blobs_fd,
+    off_t* blobs_length) {
+  LOG(INFO) << "Delta compressing kernel partition...";
+  LOG_IF(INFO, old_kernel.empty()) << "Generating full kernel update...";
+
+  // Add a new install operation
+  ops->resize(1);
+  InstallOperation* op = &(*ops)[0];
+
+  vector<char> data;
+  TEST_AND_RETURN_FALSE(
+      DeltaDiffGenerator::ReadFileToDiff(old_kernel,
+                                         new_kernel,
+                                         true, // bsdiff_allowed
+                                         &data,
+                                         op,
+                                         false));
+
+  // Write the data
+  if (op->type() != InstallOperation_Type_MOVE) {
+    op->set_data_offset(*blobs_length);
+    op->set_data_length(data.size());
+  }
+
+  TEST_AND_RETURN_FALSE(utils::WriteAll(blobs_fd, &data[0], data.size()));
+  *blobs_length += data.size();
+
+  LOG(INFO) << "Done delta compressing kernel partition: "
+            << kInstallOperationTypes[op->type()];
+  return true;
 }
 
 struct DeltaObject {
@@ -532,17 +620,16 @@ bool DeltaDiffGenerator::ReadFileToDiff(
   return true;
 }
 
-bool DeltaDiffGenerator::InitializePartitionInfo(const string& partition,
-                                                 InstallInfo* info) {
+bool DeltaDiffGenerator::InitializeInfo(const string& path, InstallInfo* info) {
   off_t size = 0;
-  TEST_AND_RETURN_FALSE(utils::GetDeviceSize(partition, &size));
+  TEST_AND_RETURN_FALSE(utils::GetDeviceSize(path, &size));
   info->set_size(size);
   OmahaHashCalculator hasher;
-  TEST_AND_RETURN_FALSE(hasher.UpdateFile(partition, size) == size);
+  TEST_AND_RETURN_FALSE(hasher.UpdateFile(path, size) == size);
   TEST_AND_RETURN_FALSE(hasher.Finalize());
   const vector<char>& hash = hasher.raw_hash();
   info->set_hash(hash.data(), hash.size());
-  LOG(INFO) << partition << ": size=" << size << " hash=" << hasher.hash();
+  LOG(INFO) << path << ": size=" << size << " hash=" << hasher.hash();
   return true;
 }
 
@@ -550,11 +637,11 @@ bool InitializePartitionInfos(const string& old_rootfs,
                               const string& new_rootfs,
                               DeltaArchiveManifest& manifest) {
   if (!old_rootfs.empty()) {
-    TEST_AND_RETURN_FALSE(DeltaDiffGenerator::InitializePartitionInfo(
+    TEST_AND_RETURN_FALSE(DeltaDiffGenerator::InitializeInfo(
         old_rootfs,
         manifest.mutable_old_partition_info()));
   }
-  TEST_AND_RETURN_FALSE(DeltaDiffGenerator::InitializePartitionInfo(
+  TEST_AND_RETURN_FALSE(DeltaDiffGenerator::InitializeInfo(
       new_rootfs,
       manifest.mutable_new_partition_info()));
   return true;
@@ -1055,6 +1142,31 @@ bool DeltaDiffGenerator::NoTempBlocksRemain(const Graph& graph) {
   return true;
 }
 
+static bool ReorderProcedureDataBlobs(
+    google::protobuf::RepeatedPtrField<InstallOperation>* ops,
+    int in_fd,
+    DirectFileWriter* writer,
+    uint64_t* written) {
+  for (InstallOperation& op : *ops) {
+    if (!op.has_data_offset())
+      continue;
+
+    CHECK(op.has_data_length());
+    vector<char> buf(op.data_length());
+    ssize_t rc = pread(in_fd, &buf[0], buf.size(), op.data_offset());
+    TEST_AND_RETURN_FALSE(rc == static_cast<ssize_t>(buf.size()));
+
+    // Add the hash of the data blobs for this operation
+    TEST_AND_RETURN_FALSE(DeltaDiffGenerator::AddOperationHash(&op, buf));
+
+    op.set_data_offset(*written);
+    TEST_AND_RETURN_FALSE(writer->Write(&buf[0], buf.size()));
+    *written += buf.size();
+  }
+
+  return true;
+}
+
 bool DeltaDiffGenerator::ReorderDataBlobs(
     DeltaArchiveManifest* manifest,
     const std::string& data_blobs_path,
@@ -1066,31 +1178,22 @@ bool DeltaDiffGenerator::ReorderDataBlobs(
   DirectFileWriter writer(new_data_blobs_path.c_str());
   TEST_AND_RETURN_FALSE_ERRNO(writer.Open() == 0);
   ScopedFileWriterCloser writer_closer(&writer);
-  uint64_t out_file_size = 0;
+  uint64_t written = 0;
 
-  for (int i = 0; i < (manifest->partition_operations_size() +
-                       manifest->noop_operations_size()); i++) {
-    InstallOperation* op = NULL;
-    if (i < manifest->partition_operations_size()) {
-      op = manifest->mutable_partition_operations(i);
-    } else {
-      op = manifest->mutable_noop_operations(
-          i - manifest->partition_operations_size());
-    }
-    if (!op->has_data_offset())
-      continue;
-    CHECK(op->has_data_length());
-    vector<char> buf(op->data_length());
-    ssize_t rc = pread(in_fd, &buf[0], buf.size(), op->data_offset());
-    TEST_AND_RETURN_FALSE(rc == static_cast<ssize_t>(buf.size()));
+  TEST_AND_RETURN_FALSE(ReorderProcedureDataBlobs(
+      manifest->mutable_partition_operations(),
+      in_fd,
+      &writer,
+      &written));
 
-    // Add the hash of the data blobs for this operation
-    TEST_AND_RETURN_FALSE(AddOperationHash(op, buf));
-
-    op->set_data_offset(out_file_size);
-    TEST_AND_RETURN_FALSE(writer.Write(&buf[0], buf.size()));
-    out_file_size += buf.size();
+  for (InstallProcedure& proc : *manifest->mutable_procedures()) {
+    TEST_AND_RETURN_FALSE(ReorderProcedureDataBlobs(
+        proc.mutable_operations(),
+        in_fd,
+        &writer,
+        &written));
   }
+
   return true;
 }
 
@@ -1201,6 +1304,8 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
     const string& old_image,
     const string& new_root,
     const string& new_image,
+    const string& old_kernel,
+    const string& new_kernel,
     const string& output_path,
     const string& private_key_path,
     uint64_t* metadata_size) {
@@ -1226,6 +1331,11 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
     }
   }
 
+  if (!new_kernel.empty()) {
+    // Sanity check kernel partition arg
+    TEST_AND_RETURN_FALSE(utils::FileSize(new_kernel) >= 0);
+  }
+
   vector<Block> blocks(new_image_size / kBlockSize);
   LOG(INFO) << "Invalid block index: " << Vertex::kInvalidIndex;
   LOG(INFO) << "Block count: " << blocks.size();
@@ -1242,6 +1352,8 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
   off_t data_file_size = 0;
 
   LOG(INFO) << "Reading files...";
+
+  vector<InstallOperation> kernel_ops;
 
   vector<Vertex::Index> final_order;
   {
@@ -1280,6 +1392,16 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
                                                 new_image,
                                                 &graph.back()));
 
+      if (!new_kernel.empty()) {
+        // Read kernel partition
+        TEST_AND_RETURN_FALSE(DeltaCompressKernel(old_kernel,
+                                                  new_kernel,
+                                                  &kernel_ops,
+                                                  fd,
+                                                  &data_file_size));
+        LOG(INFO) << "done reading kernel";
+      }
+
       CheckGraph(graph);
 
       LOG(INFO) << "Creating edges...";
@@ -1293,14 +1415,17 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
                                               &data_file_size,
                                               &final_order));
     } else {
-      TEST_AND_RETURN_FALSE(FullUpdateGenerator::Run(&graph,
-                                                     new_image,
-                                                     new_image_size,
-                                                     fd,
-                                                     &data_file_size,
-                                                     kFullUpdateChunkSize,
-                                                     kBlockSize,
-                                                     &final_order));
+      FullUpdateGenerator generator(fd, kFullUpdateChunkSize, kBlockSize);
+
+      TEST_AND_RETURN_FALSE(generator.Partition(new_image,
+                                                new_image_size,
+                                                &graph,
+                                                &final_order));
+
+      if (!new_kernel.empty())
+        TEST_AND_RETURN_FALSE(generator.Add(new_kernel, &kernel_ops));
+
+      data_file_size = generator.Size();
     }
   }
 
@@ -1315,6 +1440,13 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
   CheckGraph(graph);
   manifest.set_block_size(kBlockSize);
 
+  if (!new_kernel.empty()) {
+    TEST_AND_RETURN_FALSE(KernelProcedureToManifest(old_kernel,
+                                                    new_kernel,
+                                                    kernel_ops,
+                                                    &manifest));
+  }
+
   // Reorder the data blobs with the newly ordered manifest
   string ordered_blobs_path;
   TEST_AND_RETURN_FALSE(utils::MakeTempFile(
@@ -1326,6 +1458,9 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
                                          temp_file_path,
                                          ordered_blobs_path));
   temp_file_unlinker.reset();
+
+  // Fill in the legacy noop_operations list.
+  ProceduresToNoops(&manifest);
 
   // Check that install op blobs are in order.
   uint64_t next_blob_offset = 0;
