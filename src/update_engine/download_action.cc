@@ -46,7 +46,6 @@ void DownloadAction::PerformAction() {
   }
   int rc = writer_->Open();
   if (rc < 0) {
-    LOG(ERROR) << "Unable to open output file " << install_plan_.install_path;
     // report error to processor
     processor_->ActionComplete(this, kActionCodeInstallDeviceOpenError);
     return;
