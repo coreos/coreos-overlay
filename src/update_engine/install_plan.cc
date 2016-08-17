@@ -23,11 +23,11 @@ InstallPlan::InstallPlan(bool is_resume,
       payload_hash(payload_hash),
       partition_path(partition_path),
       kernel_path(utils::BootKernelName(partition_path)),
-      rootfs_size(0) {}
+      new_partition_size(0) {}
 
 InstallPlan::InstallPlan() : is_resume(false),
                              payload_size(0),
-                             rootfs_size(0) {}
+                             new_partition_size(0) {}
 
 
 bool InstallPlan::operator==(const InstallPlan& that) const {

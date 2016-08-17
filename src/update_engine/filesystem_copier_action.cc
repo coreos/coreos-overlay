@@ -275,12 +275,12 @@ void FilesystemCopierAction::SpawnAsyncActions() {
     if (hasher_.Finalize()) {
       LOG(INFO) << "Hash: " << hasher_.hash();
       if (verify_hash_) {
-        if (install_plan_.rootfs_hash != hasher_.raw_hash()) {
+        if (install_plan_.new_partition_hash != hasher_.raw_hash()) {
           code = kActionCodeNewRootfsVerificationError;
           LOG(ERROR) << "New partition verification failed.";
         }
       } else {
-        install_plan_.rootfs_hash = hasher_.raw_hash();
+        install_plan_.old_partition_hash = hasher_.raw_hash();
       }
     } else {
       LOG(ERROR) << "Unable to finalize the hash.";
@@ -292,7 +292,7 @@ void FilesystemCopierAction::SpawnAsyncActions() {
 
 void FilesystemCopierAction::DetermineFilesystemSize(int fd) {
   if (verify_hash_) {
-    filesystem_size_ = install_plan_.rootfs_size;
+    filesystem_size_ = install_plan_.new_partition_size;
     LOG(INFO) << "Filesystem size: " << filesystem_size_;
   } else if (utils::GetDeviceSizeFromFD(fd, &filesystem_size_)) {
     LOG(INFO) << "Filesystem size: " << filesystem_size_;

@@ -181,10 +181,11 @@ void ApplyDelta() {
       << "Failed to initialize preferences.";
   // Get original checksums
   LOG(INFO) << "Calculating original checksums";
-  InstallInfo root_info;
-  CHECK(DeltaDiffGenerator::InitializeInfo(FLAGS_old_image, &root_info));
-  install_plan.rootfs_hash.assign(root_info.hash().begin(),
-                                  root_info.hash().end());
+  InstallInfo old_info;
+  CHECK(DeltaDiffGenerator::InitializeInfo(FLAGS_old_image,
+                                           &old_info));
+  install_plan.old_partition_hash.assign(old_info.hash().begin(),
+                                         old_info.hash().end());
   install_plan.partition_path = FLAGS_old_image;
   install_plan.kernel_path = FLAGS_old_kernel;
   PayloadProcessor performer(&prefs, &install_plan);

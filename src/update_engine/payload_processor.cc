@@ -329,10 +329,20 @@ bool PayloadProcessor::GetNewPartitionInfo(uint64_t* partition_size,
 }
 
 namespace {
-void LogVerifyError(const string& local_hash,
-                    const string& expected_hash) {
-  LOG(ERROR) << "This is a server-side error due to "
-             << "mismatched delta update image!";
+string StringForHashVector(const vector<char>& hash) {
+  string ret;
+  if (!OmahaHashCalculator::Base64Encode(hash.data(), hash.size(), &ret)) {
+    ret = "<unknown>";
+  }
+  return ret;
+}
+
+void LogVerifyError(const vector<char>& local_hash_data,
+                    const vector<char>& expected_hash_data) {
+  string local_hash = StringForHashVector(local_hash_data);
+  string expected_hash = StringForHashVector(expected_hash_data);
+  LOG(ERROR) << "This is either disk corruption or server-side error "
+             << "due to a mismatched delta update image!";
   LOG(ERROR) << "The delta I've been given contains a partition delta "
              << "update that must be applied over a partition with "
              << "a specific checksum, but the partition we're starting "
@@ -342,14 +352,6 @@ void LogVerifyError(const string& local_hash,
              << local_hash << " but the update expected me to have "
              << expected_hash << " .";
 }
-
-string StringForHashBytes(const void* bytes, size_t size) {
-  string ret;
-  if (!OmahaHashCalculator::Base64Encode(bytes, size, &ret)) {
-    ret = "<unknown>";
-  }
-  return ret;
-}
 }  // namespace
 
 bool PayloadProcessor::VerifySourcePartition() {
@@ -357,20 +359,13 @@ bool PayloadProcessor::VerifySourcePartition() {
   CHECK(manifest_valid_);
   CHECK(install_plan_);
   if (manifest_.has_old_partition_info()) {
+    CHECK(!install_plan_->old_partition_hash.empty());
     const InstallInfo& info = manifest_.old_partition_info();
-    bool valid =
-        !install_plan_->rootfs_hash.empty() &&
-        install_plan_->rootfs_hash.size() == info.hash().size() &&
-        memcmp(install_plan_->rootfs_hash.data(),
-               info.hash().data(),
-               install_plan_->rootfs_hash.size()) == 0;
-    if (!valid) {
-      LogVerifyError(StringForHashBytes(install_plan_->rootfs_hash.data(),
-                                        install_plan_->rootfs_hash.size()),
-                     StringForHashBytes(info.hash().data(),
-                                        info.hash().size()));
+    const vector<char> hash(info.hash().begin(), info.hash().end());
+    if (install_plan_->old_partition_hash != hash) {
+      LogVerifyError(install_plan_->old_partition_hash, hash);
+      return false;
     }
-    TEST_AND_RETURN_FALSE(valid);
   }
   return true;
 }

@@ -109,14 +109,14 @@ void DownloadAction::TransferComplete(HttpFetcher *fetcher, bool successful) {
       LOG(ERROR) << "Download of " << install_plan_.download_url
                  << " failed due to payload verification error.";
     } else if (!payload_processor_->GetNewPartitionInfo(
-        &install_plan_.rootfs_size,
-        &install_plan_.rootfs_hash)) {
+        &install_plan_.new_partition_size,
+        &install_plan_.new_partition_hash)) {
       LOG(ERROR) << "Unable to get new partition hash info.";
       code = kActionCodeDownloadNewPartitionInfoError;
     }
   }
 
-  // Write the path to the output pipe if we're successful.
+  // Write the plan to the output pipe if we're successful.
   if (code == kActionCodeSuccess && HasOutputPipe())
     SetOutputObject(install_plan_);
   processor_->ActionComplete(this, code);

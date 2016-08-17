@@ -503,9 +503,9 @@ static void ApplyDeltaFile(DeltaState* state,
   (*performer)->set_public_key_path(kUnittestPublicKeyPath);
 
   EXPECT_EQ(state->image_size,
-            OmahaHashCalculator::RawHashOfFile(state->a_img,
-                                               state->image_size,
-                                               &install_plan.rootfs_hash));
+            OmahaHashCalculator::RawHashOfFile(
+              state->a_img, state->image_size,
+              &install_plan.old_partition_hash));
 
   EXPECT_EQ(0, (*performer)->Open());
 
