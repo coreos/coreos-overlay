@@ -185,7 +185,7 @@ void ApplyDelta() {
   CHECK(DeltaDiffGenerator::InitializeInfo(FLAGS_old_image, &root_info));
   install_plan.rootfs_hash.assign(root_info.hash().begin(),
                                   root_info.hash().end());
-  install_plan.install_path = FLAGS_old_image;
+  install_plan.partition_path = FLAGS_old_image;
   install_plan.kernel_path = FLAGS_old_kernel;
   PayloadProcessor performer(&prefs, &install_plan);
   CHECK_EQ(performer.Open(), 0);

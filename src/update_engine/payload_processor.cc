@@ -53,7 +53,7 @@ void LogPartitionInfo(const DeltaArchiveManifest& manifest) {
 }  // namespace {}
 
 PayloadProcessor::PayloadProcessor(PrefsInterface* prefs, InstallPlan* install_plan)
-  : partition_performer_(prefs, install_plan->install_path),
+  : partition_performer_(prefs, install_plan->partition_path),
     prefs_(prefs),
     install_plan_(install_plan),
     manifest_valid_(false),

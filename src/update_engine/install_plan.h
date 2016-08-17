@@ -17,7 +17,7 @@ struct InstallPlan {
               const std::string& url,
               uint64_t payload_size,
               const std::string& payload_hash,
-              const std::string& install_path);
+              const std::string& partition_path);
 
   // Default constructor: Initialize all members which don't have a class
   // initializer.
@@ -32,8 +32,8 @@ struct InstallPlan {
   std::string download_url;  // url to download from
 
   uint64_t payload_size;                 // size of the payload
-  std::string payload_hash ;             // SHA256 hash of the payload
-  std::string install_path;              // path to main partition device
+  std::string payload_hash;              // SHA256 hash of the payload
+  std::string partition_path;            // path to main partition device
   std::string kernel_path;               // path to kernel image
 
   // The fields below are used for rootfs verification. The flow is:

@@ -495,7 +495,7 @@ static void ApplyDeltaFile(DeltaState* state,
 
   // Update the A image in place.
   InstallPlan install_plan;
-  install_plan.install_path = state->a_img;
+  install_plan.partition_path = state->a_img;
   // TODO: Kernel support in PayloadProcessor
 
   *performer = new PayloadProcessor(&prefs, &install_plan);
@@ -684,7 +684,7 @@ TEST(PayloadProcessorTest, RunAsRootSmallImageSignGeneratedTest) {
 TEST(PayloadProcessorTest, BadDeltaMagicTest) {
   PrefsMock prefs;
   InstallPlan install_plan;
-  install_plan.install_path = "/dev/null";
+  install_plan.partition_path = "/dev/null";
   PayloadProcessor performer(&prefs, &install_plan);
   EXPECT_EQ(0, performer.Open());
   EXPECT_TRUE(performer.Write("junk", 4));

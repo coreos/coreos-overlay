@@ -75,7 +75,7 @@ void FilesystemCopierAction::PerformAction() {
     return;
   }
 
-  string source = verify_hash_ ? install_plan_.install_path : copy_source_;
+  string source = verify_hash_ ? install_plan_.partition_path : copy_source_;
   if (source.empty()) {
     source = utils::BootDevice();
   }
@@ -86,12 +86,12 @@ void FilesystemCopierAction::PerformAction() {
   }
 
   if (!verify_hash_) {
-    int dst_fd = open(install_plan_.install_path.c_str(),
+    int dst_fd = open(install_plan_.partition_path.c_str(),
                       O_WRONLY | O_TRUNC | O_CREAT,
                     0644);
     if (dst_fd < 0) {
       close(src_fd);
-      PLOG(ERROR) << "Unable to open " << install_plan_.install_path
+      PLOG(ERROR) << "Unable to open " << install_plan_.partition_path
                   << " for writing:";
       return;
     }

@@ -135,7 +135,7 @@ void PostinstallRunnerActionTest::DoTest(bool do_losetup, int err_code) {
   ActionProcessor processor;
   ObjectFeederAction<InstallPlan> feeder_action;
   InstallPlan install_plan;
-  install_plan.install_path = dev;
+  install_plan.partition_path = dev;
   feeder_action.set_obj(install_plan);
   PostinstallRunnerAction runner_action;
   BondActions(&feeder_action, &runner_action);
@@ -157,7 +157,7 @@ void PostinstallRunnerActionTest::DoTest(bool do_losetup, int err_code) {
   EXPECT_TRUE(delegate.code_set_);
   EXPECT_EQ(do_losetup && !err_code, delegate.code_ == kActionCodeSuccess);
   EXPECT_EQ(do_losetup && !err_code,
-            !collector_action.object().install_path.empty());
+            !collector_action.object().partition_path.empty());
   if (do_losetup && !err_code) {
     EXPECT_TRUE(install_plan == collector_action.object());
   }
