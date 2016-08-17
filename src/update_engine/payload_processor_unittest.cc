@@ -72,6 +72,7 @@ enum OperationHashTest {
 struct DeltaState {
   DeltaTest delta_test;
   SignatureTest signature_test;
+  InstallPlan install_plan;
 
   string a_img;
   string b_img;
@@ -494,18 +495,17 @@ static void ApplyDeltaFile(DeltaState* state,
   }
 
   // Update the A image in place.
-  InstallPlan install_plan;
-  install_plan.partition_path = state->a_img;
+  state->install_plan.partition_path = state->a_img;
   // TODO: Kernel support in PayloadProcessor
 
-  *performer = new PayloadProcessor(&prefs, &install_plan);
+  *performer = new PayloadProcessor(&prefs, &state->install_plan);
   EXPECT_TRUE(utils::FileExists(kUnittestPublicKeyPath));
   (*performer)->set_public_key_path(kUnittestPublicKeyPath);
 
   EXPECT_EQ(state->image_size,
             OmahaHashCalculator::RawHashOfFile(
               state->a_img, state->image_size,
-              &install_plan.old_partition_hash));
+              &state->install_plan.old_partition_hash));
 
   EXPECT_EQ(0, (*performer)->Open());
 
