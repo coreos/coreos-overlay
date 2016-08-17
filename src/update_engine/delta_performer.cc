@@ -94,6 +94,7 @@ int DeltaPerformer::Close() {
 ActionExitCode DeltaPerformer::PerformOperation(
     const InstallOperation& operation,
     const vector<char>& data) {
+  CHECK(fd_ >= 0);
 
   ActionExitCode error = ValidateOperationHash(operation, data);
   if (error != kActionCodeSuccess) {
