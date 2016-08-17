@@ -103,16 +103,10 @@ void DownloadAction::TransferComplete(HttpFetcher *fetcher, bool successful) {
   ActionExitCode code =
       successful ? kActionCodeSuccess : kActionCodeDownloadTransferError;
   if (code == kActionCodeSuccess && payload_processor_.get()) {
-    code = payload_processor_->VerifyPayload(install_plan_.payload_hash,
-                                             install_plan_.payload_size);
+    code = payload_processor_->VerifyPayload();
     if (code != kActionCodeSuccess) {
       LOG(ERROR) << "Download of " << install_plan_.download_url
                  << " failed due to payload verification error.";
-    } else if (!payload_processor_->GetNewPartitionInfo(
-        &install_plan_.new_partition_size,
-        &install_plan_.new_partition_hash)) {
-      LOG(ERROR) << "Unable to get new partition hash info.";
-      code = kActionCodeDownloadNewPartitionInfoError;
     }
   }
 

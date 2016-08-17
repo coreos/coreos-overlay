@@ -266,14 +266,12 @@ bool PayloadProcessor::ExtractSignatureMessage(const vector<char>& data) {
     }                                                           \
   } while (0);
 
-ActionExitCode PayloadProcessor::VerifyPayload(
-    const std::string& update_check_response_hash,
-    const uint64_t update_check_response_size) {
+ActionExitCode PayloadProcessor::VerifyPayload() {
   LOG(INFO) << "Verifying delta payload using public key: " << public_key_path_;
 
   // Verifies the download size.
   TEST_AND_RETURN_VAL(kActionCodePayloadSizeMismatchError,
-                      update_check_response_size ==
+                      install_plan_->payload_size ==
                       manifest_metadata_size_ + buffer_offset_);
 
   // Verifies the payload hash.
@@ -281,7 +279,15 @@ ActionExitCode PayloadProcessor::VerifyPayload(
   TEST_AND_RETURN_VAL(kActionCodeDownloadPayloadVerificationError,
                       !payload_hash_data.empty());
   TEST_AND_RETURN_VAL(kActionCodePayloadHashMismatchError,
-                      payload_hash_data == update_check_response_hash);
+                      payload_hash_data == install_plan_->payload_hash);
+
+  // Update the InstallPlan so the update can be verified.
+  TEST_AND_RETURN_VAL(kActionCodeDownloadPayloadVerificationError,
+                      manifest_.has_new_partition_info());
+  install_plan_->new_partition_size = manifest_.new_partition_info().size();
+  install_plan_->new_partition_hash.assign(
+      manifest_.new_partition_info().hash().begin(),
+      manifest_.new_partition_info().hash().end());
 
   // Verifies the signed payload hash.
   if (!utils::FileExists(public_key_path_.c_str())) {
@@ -315,17 +321,6 @@ ActionExitCode PayloadProcessor::VerifyPayload(
   }
 
   return kActionCodeSuccess;
-}
-
-bool PayloadProcessor::GetNewPartitionInfo(uint64_t* partition_size,
-                                           vector<char>* partition_hash) {
-  TEST_AND_RETURN_FALSE(manifest_valid_ &&
-			manifest_.has_new_partition_info());
-  *partition_size = manifest_.new_partition_info().size();
-  vector<char> new_partition_hash(manifest_.new_partition_info().hash().begin(),
-                                  manifest_.new_partition_info().hash().end());
-  partition_hash->swap(new_partition_hash);
-  return true;
 }
 
 namespace {

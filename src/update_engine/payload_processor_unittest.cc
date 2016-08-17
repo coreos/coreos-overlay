@@ -497,6 +497,9 @@ static void ApplyDeltaFile(DeltaState* state,
   // Update the A image in place.
   state->install_plan.partition_path = state->a_img;
   // TODO: Kernel support in PayloadProcessor
+  state->install_plan.payload_size = state->delta.size();
+  state->install_plan.payload_hash =
+      OmahaHashCalculator::OmahaHashOfData(state->delta);
 
   *performer = new PayloadProcessor(&prefs, &state->install_plan);
   EXPECT_TRUE(utils::FileExists(kUnittestPublicKeyPath));
@@ -576,9 +579,7 @@ void VerifyPayloadResult(PayloadProcessor* performer,
 
   LOG(INFO) << "Verifying payload for expected result "
             << expected_result;
-  EXPECT_EQ(expected_result, performer->VerifyPayload(
-      OmahaHashCalculator::OmahaHashOfData(state->delta),
-      state->delta.size()));
+  EXPECT_EQ(expected_result, performer->VerifyPayload());
   LOG(INFO) << "Verified payload.";
 
   if (expected_result != kActionCodeSuccess) {
@@ -588,17 +589,14 @@ void VerifyPayloadResult(PayloadProcessor* performer,
 
   CompareFilesByBlock(state->a_img, state->b_img);
 
-  uint64_t new_rootfs_size;
-  vector<char> new_rootfs_hash;
-  EXPECT_TRUE(performer->GetNewPartitionInfo(&new_rootfs_size,
-                                             &new_rootfs_hash));
-  EXPECT_EQ(state->image_size, new_rootfs_size);
-  vector<char> expected_new_rootfs_hash;
+  EXPECT_EQ(state->image_size, state->install_plan.new_partition_size);
+  vector<char> expected_partition_hash;
   EXPECT_EQ(state->image_size,
             OmahaHashCalculator::RawHashOfFile(state->b_img,
                                                state->image_size,
-                                               &expected_new_rootfs_hash));
-  EXPECT_TRUE(expected_new_rootfs_hash == new_rootfs_hash);
+                                               &expected_partition_hash));
+  EXPECT_TRUE(expected_partition_hash ==
+              state->install_plan.new_partition_hash);
 }
 
 void VerifyPayload(PayloadProcessor* performer, DeltaState* state) {
