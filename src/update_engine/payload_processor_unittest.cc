@@ -107,6 +107,13 @@ static void CompareFilesByBlock(const string& a_file, const string& b_file) {
   }
 }
 
+static void CompareFiles(const string& a_file, const string& b_file) {
+  vector<char> a_data, b_data;
+  EXPECT_TRUE(utils::ReadFile(a_file, &a_data)) << "file failed: " << a_file;
+  EXPECT_TRUE(utils::ReadFile(b_file, &b_data)) << "file failed: " << b_file;
+  EXPECT_EQ(a_data, b_data);
+}
+
 static bool WriteSparseFile(const string& path, off_t size) {
   int fd = open(path.c_str(), O_CREAT | O_TRUNC | O_WRONLY, 0644);
   TEST_AND_RETURN_FALSE_ERRNO(fd >= 0);
@@ -496,7 +503,7 @@ static void ApplyDeltaFile(DeltaState* state,
 
   // Update the A image in place.
   state->install_plan.partition_path = state->a_img;
-  // TODO: Kernel support in PayloadProcessor
+  state->install_plan.kernel_path = state->a_kernel;
   state->install_plan.payload_size = state->delta.size();
   state->install_plan.payload_hash =
       OmahaHashCalculator::OmahaHashOfData(state->delta);
@@ -509,6 +516,10 @@ static void ApplyDeltaFile(DeltaState* state,
             OmahaHashCalculator::RawHashOfFile(
               state->a_img, state->image_size,
               &state->install_plan.old_partition_hash));
+
+  EXPECT_TRUE(OmahaHashCalculator::RawHashOfData(
+                state->a_kernel_data,
+                &state->install_plan.old_kernel_hash));
 
   EXPECT_EQ(0, (*performer)->Open());
 
@@ -588,6 +599,7 @@ void VerifyPayloadResult(PayloadProcessor* performer,
   }
 
   CompareFilesByBlock(state->a_img, state->b_img);
+  CompareFiles(state->a_kernel, state->b_kernel);
 
   EXPECT_EQ(state->image_size, state->install_plan.new_partition_size);
   vector<char> expected_partition_hash;
@@ -597,6 +609,13 @@ void VerifyPayloadResult(PayloadProcessor* performer,
                                                &expected_partition_hash));
   EXPECT_TRUE(expected_partition_hash ==
               state->install_plan.new_partition_hash);
+
+  EXPECT_EQ(state->b_kernel_data.size(), state->install_plan.new_kernel_size);
+  vector<char> expected_kernel_hash;
+  EXPECT_TRUE(OmahaHashCalculator::RawHashOfData(state->b_kernel_data,
+                                                 &expected_kernel_hash));
+  EXPECT_TRUE(expected_kernel_hash ==
+              state->install_plan.new_kernel_hash);
 }
 
 void VerifyPayload(PayloadProcessor* performer, DeltaState* state) {
@@ -619,6 +638,8 @@ void DoSmallImageTest(DeltaState *state) {
   GenerateDeltaFile(state);
   ScopedPathUnlinker a_img_unlinker(state->a_img);
   ScopedPathUnlinker b_img_unlinker(state->b_img);
+  ScopedPathUnlinker a_kernel_unlinker(state->a_kernel);
+  ScopedPathUnlinker b_kernel_unlinker(state->b_kernel);
   ScopedPathUnlinker delta_unlinker(state->delta_path);
   ApplyDeltaFile(state, kValidOperationData, &performer);
   VerifyPayload(performer, state);
@@ -632,6 +653,8 @@ void DoOperationHashMismatchTest(OperationHashTest op_hash_test) {
   GenerateDeltaFile(&state);
   ScopedPathUnlinker a_img_unlinker(state.a_img);
   ScopedPathUnlinker b_img_unlinker(state.b_img);
+  ScopedPathUnlinker a_kernel_unlinker(state.a_kernel);
+  ScopedPathUnlinker b_kernel_unlinker(state.b_kernel);
   ScopedPathUnlinker delta_unlinker(state.delta_path);
   PayloadProcessor *performer;
   ApplyDeltaFile(&state, op_hash_test, &performer);

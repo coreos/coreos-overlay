@@ -30,7 +30,8 @@ class DeltaPerformer {
       : prefs_(prefs),
         path_(install_path),
         fd_(-1),
-        block_size_(0) {}
+        block_size_(0),
+        file_size_(-1) {}
 
   // Once Close()d, a DeltaPerformer can't be Open()ed again.
   int Open();
@@ -45,6 +46,11 @@ class DeltaPerformer {
   // Set block size specified by the manifest.
   void SetBlockSize(uint32_t size) {
     block_size_ = size;
+  }
+
+  // Set the size of the output file (leave unset for block devices).
+  void SetFileSize(off_t size) {
+    file_size_ = size;
   }
 
  private:
@@ -94,6 +100,9 @@ class DeltaPerformer {
 
   // The block size (parsed from the manifest).
   uint32_t block_size_;
+
+  // The final file size defined by the manifest.
+  off_t file_size_;
 
   DISALLOW_COPY_AND_ASSIGN(DeltaPerformer);
 };

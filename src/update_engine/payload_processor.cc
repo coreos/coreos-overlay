@@ -54,6 +54,7 @@ void LogPartitionInfo(const DeltaArchiveManifest& manifest) {
 
 PayloadProcessor::PayloadProcessor(PrefsInterface* prefs, InstallPlan* install_plan)
   : partition_performer_(prefs, install_plan->partition_path),
+    kernel_performer_(prefs, install_plan->kernel_path),
     prefs_(prefs),
     install_plan_(install_plan),
     manifest_valid_(false),
@@ -65,11 +66,28 @@ PayloadProcessor::PayloadProcessor(PrefsInterface* prefs, InstallPlan* install_p
 }
 
 int PayloadProcessor::Open() {
-  return partition_performer_.Open();
+  int err = partition_performer_.Open();
+  if (err != 0) {
+    return err;
+  }
+  if (!install_plan_->kernel_path.empty()) {
+    err = kernel_performer_.Open();
+    if (err != 0) {
+      partition_performer_.Close();
+      return err;
+    }
+  }
+  return 0;
 }
 
 int PayloadProcessor::Close() {
   int err = partition_performer_.Close();
+  if (!install_plan_->kernel_path.empty()) {
+    int err2 = kernel_performer_.Close();
+    if (err == 0) {
+      err = err2;
+    }
+  }
   LOG_IF(ERROR, !hash_calculator_.Finalize()) << "Unable to finalize the hash.";
   if (!buffer_.empty()) {
     LOG(ERROR) << "Called Close() while buffer not empty!";
@@ -157,10 +175,21 @@ ActionExitCode PayloadProcessor::LoadManifest() {
     return kActionCodeDownloadStateInitializationError;
   }
 
+  partition_performer_.SetBlockSize(manifest_.block_size());
   for (const InstallOperation &op : manifest_.partition_operations()) {
     operations_.emplace_back(nullptr, &op);
   }
+
+  kernel_performer_.SetBlockSize(manifest_.block_size());
   for (const InstallProcedure &proc : manifest_.procedures()) {
+    // KERNELs are plain files so we must specify their final size.
+    if (proc.has_type() &&
+        proc.type() == InstallProcedure_Type_KERNEL &&
+        proc.has_new_info() &&
+        !install_plan_->kernel_path.empty()) {
+      kernel_performer_.SetFileSize(proc.new_info().size());
+    }
+
     for (const InstallOperation &op : proc.operations()) {
       operations_.emplace_back(&proc, &op);
     }
@@ -183,8 +212,14 @@ ActionExitCode PayloadProcessor::PerformOperation() {
   // There is no InstallProcedure type for partitions, so it will be null.
   if (proc == nullptr) {
     performer = &partition_performer_;
-  } else {
-    // TODO(marineam): set performer based on proc.type()
+  } else if (proc->has_type()) {
+    // has_type is only true if it is present and has a known enum value.
+    switch (proc->type()) {
+      case InstallProcedure_Type_KERNEL:
+        if (!install_plan_->kernel_path.empty())
+          performer = &kernel_performer_;
+        break;
+    }
   }
 
   if (op->data_length() && op->data_offset() != buffer_offset_) {
@@ -283,11 +318,9 @@ ActionExitCode PayloadProcessor::VerifyPayload() {
 
   // Update the InstallPlan so the update can be verified.
   TEST_AND_RETURN_VAL(kActionCodeDownloadPayloadVerificationError,
-                      manifest_.has_new_partition_info());
-  install_plan_->new_partition_size = manifest_.new_partition_info().size();
-  install_plan_->new_partition_hash.assign(
-      manifest_.new_partition_info().hash().begin(),
-      manifest_.new_partition_info().hash().end());
+                      SetNewPartitionInfo());
+  TEST_AND_RETURN_VAL(kActionCodeDownloadPayloadVerificationError,
+                      SetNewKernelInfo());
 
   // Verifies the signed payload hash.
   if (!utils::FileExists(public_key_path_.c_str())) {
@@ -321,6 +354,35 @@ ActionExitCode PayloadProcessor::VerifyPayload() {
   }
 
   return kActionCodeSuccess;
+}
+
+bool PayloadProcessor::SetNewPartitionInfo() {
+  TEST_AND_RETURN_FALSE(manifest_valid_ &&
+                        manifest_.has_new_partition_info());
+  install_plan_->new_partition_size = manifest_.new_partition_info().size();
+  install_plan_->new_partition_hash.assign(
+      manifest_.new_partition_info().hash().begin(),
+      manifest_.new_partition_info().hash().end());
+  return true;
+}
+
+bool PayloadProcessor::SetNewKernelInfo() {
+  if (install_plan_->kernel_path.empty())
+    return true;
+
+  for (const InstallProcedure& proc : manifest_.procedures()) {
+    if (!proc.has_type() || proc.type() != InstallProcedure_Type_KERNEL)
+      continue;
+
+    TEST_AND_RETURN_FALSE(proc.has_new_info());
+    install_plan_->new_kernel_size = proc.new_info().size();
+    install_plan_->new_kernel_hash.assign(
+        proc.new_info().hash().begin(),
+        proc.new_info().hash().end());
+    return true;
+  }
+
+  return false;
 }
 
 namespace {
@@ -442,7 +504,6 @@ bool PayloadProcessor::CheckpointUpdateProgress() {
 
 bool PayloadProcessor::PrimeUpdateState() {
   CHECK(manifest_valid_);
-  partition_performer_.SetBlockSize(manifest_.block_size());
 
   int64_t next_operation = kUpdateStateOperationInvalid;
   if (!prefs_->GetInt64(kPrefsUpdateStateNextOperation, &next_operation) ||

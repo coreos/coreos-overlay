@@ -83,9 +83,16 @@ int DeltaPerformer::Open() {
 
 int DeltaPerformer::Close() {
   int err = 0;
+  if (file_size_ >= 0) {
+    if (ftruncate(fd_, file_size_) == -1) {
+      err = errno;
+      PLOG(ERROR) << "Failed to truncate " << path_ << " to " << file_size_;
+    }
+  }
   if (close(fd_) == -1) {
-    err = errno;
-    PLOG(ERROR) << "Unable to close partition fd: " << fd_;
+    if (err == 0)
+      err = errno;
+    PLOG(ERROR) << "Failed to close " << path_;
   }
   fd_ = -2;  // Set to invalid so that calls to Open() will fail.
   return -err;

@@ -103,8 +103,15 @@ class PayloadProcessor : public FileWriter {
   // update. Returns false otherwise.
   bool PrimeUpdateState();
 
+  // Fills in new partition/kernel size/hash in install_plan_ from the manifest.
+  bool SetNewPartitionInfo();
+  bool SetNewKernelInfo();
+
   // Writer for the main partition to be updated.
   DeltaPerformer partition_performer_;
+
+  // Writer for the boot kernel in the EFI System partition.
+  DeltaPerformer kernel_performer_;
 
   // Update Engine preference store.
   PrefsInterface* prefs_;
