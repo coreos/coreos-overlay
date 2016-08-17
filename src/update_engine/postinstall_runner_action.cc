@@ -21,7 +21,7 @@ const char kPostinstallScript[] = "/postinst";
 void PostinstallRunnerAction::PerformAction() {
   CHECK(HasInputObject());
   const InstallPlan install_plan = GetInputObject();
-  const string install_device = install_plan.install_path;
+  const string install_device = install_plan.partition_path;
   ScopedActionCompleter completer(processor_, this);
 
   // Make mountpoint.

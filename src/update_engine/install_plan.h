@@ -17,7 +17,7 @@ struct InstallPlan {
               const std::string& url,
               uint64_t payload_size,
               const std::string& payload_hash,
-              const std::string& install_path);
+              const std::string& partition_path);
 
   // Default constructor: Initialize all members which don't have a class
   // initializer.
@@ -32,23 +32,21 @@ struct InstallPlan {
   std::string download_url;  // url to download from
 
   uint64_t payload_size;                 // size of the payload
-  std::string payload_hash ;             // SHA256 hash of the payload
-  std::string install_path;              // path to main partition device
+  std::string payload_hash;              // SHA256 hash of the payload
+  std::string partition_path;            // path to main partition device
   std::string kernel_path;               // path to kernel image
 
-  // The fields below are used for rootfs verification. The flow is:
-  //
-  // 1. FilesystemCopierAction(verify_hash=false) computes and fills in the
-  // source partition sizes and hashes.
-  //
-  // 2. DownloadAction verifies the source partition sizes and hashes against
-  // the expected values transmitted in the update manifest. It fills in the
-  // expected applied partition sizes and hashes based on the manifest.
-  //
-  // 4. FilesystemCopierAction(verify_hashes=true) computes and verifies the
-  // applied partition sizes and hashes against the expected values.
-  uint64_t rootfs_size;
-  std::vector<char> rootfs_hash;
+  // For verifying system state prior to applying the update. The partition
+  // hash is computed by FilesystemCopierAction(verify_hash=false) and
+  // later validated by PayloadProcessor once it receives the manifest.
+  std::vector<char> old_partition_hash;
+
+  // For verifying the update applied successfully. Values filled in by
+  // PayloadProcessor once the update payload has been verified.
+  // FilesystemCopierAction(verify_hashes=true) computes and verifies the
+  // partition size and hash.
+  uint64_t new_partition_size;
+  std::vector<char> new_partition_hash;
 };
 
 }  // namespace chromeos_update_engine

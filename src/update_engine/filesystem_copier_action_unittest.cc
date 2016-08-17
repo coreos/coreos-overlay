@@ -162,16 +162,16 @@ bool FilesystemCopierActionTest::DoTest(bool run_out_of_space,
   // Set up the action objects
   InstallPlan install_plan;
   if (verify_hash) {
-    install_plan.install_path = a_dev;
-    install_plan.rootfs_size =
+    install_plan.partition_path = a_dev;
+    install_plan.new_partition_size =
         kLoopFileSize - ((verify_hash == 2) ? 1 : 0);
-    if (!OmahaHashCalculator::RawHashOfData(a_loop_data,
-                                            &install_plan.rootfs_hash)) {
+    if (!OmahaHashCalculator::RawHashOfData(
+          a_loop_data, &install_plan.new_partition_hash)) {
       ADD_FAILURE();
       success = false;
     }
   } else {
-    install_plan.install_path = b_dev;
+    install_plan.partition_path = b_dev;
   }
 
   ActionProcessor processor;

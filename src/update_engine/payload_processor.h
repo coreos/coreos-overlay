@@ -49,22 +49,13 @@ class PayloadProcessor : public FileWriter {
   int Close();
 
   // Verifies the downloaded payload against the signed hash included in the
-  // payload, against the update check hash (which is in base64 format)  and
-  // size using the public key and returns kActionCodeSuccess on success, an
-  // error code on failure.  This method should be called after closing the
-  // stream. Note this method skips the signed hash check if the public key is
-  // unavailable; it returns kActionCodeSignedDeltaPayloadExpectedError if the
-  // public key is available but the delta payload doesn't include a signature.
-  ActionExitCode VerifyPayload(const std::string& update_check_response_hash,
-                               const uint64_t update_check_response_size);
-
-  // Reads from the update manifest the expected size and hash of the target
-  // partition. These values can be used for applied update hash verification.
-  // This method must be called after the update manifest has been parsed
-  // (e.g., after closing the stream). Returns true on success, and false on
-  // failure (e.g., when the values are not present in the update manifest).
-  bool GetNewPartitionInfo(uint64_t* partition_size,
-                           std::vector<char>* partition_hash);
+  // payload, against the update check hash and size from the install_plan.
+  // Returns kActionCodeSuccess on success, an error code on failure.  This
+  // method should be called after closing the stream.  Note this method skips
+  // the signed hash check if the public key is unavailable; it returns
+  // kActionCodeSignedDeltaPayloadExpectedError if the public key is available
+  // but the delta payload doesn't include a signature.
+  ActionExitCode VerifyPayload();
 
   // Returns true if a previous update attempt can be continued based on the
   // persistent preferences and the new update check response hash.

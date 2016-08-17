@@ -16,18 +16,18 @@ InstallPlan::InstallPlan(bool is_resume,
                          const string& url,
                          uint64_t payload_size,
                          const string& payload_hash,
-                         const string& install_path)
+                         const string& partition_path)
     : is_resume(is_resume),
       download_url(url),
       payload_size(payload_size),
       payload_hash(payload_hash),
-      install_path(install_path),
-      kernel_path(utils::BootKernelName(install_path)),
-      rootfs_size(0) {}
+      partition_path(partition_path),
+      kernel_path(utils::BootKernelName(partition_path)),
+      new_partition_size(0) {}
 
 InstallPlan::InstallPlan() : is_resume(false),
                              payload_size(0),
-                             rootfs_size(0) {}
+                             new_partition_size(0) {}
 
 
 bool InstallPlan::operator==(const InstallPlan& that) const {
@@ -35,7 +35,7 @@ bool InstallPlan::operator==(const InstallPlan& that) const {
           (download_url == that.download_url) &&
           (payload_size == that.payload_size) &&
           (payload_hash == that.payload_hash) &&
-          (install_path == that.install_path) &&
+          (partition_path == that.partition_path) &&
           (kernel_path == that.kernel_path));
 }
 
@@ -49,7 +49,7 @@ void InstallPlan::Dump() const {
             << ", url: " << download_url
             << ", payload size: " << payload_size
             << ", payload hash: " << payload_hash
-            << ", install_path: " << install_path
+            << ", partition_path: " << partition_path
             << ", kernel_path: " << kernel_path;
 }
 

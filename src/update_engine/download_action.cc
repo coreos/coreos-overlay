@@ -46,7 +46,6 @@ void DownloadAction::PerformAction() {
   }
   int rc = writer_->Open();
   if (rc < 0) {
-    LOG(ERROR) << "Unable to open output file " << install_plan_.install_path;
     // report error to processor
     processor_->ActionComplete(this, kActionCodeInstallDeviceOpenError);
     return;
@@ -104,20 +103,14 @@ void DownloadAction::TransferComplete(HttpFetcher *fetcher, bool successful) {
   ActionExitCode code =
       successful ? kActionCodeSuccess : kActionCodeDownloadTransferError;
   if (code == kActionCodeSuccess && payload_processor_.get()) {
-    code = payload_processor_->VerifyPayload(install_plan_.payload_hash,
-                                             install_plan_.payload_size);
+    code = payload_processor_->VerifyPayload();
     if (code != kActionCodeSuccess) {
       LOG(ERROR) << "Download of " << install_plan_.download_url
                  << " failed due to payload verification error.";
-    } else if (!payload_processor_->GetNewPartitionInfo(
-        &install_plan_.rootfs_size,
-        &install_plan_.rootfs_hash)) {
-      LOG(ERROR) << "Unable to get new partition hash info.";
-      code = kActionCodeDownloadNewPartitionInfoError;
     }
   }
 
-  // Write the path to the output pipe if we're successful.
+  // Write the plan to the output pipe if we're successful.
   if (code == kActionCodeSuccess && HasOutputPipe())
     SetOutputObject(install_plan_);
   processor_->ActionComplete(this, code);

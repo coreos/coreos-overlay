@@ -10,8 +10,10 @@ namespace chromeos_update_engine {
 int DirectFileWriter::Open() {
   CHECK_EQ(fd_, -1);
   fd_ = open(path_.c_str(), flags_, mode_);
-  if (fd_ < 0)
+  if (fd_ < 0) {
+    PLOG(ERROR) << "Unable to open file " << path_;
     return -errno;
+  }
   return 0;
 }
 

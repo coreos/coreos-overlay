@@ -118,7 +118,7 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     EXPECT_TRUE(DoTest(in, "/dev/sda3", &install_plan));
     EXPECT_EQ(in.payload_urls[0], install_plan.download_url);
     EXPECT_EQ(in.hash, install_plan.payload_hash);
-    EXPECT_EQ("/dev/sda4", install_plan.install_path);
+    EXPECT_EQ("/dev/sda4", install_plan.partition_path);
     string deadline;
     EXPECT_TRUE(utils::ReadFile(
         OmahaResponseHandlerAction::kDeadlineFile,
@@ -144,7 +144,7 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     EXPECT_TRUE(DoTest(in, "/dev/sda4", &install_plan));
     EXPECT_EQ(in.payload_urls[0], install_plan.download_url);
     EXPECT_EQ(in.hash, install_plan.payload_hash);
-    EXPECT_EQ("/dev/sda3", install_plan.install_path);
+    EXPECT_EQ("/dev/sda3", install_plan.partition_path);
     string deadline;
     EXPECT_TRUE(utils::ReadFile(
         OmahaResponseHandlerAction::kDeadlineFile,
@@ -165,7 +165,7 @@ TEST_F(OmahaResponseHandlerActionTest, SimpleTest) {
     EXPECT_TRUE(DoTest(in, "/dev/sda3", &install_plan));
     EXPECT_EQ(in.payload_urls[0], install_plan.download_url);
     EXPECT_EQ(in.hash, install_plan.payload_hash);
-    EXPECT_EQ("/dev/sda4", install_plan.install_path);
+    EXPECT_EQ("/dev/sda4", install_plan.partition_path);
     string deadline;
     EXPECT_TRUE(utils::ReadFile(
         OmahaResponseHandlerAction::kDeadlineFile,
@@ -181,7 +181,7 @@ TEST_F(OmahaResponseHandlerActionTest, NoUpdatesTest) {
   EXPECT_FALSE(DoTest(in, "/dev/sda1", &install_plan));
   EXPECT_EQ("", install_plan.download_url);
   EXPECT_EQ("", install_plan.payload_hash);
-  EXPECT_EQ("", install_plan.install_path);
+  EXPECT_EQ("", install_plan.partition_path);
 }
 
 }  // namespace chromeos_update_engine

@@ -53,7 +53,7 @@ void LogPartitionInfo(const DeltaArchiveManifest& manifest) {
 }  // namespace {}
 
 PayloadProcessor::PayloadProcessor(PrefsInterface* prefs, InstallPlan* install_plan)
-  : partition_performer_(prefs, install_plan->install_path),
+  : partition_performer_(prefs, install_plan->partition_path),
     prefs_(prefs),
     install_plan_(install_plan),
     manifest_valid_(false),
@@ -266,14 +266,12 @@ bool PayloadProcessor::ExtractSignatureMessage(const vector<char>& data) {
     }                                                           \
   } while (0);
 
-ActionExitCode PayloadProcessor::VerifyPayload(
-    const std::string& update_check_response_hash,
-    const uint64_t update_check_response_size) {
+ActionExitCode PayloadProcessor::VerifyPayload() {
   LOG(INFO) << "Verifying delta payload using public key: " << public_key_path_;
 
   // Verifies the download size.
   TEST_AND_RETURN_VAL(kActionCodePayloadSizeMismatchError,
-                      update_check_response_size ==
+                      install_plan_->payload_size ==
                       manifest_metadata_size_ + buffer_offset_);
 
   // Verifies the payload hash.
@@ -281,7 +279,15 @@ ActionExitCode PayloadProcessor::VerifyPayload(
   TEST_AND_RETURN_VAL(kActionCodeDownloadPayloadVerificationError,
                       !payload_hash_data.empty());
   TEST_AND_RETURN_VAL(kActionCodePayloadHashMismatchError,
-                      payload_hash_data == update_check_response_hash);
+                      payload_hash_data == install_plan_->payload_hash);
+
+  // Update the InstallPlan so the update can be verified.
+  TEST_AND_RETURN_VAL(kActionCodeDownloadPayloadVerificationError,
+                      manifest_.has_new_partition_info());
+  install_plan_->new_partition_size = manifest_.new_partition_info().size();
+  install_plan_->new_partition_hash.assign(
+      manifest_.new_partition_info().hash().begin(),
+      manifest_.new_partition_info().hash().end());
 
   // Verifies the signed payload hash.
   if (!utils::FileExists(public_key_path_.c_str())) {
@@ -317,22 +323,21 @@ ActionExitCode PayloadProcessor::VerifyPayload(
   return kActionCodeSuccess;
 }
 
-bool PayloadProcessor::GetNewPartitionInfo(uint64_t* partition_size,
-                                           vector<char>* partition_hash) {
-  TEST_AND_RETURN_FALSE(manifest_valid_ &&
-			manifest_.has_new_partition_info());
-  *partition_size = manifest_.new_partition_info().size();
-  vector<char> new_partition_hash(manifest_.new_partition_info().hash().begin(),
-                                  manifest_.new_partition_info().hash().end());
-  partition_hash->swap(new_partition_hash);
-  return true;
+namespace {
+string StringForHashVector(const vector<char>& hash) {
+  string ret;
+  if (!OmahaHashCalculator::Base64Encode(hash.data(), hash.size(), &ret)) {
+    ret = "<unknown>";
+  }
+  return ret;
 }
 
-namespace {
-void LogVerifyError(const string& local_hash,
-                    const string& expected_hash) {
-  LOG(ERROR) << "This is a server-side error due to "
-             << "mismatched delta update image!";
+void LogVerifyError(const vector<char>& local_hash_data,
+                    const vector<char>& expected_hash_data) {
+  string local_hash = StringForHashVector(local_hash_data);
+  string expected_hash = StringForHashVector(expected_hash_data);
+  LOG(ERROR) << "This is either disk corruption or server-side error "
+             << "due to a mismatched delta update image!";
   LOG(ERROR) << "The delta I've been given contains a partition delta "
              << "update that must be applied over a partition with "
              << "a specific checksum, but the partition we're starting "
@@ -342,14 +347,6 @@ void LogVerifyError(const string& local_hash,
              << local_hash << " but the update expected me to have "
              << expected_hash << " .";
 }
-
-string StringForHashBytes(const void* bytes, size_t size) {
-  string ret;
-  if (!OmahaHashCalculator::Base64Encode(bytes, size, &ret)) {
-    ret = "<unknown>";
-  }
-  return ret;
-}
 }  // namespace
 
 bool PayloadProcessor::VerifySourcePartition() {
@@ -357,20 +354,13 @@ bool PayloadProcessor::VerifySourcePartition() {
   CHECK(manifest_valid_);
   CHECK(install_plan_);
   if (manifest_.has_old_partition_info()) {
+    CHECK(!install_plan_->old_partition_hash.empty());
     const InstallInfo& info = manifest_.old_partition_info();
-    bool valid =
-        !install_plan_->rootfs_hash.empty() &&
-        install_plan_->rootfs_hash.size() == info.hash().size() &&
-        memcmp(install_plan_->rootfs_hash.data(),
-               info.hash().data(),
-               install_plan_->rootfs_hash.size()) == 0;
-    if (!valid) {
-      LogVerifyError(StringForHashBytes(install_plan_->rootfs_hash.data(),
-                                        install_plan_->rootfs_hash.size()),
-                     StringForHashBytes(info.hash().data(),
-                                        info.hash().size()));
+    const vector<char> hash(info.hash().begin(), info.hash().end());
+    if (install_plan_->old_partition_hash != hash) {
+      LogVerifyError(install_plan_->old_partition_hash, hash);
+      return false;
     }
-    TEST_AND_RETURN_FALSE(valid);
   }
   return true;
 }
