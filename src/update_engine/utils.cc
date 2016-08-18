@@ -223,9 +223,10 @@ bool ReadPipe(const std::string& cmd, std::string* out_p) {
 off_t FileSize(const string& path) {
   struct stat stbuf;
   int rc = stat(path.c_str(), &stbuf);
-  CHECK_EQ(rc, 0);
-  if (rc < 0)
+  if (rc < 0) {
+    PLOG(ERROR) << "Failed to stat " << path;
     return rc;
+  }
   return stbuf.st_size;
 }
 
