@@ -15,27 +15,10 @@ using std::vector;
 
 namespace chromeos_update_engine {
 
-namespace {
-const int kDefaultKernelSize = 500; // Something small for a test
-
-class KernelCopierActionTestDelegate : public ActionProcessorDelegate {
- public:
-  void ActionCompleted(ActionProcessor* processor,
-                       AbstractAction* action,
-                       ActionExitCode code) {
-    if (action->Type() == KernelCopierAction::StaticType()) {
-      ran_ = true;
-      code_ = code;
-    }
-  }
-  bool ran_;
-  ActionExitCode code_;
-};
-}  // namespace
-
 class KernelCopierActionTest : public ::testing::Test { };
 
 TEST(KernelCopierActionTest, SuccessfulCopyTest) {
+  const int kDefaultKernelSize = 500;
   string a_file;
   string b_file;
 
@@ -60,7 +43,7 @@ TEST(KernelCopierActionTest, SuccessfulCopyTest) {
 
   // Set up the action objects
   ActionProcessor processor;
-  KernelCopierActionTestDelegate delegate;
+  ActionTestDelegate<KernelCopierAction> delegate;
 
   processor.set_delegate(&delegate);
 
@@ -82,8 +65,8 @@ TEST(KernelCopierActionTest, SuccessfulCopyTest) {
 
   processor.StartProcessing();
   EXPECT_FALSE(processor.IsRunning());
-  EXPECT_TRUE(delegate.ran_);
-  EXPECT_EQ(kActionCodeSuccess, delegate.code_);
+  EXPECT_TRUE(delegate.ran());
+  EXPECT_EQ(kActionCodeSuccess, delegate.code());
 
   vector<char> a_out, b_out;
   EXPECT_TRUE(utils::ReadFile(a_file, &a_out)) << "file failed: " << a_file;
@@ -101,7 +84,7 @@ TEST(KernelCopierActionTest, SuccessfulCopyTest) {
 
 TEST(KernelCopierActionTest, MissingInputObjectTest) {
   ActionProcessor processor;
-  KernelCopierActionTestDelegate delegate;
+  ActionTestDelegate<KernelCopierAction> delegate;
 
   processor.set_delegate(&delegate);
 
@@ -114,13 +97,13 @@ TEST(KernelCopierActionTest, MissingInputObjectTest) {
   processor.EnqueueAction(&collector_action);
   processor.StartProcessing();
   EXPECT_FALSE(processor.IsRunning());
-  EXPECT_TRUE(delegate.ran_);
-  EXPECT_EQ(kActionCodeError, delegate.code_);
+  EXPECT_TRUE(delegate.ran());
+  EXPECT_EQ(kActionCodeError, delegate.code());
 }
 
 TEST(KernelCopierActionTest, ResumeTest) {
   ActionProcessor processor;
-  KernelCopierActionTestDelegate delegate;
+  ActionTestDelegate<KernelCopierAction> delegate;
 
   processor.set_delegate(&delegate);
 
@@ -139,14 +122,14 @@ TEST(KernelCopierActionTest, ResumeTest) {
   processor.EnqueueAction(&collector_action);
   processor.StartProcessing();
   EXPECT_FALSE(processor.IsRunning());
-  EXPECT_TRUE(delegate.ran_);
-  EXPECT_EQ(kActionCodeSuccess, delegate.code_);
+  EXPECT_TRUE(delegate.ran());
+  EXPECT_EQ(kActionCodeSuccess, delegate.code());
   EXPECT_EQ(kUrl, collector_action.object().download_url);
 }
 
 TEST(KernelCopierActionTest, MissingSourceFile) {
   ActionProcessor processor;
-  KernelCopierActionTestDelegate delegate;
+  ActionTestDelegate<KernelCopierAction> delegate;
 
   processor.set_delegate(&delegate);
 
@@ -165,8 +148,8 @@ TEST(KernelCopierActionTest, MissingSourceFile) {
   processor.EnqueueAction(&collector_action);
   processor.StartProcessing();
   EXPECT_FALSE(processor.IsRunning());
-  EXPECT_TRUE(delegate.ran_);
-  EXPECT_EQ(kActionCodeError, delegate.code_);
+  EXPECT_TRUE(delegate.ran());
+  EXPECT_EQ(kActionCodeError, delegate.code());
 }
 
 }  // namespace chromeos_update_engine

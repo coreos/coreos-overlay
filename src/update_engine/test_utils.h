@@ -13,6 +13,7 @@
 #include <gtest/gtest.h>
 
 #include "update_engine/action.h"
+#include "update_engine/action_processor.h"
 #include "update_engine/subprocess.h"
 #include "update_engine/utils.h"
 
@@ -236,6 +237,25 @@ struct ObjectCollectorAction : public Action<ObjectCollectorAction<T> > {
   const T& object() const { return object_; }
  private:
   T object_;
+};
+
+// A delegate for verifying that the ActionProcessor completed an Action.
+template<typename T>
+class ActionTestDelegate : public ActionProcessorDelegate {
+ public:
+  void ActionCompleted(ActionProcessor* processor,
+                       AbstractAction* action,
+                       ActionExitCode code) {
+    if (action->Type() == T::StaticType()) {
+      ran_ = true;
+      code_ = code;
+    }
+  }
+  bool ran() const { return ran_; }
+  ActionExitCode code() const { return code_; }
+ private:
+  bool ran_;
+  ActionExitCode code_;
 };
 
 class ScopedLoopMounter {
