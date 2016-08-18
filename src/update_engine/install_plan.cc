@@ -22,7 +22,7 @@ InstallPlan::InstallPlan(bool is_resume,
       payload_size(payload_size),
       payload_hash(payload_hash),
       partition_path(partition_path),
-      kernel_path(utils::BootKernelName(partition_path)),
+      kernel_path(utils::KernelPath(partition_path)),
       new_partition_size(0),
       new_kernel_size(0) {}
 
