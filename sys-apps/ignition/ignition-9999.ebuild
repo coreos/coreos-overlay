@@ -25,7 +25,7 @@ IUSE=""
 
 src_compile() {
 	export GO15VENDOREXPERIMENT="1"
-	GO_LDFLAGS="-X github.com/coreos/ignition/internal/version.Raw $(git describe --dirty)" || die
+	GO_LDFLAGS="-X github.com/coreos/ignition/internal/version.Raw=$(git describe --dirty)" || die
 	go_build "${COREOS_GO_PACKAGE}/internal"
 }
 
