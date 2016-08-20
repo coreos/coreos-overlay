@@ -1,31 +1,36 @@
-# Copyright 1999-2015 Gentoo Foundation
+# Copyright 1999-2016 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Id$
+# $Header: $
 
 EAPI=5
 
 GITHUB_URI="github.com/opencontainers/runc"
 COREOS_GO_PACKAGE="${GITHUB_URI}"
+# the commit of runc that docker uses.
+# see https://github.com/docker/docker/blob/v1.12.0/Dockerfile#L236
+COMMIT_ID="cc29e3dded8e27ba8f65738f40d251c885030a28"
 
-inherit eutils multilib coreos-go
+inherit eutils multilib coreos-go vcs-snapshot
 
 DESCRIPTION="runc container cli tools"
 HOMEPAGE="http://runc.io"
 
-if [[ ${PV} == *9999* ]]; then
-	EGIT_REPO_URI="git://${GITHUB_URI}.git"
-	inherit git-r3
-else
-	SRC_URI="https://${GITHUB_URI}/archive/v${PV}.tar.gz -> ${P}.tar.gz"
-	KEYWORDS="amd64 arm64"
-fi
+SRC_URI="https://${GITHUB_URI}/archive/${COMMIT_ID}.tar.gz -> ${P}.tar.gz"
+KEYWORDS="amd64 arm64"
 
 LICENSE="Apache-2.0"
 SLOT="0"
-IUSE="+seccomp"
+IUSE="apparmor +seccomp"
 
-DEPEND=">=dev-lang/go-1.4:="
-RDEPEND="seccomp? ( sys-libs/libseccomp )"
+DEPEND=""
+RDEPEND="
+	apparmor? ( sys-libs/libapparmor )
+	seccomp? ( sys-libs/libseccomp )
+"
+
+src_prepare() {
+	eapply_user
+}
 
 src_compile() {
 	# fix up cross-compiling variables
@@ -45,9 +50,12 @@ src_compile() {
 	export GOPATH="${PWD}/.gopath:${PWD}/vendor"
 
 	# build up optional flags
-	local options=( $(usex seccomp "seccomp") )
+	local options=(
+		$(usex apparmor 'apparmor')
+		$(usex seccomp 'seccomp')
+	)
 
-	emake BUILDTAGS="${options[@]}"
+	emake BUILDTAGS="${options[*]}"
 }
 
 src_install() {
