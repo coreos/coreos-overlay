@@ -96,6 +96,7 @@ libupdate_engine_a_SOURCES = \
 	src/update_engine/http_common.cc \
 	src/update_engine/http_fetcher.cc \
 	src/update_engine/install_plan.cc \
+	src/update_engine/kernel_copier_action.cc \
 	src/update_engine/libcurl_http_fetcher.cc \
 	src/update_engine/marshal.glibmarshal.c \
 	src/update_engine/multi_range_http_fetcher.cc \
@@ -149,6 +150,7 @@ update_engine_unittests_SOURCES = \
 	src/update_engine/full_update_generator_unittest.cc \
 	src/update_engine/graph_utils_unittest.cc \
 	src/update_engine/http_fetcher_unittest.cc \
+	src/update_engine/kernel_copier_action_unittest.cc \
 	src/update_engine/mock_http_fetcher.cc \
 	src/update_engine/mock_system_state.cc \
 	src/update_engine/omaha_hash_calculator_unittest.cc \

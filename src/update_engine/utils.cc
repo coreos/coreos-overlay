@@ -223,9 +223,10 @@ bool ReadPipe(const std::string& cmd, std::string* out_p) {
 off_t FileSize(const string& path) {
   struct stat stbuf;
   int rc = stat(path.c_str(), &stbuf);
-  CHECK_EQ(rc, 0);
-  if (rc < 0)
+  if (rc < 0) {
+    PLOG(ERROR) << "Failed to stat " << path;
     return rc;
+  }
   return stbuf.st_size;
 }
 
@@ -473,7 +474,7 @@ const std::string BootDevice() {
   return boot_path;
 }
 
-const string BootKernelName(const std::string& boot_device) {
+const string KernelPath(const std::string& boot_device) {
   // If the target fs is 3, the kernel name is vmlinuz-a.
   // If the target fs is 4, the kernel name is vmlinuz-b.
   char last_char = boot_device[boot_device.size() - 1];
@@ -484,6 +485,10 @@ const string BootKernelName(const std::string& boot_device) {
     return "/boot/coreos/vmlinuz-b";
   }
   return "";
+}
+
+const std::string BootKernel() {
+  return KernelPath(BootDevice());
 }
 
 bool MountFilesystem(const string& device,
