@@ -105,6 +105,7 @@ RDEPEND="${RDEPEND}
 	app-admin/fleet
 	app-admin/locksmith
 	app-admin/mayday
+	app-admin/sdnotify-proxy
 	app-admin/sudo
 	app-admin/toolbox
 	app-arch/gzip
