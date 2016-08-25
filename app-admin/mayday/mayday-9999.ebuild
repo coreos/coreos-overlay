@@ -14,7 +14,7 @@ inherit coreos-go cros-workon
 if [[ "${PV}" == 9999 ]]; then
     KEYWORDS="~amd64 ~arm64"
 else
-    CROS_WORKON_COMMIT="eaff09119f3a5b911908e4d3200272034466fe5d" # v0.1.0
+    CROS_WORKON_COMMIT="5e2b4bcb0743ff0105cd193a8d9e4ddc78088153" # v1.0.0
     KEYWORDS="amd64 arm64"
 fi
 
@@ -27,10 +27,12 @@ SLOT="0"
 IUSE=""
 
 src_compile() {
-	go_build "${COREOS_GO_PACKAGE}/cmd"
+	go_build "${COREOS_GO_PACKAGE}"
 }
 
 src_install() {
-	newbin ${GOBIN}/cmd mayday
+	newbin ${GOBIN}/mayday mayday
+	insinto /usr/share/mayday
+	doins "${S}/default.json"
 }
 
