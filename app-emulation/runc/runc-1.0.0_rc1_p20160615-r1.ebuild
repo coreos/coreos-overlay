@@ -34,7 +34,7 @@ src_prepare() {
 
 src_compile() {
 	# fix up cross-compiling variables
-	export GOARCH=$(go_get_arch)
+	export GOARCH=$(go_arch)
 	export CGO_ENABLED=1
 	export CC=$(tc-getCC)
 	export CXX=$(tc-getCXX)

@@ -32,7 +32,7 @@ RDEPEND="app-emulation/runc
 S=${WORKDIR}/${P}/src/${EGO_PN}
 
 src_compile() {
-	export GOARCH=$(go_get_arch)
+	export GOARCH=$(go_arch)
 	export CGO_ENABLED=1
 	export CC=$(tc-getCC)
 	export CXX=$(tc-getCXX)
