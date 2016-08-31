@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<longdescription lang="en">
+		This tool is intended for use in the CoreOS SDK in order to support
+		packages or architectures that cannot upgrade to the same Go version
+		all at the same time. Gentoo doesn't support this use case.
+	</longdescription>
+</pkgmetadata>
