@@ -4,7 +4,7 @@
 
 EAPI="5"
 
-inherit eutils flag-o-matic toolchain-funcs
+inherit eutils flag-o-matic toolchain-funcs autotools
 
 DESCRIPTION="The GNU Privacy Guard, a GPL pgp replacement"
 HOMEPAGE="http://www.gnupg.org/"
@@ -59,7 +59,9 @@ src_prepare() {
 	epatch "${FILESDIR}/${PN}-2.0.17-gpgsm-gencert.patch"
 	epatch "${FILESDIR}/${P}-Need-to-init-the-trustdb-for-import.patch"
 	epatch "${FILESDIR}/${P}-misc-cve.patch"
+	epatch "${FILESDIR}/${P}-Pth-config-for-cross-build.patch"
 	epatch_user
+	eautoreconf
 }
 
 src_configure() {
