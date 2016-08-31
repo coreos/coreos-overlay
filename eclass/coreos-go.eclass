@@ -41,10 +41,10 @@ go_build() {
 	local package_name="$1"
 	local binary_name="${package_name##*/}"
 
-	ebegin "go build ${package_name}"
-	debug-print $(go env)
+	ebegin "${EGO} build ${package_name}"
+	debug-print EGO=${EGO} $(${EGO} env)
 
-	go build -v \
+	${EGO} build -v \
 		-p "$(makeopts_jobs)" \
 		-ldflags "${GO_LDFLAGS} -extldflags '${LDFLAGS}'" \
 		-o "${GOBIN}/${binary_name}" \

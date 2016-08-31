@@ -92,6 +92,9 @@ go_export() {
 	export CGO_CPPFLAGS="${CPPFLAGS}"
 	export CGO_CXXFLAGS="${CXXFLAGS}"
 	export CGO_LDFLAGS="${LDFLAGS}"
+
+	# Ensure the `go` wrapper calls the version we expect
+	export EGO="${COREOS_GO_VERSION}"
 }
 
 # @FUNCTION: go_tuple

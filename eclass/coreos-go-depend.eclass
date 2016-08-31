@@ -27,4 +27,4 @@ inherit coreos-go-utils
 # the package gets rebuilt when the version changes.
 IUSE="+go_version_${COREOS_GO_VERSION//./_}"
 REQUIRED_USE="go_version_${COREOS_GO_VERSION//./_}"
-DEPEND="dev-lang/go-${COREOS_GO_VERSION#go}*:="
+DEPEND="dev-lang/go:${COREOS_GO_VERSION#go}="
