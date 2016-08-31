@@ -8,7 +8,7 @@ AUTOTOOLS_AUTORECONF=yes
 AUTOTOOLS_IN_SOURCE_BUILD=yes
 
 inherit autotools-utils flag-o-matic systemd toolchain-funcs multilib
-inherit cros-workon
+inherit cros-workon coreos-go-depend
 
 CROS_WORKON_PROJECT="coreos/rkt"
 CROS_WORKON_LOCALNAME="rkt"
@@ -47,8 +47,7 @@ REQUIRED_USE="|| ( rkt_stage1_coreos rkt_stage1_fly rkt_stage1_host rkt_stage1_s
 
 COMMON_DEPEND="sys-apps/acl
 		tpm? ( app-crypt/trousers )"
-DEPEND="|| ( ~dev-lang/go-1.4.3:= >=dev-lang/go-1.5.3:= )
-	app-arch/cpio
+DEPEND="app-arch/cpio
 	sys-fs/squashfs-tools
 	dev-perl/Capture-Tiny
 	rkt_stage1_src? (
@@ -113,18 +112,7 @@ src_configure() {
 	myeconfargs+=( --with-stage1-flavors="${STAGE1FLAVORS}" )
 	myeconfargs+=( --with-stage1-default-location="${STAGE1INSTALLDIR}/stage1-${STAGE1FIRST}.aci" )
 
-	# Go's 6l linker does not support PIE, disable so cgo binaries
-	# which use 6l+gcc for linking can be built correctly.
-	if gcc-specs-pie; then
-		append-ldflags -nopie
-	fi
-
-	export CC=$(tc-getCC)
-	export CGO_ENABLED=1
-	export CGO_CFLAGS="${CFLAGS}"
-	export CGO_CPPFLAGS="${CPPFLAGS}"
-	export CGO_CXXFLAGS="${CXXFLAGS}"
-	export CGO_LDFLAGS="${LDFLAGS}"
+	go_export
 	export BUILDDIR
 	export V=1
 
