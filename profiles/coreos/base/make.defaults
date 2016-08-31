@@ -15,6 +15,10 @@ USE_EXPAND_HIDDEN="${USE_EXPAND_HIDDEN} CROS_WORKON_TREE"
 USE_EXPAND="${USE_EXPAND} ETCD_PROTOCOLS"
 ETCD_PROTOCOLS="1 2"
 
+# Use go_version_* flags to indicate which major version was used.
+# For now this is only informational and set by coreos-go.eclass
+USE_EXPAND="${USE_EXPAND} GO_VERSION"
+
 # Extra use flags for CoreOS SDK
 USE="${USE} cros_host expat -introspection -cups -tcpd -berkdb"
 

@@ -6,17 +6,31 @@
 # @BLURB: utility functions for building Go binaries
 
 # @ECLASS-VARIABLE: COREOS_GO_PACKAGE
+# @REQUIRED
 # @DESCRIPTION:
-# Name of the Go package unpacked to ${S}, this is required.
+# Name of the Go package unpacked to ${S}.
+#
+# Example:
+# @CODE
+# COREOS_GO_PACKAGE="github.com/coreos/mantle"
+# @CODE
+
+# @ECLASS-VARIABLE: COREOS_GO_VERSION
+# @DESCRIPTION:
+# This variable specifies the version of Go to use. If ommitted the
+# default value from coreos-go-depend.eclass will be used.
+#
+# Example:
+# @CODE
+# COREOS_GO_VERSION=go1.5
+# @CODE
 
 case "${EAPI:-0}" in
 	5|6) ;;
 	*) die "Unsupported EAPI=${EAPI} for ${ECLASS}"
 esac
 
-inherit coreos-go-utils multiprocessing
-
-DEPEND="dev-lang/go:="
+inherit coreos-go-depend multiprocessing
 
 # @FUNCTION: go_build
 # @USAGE: <package-name> [<binary-name>]
