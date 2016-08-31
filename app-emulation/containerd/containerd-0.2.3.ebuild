@@ -3,17 +3,20 @@
 # $Id$
 
 EAPI=5
-EGO_PN="github.com/docker/${PN}"
-COREOS_GO_PACKAGE="${EGO_PN}"
+
+GITHUB_URI="github.com/docker/${PN}"
+COREOS_GO_PACKAGE="${GITHUB_URI}"
+COREOS_GO_VERSION="go1.6"
 
 if [[ ${PV} == *9999 ]]; then
-	inherit golang-vcs
+	EGIT_REPO_URI="https://${GITHUB_URI}.git"
+	inherit git-r3
 else
 	MY_PV="${PV/_/-}"
 	EGIT_COMMIT="v${MY_PV}"
 	SRC_URI="https://${EGO_PN}/archive/${EGIT_COMMIT}.tar.gz -> ${P}.tar.gz"
 	KEYWORDS="amd64 arm64"
-	inherit golang-vcs-snapshot
+	inherit vcs-snapshot
 fi
 
 inherit coreos-go
@@ -29,20 +32,11 @@ DEPEND=""
 RDEPEND="app-emulation/runc
 	seccomp? ( sys-libs/libseccomp )"
 
-S=${WORKDIR}/${P}/src/${EGO_PN}
-
 src_compile() {
-	export GOARCH=$(go_arch)
-	export CGO_ENABLED=1
-	export CC=$(tc-getCC)
-	export CXX=$(tc-getCXX)
-
-	local options=( $(usex seccomp "seccomp") )
-	export GOPATH="${WORKDIR}/${P}" # ${PWD}/vendor
-	LDFLAGS= emake GIT_COMMIT="$EGIT_COMMIT" BUILDTAGS="${options[@]}"
+	local options=( $(usev seccomp) )
+	LDFLAGS= emake GIT_COMMIT="$EGIT_COMMIT" BUILDTAGS="${options[*]}"
 }
 
 src_install() {
 	dobin bin/containerd* bin/ctr
 }
-
