@@ -36,6 +36,10 @@ struct InstallPlan {
   std::string partition_path;            // path to main partition device
   std::string kernel_path;               // path to kernel image
 
+  // Location to copy currently running system from.
+  std::string old_partition_path;
+  std::string old_kernel_path;
+
   // For verifying system state prior to applying the update. The partition
   // hash is computed by FilesystemCopierAction(verify_hash=false) and
   // later validated by PayloadProcessor once it receives the manifest.
