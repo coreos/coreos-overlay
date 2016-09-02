@@ -80,11 +80,11 @@ class PayloadProcessor : public FileWriter {
   // Execute a single operation. Result may be kActionCodeDownloadIncomplete.
   ActionExitCode PerformOperation();
 
-  // Verifies that the expected source partition hash (if present) match the
-  // hash for the current partition. Returns true if there're no expected
+  // Verifies that the expected source hashes (if present) match the hash
+  // for the current partition/files. Returns true if there're no expected
   // hash in the payload (e.g., if it's a new-style full update) or if the
   // hashes match; returns false otherwise.
-  bool VerifySourcePartition();
+  bool VerifySource();
 
   // Returns true if the payload signature message has been extracted from
   // payload, false otherwise.

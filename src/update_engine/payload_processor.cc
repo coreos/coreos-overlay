@@ -396,36 +396,51 @@ string StringForHashVector(const vector<char>& hash) {
   return ret;
 }
 
-void LogVerifyError(const vector<char>& local_hash_data,
-                    const vector<char>& expected_hash_data) {
+bool VerifyHash(const string& local_path,
+                const vector<char>& local_hash_data,
+                const string& expected_hash_data_str) {
+  const vector<char> expected_hash_data(expected_hash_data_str.begin(),
+                                        expected_hash_data_str.end());
+  LOG(INFO) << "Verifying source " << local_path;
+  CHECK(!expected_hash_data.empty());
+  if (local_hash_data == expected_hash_data) {
+    return true;
+  }
+
   string local_hash = StringForHashVector(local_hash_data);
   string expected_hash = StringForHashVector(expected_hash_data);
   LOG(ERROR) << "This is either disk corruption or server-side error "
              << "due to a mismatched delta update image!";
-  LOG(ERROR) << "The delta I've been given contains a partition delta "
-             << "update that must be applied over a partition with "
-             << "a specific checksum, but the partition we're starting "
-             << "with doesn't have that checksum! This means that "
-             << "the delta I've been given doesn't match my existing "
-             << "system. The partition I have has hash: "
-             << local_hash << " but the update expected me to have "
+  LOG(ERROR) << "The update I've been given contains a delta that must be "
+             << "applied over existing data with a specific checksum, but "
+             << "the data we're starting with doesn't have that checksum! "
+             << "The data in " << local_path << " has hash "
+             << local_hash << " but the update expected "
              << expected_hash << " .";
+  return false;
 }
 }  // namespace
 
-bool PayloadProcessor::VerifySourcePartition() {
-  LOG(INFO) << "Verifying source partition.";
+bool PayloadProcessor::VerifySource() {
   CHECK(manifest_valid_);
   CHECK(install_plan_);
   if (manifest_.has_old_partition_info()) {
-    CHECK(!install_plan_->old_partition_hash.empty());
-    const InstallInfo& info = manifest_.old_partition_info();
-    const vector<char> hash(info.hash().begin(), info.hash().end());
-    if (install_plan_->old_partition_hash != hash) {
-      LogVerifyError(install_plan_->old_partition_hash, hash);
-      return false;
+    TEST_AND_RETURN_FALSE(VerifyHash(install_plan_->partition_path,
+                                     install_plan_->old_partition_hash,
+                                     manifest_.old_partition_info().hash()));
+  }
+
+  for (const InstallProcedure& proc : manifest_.procedures()) {
+    if (!proc.has_type() || !proc.has_old_info())
+      continue;
+
+    if (proc.type() == InstallProcedure_Type_KERNEL) {
+      TEST_AND_RETURN_FALSE(VerifyHash(install_plan_->kernel_path,
+                                      install_plan_->old_kernel_hash,
+                                      proc.old_info().hash()));
     }
   }
+
   return true;
 }
 
@@ -512,7 +527,7 @@ bool PayloadProcessor::PrimeUpdateState() {
       next_operation == kUpdateStateOperationInvalid ||
       next_operation <= 0) {
     // Initiating a new update, no more state needs to be initialized.
-    TEST_AND_RETURN_FALSE(VerifySourcePartition());
+    TEST_AND_RETURN_FALSE(VerifySource());
     return true;
   }
   next_operation_num_ = next_operation;
