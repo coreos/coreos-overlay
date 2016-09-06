@@ -172,6 +172,7 @@ bool FilesystemCopierActionTest::DoTest(bool run_out_of_space,
     }
   } else {
     install_plan.partition_path = b_dev;
+    install_plan.old_partition_path = a_dev;
   }
 
   ActionProcessor processor;
@@ -189,9 +190,6 @@ bool FilesystemCopierActionTest::DoTest(bool run_out_of_space,
   processor.EnqueueAction(&copier_action);
   processor.EnqueueAction(&collector_action);
 
-  if (!verify_hash) {
-    copier_action.set_copy_source(a_dev);
-  }
   feeder_action.set_obj(install_plan);
 
   StartProcessorCallbackArgs start_callback_args;

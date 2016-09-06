@@ -45,7 +45,7 @@ class OmahaResponseHandlerAction : public Action<OmahaResponseHandlerAction> {
 
   // For unit-testing
   void set_boot_device(const std::string& boot_device) {
-    boot_device_ = boot_device;
+    install_plan_.old_partition_path = boot_device;
   }
 
   bool GotNoUpdateResponse() const { return got_no_update_response_; }
@@ -60,17 +60,18 @@ class OmahaResponseHandlerAction : public Action<OmahaResponseHandlerAction> {
   FRIEND_TEST(UpdateAttempterTest, CreatePendingErrorEventResumedTest);
 
   // Assumes you want to install on the "other" device, where the other
-  // device is what you get if you swap 1 for 2 or 3 for 4 or vice versa
-  // for the number at the end of the boot device. E.g., /dev/sda1 -> /dev/sda2
-  // or /dev/sda4 -> /dev/sda3
+  // device is what you get if you swap 3 for 4 or vice versa for the
+  // number at the end of the boot device. E.g., /dev/sda4 -> /dev/sda3
   static bool GetInstallDev(const std::string& boot_dev,
                             std::string* install_dev);
 
+  // Selects the kernel path associated with the given partition path.
+  // E.g., /dev/sda4 -> /boot/coreos/vmlinuz-a
+  static bool GetKernelPath(const std::string& part_path,
+                            std::string* kernel_path);
+
   // Global system context.
   SystemState* system_state_;
-
-  // set to non-empty in unit tests
-  std::string boot_device_;
 
   // The install plan, if we have an update.
   InstallPlan install_plan_;

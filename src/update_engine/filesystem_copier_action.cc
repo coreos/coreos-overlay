@@ -75,10 +75,8 @@ void FilesystemCopierAction::PerformAction() {
     return;
   }
 
-  string source = verify_hash_ ? install_plan_.partition_path : copy_source_;
-  if (source.empty()) {
-    source = utils::BootDevice();
-  }
+  const string source = verify_hash_ ?
+      install_plan_.partition_path : install_plan_.old_partition_path;
   int src_fd = open(source.c_str(), O_RDONLY);
   if (src_fd < 0) {
     PLOG(ERROR) << "Unable to open " << source << " for reading:";

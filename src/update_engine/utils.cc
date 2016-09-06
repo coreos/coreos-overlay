@@ -474,23 +474,6 @@ const std::string BootDevice() {
   return boot_path;
 }
 
-const string KernelPath(const std::string& boot_device) {
-  // If the target fs is 3, the kernel name is vmlinuz-a.
-  // If the target fs is 4, the kernel name is vmlinuz-b.
-  char last_char = boot_device[boot_device.size() - 1];
-  if (last_char == '3') {
-    return "/boot/coreos/vmlinuz-a";
-  }
-  if (last_char == '4') {
-    return "/boot/coreos/vmlinuz-b";
-  }
-  return "";
-}
-
-const std::string BootKernel() {
-  return KernelPath(BootDevice());
-}
-
 bool MountFilesystem(const string& device,
                      const string& mountpoint,
                      unsigned long mountflags) {
