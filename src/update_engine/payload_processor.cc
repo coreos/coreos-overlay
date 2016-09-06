@@ -382,7 +382,9 @@ bool PayloadProcessor::SetNewKernelInfo() {
     return true;
   }
 
-  return false;
+  // Allow payloads without kernels, the verify action will be skipped
+  // if the kernel size and hash are unset.
+  return true;
 }
 
 namespace {

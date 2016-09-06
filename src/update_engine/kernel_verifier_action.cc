@@ -24,6 +24,15 @@ void KernelVerifierAction::PerformAction() {
   }
   install_plan_ = GetInputObject();
 
+  // If unset then a new kernel was never installed.
+  if (install_plan_.new_kernel_size == 0 &&
+      install_plan_.new_kernel_hash.empty()) {
+    if (HasOutputPipe())
+      SetOutputObject(install_plan_);
+    abort_action_completer.set_code(kActionCodeSuccess);
+    return;
+  }
+
   off_t length = utils::FileSize(install_plan_.kernel_path);
   if (length < 0) {
     LOG(ERROR) << "Failed to determine size of kernel "
@@ -61,6 +70,9 @@ void KernelVerifierAction::PerformAction() {
                << "\nExpected: " << expected_hash;
     return;
   }
+
+  LOG(INFO) << "Kernel size: " << length;
+  LOG(INFO) << "Kernel hash: " << hasher.hash();
 
   // Success! Pass along the new install_plan to the next action.
   if (HasOutputPipe())
