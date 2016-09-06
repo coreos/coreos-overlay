@@ -52,9 +52,6 @@ class FilesystemCopierAction : public Action<FilesystemCopierAction> {
   // terminating the glib main loop.
   bool IsCleanupPending() const;
 
-  // Used for testing, so we can copy from somewhere other than root
-  void set_copy_source(const std::string& path) { copy_source_ = path; }
-
   // Debugging/logging
   static std::string StaticType() { return "FilesystemCopierAction"; }
   std::string Type() const { return StaticType(); }
@@ -102,10 +99,6 @@ class FilesystemCopierAction : public Action<FilesystemCopierAction> {
   // it computes a hash for the target install path and compares it against the
   // expected value.
   const bool verify_hash_;
-
-  // The path to copy from. If empty (the default), the source is from the
-  // passed in InstallPlan.
-  std::string copy_source_;
 
   // If non-NULL, these are GUnixInputStream objects for the opened
   // source/destination partitions.
