@@ -128,11 +128,11 @@ src_install() {
 	use doc && dodoc -r Documentation
 	use examples && dodoc -r examples
 
-	dobin "${S}/${BUILDDIR}/target/bin"/rkt
+	dobin "${S}/${BUILDDIR}/bin/rkt"
 
 	einfo The following stage1 ACIs have been installed to ${STAGE1INSTALLDIR}:
 	insinto ${STAGE1INSTALLDIR}
-	for stage1aci in "${S}/${BUILDDIR}/target/bin"/stage1-*.aci; do
+	for stage1aci in "${S}/${BUILDDIR}"/bin/stage1-*.aci; do
 		doins "${stage1aci}"
 		einfo $(basename "${stage1aci}")
 	done
