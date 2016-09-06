@@ -247,24 +247,9 @@ bool FilesystemCopierActionTest::DoTest(bool run_out_of_space,
   return success;
 }
 
-class FilesystemCopierActionTest2Delegate : public ActionProcessorDelegate {
- public:
-  void ActionCompleted(ActionProcessor* processor,
-                       AbstractAction* action,
-                       ActionExitCode code) {
-    if (action->Type() == FilesystemCopierAction::StaticType()) {
-      ran_ = true;
-      code_ = code;
-    }
-  }
-  GMainLoop *loop_;
-  bool ran_;
-  ActionExitCode code_;
-};
-
 TEST_F(FilesystemCopierActionTest, MissingInputObjectTest) {
   ActionProcessor processor;
-  FilesystemCopierActionTest2Delegate delegate;
+  ActionTestDelegate<FilesystemCopierAction> delegate;
 
   processor.set_delegate(&delegate);
 
@@ -277,13 +262,13 @@ TEST_F(FilesystemCopierActionTest, MissingInputObjectTest) {
   processor.EnqueueAction(&collector_action);
   processor.StartProcessing();
   EXPECT_FALSE(processor.IsRunning());
-  EXPECT_TRUE(delegate.ran_);
-  EXPECT_EQ(kActionCodeError, delegate.code_);
+  EXPECT_TRUE(delegate.ran());
+  EXPECT_EQ(kActionCodeError, delegate.code());
 }
 
 TEST_F(FilesystemCopierActionTest, ResumeTest) {
   ActionProcessor processor;
-  FilesystemCopierActionTest2Delegate delegate;
+  ActionTestDelegate<FilesystemCopierAction> delegate;
 
   processor.set_delegate(&delegate);
 
@@ -302,14 +287,14 @@ TEST_F(FilesystemCopierActionTest, ResumeTest) {
   processor.EnqueueAction(&collector_action);
   processor.StartProcessing();
   EXPECT_FALSE(processor.IsRunning());
-  EXPECT_TRUE(delegate.ran_);
-  EXPECT_EQ(kActionCodeSuccess, delegate.code_);
+  EXPECT_TRUE(delegate.ran());
+  EXPECT_EQ(kActionCodeSuccess, delegate.code());
   EXPECT_EQ(kUrl, collector_action.object().download_url);
 }
 
 TEST_F(FilesystemCopierActionTest, NonExistentDriveTest) {
   ActionProcessor processor;
-  FilesystemCopierActionTest2Delegate delegate;
+  ActionTestDelegate<FilesystemCopierAction> delegate;
 
   processor.set_delegate(&delegate);
 
@@ -330,8 +315,8 @@ TEST_F(FilesystemCopierActionTest, NonExistentDriveTest) {
   processor.EnqueueAction(&collector_action);
   processor.StartProcessing();
   EXPECT_FALSE(processor.IsRunning());
-  EXPECT_TRUE(delegate.ran_);
-  EXPECT_EQ(kActionCodeError, delegate.code_);
+  EXPECT_TRUE(delegate.ran());
+  EXPECT_EQ(kActionCodeError, delegate.code());
 }
 
 TEST_F(FilesystemCopierActionTest, RunAsRootVerifyHashTest) {

@@ -30,24 +30,6 @@ class OmahaResponseHandlerActionTest : public ::testing::Test {
               InstallPlan* out);
 };
 
-class OmahaResponseHandlerActionProcessorDelegate
-    : public ActionProcessorDelegate {
- public:
-  OmahaResponseHandlerActionProcessorDelegate()
-      : code_(kActionCodeError),
-        code_set_(false) {}
-  void ActionCompleted(ActionProcessor* processor,
-                       AbstractAction* action,
-                       ActionExitCode code) {
-    if (action->Type() == OmahaResponseHandlerAction::StaticType()) {
-      code_ = code;
-      code_set_ = true;
-    }
-  }
-  ActionExitCode code_;
-  bool code_set_;
-};
-
 namespace {
 const string kLongName =
     "very_long_name_and_no_slashes-very_long_name_and_no_slashes"
@@ -66,7 +48,7 @@ bool OmahaResponseHandlerActionTest::DoTestCommon(
     const string& boot_dev,
     InstallPlan* out) {
   ActionProcessor processor;
-  OmahaResponseHandlerActionProcessorDelegate delegate;
+  ActionTestDelegate<OmahaResponseHandlerAction> delegate;
   processor.set_delegate(&delegate);
 
   ObjectFeederAction<OmahaResponse> feeder_action;
@@ -89,8 +71,8 @@ bool OmahaResponseHandlerActionTest::DoTestCommon(
       << "Update test to handle non-asynch actions";
   if (out)
     *out = collector_action.object();
-  EXPECT_TRUE(delegate.code_set_);
-  return delegate.code_ == kActionCodeSuccess;
+  EXPECT_TRUE(delegate.ran());
+  return delegate.code() == kActionCodeSuccess;
 }
 
 bool OmahaResponseHandlerActionTest::DoTest(const OmahaResponse& in,
