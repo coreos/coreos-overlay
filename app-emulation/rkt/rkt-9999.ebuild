@@ -15,26 +15,18 @@ CROS_WORKON_LOCALNAME="rkt"
 CROS_WORKON_REPO="git://github.com"
 
 if [[ "${PV}" == "9999" ]]; then
-	KEYWORDS="~amd64 ~arm64"
+	KEYWORDS="~amd64"
 else
-	KEYWORDS="amd64 arm64"
+	KEYWORDS="amd64"
 	CROS_WORKON_COMMIT="5393f2e99b1ae3d3b6b232bf428dd15a88714663" # v1.8.0
 fi
 
-PXE_VERSION="1097.0.0"
+PXE_VERSION="1032.0.0"
 PXE_SYSTEMD_VERSION="v229"
-PXE_FILE="${PN}-pxe-${ARCH}-usr-${PXE_VERSION}.img"
+PXE_URI="https://alpha.release.core-os.net/amd64-usr/${PXE_VERSION}/coreos_production_pxe_image.cpio.gz"
+PXE_FILE="${PN}-pxe-${PXE_VERSION}.img"
 
-PXE_URI_AMD64="https://alpha.release.core-os.net/amd64-usr/${PXE_VERSION}/coreos_production_pxe_image.cpio.gz"
-PXE_URI_ARM64="https://alpha.release.core-os.net/arm64-usr/${PXE_VERSION}/coreos_production_pxe_image.cpio.gz"
-
-PXE_FILE_AMD64="${PN}-pxe-amd64-usr-${PXE_VERSION}.img"
-PXE_FILE_ARM64="${PN}-pxe-arm64-usr-${PXE_VERSION}.img"
-
-SRC_URI="rkt_stage1_coreos? (
-	amd64? ( ${PXE_URI_AMD64} -> ${PXE_FILE_AMD64} )
-	arm64? ( ${PXE_URI_ARM64} -> ${PXE_FILE_ARM64} )
-)"
+SRC_URI="rkt_stage1_coreos? ( $PXE_URI -> $PXE_FILE )"
 
 DESCRIPTION="A CLI for running app containers, and an implementation of the App
 Container Spec."
@@ -42,7 +34,7 @@ HOMEPAGE="https://github.com/coreos/rkt"
 
 LICENSE="Apache-2.0"
 SLOT="0"
-IUSE="doc examples +rkt_stage1_coreos +rkt_stage1_fly rkt_stage1_host rkt_stage1_src tpm"
+IUSE="doc examples +rkt_stage1_coreos +rkt_stage1_fly rkt_stage1_host rkt_stage1_src +actool tpm"
 REQUIRED_USE="|| ( rkt_stage1_coreos rkt_stage1_fly rkt_stage1_host rkt_stage1_src )"
 
 COMMON_DEPEND="sys-apps/acl
@@ -57,6 +49,7 @@ DEPEND="|| ( ~dev-lang/go-1.4.3:= >=dev-lang/go-1.5.3:= )
 	)
 	${COMMON_DEPEND}"
 RDEPEND="!app-emulation/rocket
+	actool? ( !app-emulation/actool )
 	rkt_stage1_host? (
 		~sys-apps/systemd-222
 		app-shells/bash
@@ -76,18 +69,6 @@ function add_stage1() {
 	else
 		STAGE1FLAVORS="${STAGE1FLAVORS},$1"
 	fi
-}
-
-src_prepare() {
-	# ensure we use a CoreOS PXE image version that matches rkt's expectations.
-	local rkt_coreos_version
-
-	rkt_coreos_version=$(awk '/^CCN_IMG_RELEASE/ { print $3 }' stage1/usr_from_coreos/coreos-common.mk)
-	if [ "${rkt_coreos_version}" != "${PXE_VERSION}" ]; then
-		die "CoreOS versions in ebuild and rkt build scripts are mismatched, expecting ${rkt_coreos_version}!"
-	fi
-
-	autotools-utils_src_prepare
 }
 
 src_configure() {
@@ -135,12 +116,13 @@ src_install() {
 	dodoc README.md
 	use doc && dodoc -r Documentation
 	use examples && dodoc -r examples
+	use actool && dobin "${S}/${BUILDDIR}/bin/actool"
 
-	dobin "${S}/${BUILDDIR}/target/bin"/rkt
+	dobin "${S}/${BUILDDIR}/bin/rkt"
 
 	einfo The following stage1 ACIs have been installed to ${STAGE1INSTALLDIR}:
 	insinto ${STAGE1INSTALLDIR}
-	for stage1aci in "${S}/${BUILDDIR}/target/bin"/stage1-*.aci; do
+	for stage1aci in "${S}/${BUILDDIR}"/bin/stage1-*.aci; do
 		doins "${stage1aci}"
 		einfo $(basename "${stage1aci}")
 	done
