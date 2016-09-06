@@ -12,7 +12,7 @@ if [[ ${PV} == *9999 ]]; then
 	DOCKER_GITCOMMIT="unknown"
 	KEYWORDS="~amd64 ~arm64"
 else
-	CROS_WORKON_COMMIT="4a6e2b1e56ecd816ca066f71e7632f8a0171cada" # coreos-1.11.2
+	CROS_WORKON_COMMIT="1f8f5456c13bb31423776e886073bf44c33e2db5" # coreos-1.10.3
 	DOCKER_GITCOMMIT="${CROS_WORKON_COMMIT:0:7}"
 	KEYWORDS="amd64 arm64"
 fi
@@ -40,6 +40,7 @@ CDEPEND="
 	)
 "
 
+#dev-go/go-md2man
 DEPEND="
 	${CDEPEND}
 
@@ -66,9 +67,6 @@ RDEPEND="
 	>=dev-vcs/git-1.7
 	>=app-arch/xz-utils-4.9
 
-	>=app-emulation/containerd-0.2.0
-	>=app-emulation/runc-0.1.0
-
 	apparmor? (
 		sys-libs/libapparmor[static-libs]
 	)
@@ -81,7 +79,7 @@ CONFIG_CHECK="
 	~NAMESPACES ~NET_NS ~PID_NS ~IPC_NS ~UTS_NS
 	~DEVPTS_MULTIPLE_INSTANCES
 	~CGROUPS ~CGROUP_CPUACCT ~CGROUP_DEVICE ~CGROUP_FREEZER ~CGROUP_SCHED ~CPUSETS ~MEMCG
-	~KEYS ~MACVLAN ~VETH ~BRIDGE ~BRIDGE_NETFILTER
+	~MACVLAN ~VETH ~BRIDGE ~BRIDGE_NETFILTER
 	~NF_NAT_IPV4 ~IP_NF_FILTER ~IP_NF_TARGET_MASQUERADE
 	~NETFILTER_XT_MATCH_ADDRTYPE ~NETFILTER_XT_MATCH_CONNTRACK
 	~NF_NAT ~NF_NAT_NEEDED
@@ -90,14 +88,14 @@ CONFIG_CHECK="
 
 	~MEMCG_KMEM ~MEMCG_SWAP ~MEMCG_SWAP_ENABLED
 
-	~BLK_CGROUP ~IOSCHED_CFQ
+	~BLK_CGROUP ~IOSCHED_CFQ ~BLK_DEV_THROTTLING
 	~CGROUP_PERF
 	~CGROUP_HUGETLB
 	~NET_CLS_CGROUP
 	~CFS_BANDWIDTH ~FAIR_GROUP_SCHED ~RT_GROUP_SCHED
 "
 
-ERROR_KEYS="CONFIG_KEYS: is mandatory, see bug 581348"
+ERROR_USER_NS="CONFIG_USER_NS: is optional"
 ERROR_MEMCG_KMEM="CONFIG_MEMCG_KMEM: is optional"
 ERROR_MEMCG_SWAP="CONFIG_MEMCG_SWAP: is required if you wish to limit swap usage of containers"
 ERROR_RESOURCE_COUNTERS="CONFIG_RESOURCE_COUNTERS: is optional for container statistics gathering"
@@ -210,11 +208,10 @@ src_compile() {
 	[ "$DOCKER_GITCOMMIT" ] && export DOCKER_GITCOMMIT
 
 	if gcc-specs-pie; then
-		sed -i "s/EXTLDFLAGS_STATIC='/&-fno-PIC /" hack/make.sh || die
+		sed -i "s/EXTLDFLAGS_STATIC='/EXTLDFLAGS_STATIC='-fno-PIC /" hack/make.sh || die
 		grep -q -- '-fno-PIC' hack/make.sh || die 'hardened sed failed'
 
-		sed  "s/LDFLAGS_STATIC_DOCKER='/&-extldflags -fno-PIC /" \
-			-i hack/make/dynbinary || die
+		sed -i "s/LDFLAGS_STATIC_DOCKER='/LDFLAGS_STATIC_DOCKER='-extldflags -fno-PIC /" hack/make/dynbinary || die
 		grep -q -- '-fno-PIC' hack/make/dynbinary || die 'hardened sed failed'
 	fi
 
@@ -226,11 +223,18 @@ src_compile() {
 		fi
 	done
 
-	for tag in apparmor seccomp selinux journald; do
-		if use $tag; then
-			DOCKER_BUILDTAGS+=" $tag"
-		fi
-	done
+	if use seccomp; then
+		DOCKER_BUILDTAGS+=" seccomp"
+	fi
+	if use selinux; then
+		DOCKER_BUILDTAGS+=" selinux"
+	fi
+	if use apparmor; then
+		DOCKER_BUILDTAGS+=' apparmor'
+	fi
+	if use journald; then
+		DOCKER_BUILDTAGS+=' journald'
+	fi
 
 	if has_version '<sys-fs/lvm2-2.02.110' ; then
 		# Docker uses the host files when testing features, so force
@@ -256,11 +260,16 @@ src_compile() {
 
 	# time to build!
 	./hack/make.sh dynbinary || die 'dynbinary failed'
+
+	# build the man pages too
+	#./man/md2man-all.sh || die "unable to generate man pages"
 }
 
 src_install() {
 	VERSION="$(cat VERSION)"
 	newbin "bundles/$VERSION/dynbinary/docker-$VERSION" docker
+	exeinto /usr/libexec/docker
+	newexe "bundles/$VERSION/dynbinary/dockerinit-$VERSION" dockerinit
 
 	newinitd contrib/init/openrc/docker.initd docker
 	newconfd contrib/init/openrc/docker.confd docker
@@ -281,6 +290,7 @@ src_install() {
 
 	dodoc AUTHORS CONTRIBUTING.md CHANGELOG.md NOTICE README.md
 	dodoc -r docs/*
+	#doman man/man*/*
 
 	dobashcomp contrib/completion/bash/*
 
