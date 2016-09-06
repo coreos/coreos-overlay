@@ -77,7 +77,7 @@ TEST(KernelCopierActionTest, SuccessfulCopyTest) {
 
   InstallPlan install_plan;
   install_plan.kernel_path = b_file;
-  copier_action.set_copy_source(a_file);
+  install_plan.old_kernel_path = a_file;
   feeder_action.set_obj(install_plan);
 
   processor.StartProcessing();
@@ -153,9 +153,9 @@ TEST(KernelCopierActionTest, MissingSourceFile) {
   ObjectFeederAction<InstallPlan> feeder_action;
   InstallPlan install_plan;
   install_plan.kernel_path = "/no/such/file";
+  install_plan.old_kernel_path = "/also/no/such/file";
   feeder_action.set_obj(install_plan);
   KernelCopierAction copier_action;
-  copier_action.set_copy_source("/also/no/such/file");
   ObjectCollectorAction<InstallPlan> collector_action;
 
   BondActions(&copier_action, &collector_action);

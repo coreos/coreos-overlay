@@ -31,7 +31,7 @@ void KernelCopierAction::PerformAction() {
     return;
   }
 
-  string source = copy_source_.empty() ? utils::BootKernel() : copy_source_;
+  const string source = install_plan_.old_kernel_path;
   off_t length = utils::FileSize(source);
   if (length < 0) {
     LOG(ERROR) << "Failed to determine size of source kernel " << source;
