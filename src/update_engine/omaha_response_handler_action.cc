@@ -57,9 +57,20 @@ void OmahaResponseHandlerAction::PerformAction() {
         << "Unable to save the update check response hash.";
   }
 
+  if (install_plan_.old_partition_path.empty())
+    install_plan_.old_partition_path = utils::BootDevice();
+
   TEST_AND_RETURN(GetInstallDev(
-      (!boot_device_.empty() ? boot_device_ : utils::BootDevice()),
+      install_plan_.old_partition_path,
       &install_plan_.partition_path));
+
+  TEST_AND_RETURN(GetKernelPath(
+      install_plan_.old_partition_path,
+      &install_plan_.old_kernel_path));
+
+  TEST_AND_RETURN(GetKernelPath(
+      install_plan_.partition_path,
+      &install_plan_.kernel_path));
 
   TEST_AND_RETURN(HasOutputPipe());
   if (HasOutputPipe())
@@ -92,6 +103,22 @@ bool OmahaResponseHandlerAction::GetInstallDev(const std::string& boot_dev,
   *it = (*it == '3') ? '4' : '3';
   *install_dev = ret;
   return true;
+}
+
+bool OmahaResponseHandlerAction::GetKernelPath(const std::string& part_path,
+                                               std::string* kernel_path) {
+  // If the target fs is 3, the kernel name is vmlinuz-a.
+  // If the target fs is 4, the kernel name is vmlinuz-b.
+  char last_char = part_path[part_path.size() - 1];
+  if (last_char == '3') {
+    *kernel_path = "/boot/coreos/vmlinuz-a";
+    return true;
+  }
+  if (last_char == '4') {
+    *kernel_path = "/boot/coreos/vmlinuz-b";
+    return true;
+  }
+  return false;
 }
 
 }  // namespace chromeos_update_engine
