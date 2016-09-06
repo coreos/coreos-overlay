@@ -223,15 +223,6 @@ void ApplyMap(std::vector<ValueType>* collection,
 // or something with equivalent funcionality to interpret those.
 const std::string BootDevice();
 
-// Returns the kernel path associated with the given boot device.
-// "/boot/coreos/vmlinuz-a", for example.
-// Returns empty string on failure.
-const std::string KernelPath(const std::string& boot_device);
-
-// Shorthand for KernelPath(BootDevice())
-// Returns empty string on failure.
-const std::string BootKernel();
-
 // Assumes data points to a Closure. Runs it and returns FALSE;
 gboolean GlibRunClosure(gpointer data);
 
