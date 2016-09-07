@@ -379,6 +379,8 @@ bool PayloadProcessor::SetNewKernelInfo() {
     install_plan_->new_kernel_hash.assign(
         proc.new_info().hash().begin(),
         proc.new_info().hash().end());
+    install_plan_->postinst_args.push_back(
+        "KERNEL=" + install_plan_->kernel_path);
     return true;
   }
 

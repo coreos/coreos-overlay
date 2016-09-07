@@ -57,6 +57,10 @@ void PostinstallRunnerAction::PerformAction() {
   vector<string> command;
   command.push_back(temp_rootfs_dir_ + kPostinstallScript);
   command.push_back(install_device);
+  command.insert(command.end(),
+                 install_plan.postinst_args.begin(),
+                 install_plan.postinst_args.end());
+
   if (!Subprocess::Get().Exec(command, StaticCompletePostinstall, this)) {
     CompletePostinstall(1);
   }

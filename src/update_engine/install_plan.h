@@ -54,6 +54,12 @@ struct InstallPlan {
   std::vector<char> new_partition_hash;
   uint64_t new_kernel_size;
   std::vector<char> new_kernel_hash;
+
+  // Optional arguments to pass to the post install script. Used to inform
+  // the script about optional update procedures that ran. For example
+  // "KERNEL=kernel_path" indicates that update_engine installed the kernel
+  // so the post install script should not do so.
+  std::vector<std::string> postinst_args;
 };
 
 }  // namespace chromeos_update_engine
