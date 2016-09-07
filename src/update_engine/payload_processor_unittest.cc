@@ -616,6 +616,9 @@ void VerifyPayloadResult(PayloadProcessor* performer,
                                                  &expected_kernel_hash));
   EXPECT_TRUE(expected_kernel_hash ==
               state->install_plan.new_kernel_hash);
+
+  vector<string> expected_args = {"KERNEL=" + state->a_kernel};
+  EXPECT_EQ(expected_args, state->install_plan.postinst_args);
 }
 
 void VerifyPayload(PayloadProcessor* performer, DeltaState* state) {

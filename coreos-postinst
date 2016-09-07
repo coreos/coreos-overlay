@@ -10,6 +10,13 @@ OEM_MNT="/usr/share/oem"
 
 INSTALL_MNT=$(dirname "$0")
 INSTALL_DEV="$1"
+INSTALL_KERNEL=""
+
+for arg in "$@"; do
+    case "${arg}" in
+        KERNEL=*) INSTALL_KERNEL="${arg#KERNEL=}" ;;
+    esac
+done
 
 # Figure out if the slot id is A or B
 INSTALL_LABEL=$(blkid -o value -s PARTLABEL "${INSTALL_DEV}")
@@ -78,8 +85,8 @@ if grep -q cros_legacy /proc/cmdline; then
     fi
 fi
 
-# Copy the kernel to the ESP for new-style boots
-if [[ -f "${ESP_MNT}/coreos/vmlinuz-a" ]]; then
+# Update kernel on systems >= 668.x.x if update_engine didn't do it.
+if [[ -z "${INSTALL_KERNEL}" && -f "${ESP_MNT}/coreos/vmlinuz-a" ]]; then
     # kernel names are in lower case, ${SLOT,,} converts the slot name
     cp -v "${INSTALL_MNT}/boot/vmlinuz" \
        "${ESP_MNT}/coreos/vmlinuz-${SLOT,,}"
