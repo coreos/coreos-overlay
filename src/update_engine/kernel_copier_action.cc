@@ -23,8 +23,8 @@ void KernelCopierAction::PerformAction() {
     return;
   }
   install_plan_ = GetInputObject();
-  if (install_plan_.is_resume) {
-    // Resuming download, no copy needed.
+  if (install_plan_.is_resume || install_plan_.kernel_path.empty()) {
+    // Resuming download or no kernel to install, no copy needed.
     if (HasOutputPipe())
       SetOutputObject(install_plan_);
     abort_action_completer.set_code(kActionCodeSuccess);
