@@ -21,6 +21,8 @@
 #include "update_engine/dbus_service.h"
 #include "update_engine/download_action.h"
 #include "update_engine/filesystem_copier_action.h"
+#include "update_engine/kernel_copier_action.h"
+#include "update_engine/kernel_verifier_action.h"
 #include "update_engine/libcurl_http_fetcher.h"
 #include "update_engine/multi_range_http_fetcher.h"
 #include "update_engine/omaha_request_action.h"
@@ -177,6 +179,7 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
       new OmahaResponseHandlerAction(system_state_));
   shared_ptr<FilesystemCopierAction> filesystem_copier_action(
       new FilesystemCopierAction(false));
+  shared_ptr<KernelCopierAction> kernel_copier_action(new KernelCopierAction);
   shared_ptr<OmahaRequestAction> download_started_action(
       new OmahaRequestAction(system_state_,
                              new OmahaEvent(
@@ -197,6 +200,8 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
                              false));
   shared_ptr<FilesystemCopierAction> filesystem_verifier_action(
       new FilesystemCopierAction(true));
+  shared_ptr<KernelVerifierAction> kernel_verifier_action(
+      new KernelVerifierAction);
   shared_ptr<PostinstallRunnerAction> postinstall_runner_action(
       new PostinstallRunnerAction);
   shared_ptr<OmahaRequestAction> update_complete_action(
@@ -212,10 +217,12 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
   actions_.push_back(shared_ptr<AbstractAction>(update_check_action));
   actions_.push_back(shared_ptr<AbstractAction>(response_handler_action));
   actions_.push_back(shared_ptr<AbstractAction>(filesystem_copier_action));
+  actions_.push_back(shared_ptr<AbstractAction>(kernel_copier_action));
   actions_.push_back(shared_ptr<AbstractAction>(download_started_action));
   actions_.push_back(shared_ptr<AbstractAction>(download_action));
   actions_.push_back(shared_ptr<AbstractAction>(download_finished_action));
   actions_.push_back(shared_ptr<AbstractAction>(filesystem_verifier_action));
+  actions_.push_back(shared_ptr<AbstractAction>(kernel_verifier_action));
   actions_.push_back(shared_ptr<AbstractAction>(postinstall_runner_action));
   actions_.push_back(shared_ptr<AbstractAction>(update_complete_action));
 
@@ -231,10 +238,14 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
   BondActions(response_handler_action.get(),
               filesystem_copier_action.get());
   BondActions(filesystem_copier_action.get(),
+              kernel_copier_action.get());
+  BondActions(kernel_copier_action.get(),
               download_action.get());
   BondActions(download_action.get(),
               filesystem_verifier_action.get());
   BondActions(filesystem_verifier_action.get(),
+              kernel_verifier_action.get());
+  BondActions(kernel_verifier_action.get(),
               postinstall_runner_action.get());
 }
 
