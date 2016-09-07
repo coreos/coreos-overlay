@@ -8,6 +8,7 @@
 
 #include <glog/logging.h>
 
+#include "files/file_util.h"
 #include "update_engine/payload_processor.h"
 #include "update_engine/payload_state_interface.h"
 #include "update_engine/prefs_interface.h"
@@ -105,8 +106,25 @@ bool OmahaResponseHandlerAction::GetInstallDev(const std::string& boot_dev,
   return true;
 }
 
+namespace {
+bool IsCrosLegacySystem() {
+  string cmdline;
+  TEST_AND_RETURN_FALSE(
+      files::ReadFileToString(files::FilePath("/proc/cmdline"), &cmdline));
+  return cmdline.find("cros_legacy") != string::npos;
+}
+}  // namespace
+
 bool OmahaResponseHandlerAction::GetKernelPath(const std::string& part_path,
                                                std::string* kernel_path) {
+  // If 'cros_legacy' is in the kernel args we are on an old system
+  // using SYSLINUX style bootloader configuration. Leave the kernel to
+  // the post install script on such systems.
+  if (IsCrosLegacySystem()) {
+    *kernel_path = "";
+    return true;
+  }
+
   // If the target fs is 3, the kernel name is vmlinuz-a.
   // If the target fs is 4, the kernel name is vmlinuz-b.
   char last_char = part_path[part_path.size() - 1];
