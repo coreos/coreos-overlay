@@ -29,7 +29,7 @@ RDEPEND="
 "
 
 src_prepare() {
-	epatch "${FILESDIR}/0001-Makefile-do-not-install-dependencies-of-target.patch"
+	eapply_user
 }
 
 src_compile() {
