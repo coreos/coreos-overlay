@@ -40,7 +40,7 @@ src_prepare() {
 
 src_compile() {
 	export GO15VENDOREXPERIMENT="1"
-	GO_LDFLAGS="-X main.version $(git describe --dirty)" || die
+	GO_LDFLAGS="-X main.version=$(git describe --dirty)" || die
 	coreos-go_src_compile
 }
 
