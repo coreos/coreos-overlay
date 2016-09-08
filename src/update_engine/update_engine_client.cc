@@ -7,6 +7,7 @@
 #include <dbus/dbus.h>
 #include <gflags/gflags.h>
 #include <glib.h>
+#include <glog/logging.h>
 
 #include "update_engine/marshal.glibmarshal.h"
 #include "update_engine/dbus_constants.h"
@@ -209,10 +210,13 @@ void CompleteUpdate() {
 }  // namespace {}
 
 int main(int argc, char** argv) {
+  // Disable glog's default behavior of logging to files.
+  FLAGS_logtostderr = true;
   // Boilerplate init commands.
   dbus_threads_init_default();
   chromeos_update_engine::Subprocess::Init();
   GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
+  google::InitGoogleLogging(argv[0]);
 
   // Update the status if requested.
   if (FLAGS_reset_status) {
