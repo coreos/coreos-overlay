@@ -36,13 +36,6 @@ INSTALL_MASK="${INSTALL_MASK}
   /etc/xinetd.d
 "
 
-# Exclude ustr's source code and debug library
-INSTALL_MASK="${INSTALL_MASK}
-  /usr/bin/ustr-import
-  /usr/lib*/libustr-debug*
-  /usr/share/ustr-*
-"
-
 # Remove selinuxenabled because it triggers breakage in Ansible
 INSTALL_MASK="${INSTALL_MASK}
   /usr/sbin/selinuxenabled
