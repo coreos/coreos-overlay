@@ -6,28 +6,31 @@
 # @BLURB: utility functions for building Go binaries
 
 # @ECLASS-VARIABLE: COREOS_GO_PACKAGE
+# @REQUIRED
 # @DESCRIPTION:
-# Name of the Go package unpacked to ${S}, this is required.
+# Name of the Go package unpacked to ${S}.
+#
+# Example:
+# @CODE
+# COREOS_GO_PACKAGE="github.com/coreos/mantle"
+# @CODE
 
-[[ ${EAPI} != "5" ]] && die "${ECLASS}: Only EAPI=5 is supported"
+# @ECLASS-VARIABLE: COREOS_GO_VERSION
+# @DESCRIPTION:
+# This variable specifies the version of Go to use. If ommitted the
+# default value from coreos-go-depend.eclass will be used.
+#
+# Example:
+# @CODE
+# COREOS_GO_VERSION=go1.5
+# @CODE
 
-inherit flag-o-matic multiprocessing toolchain-funcs
+case "${EAPI:-0}" in
+	5|6) ;;
+	*) die "Unsupported EAPI=${EAPI} for ${ECLASS}"
+esac
 
-DEPEND="dev-lang/go:="
-
-# @FUNCTION: go_get_arch
-# @USAGE: export GOARCH=$(go_get_arch)
-go_get_arch() {
-	# By chance most portage arch names match Go
-	local portage_arch=$(tc-arch ${CHOST})
-	case "${portage_arch}" in
-		x86)	echo 386;;
-		x64-*)	echo amd64;;
-		ppc64)
-			[[ "$(tc-endian)" = big ]] && echo ppc64 || echo ppc64le ;;
-		*)	echo "${portage_arch}";;
-	esac
-}
+inherit coreos-go-depend multiprocessing
 
 # @FUNCTION: go_build
 # @USAGE: <package-name> [<binary-name>]
@@ -38,10 +41,10 @@ go_build() {
 	local package_name="$1"
 	local binary_name="${package_name##*/}"
 
-	ebegin "go build ${package_name}"
-	debug-print $(go env)
+	ebegin "${EGO} build ${package_name}"
+	debug-print EGO=${EGO} $(${EGO} env)
 
-	go build -v \
+	${EGO} build -v \
 		-p "$(makeopts_jobs)" \
 		-ldflags "${GO_LDFLAGS} -extldflags '${LDFLAGS}'" \
 		-o "${GOBIN}/${binary_name}" \
@@ -55,7 +58,7 @@ go_build() {
 coreos-go_src_prepare() {
 	debug-print-function ${FUNCNAME} "$@"
 
-	export GOARCH=$(go_get_arch)
+	go_export
 	export GOPATH="${WORKDIR}/gopath"
 	export GOBIN="${GOPATH}/bin"
 
@@ -68,19 +71,6 @@ coreos-go_src_prepare() {
 	local package_path="${GOPATH}/src/${COREOS_GO_PACKAGE}"
 	mkdir -p "${package_path%/*}" || die "${ECLASS}: bad path: ${package_path%/*}"
 	ln -sT "${S}" "${package_path}" || die "${ECLASS}: bad path: ${S}"
-
-	# Go's 6l linker does not support PIE, disable so cgo binaries
-	# which use 6l+gcc for linking can be built correctly.
-	if gcc-specs-pie; then
-		append-ldflags -nopie
-	fi
-
-	export CC=$(tc-getCC)
-	export CGO_ENABLED=${CGO_ENABLED:-1}
-	export CGO_CFLAGS="${CFLAGS}"
-	export CGO_CPPFLAGS="${CPPFLAGS}"
-	export CGO_CXXFLAGS="${CXXFLAGS}"
-	export CGO_LDFLAGS="${LDFLAGS}"
 }
 
 coreos-go_src_compile() {

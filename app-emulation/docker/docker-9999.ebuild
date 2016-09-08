@@ -7,6 +7,7 @@ EAPI=5
 CROS_WORKON_PROJECT="coreos/docker"
 CROS_WORKON_LOCALNAME="docker"
 CROS_WORKON_REPO="git://github.com"
+COREOS_GO_VERSION="go1.6"
 
 if [[ ${PV} == *9999 ]]; then
 	DOCKER_GITCOMMIT="unknown"
@@ -17,7 +18,7 @@ else
 	KEYWORDS="amd64 arm64"
 fi
 
-inherit bash-completion-r1 eutils linux-info multilib systemd udev user cros-workon
+inherit bash-completion-r1 eutils linux-info multilib systemd udev user cros-workon coreos-go-depend
 
 DESCRIPTION="Docker complements kernel namespacing with a high-level API which operates at the process level"
 HOMEPAGE="https://dockerproject.org"
@@ -42,8 +43,6 @@ CDEPEND="
 
 DEPEND="
 	${CDEPEND}
-
-	dev-lang/go:=
 
 	btrfs? (
 		>=sys-fs/btrfs-progs-3.16.1
@@ -205,19 +204,10 @@ src_prepare() {
 	rm --recursive --force .git
 }
 
-go_get_arch() {
-	echo ${ARCH}
-}
-
 src_compile() {
 	# if we treat them right, Docker's build scripts will set up a
 	# reasonable GOPATH for us
 	export AUTO_GOPATH=1
-
-	# setup CFLAGS and LDFLAGS for separate build target
-	# see https://github.com/tianon/docker-overlay/pull/10
-	export CGO_CFLAGS="-I${ROOT}/usr/include"
-	export CGO_LDFLAGS="-L${ROOT}/usr/$(get_libdir)"
 
 	# if we're building from a zip, we need the GITCOMMIT value
 	[ "$DOCKER_GITCOMMIT" ] && export DOCKER_GITCOMMIT
@@ -262,10 +252,7 @@ src_compile() {
 		unset DOCKER_EXPERIMENTAL
 	fi
 
-	export GOARCH=$(go_get_arch)
-	export CGO_ENABLED=1
-	export CC=$(tc-getCC)
-	export CXX=$(tc-getCXX)
+	go_export
 
 	# verbose building
 	export BUILDFLAGS="-x -v"
