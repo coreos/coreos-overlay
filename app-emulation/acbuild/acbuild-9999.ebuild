@@ -34,9 +34,9 @@ src_compile(){
 		v=$(git describe --long --dirty) || die
 		v=${v#v}
 		v=${v/-/+}
-		GO_LDFLAGS="-X ${COREOS_GO_PACKAGE}/lib.Version ${v}"
+		GO_LDFLAGS="-X ${COREOS_GO_PACKAGE}/lib.Version=${v}"
 	else
-		GO_LDFLAGS="-X ${COREOS_GO_PACKAGE}/lib.Version ${PV}"
+		GO_LDFLAGS="-X ${COREOS_GO_PACKAGE}/lib.Version=${PV}"
 	fi
 
 	go_build "${COREOS_GO_PACKAGE}/acbuild"
