@@ -106,18 +106,12 @@ coreos-go-lang_src_install() {
 	dodoc AUTHORS CONTRIBUTORS PATENTS README.md
 }
 
-eselect_go_update() {
-	if [[ -z "$(eselect go show)" || ! -f "${EROOT}usr/bin/$(eselect go show)" ]]; then
-		eselect go update
-	fi
-}
-
 coreos-go-lang_pkg_postinst() {
-	eselect_go_update
+	eselect go update
 }
 
 coreos-go-lang_pkg_postrm() {
-	eselect_go_update
+	eselect go update
 }
 
 EXPORT_FUNCTIONS pkg_pretend src_compile src_test src_install pkg_postinst pkg_postrm
