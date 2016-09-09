@@ -64,10 +64,10 @@ src_configure() {
 	append-ldflags "-Wl,-rpath,${oemlib}"
 
 	# libdnet is installed to /usr/share/oem
-	export CUSTOM_DNET_CPPFLAGS="-I${SYSROOT}${oeminc}"
-	export CUSTOM_DNET_LIBS="-L${SYSROOT}${oemlib}"
-	export CUSTOM_MSPACK_CPPFLAGS="-I${SYSROOT}${oeminc}"
-	export CUSTOM_MSPACK_LIBS="-L${SYSROOT}${oemlib}"
+	export CUSTOM_DNET_CPPFLAGS="-I=${oeminc}"
+	export CUSTOM_DNET_LIBS="-L=${oemlib}"
+	export CUSTOM_MSPACK_CPPFLAGS="-I=${oeminc}"
+	export CUSTOM_MSPACK_LIBS="-L=${oemlib}"
 
 	# >=sys-process/procps-3.3.2 not handled by configure
 	export CUSTOM_PROCPS_NAME=procps

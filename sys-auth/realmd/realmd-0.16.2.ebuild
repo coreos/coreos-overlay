@@ -25,6 +25,9 @@ DEPEND="sys-auth/polkit[introspection]
 	systemd? ( sys-apps/systemd )"
 RDEPEND="${DEPEND}"
 
+# The daemon is installed to a private dir under /usr/lib, similar to systemd.
+QA_MULTILIB_PATHS="usr/lib/realmd/realmd"
+
 src_prepare() {
 	sed -e '/gentoo-release/s/dnl/ /g' -i configure.ac
 
