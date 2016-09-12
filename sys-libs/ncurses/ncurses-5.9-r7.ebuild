@@ -50,6 +50,7 @@ src_prepare() {
 	epatch "${FILESDIR}"/${PN}-5.9-pkg-config.patch
 	epatch "${FILESDIR}"/${P}-no-I-usr-include.patch #522586
 	epatch "${FILESDIR}"/${P}-gcc-5.patch #545114
+	epatch "${FILESDIR}"/${P}-compiler-warnings.patch
 }
 
 src_configure() {
