@@ -160,8 +160,9 @@ eblit-src_unpack-pre() {
 eblit-src_prepare-post() {
 	cd "${S}"
 
-	einfo "Patching to avoid segfaults on long /etc/gshadow lines"
+	## COREOS: features and bug fixes missing from the Gentoo patch set.
 	epatch "${FILESDIR}"/2.23/glibc-2.23-gshadow-handle-erange.patch
+	epatch "${FILESDIR}"/2.23/glibc-2.23-c-utf8-locale.patch
 
 	if use hardened ; then
 		einfo "Patching to get working PIE binaries on PIE (hardened) platforms"
