@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([update_engine],[0.1.0],[https://github.com/coreos/bugs/issues])
+AC_INIT([update_engine],[0.3.0],[https://github.com/coreos/bugs/issues])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_SRCDIR([src/update_engine/main.cc])
 AC_USE_SYSTEM_EXTENSIONS
