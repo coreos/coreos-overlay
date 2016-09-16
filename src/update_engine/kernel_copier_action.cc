@@ -31,7 +31,18 @@ void KernelCopierAction::PerformAction() {
     return;
   }
 
+  // Full updates can still apply if the old kernel is missing for some
+  // reason. Just issue a warning and move on. The payload processor will
+  // reject delta updates with a hash mismatch if this happens.
   const string source = install_plan_.old_kernel_path;
+  if (!utils::FileExists(source.c_str())) {
+    LOG(WARNING) << "Missing source kernel " << source;
+    if (HasOutputPipe())
+      SetOutputObject(install_plan_);
+    abort_action_completer.set_code(kActionCodeSuccess);
+    return;
+  }
+
   off_t length = utils::FileSize(source);
   if (length < 0) {
     LOG(ERROR) << "Failed to determine size of source kernel " << source;

@@ -83,10 +83,8 @@ if grep -q cros_legacy /proc/cmdline; then
         cp -v "${INSTALL_MNT}/boot/syslinux/default.cfg.${SLOT}" \
             "${ESP_MNT}/syslinux/default.cfg"
     fi
-fi
-
-# Update kernel on systems >= 668.x.x if update_engine didn't do it.
-if [[ -z "${INSTALL_KERNEL}" && -f "${ESP_MNT}/coreos/vmlinuz-a" ]]; then
+elif [[ -z "${INSTALL_KERNEL}" ]]; then
+    # not a legacy system but update_engine didn't handle the kernel.
     # kernel names are in lower case, ${SLOT,,} converts the slot name
     cp -v "${INSTALL_MNT}/boot/vmlinuz" \
        "${ESP_MNT}/coreos/vmlinuz-${SLOT,,}"
