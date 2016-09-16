@@ -406,10 +406,17 @@ bool KernelProcedureToManifest(
 void ProceduresToNoops(DeltaArchiveManifest* manifest) {
   for (const InstallProcedure& proc : manifest->procedures()) {
     for (const InstallOperation& op : proc.operations()) {
+      // No need to include operations without data (e.g. MOVE)
+      if (op.data_length() == 0)
+        continue;
+
       InstallOperation* noop = manifest->add_noop_operations();
       noop->set_type(InstallOperation_Type_REPLACE);
       noop->set_data_offset(op.data_offset());
       noop->set_data_length(op.data_length());
+      if (op.has_data_sha256_hash())
+        noop->set_data_sha256_hash(op.data_sha256_hash());
+
       // Tell the dummy op to write this data to a big sparse hole
       Extent* extent = noop->add_dst_extents();
       extent->set_start_block(kSparseHole);
