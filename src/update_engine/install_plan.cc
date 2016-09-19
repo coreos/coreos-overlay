@@ -23,12 +23,14 @@ InstallPlan::InstallPlan(bool is_resume,
       payload_hash(payload_hash),
       partition_path(partition_path),
       new_partition_size(0),
-      new_kernel_size(0) {}
+      new_kernel_size(0),
+      new_pcr_policy_size(0) {}
 
 InstallPlan::InstallPlan() : is_resume(false),
                              payload_size(0),
                              new_partition_size(0),
-                             new_kernel_size(0) {}
+                             new_kernel_size(0),
+                             new_pcr_policy_size(0) {}
 
 
 bool InstallPlan::operator==(const InstallPlan& that) const {
@@ -38,6 +40,7 @@ bool InstallPlan::operator==(const InstallPlan& that) const {
           (payload_hash == that.payload_hash) &&
           (partition_path == that.partition_path) &&
           (kernel_path == that.kernel_path) &&
+          (pcr_policy_path == that.pcr_policy_path) &&
           (old_partition_path == that.old_partition_path) &&
           (old_kernel_path == that.old_kernel_path));
 }
@@ -54,6 +57,7 @@ void InstallPlan::Dump() const {
             << ", payload hash: " << payload_hash
             << ", partition_path: " << partition_path
             << ", kernel_path: " << kernel_path
+            << ", pcr_policy_path: " << pcr_policy_path
             << ", old_partition_path: " << old_partition_path
             << ", old_kernel_path: " << old_kernel_path;
 }
