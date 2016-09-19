@@ -20,8 +20,8 @@ package chromeos_update_engine;
 //     char data[];
 //   } blobs[];
 //
-//   // These two are not signed:
-//   uint64 signatures_message_size;
+//   // The signature covers all preceding data. Size and location are
+//   // specified inside the manifest.
 //   char signatures_message[];
 //
 // };
