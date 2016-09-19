@@ -33,6 +33,11 @@ AC_CHECK_LIB([bz2], [BZ2_bzDecompressInit], [],
 AC_CHECK_HEADERS([bzlib.h], [],
                  [AC_MSG_ERROR([*** bzlib.h not found])])
 
+AC_CHECK_LIB([rootdev], [rootdev], [],
+             [AC_MSG_ERROR([*** librootdev not found])])
+AC_CHECK_HEADERS([rootdev/rootdev.h], [],
+                 [AC_MSG_ERROR([*** rootdev.h not found])])
+
 # Detect libgflags presence and namespace. (may be gflags or google)
 # autoconf's C++ mode is only enabled for this test because other
 # macros like AM_PATH_GLIB_2_0 assume the default C mode.
