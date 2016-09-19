@@ -9,7 +9,7 @@ AUTOTOOLS_AUTORECONF=1
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~arm64 ~x86"
 else
-	CROS_WORKON_COMMIT="a1e9f5563bbe33ea837bf5ca2a9ba6c2619d8e91" # v0.3.0
+	CROS_WORKON_COMMIT="131cc1a23b36f93dadb9556a226e4762d5d84edf" # v0.3.1
 	KEYWORDS="amd64 arm64"
 fi
 
@@ -35,6 +35,7 @@ RDEPEND="!coreos-base/coreos-installer
 	dev-libs/protobuf:=
 	dev-util/bsdiff
 	net-misc/curl
+	sys-apps/rootdev
 	sys-fs/e2fsprogs"
 DEPEND="dev-cpp/gmock
 	dev-cpp/gtest
