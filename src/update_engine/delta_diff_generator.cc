@@ -1315,6 +1315,7 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
     const string& new_image,
     const string& old_kernel,
     const string& new_kernel,
+    const string& pcr_policy,
     const string& output_path,
     const string& private_key_path,
     uint64_t* metadata_size) {
@@ -1340,9 +1341,12 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
     }
   }
 
+  // Sanity check optional input files.
   if (!new_kernel.empty()) {
-    // Sanity check kernel partition arg
-    TEST_AND_RETURN_FALSE(utils::FileSize(new_kernel) >= 0);
+    TEST_AND_RETURN_FALSE(utils::FileSize(new_kernel) > 0);
+  }
+  if (!pcr_policy.empty()) {
+    TEST_AND_RETURN_FALSE(utils::FileSize(pcr_policy) > 0);
   }
 
   vector<Block> blocks(new_image_size / kBlockSize);
@@ -1362,7 +1366,7 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
 
   LOG(INFO) << "Reading files...";
 
-  vector<InstallOperation> kernel_ops;
+  vector<InstallOperation> kernel_ops, pcr_policy_ops;
 
   vector<Vertex::Index> final_order;
   {
@@ -1409,6 +1413,14 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
                                                 &data_file_size));
       }
 
+      if (!pcr_policy.empty()) {
+        TEST_AND_RETURN_FALSE(DeltaCompressFile("",
+                                                pcr_policy,
+                                                &pcr_policy_ops,
+                                                fd,
+                                                &data_file_size));
+      }
+
       CheckGraph(graph);
 
       LOG(INFO) << "Creating edges...";
@@ -1432,6 +1444,9 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
       if (!new_kernel.empty())
         TEST_AND_RETURN_FALSE(generator.Add(new_kernel, &kernel_ops));
 
+      if (!pcr_policy.empty())
+        TEST_AND_RETURN_FALSE(generator.Add(pcr_policy, &pcr_policy_ops));
+
       data_file_size = generator.Size();
     }
   }
@@ -1452,6 +1467,14 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
                                                  new_kernel,
                                                  InstallProcedure_Type_KERNEL,
                                                  kernel_ops,
+                                                 &manifest));
+  }
+
+  if (!pcr_policy.empty()) {
+    TEST_AND_RETURN_FALSE(AddProcedureToManifest("",
+                                                 pcr_policy,
+                                                 InstallProcedure_Type_PCR_POLICY,
+                                                 pcr_policy_ops,
                                                  &manifest));
   }
 

@@ -365,6 +365,7 @@ static void GenerateDeltaFile(DeltaState *state) {
             state->b_img,
             full_update ? "" : state->a_kernel,
             state->b_kernel,
+            "",  // pcr_policy
             state->delta_path,
             private_key,
             &state->metadata_size));
