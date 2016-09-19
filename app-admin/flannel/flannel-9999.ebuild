@@ -23,7 +23,7 @@ RDEPEND="app-emulation/rkt"
 S="$WORKDIR"
 
 src_install() {
-	sed "s/{{flannel_ver}}/${PV}/" "${FILESDIR}"/flanneld-rkt.service >"${T}"/flanneld.service
+	sed "s/{{flannel_ver}}/v${PV}/" "${FILESDIR}"/flanneld-rkt.service >"${T}"/flanneld.service
 	systemd_dounit "${T}"/flanneld.service
 
 	insinto /usr/lib/systemd/network
