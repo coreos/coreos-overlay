@@ -369,19 +369,20 @@ void InstallOperationsToManifest(
   }
 }
 
-// Adds all |kernel_ops| to |manifest|. Filters out no-op operations.
-// Computes hash for old and new kernel images.
-bool KernelProcedureToManifest(
-    const string& old_kernel_path,
-    const string& new_kernel_path,
-    const vector<InstallOperation>& kernel_ops,
+// Add a new procedure of type |proc_type| with operations |ops| to |manifest|.
+// Filters out no-op operations.  Computes hash for old and new paths.
+bool AddProcedureToManifest(
+    const string& old_path,
+    const string& new_path,
+    InstallProcedure_Type proc_type,
+    const vector<InstallOperation>& ops,
     DeltaArchiveManifest* manifest) {
-  DCHECK(!kernel_ops.empty());
-  DCHECK(!new_kernel_path.empty());
+  DCHECK(!ops.empty());
+  DCHECK(!new_path.empty());
 
   InstallProcedure* proc = manifest->add_procedures();
-  proc->set_type(InstallProcedure_Type_KERNEL);
-  for (const InstallOperation& add_op : kernel_ops) {
+  proc->set_type(proc_type);
+  for (const InstallOperation& add_op : ops) {
     if (DeltaDiffGenerator::IsNoopOperation(add_op)) {
       continue;
     }
@@ -389,13 +390,13 @@ bool KernelProcedureToManifest(
     *op = add_op;
   }
 
-  if (!old_kernel_path.empty()) {
+  if (!old_path.empty()) {
     TEST_AND_RETURN_FALSE(
-        DeltaDiffGenerator::InitializeInfo(old_kernel_path,
+        DeltaDiffGenerator::InitializeInfo(old_path,
                                            proc->mutable_old_info()));
   }
   TEST_AND_RETURN_FALSE(
-      DeltaDiffGenerator::InitializeInfo(new_kernel_path,
+      DeltaDiffGenerator::InitializeInfo(new_path,
                                          proc->mutable_new_info()));
   return true;
 }
@@ -431,17 +432,18 @@ void CheckGraph(const Graph& graph) {
   }
 }
 
-// Delta compresses a kernel partition |new_kernel| with knowledge of the
-// old kernel partition |old_kernel|. If |old_kernel| is an empty string,
-// generates a full update of the partition.
-bool DeltaCompressKernel(
-    const string& old_kernel,
-    const string& new_kernel,
+// Delta compresses a file |new_path| with knowledge of the old file
+// |old_path|. If |old_file| is an empty string generate a full update.
+bool DeltaCompressFile(
+    const string& old_path,
+    const string& new_path,
     vector<InstallOperation>* ops,
     int blobs_fd,
     off_t* blobs_length) {
-  LOG(INFO) << "Delta compressing kernel partition...";
-  LOG_IF(INFO, old_kernel.empty()) << "Generating full kernel update...";
+  if (old_path.empty())
+    LOG(INFO) << "Compressing " << new_path;
+  else
+    LOG(INFO) << "Delta compressing " << new_path << " using " << old_path;
 
   // Add a new install operation
   ops->resize(1);
@@ -449,8 +451,8 @@ bool DeltaCompressKernel(
 
   vector<char> data;
   TEST_AND_RETURN_FALSE(
-      DeltaDiffGenerator::ReadFileToDiff(old_kernel,
-                                         new_kernel,
+      DeltaDiffGenerator::ReadFileToDiff(old_path,
+                                         new_path,
                                          true, // bsdiff_allowed
                                          &data,
                                          op,
@@ -465,7 +467,7 @@ bool DeltaCompressKernel(
   TEST_AND_RETURN_FALSE(utils::WriteAll(blobs_fd, &data[0], data.size()));
   *blobs_length += data.size();
 
-  LOG(INFO) << "Done delta compressing kernel partition: "
+  LOG(INFO) << "Done delta compressing " << new_path << ": "
             << kInstallOperationTypes[op->type()];
   return true;
 }
@@ -1400,13 +1402,11 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
                                                 &graph.back()));
 
       if (!new_kernel.empty()) {
-        // Read kernel partition
-        TEST_AND_RETURN_FALSE(DeltaCompressKernel(old_kernel,
-                                                  new_kernel,
-                                                  &kernel_ops,
-                                                  fd,
-                                                  &data_file_size));
-        LOG(INFO) << "done reading kernel";
+        TEST_AND_RETURN_FALSE(DeltaCompressFile(old_kernel,
+                                                new_kernel,
+                                                &kernel_ops,
+                                                fd,
+                                                &data_file_size));
       }
 
       CheckGraph(graph);
@@ -1448,10 +1448,11 @@ bool DeltaDiffGenerator::GenerateDeltaUpdateFile(
   manifest.set_block_size(kBlockSize);
 
   if (!new_kernel.empty()) {
-    TEST_AND_RETURN_FALSE(KernelProcedureToManifest(old_kernel,
-                                                    new_kernel,
-                                                    kernel_ops,
-                                                    &manifest));
+    TEST_AND_RETURN_FALSE(AddProcedureToManifest(old_kernel,
+                                                 new_kernel,
+                                                 InstallProcedure_Type_KERNEL,
+                                                 kernel_ops,
+                                                 &manifest));
   }
 
   // Reorder the data blobs with the newly ordered manifest
