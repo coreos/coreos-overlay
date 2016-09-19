@@ -73,7 +73,7 @@ message InstallOperation {
   // that bsdiff writes with '\0' bytes.
   optional uint64 dst_length = 7;
 
-  // Optional SHA 256 hash of the blob associated with this operation.
+  // Required SHA 256 hash of the blob associated with this operation.
   // This is used as a primary validation for http-based downloads and
   // as a defense-in-depth validation for https-based downloads. If
   // the operation doesn't refer to any blob, this field will have
