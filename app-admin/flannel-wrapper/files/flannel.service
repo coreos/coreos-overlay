@@ -1,0 +1,27 @@
+[Unit]
+Description=flannel - Network fabric for containers (System Application Container)
+Documentation=https://github.com/coreos/flannel
+After=etcd.service etcd2.service etcd-member.service
+Before=docker.service flannel-mk-docker-opts.service
+Requires=flannel-mk-docker-opts.service
+
+[Service]
+Type=notify
+Restart=always
+RestartSec=10s
+TimeoutStartSec=60
+LimitNOFILE=40000
+LimitNPROC=1048576
+
+Environment=FLANNEL_IMG_TAG=0.5.5
+Environment=FLANNEL_OPTS=--ip-masq=true
+Environment=RKT_RUN_ARGS=--uuid-file-save=/var/lib/coreos/flannel-wrapper1.uuid
+
+ExecStartPre=/sbin/modprobe ip_tables
+ExecStartPre=/usr/bin/mkdir -p /var/lib/coreos
+ExecStartPre=-/usr/bin/rkt rm --uuid-file=/var/lib/coreos/flannel-wrapper1.uuid
+ExecStart=/usr/lib/coreos/flannel-wrapper $FLANNEL_OPTS
+ExecStop=-/usr/bin/rkt stop --uuid-file=/var/lib/coreos/flannel-wrapper1.uuid
+
+[Install]
+WantedBy=multi-user.target

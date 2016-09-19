@@ -1,0 +1,23 @@
+[Unit]
+Description=flannel docker export service - Network fabric for containers (System Application Container)
+Documentation=https://github.com/coreos/flannel
+After=flannel.service
+PartOf=flannel.service
+Before=docker.service
+
+[Service]
+Type=simple
+Restart=on-failure
+RestartSec=10
+TimeoutStartSec=60
+
+Environment=FLANNEL_IMG_TAG=0.5.5
+Environment=RKT_RUN_ARGS=--uuid-file-save=/var/lib/coreos/flannel-wrapper2.uuid
+Environment=FLANNEL_IMG_EXEC=/opt/bin/mk-docker-opts.sh
+
+ExecStartPre=-/usr/bin/rkt rm --uuid-file=/var/lib/coreos/flannel-wrapper2.uuid
+ExecStart=/usr/lib/coreos/flannel-wrapper -d /run/flannel/flannel_docker_opts.env -i
+ExecStop=-/usr/bin/rkt stop --uuid-file=/var/lib/coreos/flannel-wrapper2.uuid
+
+[Install]
+WantedBy=multi-user.target
