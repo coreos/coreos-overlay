@@ -24,7 +24,7 @@ S="$WORKDIR"
 
 src_install() {
 	local arch_tag="$(go_arch)"
-	sed "s/{{flannel_ver}}/v${PV}-${arch_tag}/" "${FILESDIR}"/flanneld-rkt.service >"${T}"/flanneld.service
+	sed "s/{{flannel_ver}}/v${PV}-${arch_tag}/" "${FILESDIR}"/flanneld.service >"${T}"/flanneld.service
 	systemd_dounit "${T}"/flanneld.service
 
 	insinto /usr/lib/systemd/network
