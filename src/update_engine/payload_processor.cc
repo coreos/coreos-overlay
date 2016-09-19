@@ -219,6 +219,10 @@ ActionExitCode PayloadProcessor::PerformOperation() {
         if (!install_plan_->kernel_path.empty())
           performer = &kernel_performer_;
         break;
+      case InstallProcedure_Type_PCR_POLICY:
+        if (!install_plan_->pcr_policy_path.empty())
+          performer = nullptr;  // TODO
+        break;
     }
   }
 

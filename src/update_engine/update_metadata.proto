@@ -130,6 +130,7 @@ message InstallInfo {
 message InstallProcedure {
   enum Type {
     KERNEL = 0;  // A kernel image to install to the boot partition.
+    PCR_POLICY = 1;  // A zip file containing TPM PCR data.
   }
   optional Type type = 1;
 
