@@ -60,6 +60,7 @@ void OmahaResponseHandlerAction::PerformAction() {
 
   if (install_plan_.old_partition_path.empty())
     install_plan_.old_partition_path = utils::BootDevice();
+  TEST_AND_RETURN(!install_plan_.old_partition_path.empty());
 
   TEST_AND_RETURN(GetInstallDev(
       install_plan_.old_partition_path,
