@@ -1,15 +1,15 @@
 # Copyright (c) 2014 CoreOS, Inc.. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=4
+EAPI=6
 
 if [[ "${PV}" == 9999 ]]; then
-	KEYWORDS="~amd64"
+	KEYWORDS="~amd64 ~arm64"
 else
-	KEYWORDS="amd64"
+	KEYWORDS="amd64 arm64"
 fi
 
-inherit systemd
+inherit systemd coreos-go-utils
 
 DESCRIPTION="flannel"
 HOMEPAGE="https://github.com/coreos/flannel"
@@ -23,7 +23,8 @@ RDEPEND="app-emulation/rkt"
 S="$WORKDIR"
 
 src_install() {
-	sed "s/{{flannel_ver}}/${PV}/" "${FILESDIR}"/flanneld-rkt.service >"${T}"/flanneld.service
+	local arch_tag="$(go_arch)"
+	sed "s/{{flannel_ver}}/v${PV}-${arch_tag}/" "${FILESDIR}"/flanneld.service >"${T}"/flanneld.service
 	systemd_dounit "${T}"/flanneld.service
 
 	insinto /usr/lib/systemd/network
