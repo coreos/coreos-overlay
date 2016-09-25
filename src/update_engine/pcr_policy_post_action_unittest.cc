@@ -1,0 +1,138 @@
+// Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+#include <string>
+#include <vector>
+
+#include "update_engine/pcr_policy_post_action.h"
+#include "update_engine/omaha_hash_calculator.h"
+#include "update_engine/test_utils.h"
+#include "update_engine/utils.h"
+
+using std::string;
+using std::vector;
+
+namespace chromeos_update_engine {
+
+namespace {
+enum VerifyTest {
+  VerifySuccess,
+  VerifyBadSize,
+  VerifyBadHash,
+};
+
+void DoTest(VerifyTest test) {
+  string pcrs_file;
+
+  if (!utils::MakeTempFile("/tmp/pcrs_file.XXXXXX", &pcrs_file, NULL)) {
+    ADD_FAILURE();
+    return;
+  }
+  ScopedPathUnlinker pcrs_file_unlinker(pcrs_file);
+
+  vector<char> pcrs_data(500);
+  FillWithData(&pcrs_data);
+  if (!WriteFileVector(pcrs_file, pcrs_data)) {
+    ADD_FAILURE();
+    return;
+  }
+
+  if (test == VerifyBadSize) {
+    pcrs_data.push_back(0xff);
+  }
+
+  vector<char> pcrs_hash;
+  if (test == VerifyBadHash) {
+    pcrs_hash.assign(32, 0xff);
+  } else {
+    if (!OmahaHashCalculator::RawHashOfData(pcrs_data, &pcrs_hash)) {
+      ADD_FAILURE();
+      return;
+    }
+  }
+
+  ActionProcessor processor;
+  ActionTestDelegate<PCRPolicyPostAction> delegate;
+
+  ObjectFeederAction<InstallPlan> feeder_action;
+  PCRPolicyPostAction post_action;
+  ObjectCollectorAction<InstallPlan> collector_action;
+
+  BondActions(&feeder_action, &post_action);
+  BondActions(&post_action, &collector_action);
+
+  processor.EnqueueAction(&feeder_action);
+  processor.EnqueueAction(&post_action);
+  processor.EnqueueAction(&collector_action);
+
+  InstallPlan install_plan;
+  install_plan.pcr_policy_path = pcrs_file;
+  install_plan.new_pcr_policy_size = pcrs_data.size();
+  install_plan.new_pcr_policy_hash = pcrs_hash;
+  feeder_action.set_obj(install_plan);
+
+  delegate.RunProcessor(&processor);
+  EXPECT_TRUE(delegate.ran());
+
+  if (test == VerifySuccess) {
+    EXPECT_EQ(kActionCodeSuccess, delegate.code());
+    EXPECT_EQ(collector_action.object(), install_plan);
+  } else {
+    EXPECT_EQ(kActionCodeNewPCRPolicyVerificationError, delegate.code());
+  }
+}
+}  // namespace
+
+class PCRPolicyPostActionTest : public ::testing::Test { };
+
+TEST(PCRPolicyPostActionTest, VerifySuccessTest) {
+  DoTest(VerifySuccess);
+}
+
+TEST(PCRPolicyPostActionTest, VerifyBadSizeTest) {
+  DoTest(VerifyBadSize);
+}
+
+TEST(PCRPolicyPostActionTest, VerifyBadHashTest) {
+  DoTest(VerifyBadHash);
+}
+
+TEST(PCRPolicyPostActionTest, MissingInputObjectTest) {
+  ActionProcessor processor;
+  ActionTestDelegate<PCRPolicyPostAction> delegate;
+
+  PCRPolicyPostAction post_action;
+  ObjectCollectorAction<InstallPlan> collector_action;
+
+  BondActions(&post_action, &collector_action);
+
+  processor.EnqueueAction(&post_action);
+  processor.EnqueueAction(&collector_action);
+  delegate.RunProcessor(&processor);
+  EXPECT_TRUE(delegate.ran());
+  EXPECT_EQ(kActionCodeNewPCRPolicyVerificationError, delegate.code());
+}
+
+TEST(PCRPolicyPostActionTest, MissingPCRPolicyTest) {
+  ActionProcessor processor;
+  ActionTestDelegate<PCRPolicyPostAction> delegate;
+
+  ObjectFeederAction<InstallPlan> feeder_action;
+  InstallPlan install_plan;
+  install_plan.pcr_policy_path = "/no/such/file";
+  feeder_action.set_obj(install_plan);
+  PCRPolicyPostAction post_action;
+  ObjectCollectorAction<InstallPlan> collector_action;
+
+  BondActions(&post_action, &collector_action);
+
+  processor.EnqueueAction(&feeder_action);
+  processor.EnqueueAction(&post_action);
+  processor.EnqueueAction(&collector_action);
+  delegate.RunProcessor(&processor);
+  EXPECT_TRUE(delegate.ran());
+  EXPECT_EQ(kActionCodeNewPCRPolicyVerificationError, delegate.code());
+}
+
+}  // namespace chromeos_update_engine

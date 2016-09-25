@@ -65,6 +65,7 @@ enum ActionExitCode {
   kActionCodeDownloadMetadataSignatureMissingError = 39,
   kActionCodeOmahaUpdateDeferredForBackoff = 40,
   kActionCodePostinstallPowerwashError = 41,
+  kActionCodeNewPCRPolicyVerificationError = 42,
 
   // DownloadIncomplete isn't an error to report, it is analogous to EAGAIN
   // and for internal use to indicate that the processing must pause until

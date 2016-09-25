@@ -693,6 +693,8 @@ string CodeToString(ActionExitCode code) {
       return "kActionCodeOmahaUpdateDeferredForBackoff";
     case kActionCodePostinstallPowerwashError:
       return "kActionCodePostinstallPowerwashError";
+    case kActionCodeNewPCRPolicyVerificationError:
+      return "kActionCodeNewPCRPolicyVerificationError";
     case kActionCodeDownloadIncomplete:
       return "kActionCodeDownloadIncomplete";
     case kActionCodeOmahaRequestHTTPResponseBase:

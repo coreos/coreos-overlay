@@ -108,6 +108,7 @@ libupdate_engine_a_SOURCES = \
 	src/update_engine/payload_processor.cc \
 	src/update_engine/payload_signer.cc \
 	src/update_engine/payload_state.cc \
+	src/update_engine/pcr_policy_post_action.cc \
 	src/update_engine/postinstall_runner_action.cc \
 	src/update_engine/prefs.cc \
 	src/update_engine/simple_key_value_store.cc \
@@ -162,6 +163,7 @@ update_engine_unittests_SOURCES = \
 	src/update_engine/payload_processor_unittest.cc \
 	src/update_engine/payload_signer_unittest.cc \
 	src/update_engine/payload_state_unittest.cc \
+	src/update_engine/pcr_policy_post_action_unittest.cc \
 	src/update_engine/postinstall_runner_action_unittest.cc \
 	src/update_engine/prefs_unittest.cc \
 	src/update_engine/simple_key_value_store_unittest.cc \
