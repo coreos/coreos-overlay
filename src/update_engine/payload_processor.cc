@@ -297,14 +297,6 @@ bool PayloadProcessor::ExtractSignatureMessage(const vector<char>& data) {
   return true;
 }
 
-#define TEST_AND_RETURN_VAL(_retval, _condition)                \
-  do {                                                          \
-    if (!(_condition)) {                                        \
-      LOG(ERROR) << "VerifyPayload failure: " << #_condition;   \
-      return _retval;                                           \
-    }                                                           \
-  } while (0);
-
 ActionExitCode PayloadProcessor::VerifyPayload() {
   LOG(INFO) << "Verifying delta payload using public key: " << public_key_path_;
 
