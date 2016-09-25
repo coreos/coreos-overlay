@@ -50,6 +50,7 @@ HttpResponseCode StringToHttpResponseCode(const char *s);
 enum HttpContentType {
   kHttpContentTypeUnspecified = 0,
   kHttpContentTypeTextXml,
+  kHttpContentTypeOctetStream,
 };
 
 // Returns a standard HTTP Content-Type string.
