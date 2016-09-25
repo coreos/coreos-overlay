@@ -5,6 +5,8 @@
 #include <string>
 #include <vector>
 
+#include "update_engine/mock_http_fetcher.h"
+#include "update_engine/mock_system_state.h"
 #include "update_engine/pcr_policy_post_action.h"
 #include "update_engine/omaha_hash_calculator.h"
 #include "update_engine/test_utils.h"
@@ -16,10 +18,13 @@ using std::vector;
 namespace chromeos_update_engine {
 
 namespace {
+const string kServerResponse = "SUCCESS\n";
+
 enum VerifyTest {
   VerifySuccess,
   VerifyBadSize,
   VerifyBadHash,
+  HTTPServerError,
 };
 
 void DoTest(VerifyTest test) {
@@ -52,11 +57,17 @@ void DoTest(VerifyTest test) {
     }
   }
 
+  MockSystemState mock_system_state;
+  MockHttpFetcher *fetcher = new MockHttpFetcher(kServerResponse.data(),
+                                                 kServerResponse.size());
+  if (test == HTTPServerError)
+    fetcher->FailTransfer(kHttpResponseInternalServerError);
+
   ActionProcessor processor;
   ActionTestDelegate<PCRPolicyPostAction> delegate;
 
   ObjectFeederAction<InstallPlan> feeder_action;
-  PCRPolicyPostAction post_action;
+  PCRPolicyPostAction post_action(&mock_system_state, fetcher);
   ObjectCollectorAction<InstallPlan> collector_action;
 
   BondActions(&feeder_action, &post_action);
@@ -72,12 +83,14 @@ void DoTest(VerifyTest test) {
   install_plan.new_pcr_policy_hash = pcrs_hash;
   feeder_action.set_obj(install_plan);
 
-  delegate.RunProcessor(&processor);
+  delegate.RunProcessorInMainLoop(&processor);
   EXPECT_TRUE(delegate.ran());
 
   if (test == VerifySuccess) {
     EXPECT_EQ(kActionCodeSuccess, delegate.code());
     EXPECT_EQ(collector_action.object(), install_plan);
+  } else if (test == HTTPServerError) {
+    EXPECT_EQ(kActionCodeNewPCRPolicyHTTPError, delegate.code());
   } else {
     EXPECT_EQ(kActionCodeNewPCRPolicyVerificationError, delegate.code());
   }
@@ -98,11 +111,15 @@ TEST(PCRPolicyPostActionTest, VerifyBadHashTest) {
   DoTest(VerifyBadHash);
 }
 
+TEST(PCRPolicyPostActionTest, HTTPServerErrorTest) {
+  DoTest(HTTPServerError);
+}
+
 TEST(PCRPolicyPostActionTest, MissingInputObjectTest) {
   ActionProcessor processor;
   ActionTestDelegate<PCRPolicyPostAction> delegate;
 
-  PCRPolicyPostAction post_action;
+  PCRPolicyPostAction post_action(nullptr, nullptr);
   ObjectCollectorAction<InstallPlan> collector_action;
 
   BondActions(&post_action, &collector_action);
@@ -122,7 +139,7 @@ TEST(PCRPolicyPostActionTest, MissingPCRPolicyTest) {
   InstallPlan install_plan;
   install_plan.pcr_policy_path = "/no/such/file";
   feeder_action.set_obj(install_plan);
-  PCRPolicyPostAction post_action;
+  PCRPolicyPostAction post_action(nullptr, nullptr);
   ObjectCollectorAction<InstallPlan> collector_action;
 
   BondActions(&post_action, &collector_action);

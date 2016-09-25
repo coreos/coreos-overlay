@@ -695,6 +695,8 @@ string CodeToString(ActionExitCode code) {
       return "kActionCodePostinstallPowerwashError";
     case kActionCodeNewPCRPolicyVerificationError:
       return "kActionCodeNewPCRPolicyVerificationError";
+    case kActionCodeNewPCRPolicyHTTPError:
+      return "kActionCodeNewPCRPolicyHTTPError";
     case kActionCodeDownloadIncomplete:
       return "kActionCodeDownloadIncomplete";
     case kActionCodeOmahaRequestHTTPResponseBase:

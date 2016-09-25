@@ -81,6 +81,38 @@ void PCRPolicyPostAction::PerformAction() {
   LOG(INFO) << "PCR policy size: " << length;
   LOG(INFO) << "PCR policy hash: " << hasher.hash();
 
+  string url; // TODO
+  http_fetcher_->set_delegate(this);
+  http_fetcher_->SetPostData(data.data(), data.size(),
+                             kHttpContentTypeOctetStream);
+  LOG(INFO) << "Posting PCR policy data to " << url;
+  http_fetcher_->BeginTransfer(url);
+  abort_action_completer.set_should_complete(false);
+  return;
+}
+
+void PCRPolicyPostAction::TerminateProcessing() {
+  http_fetcher_->TerminateTransfer();
+}
+
+void PCRPolicyPostAction::ReceivedBytes(HttpFetcher *fetcher,
+                                        const char* bytes,
+                                        int length) {
+  response_buffer_.append(bytes, length);
+}
+
+void PCRPolicyPostAction::TransferComplete(HttpFetcher *fetcher,
+                                           bool successful) {
+  ScopedActionCompleter abort_action_completer(processor_, this);
+  abort_action_completer.set_code(kActionCodeNewPCRPolicyHTTPError);
+
+  LOG(INFO) << "PCR policy HTTP POST response: " << response_buffer_;
+
+  if (!successful) {
+    LOG(ERROR) << "PCR policy HTTP POST failed.";
+    return;
+  }
+
   // Success! Pass along the new install_plan to the next action.
   if (HasOutputPipe())
     SetOutputObject(install_plan_);

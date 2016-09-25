@@ -173,6 +173,7 @@ void PayloadState::UpdateFailed(ActionExitCode error) {
     case kActionCodeOmahaUpdateDeferredForBackoff:
     case kActionCodePostinstallPowerwashError:
     case kActionCodeNewPCRPolicyVerificationError:
+    case kActionCodeNewPCRPolicyHTTPError:
       LOG(INFO) << "Not incrementing URL index or failure count for this error";
       break;
 
