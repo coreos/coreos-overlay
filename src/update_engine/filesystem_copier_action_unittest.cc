@@ -249,8 +249,6 @@ TEST_F(FilesystemCopierActionTest, MissingInputObjectTest) {
   ActionProcessor processor;
   ActionTestDelegate<FilesystemCopierAction> delegate;
 
-  processor.set_delegate(&delegate);
-
   FilesystemCopierAction copier_action(false);
   ObjectCollectorAction<InstallPlan> collector_action;
 
@@ -258,8 +256,7 @@ TEST_F(FilesystemCopierActionTest, MissingInputObjectTest) {
 
   processor.EnqueueAction(&copier_action);
   processor.EnqueueAction(&collector_action);
-  processor.StartProcessing();
-  EXPECT_FALSE(processor.IsRunning());
+  delegate.RunProcessor(&processor);
   EXPECT_TRUE(delegate.ran());
   EXPECT_EQ(kActionCodeError, delegate.code());
 }
@@ -267,8 +264,6 @@ TEST_F(FilesystemCopierActionTest, MissingInputObjectTest) {
 TEST_F(FilesystemCopierActionTest, ResumeTest) {
   ActionProcessor processor;
   ActionTestDelegate<FilesystemCopierAction> delegate;
-
-  processor.set_delegate(&delegate);
 
   ObjectFeederAction<InstallPlan> feeder_action;
   const char* kUrl = "http://some/url";
@@ -283,8 +278,7 @@ TEST_F(FilesystemCopierActionTest, ResumeTest) {
   processor.EnqueueAction(&feeder_action);
   processor.EnqueueAction(&copier_action);
   processor.EnqueueAction(&collector_action);
-  processor.StartProcessing();
-  EXPECT_FALSE(processor.IsRunning());
+  delegate.RunProcessor(&processor);
   EXPECT_TRUE(delegate.ran());
   EXPECT_EQ(kActionCodeSuccess, delegate.code());
   EXPECT_EQ(kUrl, collector_action.object().download_url);
@@ -293,8 +287,6 @@ TEST_F(FilesystemCopierActionTest, ResumeTest) {
 TEST_F(FilesystemCopierActionTest, NonExistentDriveTest) {
   ActionProcessor processor;
   ActionTestDelegate<FilesystemCopierAction> delegate;
-
-  processor.set_delegate(&delegate);
 
   ObjectFeederAction<InstallPlan> feeder_action;
   InstallPlan install_plan(false,
@@ -311,8 +303,7 @@ TEST_F(FilesystemCopierActionTest, NonExistentDriveTest) {
   processor.EnqueueAction(&feeder_action);
   processor.EnqueueAction(&copier_action);
   processor.EnqueueAction(&collector_action);
-  processor.StartProcessing();
-  EXPECT_FALSE(processor.IsRunning());
+  delegate.RunProcessor(&processor);
   EXPECT_TRUE(delegate.ran());
   EXPECT_EQ(kActionCodeError, delegate.code());
 }

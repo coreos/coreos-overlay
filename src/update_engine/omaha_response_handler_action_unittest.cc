@@ -49,7 +49,6 @@ bool OmahaResponseHandlerActionTest::DoTestCommon(
     InstallPlan* out) {
   ActionProcessor processor;
   ActionTestDelegate<OmahaResponseHandlerAction> delegate;
-  processor.set_delegate(&delegate);
 
   ObjectFeederAction<OmahaResponse> feeder_action;
   feeder_action.set_obj(in);
@@ -66,9 +65,7 @@ bool OmahaResponseHandlerActionTest::DoTestCommon(
   processor.EnqueueAction(&feeder_action);
   processor.EnqueueAction(&response_handler_action);
   processor.EnqueueAction(&collector_action);
-  processor.StartProcessing();
-  EXPECT_TRUE(!processor.IsRunning())
-      << "Update test to handle non-asynch actions";
+  delegate.RunProcessor(&processor);
   if (out)
     *out = collector_action.object();
   EXPECT_TRUE(delegate.ran());

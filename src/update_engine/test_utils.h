@@ -243,16 +243,29 @@ struct ObjectCollectorAction : public Action<ObjectCollectorAction<T> > {
 template<typename T>
 class ActionTestDelegate : public ActionProcessorDelegate {
  public:
+  ActionTestDelegate() : ran_(false) {}
+  virtual ~ActionTestDelegate() {}
+
+  void RunProcessor(ActionProcessor* processor) {
+    processor->set_delegate(this);
+    processor->StartProcessing();
+    EXPECT_FALSE(processor->IsRunning());
+  }
+
   void ActionCompleted(ActionProcessor* processor,
                        AbstractAction* action,
                        ActionExitCode code) {
     if (action->Type() == T::StaticType()) {
       ran_ = true;
       code_ = code;
+    } else {
+      EXPECT_EQ(kActionCodeSuccess, code);
     }
   }
+
   bool ran() const { return ran_; }
   ActionExitCode code() const { return code_; }
+
  private:
   bool ran_;
   ActionExitCode code_;

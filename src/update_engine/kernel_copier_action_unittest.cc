@@ -45,8 +45,6 @@ TEST(KernelCopierActionTest, SuccessfulCopyTest) {
   ActionProcessor processor;
   ActionTestDelegate<KernelCopierAction> delegate;
 
-  processor.set_delegate(&delegate);
-
   ObjectFeederAction<InstallPlan> feeder_action;
   KernelCopierAction copier_action;
   ObjectCollectorAction<InstallPlan> collector_action;
@@ -63,8 +61,7 @@ TEST(KernelCopierActionTest, SuccessfulCopyTest) {
   install_plan.old_kernel_path = a_file;
   feeder_action.set_obj(install_plan);
 
-  processor.StartProcessing();
-  EXPECT_FALSE(processor.IsRunning());
+  delegate.RunProcessor(&processor);
   EXPECT_TRUE(delegate.ran());
   EXPECT_EQ(kActionCodeSuccess, delegate.code());
 
@@ -86,8 +83,6 @@ TEST(KernelCopierActionTest, MissingInputObjectTest) {
   ActionProcessor processor;
   ActionTestDelegate<KernelCopierAction> delegate;
 
-  processor.set_delegate(&delegate);
-
   KernelCopierAction copier_action;
   ObjectCollectorAction<InstallPlan> collector_action;
 
@@ -95,8 +90,7 @@ TEST(KernelCopierActionTest, MissingInputObjectTest) {
 
   processor.EnqueueAction(&copier_action);
   processor.EnqueueAction(&collector_action);
-  processor.StartProcessing();
-  EXPECT_FALSE(processor.IsRunning());
+  delegate.RunProcessor(&processor);
   EXPECT_TRUE(delegate.ran());
   EXPECT_EQ(kActionCodeError, delegate.code());
 }
@@ -104,8 +98,6 @@ TEST(KernelCopierActionTest, MissingInputObjectTest) {
 TEST(KernelCopierActionTest, ResumeTest) {
   ActionProcessor processor;
   ActionTestDelegate<KernelCopierAction> delegate;
-
-  processor.set_delegate(&delegate);
 
   ObjectFeederAction<InstallPlan> feeder_action;
   const char* kUrl = "http://some/url";
@@ -120,8 +112,7 @@ TEST(KernelCopierActionTest, ResumeTest) {
   processor.EnqueueAction(&feeder_action);
   processor.EnqueueAction(&copier_action);
   processor.EnqueueAction(&collector_action);
-  processor.StartProcessing();
-  EXPECT_FALSE(processor.IsRunning());
+  delegate.RunProcessor(&processor);
   EXPECT_TRUE(delegate.ran());
   EXPECT_EQ(kActionCodeSuccess, delegate.code());
   EXPECT_EQ(kUrl, collector_action.object().download_url);
@@ -130,8 +121,6 @@ TEST(KernelCopierActionTest, ResumeTest) {
 TEST(KernelCopierActionTest, MissingSourceFile) {
   ActionProcessor processor;
   ActionTestDelegate<KernelCopierAction> delegate;
-
-  processor.set_delegate(&delegate);
 
   ObjectFeederAction<InstallPlan> feeder_action;
   InstallPlan install_plan;
@@ -146,8 +135,7 @@ TEST(KernelCopierActionTest, MissingSourceFile) {
   processor.EnqueueAction(&feeder_action);
   processor.EnqueueAction(&copier_action);
   processor.EnqueueAction(&collector_action);
-  processor.StartProcessing();
-  EXPECT_FALSE(processor.IsRunning());
+  delegate.RunProcessor(&processor);
   EXPECT_TRUE(delegate.ran());
   EXPECT_EQ(kActionCodeError, delegate.code());
 }
