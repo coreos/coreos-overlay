@@ -225,19 +225,28 @@ struct ObjectCollectorAction : public Action<ObjectCollectorAction<T> > {
  public:
   typedef T InputObjectType;
   typedef NoneType OutputObjectType;
+
+  ObjectCollectorAction() : ran_(false) {}
+  virtual ~ObjectCollectorAction() {}
+
   void PerformAction() {
     LOG(INFO) << "collector running!";
     ASSERT_TRUE(this->processor_);
     if (this->HasInputObject()) {
       object_ = this->GetInputObject();
+      ran_ = true;
     }
     this->processor_->ActionComplete(this, kActionCodeSuccess);
   }
+
   static std::string StaticType() { return "ObjectCollectorAction"; }
   std::string Type() const { return StaticType(); }
   const T& object() const { return object_; }
+  bool ran() const { return ran_; }
+
  private:
   T object_;
+  bool ran_;
 };
 
 // A delegate for verifying that the ActionProcessor completed an Action.

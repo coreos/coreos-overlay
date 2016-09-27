@@ -121,42 +121,6 @@ string GetUpdateResponse(const string& app_id,
 }
 }  // namespace {}
 
-class OutputObjectCollectorAction;
-
-template<>
-class ActionTraits<OutputObjectCollectorAction> {
- public:
-  // Does not take an object for input
-  typedef OmahaResponse InputObjectType;
-  // On success, puts the output path on output
-  typedef NoneType OutputObjectType;
-};
-
-class OutputObjectCollectorAction : public Action<OutputObjectCollectorAction> {
- public:
-  OutputObjectCollectorAction() : has_input_object_(false) {}
-  typedef ActionTraits<OutputObjectCollectorAction>::InputObjectType InputObjectType;
-  typedef ActionTraits<OutputObjectCollectorAction>::OutputObjectType OutputObjectType;
-  void PerformAction() {
-    // copy input object
-    has_input_object_ = HasInputObject();
-    if (has_input_object_)
-      omaha_response_ = GetInputObject();
-    processor_->ActionComplete(this, kActionCodeSuccess);
-  }
-  // Should never be called
-  void TerminateProcessing() {
-    CHECK(false);
-  }
-  // Debugging/logging
-  static std::string StaticType() {
-    return "OutputObjectCollectorAction";
-  }
-  std::string Type() const { return StaticType(); }
-  bool has_input_object_;
-  OmahaResponse omaha_response_;
-};
-
 // Returns true iff an output response was obtained from the
 // OmahaRequestAction. |prefs| may be NULL, in which case a local PrefsMock is
 // used. out_response may be NULL. If |fail_http_response_code| is non-negative,
@@ -190,18 +154,18 @@ bool TestUpdateCheck(PrefsInterface* prefs,
                             ping_only);
   processor.EnqueueAction(&action);
 
-  OutputObjectCollectorAction collector_action;
+  ObjectCollectorAction<OmahaResponse> collector_action;
   BondActions(&action, &collector_action);
   processor.EnqueueAction(&collector_action);
 
   delegate.RunProcessorInMainLoop(&processor);
   EXPECT_TRUE(delegate.ran());
   EXPECT_EQ(expected_code, delegate.code());
-  if (collector_action.has_input_object_ && out_response)
-    *out_response = collector_action.omaha_response_;
+  if (collector_action.ran() && out_response)
+    *out_response = collector_action.object();
   if (out_post_data)
     *out_post_data = fetcher->post_data();
-  return collector_action.has_input_object_;
+  return collector_action.ran();
 }
 
 // Tests Event requests -- they should always succeed. |out_post_data|
