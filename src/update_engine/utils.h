@@ -114,25 +114,6 @@ bool MakeTempDirectory(const std::string& dirname_template,
 // This WILL cross filesystem boundaries.
 bool RecursiveUnlinkDir(const std::string& path);
 
-// Returns the root device for a partition. For example,
-// RootDevice("/dev/sda3") returns "/dev/sda". Returns an empty string
-// if the input device is not of the "/dev/xyz" form.
-std::string RootDevice(const std::string& partition_device);
-
-// Returns the partition number, as a string, of partition_device. For example,
-// PartitionNumber("/dev/sda3") returns "3".
-std::string PartitionNumber(const std::string& partition_device);
-
-// Returns the sysfs block device for a root block device. For
-// example, SysfsBlockDevice("/dev/sda") returns
-// "/sys/block/sda". Returns an empty string if the input device is
-// not of the "/dev/xyz" form.
-std::string SysfsBlockDevice(const std::string& device);
-
-// Returns true if the root |device| (e.g., "/dev/sdb") is known to be
-// removable, false otherwise.
-bool IsRemovableDevice(const std::string& device);
-
 // Synchronously mount or unmount a filesystem. Return true on success.
 // Mounts as ext3 with default options.
 bool MountFilesystem(const std::string& device, const std::string& mountpoint,

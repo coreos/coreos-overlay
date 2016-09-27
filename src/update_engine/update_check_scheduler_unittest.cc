@@ -38,7 +38,6 @@ class UpdateCheckSchedulerUnderTest : public UpdateCheckScheduler {
         mock_system_state_(mock_system_state) {}
 
   MOCK_METHOD2(GTimeoutAddSeconds, guint(guint seconds, GSourceFunc function));
-  MOCK_METHOD0(IsBootDeviceRemovable, bool());
   MOCK_METHOD0(IsOfficialBuild, bool());
 
   MockSystemState* mock_system_state_;
@@ -163,27 +162,10 @@ TEST_F(UpdateCheckSchedulerTest, GTimeoutAddSecondsTest) {
   g_main_loop_unref(loop_);
 }
 
-TEST_F(UpdateCheckSchedulerTest, IsBootDeviceRemovableTest) {
-  // Invokes the actual utils wrapper method rather than the subclass mock.
-  EXPECT_FALSE(scheduler_.UpdateCheckScheduler::IsBootDeviceRemovable());
-}
-
 TEST_F(UpdateCheckSchedulerTest, IsOfficialBuildTest) {
   // Invokes the actual utils wrapper method rather than the subclass mock.
   EXPECT_TRUE(scheduler_.UpdateCheckScheduler::IsOfficialBuild());
 }
-
-TEST_F(UpdateCheckSchedulerTest, RunBootDeviceRemovableTest) {
-  scheduler_.enabled_ = true;
-  EXPECT_CALL(scheduler_, IsOfficialBuild()).Times(1).WillOnce(Return(true));
-  EXPECT_CALL(scheduler_, IsBootDeviceRemovable())
-      .Times(1)
-      .WillOnce(Return(true));
-  scheduler_.Run();
-  EXPECT_FALSE(scheduler_.enabled_);
-  EXPECT_EQ(NULL, attempter_.update_check_scheduler());
-}
-
 TEST_F(UpdateCheckSchedulerTest, RunNonOfficialBuildTest) {
   scheduler_.enabled_ = true;
   EXPECT_CALL(scheduler_, IsOfficialBuild()).Times(1).WillOnce(Return(false));
@@ -199,9 +181,6 @@ TEST_F(UpdateCheckSchedulerTest, RunTest) {
             &interval_min,
             &interval_max);
   EXPECT_CALL(scheduler_, IsOfficialBuild()).Times(1).WillOnce(Return(true));
-  EXPECT_CALL(scheduler_, IsBootDeviceRemovable())
-      .Times(1)
-      .WillOnce(Return(false));
   EXPECT_CALL(scheduler_,
               GTimeoutAddSeconds(AllOf(Ge(interval_min), Le(interval_max)),
                                  scheduler_.StaticCheck)).Times(1);

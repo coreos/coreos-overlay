@@ -152,33 +152,6 @@ TEST(UtilsTest, TempFilenameTest) {
   EXPECT_FALSE(utils::StringHasSuffix(result, "XXXXXX"));
 }
 
-TEST(UtilsTest, RootDeviceTest) {
-  EXPECT_EQ("/dev/sda", utils::RootDevice("/dev/sda3"));
-  EXPECT_EQ("/dev/mmc0", utils::RootDevice("/dev/mmc0p3"));
-  EXPECT_EQ("", utils::RootDevice("/dev/foo/bar"));
-  EXPECT_EQ("", utils::RootDevice("/"));
-  EXPECT_EQ("", utils::RootDevice(""));
-}
-
-TEST(UtilsTest, SysfsBlockDeviceTest) {
-  EXPECT_EQ("/sys/block/sda", utils::SysfsBlockDevice("/dev/sda"));
-  EXPECT_EQ("", utils::SysfsBlockDevice("/foo/sda"));
-  EXPECT_EQ("", utils::SysfsBlockDevice("/dev/foo/bar"));
-  EXPECT_EQ("", utils::SysfsBlockDevice("/"));
-  EXPECT_EQ("", utils::SysfsBlockDevice("./"));
-  EXPECT_EQ("", utils::SysfsBlockDevice(""));
-}
-
-TEST(UtilsTest, IsRemovableDeviceTest) {
-  EXPECT_FALSE(utils::IsRemovableDevice(""));
-  EXPECT_FALSE(utils::IsRemovableDevice("/dev/non-existent-device"));
-}
-
-TEST(UtilsTest, PartitionNumberTest) {
-  EXPECT_EQ("3", utils::PartitionNumber("/dev/sda3"));
-  EXPECT_EQ("3", utils::PartitionNumber("/dev/mmc0p3"));
-}
-
 TEST(UtilsTest, FuzzIntTest) {
   static const unsigned int kRanges[] = { 0, 1, 2, 20 };
   for (size_t r = 0; r < arraysize(kRanges); ++r) {
