@@ -119,38 +119,6 @@ string GetUpdateResponse(const string& app_id,
                             size,
                             deadline);
 }
-
-class OmahaRequestActionTestProcessorDelegate : public ActionProcessorDelegate {
- public:
-  OmahaRequestActionTestProcessorDelegate()
-      : loop_(NULL),
-        expected_code_(kActionCodeSuccess) {}
-  virtual ~OmahaRequestActionTestProcessorDelegate() {
-  }
-  virtual void ProcessingDone(const ActionProcessor* processor,
-                              ActionExitCode code) {
-    ASSERT_TRUE(loop_);
-    g_main_loop_quit(loop_);
-  }
-
-  virtual void ActionCompleted(ActionProcessor* processor,
-                               AbstractAction* action,
-                               ActionExitCode code) {
-    // make sure actions always succeed
-    if (action->Type() == OmahaRequestAction::StaticType())
-      EXPECT_EQ(expected_code_, code);
-    else
-      EXPECT_EQ(kActionCodeSuccess, code);
-  }
-  GMainLoop *loop_;
-  ActionExitCode expected_code_;
-};
-
-gboolean StartProcessorInRunLoop(gpointer data) {
-  ActionProcessor *processor = reinterpret_cast<ActionProcessor*>(data);
-  processor->StartProcessing();
-  return FALSE;
-}
 }  // namespace {}
 
 class OutputObjectCollectorAction;
@@ -203,7 +171,6 @@ bool TestUpdateCheck(PrefsInterface* prefs,
                      ActionExitCode expected_code,
                      OmahaResponse* out_response,
                      vector<char>* out_post_data) {
-  GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
   MockHttpFetcher* fetcher = new MockHttpFetcher(http_response.data(),
                                                  http_response.size());
   if (fail_http_response_code >= 0) {
@@ -213,25 +180,23 @@ bool TestUpdateCheck(PrefsInterface* prefs,
   if (prefs)
     mock_system_state.set_prefs(prefs);
   mock_system_state.set_request_params(&params);
+
+  ActionProcessor processor;
+  ActionTestDelegate<OmahaRequestAction> delegate;
+
   OmahaRequestAction action(&mock_system_state,
                             NULL,
                             fetcher,
                             ping_only);
-  OmahaRequestActionTestProcessorDelegate delegate;
-  delegate.loop_ = loop;
-  delegate.expected_code_ = expected_code;
-
-  ActionProcessor processor;
-  processor.set_delegate(&delegate);
   processor.EnqueueAction(&action);
 
   OutputObjectCollectorAction collector_action;
   BondActions(&action, &collector_action);
   processor.EnqueueAction(&collector_action);
 
-  g_timeout_add(0, &StartProcessorInRunLoop, &processor);
-  g_main_loop_run(loop);
-  g_main_loop_unref(loop);
+  delegate.RunProcessorInMainLoop(&processor);
+  EXPECT_TRUE(delegate.ran());
+  EXPECT_EQ(expected_code, delegate.code());
   if (collector_action.has_input_object_ && out_response)
     *out_response = collector_action.omaha_response_;
   if (out_post_data)
@@ -246,21 +211,20 @@ void TestEvent(OmahaRequestParams params,
                OmahaEvent* event,
                const string& http_response,
                vector<char>* out_post_data) {
-  GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
   MockHttpFetcher* fetcher = new MockHttpFetcher(http_response.data(),
                                                  http_response.size());
   MockSystemState mock_system_state;
   mock_system_state.set_request_params(&params);
-  OmahaRequestAction action(&mock_system_state, event, fetcher, false);
-  OmahaRequestActionTestProcessorDelegate delegate;
-  delegate.loop_ = loop;
+
   ActionProcessor processor;
-  processor.set_delegate(&delegate);
+  ActionTestDelegate<OmahaRequestAction> delegate;
+
+  OmahaRequestAction action(&mock_system_state, event, fetcher, false);
   processor.EnqueueAction(&action);
 
-  g_timeout_add(0, &StartProcessorInRunLoop, &processor);
-  g_main_loop_run(loop);
-  g_main_loop_unref(loop);
+  delegate.RunProcessorInMainLoop(&processor);
+  EXPECT_TRUE(delegate.ran());
+  EXPECT_EQ(kActionCodeSuccess, delegate.code());
   if (out_post_data)
     *out_post_data = fetcher->post_data();
 }
@@ -314,25 +278,22 @@ TEST(OmahaRequestActionTest, ValidUpdateTest) {
 TEST(OmahaRequestActionTest, NoOutputPipeTest) {
   const string http_response(GetNoUpdateResponse(OmahaRequestParams::kAppId));
 
-  GMainLoop *loop = g_main_loop_new(g_main_context_default(), FALSE);
-
   MockSystemState mock_system_state;
   OmahaRequestParams params = kDefaultTestParams;
   mock_system_state.set_request_params(&params);
+
+  ActionProcessor processor;
+  ActionTestDelegate<OmahaRequestAction> delegate;
+
   OmahaRequestAction action(&mock_system_state, NULL,
                             new MockHttpFetcher(http_response.data(),
                                                 http_response.size()),
                             false);
-  OmahaRequestActionTestProcessorDelegate delegate;
-  delegate.loop_ = loop;
-  ActionProcessor processor;
-  processor.set_delegate(&delegate);
   processor.EnqueueAction(&action);
 
-  g_timeout_add(0, &StartProcessorInRunLoop, &processor);
-  g_main_loop_run(loop);
-  g_main_loop_unref(loop);
-  EXPECT_FALSE(processor.IsRunning());
+  delegate.RunProcessorInMainLoop(&processor);
+  EXPECT_TRUE(delegate.ran());
+  EXPECT_EQ(kActionCodeSuccess, delegate.code());
 }
 
 TEST(OmahaRequestActionTest, InvalidXmlTest) {

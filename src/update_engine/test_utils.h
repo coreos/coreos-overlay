@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 
+#include <glib.h>
 #include <gtest/gtest.h>
 
 #include "update_engine/action.h"
@@ -240,16 +241,34 @@ struct ObjectCollectorAction : public Action<ObjectCollectorAction<T> > {
 };
 
 // A delegate for verifying that the ActionProcessor completed an Action.
+// Use RunProcessor or RunProcessorInMainLoop depending on if any actions
+// are synchronous are asynchronous and use the glib main loop.
 template<typename T>
 class ActionTestDelegate : public ActionProcessorDelegate {
  public:
-  ActionTestDelegate() : ran_(false) {}
+  ActionTestDelegate() : ran_(false), main_loop_(nullptr) {}
   virtual ~ActionTestDelegate() {}
 
   void RunProcessor(ActionProcessor* processor) {
     processor->set_delegate(this);
     processor->StartProcessing();
     EXPECT_FALSE(processor->IsRunning());
+  }
+
+  void RunProcessorInMainLoop(ActionProcessor* processor) {
+    processor->set_delegate(this);
+    main_loop_ = g_main_loop_new(g_main_context_default(), FALSE);
+    g_timeout_add(0, &StartProcessingInMainLoop, processor);
+    g_main_loop_run(main_loop_);
+    g_main_loop_unref(main_loop_);
+    main_loop_ = nullptr;
+    EXPECT_FALSE(processor->IsRunning());
+  }
+
+  void ProcessingDone(const ActionProcessor* processor,
+                      ActionExitCode code) {
+    if (main_loop_)
+      g_main_loop_quit(main_loop_);
   }
 
   void ActionCompleted(ActionProcessor* processor,
@@ -267,8 +286,15 @@ class ActionTestDelegate : public ActionProcessorDelegate {
   ActionExitCode code() const { return code_; }
 
  private:
+  static gboolean StartProcessingInMainLoop(gpointer data) {
+    ActionProcessor *processor = reinterpret_cast<ActionProcessor*>(data);
+    processor->StartProcessing();
+    return FALSE;
+  }
+
   bool ran_;
   ActionExitCode code_;
+  GMainLoop* main_loop_;
 };
 
 class ScopedLoopMounter {
