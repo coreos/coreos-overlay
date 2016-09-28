@@ -21,6 +21,7 @@ DEPEND="
 	app-emulation/actool
 	app-emulation/open-vmdk
 	app-misc/jq
+	app-portage/eix
 	app-shells/bash-completion
 	coreos-base/hard-host-depends
 	coreos-base/coreos-sb-keys
