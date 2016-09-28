@@ -35,28 +35,6 @@ using strings::StringPrintf;
 
 namespace chromeos_update_engine {
 
-namespace {
-
-// Opens path for read/write, put the fd into *fd. On success returns true
-// and sets *err to 0. On failure, returns false and sets *err to errno.
-bool OpenFile(const char* path, int* fd, int* err) {
-  if (*fd != -1) {
-    LOG(ERROR) << "Can't open(" << path << "), *fd != -1 (it's " << *fd << ")";
-    *err = EINVAL;
-    return false;
-  }
-  *fd = open(path, O_RDWR, 000);
-  if (*fd < 0) {
-    *err = errno;
-    PLOG(ERROR) << "Unable to open file " << path;
-    return false;
-  }
-  *err = 0;
-  return true;
-}
-
-}  // namespace {}
-
 // Returns true if |op| is idempotent -- i.e., if we can interrupt it and repeat
 // it safely. Returns false otherwise.
 bool DeltaPerformer::IsIdempotentOperation(
@@ -76,9 +54,17 @@ bool DeltaPerformer::IsIdempotentOperation(
 }
 
 int DeltaPerformer::Open() {
-  int err;
-  OpenFile(path_.c_str(), &fd_, &err);
-  return -err;
+  if (fd_ != -1) {
+    LOG(ERROR) << "Attempting to re-open " << path_;
+    return -EINVAL;
+  }
+  fd_ = open(path_.c_str(), O_RDWR, 000);
+  if (fd_ < 0) {
+    int err = errno;
+    PLOG(ERROR) << "Unable to open file " << path_;
+    return -err;
+  }
+  return 0;
 }
 
 int DeltaPerformer::Close() {
