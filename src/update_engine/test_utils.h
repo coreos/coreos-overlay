@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 
+#include <glib.h>
 #include <gtest/gtest.h>
 
 #include "update_engine/action.h"
@@ -224,38 +225,85 @@ struct ObjectCollectorAction : public Action<ObjectCollectorAction<T> > {
  public:
   typedef T InputObjectType;
   typedef NoneType OutputObjectType;
+
+  ObjectCollectorAction() : ran_(false) {}
+  virtual ~ObjectCollectorAction() {}
+
   void PerformAction() {
     LOG(INFO) << "collector running!";
     ASSERT_TRUE(this->processor_);
     if (this->HasInputObject()) {
       object_ = this->GetInputObject();
+      ran_ = true;
     }
     this->processor_->ActionComplete(this, kActionCodeSuccess);
   }
+
   static std::string StaticType() { return "ObjectCollectorAction"; }
   std::string Type() const { return StaticType(); }
   const T& object() const { return object_; }
+  bool ran() const { return ran_; }
+
  private:
   T object_;
+  bool ran_;
 };
 
 // A delegate for verifying that the ActionProcessor completed an Action.
+// Use RunProcessor or RunProcessorInMainLoop depending on if any actions
+// are synchronous are asynchronous and use the glib main loop.
 template<typename T>
 class ActionTestDelegate : public ActionProcessorDelegate {
  public:
+  ActionTestDelegate() : ran_(false), main_loop_(nullptr) {}
+  virtual ~ActionTestDelegate() {}
+
+  void RunProcessor(ActionProcessor* processor) {
+    processor->set_delegate(this);
+    processor->StartProcessing();
+    EXPECT_FALSE(processor->IsRunning());
+  }
+
+  void RunProcessorInMainLoop(ActionProcessor* processor) {
+    processor->set_delegate(this);
+    main_loop_ = g_main_loop_new(g_main_context_default(), FALSE);
+    g_timeout_add(0, &StartProcessingInMainLoop, processor);
+    g_main_loop_run(main_loop_);
+    g_main_loop_unref(main_loop_);
+    main_loop_ = nullptr;
+    EXPECT_FALSE(processor->IsRunning());
+  }
+
+  void ProcessingDone(const ActionProcessor* processor,
+                      ActionExitCode code) {
+    if (main_loop_)
+      g_main_loop_quit(main_loop_);
+  }
+
   void ActionCompleted(ActionProcessor* processor,
                        AbstractAction* action,
                        ActionExitCode code) {
     if (action->Type() == T::StaticType()) {
       ran_ = true;
       code_ = code;
+    } else {
+      EXPECT_EQ(kActionCodeSuccess, code);
     }
   }
+
   bool ran() const { return ran_; }
   ActionExitCode code() const { return code_; }
+
  private:
+  static gboolean StartProcessingInMainLoop(gpointer data) {
+    ActionProcessor *processor = reinterpret_cast<ActionProcessor*>(data);
+    processor->StartProcessing();
+    return FALSE;
+  }
+
   bool ran_;
   ActionExitCode code_;
+  GMainLoop* main_loop_;
 };
 
 class ScopedLoopMounter {

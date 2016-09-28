@@ -58,8 +58,6 @@ void DoTest(VerifyTest test) {
   ActionProcessor processor;
   ActionTestDelegate<KernelVerifierAction> delegate;
 
-  processor.set_delegate(&delegate);
-
   ObjectFeederAction<InstallPlan> feeder_action;
   KernelVerifierAction verifier_action;
   ObjectCollectorAction<InstallPlan> collector_action;
@@ -77,8 +75,7 @@ void DoTest(VerifyTest test) {
   install_plan.new_kernel_hash = kernel_hash;
   feeder_action.set_obj(install_plan);
 
-  processor.StartProcessing();
-  EXPECT_FALSE(processor.IsRunning());
+  delegate.RunProcessor(&processor);
   EXPECT_TRUE(delegate.ran());
 
   if (test == VerifySuccess) {
@@ -108,8 +105,6 @@ TEST(KernelVerifierActionTest, MissingInputObjectTest) {
   ActionProcessor processor;
   ActionTestDelegate<KernelVerifierAction> delegate;
 
-  processor.set_delegate(&delegate);
-
   KernelVerifierAction verifier_action;
   ObjectCollectorAction<InstallPlan> collector_action;
 
@@ -117,8 +112,7 @@ TEST(KernelVerifierActionTest, MissingInputObjectTest) {
 
   processor.EnqueueAction(&verifier_action);
   processor.EnqueueAction(&collector_action);
-  processor.StartProcessing();
-  EXPECT_FALSE(processor.IsRunning());
+  delegate.RunProcessor(&processor);
   EXPECT_TRUE(delegate.ran());
   EXPECT_EQ(kActionCodeNewKernelVerificationError, delegate.code());
 }
@@ -126,8 +120,6 @@ TEST(KernelVerifierActionTest, MissingInputObjectTest) {
 TEST(KernelVerifierActionTest, MissingKernelTest) {
   ActionProcessor processor;
   ActionTestDelegate<KernelVerifierAction> delegate;
-
-  processor.set_delegate(&delegate);
 
   ObjectFeederAction<InstallPlan> feeder_action;
   InstallPlan install_plan;
@@ -141,8 +133,7 @@ TEST(KernelVerifierActionTest, MissingKernelTest) {
   processor.EnqueueAction(&feeder_action);
   processor.EnqueueAction(&verifier_action);
   processor.EnqueueAction(&collector_action);
-  processor.StartProcessing();
-  EXPECT_FALSE(processor.IsRunning());
+  delegate.RunProcessor(&processor);
   EXPECT_TRUE(delegate.ran());
   EXPECT_EQ(kActionCodeNewKernelVerificationError, delegate.code());
 }

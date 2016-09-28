@@ -23,41 +23,9 @@ using strings::StringPrintf;
 
 namespace chromeos_update_engine {
 
-namespace {
-gboolean StartProcessorInRunLoop(gpointer data) {
-  ActionProcessor *processor = reinterpret_cast<ActionProcessor*>(data);
-  processor->StartProcessing();
-  return FALSE;
-}
-}  // namespace
-
 class PostinstallRunnerActionTest : public ::testing::Test {
  public:
   void DoTest(bool do_losetup, int err_code);
-};
-
-class PostinstActionProcessorDelegate : public ActionProcessorDelegate {
- public:
-  PostinstActionProcessorDelegate()
-      : loop_(NULL),
-        code_(kActionCodeError),
-        code_set_(false) {}
-  void ProcessingDone(const ActionProcessor* processor,
-                      ActionExitCode code) {
-    ASSERT_TRUE(loop_);
-    g_main_loop_quit(loop_);
-  }
-  void ActionCompleted(ActionProcessor* processor,
-                       AbstractAction* action,
-                       ActionExitCode code) {
-    if (action->Type() == PostinstallRunnerAction::StaticType()) {
-      code_ = code;
-      code_set_ = true;
-    }
-  }
-  GMainLoop* loop_;
-  ActionExitCode code_;
-  bool code_set_;
 };
 
 TEST_F(PostinstallRunnerActionTest, RunAsRootSimpleTest) {
@@ -133,36 +101,34 @@ void PostinstallRunnerActionTest::DoTest(bool do_losetup, int err_code) {
   }
 
   ActionProcessor processor;
+  ActionTestDelegate<PostinstallRunnerAction> delegate;
+
   ObjectFeederAction<InstallPlan> feeder_action;
   InstallPlan install_plan;
   install_plan.partition_path = dev;
   feeder_action.set_obj(install_plan);
+
   PostinstallRunnerAction runner_action;
   BondActions(&feeder_action, &runner_action);
+
   ObjectCollectorAction<InstallPlan> collector_action;
   BondActions(&runner_action, &collector_action);
-  PostinstActionProcessorDelegate delegate;
+
   processor.EnqueueAction(&feeder_action);
   processor.EnqueueAction(&runner_action);
   processor.EnqueueAction(&collector_action);
-  processor.set_delegate(&delegate);
 
-  GMainLoop* loop = g_main_loop_new(g_main_context_default(), FALSE);
-  delegate.loop_ = loop;
-  g_timeout_add(0, &StartProcessorInRunLoop, &processor);
-  g_main_loop_run(loop);
-  g_main_loop_unref(loop);
-  ASSERT_FALSE(processor.IsRunning());
+  delegate.RunProcessorInMainLoop(&processor);
 
-  EXPECT_TRUE(delegate.code_set_);
-  EXPECT_EQ(do_losetup && !err_code, delegate.code_ == kActionCodeSuccess);
+  EXPECT_TRUE(delegate.ran());
+  EXPECT_EQ(do_losetup && !err_code, delegate.code() == kActionCodeSuccess);
   EXPECT_EQ(do_losetup && !err_code,
             !collector_action.object().partition_path.empty());
   if (do_losetup && !err_code) {
     EXPECT_TRUE(install_plan == collector_action.object());
   }
   if (err_code == 2)
-    EXPECT_EQ(kActionCodePostinstallBootedFromFirmwareB, delegate.code_);
+    EXPECT_EQ(kActionCodePostinstallBootedFromFirmwareB, delegate.code());
 
   struct stat stbuf;
   int rc = lstat((string(cwd) + "/postinst_called").c_str(), &stbuf);
