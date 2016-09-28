@@ -1,76 +1,80 @@
 #!/usr/bin/bash -e
 # Wrapper for launching etcd via rkt.
+#
+# Make sure to set ETCD_IMAGE_TAG to an image tag published here:
+# https://quay.io/repository/coreos/etcd?tab=tags Alternatively,
+# override ETCD_IMAGE to a custom image.
 
 function require_ev_all() {
-    for rev in $@ ; do
-        if [[ -z ${!rev} ]]; then
-            echo ${rev} is not set
-            exit 1
-        fi
-    done
+	for rev in $@ ; do
+		if [[ -z "${!rev}" ]]; then
+			echo ${rev} is not set
+			exit 1
+		fi
+	done
 }
 
 function require_ev_one() {
-    for rev in $@ ; do
-        if [[ ! -z ${!rev} ]]; then
-            return
-        fi
-    done
-    echo One of $@ must be set
-    exit 1
+	for rev in $@ ; do
+		if [[ ! -z "${!rev}" ]]; then
+			return
+		fi
+	done
+	echo One of $@ must be set
+	exit 1
 }
 
-require_ev_one ETCD_IMG ETCD_TAG
-require_ev_all ETCD_IMG_USER ETCD_DATA_DIR
+require_ev_one ETCD_IMAGE ETCD_IMAGE_TAG
+require_ev_all ETCD_USER ETCD_DATA_DIR
 
-if [[ ! -z ${ETCD_TAG} ]]; then
-    ETCD_IMG="${ETCD_IMG:-coreos.com/etcd:${ETCD_TAG}}"
-    RKT_RUN_ARGS="${RKT_RUN_ARGS} \
-        --trust-keys-from-https
-    "
+ETCD_IMAGE_URL="${ETCD_IMAGE_URL:-quay.io/coreos/etcd}"
+ETCD_IMAGE="${ETCD_IMAGE:-${ETCD_IMAGE_URL}:${ETCD_IMAGE_TAG}}"
+
+if [[ "${ETCD_IMAGE%%/*}" == "quay.io" ]]; then
+	RKT_RUN_ARGS="${RKT_RUN_ARGS} --trust-keys-from-https"
 fi
 
-if [[ ! -e ${ETCD_DATA_DIR} ]]; then
-    mkdir -p ${ETCD_DATA_DIR}
-    chown ${ETCD_IMG_USER} ${ETCD_DATA_DIR}
+if [[ ! -e "${ETCD_DATA_DIR}" ]]; then
+	mkdir --parents "${ETCD_DATA_DIR}"
+	chown "${ETCD_USER}" "${ETCD_DATA_DIR}"
 fi
 
-SYSTEMD_SYSTEM_DIR_SRC=${SYSTEMD_SYSTEM_DIR_SRC:-/run/systemd/system}
-if [[ -d ${SYSTEMD_SYSTEM_DIR_SRC} ]]; then
-    RKT_RUN_ARGS="${RKT_RUN_ARGS} \
-    --mount volume=systemd-dir,target=/run/systemd/system \
-    --volume systemd-dir,kind=host,source=${SYSTEMD_SYSTEM_DIR_SRC},readOnly=true \
-    "
+ETCD_SSL_DIR="${ETCD_SSL_DIR:-/etc/ssl/certs}"
+
+SYSTEMD_SYSTEM_DIR_SRC="${SYSTEMD_SYSTEM_DIR_SRC:-/run/systemd/system}"
+if [[ -d "${SYSTEMD_SYSTEM_DIR_SRC}" ]]; then
+	RKT_RUN_ARGS="${RKT_RUN_ARGS} \
+		--mount volume=systemd-dir,target=/run/systemd/system \
+		--volume systemd-dir,kind=host,source=${SYSTEMD_SYSTEM_DIR_SRC},readOnly=true \
+	"
 fi
 
-
-if [[ -S ${NOTIFY_SOCKET} ]]; then
-    RKT_RUN_ARGS="${RKT_RUN_ARGS} \
-    --mount volume=notify,target=/run/systemd/notify \
-    --volume notify,kind=host,source=${NOTIFY_SOCKET} \
-    --set-env=NOTIFY_SOCKET=/run/systemd/notify \
-    "
+if [[ -S "${NOTIFY_SOCKET}" ]]; then
+	RKT_RUN_ARGS="${RKT_RUN_ARGS} \
+		--mount volume=notify,target=/run/systemd/notify \
+		--volume notify,kind=host,source=${NOTIFY_SOCKET} \
+		--set-env=NOTIFY_SOCKET=/run/systemd/notify \
+	"
 fi
 
-SSL_CERTS_SRC=${SSL_CERTS_SRC:-/etc/ssl/certs}
-ETC_HOSTS_SRC=${ETC_HOSTS_SRC:-/etc/hosts}
-ETCD_IMG_EXEC=${ETCD_IMG_EXEC:-/etcd}
-
-RKT=${RKT:-/usr/bin/rkt}
-RKT_STAGE1_ARG=${RKT_STAGE1_ARG:-"--stage1-from-dir=stage1-fly.aci"}
+RKT="${RKT:-/usr/bin/rkt}"
+RKT_STAGE1_ARG="${RKT_STAGE1_ARG:---stage1-from-dir=stage1-fly.aci}"
 set -x
 exec ${RKT} ${RKT_GLOBAL_ARGS} \
-    run ${RKT_RUN_ARGS} \
-    --volume data-dir,kind=host,source=${ETCD_DATA_DIR} \
-    \
-    --mount volume=etc-ssl-certs,target=/etc/ssl/certs \
-    --volume etc-ssl-certs,kind=host,source=${SSL_CERTS_SRC} \
-    \
-    --mount volume=etc-hosts,target=/etc/hosts  \
-    --volume etc-hosts,kind=host,source=${ETC_HOSTS_SRC} \
-    \
-    ${RKT_STAGE1_ARG} \
-    ${ETCD_IMG} ${ETCD_IMG_ARGS} \
-        --user=$(id -u ${ETCD_IMG_USER}) \
-        --exec=${ETCD_IMG_EXEC} -- \
-        "$@"
+	run ${RKT_RUN_ARGS} \
+	--volume data-dir,kind=host,source="${ETCD_DATA_DIR}",readOnly=false \
+	--volume etc-ssl-certs,kind=host,source="${ETCD_SSL_DIR}",readOnly=true \
+	--volume usr-share-certs,kind=host,source=/usr/share/ca-certificates,readOnly=true \
+	--volume etc-hosts,kind=host,source=/etc/hosts,readOnly=true \
+	--volume etc-resolv,kind=host,source=/etc/resolv.conf,readOnly=true \
+	--mount volume=data-dir,target=/var/lib/etcd \
+	--mount volume=etc-ssl-certs,target=/etc/ssl/certs \
+	--mount volume=usr-share-certs,target=/usr/share/ca-certificates \
+	--mount volume=etc-hosts,target=/etc/hosts  \
+	--mount volume=etc-resolv,target=/etc/resolv.conf  \
+	--inherit-env \
+	${RKT_STAGE1_ARG} \
+	${ETCD_IMAGE} \
+		${ETCD_IMAGE_ARGS} \
+		--user=$(id -u "${ETCD_USER}") \
+		-- "$@"
