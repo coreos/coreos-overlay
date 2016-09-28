@@ -312,53 +312,6 @@ bool RecursiveUnlinkDir(const std::string& path) {
   return true;
 }
 
-string RootDevice(const string& partition_device) {
-  files::FilePath device_path(partition_device);
-  if (device_path.DirName().value() != "/dev") {
-    return "";
-  }
-  string::const_iterator it = --partition_device.end();
-  for (; it >= partition_device.begin(); --it) {
-    if (!isdigit(*it))
-      break;
-  }
-  // Some devices contain a p before the partitions. For example:
-  // /dev/mmc0p4 should be shortened to /dev/mmc0.
-  if (*it == 'p')
-    --it;
-  return string(partition_device.begin(), it + 1);
-}
-
-string PartitionNumber(const string& partition_device) {
-  CHECK(!partition_device.empty());
-  string::const_iterator it = --partition_device.end();
-  for (; it >= partition_device.begin(); --it) {
-    if (!isdigit(*it))
-      break;
-  }
-  return string(it + 1, partition_device.end());
-}
-
-string SysfsBlockDevice(const string& device) {
-  files::FilePath device_path(device);
-  if (device_path.DirName().value() != "/dev") {
-    return "";
-  }
-  return files::FilePath("/sys/block").Append(device_path.BaseName()).value();
-}
-
-bool IsRemovableDevice(const std::string& device) {
-  string sysfs_block = SysfsBlockDevice(device);
-  string removable;
-  if (sysfs_block.empty() ||
-      !files::ReadFileToString(files::FilePath(sysfs_block).Append("removable"),
-                               &removable)) {
-    return false;
-  }
-  removable = strings::TrimWhitespace(removable);
-  return removable == "1";
-}
-
 std::string ErrnoNumberAsString(int err) {
   char buf[100];
   buf[0] = '\0';
