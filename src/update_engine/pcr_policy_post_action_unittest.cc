@@ -9,6 +9,7 @@
 #include "update_engine/mock_system_state.h"
 #include "update_engine/pcr_policy_post_action.h"
 #include "update_engine/omaha_hash_calculator.h"
+#include "update_engine/omaha_request_params.h"
 #include "update_engine/test_utils.h"
 #include "update_engine/utils.h"
 
@@ -24,6 +25,7 @@ enum VerifyTest {
   VerifySuccess,
   VerifyBadSize,
   VerifyBadHash,
+  HTTPServerDisabled,
   HTTPServerError,
 };
 
@@ -58,10 +60,16 @@ void DoTest(VerifyTest test) {
   }
 
   MockSystemState mock_system_state;
+  OmahaRequestParams params(&mock_system_state);
+  mock_system_state.set_request_params(&params);
   MockHttpFetcher *fetcher = new MockHttpFetcher(kServerResponse.data(),
                                                  kServerResponse.size());
   if (test == HTTPServerError)
     fetcher->FailTransfer(kHttpResponseInternalServerError);
+  if (test == HTTPServerDisabled)
+    fetcher->set_never_use(true);
+  else
+    params.set_pcr_policy_url("http://somewhere");
 
   ActionProcessor processor;
   ActionTestDelegate<PCRPolicyPostAction> delegate;
@@ -86,7 +94,7 @@ void DoTest(VerifyTest test) {
   delegate.RunProcessorInMainLoop(&processor);
   EXPECT_TRUE(delegate.ran());
 
-  if (test == VerifySuccess) {
+  if (test == VerifySuccess || test == HTTPServerDisabled) {
     EXPECT_EQ(kActionCodeSuccess, delegate.code());
     EXPECT_EQ(collector_action.object(), install_plan);
   } else if (test == HTTPServerError) {
@@ -109,6 +117,10 @@ TEST(PCRPolicyPostActionTest, VerifyBadSizeTest) {
 
 TEST(PCRPolicyPostActionTest, VerifyBadHashTest) {
   DoTest(VerifyBadHash);
+}
+
+TEST(PCRPolicyPostActionTest, HTTPServerDisabledTest) {
+  DoTest(HTTPServerDisabled);
 }
 
 TEST(PCRPolicyPostActionTest, HTTPServerErrorTest) {

@@ -81,7 +81,15 @@ void PCRPolicyPostAction::PerformAction() {
   LOG(INFO) << "PCR policy size: " << length;
   LOG(INFO) << "PCR policy hash: " << hasher.hash();
 
-  string url; // TODO
+  string url = system_state_->request_params()->pcr_policy_url();
+  if (url.empty()) {
+    LOG(INFO) << "PCR policy server disabled.";
+    if (HasOutputPipe())
+      SetOutputObject(install_plan_);
+    abort_action_completer.set_code(kActionCodeSuccess);
+    return;
+  }
+
   http_fetcher_->set_delegate(this);
   http_fetcher_->SetPostData(data.data(), data.size(),
                              kHttpContentTypeOctetStream);
