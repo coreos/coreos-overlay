@@ -58,7 +58,7 @@ int DeltaPerformer::Open() {
     LOG(ERROR) << "Attempting to re-open " << path_;
     return -EINVAL;
   }
-  fd_ = open(path_.c_str(), O_RDWR, 000);
+  fd_ = open(path_.c_str(), O_RDWR | O_CREAT, 0600);
   if (fd_ < 0) {
     int err = errno;
     PLOG(ERROR) << "Unable to open file " << path_;
