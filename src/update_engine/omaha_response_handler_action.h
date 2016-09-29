@@ -70,6 +70,10 @@ class OmahaResponseHandlerAction : public Action<OmahaResponseHandlerAction> {
   static bool GetKernelPath(const std::string& part_path,
                             std::string* kernel_path);
 
+  // Select the pcr policy path associated with the given partition.
+  static bool GetPCRPolicyPath(const std::string& part_path,
+                               std::string* policy_path);
+
   // Global system context.
   SystemState* system_state_;
 

@@ -69,6 +69,7 @@ class DeltaDiffGenerator {
                                       const std::string& new_image,
                                       const std::string& old_kernel,
                                       const std::string& new_kernel,
+                                      const std::string& pcr_policy,
                                       const std::string& output_path,
                                       const std::string& private_key_path,
                                       uint64_t* metadata_size);

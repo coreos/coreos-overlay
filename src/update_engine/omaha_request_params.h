@@ -98,6 +98,9 @@ class OmahaRequestParams {
   inline void set_update_url(const std::string& url) { update_url_ = url; }
   inline std::string update_url() const { return update_url_; }
 
+  inline void set_pcr_policy_url(const std::string& url) { pcr_policy_url_ = url; }
+  inline std::string pcr_policy_url() const { return pcr_policy_url_; }
+
   // Suggested defaults
   static const char* const kAppId;
   static const char* const kOsPlatform;
@@ -154,6 +157,9 @@ class OmahaRequestParams {
 
   // The URL to send the Omaha request to.
   std::string update_url_;
+
+  // The URL to send PCR policy data to.
+  std::string pcr_policy_url_;
 
   // When reading files, prepend root_ to the paths. Useful for testing.
   std::string root_;

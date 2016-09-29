@@ -386,6 +386,14 @@ class ScopedActionCompleter {
     }                                                                          \
   } while (0)
 
+#define TEST_AND_RETURN_VAL(_retval, _x)                                       \
+  do {                                                                         \
+    bool _success = (_x);                                                      \
+    if (!_success) {                                                           \
+      LOG(ERROR) << #_x " failed.";                                            \
+      return _retval;                                                          \
+    }                                                                          \
+  } while (0)
 
 
 #endif  // CHROMEOS_PLATFORM_UPDATE_ENGINE_UTILS_H__

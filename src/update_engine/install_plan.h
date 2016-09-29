@@ -35,6 +35,7 @@ struct InstallPlan {
   std::string payload_hash;              // SHA256 hash of the payload
   std::string partition_path;            // path to main partition device
   std::string kernel_path;               // path to kernel image
+  std::string pcr_policy_path;           // path to pcr policy zip file
 
   // Location to copy currently running system from.
   std::string old_partition_path;
@@ -54,6 +55,8 @@ struct InstallPlan {
   std::vector<char> new_partition_hash;
   uint64_t new_kernel_size;
   std::vector<char> new_kernel_hash;
+  uint64_t new_pcr_policy_size;
+  std::vector<char> new_pcr_policy_hash;
 
   // Optional arguments to pass to the post install script. Used to inform
   // the script about optional update procedures that ran. For example

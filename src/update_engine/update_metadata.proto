@@ -20,8 +20,8 @@ package chromeos_update_engine;
 //     char data[];
 //   } blobs[];
 //
-//   // These two are not signed:
-//   uint64 signatures_message_size;
+//   // The signature covers all preceding data. Size and location are
+//   // specified inside the manifest.
 //   char signatures_message[];
 //
 // };
@@ -73,7 +73,7 @@ message InstallOperation {
   // that bsdiff writes with '\0' bytes.
   optional uint64 dst_length = 7;
 
-  // Optional SHA 256 hash of the blob associated with this operation.
+  // Required SHA 256 hash of the blob associated with this operation.
   // This is used as a primary validation for http-based downloads and
   // as a defense-in-depth validation for https-based downloads. If
   // the operation doesn't refer to any blob, this field will have
@@ -130,6 +130,7 @@ message InstallInfo {
 message InstallProcedure {
   enum Type {
     KERNEL = 0;  // A kernel image to install to the boot partition.
+    PCR_POLICY = 1;  // A zip file containing TPM PCR data.
   }
   optional Type type = 1;
 

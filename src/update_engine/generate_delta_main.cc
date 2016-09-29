@@ -38,6 +38,7 @@ DEFINE_string(old_image, "", "Path to the old partition");
 DEFINE_string(new_image, "", "Path to the new partition");
 DEFINE_string(old_kernel, "", "Path to the old kernel image");
 DEFINE_string(new_kernel, "", "Path to the new kernel image");
+DEFINE_string(pcr_policy, "", "Path to the new PCR policy zip");
 DEFINE_string(in_file, "",
               "Path to input delta payload file used to hash/sign payloads "
               "and apply delta over old_image (for debugging)");
@@ -261,6 +262,7 @@ int Main(int argc, char** argv) {
                                                    FLAGS_new_image,
                                                    FLAGS_old_kernel,
                                                    FLAGS_new_kernel,
+                                                   FLAGS_pcr_policy,
                                                    FLAGS_out_file,
                                                    FLAGS_private_key,
                                                    &metadata_size)) {

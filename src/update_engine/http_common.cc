@@ -58,6 +58,7 @@ const char *GetHttpContentTypeString(HttpContentType type) {
     const char* str;
   } http_content_type_table[] = {
     { kHttpContentTypeTextXml, "text/xml" },
+    { kHttpContentTypeOctetStream, "application/octet-stream" },
   };
 
   bool is_found = false;

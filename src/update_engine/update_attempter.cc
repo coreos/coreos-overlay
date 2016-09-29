@@ -29,6 +29,7 @@
 #include "update_engine/omaha_request_params.h"
 #include "update_engine/omaha_response_handler_action.h"
 #include "update_engine/payload_state_interface.h"
+#include "update_engine/pcr_policy_post_action.h"
 #include "update_engine/postinstall_runner_action.h"
 #include "update_engine/prefs_interface.h"
 #include "update_engine/subprocess.h"
@@ -202,6 +203,8 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
       new FilesystemCopierAction(true));
   shared_ptr<KernelVerifierAction> kernel_verifier_action(
       new KernelVerifierAction);
+  shared_ptr<PCRPolicyPostAction> pcr_policy_post_action(
+      new PCRPolicyPostAction(system_state_, new LibcurlHttpFetcher()));
   shared_ptr<PostinstallRunnerAction> postinstall_runner_action(
       new PostinstallRunnerAction);
   shared_ptr<OmahaRequestAction> update_complete_action(
@@ -223,6 +226,7 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
   actions_.push_back(shared_ptr<AbstractAction>(download_finished_action));
   actions_.push_back(shared_ptr<AbstractAction>(filesystem_verifier_action));
   actions_.push_back(shared_ptr<AbstractAction>(kernel_verifier_action));
+  actions_.push_back(shared_ptr<AbstractAction>(pcr_policy_post_action));
   actions_.push_back(shared_ptr<AbstractAction>(postinstall_runner_action));
   actions_.push_back(shared_ptr<AbstractAction>(update_complete_action));
 
@@ -246,6 +250,8 @@ void UpdateAttempter::BuildUpdateActions(bool interactive) {
   BondActions(filesystem_verifier_action.get(),
               kernel_verifier_action.get());
   BondActions(kernel_verifier_action.get(),
+              pcr_policy_post_action.get());
+  BondActions(pcr_policy_post_action.get(),
               postinstall_runner_action.get());
 }
 

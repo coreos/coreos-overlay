@@ -74,6 +74,10 @@ void OmahaResponseHandlerAction::PerformAction() {
       install_plan_.partition_path,
       &install_plan_.kernel_path));
 
+  TEST_AND_RETURN(GetPCRPolicyPath(
+      install_plan_.partition_path,
+      &install_plan_.pcr_policy_path));
+
   TEST_AND_RETURN(HasOutputPipe());
   if (HasOutputPipe())
     SetOutputObject(install_plan_);
@@ -135,6 +139,20 @@ bool OmahaResponseHandlerAction::GetKernelPath(const std::string& part_path,
   }
   if (last_char == '4') {
     *kernel_path = "/boot/coreos/vmlinuz-b";
+    return true;
+  }
+  return false;
+}
+
+bool OmahaResponseHandlerAction::GetPCRPolicyPath(const std::string& part_path,
+                                                  std::string* policy_path) {
+  char last_char = part_path[part_path.size() - 1];
+  if (last_char == '3') {
+    *policy_path = "/var/lib/update_engine/pcrs-a.zip";
+    return true;
+  }
+  if (last_char == '4') {
+    *policy_path = "/var/lib/update_engine/pcrs-b.zip";
     return true;
   }
   return false;

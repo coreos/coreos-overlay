@@ -55,6 +55,7 @@ void LogPartitionInfo(const DeltaArchiveManifest& manifest) {
 PayloadProcessor::PayloadProcessor(PrefsInterface* prefs, InstallPlan* install_plan)
   : partition_performer_(prefs, install_plan->partition_path),
     kernel_performer_(prefs, install_plan->kernel_path),
+    pcr_policy_performer_(prefs, install_plan->pcr_policy_path),
     prefs_(prefs),
     install_plan_(install_plan),
     manifest_valid_(false),
@@ -77,6 +78,14 @@ int PayloadProcessor::Open() {
       return err;
     }
   }
+  if (!install_plan_->pcr_policy_path.empty()) {
+    err = pcr_policy_performer_.Open();
+    if (err != 0) {
+      kernel_performer_.Close();
+      partition_performer_.Close();
+      return err;
+    }
+  }
   return 0;
 }
 
@@ -84,6 +93,12 @@ int PayloadProcessor::Close() {
   int err = partition_performer_.Close();
   if (!install_plan_->kernel_path.empty()) {
     int err2 = kernel_performer_.Close();
+    if (err == 0) {
+      err = err2;
+    }
+  }
+  if (!install_plan_->pcr_policy_path.empty()) {
+    int err2 = pcr_policy_performer_.Close();
     if (err == 0) {
       err = err2;
     }
@@ -181,17 +196,28 @@ ActionExitCode PayloadProcessor::LoadManifest() {
   }
 
   kernel_performer_.SetBlockSize(manifest_.block_size());
+  pcr_policy_performer_.SetBlockSize(manifest_.block_size());
   for (const InstallProcedure &proc : manifest_.procedures()) {
-    // KERNELs are plain files so we must specify their final size.
-    if (proc.has_type() &&
-        proc.type() == InstallProcedure_Type_KERNEL &&
-        proc.has_new_info() &&
-        !install_plan_->kernel_path.empty()) {
-      kernel_performer_.SetFileSize(proc.new_info().size());
-    }
-
     for (const InstallOperation &op : proc.operations()) {
       operations_.emplace_back(&proc, &op);
+    }
+
+    if (!proc.has_type())
+      continue;
+
+    // Any procedures for plain files must provide final file size.
+    TEST_AND_RETURN_VAL(kActionCodeDownloadManifestParseError,
+                        proc.has_new_info());
+
+    switch (proc.type()) {
+      case InstallProcedure_Type_KERNEL:
+        if (!install_plan_->kernel_path.empty())
+          kernel_performer_.SetFileSize(proc.new_info().size());
+        break;
+      case InstallProcedure_Type_PCR_POLICY:
+        if (!install_plan_->pcr_policy_path.empty())
+          pcr_policy_performer_.SetFileSize(proc.new_info().size());
+        break;
     }
   }
 
@@ -218,6 +244,10 @@ ActionExitCode PayloadProcessor::PerformOperation() {
       case InstallProcedure_Type_KERNEL:
         if (!install_plan_->kernel_path.empty())
           performer = &kernel_performer_;
+        break;
+      case InstallProcedure_Type_PCR_POLICY:
+        if (!install_plan_->pcr_policy_path.empty())
+          performer = &pcr_policy_performer_;
         break;
     }
   }
@@ -293,14 +323,6 @@ bool PayloadProcessor::ExtractSignatureMessage(const vector<char>& data) {
   return true;
 }
 
-#define TEST_AND_RETURN_VAL(_retval, _condition)                \
-  do {                                                          \
-    if (!(_condition)) {                                        \
-      LOG(ERROR) << "VerifyPayload failure: " << #_condition;   \
-      return _retval;                                           \
-    }                                                           \
-  } while (0);
-
 ActionExitCode PayloadProcessor::VerifyPayload() {
   LOG(INFO) << "Verifying delta payload using public key: " << public_key_path_;
 
@@ -318,9 +340,7 @@ ActionExitCode PayloadProcessor::VerifyPayload() {
 
   // Update the InstallPlan so the update can be verified.
   TEST_AND_RETURN_VAL(kActionCodeDownloadPayloadVerificationError,
-                      SetNewPartitionInfo());
-  TEST_AND_RETURN_VAL(kActionCodeDownloadPayloadVerificationError,
-                      SetNewKernelInfo());
+                      SetNewInfo());
 
   // Verifies the signed payload hash.
   if (!utils::FileExists(public_key_path_.c_str())) {
@@ -356,36 +376,47 @@ ActionExitCode PayloadProcessor::VerifyPayload() {
   return kActionCodeSuccess;
 }
 
-bool PayloadProcessor::SetNewPartitionInfo() {
+bool PayloadProcessor::SetNewInfo() {
   TEST_AND_RETURN_FALSE(manifest_valid_ &&
                         manifest_.has_new_partition_info());
   install_plan_->new_partition_size = manifest_.new_partition_info().size();
   install_plan_->new_partition_hash.assign(
       manifest_.new_partition_info().hash().begin(),
       manifest_.new_partition_info().hash().end());
-  return true;
-}
-
-bool PayloadProcessor::SetNewKernelInfo() {
-  if (install_plan_->kernel_path.empty())
-    return true;
 
   for (const InstallProcedure& proc : manifest_.procedures()) {
-    if (!proc.has_type() || proc.type() != InstallProcedure_Type_KERNEL)
+    if (!proc.has_type())
       continue;
 
-    TEST_AND_RETURN_FALSE(proc.has_new_info());
-    install_plan_->new_kernel_size = proc.new_info().size();
-    install_plan_->new_kernel_hash.assign(
-        proc.new_info().hash().begin(),
-        proc.new_info().hash().end());
-    install_plan_->postinst_args.push_back(
-        "KERNEL=" + install_plan_->kernel_path);
-    return true;
+    switch (proc.type()) {
+      case InstallProcedure_Type_KERNEL:
+        if (install_plan_->kernel_path.empty())
+          continue;
+
+        TEST_AND_RETURN_FALSE(proc.has_new_info());
+        install_plan_->new_kernel_size = proc.new_info().size();
+        install_plan_->new_kernel_hash.assign(
+            proc.new_info().hash().begin(),
+            proc.new_info().hash().end());
+        install_plan_->postinst_args.push_back(
+            "KERNEL=" + install_plan_->kernel_path);
+        break;
+
+      case InstallProcedure_Type_PCR_POLICY:
+        if (install_plan_->pcr_policy_path.empty())
+          continue;
+
+        TEST_AND_RETURN_FALSE(proc.has_new_info());
+        install_plan_->new_pcr_policy_size = proc.new_info().size();
+        install_plan_->new_pcr_policy_hash.assign(
+            proc.new_info().hash().begin(),
+            proc.new_info().hash().end());
+        install_plan_->postinst_args.push_back(
+            "PCR_POLICY=" + install_plan_->pcr_policy_path);
+        break;
+    }
   }
 
-  // Allow payloads without kernels, the verify action will be skipped
-  // if the kernel size and hash are unset.
   return true;
 }
 
