@@ -35,7 +35,7 @@ RDEPEND="!coreos-base/coreos-installer
 	dev-libs/protobuf:=
 	dev-util/bsdiff
 	net-misc/curl
-	sys-apps/rootdev
+	>=sys-apps/seismograph-2.2.0
 	sys-fs/e2fsprogs"
 DEPEND="dev-cpp/gmock
 	dev-cpp/gtest
