@@ -5,14 +5,12 @@
 
 set -e
 
-# Look up the currently mounted usr or root device.
-if mountpoint -q /usr; then
-    dev=$(findmnt -n --raw --output=source --target=/usr)
-else
-    dev=$(findmnt -n --raw --output=source --target=/)
-fi
+# Look up the currently mounted usr partition.
+dev=$(rootdev -s /usr)
 
-# Mark the root as successfully booted (success=1, tries=0).
+# Repair partition table if required (e.g. the backup GPT may be out of sync)
+cgpt repair "${dev}"
+
+# Mark /usr as successfully booted (success=1, tries=0) and highest priority.
 cgpt add -S1 -T0 "${dev}"
-# Mark the root as highest priority
 cgpt prioritize "${dev}"
