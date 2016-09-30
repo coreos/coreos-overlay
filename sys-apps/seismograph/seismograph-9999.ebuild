@@ -9,7 +9,7 @@ AUTOTOOLS_AUTORECONF=1
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~arm64 ~x86"
 else
-	CROS_WORKON_COMMIT="db243fb040ef52b36e9e4bc835f5c11eec89ff2d"
+	CROS_WORKON_COMMIT="abf96f58562a7fd6dbf62542243cf201641b4a7a"
 	KEYWORDS="amd64 arm arm64 x86"
 fi
 
@@ -21,6 +21,7 @@ SLOT="0"
 IUSE=""
 
 RDEPEND="!coreos-base/vboot_reference
+	!sys-apps/rootdev
 	sys-apps/util-linux
 	sys-fs/e2fsprogs"
 DEPEND="${RDEPEND}"
