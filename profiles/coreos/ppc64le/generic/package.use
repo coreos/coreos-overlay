@@ -1,4 +1,4 @@
-# Enable SELinux for amd64 targets
+# Enable SELinux for ppc64le targets
 coreos-base/coreos	    selinux
 sys-apps/dbus               selinux
 sys-apps/systemd            selinux
