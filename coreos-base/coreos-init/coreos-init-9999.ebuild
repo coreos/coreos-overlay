@@ -30,6 +30,7 @@ REQUIRED_USE="symlink-usr"
 # during runtime so the systemd unit enable step works.
 DEPEND="
 	app-emulation/docker
+	app-emulation/containerd
 	net-misc/openssh
 	net-nds/rpcbind
 	!<dev-db/etcd-0.0.1-r6
@@ -49,6 +50,7 @@ src_install() {
 
 	# Enable some sockets that aren't enabled by their own ebuilds.
 	systemd_enable_service sockets.target sshd.socket
+	systemd_enable_service sockets.target containerd.socket
 	systemd_enable_service sockets.target docker.socket
 
 	# Enable some services that aren't enabled elsewhere.

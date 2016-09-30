@@ -1,0 +1,15 @@
+[Unit]
+Description=Containerd Container Daemon
+Documentation=http://github.com/docker/containerd
+After=containerd.socket network.target
+Requires=containerd.socket
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/containerd --debug --listen fd:// --shim /usr/bin/containerd-shim --state-dir /var/run/docker/libcontainerd/containerd --runtime /usr/bin/runc --runtime-args --debug
+
+# set delegate yes so that systemd does not reset the cgroups of containers
+Delegate=yes
+
+[Install]
+WantedBy=multi-user.target

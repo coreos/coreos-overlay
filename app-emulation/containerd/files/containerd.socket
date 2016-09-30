@@ -1,0 +1,13 @@
+# /etc/systemd/system/containerd.socket
+[Unit]
+Description=Containerd Socket for the API
+PartOf=containerd.service
+
+[Socket]
+ListenStream=/var/run/docker/libcontainerd/docker-containerd.sock
+SocketMode=0660
+SocketUser=docker
+SocketGroup=docker
+
+[Install]
+WantedBy=sockets.target
