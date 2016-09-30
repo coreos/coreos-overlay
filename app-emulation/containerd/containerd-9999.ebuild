@@ -19,7 +19,7 @@ else
 	inherit vcs-snapshot
 fi
 
-inherit coreos-go
+inherit coreos-go systemd
 
 DESCRIPTION="A daemon to control runC"
 HOMEPAGE="https://containerd.tools"
@@ -39,4 +39,6 @@ src_compile() {
 
 src_install() {
 	dobin bin/containerd* bin/ctr
+
+	systemd_dounit "${FILESDIR}/containerd.service"
 }
