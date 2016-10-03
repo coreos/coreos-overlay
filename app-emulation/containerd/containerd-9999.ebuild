@@ -41,5 +41,4 @@ src_install() {
 	dobin bin/containerd* bin/ctr
 
 	systemd_dounit "${FILESDIR}/containerd.service"
-	systemd_dounit "${FILESDIR}/containerd.socket"
 }
