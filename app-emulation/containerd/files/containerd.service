@@ -10,4 +10,4 @@ ExecStart=/usr/bin/containerd --listen unix:///var/run/docker/libcontainerd/dock
 Delegate=yes
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=multi-user.target early-docker.target
