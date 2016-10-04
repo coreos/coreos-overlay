@@ -6,6 +6,12 @@ Documentation=http://github.com/docker/containerd
 Type=simple
 ExecStart=/usr/bin/containerd --listen unix:///var/run/docker/libcontainerd/docker-containerd.sock --shim /usr/bin/containerd-shim --state-dir /var/run/docker/libcontainerd/containerd --runtime /usr/bin/runc
 
+# (lack of) limits from the upstream docker service unit
+LimitNOFILE=1048576
+LimitNPROC=infinity
+LimitCORE=infinity
+TasksMax=infinity
+
 # set delegate yes so that systemd does not reset the cgroups of containers
 Delegate=yes
 
