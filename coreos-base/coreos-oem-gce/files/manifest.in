@@ -1,0 +1,38 @@
+{
+  "acKind": "ImageManifest",
+  "acVersion": "0.8.6",
+  "name": "@ACI_NAME@",
+  "labels": [
+    {"name": "arch", "value": "@ACI_ARCH@"},
+    {"name": "os", "value": "linux"},
+    {"name": "version", "value": "@ACI_VERSION@"}
+  ],
+  "app": {
+    "exec": [ "/init.sh" ],
+    "user": "0",
+    "group": "0",
+
+    "mountPoints": [
+      {
+        "name": "baselayout",
+        "path": "/usr/share/baselayout",
+        "readOnly": true
+      },
+      {
+        "name": "cacertificates",
+        "path": "/usr/share/ca-certificates",
+        "readOnly": true
+      },
+      {
+        "name": "etc",
+        "path": "/etc",
+        "readOnly": false
+      },
+      {
+        "name": "runsystemd",
+        "path": "/run/systemd",
+        "readOnly": false
+      }
+    ]
+  }
+}
