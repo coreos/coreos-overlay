@@ -9,7 +9,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~arm64 ~x86"
 else
-	CROS_WORKON_COMMIT="508d986e38c70bd0636740d287d2fe807822fb57" # v2.18.1
+	CROS_WORKON_COMMIT="42bec47544ad80d3e39342b11ea33da05ff9133d" # v2.23.0
 	KEYWORDS="amd64 arm arm64 x86"
 fi
 
@@ -28,10 +28,10 @@ RDEPEND=""
 
 src_configure() {
 	tc-export CC
-}
-
-src_compile() {
-	emake DATADIR=/usr/share/baselayout MODULE_NAME=usrfiles
+	econf \
+		--datadir=/usr/share/baselayout \
+		--with-module-name=usrfiles \
+		--with-types=all
 }
 
 src_install() {
