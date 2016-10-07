@@ -17,6 +17,7 @@ DEPEND=""
 RDEPEND="
 	amd64? (
 		app-emulation/google-compute-daemon
+		app-emulation/google-compute-engine
 		app-emulation/google-startup-scripts
 		app-emulation/open-vm-tools
 		app-emulation/wa-linux-agent
