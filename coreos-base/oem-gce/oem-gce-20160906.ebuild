@@ -15,11 +15,6 @@ IUSE=""
 # no source directory
 S="${WORKDIR}"
 
-RDEPEND="
-	~app-emulation/google-compute-daemon-${PV}
-	~app-emulation/google-startup-scripts-${PV}
-"
-
 src_prepare() {
 	sed -e "s\\@@OEM_VERSION_ID@@\\${PVR}\\g" \
 	    "${FILESDIR}/oem-release" > "${T}/oem-release" || die
