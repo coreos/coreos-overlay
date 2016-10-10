@@ -2,9 +2,7 @@
  - Support env CC
  - Don't build/install libtz.a
  - Don't install man-pages provided by sys-apps/man-pages
- - Move zic, zdump to sbin and tzselect to bin ala glibc
- - Install posix zoneinfo into zoneinfo/posix/ instead of zoneinfo-posix/ ala glibc
- - Install leaps zoneinfo into zoneinfo/right/ ala glibc
+ - Move tzselect, zic, and zdump to bin
  - Do not run network based unittests
 
 --- a/Makefile
@@ -43,32 +41,27 @@
  
  # Library functions are put in an archive in LIBDIR.
  
-@@ -298,8 +298,10 @@ GZIPFLAGS=	-9n
+@@ -298,8 +298,7 @@ GZIPFLAGS=	-9n
  
- ###############################################################################
+ #MAKE=		make
  
 -cc=		cc
 -CC=		$(cc) -DTZDIR=\"$(TZDIR)\"
 +CPPFLAGS+=		-DTZDIR=\"$(TZDIR)\"
-+ifeq ($(NLS),1)
-+CPPFLAGS+= -DHAVE_GETTEXT=1 -DTZ_DOMAIN=\"libc\"
-+endif
  
  AR=		ar
  
-@@ -352,17 +354,14 @@ ALL:		all date
+@@ -352,16 +354,12 @@ ALL:		all date
  install:	all $(DATA) $(REDO) $(MANS)
  		mkdir -p $(DESTDIR)$(ETCDIR) $(DESTDIR)$(TZDIR) \
 -			$(DESTDIR)$(LIBDIR) \
-+			$(DESTDIR)$(SBINDIR) $(DESTDIR)$(BINDIR) \
++			$(DESTDIR)$(BINDIR) \
  			$(DESTDIR)$(MANDIR)/man3 $(DESTDIR)$(MANDIR)/man5 \
  			$(DESTDIR)$(MANDIR)/man8
- 		$(ZIC) -y $(YEARISTYPE) \
- 			-d $(DESTDIR)$(TZDIR) -l $(LOCALTIME) -p $(POSIXRULES)
+ 		$(ZIC_INSTALL) -l $(LOCALTIME) -p $(POSIXRULES)
  		cp -f iso3166.tab $(ZONETABLES) $(DESTDIR)$(TZDIR)/.
 -		cp tzselect zic zdump $(DESTDIR)$(ETCDIR)/.
-+		cp zic zdump $(DESTDIR)$(SBINDIR)/.
-+		cp tzselect $(DESTDIR)$(BINDIR)/.
++		cp tzselect zic zdump $(DESTDIR)$(BINDIR)/.
 -		cp libtz.a $(DESTDIR)$(LIBDIR)/.
 -		$(RANLIB) $(DESTDIR)$(LIBDIR)/libtz.a
  		cp -f newctime.3 newtzset.3 $(DESTDIR)$(MANDIR)/man3/.
@@ -77,32 +70,7 @@
  
  INSTALL:	ALL install date.1
  		mkdir -p $(DESTDIR)$(BINDIR) $(DESTDIR)$(MANDIR)/man1
-@@ -406,18 +408,18 @@ right_only:	zic leapseconds $(TDATA)
- # to using them, or vice versa.
- right_posix:	right_only leapseconds
- 		rm -fr $(DESTDIR)$(TZDIR)-leaps
--		ln -s $(TZDIR_BASENAME) $(DESTDIR)$(TZDIR)-leaps || \
--		  $(ZIC) -y $(YEARISTYPE) -d $(DESTDIR)$(TZDIR)-leaps \
-+		ln -s . $(DESTDIR)$(TZDIR)/right || \
-+		  $(ZIC) -y $(YEARISTYPE) -d $(DESTDIR)$(TZDIR)/right \
- 			-L leapseconds $(TDATA)
--		$(ZIC) -y $(YEARISTYPE) -d $(DESTDIR)$(TZDIR)-posix \
-+		$(ZIC) -y $(YEARISTYPE) -d $(DESTDIR)$(TZDIR)/posix \
- 			-L /dev/null $(TDATA)
- 
- posix_right:	posix_only leapseconds
- 		rm -fr $(DESTDIR)$(TZDIR)-posix
--		ln -s $(TZDIR_BASENAME) $(DESTDIR)$(TZDIR)-posix || \
--		  $(ZIC) -y $(YEARISTYPE) -d $(DESTDIR)$(TZDIR)-posix \
-+		ln -s . $(DESTDIR)$(TZDIR)/posix || \
-+		  $(ZIC) -y $(YEARISTYPE) -d $(DESTDIR)$(TZDIR)/posix \
- 			-L /dev/null $(TDATA)
--		$(ZIC) -y $(YEARISTYPE) -d $(DESTDIR)$(TZDIR)-leaps \
-+		$(ZIC) -y $(YEARISTYPE) -d $(DESTDIR)$(TZDIR)/right \
- 			-L leapseconds $(TDATA)
- 
- posix_packrat:	posix_only backzone
-@@ -440,7 +442,7 @@ tzselect:	tzselect.ksh
+@@ -440,7 +438,7 @@ tzselect:	tzselect.ksh
  		chmod +x $@
  
  check:		check_character_set check_white_space check_links check_sorted \
