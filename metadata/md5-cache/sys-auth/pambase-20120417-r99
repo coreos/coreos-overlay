@@ -1,0 +1,9 @@
+DEFINED_PHASES=-
+DESCRIPTION=Compatibility ebuild stub for CoreOS
+EAPI=6
+HOMEPAGE=https://github.com/coreos/baselayout
+KEYWORDS=amd64 arm arm64 x86
+LICENSE=metapackage
+RDEPEND=>=sys-apps/baselayout-3.1 >=sys-libs/pam-1.2
+SLOT=0
+_md5_=f0cf694242c597f847886ab6c01414b2

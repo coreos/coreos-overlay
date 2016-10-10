@@ -1,12 +1,13 @@
 DEFINED_PHASES=compile info install prepare unpack
-DEPEND=dev-lang/go:= >=dev-vcs/git-1.8.2.1
+DEPEND=dev-lang/go:1.7= >=dev-vcs/git-1.8.2.1
 DESCRIPTION=A build tool for ACIs
 EAPI=5
 HOMEPAGE=https://github.com/appc/acbuild
-IUSE=cros_workon_tree_* profiling
+IUSE=+go_version_go1_7 cros_workon_tree_* profiling
 KEYWORDS=~amd64 ~arm64
 LICENSE=Apache-2.0
 RDEPEND=sys-apps/kmod app-crypt/gnupg sys-apps/systemd
+REQUIRED_USE=go_version_go1_7
 SLOT=0
-_eclasses_=coreos-go	9aec6d11d214fbb3064cc9de1bd64eb0	cros-workon	995fc284f005294b40380f96f8f96541	eutils	9d81603248f2ba3ec59124320d123e5e	flag-o-matic	d270fa247153df66074f795fa42dba3e	git-r3	ef66dfc3db09f327af21cf32f140fb2b	multilib	3972ca401cf7dbb430df9995f5d8d580	multiprocessing	e32940a7b2a9992ad217eccddb84d548	toolchain-funcs	7a212e5e01adfa4805c9978366e6ee85
-_md5_=83e4c698278dc86b7f64f10340a86b3d
+_eclasses_=coreos-go	6e6f51e4ecc89ef7c7823a65556bd9d9	coreos-go-depend	bbc48df71cd1e48b73083b5c63377751	coreos-go-utils	5e0ac5131161ee8de80f759806fc0de0	cros-workon	995fc284f005294b40380f96f8f96541	eutils	9d81603248f2ba3ec59124320d123e5e	flag-o-matic	d270fa247153df66074f795fa42dba3e	git-r3	ef66dfc3db09f327af21cf32f140fb2b	multilib	3972ca401cf7dbb430df9995f5d8d580	multiprocessing	e32940a7b2a9992ad217eccddb84d548	toolchain-funcs	7a212e5e01adfa4805c9978366e6ee85
+_md5_=d19b7cf74a34bcb5e60b8c68f6e9187e

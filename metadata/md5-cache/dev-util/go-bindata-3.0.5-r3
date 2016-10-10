@@ -1,10 +1,12 @@
 DEFINED_PHASES=compile install prepare unpack
-DEPEND=dev-lang/go:= >=dev-vcs/git-1.6
+DEPEND=dev-lang/go:1.7= >=dev-vcs/git-1.6
 DESCRIPTION=A small utility which generates Go code from any file. Useful for embedding binary data in a Go program.
 EAPI=5
 HOMEPAGE=https://github.com/jteeuwen/go-bindata
+IUSE=+go_version_go1_7
 KEYWORDS=amd64 arm64 ~x86
 LICENSE=CC0 1.0 Universal
+REQUIRED_USE=go_version_go1_7
 SLOT=0
-_eclasses_=coreos-go	9aec6d11d214fbb3064cc9de1bd64eb0	eutils	9d81603248f2ba3ec59124320d123e5e	flag-o-matic	d270fa247153df66074f795fa42dba3e	git	a673225a1558ef94456dbd8ce271d16a	multilib	3972ca401cf7dbb430df9995f5d8d580	multiprocessing	e32940a7b2a9992ad217eccddb84d548	toolchain-funcs	7a212e5e01adfa4805c9978366e6ee85
+_eclasses_=coreos-go	6e6f51e4ecc89ef7c7823a65556bd9d9	coreos-go-depend	bbc48df71cd1e48b73083b5c63377751	coreos-go-utils	5e0ac5131161ee8de80f759806fc0de0	eutils	9d81603248f2ba3ec59124320d123e5e	flag-o-matic	d270fa247153df66074f795fa42dba3e	git	a673225a1558ef94456dbd8ce271d16a	multilib	3972ca401cf7dbb430df9995f5d8d580	multiprocessing	e32940a7b2a9992ad217eccddb84d548	toolchain-funcs	7a212e5e01adfa4805c9978366e6ee85
 _md5_=3156073f169657a13cf4990fd29531aa

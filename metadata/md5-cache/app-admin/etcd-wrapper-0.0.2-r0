@@ -1,0 +1,11 @@
+DEFINED_PHASES=install
+DEPEND=virtual/pkgconfig
+DESCRIPTION=etcd (System Application Container)
+EAPI=6
+HOMEPAGE=https://github.com/coreos/etcd
+KEYWORDS=amd64
+LICENSE=Apache-2.0
+RDEPEND=>=app-emulation/rkt-1.9.1[rkt_stage1_fly]
+SLOT=0
+_eclasses_=multilib	3972ca401cf7dbb430df9995f5d8d580	systemd	3165c885f3c71ffae7a867d931fb0e07	toolchain-funcs	7a212e5e01adfa4805c9978366e6ee85
+_md5_=36c3f16ed0e287422bd7f64616e6fd79

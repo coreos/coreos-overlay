@@ -1,0 +1,12 @@
+DEFINED_PHASES=configure install postinst
+DEPEND=test? ( dev-libs/glib )
+DESCRIPTION=Eselect module for managing multiple Go versions
+EAPI=6
+HOMEPAGE=https://github.com/coreos/eselect-go
+IUSE=test
+KEYWORDS=amd64 arm64
+LICENSE=GPL-2
+RDEPEND=app-admin/eselect !dev-lang/go:0
+SLOT=0
+SRC_URI=https://github.com/coreos/eselect-go/releases/download/v0.1.0/eselect-go-0.1.0.tar.gz
+_md5_=e41e0b67c722bdfba58ae57a4163148b
