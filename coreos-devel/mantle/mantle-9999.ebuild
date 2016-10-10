@@ -23,7 +23,10 @@ SLOT="0"
 # objcopy/split have trouble with our cross-compiled kolet
 STRIP_MASK="/*/kola/*/kolet"
 
-RDEPEND=">=net-dns/dnsmasq-2.72[dhcp,ipv6]"
+RDEPEND="
+    coreos-devel/old-docker
+    >=net-dns/dnsmasq-2.72[dhcp,ipv6]
+"
 
 src_compile() {
 	export GO15VENDOREXPERIMENT="1"
