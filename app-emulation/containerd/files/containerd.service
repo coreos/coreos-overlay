@@ -1,0 +1,19 @@
+[Unit]
+Description=Containerd Container Daemon
+Documentation=http://github.com/docker/containerd
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/containerd --listen /var/run/docker/libcontainerd/docker-containerd.sock --runtime runc --start-timeout 2m
+
+# (lack of) limits from the upstream docker service unit
+LimitNOFILE=1048576
+LimitNPROC=infinity
+LimitCORE=infinity
+TasksMax=infinity
+
+# set delegate yes so that systemd does not reset the cgroups of containers
+Delegate=yes
+
+[Install]
+WantedBy=multi-user.target early-docker.target

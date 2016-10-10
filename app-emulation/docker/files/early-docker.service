@@ -1,13 +1,17 @@
 [Unit]
 Description=Early Docker Application Container Engine
 Documentation=http://docs.docker.com
-After=early-docker.socket
-Requires=early-docker.socket
+After=containerd.service early-docker.socket
+Requires=containerd.service early-docker.socket
 
 [Service]
 Environment=TMPDIR=/var/tmp
-MountFlags=slave
-ExecStart=/usr/lib/coreos/dockerd daemon --host=fd:// --bridge=none --iptables=false --ip-masq=false --exec-root=/var/run/early-docker --graph=/var/lib/early-docker --pidfile=/var/run/early-docker.pid $DOCKER_OPTS $DOCKER_CGROUPS
+
+# We need shared mounts on the file system so that containerd can
+# see our bundles.
+# MountFlags=slave
+
+ExecStart=/usr/lib/coreos/dockerd daemon --host=fd:// --containerd=/var/run/docker/libcontainerd/docker-containerd.sock --bridge=none --iptables=false --ip-masq=false --exec-root=/var/run/early-docker --graph=/var/lib/early-docker --pidfile=/var/run/early-docker.pid $DOCKER_OPTS $DOCKER_CGROUPS
 LimitNOFILE=1048576
 # Having non-zero Limit*s causes performance problems due to accounting overhead
 # in the kernel. We recommend using cgroups to do container-local accounting.
