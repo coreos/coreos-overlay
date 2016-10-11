@@ -13,7 +13,7 @@ if [[ ${PV} == *9999 ]]; then
 	DOCKER_GITCOMMIT="unknown"
 	KEYWORDS="~amd64 ~arm64"
 else
-	CROS_WORKON_COMMIT="569214bb43beb1a094beeacfbe6b1cf7df2ab0cf" # coreos-1.11.2
+	CROS_WORKON_COMMIT="7a86f89a77eb849ed9e4ccb784dec402df224e3e" # coreos-1.12.1
 	DOCKER_GITCOMMIT="${CROS_WORKON_COMMIT:0:7}"
 	KEYWORDS="amd64 arm64"
 fi
@@ -65,8 +65,8 @@ RDEPEND="
 	>=dev-vcs/git-1.7
 	>=app-arch/xz-utils-4.9
 
-	>=app-emulation/containerd-0.2.0
-	>=app-emulation/runc-0.1.0
+	>=app-emulation/containerd-0.2.3[seccomp?]
+	>=app-emulation/runc-1.0.0_rc1_p20160615[apparmor?,seccomp?]
 "
 
 RESTRICT="installsources strip"
@@ -217,8 +217,11 @@ src_compile() {
 		grep -q -- '-fno-PIC' hack/make.sh || die 'hardened sed failed'
 
 		sed  "s/LDFLAGS_STATIC_DOCKER='/&-extldflags -fno-PIC /" \
-			-i hack/make/dynbinary || die
-		grep -q -- '-fno-PIC' hack/make/dynbinary || die 'hardened sed failed'
+			-i hack/make/dynbinary-client || die
+		sed  "s/LDFLAGS_STATIC_DOCKER='/&-extldflags -fno-PIC /" \
+			-i hack/make/dynbinary-daemon || die
+		grep -q -- '-fno-PIC' hack/make/dynbinary-daemon || die 'hardened sed failed'
+		grep -q -- '-fno-PIC' hack/make/dynbinary-client || die 'hardened sed failed'
 	fi
 
 	# let's set up some optional features :)
@@ -260,7 +263,12 @@ src_compile() {
 
 src_install() {
 	VERSION="$(cat VERSION)"
-	newbin "bundles/$VERSION/dynbinary/docker-$VERSION" docker
+	newbin "bundles/$VERSION/dynbinary-client/docker-$VERSION" docker
+	newbin "bundles/$VERSION/dynbinary-daemon/dockerd-$VERSION" dockerd
+	newbin "bundles/$VERSION/dynbinary-daemon/docker-proxy-$VERSION" docker-proxy
+	dosym containerd /usr/bin/docker-containerd
+	dosym containerd-shim /usr/bin/docker-containerd-shim
+	dosym runc /usr/bin/docker-runc
 
 	newinitd contrib/init/openrc/docker.initd docker
 	newconfd contrib/init/openrc/docker.confd docker

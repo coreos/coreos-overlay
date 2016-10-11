@@ -87,4 +87,4 @@ if [[ -z "${ARG_SELINUX}" ]]; then
         maybe_enable_selinux
 fi
 
-exec docker "$@" ${USE_SELINUX}
+exec dockerd "$@" ${USE_SELINUX}
