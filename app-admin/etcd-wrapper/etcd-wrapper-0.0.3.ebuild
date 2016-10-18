@@ -22,6 +22,8 @@ RDEPEND=">=app-emulation/rkt-1.9.1[rkt_stage1_fly]"
 S=${WORKDIR}
 
 src_install() {
-	dobin "${FILESDIR}"/etcd-wrapper
-  	systemd_dounit "${FILESDIR}"/etcd-wrapper.service
+	exeinto /usr/lib/coreos
+	doexe "${FILESDIR}"/etcd-wrapper
+
+	systemd_dounit "${FILESDIR}"/etcd-member.service
 }

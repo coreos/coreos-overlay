@@ -6,7 +6,7 @@ Requires=docker.socket early-docker.target
 
 [Service]
 Type=notify
-EnvironmentFile=-/run/flannel_docker_opts.env
+EnvironmentFile=-/run/flannel/flannel_docker_opts.env
 MountFlags=slave
 # the default is not to use systemd for cgroups because the delegate issues still
 # exists and systemd currently does not support the cgroup feature set required

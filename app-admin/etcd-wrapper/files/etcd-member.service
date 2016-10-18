@@ -1,0 +1,27 @@
+[Unit]
+Description=etcd (System Application Container)
+Documentation=https://github.com/coreos/etcd
+Wants=network.target
+Conflicts=etcd.service
+Conflicts=etcd2.service
+
+[Service]
+Type=notify
+Restart=on-failure
+RestartSec=10s
+TimeoutStartSec=0
+LimitNOFILE=40000
+
+Environment="ETCD_IMAGE_TAG=v3.0.10"
+Environment="ETCD_NAME=%m"
+Environment="ETCD_USER=etcd"
+Environment="ETCD_DATA_DIR=/var/lib/etcd"
+Environment="RKT_RUN_ARGS=--uuid-file-save=/var/lib/coreos/etcd-member-wrapper.uuid"
+
+ExecStartPre=/usr/bin/mkdir --parents /var/lib/coreos
+ExecStartPre=-/usr/bin/rkt rm --uuid-file=/var/lib/coreos/etcd-member-wrapper.uuid
+ExecStart=/usr/lib/coreos/etcd-wrapper $ETCD_OPTS
+ExecStop=-/usr/bin/rkt stop --uuid-file=/var/lib/coreos/etcd-member-wrapper.uuid
+
+[Install]
+WantedBy=multi-user.target
