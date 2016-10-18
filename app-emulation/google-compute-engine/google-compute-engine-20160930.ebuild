@@ -16,7 +16,7 @@ IUSE=""
 
 DEPEND="dev-python/setuptools"
 
-# These dependencies cover everything possibly called by the scripts.
+# These dependencies cover all commands called by the scripts.
 RDEPEND="
 	app-admin/sudo
 	dev-python/boto
@@ -26,8 +26,6 @@ RDEPEND="
 	sys-apps/grep
 	sys-apps/iproute2
 	sys-apps/shadow
-	sys-libs/glibc
-	sys-libs/nss-usrfiles
 "
 
 S="${WORKDIR}/compute-image-packages-${PV}"
