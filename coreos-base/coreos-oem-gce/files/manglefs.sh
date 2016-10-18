@@ -7,6 +7,11 @@ set -e
 cat << 'EOF' > init.sh && chmod 755 init.sh
 #!/bin/bash -ex
 
+# Write a configuration template if it does not exist.
+[ -e /etc/default/instance_configs.cfg.template ] ||
+echo -e > /etc/default/instance_configs.cfg.template \
+    '[InstanceSetup]\nset_host_keys = false'
+
 # Run the initialization scripts.
 /usr/bin/google_instance_setup
 /usr/bin/google_network_setup
