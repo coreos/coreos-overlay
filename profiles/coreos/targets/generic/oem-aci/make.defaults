@@ -1,0 +1,54 @@
+# Copyright (c) 2016 The CoreOS Authors. All rights reserved.
+# Distributed under the terms of the GNU General Public License v2
+
+# Restrictive mask for OEM ACIs.
+INSTALL_MASK="${INSTALL_MASK}
+  *.a *.la *.hpp *.o
+  /etc/sandbox.d
+  /usr/include
+  /usr/lib*/*/include
+  /usr/lib/debug
+  /usr/lib*/pkgconfig
+  /usr/share/aclocal*
+  /usr/share/awk
+  /usr/share/gdb
+  /usr/share/gettext
+  /usr/share/gobject-introspection-1.0
+  /usr/share/pkgconfig
+  /usr/share/readline
+  /usr/src
+"
+
+# Exclude nmap from OEM ACI, we just want ncat/nping in there.
+# Also remove ncat's second ca-bundle.crt, just use the system's.
+INSTALL_MASK="${INSTALL_MASK}
+  /usr/bin/nmap
+  /usr/share/ncat
+  /usr/share/nmap
+"
+
+# Remove files which depend on interpreters not present in boards.
+INSTALL_MASK="${INSTALL_MASK}
+  /usr/share/git/contrib/*
+  /usr/bin/diff-highlight
+  /usr/bin/autoscan-2.13
+  /usr/bin/autoupdate-2.69
+  /usr/bin/autoreconf-2.69
+  /usr/bin/automake-1.14
+  /usr/bin/autom4te-2.69
+  /usr/bin/autoheader-2.69
+  /usr/bin/aclocal-1.14
+  /usr/bin/aclocal-1.15
+  /usr/bin/automake-1.15
+  /usr/bin/ifnames-2.69
+  /usr/bin/intltool-update
+  /usr/bin/intltool-merge
+  /usr/bin/intltool-prepare
+  /usr/bin/intltool-extract
+  /usr/bin/autoscan-2.69
+"
+
+# There is no need to have boot stuff in a container.
+INSTALL_MASK="${INSTALL_MASK}
+  /boot
+"

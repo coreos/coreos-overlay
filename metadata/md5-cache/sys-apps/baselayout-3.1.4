@@ -1,0 +1,12 @@
+DEFINED_PHASES=compile info install postinst setup unpack
+DEPEND=sys-apps/systemd !coreos-base/coreos-base !<sys-libs/glibc-2.17-r1 !<=sys-libs/nss-usrfiles-2.18.1_pre >=dev-vcs/git-1.8.2.1 virtual/pkgconfig
+DESCRIPTION=Filesystem baselayout for CoreOS
+EAPI=5
+HOMEPAGE=http://www.coreos.com/
+IUSE=cros_host symlink-usr cros_workon_tree_* profiling
+KEYWORDS=amd64 arm arm64 x86
+LICENSE=GPL-2
+RDEPEND=sys-apps/systemd !coreos-base/coreos-base !<sys-libs/glibc-2.17-r1 !<=sys-libs/nss-usrfiles-2.18.1_pre >=sys-apps/gentoo-functions-0.10 cros_host? ( !coreos-base/coreos-init )
+SLOT=0
+_eclasses_=cros-workon	995fc284f005294b40380f96f8f96541	eutils	9d81603248f2ba3ec59124320d123e5e	git-r3	ef66dfc3db09f327af21cf32f140fb2b	multilib	3972ca401cf7dbb430df9995f5d8d580	systemd	3165c885f3c71ffae7a867d931fb0e07	toolchain-funcs	7a212e5e01adfa4805c9978366e6ee85
+_md5_=ddda8d6b82c5de1580107534a6f90b0e
