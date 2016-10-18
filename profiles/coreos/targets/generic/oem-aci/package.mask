@@ -1,6 +1,0 @@
-# Packages that we do not want to ship in OEM ACI images. Masking these is
-# merely as a safe guard against pulling them in accidentally.
-
-# OEM ACIs have no reason to include boot-related packages.
-sys-boot/*
-sys-kernel/*
