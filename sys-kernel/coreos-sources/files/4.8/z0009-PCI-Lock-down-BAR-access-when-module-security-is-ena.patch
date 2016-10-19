@@ -1,7 +1,7 @@
-From a092193db748a914f777fc4426322d085f6447ba Mon Sep 17 00:00:00 2001
+From e168029a84e7306ea580caace7437fa4da8fbc6f Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Thu, 8 Mar 2012 10:10:38 -0500
-Subject: [PATCH 02/20] PCI: Lock down BAR access when module security is
+Subject: [PATCH 09/21] PCI: Lock down BAR access when module security is
  enabled
 
 Any hardware that can potentially generate DMA has to be locked down from
@@ -18,7 +18,7 @@ Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
  3 files changed, 19 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index d319a9c..6b1884d 100644
+index bcd10c7..a950301 100644
 --- a/drivers/pci/pci-sysfs.c
 +++ b/drivers/pci/pci-sysfs.c
 @@ -30,6 +30,7 @@
@@ -29,7 +29,7 @@ index d319a9c..6b1884d 100644
  #include "pci.h"
  
  static int sysfs_initialized;	/* = 0 */
-@@ -711,6 +712,9 @@ static ssize_t pci_write_config(struct file *filp, struct kobject *kobj,
+@@ -716,6 +717,9 @@ static ssize_t pci_write_config(struct file *filp, struct kobject *kobj,
  	loff_t init_off = off;
  	u8 *data = (u8 *) buf;
  
@@ -39,7 +39,7 @@ index d319a9c..6b1884d 100644
  	if (off > dev->cfg_size)
  		return 0;
  	if (off + count > dev->cfg_size) {
-@@ -1002,6 +1006,9 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
+@@ -1007,6 +1011,9 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
  	resource_size_t start, end;
  	int i;
  
@@ -49,7 +49,7 @@ index d319a9c..6b1884d 100644
  	for (i = 0; i < PCI_ROM_RESOURCE; i++)
  		if (res == &pdev->resource[i])
  			break;
-@@ -1101,6 +1108,9 @@ static ssize_t pci_write_resource_io(struct file *filp, struct kobject *kobj,
+@@ -1106,6 +1113,9 @@ static ssize_t pci_write_resource_io(struct file *filp, struct kobject *kobj,
  				     struct bin_attribute *attr, char *buf,
  				     loff_t off, size_t count)
  {
@@ -60,7 +60,7 @@ index d319a9c..6b1884d 100644
  }
  
 diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-index 3f155e7..4265ea0 100644
+index 2408abe..59f321c 100644
 --- a/drivers/pci/proc.c
 +++ b/drivers/pci/proc.c
 @@ -116,6 +116,9 @@ static ssize_t proc_bus_pci_write(struct file *file, const char __user *buf,
@@ -85,7 +85,7 @@ index 3f155e7..4265ea0 100644
  		ret = pci_domain_nr(dev->bus);
 @@ -233,7 +239,7 @@ static int proc_bus_pci_mmap(struct file *file, struct vm_area_struct *vma)
  	struct pci_filp_private *fpriv = file->private_data;
- 	int i, ret;
+ 	int i, ret, write_combine;
  
 -	if (!capable(CAP_SYS_RAWIO))
 +	if (!capable(CAP_SYS_RAWIO) || secure_modules())
