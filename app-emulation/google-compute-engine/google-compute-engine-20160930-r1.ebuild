@@ -16,7 +16,7 @@ IUSE=""
 
 DEPEND="dev-python/setuptools"
 
-# These dependencies cover everything possibly called by the scripts.
+# These dependencies cover all commands called by the scripts.
 RDEPEND="
 	app-admin/sudo
 	dev-python/boto
@@ -26,17 +26,9 @@ RDEPEND="
 	sys-apps/grep
 	sys-apps/iproute2
 	sys-apps/shadow
-	sys-libs/glibc
-	sys-libs/nss-usrfiles
 "
 
 S="${WORKDIR}/compute-image-packages-${PV}"
-
-src_prepare() {
-	# Don't attempt to mess with our host keys.
-	sed -i -e '/set_host_keys/s/true/false/i' \
-		"${S}"/google_compute_engine/instance_setup/instance_config.py
-}
 
 src_compile() {
 	(cd "${S}" && exec python setup.py build)
