@@ -1,0 +1,62 @@
+From a9d38a0fd25b5ce5896d0eee704902fa94264edb Mon Sep 17 00:00:00 2001
+From: Vivek Goyal <vgoyal@redhat.com>
+Date: Tue, 19 Jul 2016 14:34:58 -0400
+Subject: [PATCH 02/21] selinux: Implementation for inode_copy_up() hook
+
+A file is being copied up for overlay file system. Prepare a new set of
+creds and set create_sid appropriately so that new file is created with
+appropriate label.
+
+Overlay inode has right label for both context and non-context mount
+cases. In case of non-context mount, overlay inode will have the label
+of lower file and in case of context mount, overlay inode will have
+the label from context= mount option.
+
+Signed-off-by: Vivek Goyal <vgoyal@redhat.com>
+Acked-by: Stephen Smalley <sds@tycho.nsa.gov>
+---
+ security/selinux/hooks.c | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+
+diff --git a/security/selinux/hooks.c b/security/selinux/hooks.c
+index 13185a6..264ee90 100644
+--- a/security/selinux/hooks.c
++++ b/security/selinux/hooks.c
+@@ -3293,6 +3293,26 @@ static void selinux_inode_getsecid(struct inode *inode, u32 *secid)
+ 	*secid = isec->sid;
+ }
+ 
++static int selinux_inode_copy_up(struct dentry *src, struct cred **new)
++{
++	u32 sid;
++	struct task_security_struct *tsec;
++	struct cred *new_creds = *new;
++
++	if (new_creds == NULL) {
++		new_creds = prepare_creds();
++		if (!new_creds)
++			return -ENOMEM;
++	}
++
++	tsec = new_creds->security;
++	/* Get label from overlay inode and set it in create_sid */
++	selinux_inode_getsecid(d_inode(src), &sid);
++	tsec->create_sid = sid;
++	*new = new_creds;
++	return 0;
++}
++
+ /* file security operations */
+ 
+ static int selinux_revalidate_file_permission(struct file *file, int mask)
+@@ -6088,6 +6108,7 @@ static struct security_hook_list selinux_hooks[] = {
+ 	LSM_HOOK_INIT(inode_setsecurity, selinux_inode_setsecurity),
+ 	LSM_HOOK_INIT(inode_listsecurity, selinux_inode_listsecurity),
+ 	LSM_HOOK_INIT(inode_getsecid, selinux_inode_getsecid),
++	LSM_HOOK_INIT(inode_copy_up, selinux_inode_copy_up),
+ 
+ 	LSM_HOOK_INIT(file_permission, selinux_file_permission),
+ 	LSM_HOOK_INIT(file_alloc_security, selinux_file_alloc_security),
+-- 
+2.7.3
+
