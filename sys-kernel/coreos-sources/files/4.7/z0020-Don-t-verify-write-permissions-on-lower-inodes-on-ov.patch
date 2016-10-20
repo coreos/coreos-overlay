@@ -1,7 +1,7 @@
 From 8a81012508249122343f090c989c46cf15c67480 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <mjg59@coreos.com>
 Date: Tue, 22 Dec 2015 07:43:52 +0000
-Subject: [PATCH 20/20] Don't verify write permissions on lower inodes on
+Subject: [PATCH 20/22] Don't verify write permissions on lower inodes on
  overlayfs
 
 If a user opens a file r/w on overlayfs, and if the underlying inode is
