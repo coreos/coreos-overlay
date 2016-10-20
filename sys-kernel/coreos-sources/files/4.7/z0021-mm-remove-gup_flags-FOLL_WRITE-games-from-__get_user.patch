@@ -1,7 +1,7 @@
-From 032ee5e5f54fb894f752fa46ef4e401793f0af42 Mon Sep 17 00:00:00 2001
+From 0aa4a981a4a025a8a421e97fccc6c818db29d7d1 Mon Sep 17 00:00:00 2001
 From: Linus Torvalds <torvalds@linux-foundation.org>
 Date: Thu, 13 Oct 2016 13:07:36 -0700
-Subject: [PATCH 22/22] mm: remove gup_flags FOLL_WRITE games from
+Subject: [PATCH 21/21] mm: remove gup_flags FOLL_WRITE games from
  __get_user_pages()
 
 This is an ancient bug that was actually attempted to be fixed once

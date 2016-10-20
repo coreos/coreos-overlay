@@ -1,7 +1,7 @@
-From 56c7486c654e67683c23e8769351898dc650f890 Mon Sep 17 00:00:00 2001
+From c917a7453768b96872753cf549c5cdf9f6225479 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Fri, 9 Aug 2013 17:58:15 -0400
-Subject: [PATCH 01/22] Add secure_modules() call
+Subject: [PATCH 01/21] Add secure_modules() call
 
 Provide a single call to allow kernel code to determine whether the system
 has been configured to either disable module loading entirely or to load
@@ -41,10 +41,10 @@ index 3daf2b3..15843fc 100644
  
  #ifdef CONFIG_SYSFS
 diff --git a/kernel/module.c b/kernel/module.c
-index 5f71aa6..3c38496 100644
+index 6458a2f..975a987 100644
 --- a/kernel/module.c
 +++ b/kernel/module.c
-@@ -4199,3 +4199,13 @@ void module_layout(struct module *mod,
+@@ -4204,3 +4204,13 @@ void module_layout(struct module *mod,
  }
  EXPORT_SYMBOL(module_layout);
  #endif
