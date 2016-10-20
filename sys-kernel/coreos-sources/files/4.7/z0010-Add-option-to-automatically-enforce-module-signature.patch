@@ -1,7 +1,7 @@
-From 23b33d629abc9fa53f5f1c6422bf7b170c322beb Mon Sep 17 00:00:00 2001
+From 2bcdc217c3c877906874a8d56c9b5c4112d1e629 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Fri, 9 Aug 2013 18:36:30 -0400
-Subject: [PATCH 10/22] Add option to automatically enforce module signatures
+Subject: [PATCH 10/21] Add option to automatically enforce module signatures
  when in Secure Boot mode
 
 UEFI Secure Boot provides a mechanism for ensuring that the firmware will
@@ -163,10 +163,10 @@ index 15843fc..fe5c49d 100644
  
  extern int modules_disabled; /* for sysctl */
 diff --git a/kernel/module.c b/kernel/module.c
-index 3c38496..ea484f3 100644
+index 975a987..c57ceda 100644
 --- a/kernel/module.c
 +++ b/kernel/module.c
-@@ -4200,6 +4200,13 @@ void module_layout(struct module *mod,
+@@ -4205,6 +4205,13 @@ void module_layout(struct module *mod,
  EXPORT_SYMBOL(module_layout);
  #endif
  
