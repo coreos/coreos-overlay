@@ -1,7 +1,7 @@
 From 4d316639da0c1a3cbe34b33cb7d2821b810020bf Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Tue, 16 Jun 2015 14:14:32 +0100
-Subject: [PATCH 18/20] SELinux: Check against union label for file operations
+Subject: [PATCH 18/22] SELinux: Check against union label for file operations
 
 File operations (eg. read, write) issued against a file that is attached to
 the lower layer of a union file needs to be checked against the union-layer

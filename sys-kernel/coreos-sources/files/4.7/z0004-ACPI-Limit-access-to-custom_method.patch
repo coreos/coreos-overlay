@@ -1,7 +1,7 @@
 From ec9e1e7e77567c9a02fe912d77c4ad0b861d35a0 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Fri, 9 Mar 2012 08:39:37 -0500
-Subject: [PATCH 04/20] ACPI: Limit access to custom_method
+Subject: [PATCH 04/22] ACPI: Limit access to custom_method
 
 custom_method effectively allows arbitrary access to system memory, making
 it possible for an attacker to circumvent restrictions on module loading.
