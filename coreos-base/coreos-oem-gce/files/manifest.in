@@ -14,18 +14,13 @@
 
     "mountPoints": [
       {
-        "name": "baselayout",
-        "path": "/usr/share/baselayout",
-        "readOnly": true
-      },
-      {
-        "name": "cacertificates",
-        "path": "/usr/share/ca-certificates",
-        "readOnly": true
-      },
-      {
         "name": "etc",
         "path": "/etc",
+        "readOnly": false
+      },
+      {
+        "name": "home",
+        "path": "/home",
         "readOnly": false
       },
       {

@@ -17,9 +17,8 @@ ExecStart=/usr/bin/rkt run \
     --insecure-options=image \
     --net=host \
     --stage1-path=/usr/lib/rkt/stage1-images/stage1-fly.aci \
-    --volume=baselayout,kind=host,source=/usr/share/baselayout,readOnly=true \
-    --volume=cacertificates,kind=host,source=/usr/share/ca-certificates,readOnly=true \
     --volume=etc,kind=host,source=/etc,readOnly=false \
+    --volume=home,kind=host,source=/home,readOnly=false \
     --volume=runsystemd,kind=host,source=/run/systemd,readOnly=false \
     /usr/share/oem/coreos-oem-gce.aci
 
