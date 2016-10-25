@@ -12,7 +12,7 @@ PYTHON_COMPAT=( python{2_6,2_7,3_2,3_3,3_4} )
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64 ~x86"
 else
-	CROS_WORKON_COMMIT="5962f7d5e7ddb87880e090f0473e0b4bf46612a2"
+	CROS_WORKON_COMMIT="bca61d04a080b773895a5cdf1b4015b6ebf47917"
 	KEYWORDS="amd64 arm64 x86"
 fi
 
@@ -73,7 +73,6 @@ DEPEND="${RDEPEND}
 	grub_platforms_qemu? ( media-libs/freetype:2 )
 	grub_platforms_ieee1275? ( media-libs/freetype:2 )
 	grub_platforms_loongson? ( media-libs/freetype:2 )
-	grub_platforms_xen? ( app-emulation/xen-tools )
 	grub_platforms_arm64? ( cross-aarch64-cros-linux-gnu/gcc )
 	static? (
 		app-arch/xz-utils[static-libs(+)]
