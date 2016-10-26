@@ -115,9 +115,9 @@ UpdateAttempter::UpdateAttempter(SystemState* system_state,
       start_action_processor_(false) {
   prefs_ = system_state->prefs();
   omaha_request_params_ = system_state->request_params();
-  if (utils::FileExists(kUpdateCompletedMarker)){
+  if (utils::FileExists(kUpdateCompletedMarker)) {
     status_ = UPDATE_STATUS_UPDATED_NEED_REBOOT;
-    updated_boot_flags_(true);
+    updated_boot_flags_ = true;
   }
 }
 
