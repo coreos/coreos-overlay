@@ -1,4 +1,4 @@
-From 1dc121c43321cec056018f3a9b0be1905b4b3a98 Mon Sep 17 00:00:00 2001
+From 00efe9ab7a15b6c5bf4e62ba35f0bbf7c23f167f Mon Sep 17 00:00:00 2001
 From: Josh Boyer <jwboyer@fedoraproject.org>
 Date: Tue, 27 Aug 2013 13:28:43 -0400
 Subject: [PATCH 18/21] efi: Make EFI_SECURE_BOOT_SIG_ENFORCE depend on EFI

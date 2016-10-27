@@ -1,4 +1,4 @@
-From a9d38a0fd25b5ce5896d0eee704902fa94264edb Mon Sep 17 00:00:00 2001
+From 9b08810799d603c20cc8275fface66332a9fb805 Mon Sep 17 00:00:00 2001
 From: Vivek Goyal <vgoyal@redhat.com>
 Date: Tue, 19 Jul 2016 14:34:58 -0400
 Subject: [PATCH 02/21] selinux: Implementation for inode_copy_up() hook

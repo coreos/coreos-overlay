@@ -1,4 +1,4 @@
-From 0e7ff4309fbdb793c579336ea16d1b25523476fe Mon Sep 17 00:00:00 2001
+From a0347d2718f40eb2c14835d7c019905ac7c32758 Mon Sep 17 00:00:00 2001
 From: Vivek Goyal <vgoyal@redhat.com>
 Date: Tue, 19 Jul 2016 14:34:58 -0400
 Subject: [PATCH 04/21] selinux: Implementation for inode_copy_up_xattr() hook
