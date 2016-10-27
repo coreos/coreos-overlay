@@ -1,4 +1,4 @@
-From bb44799820540a69a43ebc49dd8691f3f6b19312 Mon Sep 17 00:00:00 2001
+From e60f8bb00a8034fe8231e6fa3d93bd2c730ed1ff Mon Sep 17 00:00:00 2001
 From: Vivek Goyal <vgoyal@redhat.com>
 Date: Tue, 19 Jul 2016 14:34:59 -0400
 Subject: [PATCH 05/21] selinux: Pass security pointer to

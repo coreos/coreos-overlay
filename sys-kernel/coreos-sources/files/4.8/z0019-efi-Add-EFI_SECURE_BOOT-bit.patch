@@ -1,4 +1,4 @@
-From 3bbee9070feb5ecd3c4f4003564a47fc6b321aee Mon Sep 17 00:00:00 2001
+From 77c8564969225bbe01c379386e2b655e7bd58297 Mon Sep 17 00:00:00 2001
 From: Josh Boyer <jwboyer@fedoraproject.org>
 Date: Tue, 27 Aug 2013 13:33:03 -0400
 Subject: [PATCH 19/21] efi: Add EFI_SECURE_BOOT bit
