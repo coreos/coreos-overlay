@@ -25,6 +25,7 @@ DEPEND="
 	coreos-base/hard-host-depends
 	coreos-base/coreos-sb-keys
 	coreos-devel/mantle
+	coreos-devel/kola-data
 	dev-libs/gobject-introspection
 	dev-libs/nss
 	dev-perl/Capture-Tiny
