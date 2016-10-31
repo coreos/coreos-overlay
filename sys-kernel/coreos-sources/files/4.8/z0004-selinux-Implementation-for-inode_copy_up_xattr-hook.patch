@@ -1,4 +1,4 @@
-From a0347d2718f40eb2c14835d7c019905ac7c32758 Mon Sep 17 00:00:00 2001
+From ab804bd4ef10b58fadd124e6d8fb7ab98e4da0ea Mon Sep 17 00:00:00 2001
 From: Vivek Goyal <vgoyal@redhat.com>
 Date: Tue, 19 Jul 2016 14:34:58 -0400
 Subject: [PATCH 04/21] selinux: Implementation for inode_copy_up_xattr() hook
@@ -49,5 +49,5 @@ index 264ee90..d30d7b3 100644
  	LSM_HOOK_INIT(file_permission, selinux_file_permission),
  	LSM_HOOK_INIT(file_alloc_security, selinux_file_alloc_security),
 -- 
-2.7.3
+2.10.2
 

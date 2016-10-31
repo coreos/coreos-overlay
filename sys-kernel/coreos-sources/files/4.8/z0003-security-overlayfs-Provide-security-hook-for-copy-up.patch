@@ -1,4 +1,4 @@
-From 5d98f79e7ba90d24592f12037e8d531a5eaf172a Mon Sep 17 00:00:00 2001
+From e38edbd09e127629c86e1c9433c9fc064f052e0f Mon Sep 17 00:00:00 2001
 From: Vivek Goyal <vgoyal@redhat.com>
 Date: Tue, 19 Jul 2016 14:34:58 -0400
 Subject: [PATCH 03/21] security,overlayfs: Provide security hook for copy up
@@ -22,10 +22,10 @@ Acked-by: Stephen Smalley <sds@tycho.nsa.gov>
  4 files changed, 31 insertions(+)
 
 diff --git a/fs/overlayfs/copy_up.c b/fs/overlayfs/copy_up.c
-index e15bc8e..db37a0e 100644
+index 60274d0..7216094 100644
 --- a/fs/overlayfs/copy_up.c
 +++ b/fs/overlayfs/copy_up.c
-@@ -105,6 +105,13 @@ retry:
+@@ -115,6 +115,13 @@ retry:
  			goto retry;
  		}
  
@@ -125,5 +125,5 @@ index f2a7f27..a9e2bb9 100644
  		LIST_HEAD_INIT(security_hook_heads.file_permission),
  	.file_alloc_security =
 -- 
-2.7.3
+2.10.2
 
