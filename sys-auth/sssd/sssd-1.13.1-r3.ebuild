@@ -182,7 +182,6 @@ multilib_src_install_all() {
 	prune_libtool_files --all
 
 	insinto /usr/share/sssd
-	insopts -m600
 	doins "${S}"/src/examples/sssd-example.conf
 
 	systemd_dounit "${FILESDIR}/${PN}.service"
