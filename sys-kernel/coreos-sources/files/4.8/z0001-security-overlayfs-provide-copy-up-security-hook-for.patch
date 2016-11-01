@@ -1,4 +1,4 @@
-From 01ae62a2adcadab9f862590f5e1e20ecee298bfa Mon Sep 17 00:00:00 2001
+From 1b6c9e0a97cb8a80a175f9f3c8826a611c5f7daf Mon Sep 17 00:00:00 2001
 From: Vivek Goyal <vgoyal@redhat.com>
 Date: Tue, 19 Jul 2016 14:34:57 -0400
 Subject: [PATCH 01/21] security, overlayfs: provide copy up security hook for
@@ -21,10 +21,10 @@ Acked-by: Stephen Smalley <sds@tycho.nsa.gov>
  4 files changed, 40 insertions(+)
 
 diff --git a/fs/overlayfs/copy_up.c b/fs/overlayfs/copy_up.c
-index 43fdc27..e15bc8e 100644
+index abadbc3..60274d0 100644
 --- a/fs/overlayfs/copy_up.c
 +++ b/fs/overlayfs/copy_up.c
-@@ -248,6 +248,8 @@ static int ovl_copy_up_locked(struct dentry *workdir, struct dentry *upperdir,
+@@ -258,6 +258,8 @@ static int ovl_copy_up_locked(struct dentry *workdir, struct dentry *upperdir,
  	struct dentry *upper = NULL;
  	umode_t mode = stat->mode;
  	int err;
@@ -33,7 +33,7 @@ index 43fdc27..e15bc8e 100644
  
  	newdentry = ovl_lookup_temp(workdir, dentry);
  	err = PTR_ERR(newdentry);
-@@ -260,10 +262,23 @@ static int ovl_copy_up_locked(struct dentry *workdir, struct dentry *upperdir,
+@@ -270,10 +272,23 @@ static int ovl_copy_up_locked(struct dentry *workdir, struct dentry *upperdir,
  	if (IS_ERR(upper))
  		goto out1;
  
@@ -144,5 +144,5 @@ index 4838e7f..f2a7f27 100644
  		LIST_HEAD_INIT(security_hook_heads.file_permission),
  	.file_alloc_security =
 -- 
-2.7.3
+2.10.2
 

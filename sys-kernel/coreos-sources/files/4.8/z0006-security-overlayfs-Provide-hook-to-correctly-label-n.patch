@@ -1,4 +1,4 @@
-From 5e8dead34a9154beea39cabede13c8e55f311805 Mon Sep 17 00:00:00 2001
+From 9f89a7b701a9b5625e0ea8c6099d8ea385b059e6 Mon Sep 17 00:00:00 2001
 From: Vivek Goyal <vgoyal@redhat.com>
 Date: Tue, 19 Jul 2016 14:34:59 -0400
 Subject: [PATCH 06/21] security, overlayfs: Provide hook to correctly label
@@ -28,10 +28,10 @@ Acked-by: Stephen Smalley <sds@tycho.nsa.gov>
  4 files changed, 48 insertions(+)
 
 diff --git a/fs/overlayfs/dir.c b/fs/overlayfs/dir.c
-index 1560fdc..b0ffa1d 100644
+index 74e6964..adfaa21 100644
 --- a/fs/overlayfs/dir.c
 +++ b/fs/overlayfs/dir.c
-@@ -489,6 +489,15 @@ static int ovl_create_or_link(struct dentry *dentry, struct inode *inode,
+@@ -492,6 +492,15 @@ static int ovl_create_or_link(struct dentry *dentry, struct inode *inode,
  	if (override_cred) {
  		override_cred->fsuid = inode->i_uid;
  		override_cred->fsgid = inode->i_gid;
@@ -47,7 +47,7 @@ index 1560fdc..b0ffa1d 100644
  		put_cred(override_creds(override_cred));
  		put_cred(override_cred);
  
-@@ -499,6 +508,7 @@ static int ovl_create_or_link(struct dentry *dentry, struct inode *inode,
+@@ -502,6 +511,7 @@ static int ovl_create_or_link(struct dentry *dentry, struct inode *inode,
  			err = ovl_create_over_whiteout(dentry, inode, stat,
  							link, hardlink);
  	}
@@ -155,5 +155,5 @@ index a9e2bb9..69614f1 100644
  	.path_unlink =	LIST_HEAD_INIT(security_hook_heads.path_unlink),
  	.path_mkdir =	LIST_HEAD_INIT(security_hook_heads.path_mkdir),
 -- 
-2.7.3
+2.10.2
 
