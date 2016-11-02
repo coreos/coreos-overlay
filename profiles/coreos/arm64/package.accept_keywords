@@ -50,3 +50,4 @@
 # https://glsa.gentoo.org/glsa/201610-04
 =dev-libs/libgcrypt-1.7.3 ~arm64
 
+=net-misc/curl-7.50.3 ~arm64
