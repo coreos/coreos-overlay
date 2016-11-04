@@ -9,7 +9,7 @@ CROS_WORKON_PROJECT="coreos/etcd"
 CROS_WORKON_LOCALNAME="etcd"
 CROS_WORKON_REPO="git://github.com"
 COREOS_GO_PACKAGE="github.com/coreos/etcd"
-inherit coreos-doc coreos-go toolchain-funcs cros-workon systemd
+inherit coreos-go toolchain-funcs cros-workon systemd
 
 if [[ "${PV}" == 9999 ]]; then
     CROS_WORKON_COMMIT=${CROS_WORKON_COMMIT:="HEAD"}
@@ -42,6 +42,4 @@ src_install() {
 
 	systemd_dounit "${FILESDIR}/${PN}${SLOT}.service"
 	systemd_dotmpfilesd "${FILESDIR}/${PN}${SLOT}.conf"
-
-	coreos-dodoc -r Documentation/*
 }

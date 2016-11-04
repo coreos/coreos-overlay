@@ -6,7 +6,7 @@ CROS_WORKON_PROJECT="coreos/ignition"
 CROS_WORKON_LOCALNAME="ignition"
 CROS_WORKON_REPO="git://github.com"
 COREOS_GO_PACKAGE="github.com/coreos/ignition"
-inherit coreos-doc coreos-go cros-workon systemd udev
+inherit coreos-go cros-workon systemd udev
 
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64"
@@ -35,6 +35,4 @@ src_install() {
 	systemd_dounit "${FILESDIR}"/ignition.target
 	systemd_dounit "${FILESDIR}"/ignition-disks.service
 	systemd_dounit "${FILESDIR}"/ignition-files.service
-
-	coreos-dodoc -r doc/*
 }
