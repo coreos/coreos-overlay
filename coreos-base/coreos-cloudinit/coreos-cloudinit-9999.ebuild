@@ -6,7 +6,7 @@ CROS_WORKON_PROJECT="coreos/coreos-cloudinit"
 CROS_WORKON_LOCALNAME="coreos-cloudinit"
 CROS_WORKON_REPO="git://github.com"
 COREOS_GO_PACKAGE="github.com/coreos/coreos-cloudinit"
-inherit coreos-doc cros-workon systemd toolchain-funcs udev coreos-go
+inherit cros-workon systemd toolchain-funcs udev coreos-go
 
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64"
@@ -53,6 +53,4 @@ src_install() {
 	systemd_dounit units/*.target
 	systemd_enable_service default.target system-config.target
 	systemd_enable_service default.target user-config.target
-
-	coreos-dodoc -r Documentation/*
 }

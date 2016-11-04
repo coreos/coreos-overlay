@@ -6,7 +6,7 @@ CROS_WORKON_PROJECT="coreos/fleet"
 CROS_WORKON_LOCALNAME="fleet"
 CROS_WORKON_REPO="git://github.com"
 COREOS_GO_PACKAGE="github.com/coreos/fleet"
-inherit coreos-doc cros-workon coreos-go systemd
+inherit cros-workon coreos-go systemd
 
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64"
@@ -43,6 +43,4 @@ src_install() {
 	# Install sysusers.d snippet which adds fleet group and adds core user into it
 	insinto /usr/lib/sysusers.d/
 	newins "${FILESDIR}"/sysusers.d/${PN}.conf ${PN}.conf
-
-	coreos-dodoc -r Documentation/*
 }
