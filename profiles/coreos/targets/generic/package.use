@@ -40,3 +40,8 @@ app-shells/bash -net vanilla
 
 # disable nss utilities
 dev-libs/nss -utils
+
+# enable seccomp support in docker
+app-emulation/docker seccomp
+app-emulation/containerd seccomp
+sys-libs/libseccomp static-libs
