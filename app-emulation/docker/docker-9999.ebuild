@@ -252,6 +252,9 @@ src_compile() {
 		unset DOCKER_EXPERIMENTAL
 	fi
 
+	# disable optimizations due to https://github.com/golang/go/issues/14669
+	CFLAGS+=" -O0"
+
 	go_export
 
 	# verbose building
