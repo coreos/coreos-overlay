@@ -1,0 +1,1 @@
+export bash_cv_getcwd_malloc=yes
