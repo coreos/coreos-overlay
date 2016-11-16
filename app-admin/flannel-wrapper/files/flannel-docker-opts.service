@@ -6,9 +6,7 @@ PartOf=flannel.service
 Before=docker.service
 
 [Service]
-Type=simple
-Restart=on-failure
-RestartSec=10
+Type=oneshot
 TimeoutStartSec=60
 
 Environment="FLANNEL_IMAGE_TAG=v0.6.2"
