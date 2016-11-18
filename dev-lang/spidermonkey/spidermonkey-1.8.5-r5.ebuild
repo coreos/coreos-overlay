@@ -61,8 +61,12 @@ src_prepare() {
 	# fix builds for alternate $ROOT locations
 	epatch "${FILESDIR}"/${P}-no-link-lib-deps.patch
 	# Fix for CONFIG_ARM64_VA_BITS_48=y
+	# https://github.com/coreos/coreos-overlay/pull/2241
+	# https://bugzilla.mozilla.org/show_bug.cgi?id=1143022
 	# https://bugzilla.redhat.com/show_bug.cgi?id=1242326
-	epatch "${FILESDIR}/${P}-fix-arm64-va-48.patch"
+	if [[ "${ARCH}" == "arm64" ]]; then
+		epatch "${FILESDIR}/${P}-fix-arm64-va-48.patch"
+	fi
 
 	epatch_user
 
