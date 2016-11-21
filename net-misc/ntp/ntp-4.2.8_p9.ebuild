@@ -9,8 +9,7 @@ inherit eutils toolchain-funcs flag-o-matic user systemd
 MY_P=${P/_p/p}
 DESCRIPTION="Network Time Protocol suite/programs"
 HOMEPAGE="http://www.ntp.org/"
-SRC_URI="http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-${PV:0:3}/${MY_P}.tar.gz
-	https://dev.gentoo.org/~polynomial-c/${MY_P}-manpages.tar.xz"
+SRC_URI="http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-${PV:0:3}/${MY_P}.tar.gz"
 
 LICENSE="HPND BSD ISC"
 SLOT="0"
@@ -40,7 +39,6 @@ S=${WORKDIR}/${MY_P}
 PATCHES=(
 	"${FILESDIR}"/${PN}-4.2.8-ipc-caps.patch #533966
 	"${FILESDIR}"/${PN}-4.2.8-sntp-test-pthreads.patch #563922
-	"${FILESDIR}"/${PN}-4.2.8-ntpd-test-signd.patch
 )
 
 pkg_setup() {
@@ -91,7 +89,6 @@ src_install() {
 	mv "${ED}"/usr/bin/{ntpd,ntpdate} "${ED}"/usr/sbin/ || die "move to sbin"
 
 	dodoc INSTALL WHERE-TO-START
-	doman "${WORKDIR}"/man/*.[58]
 
 	insinto /usr/share/ntp
 	doins "${FILESDIR}"/ntp.conf
