@@ -2,6 +2,8 @@
 # Keep these in alphabetical order.
 
 =app-admin/sudo-1.8.16 ~arm64
+# app-arch/unzip: https://security.gentoo.org/glsa/201611-01
+=app-arch/unzip-6.0_p20 ~arm64
 =app-crypt/gnupg-2.1.15 ~arm64
 =app-crypt/pinentry-0.9.7 ~arm64
 =app-text/asciidoc-8.6.9-r3 ~arm64
