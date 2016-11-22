@@ -1,0 +1,84 @@
+#!/bin/bash
+# Wrapper for launching fleet via rkt-fly.
+#
+# Make sure to set FLEET_IMAGE_TAG to an image tag published here:
+# https://quay.io/repository/coreos/fleet?tab=tags Alternatively,
+# override FLEET_IMAGE to a custom image.
+
+function require_ev_all() {
+	for rev in $@ ; do
+		if [[ -z "${!rev}" ]]; then
+			echo "${rev}" is not set
+			exit 1
+		fi
+	done
+}
+
+function require_ev_one() {
+	for rev in $@ ; do
+		if [[ ! -z "${!rev}" ]]; then
+			return
+		fi
+	done
+	echo One of $@ must be set
+	exit 1
+}
+
+require_ev_one FLEET_IMAGE FLEET_IMAGE_TAG
+require_ev_all FLEET_USER
+
+FLEET_IMAGE_URL="${FLEET_IMAGE_URL:-quay.io/coreos/fleet}"
+FLEET_IMAGE="${FLEET_IMAGE:-${FLEET_IMAGE_URL}:${FLEET_IMAGE_TAG}}"
+
+if [[ "${FLEET_IMAGE%%/*}" == "quay.io" ]]; then
+	RKT_RUN_ARGS="${RKT_RUN_ARGS} --trust-keys-from-https"
+fi
+
+mkdir --parents /etc/fleet
+mkdir --parents /run/dbus
+mkdir --parents /run/fleet
+
+FLEET_UNITS_DIR_SRC="${FLEET_UNITS_DIR_SRC:-/run/fleet/units}"
+if [[ -d "${FLEET_UNITS_DIR_SRC}" ]]; then
+	RKT_RUN_ARGS="${RKT_RUN_ARGS} \
+		--volume fleet-units,kind=host,source=${FLEET_UNITS_DIR_SRC},readOnly=false \
+		--mount volume=fleet-units,target=/run/fleet/units \
+	"
+fi
+
+SYSTEMD_SYSTEM_DIR_SRC="${SYSTEMD_SYSTEM_DIR_SRC:-/run/systemd/system}"
+if [[ -d "${SYSTEMD_SYSTEM_DIR_SRC}" ]]; then
+	RKT_RUN_ARGS="${RKT_RUN_ARGS} \
+		--volume systemd-dir,kind=host,source=${SYSTEMD_SYSTEM_DIR_SRC},readOnly=true \
+		--mount volume=systemd-dir,target=/run/systemd/system \
+	"
+fi
+
+NOTIFY_SOCKET="${NOTIFY_SOCKET:-/run/systemd/notify}"
+if [[ -d "${NOTIFY_SOCKET}" ]]; then
+	RKT_RUN_ARGS="${RKT_RUN_ARGS} \
+		--volume notify,kind=host,source=${NOTIFY_SOCKET},readOnly=false \
+		--mount volume=notify,target=/run/systemd/notify \
+		--set-env=NOTIFY_SOCKET=/run/systemd/notify \
+	"
+fi
+
+RKT="${RKT:-/usr/bin/rkt}"
+RKT_STAGE1_ARG="${RKT_STAGE1_ARG:---stage1-from-dir=stage1-fly.aci}"
+set -x
+exec ${RKT} ${RKT_GLOBAL_ARGS} \
+	run ${RKT_RUN_ARGS} \
+	--volume etc-fleet,kind=host,source=/etc/fleet,readOnly=true \
+	--volume machine-id,kind=host,source=/etc/machine-id,readOnly=true \
+	--volume os-release,kind=host,source=/usr/lib/os-release,readOnly=true \
+	--volume dbus-socket,kind=host,source=/run/dbus/system_bus_socket,readOnly=false \
+	--mount volume=etc-fleet,target=/etc/fleet \
+	--mount volume=machine-id,target=/etc/machine-id \
+	--mount volume=os-release,target=/etc/os-release \
+	--mount volume=dbus-socket,target=/run/dbus/system_bus_socket \
+	--inherit-env \
+	${RKT_STAGE1_ARG} \
+	${FLEET_IMAGE} \
+		${FLEET_IMAGE_ARGS} \
+		--user=$(id -u "${FLEET_USER}") \
+		-- "$@"

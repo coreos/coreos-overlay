@@ -99,10 +99,10 @@ RDEPEND="${RDEPEND}
 		sys-auth/realmd
 		sys-auth/sssd
 		app-admin/flannel-wrapper
+		app-admin/fleet-wrapper
 	)"
 
 RDEPEND="${RDEPEND}
-	app-admin/fleet
 	app-admin/locksmith
 	app-admin/mayday
 	app-admin/sdnotify-proxy

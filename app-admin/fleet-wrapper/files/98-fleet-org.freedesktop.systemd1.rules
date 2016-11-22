@@ -1,0 +1,6 @@
+polkit.addRule(function(action, subject) {
+  if (action.id.indexOf("org.freedesktop.systemd1.") == 0 &&
+      subject.user == "fleet") {
+        return polkit.Result.YES;
+  }
+});

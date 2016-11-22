@@ -1,0 +1,26 @@
+[Unit]
+Description=fleet (Distributed Init System)
+Documentation=https://github.com/coreos/fleet
+After=etcd.service etcd2.service etcd-member.service
+Wants=network.target
+
+[Service]
+Type=notify
+Restart=always
+RestartSec=10s
+TimeoutStartSec=0
+LimitNOFILE=40000
+
+Environment="FLEET_IMAGE_TAG=v0.13.0"
+Environment="FLEET_NAME=%m"
+Environment="FLEET_USER=fleet"
+Environment="DBUS_SYSTEM_BUS_ADDRESS=unix:path=/run/dbus/system_bus_socket"
+Environment="RKT_RUN_ARGS=--uuid-file-save=/var/lib/coreos/fleet-wrapper.uuid"
+
+ExecStartPre=/usr/bin/mkdir --parents /var/lib/coreos
+ExecStartPre=-/usr/bin/rkt rm --uuid-file=/var/lib/coreos/fleet-wrapper.uuid
+ExecStart=/usr/lib/coreos/fleet-wrapper $FLEET_OPTS
+ExecStop=-/usr/bin/rkt stop --uuid-file=/var/lib/coreos/fleet-wrapper.uuid
+
+[Install]
+WantedBy=multi-user.target
