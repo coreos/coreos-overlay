@@ -1,4 +1,4 @@
-From 9f89a7b701a9b5625e0ea8c6099d8ea385b059e6 Mon Sep 17 00:00:00 2001
+From 1271cf983fa9292fd7c6dd1b0d2eb1fedecd8cdb Mon Sep 17 00:00:00 2001
 From: Vivek Goyal <vgoyal@redhat.com>
 Date: Tue, 19 Jul 2016 14:34:59 -0400
 Subject: [PATCH 06/21] security, overlayfs: Provide hook to correctly label
@@ -155,5 +155,5 @@ index a9e2bb9..69614f1 100644
  	.path_unlink =	LIST_HEAD_INIT(security_hook_heads.path_unlink),
  	.path_mkdir =	LIST_HEAD_INIT(security_hook_heads.path_mkdir),
 -- 
-2.10.2
+2.7.4
 
