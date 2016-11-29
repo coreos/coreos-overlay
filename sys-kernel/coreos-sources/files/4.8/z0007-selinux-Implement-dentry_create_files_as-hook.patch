@@ -1,4 +1,4 @@
-From 495c11c49aaa9edf681f94d3f5534e81565b8e13 Mon Sep 17 00:00:00 2001
+From 2c1808b93b771367bbb8f9617087ac550fee6b25 Mon Sep 17 00:00:00 2001
 From: Vivek Goyal <vgoyal@redhat.com>
 Date: Tue, 19 Jul 2016 14:34:59 -0400
 Subject: [PATCH 07/21] selinux: Implement dentry_create_files_as() hook
@@ -56,5 +56,5 @@ index 2bf0d00..603b600 100644
  	LSM_HOOK_INIT(inode_alloc_security, selinux_inode_alloc_security),
  	LSM_HOOK_INIT(inode_free_security, selinux_inode_free_security),
 -- 
-2.10.2
+2.7.4
 
