@@ -10,7 +10,7 @@ PYTHON_REQ_USE="ncurses,readline"
 PLOCALES="bg de_DE fr_FR hu it tr zh_CN"
 
 inherit eutils flag-o-matic linux-info toolchain-funcs multilib python-r1 \
-	user udev fcaps readme.gentoo pax-utils l10n
+	user udev fcaps readme.gentoo-r1 pax-utils l10n
 
 if [[ ${PV} = *9999* ]]; then
 	EGIT_REPO_URI="git://git.qemu.org/qemu.git"
@@ -94,7 +94,7 @@ SOFTMMU_LIB_DEPEND="${COMMON_LIB_DEPEND}
 		)
 		!gtk2? (
 			x11-libs/gtk+:3
-			vte? ( x11-libs/vte:2.90 )
+			vte? ( x11-libs/vte:2.91 )
 		)
 	)
 	infiniband? ( sys-fabric/librdmacm:=[static-libs(+)] )
@@ -108,7 +108,7 @@ SOFTMMU_LIB_DEPEND="${COMMON_LIB_DEPEND}
 		virtual/opengl
 		media-libs/libepoxy[static-libs(+)]
 		media-libs/mesa[static-libs(+)]
-		media-libs/mesa[egl,gles2]
+		media-libs/mesa[egl,gles2,gbm]
 	)
 	png? ( media-libs/libpng:0=[static-libs(+)] )
 	pulseaudio? ( media-sound/pulseaudio )
@@ -334,7 +334,36 @@ src_prepare() {
 
 	epatch "${FILESDIR}"/${PN}-2.5.0-cflags.patch
 	epatch "${FILESDIR}"/${PN}-2.5.0-sysmacros.patch
-	epatch "${FILESDIR}"/${P}-CVE-2016-6836.patch
+
+	epatch "${FILESDIR}"/${P}-CVE-2016-6836.patch   # bug 591242
+	epatch "${FILESDIR}"/${P}-CVE-2016-7155.patch   # bug 593034
+	epatch "${FILESDIR}"/${P}-CVE-2016-7156.patch   # bug 593036
+	epatch "${FILESDIR}"/${P}-CVE-2016-7157-1.patch # bug 593038
+	epatch "${FILESDIR}"/${P}-CVE-2016-7157-2.patch # bug 593038
+	epatch "${FILESDIR}"/${P}-CVE-2016-7170.patch   # bug 593284
+	epatch "${FILESDIR}"/${P}-CVE-2016-7421.patch   # bug 593950
+	epatch "${FILESDIR}"/${P}-CVE-2016-7422.patch   # bug 593956
+	epatch "${FILESDIR}"/${P}-CVE-2016-7423.patch   # bug 594368
+	epatch "${FILESDIR}"/${P}-CVE-2016-7466.patch   # bug 594520
+	epatch "${FILESDIR}"/${P}-CVE-2016-7907.patch   # bug 596048
+	epatch "${FILESDIR}"/${P}-CVE-2016-7908.patch   # bug 596049
+	epatch "${FILESDIR}"/${P}-CVE-2016-7909.patch   # bug 596048
+	epatch "${FILESDIR}"/${P}-CVE-2016-7994-1.patch # bug 596738
+	epatch "${FILESDIR}"/${P}-CVE-2016-7994-2.patch # bug 596738
+	epatch "${FILESDIR}"/${P}-CVE-2016-8576.patch   # bug 596752
+	epatch "${FILESDIR}"/${P}-CVE-2016-8577.patch   # bug 596776
+	epatch "${FILESDIR}"/${P}-CVE-2016-8578.patch   # bug 596774
+	epatch "${FILESDIR}"/${P}-CVE-2016-8668.patch   # bug 597110
+	epatch "${FILESDIR}"/${P}-CVE-2016-8669-1.patch # bug 597108
+	epatch "${FILESDIR}"/${P}-CVE-2016-8669-2.patch # bug 597108
+	epatch "${FILESDIR}"/${P}-CVE-2016-8909.patch   # bug 598044
+	epatch "${FILESDIR}"/${P}-CVE-2016-8910.patch   # bug 598046
+	epatch "${FILESDIR}"/${P}-CVE-2016-9102.patch   # bug 598328
+	epatch "${FILESDIR}"/${P}-CVE-2016-9103.patch   # bug 598328
+	epatch "${FILESDIR}"/${P}-CVE-2016-9104.patch   # bug 598328
+	epatch "${FILESDIR}"/${P}-CVE-2016-9105.patch   # bug 598328
+	epatch "${FILESDIR}"/${P}-CVE-2016-9106.patch   # bug 598772
+
 	# Fix ld and objcopy being called directly
 	tc-export AR LD OBJCOPY
 
