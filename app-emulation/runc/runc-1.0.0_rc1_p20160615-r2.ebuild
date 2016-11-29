@@ -21,12 +21,13 @@ KEYWORDS="amd64 arm64"
 
 LICENSE="Apache-2.0"
 SLOT="0"
-IUSE="apparmor +seccomp"
+IUSE="apparmor +selinux +seccomp"
 
 DEPEND=""
 RDEPEND="
 	apparmor? ( sys-libs/libapparmor )
 	seccomp? ( sys-libs/libseccomp )
+	selinux? ( sys-libs/libselinux )
 "
 
 src_prepare() {
@@ -43,6 +44,7 @@ src_compile() {
 	local options=(
 		$(usev apparmor)
 		$(usev seccomp)
+		$(usev selinux)
 	)
 
 	emake BUILDTAGS="${options[*]}"
