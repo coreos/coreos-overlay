@@ -364,6 +364,9 @@ src_prepare() {
 	epatch "${FILESDIR}"/${P}-CVE-2016-9105.patch   # bug 598328
 	epatch "${FILESDIR}"/${P}-CVE-2016-9106.patch   # bug 598772
 
+	# fix for vpc creation in qemu-img
+	epatch "${FILESDIR}"/0001-block-fix-vpc-max_table_entries-computation.patch
+
 	# Fix ld and objcopy being called directly
 	tc-export AR LD OBJCOPY
 
