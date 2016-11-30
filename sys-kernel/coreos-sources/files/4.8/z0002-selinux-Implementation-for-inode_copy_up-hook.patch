@@ -1,7 +1,7 @@
 From 591db70df1daa6d3fec150d1ec822ae413385323 Mon Sep 17 00:00:00 2001
 From: Vivek Goyal <vgoyal@redhat.com>
 Date: Tue, 19 Jul 2016 14:34:58 -0400
-Subject: [PATCH 02/21] selinux: Implementation for inode_copy_up() hook
+Subject: [PATCH 02/22] selinux: Implementation for inode_copy_up() hook
 
 A file is being copied up for overlay file system. Prepare a new set of
 creds and set create_sid appropriately so that new file is created with
