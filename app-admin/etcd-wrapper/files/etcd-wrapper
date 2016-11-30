@@ -39,6 +39,11 @@ if [[ ! -e "${ETCD_DATA_DIR}" ]]; then
 	chown "${ETCD_USER}" "${ETCD_DATA_DIR}"
 fi
 
+# Do not pass ETCD_DATA_DIR through to the container. The default path,
+# /var/lib/etcd is always used inside the container.
+etcd_data_dir="${ETCD_DATA_DIR}"
+ETCD_DATA_DIR="/var/lib/etcd"
+
 ETCD_SSL_DIR="${ETCD_SSL_DIR:-/etc/ssl/certs}"
 
 SYSTEMD_SYSTEM_DIR_SRC="${SYSTEMD_SYSTEM_DIR_SRC:-/run/systemd/system}"
@@ -62,7 +67,7 @@ RKT_STAGE1_ARG="${RKT_STAGE1_ARG:---stage1-from-dir=stage1-fly.aci}"
 set -x
 exec ${RKT} ${RKT_GLOBAL_ARGS} \
 	run ${RKT_RUN_ARGS} \
-	--volume data-dir,kind=host,source="${ETCD_DATA_DIR}",readOnly=false \
+	--volume data-dir,kind=host,source="${etcd_data_dir}",readOnly=false \
 	--volume etc-ssl-certs,kind=host,source="${ETCD_SSL_DIR}",readOnly=true \
 	--volume usr-share-certs,kind=host,source=/usr/share/ca-certificates,readOnly=true \
 	--volume etc-hosts,kind=host,source=/etc/hosts,readOnly=true \
