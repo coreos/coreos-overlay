@@ -1,7 +1,7 @@
 From 2c1808b93b771367bbb8f9617087ac550fee6b25 Mon Sep 17 00:00:00 2001
 From: Vivek Goyal <vgoyal@redhat.com>
 Date: Tue, 19 Jul 2016 14:34:59 -0400
-Subject: [PATCH 07/21] selinux: Implement dentry_create_files_as() hook
+Subject: [PATCH 07/22] selinux: Implement dentry_create_files_as() hook
 
 Calculate what would be the label of newly created file and set that secid
 in the passed creds.

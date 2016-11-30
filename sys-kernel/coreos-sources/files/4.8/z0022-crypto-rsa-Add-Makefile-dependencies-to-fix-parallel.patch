@@ -1,0 +1,30 @@
+From b764ba9deb30b2b3b1089e6bd019235d8eeec7f0 Mon Sep 17 00:00:00 2001
+From: David Michael <david.michael@coreos.com>
+Date: Tue, 29 Nov 2016 11:15:12 -0800
+Subject: [PATCH 22/22] crypto: rsa - Add Makefile dependencies to fix parallel
+ builds
+
+Both asn1 headers are included by rsa_helper.c, so rsa_helper.o
+should explicitly depend on them.
+
+Signed-off-by: David Michael <david.michael@coreos.com>
+Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
+---
+ crypto/Makefile | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/crypto/Makefile b/crypto/Makefile
+index 99cc64ac..bd6a029 100644
+--- a/crypto/Makefile
++++ b/crypto/Makefile
+@@ -40,6 +40,7 @@ obj-$(CONFIG_CRYPTO_ECDH) += ecdh_generic.o
+ 
+ $(obj)/rsapubkey-asn1.o: $(obj)/rsapubkey-asn1.c $(obj)/rsapubkey-asn1.h
+ $(obj)/rsaprivkey-asn1.o: $(obj)/rsaprivkey-asn1.c $(obj)/rsaprivkey-asn1.h
++$(obj)/rsa_helper.o: $(obj)/rsapubkey-asn1.h $(obj)/rsaprivkey-asn1.h
+ clean-files += rsapubkey-asn1.c rsapubkey-asn1.h
+ clean-files += rsaprivkey-asn1.c rsaprivkey-asn1.h
+ 
+-- 
+2.7.4
+

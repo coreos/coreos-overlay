@@ -1,7 +1,7 @@
 From 27a7af7125c4984bdb75c2a027d6046744df411c Mon Sep 17 00:00:00 2001
 From: Vivek Goyal <vgoyal@redhat.com>
 Date: Tue, 19 Jul 2016 14:34:59 -0400
-Subject: [PATCH 05/21] selinux: Pass security pointer to
+Subject: [PATCH 05/22] selinux: Pass security pointer to
  determine_inode_label()
 
 Right now selinux_determine_inode_label() works on security pointer of

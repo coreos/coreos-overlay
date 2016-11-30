@@ -1,7 +1,7 @@
 From 1271cf983fa9292fd7c6dd1b0d2eb1fedecd8cdb Mon Sep 17 00:00:00 2001
 From: Vivek Goyal <vgoyal@redhat.com>
 Date: Tue, 19 Jul 2016 14:34:59 -0400
-Subject: [PATCH 06/21] security, overlayfs: Provide hook to correctly label
+Subject: [PATCH 06/22] security, overlayfs: Provide hook to correctly label
  newly created files
 
 During a new file creation we need to make sure new file is created with the
