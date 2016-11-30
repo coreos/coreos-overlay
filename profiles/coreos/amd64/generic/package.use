@@ -5,3 +5,6 @@ sys-apps/systemd            selinux
 
 # Enable SELinux for coreutils
 sys-apps/coreutils	    selinux
+
+# Enable SELinux for runc
+app-emulation/runc          selinux
