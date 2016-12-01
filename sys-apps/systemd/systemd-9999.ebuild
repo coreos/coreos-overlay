@@ -390,6 +390,8 @@ multilib_src_install_all() {
 	rmdir "${D}"/etc/systemd/system/*.wants || die
 
 	# Grant networkd access to set the transient host name
+	# TODO: Check if this can be removed in the next release.
+	# See https://github.com/systemd/systemd/pull/4710
 	insinto /usr/share/polkit-1/rules.d
 	doins "${FILESDIR}"/99-org.freedesktop.hostname1.rules
 
