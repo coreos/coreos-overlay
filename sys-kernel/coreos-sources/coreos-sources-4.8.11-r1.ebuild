@@ -44,4 +44,5 @@ UNIPATCH_LIST="
         ${PATCH_DIR}/z0020-hibernate-Disable-in-a-signed-modules-environment.patch \
         ${PATCH_DIR}/z0021-kbuild-derive-relative-path-for-KBUILD_SRC-from-CURD.patch \
         ${PATCH_DIR}/z0022-crypto-rsa-Add-Makefile-dependencies-to-fix-parallel.patch \
+        ${PATCH_DIR}/z0023-arm64-Add-CMDLINE_EXTEND.patch \
 "
