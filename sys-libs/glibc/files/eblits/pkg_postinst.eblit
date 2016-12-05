@@ -6,9 +6,9 @@ eblit-glibc-pkg_postinst() {
 	# nothing to do if just installing headers
 	just_headers && return
 
-	if ! tc-is-cross-compiler && [[ -x ${ROOT}/usr/sbin/iconvconfig ]] ; then
+	if ! tc-is-cross-compiler && [[ -x ${EROOT}/usr/sbin/iconvconfig ]] ; then
 		# Generate fastloading iconv module configuration file.
-		"${ROOT}"/usr/sbin/iconvconfig --prefix="${ROOT}"
+		"${EROOT}"/usr/sbin/iconvconfig --prefix="${ROOT}"
 	fi
 
 	if ! is_crosscompile && [[ ${ROOT} == "/" ]] ; then
