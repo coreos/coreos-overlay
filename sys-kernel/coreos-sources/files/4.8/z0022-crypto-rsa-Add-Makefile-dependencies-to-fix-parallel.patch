@@ -1,7 +1,7 @@
 From b764ba9deb30b2b3b1089e6bd019235d8eeec7f0 Mon Sep 17 00:00:00 2001
 From: David Michael <david.michael@coreos.com>
 Date: Tue, 29 Nov 2016 11:15:12 -0800
-Subject: [PATCH 22/22] crypto: rsa - Add Makefile dependencies to fix parallel
+Subject: [PATCH 22/23] crypto: rsa - Add Makefile dependencies to fix parallel
  builds
 
 Both asn1 headers are included by rsa_helper.c, so rsa_helper.o
@@ -26,5 +26,5 @@ index 99cc64ac..bd6a029 100644
  clean-files += rsaprivkey-asn1.c rsaprivkey-asn1.h
  
 -- 
-2.7.4
+2.7.3
 
