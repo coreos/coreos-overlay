@@ -1,7 +1,7 @@
 From 2bcdc217c3c877906874a8d56c9b5c4112d1e629 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Fri, 9 Aug 2013 18:36:30 -0400
-Subject: [PATCH 10/21] Add option to automatically enforce module signatures
+Subject: [PATCH 10/22] Add option to automatically enforce module signatures
  when in Secure Boot mode
 
 UEFI Secure Boot provides a mechanism for ensuring that the firmware will
