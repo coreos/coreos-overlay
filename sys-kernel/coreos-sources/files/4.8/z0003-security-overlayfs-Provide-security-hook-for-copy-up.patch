@@ -1,7 +1,7 @@
 From c4b0abc5ee89f6b6adc9b9aa6712f0403f43df69 Mon Sep 17 00:00:00 2001
 From: Vivek Goyal <vgoyal@redhat.com>
 Date: Tue, 19 Jul 2016 14:34:58 -0400
-Subject: [PATCH 03/22] security,overlayfs: Provide security hook for copy up
+Subject: [PATCH 03/23] security,overlayfs: Provide security hook for copy up
  of xattrs for overlay file
 
 Provide a security hook which is called when xattrs of a file are being
@@ -125,5 +125,5 @@ index f2a7f27..a9e2bb9 100644
  		LIST_HEAD_INIT(security_hook_heads.file_permission),
  	.file_alloc_security =
 -- 
-2.7.4
+2.7.3
 
