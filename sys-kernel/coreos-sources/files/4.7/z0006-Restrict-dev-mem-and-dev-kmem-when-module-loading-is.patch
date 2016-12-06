@@ -1,7 +1,7 @@
 From 9f4551c9fd48af80f25ce032466f89cc9157cb3e Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Fri, 9 Mar 2012 09:28:15 -0500
-Subject: [PATCH 06/21] Restrict /dev/mem and /dev/kmem when module loading is
+Subject: [PATCH 06/22] Restrict /dev/mem and /dev/kmem when module loading is
  restricted
 
 Allowing users to write to address space makes it possible for the kernel
