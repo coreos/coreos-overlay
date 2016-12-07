@@ -286,7 +286,8 @@ src_install() {
 	systemd_dounit "${FILESDIR}/early-docker.target"
 
 	insinto /usr/lib/systemd/network
-	doins "${FILESDIR}"/50-docker{,-veth}.network
+	doins "${FILESDIR}"/50-docker.network
+	doins "${FILESDIR}"/90-docker-veth.network
 
 	udev_dorules contrib/udev/*.rules
 
