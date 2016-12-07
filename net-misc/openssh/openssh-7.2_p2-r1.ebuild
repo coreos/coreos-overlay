@@ -152,6 +152,8 @@ src_prepare() {
 	)
 	sed -i "${sed_args[@]}" configure{.ac,} || die
 
+	epatch "${FILESDIR}"/${PN}-7.2_p1-fix-krb5-config.patch
+
 	epatch_user #473004
 
 	# Now we can build a sane merged version.h
