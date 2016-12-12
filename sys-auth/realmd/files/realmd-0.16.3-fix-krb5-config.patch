@@ -1,0 +1,26 @@
+From 618abb3f1336283e56571e76be405f41b7cdf7bc Mon Sep 17 00:00:00 2001
+From: David Michael <david.michael@coreos.com>
+Date: Sun, 11 Dec 2016 13:13:15 -0800
+Subject: [PATCH] configure: Find a host-prefixed krb5-config when
+ cross-compiling
+
+---
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/configure.ac b/configure.ac
+index 5c0a8e7..e335247 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -163,7 +163,7 @@ if test "$KRB5_CFLAGS" != ""; then
+ 	KRB5_PASSED_CFLAGS=$KRB5_CFLAGS
+ fi
+ 
+-AC_PATH_PROG(KRB5_CONFIG, krb5-config)
++AC_PATH_TOOL(KRB5_CONFIG, krb5-config)
+ AC_MSG_CHECKING(for working krb5-config)
+ if test -x "$KRB5_CONFIG"; then
+ 	KRB5_CFLAGS="`$KRB5_CONFIG --cflags`"
+-- 
+2.7.4
+

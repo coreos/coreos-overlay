@@ -31,6 +31,8 @@ QA_MULTILIB_PATHS="usr/lib/realmd/realmd"
 src_prepare() {
 	sed -e '/gentoo-release/s/dnl/ /g' -i configure.ac
 
+	epatch "${FILESDIR}"/realmd-0.16.3-fix-krb5-config.patch
+
 	autotools-utils_src_prepare
 }
 
