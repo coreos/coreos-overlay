@@ -4,7 +4,7 @@ DESCRIPTION=coreos-cloudinit
 EAPI=5
 HOMEPAGE=https://github.com/coreos/coreos-cloudinit
 IUSE=cros_workon_tree_* profiling +go_version_go1_7
-KEYWORDS=~amd64 ~arm64
+KEYWORDS=amd64 arm64
 LICENSE=Apache-2.0
 RDEPEND=>=sys-apps/shadow-4.1.5.1
 REQUIRED_USE=go_version_go1_7
