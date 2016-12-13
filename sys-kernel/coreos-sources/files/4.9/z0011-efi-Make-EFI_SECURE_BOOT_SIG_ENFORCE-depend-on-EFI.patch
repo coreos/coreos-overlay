@@ -1,7 +1,7 @@
-From fe523b61b4171c61dd3d8502f82ceca832e07455 Mon Sep 17 00:00:00 2001
+From 0f2a255cf654f8190b7afe64c691d33a01bb8d42 Mon Sep 17 00:00:00 2001
 From: Josh Boyer <jwboyer@fedoraproject.org>
 Date: Tue, 27 Aug 2013 13:28:43 -0400
-Subject: [PATCH 18/22] efi: Make EFI_SECURE_BOOT_SIG_ENFORCE depend on EFI
+Subject: [PATCH 11/14] efi: Make EFI_SECURE_BOOT_SIG_ENFORCE depend on EFI
 
 The functionality of the config option is dependent upon the platform being
 UEFI based.  Reflect this in the config deps.
@@ -12,10 +12,10 @@ Signed-off-by: Josh Boyer <jwboyer@fedoraproject.org>
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index ba2c734..a5d6b58 100644
+index 882da2b..d666ef8b 100644
 --- a/arch/x86/Kconfig
 +++ b/arch/x86/Kconfig
-@@ -1775,7 +1775,8 @@ config EFI_MIXED
+@@ -1787,7 +1787,8 @@ config EFI_MIXED
  	   If unsure, say N.
  
  config EFI_SECURE_BOOT_SIG_ENFORCE
@@ -26,5 +26,5 @@ index ba2c734..a5d6b58 100644
  	---help---
  	  UEFI Secure Boot provides a mechanism for ensuring that the
 -- 
-2.7.4
+2.7.3
 
