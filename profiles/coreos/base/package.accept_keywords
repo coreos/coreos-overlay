@@ -106,3 +106,5 @@ dev-util/checkbashisms
 # mtools 4.0.18 has '-i' flag for working with images
 =sys-fs/mtools-4.0.18
 
+# multipath-tools 0.6.2 fixes systemd dependencies
+=sys-fs/multipath-tools-0.6.2-r2

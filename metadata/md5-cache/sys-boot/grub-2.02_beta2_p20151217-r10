@@ -4,7 +4,7 @@ DESCRIPTION=GNU GRUB boot loader
 EAPI=5
 HOMEPAGE=http://www.gnu.org/software/grub/
 IUSE=debug device-mapper doc efiemu mount +multislot nls static sdl test truetype libzfs grub_platforms_emu grub_platforms_qemu-mips grub_platforms_loongson grub_platforms_ieee1275 grub_platforms_coreboot grub_platforms_multiboot grub_platforms_efi-32 grub_platforms_pc grub_platforms_qemu grub_platforms_xen grub_platforms_efi-64 grub_platforms_arm64 cros_workon_tree_* profiling
-KEYWORDS=~amd64 ~arm64 ~x86
+KEYWORDS=amd64 arm64 x86
 LICENSE=GPL-3 truetype? ( BitstreamVera GPL-2-with-font-exception )
 RDEPEND=app-arch/xz-utils >=sys-libs/ncurses-5.2-r5 debug? ( sdl? ( media-libs/libsdl ) ) device-mapper? ( >=sys-fs/lvm2-2.02.45 ) libzfs? ( sys-fs/zfs ) mount? ( sys-fs/fuse ) truetype? ( media-libs/freetype:2= ) ppc? ( sys-apps/ibm-powerpc-utils sys-apps/powerpc-utils ) ppc64? ( sys-apps/ibm-powerpc-utils sys-apps/powerpc-utils ) kernel_linux? ( grub_platforms_efi-32? ( sys-boot/efibootmgr ) grub_platforms_efi-64? ( sys-boot/efibootmgr ) ) !multislot? ( !sys-boot/grub:0 ) nls? ( sys-devel/gettext )
 RESTRICT=test
