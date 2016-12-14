@@ -80,6 +80,8 @@ pkg_setup(){
 }
 
 src_prepare() {
+	epatch "${FILESDIR}"/sssd-1.14.2-fix-krb5-config.patch
+
 	eautoreconf
 
 	multilib_copy_sources
@@ -124,7 +126,6 @@ multilib_src_configure() {
 		--with-initscript="sysv"
 		--without-python2-bindings
 		--without-python3-bindings
-		KRB5_CONFIG=${ROOT}/usr/bin/${CHOST}-krb5-config
 		)
 
 	if ! multilib_is_native_abi; then
