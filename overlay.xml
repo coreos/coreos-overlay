@@ -1,0 +1,13 @@
+<?xml version="1.0" ?>
+<repositories version="1.0">
+	<repo priority="50" quality="experimental" status="unofficial">
+		<name>CoreOS</name>
+		<description>This repository contains the ebuild used to build CoreOS, based on Gentoo Optimized For the Cloud</description>
+		<homepage>https://github.com/coreos</homepage>
+		<owner>
+			<email></email>
+			<email></email>
+		</owner>
+		<source type="git">https://github.com/coreos/coreos-overlay.git</source>
+	</repo>
+</repositories>
