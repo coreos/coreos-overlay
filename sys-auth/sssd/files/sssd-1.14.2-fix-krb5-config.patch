@@ -1,0 +1,25 @@
+From 79c0ed5d08fdcc093baef155a118829caf4af63b Mon Sep 17 00:00:00 2001
+From: David Michael <david.michael@coreos.com>
+Date: Wed, 14 Dec 2016 15:08:28 -0800
+Subject: [PATCH] BUILD: Find a host-prefixed krb5-config when cross-compiling
+
+---
+ src/external/krb5.m4 | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/external/krb5.m4 b/src/external/krb5.m4
+index 8fc9096..b844c2f 100644
+--- a/src/external/krb5.m4
++++ b/src/external/krb5.m4
+@@ -9,7 +9,7 @@ if test x$KRB5_CFLAGS != x; then
+     KRB5_PASSED_CFLAGS=$KRB5_CFLAGS
+ fi
+ 
+-AC_PATH_PROG(KRB5_CONFIG, krb5-config)
++AC_PATH_TOOL(KRB5_CONFIG, krb5-config)
+ AC_MSG_CHECKING(for working krb5-config)
+ if test -x "$KRB5_CONFIG"; then
+   KRB5_CFLAGS="`$KRB5_CONFIG --cflags`"
+-- 
+2.7.4
+
