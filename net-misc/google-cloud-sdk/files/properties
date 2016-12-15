@@ -1,0 +1,5 @@
+[core]
+disable_usage_reporting = True
+
+[component_manager]
+disable_update_check = True

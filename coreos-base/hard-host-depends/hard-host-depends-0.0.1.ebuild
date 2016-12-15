@@ -73,7 +73,7 @@ RDEPEND="${RDEPEND}
 	dev-vcs/mercurial
 	dev-vcs/subversion[-dso]
 	net-misc/gcutil
-	net-misc/gsutil
+	net-misc/google-cloud-sdk
 	sys-apps/usbutils
 	sys-apps/systemd
 	!sys-apps/nih-dbus-tool

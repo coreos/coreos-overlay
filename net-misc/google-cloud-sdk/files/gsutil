@@ -1,0 +1,17 @@
+#!/bin/sh
+
+CLOUDSDK_ROOT_DIR="/usr/lib/google-cloud-sdk"
+CLOUDSDK_PYTHON="python2.7"
+CLOUDSDK_PYTHON_SITEPACKAGES=1
+
+export CLOUDSDK_ROOT_DIR CLOUDSDK_PYTHON_SITEPACKAGES
+unset CLOUDSDK_PYTHON_ARGS
+
+# Execute platform/gsutil/gsutil.py instead of the gcloud-ified wrapper
+# bin/bootstrapping/gsutil.py because the gcloud version *only* uses
+# gcloud provided auth tokens, ignoring older .boto provided tokens.
+# This breaks all existing users of gsutil in the SDK which isn't OK.
+#
+# If future versions fix this and gracefully fall back to .boto oauth
+# tokens then we can switch but until then stick with the old scheme.
+"$CLOUDSDK_PYTHON" "${CLOUDSDK_ROOT_DIR}/platform/gsutil/gsutil.py" "$@"
