@@ -6,9 +6,11 @@
 =app-arch/unzip-6.0_p20 ~arm64
 =app-crypt/gnupg-2.1.15 ~arm64
 =app-crypt/pinentry-0.9.7 ~arm64
+=app-eselect/eselect-python-20140125-r2 ~arm64
 =app-text/asciidoc-8.6.9-r3 ~arm64
 =dev-cpp/gflags-2.1.2 ~arm64
 =dev-cpp/glog-0.3.1 **
+=dev-lang/python-2.7.12 ~arm64
 =dev-libs/apr-1.5.2 ~arm64
 =dev-libs/apr-util-1.5.4-r1 ~arm64
 =dev-libs/libassuan-2.4.3 ~arm64
