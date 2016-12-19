@@ -11,7 +11,7 @@ Environment=TMPDIR=/var/tmp
 # the default is not to use systemd for cgroups because the delegate issues still
 # exists and systemd currently does not support the cgroup feature set required
 # for containers run by docker
-ExecStart=/usr/lib/coreos/dockerd --host=fd:// --bridge=none --iptables=false --ip-masq=false --exec-root=/var/run/early-docker --graph=/var/lib/early-docker --pidfile=/var/run/early-docker.pid --containerd=/var/run/docker/libcontainerd/docker-containerd.sock $DOCKER_OPTS $DOCKER_CGROUPS
+ExecStart=/usr/lib/coreos/dockerd --host=fd:// --log-driver=journald --bridge=none --iptables=false --ip-masq=false --exec-root=/var/run/early-docker --graph=/var/lib/early-docker --pidfile=/var/run/early-docker.pid --containerd=/var/run/docker/libcontainerd/docker-containerd.sock $DOCKER_OPTS $DOCKER_CGROUPS
 ExecReload=/bin/kill -s HUP $MAINPID
 LimitNOFILE=1048576
 # Having non-zero Limit*s causes performance problems due to accounting overhead
