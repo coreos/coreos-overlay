@@ -94,6 +94,7 @@ RDEPEND="${RDEPEND}
 	amd64? (
 		app-admin/kubelet-wrapper
 		app-crypt/go-tspi
+		app-emulation/qemu-binfmt
 		app-emulation/xenserver-pv-version
 		app-emulation/xenstore
 		sys-auth/realmd
