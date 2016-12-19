@@ -13,6 +13,7 @@ IUSE=""
 
 RDEPEND="
 	app-emulation/google-compute-engine
+	app-shells/bash
 	sys-libs/glibc
 	sys-libs/nss-usrfiles
 "
