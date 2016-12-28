@@ -197,10 +197,6 @@ multilib_src_install() {
 		insinto /etc/samba
 		doins examples/smb.conf.default
 
-		# Install init script and conf.d file
-		newinitd "${CONFDIR}/samba4.initd-r1" samba
-		newconfd "${CONFDIR}/samba4.confd" samba
-
 		systemd_dotmpfilesd "${FILESDIR}"/samba.conf
 		systemd_dounit "${FILESDIR}"/nmbd.service
 		systemd_dounit "${FILESDIR}"/smbd.{service,socket}
