@@ -79,3 +79,5 @@ dev-cpp/glog gflags
 # enable rpc for rpc.rquotad
 sys-fs/quota rpc
 
+# Don't bother building portage w/xattr, we don't need XATTR_PAX
+sys-apps/portage -xattr
