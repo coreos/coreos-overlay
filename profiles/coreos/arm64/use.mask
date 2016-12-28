@@ -1,0 +1,2 @@
+# TODO(marineam): remove after portage-stable/profiles is updated.
+-seccomp
