@@ -1,0 +1,2 @@
+# Unmask selinux so it can be enabled selectively in package.use
+-selinux
