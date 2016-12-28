@@ -40,7 +40,7 @@ MULTILIB_WRAPPED_HEADERS=(
 )
 
 # sys-apps/attr is an automagic dependency (see bug #489748)
-CDEPEND="${PYTHON_DEPS}
+CDEPEND="
 	>=app-arch/libarchive-3.1.2[${MULTILIB_USEDEP}]
 	dev-lang/perl:=
 	dev-libs/libaio[${MULTILIB_USEDEP}]
@@ -49,14 +49,9 @@ CDEPEND="${PYTHON_DEPS}
 	dev-libs/popt[${MULTILIB_USEDEP}]
 	sys-libs/readline:=
 	virtual/libiconv
-	dev-python/subunit[${PYTHON_USEDEP},${MULTILIB_USEDEP}]
 	sys-apps/attr[${MULTILIB_USEDEP}]
 	sys-libs/libcap
-	>=sys-libs/ldb-1.1.27[ldap(+)?,${MULTILIB_USEDEP}]
 	sys-libs/ncurses:0=[${MULTILIB_USEDEP}]
-	>=sys-libs/talloc-2.1.8[python,${PYTHON_USEDEP},${MULTILIB_USEDEP}]
-	>=sys-libs/tdb-1.3.10[python,${PYTHON_USEDEP},${MULTILIB_USEDEP}]
-	>=sys-libs/tevent-0.9.31-r1[${MULTILIB_USEDEP}]
 	sys-libs/zlib[${MULTILIB_USEDEP}]
 	pam? ( virtual/pam )
 	acl? ( virtual/acl )
@@ -81,7 +76,7 @@ RDEPEND="${CDEPEND}
 
 REQUIRED_USE="addc? ( gnutls !system-mitkrb5 )
 	ads? ( acl gnutls ldap )
-	${PYTHON_REQUIRED_USE}"
+	"
 
 S="${WORKDIR}/${MY_P}"
 
@@ -109,9 +104,6 @@ src_prepare() {
 	# install the patches from tarball(s)
 	eapply "${WORKDIR}/patches/"
 
-	# ugly hackaround for bug #592502
-	cp /usr/include/tevent_internal.h "${S}"/lib/tevent/ || die
-
 	multilib_copy_sources
 }
 
@@ -123,10 +115,11 @@ multilib_src_configure() {
 		--localstatedir="${EPREFIX}/var"
 		--with-modulesdir="${EPREFIX}/usr/$(get_libdir)/samba"
 		--with-piddir="${EPREFIX}/run/${PN}"
-		--bundled-libraries=NONE
+		--bundled-libraries=ALL
 		--builtin-libraries=NONE
 		--disable-rpath
 		--disable-rpath-install
+		--disable-python
 		--nopyc
 		--nopyo
 	)
@@ -215,6 +208,11 @@ multilib_src_install() {
 		systemd_dounit "${FILESDIR}"/winbindd.service
 		systemd_dounit "${FILESDIR}"/samba.service
 	fi
+	rm ${D}/usr/bin/ldb*
+	rm ${D}/usr/lib/debug/usr/bin/ldb*
+	rm ${D}/usr/lib64/samba/ldb/*
+	rm ${D}/usr/bin/tdb*
+	rm ${D}/usr/lib/debug/usr/bin/tdb*
 }
 
 multilib_src_test() {
