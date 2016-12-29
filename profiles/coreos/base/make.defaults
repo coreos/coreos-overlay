@@ -32,9 +32,9 @@ USE="${USE} -zeroconf"
 # No need for OpenMP support in GCC and other apps
 USE="${USE} -openmp"
 
-# Test enabling seccomp globally prior to syncing other profile changes.
+# Test enabling some flags globally prior to syncing other profile changes.
 # TODO(marineam): remove after portage-stable/profiles is updated.
-USE="${USE} seccomp"
+USE="${USE} seccomp xattr"
 
 # Set SELinux policy
 POLICY_TYPES="targeted mcs mls"
