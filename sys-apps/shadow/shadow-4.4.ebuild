@@ -1,14 +1,14 @@
-# Copyright 1999-2014 Gentoo Foundation
+# Copyright 1999-2016 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-apps/shadow/shadow-4.1.5.1-r1.ebuild,v 1.16 2014/01/18 04:48:18 vapier Exp $
+# $Id$
 
-EAPI=4
+EAPI="5"
 
-inherit eutils libtool toolchain-funcs pam multilib systemd
+inherit eutils libtool pam multilib systemd
 
 DESCRIPTION="Utilities to deal with user accounts"
-HOMEPAGE="http://shadow.pld.org.pl/ http://pkg-shadow.alioth.debian.org/"
-SRC_URI="http://pkg-shadow.alioth.debian.org/releases/${P}.tar.bz2"
+HOMEPAGE="https://github.com/shadow-maint/shadow http://pkg-shadow.alioth.debian.org/"
+SRC_URI="https://github.com/shadow-maint/shadow/releases/download/${PV}/${P}.tar.gz"
 
 LICENSE="BSD GPL-2"
 SLOT="0"
@@ -27,12 +27,20 @@ RDEPEND="acl? ( sys-apps/acl )
 	nls? ( virtual/libintl )
 	xattr? ( sys-apps/attr )"
 DEPEND="${RDEPEND}
+	app-arch/xz-utils
 	nls? ( sys-devel/gettext )"
 RDEPEND="${RDEPEND}
-	pam? ( >=sys-auth/pambase-20120417 )"
+	pam? ( >=sys-auth/pambase-20150213 )"
+
+PATCHES=(
+	"${FILESDIR}"/${PN}-4.1.3-dots-in-usernames.patch
+	"${FILESDIR}"/${P}-su-snprintf.patch
+	"${FILESDIR}"/${P}-prototypes.patch
+	"${FILESDIR}"/${P}-load_defaults.patch
+)
 
 src_prepare() {
-	epatch "${FILESDIR}"/${PN}-4.1.3-dots-in-usernames.patch #22920
+	epatch "${PATCHES[@]}"
 	epatch_user
 	elibtoolize
 }
@@ -58,11 +66,17 @@ src_configure() {
 
 set_login_opt() {
 	local comment="" opt=$1 val=$2
-	[[ -z ${val} ]] && comment="#"
-	sed -i -r \
-		-e "/^#?${opt}/s:.*:${comment}${opt} ${val}:" \
-		"${D}"/usr/share/shadow/login.defs
-	local res=$(grep "^${comment}${opt}" "${D}"/usr/share/shadow/login.defs)
+	if [[ -z ${val} ]]; then
+		comment="#"
+		sed -i \
+			-e "/^${opt}\>/s:^:#:" \
+			"${ED}"/usr/share/shadow/login.defs || die
+	else
+		sed -i -r \
+			-e "/^#?${opt}\>/s:.*:${opt} ${val}:" \
+			"${ED}"/usr/share/shadow/login.defs || die
+	fi
+	local res=$(grep "^${comment}${opt}\>" "${ED}"/usr/share/shadow/login.defs)
 	einfo ${res:-Unable to find ${opt} in /usr/share/shadow/login.defs}
 }
 
@@ -74,10 +88,10 @@ src_install() {
 	#   Currently, libshadow.a is for internal use only, so if you see
 	#   -lshadow in a Makefile of some other package, it is safe to
 	#   remove it.
-	rm -f "${D}"/{,usr/}$(get_libdir)/lib{misc,shadow}.{a,la}
+	rm -f "${ED}"/{,usr/}$(get_libdir)/lib{misc,shadow}.{a,la}
 
 	# Remove files from /etc, they will be symlinks to /usr instead.
-	rm -f "${D}"/etc/{limits,login.access,login.defs,securetty,default/useradd}
+	rm -f "${ED}"/etc/{limits,login.access,login.defs,securetty,default/useradd}
 
 	# CoreOS: break shadow.conf into two files so that we only have to apply
 	# etc-shadow.conf in the initrd.
@@ -105,7 +119,7 @@ src_install() {
 		amd64|x86)	devs="hvc0";;
 	esac
 	if [[ -n ${devs} ]]; then
-		printf '%s\n' ${devs} >> "${D}"/usr/share/shadow/securetty
+		printf '%s\n' ${devs} >> "${ED}"/usr/share/shadow/securetty
 	fi
 
 	# needed for 'useradd -D'
@@ -117,15 +131,14 @@ src_install() {
 	newins etc/login.defs login.defs
 	dosym ../usr/share/shadow/login.defs /etc/login.defs
 
+	set_login_opt CREATE_HOME yes
 	if ! use pam ; then
 		set_login_opt MAIL_CHECK_ENAB no
 		set_login_opt SU_WHEEL_ONLY yes
 		set_login_opt CRACKLIB_DICTPATH /usr/$(get_libdir)/cracklib_dict
 		set_login_opt LOGIN_RETRIES 3
 		set_login_opt ENCRYPT_METHOD SHA512
-
-		# CoreOS: increase the minimum password length to eight
-		set_login_opt PASS_MIN_LEN 8
+		set_login_opt CONSOLE
 	else
 		dopamd "${FILESDIR}"/pam.d-include/shadow
 
@@ -139,9 +152,10 @@ src_install() {
 		done
 
 		# comment out login.defs options that pam hates
-		local opt
+		local opt sed_args=()
 		for opt in \
 			CHFN_AUTH \
+			CONSOLE \
 			CRACKLIB_DICTPATH \
 			ENV_HZ \
 			ENVIRON_FILE \
@@ -160,25 +174,28 @@ src_install() {
 			SU_WHEEL_ONLY
 		do
 			set_login_opt ${opt}
+			sed_args+=( -e "/^#${opt}\>/b pamnote" )
 		done
-
-		sed -i -f "${FILESDIR}"/login_defs_pam.sed \
-			"${D}"/usr/share/shadow/login.defs
+		sed -i "${sed_args[@]}" \
+			-e 'b exit' \
+			-e ': pamnote; i# NOTE: This setting should be configured via /etc/pam.d/ and not in this file.' \
+			-e ': exit' \
+			"${ED}"/usr/share/shadow/login.defs || die
 
 		# remove manpages that pam will install for us
 		# and/or don't apply when using pam
-		find "${D}"/usr/share/man \
+		find "${ED}"/usr/share/man \
 			'(' -name 'limits.5*' -o -name 'suauth.5*' ')' \
-			-exec rm {} +
+			-delete
 
 		# Remove pam.d files provided by pambase.
-		rm "${D}"/etc/pam.d/{login,passwd,su} || die
+		rm "${ED}"/etc/pam.d/{login,passwd,su} || die
 	fi
 
 	# Remove manpages that are handled by other packages
-	find "${D}"/usr/share/man \
+	find "${ED}"/usr/share/man \
 		'(' -name id.1 -o -name passwd.5 -o -name getspnam.3 ')' \
-		-exec rm {} +
+		-delete
 
 	dodoc ChangeLog NEWS TODO
 	newdoc README README.download
