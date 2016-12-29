@@ -22,11 +22,11 @@ sys-libs/ncurses	minimal
 sys-libs/pam        -berkdb
 sys-libs/gdbm		berkdb
 
-# enable journal gateway and container features, avoid pulling in gnutls
-sys-apps/systemd audit importd http nat -ssl
+# enable journal gateway and container features
+sys-apps/systemd audit importd http nat
 
 # epoll is needed for systemd-journal-remote to work. coreos/bugs#919
-net-libs/libmicrohttpd epoll -ssl
+net-libs/libmicrohttpd epoll
 
 sys-boot/syslinux       -custom-cflags
 
@@ -41,7 +41,8 @@ app-shells/bash -net vanilla
 # disable nss utilities
 dev-libs/nss -utils
 
-# enable seccomp support in docker
-app-emulation/docker seccomp
-app-emulation/containerd seccomp
+# needed by docker
 sys-libs/libseccomp static-libs
+
+# bind-tools' configure script breaks when cross-compiling with seccomp enabled
+net-dns/bind-tools -seccomp

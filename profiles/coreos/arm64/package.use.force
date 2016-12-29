@@ -1,6 +1,3 @@
-# Do not force this flag, we don't need XATTR_PAX
-sys-apps/portage -xattr
-
 sys-auth/polkit -introspection
 sys-apps/systemd -introspection
 sys-fs/udev-init-scripts -introspection

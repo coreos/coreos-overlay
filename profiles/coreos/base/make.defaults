@@ -32,15 +32,12 @@ USE="${USE} -zeroconf"
 # No need for OpenMP support in GCC and other apps
 USE="${USE} -openmp"
 
+# Test enabling some flags globally prior to syncing other profile changes.
+# TODO(marineam): remove after portage-stable/profiles is updated.
+USE="${USE} seccomp xattr"
+
 # Set SELinux policy
 POLICY_TYPES="targeted mcs mls"
-
-# Override upstream's python settings
-USE="$USE python_targets_python2_7 python_single_target_python2_7"
-USE="$USE -python_targets_python3_2 -python_single_target_python3_2"
-USE="$USE -python_targets_python3_3 -python_single_target_python3_3"
-BOOTSTRAP_USE="$BOOTSTRAP_USE -python_targets_python3_2"
-BOOTSTRAP_USE="$BOOTSTRAP_USE -python_targets_python3_3"
 
 # Disable packages or optional features with distribution issues.
 ACCEPT_RESTRICT="* -bindist -mirror"
