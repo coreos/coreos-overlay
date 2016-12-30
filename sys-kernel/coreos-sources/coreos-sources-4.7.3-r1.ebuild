@@ -42,4 +42,6 @@ UNIPATCH_LIST="
         ${PATCH_DIR}/z0018-SELinux-Check-against-union-label-for-file-operation.patch \
         ${PATCH_DIR}/z0019-kbuild-derive-relative-path-for-KBUILD_SRC-from-CURD.patch \
         ${PATCH_DIR}/z0020-Don-t-verify-write-permissions-on-lower-inodes-on-ov.patch \
+        ${PATCH_DIR}/z0021-mm-remove-gup_flags-FOLL_WRITE-games-from-__get_user.patch \
+        ${PATCH_DIR}/z0022-packet-fix-race-condition-in-packet_set_ring.patch \
 "
