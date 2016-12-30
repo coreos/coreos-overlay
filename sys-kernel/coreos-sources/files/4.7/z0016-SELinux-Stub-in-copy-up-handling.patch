@@ -1,0 +1,55 @@
+From 5010e474dd5f54f95f54f5ac6d86085084148aca Mon Sep 17 00:00:00 2001
+From: David Howells <dhowells@redhat.com>
+Date: Tue, 16 Jun 2015 14:14:32 +0100
+Subject: [PATCH 16/20] SELinux: Stub in copy-up handling
+
+Provide stubs for union/overlay copy-up handling.  The xattr copy up stub
+discards lower SELinux xattrs rather than letting them be copied up so that
+the security label on the copy doesn't get corrupted.
+
+Signed-off-by: David Howells <dhowells@redhat.com>
+---
+ security/selinux/hooks.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+diff --git a/security/selinux/hooks.c b/security/selinux/hooks.c
+index a86d537..19719b7 100644
+--- a/security/selinux/hooks.c
++++ b/security/selinux/hooks.c
+@@ -3270,6 +3270,24 @@ static void selinux_inode_getsecid(struct inode *inode, u32 *secid)
+ 	*secid = isec->sid;
+ }
+ 
++static int selinux_inode_copy_up(struct dentry *src, struct dentry *dst)
++{
++	return 0;
++}
++
++static int selinux_inode_copy_up_xattr(struct dentry *src, struct dentry *dst,
++				       const char *name, void *value,
++				       size_t *size)
++{
++	/* The copy_up hook above sets the initial context on an inode, but we
++	 * don't then want to overwrite it by blindly copying all the lower
++	 * xattrs up.  Instead, we have to filter out SELinux-related xattrs.
++	 */
++	if (strcmp(name, XATTR_NAME_SELINUX) == 0)
++		return 1; /* Discard */
++	return 0;
++}
++
+ /* file security operations */
+ 
+ static int selinux_revalidate_file_permission(struct file *file, int mask)
+@@ -6056,6 +6074,8 @@ static struct security_hook_list selinux_hooks[] = {
+ 	LSM_HOOK_INIT(inode_setsecurity, selinux_inode_setsecurity),
+ 	LSM_HOOK_INIT(inode_listsecurity, selinux_inode_listsecurity),
+ 	LSM_HOOK_INIT(inode_getsecid, selinux_inode_getsecid),
++	LSM_HOOK_INIT(inode_copy_up, selinux_inode_copy_up),
++	LSM_HOOK_INIT(inode_copy_up_xattr, selinux_inode_copy_up_xattr),
+ 
+ 	LSM_HOOK_INIT(file_permission, selinux_file_permission),
+ 	LSM_HOOK_INIT(file_alloc_security, selinux_file_alloc_security),
+-- 
+2.7.3
+

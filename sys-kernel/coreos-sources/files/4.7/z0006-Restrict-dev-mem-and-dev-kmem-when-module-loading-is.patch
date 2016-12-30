@@ -1,7 +1,7 @@
-From 4b3bc1185096049ccd7f907d7fba1df72a5cfc7d Mon Sep 17 00:00:00 2001
+From 30af3497cb4e5af8e602674738c2eb8cd79936e9 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Fri, 9 Mar 2012 09:28:15 -0500
-Subject: [PATCH 13/22] Restrict /dev/mem and /dev/kmem when module loading is
+Subject: [PATCH 06/20] Restrict /dev/mem and /dev/kmem when module loading is
  restricted
 
 Allowing users to write to address space makes it possible for the kernel
@@ -14,10 +14,10 @@ Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
  1 file changed, 6 insertions(+)
 
 diff --git a/drivers/char/mem.c b/drivers/char/mem.c
-index 48a2897..08a7bff 100644
+index 86e5bfa..3264735 100644
 --- a/drivers/char/mem.c
 +++ b/drivers/char/mem.c
-@@ -164,6 +164,9 @@ static ssize_t write_mem(struct file *file, const char __user *buf,
+@@ -167,6 +167,9 @@ static ssize_t write_mem(struct file *file, const char __user *buf,
  	if (p != *ppos)
  		return -EFBIG;
  
@@ -27,7 +27,7 @@ index 48a2897..08a7bff 100644
  	if (!valid_phys_addr_range(p, count))
  		return -EFAULT;
  
-@@ -510,6 +513,9 @@ static ssize_t write_kmem(struct file *file, const char __user *buf,
+@@ -513,6 +516,9 @@ static ssize_t write_kmem(struct file *file, const char __user *buf,
  	char *kbuf; /* k-addr because vwrite() takes vmlist_lock rwlock */
  	int err = 0;
  
