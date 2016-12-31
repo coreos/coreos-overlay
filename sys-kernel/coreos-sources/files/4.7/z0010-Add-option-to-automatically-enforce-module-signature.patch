@@ -1,7 +1,7 @@
-From 6cdf93dbb2dd02156f15dd25a1ae7d0c8ca6ef06 Mon Sep 17 00:00:00 2001
+From 2bcdc217c3c877906874a8d56c9b5c4112d1e629 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Fri, 9 Aug 2013 18:36:30 -0400
-Subject: [PATCH 17/22] Add option to automatically enforce module signatures
+Subject: [PATCH 10/22] Add option to automatically enforce module signatures
  when in Secure Boot mode
 
 UEFI Secure Boot provides a mechanism for ensuring that the firmware will
@@ -34,10 +34,10 @@ index 95a4d34..b8527c6 100644
  290/040	ALL	edd_mbr_sig_buffer EDD MBR signatures
  2D0/A00	ALL	e820_map	E820 memory map table
 diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 2a1f0ce..ba2c734 100644
+index d9a94da..866d0e9 100644
 --- a/arch/x86/Kconfig
 +++ b/arch/x86/Kconfig
-@@ -1774,6 +1774,16 @@ config EFI_MIXED
+@@ -1776,6 +1776,16 @@ config EFI_MIXED
  
  	   If unsure, say N.
  
@@ -55,7 +55,7 @@ index 2a1f0ce..ba2c734 100644
  	def_bool y
  	prompt "Enable seccomp to safely compute untrusted bytecode"
 diff --git a/arch/x86/boot/compressed/eboot.c b/arch/x86/boot/compressed/eboot.c
-index 94dd4a3..1959b82 100644
+index 52fef60..faa223b 100644
 --- a/arch/x86/boot/compressed/eboot.c
 +++ b/arch/x86/boot/compressed/eboot.c
 @@ -12,6 +12,7 @@
@@ -103,7 +103,7 @@ index 94dd4a3..1959b82 100644
  static efi_status_t
  setup_uga32(void **uga_handle, unsigned long size, u32 *width, u32 *height)
  {
-@@ -1128,6 +1159,10 @@ struct boot_params *efi_main(struct efi_config *c,
+@@ -1126,6 +1157,10 @@ struct boot_params *efi_main(struct efi_config *c,
  	else
  		setup_boot_services32(efi_early);
  
@@ -129,10 +129,10 @@ index c18ce67..2b3e542 100644
  	 * The sentinel is set to a nonzero value (0xff) in header.S.
  	 *
 diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index 98c9cd6..8979719 100644
+index c4e7b39..bdb9881 100644
 --- a/arch/x86/kernel/setup.c
 +++ b/arch/x86/kernel/setup.c
-@@ -1160,6 +1160,12 @@ void __init setup_arch(char **cmdline_p)
+@@ -1152,6 +1152,12 @@ void __init setup_arch(char **cmdline_p)
  
  	io_delay_init();
  
@@ -146,10 +146,10 @@ index 98c9cd6..8979719 100644
  	 * Parse the ACPI tables for possible boot-time SMP configuration.
  	 */
 diff --git a/include/linux/module.h b/include/linux/module.h
-index c8b4ea0..8918ef4 100644
+index 15843fc..fe5c49d 100644
 --- a/include/linux/module.h
 +++ b/include/linux/module.h
-@@ -260,6 +260,12 @@ extern const typeof(name) __mod_##type##__##name##_device_table		\
+@@ -273,6 +273,12 @@ const struct exception_table_entry *search_exception_tables(unsigned long add);
  
  struct notifier_block;
  
@@ -163,10 +163,10 @@ index c8b4ea0..8918ef4 100644
  
  extern int modules_disabled; /* for sysctl */
 diff --git a/kernel/module.c b/kernel/module.c
-index 0332fdd..3f1ea6b 100644
+index 975a987..c57ceda 100644
 --- a/kernel/module.c
 +++ b/kernel/module.c
-@@ -4280,6 +4280,13 @@ void module_layout(struct module *mod,
+@@ -4205,6 +4205,13 @@ void module_layout(struct module *mod,
  EXPORT_SYMBOL(module_layout);
  #endif
  
@@ -181,5 +181,5 @@ index 0332fdd..3f1ea6b 100644
  {
  #ifdef CONFIG_MODULE_SIG
 -- 
-2.7.3
+2.10.2
 

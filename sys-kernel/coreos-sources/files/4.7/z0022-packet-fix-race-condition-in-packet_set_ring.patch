@@ -1,4 +1,4 @@
-From 49dac58972203db8ef112e976603380c88bc475a Mon Sep 17 00:00:00 2001
+From adb5ec49501926806a50762e8c0b699b4e0b4991 Mon Sep 17 00:00:00 2001
 From: Philip Pettersson <philip.pettersson@gmail.com>
 Date: Wed, 30 Nov 2016 14:55:36 -0800
 Subject: [PATCH 22/22] packet: fix race condition in packet_set_ring
@@ -25,10 +25,10 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
  1 file changed, 12 insertions(+), 6 deletions(-)
 
 diff --git a/net/packet/af_packet.c b/net/packet/af_packet.c
-index 33a4697..db28948 100644
+index b43c401..c3d8537 100644
 --- a/net/packet/af_packet.c
 +++ b/net/packet/af_packet.c
-@@ -3649,19 +3649,25 @@ packet_setsockopt(struct socket *sock, int level, int optname, char __user *optv
+@@ -3685,19 +3685,25 @@ packet_setsockopt(struct socket *sock, int level, int optname, char __user *optv
  
  		if (optlen != sizeof(val))
  			return -EINVAL;
@@ -58,7 +58,7 @@ index 33a4697..db28948 100644
  	}
  	case PACKET_RESERVE:
  	{
-@@ -4164,6 +4170,7 @@ static int packet_set_ring(struct sock *sk, union tpacket_req_u *req_u,
+@@ -4200,6 +4206,7 @@ static int packet_set_ring(struct sock *sk, union tpacket_req_u *req_u,
  	/* Added to avoid minimal code churn */
  	struct tpacket_req *req = &req_u->req;
  
@@ -66,7 +66,7 @@ index 33a4697..db28948 100644
  	/* Opening a Tx-ring is NOT supported in TPACKET_V3 */
  	if (!closing && tx_ring && (po->tp_version > TPACKET_V2)) {
  		net_warn_ratelimited("Tx-ring is not supported.\n");
-@@ -4245,7 +4252,6 @@ static int packet_set_ring(struct sock *sk, union tpacket_req_u *req_u,
+@@ -4281,7 +4288,6 @@ static int packet_set_ring(struct sock *sk, union tpacket_req_u *req_u,
  			goto out;
  	}
  
@@ -74,7 +74,7 @@ index 33a4697..db28948 100644
  
  	/* Detach socket from network */
  	spin_lock(&po->bind_lock);
-@@ -4294,11 +4300,11 @@ static int packet_set_ring(struct sock *sk, union tpacket_req_u *req_u,
+@@ -4330,11 +4336,11 @@ static int packet_set_ring(struct sock *sk, union tpacket_req_u *req_u,
  		if (!tx_ring)
  			prb_shutdown_retire_blk_timer(po, rb_queue);
  	}
@@ -88,5 +88,5 @@ index 33a4697..db28948 100644
  }
  
 -- 
-2.7.3
+2.10.2
 

@@ -1,7 +1,7 @@
-From fbe8ec927d07eb8c808c87f2e81922e4fe3606d9 Mon Sep 17 00:00:00 2001
+From 184434f48610ed47fab3bdaa7f81b2a6684df6b2 Mon Sep 17 00:00:00 2001
 From: Josh Boyer <jwboyer@redhat.com>
 Date: Mon, 25 Jun 2012 19:57:30 -0400
-Subject: [PATCH 14/22] acpi: Ignore acpi_rsdp kernel parameter when module
+Subject: [PATCH 07/22] acpi: Ignore acpi_rsdp kernel parameter when module
  loading is restricted
 
 This option allows userspace to pass the RSDP address to the kernel, which
@@ -14,7 +14,7 @@ Signed-off-by: Josh Boyer <jwboyer@redhat.com>
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
-index 4305ee9..fa1bcf0 100644
+index b108f13..158de7d 100644
 --- a/drivers/acpi/osl.c
 +++ b/drivers/acpi/osl.c
 @@ -40,6 +40,7 @@
@@ -35,5 +35,5 @@ index 4305ee9..fa1bcf0 100644
  #endif
  
 -- 
-2.7.3
+2.10.2
 
