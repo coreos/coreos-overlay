@@ -64,6 +64,7 @@ RDEPEND="
 	sys-process/procps
 	>=dev-vcs/git-1.7
 	>=app-arch/xz-utils-4.9
+	>=sys-apps/shadow-4.4
 
 	>=app-emulation/containerd-0.2.3[seccomp?]
 	>=app-emulation/runc-1.0.0_rc1_p20160615[apparmor?,seccomp?]
