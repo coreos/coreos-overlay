@@ -51,3 +51,12 @@
 =dev-libs/libgcrypt-1.7.3 ~arm64
 
 =net-misc/curl-7.50.3 ~arm64
+
+# https://security.gentoo.org/glsa/201612-40
+=sys-fs/squashfs-tools-4.3 ~arm64
+
+# https://security.gentoo.org/glsa/201611-17
+=net-nds/rpcbind-0.2.3-r1 ~arm64
+
+# https://security.gentoo.org/glsa/201611-01
+=app-arch/unzip-6.0_p20 ~arm64
