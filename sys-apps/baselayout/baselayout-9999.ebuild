@@ -9,7 +9,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~arm64 ~x86"
 else
-	CROS_WORKON_COMMIT="1dad7cf091467bb51ce8f5bba11b9baeab1f6c0c"
+	CROS_WORKON_COMMIT="dc8fe9b318df608ffb08959d0a1b0e8818797935"
 	KEYWORDS="amd64 arm arm64 x86"
 fi
 
@@ -130,6 +130,11 @@ src_install() {
 	done
 
 	doenvd "env.d/99coreos_ldpath"
+
+	# Add /sbin:/bin into the PATH when they aren't links into /usr.
+	if ! use symlink-usr; then
+		echo ROOTPATH=/sbin:/bin > "${D}"/etc/env.d/99coreos_bin || die
+	fi
 
 	# handle multilib paths.  do it here because we want this behavior
 	# regardless of the C library that you're using.  we do explicitly
