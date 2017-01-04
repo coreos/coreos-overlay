@@ -1,0 +1,28 @@
+--- tc/Makefile
++++ tc/Makefile
+@@ -89,7 +89,7 @@
+ endif
+ 
+ TCOBJ += $(TCMODULES)
+-LDLIBS += -L. -ltc -lm
++LDLIBS += -L. -lm
+ 
+ ifeq ($(SHARED_LIBS),y)
+ LDLIBS += -ldl
+@@ -117,12 +117,13 @@
+ 	$(CC) $(CFLAGS) $(LDFLAGS) -shared -fpic $< -o $@
+ 
+ 
+-all: libtc.a tc $(TCSO)
++all: tc $(TCSO)
+ 
+-tc: $(TCOBJ) $(TCLIB)
++tc: $(TCOBJ) libtc.a
++	$(CC) $^ $(LDFLAGS) $(LDLIBS) -o $@
+ 
+ libtc.a: $(TCLIB)
+-	$(AR) rcs $@ $(TCLIB)
++	$(AR) rcs $@ $^
+ 
+ install: all
+ 	mkdir -p $(MODDESTDIR)
