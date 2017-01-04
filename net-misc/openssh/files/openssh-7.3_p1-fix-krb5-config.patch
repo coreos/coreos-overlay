@@ -1,0 +1,25 @@
+From 56d0bb7810042e3967a377cda4e321685e173969 Mon Sep 17 00:00:00 2001
+From: David Michael <david.michael@coreos.com>
+Date: Tue, 6 Dec 2016 17:52:31 -0800
+Subject: [PATCH] Find a host-prefixed krb5-config when cross-compiling
+
+---
+ configure.ac | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/configure.ac b/configure.ac
+index 88c4633..4d9382c 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -4151,7 +4151,7 @@ AC_ARG_WITH([kerberos5],
+ 		AC_DEFINE([KRB5], [1], [Define if you want Kerberos 5 support])
+ 		KRB5_MSG="yes"
+ 
+-		AC_PATH_PROG([KRB5CONF], [krb5-config],
++		AC_PATH_TOOL([KRB5CONF], [krb5-config],
+ 			     [$KRB5ROOT/bin/krb5-config],
+ 			     [$KRB5ROOT/bin:$PATH])
+ 		if test -x $KRB5CONF ; then
+-- 
+2.7.4
+

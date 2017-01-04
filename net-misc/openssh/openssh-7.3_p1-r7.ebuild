@@ -9,18 +9,21 @@ inherit eutils user flag-o-matic multilib autotools pam systemd versionator
 # Make it more portable between straight releases
 # and _p? releases.
 PARCH=${P/_}
+HPN_PV="${PV}"
+HPN_VER="14.10"
 
-#HPN_PATCH="${PARCH}-hpnssh14v10.tar.xz"
-LDAP_PATCH="${PN}-lpk-7.2p2-0.3.14.patch.xz"
-X509_VER="8.9" X509_PATCH="${PN}-${PV/_}+x509-${X509_VER}.diff.gz"
+HPN_PATCH="${PN}-${HPN_PV}-hpn-14.10-r1.patch"
+SCTP_PATCH="${PN}-7.3_p1-sctp.patch.xz"
+LDAP_PATCH="${PN}-lpk-7.3p1-0.3.14.patch.xz"
+X509_VER="9.2" X509_PATCH="${PN}-${PV/_}+x509-${X509_VER}.diff.gz"
 
 DESCRIPTION="Port of OpenBSD's free SSH release"
 HOMEPAGE="http://www.openssh.org/"
 SRC_URI="mirror://openbsd/OpenSSH/portable/${PARCH}.tar.gz
-	mirror://gentoo/${PN}-7.2_p1-sctp.patch.xz
+	${SCTP_PATCH:+mirror://gentoo/${SCTP_PATCH}}
 	${HPN_PATCH:+hpn? (
-		mirror://gentoo/${HPN_PATCH}
-		mirror://sourceforge/hpnssh/${HPN_PATCH}
+		mirror://gentoo/${HPN_PATCH}.xz
+		http://dev.gentoo.org/~chutzpah/${HPN_PATCH}.xz
 	)}
 	${LDAP_PATCH:+ldap? ( mirror://gentoo/${LDAP_PATCH} )}
 	${X509_PATCH:+X509? ( http://roumenpetrov.info/openssh/x509-${X509_VER}/${X509_PATCH} )}
@@ -28,17 +31,20 @@ SRC_URI="mirror://openbsd/OpenSSH/portable/${PARCH}.tar.gz
 
 LICENSE="BSD GPL-2"
 SLOT="0"
-KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd ~arm-linux ~x86-linux"
+KEYWORDS="alpha amd64 arm arm64 hppa ia64 ~m68k ~mips ppc ppc64 ~s390 ~sh sparc x86 ~ppc-aix ~amd64-fbsd ~sparc-fbsd ~x86-fbsd ~x64-freebsd ~x86-freebsd ~hppa-hpux ~ia64-hpux ~x86-interix ~amd64-linux ~arm-linux ~ia64-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~m68k-mint ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
 # Probably want to drop ssl defaulting to on in a future version.
-IUSE="debug ${HPN_PATCH:++}hpn kerberos kernel_linux ldap ldns libedit libressl pam +pie sctp selinux skey ssh1 +ssl static X X509"
+IUSE="debug ${HPN_PATCH:++}hpn kerberos kernel_linux ldap ldns libedit libressl livecd pam +pie sctp selinux skey ssh1 +ssl static test X X509"
 REQUIRED_USE="ldns? ( ssl )
 	pie? ( !static )
 	ssh1? ( ssl )
 	static? ( !kerberos !pam )
-	X509? ( !ldap ssl )"
+	X509? ( !ldap ssl )
+	test? ( ssl )"
 
 LIB_DEPEND="
-	ldns? ( net-libs/ldns[ecdsa,ssl,static-libs(+)] )
+	ldns? (
+		net-libs/ldns[ecdsa,ssl,static-libs(+)]
+	)
 	libedit? ( dev-libs/libedit[static-libs(+)] )
 	sctp? ( net-misc/lksctp-tools[static-libs(+)] )
 	selinux? ( >=sys-libs/libselinux-1.28[static-libs(+)] )
@@ -113,27 +119,35 @@ src_prepare() {
 	if use X509 ; then
 		pushd .. >/dev/null
 		if use hpn ; then
-			pushd ${HPN_PATCH%.*.*} >/dev/null
-			epatch "${FILESDIR}"/${PN}-7.1_p1-hpn-x509-glue.patch
+			pushd "${WORKDIR}" >/dev/null
+			epatch "${FILESDIR}"/${P}-hpn-x509-9.2-glue.patch
 			popd >/dev/null
 		fi
-		epatch "${FILESDIR}"/${PN}-7.2_p1-sctp-x509-glue.patch
+		epatch "${FILESDIR}"/${PN}-7.3_p1-sctp-x509-glue.patch
+		sed -i 's:PKIX_VERSION:SSH_X509:g' "${WORKDIR}"/${X509_PATCH%.*} || die
 		popd >/dev/null
 		epatch "${WORKDIR}"/${X509_PATCH%.*}
-		#epatch "${FILESDIR}"/${PN}-7.1_p2-x509-hpn14v10-glue.patch
-		#save_version X509
+		epatch "${FILESDIR}"/${P}-x509-9.2-warnings.patch
+		save_version X509
+	else
+		# bug #592122, fixed by X509 patch
+		epatch "${FILESDIR}"/${P}-fix-ssh1-with-no-ssh1-host-key.patch
 	fi
 	if use ldap ; then
 		epatch "${WORKDIR}"/${LDAP_PATCH%.*}
 		save_version LPK
 	fi
-	epatch "${FILESDIR}"/${PN}-7.2_p1-GSSAPI-dns.patch #165444 integrated into gsskex
+
+	epatch "${FILESDIR}"/${PN}-7.3_p1-GSSAPI-dns.patch #165444 integrated into gsskex
 	epatch "${FILESDIR}"/${PN}-6.7_p1-openssl-ignore-status.patch
-	epatch "${WORKDIR}"/${PN}-7.2_p1-sctp.patch
+	epatch "${WORKDIR}"/${SCTP_PATCH%.*}
+
 	if use hpn ; then
-		EPATCH_FORCE="yes" EPATCH_SUFFIX="patch" \
-			EPATCH_MULTI_MSG="Applying HPN patchset ..." \
-			epatch "${WORKDIR}"/${HPN_PATCH%.*.*}
+		#EPATCH_FORCE="yes" EPATCH_SUFFIX="patch" \
+		#	EPATCH_MULTI_MSG="Applying HPN patchset ..." \
+		#	epatch "${WORKDIR}"/${HPN_PATCH%.*.*}
+		epatch "${WORKDIR}"/${HPN_PATCH}
+		epatch "${FILESDIR}"/${P}-hpn-cipher-ctr-mt-no-deadlocks.patch
 		save_version HPN
 	fi
 
@@ -151,6 +165,17 @@ src_prepare() {
 		-e '/OSSH_CHECK_CFLAG_LINK.*-ftrapv/d'
 	)
 	sed -i "${sed_args[@]}" configure{.ac,} || die
+
+	# 7.3 added seccomp support to MIPS, but failed to handled the N32
+	# case.  This patch is temporary until upstream fixes.  See
+	# Gentoo bug #591392 or upstream #2590.
+	[[ ${CHOST} == mips64*-linux-* && ${ABI} == "n32" ]] \
+		&& epatch "${FILESDIR}"/${PN}-7.3-mips-seccomp-n32.patch
+
+	epatch "${FILESDIR}"/${P}-NEWKEYS_null_deref.patch # 595342
+	epatch "${FILESDIR}"/${P}-Unregister-the-KEXINIT-handler-after-receive.patch # 597360
+
+	epatch "${FILESDIR}"/${PN}-7.3_p1-fix-krb5-config.patch
 
 	epatch_user #473004
 
@@ -231,13 +256,20 @@ src_install() {
 	SendEnv LANG LC_*
 	EOF
 
+	if use livecd ; then
+		sed -i \
+			-e '/^#PermitRootLogin/c# Allow root login with password on livecds.\nPermitRootLogin Yes' \
+			"${ED}"/etc/ssh/sshd_config || die
+	fi
+
 	if ! use X509 && [[ -n ${LDAP_PATCH} ]] && use ldap ; then
 		insinto /etc/openldap/schema/
 		newins openssh-lpk_openldap.schema openssh-lpk.schema
 	fi
 
 	doman contrib/ssh-copy-id.1
-	dodoc ChangeLog CREDITS OVERVIEW README* TODO sshd_config
+	dodoc CREDITS OVERVIEW README* TODO sshd_config
+	use X509 || dodoc ChangeLog
 
 	diropts -m 0700
 	dodir /etc/skel/.ssh
@@ -264,7 +296,7 @@ src_test() {
 	mkdir -p "${sshhome}"/.ssh
 	for t in ${tests} ; do
 		# Some tests read from stdin ...
-		HOMEDIR="${sshhome}" \
+		HOMEDIR="${sshhome}" HOME="${sshhome}" \
 		emake -k -j1 ${t} </dev/null \
 			&& passed="${passed}${t} " \
 			|| failed="${failed}${t} "
