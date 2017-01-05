@@ -1,8 +1,8 @@
 [Unit]
 Description=Docker Application Container Engine
 Documentation=http://docs.docker.com
-After=containerd.service docker.socket early-docker.target network.target
-Requires=containerd.service docker.socket early-docker.target
+After=containerd.service docker.socket network.target
+Requires=containerd.service docker.socket
 
 [Service]
 Type=notify
