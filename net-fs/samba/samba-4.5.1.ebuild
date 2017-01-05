@@ -25,8 +25,8 @@ LICENSE="GPL-3"
 
 SLOT="0"
 
-IUSE="acl addc addns ads client cluster cups dmapi fam gnutls iprint
-ldap pam quota selinux syslog +system-mitkrb5 systemd test winbind zeroconf"
+IUSE="acl addc addns ads client cluster cups dmapi fam gnutls iprint ldap
++minimal pam quota selinux syslog +system-mitkrb5 systemd test winbind zeroconf"
 
 MULTILIB_WRAPPED_HEADERS=(
 	/usr/include/samba-4.0/policy.h
@@ -197,18 +197,27 @@ multilib_src_install() {
 		insinto /etc/samba
 		doins examples/smb.conf.default
 
-		systemd_dotmpfilesd "${FILESDIR}"/samba.conf
+		if ! use minimal ; then
+			systemd_dotmpfilesd "${FILESDIR}"/samba.conf
+		fi
 		systemd_dounit "${FILESDIR}"/nmbd.service
 		systemd_dounit "${FILESDIR}"/smbd.{service,socket}
 		systemd_newunit "${FILESDIR}"/smbd_at.service 'smbd@.service'
 		systemd_dounit "${FILESDIR}"/winbindd.service
 		systemd_dounit "${FILESDIR}"/samba.service
 	fi
-	rm ${D}/usr/bin/ldb*
-	rm ${D}/usr/lib/debug/usr/bin/ldb*
-	rm ${D}/usr/lib64/samba/ldb/*
-	rm ${D}/usr/bin/tdb*
-	rm ${D}/usr/lib/debug/usr/bin/tdb*
+	rm ${D}/usr/lib*/samba/ldb/*
+	rm ${D}/etc/samba/smb.conf.default
+
+	if use minimal ; then
+	   mv ${D}/usr/bin/net ${T}
+	   rm ${D}/usr/bin/*
+	   mv ${T}/net ${D}/usr/bin/net
+	   rm ${D}/usr/sbin/*
+	   rm -rf ${D}/lib*/security
+	   rm -rf ${D}/usr/lib/systemd
+	   rm -rf ${D}/var/
+	fi
 }
 
 multilib_src_test() {
