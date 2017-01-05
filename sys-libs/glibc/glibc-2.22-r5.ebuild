@@ -167,6 +167,7 @@ eblit-src_prepare-post() {
 	## COREOS: features and bug fixes missing from the Gentoo patch set.
 	epatch "${FILESDIR}"/2.23/glibc-2.23-gshadow-handle-erange.patch
 	epatch "${FILESDIR}"/2.23/glibc-2.23-c-utf8-locale.patch
+	epatch "${FILESDIR}"/2.23/glibc-2.23-pthread-use-after-free.patch
 
 	if use hardened ; then
 		# We don't enable these for non-hardened as the output is very terse --
