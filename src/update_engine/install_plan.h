@@ -58,6 +58,9 @@ struct InstallPlan {
   uint64_t new_pcr_policy_size;
   std::vector<char> new_pcr_policy_hash;
 
+  // Optional version of the update being applied.
+  std::string display_version;
+
   // Optional arguments to pass to the post install script. Used to inform
   // the script about optional update procedures that ran. For example
   // "KERNEL=kernel_path" indicates that update_engine installed the kernel
