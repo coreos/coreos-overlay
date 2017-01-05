@@ -51,6 +51,8 @@ const int UpdateAttempter::kMaxDeltaUpdateFailures = 3;
 const char* kUpdateCompletedMarker =
     "/var/run/update_engine_autoupdate_completed";
 
+const char* kVersionZero = "0.0.0";
+
 const char* UpdateStatusToString(UpdateStatus status) {
   switch (status) {
     case UPDATE_STATUS_IDLE:
@@ -108,7 +110,7 @@ UpdateAttempter::UpdateAttempter(SystemState* system_state,
       status_(UPDATE_STATUS_IDLE),
       download_progress_(0.0),
       last_checked_time_(0),
-      new_version_("0.0.0.0"),
+      new_version_(kVersionZero),
       new_payload_size_(0),
       updated_boot_flags_(false),
       update_boot_flags_running_(false),
@@ -291,6 +293,9 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
   if (status_ == UPDATE_STATUS_REPORTING_ERROR_EVENT) {
     LOG(INFO) << "Error event sent.";
 
+    new_payload_size_ = 0;
+    new_version_ = kVersionZero;
+
     // Inform scheduler of new status
     SetStatusAndNotify(UPDATE_STATUS_IDLE, kUpdateNoticeUnspecified);
 
@@ -324,6 +329,8 @@ void UpdateAttempter::ProcessingDone(const ActionProcessor* processor,
 
 void UpdateAttempter::ProcessingStopped(const ActionProcessor* processor) {
   download_progress_ = 0.0;
+  new_payload_size_ = 0;
+  new_version_ = kVersionZero;
   SetStatusAndNotify(UPDATE_STATUS_IDLE, kUpdateNoticeUnspecified);
   actions_.clear();
   error_event_.reset(NULL);
@@ -434,6 +441,8 @@ bool UpdateAttempter::ResetStatus() {
       return true;
 
     case UPDATE_STATUS_UPDATED_NEED_REBOOT:  {
+      new_payload_size_ = 0;
+      new_version_ = kVersionZero;
       status_ = UPDATE_STATUS_IDLE;
       LOG(INFO) << "Reset Successful";
 
