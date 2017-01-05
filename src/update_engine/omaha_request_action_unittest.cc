@@ -85,8 +85,6 @@ string GetUpdateResponse2(const string& app_id,
       "<packages><package hash=\"not-used\" name=\"" + filename +  "\" "
       "size=\"" + size + "\"/></packages>"
       "<actions><action event=\"postinstall\" "
-      "DisplayVersion=\"" + display_version + "\" "
-      "ChromeOSVersion=\"" + display_version + "\" "
       "MoreInfo=\"" + more_info_url + "\" Prompt=\"" + prompt + "\" "
       "IsDelta=\"true\" "
       "IsDeltaPayload=\"true\" "
@@ -353,8 +351,6 @@ TEST(OmahaRequestActionTest, MissingFieldTest) {
       "<packages><package hash=\"not-used\" name=\"f\" "
       "size=\"587\"/></packages>"
       "<actions><action event=\"postinstall\" "
-      "DisplayVersion=\"10.2.3.4\" "
-      "ChromeOSVersion=\"10.2.3.4\" "
       "Prompt=\"false\" "
       "IsDelta=\"true\" "
       "IsDeltaPayload=\"false\" "
@@ -373,7 +369,7 @@ TEST(OmahaRequestActionTest, MissingFieldTest) {
                               &response,
                               NULL));
   EXPECT_TRUE(response.update_exists);
-  EXPECT_EQ("10.2.3.4", response.display_version);
+  EXPECT_EQ("1.0.0.0", response.display_version);
   EXPECT_EQ("http://missing/field/test/f", response.payload_urls[0]);
   EXPECT_EQ("", response.more_info_url);
   EXPECT_EQ("lkq34j5345", response.hash);

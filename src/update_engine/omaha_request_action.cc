@@ -30,7 +30,7 @@ namespace chromeos_update_engine {
 // List of custom pair tags that we interpret in the Omaha Response:
 static const char* kTagDeadline = "deadline";
 static const char* kTagDisablePayloadBackoff = "DisablePayloadBackoff";
-static const char* kTagDisplayVersion = "DisplayVersion";
+// Deprecated: "DisplayVersion"
 // Deprecated: "IsDelta"
 static const char* kTagIsDeltaPayload = "IsDeltaPayload";
 static const char* kTagMaxFailureCountPerUrl = "MaxFailureCountPerUrl";
@@ -46,7 +46,7 @@ static const char* kTagSha256 = "sha256";
 
 namespace {
 
-const string kGupdateVersion("CoreOSUpdateEngine-0.1.0.0");
+const string kGupdateVersion(PACKAGE_NAME "-" PACKAGE_VERSION);
 
 // This is handy for passing strings into libxml2
 #define ConstXMLStr(x) (reinterpret_cast<const xmlChar*>(x))
@@ -350,6 +350,9 @@ bool OmahaRequestAction::ParseResponse(xmlDoc* doc,
   if (!ParseStatus(update_check_node, output_object, completer))
     return false;
 
+  if (!ParseManifest(doc, output_object, completer))
+    return false;
+
   // Note: ParseUrls MUST be called before ParsePackage as ParsePackage
   // appends the package name to the URLs populated in this method.
   if (!ParseUrls(doc, output_object, completer))
@@ -392,6 +395,34 @@ bool OmahaRequestAction::ParseStatus(xmlNode* update_check_node,
     completer->set_code(kActionCodeOmahaResponseInvalid);
     return false;
   }
+
+  return true;
+}
+
+bool OmahaRequestAction::ParseManifest(xmlDoc* doc,
+                                       OmahaResponse* output_object,
+                                       ScopedActionCompleter* completer) {
+  // Get the manifest node.
+  static const char* kManifestNodeXPath("/response/app/updatecheck/manifest");
+
+  std::unique_ptr<xmlXPathObject, ScopedPtrXmlXPathObjectFree>
+      xpath_nodeset(GetNodeSet(doc, ConstXMLStr(kManifestNodeXPath)));
+  if (!xpath_nodeset.get()) {
+    completer->set_code(kActionCodeOmahaResponseInvalid);
+    return false;
+  }
+
+  xmlNodeSet* nodeset = xpath_nodeset->nodesetval;
+  CHECK(nodeset) << "XPath missing " << kManifestNodeXPath;
+  CHECK_GE(nodeset->nodeNr, 1);
+
+  // We only care about the first (and only hopefully) manifest.
+  xmlNode* manifest_node = nodeset->nodeTab[0];
+
+  // Parse the version, only used for informational purposes.
+  const string version(XmlGetProperty(manifest_node, "version"));
+  LOG(INFO) << "Omaha Response manifest version = " << version;
+  output_object->display_version = version;
 
   return true;
 }
@@ -532,8 +563,6 @@ bool OmahaRequestAction::ParseParams(xmlDoc* doc,
   }
 
   // Get the optional properties one by one.
-  output_object->display_version =
-      XmlGetProperty(pie_action_node, kTagDisplayVersion);
   output_object->more_info_url = XmlGetProperty(pie_action_node, kTagMoreInfo);
   output_object->needs_admin =
       XmlGetProperty(pie_action_node, kTagNeedsAdmin) == "true";
