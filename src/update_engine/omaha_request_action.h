@@ -152,6 +152,13 @@ class OmahaRequestAction : public Action<OmahaRequestAction>,
                    OmahaResponse* output_object,
                    ScopedActionCompleter* completer);
 
+  // Parses the version attribute on manifest XML node and populates
+  // |output_object| if valid. Returns true if we should continue the parsing.
+  // False otherwise, in which case it sets any error code using |completer|.
+  bool ParseManifest(xmlDoc* doc,
+                     OmahaResponse* output_object,
+                     ScopedActionCompleter* completer);
+
   // Parses the URL nodes in the given XML document and populates
   // |output_object| if valid. Returns true if we should continue the parsing.
   // False otherwise, in which case it sets any error code using |completer|.
