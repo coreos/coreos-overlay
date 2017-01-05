@@ -356,6 +356,9 @@ void UpdateAttempter::ActionCompleted(ActionProcessor* processor,
     // If the request is not an event, then it's the update-check.
     if (!omaha_request_action->IsEvent()) {
       http_response_code_ = omaha_request_action->GetHTTPResponseCode();
+      if (code == kActionCodeSuccess) {
+	last_checked_time_ = time(NULL);
+      }
       // Forward the server-dictated poll interval to the update check
       // scheduler, if any.
       if (update_check_scheduler_) {
@@ -384,7 +387,6 @@ void UpdateAttempter::ActionCompleted(ActionProcessor* processor,
     // cases when the server and the client are unable to initiate the download.
     CHECK(action == response_handler_action_.get());
     const InstallPlan& plan = response_handler_action_->install_plan();
-    last_checked_time_ = time(NULL);
     new_version_ = plan.display_version;
     new_payload_size_ = plan.payload_size;
     SetupDownload();
