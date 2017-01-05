@@ -1,7 +1,7 @@
-From aa4e5d19b6907f481858501b75b05a6d2898d270 Mon Sep 17 00:00:00 2001
+From fcf2ade3fef45be5eabaeaf76a7eccd42be9410f Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Thu, 8 Mar 2012 10:35:59 -0500
-Subject: [PATCH 03/14] x86: Lock down IO port access when module security is
+Subject: [PATCH 10/21] x86: Lock down IO port access when module security is
  enabled
 
 IO port access would permit users to gain access to PCI configuration
@@ -46,7 +46,7 @@ index 589b319..ab83724 100644
  	}
  	regs->flags = (regs->flags & ~X86_EFLAGS_IOPL) |
 diff --git a/drivers/char/mem.c b/drivers/char/mem.c
-index 5bb1985..7f1a7ab 100644
+index a33163d..48a2897 100644
 --- a/drivers/char/mem.c
 +++ b/drivers/char/mem.c
 @@ -28,6 +28,7 @@
@@ -57,7 +57,7 @@ index 5bb1985..7f1a7ab 100644
  
  #include <linux/uaccess.h>
  
-@@ -580,6 +581,9 @@ static ssize_t write_port(struct file *file, const char __user *buf,
+@@ -574,6 +575,9 @@ static ssize_t write_port(struct file *file, const char __user *buf,
  	unsigned long i = *ppos;
  	const char __user *tmp = buf;
  
@@ -68,5 +68,5 @@ index 5bb1985..7f1a7ab 100644
  		return -EFAULT;
  	while (count-- > 0 && i < 65536) {
 -- 
-2.7.3
+2.10.2
 
