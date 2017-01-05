@@ -282,9 +282,6 @@ src_install() {
 
 	systemd_dounit "${FILESDIR}/docker.service"
 	systemd_dounit "${FILESDIR}/docker.socket"
-	systemd_dounit "${FILESDIR}/early-docker.service"
-	systemd_dounit "${FILESDIR}/early-docker.socket"
-	systemd_dounit "${FILESDIR}/early-docker.target"
 
 	insinto /usr/lib/systemd/network
 	doins "${FILESDIR}"/50-docker.network

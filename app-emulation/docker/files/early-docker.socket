@@ -1,9 +1,0 @@
-[Unit]
-Description=Early Docker Socket for the API
-PartOf=early-docker.service
-
-[Socket]
-ListenStream=/var/run/early-docker.sock
-
-[Install]
-WantedBy=sockets.target
