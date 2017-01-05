@@ -46,4 +46,11 @@ INSTALL_MASK="${INSTALL_MASK}
   /usr/bin/intltool-prepare
   /usr/bin/intltool-extract
   /usr/bin/autoscan-2.69
+  /usr/bin/code2color
+  /usr/bin/event_rpcgen.py
+  /usr/libexec/selinux/semanage_migrate_store
+  /usr/libexec/git-core/git-contacts
+  /usr/sbin/mountstats
+  /usr/sbin/nfsiostat
+  /sbin/ebtables-save
 "
