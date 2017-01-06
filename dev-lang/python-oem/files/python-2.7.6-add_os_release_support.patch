@@ -68,7 +68,7 @@ diff -r 12bf7fc1ba76 Lib/platform.py
 +    os_release_info = _parse_os_release()
 +    if os_release_info is not None:
 +        if 'NAME' in os_release_info:
-+            distname = os_release_info['NAME']
++            distname = "CoreOS"
 +        if 'VERSION_ID' in os_release_info:
 +            version = os_release_info['VERSION_ID']
 +        if 'ID' in os_release_info:
