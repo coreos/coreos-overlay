@@ -29,6 +29,7 @@ namespace chromeos_update_engine {
 class UpdateCheckScheduler;
 
 extern const char* kUpdateCompletedMarker;
+extern const char* kVersionZero;
 
 enum UpdateStatus {
   UPDATE_STATUS_IDLE = 0,
