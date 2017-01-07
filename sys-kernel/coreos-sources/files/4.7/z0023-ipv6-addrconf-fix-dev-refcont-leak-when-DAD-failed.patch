@@ -1,0 +1,59 @@
+From f489f4228978eaeaa22b2ffc447b553ffcea8f53 Mon Sep 17 00:00:00 2001
+From: Wei Yongjun <weiyongjun1@huawei.com>
+Date: Mon, 5 Sep 2016 16:06:31 +0800
+Subject: [PATCH] ipv6: addrconf: fix dev refcont leak when DAD failed
+
+In general, when DAD detected IPv6 duplicate address, ifp->state
+will be set to INET6_IFADDR_STATE_ERRDAD and DAD is stopped by a
+delayed work, the call tree should be like this:
+
+ndisc_recv_ns
+  -> addrconf_dad_failure        <- missing ifp put
+     -> addrconf_mod_dad_work
+       -> schedule addrconf_dad_work()
+         -> addrconf_dad_stop()  <- missing ifp hold before call it
+
+addrconf_dad_failure() called with ifp refcont holding but not put.
+addrconf_dad_work() call addrconf_dad_stop() without extra holding
+refcount. This will not cause any issue normally.
+
+But the race between addrconf_dad_failure() and addrconf_dad_work()
+may cause ifp refcount leak and netdevice can not be unregister,
+dmesg show the following messages:
+
+IPv6: eth0: IPv6 duplicate address fe80::XX:XXXX:XXXX:XX detected!
+...
+unregister_netdevice: waiting for eth0 to become free. Usage count = 1
+
+Cc: stable@vger.kernel.org
+Fixes: c15b1ccadb32 ("ipv6: move DAD and addrconf_verify processing
+to workqueue")
+Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ net/ipv6/addrconf.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/net/ipv6/addrconf.c b/net/ipv6/addrconf.c
+index 047c75a..66a276f 100644
+--- a/net/ipv6/addrconf.c
++++ b/net/ipv6/addrconf.c
+@@ -1906,6 +1906,7 @@ errdad:
+ 	spin_unlock_bh(&ifp->lock);
+ 
+ 	addrconf_mod_dad_work(ifp, 0);
++	in6_ifa_put(ifp);
+ }
+ 
+ /* Join to solicited addr multicast group.
+@@ -3771,6 +3772,7 @@ static void addrconf_dad_work(struct work_struct *w)
+ 		addrconf_dad_begin(ifp);
+ 		goto out;
+ 	} else if (action == DAD_ABORT) {
++		in6_ifa_hold(ifp);
+ 		addrconf_dad_stop(ifp, 1);
+ 		goto out;
+ 	}
+-- 
+2.9.3
+
