@@ -114,6 +114,19 @@ EOF
     systemctl start --no-block locksmithd-kicker.timer
 fi
 
+# Azure's agent erroneously looks at the distribution name instead of its ID.
+# This prevents us from renaming the OS from "CoreOS". This patches platform.py
+# to always return "CoreOS" as the distribution name.
+PLATFORM_PATH="/usr/share/oem/python/lib64/python2.7/platform.py"
+if [ -e ${PLATFORM_PATH} ]; then
+    sum=($(md5sum ${PLATFORM_PATH}))
+    if [ ${sum} == "6315addf42c0b07f5f78d119b578e20a" ]; then
+        sed --in-place \
+            "s%distname = os_release_info\['NAME'\]%distname = \"CoreOS\"%" \
+            ${PLATFORM_PATH}
+    fi
+fi
+
 # use the cgpt binary from the image to ensure compatibility
 CGPT=
 for bindir in bin/old_bins bin sbin; do
