@@ -31,6 +31,8 @@ RDEPEND="
 
 src_prepare() {
 	epatch "${FILESDIR}/0001-Makefile-do-not-install-dependencies-of-target.patch"
+	epatch "${FILESDIR}/0002-Add-security-patches-for-runc.patch"
+
 	# Work around https://github.com/golang/go/issues/14669
 	# Remove after updating to go1.7
 	filter-flags -O*
