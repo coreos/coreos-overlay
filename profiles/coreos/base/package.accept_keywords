@@ -108,3 +108,7 @@ dev-util/checkbashisms
 
 # multipath-tools 0.6.2 fixes systemd dependencies
 =sys-fs/multipath-tools-0.6.2-r2
+
+# 4.4+ shadow tools are needed for docker --userns-remap=default to work; it
+# execs useradd with subuid related flags added in that version
+=sys-apps/shadow-4.4-r1

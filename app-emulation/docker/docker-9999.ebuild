@@ -47,6 +47,7 @@ DEPEND="
 	btrfs? (
 		>=sys-fs/btrfs-progs-3.16.1
 	)
+	>=sys-apps/shadow-4.4
 "
 
 # For CoreOS builds coreos-kernel must be installed because this ebuild
