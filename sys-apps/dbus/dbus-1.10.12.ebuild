@@ -1,21 +1,25 @@
-# Copyright 1999-2015 Gentoo Foundation
+# Copyright 1999-2016 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-apps/dbus/dbus-1.8.16.ebuild,v 1.12 2015/04/18 07:57:20 pacho Exp $
+# $Id$
 
-EAPI=5
+EAPI=6
 PYTHON_COMPAT=( python2_7 )
-inherit autotools eutils linux-info flag-o-matic python-any-r1 readme.gentoo systemd virtualx user multilib-minimal
+
+inherit autotools eutils linux-info flag-o-matic python-any-r1 readme.gentoo-r1 systemd virtualx user multilib-minimal
 
 DESCRIPTION="A message bus system, a simple way for applications to talk to each other"
-HOMEPAGE="http://dbus.freedesktop.org/"
-SRC_URI="http://dbus.freedesktop.org/releases/dbus/${P}.tar.gz"
+HOMEPAGE="https://dbus.freedesktop.org/"
+SRC_URI="https://dbus.freedesktop.org/releases/dbus/${P}.tar.gz"
 
 LICENSE="|| ( AFL-2.1 GPL-2 )"
 SLOT="0"
-KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~x86-fbsd ~x64-freebsd ~x86-freebsd ~amd64-linux ~arm-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~sparc-solaris ~x86-solaris"
-IUSE="debug doc selinux static-libs systemd test X"
+KEYWORDS="alpha amd64 arm arm64 hppa ia64 ~m68k ~mips ppc ppc64 ~s390 ~sh sparc x86 ~amd64-fbsd ~x86-fbsd ~x64-freebsd ~x86-freebsd ~amd64-linux ~arm-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~sparc-solaris ~x86-solaris"
+IUSE="debug doc selinux static-libs systemd test user-session X"
 
-CDEPEND=">=dev-libs/expat-2
+RESTRICT="test"
+
+CDEPEND="
+	>=dev-libs/expat-2
 	selinux? (
 		sys-libs/libselinux
 		)
@@ -27,16 +31,18 @@ CDEPEND=">=dev-libs/expat-2
 	abi_x86_32? (
 		!<=app-emulation/emul-linux-x86-baselibs-20131008-r4
 		!app-emulation/emul-linux-x86-baselibs[-abi_x86_32(-)]
-	)"
+	)
+"
 DEPEND="${CDEPEND}
 	app-text/xmlto
 	app-text/docbook-xml-dtd:4.4
 	virtual/pkgconfig
 	doc? ( app-doc/doxygen )
 	test? (
-		>=dev-libs/glib-2.24
+		>=dev-libs/glib-2.36:2
 		${PYTHON_DEPS}
-		)"
+		)
+"
 RDEPEND="${CDEPEND}"
 
 DOC_CONTENTS="
@@ -60,15 +66,13 @@ pkg_setup() {
 }
 
 src_prepare() {
-	epatch "${FILESDIR}"/${PN}-1.6.x-add-explicit-etc-path.patch
-
 	# Tests were restricted because of this
 	sed -i \
 		-e 's/.*bus_dispatch_test.*/printf ("Disabled due to excess noise\\n");/' \
 		-e '/"dispatch"/d' \
 		bus/test-main.c || die
 
-	epatch_user
+	eapply_user
 
 	# required for asneeded patch but also for bug 263909, cross-compile so
 	# don't remove eautoreconf
@@ -91,7 +95,6 @@ multilib_src_configure() {
 	# libaudit is *only* used in DBus wrt SELinux support, so disable it, if
 	# not on an SELinux profile.
 	myconf=(
-		--sysconfdir=/usr/share
 		--localstatedir="${EPREFIX}/var"
 		--docdir="${EPREFIX}/usr/share/doc/${PF}"
 		--htmldir="${EPREFIX}/usr/share/doc/${PF}/html"
@@ -101,18 +104,20 @@ multilib_src_configure() {
 		--disable-checks
 		$(use_enable selinux)
 		$(use_enable selinux libaudit)
+		--disable-apparmor
 		$(use_enable kernel_linux inotify)
 		$(use_enable kernel_FreeBSD kqueue)
 		$(use_enable systemd)
+		$(use_enable user-session)
 		--disable-embedded-tests
 		--disable-modular-tests
 		$(use_enable debug stats)
 		--with-session-socket-dir="${EPREFIX}"/tmp
 		--with-system-pid-file="${EPREFIX}"/var/run/dbus.pid
 		--with-system-socket="${EPREFIX}"/var/run/dbus/system_bus_socket
+		--with-systemdsystemunitdir="$(systemd_get_systemunitdir)"
 		--with-dbus-user=messagebus
 		$(use_with X x)
-		"$(systemd_with_unitdir)"
 		)
 
 	if [[ ${CHOST} == *-darwin* ]]; then
@@ -193,7 +198,7 @@ multilib_src_install() {
 }
 
 multilib_src_install_all() {
-	newinitd "${FILESDIR}"/dbus.initd dbus
+	newinitd "${FILESDIR}"/dbus.initd-r1 dbus
 
 	if use X; then
 		# dbus X session script (#77504)
@@ -220,12 +225,6 @@ multilib_src_install_all() {
 pkg_postinst() {
 	readme.gentoo_print_elog
 
-	# Put a "known" machine id into /etc/machine-id so that when we boot,
-	# if it matches, then we can override it with a unique one.
-	# TODO(marineam): Remove this once we double check it is safe to do so.
-	echo "42000000000000000000000000000042" > "${EROOT}"/etc/machine-id
-	ln -sf ../../../etc/machine-id "${EROOT}"/var/lib/dbus/machine-id
-
 	if [[ ${CHOST} == *-darwin* ]]; then
 		local plist="org.freedesktop.dbus-session.plist"
 		elog
@@ -245,5 +244,17 @@ pkg_postinst() {
 		elog "specified and refused to start otherwise, then export the"
 		elog "the following to your environment:"
 		elog " DBUS_SESSION_BUS_ADDRESS=\"launchd:env=DBUS_LAUNCHD_SESSION_BUS_SOCKET\""
+	fi
+
+	if use user-session; then
+		ewarn "You have enabled user-session. Please note this can cause"
+		ewarn "bogus behaviors in several dbus consumers that are not prepared"
+		ewarn "for this dbus activation method yet."
+		ewarn
+		ewarn "See the following link for background on this change:"
+		ewarn "https://lists.freedesktop.org/archives/systemd-devel/2015-January/027711.html"
+		ewarn
+		ewarn "Known issues are tracked here:"
+		ewarn "https://bugs.gentoo.org/show_bug.cgi?id=576028"
 	fi
 }
