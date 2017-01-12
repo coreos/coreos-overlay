@@ -108,3 +108,6 @@ dev-util/checkbashisms
 
 # multipath-tools 0.6.2 fixes systemd dependencies
 =sys-fs/multipath-tools-0.6.2-r2
+
+# flex 2.6.1 breaks cross-compiling, but 2.6.3 adds a configure workaround
+=sys-devel/flex-2.6.3 **
