@@ -13,7 +13,7 @@ if [[ ${PV} == *9999 ]]; then
 	DOCKER_GITCOMMIT="unknown"
 	KEYWORDS="~amd64 ~arm64"
 else
-	CROS_WORKON_COMMIT="58b471c7e83faa71c6737ad9de8fe8d4df6269a6" # coreos-1.12.5
+	CROS_WORKON_COMMIT="d5236f0452873048a28c1ecd63d40513efa66542" #coreos-1.12.6
 	DOCKER_GITCOMMIT="${CROS_WORKON_COMMIT:0:7}"
 	KEYWORDS="amd64 arm64"
 fi
@@ -66,8 +66,8 @@ RDEPEND="
 	>=app-arch/xz-utils-4.9
 	>=sys-apps/shadow-4.4
 
-	>=app-emulation/containerd-0.2.3[seccomp?]
-	>=app-emulation/runc-1.0.0_rc1_p20160615[apparmor?,seccomp?]
+	>=app-emulation/containerd-0.2.5[seccomp?]
+	>=app-emulation/runc-1.0.0_rc2-r2[apparmor?,seccomp?]
 "
 
 RESTRICT="installsources strip"
