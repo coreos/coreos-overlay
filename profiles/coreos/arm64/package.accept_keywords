@@ -54,7 +54,7 @@
 =sys-fs/mdadm-3.4 **
 # sys-fs/quota: match versions with amd64
 =sys-fs/quota-4.02 **
-=sys-fs/xfsprogs-3.2.2-r1 **
+=sys-fs/xfsprogs-4.5.0 **
 =sys-process/lsof-4.89 ~arm64
 
 # https://glsa.gentoo.org/glsa/201610-04
