@@ -1,8 +1,0 @@
-DEFINED_PHASES=-
-DESCRIPTION=CoreOS OEM suite for Google Compute Engine (meta package)
-EAPI=2
-KEYWORDS=amd64
-LICENSE=GPL-2
-RDEPEND=app-emulation/google-compute-engine sys-libs/glibc sys-libs/nss-usrfiles
-SLOT=0
-_md5_=dcfdd40d821402f0c11f8b1151c51e4d
