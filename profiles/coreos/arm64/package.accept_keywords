@@ -41,6 +41,7 @@
 # net-nds/rpcbind: https://security.gentoo.org/glsa/201611-17
 =net-nds/rpcbind-0.2.3-r1 ~arm64
 =sys-apps/ethtool-4.5 **
+=sys-apps/file-5.25 ~arm64
 =sys-apps/gptfdisk-1.0.1 ~arm64
 =sys-apps/i2c-tools-3.1.1-r1 ~arm64
 =sys-apps/lshw-02.17b-r2 **
