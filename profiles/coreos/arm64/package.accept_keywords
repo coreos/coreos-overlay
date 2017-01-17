@@ -21,6 +21,7 @@
 =dev-libs/liblinear-210-r1 ~arm64
 # dev-libs/libpcre: https://security.gentoo.org/glsa/201607-02
 =dev-libs/libpcre-8.38-r1
+=dev-libs/libxml2-2.9.4-r1 ~arm64
 =dev-libs/npth-1.2 ~arm64
 =dev-libs/nspr-4.12 ~arm64
 =dev-libs/nss-3.24 ~arm64
