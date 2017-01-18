@@ -39,9 +39,6 @@ net-misc/gsutil
 >=sys-boot/gnu-efi-3.0u		~amd64
 >=app-crypt/efitools-1.4.1-r2	~amd64
 
-# Fixes euse: https://bugs.gentoo.org/show_bug.cgi?id=473760
-=app-portage/gentoolkit-0.3.0.8
-
 # no version marked stable upstream
 dev-util/checkbashisms
 
@@ -111,3 +108,6 @@ dev-util/checkbashisms
 
 # flex 2.6.1 breaks cross-compiling, but 2.6.3 adds a configure workaround
 =sys-devel/flex-2.6.3 **
+
+# xfsprogs 4.5.0 has install conflicts, and versions in between fail to link
+=sys-fs/xfsprogs-4.9.0 **

@@ -1,12 +1,12 @@
 DEFINED_PHASES=compile install postrm prepare unpack
-DEPEND=>=sys-apps/policycoreutils-2.0.82 >=sec-policy/selinux-base-policy-2.20141203-r13 sys-devel/m4 >=sys-apps/checkpolicy-2.0.21
-DESCRIPTION=SELinux policy for unconfined
+DEPEND=>=sys-apps/policycoreutils-2.0.82 >=sec-policy/selinux-base-policy-2.20141203-r14 sys-devel/m4 >=sys-apps/checkpolicy-2.0.21
+DESCRIPTION=SELinux policy for virt
 EAPI=5
 HOMEPAGE=https://wiki.gentoo.org/wiki/Project:SELinux
 KEYWORDS=amd64 x86
 LICENSE=GPL-2
-RDEPEND=>=sys-apps/policycoreutils-2.0.82 >=sec-policy/selinux-base-policy-2.20141203-r13
+RDEPEND=>=sys-apps/policycoreutils-2.0.82 >=sec-policy/selinux-base-policy-2.20141203-r14
 SLOT=0
 SRC_URI=https://raw.githubusercontent.com/wiki/TresysTechnology/refpolicy/files/refpolicy-2.20141203.tar.bz2 http://dev.gentoo.org/~swift/patches/selinux-base-policy/patchbundle-selinux-base-policy-2.20141203-r9.tar.bz2
 _eclasses_=eutils	9d81603248f2ba3ec59124320d123e5e	multilib	3972ca401cf7dbb430df9995f5d8d580	selinux-policy-2	d68ba9962726141fa72a66bcdbf82aba	toolchain-funcs	7a212e5e01adfa4805c9978366e6ee85
-_md5_=0aee430bbb2ae0569a1cad996e4e6107
+_md5_=7340841221bbf9473f522371e076c012

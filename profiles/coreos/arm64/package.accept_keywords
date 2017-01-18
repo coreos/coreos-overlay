@@ -21,6 +21,7 @@
 =dev-libs/liblinear-210-r1 ~arm64
 # dev-libs/libpcre: https://security.gentoo.org/glsa/201607-02
 =dev-libs/libpcre-8.38-r1
+=dev-libs/libxml2-2.9.4-r1 ~arm64
 =dev-libs/npth-1.2 ~arm64
 =dev-libs/nspr-4.12 ~arm64
 =dev-libs/nss-3.24 ~arm64
@@ -40,6 +41,7 @@
 # net-nds/rpcbind: https://security.gentoo.org/glsa/201611-17
 =net-nds/rpcbind-0.2.3-r1 ~arm64
 =sys-apps/ethtool-4.5 **
+=sys-apps/file-5.25 ~arm64
 =sys-apps/gptfdisk-1.0.1 ~arm64
 =sys-apps/i2c-tools-3.1.1-r1 ~arm64
 =sys-apps/lshw-02.17b-r2 **
