@@ -2,24 +2,18 @@
 # Keep these in alphabetical order.
 
 =app-admin/sudo-1.8.16 ~arm64
-# app-arch/unzip: https://security.gentoo.org/glsa/201611-01
 =app-arch/unzip-6.0_p20 ~arm64
 =app-crypt/gnupg-2.1.15 ~arm64
 =app-crypt/pinentry-0.9.7 ~arm64
 =app-editors/vim-8.0.0106 ~arm64
-=app-eselect/eselect-python-20140125-r2 ~arm64
 =app-text/asciidoc-8.6.9-r3 ~arm64
 =dev-cpp/gflags-2.1.2 ~arm64
 =dev-cpp/glog-0.3.1 **
-=dev-lang/python-2.7.12 ~arm64
 =dev-libs/apr-1.5.2 ~arm64
 =dev-libs/apr-util-1.5.4-r1 ~arm64
-=dev-libs/expat-2.2.0-r1 ~arm64
 =dev-libs/libassuan-2.4.3 ~arm64
-=dev-libs/libgpg-error-1.24 ~arm64
 =dev-libs/libksba-1.3.5-r1 ~arm64
 =dev-libs/liblinear-210-r1 ~arm64
-# dev-libs/libpcre: https://security.gentoo.org/glsa/201607-02
 =dev-libs/libpcre-8.38-r1
 =dev-libs/libxml2-2.9.4-r1 ~arm64
 =dev-libs/npth-1.2 ~arm64
@@ -34,12 +28,9 @@
 =net-libs/libpcap-1.7.4 ~arm64
 =net-libs/serf-1.3.8-r1 ~arm64
 =net-misc/bridge-utils-1.5 ~arm64
+=net-misc/curl-7.50.3 ~arm64
 =net-misc/iperf-3.1.3 **
-# net-misc/wget: https://bugs.gentoo.org/show_bug.cgi?id=585926 / CVE-2016-4971
-=net-misc/wget-1.18 **
 =net-misc/whois-5.2.12 ~arm64
-# net-nds/rpcbind: https://security.gentoo.org/glsa/201611-17
-=net-nds/rpcbind-0.2.3-r1 ~arm64
 =sys-apps/ethtool-4.5 **
 =sys-apps/file-5.25 ~arm64
 =sys-apps/gptfdisk-1.0.1 ~arm64
@@ -49,17 +40,9 @@
 =sys-apps/smartmontools-6.4 **
 =sys-block/parted-3.2-r1 ~arm64
 =sys-devel/bison-3.0.4-r1 ~arm64
-=sys-devel/flex-2.6.1 ~arm64
 =sys-fs/cryptsetup-1.7.2 **
 =sys-fs/lsscsi-0.28 **
 =sys-fs/lvm2-2.02.145-r2 ~arm64
 =sys-fs/mdadm-3.4 **
-# sys-fs/quota: match versions with amd64
 =sys-fs/quota-4.02 **
 =sys-fs/xfsprogs-4.5.0 **
-=sys-process/lsof-4.89 ~arm64
-
-# https://glsa.gentoo.org/glsa/201610-04
-=dev-libs/libgcrypt-1.7.3 ~arm64
-
-=net-misc/curl-7.50.3 ~arm64
