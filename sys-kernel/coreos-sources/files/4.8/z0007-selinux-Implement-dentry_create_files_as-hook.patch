@@ -1,4 +1,4 @@
-From 0dc3b4757e8d178699bdced13db4344f25d6ae91 Mon Sep 17 00:00:00 2001
+From d1d5776d41d3c426ccb6984206d20769ba1ad01f Mon Sep 17 00:00:00 2001
 From: Vivek Goyal <vgoyal@redhat.com>
 Date: Tue, 19 Jul 2016 14:34:59 -0400
 Subject: [PATCH 07/21] selinux: Implement dentry_create_files_as() hook
