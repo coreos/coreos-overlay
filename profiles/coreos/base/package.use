@@ -69,7 +69,7 @@ net-dns/bind-tools gssapi
 dev-libs/cyrus-sasl kerberos -berkdb -gdbm
 
 # don't build manpages for sssd
-sys-auth/sssd -manpages -python kerberos gssapi ssh
+sys-auth/sssd -manpages -python samba kerberos gssapi ssh
 
 # needed for realmd build
 sys-auth/polkit introspection
