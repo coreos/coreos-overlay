@@ -1,4 +1,4 @@
-From 177ac262dbddf8af35b815a36e466fabae8e282b Mon Sep 17 00:00:00 2001
+From 5f74d421b9177d8f92a9462771744e26713b3110 Mon Sep 17 00:00:00 2001
 From: Josh Boyer <jwboyer@redhat.com>
 Date: Mon, 25 Jun 2012 19:57:30 -0400
 Subject: [PATCH 14/21] acpi: Ignore acpi_rsdp kernel parameter when module

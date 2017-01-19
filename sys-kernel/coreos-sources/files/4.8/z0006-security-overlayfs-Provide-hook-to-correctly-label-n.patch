@@ -1,4 +1,4 @@
-From 1c6d33c0e52ee6ef3ed4ae8a453e39aa71d18583 Mon Sep 17 00:00:00 2001
+From 6edae1670b755c5c747bdb30031ff9b24f2f585e Mon Sep 17 00:00:00 2001
 From: Vivek Goyal <vgoyal@redhat.com>
 Date: Tue, 19 Jul 2016 14:34:59 -0400
 Subject: [PATCH 06/21] security, overlayfs: Provide hook to correctly label
