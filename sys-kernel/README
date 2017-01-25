@@ -20,7 +20,11 @@ for using the same rules - for example:
  - commonconfig
 
 coreos-kernel uses the installed sources and coreos-modules to build the
-kernel image and initramfs.
+kernel image and initramfs. Many of its build dependencies are copied into
+the initramfs by dracut, and several of these are significant enough that we
+want to rebuild coreos-kernel whenever they change. Such packages set their
+sub-slot to their ${PVR}, and then coreos-kernel DEPENDs on them using a
+slot operator (":=") to force a rebuild whenever their sub-slot changes.
 
 Currently our dracut based initramfs (bootengine) gets built directly into
 the kernel image. The reason for this screwy scheme never came to pass and
