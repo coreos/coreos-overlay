@@ -56,5 +56,7 @@ src_install() {
 		exeinto /usr/lib/kola/${a}
 		doexe "${GOBIN}/${a}/kolet"
 	done
-}
 
+    exeinto /usr/lib/kola/amd64
+    doexe vendor/binaries/amd64/docker-1.9.1
+}
