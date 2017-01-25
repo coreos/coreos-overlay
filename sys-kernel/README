@@ -23,11 +23,10 @@ coreos-kernel uses the installed sources and coreos-modules to build the
 kernel image and initramfs.
 
 Currently our dracut based initramfs (bootengine) gets built directly into
-the kernel image, including all kernel modules. (go go modular kernels!)
-This reason for this screwy scheme never came to pass and should be
-fixed eventually. The current grub bootloader already includes logic for
-initrds but the old configure_bootloaders and coreos-postinst scripts
-need to be updated in order to support existing installs.
+the kernel image. The reason for this screwy scheme never came to pass and
+should be fixed eventually. The current grub bootloader already includes
+logic for initrds but the old configure_bootloaders and coreos-postinst
+scripts need to be updated in order to support existing installs.
 
 The coreos-firmware package is a magic version of the upstream
 linux-firmware ebuild which scans the modules installed by coreos-modules
