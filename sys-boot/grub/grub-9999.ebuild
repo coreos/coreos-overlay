@@ -12,7 +12,7 @@ PYTHON_COMPAT=( python{2_6,2_7,3_2,3_3,3_4} )
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64 ~x86"
 else
-	CROS_WORKON_COMMIT="bca61d04a080b773895a5cdf1b4015b6ebf47917"
+	CROS_WORKON_COMMIT="ff8d967effbb233ca198679280b89ce807426bf0"
 	KEYWORDS="amd64 arm64 x86"
 fi
 
@@ -199,7 +199,6 @@ grub_configure() {
 		--libdir="${EPREFIX}"/usr/lib
 		--htmldir="${EPREFIX}"/usr/share/doc/${PF}/html
 		$(use_enable debug mm-debug)
-		$(use_enable debug grub-emu-usb)
 		$(use_enable device-mapper)
 		$(use_enable mount grub-mount)
 		$(use_enable nls)
