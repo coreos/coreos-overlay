@@ -1,11 +1,11 @@
-The kernel is provided in two parts: coreos-sources and coreos-kernel.
+The kernel is provided in three parts: coreos-sources, coreos-modules,
+and coreos-kernel.
 
 coreos-sources is a traditional Gentoo kernel source ebuild, which
-installs to ${ROOT}/usr/src/linux-${PV}. No extra revision or name is
-added since, like the upstream vanilla-sources, we don't ship patches.
+installs to ${ROOT}/usr/src/linux-${PV}-coreos${COREOS_SOURCE_REVISION}.
 
-coreos-kernel uses the installed sources to build a kernel image and all
-modules. The kernel config is searched for in the files directory based
+coreos-modules uses the installed sources to build the kernel modules.
+The kernel config is searched for in the files directory based
 on the ebuild version and revision. For example version 3.12.4-r2:
  - amd64_defconfig-3.12.4-r2
  - amd64_defconfig-3.12.4
@@ -19,13 +19,19 @@ for using the same rules - for example:
  - commonconfig-3.12
  - commonconfig
 
-Currently our dracut based initrd (bootengine) gets built directly into
-the kernel image, including all kernel modules. (go go modular kernels!)
-This reason for this screwy scheme never came to pass and should be
-fixed eventually. The current grub bootloader already includes logic for
-initrds but the old configure_bootloaders and coreos-postinst scripts
-need to be updated in order to support existing installs.
+coreos-kernel uses the installed sources and coreos-modules to build the
+kernel image and initramfs. Many of its build dependencies are copied into
+the initramfs by dracut, and several of these are significant enough that we
+want to rebuild coreos-kernel whenever they change. Such packages set their
+sub-slot to their ${PVR}, and then coreos-kernel DEPENDs on them using a
+slot operator (":=") to force a rebuild whenever their sub-slot changes.
+
+Currently our dracut based initramfs (bootengine) gets built directly into
+the kernel image. The reason for this screwy scheme never came to pass and
+should be fixed eventually. The current grub bootloader already includes
+logic for initrds but the old configure_bootloaders and coreos-postinst
+scripts need to be updated in order to support existing installs.
 
 The coreos-firmware package is a magic version of the upstream
-linux-firmware ebuild which scans the modules installed by coreos-kernel
+linux-firmware ebuild which scans the modules installed by coreos-modules
 and only installs files modules declare as required.
