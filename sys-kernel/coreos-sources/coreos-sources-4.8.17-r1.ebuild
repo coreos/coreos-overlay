@@ -43,4 +43,5 @@ UNIPATCH_LIST="
         ${PATCH_DIR}/z0019-efi-Add-EFI_SECURE_BOOT-bit.patch \
         ${PATCH_DIR}/z0020-hibernate-Disable-in-a-signed-modules-environment.patch \
         ${PATCH_DIR}/z0021-kbuild-derive-relative-path-for-KBUILD_SRC-from-CURD.patch \
+        ${PATCH_DIR}/z0023-selinux-allow-context-mounts-on-tmpfs-ramfs-devpts-within-user-namespaces.patch \
 "
