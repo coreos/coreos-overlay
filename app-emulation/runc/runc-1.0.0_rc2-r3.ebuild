@@ -9,6 +9,7 @@ COREOS_GO_PACKAGE="${GITHUB_URI}"
 COREOS_GO_VERSION="go1.6"
 # the commit of runc that docker uses.
 # see https://github.com/docker/docker/blob/v1.12.6/Dockerfile#L245
+# Note: this commit is only really present in `docker/runc` in the 'docker/1.12.x' branch
 COMMIT_ID="50a19c6ff828c58e5dab13830bd3dacde268afe5"
 
 inherit eutils flag-o-matic coreos-go-depend vcs-snapshot
@@ -31,6 +32,7 @@ RDEPEND="
 
 src_prepare() {
 	epatch "${FILESDIR}/0001-Makefile-do-not-install-dependencies-of-target.patch"
+	epatch "${FILESDIR}/0002-Dont-set-label-for-mqueue-under-userns.patch"
 
 	# Work around https://github.com/golang/go/issues/14669
 	# Remove after updating to go1.7
