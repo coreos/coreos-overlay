@@ -1,6 +1,5 @@
-# Copyright 1999-2016 Gentoo Foundation
+# Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Id$
 
 EAPI="5"
 
@@ -9,41 +8,38 @@ inherit eutils user flag-o-matic multilib autotools pam systemd versionator
 # Make it more portable between straight releases
 # and _p? releases.
 PARCH=${P/_}
-HPN_PV="${PV}"
-HPN_VER="14.10"
 
-HPN_PATCH="${PN}-${HPN_PV}-hpn-14.10-r1.patch"
-SCTP_PATCH="${PN}-7.3_p1-sctp.patch.xz"
-LDAP_PATCH="${PN}-lpk-7.3p1-0.3.14.patch.xz"
-X509_VER="9.2" X509_PATCH="${PN}-${PV/_}+x509-${X509_VER}.diff.gz"
+#HPN_PATCH= #"${PARCH}-hpnssh14v12.tar.xz"
+SCTP_PATCH="${PN}-7.4_p1-sctp.patch.xz"
+LDAP_PATCH="${PN}-lpk-7.4p1-0.3.14.patch.xz"
+X509_VER="9.3" X509_PATCH="${PN}-${PV/_}+x509-${X509_VER}.diff.gz"
 
 DESCRIPTION="Port of OpenBSD's free SSH release"
 HOMEPAGE="http://www.openssh.org/"
 SRC_URI="mirror://openbsd/OpenSSH/portable/${PARCH}.tar.gz
 	${SCTP_PATCH:+mirror://gentoo/${SCTP_PATCH}}
-	${HPN_PATCH:+hpn? (
-		mirror://gentoo/${HPN_PATCH}.xz
-		http://dev.gentoo.org/~chutzpah/${HPN_PATCH}.xz
-	)}
+	${HPN_PATCH:+hpn? ( mirror://gentoo/${HPN_PATCH} )}
 	${LDAP_PATCH:+ldap? ( mirror://gentoo/${LDAP_PATCH} )}
 	${X509_PATCH:+X509? ( http://roumenpetrov.info/openssh/x509-${X509_VER}/${X509_PATCH} )}
 	"
 
 LICENSE="BSD GPL-2"
 SLOT="0"
-KEYWORDS="alpha amd64 arm arm64 hppa ia64 ~m68k ~mips ppc ppc64 ~s390 ~sh sparc x86 ~ppc-aix ~amd64-fbsd ~sparc-fbsd ~x86-fbsd ~x64-freebsd ~x86-freebsd ~hppa-hpux ~ia64-hpux ~x86-interix ~amd64-linux ~arm-linux ~ia64-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~m68k-mint ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
+KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~ppc-aix ~amd64-fbsd ~sparc-fbsd ~x86-fbsd ~amd64-linux ~arm-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~m68k-mint ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
 # Probably want to drop ssl defaulting to on in a future version.
-IUSE="debug ${HPN_PATCH:++}hpn kerberos kernel_linux ldap ldns libedit libressl livecd pam +pie sctp selinux skey ssh1 +ssl static test X X509"
+IUSE="abi_mips_n32 bindist debug ${HPN_PATCH:++}hpn kerberos kernel_linux ldap ldns libedit libressl livecd pam +pie sctp selinux skey ssh1 +ssl static test X X509"
 REQUIRED_USE="ldns? ( ssl )
 	pie? ( !static )
 	ssh1? ( ssl )
 	static? ( !kerberos !pam )
-	X509? ( !ldap ssl )
+	X509? ( !hpn !ldap !sctp ssl )
 	test? ( ssl )"
 
 LIB_DEPEND="
 	ldns? (
-		net-libs/ldns[ecdsa,ssl,static-libs(+)]
+		net-libs/ldns[static-libs(+)]
+		!bindist? ( net-libs/ldns[ecdsa,ssl] )
+		bindist? ( net-libs/ldns[-ecdsa,ssl] )
 	)
 	libedit? ( dev-libs/libedit[static-libs(+)] )
 	sctp? ( net-misc/lksctp-tools[static-libs(+)] )
@@ -51,7 +47,7 @@ LIB_DEPEND="
 	skey? ( >=sys-auth/skey-1.1.5-r1[static-libs(+)] )
 	ssl? (
 		!libressl? (
-			>=dev-libs/openssl-0.9.8f:0[-bindist(-)]
+			>=dev-libs/openssl-0.9.8f:0[bindist=]
 			dev-libs/openssl:0[static-libs(+)]
 		)
 		libressl? ( dev-libs/libressl[static-libs(+)] )
@@ -74,7 +70,7 @@ RDEPEND="${RDEPEND}
 
 S=${WORKDIR}/${PARCH}
 
-pkg_setup() {
+pkg_pretend() {
 	# this sucks, but i'd rather have people unable to `emerge -u openssh`
 	# than not be able to log in to their server any more
 	maybe_fail() { [[ -z ${!2} ]] && echo "$1" ; }
@@ -117,37 +113,26 @@ src_prepare() {
 	sed -i '/^AuthorizedKeysFile/s:^:#:' sshd_config || die
 
 	if use X509 ; then
-		pushd .. >/dev/null
-		if use hpn ; then
-			pushd "${WORKDIR}" >/dev/null
-			epatch "${FILESDIR}"/${P}-hpn-x509-9.2-glue.patch
-			popd >/dev/null
-		fi
-		epatch "${FILESDIR}"/${PN}-7.3_p1-sctp-x509-glue.patch
-		sed -i 's:PKIX_VERSION:SSH_X509:g' "${WORKDIR}"/${X509_PATCH%.*} || die
-		popd >/dev/null
 		epatch "${WORKDIR}"/${X509_PATCH%.*}
-		epatch "${FILESDIR}"/${P}-x509-9.2-warnings.patch
-		save_version X509
-	else
-		# bug #592122, fixed by X509 patch
-		epatch "${FILESDIR}"/${P}-fix-ssh1-with-no-ssh1-host-key.patch
+		# We no longer allow X509 to be used with anything else.
+		#save_version X509
 	fi
+
 	if use ldap ; then
 		epatch "${WORKDIR}"/${LDAP_PATCH%.*}
 		save_version LPK
 	fi
 
-	epatch "${FILESDIR}"/${PN}-7.3_p1-GSSAPI-dns.patch #165444 integrated into gsskex
+	epatch "${FILESDIR}"/${PN}-7.4_p1-GSSAPI-dns.patch #165444 integrated into gsskex
 	epatch "${FILESDIR}"/${PN}-6.7_p1-openssl-ignore-status.patch
-	epatch "${WORKDIR}"/${SCTP_PATCH%.*}
+	use X509 || epatch "${WORKDIR}"/${SCTP_PATCH%.*}
+	epatch "${FILESDIR}"/${P}-test-bashism.patch
+	use abi_mips_n32 && epatch "${FILESDIR}"/${PN}-7.3-mips-seccomp-n32.patch
 
 	if use hpn ; then
-		#EPATCH_FORCE="yes" EPATCH_SUFFIX="patch" \
-		#	EPATCH_MULTI_MSG="Applying HPN patchset ..." \
-		#	epatch "${WORKDIR}"/${HPN_PATCH%.*.*}
-		epatch "${WORKDIR}"/${HPN_PATCH}
-		epatch "${FILESDIR}"/${P}-hpn-cipher-ctr-mt-no-deadlocks.patch
+		EPATCH_FORCE="yes" EPATCH_SUFFIX="patch" \
+			EPATCH_MULTI_MSG="Applying HPN patchset ..." \
+			epatch "${WORKDIR}"/${HPN_PATCH%.*.*}
 		save_version HPN
 	fi
 
@@ -164,18 +149,11 @@ src_prepare() {
 		-e '/CFLAGS/s:-ftrapv:-fdisable-this-test:'
 		-e '/OSSH_CHECK_CFLAG_LINK.*-ftrapv/d'
 	)
+	# _XOPEN_SOURCE causes header conflicts on Solaris
+	[[ ${CHOST} == *-solaris* ]] && sed_args+=(
+		-e 's/-D_XOPEN_SOURCE//'
+	)
 	sed -i "${sed_args[@]}" configure{.ac,} || die
-
-	# 7.3 added seccomp support to MIPS, but failed to handled the N32
-	# case.  This patch is temporary until upstream fixes.  See
-	# Gentoo bug #591392 or upstream #2590.
-	[[ ${CHOST} == mips64*-linux-* && ${ABI} == "n32" ]] \
-		&& epatch "${FILESDIR}"/${PN}-7.3-mips-seccomp-n32.patch
-
-	epatch "${FILESDIR}"/${P}-NEWKEYS_null_deref.patch # 595342
-	epatch "${FILESDIR}"/${P}-Unregister-the-KEXINIT-handler-after-receive.patch # 597360
-
-	epatch "${FILESDIR}"/${PN}-7.3_p1-fix-krb5-config.patch
 
 	epatch_user #473004
 
@@ -213,7 +191,7 @@ src_configure() {
 		$(use_with libedit)
 		$(use_with pam)
 		$(use_with pie)
-		$(use_with sctp)
+		$(use X509 || use_with sctp)
 		$(use_with selinux)
 		$(use_with skey)
 		$(use_with ssh1)
@@ -232,6 +210,8 @@ src_install() {
 	emake install-nokeys DESTDIR="${D}"
 	fperms 600 /etc/ssh/sshd_config
 	dobin contrib/ssh-copy-id
+	newinitd "${FILESDIR}"/sshd.rc6.4 sshd
+	newconfd "${FILESDIR}"/sshd.confd sshd
 	keepdir /var/empty
 
 	newpamd "${FILESDIR}"/sshd.pam_include.2 sshd
@@ -279,37 +259,32 @@ src_install() {
 }
 
 src_test() {
-	local t tests skipped failed passed shell
-	tests="interop-tests compat-tests"
-	skipped=""
-	shell=$(egetshell ${UID})
+	local t skipped=() failed=() passed=()
+	local tests=( interop-tests compat-tests )
+
+	local shell=$(egetshell "${UID}")
 	if [[ ${shell} == */nologin ]] || [[ ${shell} == */false ]] ; then
-		elog "Running the full OpenSSH testsuite"
-		elog "requires a usable shell for the 'portage'"
+		elog "Running the full OpenSSH testsuite requires a usable shell for the 'portage'"
 		elog "user, so we will run a subset only."
-		skipped="${skipped} tests"
+		skipped+=( tests )
 	else
-		tests="${tests} tests"
+		tests+=( tests )
 	fi
-	# It will also attempt to write to the homedir .ssh
+
+	# It will also attempt to write to the homedir .ssh.
 	local sshhome=${T}/homedir
 	mkdir -p "${sshhome}"/.ssh
-	for t in ${tests} ; do
+	for t in "${tests[@]}" ; do
 		# Some tests read from stdin ...
 		HOMEDIR="${sshhome}" HOME="${sshhome}" \
 		emake -k -j1 ${t} </dev/null \
-			&& passed="${passed}${t} " \
-			|| failed="${failed}${t} "
+			&& passed+=( "${t}" ) \
+			|| failed+=( "${t}" )
 	done
-	einfo "Passed tests: ${passed}"
-	ewarn "Skipped tests: ${skipped}"
-	if [[ -n ${failed} ]] ; then
-		ewarn "Failed tests: ${failed}"
-		die "Some tests failed: ${failed}"
-	else
-		einfo "Failed tests: ${failed}"
-		return 0
-	fi
+
+	einfo "Passed tests: ${passed[*]}"
+	[[ ${#skipped[@]} -gt 0 ]] && ewarn "Skipped tests: ${skipped[*]}"
+	[[ ${#failed[@]}  -gt 0 ]] && die "Some tests failed: ${failed[*]}"
 }
 
 pkg_preinst() {
