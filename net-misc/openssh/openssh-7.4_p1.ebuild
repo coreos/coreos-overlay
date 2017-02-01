@@ -25,9 +25,9 @@ SRC_URI="mirror://openbsd/OpenSSH/portable/${PARCH}.tar.gz
 
 LICENSE="BSD GPL-2"
 SLOT="0"
-KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~ppc-aix ~amd64-fbsd ~sparc-fbsd ~x86-fbsd ~amd64-linux ~arm-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~m68k-mint ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
+KEYWORDS="~alpha amd64 ~arm arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~ppc-aix ~amd64-fbsd ~sparc-fbsd ~x86-fbsd ~amd64-linux ~arm-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~m68k-mint ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
 # Probably want to drop ssl defaulting to on in a future version.
-IUSE="abi_mips_n32 bindist debug ${HPN_PATCH:++}hpn kerberos kernel_linux ldap ldns libedit libressl livecd pam +pie sctp selinux skey ssh1 +ssl static test X X509"
+IUSE="abi_mips_n32 debug ${HPN_PATCH:++}hpn kerberos kernel_linux ldap ldns libedit libressl livecd pam +pie sctp selinux skey ssh1 +ssl static test X X509"
 REQUIRED_USE="ldns? ( ssl )
 	pie? ( !static )
 	ssh1? ( ssl )
@@ -37,9 +37,7 @@ REQUIRED_USE="ldns? ( ssl )
 
 LIB_DEPEND="
 	ldns? (
-		net-libs/ldns[static-libs(+)]
-		!bindist? ( net-libs/ldns[ecdsa,ssl] )
-		bindist? ( net-libs/ldns[-ecdsa,ssl] )
+		net-libs/ldns[ecdsa,ssl,static-libs(+)]
 	)
 	libedit? ( dev-libs/libedit[static-libs(+)] )
 	sctp? ( net-misc/lksctp-tools[static-libs(+)] )
@@ -47,7 +45,7 @@ LIB_DEPEND="
 	skey? ( >=sys-auth/skey-1.1.5-r1[static-libs(+)] )
 	ssl? (
 		!libressl? (
-			>=dev-libs/openssl-0.9.8f:0[bindist=]
+			>=dev-libs/openssl-0.9.8f:0[-bindist(-)]
 			dev-libs/openssl:0[static-libs(+)]
 		)
 		libressl? ( dev-libs/libressl[static-libs(+)] )
@@ -210,8 +208,6 @@ src_install() {
 	emake install-nokeys DESTDIR="${D}"
 	fperms 600 /etc/ssh/sshd_config
 	dobin contrib/ssh-copy-id
-	newinitd "${FILESDIR}"/sshd.rc6.4 sshd
-	newconfd "${FILESDIR}"/sshd.confd sshd
 	keepdir /var/empty
 
 	newpamd "${FILESDIR}"/sshd.pam_include.2 sshd
