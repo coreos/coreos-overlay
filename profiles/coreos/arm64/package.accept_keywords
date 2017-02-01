@@ -19,6 +19,7 @@
 =dev-libs/nspr-4.13.1 ~arm64
 =dev-libs/nss-3.28.1 ~arm64
 =dev-libs/userspace-rcu-0.9.1 **
+=media-libs/libpng-1.6.27 ~arm64
 =net-analyzer/nmap-7.12 ~arm64
 =net-analyzer/tcpdump-4.7.4-r1 ~arm64
 =net-firewall/ebtables-2.0.10.4-r1 ~arm64
@@ -43,3 +44,4 @@
 =sys-fs/lvm2-2.02.145-r2 ~arm64
 =sys-fs/mdadm-3.4 **
 =sys-fs/quota-4.02 **
+=sys-fs/squashfs-tools-4.3-r2 ~arm64
