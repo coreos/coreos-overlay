@@ -22,7 +22,6 @@ src_prepare() {
 src_install() {
 	into "/usr/share/oem"
 	dobin "${FILESDIR}/phone-home.sh"
-	dobin "${FILESDIR}/reset-interfaces.sh"
 
 	insinto "/usr/share/oem"
 	doins "${T}/cloud-config.yml"

@@ -2,22 +2,12 @@
 
 coreos:
   units:
-    - name: oem-reset-interfaces.service
-      command: start
-      content: |
-        [Unit]
-        Description=Reset the bond.
-        [Service]
-        Type=oneshot
-        ExecStart=/usr/share/oem/bin/reset-interfaces.sh
     - name: oem-cloudinit.service
       command: restart
       runtime: yes
       content: |
         [Unit]
         Description=Cloudinit from Packet metadata
-        After=oem-reset-interfaces.service
-        Requires=oem-reset-interfaces.service
 
         [Service]
         Type=oneshot
