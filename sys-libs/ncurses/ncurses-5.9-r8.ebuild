@@ -37,7 +37,7 @@ PDEPEND="gpm? ( sys-libs/gpm[${MULTILIB_USEDEP}] )"
 S=${WORKDIR}/${MY_P}
 HOSTTIC_DIR=${WORKDIR}/${P}-host
 
-MINIMAL_TERMINFO=(ansi console dumb linux rxvt rxvt-256color rxvt-unicode \
+MINIMAL_TERMINFO=(ansi console dumb linux rxvt rxvt-256color rxvt-unicode rxvt-unicode-256color \
 				  screen screen-16color screen-256color sun vt{52,100,102,200,220} \
 				  xterm xterm-color xterm-256color xterm-xfree86)
 
