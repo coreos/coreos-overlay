@@ -1,7 +1,7 @@
 From f342c4af0fd094a2ab367c5b5bf019d41337e7e9 Mon Sep 17 00:00:00 2001
 From: Josh Boyer <jwboyer@fedoraproject.org>
 Date: Fri, 20 Jun 2014 08:53:24 -0400
-Subject: [PATCH 20/21] hibernate: Disable in a signed modules environment
+Subject: [PATCH 20/24] hibernate: Disable in a signed modules environment
 
 There is currently no way to verify the resume image when returning
 from hibernate.  This might compromise the signed modules trust model,
@@ -35,5 +35,5 @@ index 33c79b6..d1420be 100644
  
  /**
 -- 
-2.10.2
+2.9.3
 

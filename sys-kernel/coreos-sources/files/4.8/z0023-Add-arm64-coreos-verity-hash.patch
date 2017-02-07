@@ -1,7 +1,7 @@
-From 4c66942f5f1ce010fbe028256940ea9d50eb069e Mon Sep 17 00:00:00 2001
+From e3614cf4156b5b9eb7eb9e1a1081260ca404b0fe Mon Sep 17 00:00:00 2001
 From: Geoff Levand <geoff@infradead.org>
 Date: Fri, 11 Nov 2016 17:28:52 -0800
-Subject: [PATCH] Add arm64 coreos verity hash
+Subject: [PATCH 23/24] Add arm64 coreos verity hash
 
 Signed-off-by: Geoff Levand <geoff@infradead.org>
 ---
@@ -9,7 +9,7 @@ Signed-off-by: Geoff Levand <geoff@infradead.org>
  1 file changed, 5 insertions(+)
 
 diff --git a/arch/arm64/kernel/head.S b/arch/arm64/kernel/head.S
-index 332e331..964bae1 100644
+index 4d19508..b7ecaf9 100644
 --- a/arch/arm64/kernel/head.S
 +++ b/arch/arm64/kernel/head.S
 @@ -195,6 +195,11 @@ section_table:
@@ -25,5 +25,5 @@ index 332e331..964bae1 100644
  	 * EFI will load .text onwards at the 4k section alignment
  	 * described in the PE/COFF header. To ensure that instruction
 -- 
-2.7.4
+2.9.3
 
