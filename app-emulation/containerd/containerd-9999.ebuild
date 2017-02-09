@@ -12,7 +12,7 @@ if [[ ${PV} == *9999 ]]; then
 	EGIT_REPO_URI="https://${GITHUB_URI}.git"
 	inherit git-r3
 else
-	EGIT_COMMIT="03e5862ec0d8d3b3f750e19fca3ee367e13c090e"
+	EGIT_COMMIT="aa8187dbd3b7ad67d8e5e3a15115d3eef43a7ed1"
 	SRC_URI="https://${EGO_PN}/archive/${EGIT_COMMIT}.tar.gz -> ${P}.tar.gz"
 	KEYWORDS="amd64 arm64"
 	inherit vcs-snapshot
