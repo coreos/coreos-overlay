@@ -45,4 +45,5 @@ UNIPATCH_LIST="
         ${PATCH_DIR}/z0021-kbuild-derive-relative-path-for-KBUILD_SRC-from-CURD.patch \
         ${PATCH_DIR}/z0022-Add-arm64-coreos-verity-hash.patch \
         ${PATCH_DIR}/z0023-selinux-allow-context-mounts-on-tmpfs-ramfs-devpts-within-user-namespaces.patch \
+        ${PATCH_DIR}/z0024-Revert-tty-serial-8250-add-CON_CONSDEV-to-flags.patch \
 "
