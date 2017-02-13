@@ -1,0 +1,39 @@
+From c6b0664f529673e83c24243edd985803b9791631 Mon Sep 17 00:00:00 2001
+From: David Michael <david.michael@coreos.com>
+Date: Wed, 8 Feb 2017 15:48:36 -0800
+Subject: [PATCH] useradd: Read defaults after changing root directories
+
+This reverts the behavior of "useradd --root" to using the settings
+from login.defs in the target root directory, not the root of the
+executed useradd command.
+---
+ src/useradd.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/src/useradd.c b/src/useradd.c
+index 1797229..d973ca3 100644
+--- a/src/useradd.c
++++ b/src/useradd.c
+@@ -2047,8 +2047,8 @@ int main (int argc, char **argv)
+ #endif				/* ACCT_TOOLS_SETUID */
+ 
+ #ifdef ENABLE_SUBIDS
+-	uid_t uid_min = (uid_t) getdef_ulong ("UID_MIN", 1000UL);
+-	uid_t uid_max = (uid_t) getdef_ulong ("UID_MAX", 60000UL);
++	uid_t uid_min;
++	uid_t uid_max;
+ #endif
+ 
+ 	/*
+@@ -2085,6 +2085,8 @@ int main (int argc, char **argv)
+ 	process_flags (argc, argv);
+ 
+ #ifdef ENABLE_SUBIDS
++	uid_min = (uid_t) getdef_ulong ("UID_MIN", 1000UL);
++	uid_max = (uid_t) getdef_ulong ("UID_MAX", 60000UL);
+ 	is_sub_uid = sub_uid_file_present () && !rflg &&
+ 	    (!user_id || (user_id <= uid_max && user_id >= uid_min));
+ 	is_sub_gid = sub_gid_file_present () && !rflg &&
+-- 
+2.7.4
+

@@ -37,6 +37,7 @@ PATCHES=(
 	"${FILESDIR}"/${P}-su-snprintf.patch
 	"${FILESDIR}"/${P}-prototypes.patch
 	"${FILESDIR}"/${P}-load_defaults.patch
+	"${FILESDIR}"/${P}-fix-root-defaults.patch
 )
 
 src_prepare() {
