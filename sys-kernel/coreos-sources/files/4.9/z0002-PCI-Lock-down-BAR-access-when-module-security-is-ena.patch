@@ -1,7 +1,7 @@
-From c1a2f1afbbccfb4c5659b4dae4f82b442c38f57b Mon Sep 17 00:00:00 2001
+From ac008727488d38debfe9d336bc3172c0cc6a55d3 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Thu, 8 Mar 2012 10:10:38 -0500
-Subject: [PATCH 09/24] PCI: Lock down BAR access when module security is
+Subject: [PATCH 02/18] PCI: Lock down BAR access when module security is
  enabled
 
 Any hardware that can potentially generate DMA has to be locked down from
