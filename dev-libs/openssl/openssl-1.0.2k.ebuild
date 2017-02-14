@@ -1,4 +1,4 @@
-# Copyright 1999-2016 Gentoo Foundation
+# Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Id$
 
@@ -13,7 +13,7 @@ SRC_URI="mirror://openssl/source/${MY_P}.tar.gz"
 
 LICENSE="openssl"
 SLOT="0"
-KEYWORDS="alpha amd64 arm arm64 hppa ia64 ~m68k ~mips ppc ppc64 ~s390 ~sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd ~arm-linux ~x86-linux"
+KEYWORDS="alpha amd64 arm arm64 hppa ~ia64 ~m68k ~mips ppc ppc64 ~s390 ~sh ~sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd ~arm-linux ~x86-linux"
 IUSE="+asm gmp kerberos rfc3779 sctp cpu_flags_x86_sse2 sslv2 +sslv3 static-libs test +tls-heartbeat vanilla zlib"
 
 RDEPEND=">=app-misc/c_rehash-1.7-r1
@@ -104,6 +104,13 @@ multilib_src_configure() {
 
 	tc-export CC AR RANLIB RC
 
+	# Clean out patent-or-otherwise-encumbered code
+	# Camellia: Royalty Free            http://en.wikipedia.org/wiki/Camellia_(cipher)
+	# IDEA:     Expired                 http://en.wikipedia.org/wiki/International_Data_Encryption_Algorithm
+	# EC:       ????????? ??/??/2015    http://en.wikipedia.org/wiki/Elliptic_Curve_Cryptography
+	# MDC2:     Expired                 http://en.wikipedia.org/wiki/MDC-2
+	# RC5:      Expired                 http://en.wikipedia.org/wiki/RC5
+
 	use_ssl() { usex $1 "enable-${2:-$1}" "no-${2:-$1}" " ${*:3}" ; }
 	echoit() { echo "$@" ; "$@" ; }
 
@@ -113,10 +120,18 @@ multilib_src_configure() {
 	# friendly and can use the nicely optimized code paths. #460790
 	local ec_nistp_64_gcc_128
 	# Disable it for now though #469976
-	#echo "__uint128_t i;" > "${T}"/128.c
-	#if ${CC} ${CFLAGS} -c "${T}"/128.c -o /dev/null >&/dev/null ; then
-	#	ec_nistp_64_gcc_128="enable-ec_nistp_64_gcc_128"
+	#if ! use bindist ; then
+	#	echo "__uint128_t i;" > "${T}"/128.c
+	#	if ${CC} ${CFLAGS} -c "${T}"/128.c -o /dev/null >&/dev/null ; then
+	#		ec_nistp_64_gcc_128="enable-ec_nistp_64_gcc_128"
+	#	fi
 	#fi
+
+	# https://github.com/openssl/openssl/issues/2286
+	if use ia64 ; then
+		replace-flags -g3 -g2
+		replace-flags -ggdb3 -ggdb2
+	fi
 
 	local sslout=$(./gentoo.config)
 	einfo "Use configuration ${sslout:-(openssl knows best)}"
