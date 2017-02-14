@@ -8,9 +8,9 @@ GITHUB_URI="github.com/opencontainers/runc"
 COREOS_GO_PACKAGE="${GITHUB_URI}"
 COREOS_GO_VERSION="go1.6"
 # the commit of runc that docker uses.
-# see https://github.com/docker/docker/blob/v1.13.0/hack/dockerfile/binaries-commits#L4
+# see https://github.com/docker/docker/blob/v1.13.1/hack/dockerfile/binaries-commits#L6
 # Note: this commit is only really present in `docker/runc` in the 'docker/1.13.x' branch
-COMMIT_ID="2f7393a47307a16f8cee44a37b262e8b81021e3e"
+COMMIT_ID="9df8b306d01f59d3a8029be411de015b7304dd8f"
 
 inherit eutils flag-o-matic coreos-go-depend vcs-snapshot
 
