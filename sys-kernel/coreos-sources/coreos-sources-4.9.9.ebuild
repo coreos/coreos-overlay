@@ -19,8 +19,6 @@ PATCH_DIR="${FILESDIR}/${KV_MAJOR}.${KV_MINOR}"
 # applied _after_ a potential patch-${KV}.patch file, present when building a
 # patchlevel revision.  We mustn't apply our patches first, it fails when the
 # local patches overlap with the upstream patch.
-
-# in $PATCH_DIR: ls -1 | sed -e 's/^/\t${PATCH_DIR}\//g' -e 's/$/ \\/g'
 UNIPATCH_LIST="
 	${PATCH_DIR}/z0001-Add-secure_modules-call.patch \
 	${PATCH_DIR}/z0002-PCI-Lock-down-BAR-access-when-module-security-is-ena.patch \
