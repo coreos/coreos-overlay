@@ -49,7 +49,7 @@ src_compile() {
 		$(usev selinux)
 	)
 
-	emake BUILDTAGS="${options[*]}"
+	emake BUILDTAGS="${options[*]}" COMMIT="${COMMIT_ID}"
 }
 
 src_install() {
