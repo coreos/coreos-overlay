@@ -51,9 +51,16 @@ if [[ "${KUBELET_IMAGE%%/*}" == "quay.io" ]]; then
 	RKT_RUN_ARGS="${RKT_RUN_ARGS} --trust-keys-from-https"
 fi
 
+UUID_FILE="/var/lib/kubelet-wrapper/last-uuid"
+
+if [ -f "${UUID_FILE}" ]; then
+  /usr/bin/rkt rm --uuid-file="${UUID_FILE}" &>/dev/null || true
+fi
+
 mkdir --parents /etc/kubernetes
 mkdir --parents /var/lib/docker
 mkdir --parents /var/lib/kubelet
+mkdir --parents /var/lib/kubelet-wrapper
 mkdir --parents /run/kubelet
 
 RKT="${RKT:-/usr/bin/rkt}"
@@ -62,6 +69,7 @@ KUBELET_IMAGE_ARGS=${KUBELET_IMAGE_ARGS:---exec=/kubelet}
 set -x
 exec ${RKT} ${RKT_GLOBAL_ARGS} \
 	run ${RKT_RUN_ARGS} \
+	--uuid-file-save "${UUID_FILE}" \
 	--volume etc-kubernetes,kind=host,source=/etc/kubernetes,readOnly=false \
 	--volume etc-ssl-certs,kind=host,source=/etc/ssl/certs,readOnly=true \
 	--volume usr-share-certs,kind=host,source=/usr/share/ca-certificates,readOnly=true \
@@ -80,3 +88,5 @@ exec ${RKT} ${RKT_GLOBAL_ARGS} \
 	${KUBELET_IMAGE} \
 		${KUBELET_IMAGE_ARGS} \
 		-- "$@"
+
+# vim: noexpandtab
