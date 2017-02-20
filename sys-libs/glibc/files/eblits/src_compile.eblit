@@ -14,21 +14,9 @@ toolchain-glibc_src_compile() {
 	done
 }
 
-## COREOS: fix compilation of cross-rpcgen during compiler bootstrap
-toolchain-glibc_headers_compile() {
-	[[ ${EAPI:-0} == [01] ]] && toolchain-glibc_headers_configure
-
-	tc-export_build_env
-	local builddir=$(builddir "headers")
-	cd "${builddir}"
-	emake -C "${S}/sunrpc" subdir=sunrpc objdir="${builddir}" \
-		"${builddir}/sunrpc/cross-rpcgen" || die "make cross-rpcgen failed"
-}
-
 eblit-glibc-src_compile() {
 	if just_headers ; then
-		export ABI=default
-		toolchain-glibc_headers_compile
+		[[ ${EAPI:-0} == [01] ]] && toolchain-glibc_headers_configure
 		return
 	fi
 

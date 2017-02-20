@@ -1,16 +1,16 @@
-# Copyright 1999-2016 Gentoo Foundation
+# Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Id$
 
 EAPI="4"
 
-inherit eutils versionator toolchain-funcs flag-o-matic gnuconfig multilib systemd unpacker multiprocessing
+inherit eutils versionator toolchain-funcs flag-o-matic gnuconfig multilib systemd unpacker multiprocessing prefix
 
 DESCRIPTION="GNU libc6 (also called glibc2) C library"
 HOMEPAGE="https://www.gnu.org/software/libc/libc.html"
 
 LICENSE="LGPL-2.1+ BSD HPND ISC inner-net rc PCRE"
-KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86"
+KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh ~sparc x86"
 RESTRICT="strip" # strip ourself #46186
 EMULTILIB_PKG="true"
 
@@ -27,10 +27,10 @@ case ${PV} in
 	;;
 esac
 GCC_BOOTSTRAP_VER="4.7.3-r1"
-PATCH_VER="13"                                 # Gentoo patchset
+PATCH_VER="7"                                  # Gentoo patchset
 : ${NPTL_KERN_VER:="2.6.32"}                   # min kernel version nptl requires
 
-IUSE="debug gd hardened multilib nscd selinux systemtap profile suid vanilla crosscompile_opts_headers-only"
+IUSE="audit caps debug gd hardened multilib nscd +rpc selinux systemtap profile suid vanilla crosscompile_opts_headers-only"
 
 # Here's how the cross-compile logic breaks down ...
 #  CTARGET - machine that will target the binaries
@@ -64,25 +64,33 @@ SLOT="2.2"
 
 # General: We need a new-enough binutils/gcc to match upstream baseline.
 # arch: we need to make sure our binutils/gcc supports TLS.
-DEPEND=">=app-misc/pax-utils-0.1.10
-	!<sys-apps/sandbox-1.6
-	!<sys-apps/portage-2.1.2
-	selinux? ( sys-libs/libselinux )"
-RDEPEND="!sys-kernel/ps3-sources
-	sys-apps/gentoo-functions
+COMMON_DEPEND="
+	nscd? ( selinux? (
+		audit? ( sys-process/audit )
+		caps? ( sys-libs/libcap )
+	) )
+	suid? ( caps? ( sys-libs/libcap ) )
 	selinux? ( sys-libs/libselinux )
+"
+DEPEND="${COMMON_DEPEND}
+	>=app-misc/pax-utils-0.1.10
+	!<sys-apps/sandbox-1.6
+	!<sys-apps/portage-2.1.2"
+RDEPEND="${COMMON_DEPEND}
+	!sys-kernel/ps3-sources
+	sys-apps/gentoo-functions
 	!sys-libs/nss-db"
 
 if [[ ${CATEGORY} == cross-* ]] ; then
 	DEPEND+=" !crosscompile_opts_headers-only? (
 		>=${CATEGORY}/binutils-2.24
-		>=${CATEGORY}/gcc-4.6
+		>=${CATEGORY}/gcc-4.7
 	)"
 	[[ ${CATEGORY} == *-linux* ]] && DEPEND+=" ${CATEGORY}/linux-headers"
 else
 	DEPEND+="
 		>=sys-devel/binutils-2.24
-		>=sys-devel/gcc-4.6
+		>=sys-devel/gcc-4.7
 		virtual/os-headers"
 	RDEPEND+=" vanilla? ( !sys-libs/timezone-data )"
 	PDEPEND+=" !vanilla? ( sys-libs/timezone-data )"
@@ -155,19 +163,12 @@ done
 
 eblit-src_unpack-pre() {
 	[[ -n ${GCC_BOOTSTRAP_VER} ]] && use multilib && unpack gcc-${GCC_BOOTSTRAP_VER}-multilib-bootstrap.tar.bz2
-	# Bug 558636 we don't apply the pie works around for 2.22. It shoud have the support. #558636
-	GLIBC_PATCH_EXCLUDE+=" 00_all_0002-workaround-crash-when-handling-signals-in-static-PIE.patch"
-	GLIBC_PATCH_EXCLUDE+=" 00_all_0012-disable-PIE-when-checking-for-PIC-default.patch"
 }
 
 eblit-src_prepare-post() {
 	cd "${S}"
 
 	epatch "${FILESDIR}"/2.19/${PN}-2.19-ia64-gcc-4.8-reloc-hack.patch #503838
-	## COREOS: features and bug fixes missing from the Gentoo patch set.
-	epatch "${FILESDIR}"/2.23/glibc-2.23-gshadow-handle-erange.patch
-	epatch "${FILESDIR}"/2.23/glibc-2.23-c-utf8-locale.patch
-	epatch "${FILESDIR}"/2.23/glibc-2.23-pthread-use-after-free.patch
 
 	if use hardened ; then
 		# We don't enable these for non-hardened as the output is very terse --

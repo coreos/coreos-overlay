@@ -16,6 +16,12 @@ eblit-glibc-pkg_postinst() {
 		# errors from this step #253697
 		/sbin/telinit U 2>/dev/null
 
-		## COREOS: locale-gen is not installed
+		# if the host locales.gen contains no entries, we'll install everything
+		local locale_list="${EROOT}etc/locale.gen"
+		if [[ -z $(locale-gen --list --config "${locale_list}") ]] ; then
+			ewarn "Generating all locales; edit /etc/locale.gen to save time/space"
+			locale_list="${EROOT}usr/share/i18n/SUPPORTED"
+		fi
+		locale-gen -j $(makeopts_jobs) --config "${locale_list}"
 	fi
 }
