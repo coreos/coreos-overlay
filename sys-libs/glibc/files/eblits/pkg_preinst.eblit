@@ -46,11 +46,7 @@ eblit-glibc-pkg_preinst() {
 	# prepare /etc/ld.so.conf.d/ for files
 	mkdir -p "${EROOT}"/etc/ld.so.conf.d
 
-	# Default /etc/hosts.conf:multi to on for systems with small dbs.
-	if [[ $(wc -l < "${EROOT}"/etc/hosts) -lt 1000 ]] ; then
-		sed -i '/^multi off/s:off:on:' "${ED}"/etc/host.conf
-		elog "Defaulting /etc/host.conf:multi to on"
-	fi
+	## COREOS: host.conf is not installed
 
 	[[ ${ROOT} != "/" ]] && return 0
 	[[ -d ${ED}/$(get_libdir) ]] || return 0

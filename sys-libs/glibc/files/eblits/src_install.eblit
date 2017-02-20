@@ -139,70 +139,40 @@ toolchain-glibc_src_install() {
 		return 0
 	fi
 
-	# Files for Debian-style locale updating
-	dodir /usr/share/i18n
-	sed \
-		-e "/^#/d" \
-		-e "/SUPPORTED-LOCALES=/d" \
-		-e "s: \\\\::g" -e "s:/: :g" \
-		"${S}"/localedata/SUPPORTED > "${ED}"/usr/share/i18n/SUPPORTED \
-		|| die "generating /usr/share/i18n/SUPPORTED failed"
-	cd "${WORKDIR}"/extra/locale
-	dosbin locale-gen || die
-	doman *.[0-8]
-	insinto /etc
-	doins locale.gen || die
+	## COREOS ##
+	# For reference, the rest of this function has been modified to do:
+	# - The SDK just gets the full locale archive, no need for locale-gen.
+	# - CoreOS targets (which are cross compiled) don't get any locales.
+	# - Config files are installed by baselayout, not glibc.
+	# - Forget about nscd for now, we have the use flag off anyway.
+
+	if ! tc-is-cross-compiler ; then
+		emake install_root="${D}$(alt_prefix)" localedata/install-locales || die
+		# Sanity check the above command worked
+		[[ -f ${ED}/usr/$(get_libdir)/locale/locale-archive ]] || die
+	else
+		keepdir /usr/$(get_libdir)/locale
+	fi
 
 	# Make sure all the ABI's can find the locales and so we only
 	# have to generate one set
 	local a
-	keepdir /usr/$(get_libdir)/locale
 	for a in $(get_install_abis) ; do
 		if [[ ! -e ${ED}/usr/$(get_abi_LIBDIR ${a})/locale ]] ; then
 			dosym /usr/$(get_libdir)/locale /usr/$(get_abi_LIBDIR ${a})/locale
 		fi
 	done
 
-	cd "${S}"
-
-	# Install misc network config files
-	insinto /etc
-	doins nscd/nscd.conf posix/gai.conf nss/nsswitch.conf || die
-	doins "${WORKDIR}"/extra/etc/*.conf || die
-
-	if ! in_iuse nscd || use nscd ; then
-		doinitd "${WORKDIR}"/extra/etc/nscd || die
-
-		local nscd_args=(
-			-e "s:@PIDFILE@:$(strings "${ED}"/usr/sbin/nscd | grep nscd.pid):"
-		)
-		version_is_at_least 2.16 || nscd_args+=( -e 's: --foreground : :' )
-		sed -i "${nscd_args[@]}" "${ED}"/etc/init.d/nscd
-
-		# Newer versions of glibc include the nscd.service themselves.
-		# TODO: Drop the $FILESDIR copy once 2.19 goes stable.
-		if version_is_at_least 2.19 ; then
-			systemd_dounit nscd/nscd.service || die
-			systemd_newtmpfilesd nscd/nscd.tmpfiles nscd.conf || die
-		else
-			systemd_dounit "${FILESDIR}"/nscd.service || die
-			systemd_newtmpfilesd "${FILESDIR}"/nscd.tmpfilesd nscd.conf || die
-		fi
-	else
-		# Do this since extra/etc/*.conf above might have nscd.conf.
-		rm -f "${ED}"/etc/nscd.conf
-	fi
+	# Clean out any default configs
+	rm -rf "${ED}"/etc
 
 	echo 'LDPATH="include ld.so.conf.d/*.conf"' > "${T}"/00glibc
 	doenvd "${T}"/00glibc || die
 
+	cd "${S}"
 	for d in BUGS ChangeLog* CONFORMANCE FAQ NEWS NOTES PROJECTS README* ; do
 		[[ -s ${d} ]] && dodoc ${d}
 	done
-
-	# Prevent overwriting of the /etc/localtime symlink.  We'll handle the
-	# creation of the "factory" symlink in pkg_postinst().
-	rm -f "${ED}"/etc/localtime
 }
 
 toolchain-glibc_headers_install() {
