@@ -1,0 +1,2 @@
+# Override the prefix that breaks building with sysroots.
+export EXTRA_ECONF="--with-crypto=yes"
