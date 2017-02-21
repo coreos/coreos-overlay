@@ -27,8 +27,7 @@ toolchain-glibc_headers_compile() {
 
 eblit-glibc-src_compile() {
 	if just_headers ; then
-		export ABI=default
-		toolchain-glibc_headers_compile
+		[[ ${EAPI:-0} == [01] ]] && toolchain-glibc_headers_configure
 		return
 	fi
 
