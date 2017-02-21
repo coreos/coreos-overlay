@@ -10,6 +10,11 @@ COREOS_GO_VERSION="go1.6"
 # the commit of runc that docker uses.
 # see https://github.com/docker/docker/blob/v1.12.6/Dockerfile#L245
 # Note: this commit is only really present in `docker/runc` in the 'docker/1.12.x' branch
+# Update the patch number when this commit is changed (i.e. the _p in the
+# ebuild).
+# The patch version is arbitrarily the number of commits since the tag version
+# spcified in the ebuild name. For example:
+# $ git log v1.0.0-rc2..${COMMIT_ID} --oneline | wc -l
 COMMIT_ID="50a19c6ff828c58e5dab13830bd3dacde268afe5"
 
 inherit eutils flag-o-matic coreos-go-depend vcs-snapshot
