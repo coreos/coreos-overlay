@@ -1,7 +1,7 @@
 From 648e8f090f90f19237cfa70c047419341de49417 Mon Sep 17 00:00:00 2001
 From: Stephen Smalley <sds@tycho.nsa.gov>
 Date: Mon, 9 Jan 2017 10:07:31 -0500
-Subject: [PATCH 16/18] selinux: allow context mounts on tmpfs, ramfs, devpts
+Subject: [PATCH 16/19] selinux: allow context mounts on tmpfs, ramfs, devpts
  within user namespaces
 
 commit aad82892af261b9903cc11c55be3ecf5f0b0b4f8 ("selinux: Add support for
@@ -53,5 +53,5 @@ index 09fd610..7f4387f 100644
  		    defcontext_sid) {
  			rc = -EACCES;
 -- 
-2.9.3
+2.7.4
 

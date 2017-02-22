@@ -40,4 +40,5 @@ UNIPATCH_LIST="
 	${PATCH_DIR}/z0016-selinux-allow-context-mounts-on-tmpfs-ramfs-devpts-w.patch \
 	${PATCH_DIR}/z0017-perf-x86-intel-rapl-Make-package-handling-more-robus.patch \
 	${PATCH_DIR}/z0018-perf-x86-intel-uncore-Make-package-handling-more-rob.patch \
+	${PATCH_DIR}/z0019-dccp-fix-freeing-skb-too-early-for-IPV6_RECVPKTINFO.patch \
 "
