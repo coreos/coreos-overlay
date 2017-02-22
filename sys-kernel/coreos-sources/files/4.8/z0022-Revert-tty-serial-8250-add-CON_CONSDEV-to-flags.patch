@@ -1,7 +1,7 @@
 From e47cbf707c26036420fec8846d07ec640b744c0e Mon Sep 17 00:00:00 2001
 From: Herbert Xu <herbert@gondor.apana.org.au>
 Date: Sun, 11 Dec 2016 10:05:49 +0800
-Subject: [PATCH] Revert "tty: serial: 8250: add CON_CONSDEV to flags"
+Subject: [PATCH 22/25] Revert "tty: serial: 8250: add CON_CONSDEV to flags"
 
 This commit needs to be reverted because it prevents people from
 using the serial console as a secondary console with input being
@@ -36,5 +36,5 @@ index dcf43f6..fa823a5 100644
  	.data		= &serial8250_reg,
  };
 -- 
-2.9.3
+2.7.4
 

@@ -44,5 +44,7 @@ UNIPATCH_LIST="
         ${PATCH_DIR}/z0020-hibernate-Disable-in-a-signed-modules-environment.patch \
         ${PATCH_DIR}/z0021-kbuild-derive-relative-path-for-KBUILD_SRC-from-CURD.patch \
         ${PATCH_DIR}/z0022-Revert-tty-serial-8250-add-CON_CONSDEV-to-flags.patch \
-        ${PATCH_DIR}/z0023-selinux-allow-context-mounts-on-tmpfs-ramfs-devpts-within-user-namespaces.patch \
+        ${PATCH_DIR}/z0023-Add-arm64-coreos-verity-hash.patch \
+        ${PATCH_DIR}/z0024-selinux-allow-context-mounts-on-tmpfs-ramfs-devpts-w.patch \
+        ${PATCH_DIR}/z0025-dccp-fix-freeing-skb-too-early-for-IPV6_RECVPKTINFO.patch \
 "

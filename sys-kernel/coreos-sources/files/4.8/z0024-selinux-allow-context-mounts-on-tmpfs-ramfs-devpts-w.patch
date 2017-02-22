@@ -1,8 +1,8 @@
-From 01593d3299a1cfdb5e08acf95f63ec59dd674906 Mon Sep 17 00:00:00 2001
+From e5868fc1175409ad885926cbb66cb5dc5fc3e6fa Mon Sep 17 00:00:00 2001
 From: Stephen Smalley <sds@tycho.nsa.gov>
 Date: Mon, 9 Jan 2017 10:07:31 -0500
-Subject: selinux: allow context mounts on tmpfs, ramfs, devpts within user
- namespaces
+Subject: [PATCH 24/25] selinux: allow context mounts on tmpfs, ramfs, devpts
+ within user namespaces
 
 commit aad82892af261b9903cc11c55be3ecf5f0b0b4f8 ("selinux: Add support for
 unprivileged mounts from user namespaces") prohibited any use of context
@@ -31,10 +31,10 @@ Signed-off-by: Paul Moore <paul@paul-moore.com>
  1 file changed, 7 insertions(+), 3 deletions(-)
 
 diff --git a/security/selinux/hooks.c b/security/selinux/hooks.c
-index e4b953f..e32f4b5 100644
+index 603b600..feb29df 100644
 --- a/security/selinux/hooks.c
 +++ b/security/selinux/hooks.c
-@@ -834,10 +834,14 @@ static int selinux_set_mnt_opts(struct super_block *sb,
+@@ -832,10 +832,14 @@ static int selinux_set_mnt_opts(struct super_block *sb,
  	}
  
  	/*
@@ -53,5 +53,5 @@ index e4b953f..e32f4b5 100644
  		    defcontext_sid) {
  			rc = -EACCES;
 -- 
-cgit v0.12
+2.7.4
 
