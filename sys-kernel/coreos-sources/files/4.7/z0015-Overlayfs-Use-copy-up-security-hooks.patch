@@ -1,7 +1,7 @@
 From bf11f2c8dfce98405042b8701bc812d491cc800f Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Tue, 16 Jun 2015 14:14:31 +0100
-Subject: [PATCH 15/22] Overlayfs: Use copy-up security hooks
+Subject: [PATCH 15/24] Overlayfs: Use copy-up security hooks
 
 Use the copy-up security hooks previously provided to allow an LSM to adjust
 the security on a newly created copy and to filter the xattrs copied to that
@@ -43,5 +43,5 @@ index 80aa6f1..c7ba7b2 100644
  		struct path upperpath;
  
 -- 
-2.10.2
+2.7.4
 

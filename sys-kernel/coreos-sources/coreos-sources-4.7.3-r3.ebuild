@@ -45,4 +45,5 @@ UNIPATCH_LIST="
         ${PATCH_DIR}/z0021-mm-remove-gup_flags-FOLL_WRITE-games-from-__get_user.patch \
         ${PATCH_DIR}/z0022-packet-fix-race-condition-in-packet_set_ring.patch \
         ${PATCH_DIR}/z0023-ipv6-addrconf-fix-dev-refcont-leak-when-DAD-failed.patch \
+        ${PATCH_DIR}/z0024-dccp-fix-freeing-skb-too-early-for-IPV6_RECVPKTINFO.patch \
 "

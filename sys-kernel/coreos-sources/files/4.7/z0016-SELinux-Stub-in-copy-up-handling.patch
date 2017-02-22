@@ -1,7 +1,7 @@
 From b955fb5fd31da9e28036be5b7892dbae8e6fae89 Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Tue, 16 Jun 2015 14:14:32 +0100
-Subject: [PATCH 16/22] SELinux: Stub in copy-up handling
+Subject: [PATCH 16/24] SELinux: Stub in copy-up handling
 
 Provide stubs for union/overlay copy-up handling.  The xattr copy up stub
 discards lower SELinux xattrs rather than letting them be copied up so that
@@ -51,5 +51,5 @@ index a86d537..19719b7 100644
  	LSM_HOOK_INIT(file_permission, selinux_file_permission),
  	LSM_HOOK_INIT(file_alloc_security, selinux_file_alloc_security),
 -- 
-2.10.2
+2.7.4
 
