@@ -1,7 +1,7 @@
 From 6edae1670b755c5c747bdb30031ff9b24f2f585e Mon Sep 17 00:00:00 2001
 From: Vivek Goyal <vgoyal@redhat.com>
 Date: Tue, 19 Jul 2016 14:34:59 -0400
-Subject: [PATCH 06/21] security, overlayfs: Provide hook to correctly label
+Subject: [PATCH 06/25] security, overlayfs: Provide hook to correctly label
  newly created files
 
 During a new file creation we need to make sure new file is created with the
@@ -155,5 +155,5 @@ index a9e2bb9..69614f1 100644
  	.path_unlink =	LIST_HEAD_INIT(security_hook_heads.path_unlink),
  	.path_mkdir =	LIST_HEAD_INIT(security_hook_heads.path_mkdir),
 -- 
-2.10.2
+2.7.4
 

@@ -1,7 +1,7 @@
 From 72f2135b077dd2e44d5bbd6b39194d009aeb2af2 Mon Sep 17 00:00:00 2001
 From: Vivek Goyal <vgoyal@redhat.com>
 Date: Tue, 19 Jul 2016 14:34:57 -0400
-Subject: [PATCH 01/21] security, overlayfs: provide copy up security hook for
+Subject: [PATCH 01/25] security, overlayfs: provide copy up security hook for
  unioned files
 
 Provide a security hook to label new file correctly when a file is copied
@@ -144,5 +144,5 @@ index 4838e7f..f2a7f27 100644
  		LIST_HEAD_INIT(security_hook_heads.file_permission),
  	.file_alloc_security =
 -- 
-2.10.2
+2.7.4
 
