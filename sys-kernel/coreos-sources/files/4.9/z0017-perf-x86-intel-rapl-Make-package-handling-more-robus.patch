@@ -1,7 +1,7 @@
 From 463b9d55d967de5900c5097bc99c34f4207a85a9 Mon Sep 17 00:00:00 2001
 From: Thomas Gleixner <tglx@linutronix.de>
 Date: Tue, 31 Jan 2017 23:58:38 +0100
-Subject: [PATCH 17/18] perf/x86/intel/rapl: Make package handling more robust
+Subject: [PATCH 17/19] perf/x86/intel/rapl: Make package handling more robust
 
 The package management code in RAPL relies on package mapping being
 available before a CPU is started. This changed with:
@@ -45,7 +45,7 @@ Signed-off-by: Ingo Molnar <mingo@kernel.org>
  2 files changed, 26 insertions(+), 35 deletions(-)
 
 diff --git a/arch/x86/events/intel/rapl.c b/arch/x86/events/intel/rapl.c
-index 0a535ce..1dba3c2 100644
+index 0a535cea..1dba3c2 100644
 --- a/arch/x86/events/intel/rapl.c
 +++ b/arch/x86/events/intel/rapl.c
 @@ -161,7 +161,13 @@ static u64 rapl_timer_ms;
@@ -175,5 +175,5 @@ index ba1cad7..965cc56 100644
  	CPUHP_PERF_POWER,
  	CPUHP_PERF_SUPERH,
 -- 
-2.9.3
+2.7.4
 
