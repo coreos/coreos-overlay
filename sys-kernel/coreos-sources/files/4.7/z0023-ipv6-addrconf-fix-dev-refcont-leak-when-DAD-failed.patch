@@ -1,7 +1,7 @@
 From f489f4228978eaeaa22b2ffc447b553ffcea8f53 Mon Sep 17 00:00:00 2001
 From: Wei Yongjun <weiyongjun1@huawei.com>
 Date: Mon, 5 Sep 2016 16:06:31 +0800
-Subject: [PATCH] ipv6: addrconf: fix dev refcont leak when DAD failed
+Subject: [PATCH 23/24] ipv6: addrconf: fix dev refcont leak when DAD failed
 
 In general, when DAD detected IPv6 duplicate address, ifp->state
 will be set to INET6_IFADDR_STATE_ERRDAD and DAD is stopped by a
@@ -55,5 +55,5 @@ index 047c75a..66a276f 100644
  		goto out;
  	}
 -- 
-2.9.3
+2.7.4
 

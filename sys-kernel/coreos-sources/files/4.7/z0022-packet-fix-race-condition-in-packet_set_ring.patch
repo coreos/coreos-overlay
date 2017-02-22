@@ -1,7 +1,7 @@
 From adb5ec49501926806a50762e8c0b699b4e0b4991 Mon Sep 17 00:00:00 2001
 From: Philip Pettersson <philip.pettersson@gmail.com>
 Date: Wed, 30 Nov 2016 14:55:36 -0800
-Subject: [PATCH 22/22] packet: fix race condition in packet_set_ring
+Subject: [PATCH 22/24] packet: fix race condition in packet_set_ring
 
 When packet_set_ring creates a ring buffer it will initialize a
 struct timer_list if the packet version is TPACKET_V3. This value
@@ -88,5 +88,5 @@ index b43c401..c3d8537 100644
  }
  
 -- 
-2.10.2
+2.7.4
 
