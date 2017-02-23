@@ -1,0 +1,1 @@
+EXTRA_ECONF="--with-libncurses-prefix=${ROOT}usr --with-libxml2-prefix=${ROOT}usr"
