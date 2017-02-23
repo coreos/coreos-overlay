@@ -31,8 +31,4 @@ src_compile() {
 
 src_install() {
 	newbin ${GOBIN}/internal ${PN}
-
-	systemd_dounit "${FILESDIR}"/ignition.target
-	systemd_dounit "${FILESDIR}"/ignition-disks.service
-	systemd_dounit "${FILESDIR}"/ignition-files.service
 }
