@@ -1,7 +1,7 @@
-From e5868fc1175409ad885926cbb66cb5dc5fc3e6fa Mon Sep 17 00:00:00 2001
+From 648e8f090f90f19237cfa70c047419341de49417 Mon Sep 17 00:00:00 2001
 From: Stephen Smalley <sds@tycho.nsa.gov>
 Date: Mon, 9 Jan 2017 10:07:31 -0500
-Subject: [PATCH 24/25] selinux: allow context mounts on tmpfs, ramfs, devpts
+Subject: [PATCH 16/19] selinux: allow context mounts on tmpfs, ramfs, devpts
  within user namespaces
 
 commit aad82892af261b9903cc11c55be3ecf5f0b0b4f8 ("selinux: Add support for
@@ -31,7 +31,7 @@ Signed-off-by: Paul Moore <paul@paul-moore.com>
  1 file changed, 7 insertions(+), 3 deletions(-)
 
 diff --git a/security/selinux/hooks.c b/security/selinux/hooks.c
-index 603b600..feb29df 100644
+index 09fd610..7f4387f 100644
 --- a/security/selinux/hooks.c
 +++ b/security/selinux/hooks.c
 @@ -832,10 +832,14 @@ static int selinux_set_mnt_opts(struct super_block *sb,

@@ -1,7 +1,7 @@
-From 22a7af2714d4dc7284c8070d305fb6d15a8f119b Mon Sep 17 00:00:00 2001
+From 24fd0e7dcfb42abc8999f0bc3b55bdf02324da75 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Fri, 9 Aug 2013 18:36:30 -0400
-Subject: [PATCH 17/25] Add option to automatically enforce module signatures
+Subject: [PATCH 10/19] Add option to automatically enforce module signatures
  when in Secure Boot mode
 
 UEFI Secure Boot provides a mechanism for ensuring that the firmware will
@@ -34,10 +34,10 @@ index 95a4d34..b8527c6 100644
  290/040	ALL	edd_mbr_sig_buffer EDD MBR signatures
  2D0/A00	ALL	e820_map	E820 memory map table
 diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 2a1f0ce..ba2c734 100644
+index bada636..882da2b 100644
 --- a/arch/x86/Kconfig
 +++ b/arch/x86/Kconfig
-@@ -1774,6 +1774,16 @@ config EFI_MIXED
+@@ -1786,6 +1786,16 @@ config EFI_MIXED
  
  	   If unsure, say N.
  
@@ -55,7 +55,7 @@ index 2a1f0ce..ba2c734 100644
  	def_bool y
  	prompt "Enable seccomp to safely compute untrusted bytecode"
 diff --git a/arch/x86/boot/compressed/eboot.c b/arch/x86/boot/compressed/eboot.c
-index 94dd4a3..1959b82 100644
+index cc69e37..17b3765 100644
 --- a/arch/x86/boot/compressed/eboot.c
 +++ b/arch/x86/boot/compressed/eboot.c
 @@ -12,6 +12,7 @@
@@ -66,7 +66,7 @@ index 94dd4a3..1959b82 100644
  
  #include "../string.h"
  #include "eboot.h"
-@@ -571,6 +572,36 @@ free_handle:
+@@ -537,6 +538,36 @@ static void setup_efi_pci(struct boot_params *params)
  	efi_call_early(free_pool, pci_handle);
  }
  
@@ -103,7 +103,7 @@ index 94dd4a3..1959b82 100644
  static efi_status_t
  setup_uga32(void **uga_handle, unsigned long size, u32 *width, u32 *height)
  {
-@@ -1128,6 +1159,10 @@ struct boot_params *efi_main(struct efi_config *c,
+@@ -1094,6 +1125,10 @@ struct boot_params *efi_main(struct efi_config *c,
  	else
  		setup_boot_services32(efi_early);
  
@@ -129,7 +129,7 @@ index c18ce67..2b3e542 100644
  	 * The sentinel is set to a nonzero value (0xff) in header.S.
  	 *
 diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index d5219b1..d635886 100644
+index 9c337b0..f7f369b 100644
 --- a/arch/x86/kernel/setup.c
 +++ b/arch/x86/kernel/setup.c
 @@ -1160,6 +1160,12 @@ void __init setup_arch(char **cmdline_p)
@@ -163,10 +163,10 @@ index c8b4ea0..8918ef4 100644
  
  extern int modules_disabled; /* for sysctl */
 diff --git a/kernel/module.c b/kernel/module.c
-index 0332fdd..3f1ea6b 100644
+index 085b720..e0c6216 100644
 --- a/kernel/module.c
 +++ b/kernel/module.c
-@@ -4280,6 +4280,13 @@ void module_layout(struct module *mod,
+@@ -4286,6 +4286,13 @@ void module_layout(struct module *mod,
  EXPORT_SYMBOL(module_layout);
  #endif
  

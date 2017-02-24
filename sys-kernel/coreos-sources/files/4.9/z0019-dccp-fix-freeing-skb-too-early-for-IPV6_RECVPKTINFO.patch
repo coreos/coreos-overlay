@@ -1,7 +1,7 @@
-From 38fc515ed7c5eb18f80182aeec2947e8680d3e59 Mon Sep 17 00:00:00 2001
+From 72a6292277c1f92dd1dd31d157ad204c827ff366 Mon Sep 17 00:00:00 2001
 From: Andrey Konovalov <andreyknvl@google.com>
 Date: Thu, 16 Feb 2017 17:22:46 +0100
-Subject: [PATCH 25/25] dccp: fix freeing skb too early for IPV6_RECVPKTINFO
+Subject: [PATCH 19/19] dccp: fix freeing skb too early for IPV6_RECVPKTINFO
 
 In the current DCCP implementation an skb for a DCCP_PKT_REQUEST packet
 is forcibly freed via __kfree_skb in dccp_rcv_state_process if
