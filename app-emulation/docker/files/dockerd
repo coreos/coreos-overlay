@@ -70,6 +70,9 @@ maybe_enable_selinux() {
             USE_SELINUX="--selinux-enabled"
             ;;
     esac
+    if [[ -n "${ARG_SELINUX}" ]]; then
+        USE_SELINUX=""
+    fi
 }
 
 ARG_ROOT="/var/lib/docker"
