@@ -1,7 +1,7 @@
-From 97b270a085859d5ada3614b45902c0b75df2be4e Mon Sep 17 00:00:00 2001
+From f1fcf911f8b2fc3e77685122e191a5faa2d90530 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <mjg59@coreos.com>
 Date: Thu, 19 Nov 2015 18:55:53 -0800
-Subject: [PATCH 08/18] kexec: Disable at runtime if the kernel enforces module
+Subject: [PATCH 08/16] kexec: Disable at runtime if the kernel enforces module
  loading restrictions
 
 kexec permits the loading and execution of arbitrary code in ring 0, which

@@ -36,6 +36,4 @@ UNIPATCH_LIST="
 	${PATCH_DIR}/z0014-kbuild-derive-relative-path-for-KBUILD_SRC-from-CURD.patch \
 	${PATCH_DIR}/z0015-Add-arm64-coreos-verity-hash.patch \
 	${PATCH_DIR}/z0016-selinux-allow-context-mounts-on-tmpfs-ramfs-devpts-w.patch \
-	${PATCH_DIR}/z0017-perf-x86-intel-rapl-Make-package-handling-more-robus.patch \
-	${PATCH_DIR}/z0018-perf-x86-intel-uncore-Make-package-handling-more-rob.patch \
 "
