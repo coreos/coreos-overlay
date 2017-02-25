@@ -1,7 +1,7 @@
-From 24fd0e7dcfb42abc8999f0bc3b55bdf02324da75 Mon Sep 17 00:00:00 2001
+From 8513cddf6e021327feb0297ae9f3c113dd327620 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Fri, 9 Aug 2013 18:36:30 -0400
-Subject: [PATCH 10/18] Add option to automatically enforce module signatures
+Subject: [PATCH 10/16] Add option to automatically enforce module signatures
  when in Secure Boot mode
 
 UEFI Secure Boot provides a mechanism for ensuring that the firmware will
@@ -34,10 +34,10 @@ index 95a4d34..b8527c6 100644
  290/040	ALL	edd_mbr_sig_buffer EDD MBR signatures
  2D0/A00	ALL	e820_map	E820 memory map table
 diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index bada636..882da2b 100644
+index e487493..5be38b4 100644
 --- a/arch/x86/Kconfig
 +++ b/arch/x86/Kconfig
-@@ -1786,6 +1786,16 @@ config EFI_MIXED
+@@ -1815,6 +1815,16 @@ config EFI_MIXED
  
  	   If unsure, say N.
  
@@ -55,7 +55,7 @@ index bada636..882da2b 100644
  	def_bool y
  	prompt "Enable seccomp to safely compute untrusted bytecode"
 diff --git a/arch/x86/boot/compressed/eboot.c b/arch/x86/boot/compressed/eboot.c
-index cc69e37..17b3765 100644
+index ff01c8f..3e9e29a 100644
 --- a/arch/x86/boot/compressed/eboot.c
 +++ b/arch/x86/boot/compressed/eboot.c
 @@ -12,6 +12,7 @@
@@ -66,8 +66,8 @@ index cc69e37..17b3765 100644
  
  #include "../string.h"
  #include "eboot.h"
-@@ -537,6 +538,36 @@ static void setup_efi_pci(struct boot_params *params)
- 	efi_call_early(free_pool, pci_handle);
+@@ -600,6 +601,36 @@ static void setup_quirks(struct boot_params *boot_params)
+ 	}
  }
  
 +static int get_secure_boot(void)
@@ -103,7 +103,7 @@ index cc69e37..17b3765 100644
  static efi_status_t
  setup_uga32(void **uga_handle, unsigned long size, u32 *width, u32 *height)
  {
-@@ -1094,6 +1125,10 @@ struct boot_params *efi_main(struct efi_config *c,
+@@ -1157,6 +1188,10 @@ struct boot_params *efi_main(struct efi_config *c,
  	else
  		setup_boot_services32(efi_early);
  
@@ -115,10 +115,10 @@ index cc69e37..17b3765 100644
  
  	setup_efi_pci(boot_params);
 diff --git a/arch/x86/include/uapi/asm/bootparam.h b/arch/x86/include/uapi/asm/bootparam.h
-index c18ce67..2b3e542 100644
+index b10bf31..5138dac 100644
 --- a/arch/x86/include/uapi/asm/bootparam.h
 +++ b/arch/x86/include/uapi/asm/bootparam.h
-@@ -134,7 +134,8 @@ struct boot_params {
+@@ -135,7 +135,8 @@ struct boot_params {
  	__u8  eddbuf_entries;				/* 0x1e9 */
  	__u8  edd_mbr_sig_buf_entries;			/* 0x1ea */
  	__u8  kbd_status;				/* 0x1eb */
@@ -129,10 +129,10 @@ index c18ce67..2b3e542 100644
  	 * The sentinel is set to a nonzero value (0xff) in header.S.
  	 *
 diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index 9c337b0..f7f369b 100644
+index 4cfba94..7c4295c 100644
 --- a/arch/x86/kernel/setup.c
 +++ b/arch/x86/kernel/setup.c
-@@ -1160,6 +1160,12 @@ void __init setup_arch(char **cmdline_p)
+@@ -1184,6 +1184,12 @@ void __init setup_arch(char **cmdline_p)
  
  	io_delay_init();
  
@@ -146,7 +146,7 @@ index 9c337b0..f7f369b 100644
  	 * Parse the ACPI tables for possible boot-time SMP configuration.
  	 */
 diff --git a/include/linux/module.h b/include/linux/module.h
-index c8b4ea0..8918ef4 100644
+index da4bd57..25d88bb 100644
 --- a/include/linux/module.h
 +++ b/include/linux/module.h
 @@ -260,6 +260,12 @@ extern const typeof(name) __mod_##type##__##name##_device_table		\
@@ -163,10 +163,10 @@ index c8b4ea0..8918ef4 100644
  
  extern int modules_disabled; /* for sysctl */
 diff --git a/kernel/module.c b/kernel/module.c
-index 085b720..e0c6216 100644
+index 9a565d5..421ee82 100644
 --- a/kernel/module.c
 +++ b/kernel/module.c
-@@ -4286,6 +4286,13 @@ void module_layout(struct module *mod,
+@@ -4300,6 +4300,13 @@ void module_layout(struct module *mod,
  EXPORT_SYMBOL(module_layout);
  #endif
  
