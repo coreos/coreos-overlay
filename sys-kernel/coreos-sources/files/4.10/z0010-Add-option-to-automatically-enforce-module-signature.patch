@@ -1,4 +1,4 @@
-From 8513cddf6e021327feb0297ae9f3c113dd327620 Mon Sep 17 00:00:00 2001
+From ed8ec0c970a5286f458976a736248c5401c8e7c2 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Fri, 9 Aug 2013 18:36:30 -0400
 Subject: [PATCH 10/16] Add option to automatically enforce module signatures
@@ -181,5 +181,5 @@ index 9a565d5..421ee82 100644
  {
  #ifdef CONFIG_MODULE_SIG
 -- 
-2.9.3
+2.7.4
 

@@ -1,4 +1,4 @@
-From 27499a2ffb18d13cb0b4ffe67cbccec23ba7b551 Mon Sep 17 00:00:00 2001
+From 300f9b0f53ace2681ab9c36642a7df8c5c9d9837 Mon Sep 17 00:00:00 2001
 From: Geoff Levand <geoff@infradead.org>
 Date: Fri, 11 Nov 2016 17:28:52 -0800
 Subject: [PATCH 15/16] Add arm64 coreos verity hash
@@ -25,5 +25,5 @@ index 4b1abac..a53fa57 100644
  	 * EFI will load .text onwards at the 4k section alignment
  	 * described in the PE/COFF header. To ensure that instruction
 -- 
-2.9.3
+2.7.4
 
