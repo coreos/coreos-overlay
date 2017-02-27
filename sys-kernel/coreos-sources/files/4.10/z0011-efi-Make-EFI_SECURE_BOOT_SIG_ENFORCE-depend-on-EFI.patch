@@ -1,4 +1,4 @@
-From 4c58cd43848c62e13421c4f4fa98df540e674fba Mon Sep 17 00:00:00 2001
+From 4d76d7bdd971932c8eeb5450cc05780117418ccb Mon Sep 17 00:00:00 2001
 From: Josh Boyer <jwboyer@fedoraproject.org>
 Date: Tue, 27 Aug 2013 13:28:43 -0400
 Subject: [PATCH 11/16] efi: Make EFI_SECURE_BOOT_SIG_ENFORCE depend on EFI
@@ -26,5 +26,5 @@ index 5be38b4..efe6b42 100644
  	---help---
  	  UEFI Secure Boot provides a mechanism for ensuring that the
 -- 
-2.9.3
+2.7.4
 

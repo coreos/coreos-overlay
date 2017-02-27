@@ -1,4 +1,4 @@
-From be3c5948ec57189c877afc2af2da91c45569db79 Mon Sep 17 00:00:00 2001
+From 5e92bc30d58f30a81381f7a2ec3ce1c40219458c Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Fri, 9 Mar 2012 09:28:15 -0500
 Subject: [PATCH 06/16] Restrict /dev/mem and /dev/kmem when module loading is
@@ -38,5 +38,5 @@ index a6eca51..191b2b0 100644
  		unsigned long to_write = min_t(unsigned long, count,
  					       (unsigned long)high_memory - p);
 -- 
-2.9.3
+2.7.4
 
