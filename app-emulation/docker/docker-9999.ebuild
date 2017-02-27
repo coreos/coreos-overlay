@@ -7,13 +7,13 @@ EAPI=5
 CROS_WORKON_PROJECT="coreos/docker"
 CROS_WORKON_LOCALNAME="docker"
 CROS_WORKON_REPO="git://github.com"
-COREOS_GO_VERSION="go1.7"
+COREOS_GO_VERSION="go1.6"
 
 if [[ ${PV} == *9999 ]]; then
 	DOCKER_GITCOMMIT="unknown"
 	KEYWORDS="~amd64 ~arm64"
 else
-	CROS_WORKON_COMMIT="092cba3727bb9b4a2f0e922cd6c0f93ea270e363" # coreos-1.13.1
+	CROS_WORKON_COMMIT="d5236f0452873048a28c1ecd63d40513efa66542" # coreos-1.12.6
 	DOCKER_GITCOMMIT="${CROS_WORKON_COMMIT:0:7}"
 	KEYWORDS="amd64 arm64"
 fi
@@ -67,8 +67,7 @@ RDEPEND="
 	>=sys-apps/shadow-4.4
 
 	>=app-emulation/containerd-0.2.5[seccomp?]
-	>=app-emulation/runc-1.0.0_rc2[apparmor?,seccomp?]
-	app-emulation/docker-proxy
+	>=app-emulation/runc-1.0.0_rc2-r2[apparmor?,seccomp?]
 "
 
 RESTRICT="installsources strip"
@@ -270,6 +269,7 @@ src_install() {
 	VERSION="$(cat VERSION)"
 	newbin "bundles/$VERSION/dynbinary-client/docker-$VERSION" docker
 	newbin "bundles/$VERSION/dynbinary-daemon/dockerd-$VERSION" dockerd
+	newbin "bundles/$VERSION/dynbinary-daemon/docker-proxy-$VERSION" docker-proxy
 	dosym containerd /usr/bin/docker-containerd
 	dosym containerd-shim /usr/bin/docker-containerd-shim
 	dosym runc /usr/bin/docker-runc
