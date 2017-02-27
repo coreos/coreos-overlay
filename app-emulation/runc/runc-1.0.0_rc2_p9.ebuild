@@ -8,14 +8,14 @@ GITHUB_URI="github.com/opencontainers/runc"
 COREOS_GO_PACKAGE="${GITHUB_URI}"
 COREOS_GO_VERSION="go1.6"
 # the commit of runc that docker uses.
-# see https://github.com/docker/docker/blob/v1.13.1/hack/dockerfile/binaries-commits#L6
-# Note: this commit is only really present in `docker/runc` in the 'docker/1.13.x' branch
+# see https://github.com/docker/docker/blob/v1.12.6/Dockerfile#L245
+# Note: this commit is only really present in `docker/runc` in the 'docker/1.12.x' branch
 # Update the patch number when this commit is changed (i.e. the _p in the
 # ebuild).
 # The patch version is arbitrarily the number of commits since the tag version
 # spcified in the ebuild name. For example:
 # $ git log v1.0.0-rc2..${COMMIT_ID} --oneline | wc -l
-COMMIT_ID="9df8b306d01f59d3a8029be411de015b7304dd8f"
+COMMIT_ID="50a19c6ff828c58e5dab13830bd3dacde268afe5"
 
 inherit eutils flag-o-matic coreos-go-depend vcs-snapshot
 
@@ -37,7 +37,7 @@ RDEPEND="
 
 src_prepare() {
 	epatch "${FILESDIR}/0001-Makefile-do-not-install-dependencies-of-target.patch"
-	epatch "${FILESDIR}/0002-Delay-unshare-of-clone-newipc-for-selinux.patch"
+	epatch "${FILESDIR}/0002-Dont-set-label-for-mqueue-under-userns.patch"
 
 	# Work around https://github.com/golang/go/issues/14669
 	# Remove after updating to go1.7
@@ -54,7 +54,7 @@ src_compile() {
 		$(usev selinux)
 	)
 
-	emake BUILDTAGS="${options[*]}" COMMIT="${COMMIT_ID}"
+	emake BUILDTAGS="${options[*]}"
 }
 
 src_install() {
