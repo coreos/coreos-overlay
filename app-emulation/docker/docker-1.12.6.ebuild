@@ -9,14 +9,9 @@ CROS_WORKON_LOCALNAME="docker"
 CROS_WORKON_REPO="git://github.com"
 COREOS_GO_VERSION="go1.6"
 
-if [[ ${PV} == *9999 ]]; then
-	DOCKER_GITCOMMIT="unknown"
-	KEYWORDS="~amd64 ~arm64"
-else
-	CROS_WORKON_COMMIT="d5236f0452873048a28c1ecd63d40513efa66542" # coreos-1.12.6
-	DOCKER_GITCOMMIT="${CROS_WORKON_COMMIT:0:7}"
-	KEYWORDS="amd64 arm64"
-fi
+CROS_WORKON_COMMIT="d5236f0452873048a28c1ecd63d40513efa66542" # coreos-1.12.6
+DOCKER_GITCOMMIT="${CROS_WORKON_COMMIT:0:7}"
+KEYWORDS="amd64 arm64"
 
 inherit bash-completion-r1 eutils linux-info multilib systemd udev user cros-workon coreos-go-depend
 
