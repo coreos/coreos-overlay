@@ -8,16 +8,11 @@ GITHUB_URI="github.com/docker/${PN}"
 COREOS_GO_PACKAGE="${GITHUB_URI}"
 COREOS_GO_VERSION="go1.6"
 
-if [[ ${PV} == *9999 ]]; then
-	EGIT_REPO_URI="https://${GITHUB_URI}.git"
-	inherit git-r3
-else
-	MY_PV="${PV/_/-}"
-	EGIT_COMMIT="v${MY_PV}"
-	SRC_URI="https://${EGO_PN}/archive/${EGIT_COMMIT}.tar.gz -> ${P}.tar.gz"
-	KEYWORDS="amd64 arm64"
-	inherit vcs-snapshot
-fi
+MY_PV="${PV/_/-}"
+EGIT_COMMIT="v${MY_PV}"
+SRC_URI="https://${EGO_PN}/archive/${EGIT_COMMIT}.tar.gz -> ${P}.tar.gz"
+KEYWORDS="amd64 arm64"
+inherit vcs-snapshot
 
 inherit coreos-go systemd
 
