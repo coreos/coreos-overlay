@@ -37,7 +37,7 @@ RDEPEND="
 
 src_prepare() {
 	epatch "${FILESDIR}/0001-Makefile-do-not-install-dependencies-of-target.patch"
-	epatch "${FILESDIR}/0002-Dont-set-label-for-mqueue-under-userns.patch"
+	epatch "${FILESDIR}/0002-${PV}-Fix-setting-selinux-label-for-mqueue-under-userns.patch"
 
 	# Work around https://github.com/golang/go/issues/14669
 	# Remove after updating to go1.7
