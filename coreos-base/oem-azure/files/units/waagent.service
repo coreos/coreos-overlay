@@ -1,0 +1,13 @@
+[Unit]
+Description=Microsoft Azure Agent
+Wants=network-online.target sshd-keygen.service
+After=network-online.target sshd-keygen.service
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=5s
+ExecStart=/usr/share/oem/python/bin/python -u /usr/share/oem/bin/waagent -daemon
+
+[Install]
+WantedBy=multi-user.target

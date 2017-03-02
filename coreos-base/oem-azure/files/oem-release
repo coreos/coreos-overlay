@@ -1,0 +1,5 @@
+ID=azure
+VERSION_ID=@@OEM_VERSION_ID@@
+NAME="Microsoft Azure"
+HOME_URL="https://azure.microsoft.com/"
+BUG_REPORT_URL="https://issues.coreos.com"
