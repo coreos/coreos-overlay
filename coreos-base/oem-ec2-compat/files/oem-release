@@ -1,0 +1,5 @@
+ID=@@OEM_ID@@
+VERSION_ID=@@OEM_VERSION_ID@@
+NAME="@@OEM_NAME@@"
+HOME_URL="@@OEM_HOME_URL@@"
+BUG_REPORT_URL="https://issues.coreos.com"
