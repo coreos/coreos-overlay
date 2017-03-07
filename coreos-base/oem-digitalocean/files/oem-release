@@ -2,4 +2,4 @@ ID=digitalocean
 VERSION_ID=@@OEM_VERSION_ID@@
 NAME="DigitalOcean"
 HOME_URL="https://www.digitalocean.com/"
-BUG_REPORT_URL="https://github.com/coreos/bugs/issues"
+BUG_REPORT_URL="https://issues.coreos.com"

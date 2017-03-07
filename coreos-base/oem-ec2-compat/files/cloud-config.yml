@@ -40,4 +40,4 @@ coreos:
     name: @@OEM_NAME@@
     version-id: @@OEM_VERSION_ID@@
     home-url: @@OEM_HOME_URL@@
-    bug-report-url: https://github.com/coreos/bugs/issues
+    bug-report-url: https://issues.coreos.com

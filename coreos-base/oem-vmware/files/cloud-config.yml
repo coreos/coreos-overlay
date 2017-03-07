@@ -27,7 +27,7 @@ coreos:
         ExecStart=/usr/bin/coreos-cloudinit --oem=vmware
 
   oem:
-    bug-report-url: "https://github.com/coreos/bugs/issues"
+    bug-report-url: "https://issues.coreos.com"
     id: vmware
     name: VMWare
     version-id: "@@OEM_VERSION_ID@@"

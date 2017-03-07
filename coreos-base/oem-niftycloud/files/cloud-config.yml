@@ -54,4 +54,4 @@ coreos:
     name: NIFTY Cloud
     version-id: @@OEM_VERSION_ID@@
     home-url: http://cloud.nifty.com/
-    bug-report-url: https://github.com/coreos/bugs/issues
+    bug-report-url: https://issues.coreos.com

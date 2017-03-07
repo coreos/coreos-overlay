@@ -2,4 +2,4 @@ ID=gce
 VERSION_ID=@@OEM_VERSION_ID@@
 NAME="Google Compute Engine"
 HOME_URL="https://cloud.google.com/products/compute-engine/"
-BUG_REPORT_URL="https://github.com/coreos/bugs/issues"
+BUG_REPORT_URL="https://issues.coreos.com"
