@@ -1,0 +1,10 @@
+[Unit]
+Description=CoreOS Metadata Agent for SAKURA Cloud
+Before=systemd-networkd.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/coreos-metadata --cmdline --attributes=/run/metadata/coreos --hostname=/etc/hostname --network-units=/etc/systemd/network
+
+[Install]
+RequiredBy=multi-user.target

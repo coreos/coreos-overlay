@@ -1,0 +1,5 @@
+ID=sakuracloud
+VERSION_ID=@@OEM_VERSION_ID@@
+NAME="SAKURA Cloud"
+HOME_URL="http://cloud.sakura.ad.jp/"
+BUG_REPORT_URL="https://github.com/coreos/bugs/issues"
