@@ -2,6 +2,8 @@
 Description=flannel docker export service - Network fabric for containers (System Application Container)
 Documentation=https://github.com/coreos/flannel
 PartOf=flanneld.service
+Requires=flanneld.service
+After=flanneld.service
 Before=docker.service
 
 [Service]
