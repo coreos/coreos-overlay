@@ -49,4 +49,4 @@ coreos:
     name: Microsoft Azure
     version-id: @@OEM_VERSION_ID@@
     home-url: https://azure.microsoft.com/
-    bug-report-url: https://github.com/coreos/bugs/issues
+    bug-report-url: https://issues.coreos.com
