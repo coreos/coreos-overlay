@@ -11,7 +11,7 @@ SRC_URI="ftp://sourceware.org/pub/lvm2/${PN/lvm/LVM}.${PV}.tgz
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-linux ~x86-linux"
+KEYWORDS="~alpha amd64 ~arm arm64 ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-linux ~x86-linux"
 IUSE="readline static static-libs systemd clvm cman corosync lvm1 lvm2create_initrd openais selinux +udev +thin device-mapper-only"
 REQUIRED_USE="device-mapper-only? ( !clvm !cman !corosync !lvm1 !lvm2create_initrd !openais !thin )
 	systemd? ( udev )
@@ -26,13 +26,12 @@ DEPEND_COMMON="
 	)
 
 	readline? ( sys-libs/readline:0= )
-	systemd? ( >=sys-apps/systemd-205:0= )
 	udev? ( >=virtual/libudev-208:=[static-libs?] )"
 # /run is now required for locking during early boot. /var cannot be assumed to
 # be available -- thus, pull in recent enough baselayout for /run.
 # This version of LVM is incompatible with cryptsetup <1.1.2.
 RDEPEND="${DEPEND_COMMON}
-	>=sys-apps/baselayout-2.2
+	!<sys-apps/baselayout-2.2
 	!<sys-apps/openrc-0.11
 	!<sys-fs/cryptsetup-1.1.2
 	!!sys-fs/clvm
@@ -46,6 +45,7 @@ DEPEND="${DEPEND_COMMON}
 	virtual/pkgconfig
 	>=sys-devel/binutils-2.20.1-r1
 	sys-devel/autoconf-archive
+	systemd? ( >=sys-apps/systemd-205:0= )
 	static? (
 		selinux? ( sys-libs/libselinux[static-libs] )
 		udev? ( >=sys-fs/eudev-3.1.2[static-libs] )
