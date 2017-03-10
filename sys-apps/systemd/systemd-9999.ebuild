@@ -11,7 +11,7 @@ if [[ ${PV} == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64 ~arm ~x86"
 else
 	CROS_WORKON_COMMIT="6b646f36fa62ec55660daab07ec5c347730f8469" # v233-coreos
-	KEYWORDS="~amd64 ~arm64 ~arm ~x86"
+	KEYWORDS="amd64 arm64 ~arm ~x86"
 fi
 
 PYTHON_COMPAT=( python{3_4,3_5,3_6} )
