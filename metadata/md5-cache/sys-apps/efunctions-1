@@ -7,5 +7,5 @@ LICENSE=BSD-2
 RDEPEND=!sys-apps/openrc !<sys-apps/baselayout-2.0 !coreos-base/efunctions
 SLOT=0
 SRC_URI=https://github.com/marcusatbang/efunctions/tarball/b35f73e902fc0a6977260a1d6e8b287ae3b1c82a -> efunctions-1.tar.gz
-_eclasses_=multilib	3972ca401cf7dbb430df9995f5d8d580	toolchain-funcs	7a212e5e01adfa4805c9978366e6ee85	vcs-snapshot	b45be87e7012be0af8424e8a5644da1d
+_eclasses_=multilib	165fc17c38d1b11dac2008280dab6e80	toolchain-funcs	1b1da0c45c555989dc5d832b54880783	vcs-snapshot	2b65ecb2d0f91e4322c2ac8d673993bd
 _md5_=920916f5c691c606ecc56b7fdc8d6c43

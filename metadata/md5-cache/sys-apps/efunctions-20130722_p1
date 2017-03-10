@@ -7,5 +7,5 @@ LICENSE=BSD-2
 RDEPEND=!sys-apps/openrc
 SLOT=0
 SRC_URI=https://github.com/coreos/efunctions/tarball/9578f50fd0a87c6b8021025d70eb84297cbb15a0 -> efunctions-20130722_p1.tar.gz
-_eclasses_=vcs-snapshot	b45be87e7012be0af8424e8a5644da1d
+_eclasses_=vcs-snapshot	2b65ecb2d0f91e4322c2ac8d673993bd
 _md5_=1b4d1e77ee101007c6804d53d68611b0
