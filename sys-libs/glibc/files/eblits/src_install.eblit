@@ -144,7 +144,7 @@ toolchain-glibc_src_install() {
 	# - The SDK just gets the full locale archive, no need for locale-gen.
 	# - CoreOS targets (which are cross compiled) don't get any locales.
 	# - Config files are installed by baselayout, not glibc.
-	# - Forget about nscd for now, we have the use flag off anyway.
+	# - Install nscd/systemd stuff in /usr.
 
 	if ! tc-is-cross-compiler ; then
 		emake install_root="${D}$(alt_prefix)" localedata/install-locales || die
@@ -166,10 +166,21 @@ toolchain-glibc_src_install() {
 	# Clean out any default configs
 	rm -rf "${ED}"/etc
 
+	cd "${S}"
+
+	# Install misc network config files
+	insinto /usr/share/baselayout
+	doins nscd/nscd.conf || die
+
+	if ! in_iuse nscd || use nscd ; then
+		systemd_dounit nscd/nscd.service || die
+		systemd_newtmpfilesd nscd/nscd.tmpfiles nscd.conf || die
+		systemd_newtmpfilesd "${FILESDIR}"/nscd-conf.tmpfiles nscd-conf.conf || die
+	fi
+
 	echo 'LDPATH="include ld.so.conf.d/*.conf"' > "${T}"/00glibc
 	doenvd "${T}"/00glibc || die
 
-	cd "${S}"
 	for d in BUGS ChangeLog* CONFORMANCE FAQ NEWS NOTES PROJECTS README* ; do
 		[[ -s ${d} ]] && dodoc ${d}
 	done
