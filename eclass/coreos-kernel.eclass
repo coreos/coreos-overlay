@@ -214,6 +214,23 @@ coreos-kernel_src_configure() {
 	# Use default for any options not explitly set in defconfig
 	kmake olddefconfig
 
+	# Verify that olddefconfig has not converted any y or m options to n
+	# (implying a new, disabled dependency). Allow options to be converted
+	# from m to y.
+	#
+	# generate regexes from enabled boolean/tristate options |
+	#	filter them out of the defconfig |
+	#	filter for boolean/tristate options, and format |
+	#	sort (why not)
+	local missing=$( \
+		gawk -F = '/=[ym]$/ {print "^" $1 "="}' "${S}/build/.config" | \
+		grep -vf - "${S}/build/.config.old" | \
+		gawk -F = '/=[ym]$/ {print "    " $1}' | \
+		sort)
+	if [[ -n "${missing}" ]]; then
+		die "Requested options not enabled in build:\n${missing}"
+	fi
+
 	# For convenience, generate a minimal defconfig of the build
 	kmake savedefconfig
 }
