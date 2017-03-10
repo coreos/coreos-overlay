@@ -3,16 +3,23 @@
 
 EAPI=6
 
+CROS_WORKON_PROJECT="coreos/systemd"
+CROS_WORKON_REPO="git://github.com"
+
 if [[ ${PV} == 9999 ]]; then
-	EGIT_REPO_URI="https://github.com/systemd/systemd.git"
-	inherit git-r3
+	# Use ~arch instead of empty keywords for compatibility with cros-workon
+	KEYWORDS="~amd64 ~arm64 ~arm ~x86"
 else
-	SRC_URI="https://github.com/systemd/systemd/archive/v${PV}.tar.gz -> ${P}.tar.gz
-		!doc? ( https://dev.gentoo.org/~floppym/dist/${P}-man.tar.gz )"
-	KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~ia64 ~ppc ~ppc64 ~sparc ~x86"
+	CROS_WORKON_COMMIT="6b646f36fa62ec55660daab07ec5c347730f8469" # v233-coreos
+	KEYWORDS="~amd64 ~arm64 ~arm ~x86"
 fi
 
 PYTHON_COMPAT=( python{3_4,3_5,3_6} )
+
+# cros-workon must be imported first, in cases where cros-workon and
+# another eclass exports the same function (say src_compile) we want
+# the later eclass's version to win. Only need src_unpack from workon.
+inherit cros-workon
 
 inherit autotools bash-completion-r1 linux-info multilib-minimal pam python-any-r1 systemd toolchain-funcs udev user
 
@@ -24,6 +31,9 @@ SLOT="0/2"
 IUSE="acl apparmor audit build cryptsetup curl doc elfutils +gcrypt gnuefi http
 	idn importd +kmod +lz4 lzma nat pam policykit
 	qrcode +seccomp selinux ssl sysv-utils test vanilla xkb"
+
+# CoreOS specific use flags
+IUSE+=" symlink-usr"
 
 REQUIRED_USE="importd? ( curl gcrypt lzma )"
 
@@ -63,10 +73,7 @@ COMMON_DEPEND=">=sys-apps/util-linux-2.27.1:0=[${MULTILIB_USEDEP}]
 	abi_x86_32? ( !<=app-emulation/emul-linux-x86-baselibs-20130224-r9
 		!app-emulation/emul-linux-x86-baselibs[-abi_x86_32(-)] )"
 
-# baselayout-2.2 has /run
 RDEPEND="${COMMON_DEPEND}
-	>=sys-apps/baselayout-2.2
-	selinux? ( sec-policy/selinux-base-policy[systemd] )
 	!build? ( || (
 		sys-apps/util-linux[kill(-)]
 		sys-process/procps[kill(+)]
@@ -80,7 +87,6 @@ RDEPEND="${COMMON_DEPEND}
 # sys-apps/dbus: the daemon only (+ build-time lib dep for tests)
 PDEPEND=">=sys-apps/dbus-1.9.8[systemd]
 	>=sys-apps/hwids-20150417[udev]
-	>=sys-fs/udev-init-scripts-25
 	policykit? ( sys-auth/polkit )
 	!vanilla? ( sys-apps/gentoo-systemd-integration )"
 
@@ -142,23 +148,14 @@ pkg_setup() {
 
 src_unpack() {
 	default
-	[[ ${PV} != 9999 ]] || git-r3_src_unpack
+	cros-workon_src_unpack
 }
 
 src_prepare() {
 	# Bug 463376
 	sed -i -e 's/GROUP="dialout"/GROUP="uucp"/' rules/*.rules || die
-
-	local PATCHES=(
-	)
-
-	if ! use vanilla; then
-		PATCHES+=(
-			"${FILESDIR}/218-Dont-enable-audit-by-default.patch"
-			"${FILESDIR}/228-noclean-tmp.patch"
-			"${FILESDIR}/233-systemd-user-pam.patch"
-		)
-	fi
+	# Use the resolv.conf managed by systemd-resolved
+	sed -i -e 's,/usr/lib/systemd/resolv.conf,/run/systemd/resolve/resolv.conf,' tmpfiles.d/etc.conf.m4 || die
 
 	[[ -d "${WORKDIR}"/patches ]] && PATCHES+=( "${WORKDIR}"/patches )
 
@@ -254,11 +251,23 @@ multilib_src_configure() {
 		EFI_CC="$(tc-getCC)"
 
 		# dbus paths
-		--with-dbuspolicydir="${EPREFIX}/etc/dbus-1/system.d"
 		--with-dbussessionservicedir="${EPREFIX}/usr/share/dbus-1/services"
 		--with-dbussystemservicedir="${EPREFIX}/usr/share/dbus-1/system-services"
 
-		--with-ntp-servers="0.gentoo.pool.ntp.org 1.gentoo.pool.ntp.org 2.gentoo.pool.ntp.org 3.gentoo.pool.ntp.org"
+		--with-ntp-servers="0.coreos.pool.ntp.org 1.coreos.pool.ntp.org 2.coreos.pool.ntp.org 3.coreos.pool.ntp.org"
+
+		--with-pamconfdir=/usr/share/pam.d
+
+		# The CoreOS epoch, Mon Jul  1 00:00:00 UTC 2013. Used by timesyncd
+		# as a sanity check for the minimum acceptable time. Explicitly set
+		# to avoid using the current build time.
+		--with-time-epoch=1372636800
+
+		# no default name servers
+		--with-dns-servers=
+
+		# Breaks Docker
+		--with-default-hierarchy=legacy
 
 		# Breaks screen, tmux, etc.
 		--without-kill-user-processes
@@ -322,19 +331,18 @@ multilib_src_install() {
 }
 
 multilib_src_install_all() {
+	local unitdir=$(systemd_get_systemunitdir)
+
 	prune_libtool_files --modules
 	einstalldocs
-	dodoc "${FILESDIR}"/nsswitch.conf
-
-	if [[ ${PV} != 9999 ]]; then
-		use doc || doman "${WORKDIR}"/man/systemd.{directives,index}.7
-	fi
 
 	if use sysv-utils; then
+		local prefix
+		use symlink-usr && prefix=/usr
 		for app in halt poweroff reboot runlevel shutdown telinit; do
-			dosym "..${ROOTPREFIX-/usr}/bin/systemctl" /sbin/${app}
+			dosym "${ROOTPREFIX-/usr}/bin/systemctl" ${prefix}/sbin/${app}
 		done
-		dosym "..${ROOTPREFIX-/usr}/lib/systemd/systemd" /sbin/init
+		dosym "${ROOTPREFIX-/usr}/lib/systemd/systemd" ${prefix}/sbin/init
 	else
 		# we just keep sysvinit tools, so no need for the mans
 		rm "${D}"/usr/share/man/man8/{halt,poweroff,reboot,runlevel,shutdown,telinit}.8 \
@@ -342,21 +350,72 @@ multilib_src_install_all() {
 		rm "${D}"/usr/share/man/man1/init.1 || die
 	fi
 
-	# Preserve empty dirs in /etc & /var, bug #437008
-	keepdir /etc/binfmt.d /etc/modules-load.d /etc/tmpfiles.d \
-		/etc/systemd/ntp-units.d /etc/systemd/user /var/lib/systemd \
-		/var/log/journal/remote
+	# Ensure journal directory has correct ownership/mode in inital image.
+	# This is fixed by systemd-tmpfiles *but* journald starts before that
+	# and will create the journal if the filesystem is already read-write.
+	# Conveniently the systemd Makefile sets this up completely wrong.
+	dodir /var/log/journal
+	fowners root:systemd-journal /var/log/journal
+	fperms 2755 /var/log/journal
 
-	# Symlink /etc/sysctl.conf for easy migration.
-	dosym ../sysctl.conf /etc/sysctl.d/99-sysctl.conf
+	systemd_dotmpfilesd "${FILESDIR}"/systemd-coreos.conf
+	systemd_dotmpfilesd "${FILESDIR}"/systemd-resolv.conf
 
-	# If we install these symlinks, there is no way for the sysadmin to remove them
-	# permanently.
-	rm "${D}"/etc/systemd/system/multi-user.target.wants/systemd-networkd.service || die
-	rm -f "${D}"/etc/systemd/system/multi-user.target.wants/systemd-resolved.service || die
-	rm -r "${D}"/etc/systemd/system/network-online.target.wants || die
-	rm -r "${D}"/etc/systemd/system/sockets.target.wants || die
-	rm -r "${D}"/etc/systemd/system/sysinit.target.wants || die
+	# Path masking and FEATURES aren't catching this
+	use doc || rm -r "${D}${ROOTPREFIX-/usr}/share/man"
+
+	# Don't default to graphical.target
+	rm "${D}${unitdir}"/default.target || die
+	dosym multi-user.target "${unitdir}"/default.target
+
+	# Don't set any extra environment variables by default
+	rm "${D}${ROOTPREFIX-/usr}/lib/environment.d/99-environment.conf" || die
+
+	# Don't install the compatibility policy rules in /var  (Fixed: @37377227)
+	rm "${D}"/var/lib/polkit-1/localauthority/10-vendor.d/systemd-networkd.pkla
+	rmdir "${D}"/var/lib/polkit-1{/localauthority{/10-vendor.d,},}
+
+	# Move a few services enabled in /etc to /usr, delete files individually
+	# so builds fail if systemd adds any new unexpected stuff to /etc
+	local f
+	for f in \
+		getty.target.wants/getty@tty1.service \
+		multi-user.target.wants/machines.target \
+		multi-user.target.wants/remote-fs.target \
+		multi-user.target.wants/systemd-networkd.service \
+		multi-user.target.wants/systemd-resolved.service \
+		network-online.target.wants/systemd-networkd-wait-online.service \
+		sockets.target.wants/systemd-networkd.socket \
+		sysinit.target.wants/systemd-timesyncd.service
+	do
+		local s="${f#*/}" t="${f%/*}"
+		local u="${s/@*.service/@.service}"
+
+		# systemd_enable_service doesn't understand template units
+		einfo "Enabling ${s} via ${t}"
+		dodir "${unitdir}/${t}"
+		dosym "../${u}" "${unitdir}/${t}/${s}"
+
+		rm "${D}/etc/systemd/system/${f}" || die
+	done
+	f=dbus-org.freedesktop.resolve1.service
+	rm "${D}/etc/systemd/system/${f}" || die
+	dosym systemd-resolved.service "${unitdir}/${f}"
+	rmdir "${D}"/etc/systemd/system/*.wants || die
+
+	# Do not enable random services if /etc was detected as empty!!!
+	rm "${D}"/usr/lib/systemd/system-preset/90-systemd.preset
+	insinto /usr/lib/systemd/system-preset
+	doins "${FILESDIR}"/99-default.preset
+
+	# Disable the "First Boot Wizard" by default, it isn't very applicable to CoreOS
+	rm "${D}${unitdir}"/sysinit.target.wants/systemd-firstboot.service
+
+	# Do not ship distro-specific files (nsswitch.conf pam.d)
+	rm -rf "${D}"/usr/share/factory
+	sed -i "${D}"/usr/lib/tmpfiles.d/etc.conf \
+		-e '/^C \/etc\/nsswitch\.conf/d' \
+		-e '/^C \/etc\/pam\.d/d'
 }
 
 migrate_locale() {
@@ -411,7 +470,6 @@ pkg_postinst() {
 
 	enewgroup input
 	enewgroup systemd-journal
-	newusergroup systemd-bus-proxy
 	newusergroup systemd-coredump
 	newusergroup systemd-journal-gateway
 	newusergroup systemd-journal-remote
@@ -439,11 +497,6 @@ pkg_postinst() {
 		eerror "for errors. You may need to clean up your system and/or try installing"
 		eerror "systemd again."
 		eerror
-	fi
-
-	if [[ $(readlink "${ROOT}"etc/resolv.conf) == */run/systemd/* ]]; then
-		ewarn "You should replace the resolv.conf symlink:"
-		ewarn "ln -snf ${ROOTPREFIX-/usr}/lib/systemd/resolv.conf ${ROOT}etc/resolv.conf"
 	fi
 }
 
