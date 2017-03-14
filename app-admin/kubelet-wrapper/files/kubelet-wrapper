@@ -54,7 +54,6 @@ fi
 mkdir --parents /etc/kubernetes
 mkdir --parents /var/lib/docker
 mkdir --parents /var/lib/kubelet
-mkdir --parents /var/log/containers
 mkdir --parents /run/kubelet
 
 RKT="${RKT:-/usr/bin/rkt}"
@@ -68,7 +67,7 @@ exec ${RKT} ${RKT_GLOBAL_ARGS} \
 	--volume usr-share-certs,kind=host,source=/usr/share/ca-certificates,readOnly=true \
 	--volume var-lib-docker,kind=host,source=/var/lib/docker,readOnly=false \
 	--volume var-lib-kubelet,kind=host,source=/var/lib/kubelet,readOnly=false \
-	--volume var-log-containers,kind=host,source=/var/log/containers,readOnly=false \
+	--volume var-log,kind=host,source=/var/log,readOnly=false \
 	--volume os-release,kind=host,source=/usr/lib/os-release,readOnly=true \
 	--volume run,kind=host,source=/run,readOnly=false \
 	--mount volume=etc-kubernetes,target=/etc/kubernetes \
@@ -76,7 +75,7 @@ exec ${RKT} ${RKT_GLOBAL_ARGS} \
 	--mount volume=usr-share-certs,target=/usr/share/ca-certificates \
 	--mount volume=var-lib-docker,target=/var/lib/docker \
 	--mount volume=var-lib-kubelet,target=/var/lib/kubelet \
-	--mount volume=var-log-containers,target=/var/log/containers \
+	--mount volume=var-log,target=/var/log \
 	--mount volume=os-release,target=/etc/os-release \
 	--mount volume=run,target=/run \
 	${RKT_STAGE1_ARG} \
