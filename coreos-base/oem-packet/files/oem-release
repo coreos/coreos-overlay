@@ -1,0 +1,5 @@
+ID=packet
+VERSION_ID=@@OEM_VERSION_ID@@
+NAME="Packet"
+HOME_URL="https://packet.net"
+BUG_REPORT_URL="https://issues.coreos.com"
