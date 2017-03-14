@@ -102,3 +102,6 @@ dev-util/checkbashisms
 
 # xfsprogs 4.5.0 has install conflicts, and versions in between fail to link
 =sys-fs/xfsprogs-4.9.0 **
+
+# systemd v233 requires libseccomp 2.3.1
+=sys-libs/libseccomp-2.3.1 **

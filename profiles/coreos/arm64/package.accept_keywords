@@ -41,7 +41,6 @@
 =sys-devel/bison-3.0.4-r1 ~arm64
 =sys-fs/cryptsetup-1.7.2 **
 =sys-fs/lsscsi-0.28 **
-=sys-fs/lvm2-2.02.145-r2 ~arm64
 =sys-fs/mdadm-3.4 **
 =sys-fs/quota-4.02 **
 =sys-fs/squashfs-tools-4.3-r2 ~arm64
