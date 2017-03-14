@@ -19,6 +19,7 @@ media-libs/gd           png
 media-libs/libmtp       -crypt
 # We don't want any driver/hw rendering on the host
 media-sound/alsa-utils	-libsamplerate minimal
+net-misc/iputils	arping traceroute
 sci-geosciences/gpsd	-cxx
 sys-devel/gettext	-git
 app-emulation/qemu	aio caps curl jpeg ncurses png python seccomp threads uuid vhost-net virtfs vnc xattr qemu_softmmu_targets_x86_64
