@@ -4,7 +4,7 @@
 
 EAPI="5"
 
-inherit eutils flag-o-matic toolchain-funcs multilib multilib-minimal
+inherit eutils flag-o-matic toolchain-funcs multilib multilib-minimal systemd
 
 MY_P=${P/_/-}
 DESCRIPTION="full-strength general purpose cryptography library (including SSL and TLS)"
@@ -212,11 +212,6 @@ multilib_src_install_all() {
 	# twice; once with shared lib support enabled and once without.
 	use static-libs || rm -f "${ED}"/usr/lib*/lib*.a
 
-	# create the certs directory
-	dodir ${SSL_CNF_DIR}/certs
-	cp -RP certs/* "${ED}"${SSL_CNF_DIR}/certs/ || die
-	rm -r "${ED}"${SSL_CNF_DIR}/certs/{demo,expired}
-
 	# Namespace openssl programs to prevent conflicts with other man pages
 	cd "${ED}"/usr/share/man
 	local m d s
@@ -242,6 +237,12 @@ multilib_src_install_all() {
 	dodir /etc/sandbox.d #254521
 	echo 'SANDBOX_PREDICT="/dev/crypto"' > "${ED}"/etc/sandbox.d/10openssl
 
-	diropts -m0700
-	keepdir ${SSL_CNF_DIR}/private
+	# Don't keep the sample CA files and their ilk in /etc.
+	rm -r "${ED}"${SSL_CNF_DIR}
+
+	# Save the default openssl.cnf in /usr and link it into place.
+	dodir /usr/share/ssl
+	insinto /usr/share/ssl
+	doins "${S}"/apps/openssl.cnf
+	systemd_dotmpfilesd ${FILESDIR}/openssl.conf
 }
