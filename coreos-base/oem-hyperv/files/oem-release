@@ -1,0 +1,4 @@
+ID=hyperv
+VERSION_ID=@@OEM_VERSION_ID@@
+NAME="Microsoft Hyper-V"
+BUG_REPORT_URL="https://issues.coreos.com"
