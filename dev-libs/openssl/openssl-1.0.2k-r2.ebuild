@@ -244,5 +244,8 @@ multilib_src_install_all() {
 	dodir /usr/share/ssl
 	insinto /usr/share/ssl
 	doins "${S}"/apps/openssl.cnf
-	systemd_dotmpfilesd ${FILESDIR}/openssl.conf
+	systemd_dotmpfilesd "${FILESDIR}"/openssl.conf
+
+	# Package the tmpfiles.d setup for SDK bootstrapping.
+	systemd-tmpfiles --create --root="${ED}" "${FILESDIR}"/openssl.conf
 }
