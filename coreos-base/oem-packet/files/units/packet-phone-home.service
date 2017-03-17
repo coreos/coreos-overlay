@@ -1,0 +1,13 @@
+[Unit]
+Description=Basic setup tasks to initialize the machine.
+ConditionFirstBoot=true
+Requires=coreos-metadata.service
+After=coreos-metadata.service
+
+[Service]
+EnvironmentFile=/run/metadata/coreos
+Type=oneshot
+ExecStart=/usr/bin/curl --request POST "${COREOS_PACKET_PHONE_HOME_URL}"
+
+[Install]
+WantedBy=multi-user.target
