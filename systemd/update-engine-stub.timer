@@ -9,4 +9,4 @@ OnActiveSec=41minutes
 Unit=update-engine-stub.service
 
 [Install]
-WantedBy=default.target
+WantedBy=multi-user.target
