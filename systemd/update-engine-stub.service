@@ -8,4 +8,4 @@ Type=oneshot
 ExecStart=/usr/sbin/update_engine_stub
 
 [Install]
-WantedBy=default.target
+WantedBy=multi-user.target
