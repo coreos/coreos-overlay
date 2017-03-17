@@ -37,12 +37,12 @@ src_prepare() {
 	    -e "s\\@@OEM_NAME@@\\${NAME}\\g" \
 	    -e "s\\@@OEM_VERSION_ID@@\\${PVR}\\g" \
 	    -e "s\\@@OEM_HOME_URL@@\\${HOME_URL}\\g" \
-	    "${FILESDIR}/cloud-config.yml" > "${T}/cloud-config.yml" || die
+	    "${FILESDIR}/oem-release" > "${T}/oem-release" || die
 }
 
 src_install() {
 	insinto "/usr/share/oem"
-	doins "${T}/cloud-config.yml"
+	doins "${T}/oem-release"
 	if use ec2 ; then
 		newins "${FILESDIR}/grub-ec2.cfg" grub.cfg
 	elif use openstack ; then
