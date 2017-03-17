@@ -51,6 +51,6 @@ src_install() {
 	systemd_dounit units/*.path
 	systemd_dounit units/*.service
 	systemd_dounit units/*.target
-	systemd_enable_service default.target system-config.target
-	systemd_enable_service default.target user-config.target
+	systemd_enable_service multi-user.target system-config.target
+	systemd_enable_service multi-user.target user-config.target
 }
