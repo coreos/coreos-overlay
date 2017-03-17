@@ -1,0 +1,5 @@
+ID=vmware
+VERSION_ID=@@OEM_VERSION_ID@@
+NAME="VMware"
+HOME_URL="https://www.vmware.com/"
+BUG_REPORT_URL="https://issues.coreos.com"

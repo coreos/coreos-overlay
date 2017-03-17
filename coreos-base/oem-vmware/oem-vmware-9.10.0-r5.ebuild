@@ -22,11 +22,12 @@ S="${WORKDIR}"
 
 src_prepare() {
 	sed -e "s\\@@OEM_VERSION_ID@@\\${PVR}\\g" \
-		"${FILESDIR}/cloud-config.yml" > "${T}/cloud-config.yml" || die
+		"${FILESDIR}/oem-release" > "${T}/oem-release" || die
 }
 
 src_install() {
 	insinto "/usr/share/oem"
-	doins "${T}/cloud-config.yml"
 	doins "${FILESDIR}/grub.cfg"
+	doins "${T}/oem-release"
+	doins -r "${FILESDIR}/units"
 }
