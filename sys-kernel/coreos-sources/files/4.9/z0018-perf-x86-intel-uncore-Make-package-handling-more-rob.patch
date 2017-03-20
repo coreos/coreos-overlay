@@ -1,7 +1,7 @@
-From c768c2f2907728b8ce5c43718221afcd1353da8b Mon Sep 17 00:00:00 2001
+From 4926886baa1be9bee6c0872538673588e8562b81 Mon Sep 17 00:00:00 2001
 From: Thomas Gleixner <tglx@linutronix.de>
 Date: Tue, 31 Jan 2017 23:58:40 +0100
-Subject: [PATCH 18/19] perf/x86/intel/uncore: Make package handling more
+Subject: [PATCH 18/18] perf/x86/intel/uncore: Make package handling more
  robust
 
 The package management code in uncore relies on package mapping being

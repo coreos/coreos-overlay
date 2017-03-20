@@ -1,7 +1,7 @@
-From 463b9d55d967de5900c5097bc99c34f4207a85a9 Mon Sep 17 00:00:00 2001
+From d96d7de8baec200cb4837127a91cd12180c31273 Mon Sep 17 00:00:00 2001
 From: Thomas Gleixner <tglx@linutronix.de>
 Date: Tue, 31 Jan 2017 23:58:38 +0100
-Subject: [PATCH 17/19] perf/x86/intel/rapl: Make package handling more robust
+Subject: [PATCH 17/18] perf/x86/intel/rapl: Make package handling more robust
 
 The package management code in RAPL relies on package mapping being
 available before a CPU is started. This changed with:
