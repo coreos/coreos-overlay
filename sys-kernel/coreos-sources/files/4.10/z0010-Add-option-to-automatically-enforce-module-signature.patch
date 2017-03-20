@@ -1,4 +1,4 @@
-From ed8ec0c970a5286f458976a736248c5401c8e7c2 Mon Sep 17 00:00:00 2001
+From 82c969da1e430f362b44bae864bf2da8e2d3b503 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Fri, 9 Aug 2013 18:36:30 -0400
 Subject: [PATCH 10/16] Add option to automatically enforce module signatures
@@ -163,10 +163,10 @@ index da4bd57..25d88bb 100644
  
  extern int modules_disabled; /* for sysctl */
 diff --git a/kernel/module.c b/kernel/module.c
-index 9a565d5..421ee82 100644
+index 3161532..19fe883 100644
 --- a/kernel/module.c
 +++ b/kernel/module.c
-@@ -4300,6 +4300,13 @@ void module_layout(struct module *mod,
+@@ -4301,6 +4301,13 @@ void module_layout(struct module *mod,
  EXPORT_SYMBOL(module_layout);
  #endif
  
