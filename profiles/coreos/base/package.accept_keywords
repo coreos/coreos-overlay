@@ -105,3 +105,6 @@ dev-util/checkbashisms
 
 # systemd v233 requires libseccomp 2.3.1
 =sys-libs/libseccomp-2.3.1 **
+
+# perl 5.22.3-rc4 is stable and secure, but RCs break cross-compiling
+=dev-lang/perl-5.22.3 **
