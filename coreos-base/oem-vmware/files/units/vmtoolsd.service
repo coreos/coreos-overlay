@@ -1,6 +1,6 @@
 [Unit]
 Description=VMware Tools Agent
-Documentation=http://open-vm-tools.sourceforge.net/
+Documentation=https://github.com/vmware/open-vm-tools
 ConditionVirtualization=vmware
 
 [Service]
