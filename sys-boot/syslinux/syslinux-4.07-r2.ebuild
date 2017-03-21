@@ -20,7 +20,7 @@ RDEPEND="sys-apps/util-linux
 		perl? (
 			dev-lang/perl
 			dev-perl/Crypt-PasswdMD5
-			dev-perl/Digest-SHA1
+			virtual/perl-Digest-SHA
 		)"
 DEPEND="${RDEPEND}
 	dev-lang/nasm
