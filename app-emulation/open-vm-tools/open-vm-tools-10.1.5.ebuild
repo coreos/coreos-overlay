@@ -9,10 +9,10 @@ AUTOTOOLS_IN_SOURCE_BUILD=1
 inherit autotools-utils flag-o-matic git-2 multilib toolchain-funcs
 
 DESCRIPTION="VMware tools for distribution via /usr/share/oem"
-HOMEPAGE="http://open-vm-tools.sourceforge.net/"
+HOMEPAGE="https://github.com/vmware/open-vm-tools"
 
 EGIT_REPO_URI="https://github.com/vmware/open-vm-tools"
-EGIT_COMMIT="0696234c3905bf91cfba2cf909dbf92fc30ee6fc"
+EGIT_COMMIT="854c0bb374612f7e633b448ca273f970f154458b"
 EGIT_SOURCEDIR="${WORKDIR}"
 
 LICENSE="LGPL-2"
@@ -36,7 +36,7 @@ RDEPEND="dnet? ( dev-libs/libdnet )
 S="${WORKDIR}/${PN}"
 
 PATCHES=(
-	"${FILESDIR}/${P}-0001-configure-Add-options-for-fuse-and-hgfs.patch"
+	"${FILESDIR}/${P}-0001-configure-Add-options-for-fuse-hgfs-and-udev.patch"
 )
 
 #pkg_setup() {
@@ -93,6 +93,7 @@ src_configure() {
 		--without-icu
 		--without-kernel-modules
 		--without-pam
+		--without-udev-rules
 		--without-x
 		--disable-vgauth
 		$(use_with dnet)
@@ -107,7 +108,8 @@ src_configure() {
 }
 
 src_install() {
-	# Relocate event scripts, a symlink will be created by cloudinit.
+	# Relocate event scripts, a symlink will be created by the systemd
+	# unit.
 	emake DESTDIR="${D}" confdir=/usr/share/oem/vmware-tools install
 
 	rm "${D}"/etc/pam.d/vmtoolsd

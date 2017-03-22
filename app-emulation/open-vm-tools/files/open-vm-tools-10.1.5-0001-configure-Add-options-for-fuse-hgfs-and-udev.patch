@@ -1,0 +1,68 @@
+From 8e133dc233f420c8b19f01ff275d7fb4ff9e36ff Mon Sep 17 00:00:00 2001
+From: Benjamin Gilbert <benjamin.gilbert@coreos.com>
+Date: Tue, 21 Mar 2017 16:04:30 -0700
+Subject: [PATCH] configure: Add options for fuse, hgfs, and udev
+
+---
+ open-vm-tools/configure.ac | 24 +++++++++++++++++++++++-
+ 1 file changed, 23 insertions(+), 1 deletion(-)
+
+diff --git a/open-vm-tools/configure.ac b/open-vm-tools/configure.ac
+index 20370ae..578894b 100644
+--- a/open-vm-tools/configure.ac
++++ b/open-vm-tools/configure.ac
+@@ -393,6 +393,13 @@ fi
+ #
+ # Check for fuse.
+ #
++AC_ARG_WITH([fuse],
++   [AS_HELP_STRING([--without-fuse],
++   [compiles without fuse support.])],
++   [],
++   [with_fuse=yes])
++
++if test "$with_fuse" = "yes"; then
+ AC_VMW_CHECK_LIB([fuse],
+                  [FUSE],
+                  [fuse],
+@@ -403,6 +410,7 @@ AC_VMW_CHECK_LIB([fuse],
+                  [have_fuse=yes],
+                  [have_fuse=no;
+                   AC_MSG_WARN([Fuse is missing, vmblock-fuse/vmhgfs-fuse will be disabled.])])
++fi
+ 
+ #
+ # Check for PAM.
+@@ -1332,7 +1340,13 @@ if test "$os" = "solaris"; then
+    fi
+ fi
+ 
+-if test "$os" = "linux"; then
++AC_ARG_WITH([udev-rules],
++   [AS_HELP_STRING([--without-udev-rules],
++   [don't install udev rules])],
++   [],
++   [with_udev_rules=yes])
++
++if test "$os" = "linux" -a "$with_udev_rules" = "yes"; then
+     have_udev="yes"
+     AC_ARG_WITH([udev-rules-dir],
+                 [AS_HELP_STRING([--with-udev-rules-dir=DIR],
+@@ -1352,6 +1366,14 @@ else
+     UDEVRULESDIR=""
+ fi
+ 
++if test "$buildHgfsmounter" = "yes"; then
++    AC_ARG_ENABLE([hgfs-mounter],
++                  [AS_HELP_STRING([--disable-hgfs-mounter],
++                                  [disables mount.vmhgfs])],
++                  [buildHgfsmounter="$enableval"],
++                  [])
++fi
++
+ AM_CONDITIONAL(BUILD_HGFSMOUNTER, test "$buildHgfsmounter" = "yes")
+ AM_CONDITIONAL(LINUX, test "$os" = "linux")
+ AM_CONDITIONAL(SOLARIS, test "$os" = "solaris")
+-- 
+2.9.3
+
