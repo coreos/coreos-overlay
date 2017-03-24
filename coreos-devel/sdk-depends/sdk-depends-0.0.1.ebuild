@@ -28,7 +28,6 @@ DEPEND="
 	coreos-devel/kola-data
 	dev-libs/gobject-introspection
 	dev-libs/nss
-	dev-perl/Capture-Tiny
 	dev-python/setuptools
 	dev-util/boost-build
 	dev-util/checkbashisms

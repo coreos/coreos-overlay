@@ -9,3 +9,6 @@ dev-lang/yasm python
 
 # not needed, requires dev-lang/python-exec
 sys-apps/util-linux python
+
+# not needed, requires lots of Perl
+sys-boot/syslinux perl

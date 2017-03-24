@@ -49,7 +49,6 @@ COMMON_DEPEND="sys-apps/acl
 		tpm? ( app-crypt/trousers )"
 DEPEND="app-arch/cpio
 	sys-fs/squashfs-tools
-	dev-perl/Capture-Tiny
 	rkt_stage1_src? (
 		>=sys-apps/systemd-222
 		app-shells/bash
