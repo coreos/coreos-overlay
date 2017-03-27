@@ -1,4 +1,4 @@
-From 9b1968abf672666c280f169ab647045126e9b0eb Mon Sep 17 00:00:00 2001
+From b2abd80b69de4ea94e7d003a13160df562392c3a Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Fri, 9 Aug 2013 17:58:15 -0400
 Subject: [PATCH 01/16] Add secure_modules() call
@@ -41,10 +41,10 @@ index cc7cba2..da4bd57 100644
  
  #ifdef CONFIG_SYSFS
 diff --git a/kernel/module.c b/kernel/module.c
-index 3d8f126..9a565d5 100644
+index 1cd2bf3..3161532 100644
 --- a/kernel/module.c
 +++ b/kernel/module.c
-@@ -4299,3 +4299,13 @@ void module_layout(struct module *mod,
+@@ -4300,3 +4300,13 @@ void module_layout(struct module *mod,
  }
  EXPORT_SYMBOL(module_layout);
  #endif
