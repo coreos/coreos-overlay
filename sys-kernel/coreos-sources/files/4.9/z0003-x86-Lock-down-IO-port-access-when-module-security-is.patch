@@ -1,7 +1,7 @@
 From 34183c12cacd1f69819a85c1713df9d3f3caa987 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Thu, 8 Mar 2012 10:35:59 -0500
-Subject: [PATCH 03/18] x86: Lock down IO port access when module security is
+Subject: [PATCH 03/20] x86: Lock down IO port access when module security is
  enabled
 
 IO port access would permit users to gain access to PCI configuration
@@ -68,5 +68,5 @@ index 6d9cc2d..a6eca51 100644
  		return -EFAULT;
  	while (count-- > 0 && i < 65536) {
 -- 
-2.7.4
+2.9.3
 

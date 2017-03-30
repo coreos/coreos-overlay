@@ -1,7 +1,7 @@
 From 4926886baa1be9bee6c0872538673588e8562b81 Mon Sep 17 00:00:00 2001
 From: Thomas Gleixner <tglx@linutronix.de>
 Date: Tue, 31 Jan 2017 23:58:40 +0100
-Subject: [PATCH 18/18] perf/x86/intel/uncore: Make package handling more
+Subject: [PATCH 18/20] perf/x86/intel/uncore: Make package handling more
  robust
 
 The package management code in uncore relies on package mapping being
@@ -305,5 +305,5 @@ index 965cc56..ce83119 100644
  	CPUHP_AP_PERF_X86_STARTING,
  	CPUHP_AP_PERF_X86_AMD_IBS_STARTING,
 -- 
-2.7.4
+2.9.3
 

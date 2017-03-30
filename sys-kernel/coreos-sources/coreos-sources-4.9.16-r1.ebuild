@@ -40,4 +40,6 @@ UNIPATCH_LIST="
 	${PATCH_DIR}/z0016-selinux-allow-context-mounts-on-tmpfs-ramfs-devpts-w.patch \
 	${PATCH_DIR}/z0017-perf-x86-intel-rapl-Make-package-handling-more-robus.patch \
 	${PATCH_DIR}/z0018-perf-x86-intel-uncore-Make-package-handling-more-rob.patch \
+	${PATCH_DIR}/z0019-xfrm_user-validate-XFRM_MSG_NEWAE-XFRMA_REPLAY_ESN_V.patch \
+	${PATCH_DIR}/z0020-xfrm_user-validate-XFRM_MSG_NEWAE-incoming-ESN-size-.patch \
 "
