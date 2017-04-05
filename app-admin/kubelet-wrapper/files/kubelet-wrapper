@@ -66,7 +66,7 @@ exec ${RKT} ${RKT_GLOBAL_ARGS} \
 	--volume etc-ssl-certs,kind=host,source=/etc/ssl/certs,readOnly=true \
 	--volume usr-share-certs,kind=host,source=/usr/share/ca-certificates,readOnly=true \
 	--volume var-lib-docker,kind=host,source=/var/lib/docker,readOnly=false \
-	--volume var-lib-kubelet,kind=host,source=/var/lib/kubelet,readOnly=false \
+	--volume var-lib-kubelet,kind=host,source=/var/lib/kubelet,readOnly=false,recursive=true \
 	--volume os-release,kind=host,source=/usr/lib/os-release,readOnly=true \
 	--volume run,kind=host,source=/run,readOnly=false \
 	--mount volume=etc-kubernetes,target=/etc/kubernetes \
