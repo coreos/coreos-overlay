@@ -10,7 +10,7 @@ COREOS_GO_PACKAGE="github.com/coreos/mantle"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64"
 else
-	CROS_WORKON_COMMIT="d59dfec8129d5e1ef2a18fe1add98cb5b08a1903" # v0.3.2
+	CROS_WORKON_COMMIT="7fa7d0d53cb73d6a545ef33bd79f491dcf33c6a7" # v0.4.0
 	KEYWORDS="amd64 arm64"
 fi
 
@@ -33,7 +33,7 @@ src_compile() {
 		GO_LDFLAGS="-X ${COREOS_GO_PACKAGE}/version.Version=${PV}"
 	fi
 
-	for cmd in cork kola ore plume; do
+	for cmd in cork gangue kola ore plume; do
 		go_build "${COREOS_GO_PACKAGE}/cmd/${cmd}"
 	done
 
@@ -48,7 +48,7 @@ src_test() {
 }
 
 src_install() {
-	for cmd in cork kola ore plume; do
+	for cmd in cork gangue kola ore plume; do
 		dobin "${GOBIN}"/"${cmd}"
 	done
 
