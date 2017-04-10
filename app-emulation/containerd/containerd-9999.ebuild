@@ -17,7 +17,7 @@ else
 	# tagged version.
 	# e.g.  git log ${base_version}..${EGIT_COMMIT} --oneline | wc -l
 	# Note: 0.2.3 in the docker-1.13.x branch is not tagged, use 973f21f
-	EGIT_COMMIT="aa8187dbd3b7ad67d8e5e3a15115d3eef43a7ed1"
+	EGIT_COMMIT="422e31ce907fd9c3833a38d7b8fdd023e5a76e73"
 	SRC_URI="https://${GITHUB_URI}/archive/${EGIT_COMMIT}.tar.gz -> ${P}.tar.gz"
 	KEYWORDS="amd64 arm64"
 	inherit vcs-snapshot

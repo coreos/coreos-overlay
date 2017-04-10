@@ -66,7 +66,7 @@ RDEPEND="
 	>=app-arch/xz-utils-4.9
 	>=sys-apps/shadow-4.4
 
-	=app-emulation/containerd-0.2.3_p85-r1[seccomp?]
+	=app-emulation/containerd-0.2.3_p109[seccomp?]
 	=app-emulation/runc-1.0.0_rc2_p133[apparmor?,seccomp?]
 	app-emulation/docker-proxy
 "
