@@ -15,7 +15,7 @@ COREOS_GO_VERSION="go1.6"
 # The patch version is arbitrarily the number of commits since the tag version
 # spcified in the ebuild name. For example:
 # $ git log v1.0.0-rc2..${COMMIT_ID} --oneline | wc -l
-COMMIT_ID="9df8b306d01f59d3a8029be411de015b7304dd8f"
+COMMIT_ID="9c2d8d184e5da67c95d601382adf14862e4f2228"
 
 inherit eutils flag-o-matic coreos-go-depend vcs-snapshot
 
