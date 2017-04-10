@@ -27,7 +27,7 @@ SLOT="0"
 IUSE="apparmor aufs +btrfs contrib +device-mapper experimental +overlay seccomp
 	+selinux vim-syntax zsh-completion +journald"
 
-# https://github.com/docker/docker/blob/master/hack/PACKAGERS.md#build-dependencies
+# https://github.com/docker/docker/blob/v17.04.0-ce/project/PACKAGERS.md#build-dependencies
 CDEPEND="
 	>=dev-db/sqlite-3.7.9:3
 	device-mapper? (
