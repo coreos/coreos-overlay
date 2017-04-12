@@ -1,0 +1,12 @@
+AC_INIT([tini], [0.1])
+AC_PROG_CC
+
+AM_INIT_AUTOMAKE([])
+
+AC_SUBST(tini_VERSION_MAJOR)
+AC_SUBST(tini_VERSION_MINOR)
+AC_SUBST(tini_VERSION_PATCH)
+AC_SUBST(tini_VERSION_GIT)
+
+AC_CONFIG_FILES([Makefile src/Makefile src/tiniConfig.h tpl/VERSION])
+AC_OUTPUT
