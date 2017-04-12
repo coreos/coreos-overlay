@@ -124,7 +124,6 @@ RDEPEND="${RDEPEND}
 	coreos-base/coreos-cloudinit
 	coreos-base/coreos-init
 	coreos-base/coreos-metadata
-	coreos-base/coretest
 	coreos-base/update_engine
 	dev-util/strace
 	dev-vcs/git
