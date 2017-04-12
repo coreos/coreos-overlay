@@ -13,7 +13,7 @@ if [[ ${PV} == *9999 ]]; then
 	DOCKER_GITCOMMIT="unknown"
 	KEYWORDS="~amd64 ~arm64"
 else
-	CROS_WORKON_COMMIT="092cba3727bb9b4a2f0e922cd6c0f93ea270e363" # coreos-1.13.1
+	CROS_WORKON_COMMIT="4845c567eb35d68f35b0b1713a09b0c8d47fe67e" # coreos-17.04.0-ce
 	DOCKER_GITCOMMIT="${CROS_WORKON_COMMIT:0:7}"
 	KEYWORDS="amd64 arm64"
 fi
@@ -27,7 +27,7 @@ SLOT="0"
 IUSE="apparmor aufs +btrfs contrib +device-mapper experimental +overlay seccomp
 	+selinux vim-syntax zsh-completion +journald"
 
-# https://github.com/docker/docker/blob/master/hack/PACKAGERS.md#build-dependencies
+# https://github.com/docker/docker/blob/v17.04.0-ce/project/PACKAGERS.md#build-dependencies
 CDEPEND="
 	>=dev-db/sqlite-3.7.9:3
 	device-mapper? (
@@ -66,8 +66,8 @@ RDEPEND="
 	>=app-arch/xz-utils-4.9
 	>=sys-apps/shadow-4.4
 
-	=app-emulation/containerd-0.2.3_p85-r1[seccomp?]
-	=app-emulation/runc-1.0.0_rc2_p133[apparmor?,seccomp?]
+	=app-emulation/containerd-0.2.3_p109[seccomp?]
+	=app-emulation/runc-1.0.0_rc2_p137[apparmor?,seccomp?]
 	app-emulation/docker-proxy
 "
 
