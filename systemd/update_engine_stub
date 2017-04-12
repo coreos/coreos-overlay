@@ -55,4 +55,4 @@ BODY="<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 
 echo Request: "${BODY}"
 
-curl -H "text/xml" -X POST -d "${BODY}" "${SERVER}"
+curl -H "Content-Type: text/xml" -X POST -d "${BODY}" "${SERVER}"
