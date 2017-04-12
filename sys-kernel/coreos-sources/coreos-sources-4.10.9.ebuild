@@ -36,6 +36,4 @@ UNIPATCH_LIST="
 	${PATCH_DIR}/z0014-kbuild-derive-relative-path-for-KBUILD_SRC-from-CURD.patch \
 	${PATCH_DIR}/z0015-Add-arm64-coreos-verity-hash.patch \
 	${PATCH_DIR}/z0016-selinux-allow-context-mounts-on-tmpfs-ramfs-devpts-w.patch \
-	${PATCH_DIR}/z0017-xfrm_user-validate-XFRM_MSG_NEWAE-XFRMA_REPLAY_ESN_V.patch \
-	${PATCH_DIR}/z0018-xfrm_user-validate-XFRM_MSG_NEWAE-incoming-ESN-size-.patch \
 "

@@ -1,7 +1,7 @@
-From b2abd80b69de4ea94e7d003a13160df562392c3a Mon Sep 17 00:00:00 2001
+From 25483d5582a84e12b9549c2723bbf6ca20b380cf Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Fri, 9 Aug 2013 17:58:15 -0400
-Subject: [PATCH 01/18] Add secure_modules() call
+Subject: [PATCH 01/16] Add secure_modules() call
 
 Provide a single call to allow kernel code to determine whether the system
 has been configured to either disable module loading entirely or to load

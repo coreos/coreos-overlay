@@ -1,7 +1,7 @@
-From 5359936a69b86d5fc0893eeac402f39db3d1364a Mon Sep 17 00:00:00 2001
+From e5ad175adb56e386dc53e82084116a3f086006c1 Mon Sep 17 00:00:00 2001
 From: Josh Boyer <jwboyer@redhat.com>
 Date: Mon, 25 Jun 2012 19:57:30 -0400
-Subject: [PATCH 07/18] acpi: Ignore acpi_rsdp kernel parameter when module
+Subject: [PATCH 07/16] acpi: Ignore acpi_rsdp kernel parameter when module
  loading is restricted
 
 This option allows userspace to pass the RSDP address to the kernel, which
