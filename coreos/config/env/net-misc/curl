@@ -1,0 +1,6 @@
+# Since curl now builds static libraries, there are linking failures due to the
+# lack of -fPIC when building under src/ .  The project is actually configured
+# to use -fPIC when the compiler is wrapped by libtool, but that only happens
+# under lib/ and not src/ .
+CFLAGS="${CFLAGS} -fPIC"
+CXXFLAGS="${CXXFLAGS} -fPIC"
