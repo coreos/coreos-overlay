@@ -16,7 +16,7 @@ DESCRIPTION="Portage is the package management and distribution system for Gento
 HOMEPAGE="https://wiki.gentoo.org/wiki/Project:Portage"
 
 LICENSE="GPL-2"
-KEYWORDS="alpha amd64 arm ~arm64 hppa ia64 ~m68k ~mips ppc ppc64 ~s390 ~sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
+KEYWORDS="alpha amd64 arm arm64 hppa ia64 ~m68k ~mips ppc ppc64 ~s390 ~sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
 SLOT="0"
 IUSE="build doc epydoc +ipc linguas_ru +native-extensions selinux xattr"
 
@@ -78,12 +78,24 @@ TARBALL_PV=${PV}
 SRC_URI="mirror://gentoo/${PN}-${TARBALL_PV}.tar.bz2
 	$(prefix_src_archives ${PN}-${TARBALL_PV}.tar.bz2)"
 
+PATCHES=(
+	# upstream bug: https://bugs.gentoo.org/507284
+	"${FILESDIR}/${PN}-2.3.8-0001-portage-repository-config.py-add-disabled-attribute-.patch"
+	# upstream bug: https://bugs.gentoo.org/490014
+	"${FILESDIR}/${PN}-2.2.18-0002-environment-Filter-EROOT-for-all-EAPIs.patch"
+	# upstream bug:
+	"${FILESDIR}/${PN}-2.2.18-0003-depgraph-ensure-slot-rebuilds-happen-in-the-correct-.patch"
+)
+
 pkg_setup() {
 	use epydoc && DISTUTILS_ALL_SUBPHASE_IMPLS=( python2.7 )
 }
 
 python_prepare_all() {
 	distutils-r1_python_prepare_all
+
+	# CoreOS does not use the gentoo repo, silence oodles of errors about it:
+	echo "# no defaults, configuration is in /etc" > cnf/repos.conf
 
 	if use native-extensions; then
 		printf "[build_ext]\nportage-ext-modules=true\n" >> \
