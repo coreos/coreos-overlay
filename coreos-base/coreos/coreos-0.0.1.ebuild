@@ -151,6 +151,7 @@ RDEPEND="${RDEPEND}
 	sys-apps/less
 	sys-apps/lshw
 	sys-apps/net-tools
+	sys-apps/nvme-cli
 	sys-apps/pciutils
 	sys-apps/rng-tools
 	sys-apps/sed
