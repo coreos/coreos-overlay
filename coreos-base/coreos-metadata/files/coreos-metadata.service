@@ -3,7 +3,8 @@ Description=CoreOS Metadata Agent
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/coreos-metadata --cmdline --attributes=/run/metadata/coreos
+Environment=COREOS_METADATA_OPT_PROVIDER=--cmdline
+ExecStart=/usr/bin/coreos-metadata ${COREOS_METADATA_OPT_PROVIDER} --attributes=/run/metadata/coreos
 
 [Install]
 RequiredBy=metadata.target
