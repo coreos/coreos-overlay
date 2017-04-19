@@ -5,6 +5,7 @@
 INSTALL_MASK="${INSTALL_MASK}
   *.a *.la *.hpp *.o
   /etc/sandbox.d
+  /lib*/pkgconfig
   /usr/include
   /usr/lib*/*/include
   /usr/lib/debug
