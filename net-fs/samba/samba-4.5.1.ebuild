@@ -42,7 +42,6 @@ MULTILIB_WRAPPED_HEADERS=(
 # sys-apps/attr is an automagic dependency (see bug #489748)
 CDEPEND="
 	>=app-arch/libarchive-3.1.2[${MULTILIB_USEDEP}]
-	dev-lang/perl:=
 	dev-libs/libaio[${MULTILIB_USEDEP}]
 	dev-libs/libbsd[${MULTILIB_USEDEP}]
 	dev-libs/iniparser:0
@@ -67,6 +66,7 @@ CDEPEND="
 	!system-mitkrb5? ( >=app-crypt/heimdal-1.5[-ssl,${MULTILIB_USEDEP}] )
 	systemd? ( sys-apps/systemd:0= )"
 DEPEND="${CDEPEND}
+	dev-lang/perl:=
 	virtual/pkgconfig"
 RDEPEND="${CDEPEND}
 	client? ( net-fs/cifs-utils[ads?] )
@@ -217,6 +217,8 @@ multilib_src_install() {
 	   rm -rf ${D}/lib*/security
 	   rm -rf ${D}/usr/lib/systemd
 	   rm -rf ${D}/var/
+	   rm -rf ${D}/usr/lib*/perl5
+	   rm -rf ${D}/usr/lib*/python2.7
 	fi
 }
 
