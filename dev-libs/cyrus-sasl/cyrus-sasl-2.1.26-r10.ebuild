@@ -58,6 +58,7 @@ src_prepare() {
 	epatch "${FILESDIR}"/${PN}-2.1.26-canonuser-ldapdb-garbage-in-out-buffer.patch
 	epatch "${FILESDIR}"/${PN}-2.1.26-fix_dovecot_authentication.patch
 	epatch "${FILESDIR}"/${PN}-2.1.26-fix-cross-compiling.patch
+	epatch "${FILESDIR}"/${PN}-2.1.26-fix-cross-compiling-again.patch
 
 	# Get rid of the -R switch (runpath_switch for Sun)
 	# >=gcc-4.6 errors out with unknown option
