@@ -27,6 +27,9 @@ do
         /usr/bin/google_${d}_daemon & daemon_pids+=($!)
 done
 
+# Notify the host that everything is running.
+NOTIFY_SOCKET=/run/systemd/notify /usr/bin/systemd-notify --ready
+
 # Pause while the daemons are running, and stop them all when one dies.
 wait -n "${daemon_pids[@]}" || :
 kill "${daemon_pids[@]}" || :
@@ -48,4 +51,5 @@ session optional pam_permit.so
 EOF
 
 # Don't bundle these paths, since they are useless to us.
+mv usr/lib64/systemd/lib*.so* usr/lib64/
 rm -fr boot etc/* usr/lib64/systemd var/db/pkg
