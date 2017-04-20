@@ -1,10 +1,9 @@
 [Unit]
 Description=GCE Linux Agent
-After=local-fs.target network-online.target network.target
-After=local-fs.target network-online.target network.target
+After=local-fs.target network-online.target
 
 [Service]
-Type=simple
+Type=notify
 Restart=always
 RestartSec=5
 
