@@ -21,6 +21,7 @@ RDEPEND="
 	coreos-base/coreos
 	coreos-base/coreos-experimental
 	coreos-base/gmerge
+	coreos-devel/mantle
 	dev-lang/python
 	dev-util/strace
 	dev-vcs/repo
