@@ -1,0 +1,13 @@
+DEFINED_PHASES=compile configure install postinst prepare pretend setup unpack
+DEPEND==sys-kernel/coreos-sources-4.10.9
+DESCRIPTION=CoreOS Linux kernel modules
+EAPI=5
+HOMEPAGE=http://www.kernel.org
+IUSE=savedconfig
+KEYWORDS=amd64 arm64
+LICENSE=GPL-2 freedist
+RDEPEND=!<sys-kernel/coreos-kernel-4.6.3-r1
+RESTRICT=binchecks strip
+SLOT=0/4.10.9-r1
+_eclasses_=coreos-kernel	a7d8c01479b7bbc753349eaebba79268	eutils	ea170b525f6a38a006be05c9d9429f13	linux-info	af49d8ab3be91bb1d38b7201dc9e5123	multilib	165fc17c38d1b11dac2008280dab6e80	portability	bb1a0ed8ea152b957d17339f01d4d7f5	savedconfig	7de7daa586f6bf361639e77d6f2299db	toolchain-funcs	1b1da0c45c555989dc5d832b54880783	versionator	99ae9d758cbe7cfed19170e7d48f5a9c
+_md5_=504109d46fa628d1af16a2067836873f
