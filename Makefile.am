@@ -8,7 +8,7 @@ check_DATA =
 CLEANFILES = $(BUILT_SOURCES) $(check_DATA)
 EXTRA_DIST =
 
-AM_CPPFLAGS = -I$(srcdir)/src -I$(builddir)/src
+AM_CPPFLAGS = -I$(srcdir)/src -I$(builddir)/src $(GTEST_CPPFLAGS) $(GMOCK_CPPFLAGS)
 AM_CFLAGS = -fno-exceptions \
 	    -fno-strict-aliasing \
 	    -Wall \
@@ -123,7 +123,7 @@ libupdate_engine_a_SOURCES = \
 	src/update_engine/utils.cc
 
 update_engine_unittests_LDADD = libupdate_engine.a \
-				-lgtest -lgmock $(LDADD)
+				$(GTEST_LIBS) $(GMOCK_LIBS) $(LDADD)
 update_engine_unittests_SOURCES = \
 	src/update_engine/testrunner.cc \
 	src/files/file_path_unittest.cc \

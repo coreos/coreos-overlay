@@ -85,6 +85,26 @@ PKG_CHECK_MODULES([DEPS],
                    libxml-2.0
                    protobuf])
 
+AC_CHECK_TOOL([GTEST_CONFIG], [gtest-config], [:])
+AS_IF([test "x${GTEST_CONFIG}" = "x:"],
+      [AC_MSG_ERROR([*** gtest not found])])
+AC_ARG_VAR([GTEST_CPPFLAGS], [CPPFLAGS for compiling with gtest])
+AC_ARG_VAR([GTEST_LIBS], [LIBS for linking with gtest])
+test -n "$GTEST_CPPFLAGS" || GTEST_CPPFLAGS=$($GTEST_CONFIG --cppflags)
+test -n "$GTEST_LIBS" || GTEST_LIBS=$($GTEST_CONFIG --libs)
+AC_SUBST([GTEST_CPPFLAGS])
+AC_SUBST([GTEST_LIBS])
+
+AC_CHECK_TOOL([GMOCK_CONFIG], [gmock-config], [:])
+AS_IF([test "x${GMOCK_CONFIG}" = "x:"],
+      [AC_MSG_ERROR([*** gmock not found])])
+AC_ARG_VAR([GMOCK_CPPFLAGS], [CPPFLAGS for compiling with gmock])
+AC_ARG_VAR([GMOCK_LIBS], [LIBS for linking with gmock])
+test -n "$GMOCK_CPPFLAGS" || GMOCK_CPPFLAGS=$($GMOCK_CONFIG --cppflags)
+test -n "$GMOCK_LIBS" || GMOCK_LIBS=$($GMOCK_CONFIG --libs)
+AC_SUBST([GMOCK_CPPFLAGS])
+AC_SUBST([GMOCK_LIBS])
+
 # Make sure logging can be configured with command line flags. If glog
 # was built with gflags support it will include the gflags header.
 AC_MSG_CHECKING([glog uses gflags])
