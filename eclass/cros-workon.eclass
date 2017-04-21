@@ -11,40 +11,40 @@
 # @ECLASS-VARIABLE: CROS_WORKON_REPO
 # @DESCRIPTION:
 # Git URL which is prefixed to CROS_WORKON_PROJECT
-: ${CROS_WORKON_REPO:=https://chromium.googlesource.com}
+: "${CROS_WORKON_REPO:=https://chromium.googlesource.com}"
 
 # @ECLASS-VARIABLE: CROS_WORKON_PROJECT
 # @DESCRIPTION:
 # Git project name which is suffixed to CROS_WORKON_REPO
-: ${CROS_WORKON_PROJECT:=${PN}}
+: "${CROS_WORKON_PROJECT:=${PN}}"
 
 # @ECLASS-VARIABLE: CROS_WORKON_LOCALDIR
 # @DESCRIPTION:
 # Repo checkout directory which is prefixed to CROS_WORKON_LOCALNAME
 # Generally is either src/third_party or src/platform
-: ${CROS_WORKON_LOCALDIR:=src/third_party}
+: "${CROS_WORKON_LOCALDIR:=src/third_party}"
 
 # @ECLASS-VARIABLE: CROS_WORKON_LOCALNAME
 # @DESCRIPTION:
 # Directory name which is suffixed to CROS_WORKON_LOCALDIR
-: ${CROS_WORKON_LOCALNAME:=${PN}}
+: "${CROS_WORKON_LOCALNAME:=${PN}}"
 
 # @ECLASS-VARIABLE: CROS_WORKON_COMMIT
 # @DESCRIPTION:
 # Git commit to checkout to
-: ${CROS_WORKON_COMMIT:=}
+: "${CROS_WORKON_COMMIT:=}"
 
 # @ECLASS-VARIABLE: CROS_WORKON_TREE
 # @DESCRIPTION:
 # SHA1 of the contents of the repository. This is used for verifying the
 # correctness of prebuilts. Unlike the commit hash, this SHA1 is unaffected
 # by the history of the repository, or by commit messages.
-: ${CROS_WORKON_TREE:=}
+: "${CROS_WORKON_TREE:=}"
 
 # @ECLASS-VARIABLE: CROS_WORKON_SRCROOT
 # @DESCRIPTION:
 # Directory where chrome third party and platform sources are located (formerly CHROMEOS_ROOT)
-: ${CROS_WORKON_SRCROOT:=}
+: "${CROS_WORKON_SRCROOT:=}"
 
 # TODO(marineam): Remove profiling and cros_workon_tree_* use flags.
 # These have never been used in CoreOS.
