@@ -4,7 +4,7 @@ DESCRIPTION=Mantle: Gluing CoreOS together
 EAPI=5
 HOMEPAGE=https://github.com/coreos/mantle
 IUSE=+go_version_go1_8 cros_workon_tree_* profiling
-KEYWORDS=~amd64 ~arm64
+KEYWORDS=amd64 arm64
 LICENSE=Apache-2
 RDEPEND=>=net-dns/dnsmasq-2.72[dhcp,ipv6]
 REQUIRED_USE=go_version_go1_8
