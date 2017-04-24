@@ -1,4 +1,4 @@
-From e447d16529ac075611efff2a5b08a965b89f178a Mon Sep 17 00:00:00 2001
+From 6bc71c742f2f411e934c808682df8c1d390213bc Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Fri, 8 Feb 2013 11:12:13 -0800
 Subject: [PATCH 09/18] x86: Restrict MSR access when module loading is
@@ -15,10 +15,10 @@ Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
  1 file changed, 7 insertions(+)
 
 diff --git a/arch/x86/kernel/msr.c b/arch/x86/kernel/msr.c
-index ef68880..74937d9 100644
+index 7f3550a..963ba40 100644
 --- a/arch/x86/kernel/msr.c
 +++ b/arch/x86/kernel/msr.c
-@@ -84,6 +84,9 @@ static ssize_t msr_write(struct file *file, const char __user *buf,
+@@ -83,6 +83,9 @@ static ssize_t msr_write(struct file *file, const char __user *buf,
  	int err = 0;
  	ssize_t bytes = 0;
  
@@ -28,7 +28,7 @@ index ef68880..74937d9 100644
  	if (count % 8)
  		return -EINVAL;	/* Invalid chunk size */
  
-@@ -131,6 +134,10 @@ static long msr_ioctl(struct file *file, unsigned int ioc, unsigned long arg)
+@@ -130,6 +133,10 @@ static long msr_ioctl(struct file *file, unsigned int ioc, unsigned long arg)
  			err = -EBADF;
  			break;
  		}

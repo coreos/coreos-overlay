@@ -1,4 +1,4 @@
-From ea565b4c32c1078914c2dd9903d2aebf67bab0ee Mon Sep 17 00:00:00 2001
+From 8cc7c3a3fa3777e525b587f6bfa199843bfde412 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Thu, 8 Mar 2012 10:10:38 -0500
 Subject: [PATCH 02/18] PCI: Lock down BAR access when module security is
@@ -18,7 +18,7 @@ Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
  3 files changed, 19 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 0666287..9867e0c 100644
+index bcd10c7..a950301 100644
 --- a/drivers/pci/pci-sysfs.c
 +++ b/drivers/pci/pci-sysfs.c
 @@ -30,6 +30,7 @@
@@ -29,7 +29,7 @@ index 0666287..9867e0c 100644
  #include "pci.h"
  
  static int sysfs_initialized;	/* = 0 */
-@@ -718,6 +719,9 @@ static ssize_t pci_write_config(struct file *filp, struct kobject *kobj,
+@@ -716,6 +717,9 @@ static ssize_t pci_write_config(struct file *filp, struct kobject *kobj,
  	loff_t init_off = off;
  	u8 *data = (u8 *) buf;
  
@@ -39,7 +39,7 @@ index 0666287..9867e0c 100644
  	if (off > dev->cfg_size)
  		return 0;
  	if (off + count > dev->cfg_size) {
-@@ -1009,6 +1013,9 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
+@@ -1007,6 +1011,9 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
  	resource_size_t start, end;
  	int i;
  
@@ -49,7 +49,7 @@ index 0666287..9867e0c 100644
  	for (i = 0; i < PCI_ROM_RESOURCE; i++)
  		if (res == &pdev->resource[i])
  			break;
-@@ -1108,6 +1115,9 @@ static ssize_t pci_write_resource_io(struct file *filp, struct kobject *kobj,
+@@ -1106,6 +1113,9 @@ static ssize_t pci_write_resource_io(struct file *filp, struct kobject *kobj,
  				     struct bin_attribute *attr, char *buf,
  				     loff_t off, size_t count)
  {
@@ -60,7 +60,7 @@ index 0666287..9867e0c 100644
  }
  
 diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-index f82710a..3af0fcf 100644
+index 2408abe..59f321c 100644
 --- a/drivers/pci/proc.c
 +++ b/drivers/pci/proc.c
 @@ -116,6 +116,9 @@ static ssize_t proc_bus_pci_write(struct file *file, const char __user *buf,
@@ -93,17 +93,17 @@ index f82710a..3af0fcf 100644
  
  	/* Make sure the caller is mapping a real resource for this device */
 diff --git a/drivers/pci/syscall.c b/drivers/pci/syscall.c
-index 9bf993e..922bdf6 100644
+index b91c4da..98f5637 100644
 --- a/drivers/pci/syscall.c
 +++ b/drivers/pci/syscall.c
-@@ -11,6 +11,7 @@
+@@ -10,6 +10,7 @@
+ #include <linux/errno.h>
  #include <linux/pci.h>
  #include <linux/syscalls.h>
- #include <linux/uaccess.h>
 +#include <linux/module.h>
+ #include <asm/uaccess.h>
  #include "pci.h"
  
- SYSCALL_DEFINE5(pciconfig_read, unsigned long, bus, unsigned long, dfn,
 @@ -92,7 +93,7 @@ SYSCALL_DEFINE5(pciconfig_write, unsigned long, bus, unsigned long, dfn,
  	u32 dword;
  	int err = 0;

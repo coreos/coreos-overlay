@@ -1,4 +1,4 @@
-From c8a67b57068f99a212023507ffeea874ba658b4e Mon Sep 17 00:00:00 2001
+From d09cc7fd2ac8ce28700c9c67319f16266a926049 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Fri, 9 Mar 2012 09:28:15 -0500
 Subject: [PATCH 06/18] Restrict /dev/mem and /dev/kmem when module loading is
@@ -14,10 +14,10 @@ Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
  1 file changed, 6 insertions(+)
 
 diff --git a/drivers/char/mem.c b/drivers/char/mem.c
-index a6eca51..191b2b0 100644
+index 83cca9f..e19f483 100644
 --- a/drivers/char/mem.c
 +++ b/drivers/char/mem.c
-@@ -164,6 +164,9 @@ static ssize_t write_mem(struct file *file, const char __user *buf,
+@@ -180,6 +180,9 @@ static ssize_t write_mem(struct file *file, const char __user *buf,
  	if (p != *ppos)
  		return -EFBIG;
  
@@ -27,7 +27,7 @@ index a6eca51..191b2b0 100644
  	if (!valid_phys_addr_range(p, count))
  		return -EFAULT;
  
-@@ -514,6 +517,9 @@ static ssize_t write_kmem(struct file *file, const char __user *buf,
+@@ -536,6 +539,9 @@ static ssize_t write_kmem(struct file *file, const char __user *buf,
  	char *kbuf; /* k-addr because vwrite() takes vmlist_lock rwlock */
  	int err = 0;
  
