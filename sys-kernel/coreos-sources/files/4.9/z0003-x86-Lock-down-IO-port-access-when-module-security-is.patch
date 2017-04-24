@@ -1,4 +1,4 @@
-From 247ab2f0f22a52cc9b87a9e6dbd3c523cb02fd7c Mon Sep 17 00:00:00 2001
+From a191b452265caa2ed0d5e48de302ee6546751695 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Thu, 8 Mar 2012 10:35:59 -0500
 Subject: [PATCH 03/18] x86: Lock down IO port access when module security is
@@ -46,7 +46,7 @@ index 589b319..ab83724 100644
  	}
  	regs->flags = (regs->flags & ~X86_EFLAGS_IOPL) |
 diff --git a/drivers/char/mem.c b/drivers/char/mem.c
-index 6d9cc2d..a6eca51 100644
+index 7e4a9d1..83cca9f 100644
 --- a/drivers/char/mem.c
 +++ b/drivers/char/mem.c
 @@ -28,6 +28,7 @@
@@ -57,7 +57,7 @@ index 6d9cc2d..a6eca51 100644
  
  #include <linux/uaccess.h>
  
-@@ -578,6 +579,9 @@ static ssize_t write_port(struct file *file, const char __user *buf,
+@@ -600,6 +601,9 @@ static ssize_t write_port(struct file *file, const char __user *buf,
  	unsigned long i = *ppos;
  	const char __user *tmp = buf;
  
