@@ -108,3 +108,6 @@ dev-util/checkbashisms
 
 # perl 5.22.3-rc4 is stable and secure, but RCs break cross-compiling
 =dev-lang/perl-5.22.3 **
+
+# https://curl.haxx.se/docs/adv_20170419.html
+=net-misc/curl-7.54.0 **
