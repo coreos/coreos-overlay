@@ -5,7 +5,7 @@
 set -e
 
 new_pvr="$1"
-srcdir="$2"
+srcdir="$(realpath $2)"
 
 if [[ -z "${new_pvr}" || -z "${srcdir}" ]]; then
     echo "Usage:   $0 <new-PVR> <dir-with-git-format-patch-output>"
