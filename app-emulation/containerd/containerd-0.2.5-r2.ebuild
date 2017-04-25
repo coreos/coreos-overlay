@@ -6,7 +6,7 @@ EAPI=5
 
 GITHUB_URI="github.com/docker/${PN}"
 COREOS_GO_PACKAGE="${GITHUB_URI}"
-COREOS_GO_VERSION="go1.6"
+COREOS_GO_VERSION="go1.7"
 
 MY_PV="${PV/_/-}"
 EGIT_COMMIT="v${MY_PV}"
