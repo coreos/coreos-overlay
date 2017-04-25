@@ -2635,7 +2635,7 @@ srcdir="$(realpath $2)"
 
 if [[ -z "${new_pvr}" || -z "${srcdir}" ]]; then
     echo "Usage:   $0 <new-PVR> <dir-with-git-format-patch-output>"
-    echo "Example: $0 4.9.9-r2 ~/coreos/linux"
+    echo "Example: $0 4.9.9-r2 ~/linux"
     exit 2
 fi
 
@@ -2658,6 +2658,12 @@ if [[ ! -f $(echo "${srcdir}"/0001*.patch) ]]; then
     echo "${srcdir} contains no patch files."
     exit 1
 fi
+for prog in ebuild gpg2 sha256sum wget xz; do
+    if ! type -P $prog >/dev/null; then
+        echo "Couldn't find $prog program."
+        exit 1
+    fi
+done
 
 old_kernrelease=$(echo "${old_ebuild}" | cut -f3 -d- | cut -f1-2 -d.)
 new_kernrelease=$(echo "${new_pvr}" | cut -f1 -d- | cut -f1-2 -d.)
@@ -2677,3 +2683,21 @@ popd >/dev/null
 
 echo '"' >> "${new_ebuild}"
 rm "${old_ebuild}"
+
+ebuild "${new_ebuild}" manifest
+# Download the files ourselves, check signatures, and verify that the hashes
+# match the manifest
+gpghome=$(mktemp -d gnupghome-XXXXXX)
+export GNUPGHOME="${gpghome}"
+trap "rm -r $gpghome" EXIT
+print_keys | gpg2 -q --import
+# Assumes SHA-256 hash is in a fixed field
+awk '{print $2, $5}' Manifest | while read filename sha256; do
+    echo "Checking ${filename}..."
+    signame="${filename%.xz}.sign"
+    wget -q "https://cdn.kernel.org/pub/linux/kernel/v4.x/$filename"
+    wget -q "https://cdn.kernel.org/pub/linux/kernel/v4.x/$signame"
+    sha256sum --quiet --strict -c - <<<"$sha256 $filename"
+    xz -dc "$filename" | gpg2 --verify --trust-model always "$signame" -
+    rm "$filename" "$signame"
+done
