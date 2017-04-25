@@ -1,4 +1,4 @@
-From e1c6be9b1dc28d543f2f01540ecaf6aa892d0e50 Mon Sep 17 00:00:00 2001
+From 1cc7d069c2ef9833542ded0bbb2cb4b33163d384 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Fri, 9 Mar 2012 08:46:50 -0500
 Subject: [PATCH 05/16] asus-wmi: Restrict debugfs interface when module
@@ -16,10 +16,10 @@ Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
  1 file changed, 9 insertions(+)
 
 diff --git a/drivers/platform/x86/asus-wmi.c b/drivers/platform/x86/asus-wmi.c
-index 43cb680..b5d77af 100644
+index 8499d3a..8378491 100644
 --- a/drivers/platform/x86/asus-wmi.c
 +++ b/drivers/platform/x86/asus-wmi.c
-@@ -1898,6 +1898,9 @@ static int show_dsts(struct seq_file *m, void *data)
+@@ -1900,6 +1900,9 @@ static int show_dsts(struct seq_file *m, void *data)
  	int err;
  	u32 retval = -1;
  
@@ -29,7 +29,7 @@ index 43cb680..b5d77af 100644
  	err = asus_wmi_get_devstate(asus, asus->debug.dev_id, &retval);
  
  	if (err < 0)
-@@ -1914,6 +1917,9 @@ static int show_devs(struct seq_file *m, void *data)
+@@ -1916,6 +1919,9 @@ static int show_devs(struct seq_file *m, void *data)
  	int err;
  	u32 retval = -1;
  
@@ -39,7 +39,7 @@ index 43cb680..b5d77af 100644
  	err = asus_wmi_set_devstate(asus->debug.dev_id, asus->debug.ctrl_param,
  				    &retval);
  
-@@ -1938,6 +1944,9 @@ static int show_call(struct seq_file *m, void *data)
+@@ -1940,6 +1946,9 @@ static int show_call(struct seq_file *m, void *data)
  	union acpi_object *obj;
  	acpi_status status;
  
