@@ -1,4 +1,4 @@
-From 9683bd9d4a6a9603a98e54dcf6849ce1b09fd09d Mon Sep 17 00:00:00 2001
+From ec485c7a0607c648e91a0bfbde3bb00b08834f68 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Fri, 8 Feb 2013 11:12:13 -0800
 Subject: [PATCH 09/16] x86: Restrict MSR access when module loading is
