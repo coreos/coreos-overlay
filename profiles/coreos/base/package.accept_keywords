@@ -111,3 +111,6 @@ dev-util/checkbashisms
 
 # All versions are ~amd64 and not enabled on arm64
 =sys-apps/nvme-cli-1.1 **
+
+# https://curl.haxx.se/docs/adv_20170419.html
+=net-misc/curl-7.54.0 **
