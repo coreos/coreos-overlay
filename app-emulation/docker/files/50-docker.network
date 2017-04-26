@@ -1,6 +1,6 @@
 [Match]
 Type=bridge
-Name=docker*
+Name=docker* br-*
 
 [Link]
 Unmanaged=yes
