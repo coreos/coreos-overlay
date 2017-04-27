@@ -75,9 +75,7 @@ RDEPEND="${RDEPEND}
 	)
 	etcd_protocols_2? (
 		dev-db/etcd:2
-		amd64? (
-			app-admin/etcd-wrapper
-		)
+		app-admin/etcd-wrapper
 	)
 	"
 
