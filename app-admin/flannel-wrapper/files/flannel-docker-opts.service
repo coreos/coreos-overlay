@@ -9,7 +9,7 @@ Before=docker.service
 [Service]
 Type=oneshot
 
-Environment="FLANNEL_IMAGE_TAG=v0.7.0"
+Environment="FLANNEL_IMAGE_TAG=v0.7.1"
 Environment="RKT_RUN_ARGS=--uuid-file-save=/var/lib/coreos/flannel-wrapper2.uuid"
 Environment="FLANNEL_IMAGE_ARGS=--exec=/opt/bin/mk-docker-opts.sh"
 
