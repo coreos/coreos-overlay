@@ -8,6 +8,7 @@ Requires=flannel-docker-opts.service
 Type=notify
 Restart=always
 RestartSec=10s
+TimeoutStartSec=300
 LimitNOFILE=40000
 LimitNPROC=1048576
 
