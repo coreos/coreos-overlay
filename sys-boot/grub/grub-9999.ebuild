@@ -12,7 +12,7 @@ PYTHON_COMPAT=( python{2_6,2_7,3_2,3_3,3_4} )
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64 ~x86"
 else
-	CROS_WORKON_COMMIT="ccf8c4a280d29f7fe0df7b26f33982e71fab9e18"
+	CROS_WORKON_COMMIT="6782f6d431d22b4e9ab14e94d263795c7991e160"
 	KEYWORDS="amd64 arm64 x86"
 fi
 
@@ -28,7 +28,7 @@ HOMEPAGE="http://www.gnu.org/software/grub/"
 
 # Includes licenses for dejavu and unifont
 LICENSE="GPL-3 truetype? ( BitstreamVera GPL-2-with-font-exception )"
-SLOT="2"
+SLOT="2/${PVR}"
 IUSE="debug device-mapper doc efiemu mount +multislot nls static sdl test truetype libzfs"
 
 GRUB_ALL_PLATFORMS=(
