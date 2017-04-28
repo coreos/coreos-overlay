@@ -15,10 +15,12 @@ if [[ -e /etc/coreos/update.conf ]]; then
     source /etc/coreos/update.conf
 fi
 
-if [[ -e /etc/oem-release ]]; then
-    # Pull in OEM information too, but prefixing variables with OEM_
-    eval "$(sed -e 's/^/OEM_/' /etc/oem-release)"
-fi
+for f in /usr/share/oem/oem-release /etc/oem-release; do
+    if [[ -e $f ]]; then
+        # Pull in OEM information too, but prefixing variables with OEM_
+        eval "$(sed -e 's/^/OEM_/' $f)"
+    fi
+done
 
 BOOT_ID=$(</proc/sys/kernel/random/boot_id)
 MACHINE_ID=$(</etc/machine-id)
@@ -53,4 +55,4 @@ BODY="<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 
 echo Request: "${BODY}"
 
-curl -H "text/xml" -X POST -d "${BODY}" "${SERVER}"
+curl -H "Content-Type: text/xml" -d "${BODY}" "${SERVER}"
