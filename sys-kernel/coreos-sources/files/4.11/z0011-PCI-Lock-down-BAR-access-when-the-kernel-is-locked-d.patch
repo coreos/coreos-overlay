@@ -1,73 +1,66 @@
-From 7d153226d6afea4f25ba771ad674bcbe8e386c49 Mon Sep 17 00:00:00 2001
+From 0dfaa6335b722d770fa40ca9e3694fbebb6afcd4 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
-Date: Thu, 8 Mar 2012 10:10:38 -0500
-Subject: [PATCH 02/16] PCI: Lock down BAR access when module security is
- enabled
+Date: Tue, 22 Nov 2016 08:46:15 +0000
+Subject: [PATCH 11/24] PCI: Lock down BAR access when the kernel is locked
+ down
 
-Any hardware that can potentially generate DMA has to be locked down from
-userspace in order to avoid it being possible for an attacker to modify
-kernel code, allowing them to circumvent disabled module loading or module
-signing. Default to paranoid - in future we can potentially relax this for
+Any hardware that can potentially generate DMA has to be locked down in
+order to avoid it being possible for an attacker to modify kernel code,
+allowing them to circumvent disabled module loading or module signing.
+Default to paranoid - in future we can potentially relax this for
 sufficiently IOMMU-isolated devices.
 
 Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
+Signed-off-by: David Howells <dhowells@redhat.com>
 ---
- drivers/pci/pci-sysfs.c | 10 ++++++++++
- drivers/pci/proc.c      |  8 +++++++-
- drivers/pci/syscall.c   |  3 ++-
- 3 files changed, 19 insertions(+), 2 deletions(-)
+ drivers/pci/pci-sysfs.c | 9 +++++++++
+ drivers/pci/proc.c      | 8 +++++++-
+ drivers/pci/syscall.c   | 2 +-
+ 3 files changed, 17 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 0666287..9867e0c 100644
+index 25d010d..f70b366 100644
 --- a/drivers/pci/pci-sysfs.c
 +++ b/drivers/pci/pci-sysfs.c
-@@ -30,6 +30,7 @@
- #include <linux/vgaarb.h>
- #include <linux/pm_runtime.h>
- #include <linux/of.h>
-+#include <linux/module.h>
- #include "pci.h"
- 
- static int sysfs_initialized;	/* = 0 */
-@@ -718,6 +719,9 @@ static ssize_t pci_write_config(struct file *filp, struct kobject *kobj,
+@@ -727,6 +727,9 @@ static ssize_t pci_write_config(struct file *filp, struct kobject *kobj,
  	loff_t init_off = off;
  	u8 *data = (u8 *) buf;
  
-+	if (secure_modules())
++	if (kernel_is_locked_down())
 +		return -EPERM;
 +
  	if (off > dev->cfg_size)
  		return 0;
  	if (off + count > dev->cfg_size) {
-@@ -1009,6 +1013,9 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
+@@ -1018,6 +1021,9 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
  	resource_size_t start, end;
  	int i;
  
-+	if (secure_modules())
++	if (kernel_is_locked_down())
 +		return -EPERM;
 +
  	for (i = 0; i < PCI_ROM_RESOURCE; i++)
  		if (res == &pdev->resource[i])
  			break;
-@@ -1108,6 +1115,9 @@ static ssize_t pci_write_resource_io(struct file *filp, struct kobject *kobj,
+@@ -1117,6 +1123,9 @@ static ssize_t pci_write_resource_io(struct file *filp, struct kobject *kobj,
  				     struct bin_attribute *attr, char *buf,
  				     loff_t off, size_t count)
  {
-+	if (secure_modules())
++	if (kernel_is_locked_down())
 +		return -EPERM;
 +
  	return pci_resource_io(filp, kobj, attr, buf, off, count, true);
  }
  
 diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-index f82710a..3af0fcf 100644
+index f82710a..139d6f0 100644
 --- a/drivers/pci/proc.c
 +++ b/drivers/pci/proc.c
 @@ -116,6 +116,9 @@ static ssize_t proc_bus_pci_write(struct file *file, const char __user *buf,
  	int size = dev->cfg_size;
  	int cnt;
  
-+	if (secure_modules())
++	if (kernel_is_locked_down())
 +		return -EPERM;
 +
  	if (pos >= size)
@@ -77,7 +70,7 @@ index f82710a..3af0fcf 100644
  #endif /* HAVE_PCI_MMAP */
  	int ret = 0;
  
-+	if (secure_modules())
++	if (kernel_is_locked_down())
 +		return -EPERM;
 +
  	switch (cmd) {
@@ -88,28 +81,20 @@ index f82710a..3af0fcf 100644
  	int i, ret, write_combine;
  
 -	if (!capable(CAP_SYS_RAWIO))
-+	if (!capable(CAP_SYS_RAWIO) || secure_modules())
++	if (!capable(CAP_SYS_RAWIO) || kernel_is_locked_down())
  		return -EPERM;
  
  	/* Make sure the caller is mapping a real resource for this device */
 diff --git a/drivers/pci/syscall.c b/drivers/pci/syscall.c
-index 9bf993e..922bdf6 100644
+index 9bf993e..c095247 100644
 --- a/drivers/pci/syscall.c
 +++ b/drivers/pci/syscall.c
-@@ -11,6 +11,7 @@
- #include <linux/pci.h>
- #include <linux/syscalls.h>
- #include <linux/uaccess.h>
-+#include <linux/module.h>
- #include "pci.h"
- 
- SYSCALL_DEFINE5(pciconfig_read, unsigned long, bus, unsigned long, dfn,
-@@ -92,7 +93,7 @@ SYSCALL_DEFINE5(pciconfig_write, unsigned long, bus, unsigned long, dfn,
+@@ -92,7 +92,7 @@ SYSCALL_DEFINE5(pciconfig_write, unsigned long, bus, unsigned long, dfn,
  	u32 dword;
  	int err = 0;
  
 -	if (!capable(CAP_SYS_ADMIN))
-+	if (!capable(CAP_SYS_ADMIN) || secure_modules())
++	if (!capable(CAP_SYS_ADMIN) || kernel_is_locked_down())
  		return -EPERM;
  
  	dev = pci_get_bus_and_slot(bus, dfn);

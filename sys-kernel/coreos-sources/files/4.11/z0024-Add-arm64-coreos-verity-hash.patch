@@ -1,7 +1,7 @@
-From b6077ba8b3a213a88c805cc14322828b1f08219c Mon Sep 17 00:00:00 2001
+From 0ec3dd6e4d4b7a14e9fae62c6f2affe6b643063e Mon Sep 17 00:00:00 2001
 From: Geoff Levand <geoff@infradead.org>
 Date: Fri, 11 Nov 2016 17:28:52 -0800
-Subject: [PATCH 15/16] Add arm64 coreos verity hash
+Subject: [PATCH 24/24] Add arm64 coreos verity hash
 
 Signed-off-by: Geoff Levand <geoff@infradead.org>
 ---
@@ -9,10 +9,10 @@ Signed-off-by: Geoff Levand <geoff@infradead.org>
  1 file changed, 5 insertions(+)
 
 diff --git a/arch/arm64/kernel/head.S b/arch/arm64/kernel/head.S
-index 4b1abac..a53fa57 100644
+index 4fb6ccd..f791d18 100644
 --- a/arch/arm64/kernel/head.S
 +++ b/arch/arm64/kernel/head.S
-@@ -195,6 +195,11 @@ section_table:
+@@ -200,6 +200,11 @@ section_table:
  	.short	0		// NumberOfLineNumbers  (0 for executables)
  	.long	0xe0500020	// Characteristics (section flags)
  
@@ -21,9 +21,9 @@ index 4b1abac..a53fa57 100644
 +	.ascii	"verity-hash"
 +	.org	_head + 512 + 64
 +
+ #ifdef CONFIG_DEBUG_EFI
  	/*
- 	 * EFI will load .text onwards at the 4k section alignment
- 	 * described in the PE/COFF header. To ensure that instruction
+ 	 * The debug table is referenced via its Relative Virtual Address (RVA),
 -- 
 2.9.3
 

@@ -1,28 +1,28 @@
-From ec485c7a0607c648e91a0bfbde3bb00b08834f68 Mon Sep 17 00:00:00 2001
+From 692346713c770cdcfddd2b03821658b562f02f70 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
-Date: Fri, 8 Feb 2013 11:12:13 -0800
-Subject: [PATCH 09/16] x86: Restrict MSR access when module loading is
- restricted
+Date: Tue, 22 Nov 2016 08:46:17 +0000
+Subject: [PATCH 13/24] x86: Restrict MSR access when the kernel is locked down
 
-Writing to MSRs should not be allowed if module loading is restricted,
-since it could lead to execution of arbitrary code in kernel mode. Based
-on a patch by Kees Cook.
+Writing to MSRs should not be allowed if the kernel is locked down, since
+it could lead to execution of arbitrary code in kernel mode.  Based on a
+patch by Kees Cook.
 
 Cc: Kees Cook <keescook@chromium.org>
 Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
+Signed-off-by: David Howells <dhowells@redhat.com>
 ---
  arch/x86/kernel/msr.c | 7 +++++++
  1 file changed, 7 insertions(+)
 
 diff --git a/arch/x86/kernel/msr.c b/arch/x86/kernel/msr.c
-index ef68880..74937d9 100644
+index ef68880..fbcce02 100644
 --- a/arch/x86/kernel/msr.c
 +++ b/arch/x86/kernel/msr.c
 @@ -84,6 +84,9 @@ static ssize_t msr_write(struct file *file, const char __user *buf,
  	int err = 0;
  	ssize_t bytes = 0;
  
-+	if (secure_modules())
++	if (kernel_is_locked_down())
 +		return -EPERM;
 +
  	if (count % 8)
@@ -32,7 +32,7 @@ index ef68880..74937d9 100644
  			err = -EBADF;
  			break;
  		}
-+		if (secure_modules()) {
++		if (kernel_is_locked_down()) {
 +			err = -EPERM;
 +			break;
 +		}
