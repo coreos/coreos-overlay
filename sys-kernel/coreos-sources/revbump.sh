@@ -2631,7 +2631,7 @@ EOF
 }
 
 new_pvr="$1"
-srcdir="$(realpath $2)"
+srcdir="$2"
 
 if [[ -z "${new_pvr}" || -z "${srcdir}" ]]; then
     echo "Usage:   $0 <new-PVR> <dir-with-git-format-patch-output>"
@@ -2639,6 +2639,7 @@ if [[ -z "${new_pvr}" || -z "${srcdir}" ]]; then
     exit 2
 fi
 
+srcdir="$(realpath $srcdir)"
 old_ebuild=$(echo coreos-sources-*.ebuild)
 new_ebuild="coreos-sources-${new_pvr}.ebuild"
 
