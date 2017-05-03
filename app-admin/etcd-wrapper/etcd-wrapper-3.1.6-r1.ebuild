@@ -33,4 +33,5 @@ src_install() {
 	sed "s|@ETCD_IMAGE_TAG@|${tag}|g" \
 		"${FILESDIR}"/etcd-member.service > ${T}/etcd-member.service
 	systemd_dounit ${T}/etcd-member.service
+	systemd_dotmpfilesd "${FILESDIR}"/etcd-wrapper.conf
 }
