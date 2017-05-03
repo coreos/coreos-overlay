@@ -9,7 +9,7 @@ HOMEPAGE="http://coreos.com"
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="amd64 arm arm64 x86"
-IUSE="etcd_protocols_1 etcd_protocols_2 selinux"
+IUSE="selinux"
 
 
 ################################################################################
@@ -65,20 +65,6 @@ IUSE="etcd_protocols_1 etcd_protocols_2 selinux"
 
 RDEPEND=">=sys-apps/baselayout-3.0.0"
 
-# Select between versions of etcd
-# If protocol 1 is installed it must be configured to provide the default
-# implementation based on whether protocol 2 is enabled or not.
-RDEPEND="${RDEPEND}
-	etcd_protocols_1? (
-		dev-db/etcd:1
-		!etcd_protocols_2? ( dev-db/etcdctl )
-	)
-	etcd_protocols_2? (
-		dev-db/etcd:2
-		app-admin/etcd-wrapper
-	)
-	"
-
 # Optionally enable SELinux and pull in policy for containers
 RDEPEND="${RDEPEND}
 	sys-apps/dbus[selinux?]
@@ -100,6 +86,7 @@ RDEPEND="${RDEPEND}
 	)"
 
 RDEPEND="${RDEPEND}
+	app-admin/etcd-wrapper
 	app-admin/fleet
 	app-admin/locksmith
 	app-admin/mayday
@@ -123,6 +110,7 @@ RDEPEND="${RDEPEND}
 	coreos-base/coreos-init
 	coreos-base/coreos-metadata
 	coreos-base/update_engine
+	dev-db/etcd:2
 	dev-util/strace
 	dev-vcs/git
 	net-analyzer/nmap
