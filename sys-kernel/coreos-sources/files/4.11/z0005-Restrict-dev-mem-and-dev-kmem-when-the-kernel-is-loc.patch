@@ -1,0 +1,43 @@
+From ec94f3ef19d149bf234a02fbf5733fc90532d903 Mon Sep 17 00:00:00 2001
+From: Matthew Garrett <matthew.garrett@nebula.com>
+Date: Tue, 22 Nov 2016 08:46:16 +0000
+Subject: [PATCH 05/24] Restrict /dev/mem and /dev/kmem when the kernel is
+ locked down
+
+Allowing users to write to address space makes it possible for the kernel to
+be subverted, avoiding module loading restrictions.  Prevent this when the
+kernel has been locked down.
+
+Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
+Signed-off-by: David Howells <dhowells@redhat.com>
+---
+ drivers/char/mem.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/char/mem.c b/drivers/char/mem.c
+index 7e4a9d1..3c305b8 100644
+--- a/drivers/char/mem.c
++++ b/drivers/char/mem.c
+@@ -179,6 +179,9 @@ static ssize_t write_mem(struct file *file, const char __user *buf,
+ 	if (p != *ppos)
+ 		return -EFBIG;
+ 
++	if (kernel_is_locked_down())
++		return -EPERM;
++
+ 	if (!valid_phys_addr_range(p, count))
+ 		return -EFAULT;
+ 
+@@ -535,6 +538,9 @@ static ssize_t write_kmem(struct file *file, const char __user *buf,
+ 	char *kbuf; /* k-addr because vwrite() takes vmlist_lock rwlock */
+ 	int err = 0;
+ 
++	if (kernel_is_locked_down())
++		return -EPERM;
++
+ 	if (p < (unsigned long) high_memory) {
+ 		unsigned long to_write = min_t(unsigned long, count,
+ 					       (unsigned long)high_memory - p);
+-- 
+2.9.3
+

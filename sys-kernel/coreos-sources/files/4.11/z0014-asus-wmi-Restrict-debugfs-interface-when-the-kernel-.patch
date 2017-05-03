@@ -1,29 +1,30 @@
-From 1cc7d069c2ef9833542ded0bbb2cb4b33163d384 Mon Sep 17 00:00:00 2001
+From 09a257a1f105159ad9f4450c2968531c4cccf745 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
-Date: Fri, 9 Mar 2012 08:46:50 -0500
-Subject: [PATCH 05/16] asus-wmi: Restrict debugfs interface when module
- loading is restricted
+Date: Tue, 22 Nov 2016 08:46:16 +0000
+Subject: [PATCH 14/24] asus-wmi: Restrict debugfs interface when the kernel is
+ locked down
 
-We have no way of validating what all of the Asus WMI methods do on a
-given machine, and there's a risk that some will allow hardware state to
-be manipulated in such a way that arbitrary code can be executed in the
-kernel, circumventing module loading restrictions. Prevent that if any of
-these features are enabled.
+We have no way of validating what all of the Asus WMI methods do on a given
+machine - and there's a risk that some will allow hardware state to be
+manipulated in such a way that arbitrary code can be executed in the
+kernel, circumventing module loading restrictions.  Prevent that if the
+kernel is locked down.
 
 Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
+Signed-off-by: David Howells <dhowells@redhat.com>
 ---
  drivers/platform/x86/asus-wmi.c | 9 +++++++++
  1 file changed, 9 insertions(+)
 
 diff --git a/drivers/platform/x86/asus-wmi.c b/drivers/platform/x86/asus-wmi.c
-index 8499d3a..8378491 100644
+index 8fe5890..feef250 100644
 --- a/drivers/platform/x86/asus-wmi.c
 +++ b/drivers/platform/x86/asus-wmi.c
 @@ -1900,6 +1900,9 @@ static int show_dsts(struct seq_file *m, void *data)
  	int err;
  	u32 retval = -1;
  
-+	if (secure_modules())
++	if (kernel_is_locked_down())
 +		return -EPERM;
 +
  	err = asus_wmi_get_devstate(asus, asus->debug.dev_id, &retval);
@@ -33,7 +34,7 @@ index 8499d3a..8378491 100644
  	int err;
  	u32 retval = -1;
  
-+	if (secure_modules())
++	if (kernel_is_locked_down())
 +		return -EPERM;
 +
  	err = asus_wmi_set_devstate(asus->debug.dev_id, asus->debug.ctrl_param,
@@ -43,7 +44,7 @@ index 8499d3a..8378491 100644
  	union acpi_object *obj;
  	acpi_status status;
  
-+	if (secure_modules())
++	if (kernel_is_locked_down())
 +		return -EPERM;
 +
  	status = wmi_evaluate_method(ASUS_WMI_MGMT_GUID,
