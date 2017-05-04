@@ -22,7 +22,7 @@ media-sound/alsa-utils	-libsamplerate minimal
 net-misc/iputils	arping traceroute
 sci-geosciences/gpsd	-cxx
 sys-devel/gettext	-git
-app-emulation/qemu	aio caps curl jpeg ncurses png python seccomp threads uuid vhost-net virtfs vnc xattr qemu_softmmu_targets_x86_64
+app-emulation/qemu	aio caps curl jpeg ncurses png python threads uuid vhost-net virtfs vnc qemu_softmmu_targets_x86_64
 
 sys-apps/gptfdisk -icu
 
