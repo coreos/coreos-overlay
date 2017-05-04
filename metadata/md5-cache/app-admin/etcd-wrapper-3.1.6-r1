@@ -3,9 +3,9 @@ DEPEND=virtual/pkgconfig
 DESCRIPTION=etcd (System Application Container)
 EAPI=6
 HOMEPAGE=https://github.com/coreos/etcd
-KEYWORDS=amd64
+KEYWORDS=amd64 arm64
 LICENSE=Apache-2.0
 RDEPEND=>=app-emulation/rkt-1.9.1[rkt_stage1_fly]
 SLOT=0
 _eclasses_=multilib	165fc17c38d1b11dac2008280dab6e80	systemd	5b6ca8b2fc1307ca593223f327342c96	toolchain-funcs	1b1da0c45c555989dc5d832b54880783
-_md5_=837b16beb1e8ec8448dd7705ea00adde
+_md5_=53aa983d0988234728341120fd800830
