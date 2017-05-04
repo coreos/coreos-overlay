@@ -16,6 +16,10 @@ SLOT="0"
 KEYWORDS="alpha amd64 arm hppa ia64 ppc ppc64 sparc x86 ~x86-fbsd ~amd64-linux ~arm-linux ~x86-linux"
 IUSE="examples"
 
+PATCHES=(
+	"${FILESDIR}/${PN}-2.0.14-tracker-add-issue.patch"
+)
+
 python_test() {
 	# run_service_tests.py requires interaction (and a valid Google account), so skip it.
 	"${PYTHON}" tests/run_data_tests.py -v || die "Test failed under ${EPYTHON}"
