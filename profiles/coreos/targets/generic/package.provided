@@ -5,7 +5,6 @@
 # disable them and we have no need/use for them in prod images.
 
 # pulled in by app-crypt/pinentry
-app-admin/eselect-pinentry-0.3
 app-eselect/eselect-pinentry-0.4
 
 # pulled in by app-editors/vim

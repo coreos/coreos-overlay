@@ -10,14 +10,6 @@
 =dev-util/perf-4.9.13 ~amd64
 =sys-libs/libnih-1.0.3 ~amd64
 
-# Get updated core code
-=net-misc/tlsdate-0.0.5 ~amd64
-=dev-libs/libgpg-error-1.10-r1 ~amd64
-=net-misc/dhcp-4.2.2-r1 ~amd64
-
-# CRIU dependencies
-=dev-libs/protobuf-c-0.15 ~amd64
-
 # Everything needed for the boot engine
 >=sys-apps/kexec-tools-2.0.4-r1 ~amd64
 sys-kernel/dracut ~amd64
@@ -32,9 +24,6 @@ dev-python/oauth2client
 dev-python/protorpc
 net-misc/gsutil
 
-# Fixes XML validation failure and python eclass usage
-=dev-lang/yasm-1.2.0-r1
-
 # efitools and dependency libraries for signing kernel images
 >=sys-boot/gnu-efi-3.0u		~amd64
 >=app-crypt/efitools-1.4.1-r2	~amd64
@@ -47,25 +36,11 @@ dev-util/checkbashisms
 ~app-emulation/xen-tools-4.4.1
 ~app-emulation/xen-pvgrub-4.4.1
 
-# Fixes a few bugs but has not yet been marked stable upstream.
-=app-arch/lbzip2-2.5
-
-# required by systemd v229
-=sys-apps/util-linux-2.27.1
-
-# 1.5 has fixed version string. coreos/bugs#455
-=app-misc/jq-1.5-r1 ~amd64 ~arm64
-
 # https://bugs.gentoo.org/show_bug.cgi?id=548158
 =sys-apps/gentoo-functions-0.10
 
 # Avoid cross compile error with amd64 stable (elfutils-0.158).
 =dev-libs/elfutils-0.161 ~amd64
-
-# Provides useful new pages like loop(4)
-=sys-apps/man-pages-4.00
-# Fixes conflict with man-pages 4.00
-=sys-apps/attr-2.4.47-r2
 
 # newer btrfs-progs improve things like preserving capabilities in send/receive
 # https://github.com/coreos/bugs/issues/923
@@ -74,12 +49,9 @@ dev-util/checkbashisms
 # Get a newer version of pylint
 =dev-python/astng-0.21.1 ~amd64
 =dev-python/pylint-0.23.0 ~amd64
-=dev-python/pyusb-0.4.3 ~amd64
+=dev-python/pyusb-1.0.0 ~amd64
 
 =dev-lang/nasm-2.09.10 ~amd64
-
-# use this wget to get slotted openssl dep.
-=net-misc/wget-1.17.1-r1 ~amd64 ~arm64
 
 # Older versions of sssd fail to build
 =sys-auth/sssd-1.13.1 ~amd64 ~arm64

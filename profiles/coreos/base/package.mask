@@ -7,8 +7,6 @@
 # version of these packages even if a newer stable version becomes
 # available in portage:
 
->=net-misc/tlsdate-0.0.6
-
 # Stick with python 2 for now
 >=dev-lang/python-3
 
