@@ -1,8 +1,5 @@
 # arm64 use
 
-# Protocol 1 not supported on arm64.
-coreos-base/coreos -etcd_protocols_1
-
 # FIXME: why isn't this set by default???
 sys-libs/ncurses unicode
 
