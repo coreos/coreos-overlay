@@ -16,3 +16,6 @@ app-misc/editor-wrapper-4
 
 # pulled in by dev-libs/cyrus-sasl
 net-mail/mailbase-1.1
+
+# elt-patches has a cyclic dependency
+app-arch/xz-utils-0
