@@ -8,7 +8,7 @@ EAPI=2
 CROS_WORKON_COMMIT="52d09bd25a02b3866aba1bb492f36a2d851d6472"
 CROS_WORKON_TREE="df952e3d5bb2f168ccde7a5a1e8684e9b87a078e"
 CROS_WORKON_PROJECT="chromiumos/third_party/ktop"
-inherit toolchain-funcs cros-workon
+inherit epatch toolchain-funcs cros-workon
 
 DESCRIPTION="Utility for looking at top users of system calls"
 HOMEPAGE="http://git.chromium.org/gitweb/?s=ktop"
