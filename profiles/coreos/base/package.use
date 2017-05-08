@@ -11,6 +11,7 @@ dev-libs/dbus-glib	tools
 dev-libs/protobuf 	-python
 dev-libs/libxml2	-python
 dev-perl/GD             png
+dev-python/ws4py	-client -server
 dev-util/perf		tui -doc
 dev-vcs/git		cvs subversion webdav curl bash-completion
 dev-vcs/subversion	-dso webdav-serf
