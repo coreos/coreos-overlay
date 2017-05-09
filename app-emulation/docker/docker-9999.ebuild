@@ -258,6 +258,7 @@ src_install() {
 	newconfd contrib/init/openrc/docker.confd docker
 
 	exeinto /usr/lib/coreos
+	# Create /usr/lib/coreos/dockerd for backwards compatibility
 	doexe "${FILESDIR}/dockerd"
 
 	systemd_dounit "${FILESDIR}/docker.service"

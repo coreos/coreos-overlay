@@ -9,7 +9,7 @@ CROS_WORKON_LOCALNAME="docker"
 CROS_WORKON_REPO="git://github.com"
 COREOS_GO_VERSION="go1.7"
 
-CROS_WORKON_COMMIT="d5236f0452873048a28c1ecd63d40513efa66542" # coreos-1.12.6
+CROS_WORKON_COMMIT="a82d35e3daba1a2cd48c66e57a4f9975c39c45c6" # coreos-1.12.6
 DOCKER_GITCOMMIT="${CROS_WORKON_COMMIT:0:7}"
 KEYWORDS="amd64 arm64"
 
@@ -270,6 +270,7 @@ src_install() {
 	newconfd contrib/init/openrc/docker.confd docker
 
 	exeinto /usr/lib/coreos
+	# Create /usr/lib/coreos/dockerd script for backwards compatibility
 	doexe "${FILESDIR}/dockerd"
 
 	systemd_dounit "${FILESDIR}/docker.service"

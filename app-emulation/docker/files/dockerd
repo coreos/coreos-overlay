@@ -1,5 +1,7 @@
 #!/bin/bash
-# Wrapper for launching docker daemons with an appropriate backend.
+# Wrapper for launching docker daemons with selinux default on
+# This wrapper script has been deprecated (euank: 2017-05-09) and is retained
+# for backwards compatibility.
 
 set -e
 
@@ -16,14 +18,6 @@ parse_docker_args() {
         fi
 
         case "${flag}" in
-            -g|--graph)
-                ARG_ROOT="$1"
-                shift
-                ;;
-            -s|--storage-driver)
-                ARG_DRIVER="$1"
-                shift
-                ;;
             --selinux-enabled)
                 ARG_SELINUX="$1"
                 shift
@@ -35,56 +29,13 @@ parse_docker_args() {
     done
 }
 
-select_docker_driver() {
-    local fstype
-
-    # mimic docker's behavior to ensure we stat the right filesystem.
-    if [[ -L "${ARG_ROOT}" ]]; then
-        ARG_ROOT="$(readlink -f "${ARG_ROOT}")"
-    fi
-
-    mkdir --parents --mode=0700 "${ARG_ROOT}"
-    fstype=$(findmnt --noheadings --output FSTYPE --target "${ARG_ROOT}")
-
-    case "${fstype}" in
-        btrfs)
-            export DOCKER_DRIVER=btrfs
-            ;;
-        ext4|tmpfs|xfs) # As of 4.1
-            export DOCKER_DRIVER=overlay
-            ;;
-        *)
-            # Fall back to whatever docker's default behavior is.
-            ;;
-    esac
-}
-
-# Enable selinux except when known to be unsupported (btrfs).
-maybe_enable_selinux() {
-    case "${DOCKER_DRIVER}" in
-        btrfs)
-            USE_SELINUX=""
-            ;;
-        *)
-            # Enable for everything else.
-            USE_SELINUX="--selinux-enabled"
-            ;;
-    esac
-}
-
-ARG_ROOT="/var/lib/docker"
-ARG_DRIVER=""
 parse_docker_args "$@"
-
-# Do not override the driver if it is already explicitly configured.
-if [[ -z "${ARG_DRIVER}" && -z "${DOCKER_DRIVER}" ]]; then
-    select_docker_driver
-fi
 
 USE_SELINUX=""
 # Do not override selinux if it is already explicitly configured.
 if [[ -z "${ARG_SELINUX}" ]]; then
-        maybe_enable_selinux
+        # If unspecified, default on
+        USE_SELINUX="--selinux-enabled"
 fi
 
 exec dockerd "$@" ${USE_SELINUX}
