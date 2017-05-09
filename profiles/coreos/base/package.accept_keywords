@@ -114,3 +114,6 @@ dev-util/checkbashisms
 
 # https://curl.haxx.se/docs/adv_20170419.html
 =net-misc/curl-7.54.0 **
+
+# CVE-2017-8779
+=net-nds/rpcbind-0.2.4-r1

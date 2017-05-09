@@ -1,10 +1,9 @@
-# Copyright 1999-2015 Gentoo Foundation
+# Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/net-libs/libtirpc/libtirpc-0.2.5.ebuild,v 1.11 2015/02/27 11:27:58 ago Exp $
 
-EAPI="4"
+EAPI="5"
 
-inherit multilib-minimal toolchain-funcs
+inherit multilib-minimal toolchain-funcs eutils
 
 DESCRIPTION="Transport Independent RPC library (SunRPC replacement)"
 HOMEPAGE="http://libtirpc.sourceforge.net/"
@@ -12,27 +11,23 @@ SRC_URI="mirror://sourceforge/${PN}/${P}.tar.bz2
 	mirror://gentoo/${PN}-glibc-nfs.tar.xz"
 
 LICENSE="GPL-2"
-SLOT="0"
-KEYWORDS="alpha amd64 arm arm64 hppa ia64 ~mips ppc ppc64 s390 sh sparc x86"
+SLOT="0/3" # subslot matches SONAME major
+KEYWORDS="~alpha amd64 ~arm arm64 ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86"
 IUSE="ipv6 kerberos static-libs"
 
 RDEPEND="kerberos? ( >=virtual/krb5-0-r1[${MULTILIB_USEDEP}] )"
 DEPEND="${RDEPEND}
 	app-arch/xz-utils
 	>=virtual/pkgconfig-0-r1[${MULTILIB_USEDEP}]"
-RDEPEND="${RDEPEND}
-	abi_x86_32? (
-		!<=app-emulation/emul-linux-x86-baselibs-20140508-r7
-		!app-emulation/emul-linux-x86-baselibs[-abi_x86_32(-)]
-	)"
 
-src_unpack() {
-	unpack ${A}
-	cp -r tirpc "${S}"/ || die
-}
+PATCHES=(
+	"${FILESDIR}/${P}-CVE-2017-8779.patch"
+)
 
 src_prepare() {
-	epatch "${FILESDIR}"/${P}-stdarg.patch
+	cp -r "${WORKDIR}"/tirpc "${S}"/ || die
+	epatch "${PATCHES[@]}"
+	epatch_user
 
 	# set netconfig path to /usr so nfs works in CoreOS PXE/ISO booted systems.
 	sed -ie "s,/etc,/usr/share/tirpc," "${S}/tirpc/netconfig.h" || die
@@ -50,7 +45,7 @@ multilib_src_install() {
 	default
 
 	# libtirpc replaces rpc support in glibc, so we need it in /
-	multilib_is_native_abi && gen_usr_ldscript -a tirpc
+	gen_usr_ldscript -a tirpc
 }
 
 multilib_src_install_all() {
