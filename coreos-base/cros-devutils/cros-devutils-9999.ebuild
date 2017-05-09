@@ -14,7 +14,7 @@ else
 	KEYWORDS="amd64 arm x86"
 fi
 
-inherit cros-workon multilib python
+inherit cros-workon multilib python-utils-r1
 
 DESCRIPTION="Development utilities for CoreOS"
 HOMEPAGE="https://github.com/coreos/dev-util"
@@ -80,7 +80,7 @@ src_install() {
 		dosym /usr/share/bash-completion/git /etc/bash_completion.d/git
 		dosym /usr/share/bash-completion/repo /etc/bash_completion.d/repo
 
-		insinto "$(python_get_sitedir)"
+		insinto "$(python_get_sitedir python2_7 PYTHON)"
 		doins host/lib/*.py
 
 		insinto "/usr/lib/crosutils"

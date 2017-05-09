@@ -1,5 +1,5 @@
 DEFINED_PHASES=compile configure install prepare
-DEPEND=!<net-fs/samba-3.3 doc? ( app-text/docbook-xml-dtd:4.2 ) !<net-fs/samba-libs-3.4 !<sys-devel/gettext-0.18.1.1-r3 || ( >=sys-devel/automake-1.15:1.15 ) >=sys-devel/autoconf-2.69 >=sys-devel/libtool-2.4
+DEPEND=!<net-fs/samba-3.3 doc? ( app-text/docbook-xml-dtd:4.2 ) !<net-fs/samba-libs-3.4 >=app-portage/elt-patches-20170317 !<sys-devel/gettext-0.18.1.1-r3 || ( >=sys-devel/automake-1.15:1.15 ) >=sys-devel/autoconf-2.69 >=sys-devel/libtool-2.4
 DESCRIPTION=Samba talloc library
 EAPI=2
 HOMEPAGE=http://talloc.samba.org/
@@ -9,5 +9,5 @@ LICENSE=GPL-3
 RDEPEND=!<net-fs/samba-3.3 doc? ( app-text/docbook-xml-dtd:4.2 ) !<net-fs/samba-libs-3.4
 SLOT=0
 SRC_URI=http://samba.org/ftp/talloc/talloc-2.0.1.tar.gz
-_eclasses_=autotools	07e71b3b5690738ef7e8bc097077e00c	confutils	18995f74ac4ffafb7ad853dfe133f209	eutils	ea170b525f6a38a006be05c9d9429f13	libtool	4890219c51da247200223277f993e054	multilib	165fc17c38d1b11dac2008280dab6e80	toolchain-funcs	1b1da0c45c555989dc5d832b54880783
+_eclasses_=autotools	7027963e8e8cc12c91117bdb9225dc26	confutils	22a248dca0998dd98347fd19c58aa30d	epatch	8233751dc5105a6ae8fcd86ce2bb0247	estack	43ddf5aaffa7a8d0482df54d25a66a1f	eutils	9c113d6a64826c40154cad7be15d95ea	libtool	e32ea84bf82cf8987965b574672dba93	ltprune	2770eed66a9b8ef944714cd0e968182e	multilib	0236be304ee52e7f179ed2f337075515	toolchain-funcs	6eb35f81556258a4bc9182ad3dfd58ee
 _md5_=fcccf968b25b2db2ad3378f9848f440d

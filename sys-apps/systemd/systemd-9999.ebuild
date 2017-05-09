@@ -361,9 +361,6 @@ multilib_src_install_all() {
 	systemd_dotmpfilesd "${FILESDIR}"/systemd-coreos.conf
 	systemd_dotmpfilesd "${FILESDIR}"/systemd-resolv.conf
 
-	# Path masking and FEATURES aren't catching this
-	use doc || rm -r "${D}${ROOTPREFIX-/usr}/share/man"
-
 	# Don't default to graphical.target
 	rm "${D}${unitdir}"/default.target || die
 	dosym multi-user.target "${unitdir}"/default.target

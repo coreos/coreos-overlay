@@ -1,10 +1,10 @@
 DEFINED_PHASES=prepare unpack
-DEPEND=!<sys-devel/gettext-0.18.1.1-r3 || ( >=sys-devel/automake-1.15:1.15 ) >=sys-devel/autoconf-2.69 >=sys-devel/libtool-2.4 dev-vcs/git
+DEPEND=>=app-portage/elt-patches-20170317 !<sys-devel/gettext-0.18.1.1-r3 || ( >=sys-devel/automake-1.15:1.15 ) >=sys-devel/autoconf-2.69 >=sys-devel/libtool-2.4 dev-vcs/git
 DESCRIPTION=Build tool wrappers for using custom SYSROOTs
 EAPI=5
 HOMEPAGE=https://github.com/coreos/sysroot-wrappers
 KEYWORDS=-*
 LICENSE=GPL-3
 SLOT=0
-_eclasses_=autotools	07e71b3b5690738ef7e8bc097077e00c	git-2	7af5d170bfc02983b4bcd3167dc5edd4	libtool	4890219c51da247200223277f993e054	multilib	165fc17c38d1b11dac2008280dab6e80	toolchain-funcs	1b1da0c45c555989dc5d832b54880783
+_eclasses_=autotools	7027963e8e8cc12c91117bdb9225dc26	git-2	195a672bfaf52d868442171c9469bbb6	libtool	e32ea84bf82cf8987965b574672dba93	multilib	0236be304ee52e7f179ed2f337075515	toolchain-funcs	6eb35f81556258a4bc9182ad3dfd58ee
 _md5_=215069a2740b17dfec19f8859a12a0c3

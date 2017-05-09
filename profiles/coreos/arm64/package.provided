@@ -1,7 +1,6 @@
 # arm64 provided
 
 dev-libs/gobject-introspection-1.40.0-r1
-dev-util/boost-build-1.55.0
 
 # build errors
 net-dns/bind-tools-9.10.1_p1

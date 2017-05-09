@@ -7,7 +7,7 @@ CROS_WORKON_TREE="fac7e77188abf62a8c29d1aab875e6bc72d892b2"
 CROS_WORKON_PROJECT="chromiumos/platform/crosutils"
 CROS_WORKON_LOCALNAME="../scripts/"
 
-inherit python cros-workon
+inherit python-utils-r1 cros-workon
 
 DESCRIPTION="Chromium OS build utilities"
 HOMEPAGE="http://www.chromium.org/chromium-os"
@@ -28,7 +28,7 @@ src_install() {
 	exeinto /usr/lib/crosutils
 	doexe * || die "Could not install shared files."
 
-	insinto "$(python_get_sitedir)"
+	insinto "$(python_get_sitedir python2_7 PYTHON)"
 	doins lib/*.py || die "Could not install python files."
 	rm -f lib/*.py
 
