@@ -7,5 +7,5 @@ KEYWORDS=amd64 arm x86
 LICENSE=BSD
 RDEPEND=!<=chromeos-base/chromeos-chrome-16.0.886.0_rc-r1 !=chromeos-base/chromeos-chrome-16.0.882.0_alpha-r1
 SLOT=0
-_eclasses_=eutils	ea170b525f6a38a006be05c9d9429f13	git	a673225a1558ef94456dbd8ce271d16a	multilib	165fc17c38d1b11dac2008280dab6e80	toolchain-funcs	1b1da0c45c555989dc5d832b54880783
+_eclasses_=epatch	8233751dc5105a6ae8fcd86ce2bb0247	estack	43ddf5aaffa7a8d0482df54d25a66a1f	eutils	9c113d6a64826c40154cad7be15d95ea	git	a673225a1558ef94456dbd8ce271d16a	ltprune	2770eed66a9b8ef944714cd0e968182e	multilib	0236be304ee52e7f179ed2f337075515	toolchain-funcs	6eb35f81556258a4bc9182ad3dfd58ee
 _md5_=579f60ce72224267969c368f3c1ac26c
