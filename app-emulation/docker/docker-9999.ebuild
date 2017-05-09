@@ -1,6 +1,5 @@
-# Copyright 1999-2015 Gentoo Foundation
+# Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Id$
 
 EAPI=5
 
@@ -24,8 +23,7 @@ DESCRIPTION="Docker complements kernel namespacing with a high-level API which o
 HOMEPAGE="https://dockerproject.org"
 LICENSE="Apache-2.0"
 SLOT="0"
-IUSE="apparmor aufs +btrfs contrib +device-mapper experimental +overlay seccomp
-	+selinux vim-syntax zsh-completion +journald"
+IUSE="apparmor aufs +btrfs +container-init +device-mapper +overlay pkcs11 +journald seccomp +selinux vim-syntax zsh-completion"
 
 # https://github.com/docker/docker/blob/v17.04.0-ce/project/PACKAGERS.md#build-dependencies
 CDEPEND="
@@ -35,9 +33,6 @@ CDEPEND="
 	)
 	seccomp? (
 		>=sys-libs/libseccomp-2.2.1[static-libs]
-	)
-	journald? (
-		>=sys-apps/systemd-225
 	)
 "
 
@@ -69,6 +64,7 @@ RDEPEND="
 	=app-emulation/containerd-0.2.3_p109[seccomp?]
 	=app-emulation/runc-1.0.0_rc2_p137[apparmor?,seccomp?]
 	app-emulation/docker-proxy
+	container-init? ( >=sys-process/tini-0.13.1 )
 "
 
 RESTRICT="installsources strip"
@@ -77,24 +73,29 @@ RESTRICT="installsources strip"
 CONFIG_CHECK="
 	~NAMESPACES ~NET_NS ~PID_NS ~IPC_NS ~UTS_NS
 	~CGROUPS ~CGROUP_CPUACCT ~CGROUP_DEVICE ~CGROUP_FREEZER ~CGROUP_SCHED ~CPUSETS ~MEMCG
-	~KEYS ~MACVLAN ~VETH ~BRIDGE ~BRIDGE_NETFILTER
-	~NF_NAT_IPV4 ~IP_NF_FILTER ~IP_NF_MANGLE ~IP_NF_TARGET_MASQUERADE
-	~IP_VS ~IP_VS_RR
+	~KEYS
+	~VETH ~BRIDGE ~BRIDGE_NETFILTER
+	~NF_NAT_IPV4 ~IP_NF_FILTER ~IP_NF_TARGET_MASQUERADE
 	~NETFILTER_XT_MATCH_ADDRTYPE ~NETFILTER_XT_MATCH_CONNTRACK
-	~NETFILTER_XT_MATCH_IPVS
-	~NETFILTER_XT_MARK ~NETFILTER_XT_TARGET_REDIRECT
 	~NF_NAT ~NF_NAT_NEEDED
-
 	~POSIX_MQUEUE
 
+	~USER_NS
+	~SECCOMP
+	~CGROUP_PIDS
 	~MEMCG_SWAP ~MEMCG_SWAP_ENABLED
 
-	~BLK_CGROUP ~IOSCHED_CFQ
+	~BLK_CGROUP ~BLK_DEV_THROTTLING ~IOSCHED_CFQ ~CFQ_GROUP_IOSCHED
 	~CGROUP_PERF
 	~CGROUP_HUGETLB
 	~NET_CLS_CGROUP
 	~CFS_BANDWIDTH ~FAIR_GROUP_SCHED ~RT_GROUP_SCHED
+	~IP_VS ~IP_VS_PROTO_TCP ~IP_VS_PROTO_UDP ~IP_VS_NFCT ~IP_VS_RR
+
+	~VXLAN
 	~XFRM_ALGO ~XFRM_USER
+	~IPVLAN
+	~MACVLAN ~DUMMY
 "
 
 ERROR_KEYS="CONFIG_KEYS: is mandatory"
@@ -112,7 +113,7 @@ pkg_setup() {
 	if kernel_is lt 3 10; then
 		ewarn ""
 		ewarn "Using Docker with kernels older than 3.10 is unstable and unsupported."
-		ewarn " - http://docs.docker.com/installation/binaries/#check-kernel-dependencies"
+		ewarn " - http://docs.docker.com/engine/installation/binaries/#check-kernel-dependencies"
 	fi
 
 	# for where these kernel versions come from, see:
@@ -170,6 +171,7 @@ pkg_setup() {
 	if use btrfs; then
 		CONFIG_CHECK+="
 			~BTRFS_FS
+			~BTRFS_FS_POSIX_ACL
 		"
 	fi
 
@@ -182,12 +184,6 @@ pkg_setup() {
 	if use overlay; then
 		CONFIG_CHECK+="
 			~OVERLAY_FS ~EXT4_FS_SECURITY ~EXT4_FS_POSIX_ACL
-		"
-	fi
-
-	if use seccomp; then
-		CONFIG_CHECK+="
-			~SECCOMP
 		"
 	fi
 
@@ -234,28 +230,11 @@ src_compile() {
 		fi
 	done
 
-	for tag in apparmor seccomp selinux journald; do
+	for tag in apparmor pkcs11 seccomp selinux journald; do
 		if use $tag; then
 			DOCKER_BUILDTAGS+=" $tag"
 		fi
 	done
-
-	if has_version '<sys-fs/lvm2-2.02.110' ; then
-		# Docker uses the host files when testing features, so force
-		# docker to not use dm_task_deferred_remove to cover cross
-		# builds.
-		DOCKER_BUILDTAGS+=' libdm_no_deferred_remove'
-	fi
-
-	# https://github.com/docker/docker/pull/13338
-	if use experimental; then
-		export DOCKER_EXPERIMENTAL=1
-	else
-		unset DOCKER_EXPERIMENTAL
-	fi
-
-	# disable optimizations due to https://github.com/golang/go/issues/14669
-	CFLAGS+=" -O0"
 
 	go_export
 
@@ -273,11 +252,13 @@ src_install() {
 	dosym containerd /usr/bin/docker-containerd
 	dosym containerd-shim /usr/bin/docker-containerd-shim
 	dosym runc /usr/bin/docker-runc
+	use container-init && dosym tini /usr/bin/docker-init
 
 	newinitd contrib/init/openrc/docker.initd docker
 	newconfd contrib/init/openrc/docker.confd docker
 
 	exeinto /usr/lib/coreos
+	# Create /usr/lib/coreos/dockerd for backwards compatibility
 	doexe "${FILESDIR}/dockerd"
 
 	systemd_dounit "${FILESDIR}/docker.service"
@@ -303,12 +284,6 @@ src_install() {
 		insinto /usr/share/vim/vimfiles
 		doins -r contrib/syntax/vim/ftdetect
 		doins -r contrib/syntax/vim/syntax
-	fi
-
-	if use contrib; then
-		# note: intentionally not using "doins" so that we preserve +x bits
-		mkdir -p "${D}/usr/share/${PN}/contrib"
-		cp -R contrib/* "${D}/usr/share/${PN}/contrib"
 	fi
 }
 
