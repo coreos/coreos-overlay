@@ -12,7 +12,7 @@ SRC_URI="mirror://sourceforge/${PN}/${P}.tar.bz2
 
 LICENSE="GPL-2"
 SLOT="0/3" # subslot matches SONAME major
-KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86"
+KEYWORDS="~alpha amd64 ~arm arm64 ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86"
 IUSE="ipv6 kerberos static-libs"
 
 RDEPEND="kerberos? ( >=virtual/krb5-0-r1[${MULTILIB_USEDEP}] )"
@@ -28,6 +28,9 @@ src_prepare() {
 	cp -r "${WORKDIR}"/tirpc "${S}"/ || die
 	epatch "${PATCHES[@]}"
 	epatch_user
+
+	# set netconfig path to /usr so nfs works in CoreOS PXE/ISO booted systems.
+	sed -ie "s,/etc,/usr/share/tirpc," "${S}/tirpc/netconfig.h" || die
 }
 
 multilib_src_configure() {
@@ -48,7 +51,7 @@ multilib_src_install() {
 multilib_src_install_all() {
 	einstalldocs
 
-	insinto /etc
+	insinto /usr/share/tirpc
 	doins doc/netconfig
 
 	insinto /usr/include/tirpc
