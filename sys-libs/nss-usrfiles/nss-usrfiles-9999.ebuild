@@ -13,7 +13,7 @@ else
 	KEYWORDS="amd64 arm arm64 x86"
 fi
 
-inherit cros-workon
+inherit cros-workon toolchain-funcs
 
 DESCRIPTION="NSS module for data sources under /usr on for CoreOS"
 HOMEPAGE="https://github.com/coreos/nss-altfiles"
