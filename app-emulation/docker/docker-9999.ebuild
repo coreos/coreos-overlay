@@ -12,7 +12,7 @@ if [[ ${PV} == *9999 ]]; then
 	DOCKER_GITCOMMIT="unknown"
 	KEYWORDS="~amd64 ~arm64"
 else
-	CROS_WORKON_COMMIT="4845c567eb35d68f35b0b1713a09b0c8d47fe67e" # coreos-17.04.0-ce
+	CROS_WORKON_COMMIT="89658bed64c2a8fe05a978e5b87dbec409d57a0f" # coreos-17.05.0-ce
 	DOCKER_GITCOMMIT="${CROS_WORKON_COMMIT:0:7}"
 	KEYWORDS="amd64 arm64"
 fi
@@ -25,7 +25,7 @@ LICENSE="Apache-2.0"
 SLOT="0"
 IUSE="apparmor aufs +btrfs +container-init +device-mapper +overlay pkcs11 +journald seccomp +selinux vim-syntax zsh-completion"
 
-# https://github.com/docker/docker/blob/v17.04.0-ce/project/PACKAGERS.md#build-dependencies
+# https://github.com/docker/docker/blob/v17.05.0-ce/project/PACKAGERS.md#build-dependencies
 CDEPEND="
 	>=dev-db/sqlite-3.7.9:3
 	device-mapper? (
@@ -61,7 +61,7 @@ RDEPEND="
 	>=app-arch/xz-utils-4.9
 	>=sys-apps/shadow-4.4
 
-	=app-emulation/containerd-0.2.3_p109[seccomp?]
+	>=app-emulation/containerd-0.2.7_p2[seccomp?]
 	=app-emulation/runc-1.0.0_rc2_p137[apparmor?,seccomp?]
 	app-emulation/docker-proxy
 	container-init? ( >=sys-process/tini-0.13.1 )
