@@ -15,8 +15,6 @@ IUSE=""
 # no source directory
 S="${WORKDIR}"
 
-RDEPEND="~app-emulation/wa-linux-agent-${PV}"
-
 src_prepare() {
 	sed -e "s\\@@OEM_VERSION_ID@@\\${PVR}\\g" \
 		"${FILESDIR}/oem-release" > "${T}/oem-release" || die
@@ -26,5 +24,4 @@ src_install() {
 	insinto "/usr/share/oem"
 	doins "${FILESDIR}/grub.cfg"
 	doins "${T}/oem-release"
-	doins -r "${FILESDIR}/units"
 }
