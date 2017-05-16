@@ -69,6 +69,7 @@ exec ${RKT} ${RKT_GLOBAL_ARGS} \
 	--volume var-lib-kubelet,kind=host,source=/var/lib/kubelet,readOnly=false,recursive=true \
 	--volume var-log,kind=host,source=/var/log,readOnly=false \
 	--volume os-release,kind=host,source=/usr/lib/os-release,readOnly=true \
+	--volume lib-modules,kind=host,source=/lib/modules,readOnly=true \
 	--volume run,kind=host,source=/run,readOnly=false \
 	--mount volume=etc-kubernetes,target=/etc/kubernetes \
 	--mount volume=etc-ssl-certs,target=/etc/ssl/certs \
@@ -77,6 +78,7 @@ exec ${RKT} ${RKT_GLOBAL_ARGS} \
 	--mount volume=var-lib-kubelet,target=/var/lib/kubelet \
 	--mount volume=var-log,target=/var/log \
 	--mount volume=os-release,target=/etc/os-release \
+	--mount volume=lib-modules,target=/lib/modules \
 	--mount volume=run,target=/run \
 	${RKT_STAGE1_ARG} \
 	${KUBELET_IMAGE} \
