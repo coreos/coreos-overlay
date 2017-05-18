@@ -62,22 +62,22 @@ KUBELET_IMAGE_ARGS=${KUBELET_IMAGE_ARGS:---exec=/kubelet}
 set -x
 exec ${RKT} ${RKT_GLOBAL_ARGS} \
 	run ${RKT_RUN_ARGS} \
-	--volume etc-kubernetes,kind=host,source=/etc/kubernetes,readOnly=false \
-	--volume etc-ssl-certs,kind=host,source=/etc/ssl/certs,readOnly=true \
-	--volume usr-share-certs,kind=host,source=/usr/share/ca-certificates,readOnly=true \
-	--volume var-lib-docker,kind=host,source=/var/lib/docker,readOnly=false \
-	--volume var-lib-kubelet,kind=host,source=/var/lib/kubelet,readOnly=false,recursive=true \
-	--volume var-log,kind=host,source=/var/log,readOnly=false \
-	--volume os-release,kind=host,source=/usr/lib/os-release,readOnly=true \
-	--volume run,kind=host,source=/run,readOnly=false \
-	--mount volume=etc-kubernetes,target=/etc/kubernetes \
-	--mount volume=etc-ssl-certs,target=/etc/ssl/certs \
-	--mount volume=usr-share-certs,target=/usr/share/ca-certificates \
-	--mount volume=var-lib-docker,target=/var/lib/docker \
-	--mount volume=var-lib-kubelet,target=/var/lib/kubelet \
-	--mount volume=var-log,target=/var/log \
-	--mount volume=os-release,target=/etc/os-release \
-	--mount volume=run,target=/run \
+	--volume coreos-etc-kubernetes,kind=host,source=/etc/kubernetes,readOnly=false \
+	--volume coreos-etc-ssl-certs,kind=host,source=/etc/ssl/certs,readOnly=true \
+	--volume coreos-usr-share-certs,kind=host,source=/usr/share/ca-certificates,readOnly=true \
+	--volume coreos-var-lib-docker,kind=host,source=/var/lib/docker,readOnly=false \
+	--volume coreos-var-lib-kubelet,kind=host,source=/var/lib/kubelet,readOnly=false,recursive=true \
+	--volume coreos-var-log,kind=host,source=/var/log,readOnly=false \
+	--volume coreos-os-release,kind=host,source=/usr/lib/os-release,readOnly=true \
+	--volume coreos-run,kind=host,source=/run,readOnly=false \
+	--mount volume=coreos-etc-kubernetes,target=/etc/kubernetes \
+	--mount volume=coreos-etc-ssl-certs,target=/etc/ssl/certs \
+	--mount volume=coreos-usr-share-certs,target=/usr/share/ca-certificates \
+	--mount volume=coreos-var-lib-docker,target=/var/lib/docker \
+	--mount volume=coreos-var-lib-kubelet,target=/var/lib/kubelet \
+	--mount volume=coreos-var-log,target=/var/log \
+	--mount volume=coreos-os-release,target=/etc/os-release \
+	--mount volume=coreos-run,target=/run \
 	${RKT_STAGE1_ARG} \
 	${KUBELET_IMAGE} \
 		${KUBELET_IMAGE_ARGS} \

@@ -46,15 +46,15 @@ fi
 ETCD_SSL_DIR="${ETCD_SSL_DIR:-/etc/ssl/etcd}"
 if [[ -d "${ETCD_SSL_DIR}" ]]; then
 	RKT_RUN_ARGS="${RKT_RUN_ARGS} \
-		--volume ssl,kind=host,source=${ETCD_SSL_DIR},readOnly=true \
-		--mount volume=ssl,target=${ETCD_SSL_DIR} \
+		--volume coreos-ssl,kind=host,source=${ETCD_SSL_DIR},readOnly=true \
+		--mount volume=coreos-ssl,target=${ETCD_SSL_DIR} \
 	"
 fi
 
 if [[ -S "${NOTIFY_SOCKET}" ]]; then
 	RKT_RUN_ARGS="${RKT_RUN_ARGS} \
-		--mount volume=notify,target=/run/systemd/notify \
-		--volume notify,kind=host,source=${NOTIFY_SOCKET} \
+		--mount volume=coreos-notify,target=/run/systemd/notify \
+		--volume coreos-notify,kind=host,source=${NOTIFY_SOCKET} \
 		--set-env=NOTIFY_SOCKET=/run/systemd/notify \
 	"
 fi
@@ -67,16 +67,16 @@ set -x
 exec ${RKT} ${RKT_GLOBAL_ARGS} \
 	run ${RKT_RUN_ARGS} \
 	--net=host \
-	--volume run-flannel,kind=host,source=/run/flannel,readOnly=false \
-	--volume etc-ssl-certs,kind=host,source=/usr/share/ca-certificates,readOnly=true \
-	--volume usr-share-certs,kind=host,source=/usr/share/ca-certificates,readOnly=true \
-	--volume etc-hosts,kind=host,source=/etc/hosts,readOnly=true \
-	--volume etc-resolv,kind=host,source=/etc/resolv.conf,readOnly=true \
-	--mount volume=run-flannel,target=/run/flannel \
-	--mount volume=etc-ssl-certs,target=/etc/ssl/certs \
-	--mount volume=usr-share-certs,target=/usr/share/ca-certificates \
-	--mount volume=etc-hosts,target=/etc/hosts  \
-	--mount volume=etc-resolv,target=/etc/resolv.conf \
+	--volume coreos-run-flannel,kind=host,source=/run/flannel,readOnly=false \
+	--volume coreos-etc-ssl-certs,kind=host,source=/usr/share/ca-certificates,readOnly=true \
+	--volume coreos-usr-share-certs,kind=host,source=/usr/share/ca-certificates,readOnly=true \
+	--volume coreos-etc-hosts,kind=host,source=/etc/hosts,readOnly=true \
+	--volume coreos-etc-resolv,kind=host,source=/etc/resolv.conf,readOnly=true \
+	--mount volume=coreos-run-flannel,target=/run/flannel \
+	--mount volume=coreos-etc-ssl-certs,target=/etc/ssl/certs \
+	--mount volume=coreos-usr-share-certs,target=/usr/share/ca-certificates \
+	--mount volume=coreos-etc-hosts,target=/etc/hosts  \
+	--mount volume=coreos-etc-resolv,target=/etc/resolv.conf \
 	--inherit-env \
 	${RKT_STAGE1_ARG} \
 	${FLANNEL_IMAGE} \
