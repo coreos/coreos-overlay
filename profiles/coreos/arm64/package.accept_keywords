@@ -18,6 +18,7 @@
 =dev-libs/nspr-4.13.1 ~arm64
 =dev-libs/nss-3.29.5 ~arm64
 =dev-libs/userspace-rcu-0.9.1 **
+=dev-vcs/git-2.13.0 ~arm64
 =media-libs/libpng-1.6.27 ~arm64
 =net-analyzer/nmap-7.12 ~arm64
 =net-analyzer/tcpdump-4.9.0 ~arm64
