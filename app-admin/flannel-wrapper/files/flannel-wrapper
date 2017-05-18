@@ -68,7 +68,7 @@ exec ${RKT} ${RKT_GLOBAL_ARGS} \
 	run ${RKT_RUN_ARGS} \
 	--net=host \
 	--volume coreos-run-flannel,kind=host,source=/run/flannel,readOnly=false \
-	--volume coreos-etc-ssl-certs,kind=host,source=/usr/share/ca-certificates,readOnly=true \
+	--volume coreos-etc-ssl-certs,kind=host,source=/etc/ssl/certs,readOnly=true \
 	--volume coreos-usr-share-certs,kind=host,source=/usr/share/ca-certificates,readOnly=true \
 	--volume coreos-etc-hosts,kind=host,source=/etc/hosts,readOnly=true \
 	--volume coreos-etc-resolv,kind=host,source=/etc/resolv.conf,readOnly=true \
