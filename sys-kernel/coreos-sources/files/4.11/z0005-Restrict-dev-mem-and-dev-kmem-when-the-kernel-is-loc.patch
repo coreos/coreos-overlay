@@ -1,4 +1,4 @@
-From ec94f3ef19d149bf234a02fbf5733fc90532d903 Mon Sep 17 00:00:00 2001
+From af03b685e00db658c4c403473c8e3eba46f7c4dc Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:16 +0000
 Subject: [PATCH 05/24] Restrict /dev/mem and /dev/kmem when the kernel is
@@ -39,5 +39,5 @@ index 7e4a9d1..3c305b8 100644
  		unsigned long to_write = min_t(unsigned long, count,
  					       (unsigned long)high_memory - p);
 -- 
-2.9.3
+2.9.4
 
