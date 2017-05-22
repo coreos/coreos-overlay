@@ -1,4 +1,4 @@
-From 5fb1117bb8bdfa834a1479a250508d87f9c29d9c Mon Sep 17 00:00:00 2001
+From b89e4a8478e4aeead12d569b4201bd49cb3fb5f8 Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Wed, 23 Nov 2016 13:22:22 +0000
 Subject: [PATCH 04/24] Enforce module signatures if the kernel is locked down
@@ -25,5 +25,5 @@ index 7eba6de..3331f2e 100644
  
  	return err;
 -- 
-2.9.3
+2.9.4
 
