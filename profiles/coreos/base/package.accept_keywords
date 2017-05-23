@@ -42,10 +42,6 @@ dev-util/checkbashisms
 # Avoid cross compile error with amd64 stable (elfutils-0.158).
 =dev-libs/elfutils-0.161 ~amd64
 
-# newer btrfs-progs improve things like preserving capabilities in send/receive
-# https://github.com/coreos/bugs/issues/923
-=sys-fs/btrfs-progs-4.2.2 ~amd64 ~arm64
-
 # Get a newer version of pylint
 =dev-python/astng-0.21.1 ~amd64
 =dev-python/pylint-0.23.0 ~amd64

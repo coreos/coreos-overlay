@@ -39,6 +39,7 @@
 =sys-apps/smartmontools-6.4 **
 =sys-apps/util-linux-2.28.2 ~arm64
 =sys-block/parted-3.2-r1 ~arm64
+=sys-fs/btrfs-progs-4.10.2 ~arm64
 =sys-fs/cryptsetup-1.7.2 **
 =sys-fs/lsscsi-0.28 **
 =sys-fs/mdadm-3.4 **
