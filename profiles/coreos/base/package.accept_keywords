@@ -85,3 +85,6 @@ dev-util/checkbashisms
 
 # CVE-2017-8779
 =net-nds/rpcbind-0.2.4-r1
+
+# Pick up fixes for bugs introduced in 4.0
+=sys-fs/dosfstools-4.1 **
