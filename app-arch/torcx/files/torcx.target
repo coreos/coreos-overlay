@@ -1,0 +1,7 @@
+[Unit]
+Description=Verify torcx succeeded
+DefaultDependencies=no
+AssertPathExists=/run/metadata/torcx
+
+[Install]
+WantedBy=basic.target
