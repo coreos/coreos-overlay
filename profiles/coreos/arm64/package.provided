@@ -4,4 +4,3 @@ dev-libs/gobject-introspection-1.40.0-r1
 
 # build errors
 net-dns/bind-tools-9.10.1_p1
-app-admin/kubelet-1.0.1-r2

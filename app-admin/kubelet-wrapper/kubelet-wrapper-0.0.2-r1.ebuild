@@ -8,7 +8,7 @@ EAPI=6
 
 DESCRIPTION="Kubernetes Container Manager"
 HOMEPAGE="http://kubernetes.io/"
-KEYWORDS="amd64"
+KEYWORDS="amd64 arm64"
 
 LICENSE="Apache-2.0"
 SLOT="0"

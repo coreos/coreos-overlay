@@ -77,7 +77,6 @@ RDEPEND="${RDEPEND}
 RDEPEND="${RDEPEND}
 	amd64? (
 		app-admin/adcli
-		app-admin/kubelet-wrapper
 		app-crypt/go-tspi
 		app-emulation/xenserver-pv-version
 		app-emulation/xenstore
@@ -89,6 +88,7 @@ RDEPEND="${RDEPEND}
 RDEPEND="${RDEPEND}
 	app-admin/etcd-wrapper
 	app-admin/fleet
+	app-admin/kubelet-wrapper
 	app-admin/locksmith
 	app-admin/mayday
 	app-admin/sdnotify-proxy
