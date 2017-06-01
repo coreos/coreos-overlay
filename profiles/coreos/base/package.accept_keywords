@@ -31,11 +31,6 @@ net-misc/gsutil
 # no version marked stable upstream
 dev-util/checkbashisms
 
-# current stable (4.3.x) xen-tools doesn't build without multilib
-~app-emulation/xen-4.4.1
-~app-emulation/xen-tools-4.4.1
-~app-emulation/xen-pvgrub-4.4.1
-
 # https://bugs.gentoo.org/show_bug.cgi?id=548158
 =sys-apps/gentoo-functions-0.10
 

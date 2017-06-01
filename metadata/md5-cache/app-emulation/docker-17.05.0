@@ -1,14 +1,14 @@
 DEFINED_PHASES=compile info install postinst prepare setup unpack
-DEPEND=>=dev-db/sqlite-3.7.9:3 device-mapper? ( >=sys-fs/lvm2-2.02.89[thin] ) seccomp? ( >=sys-libs/libseccomp-2.2.1[static-libs] ) journald? ( >=sys-apps/systemd-225 ) btrfs? ( >=sys-fs/btrfs-progs-3.16.1 ) sys-kernel/coreos-kernel virtual/pkgconfig virtual/pkgconfig >=dev-vcs/git-1.8.2.1 dev-lang/go:1.7=
+DEPEND=>=dev-db/sqlite-3.7.9:3 device-mapper? ( >=sys-fs/lvm2-2.02.89[thin] ) seccomp? ( >=sys-libs/libseccomp-2.2.1[static-libs] ) btrfs? ( >=sys-fs/btrfs-progs-3.16.1 ) sys-kernel/coreos-kernel virtual/pkgconfig virtual/pkgconfig >=dev-vcs/git-1.8.2.1 dev-lang/go:1.7=
 DESCRIPTION=Docker complements kernel namespacing with a high-level API which operates at the process level
 EAPI=5
 HOMEPAGE=https://dockerproject.org
-IUSE=apparmor aufs +btrfs contrib +device-mapper experimental +overlay seccomp +selinux vim-syntax zsh-completion +journald cros_workon_tree_* profiling +go_version_go1_7
+IUSE=apparmor aufs +btrfs +container-init +device-mapper +overlay pkcs11 +journald seccomp +selinux vim-syntax zsh-completion cros_workon_tree_* profiling +go_version_go1_7
 KEYWORDS=amd64 arm64
 LICENSE=Apache-2.0
-RDEPEND=>=dev-db/sqlite-3.7.9:3 device-mapper? ( >=sys-fs/lvm2-2.02.89[thin] ) seccomp? ( >=sys-libs/libseccomp-2.2.1[static-libs] ) journald? ( >=sys-apps/systemd-225 ) !app-emulation/docker-bin >=net-firewall/iptables-1.4 sys-process/procps >=dev-vcs/git-1.7 >=app-arch/xz-utils-4.9 >=sys-apps/shadow-4.4 =app-emulation/containerd-0.2.3_p109[seccomp?] =app-emulation/runc-1.0.0_rc2_p137[apparmor?,seccomp?] app-emulation/docker-proxy
+RDEPEND=>=dev-db/sqlite-3.7.9:3 device-mapper? ( >=sys-fs/lvm2-2.02.89[thin] ) seccomp? ( >=sys-libs/libseccomp-2.2.1[static-libs] ) !app-emulation/docker-bin >=net-firewall/iptables-1.4 sys-process/procps >=dev-vcs/git-1.7 >=app-arch/xz-utils-4.9 >=sys-apps/shadow-4.4 >=app-emulation/containerd-0.2.7_p2[seccomp?] =app-emulation/runc-1.0.0_rc2_p137[apparmor?,seccomp?] app-emulation/docker-proxy container-init? ( >=sys-process/tini-0.13.1 )
 REQUIRED_USE=go_version_go1_7
 RESTRICT=installsources strip
 SLOT=0
 _eclasses_=bash-completion-r1	8e447753aaf658afa609fbf961d80ab7	coreos-go-depend	bbc48df71cd1e48b73083b5c63377751	coreos-go-utils	5e0ac5131161ee8de80f759806fc0de0	cros-workon	4ad6e6491a1010ad7c875302b3be18ba	epatch	8233751dc5105a6ae8fcd86ce2bb0247	estack	43ddf5aaffa7a8d0482df54d25a66a1f	eutils	9c113d6a64826c40154cad7be15d95ea	flag-o-matic	61cad4fb5d800b29d484b27cb033f59b	git-r3	cbafa3261c37c7e3af44bb16a34ea390	linux-info	ca370deef9d44125d829f2eb6ebc83e0	ltprune	2770eed66a9b8ef944714cd0e968182e	multilib	0236be304ee52e7f179ed2f337075515	systemd	ec2e9154031d942186c75c0aabb41900	toolchain-funcs	6eb35f81556258a4bc9182ad3dfd58ee	udev	d91cac2c73b94629cad2daea66e0d182	user	e4b567c44272a719fabf53f0f885d3f7	versionator	c80ccf29e90adea7c5cae94b42eb76d0
-_md5_=edf26d0c62989a628f7ab5158c149314
+_md5_=b1be025177a00bbc0639192dcf4514e8

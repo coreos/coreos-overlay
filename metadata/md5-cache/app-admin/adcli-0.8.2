@@ -1,0 +1,13 @@
+DEFINED_PHASES=configure prepare
+DEPEND=app-crypt/mit-krb5 dev-libs/cyrus-sasl net-nds/openldap doc? ( app-text/docbook-xml-dtd:4.3 dev-libs/libxslt ) >=app-portage/elt-patches-20170317 !<sys-devel/gettext-0.18.1.1-r3 || ( >=sys-devel/automake-1.15:1.15 ) >=sys-devel/autoconf-2.69 >=sys-devel/libtool-2.4
+DESCRIPTION=A helper library and tools for Active Directory client operations
+EAPI=6
+HOMEPAGE=https://www.freedesktop.org/software/realmd/adcli/
+IUSE=debug doc
+KEYWORDS=amd64 arm64
+LICENSE=LGPL-2.1+
+RDEPEND=app-crypt/mit-krb5 dev-libs/cyrus-sasl net-nds/openldap
+SLOT=0
+SRC_URI=https://www.freedesktop.org/software/realmd/releases/adcli-0.8.2.tar.gz
+_eclasses_=autotools	7027963e8e8cc12c91117bdb9225dc26	libtool	e32ea84bf82cf8987965b574672dba93	multilib	0236be304ee52e7f179ed2f337075515	toolchain-funcs	6eb35f81556258a4bc9182ad3dfd58ee
+_md5_=0c5f4062cfa903546315b677de4676d1
