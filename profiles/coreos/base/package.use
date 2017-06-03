@@ -39,7 +39,7 @@ net-analyzer/nmap ncat -lua
 app-admin/sudo -sendmail
 
 # use lzma which is the default on non-gentoo systems, avoid pulling in gnutls
-sys-apps/systemd build curl gcrypt lzma -lz4 -ssl
+sys-apps/systemd build curl gcrypt lzma -ssl
 net-libs/libmicrohttpd -ssl
 
 # disable kernel config detection and module building
