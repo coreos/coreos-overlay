@@ -82,11 +82,11 @@ RDEPEND="${RDEPEND}
 		app-emulation/xenstore
 		sys-auth/realmd
 		sys-auth/sssd
-		app-admin/flannel-wrapper
 	)"
 
 RDEPEND="${RDEPEND}
 	app-admin/etcd-wrapper
+	app-admin/flannel-wrapper
 	app-admin/fleet
 	app-admin/kubelet-wrapper
 	app-admin/locksmith
