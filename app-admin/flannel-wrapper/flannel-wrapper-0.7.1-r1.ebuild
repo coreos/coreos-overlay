@@ -8,7 +8,7 @@ inherit systemd
 DESCRIPTION="flannel (System Application Container)"
 HOMEPAGE="https://github.com/coreos/flannel"
 
-KEYWORDS="amd64"
+KEYWORDS="amd64 arm64"
 SRC_URI=""
 
 LICENSE="Apache-2.0"
@@ -23,11 +23,21 @@ RDEPEND="
 S="$WORKDIR"
 
 src_install() {
+	local tag="v${PV}"
+	if [[ "${ARCH}" != "amd64" ]]; then
+		tag+="-${ARCH}"
+	fi
+
 	exeinto /usr/lib/coreos
 	doexe "${FILESDIR}"/flannel-wrapper
 
-	systemd_dounit "${FILESDIR}"/flanneld.service
-	systemd_dounit "${FILESDIR}"/flannel-docker-opts.service
+	sed "s|@FLANNEL_IMAGE_TAG@|${tag}|g" \
+		"${FILESDIR}"/flanneld.service > ${T}/flanneld.service
+	systemd_dounit ${T}/flanneld.service
+
+	sed "s|@FLANNEL_IMAGE_TAG@|${tag}|g" \
+		"${FILESDIR}"/flannel-docker-opts.service > ${T}/flannel-docker-opts.service
+	systemd_dounit ${T}/flannel-docker-opts.service
 
 	insinto /usr/lib/systemd/network
 	doins "${FILESDIR}"/50-flannel.network
