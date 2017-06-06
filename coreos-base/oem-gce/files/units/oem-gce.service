@@ -11,6 +11,10 @@ RestartSec=5
 KillMode=process
 KillSignal=SIGTERM
 
+[Service]
+ExecStartPre=/usr/bin/mkdir --parents /var/lib/oem-gce
+ExecStartPre=-/usr/bin/rkt rm --uuid-file=/var/lib/oem-gce/coreos-oem-gce.uuid
+
 ExecStart=/usr/bin/rkt run \
     --inherit-env=true \
     --insecure-options=image \
@@ -19,9 +23,10 @@ ExecStart=/usr/bin/rkt run \
     --volume=etc,kind=host,source=/etc,readOnly=false \
     --volume=home,kind=host,source=/home,readOnly=false \
     --volume=runsystemd,kind=host,source=/run/systemd,readOnly=false \
+    --uuid-file-save=/var/lib/oem-gce/coreos-oem-gce.uuid \
     /usr/share/oem/coreos-oem-gce.aci
 
-ExecStopPost=/usr/bin/rkt gc --mark-only
+ExecStop=-/usr/bin/rkt stop --uuid-file=/var/lib/oem-gce/coreos-oem-gce.uuid
 
 [Install]
 WantedBy=multi-user.target
