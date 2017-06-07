@@ -150,6 +150,7 @@ RDEPEND="${RDEPEND}
 	sys-apps/which
 	sys-block/open-iscsi
 	sys-fs/btrfs-progs
+	sys-fs/dosfstools
 	sys-fs/e2fsprogs
 	sys-fs/mdadm
 	sys-fs/multipath-tools
