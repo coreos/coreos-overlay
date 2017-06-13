@@ -2,14 +2,6 @@
 
 coreos:
   units:
-    - name: etcd.service
-      runtime: true
-      drop-ins:
-        - name: 10-oem.conf
-          content: |
-            [Service]
-            Environment=ETCD_PEER_ELECTION_TIMEOUT=1200
-
     - name: etcd2.service
       runtime: true
       drop-ins:
