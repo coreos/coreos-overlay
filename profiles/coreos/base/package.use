@@ -20,7 +20,7 @@ media-libs/gd           png
 media-libs/libmtp       -crypt
 # We don't want any driver/hw rendering on the host
 media-sound/alsa-utils	-libsamplerate minimal
-net-misc/curl		kerberos
+net-misc/curl		kerberos threads
 net-misc/iputils	arping traceroute
 sci-geosciences/gpsd	-cxx
 sys-devel/gettext	-git
@@ -85,3 +85,6 @@ sys-fs/quota rpc
 
 # Don't bother building portage w/xattr, we don't need XATTR_PAX
 sys-apps/portage -xattr
+
+# Enable -M and -Z flags; -M is used by mayday
+sys-process/lsof rpc selinux
