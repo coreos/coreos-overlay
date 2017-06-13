@@ -46,4 +46,12 @@ src_install() {
 	insinto "${vendordir}/profiles"
 	doins "${FILESDIR}/vendor.json"
 	dodir "${vendordir}/store"
+
+	# Preserve program paths for torcx packages.
+	newbin "${FILESDIR}/compat-wrapper.sh" docker
+	for link in {docker-,}{containerd{,-shim},runc} ctr docker-{init,proxy} dockerd tini
+	do ln -fns docker "${ED}/usr/bin/${link}"
+	done
+	exeinto /usr/lib/coreos
+	newexe "${FILESDIR}/dockerd-wrapper.sh" dockerd
 }
