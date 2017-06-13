@@ -20,7 +20,7 @@ media-libs/gd           png
 media-libs/libmtp       -crypt
 # We don't want any driver/hw rendering on the host
 media-sound/alsa-utils	-libsamplerate minimal
-net-misc/curl		kerberos
+net-misc/curl		kerberos threads
 net-misc/iputils	arping traceroute
 sci-geosciences/gpsd	-cxx
 sys-devel/gettext	-git
