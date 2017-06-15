@@ -1,5 +1,5 @@
 [Unit]
-Description=Basic setup tasks to initialize the machine.
+Description=Report Success to Packet
 ConditionFirstBoot=true
 Requires=coreos-metadata.service
 After=coreos-metadata.service
