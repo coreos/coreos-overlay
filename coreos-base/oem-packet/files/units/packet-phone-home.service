@@ -7,7 +7,7 @@ After=coreos-metadata.service
 [Service]
 EnvironmentFile=/run/metadata/coreos
 Type=oneshot
-ExecStart=/usr/bin/curl --request POST "${COREOS_PACKET_PHONE_HOME_URL}"
+ExecStart=/usr/bin/curl --header "Content-Type: application/json" --request POST "${COREOS_PACKET_PHONE_HOME_URL}"
 
 [Install]
 WantedBy=multi-user.target
