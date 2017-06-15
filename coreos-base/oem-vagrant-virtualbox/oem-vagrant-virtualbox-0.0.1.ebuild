@@ -19,6 +19,4 @@ src_install() {
 	insinto "/usr/share/oem"
 	doins -r "${FILESDIR}/box"
 	doins "${FILESDIR}/grub.cfg"
-
-	into "/usr/share/oem"
 }
