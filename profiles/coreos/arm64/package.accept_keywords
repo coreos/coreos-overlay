@@ -23,6 +23,7 @@
 =media-libs/libpng-1.6.27 ~arm64
 =net-analyzer/nmap-7.12 ~arm64
 =net-analyzer/tcpdump-4.9.0 ~arm64
+=net-dialup/minicom-2.7.1 ~arm64
 =net-firewall/ebtables-2.0.10.4-r1 ~arm64
 =net-firewall/ipset-6.29 ~arm64
 =net-libs/libmicrohttpd-0.9.50 **
