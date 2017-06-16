@@ -20,10 +20,6 @@ else
 	KEYWORDS="amd64 arm64 ~ppc ~ppc64 x86 ~x86-fbsd"
 fi
 
-# bug #606088
-SRC_URI+="
-	https://dev.gentoo.org/~tamiko/distfiles/${P}-CVE-2016-9602-patches.tar.xz"
-
 DESCRIPTION="QEMU + Kernel-based Virtual Machine userland tools"
 HOMEPAGE="http://www.qemu.org http://www.linux-kvm.org"
 
@@ -33,16 +29,16 @@ IUSE="accessibility +aio alsa bluetooth bzip2 +caps +curl debug +fdt
 	glusterfs gnutls gtk gtk2 infiniband iscsi +jpeg kernel_linux
 	kernel_FreeBSD lzo ncurses nfs nls numa opengl +pin-upstream-blobs +png
 	pulseaudio python rbd sasl +seccomp sdl sdl2 selinux smartcard snappy
-	spice ssh static static-user systemtap tci test +threads usb usbredir
-	vde +vhost-net virgl virtfs +vnc vte xattr xen xfs"
+	spice ssh static static-user systemtap tci test usb usbredir vde
+	+vhost-net virgl virtfs +vnc vte xattr xen xfs"
 
 COMMON_TARGETS="aarch64 alpha arm cris i386 m68k microblaze microblazeel
-	mips mips64 mips64el mipsel or32 ppc ppc64 s390x sh4 sh4eb sparc
+	mips mips64 mips64el mipsel nios2 or1k ppc ppc64 s390x sh4 sh4eb sparc
 	sparc64 x86_64"
 IUSE_SOFTMMU_TARGETS="${COMMON_TARGETS}
 	lm32 moxie ppcemb tricore unicore32 xtensa xtensaeb"
 IUSE_USER_TARGETS="${COMMON_TARGETS}
-	armeb mipsn32 mipsn32el ppc64abi32 ppc64le sparc32plus tilegx"
+	armeb hppa mipsn32 mipsn32el ppc64abi32 ppc64le sparc32plus tilegx"
 
 use_softmmu_targets=$(printf ' qemu_softmmu_targets_%s' ${IUSE_SOFTMMU_TARGETS})
 use_user_targets=$(printf ' qemu_user_targets_%s' ${IUSE_USER_TARGETS})
@@ -54,6 +50,7 @@ REQUIRED_USE="${PYTHON_REQUIRED_USE}
 	gtk2? ( gtk )
 	qemu_softmmu_targets_arm? ( fdt )
 	qemu_softmmu_targets_microblaze? ( fdt )
+	qemu_softmmu_targets_mips64el? ( fdt )
 	qemu_softmmu_targets_ppc? ( fdt )
 	qemu_softmmu_targets_ppc64? ( fdt )
 	sdl2? ( sdl )
@@ -69,18 +66,17 @@ REQUIRED_USE="${PYTHON_REQUIRED_USE}
 # The attr lib isn't always linked in (although the USE flag is always
 # respected).  This is because qemu supports using the C library's API
 # when available rather than always using the extranl library.
-#
-# To configure and compile qemu user targets or tools alone the following
-# dependencies are not strictly necessary:
-#   alsa? ( >=media-libs/alsa-lib-1.0.13 )
-#   fdt? ( >=sys-apps/dtc-1.4.0[static-libs(+)] )
-#   pulseaudio? ( media-sound/pulseaudio )
-#   seccomp? ( >=sys-libs/libseccomp-2.1.0[static-libs(+)] )
-# but these are so few it is not worth the effort to separate this list.
-TARGETS_DEPEND="
+ALL_DEPEND="
 	>=dev-libs/glib-2.0[static-libs(+)]
-	>=x11-libs/pixman-0.28.0[static-libs(+)]
 	sys-libs/zlib[static-libs(+)]
+	python? ( ${PYTHON_DEPS} )
+	systemtap? ( dev-util/systemtap )
+	xattr? ( sys-apps/attr[static-libs(+)] )"
+
+# Dependencies required for qemu tools (qemu-nbd, qemu-img, qemu-io, ...)
+# softmmu targets (qemu-system-*).
+SOFTMMU_TOOLS_DEPEND="
+	>=x11-libs/pixman-0.28.0[static-libs(+)]
 	accessibility? (
 		app-accessibility/brltty[api]
 		app-accessibility/brltty[static-libs(+)]
@@ -125,7 +121,6 @@ TARGETS_DEPEND="
 	)
 	png? ( media-libs/libpng:0=[static-libs(+)] )
 	pulseaudio? ( media-sound/pulseaudio )
-	python? ( ${PYTHON_DEPS} )
 	rbd? ( sys-cluster/ceph[static-libs(+)] )
 	sasl? ( dev-libs/cyrus-sasl[static-libs(+)] )
 	sdl? (
@@ -146,13 +141,11 @@ TARGETS_DEPEND="
 		>=app-emulation/spice-0.12.0[static-libs(+)]
 	)
 	ssh? ( >=net-libs/libssh2-1.2.8[static-libs(+)] )
-	systemtap? ( dev-util/systemtap )
-	usbredir? ( >=sys-apps/usbredir-0.6[static-libs(+)] )
 	usb? ( >=virtual/libusb-1-r2[static-libs(+)] )
+	usbredir? ( >=sys-apps/usbredir-0.6[static-libs(+)] )
 	vde? ( net-misc/vde[static-libs(+)] )
 	virgl? ( media-libs/virglrenderer[static-libs(+)] )
 	virtfs? ( sys-libs/libcap )
-	xattr? ( sys-apps/attr[static-libs(+)] )
 	xen? ( app-emulation/xen-tools:= )
 	xfs? ( sys-fs/xfsprogs[static-libs(+)] )"
 
@@ -170,7 +163,10 @@ X86_FIRMWARE_DEPEND="
 	)"
 
 CDEPEND="
-	!static? ( ${TARGETS_DEPEND//\[static-libs(+)]} )
+	!static? (
+		${ALL_DEPEND//\[static-libs(+)]}
+		${SOFTMMU_TOOLS_DEPEND//\[static-libs(+)]}
+	)
 	qemu_softmmu_targets_i386? ( ${X86_FIRMWARE_DEPEND} )
 	qemu_softmmu_targets_x86_64? ( ${X86_FIRMWARE_DEPEND} )"
 DEPEND="${CDEPEND}
@@ -180,8 +176,11 @@ DEPEND="${CDEPEND}
 	virtual/pkgconfig
 	kernel_linux? ( >=sys-kernel/linux-headers-2.6.35 )
 	gtk? ( nls? ( sys-devel/gettext ) )
-	static? ( ${TARGETS_DEPEND} )
-	static-user? ( ${TARGETS_DEPEND} )
+	static? (
+		${ALL_DEPEND}
+		${SOFTMMU_TOOLS_DEPEND}
+	)
+	static-user? ( ${ALL_DEPEND} )
 	test? (
 		dev-libs/glib[utils]
 		sys-devel/bc
@@ -192,29 +191,11 @@ RDEPEND="${CDEPEND}
 PATCHES=(
 	"${FILESDIR}"/${PN}-2.5.0-cflags.patch
 	"${FILESDIR}"/${PN}-2.5.0-sysmacros.patch
-	"${FILESDIR}"/${PN}-2.7.0-CVE-2016-8669-1.patch #597108
-	"${FILESDIR}"/${PN}-2.8.0-CVE-2016-9908.patch   #601826
-	"${FILESDIR}"/${PN}-2.8.0-CVE-2016-9912.patch   #602630
-	"${FILESDIR}"/${PN}-2.8.0-CVE-2016-10028.patch  #603444
-	"${FILESDIR}"/${PN}-2.8.0-CVE-2016-10155.patch  #606720
-	"${FILESDIR}"/${PN}-2.8.0-CVE-2017-2615.patch   #608034
-	"${FILESDIR}"/${PN}-2.8.0-CVE-2017-2630.patch   #609396
-	"${FILESDIR}"/${PN}-2.8.0-CVE-2017-5525-1.patch #606264
-	"${FILESDIR}"/${PN}-2.8.0-CVE-2017-5525-2.patch
-	"${FILESDIR}"/${PN}-2.8.0-CVE-2017-5552.patch   #606722
-	"${FILESDIR}"/${PN}-2.8.0-CVE-2017-5578.patch   #607000
-	"${FILESDIR}"/${PN}-2.8.0-CVE-2017-5579.patch   #607100
-	"${FILESDIR}"/${PN}-2.8.0-CVE-2017-5667.patch   #607766
-	"${FILESDIR}"/${PN}-2.8.0-CVE-2017-5856.patch   #608036
-	"${FILESDIR}"/${PN}-2.8.0-CVE-2017-5857.patch   #608038
-	"${FILESDIR}"/${PN}-2.8.0-CVE-2017-5898.patch   #608520
-	"${FILESDIR}"/${PN}-2.8.0-CVE-2017-5931.patch   #608728
-	"${FILESDIR}"/${PN}-2.8.0-CVE-2017-5973.patch   #609334
-	"${FILESDIR}"/${PN}-2.8.0-CVE-2017-5987.patch   #609398
-	"${FILESDIR}"/${PN}-2.8.0-CVE-2017-6058.patch   #609638
-	"${FILESDIR}"/${PN}-2.8.0-CVE-2017-2620.patch   #609206
-	"${FILESDIR}"/${PN}-2.8.0-CVE-2017-6505.patch   #612220
-	"${S}-CVE-2016-9602-patches"
+	"${FILESDIR}"/${PN}-2.9.0-CVE-2017-8309.patch # bug 616870
+	"${FILESDIR}"/${PN}-2.9.0-CVE-2017-8379.patch # bug 616872
+	"${FILESDIR}"/${PN}-2.9.0-CVE-2017-8380.patch # bug 616874
+	"${FILESDIR}"/${PN}-2.9.0-CVE-2017-8112.patch # bug 616636
+	"${FILESDIR}"/${PN}-2.9.0-CVE-2017-7493.patch # bug 618808
 
 	# fix for vpc creation in qemu-img
 	"${FILESDIR}"/0001-block-fix-vpc-max_table_entries-computation.patch
@@ -240,7 +221,7 @@ QA_WX_LOAD="usr/bin/qemu-i386
 	usr/bin/qemu-microblazeel
 	usr/bin/qemu-mips
 	usr/bin/qemu-mipsel
-	usr/bin/qemu-or32
+	usr/bin/qemu-or1k
 	usr/bin/qemu-ppc
 	usr/bin/qemu-ppc64
 	usr/bin/qemu-ppc64abi32
@@ -529,7 +510,7 @@ qemu_src_configure() {
 	if use ${static_flag}; then
 		conf_opts+=( --static --disable-pie )
 	else
-		gcc-specs-pie && conf_opts+=( --enable-pie )
+		tc-enables-pie && conf_opts+=( --enable-pie )
 	fi
 
 	echo "../configure ${conf_opts[*]}"
@@ -697,9 +678,6 @@ src_install() {
 	insinto "/etc/qemu"
 	doins "${FILESDIR}/bridge.conf"
 
-	# Remove the docdir placed qmp-commands.txt
-	mv "${ED}/usr/share/doc/${PF}/html/qmp-commands.txt" "${S}/docs/" || die
-
 	cd "${S}"
 	dodoc Changelog MAINTAINERS docs/specs/pci-ids.txt
 	newdoc pc-bios/README README.pc-bios
@@ -750,7 +728,6 @@ src_install() {
 
 pkg_postinst() {
 	DISABLE_AUTOFORMATTING=true
-	FORCE_PRINT_ELOG=1 # remove for next version bump
 	readme.gentoo_print_elog
 
 	if [[ -n ${softmmu_targets} ]] && use kernel_linux; then
