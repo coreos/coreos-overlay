@@ -102,7 +102,6 @@ RDEPEND="${RDEPEND}
 	app-crypt/gnupg
 	app-crypt/tpmpolicy
 	app-editors/vim
-	app-emulation/docker
 	app-emulation/rkt
 	app-emulation/actool
 	app-misc/ca-certificates

@@ -21,6 +21,7 @@ app-pda
 app-portage
 app-shells
 app-text
+app-torcx
 app-vim
 app-xemacs
 chromeos-base

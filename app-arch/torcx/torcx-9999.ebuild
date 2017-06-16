@@ -11,7 +11,7 @@ COREOS_GO_VERSION="go1.8"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64"
 else
-	CROS_WORKON_COMMIT="1987d1c516c6925280fade659569d5062999a1db" # v0.1.0-alpha.1a
+	CROS_WORKON_COMMIT="72f5f2721b867b158f14657d0ebe97fad8019a7a" # v0.1.0-alpha.2a
 	KEYWORDS="amd64 arm64"
 fi
 
@@ -46,4 +46,12 @@ src_install() {
 	insinto "${vendordir}/profiles"
 	doins "${FILESDIR}/vendor.json"
 	dodir "${vendordir}/store"
+
+	# Preserve program paths for torcx packages.
+	newbin "${FILESDIR}/compat-wrapper.sh" docker
+	for link in {docker-,}{containerd{,-shim},runc} ctr docker-{init,proxy} dockerd tini
+	do ln -fns docker "${ED}/usr/bin/${link}"
+	done
+	exeinto /usr/lib/coreos
+	newexe "${FILESDIR}/dockerd-wrapper.sh" dockerd
 }
