@@ -1,6 +1,5 @@
-# Copyright 1999-2016 Gentoo Foundation
+# Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Id$
 
 EAPI="5"
 
@@ -12,20 +11,23 @@ SRC_URI="https://github.com/shadow-maint/shadow/releases/download/${PV}/${P}.tar
 
 LICENSE="BSD GPL-2"
 SLOT="0"
-KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86"
+KEYWORDS="~alpha amd64 ~arm arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86"
 IUSE="acl audit cracklib nls pam selinux skey xattr"
+# Taken from the man/Makefile.am file.
+LANGS=( cs da de es fi fr hu id it ja ko pl pt_BR ru sv tr zh_CN zh_TW )
+IUSE+=" $(printf 'linguas_%s ' ${LANGS[*]})"
 
-RDEPEND="acl? ( sys-apps/acl )
-	audit? ( sys-process/audit )
-	cracklib? ( >=sys-libs/cracklib-2.7-r3 )
-	pam? ( virtual/pam )
-	skey? ( sys-auth/skey )
+RDEPEND="acl? ( sys-apps/acl:0= )
+	audit? ( >=sys-process/audit-2.6:0= )
+	cracklib? ( >=sys-libs/cracklib-2.7-r3:0= )
+	pam? ( virtual/pam:0= )
+	skey? ( sys-auth/skey:0= )
 	selinux? (
-		>=sys-libs/libselinux-1.28
-		sys-libs/libsemanage
+		>=sys-libs/libselinux-1.28:0=
+		sys-libs/libsemanage:0=
 	)
 	nls? ( virtual/libintl )
-	xattr? ( sys-apps/attr )"
+	xattr? ( sys-apps/attr:0= )"
 DEPEND="${RDEPEND}
 	app-arch/xz-utils
 	nls? ( sys-devel/gettext )"
@@ -34,20 +36,16 @@ RDEPEND="${RDEPEND}
 
 PATCHES=(
 	"${FILESDIR}"/${PN}-4.1.3-dots-in-usernames.patch
-	"${FILESDIR}"/${P}-su-snprintf.patch
-	"${FILESDIR}"/${P}-prototypes.patch
-	"${FILESDIR}"/${P}-load_defaults.patch
-	"${FILESDIR}"/${P}-fix-root-defaults.patch
 )
 
 src_prepare() {
 	epatch "${PATCHES[@]}"
 	epatch_user
+	#eautoreconf
 	elibtoolize
 }
 
 src_configure() {
-	tc-is-cross-compiler && export ac_cv_func_setpgrp_void=yes
 	econf \
 		--without-group-name-max-length \
 		--without-tcb \
@@ -63,6 +61,14 @@ src_configure() {
 		$(use_with elibc_glibc nscd) \
 		$(use_with xattr attr)
 	has_version 'sys-libs/uclibc[-rpc]' && sed -i '/RLOGIN/d' config.h #425052
+
+	if use nls ; then
+		local l langs="po" # These are the pot files.
+		for l in ${LANGS[*]} ; do
+			use linguas_${l} && langs+=" ${l}"
+		done
+		sed -i "/^SUBDIRS = /s:=.*:= ${langs}:" man/Makefile || die
+	fi
 }
 
 set_login_opt() {
@@ -75,10 +81,10 @@ set_login_opt() {
 	else
 		sed -i -r \
 			-e "/^#?${opt}\>/s:.*:${opt} ${val}:" \
-			"${ED}"/usr/share/shadow/login.defs || die
+			"${ED}"/usr/share/shadow/login.defs
 	fi
 	local res=$(grep "^${comment}${opt}\>" "${ED}"/usr/share/shadow/login.defs)
-	einfo ${res:-Unable to find ${opt} in /usr/share/shadow/login.defs}
+	einfo "${res:-Unable to find ${opt} in /usr/share/shadow/login.defs}"
 }
 
 src_install() {
@@ -103,12 +109,9 @@ src_install() {
 	# Using a securetty with devfs device names added
 	# (compat names kept for non-devfs compatibility)
 	insopts -m0600 ; doins "${FILESDIR}"/securetty
-	dosym ../usr/share/shadow/securetty /etc/securetty
 	if ! use pam ; then
 		insopts -m0600
 		doins etc/login.access etc/limits
-		dosym ../usr/share/shadow/login.access /etc/login.access
-		dosym ../usr/share/shadow/limits /etc/limits
 	fi
 	# Output arch-specific cruft
 	local devs
@@ -126,11 +129,9 @@ src_install() {
 	# needed for 'useradd -D'
 	insopts -m0600
 	doins "${FILESDIR}"/default/useradd
-	dosym ../../usr/share/shadow/useradd /etc/default/useradd
 
 	insopts -m0644
 	newins etc/login.defs login.defs
-	dosym ../usr/share/shadow/login.defs /etc/login.defs
 
 	set_login_opt CREATE_HOME yes
 	if ! use pam ; then
@@ -198,8 +199,14 @@ src_install() {
 		'(' -name id.1 -o -name passwd.5 -o -name getspnam.3 ')' \
 		-delete
 
+	cd "${S}"
 	dodoc ChangeLog NEWS TODO
 	newdoc README README.download
 	cd doc
 	dodoc HOWTO README* WISHLIST *.txt
+}
+
+pkg_preinst() {
+	rm -f "${EROOT}"/etc/pam.d/system-auth.new \
+		"${EROOT}/etc/login.defs.new"
 }
