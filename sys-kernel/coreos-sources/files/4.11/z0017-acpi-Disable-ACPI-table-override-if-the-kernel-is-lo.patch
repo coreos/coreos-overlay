@@ -1,4 +1,4 @@
-From 2844417f1d840fd3aecad52f51bac40b7e014649 Mon Sep 17 00:00:00 2001
+From 2b6a913dd4ed38bef90e810ff665e2ad59844553 Mon Sep 17 00:00:00 2001
 From: Linn Crosetto <linn@hpe.com>
 Date: Wed, 23 Nov 2016 13:32:27 +0000
 Subject: [PATCH 17/24] acpi: Disable ACPI table override if the kernel is
