@@ -1,4 +1,4 @@
-From b624041bf4b975b28c45f9a90d8452a0b7a9768a Mon Sep 17 00:00:00 2001
+From a1e377d31aa144d560ac226fa67bdc2ac1972cf5 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:16 +0000
 Subject: [PATCH 12/24] x86: Lock down IO port access when the kernel is locked
@@ -42,10 +42,10 @@ index 9c3cf09..4a613fe 100644
  	}
  	regs->flags = (regs->flags & ~X86_EFLAGS_IOPL) |
 diff --git a/drivers/char/mem.c b/drivers/char/mem.c
-index 3c305b8..f68976e 100644
+index ba68add..5e2a260 100644
 --- a/drivers/char/mem.c
 +++ b/drivers/char/mem.c
-@@ -763,6 +763,8 @@ static loff_t memory_lseek(struct file *file, loff_t offset, int orig)
+@@ -768,6 +768,8 @@ static loff_t memory_lseek(struct file *file, loff_t offset, int orig)
  
  static int open_port(struct inode *inode, struct file *filp)
  {

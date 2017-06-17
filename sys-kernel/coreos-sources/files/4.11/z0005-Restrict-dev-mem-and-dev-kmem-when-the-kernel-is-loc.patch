@@ -1,4 +1,4 @@
-From af03b685e00db658c4c403473c8e3eba46f7c4dc Mon Sep 17 00:00:00 2001
+From 739151a4ca12d3c9832bfb5f763a7e8f16c42411 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:16 +0000
 Subject: [PATCH 05/24] Restrict /dev/mem and /dev/kmem when the kernel is
@@ -15,7 +15,7 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  1 file changed, 6 insertions(+)
 
 diff --git a/drivers/char/mem.c b/drivers/char/mem.c
-index 7e4a9d1..3c305b8 100644
+index 593a881..ba68add 100644
 --- a/drivers/char/mem.c
 +++ b/drivers/char/mem.c
 @@ -179,6 +179,9 @@ static ssize_t write_mem(struct file *file, const char __user *buf,
@@ -28,7 +28,7 @@ index 7e4a9d1..3c305b8 100644
  	if (!valid_phys_addr_range(p, count))
  		return -EFAULT;
  
-@@ -535,6 +538,9 @@ static ssize_t write_kmem(struct file *file, const char __user *buf,
+@@ -540,6 +543,9 @@ static ssize_t write_kmem(struct file *file, const char __user *buf,
  	char *kbuf; /* k-addr because vwrite() takes vmlist_lock rwlock */
  	int err = 0;
  
