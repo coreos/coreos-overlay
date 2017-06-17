@@ -1,12 +1,9 @@
 # Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
-# ChromeOS-specific: BOARD_USE for accessing board value in cros-board.eclass
-#                    CROS_WORKON_TREE for cros-workon
+# ChromeOS-specific: CROS_WORKON_TREE for cros-workon
 #                    TESTS USE_EXPAND for autotest
-#                    U_BOOT_CONFIG_USE for selecting U-Boot config
-#                    U_BOOT_FDT_USE for selecting U-Boot device tree
-USE_EXPAND="${USE_EXPAND} BOARD_USE CROS_WORKON_TREE TESTS U_BOOT_CONFIG_USE U_BOOT_FDT_USE"
+USE_EXPAND="${USE_EXPAND} CROS_WORKON_TREE TESTS"
 USE_EXPAND_HIDDEN="${USE_EXPAND_HIDDEN} CROS_WORKON_TREE"
 
 # Use go_version_* flags to indicate which major version was used.
