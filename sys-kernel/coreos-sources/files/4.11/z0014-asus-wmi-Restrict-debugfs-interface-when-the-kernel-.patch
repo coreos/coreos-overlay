@@ -1,7 +1,7 @@
-From a532ea34bed3460afab6492a2fe6cedb09e30d3d Mon Sep 17 00:00:00 2001
+From 3991f2855a05f21641d223f05b822abc46b388b1 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:16 +0000
-Subject: [PATCH 14/24] asus-wmi: Restrict debugfs interface when the kernel is
+Subject: [PATCH 14/25] asus-wmi: Restrict debugfs interface when the kernel is
  locked down
 
 We have no way of validating what all of the Asus WMI methods do on a given

@@ -1,7 +1,7 @@
-From 219442f869dc3643fb935b11330b2c04e7567b17 Mon Sep 17 00:00:00 2001
+From ebcf469083241dcddd27f65d8465957d9c5374c9 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:16 +0000
-Subject: [PATCH 05/24] Restrict /dev/mem and /dev/kmem when the kernel is
+Subject: [PATCH 05/25] Restrict /dev/mem and /dev/kmem when the kernel is
  locked down
 
 Allowing users to write to address space makes it possible for the kernel to
@@ -15,7 +15,7 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  1 file changed, 6 insertions(+)
 
 diff --git a/drivers/char/mem.c b/drivers/char/mem.c
-index 6e0cbe0..a97b22f 100644
+index 593a881..ba68add 100644
 --- a/drivers/char/mem.c
 +++ b/drivers/char/mem.c
 @@ -179,6 +179,9 @@ static ssize_t write_mem(struct file *file, const char __user *buf,
