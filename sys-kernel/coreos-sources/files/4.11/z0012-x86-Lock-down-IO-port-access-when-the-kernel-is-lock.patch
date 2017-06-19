@@ -1,7 +1,7 @@
-From c6d9dd2cb16257f42a8ce7e10b0a67bc32e7baf1 Mon Sep 17 00:00:00 2001
+From 6082b23ef0f4f4e8ab59d3bb4a9f0fd5847f560e Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:16 +0000
-Subject: [PATCH 12/24] x86: Lock down IO port access when the kernel is locked
+Subject: [PATCH 12/25] x86: Lock down IO port access when the kernel is locked
  down
 
 IO port access would permit users to gain access to PCI configuration
@@ -42,7 +42,7 @@ index 9c3cf09..4a613fe 100644
  	}
  	regs->flags = (regs->flags & ~X86_EFLAGS_IOPL) |
 diff --git a/drivers/char/mem.c b/drivers/char/mem.c
-index a97b22f..8705f8f 100644
+index ba68add..5e2a260 100644
 --- a/drivers/char/mem.c
 +++ b/drivers/char/mem.c
 @@ -768,6 +768,8 @@ static loff_t memory_lseek(struct file *file, loff_t offset, int orig)
