@@ -1,7 +1,7 @@
-From 386e389f87b8df12b75d68d1b17bce9f814c2215 Mon Sep 17 00:00:00 2001
+From 9b09194823ad294e0a41de6b7ff9ee47e8e1e9cb Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Wed, 7 Dec 2016 10:28:39 +0000
-Subject: [PATCH 22/24] Lock down TIOCSSERIAL
+Subject: [PATCH 22/25] Lock down TIOCSSERIAL
 
 Lock down TIOCSSERIAL as that can be used to change the ioport and irq
 settings on a serial port.  This only appears to be an issue for the serial
@@ -15,7 +15,7 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  1 file changed, 6 insertions(+)
 
 diff --git a/drivers/tty/serial/serial_core.c b/drivers/tty/serial/serial_core.c
-index 3fe5689..4181b00 100644
+index 7f91394..ea9944d 100644
 --- a/drivers/tty/serial/serial_core.c
 +++ b/drivers/tty/serial/serial_core.c
 @@ -821,6 +821,12 @@ static int uart_set_info(struct tty_struct *tty, struct tty_port *port,
