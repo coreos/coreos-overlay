@@ -1,7 +1,7 @@
 From f87c64a5210a044c70a3f3b1e1f94c0d5e77e25d Mon Sep 17 00:00:00 2001
 From: Hugh Dickins <hughd@google.com>
 Date: Mon, 19 Jun 2017 04:03:24 -0700
-Subject: [PATCH 25/25] mm: larger stack guard gap, between vmas
+Subject: [PATCH 25/26] mm: larger stack guard gap, between vmas
 
 commit 1be7107fbe18eed3e319a6c3e83c78254b693acb upstream.
 
