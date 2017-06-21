@@ -1,7 +1,7 @@
 From 9b09194823ad294e0a41de6b7ff9ee47e8e1e9cb Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Wed, 7 Dec 2016 10:28:39 +0000
-Subject: [PATCH 22/25] Lock down TIOCSSERIAL
+Subject: [PATCH 22/26] Lock down TIOCSSERIAL
 
 Lock down TIOCSSERIAL as that can be used to change the ioport and irq
 settings on a serial port.  This only appears to be an issue for the serial
