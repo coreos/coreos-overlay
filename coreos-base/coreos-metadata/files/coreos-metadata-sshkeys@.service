@@ -3,7 +3,8 @@ Description=CoreOS Metadata Agent (SSH Keys)
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/coreos-metadata --cmdline --ssh-keys=%i
+Environment=COREOS_METADATA_OPT_PROVIDER=--cmdline
+ExecStart=/usr/bin/coreos-metadata ${COREOS_METADATA_OPT_PROVIDER} --ssh-keys=%i
 
 [Install]
 DefaultInstance=core
