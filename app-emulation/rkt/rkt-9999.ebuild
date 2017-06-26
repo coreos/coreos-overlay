@@ -18,7 +18,7 @@ if [[ "${PV}" == "9999" ]]; then
 	KEYWORDS="~amd64 ~arm64"
 else
 	KEYWORDS="amd64 arm64"
-	CROS_WORKON_COMMIT="9e7a7acbde5a3464bf23176e9d19b2c55a8b2354" # v1.26.0
+	CROS_WORKON_COMMIT="aab7ece56084422864bbfb6d61b47ad35226b96c" # v1.27.0
 fi
 
 PXE_VERSION="1235.0.0"
