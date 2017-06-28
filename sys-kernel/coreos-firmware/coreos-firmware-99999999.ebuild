@@ -83,17 +83,15 @@ src_unpack() {
 src_prepare() {
 	local kernel_mods="${ROOT}/lib/modules/${KV_FULL}"
 
-	# If any firmware is missing warn but don't raise a fuss. Missing
-	# files either means linux-firmware probably out-of-date but since
-	# this is new and hacky I'm not going to worry too much just yet.
-
+	# Fail if any firmware is missing.
 	einfo "Scanning for files required by ${KV_FULL}"
 	echo -n > "${T}/firmware-scan"
-	local kofile fwfile
+	local kofile fwfile failed
 	for kofile in $(find "${kernel_mods}" -name '*.ko'); do
 		for fwfile in $(modinfo --field firmware "${kofile}"); do
 			if [[ ! -e "${fwfile}" ]]; then
-				ewarn "Missing firmware: ${fwfile} (${kofile##*/})"
+				eerror "Missing firmware: ${fwfile} (${kofile##*/})"
+				failed=1
 			elif [[ -L "${fwfile}" ]]; then
 				echo "${fwfile}" >> "${T}/firmware-scan"
 				realpath --relative-to=. "${fwfile}" >> "${T}/firmware-scan"
@@ -102,6 +100,9 @@ src_prepare() {
 			fi
 		done
 	done
+	if [[ -n "${failed}" ]]; then
+		die "Missing firmware"
+	fi
 
 	einfo "Pruning all unneeded firmware files..."
 	sort -u "${T}/firmware-scan" > "${T}/firmware"
