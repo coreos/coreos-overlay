@@ -15,12 +15,12 @@ if [[ ${PV} == 99999999* ]]; then
 	EGIT_REPO_URI="git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git"
 	KEYWORDS=""
 else
-	SRC_URI="mirror://gentoo/linux-firmware-${PV}.tar.xz"
+	SRC_URI="mirror://gentoo/linux-firmware-${PV}.tar.gz"
 	KEYWORDS="amd64 arm64"
 fi
 
 DESCRIPTION="Linux firmware files"
-HOMEPAGE="http://git.kernel.org/?p=linux/kernel/git/firmware/linux-firmware.git"
+HOMEPAGE="https://git.kernel.org/?p=linux/kernel/git/firmware/linux-firmware.git"
 
 LICENSE="GPL-1 GPL-2 GPL-3 BSD freedist"
 SLOT="0/${PVR}"
