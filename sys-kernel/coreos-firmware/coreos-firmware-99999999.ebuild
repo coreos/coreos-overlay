@@ -15,12 +15,12 @@ if [[ ${PV} == 99999999* ]]; then
 	EGIT_REPO_URI="git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git"
 	KEYWORDS=""
 else
-	SRC_URI="mirror://gentoo/linux-firmware-${PV}.tar.xz"
+	SRC_URI="mirror://gentoo/linux-firmware-${PV}.tar.gz"
 	KEYWORDS="amd64 arm64"
 fi
 
 DESCRIPTION="Linux firmware files"
-HOMEPAGE="http://git.kernel.org/?p=linux/kernel/git/firmware/linux-firmware.git"
+HOMEPAGE="https://git.kernel.org/?p=linux/kernel/git/firmware/linux-firmware.git"
 
 LICENSE="GPL-1 GPL-2 GPL-3 BSD freedist"
 SLOT="0/${PVR}"
@@ -83,17 +83,15 @@ src_unpack() {
 src_prepare() {
 	local kernel_mods="${ROOT}/lib/modules/${KV_FULL}"
 
-	# If any firmware is missing warn but don't raise a fuss. Missing
-	# files either means linux-firmware probably out-of-date but since
-	# this is new and hacky I'm not going to worry too much just yet.
-
+	# Fail if any firmware is missing.
 	einfo "Scanning for files required by ${KV_FULL}"
 	echo -n > "${T}/firmware-scan"
-	local kofile fwfile
+	local kofile fwfile failed
 	for kofile in $(find "${kernel_mods}" -name '*.ko'); do
 		for fwfile in $(modinfo --field firmware "${kofile}"); do
 			if [[ ! -e "${fwfile}" ]]; then
-				ewarn "Missing firmware: ${fwfile} (${kofile##*/})"
+				eerror "Missing firmware: ${fwfile} (${kofile##*/})"
+				failed=1
 			elif [[ -L "${fwfile}" ]]; then
 				echo "${fwfile}" >> "${T}/firmware-scan"
 				realpath --relative-to=. "${fwfile}" >> "${T}/firmware-scan"
@@ -102,6 +100,9 @@ src_prepare() {
 			fi
 		done
 	done
+	if [[ -n "${failed}" ]]; then
+		die "Missing firmware"
+	fi
 
 	einfo "Pruning all unneeded firmware files..."
 	sort -u "${T}/firmware-scan" > "${T}/firmware"
