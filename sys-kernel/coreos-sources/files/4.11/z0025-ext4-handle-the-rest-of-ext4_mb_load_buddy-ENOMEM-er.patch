@@ -1,0 +1,88 @@
+From 53bcfff6ac09aa20b49b67233f729f06d4eff9a8 Mon Sep 17 00:00:00 2001
+From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Date: Sun, 21 May 2017 22:35:23 -0400
+Subject: [PATCH 25/25] ext4: handle the rest of ext4_mb_load_buddy() ENOMEM
+ errors
+
+I've got another report about breaking ext4 by ENOMEM error returned from
+ext4_mb_load_buddy() caused by memory shortage in memory cgroup.
+This time inside ext4_discard_preallocations().
+
+This patch replaces ext4_error() with ext4_warning() where errors returned
+from ext4_mb_load_buddy() are not fatal and handled by caller:
+* ext4_mb_discard_group_preallocations() - called before generating ENOSPC,
+  we'll try to discard other group or return ENOSPC into user-space.
+* ext4_trim_all_free() - just stop trimming and return ENOMEM from ioctl.
+
+Some callers cannot handle errors, thus __GFP_NOFAIL is used for them:
+* ext4_discard_preallocations()
+* ext4_mb_discard_lg_preallocations()
+
+Fixes: adb7ef600cc9 ("ext4: use __GFP_NOFAIL in ext4_free_blocks()")
+Signed-off-by: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
+Signed-off-by: Theodore Ts'o <tytso@mit.edu>
+---
+ fs/ext4/mballoc.c | 23 ++++++++++++++---------
+ 1 file changed, 14 insertions(+), 9 deletions(-)
+
+diff --git a/fs/ext4/mballoc.c b/fs/ext4/mballoc.c
+index 354dc1a..3942815 100644
+--- a/fs/ext4/mballoc.c
++++ b/fs/ext4/mballoc.c
+@@ -3887,7 +3887,8 @@ ext4_mb_discard_group_preallocations(struct super_block *sb,
+ 
+ 	err = ext4_mb_load_buddy(sb, group, &e4b);
+ 	if (err) {
+-		ext4_error(sb, "Error loading buddy information for %u", group);
++		ext4_warning(sb, "Error %d loading buddy information for %u",
++			     err, group);
+ 		put_bh(bitmap_bh);
+ 		return 0;
+ 	}
+@@ -4044,10 +4045,11 @@ void ext4_discard_preallocations(struct inode *inode)
+ 		BUG_ON(pa->pa_type != MB_INODE_PA);
+ 		group = ext4_get_group_number(sb, pa->pa_pstart);
+ 
+-		err = ext4_mb_load_buddy(sb, group, &e4b);
++		err = ext4_mb_load_buddy_gfp(sb, group, &e4b,
++					     GFP_NOFS|__GFP_NOFAIL);
+ 		if (err) {
+-			ext4_error(sb, "Error loading buddy information for %u",
+-					group);
++			ext4_error(sb, "Error %d loading buddy information for %u",
++				   err, group);
+ 			continue;
+ 		}
+ 
+@@ -4303,11 +4305,14 @@ ext4_mb_discard_lg_preallocations(struct super_block *sb,
+ 	spin_unlock(&lg->lg_prealloc_lock);
+ 
+ 	list_for_each_entry_safe(pa, tmp, &discard_list, u.pa_tmp_list) {
++		int err;
+ 
+ 		group = ext4_get_group_number(sb, pa->pa_pstart);
+-		if (ext4_mb_load_buddy(sb, group, &e4b)) {
+-			ext4_error(sb, "Error loading buddy information for %u",
+-					group);
++		err = ext4_mb_load_buddy_gfp(sb, group, &e4b,
++					     GFP_NOFS|__GFP_NOFAIL);
++		if (err) {
++			ext4_error(sb, "Error %d loading buddy information for %u",
++				   err, group);
+ 			continue;
+ 		}
+ 		ext4_lock_group(sb, group);
+@@ -5127,8 +5132,8 @@ ext4_trim_all_free(struct super_block *sb, ext4_group_t group,
+ 
+ 	ret = ext4_mb_load_buddy(sb, group, &e4b);
+ 	if (ret) {
+-		ext4_error(sb, "Error in loading buddy "
+-				"information for %u", group);
++		ext4_warning(sb, "Error %d loading buddy information for %u",
++			     ret, group);
+ 		return ret;
+ 	}
+ 	bitmap = e4b.bd_bitmap;
+-- 
+2.9.4
+
