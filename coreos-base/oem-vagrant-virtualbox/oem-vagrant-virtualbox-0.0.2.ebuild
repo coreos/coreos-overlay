@@ -1,4 +1,4 @@
-# Copyright 2013 The CoreOS Authors
+# Copyright 2017 The CoreOS Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=5
