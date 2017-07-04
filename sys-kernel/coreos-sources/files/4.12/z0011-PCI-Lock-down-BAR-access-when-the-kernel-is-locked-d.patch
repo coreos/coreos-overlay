@@ -1,7 +1,7 @@
-From 83624e2a7733314685e2722586e27830b482abd3 Mon Sep 17 00:00:00 2001
+From a9c564104ea9fa19437d581330c558e6f9c9ca6c Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:15 +0000
-Subject: [PATCH 11/25] PCI: Lock down BAR access when the kernel is locked
+Subject: [PATCH 11/24] PCI: Lock down BAR access when the kernel is locked
  down
 
 Any hardware that can potentially generate DMA has to be locked down in
@@ -19,10 +19,10 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  3 files changed, 17 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 7ac258f..7d29b03 100644
+index 31e9961..5595560 100644
 --- a/drivers/pci/pci-sysfs.c
 +++ b/drivers/pci/pci-sysfs.c
-@@ -727,6 +727,9 @@ static ssize_t pci_write_config(struct file *filp, struct kobject *kobj,
+@@ -754,6 +754,9 @@ static ssize_t pci_write_config(struct file *filp, struct kobject *kobj,
  	loff_t init_off = off;
  	u8 *data = (u8 *) buf;
  
@@ -32,17 +32,17 @@ index 7ac258f..7d29b03 100644
  	if (off > dev->cfg_size)
  		return 0;
  	if (off + count > dev->cfg_size) {
-@@ -1022,6 +1025,9 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
- 	resource_size_t start, end;
- 	int i;
+@@ -1048,6 +1051,9 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
+ 	enum pci_mmap_state mmap_type;
+ 	struct resource *res = &pdev->resource[bar];
  
 +	if (kernel_is_locked_down())
 +		return -EPERM;
 +
- 	for (i = 0; i < PCI_ROM_RESOURCE; i++)
- 		if (res == &pdev->resource[i])
- 			break;
-@@ -1121,6 +1127,9 @@ static ssize_t pci_write_resource_io(struct file *filp, struct kobject *kobj,
+ 	if (res->flags & IORESOURCE_MEM && iomem_is_exclusive(res->start))
+ 		return -EINVAL;
+ 
+@@ -1131,6 +1137,9 @@ static ssize_t pci_write_resource_io(struct file *filp, struct kobject *kobj,
  				     struct bin_attribute *attr, char *buf,
  				     loff_t off, size_t count)
  {
@@ -53,7 +53,7 @@ index 7ac258f..7d29b03 100644
  }
  
 diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-index dc8912e..e2c5eff 100644
+index 098360d..ef16fcc 100644
 --- a/drivers/pci/proc.c
 +++ b/drivers/pci/proc.c
 @@ -116,6 +116,9 @@ static ssize_t proc_bus_pci_write(struct file *file, const char __user *buf,
@@ -76,15 +76,15 @@ index dc8912e..e2c5eff 100644
  	switch (cmd) {
  	case PCIIOC_CONTROLLER:
  		ret = pci_domain_nr(dev->bus);
-@@ -233,7 +239,7 @@ static int proc_bus_pci_mmap(struct file *file, struct vm_area_struct *vma)
+@@ -236,7 +242,7 @@ static int proc_bus_pci_mmap(struct file *file, struct vm_area_struct *vma)
  	struct pci_filp_private *fpriv = file->private_data;
- 	int i, ret, write_combine = 0, res_bit;
+ 	int i, ret, write_combine = 0, res_bit = IORESOURCE_MEM;
  
 -	if (!capable(CAP_SYS_RAWIO))
 +	if (!capable(CAP_SYS_RAWIO) || kernel_is_locked_down())
  		return -EPERM;
  
- 	if (fpriv->mmap_state == pci_mmap_io)
+ 	if (fpriv->mmap_state == pci_mmap_io) {
 diff --git a/drivers/pci/syscall.c b/drivers/pci/syscall.c
 index 9bf993e..c095247 100644
 --- a/drivers/pci/syscall.c

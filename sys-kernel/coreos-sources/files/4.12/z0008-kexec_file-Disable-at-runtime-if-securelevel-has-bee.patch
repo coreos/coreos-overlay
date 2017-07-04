@@ -1,7 +1,7 @@
-From 147b43aeaffaec0a0809314bbfe7afa7bfce9fef Mon Sep 17 00:00:00 2001
+From 5d6c3356ce40c4cf0994b5d02324bd7db356e2a3 Mon Sep 17 00:00:00 2001
 From: "Lee, Chun-Yi" <joeyli.kernel@gmail.com>
 Date: Wed, 23 Nov 2016 13:49:19 +0000
-Subject: [PATCH 08/25] kexec_file: Disable at runtime if securelevel has been
+Subject: [PATCH 08/24] kexec_file: Disable at runtime if securelevel has been
  set
 
 When KEXEC_VERIFY_SIG is not enabled, kernel should not loads image
