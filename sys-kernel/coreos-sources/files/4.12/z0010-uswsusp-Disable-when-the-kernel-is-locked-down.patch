@@ -1,7 +1,7 @@
-From 0cf20c96adc7e09d5a7155153d274ed60fd8f323 Mon Sep 17 00:00:00 2001
+From 320e7ee93cc1f51f1995e20e9ec43b748a0c87b1 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <mjg59@srcf.ucam.org>
 Date: Wed, 23 Nov 2016 13:28:17 +0000
-Subject: [PATCH 10/25] uswsusp: Disable when the kernel is locked down
+Subject: [PATCH 10/24] uswsusp: Disable when the kernel is locked down
 
 uswsusp allows a user process to dump and then restore kernel state, which
 makes it possible to modify the running kernel.  Disable this if the kernel

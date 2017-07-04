@@ -1,7 +1,7 @@
-From 44aae071f73313b7c3b8e62955d82a7130dac637 Mon Sep 17 00:00:00 2001
+From 71dd9dbf442d3d92005817b59c3814deb7ddcc88 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:16 +0000
-Subject: [PATCH 12/25] x86: Lock down IO port access when the kernel is locked
+Subject: [PATCH 12/24] x86: Lock down IO port access when the kernel is locked
  down
 
 IO port access would permit users to gain access to PCI configuration
