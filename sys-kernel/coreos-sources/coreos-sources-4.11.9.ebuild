@@ -44,6 +44,5 @@ UNIPATCH_LIST="
 	${PATCH_DIR}/z0022-Lock-down-TIOCSSERIAL.patch \
 	${PATCH_DIR}/z0023-kbuild-derive-relative-path-for-KBUILD_SRC-from-CURD.patch \
 	${PATCH_DIR}/z0024-Add-arm64-coreos-verity-hash.patch \
-	${PATCH_DIR}/z0025-mm-larger-stack-guard-gap-between-vmas.patch \
-	${PATCH_DIR}/z0026-mm-fix-new-crash-in-unmapped_area_topdown.patch \
+	${PATCH_DIR}/z0025-ext4-handle-the-rest-of-ext4_mb_load_buddy-ENOMEM-er.patch \
 "
