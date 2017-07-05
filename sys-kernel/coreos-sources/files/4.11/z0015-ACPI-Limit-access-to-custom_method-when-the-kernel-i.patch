@@ -1,7 +1,7 @@
-From 8d62701b2c57b2e472a80393e3e976f1ade21dac Mon Sep 17 00:00:00 2001
+From 36d0b2bd8ec316128ee020f0bb8058df9d137493 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:16 +0000
-Subject: [PATCH 15/26] ACPI: Limit access to custom_method when the kernel is
+Subject: [PATCH 15/25] ACPI: Limit access to custom_method when the kernel is
  locked down
 
 custom_method effectively allows arbitrary access to system memory, making
