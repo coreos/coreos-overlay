@@ -135,6 +135,8 @@ src_install() {
 	# symlink old stage1 aci directory to the new install location
 	dosym ../$(get_libdir)/rkt/stage1-images /usr/share/rkt
 
+	systemd_dounit "${S}"/dist/init/systemd/${PN}-api.service
+	systemd_dounit "${S}"/dist/init/systemd/${PN}-api-tcp.socket
 	systemd_dounit "${S}"/dist/init/systemd/${PN}-gc.service
 	systemd_dounit "${S}"/dist/init/systemd/${PN}-gc.timer
 	systemd_enable_service multi-user.target ${PN}-gc.timer
