@@ -12,7 +12,7 @@
 
 # Everything needed for the boot engine
 >=sys-apps/kexec-tools-2.0.4-r1 ~amd64
-sys-kernel/dracut ~amd64
+=sys-kernel/dracut-045-r2 **
 
 # Needed by gsutil
 dev-python/boto
