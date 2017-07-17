@@ -1,7 +1,7 @@
-From 3cdcb9db885c7eb8c77345c157078bb7fffb14a4 Mon Sep 17 00:00:00 2001
+From ff07403fc0f47d9522e2915f175cc4eae262fef2 Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Mon, 21 Nov 2016 23:55:55 +0000
-Subject: [PATCH 03/25] efi: Lock down the kernel if booted in secure boot mode
+Subject: [PATCH 03/26] efi: Lock down the kernel if booted in secure boot mode
 
 UEFI Secure Boot provides a mechanism for ensuring that the firmware will
 only load signed bootloaders and kernels.  Certain use cases may also
@@ -16,7 +16,7 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  2 files changed, 19 insertions(+), 1 deletion(-)
 
 diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index cc98d5a..21f3985 100644
+index cc98d5a294ee..21f39855661d 100644
 --- a/arch/x86/Kconfig
 +++ b/arch/x86/Kconfig
 @@ -1817,6 +1817,18 @@ config EFI_MIXED
@@ -39,7 +39,7 @@ index cc98d5a..21f3985 100644
  	def_bool y
  	prompt "Enable seccomp to safely compute untrusted bytecode"
 diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index 396285b..85dfa74 100644
+index c134f23f8015..a2601715d8bc 100644
 --- a/arch/x86/kernel/setup.c
 +++ b/arch/x86/kernel/setup.c
 @@ -69,6 +69,7 @@
@@ -50,7 +50,7 @@ index 396285b..85dfa74 100644
  
  #include <video/edid.h>
  
-@@ -1185,7 +1186,12 @@ void __init setup_arch(char **cmdline_p)
+@@ -1192,7 +1193,12 @@ void __init setup_arch(char **cmdline_p)
  			break;
  		case efi_secureboot_mode_enabled:
  			set_bit(EFI_SECURE_BOOT, &efi.flags);
@@ -65,5 +65,5 @@ index 396285b..85dfa74 100644
  		default:
  			pr_info("Secure boot could not be determined\n");
 -- 
-2.9.4
+2.13.0
 

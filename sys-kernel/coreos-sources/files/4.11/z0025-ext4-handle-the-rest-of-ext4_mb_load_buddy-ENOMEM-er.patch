@@ -1,7 +1,7 @@
-From 50ea8d5f0cb1fe70098326905e87dfadbe01e56b Mon Sep 17 00:00:00 2001
+From 923e620f2866e499d52637fd071dc3e4a5a1411d Mon Sep 17 00:00:00 2001
 From: Konstantin Khlebnikov <khlebnikov@yandex-team.ru>
 Date: Sun, 21 May 2017 22:35:23 -0400
-Subject: [PATCH 25/25] ext4: handle the rest of ext4_mb_load_buddy() ENOMEM
+Subject: [PATCH 25/26] ext4: handle the rest of ext4_mb_load_buddy() ENOMEM
  errors
 
 I've got another report about breaking ext4 by ENOMEM error returned from
@@ -26,7 +26,7 @@ Signed-off-by: Theodore Ts'o <tytso@mit.edu>
  1 file changed, 14 insertions(+), 9 deletions(-)
 
 diff --git a/fs/ext4/mballoc.c b/fs/ext4/mballoc.c
-index 354dc1a..3942815 100644
+index 354dc1a894c2..3942815eee92 100644
 --- a/fs/ext4/mballoc.c
 +++ b/fs/ext4/mballoc.c
 @@ -3887,7 +3887,8 @@ ext4_mb_discard_group_preallocations(struct super_block *sb,
@@ -84,5 +84,5 @@ index 354dc1a..3942815 100644
  	}
  	bitmap = e4b.bd_bitmap;
 -- 
-2.9.4
+2.13.0
 

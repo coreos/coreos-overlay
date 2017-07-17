@@ -1,7 +1,7 @@
-From d8ff874c60530f0652455015ef820f8f2d7c0513 Mon Sep 17 00:00:00 2001
+From c527b2ed627bcbe2339a5fb259d4cb4c7d15f908 Mon Sep 17 00:00:00 2001
 From: Vito Caputo <vito.caputo@coreos.com>
 Date: Wed, 25 Nov 2015 02:59:45 -0800
-Subject: [PATCH 23/25] kbuild: derive relative path for KBUILD_SRC from CURDIR
+Subject: [PATCH 23/26] kbuild: derive relative path for KBUILD_SRC from CURDIR
 
 This enables relocating source and build trees to different roots,
 provided they stay reachable relative to one another.  Useful for
@@ -12,7 +12,7 @@ by some undesirable path component.
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/Makefile b/Makefile
-index 9db9095..b012128 100644
+index cf28e431b68a..3664f9227c5e 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -149,7 +149,8 @@ $(filter-out _all sub-make $(CURDIR)/Makefile, $(MAKECMDGOALS)) _all: sub-make
@@ -26,5 +26,5 @@ index 9db9095..b012128 100644
  
  # Leave processing to above invocation of make
 -- 
-2.9.4
+2.13.0
 
