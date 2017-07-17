@@ -1,7 +1,7 @@
-From 83624e2a7733314685e2722586e27830b482abd3 Mon Sep 17 00:00:00 2001
+From 6b37af949a854333512e3353fae302bbf306b706 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:15 +0000
-Subject: [PATCH 11/25] PCI: Lock down BAR access when the kernel is locked
+Subject: [PATCH 11/26] PCI: Lock down BAR access when the kernel is locked
  down
 
 Any hardware that can potentially generate DMA has to be locked down in
@@ -19,7 +19,7 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  3 files changed, 17 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 7ac258f..7d29b03 100644
+index 7ac258fd3c5c..7d29b03d9321 100644
 --- a/drivers/pci/pci-sysfs.c
 +++ b/drivers/pci/pci-sysfs.c
 @@ -727,6 +727,9 @@ static ssize_t pci_write_config(struct file *filp, struct kobject *kobj,
@@ -53,7 +53,7 @@ index 7ac258f..7d29b03 100644
  }
  
 diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-index dc8912e..e2c5eff 100644
+index dc8912e2d4a1..e2c5eff543f1 100644
 --- a/drivers/pci/proc.c
 +++ b/drivers/pci/proc.c
 @@ -116,6 +116,9 @@ static ssize_t proc_bus_pci_write(struct file *file, const char __user *buf,
@@ -86,7 +86,7 @@ index dc8912e..e2c5eff 100644
  
  	if (fpriv->mmap_state == pci_mmap_io)
 diff --git a/drivers/pci/syscall.c b/drivers/pci/syscall.c
-index 9bf993e..c095247 100644
+index 9bf993e1f71e..c09524738ceb 100644
 --- a/drivers/pci/syscall.c
 +++ b/drivers/pci/syscall.c
 @@ -92,7 +92,7 @@ SYSCALL_DEFINE5(pciconfig_write, unsigned long, bus, unsigned long, dfn,
@@ -99,5 +99,5 @@ index 9bf993e..c095247 100644
  
  	dev = pci_get_bus_and_slot(bus, dfn);
 -- 
-2.9.4
+2.13.0
 
