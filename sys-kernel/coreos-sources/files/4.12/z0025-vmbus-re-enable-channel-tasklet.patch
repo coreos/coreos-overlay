@@ -1,0 +1,40 @@
+From 91e148c7e146b7cdd53e0c0ede953c9fa90c110a Mon Sep 17 00:00:00 2001
+From: Stephen Hemminger <stephen@networkplumber.org>
+Date: Sun, 25 Jun 2017 12:47:46 -0700
+Subject: [PATCH 25/25] vmbus: re-enable channel tasklet
+
+This problem shows up in 4.11 when netvsc driver is removed and reloaded.
+The problem is that the channel is closed during module removal and the
+tasklet for processing responses is disabled. When module is reloaded
+the channel is reopened but the tasklet is marked as disabled.
+The fix is to re-enable tasklet at the end of close which gets it back
+to the initial state.
+
+The issue is less urgent in 4.12 since network driver now uses NAPI
+and not the tasklet; and other VMBUS devices are rarely unloaded/reloaded.
+
+Fixes: dad72a1d2844 ("vmbus: remove hv_event_tasklet_disable/enable")
+
+Signed-off-by: Stephen Hemminger <sthemmin@microsoft.com>
+Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+Cc: stable@vger.kernel.org
+---
+ drivers/hv/channel.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/hv/channel.c b/drivers/hv/channel.c
+index 736ac76d2a6a..3cea1216754e 100644
+--- a/drivers/hv/channel.c
++++ b/drivers/hv/channel.c
+@@ -606,6 +606,8 @@ static int vmbus_close_internal(struct vmbus_channel *channel)
+ 		get_order(channel->ringbuffer_pagecount * PAGE_SIZE));
+ 
+ out:
++	/* re-enable tasklet for use on re-open */
++	tasklet_enable(&channel->callback_event);
+ 	return ret;
+ }
+ 
+-- 
+2.13.0
+
