@@ -10,11 +10,11 @@ if [[ ${PV} == 9999 ]]; then
 	# Use ~arch instead of empty keywords for compatibility with cros-workon
 	KEYWORDS="~amd64 ~arm64 ~arm ~x86"
 else
-	CROS_WORKON_COMMIT="d0c35451903b2ea63a840d2c8cf62faa8c47a748" # v233-coreos
-	KEYWORDS="amd64 arm64 ~arm ~x86"
+	CROS_WORKON_COMMIT="dae23deb7dbf1a3998a8d7e31cf8fc936181ab6b" # v234-coreos
+	KEYWORDS="~alpha amd64 ~arm arm64 ~ia64 ~ppc ~ppc64 ~sparc ~x86"
 fi
 
-PYTHON_COMPAT=( python{3_4,3_5,3_6} )
+PYTHON_COMPAT=( python{2_7,3_4,3_5,3_6} )
 
 # cros-workon must be imported first, in cases where cros-workon and
 # another eclass exports the same function (say src_compile) we want
@@ -28,8 +28,8 @@ HOMEPAGE="https://www.freedesktop.org/wiki/Software/systemd"
 
 LICENSE="GPL-2 LGPL-2.1 MIT public-domain"
 SLOT="0/2"
-IUSE="acl apparmor audit build cryptsetup curl doc elfutils +gcrypt gnuefi http
-	idn importd +kmod +lz4 lzma nat pam policykit
+IUSE="acl apparmor audit build cryptsetup curl elfutils +gcrypt gnuefi http
+	idn importd +kmod libidn2 +lz4 lzma nat pam policykit
 	qrcode +seccomp selinux ssl sysv-utils test vanilla xkb"
 
 # CoreOS specific use flags
@@ -53,7 +53,10 @@ COMMON_DEPEND=">=sys-apps/util-linux-2.27.1:0=[${MULTILIB_USEDEP}]
 		>=net-libs/libmicrohttpd-0.9.33:0=
 		ssl? ( >=net-libs/gnutls-3.1.4:0= )
 	)
-	idn? ( net-dns/libidn:0= )
+	idn? (
+		libidn2? ( net-dns/libidn2 )
+		!libidn2? ( net-dns/libidn )
+	)
 	importd? (
 		app-arch/bzip2:0=
 		sys-libs/zlib:0=
@@ -104,36 +107,35 @@ DEPEND="${COMMON_DEPEND}
 	app-text/docbook-xml-dtd:4.5
 	app-text/docbook-xsl-stylesheets
 	dev-libs/libxslt:0
-	doc? ( $(python_gen_any_dep 'dev-python/lxml[${PYTHON_USEDEP}]') )
+	$(python_gen_any_dep 'dev-python/lxml[${PYTHON_USEDEP}]')
 "
 
-python_check_deps() {
-	has_version --host-root "dev-python/lxml[${PYTHON_USEDEP}]"
-}
-
 pkg_pretend() {
-	local CONFIG_CHECK="~AUTOFS4_FS ~BLK_DEV_BSG ~CGROUPS
-		~CHECKPOINT_RESTORE ~DEVTMPFS ~DMIID ~EPOLL ~FANOTIFY ~FHANDLE
-		~INOTIFY_USER ~IPV6 ~NET ~NET_NS ~PROC_FS ~SIGNALFD ~SYSFS
-		~TIMERFD ~TMPFS_XATTR ~UNIX
-		~CRYPTO_HMAC ~CRYPTO_SHA256 ~CRYPTO_USER_API_HASH
-		~!FW_LOADER_USER_HELPER ~!GRKERNSEC_PROC ~!IDE ~!SYSFS_DEPRECATED
-		~!SYSFS_DEPRECATED_V2"
+	if [[ ${MERGE_TYPE} != buildonly ]]; then
+		local CONFIG_CHECK="~AUTOFS4_FS ~BLK_DEV_BSG ~CGROUPS
+			~CHECKPOINT_RESTORE ~DEVTMPFS ~EPOLL ~FANOTIFY ~FHANDLE
+			~INOTIFY_USER ~IPV6 ~NET ~NET_NS ~PROC_FS ~SIGNALFD ~SYSFS
+			~TIMERFD ~TMPFS_XATTR ~UNIX
+			~CRYPTO_HMAC ~CRYPTO_SHA256 ~CRYPTO_USER_API_HASH
+			~!FW_LOADER_USER_HELPER ~!GRKERNSEC_PROC ~!IDE ~!SYSFS_DEPRECATED
+			~!SYSFS_DEPRECATED_V2"
 
-	use acl && CONFIG_CHECK+=" ~TMPFS_POSIX_ACL"
-	use seccomp && CONFIG_CHECK+=" ~SECCOMP ~SECCOMP_FILTER"
-	kernel_is -lt 3 7 && CONFIG_CHECK+=" ~HOTPLUG"
-	kernel_is -lt 4 7 && CONFIG_CHECK+=" ~DEVPTS_MULTIPLE_INSTANCES"
+		use acl && CONFIG_CHECK+=" ~TMPFS_POSIX_ACL"
+		use seccomp && CONFIG_CHECK+=" ~SECCOMP ~SECCOMP_FILTER"
+		kernel_is -lt 3 7 && CONFIG_CHECK+=" ~HOTPLUG"
+		kernel_is -lt 4 7 && CONFIG_CHECK+=" ~DEVPTS_MULTIPLE_INSTANCES"
 
-	if linux_config_exists; then
-		local uevent_helper_path=$(linux_chkconfig_string UEVENT_HELPER_PATH)
-			if [ -n "${uevent_helper_path}" ] && [ "${uevent_helper_path}" != '""' ]; then
+		if linux_config_exists; then
+			local uevent_helper_path=$(linux_chkconfig_string UEVENT_HELPER_PATH)
+			if [[ -n ${uevent_helper_path} ]] && [[ ${uevent_helper_path} != '""' ]]; then
 				ewarn "It's recommended to set an empty value to the following kernel config option:"
 				ewarn "CONFIG_UEVENT_HELPER_PATH=${uevent_helper_path}"
 			fi
-	fi
+			if linux_chkconfig_present X86; then
+				CONFIG_CHECK+=" ~DMIID"
+			fi
+		fi
 
-	if [[ ${MERGE_TYPE} != buildonly ]]; then
 		if kernel_is -lt ${MINKV//./ }; then
 			ewarn "Kernel version at least ${MINKV} required"
 		fi
@@ -173,7 +175,7 @@ src_configure() {
 	# Prevent conflicts with i686 cross toolchain, bug 559726
 	tc-export AR CC NM OBJCOPY RANLIB
 
-	use doc && python_setup
+	python_setup
 
 	multilib-minimal_src_configure
 }
@@ -240,7 +242,7 @@ multilib_src_configure() {
 		$(multilib_native_use_enable test tests)
 		$(multilib_native_use_enable test dbus)
 		$(multilib_native_use_enable xkb xkbcommon)
-		$(multilib_native_use_with doc python)
+		--without-python
 
 		# hardcode a few paths to spare some deps
 		KILL=/bin/kill
@@ -345,9 +347,9 @@ multilib_src_install_all() {
 		dosym "${ROOTPREFIX-/usr}/lib/systemd/systemd" ${prefix}/sbin/init
 	else
 		# we just keep sysvinit tools, so no need for the mans
-		rm "${D}"/usr/share/man/man8/{halt,poweroff,reboot,runlevel,shutdown,telinit}.8 \
+		rm "${ED%/}"/usr/share/man/man8/{halt,poweroff,reboot,runlevel,shutdown,telinit}.8 \
 			|| die
-		rm "${D}"/usr/share/man/man1/init.1 || die
+		rm "${ED%/}"/usr/share/man/man1/init.1 || die
 	fi
 
 	# Ensure journal directory has correct ownership/mode in inital image.
@@ -362,15 +364,15 @@ multilib_src_install_all() {
 	systemd_dotmpfilesd "${FILESDIR}"/systemd-resolv.conf
 
 	# Don't default to graphical.target
-	rm "${D}${unitdir}"/default.target || die
+	rm "${ED%/}${unitdir}"/default.target || die
 	dosym multi-user.target "${unitdir}"/default.target
 
 	# Don't set any extra environment variables by default
-	rm "${D}${ROOTPREFIX-/usr}/lib/environment.d/99-environment.conf" || die
+	rm "${ED%/}${ROOTPREFIX-/usr}/lib/environment.d/99-environment.conf" || die
 
 	# Don't install the compatibility policy rules in /var  (Fixed: @37377227)
-	rm "${D}"/var/lib/polkit-1/localauthority/10-vendor.d/systemd-networkd.pkla
-	rmdir "${D}"/var/lib/polkit-1{/localauthority{/10-vendor.d,},}
+	rm "${ED%/}"/var/lib/polkit-1/localauthority/10-vendor.d/systemd-networkd.pkla
+	rmdir "${ED%/}"/var/lib/polkit-1{/localauthority{/10-vendor.d,},}
 
 	# Move a few services enabled in /etc to /usr, delete files individually
 	# so builds fail if systemd adds any new unexpected stuff to /etc
@@ -393,24 +395,28 @@ multilib_src_install_all() {
 		dodir "${unitdir}/${t}"
 		dosym "../${u}" "${unitdir}/${t}/${s}"
 
-		rm "${D}/etc/systemd/system/${f}" || die
+		rm "${ED%/}/etc/systemd/system/${f}" || die
 	done
-	f=dbus-org.freedesktop.resolve1.service
-	rm "${D}/etc/systemd/system/${f}" || die
-	dosym systemd-resolved.service "${unitdir}/${f}"
-	rmdir "${D}"/etc/systemd/system/*.wants || die
+	rmdir "${ED%/}"/etc/systemd/system/*.wants || die
+	for f in \
+		systemd-networkd.service:dbus-org.freedesktop.network1.service \
+		systemd-resolved.service:dbus-org.freedesktop.resolve1.service
+	do
+		rm "${ED%/}/etc/systemd/system/${f#*:}" || die
+		dosym "${f%%:*}" "${unitdir}/${f#*:}"
+	done
 
 	# Do not enable random services if /etc was detected as empty!!!
-	rm "${D}"/usr/lib/systemd/system-preset/90-systemd.preset
+	rm "${ED%/}"/usr/lib/systemd/system-preset/90-systemd.preset
 	insinto /usr/lib/systemd/system-preset
 	doins "${FILESDIR}"/99-default.preset
 
 	# Disable the "First Boot Wizard" by default, it isn't very applicable to CoreOS
-	rm "${D}${unitdir}"/sysinit.target.wants/systemd-firstboot.service
+	rm "${ED%/}${unitdir}"/sysinit.target.wants/systemd-firstboot.service
 
 	# Do not ship distro-specific files (nsswitch.conf pam.d)
-	rm -rf "${D}"/usr/share/factory
-	sed -i "${D}"/usr/lib/tmpfiles.d/etc.conf \
+	rm -rf "${ED%/}"/usr/share/factory
+	sed -i "${ED%/}"/usr/lib/tmpfiles.d/etc.conf \
 		-e '/^C \/etc\/nsswitch\.conf/d' \
 		-e '/^C \/etc\/pam\.d/d'
 }
@@ -459,6 +465,19 @@ migrate_locale() {
 	fi
 }
 
+pkg_preinst() {
+	# If /lib/systemd and /usr/lib/systemd are the same directory, remove the
+	# symlinks we created in src_install.
+	if [[ $(realpath "${EROOT%/}${ROOTPREFIX}/lib/systemd") == $(realpath "${EROOT%/}/usr/lib/systemd") ]]; then
+		if [[ -L ${ED%/}/usr/lib/systemd/systemd ]]; then
+			rm "${ED%/}/usr/lib/systemd/systemd" || die
+		fi
+		if [[ -L ${ED%/}/usr/lib/systemd/systemd-shutdown ]]; then
+			rm "${ED%/}/usr/lib/systemd/systemd-shutdown" || die
+		fi
+	fi
+}
+
 pkg_postinst() {
 	newusergroup() {
 		enewgroup "$1"
@@ -466,6 +485,7 @@ pkg_postinst() {
 	}
 
 	enewgroup input
+	enewgroup kvm 78
 	enewgroup systemd-journal
 	newusergroup systemd-coredump
 	newusergroup systemd-journal-gateway
@@ -480,7 +500,7 @@ pkg_postinst() {
 	# Keep this here in case the database format changes so it gets updated
 	# when required. Despite that this file is owned by sys-apps/hwids.
 	if has_version "sys-apps/hwids[udev]"; then
-		udevadm hwdb --update --root="${ROOT%/}"
+		udevadm hwdb --update --root="${EROOT%/}"
 	fi
 
 	udev_reload || FAIL=1
