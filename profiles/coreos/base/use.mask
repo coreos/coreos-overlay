@@ -1,10 +1,2 @@
 # Never enable experimental code
 kdbus
-
-# Block python3 for now
-python_targets_python3_3
-python_targets_python3_4
-python_targets_python3_5
-python_single_target_python3_3
-python_single_target_python3_4
-python_single_target_python3_5
