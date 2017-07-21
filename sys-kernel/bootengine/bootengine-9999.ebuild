@@ -32,6 +32,7 @@ src_install() {
 	chmod +x "${D}"/usr/lib/dracut/modules.d/10*-generator/*-generator \
 		"${D}"/usr/lib/dracut/modules.d/10diskless-generator/diskless-btrfs \
 		"${D}"/usr/lib/dracut/modules.d/30ignition/ignition-generator \
+		"${D}"/usr/lib/dracut/modules.d/30ignition/retry-umount.sh \
 		"${D}"/usr/lib/dracut/modules.d/99setup-root/initrd-setup-root \
 		|| die chmod
 }
