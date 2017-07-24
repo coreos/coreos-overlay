@@ -1,4 +1,4 @@
-From bd187bcfb3d9f9637da68c3751c75a72316aa9b9 Mon Sep 17 00:00:00 2001
+From dc109b02e160750393cc042882ff622620941ef6 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:16 +0000
 Subject: [PATCH 05/25] Restrict /dev/mem and /dev/kmem when the kernel is
@@ -15,7 +15,7 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  1 file changed, 6 insertions(+)
 
 diff --git a/drivers/char/mem.c b/drivers/char/mem.c
-index 593a8818aca9..ba68add9677f 100644
+index 593a881..ba68add 100644
 --- a/drivers/char/mem.c
 +++ b/drivers/char/mem.c
 @@ -179,6 +179,9 @@ static ssize_t write_mem(struct file *file, const char __user *buf,
@@ -39,5 +39,5 @@ index 593a8818aca9..ba68add9677f 100644
  		unsigned long to_write = min_t(unsigned long, count,
  					       (unsigned long)high_memory - p);
 -- 
-2.13.0
+2.10.2
 
