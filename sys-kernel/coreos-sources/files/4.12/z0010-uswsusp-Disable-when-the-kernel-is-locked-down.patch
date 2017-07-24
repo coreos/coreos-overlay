@@ -1,4 +1,4 @@
-From 6355e8dee4bbee901afa9f602ed436b960d79441 Mon Sep 17 00:00:00 2001
+From 3eec411173fce08deee532638d9c229b5b03b76e Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <mjg59@srcf.ucam.org>
 Date: Wed, 23 Nov 2016 13:28:17 +0000
 Subject: [PATCH 10/25] uswsusp: Disable when the kernel is locked down
@@ -14,7 +14,7 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  1 file changed, 3 insertions(+)
 
 diff --git a/kernel/power/user.c b/kernel/power/user.c
-index 22df9f7ff672..e4b926d329b7 100644
+index 22df9f7..e4b926d 100644
 --- a/kernel/power/user.c
 +++ b/kernel/power/user.c
 @@ -52,6 +52,9 @@ static int snapshot_open(struct inode *inode, struct file *filp)
@@ -28,5 +28,5 @@ index 22df9f7ff672..e4b926d329b7 100644
  
  	if (!atomic_add_unless(&snapshot_device_available, -1, 0)) {
 -- 
-2.13.0
+2.10.2
 

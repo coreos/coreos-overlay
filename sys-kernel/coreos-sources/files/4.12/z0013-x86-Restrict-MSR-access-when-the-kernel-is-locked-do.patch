@@ -1,4 +1,4 @@
-From 3acbbd38964877431c984d86896bd5e105312e8e Mon Sep 17 00:00:00 2001
+From 52bf4a02f1adb42399c3110ddcbbe64e4e21a00b Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:17 +0000
 Subject: [PATCH 13/25] x86: Restrict MSR access when the kernel is locked down
@@ -15,7 +15,7 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  1 file changed, 7 insertions(+)
 
 diff --git a/arch/x86/kernel/msr.c b/arch/x86/kernel/msr.c
-index ef688804f80d..fbcce028e502 100644
+index ef68880..fbcce02 100644
 --- a/arch/x86/kernel/msr.c
 +++ b/arch/x86/kernel/msr.c
 @@ -84,6 +84,9 @@ static ssize_t msr_write(struct file *file, const char __user *buf,
@@ -40,5 +40,5 @@ index ef688804f80d..fbcce028e502 100644
  			err = -EFAULT;
  			break;
 -- 
-2.13.0
+2.10.2
 
