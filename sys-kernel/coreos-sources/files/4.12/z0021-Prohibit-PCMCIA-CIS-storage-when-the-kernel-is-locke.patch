@@ -1,4 +1,4 @@
-From 57d71dbd2cc6c719fc01a697b7369d0594d9d28a Mon Sep 17 00:00:00 2001
+From c41923cb22c64f7c4fa04f137b183bc5cb4aa7fe Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Fri, 25 Nov 2016 14:37:45 +0000
 Subject: [PATCH 21/25] Prohibit PCMCIA CIS storage when the kernel is locked
@@ -13,7 +13,7 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  1 file changed, 5 insertions(+)
 
 diff --git a/drivers/pcmcia/cistpl.c b/drivers/pcmcia/cistpl.c
-index 55ef7d1fd8da..193e4f7b73b1 100644
+index 55ef7d1..193e4f7 100644
 --- a/drivers/pcmcia/cistpl.c
 +++ b/drivers/pcmcia/cistpl.c
 @@ -1578,6 +1578,11 @@ static ssize_t pccard_store_cis(struct file *filp, struct kobject *kobj,
@@ -29,5 +29,5 @@ index 55ef7d1fd8da..193e4f7b73b1 100644
  
  	if (off)
 -- 
-2.13.0
+2.10.2
 
