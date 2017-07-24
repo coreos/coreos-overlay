@@ -1,4 +1,4 @@
-From 7e1139c4d7455b92a20d095c1df21f4cbeed1e07 Mon Sep 17 00:00:00 2001
+From 6c9948a01cdcf3b5b611b6d6f6b2823fe01400a1 Mon Sep 17 00:00:00 2001
 From: "Lee, Chun-Yi" <jlee@suse.com>
 Date: Wed, 23 Nov 2016 13:52:16 +0000
 Subject: [PATCH 19/26] bpf: Restrict kernel image access functions when the
@@ -17,7 +17,7 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  1 file changed, 11 insertions(+)
 
 diff --git a/kernel/trace/bpf_trace.c b/kernel/trace/bpf_trace.c
-index cee9802cf3e0..7fde851f207b 100644
+index cee9802..7fde851 100644
 --- a/kernel/trace/bpf_trace.c
 +++ b/kernel/trace/bpf_trace.c
 @@ -65,6 +65,11 @@ BPF_CALL_3(bpf_probe_read, void *, dst, u32, size, const void *, unsafe_ptr)
@@ -53,5 +53,5 @@ index cee9802cf3e0..7fde851f207b 100644
  	for (i = 0; i < fmt_size; i++) {
  		if ((!isprint(fmt[i]) && !isspace(fmt[i])) || !isascii(fmt[i]))
 -- 
-2.13.0
+2.10.2
 
