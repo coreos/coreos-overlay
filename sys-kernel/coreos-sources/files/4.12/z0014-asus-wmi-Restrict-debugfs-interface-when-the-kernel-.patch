@@ -1,4 +1,4 @@
-From ccd15a16715ea1984f5800f8e3587b394f394837 Mon Sep 17 00:00:00 2001
+From 96e01270c809608206a4647607ede4363a358fb7 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:16 +0000
 Subject: [PATCH 14/25] asus-wmi: Restrict debugfs interface when the kernel is
@@ -17,7 +17,7 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  1 file changed, 9 insertions(+)
 
 diff --git a/drivers/platform/x86/asus-wmi.c b/drivers/platform/x86/asus-wmi.c
-index 6c7d86074b38..57b82cbc9a6b 100644
+index 6c7d860..57b82cb 100644
 --- a/drivers/platform/x86/asus-wmi.c
 +++ b/drivers/platform/x86/asus-wmi.c
 @@ -1905,6 +1905,9 @@ static int show_dsts(struct seq_file *m, void *data)
@@ -51,5 +51,5 @@ index 6c7d86074b38..57b82cbc9a6b 100644
  				     1, asus->debug.method_id,
  				     &input, &output);
 -- 
-2.13.0
+2.10.2
 
