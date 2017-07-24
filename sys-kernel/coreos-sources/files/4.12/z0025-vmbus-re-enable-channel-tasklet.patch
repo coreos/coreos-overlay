@@ -1,4 +1,4 @@
-From 91e148c7e146b7cdd53e0c0ede953c9fa90c110a Mon Sep 17 00:00:00 2001
+From 7102e64dd2611bdea3782f99ef2ebc4a39d7e657 Mon Sep 17 00:00:00 2001
 From: Stephen Hemminger <stephen@networkplumber.org>
 Date: Sun, 25 Jun 2017 12:47:46 -0700
 Subject: [PATCH 25/25] vmbus: re-enable channel tasklet
@@ -23,7 +23,7 @@ Cc: stable@vger.kernel.org
  1 file changed, 2 insertions(+)
 
 diff --git a/drivers/hv/channel.c b/drivers/hv/channel.c
-index 736ac76d2a6a..3cea1216754e 100644
+index 736ac76..3cea121 100644
 --- a/drivers/hv/channel.c
 +++ b/drivers/hv/channel.c
 @@ -606,6 +606,8 @@ static int vmbus_close_internal(struct vmbus_channel *channel)
@@ -36,5 +36,5 @@ index 736ac76d2a6a..3cea1216754e 100644
  }
  
 -- 
-2.13.0
+2.10.2
 
