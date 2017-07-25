@@ -11,7 +11,7 @@ SRC_URI="http://git.netfilter.org/nftables/snapshot/v${PV}.tar.gz -> ${P}.tar.gz
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="~amd64 ~arm ~x86"
+KEYWORDS="amd64 arm64 ~arm ~x86"
 IUSE="debug doc gmp +readline xml"
 
 RDEPEND=">=net-libs/libmnl-1.0.3
@@ -20,8 +20,7 @@ RDEPEND=">=net-libs/libmnl-1.0.3
 	>=net-libs/libnftnl-1.0.6[xml(-)?]
 	"
 DEPEND="${RDEPEND}
-	>=app-text/docbook2X-0.8.8-r4
-	doc? ( >=app-text/dblatex-0.3.7 )
+	doc? ( >=app-text/docbook2X-0.8.8-r4 >=app-text/dblatex-0.3.7 )
 	sys-devel/bison
 	sys-devel/flex
 	virtual/pkgconfig"
@@ -49,39 +48,10 @@ src_prepare() {
 
 src_configure() {
 	econf \
+		--sysconfdir="${EPREFIX}"/usr/share \
 		--sbindir="${EPREFIX}"/sbin \
 		$(use_enable doc pdf-doc) \
 		$(use_enable debug) \
 		$(use_with readline cli) \
 		$(use_with !gmp mini_gmp)
-}
-
-src_install() {
-	default
-
-	dodir /usr/libexec/${PN}
-	exeinto /usr/libexec/${PN}
-	doexe "${FILESDIR}"/libexec/${PN}.sh
-
-	newconfd "${FILESDIR}"/${PN}.confd ${PN}
-	newinitd "${FILESDIR}"/${PN}.init ${PN}
-	keepdir /var/lib/nftables
-
-	systemd_dounit "${FILESDIR}"/systemd/${PN}-restore.service
-	systemd_enable_service basic.target ${PN}-restore.service
-}
-
-pkg_postinst() {
-	local save_file
-	save_file="${EROOT%/}/var/lib/nftables/rules-save"
-
-	elog "In order for the nftables-restore systemd service to start, "
-	elog "the file, ${save_file}, must exist.  To create this "
-	elog "file run the following command: "
-	elog ""
-	elog "	touch '${save_file}'"
-	elog ""
-	elog "Afterwards, the nftables-restore service should be manually started "
-	elog "to ensure firewall changes are stored on system shutdown.  The "
-	elog "systemd service will function normally thereafter."
 }
