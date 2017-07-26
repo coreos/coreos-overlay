@@ -62,6 +62,7 @@ src_configure() {
 
 	TARGET_NAME=$(usex debug DEBUG RELEASE)
 	TARGET_TOOLS="GCC$(gcc-version | tr -d .)"
+	[[ $TARGET_TOOLS == GCC[5-9]* ]] && TARGET_TOOLS=GCC5
 
 	case ${ARCH} in
 	amd64)	TARGET_ARCH=X64 ;;
@@ -77,7 +78,7 @@ src_compile() {
 	emake -C BaseTools -j1
 	ARCH=${arch_save}
 
-	export GCC49_AARCH64_PREFIX="${CHOST}-"
+	export "${TARGET_TOOLS}_AARCH64_PREFIX=${CHOST}-"
 	source ./edksetup.sh || die "edksetup.sh failed."
 
 	case ${ARCH} in
