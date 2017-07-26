@@ -119,6 +119,7 @@ RDEPEND="${RDEPEND}
 	net-firewall/ebtables
 	net-firewall/ipset
 	net-firewall/iptables
+	net-firewall/nftables
 	net-fs/nfs-utils
 	net-misc/bridge-utils
 	net-misc/dhcpcd
