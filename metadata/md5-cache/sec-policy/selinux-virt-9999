@@ -6,5 +6,5 @@ HOMEPAGE=https://wiki.gentoo.org/wiki/Project:SELinux
 LICENSE=GPL-2
 RDEPEND=>=sys-apps/policycoreutils-2.0.82 >=sec-policy/selinux-base-policy-9999
 SLOT=0
-_eclasses_=epatch	8233751dc5105a6ae8fcd86ce2bb0247	estack	43ddf5aaffa7a8d0482df54d25a66a1f	eutils	9c113d6a64826c40154cad7be15d95ea	git-r3	cbafa3261c37c7e3af44bb16a34ea390	ltprune	2770eed66a9b8ef944714cd0e968182e	multilib	0236be304ee52e7f179ed2f337075515	selinux-policy-2	d68ba9962726141fa72a66bcdbf82aba	toolchain-funcs	6eb35f81556258a4bc9182ad3dfd58ee
+_eclasses_=epatch	8233751dc5105a6ae8fcd86ce2bb0247	estack	43ddf5aaffa7a8d0482df54d25a66a1f	eutils	9c113d6a64826c40154cad7be15d95ea	git-r3	cbafa3261c37c7e3af44bb16a34ea390	ltprune	2770eed66a9b8ef944714cd0e968182e	multilib	97f470f374f2e94ccab04a2fb21d811e	selinux-policy-2	d68ba9962726141fa72a66bcdbf82aba	toolchain-funcs	8fec6b1eb195836560e70b66d98fb163
 _md5_=622ff6208275e649184ac8f8e6a81a97

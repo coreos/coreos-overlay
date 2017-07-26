@@ -7,9 +7,6 @@
 # version of these packages even if a newer stable version becomes
 # available in portage:
 
-# Stick with python 2 for now
->=dev-lang/python-3
-
 # Require our ca-certificates package based directly on Mozilla's
 # certificate store provided in NSS rather than the Gentoo/Debian package.
 >=app-misc/ca-certificates-20000000
