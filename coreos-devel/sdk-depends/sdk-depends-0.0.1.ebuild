@@ -40,7 +40,7 @@ DEPEND="
 	sys-boot/grub
 	sys-boot/shim
 	sys-devel/crossdev
-	sys-firmware/edk2-ovmf
+	sys-firmware/edk2
 	sys-fs/btrfs-progs
 	sys-fs/cryptsetup
 	"
