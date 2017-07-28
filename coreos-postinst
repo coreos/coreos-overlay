@@ -127,6 +127,27 @@ if [ -e ${PLATFORM_PATH} ]; then
     fi
 fi
 
+# Our VMware OEM partition contained a version of vmtoolsd that was vulnerable to 
+# CVE-2015-5191 (http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2015-5191).
+# This CVE can be mitigated by setting PrivateTmp=true on the vmtoolsd service file.
+# coreos-base/oem-vmware-10.1.5 is the last vulnerable version of the oem ebuild.
+# Note: we check in both /etc/oem-release and /usr/share/oem/oem-release
+# because pre-ignition Container Linux machines did not set the oem.id cmdline,
+# and also wrote oem-release only to /etc
+VMTOOLSD_DROPIN=/etc/systemd/system/vmtoolsd.service.d/90-tmpfiles-cve-2015-4191.conf
+if [ ! -e $VMTOOLSD_DROPIN ] && grep --quiet --no-messages "^ID=vmware$" /etc/oem-release /usr/share/oem/oem-release; then
+    mkdir -p /etc/systemd/system/vmtoolsd.service.d/
+    cat >$VMTOOLSD_DROPIN <<EOF
+# This file is automatically added during updates to mitigate CVE-2015-5191.
+# See http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2015-5191 for more info
+# on the CVE.
+# If you believe this file causes any issue, please report it as a bug to
+# CoreOS.
+[Service]
+PrivateTmp=true
+EOF
+fi
+
 # use the cgpt binary from the image to ensure compatibility
 CGPT=
 for bindir in bin/old_bins bin sbin; do
