@@ -1,4 +1,4 @@
-From 65c7f9c24804325e8c64b0d79a3e9344fba64ca8 Mon Sep 17 00:00:00 2001
+From 477e5612e6446d3b1df9ed49efee42d319721e74 Mon Sep 17 00:00:00 2001
 From: "Lee, Chun-Yi" <joeyli.kernel@gmail.com>
 Date: Wed, 23 Nov 2016 13:49:19 +0000
 Subject: [PATCH 08/25] kexec_file: Disable at runtime if securelevel has been

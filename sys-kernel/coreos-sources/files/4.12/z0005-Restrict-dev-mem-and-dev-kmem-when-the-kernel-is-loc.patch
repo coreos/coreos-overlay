@@ -1,4 +1,4 @@
-From dc109b02e160750393cc042882ff622620941ef6 Mon Sep 17 00:00:00 2001
+From 964b821d7a5f54197ef6d41d41da58a051ad0ffc Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:16 +0000
 Subject: [PATCH 05/25] Restrict /dev/mem and /dev/kmem when the kernel is

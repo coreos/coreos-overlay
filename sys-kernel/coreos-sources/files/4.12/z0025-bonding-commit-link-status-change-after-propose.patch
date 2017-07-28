@@ -1,0 +1,44 @@
+From 3849236f6d4900e255fea0c609887fc5901f9837 Mon Sep 17 00:00:00 2001
+From: WANG Cong <xiyou.wangcong@gmail.com>
+Date: Tue, 25 Jul 2017 09:44:25 -0700
+Subject: [PATCH 25/25] bonding: commit link status change after propose
+
+Commit de77ecd4ef02 ("bonding: improve link-status update in mii-monitoring")
+moves link status commitment into bond_mii_monitor(), but it still relies
+on the return value of bond_miimon_inspect() as the hint. We need to return
+non-zero as long as we propose a link status change.
+
+Fixes: de77ecd4ef02 ("bonding: improve link-status update in mii-monitoring")
+Reported-by: Benjamin Gilbert <benjamin.gilbert@coreos.com>
+Tested-by: Benjamin Gilbert <benjamin.gilbert@coreos.com>
+Cc: Mahesh Bandewar <maheshb@google.com>
+Signed-off-by: Cong Wang <xiyou.wangcong@gmail.com>
+Acked-by: Mahesh Bandewar <maheshb@google.com>
+Signed-off-by: David S. Miller <davem@davemloft.net>
+---
+ drivers/net/bonding/bond_main.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/net/bonding/bond_main.c b/drivers/net/bonding/bond_main.c
+index 8ab6bdb..0eab2fd 100644
+--- a/drivers/net/bonding/bond_main.c
++++ b/drivers/net/bonding/bond_main.c
+@@ -2047,6 +2047,7 @@ static int bond_miimon_inspect(struct bonding *bond)
+ 				continue;
+ 
+ 			bond_propose_link_state(slave, BOND_LINK_FAIL);
++			commit++;
+ 			slave->delay = bond->params.downdelay;
+ 			if (slave->delay) {
+ 				netdev_info(bond->dev, "link status down for %sinterface %s, disabling it in %d ms\n",
+@@ -2085,6 +2086,7 @@ static int bond_miimon_inspect(struct bonding *bond)
+ 				continue;
+ 
+ 			bond_propose_link_state(slave, BOND_LINK_BACK);
++			commit++;
+ 			slave->delay = bond->params.updelay;
+ 
+ 			if (slave->delay) {
+-- 
+2.10.2
+
