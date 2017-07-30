@@ -12,7 +12,7 @@ DESCRIPTION="VMware tools for distribution via /usr/share/oem"
 HOMEPAGE="https://github.com/vmware/open-vm-tools"
 
 EGIT_REPO_URI="https://github.com/vmware/open-vm-tools"
-EGIT_COMMIT="854c0bb374612f7e633b448ca273f970f154458b"
+EGIT_COMMIT="5296f23b5dc17e3afa521ad5e73885e0868c09e6"
 EGIT_SOURCEDIR="${WORKDIR}"
 
 LICENSE="LGPL-2"
