@@ -45,4 +45,5 @@ UNIPATCH_LIST="
 	${PATCH_DIR}/z0023-kbuild-derive-relative-path-for-KBUILD_SRC-from-CURD.patch \
 	${PATCH_DIR}/z0024-Add-arm64-coreos-verity-hash.patch \
 	${PATCH_DIR}/z0025-bonding-commit-link-status-change-after-propose.patch \
+	${PATCH_DIR}/z0026-virtio_net-fix-truesize-for-mergeable-buffers.patch \
 "
