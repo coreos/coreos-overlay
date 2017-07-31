@@ -1,7 +1,7 @@
 From 9fe3ac82c10eb3bcc3a9c0a9dd797862a8aeb6d1 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:15 +0000
-Subject: [PATCH 06/25] kexec: Disable at runtime if the kernel is locked down
+Subject: [PATCH 06/26] kexec: Disable at runtime if the kernel is locked down
 
 kexec permits the loading and execution of arbitrary code in ring 0, which
 is something that lock-down is meant to prevent. It makes sense to disable
@@ -17,7 +17,7 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  1 file changed, 7 insertions(+)
 
 diff --git a/kernel/kexec.c b/kernel/kexec.c
-index 980936a..46de8e6 100644
+index 980936a90ee6..46de8e6b42f4 100644
 --- a/kernel/kexec.c
 +++ b/kernel/kexec.c
 @@ -194,6 +194,13 @@ SYSCALL_DEFINE4(kexec_load, unsigned long, entry, unsigned long, nr_segments,
@@ -35,5 +35,5 @@ index 980936a..46de8e6 100644
  	 * This leaves us room for future extensions.
  	 */
 -- 
-2.10.2
+2.13.0
 
