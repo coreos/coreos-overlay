@@ -1,7 +1,7 @@
 # Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI="4"
+EAPI=5
 CROS_WORKON_PROJECT="coreos/dev-util"
 CROS_WORKON_REPO="git://github.com"
 CROS_WORKON_LOCALNAME="dev"
@@ -14,7 +14,9 @@ else
 	KEYWORDS="amd64 arm arm64 x86"
 fi
 
-inherit cros-workon
+PYTHON_COMPAT=( python2_7 )
+
+inherit cros-workon python-single-r1
 
 DESCRIPTION="emerge utilities for CoreOS developer images"
 HOMEPAGE="https://github.com/coreos/dev-util/"
@@ -23,15 +25,13 @@ LICENSE="GPL-2"
 SLOT="0"
 IUSE=""
 
-RDEPEND="dev-lang/python
-	sys-apps/portage"
-DEPEND=""
+RDEPEND="sys-apps/portage"
 
 src_compile() {
 	echo "Nothing to compile"
 }
 
 src_install() {
-	dobin gmerge
-	dobin emerge-gitclone
+	python_doscript gmerge
+	python_doscript emerge-gitclone
 }
