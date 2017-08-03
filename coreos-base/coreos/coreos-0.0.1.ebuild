@@ -115,6 +115,7 @@ RDEPEND="${RDEPEND}
 	dev-util/strace
 	dev-vcs/git
 	net-analyzer/nmap
+	net-analyzer/tcpdump
 	net-dns/bind-tools
 	net-firewall/ebtables
 	net-firewall/ipset
