@@ -37,9 +37,6 @@ dev-util/checkbashisms
 # Avoid cross compile error with amd64 stable (elfutils-0.158).
 =dev-libs/elfutils-0.161 ~amd64
 
-# Get a newer version of pylint
-=dev-python/astng-0.21.1 ~amd64
-=dev-python/pylint-0.23.0 ~amd64
 =dev-python/pyusb-1.0.0 ~amd64
 
 =dev-lang/nasm-2.09.10 ~amd64
