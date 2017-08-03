@@ -1,0 +1,13 @@
+DEFINED_PHASES=compile configure install prepare unpack
+DEPEND=amd64? ( >=dev-lang/nasm-2.10.0 sys-power/iasl )
+DESCRIPTION=EDK II Open Source UEFI Firmware
+EAPI=5
+HOMEPAGE=https://github.com/tianocore/tianocore.github.io/wiki/EDK-II
+IUSE=debug +qemu +secure-boot
+KEYWORDS=-* arm64 amd64
+LICENSE=BSD-2
+RDEPEND=!sys-firmware/edk2-armvirt !sys-firmware/edk2-ovmf amd64? ( qemu? ( app-emulation/qemu ) )
+SLOT=0
+SRC_URI=https://github.com/tianocore/edk2/archive/vUDK2017.tar.gz https://www.openssl.org/source/openssl-1.1.0f.tar.gz
+_eclasses_=epatch	8233751dc5105a6ae8fcd86ce2bb0247	estack	43ddf5aaffa7a8d0482df54d25a66a1f	eutils	9c113d6a64826c40154cad7be15d95ea	ltprune	2770eed66a9b8ef944714cd0e968182e	multilib	97f470f374f2e94ccab04a2fb21d811e	multiprocessing	284a473719153462f3e974d86c8cb81c	toolchain-funcs	8fec6b1eb195836560e70b66d98fb163
+_md5_=6b3b6c5adc8445db65b15da86ae5faa1

@@ -6,4 +6,4 @@ KEYWORDS=amd64 arm64
 LICENSE=GPL-2
 RDEPEND=amd64? ( app-emulation/open-vm-tools app-emulation/wa-linux-agent coreos-base/coreos-oem-gce coreos-base/nova-agent-container coreos-base/nova-agent-watcher dev-lang/python-oem ) arm64? ( sys-boot/grub sys-firmware/edk2 ) coreos-base/coreos coreos-base/coreos-dev
 SLOT=0
-_md5_=7b084a45802e712644cad2d5ddbe8509
+_md5_=99877b4bde4a286e139a1545cfffcae5
