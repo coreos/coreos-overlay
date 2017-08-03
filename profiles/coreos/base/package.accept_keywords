@@ -39,8 +39,6 @@ dev-util/checkbashisms
 
 =dev-python/pyusb-1.0.0 ~amd64
 
-=dev-lang/nasm-2.09.10 ~amd64
-
 # Older versions of sssd fail to build
 =sys-auth/sssd-1.13.1 ~amd64 ~arm64
 
