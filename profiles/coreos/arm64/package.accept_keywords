@@ -12,7 +12,6 @@
 =dev-libs/liblinear-210-r1 ~arm64
 =dev-libs/nss-3.29.5 ~arm64
 =dev-libs/userspace-rcu-0.9.1 **
-=dev-python/lxml-3.3.5 **
 =dev-util/meson-0.40.1 **
 =dev-util/re2c-0.16 ~arm64
 =dev-vcs/git-2.13.0 ~arm64
