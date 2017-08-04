@@ -29,6 +29,7 @@ app-emulation/qemu	aio caps curl jpeg ncurses png python threads uuid vhost-net 
 # python3 problems
 app-portage/gentoolkit -python_targets_python3_4
 app-portage/gentoolkit-dev -python_targets_python3_4
+app-portage/repoman -python_targets_python3_4
 dev-python/uritemplate -python_targets_python3_4
 sys-apps/portage -python_targets_python3_4
 
