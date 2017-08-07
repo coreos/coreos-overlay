@@ -1,4 +1,4 @@
-From 1fcbe5b939cec829f80dca667f6a1629cd7f8ac8 Mon Sep 17 00:00:00 2001
+From d17a0012c78e29a87b949f30f175267fd91ff525 Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Wed, 7 Dec 2016 10:28:39 +0000
 Subject: [PATCH 22/26] Lock down TIOCSSERIAL
@@ -15,7 +15,7 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  1 file changed, 6 insertions(+)
 
 diff --git a/drivers/tty/serial/serial_core.c b/drivers/tty/serial/serial_core.c
-index 13bfd5dcffce..45fb7689bc1c 100644
+index 13bfd5d..45fb768 100644
 --- a/drivers/tty/serial/serial_core.c
 +++ b/drivers/tty/serial/serial_core.c
 @@ -821,6 +821,12 @@ static int uart_set_info(struct tty_struct *tty, struct tty_port *port,
@@ -32,5 +32,5 @@ index 13bfd5dcffce..45fb7689bc1c 100644
  		retval = -EPERM;
  		if (change_irq || change_port ||
 -- 
-2.13.0
+2.10.2
 
