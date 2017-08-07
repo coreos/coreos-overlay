@@ -1,4 +1,4 @@
-From 275c37641a64fdb13c2bf5b7c8c6c240080e7ee8 Mon Sep 17 00:00:00 2001
+From 6c9effad0058286f8bb4d01ac247ef92be727b40 Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Tue, 22 Nov 2016 10:10:34 +0000
 Subject: [PATCH 20/26] scsi: Lock down the eata driver
@@ -24,7 +24,7 @@ cc: linux-scsi@vger.kernel.org
  1 file changed, 6 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
-index 227dd2c2ec2f..5c036d10c18b 100644
+index 227dd2c..5c036d1 100644
 --- a/drivers/scsi/eata.c
 +++ b/drivers/scsi/eata.c
 @@ -1552,8 +1552,13 @@ static int eata2x_detect(struct scsi_host_template *tpnt)
@@ -43,5 +43,5 @@ index 227dd2c2ec2f..5c036d10c18b 100644
  #if defined(MODULE)
  	/* io_port could have been modified when loading as a module */
 -- 
-2.13.0
+2.10.2
 

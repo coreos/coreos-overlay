@@ -1,4 +1,4 @@
-From 3849236f6d4900e255fea0c609887fc5901f9837 Mon Sep 17 00:00:00 2001
+From 0d1fedc72064771c52e3bd8947b9a52b81f239fb Mon Sep 17 00:00:00 2001
 From: WANG Cong <xiyou.wangcong@gmail.com>
 Date: Tue, 25 Jul 2017 09:44:25 -0700
 Subject: [PATCH 25/26] bonding: commit link status change after propose
@@ -20,7 +20,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
  1 file changed, 2 insertions(+)
 
 diff --git a/drivers/net/bonding/bond_main.c b/drivers/net/bonding/bond_main.c
-index 8ab6bdbe1682..0eab2fdff8d7 100644
+index 8ab6bdb..0eab2fd 100644
 --- a/drivers/net/bonding/bond_main.c
 +++ b/drivers/net/bonding/bond_main.c
 @@ -2047,6 +2047,7 @@ static int bond_miimon_inspect(struct bonding *bond)
@@ -40,5 +40,5 @@ index 8ab6bdbe1682..0eab2fdff8d7 100644
  
  			if (slave->delay) {
 -- 
-2.13.0
+2.10.2
 
