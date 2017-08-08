@@ -1,4 +1,4 @@
-From 10c1542768bc3ff9f655da4315401065c600ea8b Mon Sep 17 00:00:00 2001
+From cc3ff81651b05bfeeeda80928837019d67a7b1cc Mon Sep 17 00:00:00 2001
 From: Dave Young <dyoung@redhat.com>
 Date: Tue, 22 Nov 2016 08:46:15 +0000
 Subject: [PATCH 07/26] Copy secure_boot flag in boot params across kexec
@@ -22,7 +22,7 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  1 file changed, 1 insertion(+)
 
 diff --git a/arch/x86/kernel/kexec-bzimage64.c b/arch/x86/kernel/kexec-bzimage64.c
-index 9d7fd5e6689a..7e6f00ae8322 100644
+index 9d7fd5e..7e6f00a 100644
 --- a/arch/x86/kernel/kexec-bzimage64.c
 +++ b/arch/x86/kernel/kexec-bzimage64.c
 @@ -179,6 +179,7 @@ setup_efi_state(struct boot_params *params, unsigned long params_load_addr,
@@ -34,5 +34,5 @@ index 9d7fd5e6689a..7e6f00ae8322 100644
  	ei->efi_systab = current_ei->efi_systab;
  	ei->efi_systab_hi = current_ei->efi_systab_hi;
 -- 
-2.13.0
+2.10.2
 
