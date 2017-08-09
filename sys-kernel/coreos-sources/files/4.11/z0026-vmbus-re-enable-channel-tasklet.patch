@@ -1,7 +1,7 @@
 From 6be0636154d186365f759186b268486ada4b50fe Mon Sep 17 00:00:00 2001
 From: Stephen Hemminger <stephen@networkplumber.org>
 Date: Sun, 25 Jun 2017 12:47:46 -0700
-Subject: [PATCH 26/26] vmbus: re-enable channel tasklet
+Subject: [PATCH 26/28] vmbus: re-enable channel tasklet
 
 This problem shows up in 4.11 when netvsc driver is removed and reloaded.
 The problem is that the channel is closed during module removal and the
@@ -23,7 +23,7 @@ Cc: stable@vger.kernel.org
  1 file changed, 2 insertions(+)
 
 diff --git a/drivers/hv/channel.c b/drivers/hv/channel.c
-index 321b883..36c9ce1 100644
+index 321b8833fa6f..36c9ce191b74 100644
 --- a/drivers/hv/channel.c
 +++ b/drivers/hv/channel.c
 @@ -606,6 +606,8 @@ static int vmbus_close_internal(struct vmbus_channel *channel)
@@ -36,5 +36,5 @@ index 321b883..36c9ce1 100644
  }
  
 -- 
-2.10.2
+2.13.0
 

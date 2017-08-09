@@ -46,4 +46,6 @@ UNIPATCH_LIST="
 	${PATCH_DIR}/z0024-Add-arm64-coreos-verity-hash.patch \
 	${PATCH_DIR}/z0025-ext4-handle-the-rest-of-ext4_mb_load_buddy-ENOMEM-er.patch \
 	${PATCH_DIR}/z0026-vmbus-re-enable-channel-tasklet.patch \
+	${PATCH_DIR}/z0027-udp-consistently-apply-ufo-or-fragmentation.patch \
+	${PATCH_DIR}/z0028-net-packet-fix-race-in-packet_set_ring-on-PACKET_RES.patch \
 "

@@ -1,7 +1,7 @@
 From 7915d9fd1ef9d40e0a859a8f4db92aa79cde5e0e Mon Sep 17 00:00:00 2001
 From: Josh Boyer <jwboyer@fedoraproject.org>
 Date: Mon, 21 Nov 2016 23:55:55 +0000
-Subject: [PATCH 01/26] efi: Add EFI_SECURE_BOOT bit
+Subject: [PATCH 01/28] efi: Add EFI_SECURE_BOOT bit
 
 UEFI machines can be booted in Secure Boot mode.  Add a EFI_SECURE_BOOT bit
 that can be passed to efi_enabled() to find out whether secure boot is
@@ -18,7 +18,7 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  2 files changed, 2 insertions(+)
 
 diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index 11beda5..c134f23 100644
+index 11beda5a691b..c134f23f8015 100644
 --- a/arch/x86/kernel/setup.c
 +++ b/arch/x86/kernel/setup.c
 @@ -1191,6 +1191,7 @@ void __init setup_arch(char **cmdline_p)
@@ -30,7 +30,7 @@ index 11beda5..c134f23 100644
  			break;
  		default:
 diff --git a/include/linux/efi.h b/include/linux/efi.h
-index 94d34e0..6049600 100644
+index 94d34e0be24f..6049600e5475 100644
 --- a/include/linux/efi.h
 +++ b/include/linux/efi.h
 @@ -1069,6 +1069,7 @@ extern int __init efi_setup_pcdp_console(char *);
@@ -42,5 +42,5 @@ index 94d34e0..6049600 100644
  #ifdef CONFIG_EFI
  /*
 -- 
-2.10.2
+2.13.0
 
