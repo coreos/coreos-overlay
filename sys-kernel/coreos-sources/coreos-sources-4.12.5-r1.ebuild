@@ -46,4 +46,6 @@ UNIPATCH_LIST="
 	${PATCH_DIR}/z0024-Add-arm64-coreos-verity-hash.patch \
 	${PATCH_DIR}/z0025-bonding-commit-link-status-change-after-propose.patch \
 	${PATCH_DIR}/z0026-virtio_net-fix-truesize-for-mergeable-buffers.patch \
+	${PATCH_DIR}/z0027-udp-consistently-apply-ufo-or-fragmentation.patch \
+	${PATCH_DIR}/z0028-net-packet-fix-race-in-packet_set_ring-on-PACKET_RES.patch \
 "
