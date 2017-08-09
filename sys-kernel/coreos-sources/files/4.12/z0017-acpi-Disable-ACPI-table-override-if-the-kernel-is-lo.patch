@@ -1,7 +1,7 @@
 From e0ff61fba4dd9e26a6744446a6e133eac094b6ee Mon Sep 17 00:00:00 2001
 From: Linn Crosetto <linn@hpe.com>
 Date: Wed, 23 Nov 2016 13:32:27 +0000
-Subject: [PATCH 17/26] acpi: Disable ACPI table override if the kernel is
+Subject: [PATCH 17/28] acpi: Disable ACPI table override if the kernel is
  locked down
 
 From the kernel documentation (initrd_table_override.txt):
@@ -21,7 +21,7 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  1 file changed, 5 insertions(+)
 
 diff --git a/drivers/acpi/tables.c b/drivers/acpi/tables.c
-index ff42539..c72bfa9 100644
+index ff425390bfa8..c72bfa97888a 100644
 --- a/drivers/acpi/tables.c
 +++ b/drivers/acpi/tables.c
 @@ -526,6 +526,11 @@ void __init acpi_table_upgrade(void)
@@ -37,5 +37,5 @@ index ff42539..c72bfa9 100644
  		memblock_find_in_range(0, ACPI_TABLE_UPGRADE_MAX_PHYS,
  				       all_tables_size, PAGE_SIZE);
 -- 
-2.10.2
+2.13.0
 
