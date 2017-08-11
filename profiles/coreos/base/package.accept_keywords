@@ -75,3 +75,6 @@ dev-util/checkbashisms
 
 # Pick up fixes for bugs introduced in 4.0
 =sys-fs/dosfstools-4.1 **
+
+# CVE-2017-1000117
+=dev-vcs/git-2.13.5
