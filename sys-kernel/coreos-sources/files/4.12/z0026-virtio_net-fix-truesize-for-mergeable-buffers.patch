@@ -1,7 +1,7 @@
 From b24f16f597586d794bb66c08f09b4e83579da916 Mon Sep 17 00:00:00 2001
 From: "Michael S. Tsirkin" <mst@redhat.com>
 Date: Mon, 31 Jul 2017 21:49:49 +0300
-Subject: [PATCH 26/26] virtio_net: fix truesize for mergeable buffers
+Subject: [PATCH 26/28] virtio_net: fix truesize for mergeable buffers
 
 Seth Forshee noticed a performance degradation with some workloads.
 This turns out to be due to packet drops.  Euan Kemp noticed that this
@@ -27,7 +27,7 @@ Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
  1 file changed, 2 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/net/virtio_net.c b/drivers/net/virtio_net.c
-index 6633dd4..acb754e 100644
+index 6633dd4bb649..acb754eb1ccb 100644
 --- a/drivers/net/virtio_net.c
 +++ b/drivers/net/virtio_net.c
 @@ -889,21 +889,20 @@ static int add_recvbuf_mergeable(struct virtnet_info *vi,
@@ -55,5 +55,5 @@ index 6633dd4..acb754e 100644
  	if (err < 0)
  		put_page(virt_to_head_page(buf));
 -- 
-2.10.2
+2.13.4
 

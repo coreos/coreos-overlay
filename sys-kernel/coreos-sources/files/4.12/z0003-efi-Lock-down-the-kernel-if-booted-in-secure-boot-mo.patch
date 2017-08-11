@@ -1,7 +1,7 @@
 From fe6eb63a38a0e5f99d73e4b4cb2f4bbd8f127723 Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Mon, 21 Nov 2016 23:55:55 +0000
-Subject: [PATCH 03/26] efi: Lock down the kernel if booted in secure boot mode
+Subject: [PATCH 03/28] efi: Lock down the kernel if booted in secure boot mode
 
 UEFI Secure Boot provides a mechanism for ensuring that the firmware will
 only load signed bootloaders and kernels.  Certain use cases may also
@@ -16,7 +16,7 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  2 files changed, 19 insertions(+), 1 deletion(-)
 
 diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 0efb4c9..4d1c53b 100644
+index 0efb4c9497bc..4d1c53bb8411 100644
 --- a/arch/x86/Kconfig
 +++ b/arch/x86/Kconfig
 @@ -1827,6 +1827,18 @@ config EFI_MIXED
@@ -39,7 +39,7 @@ index 0efb4c9..4d1c53b 100644
  	def_bool y
  	prompt "Enable seccomp to safely compute untrusted bytecode"
 diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index 87ef54e..4c4d758 100644
+index 87ef54e64842..4c4d758d4be1 100644
 --- a/arch/x86/kernel/setup.c
 +++ b/arch/x86/kernel/setup.c
 @@ -69,6 +69,7 @@
@@ -65,5 +65,5 @@ index 87ef54e..4c4d758 100644
  		default:
  			pr_info("Secure boot could not be determined\n");
 -- 
-2.10.2
+2.13.4
 
