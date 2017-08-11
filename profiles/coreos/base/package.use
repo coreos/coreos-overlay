@@ -39,7 +39,7 @@ sys-apps/gptfdisk -icu
 dev-libs/apr-util -gdbm
 sys-libs/gdbm berkdb
 
-dev-vcs/git -perl -iconv
+dev-vcs/git -pcre-jit -perl -iconv
 
 net-analyzer/nmap ncat -lua
 
