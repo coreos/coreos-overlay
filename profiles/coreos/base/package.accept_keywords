@@ -89,3 +89,6 @@ dev-util/checkbashisms
 
 # CVE-2017-8779
 =net-nds/rpcbind-0.2.4-r1
+
+# CVE-2017-1000117
+=dev-vcs/git-2.13.5
