@@ -1,7 +1,7 @@
-From 95073d14a7f72af389cf7ae17967918f5fa69807 Mon Sep 17 00:00:00 2001
+From 34f5006c012e4f072ca4d5739788f14cc8e77518 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:16 +0000
-Subject: [PATCH 12/28] x86: Lock down IO port access when the kernel is locked
+Subject: [PATCH 12/26] x86: Lock down IO port access when the kernel is locked
  down
 
 IO port access would permit users to gain access to PCI configuration
@@ -20,7 +20,7 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  2 files changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/arch/x86/kernel/ioport.c b/arch/x86/kernel/ioport.c
-index 9c3cf0944bce..4a613fed94b6 100644
+index 9c3cf09..4a613fe 100644
 --- a/arch/x86/kernel/ioport.c
 +++ b/arch/x86/kernel/ioport.c
 @@ -30,7 +30,7 @@ asmlinkage long sys_ioperm(unsigned long from, unsigned long num, int turn_on)
@@ -42,7 +42,7 @@ index 9c3cf0944bce..4a613fed94b6 100644
  	}
  	regs->flags = (regs->flags & ~X86_EFLAGS_IOPL) |
 diff --git a/drivers/char/mem.c b/drivers/char/mem.c
-index ba68add9677f..5e2a260fb89f 100644
+index ba68add..5e2a260 100644
 --- a/drivers/char/mem.c
 +++ b/drivers/char/mem.c
 @@ -768,6 +768,8 @@ static loff_t memory_lseek(struct file *file, loff_t offset, int orig)
@@ -55,5 +55,5 @@ index ba68add9677f..5e2a260fb89f 100644
  }
  
 -- 
-2.13.4
+2.10.2
 
