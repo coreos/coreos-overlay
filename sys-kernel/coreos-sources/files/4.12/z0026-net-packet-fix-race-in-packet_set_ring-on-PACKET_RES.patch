@@ -1,7 +1,7 @@
-From af6054f1bf2facd5f44e4f3652f5f86ea81e7c06 Mon Sep 17 00:00:00 2001
+From 4ebbab6018792779607c8e1c17786bfeb573a210 Mon Sep 17 00:00:00 2001
 From: Willem de Bruijn <willemdebruijn.kernel@gmail.com>
 Date: Fri, 4 Aug 2017 12:48:20 -0400
-Subject: [PATCH 28/28] net-packet: fix race in packet_set_ring on
+Subject: [PATCH 26/26] net-packet: fix race in packet_set_ring on
  PACKET_RESERVE
 
 PACKET_RESERVE reserves headroom in memory mapped packet ring frames.
@@ -31,7 +31,7 @@ Signed-off-by: Willem de Bruijn <willemb@google.com>
  1 file changed, 9 insertions(+), 4 deletions(-)
 
 diff --git a/net/packet/af_packet.c b/net/packet/af_packet.c
-index e3eeed19cc7a..b2df3bae2de7 100644
+index 0880e0a..b84110e 100644
 --- a/net/packet/af_packet.c
 +++ b/net/packet/af_packet.c
 @@ -3705,14 +3705,19 @@ packet_setsockopt(struct socket *sock, int level, int optname, char __user *optv
@@ -59,5 +59,5 @@ index e3eeed19cc7a..b2df3bae2de7 100644
  	case PACKET_LOSS:
  	{
 -- 
-2.13.0
+2.10.2
 

@@ -1,7 +1,7 @@
-From d7e6ff962e25a9a4c7900dcae3c325d68b0b01ad Mon Sep 17 00:00:00 2001
+From be50c7445109a745324a5cceb1da9af2c19a311e Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Wed, 23 Nov 2016 13:22:22 +0000
-Subject: [PATCH 04/28] Enforce module signatures if the kernel is locked down
+Subject: [PATCH 04/26] Enforce module signatures if the kernel is locked down
 
 If the kernel is locked down, require that all modules have valid
 signatures that we can verify.
@@ -12,7 +12,7 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/kernel/module.c b/kernel/module.c
-index 4a3665f8f837..3f1de34c6d10 100644
+index 4a3665f..3f1de34 100644
 --- a/kernel/module.c
 +++ b/kernel/module.c
 @@ -2777,7 +2777,7 @@ static int module_sig_check(struct load_info *info, int flags)
@@ -25,5 +25,5 @@ index 4a3665f8f837..3f1de34c6d10 100644
  
  	return err;
 -- 
-2.13.0
+2.10.2
 
