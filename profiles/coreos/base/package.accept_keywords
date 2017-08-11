@@ -77,4 +77,4 @@ dev-util/checkbashisms
 =sys-fs/dosfstools-4.1 **
 
 # CVE-2017-1000117
-=dev-vcs/git-2.13.5
+=dev-vcs/git-2.14.1
