@@ -1,7 +1,7 @@
-From 0f444da98d55b1d78467778c2db2a0fdf7a11f9d Mon Sep 17 00:00:00 2001
+From c0e5883e09e5a226baadb06d790e5b20c3d3a547 Mon Sep 17 00:00:00 2001
 From: Willem de Bruijn <willemb@google.com>
 Date: Fri, 14 Jul 2017 10:19:00 -0700
-Subject: [PATCH 27/28] udp: consistently apply ufo or fragmentation
+Subject: [PATCH 25/26] udp: consistently apply ufo or fragmentation
 
 When iteratively building a UDP datagram with MSG_MORE and that
 datagram exceeds MTU, consistently choose UFO or fragmentation.
@@ -22,7 +22,7 @@ Signed-off-by: Willem de Bruijn <willemb@google.com>
  2 files changed, 9 insertions(+), 6 deletions(-)
 
 diff --git a/net/ipv4/ip_output.c b/net/ipv4/ip_output.c
-index 532b36e9ce2a..e5948c0c9759 100644
+index 532b36e..e5948c0 100644
 --- a/net/ipv4/ip_output.c
 +++ b/net/ipv4/ip_output.c
 @@ -964,11 +964,12 @@ static int __ip_append_data(struct sock *sk,
@@ -50,10 +50,10 @@ index 532b36e9ce2a..e5948c0c9759 100644
  	    (rt->dst.dev->features & NETIF_F_UFO)) {
  		if (skb->ip_summed != CHECKSUM_PARTIAL)
 diff --git a/net/ipv6/ip6_output.c b/net/ipv6/ip6_output.c
-index 1699acb2fa2c..90e8c3d57423 100644
+index be03067..365d510 100644
 --- a/net/ipv6/ip6_output.c
 +++ b/net/ipv6/ip6_output.c
-@@ -1390,11 +1390,12 @@ static int __ip6_append_data(struct sock *sk,
+@@ -1386,11 +1386,12 @@ static int __ip6_append_data(struct sock *sk,
  	 */
  
  	cork->length += length;
@@ -70,5 +70,5 @@ index 1699acb2fa2c..90e8c3d57423 100644
  					  hh_len, fragheaderlen, exthdrlen,
  					  transhdrlen, mtu, flags, fl6);
 -- 
-2.13.4
+2.10.2
 
