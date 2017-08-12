@@ -11,6 +11,7 @@
 =dev-libs/apr-util-1.5.4-r1 ~arm64
 =dev-libs/libevent-2.1.8 ~arm64
 =dev-libs/liblinear-210-r1 ~arm64
+=dev-libs/libnl-3.2.27 ~arm64
 =dev-libs/nss-3.29.5 ~arm64
 =dev-libs/userspace-rcu-0.9.1 **
 =dev-util/meson-0.40.1 **
@@ -36,6 +37,7 @@
 =sys-apps/smartmontools-6.4 **
 =sys-apps/util-linux-2.28.2 ~arm64
 =sys-block/parted-3.2-r1 ~arm64
+=sys-cluster/ipvsadm-1.27-r1 **
 =sys-fs/btrfs-progs-4.10.2 ~arm64
 =sys-fs/cryptsetup-1.7.4 **
 =sys-fs/lsscsi-0.28 ~arm64

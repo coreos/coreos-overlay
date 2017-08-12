@@ -25,9 +25,10 @@ INSTALL_MASK="${INSTALL_MASK}
   /etc/bash_completion.d
   /etc/dmtab
   /etc/e2fsck.conf
-  /etc/lvm/*
+  /etc/libnl
   /etc/logrotate.conf
   /etc/logrotate.d
+  /etc/lvm/*
   /etc/mdadm.conf
   /etc/rsyncd.conf
   /etc/sudoers
