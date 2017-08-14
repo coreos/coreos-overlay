@@ -1,0 +1,29 @@
+# -*- mode: ruby -*-
+# # vi: set ft=ruby :
+
+if Vagrant::VERSION < "1.6.0"
+  raise "Need at least vagrant version 1.6.0, please update"
+end
+
+require_relative 'change_host_name.rb'
+require_relative 'configure_networks.rb'
+require_relative 'base_mac.rb'
+
+Vagrant.configure("2") do |config|
+  # always use Vagrants insecure key
+  config.ssh.insert_key = false
+
+  # SSH in as the default 'core' user, it has the vagrant ssh key.
+  config.ssh.username = "core"
+
+  # Disable the base shared folder, guest additions are unavailable.
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+ ["vmware_fusion", "vmware_workstation"].each do |vmware|
+    config.vm.provider vmware do |v|
+      if v.respond_to?(:functional_hgfs=)
+        v.functional_hgfs = false
+      end
+    end
+  end
+end
