@@ -1,7 +1,7 @@
-From 1f170f847c8637bf6aa53415a5ada4871fb99352 Mon Sep 17 00:00:00 2001
+From 5a19ceeda4df04b37490a9cd79929d01598fcf2e Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:16 +0000
-Subject: [PATCH 15/26] ACPI: Limit access to custom_method when the kernel is
+Subject: [PATCH 15/24] ACPI: Limit access to custom_method when the kernel is
  locked down
 
 custom_method effectively allows arbitrary access to system memory, making
@@ -15,7 +15,7 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  1 file changed, 3 insertions(+)
 
 diff --git a/drivers/acpi/custom_method.c b/drivers/acpi/custom_method.c
-index c68e724..e4d721c 100644
+index c68e72414a67..e4d721c330c0 100644
 --- a/drivers/acpi/custom_method.c
 +++ b/drivers/acpi/custom_method.c
 @@ -29,6 +29,9 @@ static ssize_t cm_write(struct file *file, const char __user * user_buf,
@@ -29,5 +29,5 @@ index c68e724..e4d721c 100644
  		/* parse the table header to get the table length */
  		if (count <= sizeof(struct acpi_table_header))
 -- 
-2.10.2
+2.13.4
 

@@ -1,7 +1,7 @@
-From 2b2a0f2afd2f05b3f8e9e61561ce176d881c384a Mon Sep 17 00:00:00 2001
+From 4958cc96a215c001beb215b3eb9d28e5791bbaf7 Mon Sep 17 00:00:00 2001
 From: Geoff Levand <geoff@infradead.org>
 Date: Fri, 11 Nov 2016 17:28:52 -0800
-Subject: [PATCH 24/26] Add arm64 coreos verity hash
+Subject: [PATCH 24/24] Add arm64 coreos verity hash
 
 Signed-off-by: Geoff Levand <geoff@infradead.org>
 ---
@@ -9,7 +9,7 @@ Signed-off-by: Geoff Levand <geoff@infradead.org>
  1 file changed, 5 insertions(+)
 
 diff --git a/arch/arm64/kernel/efi-header.S b/arch/arm64/kernel/efi-header.S
-index 613fc30..fdaf86c 100644
+index 613fc3000677..fdaf86c78332 100644
 --- a/arch/arm64/kernel/efi-header.S
 +++ b/arch/arm64/kernel/efi-header.S
 @@ -103,6 +103,11 @@ section_table:
@@ -25,5 +25,5 @@ index 613fc30..fdaf86c 100644
  	/*
  	 * The debug table is referenced via its Relative Virtual Address (RVA),
 -- 
-2.10.2
+2.13.4
 
