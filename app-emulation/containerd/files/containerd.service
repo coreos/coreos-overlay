@@ -5,6 +5,7 @@ Documentation=http://github.com/docker/containerd
 [Service]
 Type=simple
 ExecStart=/usr/bin/containerd --listen unix:///var/run/docker/libcontainerd/docker-containerd.sock --shim /usr/bin/containerd-shim --state-dir /var/run/docker/libcontainerd/containerd --start-timeout 2m
+Restart=always
 
 # (lack of) limits from the upstream docker service unit
 LimitNOFILE=1048576
