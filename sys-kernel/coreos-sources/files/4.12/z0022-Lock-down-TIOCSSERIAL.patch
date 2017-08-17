@@ -1,4 +1,4 @@
-From 88ccec7a5ad506fe97a55fb11a1373d0744e6099 Mon Sep 17 00:00:00 2001
+From 8630a903079e06b279c544242a0bef5c446a5cce Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Wed, 7 Dec 2016 10:28:39 +0000
 Subject: [PATCH 22/24] Lock down TIOCSSERIAL
@@ -32,5 +32,5 @@ index 13bfd5dcffce..45fb7689bc1c 100644
  		retval = -EPERM;
  		if (change_irq || change_port ||
 -- 
-2.13.4
+2.13.5
 
