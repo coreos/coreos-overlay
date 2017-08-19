@@ -1,0 +1,45 @@
+From ab3a3b89d712bb1c6ca2e09ffc375f4b837e9401 Mon Sep 17 00:00:00 2001
+From: Mrunal Patel <mrunalp@gmail.com>
+Date: Thu, 2 Feb 2017 11:23:26 -0800
+Subject: [PATCH] Delay unshare of CLONE_NEWIPC for SELinux
+
+We ensure that mqueue is owned by user namespace root
+by unsharing CLONE_NEWIPC after we become user namespace
+root. This allows us to apply the container SELinux label
+to mqueue.
+
+Signed-off-by: Mrunal Patel <mrunalp@gmail.com>
+---
+ libcontainer/nsenter/nsexec.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/libcontainer/nsenter/nsexec.c b/libcontainer/nsenter/nsexec.c
+index 0ad68834..5100698a 100644
+--- a/libcontainer/nsenter/nsexec.c
++++ b/libcontainer/nsenter/nsexec.c
+@@ -719,7 +719,12 @@ void nsexec(void)
+ 			 * some old kernel versions where clone(CLONE_PARENT | CLONE_NEWPID)
+ 			 * was broken, so we'll just do it the long way anyway.
+ 			 */
+-			if (unshare(config.cloneflags) < 0)
++			uint32_t apply_cloneflags = config.cloneflags;
++			if ((config.cloneflags & CLONE_NEWUSER) && (config.cloneflags & CLONE_NEWIPC)) {
++				apply_cloneflags &= ~CLONE_NEWIPC;
++			}
++
++			if (unshare(apply_cloneflags) < 0)
+ 				bail("failed to unshare namespaces");
+ 
+ 			/*
+@@ -841,6 +846,11 @@ void nsexec(void)
+ 					bail("setgroups failed");
+ 			}
+ 
++			if ((config.cloneflags & CLONE_NEWUSER) && (config.cloneflags & CLONE_NEWIPC)) {
++				if (unshare(CLONE_NEWIPC) < 0)
++					bail("unshare ipc failed");
++			}
++
+ 			s = SYNC_CHILD_READY;
+ 			if (write(syncfd, &s, sizeof(s)) != sizeof(s))
+ 				bail("failed to sync with patent: write(SYNC_CHILD_READY)");
