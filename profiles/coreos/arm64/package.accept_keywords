@@ -2,6 +2,7 @@
 # Keep these in alphabetical order.
 
 =app-admin/sudo-1.8.20_p2 ~arm64
+=app-arch/bzip2-1.0.6-r8 ~arm64
 =app-crypt/mit-krb5-1.14.2 ~arm64
 =app-text/asciidoc-8.6.9-r3 ~arm64
 =dev-cpp/gflags-2.1.2 ~arm64
