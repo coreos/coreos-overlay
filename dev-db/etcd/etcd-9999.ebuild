@@ -25,19 +25,19 @@ SRC_URI=""
 
 LICENSE="Apache-2.0"
 SLOT="2"
-IUSE=""
+IUSE="+etcdctl"
 
 RDEPEND="!dev-db/etcd:0
-	!dev-db/etcdctl"
+	etcdctl? ( !dev-db/etcdctl )"
 
 src_compile() {
 	GO_LDFLAGS="-X ${COREOS_GO_PACKAGE}/version.GitSHA=${CROS_WORKON_COMMIT:0:7}"
 	go_build "${COREOS_GO_PACKAGE}"
-	go_build "${COREOS_GO_PACKAGE}/etcdctl"
+	use etcdctl && go_build "${COREOS_GO_PACKAGE}/etcdctl"
 }
 
 src_install() {
-	dobin ${WORKDIR}/gopath/bin/etcdctl
+	use etcdctl && dobin ${WORKDIR}/gopath/bin/etcdctl
 	newbin "${WORKDIR}/gopath/bin/${PN}" "${PN}${SLOT}"
 
 	systemd_dounit "${FILESDIR}/${PN}${SLOT}.service"
