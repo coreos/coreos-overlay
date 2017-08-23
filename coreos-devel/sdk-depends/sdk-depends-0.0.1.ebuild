@@ -31,6 +31,7 @@ DEPEND="
 	dev-python/setuptools
 	dev-util/boost-build
 	dev-util/checkbashisms
+	dev-util/patchelf
 	dev-vcs/repo
 	net-dns/bind-tools
 	net-misc/curl
