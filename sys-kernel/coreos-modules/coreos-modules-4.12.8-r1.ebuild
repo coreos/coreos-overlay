@@ -41,6 +41,13 @@ src_install() {
 		  INSTALL_FW_PATH="${T}/fw" \
 		  modules_install
 
+	# Install to /usr/lib/debug with debug symbols intact
+	kmake INSTALL_MOD_PATH="${D}/usr/lib/debug/usr" \
+		  INSTALL_FW_PATH="${T}/fw" \
+		  modules_install
+	rm "${D}/usr/lib/debug/usr/lib/modules/${KV_FULL}/"modules.* || die
+	rm "${D}/usr/lib/debug/usr/lib/modules/${KV_FULL}/"{source,build} || die
+
 	# Clean up the build tree
 	shred_keys
 	kmake clean

@@ -77,9 +77,12 @@ src_install() {
 
 	insinto "/usr/lib/modules/${KV_FULL}/build"
 	doins build/System.map
-	# TODO: vmlinux would be useful for debugging but it is >300MB
 
-	# Uncomment vdso_install for easy access to debug symbols in gdb:
-	#   set debug-file-directory /lib/modules/4.0.7-coreos-r2/vdso/
-	#kmake INSTALL_MOD_PATH="${D}/usr" vdso_install
+	insinto "/usr/lib/debug/usr/boot"
+	newins build/vmlinux "vmlinux-${KV_FULL}"
+	dosym "../../../boot/vmlinux-${KV_FULL}" "/usr/lib/debug/usr/lib/modules/${KV_FULL}/vmlinux"
+
+	# For easy access to vdso debug symbols in gdb:
+	#   set debug-file-directory /usr/lib/debug/usr/lib/modules/${KV_FULL}/vdso/
+	kmake INSTALL_MOD_PATH="${D}/usr/lib/debug/usr" vdso_install
 }
