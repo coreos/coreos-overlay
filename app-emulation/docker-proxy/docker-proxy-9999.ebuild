@@ -2,11 +2,11 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Id$
 
-EAPI=5
+EAPI=6
 EGO_PN="github.com/docker/libnetwork"
 
 COREOS_GO_PACKAGE="${EGO_PN}"
-COREOS_GO_VERSION="go1.7"
+COREOS_GO_VERSION="go1.8"
 
 if [[ ${PV} == *9999 ]]; then
 	KEYWORDS="~amd64 ~arm64"

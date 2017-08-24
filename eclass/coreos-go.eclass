@@ -57,6 +57,7 @@ go_build() {
 
 coreos-go_src_prepare() {
 	debug-print-function ${FUNCNAME} "$@"
+	has ${EAPI:-0} 6 && default
 
 	go_export
 	export GOPATH="${WORKDIR}/gopath"

@@ -1,4 +1,4 @@
-From 4a4021f597aa37f69a73f0f98e320abf9df1a814 Mon Sep 17 00:00:00 2001
+From ab3a3b89d712bb1c6ca2e09ffc375f4b837e9401 Mon Sep 17 00:00:00 2001
 From: Mrunal Patel <mrunalp@gmail.com>
 Date: Thu, 2 Feb 2017 11:23:26 -0800
 Subject: [PATCH] Delay unshare of CLONE_NEWIPC for SELinux
@@ -14,10 +14,10 @@ Signed-off-by: Mrunal Patel <mrunalp@gmail.com>
  1 file changed, 11 insertions(+), 1 deletion(-)
 
 diff --git a/libcontainer/nsenter/nsexec.c b/libcontainer/nsenter/nsexec.c
-index 5b680d0..0a10f80 100644
+index 0ad68834..5100698a 100644
 --- a/libcontainer/nsenter/nsexec.c
 +++ b/libcontainer/nsenter/nsexec.c
-@@ -639,7 +639,12 @@ void nsexec(void)
+@@ -719,7 +719,12 @@ void nsexec(void)
  			 * some old kernel versions where clone(CLONE_PARENT | CLONE_NEWPID)
  			 * was broken, so we'll just do it the long way anyway.
  			 */
@@ -31,15 +31,15 @@ index 5b680d0..0a10f80 100644
  				bail("failed to unshare namespaces");
  
  			/*
-@@ -735,6 +740,11 @@ void nsexec(void)
- 			if (setgroups(0, NULL) < 0)
- 				bail("setgroups failed");
+@@ -841,6 +846,11 @@ void nsexec(void)
+ 					bail("setgroups failed");
+ 			}
  
 +			if ((config.cloneflags & CLONE_NEWUSER) && (config.cloneflags & CLONE_NEWIPC)) {
 +				if (unshare(CLONE_NEWIPC) < 0)
 +					bail("unshare ipc failed");
 +			}
 +
- 			if (consolefd != -1) {
- 				if (ioctl(consolefd, TIOCSCTTY, 0) < 0)
- 					bail("ioctl TIOCSCTTY failed");
+ 			s = SYNC_CHILD_READY;
+ 			if (write(syncfd, &s, sizeof(s)) != sizeof(s))
+ 				bail("failed to sync with patent: write(SYNC_CHILD_READY)");

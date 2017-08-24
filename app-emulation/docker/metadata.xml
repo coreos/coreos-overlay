@@ -8,22 +8,17 @@
 		scale, in production, on VMs, bare metal, OpenStack clusters, public
 		clouds and more.
 	</longdescription>
-	<herd>proxy-maintainers</herd>
-	<maintainer status="active">
+	<maintainer type="person">
 		<email>admwiggin@gmail.com</email>
 		<name>Tianon</name>
 	</maintainer>
-	<maintainer>
-		<email>xarthisius@gentoo.org</email>
-		<name>Kacper Kowalik</name>
-	</maintainer>
-	<maintainer>
-		<email>alunduil@gentoo.org</email>
-		<name>Alex Brandt</name>
-	</maintainer>
-	<maintainer>
+	<maintainer type="person">
 		<email>williamh@gentoo.org</email>
 		<name>William Hubbs</name>
+	</maintainer>
+	<maintainer type="person">
+		<email>mrueg@gentoo.org</email>
+		<name>Manuel Rüger</name>
 	</maintainer>
 	<use>
 		<flag name="aufs">
@@ -37,23 +32,20 @@
 			Enables dependencies for the "btrfs" graph driver, including
 			necessary kernel flags.
 		</flag>
-		<flag name="contrib">
-			Install additional contrib scripts and components.
+		<flag name="container-init">
+			Makes the a staticly-linked init system tini available inside a
+			container.
 		</flag>
 		<flag name="device-mapper">
 			Enables dependencies for the "devicemapper" graph driver, including
 			necessary kernel flags.
 		</flag>
-		<flag name="experimental">
-			Enable features labelled by upstream to be of "experimental"
-			quality and not yet ready for general consumption.
-		</flag>
 		<flag name="overlay">
 			Enables dependencies for the "overlay" graph driver, including
 			necessary kernel flags.
 		</flag>
-		<flag name="lxc">
-			Enables dependencies for the "lxc" execution driver.
+		<flag name="pkcs11">
+			Enables pkcs-11 support.
 		</flag>
 	</use>
 	<upstream>
