@@ -1,0 +1,4 @@
+# aws cli; handy for developer usage when working with kola
+dev-python/awscli ~amd64
+dev-python/s3transfer ~amd64
+dev-python/botocore ~amd64
