@@ -1,4 +1,4 @@
-From 4278fb032961f619a8d9605efc98fe88b43f68c8 Mon Sep 17 00:00:00 2001
+From ff42bf8fbde161f5f56410bee078313016fe9d84 Mon Sep 17 00:00:00 2001
 From: "Lee, Chun-Yi" <joeyli.kernel@gmail.com>
 Date: Wed, 23 Nov 2016 13:49:19 +0000
 Subject: [PATCH 08/24] kexec_file: Disable at runtime if securelevel has been
@@ -18,10 +18,10 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  1 file changed, 6 insertions(+)
 
 diff --git a/kernel/kexec_file.c b/kernel/kexec_file.c
-index b118735fea9d..f6937eecd1eb 100644
+index 9f48f4412297..7da87007c202 100644
 --- a/kernel/kexec_file.c
 +++ b/kernel/kexec_file.c
-@@ -268,6 +268,12 @@ SYSCALL_DEFINE5(kexec_file_load, int, kernel_fd, int, initrd_fd,
+@@ -255,6 +255,12 @@ SYSCALL_DEFINE5(kexec_file_load, int, kernel_fd, int, initrd_fd,
  	if (!capable(CAP_SYS_BOOT) || kexec_load_disabled)
  		return -EPERM;
  

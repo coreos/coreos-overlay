@@ -3,17 +3,28 @@
 
 EAPI="5"
 ETYPE="sources"
+
+# -rc releases should be versioned L.M_rcN
+# Final releases should be versioned L.M.N, even for n == 0
+
+# Only needed for RCs
+K_BASE_VER="4.12"
+
 inherit kernel-2
 detect_version
 
 DESCRIPTION="Full sources for the CoreOS Linux kernel"
 HOMEPAGE="http://www.kernel.org"
-SRC_URI="${KERNEL_URI}"
+if [[ "${PV%%_rc*}" != "${PV}" ]]; then
+	SRC_URI="https://git.kernel.org/torvalds/p/v${KV%-coreos}/v${OKV} -> patch-${KV%-coreos}.patch ${KERNEL_BASE_URI}/linux-${OKV}.tar.xz"
+	PATCH_DIR="${FILESDIR}/${KV_MAJOR}.${KV_PATCH}"
+else
+	SRC_URI="${KERNEL_URI}"
+	PATCH_DIR="${FILESDIR}/${KV_MAJOR}.${KV_MINOR}"
+fi
 
 KEYWORDS="amd64 arm64"
 IUSE=""
-
-PATCH_DIR="${FILESDIR}/${KV_MAJOR}.${KV_MINOR}"
 
 # XXX: Note we must prefix the patch filenames with "z" to ensure they are
 # applied _after_ a potential patch-${KV}.patch file, present when building a

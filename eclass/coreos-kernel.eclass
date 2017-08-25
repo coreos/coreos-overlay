@@ -8,7 +8,7 @@
 : ${COREOS_SOURCE_REVISION:=}
 
 COREOS_SOURCE_VERSION="${PV}${COREOS_SOURCE_REVISION}"
-COREOS_SOURCE_NAME="linux-${PV}-coreos${COREOS_SOURCE_REVISION}"
+COREOS_SOURCE_NAME="linux-${PV/_rc/-rc}-coreos${COREOS_SOURCE_REVISION}"
 
 [[ ${EAPI} != "5" ]] && die "Only EAPI=5 is supported"
 
@@ -40,11 +40,12 @@ KERNEL_DIR="${SYSROOT}/usr/src/${COREOS_SOURCE_NAME}"
 #  - amd64_defconfig-3.12.4
 #  - amd64_defconfig-3.12
 #  - amd64_defconfig
+# and similarly for _rcN releases.
 # The first matching config is used, die otherwise.
 find_config() {
 	local base_path="${FILESDIR}/${1}"
 	local try_suffix try_path
-	for try_suffix in "-${PVR}" "-${PV}" "-${PV%.*}" ""; do
+	for try_suffix in "-${PVR}" "-${PV}" "-${PV%[._]*}" ""; do
 		try_path="${base_path}${try_suffix}"
 		if [[ -f "${try_path}" ]]; then
 			echo "${try_path}"

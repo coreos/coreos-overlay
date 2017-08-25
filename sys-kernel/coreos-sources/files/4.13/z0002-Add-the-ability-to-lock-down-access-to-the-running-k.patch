@@ -1,4 +1,4 @@
-From 2501f1d32a7739cc573f78dc1bfd84b8b698a9f7 Mon Sep 17 00:00:00 2001
+From 54c7d80dbd0228bf36fa0bc6b89347d98f033270 Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Mon, 21 Nov 2016 23:36:17 +0000
 Subject: [PATCH 02/24] Add the ability to lock down access to the running
@@ -21,10 +21,10 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  create mode 100644 security/lock_down.c
 
 diff --git a/include/linux/kernel.h b/include/linux/kernel.h
-index 13bc08aba704..282a1684d6e8 100644
+index bd6d96cf80b1..65692c80aa1a 100644
 --- a/include/linux/kernel.h
 +++ b/include/linux/kernel.h
-@@ -276,6 +276,15 @@ extern int oops_may_print(void);
+@@ -277,6 +277,15 @@ extern int oops_may_print(void);
  void do_exit(long error_code) __noreturn;
  void complete_and_exit(struct completion *, long) __noreturn;
  
@@ -41,10 +41,10 @@ index 13bc08aba704..282a1684d6e8 100644
  int __must_check _kstrtoul(const char *s, unsigned int base, unsigned long *res);
  int __must_check _kstrtol(const char *s, unsigned int base, long *res);
 diff --git a/include/linux/security.h b/include/linux/security.h
-index af675b576645..68bab18ddd57 100644
+index b6ea1dc9cc9d..834b355fa298 100644
 --- a/include/linux/security.h
 +++ b/include/linux/security.h
-@@ -1698,5 +1698,16 @@ static inline void free_secdata(void *secdata)
+@@ -1764,5 +1764,16 @@ static inline void free_secdata(void *secdata)
  { }
  #endif /* CONFIG_SECURITY */
  
@@ -62,10 +62,10 @@ index af675b576645..68bab18ddd57 100644
  #endif /* ! __LINUX_SECURITY_H */
  
 diff --git a/security/Kconfig b/security/Kconfig
-index 93027fdf47d1..4baac4aab277 100644
+index e8e449444e65..1a84ed33c09a 100644
 --- a/security/Kconfig
 +++ b/security/Kconfig
-@@ -189,6 +189,21 @@ config STATIC_USERMODEHELPER_PATH
+@@ -205,6 +205,21 @@ config STATIC_USERMODEHELPER_PATH
  	  If you wish for all usermode helper programs to be disabled,
  	  specify an empty string here (i.e. "").
  
