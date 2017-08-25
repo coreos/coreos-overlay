@@ -1,4 +1,4 @@
-From 658a0724dcd6f78a873dde6529d173a14912cfa4 Mon Sep 17 00:00:00 2001
+From e7362ae6de332a7e6c7c63a96314afc6354d547e Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Mon, 21 Nov 2016 23:55:55 +0000
 Subject: [PATCH 03/24] efi: Lock down the kernel if booted in secure boot mode
@@ -16,10 +16,10 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  2 files changed, 19 insertions(+), 1 deletion(-)
 
 diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 0efb4c9497bc..4d1c53bb8411 100644
+index ae1d55548f5a..ad4f7fed541e 100644
 --- a/arch/x86/Kconfig
 +++ b/arch/x86/Kconfig
-@@ -1827,6 +1827,18 @@ config EFI_MIXED
+@@ -1828,6 +1828,18 @@ config EFI_MIXED
  
  	   If unsure, say N.
  
@@ -65,5 +65,5 @@ index 87ef54e64842..4c4d758d4be1 100644
  		default:
  			pr_info("Secure boot could not be determined\n");
 -- 
-2.13.5
+2.14.1
 
