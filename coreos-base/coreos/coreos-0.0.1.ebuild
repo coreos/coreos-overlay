@@ -112,6 +112,7 @@ RDEPEND="${RDEPEND}
 	coreos-base/coreos-metadata
 	coreos-base/update_engine
 	dev-db/etcd:2
+	dev-db/etcdctl
 	dev-util/strace
 	dev-vcs/git
 	net-analyzer/nmap
