@@ -1,4 +1,4 @@
-From f2972226aac2cfcdaa79a2814ec2d6dc76898dcd Mon Sep 17 00:00:00 2001
+From 4510dc27c32ad241f3e18f3b142e09b77801ec2c Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:15 +0000
 Subject: [PATCH 11/24] PCI: Lock down BAR access when the kernel is locked
@@ -99,5 +99,5 @@ index 9bf993e1f71e..c09524738ceb 100644
  
  	dev = pci_get_bus_and_slot(bus, dfn);
 -- 
-2.13.5
+2.14.1
 
