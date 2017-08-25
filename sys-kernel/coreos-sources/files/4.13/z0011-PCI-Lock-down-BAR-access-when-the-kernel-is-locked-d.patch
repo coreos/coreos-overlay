@@ -1,4 +1,4 @@
-From f2972226aac2cfcdaa79a2814ec2d6dc76898dcd Mon Sep 17 00:00:00 2001
+From c065d3f63e6d2a328cc072471309da1bece1c159 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:15 +0000
 Subject: [PATCH 11/24] PCI: Lock down BAR access when the kernel is locked
@@ -19,10 +19,10 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  3 files changed, 17 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 31e99613a12e..559556047d66 100644
+index 2f3780b50723..534d6df4aec2 100644
 --- a/drivers/pci/pci-sysfs.c
 +++ b/drivers/pci/pci-sysfs.c
-@@ -754,6 +754,9 @@ static ssize_t pci_write_config(struct file *filp, struct kobject *kobj,
+@@ -881,6 +881,9 @@ static ssize_t pci_write_config(struct file *filp, struct kobject *kobj,
  	loff_t init_off = off;
  	u8 *data = (u8 *) buf;
  
@@ -32,7 +32,7 @@ index 31e99613a12e..559556047d66 100644
  	if (off > dev->cfg_size)
  		return 0;
  	if (off + count > dev->cfg_size) {
-@@ -1048,6 +1051,9 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
+@@ -1175,6 +1178,9 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
  	enum pci_mmap_state mmap_type;
  	struct resource *res = &pdev->resource[bar];
  
@@ -42,7 +42,7 @@ index 31e99613a12e..559556047d66 100644
  	if (res->flags & IORESOURCE_MEM && iomem_is_exclusive(res->start))
  		return -EINVAL;
  
-@@ -1131,6 +1137,9 @@ static ssize_t pci_write_resource_io(struct file *filp, struct kobject *kobj,
+@@ -1258,6 +1264,9 @@ static ssize_t pci_write_resource_io(struct file *filp, struct kobject *kobj,
  				     struct bin_attribute *attr, char *buf,
  				     loff_t off, size_t count)
  {

@@ -1,4 +1,4 @@
-From 5e24aa7d6d87d9579604d9fb9b0a423748e6e879 Mon Sep 17 00:00:00 2001
+From 3c85a22ee69a084fd61b7ab16c49e25cfb351bfb Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <mjg59@srcf.ucam.org>
 Date: Wed, 23 Nov 2016 13:28:17 +0000
 Subject: [PATCH 10/24] uswsusp: Disable when the kernel is locked down

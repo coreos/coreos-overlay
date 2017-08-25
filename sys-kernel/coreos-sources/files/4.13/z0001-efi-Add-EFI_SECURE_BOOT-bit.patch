@@ -1,4 +1,4 @@
-From 4e2f9eda0169ec4c6eac1499aeca816ed13fb22d Mon Sep 17 00:00:00 2001
+From 481a43ba6c1a3987ab96b55cd5834ea1bfd32d61 Mon Sep 17 00:00:00 2001
 From: Josh Boyer <jwboyer@fedoraproject.org>
 Date: Mon, 21 Nov 2016 23:55:55 +0000
 Subject: [PATCH 01/24] efi: Add EFI_SECURE_BOOT bit
@@ -18,7 +18,7 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  2 files changed, 2 insertions(+)
 
 diff --git a/arch/x86/kernel/setup.c b/arch/x86/kernel/setup.c
-index 36646f19d40b..87ef54e64842 100644
+index 3486d0498800..319995f58345 100644
 --- a/arch/x86/kernel/setup.c
 +++ b/arch/x86/kernel/setup.c
 @@ -1190,6 +1190,7 @@ void __init setup_arch(char **cmdline_p)
@@ -30,10 +30,10 @@ index 36646f19d40b..87ef54e64842 100644
  			break;
  		default:
 diff --git a/include/linux/efi.h b/include/linux/efi.h
-index ec36f42a2add..381b3f6670d3 100644
+index 8269bcb8ccf7..7952dd3ffa73 100644
 --- a/include/linux/efi.h
 +++ b/include/linux/efi.h
-@@ -1069,6 +1069,7 @@ extern int __init efi_setup_pcdp_console(char *);
+@@ -1081,6 +1081,7 @@ extern int __init efi_setup_pcdp_console(char *);
  #define EFI_DBG			8	/* Print additional debug info at runtime */
  #define EFI_NX_PE_DATA		9	/* Can runtime data regions be mapped non-executable? */
  #define EFI_MEM_ATTR		10	/* Did firmware publish an EFI_MEMORY_ATTRIBUTES table? */

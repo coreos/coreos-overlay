@@ -1,4 +1,4 @@
-From eb3bd4fc83774bb5f0a8b95c273fac07a912dcc5 Mon Sep 17 00:00:00 2001
+From 5bc506ab5a4bcba529f2f4461478f57990029255 Mon Sep 17 00:00:00 2001
 From: Josh Boyer <jwboyer@fedoraproject.org>
 Date: Tue, 22 Nov 2016 08:46:15 +0000
 Subject: [PATCH 09/24] hibernate: Disable when the kernel is locked down
@@ -15,7 +15,7 @@ Signed-off-by: David Howells <dhowells@redhat.com>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/kernel/power/hibernate.c b/kernel/power/hibernate.c
-index a8b978c35a6a..50cca5dcb62f 100644
+index e1914c7b85b1..7859ba79e181 100644
 --- a/kernel/power/hibernate.c
 +++ b/kernel/power/hibernate.c
 @@ -70,7 +70,7 @@ static const struct platform_hibernation_ops *hibernation_ops;
