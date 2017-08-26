@@ -1,0 +1,4 @@
+# The package does not understand cross-compiling.
+export PKG_CONFIG_LIBDIR="${ROOT}usr/lib/pkgconfig:${ROOT}usr/lib64/pkgconfig"
+export PKG_CONFIG_PATH="${PKG_CONFIG_LIBDIR}:${ROOT}usr/share/pkgconfig"
+export PKG_CONFIG_SYSROOT_DIR="${ROOT}"

@@ -151,6 +151,7 @@ RDEPEND="${RDEPEND}
 	sys-apps/util-linux
 	sys-apps/which
 	sys-block/open-iscsi
+	sys-cluster/ipvsadm
 	sys-fs/btrfs-progs
 	sys-fs/dosfstools
 	sys-fs/e2fsprogs
