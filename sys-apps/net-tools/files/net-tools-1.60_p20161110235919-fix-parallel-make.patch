@@ -1,0 +1,22 @@
+diff --git a/Makefile b/Makefile
+index bf67bc6..b14cadf 100644
+--- a/Makefile
++++ b/Makefile
+@@ -109,7 +109,7 @@ all:		config.h version.h subdirs $(PROGS)
+ 
+ config: 	cleanconfig config.h
+ 
+-install:	all savebin installbin installdata
++install:	all installbin installdata
+ 
+ update: 	all installbin installdata
+ 
+@@ -205,7 +205,7 @@ ipmaddr:	$(NET_LIB) ipmaddr.o
+ mii-tool:	$(NET_LIB) mii-tool.o
+ 		$(CC) $(CFLAGS) $(LDFLAGS) -o $@ mii-tool.o $(NLIB) $(LDLIBS)
+ 
+-installbin:
++installbin: savebin
+ 	@echo
+ 	@echo "######################################################"
+ 	@echo "Notice: ifconfig and route are now installed into /bin"
