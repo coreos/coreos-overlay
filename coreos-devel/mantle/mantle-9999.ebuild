@@ -11,7 +11,7 @@ COREOS_GO_VERSION="go1.8"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64"
 else
-	CROS_WORKON_COMMIT="807bd1fdb2fe2a44fe706de2e92317a61b5f92c1" # v0.6.0
+	CROS_WORKON_COMMIT="b503bbe4343b62ef2f0a7eeb6186bf9893956aa9" # v0.7.0
 	KEYWORDS="amd64 arm64"
 fi
 
