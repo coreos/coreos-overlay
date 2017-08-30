@@ -1,4 +1,4 @@
-From 51da05696d6a487f983192feb49087a3f5290a2c Mon Sep 17 00:00:00 2001
+From 03e5b38a4c2b85c05a6586c14acb29ebadc987f6 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:17 +0000
 Subject: [PATCH 13/24] x86: Restrict MSR access when the kernel is locked down
