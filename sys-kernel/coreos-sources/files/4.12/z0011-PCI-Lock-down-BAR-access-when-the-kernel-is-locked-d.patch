@@ -1,4 +1,4 @@
-From 4510dc27c32ad241f3e18f3b142e09b77801ec2c Mon Sep 17 00:00:00 2001
+From 7e8179dc6af6229ac8f93177a869b0aaa931c811 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:15 +0000
 Subject: [PATCH 11/24] PCI: Lock down BAR access when the kernel is locked
