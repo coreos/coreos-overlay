@@ -1,6 +1,5 @@
 # Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: $
 
 EAPI=5
 
@@ -10,7 +9,7 @@ AUTOTOOLS_IN_SOURCE_BUILD=yes
 inherit autotools-utils flag-o-matic systemd toolchain-funcs multilib
 inherit cros-workon coreos-go-depend
 
-CROS_WORKON_PROJECT="coreos/rkt"
+CROS_WORKON_PROJECT="rkt/rkt"
 CROS_WORKON_LOCALNAME="rkt"
 CROS_WORKON_REPO="git://github.com"
 
@@ -38,7 +37,7 @@ SRC_URI="rkt_stage1_coreos? (
 
 DESCRIPTION="A CLI for running app containers, and an implementation of the App
 Container Spec."
-HOMEPAGE="https://github.com/coreos/rkt"
+HOMEPAGE="https://github.com/rkt/rkt"
 
 LICENSE="Apache-2.0"
 SLOT="0"
