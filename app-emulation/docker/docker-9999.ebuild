@@ -20,9 +20,14 @@ else
 		MY_PV="$PV-ce"
 	fi
 	DOCKER_GITCOMMIT="874a737"
+	# Unix timestamp to use for this build. Set to `date +%s` each time an ebuild
+	# is edited.
+	# This is required for a reproducible build
+	DOCKER_BUILD_DATE="1504482497"
 	SRC_URI="https://${COREOS_GO_PACKAGE}/archive/v${MY_PV}.tar.gz -> ${P}.tar.gz"
 	KEYWORDS="amd64 arm64"
 	[ "$DOCKER_GITCOMMIT" ] || die "DOCKER_GITCOMMIT must be added manually for each bump!"
+	[ "$DOCKER_BUILD_DATE" ] || die "DOCKER_BUILD_DATE must be added manually for each bump!"
 fi
 inherit bash-completion-r1 coreos-go-depend linux-info systemd udev user
 
@@ -73,6 +78,10 @@ RDEPEND="
 RESTRICT="installsources strip"
 
 S="${WORKDIR}/${P}/src/${COREOS_GO_PACKAGE}"
+
+PATCHES=(
+	"${FILESDIR}/allow-override-build-date.patch"
+)
 
 # see "contrib/check-config.sh" from upstream's sources
 CONFIG_CHECK="
@@ -205,6 +214,7 @@ src_unpack() {
 	else
 		git-r3_src_unpack
 		DOCKER_GITCOMMIT=$(git -C "${S}" rev-parse HEAD | head -c 7)
+		DOCKER_BUILD_DATE=$(git -C "${S}" log -1 --format="%ct")
 	fi
 }
 
@@ -248,14 +258,18 @@ src_compile() {
 	fi
 
 	# build daemon
-	./hack/make.sh dynbinary || die 'dynbinary failed'
+	SOURCE_DATE_EPOCH="${DOCKER_BUILD_DATE}" ./hack/make.sh dynbinary || die 'dynbinary failed'
 
 	popd || die # components/engine
 
 	pushd components/cli || die
 
+
+	# Imitating https://github.com/docker/docker-ce/blob/v17.06.1-ce/components/cli/scripts/build/.variables#L7
+	CLI_BUILDTIME="$(date -d "@${DOCKER_BUILD_DATE}" --utc --rfc-3339 ns 2> /dev/null | sed -e 's/ /T/')"
 	# build cli
 	emake \
+		BUILDTIME="${CLI_BUILDTIME}" \
 		LDFLAGS="$(usex hardened "-extldflags \"-fno-PIC $LDFLAGS\"" '')" \
 		VERSION="$(cat ../../VERSION)" \
 		GITCOMMIT="${DOCKER_GITCOMMIT}" \
