@@ -1,4 +1,4 @@
-From 45167c3fb33696262b9774e495806682b25218e5 Mon Sep 17 00:00:00 2001
+From b2cc1203999092e17366f145a7965ee367f64f70 Mon Sep 17 00:00:00 2001
 From: Josh Boyer <jwboyer@redhat.com>
 Date: Tue, 22 Nov 2016 08:46:16 +0000
 Subject: [PATCH 16/24] acpi: Ignore acpi_rsdp kernel param when the kernel has
@@ -28,5 +28,5 @@ index db78d353bab1..d4d4ba348451 100644
  #endif
  
 -- 
-2.14.1
+2.13.5
 
