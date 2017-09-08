@@ -1,4 +1,4 @@
-From 23c35c90d81f4e0c8382be581dc06d7a22cd39c2 Mon Sep 17 00:00:00 2001
+From 2a7f5a1c5659202133a0845f7f428c126fa92a64 Mon Sep 17 00:00:00 2001
 From: "Lee, Chun-Yi" <joeyli.kernel@gmail.com>
 Date: Wed, 23 Nov 2016 13:49:19 +0000
 Subject: [PATCH 08/24] kexec_file: Disable at runtime if securelevel has been
@@ -35,5 +35,5 @@ index b118735fea9d..f6937eecd1eb 100644
  	if (flags != (flags & KEXEC_FILE_FLAGS))
  		return -EINVAL;
 -- 
-2.14.1
+2.13.5
 
