@@ -20,14 +20,9 @@ else
 		MY_PV="$PV-ce"
 	fi
 	DOCKER_GITCOMMIT="cec0b72"
-	# Unix timestamp to use for this build. Set to `date +%s` each time an ebuild
-	# is edited.
-	# This is required for a reproducible build
-	DOCKER_BUILD_DATE="1504482497"
 	SRC_URI="https://${COREOS_GO_PACKAGE}/archive/v${MY_PV}.tar.gz -> ${P}.tar.gz"
 	KEYWORDS="amd64 arm64"
 	[ "$DOCKER_GITCOMMIT" ] || die "DOCKER_GITCOMMIT must be added manually for each bump!"
-	[ "$DOCKER_BUILD_DATE" ] || die "DOCKER_BUILD_DATE must be added manually for each bump!"
 fi
 inherit bash-completion-r1 coreos-go-depend linux-info systemd udev user
 
@@ -211,6 +206,7 @@ src_unpack() {
 	if [ -n "$DOCKER_GITCOMMIT" ]; then
 		mkdir -p "${S}"
 		tar --strip-components=1 -C "${S}" -xf "${DISTDIR}/${A}"
+		DOCKER_BUILD_DATE=$(date --reference="${S}/VERSION" +%s)
 	else
 		git-r3_src_unpack
 		DOCKER_GITCOMMIT=$(git -C "${S}" rev-parse HEAD | head -c 7)
