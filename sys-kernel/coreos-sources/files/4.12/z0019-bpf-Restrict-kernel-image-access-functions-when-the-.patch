@@ -1,4 +1,4 @@
-From 5bf830c5b0ed194feb7836b82fad59a82d6b44a3 Mon Sep 17 00:00:00 2001
+From c88a3447148a71746b067ddde1976fd30755769f Mon Sep 17 00:00:00 2001
 From: "Lee, Chun-Yi" <jlee@suse.com>
 Date: Wed, 23 Nov 2016 13:52:16 +0000
 Subject: [PATCH 19/24] bpf: Restrict kernel image access functions when the
@@ -53,5 +53,5 @@ index d521b301dee9..82d6086766d6 100644
  	for (i = 0; i < fmt_size; i++) {
  		if ((!isprint(fmt[i]) && !isspace(fmt[i])) || !isascii(fmt[i]))
 -- 
-2.14.1
+2.13.5
 
