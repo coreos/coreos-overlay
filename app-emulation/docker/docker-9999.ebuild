@@ -19,7 +19,7 @@ else
 	else
 		MY_PV="$PV-ce"
 	fi
-	DOCKER_GITCOMMIT="874a737"
+	DOCKER_GITCOMMIT="cec0b72"
 	# Unix timestamp to use for this build. Set to `date +%s` each time an ebuild
 	# is edited.
 	# This is required for a reproducible build
@@ -265,7 +265,7 @@ src_compile() {
 	pushd components/cli || die
 
 
-	# Imitating https://github.com/docker/docker-ce/blob/v17.06.1-ce/components/cli/scripts/build/.variables#L7
+	# Imitating https://github.com/docker/docker-ce/blob/v17.06.2-ce/components/cli/scripts/build/.variables#L7
 	CLI_BUILDTIME="$(date -d "@${DOCKER_BUILD_DATE}" --utc --rfc-3339 ns 2> /dev/null | sed -e 's/ /T/')"
 	# build cli
 	emake \
