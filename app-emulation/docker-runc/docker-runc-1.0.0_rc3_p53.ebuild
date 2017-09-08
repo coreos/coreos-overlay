@@ -7,7 +7,7 @@ GITHUB_URI="github.com/opencontainers/runc"
 COREOS_GO_PACKAGE="${GITHUB_URI}"
 COREOS_GO_VERSION="go1.8"
 # the commit of runc that docker uses.
-# see https://github.com/docker/docker-ce/blob/v17.06.1-ce/components/engine/hack/dockerfile/binaries-commits#L6
+# see https://github.com/docker/docker-ce/blob/v17.06.2-ce/components/engine/hack/dockerfile/binaries-commits#L6
 # Note: this commit is only really present in `docker/runc` in the 'docker/17.06' branch
 # Update the patch number when this commit is changed (i.e. the _p in the ebuild).
 # The patch version is arbitrarily the number of commits since the tag version
