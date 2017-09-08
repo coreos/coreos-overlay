@@ -2,7 +2,7 @@ DEFINED_PHASES=compile configure info install prepare test unpack
 DEPEND=app-arch/cpio sys-fs/squashfs-tools rkt_stage1_src? ( >=sys-apps/systemd-222 app-shells/bash ) sys-apps/acl tpm? ( app-crypt/trousers ) >=app-portage/elt-patches-20170317 !<sys-devel/gettext-0.18.1.1-r3 || ( >=sys-devel/automake-1.15:1.15 ) >=sys-devel/autoconf-2.69 >=sys-devel/libtool-2.4 virtual/pkgconfig >=dev-vcs/git-1.8.2.1 dev-lang/go:1.7=
 DESCRIPTION=A CLI for running app containers, and an implementation of the App Container Spec.
 EAPI=5
-HOMEPAGE=https://github.com/coreos/rkt
+HOMEPAGE=https://github.com/rkt/rkt
 IUSE=doc examples +rkt_stage1_coreos +rkt_stage1_fly rkt_stage1_host rkt_stage1_src tpm cros_workon_tree_* profiling +go_version_go1_7
 KEYWORDS=amd64 arm64
 LICENSE=Apache-2.0
@@ -11,4 +11,4 @@ REQUIRED_USE=|| ( rkt_stage1_coreos rkt_stage1_fly rkt_stage1_host rkt_stage1_sr
 SLOT=0
 SRC_URI=rkt_stage1_coreos? ( amd64? ( https://alpha.release.core-os.net/amd64-usr/1235.0.0/coreos_production_pxe_image.cpio.gz -> rkt-pxe-amd64-usr-1235.0.0.img ) arm64? ( https://alpha.release.core-os.net/arm64-usr/1235.0.0/coreos_production_pxe_image.cpio.gz -> rkt-pxe-arm64-usr-1235.0.0.img ) )
 _eclasses_=autotools	7027963e8e8cc12c91117bdb9225dc26	autotools-utils	5a4611dfba155b1659528663fad4cd5e	coreos-go-depend	bbc48df71cd1e48b73083b5c63377751	coreos-go-utils	5e0ac5131161ee8de80f759806fc0de0	cros-workon	4ad6e6491a1010ad7c875302b3be18ba	epatch	8233751dc5105a6ae8fcd86ce2bb0247	estack	43ddf5aaffa7a8d0482df54d25a66a1f	eutils	9c113d6a64826c40154cad7be15d95ea	flag-o-matic	61cad4fb5d800b29d484b27cb033f59b	git-r3	cbafa3261c37c7e3af44bb16a34ea390	libtool	e32ea84bf82cf8987965b574672dba93	ltprune	2770eed66a9b8ef944714cd0e968182e	multilib	97f470f374f2e94ccab04a2fb21d811e	systemd	e12dd5e3cf1f359292cea2a70abeba5f	toolchain-funcs	8fec6b1eb195836560e70b66d98fb163
-_md5_=ce967e520491d4fd28618700640fa8e1
+_md5_=72826d0f82e6db38709187d250f3b791
