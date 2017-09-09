@@ -22,6 +22,7 @@ src_prepare() {
 src_install() {
 	insinto "/usr/share/oem"
 	doins "${FILESDIR}/grub.cfg"
+	doins "${FILESDIR}/iptables-rules"
 	doins "${T}/oem-release"
 	doins -r "${FILESDIR}/units"
 }
