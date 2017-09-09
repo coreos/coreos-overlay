@@ -17,7 +17,6 @@ DEPEND="
 	app-admin/sudo
 	app-admin/updateservicectl
 	app-arch/pbzip2
-	app-backup/casync
 	app-emulation/acbuild
 	app-emulation/actool
 	app-emulation/open-vmdk
