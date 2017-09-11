@@ -1,4 +1,4 @@
-From 748399214b99f8efd3e27a76988071edf04008bc Mon Sep 17 00:00:00 2001
+From 5d7fb119ef5f3043274e02d5a81ff72b5233c54c Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:15 +0000
 Subject: [PATCH 06/24] kexec: Disable at runtime if the kernel is locked down
@@ -20,20 +20,20 @@ diff --git a/kernel/kexec.c b/kernel/kexec.c
 index e62ec4dc6620..37f75d0b75de 100644
 --- a/kernel/kexec.c
 +++ b/kernel/kexec.c
-@@ -202,6 +202,13 @@ SYSCALL_DEFINE4(kexec_load, unsigned long, entry, unsigned long, nr_segments,
+@@ -201,6 +201,13 @@ SYSCALL_DEFINE4(kexec_load, unsigned long, entry, unsigned long, nr_segments,
+ 	if (!capable(CAP_SYS_BOOT) || kexec_load_disabled)
  		return -EPERM;
  
- 	/*
++	/*
 +	 * kexec can be used to circumvent module loading restrictions, so
 +	 * prevent loading in that case
 +	 */
 +	if (kernel_is_locked_down())
 +		return -EPERM;
 +
-+	/*
+ 	/*
  	 * Verify we have a legal set of flags
  	 * This leaves us room for future extensions.
- 	 */
 -- 
-2.13.5
+2.14.1
 

@@ -1,4 +1,4 @@
-From f96c513dc36e427920bdf02c08ac2948010f13ee Mon Sep 17 00:00:00 2001
+From 495c37aed46e6726389d42feb2f74fad9720c38a Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Mon, 21 Nov 2016 23:36:17 +0000
 Subject: [PATCH 02/24] Add the ability to lock down access to the running
@@ -145,5 +145,5 @@ index 000000000000..5788c60ff4e1
 +}
 +EXPORT_SYMBOL(kernel_is_locked_down);
 -- 
-2.13.5
+2.14.1
 
