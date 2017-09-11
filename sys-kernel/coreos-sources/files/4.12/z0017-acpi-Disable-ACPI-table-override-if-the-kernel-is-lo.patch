@@ -1,4 +1,4 @@
-From 34c0aca421d7645bfe8d69aa6ff6681bed9deb1a Mon Sep 17 00:00:00 2001
+From 1b8d0dc8174ea69bd80504f72953925c8b210732 Mon Sep 17 00:00:00 2001
 From: Linn Crosetto <linn@hpe.com>
 Date: Wed, 23 Nov 2016 13:32:27 +0000
 Subject: [PATCH 17/24] acpi: Disable ACPI table override if the kernel is
@@ -37,5 +37,5 @@ index ff425390bfa8..c72bfa97888a 100644
  		memblock_find_in_range(0, ACPI_TABLE_UPGRADE_MAX_PHYS,
  				       all_tables_size, PAGE_SIZE);
 -- 
-2.13.5
+2.14.1
 
