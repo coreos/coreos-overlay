@@ -1,4 +1,4 @@
-From b49436f51c26e3d7c0dbe8c31bf3dfa94d53a92f Mon Sep 17 00:00:00 2001
+From f6c3d482bcaa3c2770623ed39424cbf9375bfd21 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:16 +0000
 Subject: [PATCH 15/24] ACPI: Limit access to custom_method when the kernel is
@@ -29,5 +29,5 @@ index c68e72414a67..e4d721c330c0 100644
  		/* parse the table header to get the table length */
  		if (count <= sizeof(struct acpi_table_header))
 -- 
-2.13.5
+2.14.1
 

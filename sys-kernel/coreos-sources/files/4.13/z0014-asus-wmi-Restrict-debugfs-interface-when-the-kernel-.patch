@@ -1,4 +1,4 @@
-From df735d38937440c3e435fd709f76dad2405382fc Mon Sep 17 00:00:00 2001
+From 9e22dfcdcf70705a9e31deb52c423d8776e80226 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:16 +0000
 Subject: [PATCH 14/24] asus-wmi: Restrict debugfs interface when the kernel is
@@ -51,5 +51,5 @@ index 709e3a67391a..2d8db47698b2 100644
  				     1, asus->debug.method_id,
  				     &input, &output);
 -- 
-2.13.5
+2.14.1
 
