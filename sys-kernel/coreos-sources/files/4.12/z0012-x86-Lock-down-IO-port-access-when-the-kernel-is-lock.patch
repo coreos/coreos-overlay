@@ -1,4 +1,4 @@
-From 09e16ed3372096b0ef96e4f2423779666d583e18 Mon Sep 17 00:00:00 2001
+From ed4adf07999fd8da89221b974b791714f02ef001 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:16 +0000
 Subject: [PATCH 12/24] x86: Lock down IO port access when the kernel is locked
@@ -55,5 +55,5 @@ index ba68add9677f..5e2a260fb89f 100644
  }
  
 -- 
-2.13.5
+2.14.1
 
