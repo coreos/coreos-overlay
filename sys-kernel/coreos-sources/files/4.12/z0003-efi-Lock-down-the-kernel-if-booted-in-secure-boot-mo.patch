@@ -1,4 +1,4 @@
-From aa12a429343365c637e205c962800e73a4dab3ec Mon Sep 17 00:00:00 2001
+From 2e48758af09e57dd246df697a46133c29cafbb8e Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Mon, 21 Nov 2016 23:55:55 +0000
 Subject: [PATCH 03/24] efi: Lock down the kernel if booted in secure boot mode
@@ -65,5 +65,5 @@ index 87ef54e64842..4c4d758d4be1 100644
  		default:
  			pr_info("Secure boot could not be determined\n");
 -- 
-2.13.5
+2.14.1
 
