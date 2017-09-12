@@ -19,7 +19,7 @@ else
 	else
 		MY_PV="$PV-ce"
 	fi
-	DOCKER_GITCOMMIT="874a737"
+	DOCKER_GITCOMMIT="cec0b72"
 	SRC_URI="https://${COREOS_GO_PACKAGE}/archive/v${MY_PV}.tar.gz -> ${P}.tar.gz"
 	KEYWORDS="amd64 arm64"
 	[ "$DOCKER_GITCOMMIT" ] || die "DOCKER_GITCOMMIT must be added manually for each bump!"
@@ -73,6 +73,10 @@ RDEPEND="
 RESTRICT="installsources strip"
 
 S="${WORKDIR}/${P}/src/${COREOS_GO_PACKAGE}"
+
+PATCHES=(
+	"${FILESDIR}/allow-override-build-date.patch"
+)
 
 # see "contrib/check-config.sh" from upstream's sources
 CONFIG_CHECK="
@@ -202,13 +206,16 @@ src_unpack() {
 	if [ -n "$DOCKER_GITCOMMIT" ]; then
 		mkdir -p "${S}"
 		tar --strip-components=1 -C "${S}" -xf "${DISTDIR}/${A}"
+		DOCKER_BUILD_DATE=$(date --reference="${S}/VERSION" +%s)
 	else
 		git-r3_src_unpack
 		DOCKER_GITCOMMIT=$(git -C "${S}" rev-parse HEAD | head -c 7)
+		DOCKER_BUILD_DATE=$(git -C "${S}" log -1 --format="%ct")
 	fi
 }
 
 src_compile() {
+	go_export
 	export GOPATH="${WORKDIR}/${P}"
 
 	# setup CFLAGS and LDFLAGS for separate build target
@@ -248,14 +255,18 @@ src_compile() {
 	fi
 
 	# build daemon
-	./hack/make.sh dynbinary || die 'dynbinary failed'
+	SOURCE_DATE_EPOCH="${DOCKER_BUILD_DATE}" ./hack/make.sh dynbinary || die 'dynbinary failed'
 
 	popd || die # components/engine
 
 	pushd components/cli || die
 
+
+	# Imitating https://github.com/docker/docker-ce/blob/v17.06.2-ce/components/cli/scripts/build/.variables#L7
+	CLI_BUILDTIME="$(date -d "@${DOCKER_BUILD_DATE}" --utc --rfc-3339 ns 2> /dev/null | sed -e 's/ /T/')"
 	# build cli
 	emake \
+		BUILDTIME="${CLI_BUILDTIME}" \
 		LDFLAGS="$(usex hardened "-extldflags \"-fno-PIC $LDFLAGS\"" '')" \
 		VERSION="$(cat ../../VERSION)" \
 		GITCOMMIT="${DOCKER_GITCOMMIT}" \
