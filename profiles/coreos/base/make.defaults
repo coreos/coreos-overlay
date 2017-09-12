@@ -35,7 +35,7 @@ USE="${USE} -openmp"
 POLICY_TYPES="targeted mcs mls"
 
 # Disable packages or optional features with distribution issues.
-ACCEPT_RESTRICT="* -bindist -mirror"
+ACCEPT_RESTRICT="* -bindist"
 USE="${USE} bindist"
 
 # Default licenses that are accepted for ChromiumOS builds.

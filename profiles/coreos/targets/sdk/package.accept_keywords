@@ -2,3 +2,7 @@
 dev-python/awscli ~amd64
 dev-python/s3transfer ~amd64
 dev-python/botocore ~amd64
+
+# Accept unstable host Rust compilers
+dev-lang/rust ~amd64
+dev-util/cargo ~amd64

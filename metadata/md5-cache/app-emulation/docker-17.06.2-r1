@@ -12,4 +12,4 @@ RESTRICT=installsources strip
 SLOT=0
 SRC_URI=https://github.com/docker/docker-ce/archive/v17.06.2-ce.tar.gz -> docker-17.06.2.tar.gz
 _eclasses_=bash-completion-r1	8e447753aaf658afa609fbf961d80ab7	coreos-go-depend	bbc48df71cd1e48b73083b5c63377751	coreos-go-utils	5e0ac5131161ee8de80f759806fc0de0	epatch	8233751dc5105a6ae8fcd86ce2bb0247	estack	43ddf5aaffa7a8d0482df54d25a66a1f	eutils	9c113d6a64826c40154cad7be15d95ea	flag-o-matic	61cad4fb5d800b29d484b27cb033f59b	linux-info	ca370deef9d44125d829f2eb6ebc83e0	ltprune	2770eed66a9b8ef944714cd0e968182e	multilib	97f470f374f2e94ccab04a2fb21d811e	systemd	e12dd5e3cf1f359292cea2a70abeba5f	toolchain-funcs	8fec6b1eb195836560e70b66d98fb163	udev	d91cac2c73b94629cad2daea66e0d182	user	e4b567c44272a719fabf53f0f885d3f7	versionator	c80ccf29e90adea7c5cae94b42eb76d0
-_md5_=935be9e9d82a2c7a7615dc777eaf4cf5
+_md5_=4fa2009bab07870cc3f8438745fd06c6
