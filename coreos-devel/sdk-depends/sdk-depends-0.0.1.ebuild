@@ -44,7 +44,6 @@ DEPEND="
 	sys-firmware/edk2
 	sys-fs/btrfs-progs
 	sys-fs/cryptsetup
-	sys-fs/multipath-tools
 	"
 
 # Must match the build-time dependencies listed in selinux-policy-2.eclass
