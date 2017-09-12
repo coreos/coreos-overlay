@@ -215,6 +215,7 @@ src_unpack() {
 }
 
 src_compile() {
+	go_export
 	export GOPATH="${WORKDIR}/${P}"
 
 	# setup CFLAGS and LDFLAGS for separate build target
