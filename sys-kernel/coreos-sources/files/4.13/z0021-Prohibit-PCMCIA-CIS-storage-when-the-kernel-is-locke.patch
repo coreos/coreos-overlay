@@ -1,4 +1,4 @@
-From b033945096f19c5f40cbc0db69ca89a37e0bc037 Mon Sep 17 00:00:00 2001
+From 1bc8fb8a3563685c064e67f5c76c1e502460eb2a Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Fri, 25 Nov 2016 14:37:45 +0000
 Subject: [PATCH 21/24] Prohibit PCMCIA CIS storage when the kernel is locked
