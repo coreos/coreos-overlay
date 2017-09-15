@@ -1,4 +1,4 @@
-From 0795e2bc180d56a36de0e4bf6457f7f2f224de76 Mon Sep 17 00:00:00 2001
+From d061a6c86996f3fab2f7012d0620f4303a704733 Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Wed, 7 Dec 2016 10:28:39 +0000
 Subject: [PATCH 22/24] Lock down TIOCSSERIAL
