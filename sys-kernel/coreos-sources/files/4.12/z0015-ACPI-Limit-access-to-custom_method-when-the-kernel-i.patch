@@ -1,4 +1,4 @@
-From f281be06c169ac2a985484ba9ef4b6c396e31435 Mon Sep 17 00:00:00 2001
+From 6f69d76c989baa6d0297df2696b5e4d9251f45c9 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:16 +0000
 Subject: [PATCH 15/24] ACPI: Limit access to custom_method when the kernel is
