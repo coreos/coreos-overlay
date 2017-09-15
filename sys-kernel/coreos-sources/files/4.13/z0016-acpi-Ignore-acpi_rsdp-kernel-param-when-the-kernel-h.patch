@@ -1,4 +1,4 @@
-From 8bcc73613a6886a32d6b3277dc94174ec513cd61 Mon Sep 17 00:00:00 2001
+From 8243e0b28a0ee146dea13bab151f371c983be9aa Mon Sep 17 00:00:00 2001
 From: Josh Boyer <jwboyer@redhat.com>
 Date: Tue, 22 Nov 2016 08:46:16 +0000
 Subject: [PATCH 16/24] acpi: Ignore acpi_rsdp kernel param when the kernel has
