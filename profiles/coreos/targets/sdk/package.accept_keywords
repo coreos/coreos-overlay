@@ -6,3 +6,6 @@ dev-python/botocore ~amd64
 # Accept unstable host Rust compilers
 dev-lang/rust ~amd64
 dev-util/cargo ~amd64
+
+# Match binutils versions with the host
+=cross-aarch64-cros-linux-gnu/binutils-2.28.1 ~arm64
