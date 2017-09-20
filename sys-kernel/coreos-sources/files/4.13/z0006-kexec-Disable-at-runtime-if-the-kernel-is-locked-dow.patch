@@ -1,4 +1,4 @@
-From 53ea67f10f3c4627c68387340537db43177e4e62 Mon Sep 17 00:00:00 2001
+From 2c45e9276090de762bdf1fdfa2075f664d4952fb Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:15 +0000
 Subject: [PATCH 06/24] kexec: Disable at runtime if the kernel is locked down
