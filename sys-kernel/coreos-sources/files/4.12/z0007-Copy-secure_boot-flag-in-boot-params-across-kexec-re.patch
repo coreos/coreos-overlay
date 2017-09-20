@@ -1,4 +1,4 @@
-From 1af8f28679fccd64b225d84047198548b290063d Mon Sep 17 00:00:00 2001
+From d3b6e1be89a893d78460958821dd8b877459f0b0 Mon Sep 17 00:00:00 2001
 From: Dave Young <dyoung@redhat.com>
 Date: Tue, 22 Nov 2016 08:46:15 +0000
 Subject: [PATCH 07/24] Copy secure_boot flag in boot params across kexec
