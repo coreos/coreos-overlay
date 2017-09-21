@@ -33,13 +33,6 @@ coreos-cargo_src_unpack() {
 
 	[[ ${CBUILD:-${CHOST}} != ${CHOST} ]] || return 0
 
-	# Define the cross-compilers for rust-gcc commands.
-	export TARGET_AR="$(tc-getAR)"
-	export TARGET_CC="$(tc-getCC)"
-	export TARGET_CFLAGS="${CFLAGS}"
-	export TARGET_CXX="$(tc-getCXX)"
-	export TARGET_CXXFLAGS="${CXXFLAGS}"
-
 	# Map the SDK host triplet to one that is built into rustc.
 	function rust_builtin_target() case "$1" in
 		aarch64-*-linux-gnu) echo aarch64-unknown-linux-gnu ;;
@@ -47,22 +40,47 @@ coreos-cargo_src_unpack() {
 		*) die "Unknown host triplet: $1" ;;
 	esac
 
-	# Allow searching host libraries when targeting incompatible systems.
-	export RUST_TARGET=$(rust_builtin_target "${CHOST}")
-	local build_triplet=$(rust_builtin_target "${CBUILD}")
-	[[ ${RUST_TARGET} = ${build_triplet} ]] ||
-	local crossflags="-L /usr/lib64/rustlib/${build_triplet}/lib"
+	# Set the gcc-rs flags for cross-compiling.
+	export TARGET_CFLAGS="${CFLAGS}"
+	export TARGET_CXXFLAGS="${CXXFLAGS}"
 
-	# Create a compiler wrapper to work around rust-lang/cargo#4456.
-	if [[ ${CATEGORY}/${PN} != dev-libs/rustlib ]]; then
-		cat <<- EOF > "${T}/wrustc" && chmod 0755 "${T}/wrustc"
-		#!/bin/sh
-		exec rustc --sysroot="${ROOT:-/}usr" ${crossflags-} "\$@"
-		EOF
-		export RUSTC="${T}/wrustc"
-	fi
+	# Wrap ar for gcc-rs to work around rust-lang/cargo#4456.
+	export TARGET_AR="${T}/rustproof-ar"
+	cat <<- EOF > "${TARGET_AR}" && chmod 0755 "${TARGET_AR}"
+	#!/bin/sh
+	unset LD_LIBRARY_PATH
+	exec $(tc-getAR) "\$@"
+	EOF
+
+	# Wrap gcc for gcc-rs to work around rust-lang/cargo#4456.
+	export TARGET_CC="${T}/rustproof-cc"
+	cat <<- EOF > "${TARGET_CC}" && chmod 0755 "${TARGET_CC}"
+	#!/bin/sh
+	unset LD_LIBRARY_PATH
+	exec $(tc-getCC) "\$@"
+	EOF
+
+	# Wrap g++ for gcc-rs to work around rust-lang/cargo#4456.
+	export TARGET_CXX="${T}/rustproof-cxx"
+	cat <<- EOF > "${TARGET_CXX}" && chmod 0755 "${TARGET_CXX}"
+	#!/bin/sh
+	unset LD_LIBRARY_PATH
+	exec $(tc-getCXX) "\$@"
+	EOF
+
+	# Create a compiler wrapper that uses a sysroot for cross-compiling.
+	export RUSTC_WRAPPER="${T}/wrustc"
+	cat <<- 'EOF' > "${RUSTC_WRAPPER}" && chmod 0755 "${RUSTC_WRAPPER}"
+	#!/bin/bash -e
+	rustc=${1:?Missing rustc command}
+	shift
+	xflags=()
+	[ "x$*" = "x${*#--target}" ] || xflags=( --sysroot="${ROOT:-/}usr" )
+	exec "${rustc}" "${xflags[@]}" "$@"
+	EOF
 
 	# Compile for the built-in target, using the SDK cross-tools.
+	export RUST_TARGET=$(rust_builtin_target "${CHOST}")
 	cat <<- EOF >> "${ECARGO_HOME}/config"
 
 	[build]

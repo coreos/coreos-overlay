@@ -31,35 +31,8 @@ src_configure() {
 	# too, and we don't want that since we aren't building the whole compiler
 	rm src/Cargo.toml
 
-	# Wrap ar for gcc-rs to work around rust-lang/cargo#4456.
-	export TARGET_AR="${T}/rustproof-ar"
-	cat <<- EOF > "${TARGET_AR}" && chmod 0755 "${TARGET_AR}"
-	#!/bin/sh
-	unset LD_LIBRARY_PATH
-	exec $(tc-getAR) "\$@"
-	EOF
-
-	# Wrap gcc for gcc-rs to work around rust-lang/cargo#4456.
-	export TARGET_CC="${T}/rustproof-cc"
-	cat <<- EOF > "${TARGET_CC}" && chmod 0755 "${TARGET_CC}"
-	#!/bin/sh
-	unset LD_LIBRARY_PATH
-	exec $(tc-getCC) "\$@"
-	EOF
-
-	# Wrap g++ for gcc-rs to work around rust-lang/cargo#4456.
-	export TARGET_CXX="${T}/rustproof-cxx"
-	cat <<- EOF > "${TARGET_CXX}" && chmod 0755 "${TARGET_CXX}"
-	#!/bin/sh
-	unset LD_LIBRARY_PATH
-	exec $(tc-getCXX) "\$@"
-	EOF
-
-	# Make cargo use the wrappers as well.
-	sed -i \
-		-e "s,^ar *=.*,ar = \"${TARGET_AR}\"," \
-		-e "s,^linker *=.*,linker = \"${TARGET_CC}\"," \
-		"${ECARGO_HOME}/config"
+	# Add the vendored crates to the local registry.
+	ln -fst "${ECARGO_VENDOR}" "${S}"/src/vendor/*
 }
 
 src_compile() {
@@ -71,21 +44,27 @@ src_compile() {
 	# really building the std libs is bootstrapping anyway, so I don't feel bad
 	local -x RUSTC_BOOTSTRAP=1
 	# various required flags for compiling thes std libs
-	local -x RUSTFLAGS="-Z force-unstable-if-unmarked"
-	# make sure we can find the custom ChromeOS target definitions
-	local -x RUST_TARGET_PATH="/usr/$(get_libdir)/rustlib"
+	local -x RUSTFLAGS="-C prefer-dynamic -L ${CARGO_TARGET_DIR}/${RUST_TARGET}/release/deps -Z force-unstable-if-unmarked"
 
 	# build the std lib, which also builds all the other important libraries
 	# (core, collections, etc). build it for the target we want for this build.
 	# also make sure that the jemalloc libraries are included.
 	local -a features=( $(usex debug debug-jemalloc jemalloc) panic-unwind )
-	cargo build -p std -v $(usex debug '' --release) \
+	cargo build -p std -v --lib $(usex debug '' --release) \
 		--features "${features[*]}" \
 		--manifest-path src/libstd/Cargo.toml \
-		--target "${RUST_TARGET}"
+		--target "${RUST_TARGET}" || die
+
+	cargo build -p term -v --lib $(usex debug '' --release) \
+		--manifest-path src/libterm/Cargo.toml \
+		--target "${RUST_TARGET}" || die
+
+	cargo build -p proc_macro -v --lib $(usex debug '' --release) \
+		--manifest-path src/libproc_macro/Cargo.toml \
+		--target "${RUST_TARGET}" || die
 
 	# Correct the directory name prior to installing it.
-	mv "${T}/target/${RUST_TARGET}/release/deps" "${T}/target/${RUST_TARGET}/release/lib"
+	mv "${CARGO_TARGET_DIR}/${RUST_TARGET}/release/deps" "${CARGO_TARGET_DIR}/${RUST_TARGET}/release/lib"
 }
 
 src_install() {
