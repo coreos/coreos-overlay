@@ -1,8 +1,5 @@
-#
 # Copyright (c) 2015 CoreOS, Inc.. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
-# $Header:$
-#
 
 EAPI=5
 CROS_WORKON_PROJECT="coreos/etcd"
@@ -15,7 +12,7 @@ if [[ "${PV}" == 9999 ]]; then
     CROS_WORKON_COMMIT=${CROS_WORKON_COMMIT:="HEAD"}
     KEYWORDS="~amd64 ~arm64"
 else
-    CROS_WORKON_COMMIT="fd17c9101d94703f6f4c3d8d6cfb72b62b894cd7" # v2.3.7
+    CROS_WORKON_COMMIT="7e4fc7eaa931298732c880a703bccc9c177ae1de" # v2.3.8
     KEYWORDS="amd64 arm64"
 fi
 
