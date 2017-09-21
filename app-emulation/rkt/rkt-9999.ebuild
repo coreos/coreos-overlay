@@ -76,6 +76,8 @@ function add_stage1() {
 }
 
 src_prepare() {
+	epatch "${FILESDIR}/${PN}-1.28.1-avoid-double-overlay-mounts.patch"
+
 	# ensure we use a CoreOS PXE image version that matches rkt's expectations.
 	local rkt_coreos_version
 
