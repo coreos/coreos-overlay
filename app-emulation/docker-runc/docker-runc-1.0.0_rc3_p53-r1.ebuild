@@ -44,6 +44,7 @@ src_unpack() {
 
 PATCHES=(
 	"${FILESDIR}/0001-Delay-unshare-of-clone-newipc-for-selinux.patch"
+	"${FILESDIR}/0002-libcontainer-default-mount-propagation-correctly.patch"
 )
 
 src_compile() {
