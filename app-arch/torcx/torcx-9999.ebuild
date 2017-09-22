@@ -11,7 +11,7 @@ COREOS_GO_VERSION="go1.8"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64"
 else
-	CROS_WORKON_COMMIT="01135a49b29c03bb9a223958332f5e2a937d613d" # v0.1.0
+	CROS_WORKON_COMMIT="71fde8cf2772ce291a9d2b592b29dd1a574e64f2" # v0.1.2
 	KEYWORDS="amd64 arm64"
 fi
 
@@ -44,6 +44,8 @@ src_install() {
 	systemd_dounit "${FILESDIR}/torcx.target"
 
 	insinto "${vendordir}/profiles"
+	doins "${FILESDIR}/docker-1.12-no.json"
+	doins "${FILESDIR}/docker-1.12-yes.json"
 	doins "${FILESDIR}/vendor.json"
 	dodir "${vendordir}/store"
 
