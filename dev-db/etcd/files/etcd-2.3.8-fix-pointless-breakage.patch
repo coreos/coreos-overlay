@@ -1,0 +1,10 @@
+--- etcdmain/etcd.go
++++ etcdmain/etcd.go
+@@ -555,6 +555,7 @@
+ }
+ 
+ func checkSupportArch() {
++	return
+ 	// TODO qualify arm64
+ 	if runtime.GOARCH == "amd64" {
+ 		return

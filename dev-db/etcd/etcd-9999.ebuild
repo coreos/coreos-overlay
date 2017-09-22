@@ -27,6 +27,11 @@ IUSE="+etcdctl"
 RDEPEND="!dev-db/etcd:0
 	etcdctl? ( !dev-db/etcdctl )"
 
+src_prepare() {
+	epatch "${FILESDIR}/${PN}-2.3.8-fix-pointless-breakage.patch"
+	coreos-go_src_prepare "$@"
+}
+
 src_compile() {
 	GO_LDFLAGS="-X ${COREOS_GO_PACKAGE}/version.GitSHA=${CROS_WORKON_COMMIT:0:7}"
 	go_build "${COREOS_GO_PACKAGE}"
