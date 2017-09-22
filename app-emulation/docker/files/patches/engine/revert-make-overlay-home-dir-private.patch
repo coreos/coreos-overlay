@@ -1,0 +1,111 @@
+From 699fab4877c3ff5d7f935bd3977e413c31269c7c Mon Sep 17 00:00:00 2001
+From: Euan Kemp <euan.kemp@coreos.com>
+Date: Fri, 22 Sep 2017 12:01:04 -0700
+Subject: [PATCH] Revert "Make overlay home dir Private mount"
+
+This reverts commit e076bccb458aeadab9380ce0636456ad6317a85f.
+It also reverts it for the overlay2 package, which didn't exist at the
+time the commit was made but is a direct successor with copy-pasted
+code.
+
+The original commit was meant to fix a bug whereby `docker cp`
+(implemented via chrootarchive) could inadvertantly lead to shared
+mounts getting unmounted on the host too.
+
+The fix, however, had side effects. It results in overlay mounts being
+private, and thus being quite easy to leak copies that are hard to
+umount into other mount namespaces on the box.
+
+This hasn't been noticed until now because on kernels prior to v4.13,
+temporarily leaking overlayfs mounts to other namespaces didn't have any
+ill effects.
+
+Starting with v4.13, setting the mount to private and thus leaking
+mounts results in errors. See https://github.com/moby/moby/issues/34672
+
+The correct fix for the original issue was implemented later in
+https://github.com/moby/moby/pull/27609, and since that code is now
+merged we can safely throw away this less ideal fix.
+
+Signed-off-by: Euan Kemp <euan.kemp@coreos.com>
+---
+ daemon/graphdriver/overlay/overlay.go  | 12 +++---------
+ daemon/graphdriver/overlay2/overlay.go | 12 +++---------
+ 2 files changed, 6 insertions(+), 18 deletions(-)
+
+diff --git a/daemon/graphdriver/overlay/overlay.go b/daemon/graphdriver/overlay/overlay.go
+index 9012722c20d..8ed51e6c384 100644
+--- a/daemon/graphdriver/overlay/overlay.go
++++ b/daemon/graphdriver/overlay/overlay.go
+@@ -19,7 +19,6 @@ import (
+ 	"github.com/docker/docker/pkg/fsutils"
+ 	"github.com/docker/docker/pkg/idtools"
+ 	"github.com/docker/docker/pkg/locker"
+-	"github.com/docker/docker/pkg/mount"
+ 	"github.com/docker/docker/pkg/system"
+ 	"github.com/opencontainers/selinux/go-selinux/label"
+ 	"github.com/sirupsen/logrus"
+@@ -139,10 +138,6 @@ func Init(home string, options []string, uidMaps, gidMaps []idtools.IDMap) (grap
+ 		return nil, err
+ 	}
+ 
+-	if err := mount.MakePrivate(home); err != nil {
+-		return nil, err
+-	}
+-
+ 	supportsDType, err := fsutils.SupportsDType(home)
+ 	if err != nil {
+ 		return nil, err
+@@ -227,11 +222,10 @@ func (d *Driver) GetMetadata(id string) (map[string]string, error) {
+ 	return metadata, nil
+ }
+ 
+-// Cleanup any state created by overlay which should be cleaned when daemon
+-// is being shutdown. For now, we just have to unmount the bind mounted
+-// we had created.
++// Cleanup simply returns nil and do not change the existing filesystem.
++// This is required to satisfy the graphdriver.Driver interface.
+ func (d *Driver) Cleanup() error {
+-	return mount.Unmount(d.home)
++	return nil
+ }
+ 
+ // CreateReadWrite creates a layer that is writable for use as a container
+diff --git a/daemon/graphdriver/overlay2/overlay.go b/daemon/graphdriver/overlay2/overlay.go
+index f350ca9c0b8..5aaf8c0cefe 100644
+--- a/daemon/graphdriver/overlay2/overlay.go
++++ b/daemon/graphdriver/overlay2/overlay.go
+@@ -28,7 +28,6 @@ import (
+ 	"github.com/docker/docker/pkg/fsutils"
+ 	"github.com/docker/docker/pkg/idtools"
+ 	"github.com/docker/docker/pkg/locker"
+-	"github.com/docker/docker/pkg/mount"
+ 	"github.com/docker/docker/pkg/parsers"
+ 	"github.com/docker/docker/pkg/parsers/kernel"
+ 	"github.com/docker/docker/pkg/system"
+@@ -175,10 +174,6 @@ func Init(home string, options []string, uidMaps, gidMaps []idtools.IDMap) (grap
+ 		return nil, err
+ 	}
+ 
+-	if err := mount.MakePrivate(home); err != nil {
+-		return nil, err
+-	}
+-
+ 	supportsDType, err := fsutils.SupportsDType(home)
+ 	if err != nil {
+ 		return nil, err
+@@ -314,11 +309,10 @@ func (d *Driver) GetMetadata(id string) (map[string]string, error) {
+ 	return metadata, nil
+ }
+ 
+-// Cleanup any state created by overlay which should be cleaned when daemon
+-// is being shutdown. For now, we just have to unmount the bind mounted
+-// we had created.
++// Cleanup simply returns nil and do not change the existing filesystem.
++// This is required to satisfy the graphdriver.Driver interface.
+ func (d *Driver) Cleanup() error {
+-	return mount.Unmount(d.home)
++	return nil
+ }
+ 
+ // CreateReadWrite creates a layer that is writable for use as a container
