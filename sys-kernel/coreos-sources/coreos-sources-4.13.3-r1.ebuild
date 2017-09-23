@@ -55,4 +55,5 @@ UNIPATCH_LIST="
 	${PATCH_DIR}/z0022-Lock-down-TIOCSSERIAL.patch \
 	${PATCH_DIR}/z0023-kbuild-derive-relative-path-for-KBUILD_SRC-from-CURD.patch \
 	${PATCH_DIR}/z0024-Add-arm64-coreos-verity-hash.patch \
+	${PATCH_DIR}/z0025-scsi-fix-the-issue-that-iscsi_if_rx-doesn-t-parse-nl.patch \
 "
