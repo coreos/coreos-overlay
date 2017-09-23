@@ -77,9 +77,9 @@ S="${WORKDIR}/${P}/src/${COREOS_GO_PACKAGE}"
 PATCHES=(
 	"${FILESDIR}/patches/allow-override-build-date.patch"
 )
-# Note: patches in the 'engine' subfolder are automatically applied to the
-# engine component; because docker-ce has subfolders for each component,
-# backporting specific component's patches has this extra complexity
+ENGINE_PATCHES=(
+	"${FILESDIR}/patches/engine/revert-make-overlay-home-dir-private.patch"
+)
 
 # see "contrib/check-config.sh" from upstream's sources
 CONFIG_CHECK="
@@ -215,10 +215,7 @@ src_unpack() {
 		DOCKER_GITCOMMIT=$(git -C "${S}" rev-parse HEAD | head -c 7)
 		DOCKER_BUILD_DATE=$(git -C "${S}" log -1 --format="%ct")
 	fi
-	pushd "${S}"/components/engine || die
-	EPATCH_SOURCE="${FILESDIR}/patches/engine" EPATCH_SUFFIX="patch" \
-		EPATCH_FORCE="yes" epatch
-	popd || die
+	eapply -d"${S}"/components/engine "${ENGINE_PATCHES[@]}"
 }
 
 src_compile() {
