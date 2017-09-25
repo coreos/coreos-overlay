@@ -46,3 +46,14 @@ sys-libs/libseccomp static-libs
 
 # bind-tools' configure script breaks when cross-compiling with seccomp enabled
 net-dns/bind-tools -seccomp
+
+# Enable SELinux for amd64 targets
+coreos-base/coreos selinux
+sys-apps/dbus selinux
+sys-apps/systemd selinux
+
+# Enable SELinux for coreutils
+sys-apps/coreutils selinux
+
+# Enable SELinux for runc
+app-emulation/runc selinux
