@@ -17,7 +17,7 @@ else
 	SRC_URI="https://raw.githubusercontent.com/wiki/TresysTechnology/refpolicy/files/refpolicy-${PV}.tar.bz2
 			http://dev.gentoo.org/~swift/patches/selinux-base-policy/patchbundle-selinux-base-policy-2.20141203-r9.tar.bz2"
 
-	KEYWORDS="amd64 x86"
+	KEYWORDS="amd64 x86 arm64 arm"
 fi
 
 IUSE="+peer_perms +open_perms +ubac +unconfined doc"
@@ -125,7 +125,7 @@ src_compile() {
 
 	for i in ${POLICY_TYPES}; do
 		cd "${S}/${i}"
-		emake base UNK_PERMS=allow BINDIR="${ROOT}/usr/bin" || die "${i} compile failed"
+		emake base UNK_PERMS=allow BINDIR="/usr/bin" || die "${i} compile failed"
 		if use doc; then
 			make html || die
 		fi
