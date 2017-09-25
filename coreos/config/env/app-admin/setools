@@ -1,2 +1,2 @@
-export ac_cv_file__build_amd64_usr__usr_lib64_libsepol_a=yes
-
+export ac_cv_file__build_amd64_usr_usr_lib64_libsepol_a=yes
+export ac_cv_file__build_arm64_usr_usr_lib64_libsepol_a=yes
