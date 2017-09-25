@@ -18,7 +18,7 @@ SRC_URI="https://raw.githubusercontent.com/wiki/SELinuxProject/selinux/files/rel
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="amd64 x86"
+KEYWORDS="amd64 x86 arm64 arm"
 IUSE="python"
 
 RDEPEND=">=sys-libs/libsepol-${SEPOL_VER}[${MULTILIB_USEDEP}]
@@ -77,6 +77,7 @@ multilib_src_compile() {
 	emake \
 		AR="$(tc-getAR)" \
 		CC="$(tc-getCC)" \
+		INCLUDEDIR="${ROOT:-/}usr/include" \
 		LIBDIR="${EPREFIX}/usr/$(get_libdir)" \
 		all
 
