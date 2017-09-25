@@ -18,7 +18,7 @@ SRC_URI="https://raw.githubusercontent.com/wiki/SELinuxProject/selinux/files/rel
 
 LICENSE="public-domain"
 SLOT="0"
-KEYWORDS="amd64 x86"
+KEYWORDS="amd64 x86 arm64 arm"
 
 IUSE="python ruby static-libs ruby_targets_ruby19 ruby_targets_ruby20"
 
