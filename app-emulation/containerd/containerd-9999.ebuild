@@ -15,7 +15,7 @@ else
 	# The patch number is arbitrarily chosen as the number of commits since the
 	# tagged version.
 	# e.g. git log --oneline v0.2.9..${EGIT_COMMIT} | wc -l
-	EGIT_COMMIT="6e23458c129b551d5c9871e5174f6b1b7f6d1170"
+	EGIT_COMMIT="06b9cb35161009dcb7123345749fef02f7cea8e0"
 	SRC_URI="https://${GITHUB_URI}/archive/${EGIT_COMMIT}.tar.gz -> ${P}.tar.gz"
 	KEYWORDS="amd64 arm64"
 	inherit vcs-snapshot
@@ -31,7 +31,7 @@ SLOT="0"
 IUSE="hardened +seccomp"
 
 DEPEND=""
-RDEPEND=">=app-emulation/docker-runc-1.0.0_rc3
+RDEPEND=">=app-emulation/docker-runc-1.0.0_rc4
 	seccomp? ( sys-libs/libseccomp )"
 
 S=${WORKDIR}/${P}/src/${COREOS_GO_PACKAGE}
