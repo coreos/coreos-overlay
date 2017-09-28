@@ -1,0 +1,60 @@
+From 8bd2b1562182bc03feed4fc7c6afa3094c0f325b Mon Sep 17 00:00:00 2001
+From: Xin Long <lucien.xin@gmail.com>
+Date: Sun, 27 Aug 2017 20:25:26 +0800
+Subject: [PATCH 25/25] scsi: fix the issue that iscsi_if_rx doesn't parse
+ nlmsg properly
+
+ChunYu found a kernel crash by syzkaller:
+
+[  651.617875] kasan: CONFIG_KASAN_INLINE enabled
+[  651.618217] kasan: GPF could be caused by NULL-ptr deref or user memory access
+[  651.618731] general protection fault: 0000 [#1] SMP KASAN
+[  651.621543] CPU: 1 PID: 9539 Comm: scsi Not tainted 4.11.0.cov #32
+[  651.621938] Hardware name: Red Hat KVM, BIOS 0.5.1 01/01/2011
+[  651.622309] task: ffff880117780000 task.stack: ffff8800a3188000
+[  651.622762] RIP: 0010:skb_release_data+0x26c/0x590
+[...]
+[  651.627260] Call Trace:
+[  651.629156]  skb_release_all+0x4f/0x60
+[  651.629450]  consume_skb+0x1a5/0x600
+[  651.630705]  netlink_unicast+0x505/0x720
+[  651.632345]  netlink_sendmsg+0xab2/0xe70
+[  651.633704]  sock_sendmsg+0xcf/0x110
+[  651.633942]  ___sys_sendmsg+0x833/0x980
+[  651.637117]  __sys_sendmsg+0xf3/0x240
+[  651.638820]  SyS_sendmsg+0x32/0x50
+[  651.639048]  entry_SYSCALL_64_fastpath+0x1f/0xc2
+
+It's caused by skb_shared_info at the end of sk_buff was overwritten by
+ISCSI_KEVENT_IF_ERROR when parsing nlmsg info from skb in iscsi_if_rx.
+
+During the loop if skb->len == nlh->nlmsg_len and both are sizeof(*nlh),
+ev = nlmsg_data(nlh) will acutally get skb_shinfo(SKB) instead and set a
+new value to skb_shinfo(SKB)->nr_frags by ev->type.
+
+This patch is to fix it by checking nlh->nlmsg_len properly there to
+avoid over accessing sk_buff.
+
+Reported-by: ChunYu Wang <chunwang@redhat.com>
+Signed-off-by: Xin Long <lucien.xin@gmail.com>
+Acked-by: Chris Leech <cleech@redhat.com>
+---
+ drivers/scsi/scsi_transport_iscsi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index a424eaeafeb0..c55c6f3147ae 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -3689,7 +3689,7 @@ iscsi_if_rx(struct sk_buff *skb)
+ 		uint32_t group;
+ 
+ 		nlh = nlmsg_hdr(skb);
+-		if (nlh->nlmsg_len < sizeof(*nlh) ||
++		if (nlh->nlmsg_len < sizeof(*nlh) + sizeof(*ev) ||
+ 		    skb->len < nlh->nlmsg_len) {
+ 			break;
+ 		}
+-- 
+2.14.1
+
