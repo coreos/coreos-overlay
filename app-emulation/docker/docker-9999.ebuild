@@ -19,7 +19,7 @@ else
 	else
 		MY_PV="$PV-ce"
 	fi
-	DOCKER_GITCOMMIT="cec0b72"
+	DOCKER_GITCOMMIT="afdb6d4"
 	SRC_URI="https://${COREOS_GO_PACKAGE}/archive/v${MY_PV}.tar.gz -> ${P}.tar.gz"
 	KEYWORDS="amd64 arm64"
 	[ "$DOCKER_GITCOMMIT" ] || die "DOCKER_GITCOMMIT must be added manually for each bump!"
@@ -74,9 +74,6 @@ RESTRICT="installsources strip"
 
 S="${WORKDIR}/${P}/src/${COREOS_GO_PACKAGE}"
 
-PATCHES=(
-	"${FILESDIR}/patches/allow-override-build-date.patch"
-)
 ENGINE_PATCHES=(
 	"${FILESDIR}/patches/engine/revert-make-overlay-home-dir-private.patch"
 )
@@ -259,14 +256,14 @@ src_compile() {
 	fi
 
 	# build daemon
-	SOURCE_DATE_EPOCH="${DOCKER_BUILD_DATE}" ./hack/make.sh dynbinary || die 'dynbinary failed'
+	SOURCE_DATE_EPOCH="${DOCKER_BUILD_DATE}" \
+	./hack/make.sh dynbinary || die 'dynbinary failed'
 
 	popd || die # components/engine
 
 	pushd components/cli || die
 
-
-	# Imitating https://github.com/docker/docker-ce/blob/v17.06.2-ce/components/cli/scripts/build/.variables#L7
+	# Imitating https://github.com/docker/docker-ce/blob/v17.09.0-ce/components/cli/scripts/build/.variables#L6
 	CLI_BUILDTIME="$(date -d "@${DOCKER_BUILD_DATE}" --utc --rfc-3339 ns 2> /dev/null | sed -e 's/ /T/')"
 	# build cli
 	emake \
@@ -274,6 +271,7 @@ src_compile() {
 		LDFLAGS="$(usex hardened "-extldflags \"-fno-PIC $LDFLAGS\"" '')" \
 		VERSION="$(cat ../../VERSION)" \
 		GITCOMMIT="${DOCKER_GITCOMMIT}" \
+		DISABLE_WARN_OUTSIDE_CONTAINER=1 \
 		dynbinary || die
 
 	popd || die # components/cli
