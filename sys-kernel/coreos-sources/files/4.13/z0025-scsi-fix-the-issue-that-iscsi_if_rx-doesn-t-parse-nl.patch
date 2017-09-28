@@ -1,4 +1,4 @@
-From d08d44a08c8d3a9a60e415b155401f2f03661b6e Mon Sep 17 00:00:00 2001
+From 8bd2b1562182bc03feed4fc7c6afa3094c0f325b Mon Sep 17 00:00:00 2001
 From: Xin Long <lucien.xin@gmail.com>
 Date: Sun, 27 Aug 2017 20:25:26 +0800
 Subject: [PATCH 25/25] scsi: fix the issue that iscsi_if_rx doesn't parse
@@ -56,5 +56,5 @@ index a424eaeafeb0..c55c6f3147ae 100644
  			break;
  		}
 -- 
-2.13.5
+2.14.1
 
