@@ -1,6 +1,5 @@
-# Copyright 1999-2016 Gentoo Foundation
+# Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Id$
 
 EAPI=6
 EGO_PN="github.com/docker/libnetwork"
@@ -21,7 +20,7 @@ fi
 inherit coreos-go
 
 DESCRIPTION="Docker container networking"
-HOMEPAGE="http://github.com/docker/libnetwork"
+HOMEPAGE="https://github.com/docker/libnetwork"
 
 LICENSE="Apache-2.0"
 SLOT="0"
@@ -29,12 +28,15 @@ IUSE=""
 
 S=${WORKDIR}/${P}/src/${EGO_PN}
 
-RDEPEND="!<app-emulation/docker-17.04.0"
+RDEPEND="!<app-emulation/docker-1.13.0_rc1"
+
+RESTRICT="test" # needs dockerd
 
 src_compile() {
 	go_build "${COREOS_GO_PACKAGE}/cmd/proxy"
 }
 
 src_install() {
+	dodoc ROADMAP.md README.md CHANGELOG.md
 	newbin "${GOBIN}"/proxy docker-proxy
 }
