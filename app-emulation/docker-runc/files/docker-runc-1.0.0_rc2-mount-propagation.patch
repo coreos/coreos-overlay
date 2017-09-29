@@ -1,0 +1,41 @@
+From db55cd4f29298ae08b20f92b8953735723ee2167 Mon Sep 17 00:00:00 2001
+From: Euan Kemp <euan.kemp@coreos.com>
+Date: Fri, 22 Sep 2017 02:31:17 -0700
+Subject: [PATCH] libcontainer: default mount propagation correctly
+
+The code in prepareRoot (https://github.com/opencontainers/runc/blob/e385f67a0e45fa1d8ef8154e2aea5128ea1d331b/libcontainer/rootfs_linux.go#L599-L605)
+attempts to default the rootfs mount to `rslave`. However, since the spec
+conversion has already defaulted it to `rprivate`, that code doesn't
+actually ever do anything.
+
+This changes the spec conversion code to accept "" and treat it as 0.
+
+Implicitly, this makes rootfs propagation default to `rslave`, which is
+a part of fixing the moby bug https://github.com/moby/moby/issues/34672
+
+Alternate implementatoins include changing this defaulting to be
+`rslave` and removing the defaulting code in prepareRoot, or skipping
+the mapping entirely for "", but I think this change is the cleanest of
+those options.
+
+Signed-off-by: Euan Kemp <euan.kemp@coreos.com>
+---
+ libcontainer/specconv/spec_linux.go | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/libcontainer/specconv/spec_linux.go b/libcontainer/specconv/spec_linux.go
+index 1575ae03..8a2947f6 100644
+--- a/libcontainer/specconv/spec_linux.go
++++ b/libcontainer/specconv/spec_linux.go
+@@ -36,7 +36,7 @@ var mountPropagationMapping = map[string]int{
+ 	"slave":    syscall.MS_SLAVE,
+ 	"rshared":  syscall.MS_SHARED | syscall.MS_REC,
+ 	"shared":   syscall.MS_SHARED,
+-	"":         syscall.MS_PRIVATE | syscall.MS_REC,
++	"":         0,
+ }
+ 
+ var allowedDevices = []*configs.Device{
+-- 
+2.13.5
+
