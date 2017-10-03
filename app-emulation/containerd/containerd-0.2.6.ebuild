@@ -3,23 +3,13 @@
 
 EAPI=6
 
-GITHUB_URI="github.com/containerd/containerd"
+GITHUB_URI="github.com/docker/containerd"
 COREOS_GO_PACKAGE="${GITHUB_URI}"
-COREOS_GO_VERSION="go1.8"
+COREOS_GO_VERSION="go1.7"
 
-if [[ ${PV} == *9999 ]]; then
-	EGIT_REPO_URI="https://${GITHUB_URI}.git"
-	inherit git-r3
-else
-	# Update the patch number when setting commit.
-	# The patch number is arbitrarily chosen as the number of commits since the
-	# tagged version.
-	# e.g. git log --oneline v0.2.9..${EGIT_COMMIT} | wc -l
-	EGIT_COMMIT="06b9cb35161009dcb7123345749fef02f7cea8e0"
-	SRC_URI="https://${GITHUB_URI}/archive/${EGIT_COMMIT}.tar.gz -> ${P}.tar.gz"
-	KEYWORDS="amd64 arm64"
-	inherit vcs-snapshot
-fi
+EGIT_COMMIT="4ab9917febca54791c5f071a9d1f404867857fcc" # v0.2.6
+SRC_URI="https://${GITHUB_URI}/archive/v${PV}.tar.gz -> ${P}.tar.gz"
+KEYWORDS="amd64 arm64"
 
 inherit coreos-go systemd
 
@@ -31,7 +21,7 @@ SLOT="0"
 IUSE="hardened +seccomp"
 
 DEPEND=""
-RDEPEND=">=app-emulation/docker-runc-1.0.0_rc4
+RDEPEND=">=app-emulation/docker-runc-1.0.0_rc2
 	seccomp? ( sys-libs/libseccomp )"
 
 S=${WORKDIR}/${P}/src/${COREOS_GO_PACKAGE}

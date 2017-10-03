@@ -5,13 +5,13 @@ EAPI=6
 EGO_PN="github.com/docker/libnetwork"
 
 COREOS_GO_PACKAGE="${EGO_PN}"
-COREOS_GO_VERSION="go1.8"
+COREOS_GO_VERSION="go1.7"
 
 if [[ ${PV} == *9999 ]]; then
 	KEYWORDS="~amd64 ~arm64"
 	inherit golang-vcs
 else
-	EGIT_COMMIT="7b2b1feb1de4817d522cc372af149ff48d25028e"
+	EGIT_COMMIT="0f534354b813003a754606689722fe253101bc4e"
 	SRC_URI="https://${EGO_PN}/archive/${EGIT_COMMIT}.tar.gz -> ${P}.tar.gz"
 	KEYWORDS="amd64 arm64"
 	inherit golang-vcs-snapshot

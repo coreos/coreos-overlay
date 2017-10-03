@@ -7,13 +7,13 @@ GITHUB_URI="github.com/opencontainers/runc"
 COREOS_GO_PACKAGE="${GITHUB_URI}"
 COREOS_GO_VERSION="go1.8"
 # the commit of runc that docker uses.
-# see https://github.com/docker/docker-ce/blob/v17.06.2-ce/components/engine/hack/dockerfile/binaries-commits#L6
-# Note: this commit is only really present in `docker/runc` in the 'docker/17.06' branch
+# see https://github.com/docker/docker-ce/blob/v17.09.0-ce/components/engine/hack/dockerfile/binaries-commits#L6
+# Note: this commit is only really present in the `docker/runc` repository.
 # Update the patch number when this commit is changed (i.e. the _p in the ebuild).
 # The patch version is arbitrarily the number of commits since the tag version
 # spcified in the ebuild name. For example:
-# $ git log --oneline v1.0.0-rc3..${COMMIT_ID} | wc -l
-COMMIT_ID="810190ceaa507aa2727d7ae6f4790c76ec150bd2"
+# $ git log --oneline v1.0.0-rc4..${COMMIT_ID} | wc -l
+COMMIT_ID="3f2f8b84a77f73d38244dd690525642a72156c64"
 
 inherit eutils flag-o-matic coreos-go vcs-snapshot
 
@@ -25,7 +25,7 @@ HOMEPAGE="http://runc.io"
 
 LICENSE="Apache-2.0"
 SLOT="0"
-IUSE="apparmor ambient hardened +seccomp selinux"
+IUSE="ambient apparmor hardened +seccomp selinux"
 
 RDEPEND="
 	apparmor? ( sys-libs/libapparmor )
@@ -55,8 +55,8 @@ src_compile() {
 
 	# build up optional flags
 	local options=(
-		$(usex apparmor 'apparmor' '')
 		$(usex ambient 'ambient' '')
+		$(usex apparmor 'apparmor' '')
 		$(usex seccomp 'seccomp' '')
 		$(usex selinux 'selinux' '')
 	)
