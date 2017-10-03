@@ -148,6 +148,96 @@ PrivateTmp=true
 EOF
 fi
 
+# Tectonic backed itself into a corner by depending on the docker version
+# shipped in Container Linux but not actively ensuring that they kept clusters
+# up-to-date. As a result, the OS has continued to ship an old docker to work
+# around the issue. Now that Tectonic is able to specify the version of docker,
+# the default version of docker can be updated. Unfortunately, this can't be
+# done until all clusters have fallen out of support or have updated. In order
+# to expedite this process, the /etc/coreos/docker-1.12 flag file has been
+# added, which can signal that the installed version of docker should remain at
+# 1.12.6. This next chunk of black magic attempts to determine if the machine
+# is a part of a Tectonic cluster and, if so, write the flag file so that old
+# clusters aren't caught up in the docker-version bump.
+#
+# This code works by looking at the kubelet.service and a particular sysctl
+# entry that have always been written by the Tectonic installer. After
+# stripping out known variables and commonly-added user modifications, the
+# contents are hashed and compared against a known, good list. This list was
+# derived from every kubelet.service we have ever shipped in Tectonic. This was
+# not a particularly fun exercise.
+good_kubelet() {
+    KUBELET_PATH="/etc/systemd/system/kubelet.service"
+    declare -A GOOD_KUBELET_SUMS=(
+        [9aa254d55054fab5de48ca4e97ac3f0f]=1
+        [838ca6c80119a7daf9fdc3881698d058]=1
+        [35dd901dd87291df1ad8b6bf9b60a174]=1
+        [43af37f891e555c5e4cf7c18478fce54]=1
+        [c27121efdd210cc05a28c122f8f4a145]=1
+        [f4cab5080e349a999197daace5ca971c]=1
+        [71f8b465420d9373a536424eb81987ad]=1
+        [997f455cd2a02ce885e5ec7db4755fa5]=1
+        [69d890f526fe59da3117f56583bc9929]=1
+        [46a19863e5497f903fb3fdc0fbda9137]=1
+        [42357b95fc5ae52b476b8eb5c58ebb42]=1
+        [ee5ef7bb3443f872fe470f4eab586b3c]=1
+        [5b08a40b4f8312c4710b1676b761a9b0]=1
+        [879210fde7b8a3c8c02b8646dd06a35e]=1
+        [b0cf744da1a9b5df933baabdcfb5bf7f]=1
+        [b3c382658e55ada45a819c3274d25cb2]=1
+        [852dd9b686429b84144b36e101305968]=1
+    )
+
+    [ -f $KUBELET_PATH ] || return 1
+
+    # Remove all whitespace (including newlines), backslashes, known variables
+    # (the first six expressions), and commonly-added user options (the next
+    # two expressions) before determining the md5 sum.
+    sum=$(sed \
+        --regexp-extended \
+        --expression '/--cloud-provider=/d' \
+        --expression '/--hostname-override=/d' \
+        --expression '/--cluster-dns=/d' \
+        --expression '/--cluster_dns=/d' \
+        --expression '/--node-labels=/d' \
+        --expression '/--cni-bin-dir=/d' \
+        --expression '/--register-with-taints=/d' \
+        --expression '/\/opt\/s3-puller.sh/d' \
+        --expression '/-v=/d' \
+        --expression '/-vmodule=/d' \
+        --expression 's/\s//g' \
+        --expression 's/\\//g' \
+        $KUBELET_PATH | tr --delete '\n' | md5sum | gawk '{print $1}')
+
+    [[ -n "${GOOD_KUBELET_SUMS[${sum}]}" ]] && return 0
+}
+
+good_sysctl() {
+    SYSCTL_PATH="/etc/sysctl.d/max-user-watches.conf"
+    declare -A GOOD_SYSCTL_SUMS=(
+        [6de69b29eccf652d476f68c1abf3d0db]=1
+        [52ddc3d78f9ce25f068c6da1c1f7f2f3]=1
+    )
+
+    [ -f $SYSCTL_PATH ] || return 1
+
+    sum=$(md5sum $SYSCTL_PATH | gawk '{print $1}')
+
+    [[ -n "${GOOD_SYSCTL_SUMS[${sum}]}" ]] && return 0
+}
+
+# Check to make sure that the current version is less than 1576 (this is the
+# first release to include this Tectonic work-around). This ensures that we
+# only apply this work-around one time.
+source /usr/lib/os-release
+DOCKER_FLAG_PATH="/etc/coreos/docker-1.12"
+if [ ! -e "${DOCKER_FLAG_PATH}" ] && [ "${VERSION_ID%%.*}" -lt 1576 ] &&
+    good_kubelet && good_sysctl
+then
+    echo "Detected a Tectonic cluster. Writing docker override..."
+    cat > "${DOCKER_FLAG_PATH}" <<< yes
+fi
+
 # use the cgpt binary from the image to ensure compatibility
 CGPT=
 for bindir in bin/old_bins bin sbin; do
