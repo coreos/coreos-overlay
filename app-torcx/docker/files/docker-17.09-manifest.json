@@ -1,0 +1,29 @@
+{
+    "kind": "image-manifest-v0",
+    "value": {
+        "bin": [
+            "/bin/containerd",
+            "/bin/containerd-shim",
+            "/bin/ctr",
+            "/bin/docker",
+            "/bin/docker-containerd",
+            "/bin/docker-containerd-shim",
+            "/bin/docker-init",
+            "/bin/docker-proxy",
+            "/bin/docker-runc",
+            "/bin/dockerd",
+            "/bin/runc",
+            "/bin/tini"
+        ],
+        "network": [
+            "/lib/systemd/network/50-docker.network",
+            "/lib/systemd/network/90-docker-veth.network"
+        ],
+        "units": [
+            "/lib/systemd/system/containerd.service",
+            "/lib/systemd/system/docker.service",
+            "/lib/systemd/system/docker.socket",
+            "/lib/systemd/system/sockets.target.wants"
+        ]
+    }
+}

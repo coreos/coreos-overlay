@@ -11,11 +11,10 @@ KEYWORDS="amd64 arm64"
 
 # Explicitly list all packages that will be built into the image.
 RDEPEND="
-	=app-emulation/docker-17.06.2-r2
-	=app-emulation/containerd-0.2.9_p7
-	=app-emulation/docker-proxy-0.8.0_p20170410-r1
-	=app-emulation/docker-runc-1.0.0_rc3_p53
-	=dev-libs/libltdl-2.4.6
+	=app-emulation/docker-17.03.2
+	=app-emulation/containerd-0.2.6
+	=app-emulation/docker-proxy-0.8.0_p20161019
+	=app-emulation/docker-runc-1.0.0_rc2_p136
 	=sys-process/tini-0.13.2
 "
 
