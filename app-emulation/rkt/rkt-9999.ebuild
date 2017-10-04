@@ -17,11 +17,11 @@ if [[ "${PV}" == "9999" ]]; then
 	KEYWORDS="~amd64 ~arm64"
 else
 	KEYWORDS="amd64 arm64"
-	CROS_WORKON_COMMIT="3abde24bc284b7ded5784c56b4e8184c28999641" # v1.28.1
+	CROS_WORKON_COMMIT="6de500a70706403c8c611d80491aea64019141b0" # v1.29.0
 fi
 
-PXE_VERSION="1235.0.0"
-PXE_SYSTEMD_VERSION="v231"
+PXE_VERSION="1478.0.0"
+PXE_SYSTEMD_VERSION="v233"
 PXE_FILE="${PN}-pxe-${ARCH}-usr-${PXE_VERSION}.img"
 
 PXE_URI_AMD64="https://alpha.release.core-os.net/amd64-usr/${PXE_VERSION}/coreos_production_pxe_image.cpio.gz"
@@ -76,8 +76,6 @@ function add_stage1() {
 }
 
 src_prepare() {
-	epatch "${FILESDIR}/${PN}-1.28.1-avoid-double-overlay-mounts.patch"
-
 	# ensure we use a CoreOS PXE image version that matches rkt's expectations.
 	local rkt_coreos_version
 
