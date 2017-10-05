@@ -79,14 +79,6 @@ src_install() {
 	docinto test/
 	dodoc test/*
 
-	# udev pieces
-	insinto /usr/lib/udev/rules.d
-	doins "${FILESDIR}"/99-iscsi.rules
-	insopts -m0755
-	insinto /usr/lib/udev/scripts
-	doins "${FILESDIR}"/iscsidev.sh
-	insopts -m0644
-
 	systemd_dounit "${FILESDIR}"/iscsid.service
 	systemd_dounit "${FILESDIR}"/iscsid.socket
 	systemd_dounit "${FILESDIR}"/iscsid-initiatorname.service
