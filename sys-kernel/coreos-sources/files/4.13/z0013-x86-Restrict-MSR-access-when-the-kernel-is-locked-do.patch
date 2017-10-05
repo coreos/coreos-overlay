@@ -1,7 +1,7 @@
 From f1e625e306e90405acff33c68a6285a20877de59 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:17 +0000
-Subject: [PATCH 13/24] x86: Restrict MSR access when the kernel is locked down
+Subject: [PATCH 13/25] x86: Restrict MSR access when the kernel is locked down
 
 Writing to MSRs should not be allowed if the kernel is locked down, since
 it could lead to execution of arbitrary code in kernel mode.  Based on a
@@ -40,5 +40,5 @@ index ef688804f80d..fbcce028e502 100644
  			err = -EFAULT;
  			break;
 -- 
-2.14.1
+2.13.6
 
