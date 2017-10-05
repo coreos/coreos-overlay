@@ -1,7 +1,7 @@
-From f7364eee64c715ffe9266d8ea55d52154becf879 Mon Sep 17 00:00:00 2001
+From 07584ac35f055643fbb7d3db977edb1667761cdd Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Mon, 21 Nov 2016 23:36:17 +0000
-Subject: [PATCH 02/25] Add the ability to lock down access to the running
+Subject: [PATCH 02/24] Add the ability to lock down access to the running
  kernel image
 
 Provide a single call to allow kernel code to determine whether the system
