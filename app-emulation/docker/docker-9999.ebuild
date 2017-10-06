@@ -74,9 +74,7 @@ RESTRICT="installsources strip"
 
 S="${WORKDIR}/${P}/src/${COREOS_GO_PACKAGE}"
 
-ENGINE_PATCHES=(
-	"${FILESDIR}/patches/engine/revert-make-overlay-home-dir-private.patch"
-)
+ENGINE_PATCHES=()
 
 # see "contrib/check-config.sh" from upstream's sources
 CONFIG_CHECK="
@@ -212,7 +210,7 @@ src_unpack() {
 		DOCKER_GITCOMMIT=$(git -C "${S}" rev-parse HEAD | head -c 7)
 		DOCKER_BUILD_DATE=$(git -C "${S}" log -1 --format="%ct")
 	fi
-	eapply -d"${S}"/components/engine "${ENGINE_PATCHES[@]}"
+	[ "${#ENGINE_PATCHES[@]}" -gt 0 ] && eapply -d"${S}"/components/engine "${ENGINE_PATCHES[@]}"
 }
 
 src_compile() {
