@@ -1,7 +1,7 @@
 From a4a18f7a7c9f4dc853d1ed84e100bfad45ca768d Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:15 +0000
-Subject: [PATCH 06/24] kexec: Disable at runtime if the kernel is locked down
+Subject: [PATCH 06/25] kexec: Disable at runtime if the kernel is locked down
 
 kexec permits the loading and execution of arbitrary code in ring 0, which
 is something that lock-down is meant to prevent. It makes sense to disable
@@ -20,20 +20,20 @@ diff --git a/kernel/kexec.c b/kernel/kexec.c
 index e62ec4dc6620..37f75d0b75de 100644
 --- a/kernel/kexec.c
 +++ b/kernel/kexec.c
-@@ -201,6 +201,13 @@ SYSCALL_DEFINE4(kexec_load, unsigned long, entry, unsigned long, nr_segments,
- 	if (!capable(CAP_SYS_BOOT) || kexec_load_disabled)
+@@ -202,6 +202,13 @@ SYSCALL_DEFINE4(kexec_load, unsigned long, entry, unsigned long, nr_segments,
  		return -EPERM;
  
-+	/*
+ 	/*
 +	 * kexec can be used to circumvent module loading restrictions, so
 +	 * prevent loading in that case
 +	 */
 +	if (kernel_is_locked_down())
 +		return -EPERM;
 +
- 	/*
++	/*
  	 * Verify we have a legal set of flags
  	 * This leaves us room for future extensions.
+ 	 */
 -- 
-2.14.1
+2.13.6
 
