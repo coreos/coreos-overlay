@@ -83,9 +83,6 @@ src_install() {
 	systemd_enable_service multi-user.target update-engine.service
 	systemd_enable_service multi-user.target update-engine-stub.timer
 
-	insinto /usr/share/dbus-1/services
-	doins com.coreos.update1.service
-
 	insinto /usr/share/dbus-1/system.d
 	doins com.coreos.update1.conf
 
