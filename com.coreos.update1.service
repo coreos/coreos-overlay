@@ -1,3 +1,0 @@
-[D-BUS Service]
-Name=com.coreos.update1
-Exec=/usr/sbin/update_engine
