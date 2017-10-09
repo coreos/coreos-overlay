@@ -79,3 +79,6 @@ dev-util/checkbashisms
 # iproute2 4.13 includes a patch to avoid leaking netns mounts in rkt 
 # https://git.kernel.org/pub/scm/linux/kernel/git/shemminger/iproute2.git/commit/?id=d6a4076b6ba6547d7e52c377a7c58c56eb5ea16e
 =sys-apps/iproute2-4.13.0 ~amd64 ~arm64
+
+# systemd v235 requires util-linux 2.30
+=sys-apps/util-linux-2.30.2 ~amd64 ~arm64

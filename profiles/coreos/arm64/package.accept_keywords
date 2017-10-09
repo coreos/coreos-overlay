@@ -42,7 +42,6 @@
 =sys-apps/man-db-2.7.6.1-r2 ~arm64
 =sys-apps/rng-tools-5-r2 **
 =sys-apps/smartmontools-6.4 **
-=sys-apps/util-linux-2.28.2 ~arm64
 =sys-block/parted-3.2-r1 ~arm64
 =sys-cluster/ipvsadm-1.27-r1 **
 =sys-devel/binutils-2.28.1 ~arm64
