@@ -1,7 +1,7 @@
 From 87d86828a5c23d79d182fe08fc311980a49bb314 Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Tue, 22 Nov 2016 10:10:34 +0000
-Subject: [PATCH 20/25] scsi: Lock down the eata driver
+Subject: [PATCH 20/26] scsi: Lock down the eata driver
 
 When the kernel is running in secure boot mode, we lock down the kernel to
 prevent userspace from modifying the running kernel image.  Whilst this

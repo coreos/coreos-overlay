@@ -1,7 +1,7 @@
 From 3dd952f456fda073b3d492a94745f119effba17b Mon Sep 17 00:00:00 2001
 From: Amir Goldstein <amir73il@gmail.com>
 Date: Fri, 29 Sep 2017 10:21:21 +0300
-Subject: [PATCH 25/25] ovl: fix regression caused by exclusive upper/work dir
+Subject: [PATCH 25/26] ovl: fix regression caused by exclusive upper/work dir
  protection
 
 Enforcing exclusive ownership on upper/work dirs caused a docker
