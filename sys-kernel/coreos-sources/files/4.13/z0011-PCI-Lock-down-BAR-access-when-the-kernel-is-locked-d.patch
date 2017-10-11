@@ -1,7 +1,7 @@
 From 16ad18e196811749d4d5f737e4ca0482326be131 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:15 +0000
-Subject: [PATCH 11/25] PCI: Lock down BAR access when the kernel is locked
+Subject: [PATCH 11/26] PCI: Lock down BAR access when the kernel is locked
  down
 
 Any hardware that can potentially generate DMA has to be locked down in
