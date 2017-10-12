@@ -1,7 +1,7 @@
-From 9f619ad071340dfa7063e54ff280554dca182f14 Mon Sep 17 00:00:00 2001
+From 4e6fc257193a1d56eedc55e040d6e5c158cdaceb Mon Sep 17 00:00:00 2001
 From: Kees Cook <keescook@chromium.org>
 Date: Mon, 9 Oct 2017 11:36:52 -0700
-Subject: [PATCH 26/26] waitid(): Add missing access_ok() checks
+Subject: [PATCH 25/25] waitid(): Add missing access_ok() checks
 
 Adds missing access_ok() checks.
 
@@ -39,5 +39,5 @@ index 6d31fc5ba50d..135b36985f8a 100644
  	unsafe_put_user(signo, &infop->si_signo, Efault);
  	unsafe_put_user(0, &infop->si_errno, Efault);
 -- 
-2.13.6
+2.14.1
 
