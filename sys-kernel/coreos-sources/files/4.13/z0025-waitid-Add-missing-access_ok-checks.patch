@@ -1,0 +1,43 @@
+From 4e6fc257193a1d56eedc55e040d6e5c158cdaceb Mon Sep 17 00:00:00 2001
+From: Kees Cook <keescook@chromium.org>
+Date: Mon, 9 Oct 2017 11:36:52 -0700
+Subject: [PATCH 25/25] waitid(): Add missing access_ok() checks
+
+Adds missing access_ok() checks.
+
+CVE-2017-5123
+
+Reported-by: Chris Salls <chrissalls5@gmail.com>
+Fixes: 4c48abe91be0 ("waitid(): switch copyout of siginfo to unsafe_put_user()")
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ kernel/exit.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/kernel/exit.c b/kernel/exit.c
+index 6d31fc5ba50d..135b36985f8a 100644
+--- a/kernel/exit.c
++++ b/kernel/exit.c
+@@ -1611,6 +1611,9 @@ SYSCALL_DEFINE5(waitid, int, which, pid_t, upid, struct siginfo __user *,
+ 	if (!infop)
+ 		return err;
+ 
++	if (!access_ok(VERIFY_WRITE, infop, sizeof(*infop)))
++		goto Efault;
++
+ 	user_access_begin();
+ 	unsafe_put_user(signo, &infop->si_signo, Efault);
+ 	unsafe_put_user(0, &infop->si_errno, Efault);
+@@ -1736,6 +1739,9 @@ COMPAT_SYSCALL_DEFINE5(waitid,
+ 	if (!infop)
+ 		return err;
+ 
++	if (!access_ok(VERIFY_WRITE, infop, sizeof(*infop)))
++		goto Efault;
++
+ 	user_access_begin();
+ 	unsafe_put_user(signo, &infop->si_signo, Efault);
+ 	unsafe_put_user(0, &infop->si_errno, Efault);
+-- 
+2.14.1
+

@@ -1,4 +1,4 @@
-From f1837934545ec345d6509fe6b70d5a8e7fb48c06 Mon Sep 17 00:00:00 2001
+From 0ca587d266c2a08314e7e5026f4db17b2587aaae Mon Sep 17 00:00:00 2001
 From: Josh Boyer <jwboyer@fedoraproject.org>
 Date: Mon, 21 Nov 2016 23:55:55 +0000
 Subject: [PATCH 01/25] efi: Add EFI_SECURE_BOOT bit
@@ -42,5 +42,5 @@ index 8269bcb8ccf7..7952dd3ffa73 100644
  #ifdef CONFIG_EFI
  /*
 -- 
-2.13.6
+2.14.1
 
