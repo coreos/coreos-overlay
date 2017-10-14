@@ -1,7 +1,7 @@
-From 0e0436f160dc5e72da06475f47cf0f3d3eb825c2 Mon Sep 17 00:00:00 2001
+From d5daa6edc6e51072dc797b81051360b478fb5265 Mon Sep 17 00:00:00 2001
 From: Linn Crosetto <linn@hpe.com>
 Date: Wed, 23 Nov 2016 13:32:27 +0000
-Subject: [PATCH 17/25] acpi: Disable ACPI table override if the kernel is
+Subject: [PATCH 17/24] acpi: Disable ACPI table override if the kernel is
  locked down
 
 From the kernel documentation (initrd_table_override.txt):
