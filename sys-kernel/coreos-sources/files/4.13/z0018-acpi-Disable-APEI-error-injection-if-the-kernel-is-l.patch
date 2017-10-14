@@ -1,7 +1,7 @@
-From 76da8791076ba432067fe7d079ca49e0c9db7bf4 Mon Sep 17 00:00:00 2001
+From 1489fcf49abbef75b55b57b0ccbedf6fe04540c7 Mon Sep 17 00:00:00 2001
 From: Linn Crosetto <linn@hpe.com>
 Date: Wed, 23 Nov 2016 13:39:41 +0000
-Subject: [PATCH 18/25] acpi: Disable APEI error injection if the kernel is
+Subject: [PATCH 18/24] acpi: Disable APEI error injection if the kernel is
  locked down
 
 ACPI provides an error injection mechanism, EINJ, for debugging and testing
