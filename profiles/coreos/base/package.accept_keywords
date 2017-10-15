@@ -34,9 +34,6 @@ dev-util/checkbashisms
 # https://bugs.gentoo.org/show_bug.cgi?id=548158
 =sys-apps/gentoo-functions-0.10
 
-# Avoid cross compile error with amd64 stable (elfutils-0.158).
-=dev-libs/elfutils-0.161 ~amd64
-
 =dev-python/pyusb-1.0.0 ~amd64
 
 # Older versions of sssd fail to build
