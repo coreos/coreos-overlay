@@ -59,7 +59,7 @@ dev-lang/spidermonkey minimal
 dev-libs/glib -mime
 
 # keep grub build simple
-sys-boot/grub -multislot -nls
+sys-boot/grub -multislot -nls -themes
 
 # disable "high performance ssh" patch, turn on kerberos
 net-misc/openssh -hpn kerberos
