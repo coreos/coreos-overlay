@@ -129,6 +129,7 @@ RDEPEND="${RDEPEND}
 	net-misc/iputils
 	net-misc/ntp
 	net-misc/rsync
+	net-misc/socat
 	net-misc/wget
 	net-misc/whois
 	sys-apps/coreutils
