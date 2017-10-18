@@ -1,51 +1,50 @@
-# Copyright 1999-2014 Gentoo Foundation
+# Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-boot/grub/grub-9999-r1.ebuild,v 1.21 2014/10/19 01:51:58 floppym Exp $
 
-EAPI=5
+EAPI=6
+
 CROS_WORKON_PROJECT="coreos/grub"
 CROS_WORKON_REPO="git://github.com"
-AUTOTOOLS_AUTORECONF=1
-GRUB_AUTOGEN=1
-PYTHON_COMPAT=( python{2_6,2_7,3_2,3_3,3_4} )
+GRUB_AUTOGEN=1  # We start from Git, so always autogen.
 
-if [[ "${PV}" == 9999 ]]; then
+if [[ ${PV} == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64 ~x86"
 else
-	CROS_WORKON_COMMIT="6782f6d431d22b4e9ab14e94d263795c7991e160"
+	CROS_WORKON_COMMIT="84a4fd2f4c35a45b66a6ca4ef455d999f8b05b55"
 	KEYWORDS="amd64 arm64 x86"
 fi
+inherit cros-workon
 
-inherit cros-workon autotools-utils bash-completion-r1 eutils flag-o-matic mount-boot multibuild pax-utils python-any-r1 toolchain-funcs versionator
+if [[ -n ${GRUB_AUTOGEN} ]]; then
+	PYTHON_COMPAT=( python{2_7,3_3,3_4,3_5} )
+	WANT_LIBTOOL=none
+	inherit autotools python-any-r1
+fi
 
-DEJAVU=dejavu-sans-ttf-2.34
-UNIFONT=unifont-7.0.05
-SRC_URI+=" mirror://gnu/unifont/${UNIFONT}/${UNIFONT}.pcf.gz
-	truetype? ( mirror://sourceforge/dejavu/${DEJAVU}.zip )"
+inherit autotools bash-completion-r1 flag-o-matic multibuild pax-utils toolchain-funcs versionator
+DEJAVU=dejavu-sans-ttf-2.37
+UNIFONT=unifont-9.0.06
+SRC_URI+=" fonts? ( mirror://gnu/unifont/${UNIFONT}/${UNIFONT}.pcf.gz )
+	themes? ( mirror://sourceforge/dejavu/${DEJAVU}.zip )"
 
 DESCRIPTION="GNU GRUB boot loader"
-HOMEPAGE="http://www.gnu.org/software/grub/"
+HOMEPAGE="https://www.gnu.org/software/grub/"
 
 # Includes licenses for dejavu and unifont
-LICENSE="GPL-3 truetype? ( BitstreamVera GPL-2-with-font-exception )"
+LICENSE="GPL-3 fonts? ( GPL-2-with-font-exception ) themes? ( BitstreamVera )"
 SLOT="2/${PVR}"
-IUSE="debug device-mapper doc efiemu mount +multislot nls static sdl test truetype libzfs"
+IUSE="debug device-mapper doc efiemu +fonts mount multislot nls static sdl test +themes truetype libzfs"
 
-GRUB_ALL_PLATFORMS=(
-	# everywhere:
-	emu
-	# mips only:
-	qemu-mips loongson
-	# amd64, x86, ppc, ppc64:
-	ieee1275
-	# amd64, x86:
-	coreboot multiboot efi-32 pc qemu xen
-	# amd64, ia64:
-	efi-64
-	# arm64:
-	arm64
-)
+GRUB_ALL_PLATFORMS=( coreboot efi-32 efi-64 emu ieee1275 loongson multiboot qemu qemu-mips pc uboot xen xen-32 )
+GRUB_ALL_PLATFORMS+=( arm64 )  # Tack on arm64 for pulling in the cross-compiler.
 IUSE+=" ${GRUB_ALL_PLATFORMS[@]/#/grub_platforms_}"
+
+REQUIRED_USE="
+	grub_platforms_coreboot? ( fonts )
+	grub_platforms_qemu? ( fonts )
+	grub_platforms_ieee1275? ( fonts )
+	grub_platforms_loongson? ( fonts )
+"
 
 # os-prober: Used on runtime to detect other OSes
 # xorriso (dev-libs/libisoburn): Used on runtime for mkrescue
@@ -69,10 +68,6 @@ DEPEND="${RDEPEND}
 	sys-devel/bison
 	sys-apps/help2man
 	sys-apps/texinfo
-	grub_platforms_coreboot? ( media-libs/freetype:2 )
-	grub_platforms_qemu? ( media-libs/freetype:2 )
-	grub_platforms_ieee1275? ( media-libs/freetype:2 )
-	grub_platforms_loongson? ( media-libs/freetype:2 )
 	grub_platforms_arm64? ( cross-aarch64-cros-linux-gnu/gcc )
 	static? (
 		app-arch/xz-utils[static-libs(+)]
@@ -83,59 +78,42 @@ DEPEND="${RDEPEND}
 		)
 	)
 	test? (
-		dev-libs/libisoburn
-		sys-fs/squashfs-tools[lzo,xz]
+		app-admin/genromfs
+		app-arch/cpio
+		app-arch/lzop
 		grub_platforms_efi-64? ( app-emulation/qemu[qemu_softmmu_targets_x86_64] )
 		grub_platforms_pc? ( app-emulation/qemu[qemu_softmmu_targets_i386] )
 		grub_platforms_arm64? ( app-emulation/qemu[qemu_softmmu_targets_aarch64] )
+		dev-libs/libisoburn
+		sys-apps/miscfiles
+		sys-block/parted
+		sys-fs/squashfs-tools[lzo,xz]
 	)
-	truetype? ( app-arch/unzip )
+	themes? (
+		app-arch/unzip
+		media-libs/freetype:2
+	)
 "
 RDEPEND+="
 	kernel_linux? (
 		grub_platforms_efi-32? ( sys-boot/efibootmgr )
 		grub_platforms_efi-64? ( sys-boot/efibootmgr )
 	)
-	!multislot? ( !sys-boot/grub:0 )
+	!multislot? ( !sys-boot/grub:0 !sys-boot/grub-static )
 	nls? ( sys-devel/gettext )
 "
 
-STRIP_MASK="*/grub/*/*.{mod,img}"
-RESTRICT="test"
+DEPEND+=" !!=media-libs/freetype-2.5.4"
 
-QA_EXECSTACK="
-	usr/bin/grub*-emu*
-	usr/lib*/grub/*/*.mod
-	usr/lib*/grub/*/*.module
-	usr/lib*/grub/*/kernel.exec
-	usr/lib*/grub/*/kernel.img
-"
+RESTRICT="strip !test? ( test )"
 
-QA_WX_LOAD="
-	usr/lib*/grub/*/kernel.exec
-	usr/lib*/grub/*/kernel.img
-	usr/lib*/grub/*/*.image
-"
-
-QA_PRESTRIPPED="
-	usr/lib.*/grub/.*/kernel.img
-"
-
-pkg_pretend() {
-	if [[ ${MERGE_TYPE} != binary ]]; then
-		# Bug 439082
-		if ! version_is_at_least 4.8 "$(gcc-version)" &&
-			$(tc-getLD) --version | grep -q "GNU gold"; then
-			eerror "GRUB does not function correctly when built with the gold linker."
-			eerror "Please select the bfd linker with binutils-config."
-			die "GNU gold detected"
-		fi
-	fi
-}
+QA_EXECSTACK="usr/bin/grub*-emu* usr/lib/grub/*"
+QA_WX_LOAD="usr/lib/grub/*"
+QA_MULTILIB_PATHS="usr/lib/grub/.*"
 
 src_unpack() {
 	cros-workon_src_unpack
-	default_src_unpack
+	default
 }
 
 src_prepare() {
@@ -146,51 +124,56 @@ src_prepare() {
 		sed -i -e 's/^\* GRUB:/* GRUB2:/' -e 's/(grub)/(grub2)/' docs/grub.texi || die
 	fi
 
-	epatch_user
+	# Nothing in Gentoo packages 'american-english' in the exact path
+	# wanted for the test, but all that is needed is a compressible text
+	# file, and we do have 'words' from miscfiles in the same path.
+	sed -i \
+		-e '/CFILESSRC.*=/s,american-english,words,' \
+		tests/util/grub-fs-tester.in \
+		|| die
+
+	eapply_user
 
 	if [[ -n ${GRUB_AUTOGEN} ]]; then
 		python_setup
 		bash autogen.sh || die
-	fi
-
-	if [[ -n ${AUTOTOOLS_AUTORECONF} ]]; then
-		autopoint() { return 0; }
+		autopoint() { :; }
 		eautoreconf
 	fi
 }
 
-setup_fonts() {
-	ln -s "${WORKDIR}/${UNIFONT}.pcf" unifont.pcf || die
-	if use truetype; then
-		ln -s "${WORKDIR}/${DEJAVU}/ttf/DejaVuSans.ttf" DejaVuSans.ttf || die
-	fi
+grub_do() {
+	multibuild_foreach_variant run_in_build_dir "$@"
+}
+
+grub_do_once() {
+	multibuild_for_best_variant run_in_build_dir "$@"
 }
 
 grub_configure() {
 	local platform
 
 	case ${MULTIBUILD_VARIANT} in
-		efi-32)
-			platform=efi
+		efi*) platform=efi ;;
+		xen*) platform=xen ;;
+		arm64) platform=efi ;;
+		guessed) ;;
+		*) platform=${MULTIBUILD_VARIANT} ;;
+	esac
+
+	case ${MULTIBUILD_VARIANT} in
+		*-32)
 			if [[ ${CTARGET:-${CHOST}} == x86_64* ]]; then
 				local CTARGET=${CTARGET:-i386}
 			fi ;;
-		efi-64)
-			platform=efi
+		*-64)
 			if [[ ${CTARGET:-${CHOST}} == i?86* ]]; then
 				local CTARGET=${CTARGET:-x86_64}
-				local TARGET_CFLAGS="-Os -march=x86-64 ${TARGET_CFLAGS}"
-				local TARGET_CPPFLAGS="-march=x86-64 ${TARGET_CPPFLAGS}"
-				export TARGET_CFLAGS TARGET_CPPFLAGS
+				local -x TARGET_CFLAGS="-Os -march=x86-64 ${TARGET_CFLAGS}"
+				local -x TARGET_CPPFLAGS="-march=x86-64 ${TARGET_CPPFLAGS}"
 			fi ;;
 		arm64)
-			# FIXME(andrejro): mixed architecture binaries are generated
-			# while prepallstrip uses the native strip executable. This
-			# causes errors trying to strip aarch64 grub modules.
-			platform=efi
 			local CTARGET=aarch64-cros-linux-gnu ;;
-		guessed) ;;
-		*)	platform=${MULTIBUILD_VARIANT} ;;
 	esac
 
 	local myeconfargs=(
@@ -202,6 +185,7 @@ grub_configure() {
 		$(use_enable device-mapper)
 		$(use_enable mount grub-mount)
 		$(use_enable nls)
+		$(use_enable themes grub-themes)
 		$(use_enable truetype grub-mkfont)
 		$(use_enable libzfs)
 		$(use sdl && use_enable debug grub-emu-sdl)
@@ -215,10 +199,14 @@ grub_configure() {
 		myeconfargs+=( --program-transform-name="s,grub,grub2," )
 	fi
 
-	mkdir -p "${BUILD_DIR}" || die
-	run_in_build_dir setup_fonts
+	# Set up font symlinks
+	ln -s "${WORKDIR}/${UNIFONT}.pcf" unifont.pcf || die
+	if use themes; then
+		ln -s "${WORKDIR}/${DEJAVU}/ttf/DejaVuSans.ttf" DejaVuSans.ttf || die
+	fi
 
-	autotools-utils_src_configure
+	local ECONF_SOURCE="${S}"
+	econf "${myeconfargs[@]}"
 }
 
 src_configure() {
@@ -234,40 +222,41 @@ src_configure() {
 
 	use static && HOST_LDFLAGS+=" -static"
 
-	if version_is_at_least 4.8 "$(gcc-version)"; then
-		export TARGET_LDFLAGS+=" -fuse-ld=bfd"
-	fi
+	tc-ld-disable-gold #439082 #466536 #526348
+	export TARGET_LDFLAGS="${TARGET_LDFLAGS} ${LDFLAGS}"
+	unset LDFLAGS
 
-	tc-export CC NM OBJCOPY STRIP
+	tc-export CC NM OBJCOPY RANLIB STRIP
 	tc-export BUILD_CC # Bug 485592
 
-	# Portage will take care of cleaning up GRUB_PLATFORMS
-	MULTIBUILD_VARIANTS=( ${GRUB_PLATFORMS:-guessed} )
-	multibuild_parallel_foreach_variant grub_configure
+	MULTIBUILD_VARIANTS=()
+	local p
+	for p in "${GRUB_ALL_PLATFORMS[@]}"; do
+		use "grub_platforms_${p}" && MULTIBUILD_VARIANTS+=( "${p}" )
+	done
+	[[ ${#MULTIBUILD_VARIANTS[@]} -eq 0 ]] && MULTIBUILD_VARIANTS=( guessed )
+	grub_do grub_configure
 }
 
 src_compile() {
 	# Sandbox bug 404013.
 	use libzfs && addpredict /etc/dfs:/dev/zfs
 
-	multibuild_foreach_variant autotools-utils_src_compile
-
-	use doc && multibuild_for_best_variant \
-		autotools-utils_src_compile -C docs html
+	grub_do emake
+	use doc && grub_do_once emake -C docs html
 }
 
 src_test() {
 	# The qemu dependency is a bit complex.
 	# You will need to adjust QEMU_SOFTMMU_TARGETS to match the cpu/platform.
-	multibuild_foreach_variant autotools-utils_src_test
+	grub_do emake check
 }
 
 src_install() {
-	multibuild_foreach_variant autotools-utils_src_install \
-		bashcompletiondir="$(get_bashcompdir)"
+	grub_do emake install DESTDIR="${D}" bashcompletiondir="$(get_bashcompdir)"
+	use doc && grub_do_once emake -C docs install-html DESTDIR="${D}"
 
-	use doc && multibuild_for_best_variant run_in_build_dir \
-		emake -C docs DESTDIR="${D}" install-html
+	einstalldocs
 
 	if use multislot; then
 		mv "${ED%/}"/usr/share/info/grub{,2}.info || die
@@ -278,34 +267,19 @@ src_install() {
 }
 
 pkg_postinst() {
-	mount-boot_mount_boot_partition
-
-	if [[ -e "${ROOT%/}/boot/grub2/grub.cfg"  ]]; then
-		ewarn "The grub directory has changed from /boot/grub2 to /boot/grub."
-		ewarn "Please run grub2-install and grub2-mkconfig -o /boot/grub/grub.cfg."
-
-		if [[ ! -e "${ROOT%/}/boot/grub/grub.cfg" ]]; then
-			mkdir -p "${ROOT%/}/boot/grub"
-			ln -s ../grub2/grub.cfg "${ROOT%/}/boot/grub/grub.cfg"
-		fi
-	fi
-
-	mount-boot_pkg_postinst
-
 	elog "For information on how to configure GRUB2 please refer to the guide:"
-	elog "    http://wiki.gentoo.org/wiki/GRUB2_Quick_Start"
+	elog "    https://wiki.gentoo.org/wiki/GRUB2_Quick_Start"
 
 	if has_version 'sys-boot/grub:0'; then
 		elog "A migration guide for GRUB Legacy users is available:"
-		elog "    http://www.gentoo.org/doc/en/grub2-migration.xml"
+		elog "    https://wiki.gentoo.org/wiki/GRUB2_Migration"
 	fi
 
 	if [[ -z ${REPLACING_VERSIONS} ]]; then
-		if ! has_version sys-boot/os-prober; then
-			elog "Install sys-boot/os-prober to enable detection of other operating systems using grub2-mkconfig."
-		fi
-		if ! has_version dev-libs/libisoburn; then
-			elog "Install dev-libs/libisoburn to enable creation of rescue media using grub2-mkrescue."
-		fi
+		elog
+		elog "You may consider installing the following optional packages:"
+		optfeature "Detect other operating systems (grub-mkconfig)" sys-boot/os-prober
+		optfeature "Create rescue media (grub-mkrescue)" dev-libs/libisoburn
+		optfeature "Enable RAID device detection" sys-fs/mdadm
 	fi
 }
