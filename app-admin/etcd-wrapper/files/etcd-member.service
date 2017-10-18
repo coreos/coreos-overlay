@@ -1,7 +1,8 @@
 [Unit]
 Description=etcd (System Application Container)
 Documentation=https://github.com/coreos/etcd
-Wants=network.target
+Wants=network-online.target network.target
+After=network-online.target
 Conflicts=etcd.service
 Conflicts=etcd2.service
 
