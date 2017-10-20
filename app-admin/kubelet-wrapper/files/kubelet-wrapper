@@ -80,6 +80,7 @@ exec ${RKT} ${RKT_GLOBAL_ARGS} \
 	--mount volume=coreos-os-release,target=/etc/os-release \
 	--mount volume=coreos-run,target=/run \
 	--mount volume=coreos-lib-modules,target=/lib/modules \
+	--hosts-entry host \
 	${RKT_STAGE1_ARG} \
 	${KUBELET_IMAGE} \
 		${KUBELET_IMAGE_ARGS} \
