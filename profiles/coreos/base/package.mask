@@ -14,3 +14,9 @@
 # mask an accidental rkt major version bump to ensure it's not chosen over more
 # recent releases
 =app-emulation/rkt-13.0
+
+# Block new binutils, the amd64 kernel can't uncompress when built with it.
+>=sys-devel/binutils-2.26
+>=sys-libs/binutils-libs-2.26
+>=cross-aarch64-cros-linux-gnu/binutils-2.26
+>=cross-x86_64-cros-linux-gnu/binutils-2.26
