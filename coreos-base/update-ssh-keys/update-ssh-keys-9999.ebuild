@@ -21,6 +21,10 @@ HOMEPAGE="https://github.com/coreos/update-ssh-keys"
 LICENSE="Apache-2.0"
 SLOT="0"
 
+# make sure we have a new enough coreos-init that we won't conflict with the
+# old bash script
+RDEPEND="!<coreos-base/coreos-init-0.0.1-r152"
+
 # sed -n 's/^"checksum \([^ ]*\) \([^ ]*\) .*/\1-\2/p' Cargo.lock
 CRATES="
 ansi_term-0.9.0
