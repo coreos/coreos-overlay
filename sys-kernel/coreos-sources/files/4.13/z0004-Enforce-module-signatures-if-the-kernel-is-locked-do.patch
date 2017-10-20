@@ -1,7 +1,7 @@
-From 21703e9af75dd9c17303e3e7e8ccc54dc409fd5f Mon Sep 17 00:00:00 2001
+From ba9d0a66a38d4dcf1aa8d3620f8970711acd207d Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Wed, 23 Nov 2016 13:22:22 +0000
-Subject: [PATCH 04/24] Enforce module signatures if the kernel is locked down
+Subject: [PATCH 04/25] Enforce module signatures if the kernel is locked down
 
 If the kernel is locked down, require that all modules have valid
 signatures that we can verify.
