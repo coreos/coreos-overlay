@@ -1,7 +1,7 @@
-From e03ef102d0cabd798b0784330e5c063e406ba69f Mon Sep 17 00:00:00 2001
+From 4f4eec160361014f861c8f439e137138dd98008b Mon Sep 17 00:00:00 2001
 From: Josh Boyer <jwboyer@fedoraproject.org>
 Date: Mon, 21 Nov 2016 23:55:55 +0000
-Subject: [PATCH 01/24] efi: Add EFI_SECURE_BOOT bit
+Subject: [PATCH 01/25] efi: Add EFI_SECURE_BOOT bit
 
 UEFI machines can be booted in Secure Boot mode.  Add a EFI_SECURE_BOOT bit
 that can be passed to efi_enabled() to find out whether secure boot is
