@@ -110,6 +110,7 @@ RDEPEND="${RDEPEND}
 	coreos-base/coreos-cloudinit
 	coreos-base/coreos-init
 	coreos-base/coreos-metadata
+	coreos-base/update-ssh-keys
 	coreos-base/update_engine
 	dev-db/etcd:2
 	dev-db/etcdctl
