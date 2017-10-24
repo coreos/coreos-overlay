@@ -84,6 +84,8 @@ src_prepare() {
 		die "CoreOS versions in ebuild and rkt build scripts are mismatched, expecting ${rkt_coreos_version}!"
 	fi
 
+	epatch "${FILESDIR}/${PN}-1.29.0-allow-multiple-hosts-entry-host.patch"
+
 	autotools-utils_src_prepare
 }
 
