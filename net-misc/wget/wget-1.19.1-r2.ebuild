@@ -47,6 +47,8 @@ DOCS=( AUTHORS MAILING-LIST NEWS README doc/sample.wgetrc )
 
 PATCHES=(
 	"${FILESDIR}"/${P}-CRLF_injection.patch
+	"${FILESDIR}"/${P}-CVE-2017-13089.patch
+	"${FILESDIR}"/${P}-CVE-2017-13090.patch
 )
 
 pkg_setup() {
