@@ -72,7 +72,6 @@ RDEPEND="${RDEPEND}
 	>=dev-vcs/git-1.7.2
 	dev-vcs/mercurial
 	dev-vcs/subversion[-dso]
-	net-misc/gcutil
 	net-misc/google-cloud-sdk
 	sys-apps/usbutils
 	sys-apps/systemd
