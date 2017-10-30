@@ -1,4 +1,4 @@
-From 206ede09d1c401b7e27254a4e386693c55f489f0 Mon Sep 17 00:00:00 2001
+From c9232d15690a040d3145df1524feb16adc7cc1e2 Mon Sep 17 00:00:00 2001
 From: Benjamin Gilbert <benjamin.gilbert@coreos.com>
 Date: Thu, 19 Oct 2017 11:36:02 -0700
 Subject: [PATCH 25/25] cifs: Select all required crypto modules
