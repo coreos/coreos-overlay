@@ -147,11 +147,6 @@ RDEPEND="${RDEPEND}
 	dev-python/gdata
 	"
 
-# Host dependencies for taking to dev boards
-RDEPEND="${RDEPEND}
-	dev-embedded/smdk-dltool
-	"
-
 # Host dependencies for HWID processing
 RDEPEND="${RDEPEND}
 	dev-python/pyyaml
