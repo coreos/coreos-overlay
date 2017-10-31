@@ -1,4 +1,4 @@
-From c0fae21da1a8ae1b992c816ffd30964f3ff7a0f0 Mon Sep 17 00:00:00 2001
+From 62487920402b56b8eab77f515d7890df6473ca29 Mon Sep 17 00:00:00 2001
 From: Josh Boyer <jwboyer@fedoraproject.org>
 Date: Tue, 22 Nov 2016 08:46:15 +0000
 Subject: [PATCH 09/25] hibernate: Disable when the kernel is locked down
