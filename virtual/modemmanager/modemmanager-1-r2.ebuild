@@ -1,1 +1,0 @@
-modemmanager-1.ebuild
