@@ -23,6 +23,23 @@ LICENSE="Apache-2.0"
 SLOT="0/${PVR}"
 IUSE=""
 
+# need util-linux for libblkid at compile time
+DEPEND="sys-apps/util-linux"
+
+RDEPEND="
+	sys-apps/coreutils
+	sys-apps/gptfdisk
+	sys-apps/shadow
+	sys-apps/systemd
+	sys-fs/btrfs-progs
+	sys-fs/dosfstools
+	sys-fs/e2fsprogs
+	sys-fs/mdadm
+	sys-fs/xfsprogs
+"
+
+RDEPEND+="${DEPEND}"
+
 src_compile() {
 	export GO15VENDOREXPERIMENT="1"
 	GO_LDFLAGS="-X github.com/coreos/ignition/internal/version.Raw=$(git describe --dirty)" || die
