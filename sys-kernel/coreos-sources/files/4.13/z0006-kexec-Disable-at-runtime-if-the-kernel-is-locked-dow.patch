@@ -1,7 +1,7 @@
-From 75d101e041cef9ffd5c4320183ed9120c33384bd Mon Sep 17 00:00:00 2001
+From edb3e2ddb68f54af1a3ebc108dfe5c25b41a7795 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:15 +0000
-Subject: [PATCH 06/25] kexec: Disable at runtime if the kernel is locked down
+Subject: [PATCH 06/24] kexec: Disable at runtime if the kernel is locked down
 
 kexec permits the loading and execution of arbitrary code in ring 0, which
 is something that lock-down is meant to prevent. It makes sense to disable
