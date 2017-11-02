@@ -3,6 +3,6 @@ DESCRIPTION=Packages to be installed in a torcx image for Docker
 EAPI=2
 KEYWORDS=amd64 arm64
 LICENSE=GPL-2
-RDEPEND==app-emulation/docker-1.12.6-r6 =app-emulation/containerd-0.2.5-r3 =app-emulation/runc-1.0.0_rc2_p9
+RDEPEND==app-emulation/docker-1.12.6-r8 =app-emulation/containerd-0.2.5-r3 =app-emulation/runc-1.0.0_rc2_p9
 SLOT=0
-_md5_=9e79992ac855f653098f0d6e70265aea
+_md5_=0173a03ae53389ae2fcf96fa36f2ccd1
