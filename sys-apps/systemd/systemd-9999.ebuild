@@ -10,18 +10,18 @@ if [[ ${PV} == 9999 ]]; then
 	# Use ~arch instead of empty keywords for compatibility with cros-workon
 	KEYWORDS="~amd64 ~arm64 ~arm ~x86"
 else
-	CROS_WORKON_COMMIT="86c388465b686bb23cede68c226d00f5ff31c3b3" # v234-coreos
+	CROS_WORKON_COMMIT="e2384cbc5e1b47719cfffd21f65c0106052a6f69" # v235-coreos
 	KEYWORDS="~alpha amd64 ~arm arm64 ~ia64 ~ppc ~ppc64 ~sparc ~x86"
 fi
 
-PYTHON_COMPAT=( python{2_7,3_4,3_5,3_6} )
+PYTHON_COMPAT=( python{3_4,3_5,3_6} )
 
 # cros-workon must be imported first, in cases where cros-workon and
 # another eclass exports the same function (say src_compile) we want
 # the later eclass's version to win. Only need src_unpack from workon.
 inherit cros-workon
 
-inherit autotools bash-completion-r1 linux-info multilib-minimal pam python-any-r1 systemd toolchain-funcs udev user
+inherit bash-completion-r1 linux-info meson multilib-minimal ninja-utils pam python-any-r1 systemd toolchain-funcs udev user
 
 DESCRIPTION="System and service manager for Linux"
 HOMEPAGE="https://www.freedesktop.org/wiki/Software/systemd"
@@ -35,11 +35,14 @@ IUSE="acl apparmor audit build cryptsetup curl elfutils +gcrypt gnuefi http
 # CoreOS specific use flags
 IUSE+=" symlink-usr"
 
+# Install systemd in the /usr partition on CoreOS.
+ROOTPREFIX="/usr"
+
 REQUIRED_USE="importd? ( curl gcrypt lzma )"
 
 MINKV="3.11"
 
-COMMON_DEPEND=">=sys-apps/util-linux-2.27.1:0=[${MULTILIB_USEDEP}]
+COMMON_DEPEND=">=sys-apps/util-linux-2.30:0=[${MULTILIB_USEDEP}]
 	sys-libs/libcap:0=[${MULTILIB_USEDEP}]
 	!<sys-libs/glibc-2.16
 	acl? ( sys-apps/acl:0= )
@@ -154,24 +157,13 @@ src_unpack() {
 }
 
 src_prepare() {
-	# Bug 463376
-	sed -i -e 's/GROUP="dialout"/GROUP="uucp"/' rules/*.rules || die
 	# Use the resolv.conf managed by systemd-resolved
 	sed -i -e 's,/usr/lib/systemd/resolv.conf,/run/systemd/resolve/resolv.conf,' tmpfiles.d/etc.conf.m4 || die
 
-	[[ -d "${WORKDIR}"/patches ]] && PATCHES+=( "${WORKDIR}"/patches )
-
 	default
-
-	eautoreconf
 }
 
 src_configure() {
-	# Keep using the one where the rules were installed.
-	MY_UDEVDIR=$(get_udevdir)
-	# Fix systems broken by bug #509454.
-	[[ ${MY_UDEVDIR} ]] || MY_UDEVDIR=/lib/udev
-
 	# Prevent conflicts with i686 cross toolchain, bug 559726
 	tc-export AR CC NM OBJCOPY RANLIB
 
@@ -180,176 +172,181 @@ src_configure() {
 	multilib-minimal_src_configure
 }
 
+meson_use() {
+	usex "$1" true false
+}
+
+meson_multilib() {
+	if multilib_is_native_abi; then
+		echo true
+	else
+		echo false
+	fi
+}
+
+meson_multilib_native_use() {
+	if multilib_is_native_abi && use "$1"; then
+		echo true
+	else
+		echo false
+	fi
+}
+
 multilib_src_configure() {
-	local myeconfargs=(
-		# disable -flto since it is an optimization flag
-		# and makes distcc less effective
-		cc_cv_CFLAGS__flto=no
-		# disable -fuse-ld=gold since Gentoo supports explicit linker
-		# choice and forcing gold is undesired, #539998
-		# ld.gold may collide with user's LDFLAGS, #545168
-		# ld.gold breaks sparc, #573874
-		cc_cv_LDFLAGS__Wl__fuse_ld_gold=no
-
-		# Workaround for gcc-4.7, bug 554454.
-		cc_cv_CFLAGS__Werror_shadow=no
-
-		# Workaround for bug 516346
-		--enable-dependency-tracking
-
-		--disable-maintainer-mode
-		--localstatedir=/var
-		--with-pamlibdir=$(getpam_mod_dir)
+	local myconf=(
+		--localstatedir="${EPREFIX}/var"
+		-Dpamlibdir="$(getpam_mod_dir)"
 		# avoid bash-completion dep
-		--with-bashcompletiondir="$(get_bashcompdir)"
+		-Dbashcompletiondir="$(get_bashcompdir)"
 		# make sure we get /bin:/sbin in $PATH
-		--enable-split-usr
-		# For testing.
-		--with-rootprefix="${ROOTPREFIX-/usr}"
-		--with-rootlibdir="${ROOTPREFIX-/usr}/$(get_libdir)"
-		# disable sysv compatibility
-		--with-sysvinit-path=
-		--with-sysvrcnd-path=
+		-Dsplit-usr=true
+		-Drootprefix="${EPREFIX}${ROOTPREFIX}"
+		-Dsysvinit-path=
+		-Dsysvrcnd-path=
 		# no deps
-		--enable-efi
-		--enable-ima
-
+		-Defi=$(meson_multilib)
+		-Dima=true
 		# Optional components/dependencies
-		$(multilib_native_use_enable acl)
-		$(multilib_native_use_enable apparmor)
-		$(multilib_native_use_enable audit)
-		$(multilib_native_use_enable cryptsetup libcryptsetup)
-		$(multilib_native_use_enable curl libcurl)
-		$(multilib_native_use_enable elfutils)
-		$(use_enable gcrypt)
-		$(multilib_native_use_enable gnuefi)
-		--with-efi-libdir="/usr/$(get_libdir)"
-		$(multilib_native_use_enable http microhttpd)
-		$(usex http $(multilib_native_use_enable ssl gnutls) --disable-gnutls)
-		$(multilib_native_use_enable idn libidn)
-		$(multilib_native_use_enable importd)
-		$(multilib_native_use_enable importd bzip2)
-		$(multilib_native_use_enable importd zlib)
-		$(multilib_native_use_enable kmod)
-		$(use_enable lz4)
-		$(use_enable lzma xz)
-		$(multilib_native_use_enable nat libiptc)
-		$(use_enable pam)
-		$(multilib_native_use_enable policykit polkit)
-		$(multilib_native_use_enable qrcode qrencode)
-		$(multilib_native_use_enable seccomp)
-		$(multilib_native_use_enable selinux)
-		$(multilib_native_use_enable test tests)
-		$(multilib_native_use_enable test dbus)
-		$(multilib_native_use_enable xkb xkbcommon)
-		--without-python
-
+		-Dacl=$(meson_multilib_native_use acl)
+		-Dapparmor=$(meson_multilib_native_use apparmor)
+		-Daudit=$(meson_multilib_native_use audit)
+		-Dlibcryptsetup=$(meson_multilib_native_use cryptsetup)
+		-Dlibcurl=$(meson_multilib_native_use curl)
+		-Delfutils=$(meson_multilib_native_use elfutils)
+		-Dgcrypt=$(meson_use gcrypt)
+		-Dgnu-efi=$(meson_multilib_native_use gnuefi)
+		-Defi-libdir="/usr/$(get_libdir)"
+		-Dmicrohttpd=$(meson_multilib_native_use http)
+		$(usex http -Dgnutls=$(meson_multilib_native_use ssl) -Dgnutls=false)
+		-Dimportd=$(meson_multilib_native_use importd)
+		-Dbzip2=$(meson_multilib_native_use importd)
+		-Dzlib=$(meson_multilib_native_use importd)
+		-Dkmod=$(meson_multilib_native_use kmod)
+		-Dlz4=$(meson_use lz4)
+		-Dxz=$(meson_use lzma)
+		-Dlibiptc=$(meson_multilib_native_use nat)
+		-Dpam=$(meson_use pam)
+		-Dpolkit=$(meson_multilib_native_use policykit)
+		-Dqrencode=$(meson_multilib_native_use qrcode)
+		-Dseccomp=$(meson_multilib_native_use seccomp)
+		-Dselinux=$(meson_multilib_native_use selinux)
+		#-Dtests=$(meson_multilib_native_use test)
+		-Ddbus=$(meson_multilib_native_use test)
+		-Dxkbcommon=$(meson_multilib_native_use xkb)
 		# hardcode a few paths to spare some deps
-		KILL=/bin/kill
-		QUOTAON=/usr/sbin/quotaon
-		QUOTACHECK=/usr/sbin/quotacheck
+		-Dpath-kill=/bin/kill
+		-Dntp-servers="0.gentoo.pool.ntp.org 1.gentoo.pool.ntp.org 2.gentoo.pool.ntp.org 3.gentoo.pool.ntp.org"
+		# Breaks screen, tmux, etc.
+		-Ddefault-kill-user-processes=false
 
-		# TODO: we may need to restrict this to gcc
-		EFI_CC="$(tc-getCC)"
+		# multilib options
+		-Dbacklight=$(meson_multilib)
+		-Dbinfmt=$(meson_multilib)
+		-Dcoredump=$(meson_multilib)
+		-Denvironment-d=$(meson_multilib)
+		-Dfirstboot=$(meson_multilib)
+		-Dhibernate=$(meson_multilib)
+		-Dhostnamed=$(meson_multilib)
+		-Dhwdb=$(meson_multilib)
+		-Dldconfig=$(meson_multilib)
+		-Dlocaled=$(meson_multilib)
+		-Dman=$(meson_multilib)
+		-Dnetworkd=$(meson_multilib)
+		-Dquotacheck=$(meson_multilib)
+		-Drandomseed=$(meson_multilib)
+		-Drfkill=$(meson_multilib)
+		-Dsysusers=$(meson_multilib)
+		-Dtimedated=$(meson_multilib)
+		-Dtimesyncd=$(meson_multilib)
+		-Dtmpfiles=$(meson_multilib)
+		-Dvconsole=$(meson_multilib)
+
+		### CoreOS options
+
+		# Specify this, or meson breaks due to no /etc/login.defs
+		-Dsystem-gid-max=999
+		-Dsystem-uid-max=999
 
 		# dbus paths
-		--with-dbussessionservicedir="${EPREFIX}/usr/share/dbus-1/services"
-		--with-dbussystemservicedir="${EPREFIX}/usr/share/dbus-1/system-services"
+		-Ddbussessionservicedir="${EPREFIX}/usr/share/dbus-1/services"
+		-Ddbussystemservicedir="${EPREFIX}/usr/share/dbus-1/system-services"
 
-		--with-ntp-servers="0.coreos.pool.ntp.org 1.coreos.pool.ntp.org 2.coreos.pool.ntp.org 3.coreos.pool.ntp.org"
+		-Dntp-servers="0.coreos.pool.ntp.org 1.coreos.pool.ntp.org 2.coreos.pool.ntp.org 3.coreos.pool.ntp.org"
 
-		--with-pamconfdir=/usr/share/pam.d
+		-Dpamconfdir=/usr/share/pam.d
 
 		# The CoreOS epoch, Mon Jul  1 00:00:00 UTC 2013. Used by timesyncd
 		# as a sanity check for the minimum acceptable time. Explicitly set
 		# to avoid using the current build time.
-		--with-time-epoch=1372636800
+		-Dtime-epoch=1372636800
 
 		# no default name servers
-		--with-dns-servers=
+		-Ddns-servers=
 
 		# Breaks Docker
-		--with-default-hierarchy=legacy
+		-Ddefault-hierarchy=legacy
 
-		# Breaks screen, tmux, etc.
-		--without-kill-user-processes
+		# Disable the "First Boot Wizard", it isn't very applicable to CoreOS
+		-Dfirstboot=false
+
+		# unported options, still needed?
+		-Defi-cc="$(tc-getCC)"
+		-Dquotaon-path=/usr/sbin/quotaon
+		-Dquotacheck-path=/usr/sbin/quotacheck
+		-Drootlibdir="${EPREFIX}${ROOTPREFIX}/$(get_libdir)"
 	)
 
-	# Work around bug 463846.
-	tc-export CC
+	if multilib_is_native_abi && use idn; then
+		myconf+=(
+			-Dlibidn2=$(usex libidn2 true false)
+			-Dlibidn=$(usex libidn2 false true)
+		)
+	else
+		myconf+=(
+			-Dlibidn2=false
+			-Dlibidn=false
+		)
+	fi
 
-	ECONF_SOURCE="${S}" econf "${myeconfargs[@]}"
+	meson_src_configure "${myconf[@]}"
 }
 
 multilib_src_compile() {
-	local mymakeopts=(
-		udevlibexecdir="${MY_UDEVDIR}"
-	)
-
-	if multilib_is_native_abi; then
-		emake "${mymakeopts[@]}"
-	else
-		emake built-sources
-		local targets=(
-			'$(rootlib_LTLIBRARIES)'
-			'$(lib_LTLIBRARIES)'
-			'$(pamlib_LTLIBRARIES)'
-			'$(pkgconfiglib_DATA)'
-		)
-		echo "gentoo: ${targets[*]}" | emake "${mymakeopts[@]}" -f Makefile -f - gentoo
-	fi
+	eninja
 }
 
 multilib_src_test() {
-	multilib_is_native_abi || return 0
-	default
+	eninja test
 }
 
 multilib_src_install() {
-	local mymakeopts=(
-		# automake fails with parallel libtool relinking
-		# https://bugs.gentoo.org/show_bug.cgi?id=491398
-		-j1
-
-		udevlibexecdir="${MY_UDEVDIR}"
-		dist_udevhwdb_DATA=
-		DESTDIR="${D}"
-	)
-
-	if multilib_is_native_abi; then
-		emake "${mymakeopts[@]}" install
-	else
-		mymakeopts+=(
-			install-rootlibLTLIBRARIES
-			install-libLTLIBRARIES
-			install-pamlibLTLIBRARIES
-			install-pkgconfiglibDATA
-			install-includeHEADERS
-			install-pkgincludeHEADERS
-		)
-
-		emake "${mymakeopts[@]}"
-	fi
+	DESTDIR="${D}" eninja install
 }
 
 multilib_src_install_all() {
-	local unitdir=$(systemd_get_systemunitdir)
+	# meson doesn't know about docdir
+	mv "${ED%/}"/usr/share/doc/{systemd,${PF}} || die
 
-	prune_libtool_files --modules
 	einstalldocs
 
 	if use sysv-utils; then
-		local prefix
-		use symlink-usr && prefix=/usr
 		for app in halt poweroff reboot runlevel shutdown telinit; do
-			dosym "${ROOTPREFIX-/usr}/bin/systemctl" ${prefix}/sbin/${app}
+			dosym "${EPREFIX}${ROOTPREFIX%/}/bin/systemctl" $(usex symlink-usr /usr '')/sbin/${app}
 		done
-		dosym "${ROOTPREFIX-/usr}/lib/systemd/systemd" ${prefix}/sbin/init
+		dosym "${EPREFIX}${ROOTPREFIX%/}/lib/systemd/systemd" $(usex symlink-usr /usr '')/sbin/init
 	else
 		# we just keep sysvinit tools, so no need for the mans
 		rm "${ED%/}"/usr/share/man/man8/{halt,poweroff,reboot,runlevel,shutdown,telinit}.8 \
 			|| die
 		rm "${ED%/}"/usr/share/man/man1/init.1 || die
+	fi
+
+	rm -r "${ED%/}${ROOTPREFIX%/}/lib/udev/hwdb.d" || die
+
+	if [[ ! -e "${ED%/}"/usr/lib/systemd/systemd ]]; then
+		# Avoid breaking boot/reboot
+		dosym "../../..${ROOTPREFIX%/}/lib/systemd/systemd" /usr/lib/systemd/systemd
+		dosym "../../..${ROOTPREFIX%/}/lib/systemd/systemd-shutdown" /usr/lib/systemd/systemd-shutdown
 	fi
 
 	# Ensure journal directory has correct ownership/mode in inital image.
@@ -364,15 +361,11 @@ multilib_src_install_all() {
 	systemd_dotmpfilesd "${FILESDIR}"/systemd-resolv.conf
 
 	# Don't default to graphical.target
-	rm "${ED%/}${unitdir}"/default.target || die
+	local unitdir=$(systemd_get_systemunitdir)
 	dosym multi-user.target "${unitdir}"/default.target
 
 	# Don't set any extra environment variables by default
-	rm "${ED%/}${ROOTPREFIX-/usr}/lib/environment.d/99-environment.conf" || die
-
-	# Don't install the compatibility policy rules in /var  (Fixed: @37377227)
-	rm "${ED%/}"/var/lib/polkit-1/localauthority/10-vendor.d/systemd-networkd.pkla
-	rmdir "${ED%/}"/var/lib/polkit-1{/localauthority{/10-vendor.d,},}
+	rm "${ED%/}${ROOTPREFIX%/}/lib/environment.d/99-environment.conf" || die
 
 	# Move a few services enabled in /etc to /usr, delete files individually
 	# so builds fail if systemd adds any new unexpected stuff to /etc
@@ -380,6 +373,7 @@ multilib_src_install_all() {
 	for f in \
 		getty.target.wants/getty@tty1.service \
 		multi-user.target.wants/machines.target \
+		$(usex cryptsetup multi-user.target.wants/remote-cryptsetup.target '') \
 		multi-user.target.wants/remote-fs.target \
 		multi-user.target.wants/systemd-networkd.service \
 		multi-user.target.wants/systemd-resolved.service \
@@ -407,12 +401,9 @@ multilib_src_install_all() {
 	done
 
 	# Do not enable random services if /etc was detected as empty!!!
-	rm "${ED%/}"/usr/lib/systemd/system-preset/90-systemd.preset
+	rm "${ED%/}"/usr/lib/systemd/system-preset/90-systemd.preset || die
 	insinto /usr/lib/systemd/system-preset
 	doins "${FILESDIR}"/99-default.preset
-
-	# Disable the "First Boot Wizard" by default, it isn't very applicable to CoreOS
-	rm "${ED%/}${unitdir}"/sysinit.target.wants/systemd-firstboot.service
 
 	# Do not ship distro-specific files (nsswitch.conf pam.d)
 	rm -rf "${ED%/}"/usr/share/factory

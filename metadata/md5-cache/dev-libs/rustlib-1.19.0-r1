@@ -1,0 +1,12 @@
+DEFINED_PHASES=compile configure install unpack
+DESCRIPTION=Standard libraries for Rust
+EAPI=6
+HOMEPAGE=http://www.rust-lang.org/
+IUSE=debug
+KEYWORDS=amd64 arm64
+LICENSE=|| ( MIT Apache-2.0 ) BSD-1 BSD-2 BSD-4 UoI-NCSA
+RDEPEND=!dev-lang/rust
+SLOT=0
+SRC_URI=https://static.rust-lang.org/dist/rustc-1.19.0-src.tar.gz https://crates.io/api/v1/crates/cmake/0.1.24/download -> cmake-0.1.24.crate https://crates.io/api/v1/crates/filetime/0.1.10/download -> filetime-0.1.10.crate https://crates.io/api/v1/crates/gcc/0.3.51/download -> gcc-0.3.51.crate https://crates.io/api/v1/crates/libc/0.2.26/download -> libc-0.2.26.crate
+_eclasses_=cargo	5a58e76471ae53decd3da1fa44915831	coreos-cargo	cf93e8573489b70d0943bc7d423fb6ae	multilib	97f470f374f2e94ccab04a2fb21d811e	toolchain-funcs	185a06792159ca143528e7010368e8af
+_md5_=aa6b242f7a10b403d0e82225fc2a068a

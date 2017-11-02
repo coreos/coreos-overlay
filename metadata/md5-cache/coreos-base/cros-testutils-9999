@@ -8,5 +8,5 @@ KEYWORDS=~amd64 ~arm ~x86
 LICENSE=GPL-2
 RDEPEND=app-emulation/qemu app-portage/gentoolkit app-shells/bash coreos-base/cros-devutils dev-util/crosutils
 SLOT=0
-_eclasses_=cros-workon	4ad6e6491a1010ad7c875302b3be18ba	git-r3	cbafa3261c37c7e3af44bb16a34ea390
+_eclasses_=cros-workon	4ad6e6491a1010ad7c875302b3be18ba	git-r3	52a888802d25387c2c74cb845d1219bc
 _md5_=908187b89e7e52349eee4b9ef7b15e6b
