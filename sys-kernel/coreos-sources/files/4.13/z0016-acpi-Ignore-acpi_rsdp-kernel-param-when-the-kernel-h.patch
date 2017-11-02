@@ -1,7 +1,7 @@
-From 32ed0045e519827e0d28461e917f33fb2a06e096 Mon Sep 17 00:00:00 2001
+From 01dfdf4c98c782da104df61e71008f9ef87a5286 Mon Sep 17 00:00:00 2001
 From: Josh Boyer <jwboyer@redhat.com>
 Date: Tue, 22 Nov 2016 08:46:16 +0000
-Subject: [PATCH 16/25] acpi: Ignore acpi_rsdp kernel param when the kernel has
+Subject: [PATCH 16/24] acpi: Ignore acpi_rsdp kernel param when the kernel has
  been locked down
 
 This option allows userspace to pass the RSDP address to the kernel, which
