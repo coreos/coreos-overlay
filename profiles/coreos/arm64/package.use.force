@@ -1,3 +1,2 @@
 sys-auth/polkit -introspection
 sys-apps/systemd -introspection
-sys-fs/udev-init-scripts -introspection
