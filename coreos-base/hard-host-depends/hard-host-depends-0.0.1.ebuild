@@ -37,7 +37,6 @@ RDEPEND="${RDEPEND}
 	app-emulation/qemu
 	app-text/texi2html
 	coreos-base/cros-devutils[cros_host]
-	coreos-base/cros-testutils
 	=dev-lang/python-2*
 	dev-python/setuptools
 	dev-lang/nasm
