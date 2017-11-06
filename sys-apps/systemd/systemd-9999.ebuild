@@ -263,6 +263,9 @@ multilib_src_configure() {
 
 		### CoreOS options
 
+		# Point to a bad path, or telinit in the SDK re-execs itself
+		-Dtelinit-path=/lib/sysvinit/telinit
+
 		# Specify this, or meson breaks due to no /etc/login.defs
 		-Dsystem-gid-max=999
 		-Dsystem-uid-max=999
