@@ -79,6 +79,8 @@ SRC_URI="mirror://gentoo/${PN}-${TARBALL_PV}.tar.bz2
 	$(prefix_src_archives ${PN}-${TARBALL_PV}.tar.bz2)"
 
 PATCHES=(
+	# fixed upstream in 2.3.12 and up. Backports upstream commits b4b0e6b0aa and 26c0a0e31b.
+	"${FILESDIR}/${PN}-2.3.8-0002-backport-decompression-fixes.patch"
 	# upstream bug: https://bugs.gentoo.org/507284
 	"${FILESDIR}/${PN}-2.3.8-0001-portage-repository-config.py-add-disabled-attribute-.patch"
 	# upstream bug: https://bugs.gentoo.org/490014
