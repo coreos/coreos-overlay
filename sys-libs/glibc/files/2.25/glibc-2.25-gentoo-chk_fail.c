@@ -1,4 +1,5 @@
-/* Copyright (C) 2005 Free Software Foundation, Inc.
+/* Copyright (C) 2004-2014 Free Software Foundation, Inc.
+   Copyright (C) 2006-2014 Gentoo Foundation Inc.
    This file is part of the GNU C Library.
 
    The GNU C Library is free software; you can redistribute it and/or
@@ -16,34 +17,29 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-/* Copyright (C) 2006-2007 Gentoo Foundation Inc.
- * License terms as above.
- *
- * Hardened Gentoo SSP handler
- *
- * An SSP failure handler that does not use functions from the rest of
- * glibc; it uses the INTERNAL_SYSCALL methods directly.  This ensures
- * no possibility of recursion into the handler.
- *
- * Direct all bug reports to http://bugs.gentoo.org/
- *
- * Re-written from the glibc-2.3 Hardened Gentoo SSP handler
- * by Kevin F. Quinn - <kevquinn[@]gentoo.org>
- *
- * The following people contributed to the glibc-2.3 Hardened
- * Gentoo SSP handler, from which this implementation draws much:
- *
- * Ned Ludd - <solar[@]gentoo.org>
- * Alexander Gabert - <pappy[@]gentoo.org>
- * The PaX Team - <pageexec[@]freemail.hu>
- * Peter S. Mazinger - <ps.m[@]gmx.net>
- * Yoann Vandoorselaere - <yoann[@]prelude-ids.org>
- * Robert Connolly - <robert[@]linuxfromscratch.org>
- * Cory Visi <cory[@]visi.name>
- * Mike Frysinger <vapier[@]gentoo.org>
+/* Hardened Gentoo SSP and FORTIFY handler
+
+   A failure handler that does not use functions from the rest of glibc;
+   it uses the INTERNAL_SYSCALL methods directly.  This helps ensure no
+   possibility of recursion into the handler.
+
+   Direct all bug reports to http://bugs.gentoo.org/
+
+   People who have contributed significantly to the evolution of this file:
+   Ned Ludd - <solar[@]gentoo.org>
+   Alexander Gabert - <pappy[@]gentoo.org>
+   The PaX Team - <pageexec[@]freemail.hu>
+   Peter S. Mazinger - <ps.m[@]gmx.net>
+   Yoann Vandoorselaere - <yoann[@]prelude-ids.org>
+   Robert Connolly - <robert[@]linuxfromscratch.org>
+   Cory Visi <cory[@]visi.name>
+   Mike Frysinger <vapier[@]gentoo.org>
+   Magnus Granberg <zorry[@]gentoo.org>
+   Kevin F. Quinn - <kevquinn[@]gentoo.org>
  */
 
 #include <errno.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
@@ -52,7 +48,6 @@
 
 #include <sysdep-cancel.h>
 #include <sys/syscall.h>
-#include <bp-checks.h>
 
 #include <kernel-features.h>
 
@@ -62,7 +57,6 @@
 /* for the stuff in bits/socket.h */
 #include <sys/socket.h>
 #include <sys/un.h>
-
 
 /* Sanity check on SYSCALL macro names - force compilation
  * failure if the names used here do not exist
@@ -128,6 +122,7 @@
 #else
 # define USE_OLD_SOCKETCALL 1
 #endif
+
 /* stub out the __NR_'s so we can let gcc optimize away dead code */
 #ifndef __NR_socketcall
 # define __NR_socketcall 0
@@ -172,42 +167,46 @@ static const char path_log[] = _PATH_LOG;
  * in more of libc.so into ld.so
  */
 #ifdef IS_IN_rtld
-static char *__progname = "<rtld>";
+static const char *__progname = "<ldso>";
 #else
-extern char *__progname;
+extern const char *__progname;
 #endif
 
+#ifdef GENTOO_SSP_HANDLER
+# define ERROR_MSG "stack smashing"
+#else
+# define ERROR_MSG "buffer overflow"
+#endif
 
-/* Common handler code, used by stack_chk_fail and __stack_smash_handler
+/* Common handler code, used by chk_fail
  * Inlined to ensure no self-references to the handler within itself.
  * Data static to avoid putting more than necessary on the stack,
  * to aid core debugging.
  */
-__attribute__ ((__noreturn__ , __always_inline__))
+__attribute__ ((__noreturn__, __always_inline__))
 static inline void
-__hardened_gentoo_stack_chk_fail(char func[], int damaged)
+__hardened_gentoo_fail(void)
 {
-#define MESSAGE_BUFSIZ 256
+#define MESSAGE_BUFSIZ 512
 	static pid_t pid;
-	static int plen, i;
+	static int plen, i, hlen;
 	static char message[MESSAGE_BUFSIZ];
-	static const char msg_ssa[] = ": stack smashing attack";
-	static const char msg_inf[] = " in function ";
-	static const char msg_ssd[] = "*** stack smashing detected ***: ";
-	static const char msg_terminated[] = " - terminated\n";
-	static const char msg_report[] = "Report to http://bugs.gentoo.org/\n";
+	/* <11> is LOG_USER|LOG_ERR. A dummy date for loggers to skip over. */
+	static const char msg_header[] = "<11>" __DATE__ " " __TIME__ " glibc-gentoo-hardened-check: ";
+	static const char msg_ssd[] = "*** " ERROR_MSG " detected ***: ";
+	static const char msg_terminated[] = " terminated; ";
+	static const char msg_report[] = "report to " REPORT_BUGS_TO "\n";
 	static const char msg_unknown[] = "<unknown>";
 	static int log_socket, connect_result;
 	static struct sockaddr_un sock;
 	static unsigned long int socketargs[4];
 
-	/* Build socket address
-	 */
+	/* Build socket address */
 	sock.sun_family = AF_UNIX;
 	i = 0;
-	while ((path_log[i] != '\0') && (i<(sizeof(sock.sun_path)-1))) {
+	while (path_log[i] != '\0' && i < sizeof(sock.sun_path) - 1) {
 		sock.sun_path[i] = path_log[i];
-		i++;
+		++i;
 	}
 	sock.sun_path[i] = '\0';
 
@@ -230,92 +229,75 @@ __hardened_gentoo_stack_chk_fail(char func[], int damaged)
 	 * to work.
 	 */
 #define strconcat(str) \
-		{i=0; while ((str[i] != '\0') && ((i+plen)<(MESSAGE_BUFSIZ-1))) \
-		{\
-			message[plen+i]=str[i];\
-			i++;\
-		}\
-		plen+=i;}
+	({ \
+		i = 0; \
+		while ((str[i] != '\0') && ((i + plen) < (MESSAGE_BUFSIZ - 1))) { \
+			message[plen + i] = str[i]; \
+			++i; \
+		} \
+		plen += i; \
+	})
 
-	/* R.Henderson post-gcc-4 style message */
+	/* Tersely log the failure */
 	plen = 0;
+	strconcat(msg_header);
+	hlen = plen;
 	strconcat(msg_ssd);
-	if (__progname != (char *)0)
-		strconcat(__progname)
+	if (__progname != NULL)
+		strconcat(__progname);
 	else
 		strconcat(msg_unknown);
 	strconcat(msg_terminated);
-
-	/* Write out error message to STDERR, to syslog if open */
-	INLINE_SYSCALL(write, 3, STDERR_FILENO, message, plen);
-	if (connect_result != -1)
-		INLINE_SYSCALL(write, 3, log_socket, message, plen);
-
-	/* Dr. Etoh pre-gcc-4 style message */
-	plen = 0;
-	if (__progname != (char *)0)
-		strconcat(__progname)
-	else
-		strconcat(msg_unknown);
-	strconcat(msg_ssa);
-	strconcat(msg_inf);
-	if (func != NULL)
-		strconcat(func)
-	else
-		strconcat(msg_unknown);
-	strconcat(msg_terminated);
-	/* Write out error message to STDERR, to syslog if open */
-	INLINE_SYSCALL(write, 3, STDERR_FILENO, message, plen);
-	if (connect_result != -1)
-		INLINE_SYSCALL(write, 3, log_socket, message, plen);
-
-	/* Direct reports to bugs.gentoo.org */
-	plen=0;
 	strconcat(msg_report);
-	message[plen++]='\0';
 
 	/* Write out error message to STDERR, to syslog if open */
-	INLINE_SYSCALL(write, 3, STDERR_FILENO, message, plen);
-	if (connect_result != -1)
+	INLINE_SYSCALL(write, 3, STDERR_FILENO, message + hlen, plen - hlen);
+	if (connect_result != -1) {
 		INLINE_SYSCALL(write, 3, log_socket, message, plen);
-
-	if (log_socket != -1)
 		INLINE_SYSCALL(close, 1, log_socket);
+	}
 
-	/* Suicide */
+	/* Time to kill self since we have no idea what is going on */
 	pid = INLINE_SYSCALL(getpid, 0);
 
 	if (ENABLE_SSP_SMASH_DUMPS_CORE) {
+		/* Remove any user-supplied handler for SIGABRT, before using it. */
+#if 0
+		/*
+		 * Note: Disabled because some programs catch & process their
+		 * own crashes.  We've already enabled this code path which
+		 * means we want to let core dumps happen.
+		 */
 		static struct sigaction default_abort_act;
-		/* Remove any user-supplied handler for SIGABRT, before using it */
 		default_abort_act.sa_handler = SIG_DFL;
 		default_abort_act.sa_sigaction = NULL;
 		__sigfillset(&default_abort_act.sa_mask);
 		default_abort_act.sa_flags = 0;
 		if (DO_SIGACTION(SIGABRT, &default_abort_act, NULL) == 0)
+#endif
 			INLINE_SYSCALL(kill, 2, pid, SIGABRT);
 	}
 
-	/* Note; actions cannot be added to SIGKILL */
+	/* SIGKILL is only signal which cannot be caught */
 	INLINE_SYSCALL(kill, 2, pid, SIGKILL);
 
-	/* In case the kill didn't work, exit anyway
-	 * The loop prevents gcc thinking this routine returns
+	/* In case the kill didn't work, exit anyway.
+	 * The loop prevents gcc thinking this routine returns.
 	 */
 	while (1)
-		INLINE_SYSCALL(exit, 0);
+		INLINE_SYSCALL(exit, 1, 137);
 }
 
 __attribute__ ((__noreturn__))
+#ifdef GENTOO_SSP_HANDLER
 void __stack_chk_fail(void)
+#else
+void __chk_fail(void)
+#endif
 {
-	__hardened_gentoo_stack_chk_fail(NULL, 0);
+	__hardened_gentoo_fail();
 }
 
-#ifdef ENABLE_OLD_SSP_COMPAT
-__attribute__ ((__noreturn__))
-void __stack_smash_handler(char func[], int damaged)
-{
-	__hardened_gentoo_stack_chk_fail(func, damaged);
-}
+#ifdef GENTOO_SSP_HANDLER
+strong_alias (__stack_chk_fail, __stack_chk_fail_local)
 #endif
