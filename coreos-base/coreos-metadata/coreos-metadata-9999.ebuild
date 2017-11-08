@@ -7,12 +7,12 @@ CROS_WORKON_PROJECT="coreos/coreos-metadata"
 CROS_WORKON_LOCALNAME="coreos-metadata"
 CROS_WORKON_REPO="git://github.com"
 
-UPDATE_SSH_KEYS_VERSION="0.1.0"
+UPDATE_SSH_KEYS_VERSION="0.1.1"
 
 if [[ ${PV} == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64"
 else
-	CROS_WORKON_COMMIT="e28473eb9def6a9b3862a4d28549fc92be45fe59" # v1.0.0
+	CROS_WORKON_COMMIT="6eaf41ae92cb3ba327cf92236ab72ed50d315fa5" # v1.0.2
 	KEYWORDS="amd64 arm64"
 fi
 
@@ -69,20 +69,18 @@ byte-tools-0.2.0
 byteorder-1.1.0
 bytes-0.4.5
 cargo_metadata-0.2.3
-cc-1.0.1
+cc-1.0.3
 cfg-if-0.1.2
 chrono-0.4.0
-clap-2.26.2
-clippy-0.0.165
-clippy_lints-0.0.165
-conv-0.3.3
+clap-2.27.1
+clippy-0.0.169
+clippy_lints-0.0.169
 core-foundation-0.2.3
 core-foundation-sys-0.2.3
 crc-1.5.0
 crc-core-0.1.0
 crossbeam-0.2.10
 crypt32-sys-0.2.0
-custom_derive-0.1.7
 digest-0.6.2
 dtoa-0.4.2
 either-1.3.0
@@ -92,7 +90,7 @@ foreign-types-0.2.0
 fs2-0.4.2
 fuchsia-zircon-0.2.1
 fuchsia-zircon-sys-0.2.0
-futures-0.1.16
+futures-0.1.17
 futures-cpupool-0.1.7
 gcc-0.3.54
 generic-array-0.8.3
@@ -104,6 +102,7 @@ httparse-1.2.3
 hyper-0.11.6
 hyper-tls-0.1.2
 idna-0.1.4
+if_chain-0.1.2
 iovec-0.1.1
 ipnetwork-0.12.7
 isatty-0.1.5
@@ -114,39 +113,41 @@ kernel32-sys-0.2.2
 language-tags-0.2.2
 lazy_static-0.2.9
 lazycell-0.5.1
-libc-0.2.32
+libc-0.2.33
 libflate-0.1.12
 log-0.3.8
-magenta-0.1.1
-magenta-sys-0.1.1
 matches-0.1.6
-memchr-1.0.1
+memchr-1.0.2
 mime-0.3.5
-mio-0.6.10
+mio-0.6.11
 miow-0.2.1
 mockito-0.9.0
 native-tls-0.1.4
 net2-0.2.31
 nix-0.9.0
-nodrop-0.1.10
+nodrop-0.1.12
 num-0.1.40
 num-integer-0.1.35
 num-iter-0.1.34
 num-traits-0.1.40
 num_cpus-1.7.0
-odds-0.2.25
-openssh-keys-0.1.2
+openssh-keys-0.2.0
 openssl-0.9.20
 openssl-sys-0.9.20
 percent-encoding-1.0.0
 pkg-config-0.3.9
-pnet-0.19.0
-pnet_macros-0.15.0
-pnet_macros_support-0.2.0
+pnet-0.20.0
+pnet_base-0.20.0
+pnet_datalink-0.20.0
+pnet_macros-0.20.0
+pnet_macros_support-0.20.0
+pnet_packet-0.20.0
+pnet_sys-0.20.0
+pnet_transport-0.20.0
 pulldown-cmark-0.0.15
 quine-mc_cluskey-0.2.4
 quote-0.3.15
-rand-0.3.17
+rand-0.3.18
 redox_syscall-0.1.31
 redox_termios-0.1.1
 regex-0.2.2
@@ -164,11 +165,11 @@ security-framework-sys-0.1.16
 semver-0.1.20
 semver-0.6.0
 semver-parser-0.7.0
-serde-1.0.15
+serde-1.0.19
 serde-xml-rs-0.2.1
-serde_derive-1.0.15
-serde_derive_internals-0.16.0
-serde_json-1.0.4
+serde_derive-1.0.19
+serde_derive_internals-0.17.0
+serde_json-1.0.5
 serde_urlencoded-0.5.1
 sha2-0.6.0
 slab-0.3.0
@@ -189,9 +190,8 @@ take-0.1.0
 take_mut-0.1.3
 tempdir-0.3.5
 term-0.4.6
-term_size-0.3.0
 termion-1.5.1
-textwrap-0.8.0
+textwrap-0.9.0
 thread_local-0.3.4
 time-0.1.38
 tokio-core-0.1.10
@@ -208,7 +208,7 @@ unicode-width-0.1.4
 unicode-xid-0.0.3
 unicode-xid-0.0.4
 unreachable-1.0.0
-url-1.5.1
+url-1.6.0
 users-0.6.0
 utf8-ranges-1.0.0
 vcpkg-0.2.2
@@ -221,7 +221,7 @@ ws2_32-sys-0.2.1
 xml-rs-0.3.6
 "
 # not listed:
-# update-ssh-keys-0.1.0
+# update-ssh-keys-0.1.1
 
 SRC_URI="$(cargo_crate_uris ${CRATES})
 https://github.com/coreos/update-ssh-keys/archive/v${UPDATE_SSH_KEYS_VERSION}.tar.gz -> update-ssh-keys-${UPDATE_SSH_KEYS_VERSION}.tar.gz
