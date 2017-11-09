@@ -1,8 +1,0 @@
-DEFINED_PHASES=-
-DESCRIPTION=Host dependencies BSP virtual package. Override this virtual package in a private host overlay by adding a virtual/hard-host-depends-bsp version 2 ebuild, and have that package RDEPEND on any host dependencies needed by the private overlay.
-EAPI=4
-HOMEPAGE=http://src.chromium.org
-KEYWORDS=amd64 x86
-LICENSE=BSD
-SLOT=0
-_md5_=10aaa7f754e08cd0c73344f7d96c09a0
