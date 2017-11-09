@@ -1,4 +1,4 @@
-From 0c97da2399d3e50cc46bcc2684f37b954850e0aa Mon Sep 17 00:00:00 2001
+From b02ae54e813a391e4d2e3c80f43fd8bcc57011d8 Mon Sep 17 00:00:00 2001
 From: "Lee, Chun-Yi" <jlee@suse.com>
 Date: Wed, 23 Nov 2016 13:52:16 +0000
 Subject: [PATCH 19/24] bpf: Restrict kernel image access functions when the
