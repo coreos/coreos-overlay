@@ -1,0 +1,47 @@
+From 1b8ccc0e487a523aa6d974b3ebe26548ad6502b6 Mon Sep 17 00:00:00 2001
+From: Alex Crawford <alex.crawford@coreos.com>
+Date: Mon, 14 Apr 2014 12:43:56 -0700
+Subject: [PATCH 1/4] portage/repository/config.py: add disabled attribute to
+ repos.conf
+
+This flag allows a repos.conf file to disable a previously-defined repository.
+
+Updated 03-Nov-17 for portage 2.3.8
+---
+diff --git a/pym/portage/repository/config.py b/pym/portage/repository/config.py
+index b65ed97ce..f3e2f112b 100644
+--- a/pym/portage/repository/config.py
++++ b/pym/portage/repository/config.py
+@@ -76,7 +76,7 @@ class RepoConfig(object):
+ 
+ 	__slots__ = ('aliases', 'allow_missing_manifest', 'allow_provide_virtual',
+ 		'auto_sync', 'cache_formats', 'clone_depth',
+-		'create_manifest', 'disable_manifest',
++		'create_manifest', 'disable_manifest', 'disabled',
+ 		'eapi', 'eclass_db', 'eclass_locations', 'eclass_overrides',
+ 		'find_invalid_path_char', 'force', 'format', 'local_config', 'location',
+ 		'main_repo', 'manifest_hashes', 'masters', 'missing_repo_name',
+@@ -198,6 +198,11 @@ class RepoConfig(object):
+ 			location = None
+ 		self.location = location
+ 
++		disabled = repo_opts.get('disabled')
++		if disabled is not None:
++			disabled = disabled.strip().lower() == 'true'
++		self.disabled = disabled or False
++
+ 		missing = True
+ 		self.name = name
+ 		if self.location is not None:
+@@ -651,7 +656,10 @@ class RepoConfigLoader(object):
+ 		# Do this before expanding aliases, so that location_map and
+ 		# treemap consistently map unaliased names whenever available.
+ 		for repo_name, repo in list(prepos.items()):
+-			if repo.location is None:
++			if repo.disabled:
++				del prepos[repo_name]
++				continue
++			elif repo.location is None:
+ 				if repo_name != 'DEFAULT':
+ 					# Skip this warning for repoman (bug #474578).
+ 					if settings.local_config and paths:
