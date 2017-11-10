@@ -103,3 +103,6 @@ dev-db/etcd -etcdctl
 # can be removed with socat-2.0.0; this is the openssl/readline license
 # incompatibility 
 net-misc/socat -ssl
+
+# Prevent pulling in a ton of perl dependencies
+sys-apps/man-db -nls
