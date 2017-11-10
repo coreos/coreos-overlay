@@ -1,4 +1,4 @@
-From 058c6666f66887964323d712ad5896dc39d29d3b Mon Sep 17 00:00:00 2001
+From 748649225c4f5b80326088b6b21671b63f0310db Mon Sep 17 00:00:00 2001
 From: Linn Crosetto <linn@hpe.com>
 Date: Wed, 23 Nov 2016 13:39:41 +0000
 Subject: [PATCH 18/24] acpi: Disable APEI error injection if the kernel is
