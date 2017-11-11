@@ -3,7 +3,6 @@
 # Distributed under the terms of the GNU General Public License v2
 
 =dev-python/ws4py-0.2.4 ~amd64
-=dev-embedded/smdk-dltool-0.20-r3 ~amd64
 =dev-cpp/gflags-2.0 ~amd64
 =sys-devel/smatch-1.57-r1 ~amd64
 =dev-util/shflags-1.0.3 ~amd64
@@ -14,15 +13,8 @@
 >=sys-apps/kexec-tools-2.0.4-r1 ~amd64
 =sys-kernel/dracut-045-r2 **
 
-# Needed by gsutil
+# Needed by coreos-oem-gce
 dev-python/boto
-dev-python/gcs-oauth2-boto-plugin
-dev-python/google-api-python-client
-dev-python/google-apitools
-dev-python/httplib2
-dev-python/oauth2client
-dev-python/protorpc
-net-misc/gsutil
 
 # efitools and dependency libraries for signing kernel images
 >=sys-boot/gnu-efi-3.0u		~amd64
