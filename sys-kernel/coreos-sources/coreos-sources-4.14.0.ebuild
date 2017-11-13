@@ -8,10 +8,7 @@ ETYPE="sources"
 # Final releases should be versioned L.M.N, even for N == 0
 
 # Only needed for RCs
-K_BASE_VER="4.13"
-
-# Avoid failures when an -rc patch adds a file that replaces a symlink
-K_FROM_GIT=1
+K_BASE_VER="4.14"
 
 inherit kernel-2
 detect_version
