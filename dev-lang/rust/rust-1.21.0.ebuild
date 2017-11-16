@@ -31,7 +31,7 @@ fi
 CARGO_VERSION="0.$(($(get_version_component_range 2) + 1)).0"
 STAGE0_VERSION="1.$(($(get_version_component_range 2) - 1)).0"
 STAGE0_VERSION_CARGO="0.$(($(get_version_component_range 2))).0"
-BOOTSTRAP_DATE="2017-06-08" # found in src/stage0.txt
+BOOTSTRAP_DATE="2017-08-31" # found in src/stage0.txt
 
 DESCRIPTION="Systems programming language from Mozilla"
 HOMEPAGE="http://www.rust-lang.org/"
