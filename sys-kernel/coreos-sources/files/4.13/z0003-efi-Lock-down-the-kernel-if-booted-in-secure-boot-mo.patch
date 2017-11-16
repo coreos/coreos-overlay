@@ -1,4 +1,4 @@
-From dc78b7924fa6d7f29b7ae9a4b82e8b3cf0f61585 Mon Sep 17 00:00:00 2001
+From 7c4886230ff3823b1d2a91bfdefa9755176f47ac Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Mon, 21 Nov 2016 23:55:55 +0000
 Subject: [PATCH 03/24] efi: Lock down the kernel if booted in secure boot mode
