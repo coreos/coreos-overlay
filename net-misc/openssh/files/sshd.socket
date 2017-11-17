@@ -5,7 +5,6 @@ Conflicts=sshd.service
 [Socket]
 ListenStream=22
 Accept=yes
-TriggerLimitBurst=0
 
 [Install]
 WantedBy=sockets.target
