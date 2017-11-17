@@ -1,56 +1,56 @@
 # Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI="5"
+EAPI=6
 
-inherit eutils user flag-o-matic multilib autotools pam systemd versionator
+inherit user flag-o-matic multilib autotools pam systemd versionator
 
 # Make it more portable between straight releases
 # and _p? releases.
 PARCH=${P/_}
 
-#HPN_PATCH= #"${PARCH}-hpnssh14v12.tar.xz"
-SCTP_PATCH="${PN}-7.4_p1-sctp.patch.xz"
-LDAP_PATCH="${PN}-lpk-7.4p1-0.3.14.patch.xz"
-X509_VER="9.3" X509_PATCH="${PN}-${PV/_}+x509-${X509_VER}.diff.gz"
+#HPN_PATCH="${PARCH}-hpnssh14v12.tar.xz"
+SCTP_PATCH="${PN}-7.6_p1-sctp.patch.xz"
+LDAP_PATCH="${PN}-lpk-7.6p1-0.3.14.patch.xz"
+X509_VER="11.0" X509_PATCH="${PN}-${PV/_}+x509-${X509_VER}.diff.gz"
 
 DESCRIPTION="Port of OpenBSD's free SSH release"
 HOMEPAGE="http://www.openssh.org/"
 SRC_URI="mirror://openbsd/OpenSSH/portable/${PARCH}.tar.gz
-	${SCTP_PATCH:+mirror://gentoo/${SCTP_PATCH}}
+	${SCTP_PATCH:+https://dev.gentoo.org/~polynomial-c/${SCTP_PATCH}}
 	${HPN_PATCH:+hpn? ( mirror://gentoo/${HPN_PATCH} )}
-	${LDAP_PATCH:+ldap? ( mirror://gentoo/${LDAP_PATCH} )}
+	${LDAP_PATCH:+ldap? ( https://dev.gentoo.org/~polynomial-c/${LDAP_PATCH} )}
 	${X509_PATCH:+X509? ( http://roumenpetrov.info/openssh/x509-${X509_VER}/${X509_PATCH} )}
 	"
 
 LICENSE="BSD GPL-2"
 SLOT="0"
-KEYWORDS="~alpha amd64 ~arm arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~ppc-aix ~amd64-fbsd ~sparc-fbsd ~x86-fbsd ~amd64-linux ~arm-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~m68k-mint ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
+KEYWORDS="~alpha amd64 ~arm arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~ppc-aix ~x64-cygwin ~amd64-fbsd ~sparc-fbsd ~x86-fbsd ~amd64-linux ~arm-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~m68k-mint ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
 # Probably want to drop ssl defaulting to on in a future version.
-IUSE="abi_mips_n32 debug ${HPN_PATCH:++}hpn kerberos kernel_linux ldap ldns libedit libressl livecd pam +pie sctp selinux skey ssh1 +ssl static test X X509"
+IUSE="abi_mips_n32 audit debug ${HPN_PATCH:++}hpn kerberos kernel_linux ldap ldns libedit libressl livecd pam +pie sctp selinux skey +ssl static test X X509"
 REQUIRED_USE="ldns? ( ssl )
 	pie? ( !static )
-	ssh1? ( ssl )
 	static? ( !kerberos !pam )
-	X509? ( !hpn !ldap !sctp ssl )
+	X509? ( !ldap !sctp ssl )
 	test? ( ssl )"
 
 LIB_DEPEND="
+	audit? ( sys-process/audit[static-libs(+)] )
 	ldns? (
 		net-libs/ldns[ecdsa,ssl,static-libs(+)]
 	)
-	libedit? ( dev-libs/libedit[static-libs(+)] )
+	libedit? ( dev-libs/libedit:=[static-libs(+)] )
 	sctp? ( net-misc/lksctp-tools[static-libs(+)] )
 	selinux? ( >=sys-libs/libselinux-1.28[static-libs(+)] )
 	skey? ( >=sys-auth/skey-1.1.5-r1[static-libs(+)] )
 	ssl? (
 		!libressl? (
-			>=dev-libs/openssl-0.9.8f:0[-bindist(-)]
-			dev-libs/openssl:0[static-libs(+)]
+			>=dev-libs/openssl-1.0.1:0=[-bindist(-)]
+			dev-libs/openssl:0=[static-libs(+)]
 		)
-		libressl? ( dev-libs/libressl[static-libs(+)] )
+		libressl? ( dev-libs/libressl:0=[static-libs(+)] )
 	)
-	>=sys-libs/zlib-1.2.3[static-libs(+)]"
+	>=sys-libs/zlib-1.2.3:=[static-libs(+)]"
 RDEPEND="
 	!static? ( ${LIB_DEPEND//\[static-libs(+)]} )
 	pam? ( virtual/pam )
@@ -66,7 +66,7 @@ RDEPEND="${RDEPEND}
 	userland_GNU? ( virtual/shadow )
 	X? ( x11-apps/xauth )"
 
-S=${WORKDIR}/${PARCH}
+S="${WORKDIR}/${PARCH}"
 
 pkg_pretend() {
 	# this sucks, but i'd rather have people unable to `emerge -u openssh`
@@ -107,30 +107,35 @@ src_prepare() {
 	# this file.
 	cp version.h version.h.pristine
 
+	eapply "${FILESDIR}/${P}-warnings.patch"
+
 	# don't break .ssh/authorized_keys2 for fun
 	sed -i '/^AuthorizedKeysFile/s:^:#:' sshd_config || die
 
 	if use X509 ; then
-		epatch "${WORKDIR}"/${X509_PATCH%.*}
-		# We no longer allow X509 to be used with anything else.
-		#save_version X509
+		if use hpn ; then
+			pushd "${WORKDIR}" >/dev/null
+			eapply "${FILESDIR}"/${P}-hpn-x509-${X509_VER}-glue.patch
+			eapply "${FILESDIR}"/${P}-x509-${X509_VER}-libressl.patch
+			popd >/dev/null
+		fi
+		save_version X509
+		eapply "${WORKDIR}"/${X509_PATCH%.*}
 	fi
 
 	if use ldap ; then
-		epatch "${WORKDIR}"/${LDAP_PATCH%.*}
+		eapply "${WORKDIR}"/${LDAP_PATCH%.*}
 		save_version LPK
 	fi
 
-	epatch "${FILESDIR}"/${PN}-7.4_p1-GSSAPI-dns.patch #165444 integrated into gsskex
-	epatch "${FILESDIR}"/${PN}-6.7_p1-openssl-ignore-status.patch
-	use X509 || epatch "${WORKDIR}"/${SCTP_PATCH%.*}
-	epatch "${FILESDIR}"/${P}-test-bashism.patch
-	use abi_mips_n32 && epatch "${FILESDIR}"/${PN}-7.3-mips-seccomp-n32.patch
+	eapply "${FILESDIR}"/${PN}-7.5_p1-GSSAPI-dns.patch #165444 integrated into gsskex
+	eapply "${FILESDIR}"/${PN}-6.7_p1-openssl-ignore-status.patch
+	use X509 || eapply "${WORKDIR}"/${SCTP_PATCH%.*}
+	use abi_mips_n32 && eapply "${FILESDIR}"/${PN}-7.3-mips-seccomp-n32.patch
 
 	if use hpn ; then
-		EPATCH_FORCE="yes" EPATCH_SUFFIX="patch" \
-			EPATCH_MULTI_MSG="Applying HPN patchset ..." \
-			epatch "${WORKDIR}"/${HPN_PATCH%.*.*}
+		elog "Applying HPN patchset ..."
+		eapply "${WORKDIR}"/${HPN_PATCH%.*.*}
 		save_version HPN
 	fi
 
@@ -153,14 +158,14 @@ src_prepare() {
 	)
 	sed -i "${sed_args[@]}" configure{.ac,} || die
 
-	epatch_user #473004
+	eapply_user #473004
 
 	# Now we can build a sane merged version.h
 	(
 		sed '/^#define SSH_RELEASE/d' version.h.* | sort -u
 		macros=()
-		for p in HPN LPK X509 ; do [ -e version.h.${p} ] && macros+=( SSH_${p} ) ; done
-		printf '#define SSH_RELEASE SSH_VERSION SSH_PORTABLE %s\n' "${macros}"
+		for p in HPN LPK X509; do [[ -e version.h.${p} ]] && macros+=( SSH_${p} ) ; done
+		printf '#define SSH_RELEASE SSH_VERSION SSH_PORTABLE %s\n' "${macros[*]}"
 	) > version.h
 
 	eautoreconf
@@ -181,6 +186,7 @@ src_configure() {
 		--datadir="${EPREFIX}"/usr/share/openssh
 		--with-privsep-path="${EPREFIX}"/var/empty
 		--with-privsep-user=sshd
+		$(use_with audit audit linux)
 		$(use_with kerberos kerberos5 "${EPREFIX}"/usr)
 		# We apply the ldap patch conditionally, so can't pass --without-ldap
 		# unconditionally else we get unknown flag warnings.
@@ -192,7 +198,6 @@ src_configure() {
 		$(use X509 || use_with sctp)
 		$(use_with selinux)
 		$(use_with skey)
-		$(use_with ssh1)
 		$(use_with ssl openssl)
 		$(use_with ssl md5-passwords)
 		$(use_with ssl ssl-engine)
@@ -208,7 +213,6 @@ src_install() {
 	emake install-nokeys DESTDIR="${D}"
 	fperms 600 /etc/ssh/sshd_config
 	dobin contrib/ssh-copy-id
-	keepdir /var/empty
 
 	newpamd "${FILESDIR}"/sshd.pam_include.2 sshd
 	if use pam ; then
@@ -294,9 +298,6 @@ pkg_postinst() {
 		elog "algorithm (ECDSA).  You are encouraged to manually update your stored"
 		elog "keys list as servers update theirs.  See ssh-keyscan(1) for more info."
 	fi
-	if has_version "<${CATEGORY}/${PN}-6.9_p1" ; then
-		elog "Starting with openssh-6.9p1, ssh1 support is disabled by default."
-	fi
 	if has_version "<${CATEGORY}/${PN}-7.0_p1" ; then
 		elog "Starting with openssh-6.7, support for USE=tcpd has been dropped by upstream."
 		elog "Make sure to update any configs that you might have.  Note that xinetd might"
@@ -313,9 +314,19 @@ pkg_postinst() {
 		elog "to 'prohibit-password'.  That means password auth for root users no longer works"
 		elog "out of the box.  If you need this, please update your sshd_config explicitly."
 	fi
+	if has_version "<${CATEGORY}/${PN}-7.6_p1" ; then
+		elog "Starting with openssh-7.6p1, openssh upstream has removed ssh1 support entirely."
+		elog "Furthermore, rsa keys with less than 1024 bits will be refused."
+	fi
 	if ! use ssl && has_version "${CATEGORY}/${PN}[ssl]" ; then
 		elog "Be aware that by disabling openssl support in openssh, the server and clients"
 		elog "no longer support dss/rsa/ecdsa keys.  You will need to generate ed25519 keys"
 		elog "and update all clients/servers that utilize them."
+	fi
+
+	# remove this if aes-ctr-mt gets fixed
+	if use hpn; then
+		elog "The multithreaded AES-CTR cipher has been temporarily dropped from the HPN patch"
+		elog "set since it does not (yet) work with >=openssh-7.6p1."
 	fi
 }

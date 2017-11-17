@@ -16,13 +16,13 @@ https://bugzilla.mindrot.org/show_bug.cgi?id=1008
  	{ "gssapiauthentication", oGssAuthentication },
  	{ "gssapidelegatecredentials", oGssDelegateCreds },
 +	{ "gssapitrustdns", oGssTrustDns },
- #else
+ # else
  	{ "gssapiauthentication", oUnsupported },
  	{ "gssapidelegatecredentials", oUnsupported },
 +	{ "gssapitrustdns", oUnsupported },
  #endif
- 	{ "fallbacktorsh", oDeprecated },
- 	{ "usersh", oDeprecated },
+ #ifdef ENABLE_PKCS11
+ 	{ "smartcarddevice", oPKCS11Provider },
 @@ -930,6 +933,10 @@
  		intptr = &options->gss_deleg_creds;
  		goto parse_flag;
@@ -66,7 +66,7 @@ https://bugzilla.mindrot.org/show_bug.cgi?id=1008
 @@ -830,6 +830,16 @@
  Forward (delegate) credentials to the server.
  The default is
- .Dq no .
+ .Cm no .
 +Note that this option applies to protocol version 2 connections using GSSAPI.
 +.It Cm GSSAPITrustDns
 +Set to
