@@ -1,0 +1,22 @@
+{
+  "ignition": {
+    "version": "2.1.0"
+  },
+  "systemd": {
+    "units": [
+      {
+        "name": "user-configdrive.service",
+        "mask": true
+      },
+      {
+        "name": "user-configvirtfs.service",
+        "mask": true
+      },
+      {
+        "name": "oem-cloudinit.service",
+        "enabled": true,
+        "contents": "[Unit]\nDescription=Cloudinit from platform metadata\n\n[Service]\nType=oneshot\nExecStart=/usr/bin/coreos-cloudinit --oem=ec2-compat\n\n[Install]\nWantedBy=multi-user.target\n"
+      }
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "ignition": {
+    "version": "2.1.0"
+  },
+  "storage": {
+    "files": [
+      {
+        "filesystem": "root",
+        "path": "/etc/systemd/system/packet-phone-home.service",
+        "contents": {
+          "source": "oem:///units/packet-phone-home.service"
+        },
+        "mode": 292
+      }
+    ]
+  },
+  "systemd": {
+    "units": [
+      {
+        "name": "coreos-metadata-sshkeys@.service",
+        "enabled": true
+      },
+      {
+        "name": "packet-phone-home.service",
+        "enabled": true
+      }
+    ]
+  }
+}

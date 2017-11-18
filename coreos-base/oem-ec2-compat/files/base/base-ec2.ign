@@ -1,0 +1,22 @@
+{
+  "ignition": {
+    "version": "2.1.0"
+  },
+  "systemd": {
+    "units": [
+      {
+        "name": "coreos-metadata-sshkeys@.service",
+        "enabled": true
+      },
+      {
+        "name": "etcd2.service",
+        "dropins": [
+          {
+            "name": "10-oem.conf",
+            "contents": "[Service]\nEnvironment=ETCD_ELECTION_TIMEOUT=1200\n"
+          }
+        ]
+      }
+    ]
+  }
+}
