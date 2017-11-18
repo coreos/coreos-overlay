@@ -59,6 +59,7 @@ src_prepare() {
 	epatch "${FILESDIR}"/${PN}-1.1.4-mtab-sym.patch
 	epatch "${FILESDIR}"/${PN}-1.2.8-cross-build.patch
 	epatch "${FILESDIR}"/${PN}-1.3.2-background-statd.patch
+	epatch "${FILESDIR}"/${PN}-1.3.2-rpcbind-after.patch
 
 	sed \
 		-e "/^sbindir/s:= := \"${EPREFIX}\":g" \
