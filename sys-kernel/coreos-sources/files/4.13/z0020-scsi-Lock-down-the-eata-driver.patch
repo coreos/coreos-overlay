@@ -1,4 +1,4 @@
-From 3fd53721daa973023e730bdfc7f97c14b8d90277 Mon Sep 17 00:00:00 2001
+From b52b5c1cc39b35919b223c3a254a7f6d27f46e6d Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Tue, 22 Nov 2016 10:10:34 +0000
 Subject: [PATCH 20/24] scsi: Lock down the eata driver
