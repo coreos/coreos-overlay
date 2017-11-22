@@ -1,4 +1,4 @@
-From 8e8c050c243301142329ca04ffacf69bf4a82877 Mon Sep 17 00:00:00 2001
+From 39393da236c4790aa52284004fa5ed4598524340 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:16 +0000
 Subject: [PATCH 14/24] asus-wmi: Restrict debugfs interface when the kernel is
