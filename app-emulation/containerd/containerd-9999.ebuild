@@ -5,7 +5,7 @@ EAPI=6
 
 GITHUB_URI="github.com/containerd/containerd"
 COREOS_GO_PACKAGE="${GITHUB_URI}"
-COREOS_GO_VERSION="go1.8"
+COREOS_GO_VERSION="go1.9"
 
 if [[ ${PV} == *9999 ]]; then
 	EGIT_REPO_URI="https://${GITHUB_URI}.git"
@@ -14,11 +14,12 @@ else
 	# Update the patch number when setting commit.
 	# The patch number is arbitrarily chosen as the number of commits since the
 	# tagged version.
-	# e.g. git log --oneline v0.2.9..${EGIT_COMMIT} | wc -l
-	EGIT_COMMIT="06b9cb35161009dcb7123345749fef02f7cea8e0"
+	# e.g. git log --oneline v1.0.0-beta.2..${EGIT_COMMIT} | wc -l
+	EGIT_COMMIT="992280e8e265f491f7a624ab82f3e238be086e49"
 	SRC_URI="https://${GITHUB_URI}/archive/${EGIT_COMMIT}.tar.gz -> ${P}.tar.gz"
 	KEYWORDS="amd64 arm64"
 	inherit vcs-snapshot
+	MAKE_VERSION_ARGS="REVISION=${EGIT_COMMIT} VERSION=v1.0.0-beta.2-53-g992280e8"
 fi
 
 inherit coreos-go systemd
@@ -46,10 +47,12 @@ src_unpack() {
 src_compile() {
 	local options=( $(usex seccomp "seccomp" '') )
 	export GOPATH="${WORKDIR}/${P}" # ${PWD}/vendor
-	LDFLAGS=$(usex hardened '-extldflags -fno-PIC' '') emake GIT_COMMIT="$EGIT_COMMIT" BUILDTAGS="${options[@]}"
+	LDFLAGS=$(usex hardened '-extldflags -fno-PIC' '') emake ${MAKE_VERSION_ARGS} BUILDTAGS="${options[@]}"
 }
 
 src_install() {
 	dobin bin/containerd* bin/ctr
-	systemd_dounit "${FILESDIR}/containerd.service"
+	systemd_newunit "${FILESDIR}/${PN}-1.0.0.service" "${PN}.service"
+	insinto /usr/share/containerd
+	doins "${FILESDIR}/config.toml" 
 }
