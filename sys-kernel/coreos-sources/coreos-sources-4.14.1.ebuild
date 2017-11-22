@@ -33,4 +33,5 @@ IUSE=""
 UNIPATCH_LIST="
 	${PATCH_DIR}/z0001-kbuild-derive-relative-path-for-KBUILD_SRC-from-CURD.patch \
 	${PATCH_DIR}/z0002-Add-arm64-coreos-verity-hash.patch \
+	${PATCH_DIR}/z0003-bio-ensure-__bio_clone_fast-copies-bi_partno.patch \
 "
