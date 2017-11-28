@@ -9,16 +9,7 @@ DESCRIPTION="Standard libraries for Rust"
 HOMEPAGE="http://www.rust-lang.org/"
 LICENSE="|| ( MIT Apache-2.0 ) BSD-1 BSD-2 BSD-4 UoI-NCSA"
 
-CRATES="
-cmake-0.1.24
-filetime-0.1.10
-gcc-0.3.51
-libc-0.2.26
-"
-SRC_URI="
-https://static.rust-lang.org/dist/rustc-${PV}-src.tar.gz
-$(cargo_crate_uris ${CRATES})
-"
+SRC_URI="https://static.rust-lang.org/dist/rustc-${PV}-src.tar.gz"
 S="${WORKDIR}/rustc-${PV}-src"
 
 RDEPEND="!dev-lang/rust"
@@ -40,6 +31,8 @@ src_compile() {
 	local -x CARGO_TARGET_DIR="${T}/target"
 	# look up required crates in our fake registry
 	local -x CARGO_HOME="${ECARGO_HOME}"
+	# set this required bootstrapping variable
+	local -x CFG_COMPILER_HOST_TRIPLE="${RUST_TARGET}"
 	# fake out the compiler so that it lets us use #!feature attributes
 	# really building the std libs is bootstrapping anyway, so I don't feel bad
 	local -x RUSTC_BOOTSTRAP=1
