@@ -43,8 +43,8 @@ dev-vcs/git -pcre-jit -perl -iconv
 
 net-analyzer/nmap ncat -lua
 
-# removes mta dependencies
-app-admin/sudo -sendmail
+# removes mta dependencies and supports LDAP sudoers
+app-admin/sudo -sendmail ldap
 
 # use lzma which is the default on non-gentoo systems, avoid pulling in gnutls
 sys-apps/systemd build curl gcrypt lzma -ssl
