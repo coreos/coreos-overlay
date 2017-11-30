@@ -55,5 +55,6 @@ INSTALL_MASK="${INSTALL_MASK}
   /usr/libexec/git-core/git-contacts
   /usr/sbin/mountstats
   /usr/sbin/nfsiostat
+  /usr/sbin/sudoers2ldif
   /sbin/ebtables-save
 "
