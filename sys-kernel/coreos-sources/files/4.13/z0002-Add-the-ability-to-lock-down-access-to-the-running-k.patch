@@ -1,7 +1,7 @@
 From fad03831bb23e8396209ca5502f12c65905d7343 Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Mon, 21 Nov 2016 23:36:17 +0000
-Subject: [PATCH 02/24] Add the ability to lock down access to the running
+Subject: [PATCH 02/26] Add the ability to lock down access to the running
  kernel image
 
 Provide a single call to allow kernel code to determine whether the system
@@ -145,5 +145,5 @@ index 000000000000..5788c60ff4e1
 +}
 +EXPORT_SYMBOL(kernel_is_locked_down);
 -- 
-2.14.1
+2.13.6
 

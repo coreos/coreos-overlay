@@ -1,7 +1,7 @@
 From 768d6504a3651557f584f01f49ce27d635d02aba Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Mon, 21 Nov 2016 23:55:55 +0000
-Subject: [PATCH 03/24] efi: Lock down the kernel if booted in secure boot mode
+Subject: [PATCH 03/26] efi: Lock down the kernel if booted in secure boot mode
 
 UEFI Secure Boot provides a mechanism for ensuring that the firmware will
 only load signed bootloaders and kernels.  Certain use cases may also
@@ -65,5 +65,5 @@ index 319995f58345..d0128aef43ce 100644
  		default:
  			pr_info("Secure boot could not be determined\n");
 -- 
-2.14.1
+2.13.6
 
