@@ -1,0 +1,43 @@
+From f75d35638db500bba6d0e2418cf3a8a09dae2652 Mon Sep 17 00:00:00 2001
+From: Hannes Reinecke <hare@suse.de>
+Date: Thu, 24 Aug 2017 14:52:43 +0200
+Subject: [PATCH 26/26] scsi: mptsas: Fixup device hotplug for VMWare ESXi
+
+VMWare ESXi emulates an mptsas HBA, but exposes all drives as
+direct-attached SAS drives.  This it not how the driver originally
+envisioned things; SAS drives were supposed to be connected via an
+expander, and only SATA drives would be direct attached.  As such, any
+hotplug event for direct-attach SAS drives was silently ignored, and the
+guest failed to detect new drives from within a VMWare ESXi environment.
+
+[mkp: typos]
+
+Bugzilla: https://bugzilla.suse.com/show_bug.cgi?id=1030850
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+---
+ drivers/message/fusion/mptsas.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+index f6308ad35b19..42ee70c23d9f 100644
+--- a/drivers/message/fusion/mptsas.c
++++ b/drivers/message/fusion/mptsas.c
+@@ -4352,11 +4352,10 @@ mptsas_hotplug_work(MPT_ADAPTER *ioc, struct fw_event_work *fw_event,
+ 			return;
+ 
+ 		phy_info = mptsas_refreshing_device_handles(ioc, &sas_device);
+-		/* Only For SATA Device ADD */
+-		if (!phy_info && (sas_device.device_info &
+-				MPI_SAS_DEVICE_INFO_SATA_DEVICE)) {
++		/* Device hot plug */
++		if (!phy_info) {
+ 			devtprintk(ioc, printk(MYIOC_s_DEBUG_FMT
+-				"%s %d SATA HOT PLUG: "
++				"%s %d HOT PLUG: "
+ 				"parent handle of device %x\n", ioc->name,
+ 				__func__, __LINE__, sas_device.handle_parent));
+ 			port_info = mptsas_find_portinfo_by_handle(ioc,
+-- 
+2.13.6
+
