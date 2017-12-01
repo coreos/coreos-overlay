@@ -19,7 +19,7 @@ else
 	else
 		MY_PV="$PV-ce"
 	fi
-	DOCKER_GITCOMMIT="afdb6d4"
+	DOCKER_GITCOMMIT="1caf76c"
 	SRC_URI="https://${COREOS_GO_PACKAGE}/archive/v${MY_PV}.tar.gz -> ${P}.tar.gz"
 	KEYWORDS="amd64 arm64"
 	[ "$DOCKER_GITCOMMIT" ] || die "DOCKER_GITCOMMIT must be added manually for each bump!"
@@ -64,7 +64,7 @@ RDEPEND="
 	>=dev-vcs/git-1.7
 	>=app-arch/xz-utils-4.9
 
-	=app-emulation/containerd-0.2.9_p27[seccomp?]
+	=app-emulation/containerd-1.0.0_beta2_p53[seccomp?]
 	=app-emulation/docker-runc-1.0.0_rc4_p104[apparmor?,seccomp?]
 	app-emulation/docker-proxy
 	container-init? ( >=sys-process/tini-0.13.1 )

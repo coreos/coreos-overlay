@@ -4,7 +4,7 @@
         "images": [
             {
                 "name": "docker",
-                "reference": "17.10"
+                "reference": "17.11"
             }
         ]
     }
