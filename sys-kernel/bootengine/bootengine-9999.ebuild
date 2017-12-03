@@ -10,7 +10,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~arm64 ~x86"
 else
-	CROS_WORKON_COMMIT="f927ba07477286996d636e658bd8daaad9eccb98"
+	CROS_WORKON_COMMIT="60d29e066913fa856485b5cb90dd6208c18bcc73"
 	KEYWORDS="amd64 arm arm64 x86"
 fi
 
@@ -32,6 +32,7 @@ src_install() {
 	chmod +x "${D}"/usr/lib/dracut/modules.d/10*-generator/*-generator \
 		"${D}"/usr/lib/dracut/modules.d/10diskless-generator/diskless-btrfs \
 		"${D}"/usr/lib/dracut/modules.d/30ignition/ignition-generator \
+		"${D}"/usr/lib/dracut/modules.d/30ignition/ignition-setup.sh \
 		"${D}"/usr/lib/dracut/modules.d/30ignition/retry-umount.sh \
 		"${D}"/usr/lib/dracut/modules.d/90iscsi-root/iscsi-root-generator \
 		"${D}"/usr/lib/dracut/modules.d/99setup-root/initrd-setup-root \
