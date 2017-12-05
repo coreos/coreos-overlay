@@ -1,7 +1,7 @@
 From f75d35638db500bba6d0e2418cf3a8a09dae2652 Mon Sep 17 00:00:00 2001
 From: Hannes Reinecke <hare@suse.de>
 Date: Thu, 24 Aug 2017 14:52:43 +0200
-Subject: [PATCH 26/26] scsi: mptsas: Fixup device hotplug for VMWare ESXi
+Subject: [PATCH 26/28] scsi: mptsas: Fixup device hotplug for VMWare ESXi
 
 VMWare ESXi emulates an mptsas HBA, but exposes all drives as
 direct-attached SAS drives.  This it not how the driver originally

@@ -1,7 +1,7 @@
 From 1ad7533c31e6de9e93d3d64c9eabdc13faaf2292 Mon Sep 17 00:00:00 2001
 From: "Lee, Chun-Yi" <jlee@suse.com>
 Date: Wed, 23 Nov 2016 13:52:16 +0000
-Subject: [PATCH 19/26] bpf: Restrict kernel image access functions when the
+Subject: [PATCH 19/28] bpf: Restrict kernel image access functions when the
  kernel is locked down
 
 There are some bpf functions can be used to read kernel memory:

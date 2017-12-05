@@ -1,7 +1,7 @@
 From 8a44a968daec0911bc28e26e8926f402a07dcb2b Mon Sep 17 00:00:00 2001
 From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
 Date: Mon, 27 Nov 2017 06:21:25 +0300
-Subject: [PATCH 25/26] mm, thp: Do not make page table dirty unconditionally
+Subject: [PATCH 25/28] mm, thp: Do not make page table dirty unconditionally
  in touch_p[mu]d()
 
 Currently, we unconditionally make page table dirty in touch_pmd().
