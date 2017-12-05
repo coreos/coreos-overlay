@@ -57,4 +57,6 @@ UNIPATCH_LIST="
 	${PATCH_DIR}/z0024-Add-arm64-coreos-verity-hash.patch \
 	${PATCH_DIR}/z0025-mm-thp-Do-not-make-page-table-dirty-unconditionally-.patch \
 	${PATCH_DIR}/z0026-scsi-mptsas-Fixup-device-hotplug-for-VMWare-ESXi.patch \
+	${PATCH_DIR}/z0027-KVM-Remove-I-O-port-0x80-bypass-on-intel-hosts.patch \
+	${PATCH_DIR}/z0028-dccp-CVE-2017-8824-use-after-free-in-DCCP-code.patch \
 "
