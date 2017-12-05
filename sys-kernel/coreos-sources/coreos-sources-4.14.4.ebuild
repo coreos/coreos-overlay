@@ -33,5 +33,6 @@ IUSE=""
 UNIPATCH_LIST="
 	${PATCH_DIR}/z0001-kbuild-derive-relative-path-for-KBUILD_SRC-from-CURD.patch \
 	${PATCH_DIR}/z0002-Add-arm64-coreos-verity-hash.patch \
-	${PATCH_DIR}/z0003-mm-thp-Do-not-make-page-table-dirty-unconditionally-.patch \
+	${PATCH_DIR}/z0003-KVM-Remove-I-O-port-0x80-bypass-on-intel-hosts.patch \
+	${PATCH_DIR}/z0004-dccp-CVE-2017-8824-use-after-free-in-DCCP-code.patch \
 "
