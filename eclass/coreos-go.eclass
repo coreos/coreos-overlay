@@ -1,6 +1,5 @@
 # Copyright 2014 CoreOS, Inc.
 # Distributed under the terms of the GNU General Public License v2
-# $Header: $
 
 # @ECLASS: coreos-go.eclass
 # @BLURB: utility functions for building Go binaries
@@ -22,7 +21,7 @@
 #
 # Example:
 # @CODE
-# COREOS_GO_VERSION=go1.5
+# COREOS_GO_VERSION=go1.9
 # @CODE
 
 case "${EAPI:-0}" in

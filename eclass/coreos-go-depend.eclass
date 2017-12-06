@@ -1,6 +1,5 @@
 # Copyright 2016 CoreOS, Inc.
 # Distributed under the terms of the GNU General Public License v2
-# $Header: $
 
 # @ECLASS: coreos-go-depend.eclass
 # @BLURB: Minimal Go eclass for simply depending on Go.
@@ -12,9 +11,9 @@
 #
 # Example:
 # @CODE
-# COREOS_GO_VERSION=go1.5
+# COREOS_GO_VERSION=go1.9
 # @CODE
-export COREOS_GO_VERSION="${COREOS_GO_VERSION:-go1.7}"
+export COREOS_GO_VERSION="${COREOS_GO_VERSION:-go1.9}"
 
 case "${EAPI:-0}" in
 	5|6) ;;

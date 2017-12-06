@@ -1,6 +1,5 @@
 # Copyright 2016 CoreOS, Inc.
 # Distributed under the terms of the GNU General Public License v2
-# $Header: $
 
 # @ECLASS: coreos-go-utils.eclass
 # @BLURB: Utility functions for Go
