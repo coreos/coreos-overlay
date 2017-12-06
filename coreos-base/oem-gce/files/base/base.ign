@@ -1,0 +1,45 @@
+{
+  "ignition": {
+    "version": "2.1.0"
+  },
+  "storage": {
+    "files": [
+      {
+        "filesystem": "root",
+        "path": "/etc/systemd/system/oem-gce.service",
+        "contents": {
+          "source": "oem:///units/oem-gce.service"
+        },
+        "mode": 292
+      },
+      {
+        "filesystem": "root",
+        "path": "/etc/hosts",
+        "contents": {
+          "source": "oem:///files/hosts"
+        },
+        "mode": 292
+      },
+      {
+        "filesystem": "root",
+        "path": "/etc/profile.d/google-cloud-sdk.sh",
+        "contents": {
+          "source": "oem:///files/google-cloud-sdk.sh"
+        },
+        "mode": 292
+      }
+    ]
+  },
+  "systemd": {
+    "units": [
+      {
+        "name": "coreos-metadata-sshkeys@.service",
+        "enabled": true
+      },
+      {
+        "name": "oem-gce.service",
+        "enabled": true
+      }
+    ]
+  }
+}

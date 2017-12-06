@@ -1,0 +1,14 @@
+{
+  "ignition": {
+    "version": "2.1.0"
+  },
+  "systemd": {
+    "units": [
+      {
+        "name": "oem-cloudinit.service",
+        "enabled": true,
+        "contents": "[Unit]\nDescription=Cloudinit from DigitalOcean metadata\n\n[Service]\nType=oneshot\nExecStart=/usr/bin/coreos-cloudinit --oem=digitalocean\n\n[Install]\nWantedBy=multi-user.target\n"
+      }
+    ]
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "ignition": {
+    "version": "2.1.0"
+  },
+  "storage": {
+    "files": [
+      {
+        "filesystem": "root",
+        "path": "/etc/systemd/system/waagent.service",
+        "contents": {
+          "source": "oem:///units/waagent.service"
+        },
+        "mode": 292
+      }
+    ]
+  },
+  "systemd": {
+    "units": [
+      {
+        "name": "waagent.service",
+        "enabled": true
+      },
+      {
+        "name": "etcd2.service",
+        "dropins": [
+          {
+            "name": "10-oem.conf",
+            "contents": "[Service]\nEnvironment=ETCD_ELECTION_TIMEOUT=1200\n"
+          }
+        ]
+      }
+    ]
+  }
+}

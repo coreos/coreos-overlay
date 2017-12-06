@@ -1,0 +1,25 @@
+{
+  "ignition": {
+    "version": "2.1.0"
+  },
+  "storage": {
+    "files": [
+      {
+        "filesystem": "root",
+        "path": "/etc/systemd/system/vmtoolsd.service",
+        "contents": {
+          "source": "oem:///units/vmtoolsd.service"
+        },
+        "mode": 292
+      }
+    ]
+  },
+  "systemd": {
+    "units": [
+      {
+        "name": "vmtoolsd.service",
+        "enabled": true
+      }
+    ]
+  }
+}
