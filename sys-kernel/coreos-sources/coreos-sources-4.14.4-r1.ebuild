@@ -35,4 +35,6 @@ UNIPATCH_LIST="
 	${PATCH_DIR}/z0002-Add-arm64-coreos-verity-hash.patch \
 	${PATCH_DIR}/z0003-KVM-Remove-I-O-port-0x80-bypass-on-intel-hosts.patch \
 	${PATCH_DIR}/z0004-dccp-CVE-2017-8824-use-after-free-in-DCCP-code.patch \
+	${PATCH_DIR}/z0005-block-factor-out-__blkdev_issue_zero_pages.patch \
+	${PATCH_DIR}/z0006-block-cope-with-WRITE-ZEROES-failing-in-blkdev_issue.patch \
 "
