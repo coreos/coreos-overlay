@@ -6,6 +6,7 @@ CROS_WORKON_PROJECT="coreos/etcd"
 CROS_WORKON_LOCALNAME="etcd"
 CROS_WORKON_REPO="git://github.com"
 COREOS_GO_PACKAGE="github.com/coreos/etcd"
+COREOS_GO_VERSION="go1.7"
 inherit coreos-go toolchain-funcs cros-workon systemd
 
 if [[ "${PV}" == 9999 ]]; then
