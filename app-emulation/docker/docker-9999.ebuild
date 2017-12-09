@@ -261,7 +261,7 @@ src_compile() {
 
 	pushd components/cli || die
 
-	# Imitating https://github.com/docker/docker-ce/blob/v17.09.0-ce/components/cli/scripts/build/.variables#L6
+	# Imitating https://github.com/docker/docker-ce/blob/v17.11.0-ce/components/cli/scripts/build/.variables#L6
 	CLI_BUILDTIME="$(date -d "@${DOCKER_BUILD_DATE}" --utc --rfc-3339 ns 2> /dev/null | sed -e 's/ /T/')"
 	# build cli
 	emake \
