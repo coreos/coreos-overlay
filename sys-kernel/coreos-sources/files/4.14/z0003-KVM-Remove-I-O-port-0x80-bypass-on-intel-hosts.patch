@@ -1,4 +1,4 @@
-From 8fabd9ceb90c5d6fa66b57477bbc791f4e37730f Mon Sep 17 00:00:00 2001
+From f6557bee7caf4685b57f2be35f4032955816f2c7 Mon Sep 17 00:00:00 2001
 From: Andrew Honig <ahonig@google.com>
 Date: Wed, 29 Nov 2017 10:54:24 -0800
 Subject: [PATCH 3/6] KVM: Remove I/O port 0x80 bypass on intel hosts.
@@ -77,5 +77,5 @@ index b21113bcf227..7242184fd8fd 100644
  	memset(vmx_msr_bitmap_legacy, 0xff, PAGE_SIZE);
  	memset(vmx_msr_bitmap_longmode, 0xff, PAGE_SIZE);
 -- 
-2.13.6
+2.14.1
 
