@@ -1,18 +1,21 @@
 # Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI="5"
+EAPI="6"
 
 inherit eutils flag-o-matic toolchain-funcs multilib multilib-minimal systemd
 
+PATCH_SET="openssl-1.0.2-patches-1.0"
 MY_P=${P/_/-}
 DESCRIPTION="full-strength general purpose cryptography library (including SSL and TLS)"
 HOMEPAGE="https://www.openssl.org/"
-SRC_URI="mirror://openssl/source/${MY_P}.tar.gz"
+SRC_URI="mirror://openssl/source/${MY_P}.tar.gz
+	mirror://gentoo/${PATCH_SET}.tar.xz
+	https://dev.gentoo.org/~whissi/dist/${PN}/${PATCH_SET}.tar.xz"
 
 LICENSE="openssl"
 SLOT="0"
-KEYWORDS="alpha amd64 arm arm64 hppa ia64 ~m68k ~mips ppc ppc64 ~s390 ~sh ~sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd ~arm-linux ~x86-linux"
+KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd ~arm-linux ~x86-linux"
 IUSE="+asm gmp kerberos rfc3779 sctp cpu_flags_x86_sse2 sslv2 +sslv3 static-libs test +tls-heartbeat vanilla zlib"
 
 RDEPEND=">=app-misc/c_rehash-1.7-r1
@@ -43,17 +46,10 @@ src_prepare() {
 	rm -f Makefile
 
 	if ! use vanilla ; then
-		epatch "${FILESDIR}"/${PN}-1.0.0a-ldflags.patch #327421
-		epatch "${FILESDIR}"/${PN}-1.0.2i-parallel-build.patch
-		epatch "${FILESDIR}"/${PN}-1.0.2a-parallel-obj-headers.patch
-		epatch "${FILESDIR}"/${PN}-1.0.2a-parallel-install-dirs.patch
-		epatch "${FILESDIR}"/${PN}-1.0.2a-parallel-symlinking.patch #545028
-		epatch "${FILESDIR}"/${PN}-1.0.2-ipv6.patch
-		epatch "${FILESDIR}"/${PN}-1.0.2a-x32-asm.patch #542618
-		epatch "${FILESDIR}"/${PN}-1.0.1p-default-source.patch #554338
-
-		epatch_user #332661
+		eapply "${WORKDIR}"/patch/*.patch
 	fi
+
+	eapply_user
 
 	# disable fips in the build
 	# make sure the man pages are suffixed #302165
@@ -82,7 +78,7 @@ src_prepare() {
 
 	# allow openssl to be cross-compiled
 	cp "${FILESDIR}"/gentoo.config-1.0.2 gentoo.config || die
-	chmod a+rx gentoo.config
+	chmod a+rx gentoo.config || die
 
 	append-flags -fno-strict-aliasing
 	append-flags $(test-flags-CC -Wa,--noexecstack)
@@ -200,8 +196,9 @@ multilib_src_install_all() {
 	# we provide a shell version via app-misc/c_rehash
 	rm "${ED}"/usr/bin/c_rehash || die
 
-	dodoc CHANGES* FAQ NEWS README doc/*.txt doc/c-indentation.el
-	dohtml -r doc/*
+	local -a DOCS=( CHANGES* FAQ NEWS README doc/*.txt doc/c-indentation.el )
+	einstalldocs
+
 	use rfc3779 && dodoc engines/ccgost/README.gost
 
 	# This is crappy in that the static archives are still built even
