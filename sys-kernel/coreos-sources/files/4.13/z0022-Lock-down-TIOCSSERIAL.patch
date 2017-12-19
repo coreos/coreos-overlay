@@ -1,7 +1,7 @@
 From b4f01f10ecb275a8bbb6982f94b975aaa0b272cd Mon Sep 17 00:00:00 2001
 From: David Howells <dhowells@redhat.com>
 Date: Wed, 7 Dec 2016 10:28:39 +0000
-Subject: [PATCH 22/28] Lock down TIOCSSERIAL
+Subject: [PATCH 22/29] Lock down TIOCSSERIAL
 
 Lock down TIOCSSERIAL as that can be used to change the ioport and irq
 settings on a serial port.  This only appears to be an issue for the serial
@@ -32,5 +32,5 @@ index f534a40aebde..e32c0179f423 100644
  		retval = -EPERM;
  		if (change_irq || change_port ||
 -- 
-2.13.6
+2.14.3
 

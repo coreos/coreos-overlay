@@ -1,7 +1,7 @@
 From caf58edf10b8705b67260be44e8722e04e0beef7 Mon Sep 17 00:00:00 2001
 From: Matthew Garrett <matthew.garrett@nebula.com>
 Date: Tue, 22 Nov 2016 08:46:15 +0000
-Subject: [PATCH 11/28] PCI: Lock down BAR access when the kernel is locked
+Subject: [PATCH 11/29] PCI: Lock down BAR access when the kernel is locked
  down
 
 Any hardware that can potentially generate DMA has to be locked down in
@@ -99,5 +99,5 @@ index 9bf993e1f71e..c09524738ceb 100644
  
  	dev = pci_get_bus_and_slot(bus, dfn);
 -- 
-2.13.6
+2.14.3
 

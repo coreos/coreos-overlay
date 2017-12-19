@@ -1,0 +1,44 @@
+From 9290f7e9ed1dc3302cba413eb8215eb1e14d8dc0 Mon Sep 17 00:00:00 2001
+From: Steffen Klassert <steffen.klassert@secunet.com>
+Date: Mon, 30 Oct 2017 10:04:04 +0100
+Subject: [PATCH 29/29] xfrm: Fix GSO for IPsec with GRE tunnel.
+
+We reset the encapsulation field of the skb too early
+in xfrm_output. As a result, the GRE GSO handler does
+not segment the packets. This leads to a performance
+drop down. We fix this by resetting the encapsulation
+field right before we do the transformation, when
+the inner headers become invalid.
+
+Fixes: f1bd7d659ef0 ("xfrm: Add encapsulation header offsets while SKB is not encrypted")
+Reported-by: Vicente De Luca <vdeluca@zendesk.com>
+Signed-off-by: Steffen Klassert <steffen.klassert@secunet.com>
+---
+ net/xfrm/xfrm_output.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/net/xfrm/xfrm_output.c b/net/xfrm/xfrm_output.c
+index 8c0b6722aaa8..626424645030 100644
+--- a/net/xfrm/xfrm_output.c
++++ b/net/xfrm/xfrm_output.c
+@@ -102,6 +102,9 @@ static int xfrm_output_one(struct sk_buff *skb, int err)
+ 		if (xfrm_offload(skb)) {
+ 			x->type_offload->encap(x, skb);
+ 		} else {
++			/* Inner headers are invalid now. */
++			skb->encapsulation = 0;
++
+ 			err = x->type->output(x, skb);
+ 			if (err == -EINPROGRESS)
+ 				goto out;
+@@ -205,7 +208,6 @@ int xfrm_output(struct sock *sk, struct sk_buff *skb)
+ 	int err;
+ 
+ 	secpath_reset(skb);
+-	skb->encapsulation = 0;
+ 
+ 	if (xfrm_dev_offload_ok(skb, x)) {
+ 		struct sec_path *sp;
+-- 
+2.14.3
+
