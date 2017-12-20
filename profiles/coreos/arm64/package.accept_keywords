@@ -18,7 +18,8 @@
 =dev-libs/libxml2-2.9.4-r3 ~arm64
 =dev-libs/nss-3.29.5 ~arm64
 =dev-libs/userspace-rcu-0.9.1 **
-=dev-util/meson-0.40.1 **
+=dev-util/meson-0.43.0 ~arm64
+=dev-util/ninja-1.8.2 ~arm64
 =dev-util/re2c-0.16 ~arm64
 =dev-vcs/git-2.13.0 ~arm64
 =net-analyzer/nmap-7.40 ~arm64
