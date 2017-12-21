@@ -1,9 +1,0 @@
-DEFINED_PHASES=-
-DESCRIPTION=CoreOS developer images and containers (meta package)
-EAPI=4
-HOMEPAGE=http://coreos.com
-KEYWORDS=amd64 arm arm64 x86
-LICENSE=GPL-2
-RDEPEND=app-portage/gentoolkit coreos-base/coreos coreos-base/coreos-experimental coreos-base/gmerge coreos-devel/mantle dev-lang/python dev-util/strace dev-vcs/repo net-analyzer/netperf net-dialup/minicom net-misc/iperf net-misc/iputils net-misc/openssh net-misc/rsync sys-apps/coreutils sys-apps/diffutils sys-apps/file sys-apps/findutils sys-apps/i2c-tools sys-apps/kbd sys-apps/less sys-apps/portage sys-apps/smartmontools sys-apps/which sys-devel/gcc sys-devel/gdb sys-fs/lvm2 sys-process/ktop sys-process/procps sys-process/psmisc
-SLOT=0
-_md5_=6dd0a1e95db4b4ed4eafa6917f0701e5

@@ -43,7 +43,6 @@ RDEPEND="
 	sys-devel/gcc
 	sys-devel/gdb
 	sys-fs/lvm2
-	sys-process/ktop
 	sys-process/procps
 	sys-process/psmisc
 	"
