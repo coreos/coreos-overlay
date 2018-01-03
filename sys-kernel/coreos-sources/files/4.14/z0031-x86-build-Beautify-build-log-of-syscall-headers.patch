@@ -39,7 +39,7 @@ diff --git a/arch/x86/entry/syscalls/Makefile b/arch/x86/entry/syscalls/Makefile
 index 57aa59fd140c..e34c7a931994 100644
 --- a/arch/x86/entry/syscalls/Makefile
 +++ b/arch/x86/entry/syscalls/Makefile
-@@ -1,5 +1,5 @@
+@@ -2,5 +2,5 @@
 -out := $(obj)/../../include/generated/asm
 -uapi := $(obj)/../../include/generated/uapi/asm
 +out := arch/$(SRCARCH)/include/generated/asm
