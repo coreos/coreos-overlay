@@ -1,0 +1,38 @@
+From c7da092a1f243bfd1bfb4124f538e69e941882da Mon Sep 17 00:00:00 2001
+From: Borislav Petkov <bp@suse.de>
+Date: Fri, 3 Nov 2017 11:20:28 +0100
+Subject: [PATCH 060/171] x86/mm: Define _PAGE_TABLE using _KERNPG_TABLE
+
+... so that the difference is obvious.
+
+No functionality change.
+
+Signed-off-by: Borislav Petkov <bp@suse.de>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Link: http://lkml.kernel.org/r/20171103102028.20284-1-bp@alien8.de
+Signed-off-by: Ingo Molnar <mingo@kernel.org>
+---
+ arch/x86/include/asm/pgtable_types.h | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/arch/x86/include/asm/pgtable_types.h b/arch/x86/include/asm/pgtable_types.h
+index f1492473f10e..c33f80da8a79 100644
+--- a/arch/x86/include/asm/pgtable_types.h
++++ b/arch/x86/include/asm/pgtable_types.h
+@@ -199,10 +199,9 @@ enum page_cache_mode {
+ 
+ #define _PAGE_ENC	(_AT(pteval_t, sme_me_mask))
+ 
+-#define _PAGE_TABLE	(_PAGE_PRESENT | _PAGE_RW | _PAGE_USER |	\
+-			 _PAGE_ACCESSED | _PAGE_DIRTY | _PAGE_ENC)
+ #define _KERNPG_TABLE	(_PAGE_PRESENT | _PAGE_RW | _PAGE_ACCESSED |	\
+ 			 _PAGE_DIRTY | _PAGE_ENC)
++#define _PAGE_TABLE	(_KERNPG_TABLE | _PAGE_USER)
+ 
+ #define __PAGE_KERNEL_ENC	(__PAGE_KERNEL | _PAGE_ENC)
+ #define __PAGE_KERNEL_ENC_WP	(__PAGE_KERNEL_WP | _PAGE_ENC)
+-- 
+2.13.6
+

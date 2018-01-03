@@ -1,0 +1,71 @@
+From 385ce0ea4c078517fa51c261882c4e72fba53005 Mon Sep 17 00:00:00 2001
+From: Dave Hansen <dave.hansen@linux.intel.com>
+Date: Mon, 4 Dec 2017 15:08:03 +0100
+Subject: [PATCH 158/171] x86/mm/pti: Add Kconfig
+
+Finally allow CONFIG_PAGE_TABLE_ISOLATION to be enabled.
+
+PARAVIRT generally requires that the kernel not manage its own page tables.
+It also means that the hypervisor and kernel must agree wholeheartedly
+about what format the page tables are in and what they contain.
+PAGE_TABLE_ISOLATION, unfortunately, changes the rules and they
+can not be used together.
+
+I've seen conflicting feedback from maintainers lately about whether they
+want the Kconfig magic to go first or last in a patch series.  It's going
+last here because the partially-applied series leads to kernels that can
+not boot in a bunch of cases.  I did a run through the entire series with
+CONFIG_PAGE_TABLE_ISOLATION=y to look for build errors, though.
+
+[ tglx: Removed SMP and !PARAVIRT dependencies as they not longer exist ]
+
+Signed-off-by: Dave Hansen <dave.hansen@linux.intel.com>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: Andy Lutomirski <luto@kernel.org>
+Cc: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Brian Gerst <brgerst@gmail.com>
+Cc: David Laight <David.Laight@aculab.com>
+Cc: Denys Vlasenko <dvlasenk@redhat.com>
+Cc: Eduardo Valentin <eduval@amazon.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>
+Cc: H. Peter Anvin <hpa@zytor.com>
+Cc: Josh Poimboeuf <jpoimboe@redhat.com>
+Cc: Juergen Gross <jgross@suse.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: aliguori@amazon.com
+Cc: daniel.gruss@iaik.tugraz.at
+Cc: hughd@google.com
+Cc: keescook@google.com
+Cc: linux-mm@kvack.org
+Signed-off-by: Ingo Molnar <mingo@kernel.org>
+---
+ security/Kconfig | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/security/Kconfig b/security/Kconfig
+index e8e449444e65..a623d13bf288 100644
+--- a/security/Kconfig
++++ b/security/Kconfig
+@@ -54,6 +54,16 @@ config SECURITY_NETWORK
+ 	  implement socket and networking access controls.
+ 	  If you are unsure how to answer this question, answer N.
+ 
++config PAGE_TABLE_ISOLATION
++	bool "Remove the kernel mapping in user mode"
++	depends on X86_64 && !UML
++	help
++	  This feature reduces the number of hardware side channels by
++	  ensuring that the majority of kernel addresses are not mapped
++	  into userspace.
++
++	  See Documentation/x86/pagetable-isolation.txt for more details.
++
+ config SECURITY_INFINIBAND
+ 	bool "Infiniband Security Hooks"
+ 	depends on SECURITY && INFINIBAND
+-- 
+2.13.6
+

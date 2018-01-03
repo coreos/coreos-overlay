@@ -1,0 +1,67 @@
+From 693cb5580fdb026922363aa103add64b3ecd572e Mon Sep 17 00:00:00 2001
+From: Andy Lutomirski <luto@kernel.org>
+Date: Sat, 4 Nov 2017 04:19:48 -0700
+Subject: [PATCH 063/171] selftests/x86/protection_keys: Fix syscall NR
+ redefinition warnings
+
+On new enough glibc, the pkey syscalls numbers are available.  Check
+first before defining them to avoid warnings like:
+
+protection_keys.c:198:0: warning: "SYS_pkey_alloc" redefined
+
+Signed-off-by: Andy Lutomirski <luto@kernel.org>
+Cc: Borislav Petkov <bpetkov@suse.de>
+Cc: Dave Hansen <dave.hansen@intel.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: stable@vger.kernel.org
+Link: http://lkml.kernel.org/r/1fbef53a9e6befb7165ff855fc1a7d4788a191d6.1509794321.git.luto@kernel.org
+Signed-off-by: Ingo Molnar <mingo@kernel.org>
+---
+ tools/testing/selftests/x86/protection_keys.c | 24 ++++++++++++++++++------
+ 1 file changed, 18 insertions(+), 6 deletions(-)
+
+diff --git a/tools/testing/selftests/x86/protection_keys.c b/tools/testing/selftests/x86/protection_keys.c
+index 555e43ca846b..7a1cc0e56d2d 100644
+--- a/tools/testing/selftests/x86/protection_keys.c
++++ b/tools/testing/selftests/x86/protection_keys.c
+@@ -189,17 +189,29 @@ void lots_o_noops_around_write(int *write_to_me)
+ #define u64 uint64_t
+ 
+ #ifdef __i386__
+-#define SYS_mprotect_key 380
+-#define SYS_pkey_alloc	 381
+-#define SYS_pkey_free	 382
++
++#ifndef SYS_mprotect_key
++# define SYS_mprotect_key 380
++#endif
++#ifndef SYS_pkey_alloc
++# define SYS_pkey_alloc	 381
++# define SYS_pkey_free	 382
++#endif
+ #define REG_IP_IDX REG_EIP
+ #define si_pkey_offset 0x14
++
+ #else
+-#define SYS_mprotect_key 329
+-#define SYS_pkey_alloc	 330
+-#define SYS_pkey_free	 331
++
++#ifndef SYS_mprotect_key
++# define SYS_mprotect_key 329
++#endif
++#ifndef SYS_pkey_alloc
++# define SYS_pkey_alloc	 330
++# define SYS_pkey_free	 331
++#endif
+ #define REG_IP_IDX REG_RIP
+ #define si_pkey_offset 0x20
++
+ #endif
+ 
+ void dump_mem(void *dumpme, int len_bytes)
+-- 
+2.13.6
+

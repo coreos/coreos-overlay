@@ -1,0 +1,78 @@
+From c49870e89f4d2c21c76ebe90568246bb0f3572b7 Mon Sep 17 00:00:00 2001
+From: Dongjiu Geng <gengdongjiu@huawei.com>
+Date: Tue, 17 Oct 2017 16:02:20 +0800
+Subject: [PATCH 029/171] ACPI / APEI: remove the unused dead-code for SEA/NMI
+ notification type
+
+For the SEA notification, the two functions ghes_sea_add() and
+ghes_sea_remove() are only called when CONFIG_ACPI_APEI_SEA
+is defined. If not, it will return errors in the ghes_probe()
+and not continue. If the probe is failed, the ghes_sea_remove()
+also has no chance to be called. Hence, remove the unnecessary
+handling when CONFIG_ACPI_APEI_SEA is not defined.
+
+For the NMI notification, it has the same issue as SEA notification,
+so also remove the unused dead-code for it.
+
+Signed-off-by: Dongjiu Geng <gengdongjiu@huawei.com>
+Tested-by: Tyler Baicar <tbaicar@codeaurora.org>
+Reviewed-by: Borislav Petkov <bp@suse.de>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/apei/ghes.c | 33 +++++----------------------------
+ 1 file changed, 5 insertions(+), 28 deletions(-)
+
+diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
+index 69ef0b6bf25d..cb7aceae3553 100644
+--- a/drivers/acpi/apei/ghes.c
++++ b/drivers/acpi/apei/ghes.c
+@@ -852,17 +852,8 @@ static void ghes_sea_remove(struct ghes *ghes)
+ 	synchronize_rcu();
+ }
+ #else /* CONFIG_ACPI_APEI_SEA */
+-static inline void ghes_sea_add(struct ghes *ghes)
+-{
+-	pr_err(GHES_PFX "ID: %d, trying to add SEA notification which is not supported\n",
+-	       ghes->generic->header.source_id);
+-}
+-
+-static inline void ghes_sea_remove(struct ghes *ghes)
+-{
+-	pr_err(GHES_PFX "ID: %d, trying to remove SEA notification which is not supported\n",
+-	       ghes->generic->header.source_id);
+-}
++static inline void ghes_sea_add(struct ghes *ghes) { }
++static inline void ghes_sea_remove(struct ghes *ghes) { }
+ #endif /* CONFIG_ACPI_APEI_SEA */
+ 
+ #ifdef CONFIG_HAVE_ACPI_APEI_NMI
+@@ -1064,23 +1055,9 @@ static void ghes_nmi_init_cxt(void)
+ 	init_irq_work(&ghes_proc_irq_work, ghes_proc_in_irq);
+ }
+ #else /* CONFIG_HAVE_ACPI_APEI_NMI */
+-static inline void ghes_nmi_add(struct ghes *ghes)
+-{
+-	pr_err(GHES_PFX "ID: %d, trying to add NMI notification which is not supported!\n",
+-	       ghes->generic->header.source_id);
+-	BUG();
+-}
+-
+-static inline void ghes_nmi_remove(struct ghes *ghes)
+-{
+-	pr_err(GHES_PFX "ID: %d, trying to remove NMI notification which is not supported!\n",
+-	       ghes->generic->header.source_id);
+-	BUG();
+-}
+-
+-static inline void ghes_nmi_init_cxt(void)
+-{
+-}
++static inline void ghes_nmi_add(struct ghes *ghes) { }
++static inline void ghes_nmi_remove(struct ghes *ghes) { }
++static inline void ghes_nmi_init_cxt(void) { }
+ #endif /* CONFIG_HAVE_ACPI_APEI_NMI */
+ 
+ static int ghes_probe(struct platform_device *ghes_dev)
+-- 
+2.13.6
+

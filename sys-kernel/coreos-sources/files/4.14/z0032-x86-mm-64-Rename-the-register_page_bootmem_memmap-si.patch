@@ -1,0 +1,80 @@
+From 15670bfe19905b1dcbb63137f40d718b59d84479 Mon Sep 17 00:00:00 2001
+From: Baoquan He <bhe@redhat.com>
+Date: Sat, 28 Oct 2017 09:30:38 +0800
+Subject: [PATCH 032/171] x86/mm/64: Rename the register_page_bootmem_memmap()
+ 'size' parameter to 'nr_pages'
+
+register_page_bootmem_memmap()'s 3rd 'size' parameter is named
+in a somewhat misleading fashion - rename it to 'nr_pages' which
+makes the units of it much clearer.
+
+Meanwhile rename the existing local variable 'nr_pages' to
+'nr_pmd_pages', a more expressive name, to avoid conflict with
+new function parameter 'nr_pages'.
+
+(Also clean up the unnecessary parentheses in which get_order() is called.)
+
+Signed-off-by: Baoquan He <bhe@redhat.com>
+Acked-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: akpm@linux-foundation.org
+Link: http://lkml.kernel.org/r/1509154238-23250-1-git-send-email-bhe@redhat.com
+Signed-off-by: Ingo Molnar <mingo@kernel.org>
+---
+ arch/x86/mm/init_64.c | 10 +++++-----
+ include/linux/mm.h    |  2 +-
+ 2 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/arch/x86/mm/init_64.c b/arch/x86/mm/init_64.c
+index 048fbe8fc274..adcea90a2046 100644
+--- a/arch/x86/mm/init_64.c
++++ b/arch/x86/mm/init_64.c
+@@ -1426,16 +1426,16 @@ int __meminit vmemmap_populate(unsigned long start, unsigned long end, int node)
+ 
+ #if defined(CONFIG_MEMORY_HOTPLUG_SPARSE) && defined(CONFIG_HAVE_BOOTMEM_INFO_NODE)
+ void register_page_bootmem_memmap(unsigned long section_nr,
+-				  struct page *start_page, unsigned long size)
++				  struct page *start_page, unsigned long nr_pages)
+ {
+ 	unsigned long addr = (unsigned long)start_page;
+-	unsigned long end = (unsigned long)(start_page + size);
++	unsigned long end = (unsigned long)(start_page + nr_pages);
+ 	unsigned long next;
+ 	pgd_t *pgd;
+ 	p4d_t *p4d;
+ 	pud_t *pud;
+ 	pmd_t *pmd;
+-	unsigned int nr_pages;
++	unsigned int nr_pmd_pages;
+ 	struct page *page;
+ 
+ 	for (; addr < end; addr = next) {
+@@ -1482,9 +1482,9 @@ void register_page_bootmem_memmap(unsigned long section_nr,
+ 			if (pmd_none(*pmd))
+ 				continue;
+ 
+-			nr_pages = 1 << (get_order(PMD_SIZE));
++			nr_pmd_pages = 1 << get_order(PMD_SIZE);
+ 			page = pmd_page(*pmd);
+-			while (nr_pages--)
++			while (nr_pmd_pages--)
+ 				get_page_bootmem(section_nr, page++,
+ 						 SECTION_INFO);
+ 		}
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index 065d99deb847..b2c7045e9604 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -2495,7 +2495,7 @@ void vmemmap_populate_print_last(void);
+ void vmemmap_free(unsigned long start, unsigned long end);
+ #endif
+ void register_page_bootmem_memmap(unsigned long section_nr, struct page *map,
+-				  unsigned long size);
++				  unsigned long nr_pages);
+ 
+ enum mf_flags {
+ 	MF_COUNT_INCREASED = 1 << 0,
+-- 
+2.13.6
+

@@ -1,0 +1,51 @@
+From 4fbb39108f972437c44e5ffa781b56635d496826 Mon Sep 17 00:00:00 2001
+From: Andy Lutomirski <luto@kernel.org>
+Date: Thu, 2 Nov 2017 00:59:03 -0700
+Subject: [PATCH 042/171] x86/entry/64: Use pop instead of movq in
+ syscall_return_via_sysret
+
+Saves 64 bytes.
+
+Signed-off-by: Andy Lutomirski <luto@kernel.org>
+Reviewed-by: Borislav Petkov <bp@suse.de>
+Cc: Borislav Petkov <bpetkov@suse.de>
+Cc: Brian Gerst <brgerst@gmail.com>
+Cc: Dave Hansen <dave.hansen@intel.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Link: http://lkml.kernel.org/r/6609b7f74ab31c36604ad746e019ea8495aec76c.1509609304.git.luto@kernel.org
+Signed-off-by: Ingo Molnar <mingo@kernel.org>
+---
+ arch/x86/entry/entry_64.S | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
+
+diff --git a/arch/x86/entry/entry_64.S b/arch/x86/entry/entry_64.S
+index 155396443aaa..4f9b4463b3fc 100644
+--- a/arch/x86/entry/entry_64.S
++++ b/arch/x86/entry/entry_64.S
+@@ -315,10 +315,18 @@ return_from_SYSCALL_64:
+ 	 */
+ syscall_return_via_sysret:
+ 	/* rcx and r11 are already restored (see code above) */
+-	RESTORE_EXTRA_REGS
+-	RESTORE_C_REGS_EXCEPT_RCX_R11
+-	movq	RSP(%rsp), %rsp
+ 	UNWIND_HINT_EMPTY
++	POP_EXTRA_REGS
++	popq	%rsi	/* skip r11 */
++	popq	%r10
++	popq	%r9
++	popq	%r8
++	popq	%rax
++	popq	%rsi	/* skip rcx */
++	popq	%rdx
++	popq	%rsi
++	popq	%rdi
++	movq	RSP-ORIG_RAX(%rsp), %rsp
+ 	USERGS_SYSRET64
+ END(entry_SYSCALL_64)
+ 
+-- 
+2.13.6
+

@@ -1,0 +1,54 @@
+From 4b6bbe95b87966ba08999574db65c93c5e925a36 Mon Sep 17 00:00:00 2001
+From: Andy Lutomirski <luto@kernel.org>
+Date: Fri, 15 Dec 2017 22:08:18 +0100
+Subject: [PATCH 145/171] x86/mm/pti: Map ESPFIX into user space
+
+Map the ESPFIX pages into user space when PTI is enabled.
+
+Signed-off-by: Andy Lutomirski <luto@kernel.org>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Brian Gerst <brgerst@gmail.com>
+Cc: Dave Hansen <dave.hansen@linux.intel.com>
+Cc: David Laight <David.Laight@aculab.com>
+Cc: H. Peter Anvin <hpa@zytor.com>
+Cc: Josh Poimboeuf <jpoimboe@redhat.com>
+Cc: Juergen Gross <jgross@suse.com>
+Cc: Kees Cook <keescook@chromium.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Signed-off-by: Ingo Molnar <mingo@kernel.org>
+---
+ arch/x86/mm/pti.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/arch/x86/mm/pti.c b/arch/x86/mm/pti.c
+index 0e78797650a7..b1c38ef9fbbb 100644
+--- a/arch/x86/mm/pti.c
++++ b/arch/x86/mm/pti.c
+@@ -288,6 +288,16 @@ static void __init pti_clone_user_shared(void)
+ }
+ 
+ /*
++ * Clone the ESPFIX P4D into the user space visinble page table
++ */
++static void __init pti_setup_espfix64(void)
++{
++#ifdef CONFIG_X86_ESPFIX64
++	pti_clone_p4d(ESPFIX_BASE_ADDR);
++#endif
++}
++
++/*
+  * Clone the populated PMDs of the entry and irqentry text and force it RO.
+  */
+ static void __init pti_clone_entry_text(void)
+@@ -308,4 +318,5 @@ void __init pti_init(void)
+ 
+ 	pti_clone_user_shared();
+ 	pti_clone_entry_text();
++	pti_setup_espfix64();
+ }
+-- 
+2.13.6
+

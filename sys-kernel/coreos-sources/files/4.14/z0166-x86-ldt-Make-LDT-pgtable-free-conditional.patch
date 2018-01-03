@@ -1,0 +1,32 @@
+From 7f414195b0c3612acd12b4611a5fe75995cf10c7 Mon Sep 17 00:00:00 2001
+From: Thomas Gleixner <tglx@linutronix.de>
+Date: Sun, 31 Dec 2017 16:52:15 +0100
+Subject: [PATCH 166/171] x86/ldt: Make LDT pgtable free conditional
+
+Andy prefers to be paranoid about the pagetable free in the error path of
+write_ldt(). Make it conditional and warn whenever the installment of a
+secondary LDT fails.
+
+Requested-by: Andy Lutomirski <luto@amacapital.net>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+---
+ arch/x86/kernel/ldt.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/arch/x86/kernel/ldt.c b/arch/x86/kernel/ldt.c
+index 500e90e44f86..26d713ecad34 100644
+--- a/arch/x86/kernel/ldt.c
++++ b/arch/x86/kernel/ldt.c
+@@ -426,7 +426,8 @@ static int write_ldt(void __user *ptr, unsigned long bytecount, int oldmode)
+ 		 * already installed then the PTE page is already
+ 		 * populated. Mop up a half populated page table.
+ 		 */
+-		free_ldt_pgtables(mm);
++		if (!WARN_ON_ONCE(old_ldt))
++			free_ldt_pgtables(mm);
+ 		free_ldt_struct(new_ldt);
+ 		goto out_unlock;
+ 	}
+-- 
+2.13.6
+

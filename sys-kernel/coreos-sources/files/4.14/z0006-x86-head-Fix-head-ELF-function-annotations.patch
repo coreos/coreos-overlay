@@ -1,0 +1,56 @@
+From 015a2ea5478680fc5216d56b7ff306f2a74efaf9 Mon Sep 17 00:00:00 2001
+From: Josh Poimboeuf <jpoimboe@redhat.com>
+Date: Mon, 18 Sep 2017 21:43:33 -0500
+Subject: [PATCH 006/171] x86/head: Fix head ELF function annotations
+
+These functions aren't callable C-type functions, so don't annotate them
+as such.
+
+Signed-off-by: Josh Poimboeuf <jpoimboe@redhat.com>
+Cc: Andy Lutomirski <luto@kernel.org>
+Cc: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Cc: Jiri Slaby <jslaby@suse.cz>
+Cc: Juergen Gross <jgross@suse.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Link: http://lkml.kernel.org/r/36eb182738c28514f8bf95e403d89b6413a88883.1505764066.git.jpoimboe@redhat.com
+Signed-off-by: Ingo Molnar <mingo@kernel.org>
+---
+ arch/x86/kernel/head_64.S | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/arch/x86/kernel/head_64.S b/arch/x86/kernel/head_64.S
+index afb0a1e22d41..edacd579d504 100644
+--- a/arch/x86/kernel/head_64.S
++++ b/arch/x86/kernel/head_64.S
+@@ -234,7 +234,7 @@ ENTRY(secondary_startup_64)
+ 	pushq	%rax		# target address in negative space
+ 	lretq
+ .Lafter_lret:
+-ENDPROC(secondary_startup_64)
++END(secondary_startup_64)
+ 
+ #include "verify_cpu.S"
+ 
+@@ -277,7 +277,7 @@ ENTRY(early_idt_handler_array)
+ 	i = i + 1
+ 	.fill early_idt_handler_array + i*EARLY_IDT_HANDLER_SIZE - ., 1, 0xcc
+ 	.endr
+-ENDPROC(early_idt_handler_array)
++END(early_idt_handler_array)
+ 
+ early_idt_handler_common:
+ 	/*
+@@ -320,7 +320,7 @@ early_idt_handler_common:
+ 20:
+ 	decl early_recursion_flag(%rip)
+ 	jmp restore_regs_and_iret
+-ENDPROC(early_idt_handler_common)
++END(early_idt_handler_common)
+ 
+ 	__INITDATA
+ 
+-- 
+2.13.6
+

@@ -1,0 +1,43 @@
+From e93db75a0054b23a874a12c63376753544f3fe9e Mon Sep 17 00:00:00 2001
+From: Josh Poimboeuf <jpoimboe@redhat.com>
+Date: Mon, 18 Sep 2017 21:43:34 -0500
+Subject: [PATCH 007/171] x86/boot: Annotate verify_cpu() as a callable
+ function
+
+verify_cpu() is a callable function.  Annotate it as such.
+
+Signed-off-by: Josh Poimboeuf <jpoimboe@redhat.com>
+Cc: Andy Lutomirski <luto@kernel.org>
+Cc: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Cc: Jiri Slaby <jslaby@suse.cz>
+Cc: Juergen Gross <jgross@suse.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Link: http://lkml.kernel.org/r/293024b8a080832075312f38c07ccc970fc70292.1505764066.git.jpoimboe@redhat.com
+Signed-off-by: Ingo Molnar <mingo@kernel.org>
+---
+ arch/x86/kernel/verify_cpu.S | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/arch/x86/kernel/verify_cpu.S b/arch/x86/kernel/verify_cpu.S
+index 014ea59aa153..3d3c2f71f617 100644
+--- a/arch/x86/kernel/verify_cpu.S
++++ b/arch/x86/kernel/verify_cpu.S
+@@ -33,7 +33,7 @@
+ #include <asm/cpufeatures.h>
+ #include <asm/msr-index.h>
+ 
+-verify_cpu:
++ENTRY(verify_cpu)
+ 	pushf				# Save caller passed flags
+ 	push	$0			# Kill any dangerous flags
+ 	popf
+@@ -139,3 +139,4 @@ verify_cpu:
+ 	popf				# Restore caller passed flags
+ 	xorl %eax, %eax
+ 	ret
++ENDPROC(verify_cpu)
+-- 
+2.13.6
+

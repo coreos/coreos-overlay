@@ -1,0 +1,46 @@
+From 2582d3df95c76d3b686453baf90b64d57e87d1e8 Mon Sep 17 00:00:00 2001
+From: Josh Poimboeuf <jpoimboe@redhat.com>
+Date: Mon, 18 Sep 2017 21:43:35 -0500
+Subject: [PATCH 008/171] x86/xen: Fix xen head ELF annotations
+
+Mark the ends of the startup_xen and hypercall_page code sections.
+
+Signed-off-by: Josh Poimboeuf <jpoimboe@redhat.com>
+Cc: Andy Lutomirski <luto@kernel.org>
+Cc: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Cc: Jiri Slaby <jslaby@suse.cz>
+Cc: Juergen Gross <jgross@suse.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Link: http://lkml.kernel.org/r/3a80a394d30af43d9cefa1a29628c45ed8420c97.1505764066.git.jpoimboe@redhat.com
+Signed-off-by: Ingo Molnar <mingo@kernel.org>
+---
+ arch/x86/xen/xen-head.S | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/x86/xen/xen-head.S b/arch/x86/xen/xen-head.S
+index a7525e95d53f..9753225289e8 100644
+--- a/arch/x86/xen/xen-head.S
++++ b/arch/x86/xen/xen-head.S
+@@ -33,7 +33,7 @@ ENTRY(startup_xen)
+ 	mov $init_thread_union+THREAD_SIZE, %_ASM_SP
+ 
+ 	jmp xen_start_kernel
+-
++END(startup_xen)
+ 	__FINIT
+ #endif
+ 
+@@ -47,7 +47,7 @@ ENTRY(hypercall_page)
+ 	.type xen_hypercall_##n, @function; .size xen_hypercall_##n, 32
+ #include <asm/xen-hypercalls.h>
+ #undef HYPERCALL
+-
++END(hypercall_page)
+ .popsection
+ 
+ 	ELFNOTE(Xen, XEN_ELFNOTE_GUEST_OS,       .asciz "linux")
+-- 
+2.13.6
+
