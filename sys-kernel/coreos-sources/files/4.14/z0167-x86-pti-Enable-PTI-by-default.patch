@@ -1,0 +1,29 @@
+From 87faa0d9b43b4755ff6963a22d1fd1bee1aa3b39 Mon Sep 17 00:00:00 2001
+From: Thomas Gleixner <tglx@linutronix.de>
+Date: Wed, 3 Jan 2018 15:18:44 +0100
+Subject: [PATCH 167/171] x86/pti: Enable PTI by default
+
+This really want's to be enabled by default. Users who know what they are
+doing can disable it either in the config or on the kernel command line.
+
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: stable@vger.kernel.org
+---
+ security/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/security/Kconfig b/security/Kconfig
+index a623d13bf288..3d4debd0257e 100644
+--- a/security/Kconfig
++++ b/security/Kconfig
+@@ -56,6 +56,7 @@ config SECURITY_NETWORK
+ 
+ config PAGE_TABLE_ISOLATION
+ 	bool "Remove the kernel mapping in user mode"
++	default y
+ 	depends on X86_64 && !UML
+ 	help
+ 	  This feature reduces the number of hardware side channels by
+-- 
+2.13.6
+

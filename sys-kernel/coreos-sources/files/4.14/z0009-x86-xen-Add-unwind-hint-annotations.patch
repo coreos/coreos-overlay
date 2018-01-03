@@ -1,0 +1,60 @@
+From abbe1cac6214d81d2f4e149aba64a8760703144e Mon Sep 17 00:00:00 2001
+From: Josh Poimboeuf <jpoimboe@redhat.com>
+Date: Mon, 18 Sep 2017 21:43:36 -0500
+Subject: [PATCH 009/171] x86/xen: Add unwind hint annotations
+
+Add unwind hint annotations to the xen head code so the ORC unwinder can
+read head_64.o.
+
+hypercall_page needs empty annotations at 32-byte intervals to match the
+'xen_hypercall_*' ELF functions at those locations.
+
+Signed-off-by: Josh Poimboeuf <jpoimboe@redhat.com>
+Cc: Andy Lutomirski <luto@kernel.org>
+Cc: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Cc: Jiri Slaby <jslaby@suse.cz>
+Cc: Juergen Gross <jgross@suse.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Link: http://lkml.kernel.org/r/70ed2eb516fe9266be766d953f93c2571bca88cc.1505764066.git.jpoimboe@redhat.com
+Signed-off-by: Ingo Molnar <mingo@kernel.org>
+---
+ arch/x86/xen/xen-head.S | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/arch/x86/xen/xen-head.S b/arch/x86/xen/xen-head.S
+index 9753225289e8..124941d09b2b 100644
+--- a/arch/x86/xen/xen-head.S
++++ b/arch/x86/xen/xen-head.S
+@@ -9,6 +9,7 @@
+ #include <asm/boot.h>
+ #include <asm/asm.h>
+ #include <asm/page_types.h>
++#include <asm/unwind_hints.h>
+ 
+ #include <xen/interface/elfnote.h>
+ #include <xen/interface/features.h>
+@@ -19,6 +20,7 @@
+ #ifdef CONFIG_XEN_PV
+ 	__INIT
+ ENTRY(startup_xen)
++	UNWIND_HINT_EMPTY
+ 	cld
+ 
+ 	/* Clear .bss */
+@@ -40,7 +42,10 @@ END(startup_xen)
+ .pushsection .text
+ 	.balign PAGE_SIZE
+ ENTRY(hypercall_page)
+-	.skip PAGE_SIZE
++	.rept (PAGE_SIZE / 32)
++		UNWIND_HINT_EMPTY
++		.skip 32
++	.endr
+ 
+ #define HYPERCALL(n) \
+ 	.equ xen_hypercall_##n, hypercall_page + __HYPERVISOR_##n * 32; \
+-- 
+2.13.6
+

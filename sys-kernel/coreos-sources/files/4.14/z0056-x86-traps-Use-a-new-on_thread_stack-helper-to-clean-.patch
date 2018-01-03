@@ -1,0 +1,58 @@
+From 3383642c2f9d4f5b4fa37436db4a109a1a10018c Mon Sep 17 00:00:00 2001
+From: Andy Lutomirski <luto@kernel.org>
+Date: Thu, 2 Nov 2017 00:59:17 -0700
+Subject: [PATCH 056/171] x86/traps: Use a new on_thread_stack() helper to
+ clean up an assertion
+
+Let's keep the stack-related logic together rather than open-coding
+a comparison in an assertion in the traps code.
+
+Signed-off-by: Andy Lutomirski <luto@kernel.org>
+Reviewed-by: Borislav Petkov <bp@suse.de>
+Cc: Borislav Petkov <bpetkov@suse.de>
+Cc: Brian Gerst <brgerst@gmail.com>
+Cc: Dave Hansen <dave.hansen@intel.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Link: http://lkml.kernel.org/r/856b15bee1f55017b8f79d3758b0d51c48a08cf8.1509609304.git.luto@kernel.org
+Signed-off-by: Ingo Molnar <mingo@kernel.org>
+---
+ arch/x86/include/asm/processor.h | 6 ++++++
+ arch/x86/kernel/traps.c          | 3 +--
+ 2 files changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/arch/x86/include/asm/processor.h b/arch/x86/include/asm/processor.h
+index ae2ae6d80674..f10dae14f951 100644
+--- a/arch/x86/include/asm/processor.h
++++ b/arch/x86/include/asm/processor.h
+@@ -541,6 +541,12 @@ static inline unsigned long current_top_of_stack(void)
+ #endif
+ }
+ 
++static inline bool on_thread_stack(void)
++{
++	return (unsigned long)(current_top_of_stack() -
++			       current_stack_pointer) < THREAD_SIZE;
++}
++
+ #ifdef CONFIG_PARAVIRT
+ #include <asm/paravirt.h>
+ #else
+diff --git a/arch/x86/kernel/traps.c b/arch/x86/kernel/traps.c
+index 67db4f43309e..42a9c4458f5d 100644
+--- a/arch/x86/kernel/traps.c
++++ b/arch/x86/kernel/traps.c
+@@ -141,8 +141,7 @@ void ist_begin_non_atomic(struct pt_regs *regs)
+ 	 * will catch asm bugs and any attempt to use ist_preempt_enable
+ 	 * from double_fault.
+ 	 */
+-	BUG_ON((unsigned long)(current_top_of_stack() -
+-			       current_stack_pointer) >= THREAD_SIZE);
++	BUG_ON(!on_thread_stack());
+ 
+ 	preempt_enable_no_resched();
+ }
+-- 
+2.13.6
+

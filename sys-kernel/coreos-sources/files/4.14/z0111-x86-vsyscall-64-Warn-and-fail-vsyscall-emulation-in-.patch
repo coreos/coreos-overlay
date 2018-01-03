@@ -1,0 +1,45 @@
+From 4831b779403a836158917d59a7ca880483c67378 Mon Sep 17 00:00:00 2001
+From: Andy Lutomirski <luto@kernel.org>
+Date: Sun, 10 Dec 2017 22:47:20 -0800
+Subject: [PATCH 111/171] x86/vsyscall/64: Warn and fail vsyscall emulation in
+ NATIVE mode
+
+If something goes wrong with pagetable setup, vsyscall=native will
+accidentally fall back to emulation.  Make it warn and fail so that we
+notice.
+
+Signed-off-by: Andy Lutomirski <luto@kernel.org>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: Borislav Petkov <bp@alien8.de>
+Cc: Brian Gerst <brgerst@gmail.com>
+Cc: Dave Hansen <dave.hansen@linux.intel.com>
+Cc: David Laight <David.Laight@aculab.com>
+Cc: H. Peter Anvin <hpa@zytor.com>
+Cc: Josh Poimboeuf <jpoimboe@redhat.com>
+Cc: Juergen Gross <jgross@suse.com>
+Cc: Kees Cook <keescook@chromium.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Signed-off-by: Ingo Molnar <mingo@kernel.org>
+---
+ arch/x86/entry/vsyscall/vsyscall_64.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/arch/x86/entry/vsyscall/vsyscall_64.c b/arch/x86/entry/vsyscall/vsyscall_64.c
+index daad57c76e42..1faf40f2dda9 100644
+--- a/arch/x86/entry/vsyscall/vsyscall_64.c
++++ b/arch/x86/entry/vsyscall/vsyscall_64.c
+@@ -139,6 +139,10 @@ bool emulate_vsyscall(struct pt_regs *regs, unsigned long address)
+ 
+ 	WARN_ON_ONCE(address != regs->ip);
+ 
++	/* This should be unreachable in NATIVE mode. */
++	if (WARN_ON(vsyscall_mode == NATIVE))
++		return false;
++
+ 	if (vsyscall_mode == NONE) {
+ 		warn_bad_vsyscall(KERN_INFO, regs,
+ 				  "vsyscall attempted with vsyscall=none");
+-- 
+2.13.6
+

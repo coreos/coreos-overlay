@@ -1,0 +1,54 @@
+From d60ad744c9741586010d4bea286f09a063a90fbd Mon Sep 17 00:00:00 2001
+From: Andy Lutomirski <luto@kernel.org>
+Date: Sat, 4 Nov 2017 04:19:49 -0700
+Subject: [PATCH 064/171] selftests/x86/ldt_gdt: Robustify against
+ set_thread_area() and LAR oddities
+
+Bits 19:16 of LAR's result are undefined, and some upcoming
+improvements to the test case seem to trigger this.  Mask off those
+bits to avoid spurious failures.
+
+commit 5b781c7e317f ("x86/tls: Forcibly set the accessed bit in TLS
+segments") adds a valid case in which LAR's output doesn't quite
+agree with set_thread_area()'s input.  This isn't triggered in the
+test as is, but it will be if we start calling set_thread_area()
+with the accessed bit clear.  Work around this discrepency.
+
+I've added a Fixes tag so that -stable can pick this up if neccesary.
+
+Signed-off-by: Andy Lutomirski <luto@kernel.org>
+Cc: Borislav Petkov <bpetkov@suse.de>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Fixes: 5b781c7e317f ("x86/tls: Forcibly set the accessed bit in TLS segments")
+Link: http://lkml.kernel.org/r/b82f3f89c034b53580970ac865139fd8863f44e2.1509794321.git.luto@kernel.org
+Signed-off-by: Ingo Molnar <mingo@kernel.org>
+---
+ tools/testing/selftests/x86/ldt_gdt.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/tools/testing/selftests/x86/ldt_gdt.c b/tools/testing/selftests/x86/ldt_gdt.c
+index 961e3ee26c27..b0334338a4b0 100644
+--- a/tools/testing/selftests/x86/ldt_gdt.c
++++ b/tools/testing/selftests/x86/ldt_gdt.c
+@@ -115,7 +115,15 @@ static void check_valid_segment(uint16_t index, int ldt,
+ 		return;
+ 	}
+ 
+-	if (ar != expected_ar) {
++	/* The SDM says "bits 19:16 are undefined".  Thanks. */
++	ar &= ~0xF0000;
++
++	/*
++	 * NB: Different Linux versions do different things with the
++	 * accessed bit in set_thread_area().
++	 */
++	if (ar != expected_ar &&
++	    (ldt || ar != (expected_ar | AR_ACCESSED))) {
+ 		printf("[FAIL]\t%s entry %hu has AR 0x%08X but expected 0x%08X\n",
+ 		       (ldt ? "LDT" : "GDT"), index, ar, expected_ar);
+ 		nerrs++;
+-- 
+2.13.6
+

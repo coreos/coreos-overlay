@@ -1,0 +1,125 @@
+From 26c4ef9c49d8a0341f6d97ce2cfdd55d1236ed29 Mon Sep 17 00:00:00 2001
+From: Andy Lutomirski <luto@kernel.org>
+Date: Thu, 2 Nov 2017 00:58:59 -0700
+Subject: [PATCH 038/171] x86/entry/64: Split the IRET-to-user and
+ IRET-to-kernel paths
+
+These code paths will diverge soon.
+
+Signed-off-by: Andy Lutomirski <luto@kernel.org>
+Cc: Borislav Petkov <bpetkov@suse.de>
+Cc: Brian Gerst <brgerst@gmail.com>
+Cc: Dave Hansen <dave.hansen@intel.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Link: http://lkml.kernel.org/r/dccf8c7b3750199b4b30383c812d4e2931811509.1509609304.git.luto@kernel.org
+Signed-off-by: Ingo Molnar <mingo@kernel.org>
+---
+ arch/x86/entry/entry_64.S        | 34 +++++++++++++++++++++++++---------
+ arch/x86/entry/entry_64_compat.S |  2 +-
+ arch/x86/kernel/head_64.S        |  2 +-
+ 3 files changed, 27 insertions(+), 11 deletions(-)
+
+diff --git a/arch/x86/entry/entry_64.S b/arch/x86/entry/entry_64.S
+index e8ef83df46e6..3eeb1694210c 100644
+--- a/arch/x86/entry/entry_64.S
++++ b/arch/x86/entry/entry_64.S
+@@ -321,7 +321,7 @@ syscall_return_via_sysret:
+ 
+ opportunistic_sysret_failed:
+ 	SWAPGS
+-	jmp	restore_regs_and_iret
++	jmp	restore_regs_and_return_to_usermode
+ END(entry_SYSCALL_64)
+ 
+ ENTRY(stub_ptregs_64)
+@@ -423,7 +423,7 @@ ENTRY(ret_from_fork)
+ 	call	syscall_return_slowpath	/* returns with IRQs disabled */
+ 	TRACE_IRQS_ON			/* user mode is traced as IRQS on */
+ 	SWAPGS
+-	jmp	restore_regs_and_iret
++	jmp	restore_regs_and_return_to_usermode
+ 
+ 1:
+ 	/* kernel thread */
+@@ -612,7 +612,20 @@ GLOBAL(retint_user)
+ 	call	prepare_exit_to_usermode
+ 	TRACE_IRQS_IRETQ
+ 	SWAPGS
+-	jmp	restore_regs_and_iret
++
++GLOBAL(restore_regs_and_return_to_usermode)
++#ifdef CONFIG_DEBUG_ENTRY
++	/* Assert that pt_regs indicates user mode. */
++	testl	$3, CS(%rsp)
++	jnz	1f
++	ud2
++1:
++#endif
++	RESTORE_EXTRA_REGS
++	RESTORE_C_REGS
++	REMOVE_PT_GPREGS_FROM_STACK 8
++	INTERRUPT_RETURN
++
+ 
+ /* Returning to kernel space */
+ retint_kernel:
+@@ -632,11 +645,14 @@ retint_kernel:
+ 	 */
+ 	TRACE_IRQS_IRETQ
+ 
+-/*
+- * At this label, code paths which return to kernel and to user,
+- * which come from interrupts/exception and from syscalls, merge.
+- */
+-GLOBAL(restore_regs_and_iret)
++GLOBAL(restore_regs_and_return_to_kernel)
++#ifdef CONFIG_DEBUG_ENTRY
++	/* Assert that pt_regs indicates kernel mode. */
++	testl	$3, CS(%rsp)
++	jz	1f
++	ud2
++1:
++#endif
+ 	RESTORE_EXTRA_REGS
+ 	RESTORE_C_REGS
+ 	REMOVE_PT_GPREGS_FROM_STACK 8
+@@ -1327,7 +1343,7 @@ ENTRY(nmi)
+ 	 * work, because we don't want to enable interrupts.
+ 	 */
+ 	SWAPGS
+-	jmp	restore_regs_and_iret
++	jmp	restore_regs_and_return_to_usermode
+ 
+ .Lnmi_from_kernel:
+ 	/*
+diff --git a/arch/x86/entry/entry_64_compat.S b/arch/x86/entry/entry_64_compat.S
+index e26c25ca7756..9ca014a99968 100644
+--- a/arch/x86/entry/entry_64_compat.S
++++ b/arch/x86/entry/entry_64_compat.S
+@@ -337,7 +337,7 @@ ENTRY(entry_INT80_compat)
+ 	/* Go back to user mode. */
+ 	TRACE_IRQS_ON
+ 	SWAPGS
+-	jmp	restore_regs_and_iret
++	jmp	restore_regs_and_return_to_usermode
+ END(entry_INT80_compat)
+ 
+ ENTRY(stub32_clone)
+diff --git a/arch/x86/kernel/head_64.S b/arch/x86/kernel/head_64.S
+index 189bf42dfa2b..08f067faa264 100644
+--- a/arch/x86/kernel/head_64.S
++++ b/arch/x86/kernel/head_64.S
+@@ -326,7 +326,7 @@ early_idt_handler_common:
+ 
+ 20:
+ 	decl early_recursion_flag(%rip)
+-	jmp restore_regs_and_iret
++	jmp restore_regs_and_return_to_kernel
+ END(early_idt_handler_common)
+ 
+ 	__INITDATA
+-- 
+2.13.6
+
