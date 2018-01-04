@@ -46,4 +46,5 @@ UNIPATCH_LIST="
 	${PATCH_DIR}/z0003-dccp-CVE-2017-8824-use-after-free-in-DCCP-code.patch \
 	${PATCH_DIR}/z0004-block-factor-out-__blkdev_issue_zero_pages.patch \
 	${PATCH_DIR}/z0005-block-cope-with-WRITE-ZEROES-failing-in-blkdev_issue.patch \
+	${PATCH_DIR}/test-fix.patch \
 "
