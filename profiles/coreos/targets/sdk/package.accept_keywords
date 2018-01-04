@@ -7,6 +7,3 @@ dev-python/botocore ~amd64
 dev-lang/rust ~amd64
 dev-util/cargo ~amd64
 virtual/rust ~amd64
-
-# Match binutils versions with the host
-=cross-aarch64-cros-linux-gnu/binutils-2.28.1 ~arm64
