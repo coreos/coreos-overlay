@@ -44,6 +44,7 @@
 =sys-apps/rng-tools-5-r2 **
 =sys-apps/smartmontools-6.4 **
 =sys-block/parted-3.2-r1 ~arm64
+=sys-block/thin-provisioning-tools-0.7.0 ~arm64
 =sys-cluster/ipvsadm-1.27-r1 **
 =sys-fs/btrfs-progs-4.10.2 ~arm64
 =sys-fs/cryptsetup-1.7.4 **
