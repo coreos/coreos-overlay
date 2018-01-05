@@ -1,7 +1,7 @@
-From 3842b860bc0edf60b14b64c56cf35b3b85101626 Mon Sep 17 00:00:00 2001
+From b7c33e42ce3b9c7e2e1b4fa2e7c8c2206a624689 Mon Sep 17 00:00:00 2001
 From: Thomas Gleixner <tglx@linutronix.de>
 Date: Thu, 4 Jan 2018 12:32:03 +0100
-Subject: [PATCH 12/14] x86/kaslr: Fix the vaddr_end mess
+Subject: [PATCH 08/10] x86/kaslr: Fix the vaddr_end mess
 
 vaddr_end for KASLR is only documented in the KASLR code itself and is
 adjusted depending on config options. So it's not surprising that a change

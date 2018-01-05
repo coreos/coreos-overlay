@@ -1,7 +1,7 @@
-From a058d76b8da67c03e3ce13328b2ec8811e494184 Mon Sep 17 00:00:00 2001
+From 75c424050cce884af639e8a32d9021e0449ad590 Mon Sep 17 00:00:00 2001
 From: Andrey Ryabinin <aryabinin@virtuozzo.com>
 Date: Thu, 28 Dec 2017 19:06:20 +0300
-Subject: [PATCH 10/14] x86/mm: Set MODULES_END to 0xffffffffff000000
+Subject: [PATCH 06/10] x86/mm: Set MODULES_END to 0xffffffffff000000
 
 Since f06bdd4001c2 ("x86/mm: Adapt MODULES_END based on fixmap section size")
 kasan_mem_to_shadow(MODULES_END) could be not aligned to a page boundary.
