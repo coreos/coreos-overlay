@@ -1,7 +1,7 @@
-From ac76d022de724f8a414d8862b2a10b6be2dffd10 Mon Sep 17 00:00:00 2001
+From 317036bde63956361dc022ed1401ed8b0f22a682 Mon Sep 17 00:00:00 2001
 From: Peter Zijlstra <peterz@infradead.org>
 Date: Thu, 4 Jan 2018 18:07:12 +0100
-Subject: [PATCH 13/14] x86/events/intel/ds: Use the proper cache flush method
+Subject: [PATCH 09/10] x86/events/intel/ds: Use the proper cache flush method
  for mapping ds buffers
 
 Thomas reported the following warning:
