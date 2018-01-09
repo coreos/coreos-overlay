@@ -60,6 +60,8 @@ src_prepare() {
 	epatch "${FILESDIR}"/${PN}-perl-defined-array-check.patch
 	# fix builds for alternate $ROOT locations
 	epatch "${FILESDIR}"/${P}-no-link-lib-deps.patch
+	# https://bugs.gentoo.org/show_bug.cgi?id=582478
+	epatch "${FILESDIR}"/${P}-gcc6.patch
 	# Fix for CONFIG_ARM64_VA_BITS_48=y
 	# https://github.com/coreos/coreos-overlay/pull/2241
 	# https://bugzilla.mozilla.org/show_bug.cgi?id=1143022
