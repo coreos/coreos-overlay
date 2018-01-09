@@ -1,4 +1,4 @@
-# Copyright 1999-2017 Gentoo Foundation
+# Copyright 1999-2018 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
@@ -7,13 +7,13 @@ GITHUB_URI="github.com/opencontainers/runc"
 COREOS_GO_PACKAGE="${GITHUB_URI}"
 COREOS_GO_VERSION="go1.8"
 # the commit of runc that docker uses.
-# see https://github.com/docker/docker-ce/blob/v17.10.0-ce/components/engine/hack/dockerfile/binaries-commits#L6
+# see https://github.com/docker/docker-ce/blob/v17.12.0-ce/components/engine/hack/dockerfile/binaries-commits#L6
 # Note: this commit is only really present in the `docker/runc` repository.
 # Update the patch number when this commit is changed (i.e. the _p in the ebuild).
 # The patch version is arbitrarily the number of commits since the tag version
 # spcified in the ebuild name. For example:
 # $ git log --oneline v1.0.0-rc4..${COMMIT_ID} | wc -l
-COMMIT_ID="0351df1c5a66838d0c392b4ac4cf9450de844e2d"
+COMMIT_ID="b2567b37d7b75eb4cf325b77297b140ea686ce8f"
 
 inherit eutils flag-o-matic coreos-go vcs-snapshot
 
