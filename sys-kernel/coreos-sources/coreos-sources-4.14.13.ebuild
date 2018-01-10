@@ -46,9 +46,4 @@ UNIPATCH_LIST="
 	${PATCH_DIR}/z0003-dccp-CVE-2017-8824-use-after-free-in-DCCP-code.patch \
 	${PATCH_DIR}/z0004-block-factor-out-__blkdev_issue_zero_pages.patch \
 	${PATCH_DIR}/z0005-block-cope-with-WRITE-ZEROES-failing-in-blkdev_issue.patch \
-	${PATCH_DIR}/z0006-x86-mm-Set-MODULES_END-to-0xffffffffff000000.patch \
-	${PATCH_DIR}/z0007-x86-mm-Map-cpu_entry_area-at-the-same-place-on-4-5-l.patch \
-	${PATCH_DIR}/z0008-x86-kaslr-Fix-the-vaddr_end-mess.patch \
-	${PATCH_DIR}/z0009-x86-events-intel-ds-Use-the-proper-cache-flush-metho.patch \
-	${PATCH_DIR}/z0010-x86-tlb-Drop-the-_GPL-from-the-cpu_tlbstate-export.patch \
 "
