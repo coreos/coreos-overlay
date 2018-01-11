@@ -19,7 +19,7 @@ else
 	else
 		MY_PV="$PV-ce"
 	fi
-	DOCKER_GITCOMMIT="486a48d"
+	DOCKER_GITCOMMIT="03596f5"
 	SRC_URI="https://${COREOS_GO_PACKAGE}/archive/v${MY_PV}.tar.gz -> ${P}.tar.gz"
 	KEYWORDS="amd64 arm64"
 	[ "$DOCKER_GITCOMMIT" ] || die "DOCKER_GITCOMMIT must be added manually for each bump!"
@@ -211,8 +211,6 @@ src_unpack() {
 		DOCKER_BUILD_DATE=$(git -C "${S}" log -1 --format="%ct")
 	fi
 	[ "${#ENGINE_PATCHES[@]}" -gt 0 ] && eapply -d"${S}"/components/engine "${ENGINE_PATCHES[@]}"
-	# XXX: fix the insane version in the 17.12.0 tag -- DELETE THIS ON UPDATE
-	[ "x${PV}-ce" = "x$(<${S}/VERSION)" ] && die || echo "${PV}-ce" > "${S}/VERSION"
 }
 
 src_compile() {
@@ -265,7 +263,7 @@ src_compile() {
 
 	pushd components/cli || die
 
-	# Imitating https://github.com/docker/docker-ce/blob/v17.12.0-ce/components/cli/scripts/build/.variables#L7
+	# Imitating https://github.com/docker/docker-ce/blob/v18.01.0-ce/components/cli/scripts/build/.variables#L7
 	CLI_BUILDTIME="$(date -d "@${DOCKER_BUILD_DATE}" --utc --rfc-3339 ns 2> /dev/null | sed -e 's/ /T/')"
 	# build cli
 	emake \
