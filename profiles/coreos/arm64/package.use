@@ -3,6 +3,4 @@
 # FIXME: why isn't this set by default???
 sys-libs/ncurses unicode
 
-sys-apps/systemd -selinux
-
 sys-auth/polkit -introspection

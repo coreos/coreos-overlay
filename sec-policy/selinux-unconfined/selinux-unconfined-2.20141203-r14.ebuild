@@ -13,5 +13,5 @@ DESCRIPTION="SELinux policy for unconfined"
 if [[ $PV == 9999* ]] ; then
 	KEYWORDS=""
 else
-	KEYWORDS="amd64 x86"
+	KEYWORDS="amd64 x86 arm64 arm"
 fi

@@ -14,7 +14,7 @@ SRC_URI="http://oss.tresys.com/projects/setools/chrome/site/dists/${P}/${P}.tar.
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="amd64 x86"
+KEYWORDS="amd64 x86 arm64 arm"
 IUSE="X debug java python"
 
 COMMONDEPEND=">=sys-libs/libsepol-2.4
@@ -87,7 +87,8 @@ src_configure() {
 		--with-java-prefix=${JAVA_HOME} \
 		--disable-selinux-check \
 		--disable-bwidget-check \
-		--with-sepol-devel=${ROOT}/usr \
+		--with-selinux-devel="${ROOT:-/}usr" \
+		--with-sepol-devel="${ROOT:-/}usr" \
 		$(use_enable python swig-python) \
 		$(use_enable java swig-java) \
 		$(use_enable X swig-tcl) \
