@@ -10,7 +10,7 @@ if [[ ${PV} == 9999 ]]; then
 	# Use ~arch instead of empty keywords for compatibility with cros-workon
 	KEYWORDS="~amd64 ~arm64 ~arm ~x86"
 else
-	CROS_WORKON_COMMIT="116be646056745e7ae4bee25f396c36a7f0de610" # v235-coreos
+	CROS_WORKON_COMMIT="3e33d19de3f73f2059b92659cde8370715b94662" # v236-coreos
 	KEYWORDS="~alpha amd64 ~arm arm64 ~ia64 ~ppc ~ppc64 ~sparc ~x86"
 fi
 
@@ -28,17 +28,10 @@ HOMEPAGE="https://www.freedesktop.org/wiki/Software/systemd"
 
 LICENSE="GPL-2 LGPL-2.1 MIT public-domain"
 SLOT="0/2"
-IUSE="acl apparmor audit build cryptsetup curl elfutils +gcrypt gnuefi http
-	idn importd +kmod libidn2 +lz4 lzma nat pam policykit
-	qrcode +seccomp selinux ssl sysv-utils test vanilla xkb"
-
-# CoreOS specific use flags
-IUSE+=" symlink-usr"
-
-# Install systemd in the /usr partition on CoreOS.
-ROOTPREFIX="/usr"
+IUSE="acl apparmor audit build cryptsetup curl elfutils +gcrypt gnuefi http idn importd +kmod libidn2 +lz4 lzma nat pam policykit qrcode +seccomp selinux ssl sysv-utils test usrmerge vanilla xkb"
 
 REQUIRED_USE="importd? ( curl gcrypt lzma )"
+RESTRICT="!test? ( test )"
 
 MINKV="3.11"
 
@@ -101,6 +94,7 @@ DEPEND="${COMMON_DEPEND}
 	app-arch/xz-utils:0
 	dev-util/gperf
 	>=dev-util/intltool-0.50
+	>=dev-util/meson-0.41
 	>=sys-apps/coreutils-8.16
 	>=sys-kernel/linux-headers-${MINKV}
 	virtual/pkgconfig
@@ -127,6 +121,7 @@ pkg_pretend() {
 		use seccomp && CONFIG_CHECK+=" ~SECCOMP ~SECCOMP_FILTER"
 		kernel_is -lt 3 7 && CONFIG_CHECK+=" ~HOTPLUG"
 		kernel_is -lt 4 7 && CONFIG_CHECK+=" ~DEVPTS_MULTIPLE_INSTANCES"
+		kernel_is -ge 4 10 && CONFIG_CHECK+=" ~CGROUP_BPF"
 
 		if linux_config_exists; then
 			local uevent_helper_path=$(linux_chkconfig_string UEVENT_HELPER_PATH)
@@ -158,7 +153,7 @@ src_unpack() {
 
 src_prepare() {
 	# Use the resolv.conf managed by systemd-resolved
-	sed -i -e 's,/usr/lib/systemd/resolv.conf,/run/systemd/resolve/resolv.conf,' tmpfiles.d/etc.conf.m4 || die
+	sed -i -e 's,/run/systemd/resolve/stub-resolv.conf,/run/systemd/resolve/resolv.conf,' tmpfiles.d/etc.conf.m4 || die
 
 	default
 }
@@ -198,9 +193,9 @@ multilib_src_configure() {
 		-Dpamlibdir="$(getpam_mod_dir)"
 		# avoid bash-completion dep
 		-Dbashcompletiondir="$(get_bashcompdir)"
-		# make sure we get /bin:/sbin in $PATH
-		-Dsplit-usr=true
-		-Drootprefix="${EPREFIX}${ROOTPREFIX}"
+		# make sure we get /bin:/sbin in PATH
+		-Dsplit-usr=$(usex usrmerge false true)
+		-Drootprefix="$(usex usrmerge "${EPREFIX}/usr" "${EPREFIX:-/}")"
 		-Dsysvinit-path=
 		-Dsysvrcnd-path=
 		# no deps
@@ -215,7 +210,7 @@ multilib_src_configure() {
 		-Delfutils=$(meson_multilib_native_use elfutils)
 		-Dgcrypt=$(meson_use gcrypt)
 		-Dgnu-efi=$(meson_multilib_native_use gnuefi)
-		-Defi-libdir="/usr/$(get_libdir)"
+		-Defi-libdir="${EPREFIX}/usr/$(get_libdir)"
 		-Dmicrohttpd=$(meson_multilib_native_use http)
 		$(usex http -Dgnutls=$(meson_multilib_native_use ssl) -Dgnutls=false)
 		-Dimportd=$(meson_multilib_native_use importd)
@@ -296,7 +291,7 @@ multilib_src_configure() {
 		-Defi-cc="$(tc-getCC)"
 		-Dquotaon-path=/usr/sbin/quotaon
 		-Dquotacheck-path=/usr/sbin/quotacheck
-		-Drootlibdir="${EPREFIX}${ROOTPREFIX}/$(get_libdir)"
+		-Drootlibdir="${EPREFIX}$(usex usrmerge /usr '')/$(get_libdir)"
 	)
 
 	if multilib_is_native_abi && use idn; then
@@ -333,10 +328,11 @@ multilib_src_install_all() {
 	einstalldocs
 
 	if use sysv-utils; then
+		local app
 		for app in halt poweroff reboot runlevel shutdown telinit; do
-			dosym "${EPREFIX}${ROOTPREFIX%/}/bin/systemctl" $(usex symlink-usr /usr '')/sbin/${app}
+			dosym ../bin/systemctl $(usex usrmerge /usr '')/sbin/${app}
 		done
-		dosym "${EPREFIX}${ROOTPREFIX%/}/lib/systemd/systemd" $(usex symlink-usr /usr '')/sbin/init
+		dosym ../lib/systemd/systemd $(usex usrmerge /usr '')/sbin/init
 	else
 		# we just keep sysvinit tools, so no need for the mans
 		rm "${ED%/}"/usr/share/man/man8/{halt,poweroff,reboot,runlevel,shutdown,telinit}.8 \
@@ -344,12 +340,15 @@ multilib_src_install_all() {
 		rm "${ED%/}"/usr/share/man/man1/init.1 || die
 	fi
 
-	rm -r "${ED%/}${ROOTPREFIX%/}/lib/udev/hwdb.d" || die
+	local udevdir=/lib/udev
+	use usrmerge && udevdir=/usr/lib/udev
 
-	if [[ ! -e "${ED%/}"/usr/lib/systemd/systemd ]]; then
+	rm -r "${ED%/}${udevdir}/hwdb.d" || die
+
+	if ! use usrmerge; then
 		# Avoid breaking boot/reboot
-		dosym "../../..${ROOTPREFIX%/}/lib/systemd/systemd" /usr/lib/systemd/systemd
-		dosym "../../..${ROOTPREFIX%/}/lib/systemd/systemd-shutdown" /usr/lib/systemd/systemd-shutdown
+		dosym ../../../lib/systemd/systemd /usr/lib/systemd/systemd
+		dosym ../../../lib/systemd/systemd-shutdown /usr/lib/systemd/systemd-shutdown
 	fi
 
 	# Ensure journal directory has correct ownership/mode in inital image.
@@ -368,7 +367,7 @@ multilib_src_install_all() {
 	dosym multi-user.target "${unitdir}"/default.target
 
 	# Don't set any extra environment variables by default
-	rm "${ED%/}${ROOTPREFIX%/}/lib/environment.d/99-environment.conf" || die
+	rm "${ED%/}/usr/lib/environment.d/99-environment.conf" || die
 
 	# Move a few services enabled in /etc to /usr, delete files individually
 	# so builds fail if systemd adds any new unexpected stuff to /etc
@@ -404,8 +403,8 @@ multilib_src_install_all() {
 	done
 
 	# Do not enable random services if /etc was detected as empty!!!
-	rm "${ED%/}"/usr/lib/systemd/system-preset/90-systemd.preset || die
-	insinto /usr/lib/systemd/system-preset
+	rm "${ED%/}$(usex usrmerge /usr '')/lib/systemd/system-preset/90-systemd.preset" || die
+	insinto $(usex usrmerge /usr '')/lib/systemd/system-preset
 	doins "${FILESDIR}"/99-default.preset
 
 	# Do not ship distro-specific files (nsswitch.conf pam.d)
@@ -459,19 +458,6 @@ migrate_locale() {
 	fi
 }
 
-pkg_preinst() {
-	# If /lib/systemd and /usr/lib/systemd are the same directory, remove the
-	# symlinks we created in src_install.
-	if [[ $(realpath "${EROOT%/}${ROOTPREFIX}/lib/systemd") == $(realpath "${EROOT%/}/usr/lib/systemd") ]]; then
-		if [[ -L ${ED%/}/usr/lib/systemd/systemd ]]; then
-			rm "${ED%/}/usr/lib/systemd/systemd" || die
-		fi
-		if [[ -L ${ED%/}/usr/lib/systemd/systemd-shutdown ]]; then
-			rm "${ED%/}/usr/lib/systemd/systemd-shutdown" || die
-		fi
-	fi
-}
-
 pkg_postinst() {
 	newusergroup() {
 		enewgroup "$1"
@@ -482,12 +468,9 @@ pkg_postinst() {
 	enewgroup kvm 78
 	enewgroup systemd-journal
 	newusergroup systemd-coredump
-	newusergroup systemd-journal-gateway
 	newusergroup systemd-journal-remote
-	newusergroup systemd-journal-upload
 	newusergroup systemd-network
 	newusergroup systemd-resolve
-	newusergroup systemd-timesync
 
 	systemd_update_catalog
 
