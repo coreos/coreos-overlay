@@ -11,7 +11,7 @@
 
 # Everything needed for the boot engine
 >=sys-apps/kexec-tools-2.0.4-r1 ~amd64
-=sys-kernel/dracut-045-r2 **
+=sys-kernel/dracut-046-r1 **
 
 # Needed by coreos-oem-gce
 dev-python/boto
