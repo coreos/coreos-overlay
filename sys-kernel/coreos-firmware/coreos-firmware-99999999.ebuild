@@ -104,6 +104,10 @@ src_prepare() {
 		die "Missing firmware"
 	fi
 
+	# AMD's microcode is shipped as part of coreos-firmware, but not a dependency to
+	# any module, so add it manually
+	use amd64 && find amd-ucode/ -type f -not -name "*.asc" >> "${T}/firmware-scan"
+
 	einfo "Pruning all unneeded firmware files..."
 	sort -u "${T}/firmware-scan" > "${T}/firmware"
 	find * -not -type d \
