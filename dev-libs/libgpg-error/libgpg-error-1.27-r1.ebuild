@@ -3,7 +3,7 @@
 
 EAPI=6
 
-inherit libtool ltprune multilib-minimal toolchain-funcs
+inherit autotools eutils libtool ltprune multilib-minimal toolchain-funcs
 
 DESCRIPTION="Contains error handling functions used by GnuPG software"
 HOMEPAGE="http://www.gnupg.org/related_software/libgpg-error"
@@ -32,6 +32,8 @@ MULTILIB_WRAPPED_HEADERS=(
 
 src_prepare() {
 	default
+	epatch "${FILESDIR}/${P}-cross-compile-fix.patch"
+	eautoreconf
 	elibtoolize
 }
 
