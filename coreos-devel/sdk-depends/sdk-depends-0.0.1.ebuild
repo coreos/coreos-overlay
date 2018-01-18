@@ -38,6 +38,7 @@ DEPEND="
 	net-misc/curl
 	sys-apps/debianutils
 	sys-apps/iproute2
+	sys-apps/iucode_tool
 	sys-apps/seismograph
 	sys-boot/grub
 	sys-boot/shim
