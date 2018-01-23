@@ -26,16 +26,6 @@ fi
 KEYWORDS="amd64 arm64"
 IUSE=""
 
-# For 4.14 >= 4.14.10
-src_install() {
-	kernel-2_src_install
-	local r="${PR#r0}"
-	local script="${ED}/usr/src/linux-${PV/_rc/-rc}-coreos${r:+-${r}}/tools/objtool/sync-check.sh"
-	if [[ -e "${script}" ]]; then
-		chmod +x "${script}" || die
-	fi
-}
-
 # XXX: Note we must prefix the patch filenames with "z" to ensure they are
 # applied _after_ a potential patch-${KV}.patch file, present when building a
 # patchlevel revision.  We mustn't apply our patches first, it fails when the
