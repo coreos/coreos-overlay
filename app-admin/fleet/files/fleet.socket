@@ -1,9 +1,0 @@
-[Unit]
-Description=Fleet API Socket
-PartOf=fleet.service
-
-[Socket]
-ListenStream=/var/run/fleet.sock
-SocketMode=0660
-SocketUser=fleet
-SocketGroup=fleet
