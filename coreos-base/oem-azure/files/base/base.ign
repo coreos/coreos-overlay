@@ -19,15 +19,6 @@
       {
         "name": "waagent.service",
         "enabled": true
-      },
-      {
-        "name": "etcd2.service",
-        "dropins": [
-          {
-            "name": "10-oem.conf",
-            "contents": "[Service]\nEnvironment=ETCD_ELECTION_TIMEOUT=1200\n"
-          }
-        ]
       }
     ]
   }
