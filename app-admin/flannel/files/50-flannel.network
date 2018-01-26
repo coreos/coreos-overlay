@@ -1,5 +1,0 @@
-[Match]
-Name=flannel*
-
-[Link]
-Unmanaged=yes
