@@ -87,7 +87,6 @@ RDEPEND="${RDEPEND}
 RDEPEND="${RDEPEND}
 	app-admin/etcd-wrapper
 	app-admin/flannel-wrapper
-	app-admin/fleet
 	app-admin/kubelet-wrapper
 	app-admin/locksmith
 	app-admin/mayday
@@ -112,7 +111,6 @@ RDEPEND="${RDEPEND}
 	coreos-base/coreos-metadata
 	coreos-base/update-ssh-keys
 	coreos-base/update_engine
-	dev-db/etcd:2
 	dev-db/etcdctl
 	dev-util/strace
 	dev-vcs/git

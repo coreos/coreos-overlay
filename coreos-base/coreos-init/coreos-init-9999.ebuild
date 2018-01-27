@@ -31,7 +31,6 @@ REQUIRED_USE="symlink-usr"
 DEPEND="
 	net-misc/openssh
 	net-nds/rpcbind
-	!<dev-db/etcd-0.0.1-r6
 	!coreos-base/oem-service
 	test? ( dev-lang/python:2.7 )
 	"

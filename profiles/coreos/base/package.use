@@ -96,10 +96,6 @@ sys-apps/portage -xattr
 # Enable -M and -Z flags; -M is used by mayday
 sys-process/lsof rpc selinux
 
-# Don't include etcd2's etcdctl so we can include the newer version via the
-# etcdctl package
-dev-db/etcd -etcdctl
-
 # can be removed with socat-2.0.0; this is the openssl/readline license
 # incompatibility 
 net-misc/socat -ssl
