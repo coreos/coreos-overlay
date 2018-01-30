@@ -14,7 +14,7 @@ else
 	KEYWORDS="amd64 arm arm64 x86"
 fi
 
-inherit cros-workon cros-debug cros-au
+inherit cros-workon cros-debug
 
 DESCRIPTION="CoreOS Bootengine"
 SRC_URI=""
