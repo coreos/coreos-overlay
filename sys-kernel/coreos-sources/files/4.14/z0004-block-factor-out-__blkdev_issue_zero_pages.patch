@@ -1,4 +1,4 @@
-From 3cca94dee8d32324b2f218c36e4d96a97d925554 Mon Sep 17 00:00:00 2001
+From 82681258a4b7dc951f2e4b367ebeaf3f89c5073b Mon Sep 17 00:00:00 2001
 From: Ilya Dryomov <idryomov@gmail.com>
 Date: Mon, 16 Oct 2017 15:59:09 +0200
 Subject: [PATCH 4/5] block: factor out __blkdev_issue_zero_pages()
@@ -103,5 +103,5 @@ index 63fb971d6574..9e86a4871b0f 100644
  EXPORT_SYMBOL(__blkdev_issue_zeroout);
  
 -- 
-2.14.1
+2.14.3
 
