@@ -55,7 +55,7 @@ DEPEND="app-arch/cpio
 	${COMMON_DEPEND}"
 RDEPEND="!app-emulation/rocket
 	rkt_stage1_host? (
-		~sys-apps/systemd-222
+		>=sys-apps/systemd-220
 		app-shells/bash
 	)
 	${COMMON_DEPEND}"
