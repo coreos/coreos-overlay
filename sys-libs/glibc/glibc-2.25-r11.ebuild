@@ -125,6 +125,9 @@ src_prepare() {
 	cd "${S}"
 
 	epatch "${FILESDIR}"/2.19/${PN}-2.19-ia64-gcc-4.8-reloc-hack.patch #503838
+	## COREOS: Apply features and fixes missing from the Gentoo patch set.
+	epatch "${FILESDIR}"/${PV}/${P}-gshadow-handle-erange.patch
+	epatch "${FILESDIR}"/${PV}/${P}-c-utf8-locale.patch
 
 	if use hardened ; then
 		# We don't enable these for non-hardened as the output is very terse --
@@ -151,3 +154,28 @@ src_prepare() {
 		;;
 	esac
 }
+
+## COREOS: Redefine some eclass-provided functions for local changes.
+
+# For reference, this function has been modified to do:
+# - Config files are installed by baselayout, not glibc.
+# - Install nscd/systemd stuff in /usr.
+src_install() {
+	toolchain-glibc_src_install "$@"
+
+	# Use tmpfiles to put nscd.conf in /etc and create directories.
+	insinto /usr/share/baselayout
+	if ! in_iuse nscd || use nscd ; then
+		doins "${S}"/nscd/nscd.conf || die
+		systemd_newtmpfilesd "${FILESDIR}"/nscd-conf.tmpfiles nscd-conf.conf || die
+	fi
+
+	# Clean out any default configs.
+	rm -rf "${ED}"/etc
+
+	# Restore this one for the SDK.
+	test ! -e "${T}"/00glibc || doenvd "${T}"/00glibc
+}
+
+# Ignore /dev/pts settings, since the chroot has no control over them.
+check_devpts() { : ; }
