@@ -35,7 +35,6 @@ RDEPEND="${RDEPEND}
 	app-arch/sharutils
 	app-arch/unzip
 	app-emulation/qemu
-	app-text/texi2html
 	coreos-base/cros-devutils[cros_host]
 	=dev-lang/python-2*
 	dev-python/setuptools
