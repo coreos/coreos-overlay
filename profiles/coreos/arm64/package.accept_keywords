@@ -19,6 +19,7 @@
 =dev-libs/libpcre-8.41 ~arm64
 =dev-libs/libxml2-2.9.4-r3 ~arm64
 =dev-libs/nss-3.29.5 ~arm64
+=dev-libs/libpcre2-10.30 ~arm64
 =dev-libs/userspace-rcu-0.9.1 **
 =dev-util/meson-0.43.0 ~arm64
 =dev-util/ninja-1.8.2 ~arm64
