@@ -4,7 +4,7 @@
 
 EAPI=5
 
-DESCRIPTION="Meta ebuild for everything that should be in the SDK."
+DESCRIPTION="Meta ebuild for everything that needs to be in the SDK."
 HOMEPAGE="http://coreos.com/docs/sdk/"
 SRC_URI=""
 

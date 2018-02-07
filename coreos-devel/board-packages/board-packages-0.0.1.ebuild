@@ -13,6 +13,10 @@ SLOT="0"
 KEYWORDS="amd64 arm64"
 IUSE=""
 
+# Depend on everything OEMs need, but not the OEMs themselves.
+# This makes the built packages available for image_vm_util.sh but
+# avoids copying the oem specific files (e.g. grub configs) before
+# the oem partition is set up.
 DEPEND=""
 RDEPEND="
 	amd64? (

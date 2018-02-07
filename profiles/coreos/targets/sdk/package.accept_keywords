@@ -7,3 +7,7 @@ dev-python/botocore ~amd64
 dev-lang/rust ~amd64
 dev-util/cargo ~amd64
 virtual/rust ~amd64
+
+# Accept go utilities
+dev-go/glide ~amd64
+dev-go/godep ~amd64
