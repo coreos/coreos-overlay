@@ -8,5 +8,5 @@ KEYWORDS=amd64 arm64
 LICENSE=Apache-2.0
 RDEPEND=app-emulation/rkt
 SLOT=0
-_eclasses_=cros-workon	4ad6e6491a1010ad7c875302b3be18ba	git-r3	52a888802d25387c2c74cb845d1219bc
+_eclasses_=cros-workon	4ad6e6491a1010ad7c875302b3be18ba	git-r3	fec09a83ae965b041b47f5ff7c8ba29a
 _md5_=229ba7af409042f18322c7185b3730be

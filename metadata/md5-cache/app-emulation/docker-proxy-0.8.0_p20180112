@@ -1,0 +1,15 @@
+DEFINED_PHASES=compile install prepare unpack
+DEPEND=>=dev-lang/go-1.8 dev-lang/go:1.8=
+DESCRIPTION=Docker container networking
+EAPI=6
+HOMEPAGE=https://github.com/docker/libnetwork
+IUSE=+go_version_go1_8
+KEYWORDS=amd64 arm64
+LICENSE=Apache-2.0
+RDEPEND=!<app-emulation/docker-1.13.0_rc1
+REQUIRED_USE=go_version_go1_8
+RESTRICT=test
+SLOT=0
+SRC_URI=https://github.com/docker/libnetwork/archive/fcf1c3b5e57833aaaa756ae3c4140ea54da00319.tar.gz -> docker-proxy-0.8.0_p20180112.tar.gz
+_eclasses_=coreos-go	1b5f6ac7749b16d9f26b8b2813f6d09c	coreos-go-depend	14c6f09b2aaca3f3965f1895f1566f7c	coreos-go-utils	c34072f13165bb85e5106cc6e082a4e1	desktop	2ccd1dd1dd7bfb8795eea024a4f91bb6	epatch	8233751dc5105a6ae8fcd86ce2bb0247	estack	43ddf5aaffa7a8d0482df54d25a66a1f	eutils	b4eee44966573b7fb6761e507910b306	flag-o-matic	02908f00f002f0f07c5b74783d778325	golang-base	51a1f13e065f1cff4507685d9cc268c7	golang-vcs-snapshot	913580335becddd3ebecefe852e47536	ltprune	2770eed66a9b8ef944714cd0e968182e	multilib	97f470f374f2e94ccab04a2fb21d811e	multiprocessing	cac3169468f893670dac3e7cb940e045	preserve-libs	ef207dc62baddfddfd39a164d9797648	toolchain-funcs	885c7d8dd70a58825f3d17e35a3cd1e9
+_md5_=2080eb56c96cd52f34cbc3ae32d9b0f1

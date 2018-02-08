@@ -1,0 +1,14 @@
+DEFINED_PHASES=compile install prepare unpack
+DEPEND=btrfs? ( sys-fs/btrfs-progs ) dev-lang/go:1.9= virtual/pkgconfig
+DESCRIPTION=A daemon to control runC
+EAPI=6
+HOMEPAGE=https://containerd.tools
+IUSE=+btrfs hardened +go_version_go1_9
+KEYWORDS=amd64 arm64
+LICENSE=Apache-2.0
+RDEPEND==app-emulation/docker-runc-1.0.0_rc4_p205 sys-libs/libseccomp
+REQUIRED_USE=go_version_go1_9
+SLOT=0
+SRC_URI=https://github.com/containerd/containerd/archive/9b55aab90508bd389d7654c4baf173a981477d55.tar.gz -> containerd-1.0.1.tar.gz
+_eclasses_=coreos-go	1b5f6ac7749b16d9f26b8b2813f6d09c	coreos-go-depend	14c6f09b2aaca3f3965f1895f1566f7c	coreos-go-utils	c34072f13165bb85e5106cc6e082a4e1	desktop	2ccd1dd1dd7bfb8795eea024a4f91bb6	epatch	8233751dc5105a6ae8fcd86ce2bb0247	estack	43ddf5aaffa7a8d0482df54d25a66a1f	eutils	b4eee44966573b7fb6761e507910b306	flag-o-matic	02908f00f002f0f07c5b74783d778325	ltprune	2770eed66a9b8ef944714cd0e968182e	multilib	97f470f374f2e94ccab04a2fb21d811e	multiprocessing	cac3169468f893670dac3e7cb940e045	preserve-libs	ef207dc62baddfddfd39a164d9797648	systemd	a31844b675f1a1fea87fbe1144aee5f5	toolchain-funcs	885c7d8dd70a58825f3d17e35a3cd1e9	vcs-snapshot	03289f51c769cf409d200d2d628cdd6e
+_md5_=8294adf8c3b5ddd12883d7990b344d07
