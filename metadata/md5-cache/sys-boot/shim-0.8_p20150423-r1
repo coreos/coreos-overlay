@@ -7,5 +7,5 @@ IUSE=cros_workon_tree_* profiling
 KEYWORDS=amd64 arm64
 LICENSE=BSD
 SLOT=0
-_eclasses_=cros-workon	4ad6e6491a1010ad7c875302b3be18ba	git-r3	52a888802d25387c2c74cb845d1219bc	multilib	97f470f374f2e94ccab04a2fb21d811e	toolchain-funcs	185a06792159ca143528e7010368e8af
+_eclasses_=cros-workon	4ad6e6491a1010ad7c875302b3be18ba	git-r3	fec09a83ae965b041b47f5ff7c8ba29a	multilib	97f470f374f2e94ccab04a2fb21d811e	toolchain-funcs	885c7d8dd70a58825f3d17e35a3cd1e9
 _md5_=7aa3817a532da1c9a57b076fcb60c1dc
