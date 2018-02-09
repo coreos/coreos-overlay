@@ -29,7 +29,6 @@ RDEPEND="${RDEPEND}
 # Host dependencies for building cross-compiled packages.
 # TODO: chromeos-base/chromeos-installer
 RDEPEND="${RDEPEND}
-	app-arch/cabextract
 	>=app-arch/pbzip2-1.1.1-r1
 	app-arch/rpm2targz
 	app-arch/sharutils
@@ -52,17 +51,8 @@ RDEPEND="${RDEPEND}
 	dev-libs/libxslt
 	dev-libs/libyaml
 	dev-libs/protobuf
-	dev-python/cherrypy
 	dev-python/ctypesgen
-	dev-python/m2crypto
 	dev-python/mako
-	dev-python/netifaces
-	dev-python/pyinotify
-	dev-python/pyopenssl
-	dev-python/python-daemon
-	dev-python/pyusb
-	dev-python/setproctitle
-	dev-python/ws4py
 	sys-devel/bc
 	dev-util/gdbus-codegen
 	dev-util/gperf
@@ -108,7 +98,6 @@ RDEPEND="${RDEPEND}
 	dev-util/perf
 	sys-apps/pv
 	app-shells/bash-completion
-	sys-devel/smatch
 	"
 
 # Host dependencies that are needed to create and sign images
@@ -122,15 +111,8 @@ RDEPEND="${RDEPEND}
 	coreos-base/update_engine
 	"
 
-# Host dependencies to run unit tests within the chroot
-RDEPEND="${RDEPEND}
-	dev-cpp/gflags
-	dev-python/mock
-	dev-python/mox
-	dev-python/unittest2
-	"
-
 # Host dependencies for running pylint within the chroot
+# TODO: move to sdk-extras
 RDEPEND="${RDEPEND}
 	dev-python/pylint
 	"
@@ -146,11 +128,6 @@ RDEPEND="${RDEPEND}
 # Host dependencies that are needed for chromite/bin/upload_package_status
 RDEPEND="${RDEPEND}
 	dev-python/gdata
-	"
-
-# Host dependencies for HWID processing
-RDEPEND="${RDEPEND}
-	dev-python/pyyaml
 	"
 
 # Host dependencies for building ISOs
