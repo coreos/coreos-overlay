@@ -22,6 +22,7 @@ S="${WORKDIR}/${PN}"
 DEPEND="${PYTHON_DEPS}"
 RDEPEND="${DEPEND}
 	dev-python/crcmod[${PYTHON_USEDEP}]
+	dev-python/pyopenssl
 	!net-misc/gsutil"
 
 src_prepare() {
