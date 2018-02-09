@@ -12,3 +12,6 @@ sys-apps/util-linux python
 
 # not needed, requires lots of Perl
 sys-boot/syslinux perl
+
+# not needed, problems building with GCC 7.3.0
+sys-libs/ncurses cxx
