@@ -8,7 +8,7 @@ ETYPE="sources"
 # Final releases should be versioned L.M.N, even for N == 0
 
 # Only needed for RCs
-K_BASE_VER="4.15"
+K_BASE_VER="4.14"
 
 inherit kernel-2
 detect_version
@@ -33,4 +33,8 @@ IUSE=""
 UNIPATCH_LIST="
 	${PATCH_DIR}/z0001-kbuild-derive-relative-path-for-KBUILD_SRC-from-CURD.patch \
 	${PATCH_DIR}/z0002-Add-arm64-coreos-verity-hash.patch \
+	${PATCH_DIR}/z0003-dccp-CVE-2017-8824-use-after-free-in-DCCP-code.patch \
+	${PATCH_DIR}/z0004-block-factor-out-__blkdev_issue_zero_pages.patch \
+	${PATCH_DIR}/z0005-block-cope-with-WRITE-ZEROES-failing-in-blkdev_issue.patch \
+	${PATCH_DIR}/z0006-tools-objtool-Makefile-Don-t-fail-on-fallthrough-wit.patch \
 "
