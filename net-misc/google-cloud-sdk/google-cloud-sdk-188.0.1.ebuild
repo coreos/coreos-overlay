@@ -27,6 +27,7 @@ RDEPEND="${DEPEND}
 
 src_prepare() {
 	# Drop unnused python3 code
+	rm -r lib/third_party/httplib2/python3 || die
 	rm -r platform/gsutil/third_party/httplib2/python3 || die
 	# Use the compiled crcmod from the system
 	rm -r platform/gsutil/third_party/{crcmod,crcmod_osx} || die
@@ -42,7 +43,6 @@ src_install() {
 
 	dobin "${FILESDIR}/"{gcloud,gsutil}
 	dodoc LICENSE README RELEASE_NOTES
-	doman help/man/man1/*.1
 
 	newbashcomp completion.bash.inc gcloud
 	bashcomp_alias gcloud gsutil
