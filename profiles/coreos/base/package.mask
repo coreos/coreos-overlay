@@ -14,3 +14,6 @@
 # mask an accidental rkt major version bump to ensure it's not chosen over more
 # recent releases
 =app-emulation/rkt-13.0
+
+# Prevent this from attempting to install along with GCC 7.
+=sys-devel/gcc-6.4.0-r1
