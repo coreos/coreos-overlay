@@ -67,6 +67,8 @@ src_prepare() {
 	local rust_stage0_name="RUST_STAGE0_${ARCH}"
 	local rust_stage0="${!rust_stage0_name}"
 
+	sed -i -e /-Werror/d src/binaryen/CMakeLists.txt
+
 	"${WORKDIR}/${rust_stage0}"/install.sh --disable-ldconfig --destdir="${rust_stage0_root}" --prefix=/ || die
 
 	default
