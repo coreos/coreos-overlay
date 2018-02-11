@@ -1,0 +1,2 @@
+# This fails from -Werror=implicit-fallthrough, and it's disabled in the SDK.
+sys-devel/gcc sanitize

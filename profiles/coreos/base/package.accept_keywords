@@ -71,3 +71,8 @@ dev-util/checkbashisms
 
 # systemd v235 requires util-linux 2.30
 =sys-apps/util-linux-2.30.2 ~amd64 ~arm64
+
+# Upgrade to GCC 7.3 for retpoline support.
+=sys-devel/gcc-7.3.0
+=cross-aarch64-cros-linux-gnu/gcc-7.3.0 ~arm64
+=cross-x86_64-cros-linux-gnu/gcc-7.3.0 ~amd64
