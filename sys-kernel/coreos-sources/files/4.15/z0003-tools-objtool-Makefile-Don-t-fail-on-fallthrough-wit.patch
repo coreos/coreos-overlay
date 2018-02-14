@@ -1,0 +1,27 @@
+From 636728be81fa014a63e39e3c6aaa824374b7a542 Mon Sep 17 00:00:00 2001
+From: David Michael <david.michael@coreos.com>
+Date: Thu, 8 Feb 2018 21:23:12 -0500
+Subject: [PATCH 3/3] tools/objtool/Makefile: Don't fail on fallthrough with
+ new GCCs
+
+---
+ tools/lib/subcmd/Makefile | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/tools/lib/subcmd/Makefile b/tools/lib/subcmd/Makefile
+index 95563b8e1ad7..307652c42a7b 100644
+--- a/tools/lib/subcmd/Makefile
++++ b/tools/lib/subcmd/Makefile
+@@ -33,6 +33,9 @@ ifneq ($(WERROR),0)
+   CFLAGS += -Werror
+ endif
+ 
++# Don't fail on fallthrough with newer GCCs.
++CFLAGS += -Wno-error=implicit-fallthrough
++
+ CFLAGS += -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE
+ 
+ CFLAGS += -I$(srctree)/tools/include/
+-- 
+2.14.3
+
