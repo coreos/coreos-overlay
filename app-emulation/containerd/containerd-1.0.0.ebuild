@@ -11,11 +11,13 @@ if [[ ${PV} == *9999 ]]; then
 	EGIT_REPO_URI="https://${GITHUB_URI}.git"
 	inherit git-r3
 else
-	EGIT_COMMIT="89623f28b87a6004d4b785663257362d1658a729" # v1.0.0
+	MY_PV="${PV/_rc/-rc.}"
+	EGIT_COMMIT="v${MY_PV}"
+	CONTAINERD_COMMIT="89623f2"
 	SRC_URI="https://${GITHUB_URI}/archive/${EGIT_COMMIT}.tar.gz -> ${P}.tar.gz"
 	KEYWORDS="amd64 arm64"
 	inherit vcs-snapshot
-	MAKE_VERSION_ARGS="REVISION=${EGIT_COMMIT} VERSION=v${PV}"
+	MAKE_VERSION_ARGS="REVISION=${CONTAINERD_COMMIT} VERSION=v${PV}"
 fi
 
 inherit coreos-go systemd

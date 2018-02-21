@@ -11,7 +11,9 @@ if [[ ${PV} == *9999 ]]; then
 	EGIT_REPO_URI="https://${GITHUB_URI}.git"
 	inherit git-r3
 else
-	EGIT_COMMIT="9b55aab90508bd389d7654c4baf173a981477d55" # v1.0.1
+	MY_PV="${PV/_rc/-rc.}"
+	EGIT_COMMIT="v${MY_PV}"
+	CONTAINERD_COMMIT="9b55aab"
 	SRC_URI="https://${GITHUB_URI}/archive/${EGIT_COMMIT}.tar.gz -> ${P}.tar.gz"
 	KEYWORDS="amd64 arm64"
 	inherit vcs-snapshot
@@ -41,7 +43,7 @@ src_prepare() {
 	default
 	if [[ ${PV} != *9999* ]]; then
 		sed -i -e "s/git describe --match.*$/echo ${PV})/"\
-			-e "s/git rev-parse HEAD.*$/echo ${EGIT_COMMIT})/"\
+			-e "s/git rev-parse HEAD.*$/echo $CONTAINERD_COMMIT)/"\
 			-e "s/-s -w//" \
 			Makefile || die
 	fi
