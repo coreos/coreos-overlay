@@ -36,5 +36,4 @@ UNIPATCH_LIST="
 	${PATCH_DIR}/z0003-block-factor-out-__blkdev_issue_zero_pages.patch \
 	${PATCH_DIR}/z0004-block-cope-with-WRITE-ZEROES-failing-in-blkdev_issue.patch \
 	${PATCH_DIR}/z0005-tools-objtool-Makefile-Don-t-fail-on-fallthrough-wit.patch \
-	${PATCH_DIR}/z0006-scsi-core-check-for-device-state-in-__scsi_remove_ta.patch \
 "
