@@ -40,7 +40,7 @@ src_unpack() {
 }
 
 src_prepare() {
-	default
+	coreos-go_src_prepare
 	if [[ ${PV} != *9999* ]]; then
 		sed -i -e "s/git describe --match.*$/echo ${PV})/"\
 			-e "s/git rev-parse HEAD.*$/echo $CONTAINERD_COMMIT)/"\
