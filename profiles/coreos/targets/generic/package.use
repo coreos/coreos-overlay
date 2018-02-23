@@ -1,7 +1,6 @@
 # Copyright (c) 2009 The Chromium OS Authors. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
-app-admin/rsyslog	-ssl
 app-editors/vim		minimal
 dev-lang/python		-berkdb gdbm
 dev-libs/dbus-glib	tools
@@ -14,7 +13,6 @@ net-analyzer/tcpdump	-chroot
 net-misc/dhcp	        -server
 net-misc/iperf		threads
 net-misc/ntp            caps
-sys-apps/busybox	-selinux
 sys-apps/smartmontools	minimal
 sys-block/parted        device-mapper
 sys-fs/lvm2		-lvm1 -readline
@@ -29,8 +27,6 @@ sys-apps/systemd audit importd http nat
 net-libs/libmicrohttpd epoll
 
 sys-boot/syslinux       -custom-cflags
-
-sys-apps/flashrom -dediprog -ft2232_spi -serprog
 
 # break dependency loop between pkg-config and glib
 dev-util/pkgconfig internal-glib
