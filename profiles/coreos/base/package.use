@@ -5,24 +5,16 @@
 
 app-arch/tar		minimal
 app-crypt/mit-krb5	-keyutils
-dev-embedded/libftdi	-cxx
 dev-libs/nss		utils
 dev-libs/dbus-glib	tools
 dev-libs/protobuf 	-python
 dev-libs/libxml2	-python
-dev-perl/GD             png
-dev-python/ws4py	-client -server
 dev-util/perf		tui -doc
 dev-vcs/git		cvs subversion webdav curl bash-completion
 dev-vcs/subversion	-dso webdav-serf
-media-libs/freeimage	-cxx
-media-libs/gd           png
-media-libs/libmtp       -crypt
 # We don't want any driver/hw rendering on the host
-media-sound/alsa-utils	-libsamplerate minimal
 net-misc/curl		kerberos threads
 net-misc/iputils	arping traceroute
-sci-geosciences/gpsd	-cxx
 sys-devel/gettext	-git
 app-emulation/qemu	aio caps curl jpeg ncurses png python threads uuid vhost-net virtfs vnc qemu_softmmu_targets_x86_64
 

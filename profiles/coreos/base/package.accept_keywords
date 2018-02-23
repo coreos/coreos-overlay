@@ -2,9 +2,7 @@
 # Copyright (c) 2013 The CoreOS Authors. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
-=dev-python/ws4py-0.2.4 ~amd64
 =dev-cpp/gflags-2.0 ~amd64
-=sys-devel/smatch-1.57-r1 ~amd64
 =dev-util/shflags-1.0.3 ~amd64
 =dev-util/perf-4.9.13 ~amd64
 =sys-libs/libnih-1.0.3 ~amd64
@@ -25,8 +23,6 @@ dev-util/checkbashisms
 
 # https://bugs.gentoo.org/show_bug.cgi?id=548158
 =sys-apps/gentoo-functions-0.10
-
-=dev-python/pyusb-1.0.0 ~amd64
 
 # Older versions of sssd fail to build
 =sys-auth/sssd-1.13.1 ~amd64 ~arm64
