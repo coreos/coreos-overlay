@@ -11,17 +11,17 @@ KEYWORDS="amd64 arm64"
 
 # Explicitly list all packages that will be built into the image.
 RDEPEND="
-	=app-emulation/docker-17.12.0
-	=app-emulation/containerd-1.0.0
+	=app-emulation/docker-17.12.1
+	=app-emulation/containerd-1.0.1
 	=app-emulation/docker-proxy-0.8.0_p20170917
-	=app-emulation/docker-runc-1.0.0_rc4_p171
+	=app-emulation/docker-runc-1.0.0_rc4_p205
 	=dev-libs/libltdl-2.4.6
 	=sys-process/tini-0.13.2
 "
 
 src_install() {
 	insinto /.torcx
-	newins "${FILESDIR}/${PN}-${PV}-manifest.json" manifest.json
+	newins "${FILESDIR}/${P}-manifest.json" manifest.json
 
 	# Enable the Docker socket by default.
 	local unitdir=/usr/lib/systemd/system
