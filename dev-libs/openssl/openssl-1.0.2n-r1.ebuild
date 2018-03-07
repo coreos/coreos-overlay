@@ -138,6 +138,7 @@ multilib_src_configure() {
 		${sslout} \
 		$(use cpu_flags_x86_sse2 || echo "no-sse2") \
 		enable-camellia \
+		enable-ec \
 		${ec_nistp_64_gcc_128} \
 		enable-idea \
 		enable-mdc2 \
