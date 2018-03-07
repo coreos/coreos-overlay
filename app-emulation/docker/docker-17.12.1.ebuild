@@ -19,7 +19,7 @@ else
 	else
 		MY_PV="$PV-ce"
 	fi
-	DOCKER_GITCOMMIT="c97c6d6"
+	DOCKER_GITCOMMIT="7390fc6"
 	SRC_URI="https://${COREOS_GO_PACKAGE}/archive/v${MY_PV}.tar.gz -> ${P}.tar.gz"
 	KEYWORDS="amd64 arm64"
 	[ "$DOCKER_GITCOMMIT" ] || die "DOCKER_GITCOMMIT must be added manually for each bump!"
@@ -64,9 +64,9 @@ RDEPEND="
 	>=dev-vcs/git-1.7
 	>=app-arch/xz-utils-4.9
 	dev-libs/libltdl
-	=app-emulation/containerd-1.0.0[seccomp?]
-	=app-emulation/docker-runc-1.0.0_rc4_p171[apparmor?,seccomp?]
-	app-emulation/docker-proxy
+	=app-emulation/containerd-1.0.1
+	=app-emulation/docker-runc-1.0.0_rc4_p205[apparmor?,seccomp?]
+	=app-emulation/docker-proxy-0.8.0_p20170917
 	container-init? ( >=sys-process/tini-0.13.1 )
 "
 
@@ -263,7 +263,7 @@ src_compile() {
 
 	pushd components/cli || die
 
-	# Imitating https://github.com/docker/docker-ce/blob/v17.12.0-ce/components/cli/scripts/build/.variables#L7
+	# Imitating https://github.com/docker/docker-ce/blob/v17.12.1-ce/components/cli/scripts/build/.variables#L7
 	CLI_BUILDTIME="$(date -d "@${DOCKER_BUILD_DATE}" --utc --rfc-3339 ns 2> /dev/null | sed -e 's/ /T/')"
 	# build cli
 	emake \
