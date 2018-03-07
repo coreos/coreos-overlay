@@ -12,3 +12,6 @@ QEMU_SOFTMMU_TARGETS="x86_64 i386 aarch64"
 
 # For cross build support.
 QEMU_USER_TARGETS="aarch64"
+
+# Disable ccache in the SDK so it stops randomly breaking catalyst.
+FEATURES="-ccache"
