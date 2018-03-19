@@ -10,7 +10,7 @@ COREOS_GO_VERSION="go1.7"
 
 MY_PV="${PV/_/-}"
 EGIT_COMMIT="v${MY_PV}"
-SRC_URI="https://${EGO_PN}/archive/${EGIT_COMMIT}.tar.gz -> ${P}.tar.gz"
+SRC_URI="https://${GITHUB_URI}/archive/${EGIT_COMMIT}.tar.gz -> ${P}.tar.gz"
 KEYWORDS="amd64 arm64"
 inherit vcs-snapshot
 
