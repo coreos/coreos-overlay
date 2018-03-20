@@ -1,5 +1,5 @@
 # We don't ship GnuTLS by default, and smartcard has a dep loop
-app-crypt/gnupg gnutls smartcard
+app-crypt/gnupg smartcard ssl
 
 # We don't need integration with cvs, perl, or subversion in git, so we can
 dev-vcs/git cvs perl subversion
