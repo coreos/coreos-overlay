@@ -4,7 +4,6 @@
 =app-admin/sudo-1.8.20_p2 ~arm64
 =app-arch/bzip2-1.0.6-r8 ~arm64
 =app-arch/libarchive-3.3.1 ~arm64
-=app-crypt/gnupg-2.2.4 ~arm64
 =app-crypt/mit-krb5-1.14.2 ~arm64
 =app-text/asciidoc-8.6.9-r3 ~arm64
 =dev-cpp/gflags-2.1.2 ~arm64
@@ -17,6 +16,7 @@
 =dev-libs/liblinear-210-r1 ~arm64
 =dev-libs/libnl-3.2.27 ~arm64
 =dev-libs/libpcre-8.41 ~arm64
+=dev-libs/libusb-1.0.21 ~arm64
 =dev-libs/libxml2-2.9.4-r3 ~arm64
 =dev-libs/nss-3.29.5 ~arm64
 =dev-libs/libpcre2-10.30 ~arm64
@@ -59,4 +59,5 @@
 =sys-libs/binutils-libs-2.29.1-r1 ~arm64
 =sys-libs/libcap-ng-0.7.8 ~arm64
 =virtual/libudev-232 ~arm64
+=virtual/libusb-1-r2 ~arm64
 =virtual/perl-File-Path-2.130.0 ~arm64
