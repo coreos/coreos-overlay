@@ -69,6 +69,3 @@ dev-util/checkbashisms
 =sys-devel/gcc-7.3.0
 =cross-aarch64-cros-linux-gnu/gcc-7.3.0 ~arm64
 =cross-x86_64-cros-linux-gnu/gcc-7.3.0 ~amd64
-
-# Accept the fixed Intel microcode for Spectre mitigation.
-=sys-firmware/intel-microcode-20180312 ~amd64
