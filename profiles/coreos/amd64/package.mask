@@ -1,1 +1,0 @@
->=sys-firmware/intel-microcode-20180100
