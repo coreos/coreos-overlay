@@ -13,7 +13,7 @@ if [[ ${PV} == *9999 ]]; then
 else
 	MY_PV="${PV/_rc/-rc.}"
 	EGIT_COMMIT="v${MY_PV}"
-	CONTAINERD_COMMIT="9b55aab90508bd389d7654c4baf173a981477d55"
+	CONTAINERD_COMMIT="cfd04396dc68220d1cecbe686a6cc3aa5ce3667c"
 	SRC_URI="https://${GITHUB_URI}/archive/${EGIT_COMMIT}.tar.gz -> ${P}.tar.gz"
 	KEYWORDS="amd64 arm64"
 	inherit vcs-snapshot
@@ -29,7 +29,7 @@ SLOT="0"
 IUSE="+btrfs hardened"
 
 DEPEND="btrfs? ( sys-fs/btrfs-progs )"
-RDEPEND="=app-emulation/docker-runc-1.0.0_rc4_p205
+RDEPEND="=app-emulation/docker-runc-1.0.0_rc5
 	sys-libs/libseccomp"
 
 S=${WORKDIR}/${P}/src/${COREOS_GO_PACKAGE}
