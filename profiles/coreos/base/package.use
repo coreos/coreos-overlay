@@ -94,3 +94,7 @@ net-misc/socat -ssl
 
 # Prevent pulling in a ton of perl dependencies
 sys-apps/man-db -nls
+
+#Add nfs kerberos support
+net-fs/nfs-utils kerberos nfsv41
+net-libs/libtirpc kerberos
