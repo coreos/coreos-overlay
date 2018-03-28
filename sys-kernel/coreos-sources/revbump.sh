@@ -2632,23 +2632,33 @@ EOF
 
 new_pvr="$1"
 srcdir="$2"
+old_ebuild="$3"
 
 if [[ -z "${new_pvr}" || -z "${srcdir}" ]]; then
-    echo "Usage:   $0 <new-PVR> <dir-with-git-format-patch-output>"
-    echo "Example: $0 4.9.9-r2 ~/linux"
+    echo "Usage:   $0 <new-PVR> <dir-with-git-format-patch-output> [old-ebuild]"
+    echo "Example: $0 4.9.9-r2 ~/linux coreos-sources-4.9.9-r1.ebuild"
     exit 2
 fi
 
 srcdir="$(realpath $srcdir)"
-old_ebuild=$(echo coreos-sources-*.ebuild)
+if [[ -z "${old_ebuild}" ]]; then
+    old_ebuild=$(echo coreos-sources-*.ebuild)
+elif [[ ! -f "${old_ebuild}" ]]; then
+    echo "Specified ebuild does not exist."
+    exit 1
+fi
 new_ebuild="coreos-sources-${new_pvr}.ebuild"
 
-if [[ "${old_ebuild}" = 'coreos-sources-*.ebuild' ]]; then
+if [[ ! -f "revbump.sh" ]]; then
     echo "Must be run from the coreos-sources directory."
     exit 1
 fi
+if [[ "${old_ebuild}" = 'coreos-sources-*.ebuild' ]]; then
+    echo "Couldn't find ebuild to update."
+    exit 1
+fi
 if [[ ! -f "${old_ebuild}" ]]; then
-    echo "Multiple ebuilds in coreos-sources directory.  Aborting."
+    echo "Multiple ebuilds in coreos-sources directory, and no ebuild specified. Aborting."
     exit 1
 fi
 if [[ "${old_ebuild}" = "${new_ebuild}" ]]; then
