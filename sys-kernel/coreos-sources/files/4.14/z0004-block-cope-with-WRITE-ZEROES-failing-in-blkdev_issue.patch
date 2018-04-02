@@ -1,4 +1,4 @@
-From 70fb36baf0009b8d183b1622e22f66b7da16d63a Mon Sep 17 00:00:00 2001
+From 519f6cec098cf64166a6aea060127730e7c6a3e3 Mon Sep 17 00:00:00 2001
 From: Ilya Dryomov <idryomov@gmail.com>
 Date: Mon, 16 Oct 2017 15:59:10 +0200
 Subject: [PATCH 4/6] block: cope with WRITE ZEROES failing in
@@ -106,5 +106,5 @@ index 9e86a4871b0f..2bc544ce3d2e 100644
  	return ret;
  }
 -- 
-2.13.6
+2.14.3
 
