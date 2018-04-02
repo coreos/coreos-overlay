@@ -94,3 +94,6 @@ net-misc/socat -ssl
 
 # Prevent pulling in a ton of perl dependencies
 sys-apps/man-db -nls
+
+# Support loading XZ-compressed kernel modules
+sys-apps/kmod lzma
