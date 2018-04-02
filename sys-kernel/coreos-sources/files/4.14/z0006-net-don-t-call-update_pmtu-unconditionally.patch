@@ -1,4 +1,4 @@
-From f5f2102a531988e24f19a13fdc5b8206007aaad5 Mon Sep 17 00:00:00 2001
+From 194e377e8bf76579dd577b20a91e3c329a2c3232 Mon Sep 17 00:00:00 2001
 From: Nicolas Dichtel <nicolas.dichtel@6wind.com>
 Date: Thu, 25 Jan 2018 19:03:03 +0100
 Subject: [PATCH 6/6] net: don't call update_pmtu unconditionally
@@ -162,5 +162,5 @@ index cac815cc8600..360317b968b7 100644
  		if (skb->len > mtu && !skb_is_gso(skb)) {
  			icmpv6_send(skb, ICMPV6_PKT_TOOBIG, 0, mtu);
 -- 
-2.13.6
+2.14.3
 
