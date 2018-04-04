@@ -166,6 +166,16 @@ src_prepare() {
 src_install() {
 	toolchain-glibc_src_install "$@"
 
+	# Work around #627378 on the boards.
+	if [[ ${ROOT:-/} =~ ^/build/ ]] ; then
+		local libm=("${ED}"/usr/lib*/libm-${PV}.so)
+		libm="${libm[0]:${#ED}}"
+		if [ -h "${ED}$libm" ] ; then
+			rm -f "${ED}$libm"
+			mv "${ED}${libm#/usr}" "${ED}$libm"
+		fi
+	fi
+
 	# Use tmpfiles to put nscd.conf in /etc and create directories.
 	insinto /usr/share/baselayout
 	if ! in_iuse nscd || use nscd ; then
