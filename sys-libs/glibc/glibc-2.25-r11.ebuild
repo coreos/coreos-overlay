@@ -34,6 +34,9 @@ GLIBC_PATCH_EXCLUDE+=" 0005_all_sys-types.h-drop-sys-sysmacros.h-include.patch"
 
 IUSE="audit caps debug gd hardened multilib nscd +rpc selinux systemtap profile suid vanilla headers-only"
 
+# Drop this after updating profiles.
+IUSE+=" crosscompile_opts_headers-only"
+
 # Here's how the cross-compile logic breaks down ...
 #  CTARGET - machine that will target the binaries
 #  CHOST   - machine that will host the binaries
