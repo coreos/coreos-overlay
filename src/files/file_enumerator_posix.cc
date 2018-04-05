@@ -123,9 +123,8 @@ bool FileEnumerator::ReadDirectory(std::vector<FileInfo>* entries,
          additional space for pathname may be needed
 #endif
 
-  struct dirent dent_buf;
   struct dirent* dent;
-  while (readdir_r(dir, &dent_buf, &dent) == 0 && dent) {
+  while ((dent = readdir(dir)) != NULL) {
     FileInfo info;
     info.filename_ = FilePath(dent->d_name);
 

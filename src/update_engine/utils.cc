@@ -290,14 +290,9 @@ bool RecursiveUnlinkDir(const std::string& path) {
     DIR *dir = opendir(path.c_str());
     TEST_AND_RETURN_FALSE_ERRNO(dir);
     ScopedDirCloser dir_closer(&dir);
-    struct dirent dir_entry;
     struct dirent *dir_entry_p;
-    int err = 0;
-    while ((err = readdir_r(dir, &dir_entry, &dir_entry_p)) == 0) {
-      if (dir_entry_p == NULL) {
-        // end of stream reached
-        break;
-      }
+    errno = 0;
+    while ((dir_entry_p = readdir(dir)) != NULL) {
       // Skip . and ..
       if (!strcmp(dir_entry_p->d_name, ".") ||
           !strcmp(dir_entry_p->d_name, ".."))
@@ -305,7 +300,7 @@ bool RecursiveUnlinkDir(const std::string& path) {
       TEST_AND_RETURN_FALSE(RecursiveUnlinkDir(path + "/" +
                                                dir_entry_p->d_name));
     }
-    TEST_AND_RETURN_FALSE(err == 0);
+    TEST_AND_RETURN_FALSE(errno == 0);
   }
   // unlink dir
   TEST_AND_RETURN_FALSE_ERRNO((rmdir(path.c_str()) == 0) || (errno == ENOENT));

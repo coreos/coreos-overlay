@@ -111,11 +111,10 @@ void FilesystemIterator::Increment() {
 void FilesystemIterator::IncrementInternal() {
   CHECK_EQ(dirs_.size(), names_.size() + 1);
   for (;;) {
-    struct dirent dir_entry;
     struct dirent* dir_entry_pointer;
-    int r;
+    errno = 0;
     RETURN_ERROR_IF_FALSE(
-        (r = readdir_r(dirs_.back(), &dir_entry, &dir_entry_pointer)) == 0);
+        (dir_entry_pointer = readdir(dirs_.back())) != NULL || errno == 0);
     if (dir_entry_pointer) {
       // Found an entry
       names_.push_back(dir_entry_pointer->d_name);
