@@ -19,3 +19,6 @@ net-mail/mailbase-1.1
 
 # elt-patches has a cyclic dependency
 app-arch/xz-utils-0
+
+# doesn't cross-compile, but required for glog, gflags, etc.
+dev-util/cmake-3.7.2
