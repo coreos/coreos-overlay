@@ -2,7 +2,6 @@
 # Copyright (c) 2013 The CoreOS Authors. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
-=dev-cpp/gflags-2.0 ~amd64
 =dev-util/shflags-1.0.3 ~amd64
 =dev-util/perf-4.9.13 ~amd64
 =sys-libs/libnih-1.0.3 ~amd64
