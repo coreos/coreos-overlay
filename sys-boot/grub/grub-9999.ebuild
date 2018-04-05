@@ -1,4 +1,4 @@
-# Copyright 1999-2017 Gentoo Foundation
+# Copyright 1999-2018 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
@@ -10,7 +10,7 @@ GRUB_AUTOGEN=1  # We start from Git, so always autogen.
 if [[ ${PV} == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64 ~x86"
 else
-	CROS_WORKON_COMMIT="84a4fd2f4c35a45b66a6ca4ef455d999f8b05b55"
+	CROS_WORKON_COMMIT="f8e0a62fba16236942a1657ba242cd71a21b0153"
 	KEYWORDS="amd64 arm64 x86"
 fi
 inherit cros-workon
