@@ -9,7 +9,7 @@ AUTOTOOLS_AUTORECONF=1
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~arm64 ~x86"
 else
-	CROS_WORKON_COMMIT="2319df8546738fad1cd0ca15e1e4ca8317fce990" # v0.4.5
+	CROS_WORKON_COMMIT="7dc60831aaabda87384779424ee01c96f4ccd686" # v0.4.6
 	KEYWORDS="amd64 arm64"
 fi
 
@@ -37,8 +37,7 @@ RDEPEND="!coreos-base/coreos-installer
 	net-misc/curl
 	>=sys-apps/seismograph-2.2.0
 	sys-fs/e2fsprogs"
-DEPEND="dev-cpp/gmock
-	dev-cpp/gtest
+DEPEND="dev-cpp/gtest
 	${RDEPEND}"
 
 src_configure() {
