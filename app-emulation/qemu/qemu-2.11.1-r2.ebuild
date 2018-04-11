@@ -1,4 +1,4 @@
-# Copyright 1999-2017 Gentoo Foundation
+# Copyright 1999-2018 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="6"
@@ -7,6 +7,8 @@ PYTHON_COMPAT=( python2_7 )
 PYTHON_REQ_USE="ncurses,readline"
 
 PLOCALES="bg de_DE fr_FR hu it tr zh_CN"
+
+FIRMWARE_ABI_VERSION="2.9.0-r52"
 
 inherit eutils flag-o-matic linux-info toolchain-funcs multilib python-r1 \
 	user udev fcaps readme.gentoo-r1 pax-utils l10n
@@ -18,6 +20,9 @@ if [[ ${PV} = *9999* ]]; then
 else
 	SRC_URI="http://wiki.qemu-project.org/download/${P}.tar.bz2"
 	KEYWORDS="amd64 arm64 ~ppc ~ppc64 x86 ~x86-fbsd"
+
+	# Gentoo specific patchsets:
+	SRC_URI+=" https://dev.gentoo.org/~tamiko/distfiles/${P}-patches-r1.tar.xz"
 fi
 
 DESCRIPTION="QEMU + Kernel-based Virtual Machine userland tools"
@@ -27,7 +32,7 @@ LICENSE="GPL-2 LGPL-2 BSD-2"
 SLOT="0"
 IUSE="accessibility +aio alsa bluetooth bzip2 +caps +curl debug +fdt
 	glusterfs gnutls gtk gtk2 infiniband iscsi +jpeg kernel_linux
-	kernel_FreeBSD lzo ncurses nfs nls numa opengl +pin-upstream-blobs +png
+	kernel_FreeBSD lzo ncurses nfs nls numa opengl pin-upstream-blobs +png
 	pulseaudio python rbd sasl +seccomp sdl sdl2 selinux smartcard snappy
 	spice ssh static static-user systemtap tci test usb usbredir vde
 	+vhost-net virgl virtfs +vnc vte xattr xen xfs"
@@ -54,7 +59,7 @@ REQUIRED_USE="${PYTHON_REQUIRED_USE}
 	qemu_softmmu_targets_ppc? ( fdt )
 	qemu_softmmu_targets_ppc64? ( fdt )
 	sdl2? ( sdl )
-	static? ( static-user !alsa !bluetooth !gtk !gtk2 !opengl !pulseaudio )
+	static? ( static-user !alsa !bluetooth !gtk !gtk2 !opengl !pulseaudio !snappy )
 	virtfs? ( xattr )
 	vte? ( gtk )"
 
@@ -87,7 +92,7 @@ SOFTMMU_TOOLS_DEPEND="
 	bzip2? ( app-arch/bzip2[static-libs(+)] )
 	caps? ( sys-libs/libcap-ng[static-libs(+)] )
 	curl? ( >=net-misc/curl-7.15.4[static-libs(+)] )
-	fdt? ( >=sys-apps/dtc-1.4.0[static-libs(+)] )
+	fdt? ( >=sys-apps/dtc-1.4.2[static-libs(+)] )
 	glusterfs? ( >=sys-cluster/glusterfs-3.4.0[static-libs(+)] )
 	gnutls? (
 		dev-libs/nettle:=[static-libs(+)]
@@ -111,7 +116,7 @@ SOFTMMU_TOOLS_DEPEND="
 		sys-libs/ncurses:0=[unicode]
 		sys-libs/ncurses:0=[static-libs(+)]
 	)
-	nfs? ( >=net-fs/libnfs-1.9.3[static-libs(+)] )
+	nfs? ( >=net-fs/libnfs-1.9.3:=[static-libs(+)] )
 	numa? ( sys-process/numactl[static-libs(+)] )
 	opengl? (
 		virtual/opengl
@@ -135,7 +140,7 @@ SOFTMMU_TOOLS_DEPEND="
 	)
 	seccomp? ( >=sys-libs/libseccomp-2.1.0[static-libs(+)] )
 	smartcard? ( >=app-emulation/libcacard-2.5.0[static-libs(+)] )
-	snappy? ( app-arch/snappy[static-libs(+)] )
+	snappy? ( app-arch/snappy:= )
 	spice? (
 		>=app-emulation/spice-protocol-0.12.3
 		>=app-emulation/spice-0.12.0[static-libs(+)]
@@ -150,17 +155,26 @@ SOFTMMU_TOOLS_DEPEND="
 	xfs? ( sys-fs/xfsprogs[static-libs(+)] )"
 
 X86_FIRMWARE_DEPEND="
-	>=sys-firmware/ipxe-1.0.0_p20130624
 	pin-upstream-blobs? (
-		~sys-firmware/seabios-1.10.1
+		~sys-firmware/edk2-ovmf-2017_pre20170505[binary]
+		~sys-firmware/ipxe-1.0.0_p20160620
+		~sys-firmware/seabios-1.10.2[binary,seavgabios]
 		~sys-firmware/sgabios-0.1_pre8
-		~sys-firmware/vgabios-0.7a
 	)
 	!pin-upstream-blobs? (
-		sys-firmware/seabios
+		sys-firmware/edk2
+		sys-firmware/ipxe
+		>=sys-firmware/seabios-1.10.2[seavgabios]
 		sys-firmware/sgabios
-		sys-firmware/vgabios
 	)"
+PPC64_FIRMWARE_DEPEND="
+	pin-upstream-blobs? (
+		~sys-firmware/seabios-1.10.2[binary,seavgabios]
+	)
+	!pin-upstream-blobs? (
+		>=sys-firmware/seabios-1.10.2[seavgabios]
+	)
+"
 
 CDEPEND="
 	!static? (
@@ -168,7 +182,9 @@ CDEPEND="
 		${SOFTMMU_TOOLS_DEPEND//\[static-libs(+)]}
 	)
 	qemu_softmmu_targets_i386? ( ${X86_FIRMWARE_DEPEND} )
-	qemu_softmmu_targets_x86_64? ( ${X86_FIRMWARE_DEPEND} )"
+	qemu_softmmu_targets_x86_64? ( ${X86_FIRMWARE_DEPEND} )
+	qemu_softmmu_targets_ppc64? ( ${PPC64_FIRMWARE_DEPEND} )
+"
 DEPEND="${CDEPEND}
 	dev-lang/perl
 	=dev-lang/python-2*
@@ -191,11 +207,8 @@ RDEPEND="${CDEPEND}
 PATCHES=(
 	"${FILESDIR}"/${PN}-2.5.0-cflags.patch
 	"${FILESDIR}"/${PN}-2.5.0-sysmacros.patch
-	"${FILESDIR}"/${PN}-2.9.0-CVE-2017-8309.patch # bug 616870
-	"${FILESDIR}"/${PN}-2.9.0-CVE-2017-8379.patch # bug 616872
-	"${FILESDIR}"/${PN}-2.9.0-CVE-2017-8380.patch # bug 616874
-	"${FILESDIR}"/${PN}-2.9.0-CVE-2017-8112.patch # bug 616636
-	"${FILESDIR}"/${PN}-2.9.0-CVE-2017-7493.patch # bug 618808
+	"${FILESDIR}"/${PN}-2.11.0-glibc-2.27.patch
+	"${WORKDIR}"/patches
 
 	# fix for vpc creation in qemu-img
 	"${FILESDIR}"/0001-block-fix-vpc-max_table_entries-computation.patch
@@ -209,6 +222,7 @@ QA_PREBUILT="
 	usr/share/qemu/openbios-sparc32
 	usr/share/qemu/palcode-clipper
 	usr/share/qemu/s390-ccw.img
+	usr/share/qemu/s390-netboot.img
 	usr/share/qemu/u-boot.e500"
 
 QA_WX_LOAD="usr/bin/qemu-i386
@@ -278,7 +292,11 @@ pkg_pretend() {
 			ERROR_VHOST_NET+=" support"
 
 			if use amd64 || use x86 || use amd64-linux || use x86-linux; then
-				CONFIG_CHECK+=" ~KVM_AMD ~KVM_INTEL"
+				if grep -q AuthenticAMD /proc/cpuinfo; then
+					CONFIG_CHECK+=" ~KVM_AMD"
+				elif grep -q GenuineIntel /proc/cpuinfo; then
+					CONFIG_CHECK+=" ~KVM_INTEL"
+				fi
 			fi
 
 			use python && CONFIG_CHECK+=" ~DEBUG_FS"
@@ -364,6 +382,9 @@ src_prepare() {
 
 	# Run after we've applied all patches.
 	handle_locales
+
+	# Remove bundled copy of libfdt
+	rm -r dtc || die
 }
 
 ##
@@ -483,7 +504,6 @@ qemu_src_configure() {
 			--disable-linux-user
 			--enable-system
 			--disable-tools
-			--with-system-pixman
 		)
 		local static_flag="static"
 		;;
@@ -512,6 +532,9 @@ qemu_src_configure() {
 	else
 		tc-enables-pie && conf_opts+=( --enable-pie )
 	fi
+
+	#bug #647570
+	conf_opts+=( --disable-capstone )
 
 	echo "../configure ${conf_opts[*]}"
 	cd "${builddir}"
@@ -681,27 +704,31 @@ src_install() {
 	cd "${S}"
 	dodoc Changelog MAINTAINERS docs/specs/pci-ids.txt
 	newdoc pc-bios/README README.pc-bios
-	dodoc docs/qmp-*.txt
 
 	if [[ -n ${softmmu_targets} ]]; then
 		# Remove SeaBIOS since we're using the SeaBIOS packaged one
 		rm "${ED}/usr/share/qemu/bios.bin"
+		rm "${ED}/usr/share/qemu/bios-256k.bin"
 		if use qemu_softmmu_targets_x86_64 || use qemu_softmmu_targets_i386; then
 			dosym ../seabios/bios.bin /usr/share/qemu/bios.bin
+			dosym ../seabios/bios-256k.bin /usr/share/qemu/bios-256k.bin
 		fi
 
-		# Remove vgabios since we're using the vgabios packaged one
+		# Remove vgabios since we're using the seavgabios packaged one
 		rm "${ED}/usr/share/qemu/vgabios.bin"
 		rm "${ED}/usr/share/qemu/vgabios-cirrus.bin"
 		rm "${ED}/usr/share/qemu/vgabios-qxl.bin"
 		rm "${ED}/usr/share/qemu/vgabios-stdvga.bin"
+		rm "${ED}/usr/share/qemu/vgabios-virtio.bin"
 		rm "${ED}/usr/share/qemu/vgabios-vmware.bin"
-		if use qemu_softmmu_targets_x86_64 || use qemu_softmmu_targets_i386; then
-			dosym ../vgabios/vgabios.bin /usr/share/qemu/vgabios.bin
-			dosym ../vgabios/vgabios-cirrus.bin /usr/share/qemu/vgabios-cirrus.bin
-			dosym ../vgabios/vgabios-qxl.bin /usr/share/qemu/vgabios-qxl.bin
-			dosym ../vgabios/vgabios-stdvga.bin /usr/share/qemu/vgabios-stdvga.bin
-			dosym ../vgabios/vgabios-vmware.bin /usr/share/qemu/vgabios-vmware.bin
+		# PPC64 loads vgabios-stdvga
+		if use qemu_softmmu_targets_x86_64 || use qemu_softmmu_targets_i386 || use qemu_softmmu_targets_ppc64; then
+			dosym ../seavgabios/vgabios-isavga.bin /usr/share/qemu/vgabios.bin
+			dosym ../seavgabios/vgabios-cirrus.bin /usr/share/qemu/vgabios-cirrus.bin
+			dosym ../seavgabios/vgabios-qxl.bin /usr/share/qemu/vgabios-qxl.bin
+			dosym ../seavgabios/vgabios-stdvga.bin /usr/share/qemu/vgabios-stdvga.bin
+			dosym ../seavgabios/vgabios-virtio.bin /usr/share/qemu/vgabios-virtio.bin
+			dosym ../seavgabios/vgabios-vmware.bin /usr/share/qemu/vgabios-vmware.bin
 		fi
 
 		# Remove sgabios since we're using the sgabios packaged one
@@ -726,20 +753,50 @@ src_install() {
 	readme.gentoo_create_doc
 }
 
-pkg_postinst() {
-	DISABLE_AUTOFORMATTING=true
-	readme.gentoo_print_elog
+firmware_abi_change() {
+	local pv
+	for pv in ${REPLACING_VERSIONS}; do
+		if ! version_is_at_least ${FIRMWARE_ABI_VERSION} ${pv}; then
+			return 0
+		fi
+	done
+	return 1
+}
 
+pkg_postinst() {
 	if [[ -n ${softmmu_targets} ]] && use kernel_linux; then
 		udev_reload
 	fi
 
 	fcaps cap_net_admin /usr/libexec/qemu-bridge-helper
+
+	DISABLE_AUTOFORMATTING=true
+	readme.gentoo_print_elog
+
+	if use pin-upstream-blobs && firmware_abi_change; then
+		ewarn "This version of qemu pins new versions of firmware blobs:"
+		ewarn "	$(best_version sys-firmware/edk2-ovmf)"
+		ewarn "	$(best_version sys-firmware/ipxe)"
+		ewarn "	$(best_version sys-firmware/seabios)"
+		ewarn "	$(best_version sys-firmware/sgabios)"
+		ewarn "This might break resume of hibernated guests (started with a different"
+		ewarn "firmware version) and live migration to/from qemu versions with different"
+		ewarn "firmware. Please (cold) restart all running guests. For functional"
+		ewarn "guest migration ensure that all"
+		ewarn "hosts run at least"
+		ewarn "	app-emulation/qemu-${FIRMWARE_ABI_VERSION}."
+	fi
 }
 
 pkg_info() {
 	echo "Using:"
 	echo "  $(best_version app-emulation/spice-protocol)"
+	echo "  $(best_version sys-firmware/edk2-ovmf)"
+	if has_version 'sys-firmware/edk2-ovmf[binary]'; then
+		echo "    USE=binary"
+	else
+		echo "    USE=''"
+	fi
 	echo "  $(best_version sys-firmware/ipxe)"
 	echo "  $(best_version sys-firmware/seabios)"
 	if has_version 'sys-firmware/seabios[binary]'; then
@@ -747,5 +804,5 @@ pkg_info() {
 	else
 		echo "    USE=''"
 	fi
-	echo "  $(best_version sys-firmware/vgabios)"
+	echo "  $(best_version sys-firmware/sgabios)"
 }

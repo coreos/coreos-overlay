@@ -37,9 +37,7 @@ DEPEND="
 RDEPEND="
 	!sys-firmware/edk2-armvirt
 	!sys-firmware/edk2-ovmf
-	amd64? (
-		qemu? ( app-emulation/qemu )
-	)"
+	"
 
 src_unpack() {
 	[[ ${EGIT_REPO_URI} ]] && git-r3_src_unpack
