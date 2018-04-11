@@ -7,7 +7,7 @@ GITHUB_URI="github.com/opencontainers/runc"
 COREOS_GO_PACKAGE="${GITHUB_URI}"
 COREOS_GO_VERSION="go1.9"
 # the commit of runc that docker uses.
-# see https://github.com/docker/docker-ce/blob/v18.03.0-ce/components/engine/hack/dockerfile/install/runc.installer#L4
+# see https://github.com/docker/docker-ce/blob/v18.04.0-ce/components/engine/hack/dockerfile/install/runc.installer#L4
 COMMIT_ID="4fc53a81fb7c994640722ac585fa9ca548971871"
 
 inherit eutils flag-o-matic coreos-go vcs-snapshot
