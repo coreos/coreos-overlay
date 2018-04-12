@@ -1,4 +1,4 @@
-From 36c2bc9bef2d735a4642aecca1f684feb7e6c3cf Mon Sep 17 00:00:00 2001
+From 28d329520aebab3076c9f311ba4de012c25aeba7 Mon Sep 17 00:00:00 2001
 From: David Michael <david.michael@coreos.com>
 Date: Thu, 8 Feb 2018 21:23:12 -0500
 Subject: [PATCH 3/3] tools/objtool/Makefile: Don't fail on fallthrough with
@@ -23,5 +23,5 @@ index 95563b8e1ad7..307652c42a7b 100644
  
  CFLAGS += -I$(srctree)/tools/include/
 -- 
-2.13.6
+2.14.3
 
