@@ -1,4 +1,4 @@
-From 194e377e8bf76579dd577b20a91e3c329a2c3232 Mon Sep 17 00:00:00 2001
+From 66676d18bdc839807a56c5e53cf27c1b44ef3310 Mon Sep 17 00:00:00 2001
 From: Nicolas Dichtel <nicolas.dichtel@6wind.com>
 Date: Thu, 25 Jan 2018 19:03:03 +0100
 Subject: [PATCH 6/6] net: don't call update_pmtu unconditionally
@@ -84,10 +84,10 @@ index 694c2e6ae618..ebfb4328fdb1 100644
 +
  #endif /* _NET_DST_H */
 diff --git a/net/ipv4/ip_tunnel.c b/net/ipv4/ip_tunnel.c
-index 4e90082b23a6..29ee155ebf51 100644
+index 13f7bbc0168d..a2fcc20774a6 100644
 --- a/net/ipv4/ip_tunnel.c
 +++ b/net/ipv4/ip_tunnel.c
-@@ -520,8 +520,7 @@ static int tnl_update_pmtu(struct net_device *dev, struct sk_buff *skb,
+@@ -521,8 +521,7 @@ static int tnl_update_pmtu(struct net_device *dev, struct sk_buff *skb,
  	else
  		mtu = skb_dst(skb) ? dst_mtu(skb_dst(skb)) : dev->mtu;
  
@@ -111,10 +111,10 @@ index 89453cf62158..c9cd891f69c2 100644
  			icmp_send(skb, ICMP_DEST_UNREACH, ICMP_FRAG_NEEDED,
  				  htonl(mtu));
 diff --git a/net/ipv6/ip6_tunnel.c b/net/ipv6/ip6_tunnel.c
-index 1161fd5630c1..b825cb5a5123 100644
+index 7e11f6a811f5..d61a82fd4b60 100644
 --- a/net/ipv6/ip6_tunnel.c
 +++ b/net/ipv6/ip6_tunnel.c
-@@ -649,7 +649,7 @@ ip4ip6_err(struct sk_buff *skb, struct inet6_skb_parm *opt,
+@@ -652,7 +652,7 @@ ip4ip6_err(struct sk_buff *skb, struct inet6_skb_parm *opt,
  		if (rel_info > dst_mtu(skb_dst(skb2)))
  			goto out;
  
@@ -123,7 +123,7 @@ index 1161fd5630c1..b825cb5a5123 100644
  	}
  	if (rel_type == ICMP_REDIRECT)
  		skb_dst(skb2)->ops->redirect(skb_dst(skb2), NULL, skb2);
-@@ -1138,8 +1138,7 @@ int ip6_tnl_xmit(struct sk_buff *skb, struct net_device *dev, __u8 dsfield,
+@@ -1141,8 +1141,7 @@ int ip6_tnl_xmit(struct sk_buff *skb, struct net_device *dev, __u8 dsfield,
  		mtu = 576;
  	}
  
@@ -134,10 +134,10 @@ index 1161fd5630c1..b825cb5a5123 100644
  		*pmtu = mtu;
  		err = -EMSGSIZE;
 diff --git a/net/ipv6/ip6_vti.c b/net/ipv6/ip6_vti.c
-index 413f01be0c9b..8284c6697936 100644
+index 7c0f647b5195..2493a40bc4b1 100644
 --- a/net/ipv6/ip6_vti.c
 +++ b/net/ipv6/ip6_vti.c
-@@ -483,7 +483,7 @@ vti6_xmit(struct sk_buff *skb, struct net_device *dev, struct flowi *fl)
+@@ -486,7 +486,7 @@ vti6_xmit(struct sk_buff *skb, struct net_device *dev, struct flowi *fl)
  
  	mtu = dst_mtu(dst);
  	if (!skb->ignore_df && skb->len > mtu) {
@@ -147,10 +147,10 @@ index 413f01be0c9b..8284c6697936 100644
  		if (skb->protocol == htons(ETH_P_IPV6)) {
  			if (mtu < IPV6_MIN_MTU)
 diff --git a/net/ipv6/sit.c b/net/ipv6/sit.c
-index cac815cc8600..360317b968b7 100644
+index f03c1a562135..b35d8905794c 100644
 --- a/net/ipv6/sit.c
 +++ b/net/ipv6/sit.c
-@@ -923,8 +923,8 @@ static netdev_tx_t ipip6_tunnel_xmit(struct sk_buff *skb,
+@@ -925,8 +925,8 @@ static netdev_tx_t ipip6_tunnel_xmit(struct sk_buff *skb,
  			df = 0;
  		}
  
