@@ -20,7 +20,7 @@ if [[ "${PV}" == "9999" ]]; then
 	KEYWORDS="~amd64 ~arm64"
 else
 	KEYWORDS="amd64 arm64"
-	CROS_WORKON_COMMIT="6de500a70706403c8c611d80491aea64019141b0" # v1.29.0
+	CROS_WORKON_COMMIT="e04dd994baa1051f1205578d12d69eec83dbb905" # v1.30.0
 fi
 
 PXE_VERSION="1478.0.0"
@@ -86,8 +86,6 @@ src_prepare() {
 	if [ "${rkt_coreos_version}" != "${PXE_VERSION}" ]; then
 		die "CoreOS versions in ebuild and rkt build scripts are mismatched, expecting ${rkt_coreos_version}!"
 	fi
-
-	epatch "${FILESDIR}/${PN}-1.29.0-allow-multiple-hosts-entry-host.patch"
 
 	autotools-utils_src_prepare
 }
