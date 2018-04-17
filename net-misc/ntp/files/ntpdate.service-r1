@@ -1,13 +1,12 @@
 [Unit]
 Description=Set time via NTP using ntpdate
-After=network.target nss-lookup.target
+After=network-online.target nss-lookup.target
 Before=time-sync.target
 Wants=time-sync.target
-Conflicts=systemd-timesyncd.service
+Conflicts=systemd-timesyncd.service             
 
 [Service]
 Type=oneshot
-Environment="SERVER=0.coreos.pool.ntp.org 1.coreos.pool.ntp.org 2.coreos.pool.ntp.org 3.coreos.pool.ntp.org"
 ExecStart=/usr/sbin/ntpdate -b -u $SERVER
 RemainAfterExit=yes
 
