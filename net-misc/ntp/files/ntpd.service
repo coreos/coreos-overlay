@@ -4,8 +4,9 @@ After=ntpdate.service sntp.service
 Conflicts=systemd-timesyncd.service
 
 [Service]
-ExecStart=/usr/sbin/ntpd -g -n
+ExecStart=/usr/sbin/ntpd -g -n -f /var/lib/ntp/ntp.drift
 PrivateTmp=true
+Restart=always
 
 [Install]
 WantedBy=multi-user.target
