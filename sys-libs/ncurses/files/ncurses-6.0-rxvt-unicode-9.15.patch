@@ -10,10 +10,10 @@ which includes 256 color support and fixes Gentoo bug 383871
 
 http://bugs.gentoo.org/show_bug.cgi?id=383871
 
---- misc/terminfo.src
-+++ misc/terminfo.src
-@@ -4208,6 +4208,176 @@
- rxvt-16color|xterm with 16 colors like aixterm,
+--- ncurses-6.0/misc/terminfo.src
++++ ncurses-6.0/misc/terminfo.src
+@@ -5214,6 +5214,176 @@
+ rxvt-16color|rxvt with 16 colors like aixterm,
  	ncv#32, use=ibm+16color, use=rxvt,
  
 +# From: Thomas Dickey <dickey@clark.net> 04 Oct 1997
@@ -186,6 +186,6 @@ http://bugs.gentoo.org/show_bug.cgi?id=383871
 +	pairs#32767,
 +	use=rxvt-unicode,
 +
+ #### MRXVT
  # mrxvt 0.5.4
  #
- # mrxvt is based on rxvt 2.7.11, but has by default XTERM_FKEYS defined, which
