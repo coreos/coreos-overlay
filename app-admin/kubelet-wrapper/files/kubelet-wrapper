@@ -71,6 +71,7 @@ exec ${RKT} ${RKT_GLOBAL_ARGS} \
 	--volume coreos-os-release,kind=host,source=/usr/lib/os-release,readOnly=true \
 	--volume coreos-run,kind=host,source=/run,readOnly=false \
 	--volume coreos-lib-modules,kind=host,source=/lib/modules,readOnly=true \
+	--volume coreos-etc-machine-id,kind=host,source=/etc/machine-id,readOnly=true \
 	--mount volume=coreos-etc-kubernetes,target=/etc/kubernetes \
 	--mount volume=coreos-etc-ssl-certs,target=/etc/ssl/certs \
 	--mount volume=coreos-usr-share-certs,target=/usr/share/ca-certificates \
@@ -80,6 +81,7 @@ exec ${RKT} ${RKT_GLOBAL_ARGS} \
 	--mount volume=coreos-os-release,target=/etc/os-release \
 	--mount volume=coreos-run,target=/run \
 	--mount volume=coreos-lib-modules,target=/lib/modules \
+	--mount volume=coreos-etc-machine-id,target=/etc/machine-id \
 	--hosts-entry host \
 	${RKT_STAGE1_ARG} \
 	${KUBELET_IMAGE} \
