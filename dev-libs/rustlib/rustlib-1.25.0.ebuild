@@ -38,6 +38,8 @@ src_compile() {
 	local -x RUSTC_BOOTSTRAP=1
 	# various required flags for compiling thes std libs
 	local -x RUSTFLAGS="-C prefer-dynamic -L ${CARGO_TARGET_DIR}/${RUST_TARGET}/release/deps -Z force-unstable-if-unmarked"
+	# set the metadata directory for the boostrap build
+	local -x RUSTC_ERROR_METADATA_DST="${T}/target/release/build/tmp/extended-error-metadata"
 
 	# build the std lib, which also builds all the other important libraries
 	# (core, collections, etc). build it for the target we want for this build.
