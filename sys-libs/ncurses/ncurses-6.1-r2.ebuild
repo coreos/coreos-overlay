@@ -16,7 +16,7 @@ LICENSE="MIT"
 # The subslot reflects the SONAME.
 SLOT="0/6"
 KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~x86-fbsd"
-IUSE="ada +cxx debug doc gpm minimal profile static-libs test threads tinfo trace unicode"
+IUSE="ada +cxx debug doc gpm minimal profile static-libs symlink-usr test threads tinfo trace unicode"
 
 DEPEND="gpm? ( sys-libs/gpm[${MULTILIB_USEDEP}] )"
 #	berkdb? ( sys-libs/db )"
@@ -29,6 +29,12 @@ RDEPEND="${DEPEND}
 	!app-emulation/emul-linux-x86-baselibs"
 
 S=${WORKDIR}/${MY_P}
+
+MINIMAL_TERMINFO=(
+	ansi console dumb linux rxvt rxvt-256color rxvt-unicode rxvt-unicode-256color
+	screen screen-16color screen-256color sun vt{52,100,102,200,220}
+	xterm xterm-color xterm-256color xterm-xfree86
+)
 
 PATCHES=(
 	"${FILESDIR}/${PN}-6.0-gfbsd.patch"
@@ -100,6 +106,8 @@ multilib_src_configure() {
 }
 
 do_configure() {
+	addwrite /dev/ptmx
+
 	local target=$1
 	shift
 
@@ -251,12 +259,11 @@ multilib_src_install() {
 }
 
 multilib_src_install_all() {
-#	if ! use berkdb ; then
+	if ! use symlink-usr ; then
 		# We need the basic terminfo files in /etc, bug #37026
 		einfo "Installing basic terminfo files in /etc..."
 		local x
-		for x in ansi console dumb linux rxvt rxvt-unicode screen{,-256color} vt{52,100,102,200,220} \
-				 xterm xterm-{,256}color
+		for x in "${MINIMAL_TERMINFO[@]}"
 		do
 			local termfile=$(find "${ED}"/usr/share/terminfo/ -name "${x}" 2>/dev/null)
 			local basedir=$(basename $(dirname "${termfile}"))
@@ -268,14 +275,20 @@ multilib_src_install_all() {
 					/usr/share/terminfo/${basedir}/${x}
 			fi
 		done
-#	fi
 
-	echo "CONFIG_PROTECT_MASK=\"/etc/terminfo\"" > "${T}"/50ncurses
-	doenvd "${T}"/50ncurses
+		echo "CONFIG_PROTECT_MASK=\"/etc/terminfo\"" > "${T}"/50ncurses
+		doenvd "${T}"/50ncurses
 
-	use minimal && rm -r "${ED}"/usr/share/terminfo*
-	# Because ncurses5-config --terminfo returns the directory we keep it
-	keepdir /usr/share/terminfo #245374
+		use minimal && rm -r "${ED}"/usr/share/terminfo*
+		# Because ncurses5-config --terminfo returns the directory we keep it
+		keepdir /usr/share/terminfo #245374
+	elif use minimal; then
+		# prune all files and symlinks not listed in MINIMAL_TERMINFO
+		find "${D}"/usr/share/terminfo ! -type d \
+			${MINIMAL_TERMINFO[@]/#/! -name } \
+			-delete || die
+		find "${D}"/usr/share/terminfo -type d -empty -delete || die
+	fi
 
 	cd "${S}"
 	dodoc ANNOUNCE MANIFEST NEWS README* TO-DO doc/*.doc
