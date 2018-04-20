@@ -7,7 +7,7 @@ CROS_WORKON_PROJECT="coreos/coreos-metadata"
 CROS_WORKON_LOCALNAME="coreos-metadata"
 CROS_WORKON_REPO="git://github.com"
 
-UPDATE_SSH_KEYS_VERSION="0.1.1"
+UPDATE_SSH_KEYS_VERSION="0.1.2"
 
 if [[ ${PV} == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64"
