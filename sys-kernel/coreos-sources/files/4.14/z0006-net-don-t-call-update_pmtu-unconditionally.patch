@@ -1,4 +1,4 @@
-From 66676d18bdc839807a56c5e53cf27c1b44ef3310 Mon Sep 17 00:00:00 2001
+From 3ff3238a45e554ccec5d4e38cfcba3035e80c18d Mon Sep 17 00:00:00 2001
 From: Nicolas Dichtel <nicolas.dichtel@6wind.com>
 Date: Thu, 25 Jan 2018 19:03:03 +0100
 Subject: [PATCH 6/6] net: don't call update_pmtu unconditionally
