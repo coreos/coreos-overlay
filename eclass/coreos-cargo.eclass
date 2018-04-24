@@ -1,4 +1,4 @@
-# Copyright 2017 CoreOS, Inc.
+# Copyright 2017-2018 CoreOS, Inc.
 # Distributed under the terms of the GNU General Public License v2
 
 # @ECLASS: coreos-cargo.eclass
@@ -18,7 +18,7 @@ inherit toolchain-funcs
 EXPORT_FUNCTIONS src_unpack
 
 [[ ${CATEGORY}/${PN} != dev-libs/rustlib ]] && DEPEND="|| (
-	dev-libs/rustlib
+	dev-libs/rustlib:=
 	dev-util/cargo
 )"
 
