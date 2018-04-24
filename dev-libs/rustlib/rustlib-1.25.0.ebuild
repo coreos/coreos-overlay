@@ -1,4 +1,4 @@
-# Copyright 2017 CoreOS, Inc.
+# Copyright 2017-2018 CoreOS, Inc.
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
@@ -14,7 +14,7 @@ S="${WORKDIR}/rustc-${PV}-src"
 
 RDEPEND="!dev-lang/rust"
 
-SLOT="0"
+SLOT="0/${PVR}"
 KEYWORDS="amd64 arm64"
 
 src_configure() {
