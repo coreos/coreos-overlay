@@ -14,7 +14,7 @@ HOMEPAGE="http://inertiawar.com/microcode/ https://downloadcenter.intel.com/Deta
 SRC_URI="https://downloadmirror.intel.com/${NUM}/eng/microcode-${PV}.tgz"
 
 LICENSE="intel-ucode"
-SLOT="0"
+SLOT="0/${PVR}"
 KEYWORDS="-* amd64 x86"
 IUSE="initramfs +split-ucode"
 REQUIRED_USE="|| ( initramfs split-ucode )"
