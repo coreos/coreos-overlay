@@ -30,7 +30,7 @@ DEPEND="${RDEPEND}
 	>=sys-kernel/bootengine-0.0.4:=
 	sys-kernel/dracut
 	virtual/udev
-	amd64? ( sys-firmware/intel-microcode )"
+	amd64? ( sys-firmware/intel-microcode:= )"
 
 # We are bad, we want to get around the sandbox.  So do the creation of the
 # cpio image in pkg_setup() where we are free to mount filesystems, chroot,
