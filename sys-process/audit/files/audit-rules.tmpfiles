@@ -1,0 +1,5 @@
+d   /etc/audit                          -   -   -   -   -
+d   /etc/audit/rules.d                  -   -   -   -   -
+L   /etc/audit/rules.d/00-clear.rules   -   -   -   -   /usr/share/audit/rules.d/00-clear.rules
+L   /etc/audit/rules.d/80-selinux.rules -   -   -   -   /usr/share/audit/rules.d/80-selinux.rules
+L   /etc/audit/rules.d/99-default.rules -   -   -   -   /usr/share/audit/rules.d/99-default.rules
