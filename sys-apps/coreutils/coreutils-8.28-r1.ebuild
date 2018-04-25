@@ -32,6 +32,7 @@ LIB_DEPEND="acl? ( sys-apps/acl[static-libs] )
 	gmp? ( dev-libs/gmp:=[static-libs] )
 	xattr? ( !userland_BSD? ( sys-apps/attr[static-libs] ) )"
 RDEPEND="!static? ( ${LIB_DEPEND//\[static-libs]} )
+	>=sys-apps/sandbox-2.12
 	selinux? ( sys-libs/libselinux )
 	nls? ( virtual/libintl )"
 DEPEND="${RDEPEND}
