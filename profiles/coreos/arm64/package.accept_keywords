@@ -9,6 +9,7 @@
 =dev-cpp/gflags-2.2.0 ~arm64
 =dev-cpp/glog-0.3.4-r1 ~arm64
 =dev-lang/perl-5.24.1-r2 ~arm64
+=dev-lang/swig-3.0.12 ~arm64
 =dev-libs/apr-util-1.5.4-r1 ~arm64
 =dev-libs/elfutils-0.169-r1 ~arm64
 =dev-libs/libassuan-2.5.1 ~arm64
@@ -21,6 +22,8 @@
 =dev-libs/nss-3.29.5 ~arm64
 =dev-libs/libpcre2-10.30 ~arm64
 =dev-libs/userspace-rcu-0.9.1 **
+=dev-perl/libintl-perl-1.240.0-r2 ~arm64
+=dev-perl/Text-Unidecode-1.270.0 ~arm64
 =dev-util/meson-0.43.0 ~arm64
 =dev-util/ninja-1.8.2 ~arm64
 =dev-util/re2c-0.16 ~arm64
@@ -45,6 +48,7 @@
 =sys-apps/lshw-02.17b-r2 **
 =sys-apps/man-db-2.7.6.1-r2 ~arm64
 =sys-apps/rng-tools-5-r2 **
+=sys-apps/sandbox-2.12 ~arm64
 =sys-apps/smartmontools-6.4 **
 =sys-block/parted-3.2-r1 ~arm64
 =sys-block/thin-provisioning-tools-0.7.0 ~arm64
