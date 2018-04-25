@@ -1,6 +1,5 @@
-# Copyright 1999-2016 Gentoo Foundation
+# Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Id$
 
 # To generate the man pages, unpack the upstream tarball and run:
 # ./configure --enable-install-program=arch,coreutils,hostname,kill
@@ -8,27 +7,27 @@
 # cd ..
 # tar cf - coreutils-*/man/*.[0-9] | xz > coreutils-<ver>-man.tar.xz
 
-EAPI="4"
+EAPI=5
 
 inherit eutils flag-o-matic toolchain-funcs
 
 PATCH_VER="1.1"
-DESCRIPTION="Standard GNU file utilities (chmod, cp, dd, dir, ls...), text utilities (sort, tr, head, wc..), and shell utilities (whoami, who,...)"
+DESCRIPTION="Standard GNU utilities (chmod, cp, dd, ls, sort, tr, head, wc, who,...)"
 HOMEPAGE="https://www.gnu.org/software/coreutils/"
 SRC_URI="mirror://gnu/${PN}/${P}.tar.xz
 	mirror://gentoo/${P}-patches-${PATCH_VER}.tar.xz
-	https://dev.gentoo.org/~vapier/dist/${P}-patches-${PATCH_VER}.tar.xz
+	https://dev.gentoo.org/~polynomial-c/dist/${P}-patches-${PATCH_VER}.tar.xz
 	mirror://gentoo/${P}-man.tar.xz
-	https://dev.gentoo.org/~vapier/dist/${P}-man.tar.xz"
+	https://dev.gentoo.org/~polynomial-c/dist/${P}-man.tar.xz"
 
 LICENSE="GPL-3"
 SLOT="0"
-KEYWORDS="~alpha amd64 ~arm arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~x86-fbsd ~arm-linux ~x86-linux"
-IUSE="acl caps gmp hostname kill multicall nls selinux static symlink-usr userland_BSD vanilla xattr"
+KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~x86-fbsd ~arm-linux ~x86-linux"
+IUSE="acl caps gmp hostname kill multicall nls selinux static userland_BSD vanilla xattr"
 
 LIB_DEPEND="acl? ( sys-apps/acl[static-libs] )
 	caps? ( sys-libs/libcap )
-	gmp? ( dev-libs/gmp[static-libs] )
+	gmp? ( dev-libs/gmp:=[static-libs] )
 	xattr? ( !userland_BSD? ( sys-apps/attr[static-libs] ) )"
 RDEPEND="!static? ( ${LIB_DEPEND//\[static-libs]} )
 	selinux? ( sys-libs/libselinux )
@@ -137,8 +136,11 @@ src_test() {
 src_install() {
 	default
 
-	if [[ ${USERLAND} == "GNU" ]] && ! use symlink-usr; then
-		cd "${ED}"/usr/bin
+	insinto /etc
+	newins src/dircolors.hin DIR_COLORS
+
+	if [[ ${USERLAND} == "GNU" ]] ; then
+		cd "${ED}"/usr/bin || die
 		dodir /bin
 		# move critical binaries into /bin (required by FHS)
 		local fhs="cat chgrp chmod chown cp date dd df echo false ln ls
@@ -154,9 +156,9 @@ src_install() {
 		# create a symlink for uname in /usr/bin/ since autotools require it
 		local x
 		for x in ${com} uname ; do
-			dosym /bin/${x} /usr/bin/${x}
+			dosym ../../bin/${x} /usr/bin/${x}
 		done
-	elif [[ ${USERLAND} != "GNU" ]] ; then
+	else
 		# For now, drop the man pages, collides with the ones of the system.
 		rm -rf "${ED}"/usr/share/man
 	fi

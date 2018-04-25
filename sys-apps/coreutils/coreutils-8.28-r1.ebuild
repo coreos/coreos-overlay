@@ -1,41 +1,52 @@
-# Copyright 1999-2016 Gentoo Foundation
+# Copyright 1999-2018 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Id$
 
 # To generate the man pages, unpack the upstream tarball and run:
-# ./configure --enable-install-program=arch,coreutils
+# ./configure --enable-install-program=arch,coreutils,hostname,kill
 # make
 # cd ..
 # tar cf - coreutils-*/man/*.[0-9] | xz > coreutils-<ver>-man.tar.xz
 
-EAPI="4"
+EAPI="6"
 
-inherit eutils flag-o-matic toolchain-funcs
+PYTHON_COMPAT=( python{2_7,3_4,3_5,3_6} )
+
+inherit eutils flag-o-matic python-any-r1 toolchain-funcs
 
 PATCH_VER="1.1"
-DESCRIPTION="Standard GNU file utilities (chmod, cp, dd, dir, ls...), text utilities (sort, tr, head, wc..), and shell utilities (whoami, who,...)"
+DESCRIPTION="Standard GNU utilities (chmod, cp, dd, ls, sort, tr, head, wc, who,...)"
 HOMEPAGE="https://www.gnu.org/software/coreutils/"
 SRC_URI="mirror://gnu/${PN}/${P}.tar.xz
 	mirror://gentoo/${P}-patches-${PATCH_VER}.tar.xz
-	https://dev.gentoo.org/~vapier/dist/${P}-patches-${PATCH_VER}.tar.xz
+	https://dev.gentoo.org/~whissi/dist/${PN}/${P}-patches-${PATCH_VER}.tar.xz
 	mirror://gentoo/${P}-man.tar.xz
-	https://dev.gentoo.org/~vapier/dist/${P}-man.tar.xz"
+	https://dev.gentoo.org/~polynomial-c/dist/${P}-man.tar.xz"
 
 LICENSE="GPL-3"
 SLOT="0"
-KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~x86-fbsd ~arm-linux ~x86-linux"
-IUSE="acl caps gmp hostname kill multicall nls selinux static userland_BSD vanilla xattr"
+KEYWORDS="alpha amd64 arm arm64 hppa ia64 ~m68k ~mips ppc ppc64 ~s390 ~sh sparc x86 ~arm-linux ~x86-linux"
+IUSE="acl caps gmp hostname kill multicall nls selinux static symlink-usr test userland_BSD vanilla xattr"
 
 LIB_DEPEND="acl? ( sys-apps/acl[static-libs] )
 	caps? ( sys-libs/libcap )
-	gmp? ( dev-libs/gmp[static-libs] )
+	gmp? ( dev-libs/gmp:=[static-libs] )
 	xattr? ( !userland_BSD? ( sys-apps/attr[static-libs] ) )"
 RDEPEND="!static? ( ${LIB_DEPEND//\[static-libs]} )
+	>=sys-apps/sandbox-2.12
 	selinux? ( sys-libs/libselinux )
 	nls? ( virtual/libintl )"
 DEPEND="${RDEPEND}
 	static? ( ${LIB_DEPEND} )
-	app-arch/xz-utils"
+	app-arch/xz-utils
+	test? (
+		dev-lang/perl
+		dev-perl/Expect
+		!userland_BSD? (
+			dev-util/strace
+		)
+		${PYTHON_DEPS}
+		$(python_gen_any_dep 'dev-python/pyinotify[${PYTHON_USEDEP}]')
+	)"
 RDEPEND+="
 	hostname? ( !sys-apps/net-tools[hostname] )
 	kill? (
@@ -44,20 +55,27 @@ RDEPEND+="
 	)
 	!app-misc/realpath
 	!<sys-apps/util-linux-2.13
+	!<sys-apps/sandbox-2.10-r4
 	!sys-apps/stat
 	!net-mail/base64
 	!sys-apps/mktemp
 	!<app-forensics/tct-1.18-r1
 	!<net-fs/netatalk-2.0.3-r4"
 
+pkg_setup() {
+	if use test ; then
+		python-any-r1_pkg_setup
+	fi
+}
+
 src_prepare() {
 	if ! use vanilla ; then
 		use_if_iuse unicode || rm -f "${WORKDIR}"/patch/000_all_coreutils-i18n.patch
-		EPATCH_SUFFIX="patch" \
-		PATCHDIR="${WORKDIR}/patch" \
-		EPATCH_EXCLUDE="001_all_coreutils-gen-progress-bar.patch" \
-		epatch
+		#rm "${WORKDIR}"/patch/001_all_coreutils-gen-progress-bar.patch || die
+		eapply "${WORKDIR}"/patch/*.patch
 	fi
+
+	eapply_user
 
 	# Since we've patched many .c files, the make process will try to
 	# re-build the manpages by running `./bin --help`.  When doing a
@@ -75,7 +93,20 @@ src_prepare() {
 }
 
 src_configure() {
-	local myconf=''
+	local myconf=(
+		--with-packager="Gentoo"
+		--with-packager-version="${PVR} (p${PATCH_VER:-0})"
+		--with-packager-bug-reports="https://bugs.gentoo.org/"
+		--enable-install-program="arch,$(usev hostname),$(usev kill)"
+		--enable-no-install-program="groups,$(usev !hostname),$(usev !kill),su,uptime"
+		--enable-largefile
+		$(use caps || echo --disable-libcap)
+		$(use_enable nls)
+		$(use_enable acl)
+		$(use_enable multicall single-binary)
+		$(use_enable xattr)
+		$(use_with gmp)
+	)
 	if tc-is-cross-compiler && [[ ${CHOST} == *linux* ]] ; then
 		export fu_cv_sys_stat_statfs2_bsize=yes #311569
 		export gl_cv_func_realpath_works=yes #416629
@@ -84,27 +115,23 @@ src_configure() {
 	export gl_cv_func_mknod_works=yes #409919
 	use static && append-ldflags -static && sed -i '/elf_sys=yes/s:yes:no:' configure #321821
 	use selinux || export ac_cv_{header_selinux_{context,flash,selinux}_h,search_setfilecon}=no #301782
-	use userland_BSD && myconf="${myconf} -program-prefix=g --program-transform-name=s/stat/nustat/"
+	use userland_BSD && myconf+=( -program-prefix=g --program-transform-name=s/stat/nustat/ )
 	# kill/uptime - procps
 	# groups/su   - shadow
 	# hostname    - net-tools
-	econf \
-		--with-packager="Gentoo" \
-		--with-packager-version="${PVR} (p${PATCH_VER:-0})" \
-		--with-packager-bug-reports="https://bugs.gentoo.org/" \
-		--enable-install-program="arch,$(usev hostname),$(usev kill)" \
-		--enable-no-install-program="groups,$(usev !hostname),$(usev !kill),su,uptime" \
-		--enable-largefile \
-		$(use caps || echo --disable-libcap) \
-		$(use_enable nls) \
-		$(use_enable acl) \
-		$(use_enable multicall single-binary) \
-		$(use_enable xattr) \
-		$(use_with gmp) \
-		${myconf}
+	econf "${myconf[@]}"
 }
 
 src_test() {
+	# Known to fail with FEATURES=usersandbox (bug #439574):
+	#   -  tests/du/long-from-unreadable.sh} (bug #413621)
+	#   -  tests/rm/deep-2.sh (bug #413621)
+	#   -  tests/dd/no-allocate.sh (bug #629660)
+	if has usersandbox $FEATURES ; then
+		ewarn "You are emerging ${P} with 'usersandbox' enabled." \
+			"Expect some test failures or emerge with 'FEATURES=-usersandbox'!"
+	fi
+
 	# Non-root tests will fail if the full path isn't
 	# accessible to non-root users
 	chmod -R go-w "${WORKDIR}"
@@ -137,11 +164,8 @@ src_test() {
 src_install() {
 	default
 
-	insinto /etc
-	newins src/dircolors.hin DIR_COLORS
-
-	if [[ ${USERLAND} == "GNU" ]] ; then
-		cd "${ED}"/usr/bin
+	if [[ ${USERLAND} == "GNU" ]] && ! use symlink-usr; then
+		cd "${ED%/}"/usr/bin || die
 		dodir /bin
 		# move critical binaries into /bin (required by FHS)
 		local fhs="cat chgrp chmod chown cp date dd df echo false ln ls
@@ -157,11 +181,11 @@ src_install() {
 		# create a symlink for uname in /usr/bin/ since autotools require it
 		local x
 		for x in ${com} uname ; do
-			dosym /bin/${x} /usr/bin/${x}
+			dosym ../../bin/${x} /usr/bin/${x}
 		done
-	else
+	elif [[ ${USERLAND} != "GNU" ]] ; then
 		# For now, drop the man pages, collides with the ones of the system.
-		rm -rf "${ED}"/usr/share/man
+		rm -rf "${ED%/}"/usr/share/man
 	fi
 
 }
@@ -172,7 +196,7 @@ pkg_postinst() {
 	ewarn "  changes, such as: source /etc/profile"
 
 	# Help out users using experimental filesystems
-	if grep -qs btrfs "${EROOT}"/etc/fstab /proc/mounts ; then
+	if grep -qs btrfs "${EROOT%/}"/etc/fstab /proc/mounts ; then
 		case $(uname -r) in
 		2.6.[12][0-9]|2.6.3[0-7]*)
 			ewarn "You are running a system with a buggy btrfs driver."

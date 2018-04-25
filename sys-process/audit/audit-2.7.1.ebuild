@@ -1,36 +1,34 @@
-# Copyright 1999-2015 Gentoo Foundation
+# Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-process/audit/audit-2.4.3.ebuild,v 1.1 2015/07/27 18:23:11 perfinion Exp $
 
-EAPI="5"
+EAPI=6
 
-PYTHON_COMPAT=( python{2_7,3_3,3_4} )
+PYTHON_COMPAT=( python{2_7,3_4,3_5,3_6} )
 
-inherit autotools multilib multilib-minimal toolchain-funcs python-r1 linux-info eutils systemd
+inherit autotools multilib multilib-minimal toolchain-funcs python-r1 linux-info systemd
 
 DESCRIPTION="Userspace utilities for storing and processing auditing records"
-HOMEPAGE="http://people.redhat.com/sgrubb/audit/"
-SRC_URI="http://people.redhat.com/sgrubb/audit/${P}.tar.gz"
+HOMEPAGE="https://people.redhat.com/sgrubb/audit/"
+SRC_URI="https://people.redhat.com/sgrubb/audit/${P}.tar.gz"
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="~alpha amd64 ~arm ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sparc ~x86"
-IUSE="daemon ldap python"
-# Testcases are pretty useless as they are built for RedHat users/groups and
-# kernels.
-RESTRICT="test"
-
-RDEPEND="ldap? ( net-nds/openldap )
-	sys-apps/diffutils
-	sys-libs/libcap-ng"
-DEPEND="${RDEPEND}
-	python? ( ${PYTHON_DEPS}
-		dev-lang/swig )
-	>=sys-kernel/linux-headers-2.6.34"
-# Do not use os-headers as this is linux specific
-
+KEYWORDS="~alpha amd64 ~arm arm64 ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86"
+IUSE="daemon gssapi ldap python static-libs"
 REQUIRED_USE="ldap? ( daemon )
 	python? ( ${PYTHON_REQUIRED_USE} )"
+# Testcases are pretty useless as they are built for RedHat users/groups and kernels.
+RESTRICT="test"
+
+RDEPEND="gssapi? ( virtual/krb5 )
+	ldap? ( net-nds/openldap )
+	sys-apps/diffutils
+	sys-libs/libcap-ng
+	python? ( ${PYTHON_DEPS} )"
+DEPEND="${RDEPEND}
+	>=sys-kernel/linux-headers-2.6.34
+	python? ( dev-lang/swig:0 )"
+# Do not use os-headers as this is linux specific
 
 CONFIG_CHECK="~AUDIT"
 
@@ -39,15 +37,36 @@ pkg_setup() {
 }
 
 src_prepare() {
-	epatch_user
+	eapply_user
+
+	# Do not build GUI tools
+	sed -i \
+		-e '/AC_CONFIG_SUBDIRS.*system-config-audit/d' \
+		"${S}"/configure.ac || die
+	sed -i \
+		-e 's,system-config-audit,,g' \
+		"${S}"/Makefile.am || die
+	rm -rf "${S}"/system-config-audit
+
+	if ! use ldap; then
+		sed -i \
+			-e '/^AC_OUTPUT/s,audisp/plugins/zos-remote/Makefile,,g' \
+			"${S}"/configure.ac || die
+		sed -i \
+			-e '/^SUBDIRS/s,zos-remote,,g' \
+			"${S}"/audisp/plugins/Makefile.am || die
+	fi
 
 	# Don't build static version of Python module.
-	epatch "${FILESDIR}"/${PN}-2.4.3-python.patch
+	eapply "${FILESDIR}"/${PN}-2.4.3-python.patch
 
 	# glibc/kernel upstreams suck with both defining ia64_fpreg
 	# This patch is a horribly workaround that is only valid as long as you
 	# don't need the OTHER definitions in fpu.h.
-	epatch "${FILESDIR}"/${PN}-2.1.3-ia64-compile-fix.patch
+	eapply "${FILESDIR}"/${PN}-2.1.3-ia64-compile-fix.patch
+
+	# there is no --without-golang conf option
+	sed -e "/^SUBDIRS =/s/ @gobind_dir@//" -i bindings/Makefile.am || die
 
 	if ! use daemon; then
 		sed -e '/^SUBDIRS =/s/audisp//' \
@@ -68,10 +87,12 @@ src_prepare() {
 multilib_src_configure() {
 	local ECONF_SOURCE=${S}
 	econf \
-		--sbindir=/sbin \
-		--enable-systemd \
+		--sbindir="${EPREFIX}/sbin" \
+		$(use_enable gssapi gssapi-krb5) \
+		$(use_enable static-libs static) \
 		$(use_enable ldap zos-remote) \
 		--without-golang \
+		--enable-systemd \
 		--without-python \
 		--without-python3
 
@@ -89,6 +110,14 @@ multilib_src_configure() {
 
 		use python && python_foreach_impl python_configure
 	fi
+}
+
+src_configure() {
+	tc-export_build_env BUILD_{CC,CPP}
+	export CC_FOR_BUILD="${BUILD_CC}"
+	export CPP_FOR_BUILD="${BUILD_CPP}"
+
+	multilib-minimal_src_configure
 }
 
 multilib_src_compile() {
@@ -127,7 +156,7 @@ multilib_src_compile() {
 
 multilib_src_install() {
 	if multilib_is_native_abi; then
-		emake DESTDIR="${D}" initdir="$(systemd_get_unitdir)" install
+		emake DESTDIR="${D}" initdir="$(systemd_get_systemunitdir)" install
 
 		python_install() {
 			local pysuffix pydef
@@ -167,18 +196,21 @@ multilib_src_install() {
 multilib_src_install_all() {
 	dodoc AUTHORS ChangeLog README* THANKS TODO
 	docinto contrib
-	dodoc contrib/{*.rules,avc_snap,skeleton.c}
+	dodoc contrib/{avc_snap,skeleton.c}
+	docinto rules
+	dodoc rules/*
 
 	if use daemon; then
 		docinto contrib/plugin
 		dodoc contrib/plugin/*
-
-		newinitd "${FILESDIR}"/auditd-init.d-2.1.3 auditd
+		newinitd "${FILESDIR}"/auditd-init.d-2.4.3 auditd
 		newconfd "${FILESDIR}"/auditd-conf.d-2.1.3 auditd
 
-		[ -f "${D}"/sbin/audisp-remote ] && \
+		fperms 644 "$(systemd_get_systemunitdir)"/auditd.service # 556436
+
+		[ -f "${ED}"/sbin/audisp-remote ] && \
 		dodir /usr/sbin && \
-		mv "${D}"/{sbin,usr/sbin}/audisp-remote || die
+		mv "${ED}"/{sbin,usr/sbin}/audisp-remote || die
 
 		# audit logs go here
 		keepdir /var/log/audit/
@@ -187,6 +219,7 @@ multilib_src_install_all() {
 	insinto /usr/share/audit/rules.d
 	doins "${FILESDIR}"/rules.d/*.rules
 
+	# Security
 	systemd_newtmpfilesd "${FILESDIR}"/audit-rules.tmpfiles audit-rules.conf
 	systemd_dounit "${FILESDIR}"/audit-rules.service
 	systemd_enable_service multi-user.target audit-rules.service

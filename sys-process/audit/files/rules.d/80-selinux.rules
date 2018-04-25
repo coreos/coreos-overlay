@@ -1,2 +1,4 @@
 # Enable all SELinux related events
+# 1400 to 1499 are for kernel SELinux use (see /include/uapi/linux/audit.h)
+
 -a exclude,never -F msgtype>=1400 -F msgtype<=1499
