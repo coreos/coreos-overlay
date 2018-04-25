@@ -1,2 +1,0 @@
-# Enable all SELinux related events
--a exclude,never -F msgtype>=1400 -F msgtype<=1499
