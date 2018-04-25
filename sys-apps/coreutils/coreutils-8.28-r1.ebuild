@@ -25,7 +25,7 @@ SRC_URI="mirror://gnu/${PN}/${P}.tar.xz
 LICENSE="GPL-3"
 SLOT="0"
 KEYWORDS="alpha amd64 arm ~arm64 hppa ia64 ~m68k ~mips ppc ppc64 ~s390 ~sh sparc x86 ~arm-linux ~x86-linux"
-IUSE="acl caps gmp hostname kill multicall nls selinux static test userland_BSD vanilla xattr"
+IUSE="acl caps gmp hostname kill multicall nls selinux static symlink-usr test userland_BSD vanilla xattr"
 
 LIB_DEPEND="acl? ( sys-apps/acl[static-libs] )
 	caps? ( sys-libs/libcap )
@@ -166,7 +166,7 @@ src_install() {
 	insinto /etc
 	newins src/dircolors.hin DIR_COLORS
 
-	if [[ ${USERLAND} == "GNU" ]] ; then
+	if [[ ${USERLAND} == "GNU" ]] && ! use symlink-usr; then
 		cd "${ED%/}"/usr/bin || die
 		dodir /bin
 		# move critical binaries into /bin (required by FHS)
@@ -185,7 +185,7 @@ src_install() {
 		for x in ${com} uname ; do
 			dosym ../../bin/${x} /usr/bin/${x}
 		done
-	else
+	elif [[ ${USERLAND} != "GNU" ]] ; then
 		# For now, drop the man pages, collides with the ones of the system.
 		rm -rf "${ED%/}"/usr/share/man
 	fi
