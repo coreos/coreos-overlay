@@ -7,7 +7,7 @@
 
 EAPI="5"
 
-inherit flag-o-matic
+inherit autotools flag-o-matic
 
 DESCRIPTION="The GNU info program and utilities"
 HOMEPAGE="https://www.gnu.org/software/texinfo/"
@@ -29,6 +29,11 @@ RDEPEND="
 DEPEND="${RDEPEND}
 	app-arch/xz-utils
 	nls? ( >=sys-devel/gettext-0.19.6 )"
+
+src_prepare() {
+	epatch "${FILESDIR}"/0001-configure-Fixups-for-Container-Linux.patch
+	eautoreconf
+}
 
 src_configure() {
 	use static && append-ldflags -static

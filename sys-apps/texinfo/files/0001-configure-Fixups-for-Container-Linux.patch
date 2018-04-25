@@ -1,0 +1,44 @@
+From 94b3629f6c781344e01fe8fa2b0b8e1df96f65eb Mon Sep 17 00:00:00 2001
+From: Geoff Levand <geoff@infradead.org>
+Date: Wed, 24 Jan 2018 16:30:05 -0800
+Subject: [PATCH] configure: Fixups for Container Linux builds
+
+Need to set CCACHE_DIR for tool build.
+Need to skip doc, man for main build.
+
+Signed-off-by: Geoff Levand <geoff@infradead.org>
+---
+ Makefile.am  | 3 +--
+ configure.ac | 2 +-
+ 2 files changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/Makefile.am b/Makefile.am
+index b3ea505..abc43e4 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -66,8 +66,7 @@ if HOST_IS_WINDOWS
+   SUBDIRS += info
+ endif
+ endif
+-  SUBDIRS += install-info po po_document tp Pod-Simple-Texinfo texindex util \
+-             doc man
++  SUBDIRS += install-info po po_document tp Pod-Simple-Texinfo texindex util
+ endif
+ 
+ distclean-local:
+diff --git a/configure.ac b/configure.ac
+index 055b294..80ec33b 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -210,7 +210,7 @@ else
+   # it gets the wrong CC etc.
+   # env -i gives this build host configure a clean environment;
+   # consequently, we have to re-initialize $PATH.
+-  env -i CC="$BUILD_CC" AR="$BUILD_AR" RANLIB="$BUILD_RANLIB" \
++  env -i CCACHE_DIR=$CCACHE_DIR CC="$BUILD_CC" AR="$BUILD_AR" RANLIB="$BUILD_RANLIB" \
+       PATH="$PATH" \
+       tools_only=1 \
+     ${confdir}/configure --build=${build} --host=${build} \
+-- 
+2.11.0
+
