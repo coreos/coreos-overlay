@@ -90,6 +90,8 @@ multilib_src_configure() {
 		--sbindir="${EPREFIX}/sbin" \
 		$(use_enable gssapi gssapi-krb5) \
 		$(use_enable static-libs static) \
+		$(use_enable ldap zos-remote) \
+		--without-golang \
 		--enable-systemd \
 		--without-python \
 		--without-python3
