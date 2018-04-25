@@ -6,5 +6,6 @@
 	</maintainer>
 	<use>
 		<flag name="gssapi">Enable GSSAPI support</flag>
+		<flag name="daemon">Enable auditd and audisp support</flag>
 	</use>
 </pkgmetadata>
