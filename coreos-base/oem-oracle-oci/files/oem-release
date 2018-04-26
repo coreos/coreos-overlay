@@ -1,5 +1,0 @@
-ID=oracle-oci
-VERSION_ID=@@OEM_VERSION_ID@@
-NAME="Oracle Cloud Infrastructure"
-HOME_URL="https://cloud.oracle.com/en_US/bare-metal"
-BUG_REPORT_URL="https://issues.coreos.com"

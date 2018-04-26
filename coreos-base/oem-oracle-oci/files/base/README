@@ -1,4 +1,0 @@
-These Ignition configs are part of the OEM configuration. Do not modify
-them. If you want to write an Ignition config directly to disk, put it in
-../config.ign and it will be applied at first boot instead of a config
-in userdata.
