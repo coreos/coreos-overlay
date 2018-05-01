@@ -1,4 +1,4 @@
-From bba160effeed5475d50784b0a85a544773f2965b Mon Sep 17 00:00:00 2001
+From 7ba58ec790b9d2c44c55c84a08b44c968daf5bb5 Mon Sep 17 00:00:00 2001
 From: Ilya Dryomov <idryomov@gmail.com>
 Date: Mon, 16 Oct 2017 15:59:10 +0200
 Subject: [PATCH 4/6] block: cope with WRITE ZEROES failing in
