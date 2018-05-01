@@ -1,4 +1,4 @@
-From 22c4e7bd39f17dc0e628264b633c8fb707f5dc2b Mon Sep 17 00:00:00 2001
+From 93200678e09fbfdd537830491cb41ad90dcc79c5 Mon Sep 17 00:00:00 2001
 From: David Michael <david.michael@coreos.com>
 Date: Thu, 8 Feb 2018 21:23:12 -0500
 Subject: [PATCH 5/6] tools/objtool/Makefile: Don't fail on fallthrough with
