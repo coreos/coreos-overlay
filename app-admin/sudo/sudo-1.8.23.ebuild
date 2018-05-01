@@ -23,9 +23,9 @@ SRC_URI="https://www.sudo.ws/sudo/dist/${uri_prefix}${MY_P}.tar.gz
 LICENSE="ISC BSD"
 SLOT="0"
 if [[ ${PV} != *_beta* ]] && [[ ${PV} != *_rc* ]] ; then
-	KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~x86-fbsd ~sparc-solaris"
+	KEYWORDS="~alpha amd64 ~arm arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~x86-fbsd ~sparc-solaris"
 fi
-IUSE="gcrypt ldap nls pam offensive openssl sasl selinux +sendmail skey"
+IUSE="gcrypt ldap nls pam offensive openssl sasl selinux +sendmail skey sssd"
 
 CDEPEND="
 	gcrypt? ( dev-libs/libgcrypt:= )
@@ -42,7 +42,6 @@ CDEPEND="
 RDEPEND="
 	${CDEPEND}
 	selinux? ( sec-policy/selinux-sudo )
-	ldap? ( dev-lang/perl )
 	pam? ( sys-auth/pambase )
 	>=app-misc/editor-wrapper-3
 	virtual/editor
@@ -139,6 +138,7 @@ src_configure() {
 		$(use_with skey)
 		$(use_with selinux)
 		$(use_with sendmail)
+		$(use_with sssd)
 	)
 	econf "${myeconfargs[@]}"
 }
@@ -161,9 +161,6 @@ src_install() {
 		insinto /etc
 		doins "${T}"/ldap.conf.sudo
 		fperms 0440 /etc/ldap.conf.sudo
-
-		insinto /etc/openldap/schema
-		newins doc/schema.OpenLDAP sudo.schema
 	fi
 
 	pamd_mimic system-auth sudo auth account session
