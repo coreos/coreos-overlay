@@ -67,3 +67,7 @@ INSTALL_MASK="${INSTALL_MASK}
   /etc/ssl/misc/tsget
 "
 
+# Remove tools that don't need to be installed on every server.
+INSTALL_MASK="${INSTALL_MASK}
+  /usr/bin/cvtsudoers
+"
