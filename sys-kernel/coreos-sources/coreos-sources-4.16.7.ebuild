@@ -25,6 +25,10 @@ fi
 
 KEYWORDS="amd64 arm64"
 IUSE=""
+RDEPEND+="
+	sys-devel/bison
+	sys-devel/flex
+"
 
 # XXX: Note we must prefix the patch filenames with "z" to ensure they are
 # applied _after_ a potential patch-${KV}.patch file, present when building a
