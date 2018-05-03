@@ -1,6 +1,6 @@
 [Unit]
 Description=Set time via SNTP
-After=network.target nss-lookup.target
+After=network.target NetworkManager-wait-online.service nss-lookup.target
 Before=time-sync.target
 Wants=time-sync.target
 Conflicts=systemd-timesyncd.service
