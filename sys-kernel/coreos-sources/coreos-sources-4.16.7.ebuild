@@ -34,4 +34,6 @@ UNIPATCH_LIST="
 	${PATCH_DIR}/z0001-kbuild-derive-relative-path-for-KBUILD_SRC-from-CURD.patch \
 	${PATCH_DIR}/z0002-Add-arm64-coreos-verity-hash.patch \
 	${PATCH_DIR}/z0003-tools-objtool-Makefile-Don-t-fail-on-fallthrough-wit.patch \
+	${PATCH_DIR}/z0004-Revert-random-use-a-different-mixing-algorithm-for-a.patch \
+	${PATCH_DIR}/z0005-Revert-random-fix-crng_ready-test.patch \
 "
