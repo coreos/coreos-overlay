@@ -15,5 +15,5 @@
 # recent releases
 =app-emulation/rkt-13.0
 
-# Prevent this from attempting to install along with GCC 7.
-=sys-devel/gcc-6.4.0-r1
+# Temporarily block newer stable Python versions until profiles are updated.
+>=dev-lang/python-3.5
