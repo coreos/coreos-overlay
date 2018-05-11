@@ -1,0 +1,2 @@
+# Skip MTA dependencies.
+virtual/mta-1
