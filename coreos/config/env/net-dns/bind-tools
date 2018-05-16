@@ -1,0 +1,2 @@
+# Work around failing OpenSSL feature detection.
+EXTRA_ECONF="--without-ecdsa"

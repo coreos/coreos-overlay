@@ -5,7 +5,7 @@
 # disable them and we have no need/use for them in prod images.
 
 # pulled in by app-crypt/pinentry
-app-eselect/eselect-pinentry-0.4
+app-eselect/eselect-pinentry-0.7
 
 # pulled in by app-editors/vim
 app-admin/eselect-vi-1.1.5
@@ -21,4 +21,4 @@ net-mail/mailbase-1.1
 app-arch/xz-utils-0
 
 # doesn't cross-compile, but required for glog, gflags, etc.
-dev-util/cmake-3.7.2
+dev-util/cmake-3.9.6
