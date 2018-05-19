@@ -16,10 +16,9 @@
 =dev-libs/liblinear-210-r1 ~arm64
 =dev-libs/libnl-3.2.27 ~arm64
 =dev-libs/libpcre-8.41 ~arm64
-=dev-libs/libusb-1.0.21 ~arm64
-=dev-libs/libxml2-2.9.4-r3 ~arm64
-=dev-libs/nss-3.29.5 ~arm64
 =dev-libs/libpcre2-10.30 ~arm64
+=dev-libs/libusb-1.0.21 ~arm64
+=dev-libs/nss-3.29.5 ~arm64
 =dev-libs/userspace-rcu-0.9.1 **
 =dev-perl/libintl-perl-1.240.0-r2 ~arm64
 =dev-perl/Text-Unidecode-1.270.0 ~arm64
@@ -30,6 +29,7 @@
 =net-analyzer/nmap-7.40 ~arm64
 =net-analyzer/tcpdump-4.9.2 ~arm64
 =net-dialup/minicom-2.7.1 ~arm64
+=net-dns/bind-tools-9.11.2_p1 ~arm64
 =net-dns/dnsmasq-2.78 ~arm64
 =net-firewall/ebtables-2.0.10.4-r1 ~arm64
 =net-firewall/ipset-6.29 ~arm64
@@ -41,7 +41,6 @@
 =net-misc/socat-1.7.3.2 ~arm64
 =net-nds/openldap-2.4.44 ~arm64
 =perl-core/File-Path-2.130.0 ~arm64
-=sys-apps/gptfdisk-1.0.1 ~arm64
 =sys-apps/i2c-tools-3.1.1-r1 ~arm64
 =sys-apps/lshw-02.17b-r2 **
 =sys-apps/man-db-2.7.6.1-r2 ~arm64
@@ -59,6 +58,7 @@
 =sys-fs/quota-4.02 **
 =sys-libs/binutils-libs-2.29.1-r1 ~arm64
 =sys-libs/libcap-ng-0.7.8 ~arm64
+=virtual/krb5-0-r1 ~arm64
 =virtual/libudev-232 ~arm64
 =virtual/libusb-1-r2 ~arm64
 =virtual/perl-File-Path-2.130.0 ~arm64

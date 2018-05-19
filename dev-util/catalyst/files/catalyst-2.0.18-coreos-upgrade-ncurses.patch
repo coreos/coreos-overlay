@@ -1,0 +1,11 @@
+--- targets/stage1/stage1-chroot.sh
++++ targets/stage1/stage1-chroot.sh
+@@ -30,6 +30,8 @@
+ 		if [ -n "${clst_update_seed_command}" ]; then
+ 			clst_root_path=/ run_merge "--buildpkg=n ${clst_update_seed_command}"
+ 		else
++			clst_root_path=/ run_merge "--unmerge sys-libs/ncurses-5.9-r99"
++			clst_root_path=/ run_merge "<dev-lang/python-3 app-crypt/pinentry app-emulation/qemu app-editors/vim app-shells/bash app-shells/bash-completion dev-db/sqlite dev-lang/python dev-libs/libxml2 dev-util/cmake net-dns/bind-tools sys-apps/gptfdisk sys-apps/less sys-apps/util-linux sys-devel/gettext sys-fs/lvm2 sys-libs/ncurses"
+ 			clst_root_path=/ run_merge "--update --deep --newuse --complete-graph --rebuild-if-new-ver gcc"
+ 		fi
+ 	elif [ "${clst_update_seed}" != "no" ]; then
