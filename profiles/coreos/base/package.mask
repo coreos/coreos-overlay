@@ -14,3 +14,8 @@
 # mask an accidental rkt major version bump to ensure it's not chosen over more
 # recent releases
 =app-emulation/rkt-13.0
+
+# Block Linux 4.19 to test 4.14.
+>=sys-kernel/coreos-kernel-4.15
+>=sys-kernel/coreos-modules-4.15
+>=sys-kernel/coreos-sources-4.15
