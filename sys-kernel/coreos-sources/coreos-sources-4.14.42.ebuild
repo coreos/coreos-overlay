@@ -36,7 +36,6 @@ UNIPATCH_LIST="
 	${PATCH_DIR}/z0003-block-factor-out-__blkdev_issue_zero_pages.patch \
 	${PATCH_DIR}/z0004-block-cope-with-WRITE-ZEROES-failing-in-blkdev_issue.patch \
 	${PATCH_DIR}/z0005-tools-objtool-Makefile-Don-t-fail-on-fallthrough-wit.patch \
-	${PATCH_DIR}/z0006-net-don-t-call-update_pmtu-unconditionally.patch \
-	${PATCH_DIR}/z0007-Revert-random-use-a-different-mixing-algorithm-for-a.patch \
-	${PATCH_DIR}/z0008-Revert-random-fix-crng_ready-test.patch \
+	${PATCH_DIR}/z0006-Revert-random-use-a-different-mixing-algorithm-for-a.patch \
+	${PATCH_DIR}/z0007-Revert-random-fix-crng_ready-test.patch \
 "
