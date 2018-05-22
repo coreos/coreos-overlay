@@ -1,3 +1,0 @@
-# the OEM package app-emulation/open-vm-tools has been linking against
-# procps but recent versions have changed the soname. Mask until we fix. :(
->=sys-process/procps-3.3.10
