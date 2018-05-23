@@ -1,5 +1,10 @@
-# Always report changes to the audit subsystem itself.
--a exclude,never -F msgtype=CONFIG_CHANGE
-
+# Report changes to the audit subsystem (CONFIG_CHANGE).
+# Report all SELinux related events (AVC).
 # Ignore everything else.
--a exclude,always -F msgtype>0
+#
+# Rules on the same line form an AND expression.
+# Rules on on different lines form an OR expression.
+# For info on configuring audit rules see the auditctl man page and
+# https://github.com/torvalds/linux/blob/master/include/uapi/linux/audit.h
+
+-a always,exclude -F msgtype!=AVC -F msgtype!=CONFIG_CHANGE
