@@ -3,6 +3,8 @@
 
 EAPI="6"
 
+inherit coreos-sec-policy systemd
+
 if [[ ${PV} == 9999* ]]; then
 	EGIT_REPO_URI="${SELINUX_GIT_REPO:-https://anongit.gentoo.org/git/proj/hardened-refpolicy.git}"
 	EGIT_BRANCH="${SELINUX_GIT_BRANCH:-master}"
@@ -36,6 +38,20 @@ src_prepare() {
 		einfo "Applying SELinux policy updates ... "
 		eapply -p0 "${WORKDIR}/0001-full-patch-against-stable-release.patch"
 	fi
+
+	# Additional selinux policy for rkt.
+	local kte="${S}/refpolicy/policy/modules/kernel/kernel.te"
+	#  Read and write files and directories regardless of their category set.
+	echo "mcs_file_read_all(kernel_t)" >> "${kte}"
+	echo "mcs_file_write_all(kernel_t)" >> "${kte}"
+	#  Trusted for setting any category set for the processes it executes.
+	echo "mcs_process_set_categories(kernel_t)" >> "${kte}"
+	#  Sigkill and sigstop all domains regardless of their category set.
+	echo "mcs_killall(kernel_t)" >> "${kte}"
+	#  Allowed to ptrace all domains regardless of their category set.
+	echo "mcs_ptrace_all(kernel_t)" >> "${kte}"
+	#  Quiet wake_alarm AVCs.
+	echo "allow kernel_t self:capability2 wake_alarm;" >> "${kte}"
 
 	eapply_user
 
@@ -134,28 +150,24 @@ src_install() {
 		echo "run_init_t" > "${D}/etc/selinux/${i}/contexts/run_init_type" || die
 
 		echo "textrel_shlib_t" >> "${D}/etc/selinux/${i}/contexts/customizable_types" || die
-
-		# libsemanage won't make this on its own
-		keepdir "/etc/selinux/${i}/policy"
-
-		if use doc; then
-			docinto ${i}/html
-			dodoc -r doc/html/*;
-		fi
-
-		insinto /usr/share/selinux/devel;
-		doins doc/policy.xml;
-
 	done
 
-	docinto /
-	dodoc doc/Makefile.example doc/example.{te,fc,if}
-
-	doman man/man8/*.8;
-
-	insinto /etc/selinux
+	insinto /usr/lib/selinux
 	doins "${FILESDIR}/config"
 
-	insinto /usr/share/portage/config/sets
-	doins "${FILESDIR}/selinux.conf"
+	local tmpfiles_conf="${T}"/selinux-base.conf
+	cp "${FILESDIR}"/tmpfiles.d/selinux-base.conf "${tmpfiles_conf}"
+
+	for i in ${POLICY_TYPES}; do
+		# relocate policy to /usr
+		mv "${D}/etc/selinux/${i}" "${D}/usr/lib/selinux"
+		echo "L	/etc/selinux/${i}	-	-	-	-	../../usr/lib/selinux/${i}" \
+			>> "${tmpfiles_conf}"
+
+		insinto /usr/lib/selinux/${i}/contexts
+		doins "${FILESDIR}/lxc_contexts"
+	done
+
+	systemd_dotmpfilesd "${tmpfiles_conf}"
+	systemd-tmpfiles --root="${D}" --create selinux-base.conf
 }

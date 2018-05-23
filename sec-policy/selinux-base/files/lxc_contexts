@@ -1,0 +1,10 @@
+# This file is used to configure the per-instance contexts of rkt and other
+# applications that use libvirt for lxc container support.
+#
+# See:
+#    https://coreos.com/rkt/docs/latest/selinux.html
+#    https://selinuxproject.org/page/PolicyConfigurationFiles#contexts.2Flxc_contexts_File
+
+process = "system_u:system_r:svirt_lxc_net_t:s0"
+content = "system_u:object_r:virt_var_lib_t:s0"
+file = "system_u:object_r:svirt_lxc_file_t:s0"
