@@ -11,5 +11,6 @@
 	</upstream>
 	<use>
 		<flag name="networkx">Enable support for <pkg>dev-python/networkx</pkg></flag>
+		<flag name="python">Enable support for <pkg>python</pkg></flag>
 	</use>
 </pkgmetadata>

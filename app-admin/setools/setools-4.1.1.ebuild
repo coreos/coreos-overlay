@@ -4,6 +4,7 @@
 EAPI="6"
 PYTHON_COMPAT=( python2_7 python3_4 python3_5 )
 
+DISTUTILS_OPTIONAL=1
 inherit distutils-r1
 
 DESCRIPTION="Policy Analysis Tools for SELinux"
@@ -19,16 +20,17 @@ fi
 
 LICENSE="GPL-2 LGPL-2.1"
 SLOT="0"
-IUSE="X debug test networkx"
+IUSE="X debug test networkx python"
 
-RDEPEND="${PYTHON_DEPS}
+RDEPEND="
+	python? ( ${PYTHON_DEPS} )
 	>=sys-libs/libsepol-2.7:=
-	>=sys-libs/libselinux-2.7:=[${PYTHON_USEDEP}]
-	networkx? ( >=dev-python/networkx-1.8[${PYTHON_USEDEP}] )
-	networkx? ( virtual/python-enum34[${PYTHON_USEDEP}] )
+	>=sys-libs/libselinux-2.7:=[python?,${PYTHON_USEDEP}]
+	networkx? ( >=dev-python/networkx-1.8[python?,${PYTHON_USEDEP}] )
+	networkx? ( virtual/python-enum34[python?,${PYTHON_USEDEP}] )
 	dev-libs/libpcre:=
 	X? (
-		dev-python/PyQt5[gui,widgets,${PYTHON_USEDEP}]
+		dev-python/PyQt5[gui,widgets,python?,${PYTHON_USEDEP}]
 	)"
 
 DEPEND="${RDEPEND}
