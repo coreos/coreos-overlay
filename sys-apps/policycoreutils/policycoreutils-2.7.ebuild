@@ -15,7 +15,7 @@ SEMNG_VER="${PV}"
 SELNX_VER="${PV}"
 SEPOL_VER="${PV}"
 
-IUSE="audit pam dbus python"
+IUSE="audit extra pam dbus python"
 REQUIRED_USE="${PYTHON_REQUIRED_USE}"
 
 DESCRIPTION="SELinux core utilities"
@@ -30,7 +30,7 @@ if [[ ${PV} == 9999 ]] ; then
 	S="${S1}"
 else
 	SRC_URI="https://raw.githubusercontent.com/wiki/SELinuxProject/selinux/files/releases/${MY_RELEASEDATE}/${MY_P}.tar.gz
-		https://dev.gentoo.org/~perfinion/distfiles/policycoreutils-extra-${EXTRAS_VER}.tar.bz2"
+		extra? ( https://dev.gentoo.org/~perfinion/distfiles/policycoreutils-extra-${EXTRAS_VER}.tar.bz2 )"
 	KEYWORDS="amd64 ~arm64 ~mips x86"
 	S1="${WORKDIR}/${MY_P}"
 	S2="${WORKDIR}/policycoreutils-extra"
@@ -108,8 +108,10 @@ src_prepare() {
 		# directory. We really should optimize this as it is ugly, but the extra
 		# code is needed for Gentoo at the same time that policycoreutils is present
 		# (so we cannot use an additional package for now).
-		S="${S2}"
-		python_copy_sources
+		if use extra ; then
+			S="${S2}"
+			python_copy_sources
+		fi
 	fi
 }
 
@@ -128,13 +130,17 @@ src_compile() {
 	if use python ; then
 		S="${S1}" # Regular policycoreutils
 		python_foreach_impl building
-		S="${S2}" # Extra set
-		python_foreach_impl building
+		if use extra ; then
+			S="${S2}" # Extra set
+			python_foreach_impl building
+		fi
 	else
 		BUILD_DIR="${S1}"
 		building
-		BUILD_DIR="${S2}"
-		building
+		if use extra ; then
+			BUILD_DIR="${S2}"
+			building
+		fi
 	fi
 }
 
@@ -170,14 +176,18 @@ src_install() {
 	if use python ; then
 		S="${S1}" # policycoreutils
 		python_foreach_impl installation-policycoreutils
-		S="${S2}" # extras
-		python_foreach_impl installation-extras
-		S="${S1}" # back for later
+		if use extra ; then
+			S="${S2}"
+			installation-extras
+			S="${S1}" # back for later
+		fi
 	else
 		BUILD_DIR="${S1}"
 		installation-policycoreutils
-		BUILD_DIR="${S2}"
-		installation-extras
+		if use extra ; then
+			BUILD_DIR="${S2}"
+			installation-extras
+		fi
 	fi
 
 	# remove redhat-style init script
@@ -196,9 +206,8 @@ src_install() {
 		for pyscript in audit2allow sepolgen-ifgen sepolicy chcat; do
 		  python_replicate_script "${ED}/usr/bin/${pyscript}"
 		done
-		for pyscript in semanage rlpkg; do
-		  python_replicate_script "${ED}/usr/sbin/${pyscript}"
-		done
+		python_replicate_script "${ED}/usr/sbin/semanage"
+		use extra && python_replicate_script "${ED}/usr/sbin/rlpkg"
 	fi
 }
 
