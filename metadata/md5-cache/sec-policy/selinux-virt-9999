@@ -1,10 +1,10 @@
-DEFINED_PHASES=compile install postrm prepare unpack
+DEFINED_PHASES=compile install postinst postrm prepare unpack
 DEPEND=>=dev-vcs/git-1.8.2.1 >=sys-apps/policycoreutils-2.0.82 >=sec-policy/selinux-base-policy-9999 sys-devel/m4 >=sys-apps/checkpolicy-2.0.21
 DESCRIPTION=SELinux policy for virt
-EAPI=5
+EAPI=6
 HOMEPAGE=https://wiki.gentoo.org/wiki/Project:SELinux
 LICENSE=GPL-2
 RDEPEND=>=sys-apps/policycoreutils-2.0.82 >=sec-policy/selinux-base-policy-9999
 SLOT=0
-_eclasses_=epatch	8233751dc5105a6ae8fcd86ce2bb0247	estack	43ddf5aaffa7a8d0482df54d25a66a1f	eutils	227b041a120d309fdefbebb3b8c1dfa9	git-r3	52a888802d25387c2c74cb845d1219bc	ltprune	2770eed66a9b8ef944714cd0e968182e	multilib	97f470f374f2e94ccab04a2fb21d811e	selinux-policy-2	d68ba9962726141fa72a66bcdbf82aba	toolchain-funcs	185a06792159ca143528e7010368e8af
-_md5_=622ff6208275e649184ac8f8e6a81a97
+_eclasses_=git-r3	52a888802d25387c2c74cb845d1219bc	selinux-policy-2	426dde83b8cbb78f4bf8e9edf7715355
+_md5_=5523f0b9ca2249a1d6460c5d24c355fa
