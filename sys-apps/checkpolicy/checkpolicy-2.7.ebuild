@@ -1,23 +1,31 @@
-# Copyright 1999-2015 Gentoo Foundation
+# Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-apps/checkpolicy/checkpolicy-2.4.ebuild,v 1.3 2015/05/10 09:07:48 perfinion Exp $
 
-EAPI="5"
+EAPI="6"
 
-inherit toolchain-funcs eutils
+inherit toolchain-funcs
 
 MY_P="${P//_/-}"
+MY_RELEASEDATE="20170804"
 
 SEPOL_VER="${PV}"
 SEMNG_VER="${PV}"
 
 DESCRIPTION="SELinux policy compiler"
 HOMEPAGE="http://userspace.selinuxproject.org"
-SRC_URI="https://raw.githubusercontent.com/wiki/SELinuxProject/selinux/files/releases/20150202/${MY_P}.tar.gz"
+
+if [[ ${PV} == 9999 ]] ; then
+	inherit git-r3
+	EGIT_REPO_URI="https://github.com/SELinuxProject/selinux.git"
+	S="${WORKDIR}/${MY_P}/${PN}"
+else
+	SRC_URI="https://raw.githubusercontent.com/wiki/SELinuxProject/selinux/files/releases/${MY_RELEASEDATE}/${MY_P}.tar.gz"
+	KEYWORDS="amd64 ~arm ~arm64 ~mips x86"
+	S="${WORKDIR}/${MY_P}"
+fi
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="amd64 x86"
 IUSE="debug"
 
 DEPEND=">=sys-libs/libsepol-${SEPOL_VER}
@@ -27,21 +35,17 @@ DEPEND=">=sys-libs/libsepol-${SEPOL_VER}
 
 RDEPEND=">=sys-libs/libsemanage-${SEMNG_VER}"
 
-S="${WORKDIR}/${MY_P}"
-
-src_prepare() {
-	epatch_user
-}
-
 src_compile() {
-	emake CC="$(tc-getCC)" YACC="bison -y" \
-		INCLUDEDIR="${ROOT}\$(PREFIX)/include" \
-		LIBDIR="\$(PREFIX)/$(get_libdir)" \
-		LDLIBS="${ROOT}\$(LIBDIR)/libsepol.a -lfl"
+	emake \
+		CC="$(tc-getCC)" \
+		YACC="bison -y" \
+		LIBDIR="\$(PREFIX)/$(get_libdir)"
 }
 
 src_install() {
-	emake DESTDIR="${D}" install
+	emake DESTDIR="${D}" \
+		LIBSEPOLA="/usr/$(get_libdir)/libsepol.a" \
+		install
 
 	if use debug; then
 		dobin "${S}/test/dismod"
