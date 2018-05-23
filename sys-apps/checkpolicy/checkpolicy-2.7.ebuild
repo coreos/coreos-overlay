@@ -39,12 +39,13 @@ src_compile() {
 	emake \
 		CC="$(tc-getCC)" \
 		YACC="bison -y" \
-		LIBDIR="\$(PREFIX)/$(get_libdir)"
+		PREFIX="/usr" \
+		LIBDIR="${ROOT:-/}\$(PREFIX)/$(get_libdir)"
 }
 
 src_install() {
 	emake DESTDIR="${D}" \
-		LIBSEPOLA="/usr/$(get_libdir)/libsepol.a" \
+		LIBSEPOLA="${ROOT:-/}usr/$(get_libdir)/libsepol.a" \
 		install
 
 	if use debug; then
