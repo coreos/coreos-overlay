@@ -7,7 +7,7 @@ PYTHON_COMPAT=( python{2_7,3_4,3_5} )
 inherit multilib python-r1 toolchain-funcs multilib-minimal
 
 MY_P="${P//_/-}"
-MY_RELEASEDATE="20170804"
+MY_RELEASEDATE="20161014"
 
 SEPOL_VER="${PV}"
 SELNX_VER="${PV}"
@@ -21,7 +21,7 @@ if [[ ${PV} == 9999 ]]; then
 	S="${WORKDIR}/${MY_P}/${PN}"
 else
 	SRC_URI="https://raw.githubusercontent.com/wiki/SELinuxProject/selinux/files/releases/${MY_RELEASEDATE}/${MY_P}.tar.gz"
-	KEYWORDS="~amd64 ~arm ~arm64 ~mips ~x86"
+	KEYWORDS="amd64 ~arm ~arm64 ~mips x86"
 	S="${WORKDIR}/${MY_P}"
 fi
 
@@ -71,6 +71,9 @@ src_prepare() {
 	echo "# decompression of modules in the module store." >> "${S}/src/semanage.conf"
 	echo "bzip-small=true" >> "${S}/src/semanage.conf"
 
+	eapply "${FILESDIR}"/${PN}-2.6-build-paths.patch
+	eapply "${FILESDIR}"/${PN}-2.6-0001-libsemanage-genhomedircon-only-set-MLS-level-if-MLS-.patch
+
 	eapply_user
 
 	multilib_copy_sources
@@ -85,11 +88,8 @@ multilib_src_compile() {
 
 	if multilib_is_native_abi && use python; then
 		building_py() {
-			emake \
-				AR="$(tc-getAR)" \
-				CC="$(tc-getCC)" \
-				LIBDIR="${EPREFIX}/usr/$(get_libdir)" \
-				"$@"
+			python_export PYTHON_INCLUDEDIR PYTHON_LIBPATH
+			emake CC="$(tc-getCC)" PYINC="-I${PYTHON_INCLUDEDIR}" PYTHONLBIDIR="${PYTHON_LIBPATH}" PYPREFIX="${EPYTHON##*/}" "$@"
 		}
 		python_foreach_impl building_py swigify
 		python_foreach_impl building_py pywrap
@@ -104,11 +104,8 @@ multilib_src_install() {
 
 	if multilib_is_native_abi && use python; then
 		installation_py() {
-			emake DESTDIR="${ED}" \
-				LIBDIR="${ED}/usr/$(get_libdir)" \
-				SHLIBDIR="${ED}/usr/$(get_libdir)" \
-				LIBSEPOLA="${EPREFIX%/}/usr/$(get_libdir)/libsepol.a" \
-				install-pywrap
+			emake DESTDIR="${ED}" LIBDIR="${ED}/usr/$(get_libdir)" \
+				SHLIBDIR="${ED}/usr/$(get_libdir)" install-pywrap
 			python_optimize # bug 531638
 		}
 		python_foreach_impl installation_py
