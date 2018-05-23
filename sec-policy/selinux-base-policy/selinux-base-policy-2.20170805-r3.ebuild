@@ -3,6 +3,8 @@
 
 EAPI="6"
 
+inherit coreos-sec-policy
+
 if [[ ${PV} == 9999* ]]; then
 	EGIT_REPO_URI="${SELINUX_GIT_REPO:-https://anongit.gentoo.org/git/proj/hardened-refpolicy.git}"
 	EGIT_BRANCH="${SELINUX_GIT_BRANCH:-master}"
@@ -19,6 +21,12 @@ HOMEPAGE="https://www.gentoo.org/proj/en/hardened/selinux/"
 DESCRIPTION="SELinux policy for core modules"
 
 IUSE="systemd +unconfined"
+
+# For board builds Container Linux installs the base security module (base.pp)
+# in the SDK build_image script, and not in pkg_postinst() below.  The added
+# RDEPEND here is needed to get base.pp into the OS image so it is available
+# for build_image.
+RDEPEND=">=sec-policy/selinux-base-${PV}"
 
 PDEPEND="unconfined? ( sec-policy/selinux-unconfined )"
 DEPEND="=sec-policy/selinux-base-${PVR}[systemd?]"
@@ -91,6 +99,10 @@ src_install() {
 }
 
 pkg_postinst() {
+	# For board builds Container Linux installs policy modules to the OS
+	# image in the SDK build_image script.
+	[[ "${CBUILD}" == "${CHOST}" ]] || return
+
 	# Override the command from the eclass, we need to load in base as well here
 	local COMMAND="-i base.pp"
 	if has_version "<sys-apps/policycoreutils-2.5"; then
