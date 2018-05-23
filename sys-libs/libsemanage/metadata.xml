@@ -9,4 +9,7 @@
 	<upstream>
 		<remote-id type="github">SELinuxProject/selinux</remote-id>
 	</upstream>
+	<use>
+		<flag name="postinst">Run postinst to migrate the SELinux semanage configuration store.</flag>
+	</use>
 </pkgmetadata>

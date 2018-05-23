@@ -27,7 +27,7 @@ fi
 
 LICENSE="GPL-2"
 SLOT="0"
-IUSE="python"
+IUSE="python postinst"
 REQUIRED_USE="python? ( ${PYTHON_REQUIRED_USE} )"
 
 RDEPEND=">=sys-libs/libsepol-${SEPOL_VER}[${MULTILIB_USEDEP}]
@@ -116,6 +116,8 @@ multilib_src_install() {
 }
 
 pkg_postinst() {
+	use postinst || return
+
 	# Migrate the SELinux semanage configuration store if not done already
 	local selinuxtype=$(awk -F'=' '/SELINUXTYPE=/ {print $2}' "${EROOT}"/etc/selinux/config 2>/dev/null)
 	if [ -n "${selinuxtype}" ] && [ ! -d "${EROOT}"/var/lib/selinux/${mcs}/active ] ; then
