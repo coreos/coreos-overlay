@@ -114,6 +114,14 @@ src_prepare() {
 			python_copy_sources
 		fi
 	fi
+
+	# Skip building unneeded parts.
+	if ! use python ; then
+		for dir in audit2allow gui scripts semanage sepolicy sepolgen-ifgen; do
+			sed -e "s/ $dir / /" -i Makefile || die
+		done
+	fi
+
 	use nls || sed -e "s/ po / /" -i Makefile || die
 }
 
@@ -196,12 +204,12 @@ src_install() {
 	rm -fR "${D}/etc/rc.d" || die
 
 	# compatibility symlinks
-	dosym /sbin/setfiles /usr/sbin/setfiles
 	bashcomp_alias setsebool getsebool
 
 	# location for policy definitions
-	dodir /var/lib/selinux
-	keepdir /var/lib/selinux
+	dodir /usr/lib/selinux/policy
+	dosym ../../usr/lib/selinux/policy /var/lib/selinux
+	keepdir /usr/lib/selinux/policy
 
 	if use python ; then
 		# Set version-specific scripts
