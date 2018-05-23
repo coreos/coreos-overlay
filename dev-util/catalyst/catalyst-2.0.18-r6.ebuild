@@ -52,7 +52,6 @@ PATCHES=(
 	"${FILESDIR}/catalyst-2.0.18-fix-quotes.patch"
 	"${FILESDIR}/catalyst-2.0.18-remove-machine-id.patch"
 	"${FILESDIR}/catalyst-2.0.18-stage1-export-ROOT.patch"
-	"${FILESDIR}/catalyst-2.0.18-coreos-upgrade-ncurses.patch"
 )
 
 pkg_setup() {
