@@ -86,7 +86,14 @@ src_prepare() {
 
 multilib_src_configure() {
 	local ECONF_SOURCE=${S}
+	local extra_conf
+
+	if [[ "${ARCH}" == "arm64" ]]; then
+		extra_conf="--with-arm --with-aarch64"
+	fi
+
 	econf \
+		${extra_conf} \
 		--sbindir="${EPREFIX}/sbin" \
 		$(use_enable gssapi gssapi-krb5) \
 		$(use_enable static-libs static) \
