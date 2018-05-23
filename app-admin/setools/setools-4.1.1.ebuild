@@ -19,13 +19,13 @@ fi
 
 LICENSE="GPL-2 LGPL-2.1"
 SLOT="0"
-IUSE="X debug test"
+IUSE="X debug test networkx"
 
 RDEPEND="${PYTHON_DEPS}
 	>=sys-libs/libsepol-2.7:=
 	>=sys-libs/libselinux-2.7:=[${PYTHON_USEDEP}]
-	>=dev-python/networkx-1.8[${PYTHON_USEDEP}]
-	virtual/python-enum34[${PYTHON_USEDEP}]
+	networkx? ( >=dev-python/networkx-1.8[${PYTHON_USEDEP}] )
+	networkx? ( virtual/python-enum34[${PYTHON_USEDEP}] )
 	dev-libs/libpcre:=
 	X? (
 		dev-python/PyQt5[gui,widgets,${PYTHON_USEDEP}]
@@ -44,7 +44,11 @@ DEPEND="${RDEPEND}
 python_prepare_all() {
 	sed -i "s/'-Werror', //" "${S}"/setup.py || die "failed to remove Werror"
 
-	use X || local PATCHES=( "${FILESDIR}"/setools-4.1.1-remove-gui.patch )
+	use X || epatch "${FILESDIR}"/setools-4.1.1-remove-gui.patch
+
+	use networkx || sed -i "s@, 'sedta'@@g" "${S}"/setup.py || die "failed to remove sedta"
+	use networkx || sed -i "s@, 'seinfoflow'@@g" "${S}"/setup.py || die "failed to remove seinfoflow"
+
 	distutils-r1_python_prepare_all
 }
 

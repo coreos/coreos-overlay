@@ -9,4 +9,7 @@
 	<upstream>
 		<remote-id type="github">TresysTechnology/setools</remote-id>
 	</upstream>
+	<use>
+		<flag name="networkx">Enable support for <pkg>dev-python/networkx</pkg></flag>
+	</use>
 </pkgmetadata>
