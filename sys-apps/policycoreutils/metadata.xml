@@ -19,6 +19,7 @@
 	</longdescription>
 	<use>
 		<flag name="audit">Enable support for <pkg>sys-process/audit</pkg> and use the audit_* functions (like audit_getuid instead of getuid())</flag>
+		<flag name="semodule">Enable support for <pkg>sys-apps/semodule-utils</pkg>.</flag>
 		<flag name="extra">Enable Gentoo's policycoreutils-extra features.</flag>
 		<flag name="nls">Use nls/gettext.</flag>
 	</use>

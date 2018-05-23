@@ -15,7 +15,7 @@ SEMNG_VER="${PV}"
 SELNX_VER="${PV}"
 SEPOL_VER="${PV}"
 
-IUSE="audit extra nls pam dbus python"
+IUSE="audit extra nls pam dbus python semodule"
 REQUIRED_USE="${PYTHON_REQUIRED_USE}"
 
 DESCRIPTION="SELinux core utilities"
@@ -71,7 +71,8 @@ RDEPEND="${DEPEND}
 	app-misc/pax-utils
 	!<sys-apps/openrc-0.14"
 
-PDEPEND="sys-apps/semodule-utils
+PDEPEND="
+	semodule? ( sys-apps/semodule-utils )
 	python? (
 		sys-apps/selinux-python
 	)"
