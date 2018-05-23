@@ -15,7 +15,7 @@ SEMNG_VER="${PV}"
 SELNX_VER="${PV}"
 SEPOL_VER="${PV}"
 
-IUSE="audit extra pam dbus python"
+IUSE="audit extra nls pam dbus python"
 REQUIRED_USE="${PYTHON_REQUIRED_USE}"
 
 DESCRIPTION="SELinux core utilities"
@@ -47,7 +47,7 @@ DEPEND=">=sys-libs/libselinux-${SELNX_VER}:=[python?,${PYTHON_USEDEP}]
 	sys-libs/libcap-ng:=
 	>=sys-libs/libsepol-${SEPOL_VER}:=
 	>=app-admin/setools-4.1.1[python?,${PYTHON_USEDEP}]
-	sys-devel/gettext
+	nls? ( sys-devel/gettext )
 	python? (
 		dev-python/ipy[${PYTHON_USEDEP}]
 	)
@@ -113,6 +113,7 @@ src_prepare() {
 			python_copy_sources
 		fi
 	fi
+	use nls || sed -e "s/ po / /" -i Makefile || die
 }
 
 src_compile() {
