@@ -4,7 +4,7 @@
 EAPI="6"
 PYTHON_COMPAT=( python{2_7,3_4,3_5} )
 
-inherit multilib python-r1 toolchain-funcs multilib-minimal
+inherit multilib python-r1 toolchain-funcs multilib-minimal systemd
 
 MY_P="${P//_/-}"
 MY_RELEASEDATE="20170804"
@@ -99,6 +99,7 @@ multilib_src_compile() {
 
 multilib_src_install() {
 	emake \
+		DEFAULT_SEMANAGE_CONF_LOCATION="${ED}/usr/lib/selinux/semanage.conf" \
 		LIBDIR="${ED}/usr/$(get_libdir)" \
 		SHLIBDIR="${ED}/usr/$(get_libdir)" \
 		DESTDIR="${ED}" install
@@ -114,6 +115,8 @@ multilib_src_install() {
 		}
 		python_foreach_impl installation_py
 	fi
+
+	systemd_dotmpfilesd "${FILESDIR}/tmpfiles.d/libsemanage.conf"
 }
 
 pkg_postinst() {
