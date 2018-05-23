@@ -6,7 +6,7 @@ EAPI="6"
 IUSE=""
 MODS="unconfined"
 
-inherit selinux-policy-2
+inherit coreos-sec-policy
 
 DESCRIPTION="SELinux policy for unconfined"
 
