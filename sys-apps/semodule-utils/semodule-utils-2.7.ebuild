@@ -42,12 +42,12 @@ src_prepare() {
 src_compile() {
 	emake \
 		CC="$(tc-getCC)" \
-		LIBDIR="\$(PREFIX)/$(get_libdir)"
+		LIBDIR="${ROOT:-/}\$(PREFIX)/$(get_libdir)"
 }
 
 src_install() {
 	emake DESTDIR="${D}" \
-		LIBDIR="\$(PREFIX)/$(get_libdir)" \
-		LIBSEPOLA="/usr/$(get_libdir)/libsepol.a" \
+		LIBDIR="${ROOT:-/}\$(PREFIX)/$(get_libdir)" \
+		LIBSEPOLA="${ROOT:-/}/usr/$(get_libdir)/libsepol.a" \
 		install
 }
