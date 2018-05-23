@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
 <pkgmetadata>
-	<herd>selinux</herd>
+	<maintainer type="project">
+		<email>selinux@gentoo.org</email>
+		<name>SELinux Team</name>
+	</maintainer>
 	<longdescription>
 		Policycoreutils contains the policy core utilities that are required
 		for basic operation of a SELinux system.  These utilities include
@@ -15,9 +18,10 @@
 		permissive.
 	</longdescription>
 	<use>
-	  <flag name='audit'>Enable support for <pkg>sys-process/audit</pkg> and use the audit_* functions (like audit_getuid instead of getuid())</flag>
+		<flag name="audit">Enable support for <pkg>sys-process/audit</pkg> and use the audit_* functions (like audit_getuid instead of getuid())</flag>
 	</use>
 	<upstream>
-	  <remote-id type="cpe">cpe:/a:redhat:policycoreutils</remote-id>
+		<remote-id type="cpe">cpe:/a:redhat:policycoreutils</remote-id>
+		<remote-id type="github">SELinuxProject/selinux</remote-id>
 	</upstream>
 </pkgmetadata>
