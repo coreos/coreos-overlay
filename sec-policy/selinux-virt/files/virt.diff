@@ -1,7 +1,8 @@
-diff -u contrib.orig/virt.te contrib/virt.te
---- modules/contrib.orig/virt.te	2016-02-20 13:18:44.670955920 -0800
-+++ modules/contrib/virt.te	2016-02-20 13:22:24.186318856 -0800
-@@ -1299,3 +1299,32 @@
+diff --git a/policy/modules/contrib/virt.te b/policy/modules/contrib/virt.te
+index 2966d293..d2051577 100644
+--- a/policy/modules/contrib/virt.te
++++ b/policy/modules/contrib/virt.te
+@@ -1299,3 +1299,36 @@ miscfiles_read_localization(virtlockd_t)
  
  virt_append_log(virtlockd_t)
  virt_read_config(virtlockd_t)
@@ -34,3 +35,7 @@ diff -u contrib.orig/virt.te contrib/virt.te
 +allow svirt_lxc_net_t var_lib_t:file { entrypoint execute execute_no_trans };
 +allow svirt_lxc_net_t kernel_t:fifo_file { getattr ioctl read write open append };
 +
++type spc_t;
++domain_type(spc_t)
++role system_r types spc_t;
++allow kernel_t spc_t:process transition;
