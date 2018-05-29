@@ -16,7 +16,7 @@ SRC_PATH="stable"
 SRC_URI="mirror://samba/${SRC_PATH}/${MY_P}.tar.gz
 	https://dev.gentoo.org/~polynomial-c/samba-4.5.11-disable-python-patches.tar.xz"
 [[ ${PV} = *_rc* ]] || \
-KEYWORDS="alpha amd64 arm ~arm64 ~hppa ia64 ppc ppc64 sparc x86"
+KEYWORDS="alpha amd64 arm arm64 ~hppa ia64 ppc ppc64 sparc x86"
 
 DESCRIPTION="Samba Suite Version 4"
 HOMEPAGE="http://www.samba.org/"
@@ -26,6 +26,7 @@ SLOT="0"
 
 IUSE="acl addc addns ads client cluster cups dmapi fam gnutls gpg iprint ldap pam
 quota selinux syslog system-heimdal +system-mitkrb5 systemd test winbind zeroconf"
+IUSE+=" +minimal"  # COREOS: Only install libraries, not executables.
 
 # the test suite is messed, it uses system-installed samba
 # bits instead of what was built, tests things disabled via use
@@ -45,24 +46,16 @@ MULTILIB_WRAPPED_HEADERS=(
 )
 
 # sys-apps/attr is an automagic dependency (see bug #489748)
-CDEPEND="${PYTHON_DEPS}
+CDEPEND="
 	>=app-arch/libarchive-3.1.2[${MULTILIB_USEDEP}]
-	dev-lang/perl:=
 	dev-libs/libaio[${MULTILIB_USEDEP}]
 	dev-libs/libbsd[${MULTILIB_USEDEP}]
 	dev-libs/iniparser:0
 	dev-libs/popt[${MULTILIB_USEDEP}]
-	dev-python/subunit[${PYTHON_USEDEP},${MULTILIB_USEDEP}]
-	net-libs/libnsl:=[${MULTILIB_USEDEP}]
 	sys-apps/attr[${MULTILIB_USEDEP}]
-	>=sys-libs/ldb-1.1.27[ldap(+)?,python(+),${MULTILIB_USEDEP}]
-	<sys-libs/ldb-1.1.30[ldap(+)?,python(+),${MULTILIB_USEDEP}]
 	sys-libs/libcap
 	sys-libs/ncurses:0=[${MULTILIB_USEDEP}]
 	sys-libs/readline:0=
-	>=sys-libs/talloc-2.1.8[python,${PYTHON_USEDEP},${MULTILIB_USEDEP}]
-	>=sys-libs/tdb-1.3.10[python,${PYTHON_USEDEP},${MULTILIB_USEDEP}]
-	>=sys-libs/tevent-0.9.31-r1[${MULTILIB_USEDEP}]
 	sys-libs/zlib[${MULTILIB_USEDEP}]
 	virtual/libiconv
 	pam? ( virtual/pam )
@@ -85,7 +78,9 @@ CDEPEND="${PYTHON_DEPS}
 	system-mitkrb5? ( app-crypt/mit-krb5[${MULTILIB_USEDEP}] )
 	systemd? ( sys-apps/systemd:0= )"
 DEPEND="${CDEPEND}
+	${PYTHON_DEPS}
 	app-text/docbook-xsl-stylesheets
+	dev-lang/perl:=
 	dev-libs/libxslt
 	virtual/pkgconfig
 	test? (
@@ -138,9 +133,6 @@ src_prepare() {
 	# install the patches from tarball(s)
 	eapply "${WORKDIR}/patches"
 
-	# ugly hackaround for bug #592502
-	cp /usr/include/tevent_internal.h "${S}"/lib/tevent/ || die
-
 	sed -e 's:<gpgme\.h>:<gpgme/gpgme.h>:' \
 		-i source4/dsdb/samdb/ldb_modules/password_hash.c \
 		|| die
@@ -157,6 +149,9 @@ multilib_src_configure() {
 		bundled_libs="heimbase,heimntlm,hdb,kdc,krb5,wind,gssapi,hcrypto,hx509,roken,asn1,com_err,NONE"
 	fi
 
+	# COREOS: Don't depend on tons of new packages with broken cross-compilation support.
+	bundled_libs=ALL
+
 	local myconf=()
 	myconf=(
 		--enable-fhs
@@ -172,6 +167,7 @@ multilib_src_configure() {
 		--nopyc
 		--nopyo
 		--disable-cephfs
+		--disable-python  # COREOS: Don't build libraries requiring Python.
 	)
 	if multilib_is_native_abi ; then
 		myconf+=(
@@ -266,12 +262,27 @@ multilib_src_install() {
 		newinitd "${CONFDIR}/samba4.initd-r1" samba
 		newconfd "${CONFDIR}/samba4.confd" samba
 
-		systemd_dotmpfilesd "${FILESDIR}"/samba.conf
+		if ! use minimal ; then
+			systemd_dotmpfilesd "${FILESDIR}"/samba.conf
+		fi
 		systemd_dounit "${FILESDIR}"/nmbd.service
 		systemd_dounit "${FILESDIR}"/smbd.{service,socket}
 		systemd_newunit "${FILESDIR}"/smbd_at.service 'smbd@.service'
 		systemd_dounit "${FILESDIR}"/winbindd.service
 		systemd_dounit "${FILESDIR}"/samba.service
+	fi
+
+	rm -f "${ED%/}"/etc/samba/*
+	rm -f "${ED%/}"/usr/lib*/samba/ldb/*
+	if use minimal ; then
+		mv "${ED%/}"/usr/bin/net "${T}"/
+		rm -f "${ED%/}"/usr/bin/* "${ED%/}"/usr/sbin/*
+		mv "${T}"/net "${ED%/}"/usr/bin/net
+		rm -rf ${ED%/}/lib*/security
+		rm -rf ${ED%/}/usr/lib/systemd
+		rm -rf ${ED%/}/usr/lib*/perl*
+		rm -rf ${ED%/}/usr/lib*/python*
+		rm -rf ${ED%/}/var
 	fi
 }
 
