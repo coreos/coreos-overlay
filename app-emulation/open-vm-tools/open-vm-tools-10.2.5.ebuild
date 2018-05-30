@@ -12,7 +12,7 @@ DESCRIPTION="VMware tools for distribution via /usr/share/oem"
 HOMEPAGE="https://github.com/vmware/open-vm-tools"
 
 EGIT_REPO_URI="https://github.com/vmware/open-vm-tools"
-EGIT_COMMIT="5296f23b5dc17e3afa521ad5e73885e0868c09e6"
+EGIT_COMMIT="380a3d9747999e8bcbcbcd03b1402b702770db79"
 EGIT_SOURCEDIR="${WORKDIR}"
 
 LICENSE="LGPL-2"
@@ -21,14 +21,12 @@ KEYWORDS="amd64 ~x86"
 IUSE="+dnet +pic +deploypkg" # TODO: pam
 
 DEPEND="dev-libs/glib:2
-	sys-process/procps
 	deploypkg? ( dev-libs/libmspack )
 	dnet? ( dev-libs/libdnet )"
 
 # Runtime dependencies provided by CoreOS, not the OEM:
 #	dev-libs/glib:2
 #	sys-apps/ethtool
-#	sys-process/procps
 #	pam? ( virtual/pam )
 RDEPEND="dnet? ( dev-libs/libdnet )
 	deploypkg? ( dev-libs/libmspack )"
@@ -69,10 +67,6 @@ src_configure() {
 	export CUSTOM_MSPACK_CPPFLAGS="-I=${oeminc}"
 	export CUSTOM_MSPACK_LIBS="-L=${oemlib}"
 
-	# >=sys-process/procps-3.3.2 not handled by configure
-	export CUSTOM_PROCPS_NAME=procps
-	override_vmw_check_lib libprocps PROCPS
-
 	# for everything else configure is still wrong because it calls
 	# pkg-config directly instead of favoring the ${CHOST}-pkg-config
 	# wrapper or using the standard autoconf macro.
@@ -88,7 +82,6 @@ src_configure() {
 		--disable-hgfs-mounter
 		--disable-multimon
 		--disable-tests
-		--with-procps
 		--without-fuse
 		--without-icu
 		--without-kernel-modules

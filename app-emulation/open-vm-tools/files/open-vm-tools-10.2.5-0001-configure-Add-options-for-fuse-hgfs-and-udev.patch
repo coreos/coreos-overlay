@@ -1,4 +1,4 @@
-From 8e133dc233f420c8b19f01ff275d7fb4ff9e36ff Mon Sep 17 00:00:00 2001
+From a5c17c107ac1e88c664dd26e49bf9eb8635a4462 Mon Sep 17 00:00:00 2001
 From: Benjamin Gilbert <benjamin.gilbert@coreos.com>
 Date: Tue, 21 Mar 2017 16:04:30 -0700
 Subject: [PATCH] configure: Add options for fuse, hgfs, and udev
@@ -8,10 +8,10 @@ Subject: [PATCH] configure: Add options for fuse, hgfs, and udev
  1 file changed, 23 insertions(+), 1 deletion(-)
 
 diff --git a/open-vm-tools/configure.ac b/open-vm-tools/configure.ac
-index 20370ae..578894b 100644
+index b283ebe8..777b38af 100644
 --- a/open-vm-tools/configure.ac
 +++ b/open-vm-tools/configure.ac
-@@ -393,6 +393,13 @@ fi
+@@ -471,6 +471,13 @@ fi
  #
  # Check for fuse.
  #
@@ -25,7 +25,7 @@ index 20370ae..578894b 100644
  AC_VMW_CHECK_LIB([fuse],
                   [FUSE],
                   [fuse],
-@@ -403,6 +410,7 @@ AC_VMW_CHECK_LIB([fuse],
+@@ -481,6 +488,7 @@ AC_VMW_CHECK_LIB([fuse],
                   [have_fuse=yes],
                   [have_fuse=no;
                    AC_MSG_WARN([Fuse is missing, vmblock-fuse/vmhgfs-fuse will be disabled.])])
@@ -33,7 +33,7 @@ index 20370ae..578894b 100644
  
  #
  # Check for PAM.
-@@ -1332,7 +1340,13 @@ if test "$os" = "solaris"; then
+@@ -1347,7 +1355,13 @@ if test "$os" = "solaris"; then
     fi
  fi
  
@@ -48,8 +48,8 @@ index 20370ae..578894b 100644
      have_udev="yes"
      AC_ARG_WITH([udev-rules-dir],
                  [AS_HELP_STRING([--with-udev-rules-dir=DIR],
-@@ -1352,6 +1366,14 @@ else
-     UDEVRULESDIR=""
+@@ -1375,6 +1389,14 @@ if test "x$enable_resolutionkms" = "xyes"; then
+    CPPFLAGS="$CPPFLAGS -DENABLE_RESOLUTIONKMS"
  fi
  
 +if test "$buildHgfsmounter" = "yes"; then
@@ -64,5 +64,5 @@ index 20370ae..578894b 100644
  AM_CONDITIONAL(LINUX, test "$os" = "linux")
  AM_CONDITIONAL(SOLARIS, test "$os" = "solaris")
 -- 
-2.9.3
+2.17.0
 
