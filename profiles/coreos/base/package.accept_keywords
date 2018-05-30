@@ -54,9 +54,6 @@ dev-util/checkbashisms
 # Pick up fixes for bugs introduced in 4.0
 =sys-fs/dosfstools-4.1 **
 
-# CVE-2017-1000117
-=dev-vcs/git-2.14.1
-
 # iproute2 4.13 includes a patch to avoid leaking netns mounts in rkt 
 # https://git.kernel.org/pub/scm/linux/kernel/git/shemminger/iproute2.git/commit/?id=d6a4076b6ba6547d7e52c377a7c58c56eb5ea16e
 =sys-apps/iproute2-4.13.0 ~amd64 ~arm64
