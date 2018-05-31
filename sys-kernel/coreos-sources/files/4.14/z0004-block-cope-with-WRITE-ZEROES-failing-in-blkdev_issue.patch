@@ -1,7 +1,7 @@
 From 9e9f99fd6ac01c5493966085aa89ef7cb210d901 Mon Sep 17 00:00:00 2001
 From: Ilya Dryomov <idryomov@gmail.com>
 Date: Mon, 16 Oct 2017 15:59:10 +0200
-Subject: [PATCH 4/7] block: cope with WRITE ZEROES failing in
+Subject: [PATCH 4/8] block: cope with WRITE ZEROES failing in
  blkdev_issue_zeroout()
 
 sd_config_write_same() ignores ->max_ws_blocks == 0 and resets it to
@@ -106,5 +106,5 @@ index 9e86a4871b0f..2bc544ce3d2e 100644
  	return ret;
  }
 -- 
-2.14.3
+2.14.1
 

@@ -1,7 +1,7 @@
 From f25a311421288ae20f0b9d1fc558a6e14a036b5a Mon Sep 17 00:00:00 2001
 From: Jeremy Cline <jeremy@jcline.org>
 Date: Wed, 2 May 2018 15:16:29 -0400
-Subject: [PATCH 6/7] Revert "random: use a different mixing algorithm for
+Subject: [PATCH 6/8] Revert "random: use a different mixing algorithm for
  add_device_randomness()"
 
 This reverts commit 7b6b1f3a192372937164d1293b432c640ffc7c8f.
@@ -90,5 +90,5 @@ index ddc493d976fd..42ed176c4bfd 100644
  	trace_add_device_randomness(size, _RET_IP_);
  	spin_lock_irqsave(&input_pool.lock, flags);
 -- 
-2.14.3
+2.14.1
 
