@@ -1,7 +1,7 @@
 From d25b1ad577bba0861ff76fcb244beac9f6c641b6 Mon Sep 17 00:00:00 2001
 From: Geoff Levand <geoff@infradead.org>
 Date: Fri, 11 Nov 2016 17:28:52 -0800
-Subject: [PATCH 2/5] Add arm64 coreos verity hash
+Subject: [PATCH 2/6] Add arm64 coreos verity hash
 
 Signed-off-by: Geoff Levand <geoff@infradead.org>
 ---
@@ -25,5 +25,5 @@ index 613fc3000677..fdaf86c78332 100644
  	/*
  	 * The debug table is referenced via its Relative Virtual Address (RVA),
 -- 
-2.14.3
+2.14.1
 
