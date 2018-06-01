@@ -48,6 +48,7 @@ INSTALL_MASK="${INSTALL_MASK}
 
   /usr/lib/modules/*-coreos/source/scripts/*.pl
 
+  /usr/share/git-core/templates/hooks/fsmonitor-watchman.sample
   /usr/share/rsync/*
 
   /usr/bin/glib-mkenums
