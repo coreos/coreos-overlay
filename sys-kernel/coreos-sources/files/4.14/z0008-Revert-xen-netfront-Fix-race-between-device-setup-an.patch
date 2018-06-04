@@ -1,6 +1,6 @@
-From db2f3a445c5ad066952bad0f5c87ff6eba823b50 Mon Sep 17 00:00:00 2001
+From 9358851f273063e5e52e54c6356f4f1c81fcb058 Mon Sep 17 00:00:00 2001
 From: Andrew Jeddeloh <andrew.jeddeloh@coreos.com>
-Date: Wed, 30 May 2018 17:39:54 -0700
+Date: Wed, 30 May 2018 17:45:35 -0700
 Subject: [PATCH 8/8] Revert "xen-netfront: Fix race between device setup and
  open"
 
