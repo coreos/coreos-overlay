@@ -1,4 +1,4 @@
-From af08120ff4a248fe9ff4ffbc0e361451ba8bf598 Mon Sep 17 00:00:00 2001
+From 10ef317e18e3ca2313fdf177ce798fea5efe0c91 Mon Sep 17 00:00:00 2001
 From: Jeremy Cline <jeremy@jcline.org>
 Date: Wed, 2 May 2018 15:16:29 -0400
 Subject: [PATCH 6/8] Revert "random: use a different mixing algorithm for
@@ -90,5 +90,5 @@ index ddc493d976fd..42ed176c4bfd 100644
  	trace_add_device_randomness(size, _RET_IP_);
  	spin_lock_irqsave(&input_pool.lock, flags);
 -- 
-2.14.1
+2.14.4
 
