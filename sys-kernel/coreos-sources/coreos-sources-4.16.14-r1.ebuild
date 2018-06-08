@@ -41,4 +41,5 @@ UNIPATCH_LIST="
 	${PATCH_DIR}/z0004-Revert-random-use-a-different-mixing-algorithm-for-a.patch \
 	${PATCH_DIR}/z0005-Revert-random-fix-crng_ready-test.patch \
 	${PATCH_DIR}/z0006-Revert-xen-netfront-Fix-race-between-device-setup-an.patch \
+	${PATCH_DIR}/z0007-hv_netvsc-Fix-a-network-regression-after-ifdown-ifup.patch \
 "
