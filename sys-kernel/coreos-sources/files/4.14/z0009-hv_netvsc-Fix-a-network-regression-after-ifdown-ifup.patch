@@ -1,4 +1,4 @@
-From ea2f94c7ae1ee12d97ea1e540219ef617be883c9 Mon Sep 17 00:00:00 2001
+From 697cf22ae79eb8f40e850f111a78f6617a6ff39a Mon Sep 17 00:00:00 2001
 From: Dexuan Cui <decui@microsoft.com>
 Date: Wed, 6 Jun 2018 21:32:51 +0000
 Subject: [PATCH 9/9] hv_netvsc: Fix a network regression after ifdown/ifup
