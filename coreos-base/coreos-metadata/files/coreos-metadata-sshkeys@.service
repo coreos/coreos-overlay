@@ -1,5 +1,6 @@
 [Unit]
 Description=CoreOS Metadata Agent (SSH Keys)
+After=network.target
 
 [Service]
 Type=oneshot
