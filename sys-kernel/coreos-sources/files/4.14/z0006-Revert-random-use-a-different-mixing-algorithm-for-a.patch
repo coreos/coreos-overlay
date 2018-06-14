@@ -1,12 +1,12 @@
-From 26b0eba60aa7c139962b0df4ed0901bc643fe37b Mon Sep 17 00:00:00 2001
+From 10ef317e18e3ca2313fdf177ce798fea5efe0c91 Mon Sep 17 00:00:00 2001
 From: Jeremy Cline <jeremy@jcline.org>
 Date: Wed, 2 May 2018 15:16:29 -0400
-Subject: [PATCH 6/9] Revert "random: use a different mixing algorithm for
+Subject: [PATCH 06/10] Revert "random: use a different mixing algorithm for
  add_device_randomness()"
 
 This reverts commit 7b6b1f3a192372937164d1293b432c640ffc7c8f.
 ---
- drivers/char/random.c | 55 ++++-----------------------------------------------
+ drivers/char/random.c | 55 ++++---------------------------------------
  1 file changed, 4 insertions(+), 51 deletions(-)
 
 diff --git a/drivers/char/random.c b/drivers/char/random.c
@@ -90,5 +90,5 @@ index ddc493d976fd..42ed176c4bfd 100644
  	trace_add_device_randomness(size, _RET_IP_);
  	spin_lock_irqsave(&input_pool.lock, flags);
 -- 
-2.14.4
+2.17.1
 
