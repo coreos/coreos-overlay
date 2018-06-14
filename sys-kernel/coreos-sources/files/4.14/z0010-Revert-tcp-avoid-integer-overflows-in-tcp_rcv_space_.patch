@@ -1,0 +1,68 @@
+From 8f834fe4ffc1664ee04dec0a58ad3272be27ebf8 Mon Sep 17 00:00:00 2001
+From: Benjamin Gilbert <bgilbert@redhat.com>
+Date: Thu, 14 Jun 2018 00:41:14 -0400
+Subject: [PATCH 10/10] Revert "tcp: avoid integer overflows in
+ tcp_rcv_space_adjust()"
+
+This reverts commit a6f81fcb2c3905c28641837dc823ed34617eb110.
+---
+ include/linux/tcp.h  |  2 +-
+ net/ipv4/tcp_input.c | 10 ++++------
+ 2 files changed, 5 insertions(+), 7 deletions(-)
+
+diff --git a/include/linux/tcp.h b/include/linux/tcp.h
+index fe322fa611e6..e8418fc77a43 100644
+--- a/include/linux/tcp.h
++++ b/include/linux/tcp.h
+@@ -334,7 +334,7 @@ struct tcp_sock {
+ 
+ /* Receiver queue space */
+ 	struct {
+-		u32	space;
++		int	space;
+ 		u32	seq;
+ 		u64	time;
+ 	} rcvq_space;
+diff --git a/net/ipv4/tcp_input.c b/net/ipv4/tcp_input.c
+index 125b49c166a4..ebbb54bcbcac 100644
+--- a/net/ipv4/tcp_input.c
++++ b/net/ipv4/tcp_input.c
+@@ -591,8 +591,8 @@ static inline void tcp_rcv_rtt_measure_ts(struct sock *sk,
+ void tcp_rcv_space_adjust(struct sock *sk)
+ {
+ 	struct tcp_sock *tp = tcp_sk(sk);
+-	u32 copied;
+ 	int time;
++	int copied;
+ 
+ 	tcp_mstamp_refresh(tp);
+ 	time = tcp_stamp_us_delta(tp->tcp_mstamp, tp->rcvq_space.time);
+@@ -615,13 +615,12 @@ void tcp_rcv_space_adjust(struct sock *sk)
+ 
+ 	if (sysctl_tcp_moderate_rcvbuf &&
+ 	    !(sk->sk_userlocks & SOCK_RCVBUF_LOCK)) {
+-		int rcvmem, rcvbuf;
+-		u64 rcvwin;
++		int rcvwin, rcvmem, rcvbuf;
+ 
+ 		/* minimal window to cope with packet losses, assuming
+ 		 * steady state. Add some cushion because of small variations.
+ 		 */
+-		rcvwin = ((u64)copied << 1) + 16 * tp->advmss;
++		rcvwin = (copied << 1) + 16 * tp->advmss;
+ 
+ 		/* If rate increased by 25%,
+ 		 *	assume slow start, rcvwin = 3 * copied
+@@ -641,8 +640,7 @@ void tcp_rcv_space_adjust(struct sock *sk)
+ 		while (tcp_win_from_space(rcvmem) < tp->advmss)
+ 			rcvmem += 128;
+ 
+-		do_div(rcvwin, tp->advmss);
+-		rcvbuf = min_t(u64, rcvwin * rcvmem, sysctl_tcp_rmem[2]);
++		rcvbuf = min(rcvwin / tp->advmss * rcvmem, sysctl_tcp_rmem[2]);
+ 		if (rcvbuf > sk->sk_rcvbuf) {
+ 			sk->sk_rcvbuf = rcvbuf;
+ 
+-- 
+2.17.1
+
