@@ -1,7 +1,7 @@
 From 6ff5b8ec024a1236d044f9901aa9ba6edeb289da Mon Sep 17 00:00:00 2001
 From: Ilya Dryomov <idryomov@gmail.com>
 Date: Mon, 16 Oct 2017 15:59:09 +0200
-Subject: [PATCH 3/9] block: factor out __blkdev_issue_zero_pages()
+Subject: [PATCH 03/10] block: factor out __blkdev_issue_zero_pages()
 
 blkdev_issue_zeroout() will use this in !BLKDEV_ZERO_NOFALLBACK case.
 
@@ -10,7 +10,7 @@ Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Ilya Dryomov <idryomov@gmail.com>
 Signed-off-by: Jens Axboe <axboe@kernel.dk>
 ---
- block/blk-lib.c | 63 +++++++++++++++++++++++++++++++++------------------------
+ block/blk-lib.c | 63 +++++++++++++++++++++++++++++--------------------
  1 file changed, 37 insertions(+), 26 deletions(-)
 
 diff --git a/block/blk-lib.c b/block/blk-lib.c
@@ -103,5 +103,5 @@ index 63fb971d6574..9e86a4871b0f 100644
  EXPORT_SYMBOL(__blkdev_issue_zeroout);
  
 -- 
-2.14.4
+2.17.1
 

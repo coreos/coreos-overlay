@@ -1,7 +1,7 @@
 From cc0dfe854bd4fc60e131598cb91a7e310fe4b3a6 Mon Sep 17 00:00:00 2001
 From: Vito Caputo <vito.caputo@coreos.com>
 Date: Wed, 25 Nov 2015 02:59:45 -0800
-Subject: [PATCH 1/9] kbuild: derive relative path for KBUILD_SRC from CURDIR
+Subject: [PATCH 01/10] kbuild: derive relative path for KBUILD_SRC from CURDIR
 
 This enables relocating source and build trees to different roots,
 provided they stay reachable relative to one another.  Useful for
@@ -26,5 +26,5 @@ index 480ae7ef755c..bdd1ed4513d3 100644
  
  # Leave processing to above invocation of make
 -- 
-2.14.4
+2.17.1
 
