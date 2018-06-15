@@ -50,7 +50,7 @@
 =sys-block/thin-provisioning-tools-0.7.0 ~arm64
 =sys-cluster/ipvsadm-1.27-r1 **
 =sys-fs/btrfs-progs-4.10.2 ~arm64
-=sys-fs/cryptsetup-1.7.4 **
+=sys-fs/cryptsetup-1.7.5 ~arm64
 =sys-fs/lsscsi-0.28 ~arm64
 =sys-fs/mdadm-3.4 **
 =sys-fs/multipath-tools-0.6.4-r1 ~arm64
