@@ -20,9 +20,6 @@ dev-python/boto
 # no version marked stable upstream
 dev-util/checkbashisms
 
-# https://bugs.gentoo.org/show_bug.cgi?id=548158
-=sys-apps/gentoo-functions-0.10
-
 # Older versions of sssd fail to build
 =sys-auth/sssd-1.13.1 ~amd64 ~arm64
 
