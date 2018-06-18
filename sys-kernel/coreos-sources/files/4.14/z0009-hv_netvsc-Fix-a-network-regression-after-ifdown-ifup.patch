@@ -1,7 +1,7 @@
-From 697cf22ae79eb8f40e850f111a78f6617a6ff39a Mon Sep 17 00:00:00 2001
+From 85c9abf8a7c129363a8e6ae434dbeb9ac95eca90 Mon Sep 17 00:00:00 2001
 From: Dexuan Cui <decui@microsoft.com>
 Date: Wed, 6 Jun 2018 21:32:51 +0000
-Subject: [PATCH 9/9] hv_netvsc: Fix a network regression after ifdown/ifup
+Subject: [PATCH 09/10] hv_netvsc: Fix a network regression after ifdown/ifup
 
 Recently people reported the NIC stops working after
 "ifdown eth0; ifup eth0". It turns out in this case the TX queues are not

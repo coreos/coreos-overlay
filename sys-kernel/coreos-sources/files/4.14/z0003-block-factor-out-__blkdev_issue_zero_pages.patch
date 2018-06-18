@@ -1,7 +1,7 @@
-From 6ff5b8ec024a1236d044f9901aa9ba6edeb289da Mon Sep 17 00:00:00 2001
+From 9f7f43fd19e1f187b6c7af56c12b37412ce1a95e Mon Sep 17 00:00:00 2001
 From: Ilya Dryomov <idryomov@gmail.com>
 Date: Mon, 16 Oct 2017 15:59:09 +0200
-Subject: [PATCH 3/9] block: factor out __blkdev_issue_zero_pages()
+Subject: [PATCH 03/10] block: factor out __blkdev_issue_zero_pages()
 
 blkdev_issue_zeroout() will use this in !BLKDEV_ZERO_NOFALLBACK case.
 
