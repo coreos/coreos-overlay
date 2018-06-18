@@ -1,7 +1,7 @@
-From 26b0eba60aa7c139962b0df4ed0901bc643fe37b Mon Sep 17 00:00:00 2001
+From fac257156dd280c567194b905d37f05b73f0a989 Mon Sep 17 00:00:00 2001
 From: Jeremy Cline <jeremy@jcline.org>
 Date: Wed, 2 May 2018 15:16:29 -0400
-Subject: [PATCH 6/9] Revert "random: use a different mixing algorithm for
+Subject: [PATCH 06/10] Revert "random: use a different mixing algorithm for
  add_device_randomness()"
 
 This reverts commit 7b6b1f3a192372937164d1293b432c640ffc7c8f.

@@ -1,7 +1,7 @@
-From 809f83bb015b3b620861d3fc0eac556984448733 Mon Sep 17 00:00:00 2001
+From 40a0c092644b1fc1a40ca40ecee69cd1ae680c39 Mon Sep 17 00:00:00 2001
 From: Ilya Dryomov <idryomov@gmail.com>
 Date: Mon, 16 Oct 2017 15:59:10 +0200
-Subject: [PATCH 4/9] block: cope with WRITE ZEROES failing in
+Subject: [PATCH 04/10] block: cope with WRITE ZEROES failing in
  blkdev_issue_zeroout()
 
 sd_config_write_same() ignores ->max_ws_blocks == 0 and resets it to
