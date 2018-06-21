@@ -1,4 +1,4 @@
-From 77f4111c5d3eed440436da7affae4c39c7bbf5ac Mon Sep 17 00:00:00 2001
+From 3d6901a3f1defaec2e195646188c2467edb22946 Mon Sep 17 00:00:00 2001
 From: Andrew Jeddeloh <andrew.jeddeloh@coreos.com>
 Date: Wed, 30 May 2018 17:50:37 -0700
 Subject: [PATCH 6/7] Revert "xen-netfront: Fix race between device setup and
