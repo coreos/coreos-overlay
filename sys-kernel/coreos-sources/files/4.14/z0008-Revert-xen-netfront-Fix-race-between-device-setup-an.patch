@@ -1,7 +1,7 @@
-From 4096a812cd7b9ee8e9aad5b68914174577532ded Mon Sep 17 00:00:00 2001
+From 97e7ddd50592002e80be74a42b59d7fe3ed46504 Mon Sep 17 00:00:00 2001
 From: Andrew Jeddeloh <andrew.jeddeloh@coreos.com>
 Date: Wed, 30 May 2018 17:45:35 -0700
-Subject: [PATCH 08/10] Revert "xen-netfront: Fix race between device setup and
+Subject: [PATCH 8/9] Revert "xen-netfront: Fix race between device setup and
  open"
 
 This reverts commit 70f3461c23ffb394676cb53c2eb1095208a52327.
