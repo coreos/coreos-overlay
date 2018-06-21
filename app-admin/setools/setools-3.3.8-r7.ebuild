@@ -1,6 +1,5 @@
-# Copyright 1999-2015 Gentoo Foundation
+# Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/app-admin/setools/setools-3.3.8-r7.ebuild,v 1.6 2015/05/10 09:06:14 perfinion Exp $
 
 EAPI="5"
 PYTHON_COMPAT=( python2_7 python3_4 )
@@ -8,14 +7,15 @@ PYTHON_COMPAT=( python2_7 python3_4 )
 inherit autotools java-pkg-opt-2 python-r1 eutils toolchain-funcs
 
 DESCRIPTION="SELinux policy tools"
-HOMEPAGE="http://www.tresys.com/selinux/selinux_policy_tools.shtml"
+HOMEPAGE="https://github.com/TresysTechnology/setools/wiki"
 SRC_URI="http://oss.tresys.com/projects/setools/chrome/site/dists/${P}/${P}.tar.bz2
-	http://dev.gentoo.org/~perfinion/patches/setools/${P}-04-gentoo-patches.tar.bz2"
+	https://dev.gentoo.org/~perfinion/patches/setools/${P}-04-gentoo-patches.tar.bz2"
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="amd64 x86"
+KEYWORDS="amd64 ~arm ~arm64 ~mips x86"
 IUSE="X debug java python"
+REQUIRED_USE="python? ( ${PYTHON_REQUIRED_USE} )"
 
 COMMONDEPEND=">=sys-libs/libsepol-2.4
 	>=sys-libs/libselinux-2.4
@@ -52,13 +52,14 @@ pkg_setup() {
 }
 
 src_prepare() {
-	epatch "${FILESDIR}/support-cross-build.patch"
-
 	EPATCH_MULTI_MSG="Applying various (Gentoo) setool fixes... " \
 	EPATCH_SUFFIX="patch" \
 	EPATCH_SOURCE="${WORKDIR}/gentoo-patches" \
 	EPATCH_FORCE="yes" \
 	epatch
+
+	epatch "${FILESDIR}"/${PN}-3.3.8-no-check-file.patch
+	epatch "${FILESDIR}"/${PN}-3.3.8-policy-max.patch
 
 	# Fix build failure due to double __init__.py installation
 	sed -e "s/^wrappedpy_DATA = qpol.py \$(pkgpython_PYTHON)/wrappedpy_DATA = qpol.py/" -i libqpol/swig/python/Makefile.am || die
@@ -87,7 +88,6 @@ src_configure() {
 		--with-java-prefix=${JAVA_HOME} \
 		--disable-selinux-check \
 		--disable-bwidget-check \
-		--with-sepol-devel=${ROOT}/usr \
 		$(use_enable python swig-python) \
 		$(use_enable java swig-java) \
 		$(use_enable X swig-tcl) \

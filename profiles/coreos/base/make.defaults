@@ -32,7 +32,7 @@ USE="${USE} -zeroconf"
 USE="${USE} -openmp"
 
 # Set SELinux policy
-POLICY_TYPES="targeted mcs mls"
+POLICY_TYPES="mcs"
 
 # Disable packages or optional features with distribution issues.
 ACCEPT_RESTRICT="* -bindist"

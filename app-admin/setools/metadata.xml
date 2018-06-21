@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
 <pkgmetadata>
-	<herd>selinux</herd>
+	<maintainer type="project">
+		<email>selinux@gentoo.org</email>
+		<name>SELinux Team</name>
+	</maintainer>
 	<longdescription>SELinux policy analysis tools.</longdescription>
+	<upstream>
+		<remote-id type="github">TresysTechnology/setools</remote-id>
+	</upstream>
+	<use>
+		<flag name="networkx">Enable support for <pkg>dev-python/networkx</pkg></flag>
+		<flag name="python">Enable support for <pkg>python</pkg></flag>
+	</use>
 </pkgmetadata>

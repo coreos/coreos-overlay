@@ -20,6 +20,7 @@
 =dev-libs/libusb-1.0.21 ~arm64
 =dev-libs/nss-3.29.5 ~arm64
 =dev-libs/userspace-rcu-0.9.1 **
+=dev-libs/ustr-1.0.4-r8 ~arm64
 =dev-perl/libintl-perl-1.240.0-r2 ~arm64
 =dev-perl/Text-Unidecode-1.270.0 ~arm64
 =dev-util/meson-0.43.0 ~arm64
@@ -57,6 +58,8 @@
 =sys-fs/quota-4.02 **
 =sys-libs/binutils-libs-2.29.1-r1 ~arm64
 =sys-libs/libcap-ng-0.7.8 ~arm64
+=sys-libs/libselinux-2.7 ~arm64
+=sys-libs/libsepol-2.7 ~arm64
 =virtual/krb5-0-r1 ~arm64
 =virtual/libudev-232 ~arm64
 =virtual/libusb-1-r2 ~arm64
