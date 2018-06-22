@@ -3,7 +3,7 @@
 # $Header: /var/cvsroot/gentoo-x86/sys-libs/libselinux/libselinux-2.4.ebuild,v 1.4 2015/05/10 09:01:52 perfinion Exp $
 
 EAPI="5"
-PYTHON_COMPAT=( python2_7 python3_3 python3_4 )
+PYTHON_COMPAT=( python2_7 python3_4 python3_5 python3_6 )
 USE_RUBY="ruby19 ruby20"
 
 # No, I am not calling ruby-ng
