@@ -13,6 +13,7 @@ app-arch/bzip2 static-libs
 app-emulation/qemu static-user
 dev-libs/glib static-libs
 dev-libs/libaio static-libs
+dev-libs/libpcre static-libs
 dev-libs/openssl static-libs
 media-libs/libjpeg-turbo static-libs
 media-libs/libpng static-libs
