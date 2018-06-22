@@ -3,7 +3,7 @@
 # $Header: /var/cvsroot/gentoo-x86/app-admin/setools/setools-3.3.8-r7.ebuild,v 1.6 2015/05/10 09:06:14 perfinion Exp $
 
 EAPI="5"
-PYTHON_COMPAT=( python2_7 python3_4 )
+PYTHON_COMPAT=( python2_7 python3_4 python3_5 python3_6 )
 
 inherit autotools java-pkg-opt-2 python-r1 eutils toolchain-funcs
 
