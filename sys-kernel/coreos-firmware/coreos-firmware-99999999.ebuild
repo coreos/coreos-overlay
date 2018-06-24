@@ -15,10 +15,8 @@ if [[ ${PV} == 99999999* ]]; then
 	EGIT_REPO_URI="git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git"
 	KEYWORDS=""
 else
-	GIT_COMMIT="2eefafb2e9dcbafdf4b83d8c43fcd6b75fd4ac78"
-	SRC_URI="https://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/snapshot/linux-firmware-${GIT_COMMIT}.tar.gz -> linux-firmware-${PV}.tar.gz
-		mirror://gentoo/microcode_amd_fam17h.tar.gz
-		https://dev.gentoo.org/~whissi/dist/${PN}/microcode_amd_fam17h.tar.gz"
+	GIT_COMMIT="d1147327232ec4616a66ab898df84f9700c816c1"
+	SRC_URI="https://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/snapshot/linux-firmware-${GIT_COMMIT}.tar.gz -> linux-firmware-${PV}.tar.gz"
 	KEYWORDS="~alpha amd64 ~arm arm64 hppa ia64 ~mips ppc ppc64 ~s390 ~sh ~sparc x86"
 fi
 
@@ -84,10 +82,6 @@ src_unpack() {
 }
 
 src_prepare() {
-	# Move the amd ucode as well. This can be dropped once gentoo drops it from
-	# their ebuild.
-	mv "${WORKDIR}"/microcode_amd_fam17h.bin "${S}"/amd-ucode || die
-
 	local kernel_mods="${ROOT}/lib/modules/${KV_FULL}"
 
 	# Fail if any firmware is missing.
