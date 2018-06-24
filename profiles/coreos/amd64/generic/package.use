@@ -8,3 +8,7 @@ sys-apps/coreutils	    selinux
 
 # Enable SELinux for runc
 app-emulation/runc          selinux
+
+# Only ship microcode currently distributed by Intel
+# See https://bugs.gentoo.org/654638#c11 by iucode-tool maintainer
+sys-firmware/intel-microcode vanilla
