@@ -1,5 +1,5 @@
 DEFINED_PHASES=compile info install postinst prepare setup unpack
-DEPEND=>=dev-db/sqlite-3.7.9:3 device-mapper? ( >=sys-fs/lvm2-2.02.89[thin] ) seccomp? ( >=sys-libs/libseccomp-2.2.1[static-libs] ) journald? ( >=sys-apps/systemd-225 ) btrfs? ( >=sys-fs/btrfs-progs-3.16.1 ) sys-kernel/coreos-kernel virtual/pkgconfig virtual/pkgconfig >=dev-vcs/git-1.8.2.1 dev-lang/go:1.7=
+DEPEND=>=dev-db/sqlite-3.7.9:3 device-mapper? ( >=sys-fs/lvm2-2.02.89[thin] ) seccomp? ( >=sys-libs/libseccomp-2.2.1[static-libs] ) journald? ( >=sys-apps/systemd-225 ) btrfs? ( >=sys-fs/btrfs-progs-3.16.1 ) sys-kernel/coreos-kernel virtual/pkgconfig virtual/pkgconfig >=dev-vcs/git-1.8.2.1[curl] dev-lang/go:1.7=
 DESCRIPTION=Docker complements kernel namespacing with a high-level API which operates at the process level
 EAPI=5
 HOMEPAGE=https://dockerproject.org
@@ -10,5 +10,5 @@ RDEPEND=>=dev-db/sqlite-3.7.9:3 device-mapper? ( >=sys-fs/lvm2-2.02.89[thin] ) s
 REQUIRED_USE=go_version_go1_7
 RESTRICT=installsources strip
 SLOT=0
-_eclasses_=bash-completion-r1	8e447753aaf658afa609fbf961d80ab7	coreos-go-depend	0c1747ddda8ae24e0d2e88cdfddaa7d1	coreos-go-utils	c34072f13165bb85e5106cc6e082a4e1	cros-workon	4ad6e6491a1010ad7c875302b3be18ba	epatch	8233751dc5105a6ae8fcd86ce2bb0247	estack	43ddf5aaffa7a8d0482df54d25a66a1f	eutils	227b041a120d309fdefbebb3b8c1dfa9	flag-o-matic	2274fcc1e7ef6affaff5bcd636275417	git-r3	52a888802d25387c2c74cb845d1219bc	linux-info	ca370deef9d44125d829f2eb6ebc83e0	ltprune	2770eed66a9b8ef944714cd0e968182e	multilib	97f470f374f2e94ccab04a2fb21d811e	systemd	34815d3b76e745c5ca33eec9f95074c2	toolchain-funcs	185a06792159ca143528e7010368e8af	udev	d91cac2c73b94629cad2daea66e0d182	user	e4b567c44272a719fabf53f0f885d3f7	versionator	c80ccf29e90adea7c5cae94b42eb76d0
+_eclasses_=bash-completion-r1	6af26c1ffe65d92d3f525cb715f6250c	coreos-go-depend	0c1747ddda8ae24e0d2e88cdfddaa7d1	coreos-go-utils	c34072f13165bb85e5106cc6e082a4e1	cros-workon	4ad6e6491a1010ad7c875302b3be18ba	desktop	1b286a7e7143d8c4ec89cd0d2743a097	epatch	9a5f039771f143195164a15a4faa41a1	estack	43ddf5aaffa7a8d0482df54d25a66a1f	eutils	5b8ce72259e08104b337fe28c6de5dbc	flag-o-matic	5128c4729303400bd8d4b0b966530955	git-r3	8f6de46b0aa318aea0e8cac62ece098b	linux-info	aedb720bff5a5dec9b87edd351382bfc	ltprune	607e058da37aa6dabfa408b7d61da72e	multilib	97f470f374f2e94ccab04a2fb21d811e	preserve-libs	ef207dc62baddfddfd39a164d9797648	systemd	04e50685fbf3d89e5c67ac6a385dd595	toolchain-funcs	1e35303c63cd707f6c3422b4493d5607	udev	79c22815770535c8ae27f6f356559a88	user	8bc2845510e2109af75e3eeac607ec81	vcs-clean	2a0f74a496fa2b1552c4f3398258b7bf	versionator	26ca8a8bd95d6a74122c08ba98a4ee72
 _md5_=1848ce560a3c7caf7f7ec9ac3bfee7c8

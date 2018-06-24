@@ -1,5 +1,5 @@
 DEFINED_PHASES=compile configure install prepare unpack
-DEPEND=amd64? ( >=dev-lang/nasm-2.10.0 sys-power/iasl ) >=dev-vcs/git-1.8.2.1
+DEPEND=amd64? ( >=dev-lang/nasm-2.10.0 sys-power/iasl ) >=dev-vcs/git-1.8.2.1[curl]
 DESCRIPTION=EDK II Open Source UEFI Firmware
 EAPI=5
 HOMEPAGE=https://github.com/tianocore/tianocore.github.io/wiki/EDK-II
@@ -9,5 +9,5 @@ LICENSE=BSD-2
 RDEPEND=!sys-firmware/edk2-armvirt !sys-firmware/edk2-ovmf
 SLOT=0
 SRC_URI=https://www.openssl.org/source/openssl-1.1.0f.tar.gz
-_eclasses_=epatch	8233751dc5105a6ae8fcd86ce2bb0247	estack	43ddf5aaffa7a8d0482df54d25a66a1f	eutils	227b041a120d309fdefbebb3b8c1dfa9	git-r3	52a888802d25387c2c74cb845d1219bc	ltprune	2770eed66a9b8ef944714cd0e968182e	multilib	97f470f374f2e94ccab04a2fb21d811e	multiprocessing	6f5991c7101863d0b29df63990ad852e	toolchain-funcs	185a06792159ca143528e7010368e8af
+_eclasses_=desktop	1b286a7e7143d8c4ec89cd0d2743a097	epatch	9a5f039771f143195164a15a4faa41a1	estack	43ddf5aaffa7a8d0482df54d25a66a1f	eutils	5b8ce72259e08104b337fe28c6de5dbc	git-r3	8f6de46b0aa318aea0e8cac62ece098b	ltprune	607e058da37aa6dabfa408b7d61da72e	multilib	97f470f374f2e94ccab04a2fb21d811e	multiprocessing	cac3169468f893670dac3e7cb940e045	preserve-libs	ef207dc62baddfddfd39a164d9797648	toolchain-funcs	1e35303c63cd707f6c3422b4493d5607	vcs-clean	2a0f74a496fa2b1552c4f3398258b7bf
 _md5_=0a05a0e02ccbeeb2aad57e503aa964b4

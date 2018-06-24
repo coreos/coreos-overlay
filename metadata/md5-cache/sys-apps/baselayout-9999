@@ -1,5 +1,5 @@
 DEFINED_PHASES=compile info install postinst setup unpack
-DEPEND=sys-apps/systemd !coreos-base/coreos-base !<sys-libs/glibc-2.17-r1 !<=sys-libs/nss-usrfiles-2.18.1_pre >=dev-vcs/git-1.8.2.1 virtual/pkgconfig
+DEPEND=sys-apps/systemd !coreos-base/coreos-base !<sys-libs/glibc-2.17-r1 !<=sys-libs/nss-usrfiles-2.18.1_pre >=dev-vcs/git-1.8.2.1[curl] virtual/pkgconfig
 DESCRIPTION=Filesystem baselayout for CoreOS
 EAPI=5
 HOMEPAGE=http://www.coreos.com/
@@ -8,5 +8,5 @@ KEYWORDS=~amd64 ~arm ~arm64 ~x86
 LICENSE=GPL-2
 RDEPEND=sys-apps/systemd !coreos-base/coreos-base !<sys-libs/glibc-2.17-r1 !<=sys-libs/nss-usrfiles-2.18.1_pre >=sys-apps/gentoo-functions-0.10 cros_host? ( !coreos-base/coreos-init )
 SLOT=0
-_eclasses_=cros-workon	4ad6e6491a1010ad7c875302b3be18ba	epatch	8233751dc5105a6ae8fcd86ce2bb0247	estack	43ddf5aaffa7a8d0482df54d25a66a1f	eutils	227b041a120d309fdefbebb3b8c1dfa9	git-r3	52a888802d25387c2c74cb845d1219bc	ltprune	2770eed66a9b8ef944714cd0e968182e	multilib	97f470f374f2e94ccab04a2fb21d811e	systemd	34815d3b76e745c5ca33eec9f95074c2	toolchain-funcs	185a06792159ca143528e7010368e8af
+_eclasses_=cros-workon	4ad6e6491a1010ad7c875302b3be18ba	desktop	1b286a7e7143d8c4ec89cd0d2743a097	epatch	9a5f039771f143195164a15a4faa41a1	estack	43ddf5aaffa7a8d0482df54d25a66a1f	eutils	5b8ce72259e08104b337fe28c6de5dbc	git-r3	8f6de46b0aa318aea0e8cac62ece098b	ltprune	607e058da37aa6dabfa408b7d61da72e	multilib	97f470f374f2e94ccab04a2fb21d811e	preserve-libs	ef207dc62baddfddfd39a164d9797648	systemd	04e50685fbf3d89e5c67ac6a385dd595	toolchain-funcs	1e35303c63cd707f6c3422b4493d5607	vcs-clean	2a0f74a496fa2b1552c4f3398258b7bf
 _md5_=c1c1ee892666cc8e23cbdb66d23e0375

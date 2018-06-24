@@ -8,5 +8,5 @@ LICENSE=|| ( MIT Apache-2.0 ) BSD-1 BSD-2 BSD-4 UoI-NCSA
 RDEPEND=!dev-lang/rust
 SLOT=0/1.26.0
 SRC_URI=https://static.rust-lang.org/dist/rustc-1.26.0-src.tar.gz
-_eclasses_=cargo	5a58e76471ae53decd3da1fa44915831	coreos-cargo	ecc71b7f40f79def52bcee3f1dca6559	multilib	97f470f374f2e94ccab04a2fb21d811e	toolchain-funcs	185a06792159ca143528e7010368e8af
+_eclasses_=cargo	959846e2836f8244430c9582dd6493af	coreos-cargo	ecc71b7f40f79def52bcee3f1dca6559	multilib	97f470f374f2e94ccab04a2fb21d811e	multiprocessing	cac3169468f893670dac3e7cb940e045	toolchain-funcs	1e35303c63cd707f6c3422b4493d5607
 _md5_=19643e3862fb1b2e03af563c7111e46d

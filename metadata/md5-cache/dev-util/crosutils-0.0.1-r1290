@@ -1,0 +1,11 @@
+DEFINED_PHASES=configure info install unpack
+DEPEND=>=dev-vcs/git-1.8.2.1[curl]
+DESCRIPTION=Chromium OS build utilities
+EAPI=6
+HOMEPAGE=http://www.chromium.org/chromium-os
+IUSE=cros_workon_tree_fac7e77188abf62a8c29d1aab875e6bc72d892b2 profiling
+KEYWORDS=amd64
+LICENSE=BSD
+SLOT=0
+_eclasses_=cros-workon	4ad6e6491a1010ad7c875302b3be18ba	git-r3	8f6de46b0aa318aea0e8cac62ece098b	multilib	97f470f374f2e94ccab04a2fb21d811e	python-utils-r1	ffa9c3284c6b07b8c9f7933911f63812	toolchain-funcs	1e35303c63cd707f6c3422b4493d5607
+_md5_=519d8f82c32ffb667bf3b806582ad61a
