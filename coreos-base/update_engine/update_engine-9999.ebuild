@@ -50,6 +50,9 @@ src_configure() {
 		append-ldflags -no-pie
 	fi
 
+	# Work around new gdbus-codegen output.
+	append-flags -Wno-unused-function
+
 	local myeconfargs=(
 		$(use_enable cros-debug debug)
 		$(use_enable delta_generator)

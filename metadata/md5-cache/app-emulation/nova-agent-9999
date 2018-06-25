@@ -7,5 +7,5 @@ KEYWORDS=~amd64 ~arm ~x86
 LICENSE=MIT
 RDEPEND=dev-python/pyxenstore
 SLOT=0
-_eclasses_=git-2	195a672bfaf52d868442171c9469bbb6	multilib	97f470f374f2e94ccab04a2fb21d811e	systemd	34815d3b76e745c5ca33eec9f95074c2	toolchain-funcs	185a06792159ca143528e7010368e8af
+_eclasses_=git-2	45ff482316b52b3f96ff6b7309b77f03	multilib	97f470f374f2e94ccab04a2fb21d811e	systemd	04e50685fbf3d89e5c67ac6a385dd595	toolchain-funcs	1e35303c63cd707f6c3422b4493d5607
 _md5_=e2387a59fee4cf367c6d355c9f32319c

@@ -1,5 +1,5 @@
 DEFINED_PHASES=info install unpack
-DEPEND=net-misc/openssh net-nds/rpcbind !coreos-base/oem-service test? ( dev-lang/python:2.7 ) >=dev-vcs/git-1.8.2.1 virtual/pkgconfig
+DEPEND=net-misc/openssh net-nds/rpcbind !coreos-base/oem-service test? ( dev-lang/python:2.7 ) >=dev-vcs/git-1.8.2.1[curl] virtual/pkgconfig
 DESCRIPTION=Init scripts for CoreOS
 EAPI=4
 HOMEPAGE=http://www.coreos.com/
@@ -9,5 +9,5 @@ LICENSE=BSD
 RDEPEND=net-misc/openssh net-nds/rpcbind !coreos-base/oem-service test? ( dev-lang/python:2.7 ) app-admin/logrotate sys-block/parted sys-apps/gptfdisk >=sys-apps/systemd-207-r5 >=coreos-base/coreos-cloudinit-0.1.2-r5
 REQUIRED_USE=symlink-usr
 SLOT=0
-_eclasses_=cros-workon	4ad6e6491a1010ad7c875302b3be18ba	git-r3	52a888802d25387c2c74cb845d1219bc	multilib	97f470f374f2e94ccab04a2fb21d811e	systemd	34815d3b76e745c5ca33eec9f95074c2	toolchain-funcs	185a06792159ca143528e7010368e8af
+_eclasses_=cros-workon	4ad6e6491a1010ad7c875302b3be18ba	git-r3	8f6de46b0aa318aea0e8cac62ece098b	multilib	97f470f374f2e94ccab04a2fb21d811e	systemd	04e50685fbf3d89e5c67ac6a385dd595	toolchain-funcs	1e35303c63cd707f6c3422b4493d5607
 _md5_=3785de07b9baf3fed77456931ab95c67

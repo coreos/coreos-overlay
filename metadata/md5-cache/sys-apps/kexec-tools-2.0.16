@@ -10,5 +10,5 @@ RDEPEND=lzma? ( app-arch/xz-utils ) zlib? ( sys-libs/zlib )
 REQUIRED_USE=lzma? ( zlib )
 SLOT=0
 SRC_URI=mirror://kernel/linux/utils/kernel/kexec/kexec-tools-2.0.16.tar.xz
-_eclasses_=epatch	8233751dc5105a6ae8fcd86ce2bb0247	estack	43ddf5aaffa7a8d0482df54d25a66a1f	eutils	227b041a120d309fdefbebb3b8c1dfa9	libtool	0081a71a261724730ec4c248494f044d	linux-info	ca370deef9d44125d829f2eb6ebc83e0	ltprune	2770eed66a9b8ef944714cd0e968182e	multilib	97f470f374f2e94ccab04a2fb21d811e	systemd	34815d3b76e745c5ca33eec9f95074c2	toolchain-funcs	185a06792159ca143528e7010368e8af	versionator	c80ccf29e90adea7c5cae94b42eb76d0
+_eclasses_=estack	43ddf5aaffa7a8d0482df54d25a66a1f	libtool	0081a71a261724730ec4c248494f044d	linux-info	aedb720bff5a5dec9b87edd351382bfc	multilib	97f470f374f2e94ccab04a2fb21d811e	systemd	04e50685fbf3d89e5c67ac6a385dd595	toolchain-funcs	1e35303c63cd707f6c3422b4493d5607	versionator	26ca8a8bd95d6a74122c08ba98a4ee72
 _md5_=6811a0b93cdd4407f9c3a3ceb5e06877

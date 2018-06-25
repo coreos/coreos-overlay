@@ -1,2 +1,5 @@
 # This fails from -Werror=implicit-fallthrough, and it's disabled in the SDK.
 sys-devel/gcc sanitize
+
+# Undo Gentoo masking all this on arm64.
+sys-apps/systemd -cryptsetup -http -policykit -qrcode -xkb

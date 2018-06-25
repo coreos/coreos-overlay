@@ -3,7 +3,7 @@
 # $Header: /var/cvsroot/gentoo-x86/sys-libs/libsemanage/libsemanage-2.4-r1.ebuild,v 1.2 2015/05/10 09:02:13 perfinion Exp $
 
 EAPI="5"
-PYTHON_COMPAT=( python2_7 python3_3 python3_4 )
+PYTHON_COMPAT=( python2_7 python3_4 python3_5 python3_6 )
 
 inherit multilib python-r1 toolchain-funcs eutils multilib-minimal systemd
 
