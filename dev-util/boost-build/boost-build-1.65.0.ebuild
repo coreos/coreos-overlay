@@ -101,6 +101,7 @@ src_compile() {
 		toolset=cc
 	fi
 
+	tc-is-cross-compiler && sed -i -e 's/BOOST_JAM_CC=\$CC$/BOOST_JAM_CC=cc/' build.sh
 	CC=$(tc-getCC) ./build.sh ${toolset} -d+2 $(use_with python python "${EROOT%/}"/usr) || die "building bjam failed"
 }
 
