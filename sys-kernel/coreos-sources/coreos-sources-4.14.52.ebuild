@@ -38,6 +38,6 @@ UNIPATCH_LIST="
 	${PATCH_DIR}/z0005-tools-objtool-Makefile-Don-t-fail-on-fallthrough-wit.patch \
 	${PATCH_DIR}/z0006-Revert-random-use-a-different-mixing-algorithm-for-a.patch \
 	${PATCH_DIR}/z0007-Revert-random-fix-crng_ready-test.patch \
-	${PATCH_DIR}/z0008-Revert-xen-netfront-Fix-race-between-device-setup-an.patch \
-	${PATCH_DIR}/z0009-hv_netvsc-Fix-a-network-regression-after-ifdown-ifup.patch \
+	${PATCH_DIR}/z0008-xen-netfront-Fix-mismatched-rtnl_unlock.patch \
+	${PATCH_DIR}/z0009-xen-netfront-Update-features-after-registering-netde.patch \
 "
