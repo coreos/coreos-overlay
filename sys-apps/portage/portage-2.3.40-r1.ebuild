@@ -1,24 +1,24 @@
-# Copyright 1999-2017 Gentoo Foundation
+# Copyright 1999-2018 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=5
 
 PYTHON_COMPAT=(
 	pypy
-	python3_3 python3_4 python3_5 python3_6
+	python3_4 python3_5 python3_6
 	python2_7
 )
 PYTHON_REQ_USE='bzip2(+),threads(+)'
 
-inherit distutils-r1 multilib
+inherit distutils-r1 eutils systemd
 
 DESCRIPTION="Portage is the package management and distribution system for Gentoo"
 HOMEPAGE="https://wiki.gentoo.org/wiki/Project:Portage"
 
 LICENSE="GPL-2"
-KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
+KEYWORDS="alpha amd64 arm arm64 hppa ia64 ~mips ppc ppc64 s390 sparc x86 ~amd64-fbsd"
 SLOT="0"
-IUSE="build doc epydoc +ipc linguas_ru +native-extensions selinux xattr"
+IUSE="build doc epydoc gentoo-dev +ipc +native-extensions +rsync-verify selinux xattr"
 
 DEPEND="!build? ( $(python_gen_impl_dep 'ssl(+)') )
 	>=app-arch/tar-1.27
@@ -33,6 +33,8 @@ DEPEND="!build? ( $(python_gen_impl_dep 'ssl(+)') )
 # for now, don't pull in xattr deps for other kernels.
 # For whirlpool hash, require python[ssl] (bug #425046).
 # For compgen, require bash[readline] (bug #445576).
+# app-portage/gemato goes without PYTHON_USEDEP since we're calling
+# the executable.
 RDEPEND="
 	>=app-arch/tar-1.27
 	dev-lang/python-exec:2
@@ -40,6 +42,13 @@ RDEPEND="
 		>=sys-apps/sed-4.0.5
 		app-shells/bash:0[readline]
 		>=app-admin/eselect-1.2
+		$(python_gen_cond_dep 'dev-python/pyblake2[${PYTHON_USEDEP}]' \
+			python{2_7,3_4,3_5} pypy)
+		rsync-verify? (
+			>=app-portage/gemato-12.1[${PYTHON_USEDEP}]
+			app-crypt/openpgp-keys-gentoo-release
+			>=app-crypt/gnupg-2.2.4-r2[ssl(-)]
+		)
 	)
 	elibc_FreeBSD? ( sys-freebsd/freebsd-bin )
 	elibc_glibc? ( >=sys-apps/sandbox-2.2 )
@@ -63,7 +72,7 @@ PDEPEND="
 
 REQUIRED_USE="epydoc? ( $(python_gen_useflags 'python2*') )"
 
-SRC_ARCHIVES="https://dev.gentoo.org/~dolsen/releases/portage"
+SRC_ARCHIVES="https://dev.gentoo.org/~zmedico/portage/archives"
 
 prefix_src_archives() {
 	local x y
@@ -76,13 +85,9 @@ prefix_src_archives() {
 
 TARBALL_PV=${PV}
 SRC_URI="mirror://gentoo/${PN}-${TARBALL_PV}.tar.bz2
-	$(prefix_src_archives ${PN}-${TARBALL_PV}.tar.bz2)"
-
-PATCHES=(
-	"${FILESDIR}/${PN}-2.2.18-0001-portage-repository-config.py-add-disabled-attribute-.patch"
-	"${FILESDIR}/${PN}-2.2.18-0002-environment-Filter-EROOT-for-all-EAPIs.patch"
-	"${FILESDIR}/${PN}-2.2.18-0003-depgraph-ensure-slot-rebuilds-happen-in-the-correct-.patch"
-)
+	$(prefix_src_archives ${PN}-${TARBALL_PV}.tar.bz2)
+	https://github.com/gentoo/portage/compare/b7f94fccf4163364ab7b4c4f0dcd42b8847f03e0...937d0156aa060bdba9095313dedbb62e0a993aea.patch -> ${P}-bug-656942-bug-657436-937d0156aa06.patch
+	https://github.com/gentoo/portage/compare/937d0156aa060bdba9095313dedbb62e0a993aea...1fc628eead43fa5da4b142479aa004ded8acceab.patch -> ${P}-bug-657436-937d0156aa06-1fc628eead43.patch"
 
 pkg_setup() {
 	use epydoc && DISTUTILS_ALL_SUBPHASE_IMPLS=( python2.7 )
@@ -91,8 +96,23 @@ pkg_setup() {
 python_prepare_all() {
 	distutils-r1_python_prepare_all
 
-	# CoreOS does not use the gentoo repo, silence oodles of errors about it:
-	echo "# no defaults, configuration is in /etc" > cnf/repos.conf
+	epatch "${DISTDIR}/${P}-bug-656942-bug-657436-937d0156aa06.patch" \
+		"${DISTDIR}/${P}-bug-657436-937d0156aa06-1fc628eead43.patch"
+
+	# apply 4fb5ef2ce2cb
+	sed -i "s:\\((self._poll_obj, 'close'\\)):\\1, None):" \
+		pym/portage/util/_eventloop/EventLoop.py || die
+
+	if use gentoo-dev; then
+		einfo "Disabling --dynamic-deps by default for gentoo-dev..."
+		sed -e 's:\("--dynamic-deps", \)\("y"\):\1"n":' \
+			-i pym/_emerge/create_depgraph_params.py || \
+			die "failed to patch create_depgraph_params.py"
+
+		einfo "Enabling additional FEATURES for gentoo-dev..."
+		echo 'FEATURES="${FEATURES} ipc-sandbox network-sandbox strict-keepdir"' \
+			>> cnf/make.globals || die
+	fi
 
 	if use native-extensions; then
 		printf "[build_ext]\nportage-ext-modules=true\n" >> \
@@ -110,6 +130,11 @@ python_prepare_all() {
 		einfo "Adding FEATURES=xattr to make.globals ..."
 		echo -e '\nFEATURES="${FEATURES} xattr"' >> cnf/make.globals \
 			|| die "failed to append to make.globals"
+	fi
+
+	if use build || ! use rsync-verify; then
+		sed -e '/^sync-rsync-verify-metamanifest/s|yes|no|' \
+			-i cnf/repos.conf || die "sed failed"
 	fi
 
 	if [[ -n ${EPREFIX} ]] ; then
@@ -138,11 +163,15 @@ python_prepare_all() {
 			-i cnf/make.globals || die "sed failed"
 
 		einfo "Adjusting repos.conf ..."
-		sed -e "s|^\(main-repo = \).*|\\1gentoo_prefix|" \
-			-e "s|^\\[gentoo\\]|[gentoo_prefix]|" \
-			-e "s|^\(location = \)\(/usr/portage\)|\\1${EPREFIX}\\2|" \
-			-e "s|^\(sync-uri = \).*|\\1rsync://rsync.prefix.bitzolder.nl/gentoo-portage-prefix|" \
+		sed -e "s|^\(location = \)\(/usr/portage\)|\\1${EPREFIX}\\2|" \
+			-e "s|^\(sync-openpgp-key-path = \)\(.*\)|\\1${EPREFIX}\\2|" \
 			-i cnf/repos.conf || die "sed failed"
+		if use prefix-guest ; then
+			sed -e "s|^\(main-repo = \).*|\\1gentoo_prefix|" \
+				-e "s|^\\[gentoo\\]|[gentoo_prefix]|" \
+				-e "s|^\(sync-uri = \).*|\\1rsync://rsync.prefix.bitzolder.nl/gentoo-portage-prefix|" \
+				-i cnf/repos.conf || die "sed failed"
+		fi
 
 		einfo "Adding FEATURES=force-prefix to make.globals ..."
 		echo -e '\nFEATURES="${FEATURES} force-prefix"' >> cnf/make.globals \
@@ -193,13 +222,21 @@ python_install_all() {
 	distutils-r1_python_install_all
 
 	local targets=()
-	use doc && targets+=( install_docbook )
-	use epydoc && targets+=( install_epydoc )
+	use doc && targets+=(
+		install_docbook
+		--htmldir="${EPREFIX}/usr/share/doc/${PF}/html"
+	)
+	use epydoc && targets+=(
+		install_epydoc
+		--htmldir="${EPREFIX}/usr/share/doc/${PF}/html"
+	)
 
 	# install docs
 	if [[ ${targets[@]} ]]; then
 		esetup.py "${targets[@]}"
 	fi
+
+	systemd_dotmpfilesd "${FILESDIR}"/portage-ccache.conf
 
 	# Due to distutils/python-exec limitations
 	# these must be installed to /usr/bin.
@@ -239,36 +276,6 @@ pkg_preinst() {
 	else
 		SYNC_DEPTH_UPGRADE=false
 	fi
-}
-
-get_ownership() {
-	case ${USERLAND} in
-		BSD)
-			stat -f '%Su:%Sg' "${1}"
-			;;
-		*)
-			stat -c '%U:%G' "${1}"
-			;;
-	esac
-}
-
-new_config_protect() {
-	# Generate a ._cfg file even if the target file
-	# does not exist, ensuring that the user will
-	# notice the config change.
-	local basename=${1##*/}
-	local dirname=${1%/*}
-	local i=0
-	while true ; do
-		local filename=$(
-			echo -n "${dirname}/._cfg"
-			printf "%04d" ${i}
-			echo -n "_${basename}"
-		)
-		[[ -e ${filename} ]] || break
-		(( i++ ))
-	done
-	echo "${filename}"
 }
 
 pkg_postinst() {
