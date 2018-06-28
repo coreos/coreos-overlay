@@ -1,8 +1,8 @@
 # Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
-USE="cros-debug acpi usb symlink-usr usrmerge cryptsetup policykit"
-USE="${USE} -cros_host -expat -cairo -X -man"
+USE="cros-debug acpi usb symlink-usr cryptsetup policykit"
+USE="${USE} -split-usr -cros_host -expat -cairo -X -man"
 USE="${USE} -acl -gpm -python"
 USE="${USE} -fortran -abiword -perl -cups -poppler-data -nls"
 
