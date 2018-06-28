@@ -1,0 +1,21 @@
+# Derived from https://github.com/mrueg/repoman-travis/
+
+sudo: required
+language: python
+python:
+    - pypy
+
+# For some reason portage is defaulting to lbzip2/lbunzip2 here and then complaining when they don't
+# exist, so use plain old b{,un}zip2.
+env:
+    - PORTAGE_VER="2.3.40" PORTAGE_BZIP2_COMMAND="bzip2" PORTAGE_BUNZIP2_COMMAND="bunzip2"
+
+before_install:
+    - sudo apt-get -qq update
+    - pip install lxml pyyaml
+
+before_script: ./.travis/setup_repoman.sh
+
+script:
+    - cd /usr/coreos-overlay
+    - /tmp/portage/portage-${PORTAGE_VER}/repoman/bin/repoman --experimental-repository-modules=y -dx full
