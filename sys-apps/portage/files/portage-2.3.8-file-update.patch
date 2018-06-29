@@ -1,0 +1,23 @@
+Add support for new file command output.
+
+--- bin/ebuild-helpers/prepstrip
++++ bin/ebuild-helpers/prepstrip
+@@ -346,7 +346,7 @@
+ 				${STRIP} -g "${x}"
+ 			fi
+ 		fi
+-	elif [[ ${f} == *"SB executable"* || ${f} == *"SB shared object"* ]] ; then
++	elif [[ ${f} == *"SB executable"* || ${f} == *"SB pie executable"* || ${f} == *"SB shared object"* ]] ; then
+ 		process_elf "${x}" "${inode_link}" ${PORTAGE_STRIP_FLAGS}
+ 	elif [[ ${f} == *"SB relocatable"* ]] ; then
+ 		process_elf "${x}" "${inode_link}" ${SAFE_STRIP_FLAGS}
+--- bin/install-qa-check.d/10ignored-flags
++++ bin/install-qa-check.d/10ignored-flags
+@@ -33,6 +33,7 @@
+ 			f=$(file "${x}") || continue
+ 			[[ -z ${f} ]] && continue
+ 			if [[ ${f} == *"SB executable"* ||
++				${f} == *"SB pie executable"* ||
+ 				${f} == *"SB shared object"* ]] ; then
+ 				echo "${x}" >> "${T}"/scanelf-ignored-CFLAGS.log
+ 			fi

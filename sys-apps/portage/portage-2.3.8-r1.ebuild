@@ -87,6 +87,8 @@ PATCHES=(
 	"${FILESDIR}/${PN}-2.2.18-0002-environment-Filter-EROOT-for-all-EAPIs.patch"
 	# upstream bug:
 	"${FILESDIR}/${PN}-2.2.18-0003-depgraph-ensure-slot-rebuilds-happen-in-the-correct-.patch"
+	# support new file command output (this can be dropped when upgrading)
+	"${FILESDIR}/${P}-file-update.patch"
 )
 
 pkg_setup() {
