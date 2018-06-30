@@ -8,7 +8,7 @@ ETYPE="sources"
 # Final releases should be versioned L.M.N, even for N == 0
 
 # Only needed for RCs
-K_BASE_VER="4.16"
+K_BASE_VER="4.17"
 
 inherit kernel-2
 detect_version
@@ -38,8 +38,7 @@ UNIPATCH_LIST="
 	${PATCH_DIR}/z0001-kbuild-derive-relative-path-for-KBUILD_SRC-from-CURD.patch \
 	${PATCH_DIR}/z0002-Add-arm64-coreos-verity-hash.patch \
 	${PATCH_DIR}/z0003-tools-objtool-Makefile-Don-t-fail-on-fallthrough-wit.patch \
-	${PATCH_DIR}/z0004-Revert-random-use-a-different-mixing-algorithm-for-a.patch \
-	${PATCH_DIR}/z0005-Revert-random-fix-crng_ready-test.patch \
-	${PATCH_DIR}/z0006-xen-netfront-Fix-mismatched-rtnl_unlock.patch \
-	${PATCH_DIR}/z0007-xen-netfront-Update-features-after-registering-netde.patch \
+	${PATCH_DIR}/z0004-xen-netfront-Fix-mismatched-rtnl_unlock.patch \
+	${PATCH_DIR}/z0005-xen-netfront-Update-features-after-registering-netde.patch \
+	${PATCH_DIR}/z0006-Revert-x86-boot-compressed-64-Handle-5-level-paging-.patch \
 "

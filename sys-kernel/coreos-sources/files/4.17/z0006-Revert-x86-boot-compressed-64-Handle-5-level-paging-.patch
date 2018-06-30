@@ -1,0 +1,132 @@
+From 8a18baaaff11b8758d738e4325fbe77476191446 Mon Sep 17 00:00:00 2001
+From: Benjamin Gilbert <bgilbert@redhat.com>
+Date: Sun, 1 Jul 2018 12:13:35 -0700
+Subject: [PATCH 6/6] Revert "x86/boot/compressed/64: Handle 5-level paging
+ boot if kernel is above 4G"
+
+This reverts commit 194a9749c73d650c0b1dfdee04fb0bdf0a888ba8, which causes
+instantaneous and silent boot failures.
+---
+ arch/x86/boot/compressed/head_64.S | 69 +++++++-----------------------
+ 1 file changed, 16 insertions(+), 53 deletions(-)
+
+diff --git a/arch/x86/boot/compressed/head_64.S b/arch/x86/boot/compressed/head_64.S
+index 8169e8b7a4dc..7588e65a9c4a 100644
+--- a/arch/x86/boot/compressed/head_64.S
++++ b/arch/x86/boot/compressed/head_64.S
+@@ -326,27 +326,11 @@ ENTRY(startup_64)
+ 
+ 	/*
+ 	 * At this point we are in long mode with 4-level paging enabled,
+-	 * but we might want to enable 5-level paging or vice versa.
++	 * but we want to enable 5-level paging.
+ 	 *
+-	 * The problem is that we cannot do it directly. Setting or clearing
+-	 * CR4.LA57 in long mode would trigger #GP. So we need to switch off
+-	 * long mode and paging first.
+-	 *
+-	 * We also need a trampoline in lower memory to switch over from
+-	 * 4- to 5-level paging for cases when the bootloader puts the kernel
+-	 * above 4G, but didn't enable 5-level paging for us.
+-	 *
+-	 * The same trampoline can be used to switch from 5- to 4-level paging
+-	 * mode, like when starting 4-level paging kernel via kexec() when
+-	 * original kernel worked in 5-level paging mode.
+-	 *
+-	 * For the trampoline, we need the top page table to reside in lower
+-	 * memory as we don't have a way to load 64-bit values into CR3 in
+-	 * 32-bit mode.
+-	 *
+-	 * We go though the trampoline even if we don't have to: if we're
+-	 * already in a desired paging mode. This way the trampoline code gets
+-	 * tested on every boot.
++	 * The problem is that we cannot do it directly. Setting LA57 in
++	 * long mode would trigger #GP. So we need to switch off long mode
++	 * first.
+ 	 */
+ 
+ 	/* Make sure we have GDT with 32-bit code segment */
+@@ -371,18 +355,13 @@ ENTRY(startup_64)
+ 	/* Save the trampoline address in RCX */
+ 	movq	%rax, %rcx
+ 
+-	/*
+-	 * Load the address of trampoline_return() into RDI.
+-	 * It will be used by the trampoline to return to the main code.
+-	 */
+-	leaq	trampoline_return(%rip), %rdi
+ 
+ 	/* Switch to compatibility mode (CS.L = 0 CS.D = 1) via far return */
+ 	pushq	$__KERNEL32_CS
+-	leaq	TRAMPOLINE_32BIT_CODE_OFFSET(%rax), %rax
++	leaq	compatible_mode(%rip), %rax
+ 	pushq	%rax
+ 	lretq
+-trampoline_return:
++lvl5:
+ 	/* Restore the stack, the 32-bit trampoline uses its own stack */
+ 	leaq	boot_stack_end(%rbx), %rsp
+ 
+@@ -559,14 +538,8 @@ adjust_got:
+ 	ret
+ 
+ 	.code32
+-/*
+- * This is the 32-bit trampoline that will be copied over to low memory.
+- *
+- * RDI contains the return address (might be above 4G).
+- * ECX contains the base address of the trampoline memory.
+- * Non zero RDX on return means we need to enable 5-level paging.
+- */
+ ENTRY(trampoline_32bit_src)
++compatible_mode:
+ 	/* Set up data and stack segments */
+ 	movl	$__KERNEL_DS, %eax
+ 	movl	%eax, %ds
+@@ -607,34 +580,24 @@ ENTRY(trampoline_32bit_src)
+ 1:
+ 	movl	%eax, %cr4
+ 
+-	/* Calculate address of paging_enabled() once we are executing in the trampoline */
+-	leal	paging_enabled - trampoline_32bit_src + TRAMPOLINE_32BIT_CODE_OFFSET(%ecx), %eax
++	/* Calculate address we are running at */
++	call	1f
++1:	popl	%edi
++	subl	$1b, %edi
+ 
+-	/* Prepare the stack for far return to Long Mode */
++	/* Prepare stack for far return to Long Mode */
+ 	pushl	$__KERNEL_CS
+-	pushl	%eax
++	leal	lvl5(%edi), %eax
++	push	%eax
+ 
+-	/* Enable paging again */
++	/* Enable paging back */
+ 	movl	$(X86_CR0_PG | X86_CR0_PE), %eax
+ 	movl	%eax, %cr0
+ 
+ 	lret
+ 
+-	.code64
+-paging_enabled:
+-	/* Return from the trampoline */
+-	jmp	*%rdi
+-
+-	/*
+-         * The trampoline code has a size limit.
+-         * Make sure we fail to compile if the trampoline code grows
+-         * beyond TRAMPOLINE_32BIT_CODE_SIZE bytes.
+-	 */
+-	.org	trampoline_32bit_src + TRAMPOLINE_32BIT_CODE_SIZE
+-
+-	.code32
+ no_longmode:
+-	/* This isn't an x86-64 CPU, so hang intentionally, we cannot continue */
++	/* This isn't an x86-64 CPU so hang */
+ 1:
+ 	hlt
+ 	jmp     1b
+-- 
+2.17.1
+
