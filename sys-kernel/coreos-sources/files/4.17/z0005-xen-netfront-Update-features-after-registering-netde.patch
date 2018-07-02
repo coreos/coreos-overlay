@@ -1,7 +1,7 @@
-From 77a0d69a6d7b82a4724c966428a0652929a2565c Mon Sep 17 00:00:00 2001
+From 64dca404996f00e7df2b829e471c687286e8e847 Mon Sep 17 00:00:00 2001
 From: Ross Lagerwall <ross.lagerwall@citrix.com>
 Date: Thu, 21 Jun 2018 14:00:21 +0100
-Subject: [PATCH 7/7] xen-netfront: Update features after registering netdev
+Subject: [PATCH 5/6] xen-netfront: Update features after registering netdev
 
 Update the features after calling register_netdev() otherwise the
 device features are not set up correctly and it not possible to change
@@ -19,7 +19,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
  1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/net/xen-netfront.c b/drivers/net/xen-netfront.c
-index 5f4951a48c9a..ad2e9cb36903 100644
+index 244095bfd604..1d5082d30187 100644
 --- a/drivers/net/xen-netfront.c
 +++ b/drivers/net/xen-netfront.c
 @@ -1951,10 +1951,6 @@ static int xennet_connect(struct net_device *dev)
@@ -45,5 +45,5 @@ index 5f4951a48c9a..ad2e9cb36903 100644
  	 * All public and private state should now be sane.  Get
  	 * ready to start sending and receiving packets and give the driver
 -- 
-2.14.4
+2.17.1
 
