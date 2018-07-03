@@ -1,4 +1,4 @@
-From cd4d6483723ea3185f97a6896b006b2582baaad5 Mon Sep 17 00:00:00 2001
+From 32d9da78f1a09d13dc44791dd99a476d014c1fda Mon Sep 17 00:00:00 2001
 From: Ross Lagerwall <ross.lagerwall@citrix.com>
 Date: Thu, 21 Jun 2018 14:00:20 +0100
 Subject: [PATCH 4/6] xen-netfront: Fix mismatched rtnl_unlock
@@ -34,5 +34,5 @@ index 4dd0668003e7..244095bfd604 100644
  	return err;
  }
 -- 
-2.17.1
+2.14.4
 
