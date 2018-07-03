@@ -1,6 +1,6 @@
 {
   "ignition": {
-    "version": "2.1.0"
+    "version": "2.2.0"
   },
   "storage": {
     "files": [
@@ -9,6 +9,14 @@
         "path": "/etc/systemd/system/oem-gce.service",
         "contents": {
           "source": "oem:///units/oem-gce.service"
+        },
+        "mode": 292
+      },
+      {
+        "filesystem": "root",
+        "path": "/etc/systemd/system/oem-gce-enable-oslogin.service",
+        "contents": {
+          "source": "oem:///units/oem-gce-enable-oslogin.service"
         },
         "mode": 292
       },
@@ -38,6 +46,10 @@
       },
       {
         "name": "oem-gce.service",
+        "enabled": true
+      },
+      {
+        "name": "oem-gce-enable-oslogin.service",
         "enabled": true
       }
     ]

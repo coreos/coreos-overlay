@@ -1,0 +1,14 @@
+[Unit]
+Description=Enable GCE OS Login
+After=local-fs.target
+ConditionFirstBoot=true
+Before=sshd.service
+Before=sshd.socket
+
+[Service]
+Type=oneshot
+
+ExecStart=/usr/share/oem/bin/enable-oslogin
+
+[Install]
+WantedBy=sysinit.target
