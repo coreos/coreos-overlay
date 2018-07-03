@@ -1,0 +1,39 @@
+From 66c1d03b541211ed4707b0608422856ece90f1c2 Mon Sep 17 00:00:00 2001
+From: Andrew Jeddeloh <andrew.jeddeloh@coreos.com>
+Date: Fri, 6 Jul 2018 15:54:40 -0700
+Subject: [PATCH] pam_module: use /var/lib/ instead of /var
+
+---
+ google_compute_engine_oslogin/pam_module/pam_oslogin_admin.cc | 2 +-
+ google_compute_engine_oslogin/pam_module/pam_oslogin_login.cc | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/google_compute_engine_oslogin/pam_module/pam_oslogin_admin.cc b/google_compute_engine_oslogin/pam_module/pam_oslogin_admin.cc
+index 04d0808..376916e 100644
+--- a/google_compute_engine_oslogin/pam_module/pam_oslogin_admin.cc
++++ b/google_compute_engine_oslogin/pam_module/pam_oslogin_admin.cc
+@@ -36,7 +36,7 @@ using oslogin_utils::ParseJsonToEmail;
+ using oslogin_utils::UrlEncode;
+ using oslogin_utils::kMetadataServerUrl;
+ 
+-static const char kSudoersDir[] = "/var/google-sudoers.d/";
++static const char kSudoersDir[] = "/var/lib/google-sudoers.d/";
+ 
+ extern "C" {
+ 
+diff --git a/google_compute_engine_oslogin/pam_module/pam_oslogin_login.cc b/google_compute_engine_oslogin/pam_module/pam_oslogin_login.cc
+index 9e708f4..428600b 100644
+--- a/google_compute_engine_oslogin/pam_module/pam_oslogin_login.cc
++++ b/google_compute_engine_oslogin/pam_module/pam_oslogin_login.cc
+@@ -36,7 +36,7 @@ using oslogin_utils::ParseJsonToEmail;
+ using oslogin_utils::UrlEncode;
+ using oslogin_utils::kMetadataServerUrl;
+ 
+-static const char kUsersDir[] = "/var/google-users.d/";
++static const char kUsersDir[] = "/var/lib/google-users.d/";
+ 
+ extern "C" {
+ 
+-- 
+2.16.4
+

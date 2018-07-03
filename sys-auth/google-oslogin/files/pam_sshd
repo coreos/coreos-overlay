@@ -1,0 +1,9 @@
+# Keep this file in sync with the net-misc/openssh/files/sshd.pam_include.2
+auth       include	system-remote-login
+account    include	system-remote-login
+password   include	system-remote-login
+session	   include	system-remote-login
+# Needed for oslogin support
+account    requisite    pam_oslogin_login.so
+account    optional     pam_oslogin_admin.so
+session    optional     pam_mkhomedir.so
