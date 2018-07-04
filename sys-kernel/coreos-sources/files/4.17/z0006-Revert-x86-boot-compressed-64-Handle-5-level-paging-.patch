@@ -1,4 +1,4 @@
-From 8a18baaaff11b8758d738e4325fbe77476191446 Mon Sep 17 00:00:00 2001
+From 6694ab807f21e64d43e13a884b35eae44dd9a59f Mon Sep 17 00:00:00 2001
 From: Benjamin Gilbert <bgilbert@redhat.com>
 Date: Sun, 1 Jul 2018 12:13:35 -0700
 Subject: [PATCH 6/6] Revert "x86/boot/compressed/64: Handle 5-level paging
@@ -7,7 +7,7 @@ Subject: [PATCH 6/6] Revert "x86/boot/compressed/64: Handle 5-level paging
 This reverts commit 194a9749c73d650c0b1dfdee04fb0bdf0a888ba8, which causes
 instantaneous and silent boot failures.
 ---
- arch/x86/boot/compressed/head_64.S | 69 +++++++-----------------------
+ arch/x86/boot/compressed/head_64.S | 69 +++++++++-----------------------------
  1 file changed, 16 insertions(+), 53 deletions(-)
 
 diff --git a/arch/x86/boot/compressed/head_64.S b/arch/x86/boot/compressed/head_64.S
@@ -128,5 +128,5 @@ index 8169e8b7a4dc..7588e65a9c4a 100644
  	hlt
  	jmp     1b
 -- 
-2.17.1
+2.14.4
 
