@@ -1,4 +1,4 @@
-From 64dca404996f00e7df2b829e471c687286e8e847 Mon Sep 17 00:00:00 2001
+From f473198fd5ca6c586c3e07fddf50aaa2af7c166a Mon Sep 17 00:00:00 2001
 From: Ross Lagerwall <ross.lagerwall@citrix.com>
 Date: Thu, 21 Jun 2018 14:00:21 +0100
 Subject: [PATCH 5/6] xen-netfront: Update features after registering netdev
@@ -45,5 +45,5 @@ index 244095bfd604..1d5082d30187 100644
  	 * All public and private state should now be sane.  Get
  	 * ready to start sending and receiving packets and give the driver
 -- 
-2.17.1
+2.14.4
 
