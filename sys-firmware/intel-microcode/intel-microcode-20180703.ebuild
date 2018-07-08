@@ -8,16 +8,16 @@ inherit linux-info toolchain-funcs mount-boot
 # Find updates by searching and clicking the first link (hopefully it's the one):
 # http://www.intel.com/content/www/us/en/search.html?keyword=Processor+Microcode+Data+File
 
-COLLECTION_SNAPSHOT="20180616"
-INTEL_SNAPSHOT="20180425"
-NUM="27776"
+COLLECTION_SNAPSHOT="20180630"
+INTEL_SNAPSHOT="20180703"
+NUM="27945"
 DESCRIPTION="Intel IA32/IA64 microcode update data"
 HOMEPAGE="http://inertiawar.com/microcode/ https://downloadcenter.intel.com/Detail_Desc.aspx?DwnldID=${NUM}"
 SRC_URI="https://downloadmirror.intel.com/${NUM}/eng/microcode-${INTEL_SNAPSHOT}.tgz
 	https://dev.gentoo.org/~whissi/dist/intel-microcode/intel-microcode-collection-${COLLECTION_SNAPSHOT}.tar.xz"
 
 LICENSE="intel-ucode"
-SLOT="0/${PVR}"
+SLOT="0"
 KEYWORDS="-* amd64 x86"
 IUSE="hostonly initramfs +split-ucode vanilla"
 REQUIRED_USE="|| ( initramfs split-ucode )"
@@ -31,7 +31,8 @@ RDEPEND="!<sys-apps/microcode-ctl-1.17-r2
 S=${WORKDIR}
 
 # Blacklist bad microcode here.
-MICROCODE_BLACKLIST_DEFAULT=""
+# 0x000406f1 aka 06-4f-01 aka CPUID 406F1 require newer microcode loader
+MICROCODE_BLACKLIST_DEFAULT="-s !0x000406f1"
 MICROCODE_BLACKLIST="${MICROCODE_BLACKLIST:=${MICROCODE_BLACKLIST_DEFAULT}}"
 
 # In case we want to set some defaults ...
