@@ -17,7 +17,7 @@ SRC_URI="https://downloadmirror.intel.com/${NUM}/eng/microcode-${INTEL_SNAPSHOT}
 	https://dev.gentoo.org/~whissi/dist/intel-microcode/intel-microcode-collection-${COLLECTION_SNAPSHOT}.tar.xz"
 
 LICENSE="intel-ucode"
-SLOT="0"
+SLOT="0/${PVR}"
 KEYWORDS="-* amd64 x86"
 IUSE="hostonly initramfs +split-ucode vanilla"
 REQUIRED_USE="|| ( initramfs split-ucode )"
@@ -31,8 +31,7 @@ RDEPEND="!<sys-apps/microcode-ctl-1.17-r2
 S=${WORKDIR}
 
 # Blacklist bad microcode here.
-# 0x000406f1 aka 06-4f-01 aka CPUID 406F1 require newer microcode loader
-MICROCODE_BLACKLIST_DEFAULT="-s !0x000406f1"
+MICROCODE_BLACKLIST_DEFAULT=""
 MICROCODE_BLACKLIST="${MICROCODE_BLACKLIST:=${MICROCODE_BLACKLIST_DEFAULT}}"
 
 # In case we want to set some defaults ...
