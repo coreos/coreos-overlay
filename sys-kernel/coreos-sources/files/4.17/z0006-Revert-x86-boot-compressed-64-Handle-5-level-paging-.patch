@@ -1,4 +1,4 @@
-From 6694ab807f21e64d43e13a884b35eae44dd9a59f Mon Sep 17 00:00:00 2001
+From ef3afa473f6d31812979d6f1ed0b553aefa7ca41 Mon Sep 17 00:00:00 2001
 From: Benjamin Gilbert <bgilbert@redhat.com>
 Date: Sun, 1 Jul 2018 12:13:35 -0700
 Subject: [PATCH 6/6] Revert "x86/boot/compressed/64: Handle 5-level paging
