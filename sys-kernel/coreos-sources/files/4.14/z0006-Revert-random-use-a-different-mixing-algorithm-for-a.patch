@@ -1,4 +1,4 @@
-From c7739e5bc74c74d14da9037878a793234a583f8d Mon Sep 17 00:00:00 2001
+From 1690d8c08508145c728d3bef094d1274d4dcac49 Mon Sep 17 00:00:00 2001
 From: Jeremy Cline <jeremy@jcline.org>
 Date: Wed, 2 May 2018 15:16:29 -0400
 Subject: [PATCH 6/9] Revert "random: use a different mixing algorithm for
