@@ -1,0 +1,65 @@
+---
+
+version: 1
+repoman_version: 2.3.3
+
+missingvars:
+    - LICENSE
+
+qacats:
+    - EAPI.definition
+    - EAPI.deprecated
+    - EAPI.incompatible
+    - EAPI.unsupported
+    - LICENSE.invalid
+    - LICENSE.missing
+    - LICENSE.syntax
+    - dependency.syntax
+    - digest.assumed
+    - digest.missing
+    - ebuild.invalidname
+    - ebuild.majorsyn
+    - ebuild.syntax
+    - file.name
+    - inherit.missing
+    - manifest.bad
+    - repo.eapi.banned
+    - variable.invalidchar
+
+qawarnings:
+    - DESCRIPTION.missing
+    - DESCRIPTION.toolong
+    - HOMEPAGE.virtual
+    - IUSE.invalid
+    - IUSE.missing
+    - KEYWORDS.stupid
+    - LICENSE.deprecated
+    - LICENSE.virtual
+    - digest.unused
+    - ebuild.absdosym
+    - ebuild.invalidname
+    - ebuild.minorsyn
+    - ebuild.patches
+    - file.UTF8
+    - file.executable
+    - file.size
+    - inherit.unused
+    - inherit.deprecated
+    - portage.internal
+    - repo.eapi.deprecated
+    - upstream.workaround
+    - uri.https
+    - variable.readonly
+
+valid_restrict:
+    - binchecks
+    - bindist
+    - fetch
+    - installsources
+    - mirror
+    - preserve-libs
+    - primaryuri
+    - splitdebug
+    - strip
+    - test
+    - userpriv
