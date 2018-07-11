@@ -33,9 +33,7 @@ IUSE=""
 UNIPATCH_LIST="
 	${PATCH_DIR}/z0001-kbuild-derive-relative-path-for-KBUILD_SRC-from-CURD.patch \
 	${PATCH_DIR}/z0002-Add-arm64-coreos-verity-hash.patch \
-	${PATCH_DIR}/z0003-block-factor-out-__blkdev_issue_zero_pages.patch \
-	${PATCH_DIR}/z0004-block-cope-with-WRITE-ZEROES-failing-in-blkdev_issue.patch \
-	${PATCH_DIR}/z0005-tools-objtool-Makefile-Don-t-fail-on-fallthrough-wit.patch \
-	${PATCH_DIR}/z0006-xen-netfront-Fix-mismatched-rtnl_unlock.patch \
-	${PATCH_DIR}/z0007-xen-netfront-Update-features-after-registering-netde.patch \
+	${PATCH_DIR}/z0003-tools-objtool-Makefile-Don-t-fail-on-fallthrough-wit.patch \
+	${PATCH_DIR}/z0004-xen-netfront-Fix-mismatched-rtnl_unlock.patch \
+	${PATCH_DIR}/z0005-xen-netfront-Update-features-after-registering-netde.patch \
 "
