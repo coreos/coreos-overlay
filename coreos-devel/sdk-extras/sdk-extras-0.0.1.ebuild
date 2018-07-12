@@ -29,6 +29,7 @@ RDEPEND="
 	app-misc/tmux
 	app-text/tree
 	app-text/dos2unix
+	coreos-devel/fero-client
 	dev-util/cscope
 	dev-util/perf
 	dev-util/strace
