@@ -104,6 +104,9 @@ else
 	PDEPEND+=" !vanilla? ( sys-libs/timezone-data )"
 fi
 
+# COREOS: Ignore /dev/pts settings, since the chroot has no control over them.
+check_devpts() { : ; }
+
 #
 # the phases
 #
@@ -258,6 +261,10 @@ src_prepare() {
 	chmod u+x "${S}"/scripts/*.sh
 
 	cd "${S}"
+
+	## COREOS: Apply features and fixes missing from the Gentoo patch set.
+	epatch "${FILESDIR}"/${PV}/${P}-c-utf8-locale.patch
+	epatch "${FILESDIR}"/2.25/glibc-2.25-gshadow-handle-erange.patch
 
 	if use hardened ; then
 		# We don't enable these for non-hardened as the output is very terse --
@@ -763,6 +770,23 @@ glibc_do_src_install() {
 	# Prevent overwriting of the /etc/localtime symlink.  We'll handle the
 	# creation of the "factory" symlink in pkg_postinst().
 	rm -f "${ED}"/etc/localtime
+
+	## COREOS: Add some local changes:
+	# - Config files are installed by baselayout, not glibc.
+	# - Install nscd/systemd stuff in /usr.
+
+	# Use tmpfiles to put nscd.conf in /etc and create directories.
+	insinto /usr/share/baselayout
+	if ! in_iuse nscd || use nscd ; then
+		doins "${S}"/nscd/nscd.conf || die
+		systemd_newtmpfilesd "${FILESDIR}"/nscd-conf.tmpfiles nscd-conf.conf || die
+	fi
+
+	# Clean out any default configs.
+	rm -rf "${ED}"/etc
+
+	# Restore this one for the SDK.
+	test ! -e "${T}"/00glibc || doenvd "${T}"/00glibc
 }
 
 glibc_headers_install() {
