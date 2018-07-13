@@ -10,7 +10,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ "${PV}" == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm ~arm64 ~x86"
 else
-	CROS_WORKON_COMMIT="deba0732daec569545cf456f0cc514f17c7529b5"
+	CROS_WORKON_COMMIT="30b4f2a73ecde5abbd2c5dd7e78fbf4bdbff3722"
 	KEYWORDS="amd64 arm arm64 x86"
 fi
 
@@ -34,6 +34,7 @@ src_install() {
 		"${D}"/usr/lib/dracut/modules.d/30ignition/ignition-generator \
 		"${D}"/usr/lib/dracut/modules.d/30ignition/ignition-setup.sh \
 		"${D}"/usr/lib/dracut/modules.d/30ignition/retry-umount.sh \
+		"${D}"/usr/lib/dracut/modules.d/35torcx/torcx-profile-populate-generator \
 		"${D}"/usr/lib/dracut/modules.d/99setup-root/initrd-setup-root \
 		|| die chmod
 }
