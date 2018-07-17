@@ -1,4 +1,4 @@
-From 27e6afb3bb0190bcdddf5e56c54938da86818908 Mon Sep 17 00:00:00 2001
+From e0b96e31c6c6f4f7bb45a0fa902d48d524089dec Mon Sep 17 00:00:00 2001
 From: Ross Lagerwall <ross.lagerwall@citrix.com>
 Date: Thu, 21 Jun 2018 14:00:21 +0100
 Subject: [PATCH 5/6] xen-netfront: Update features after registering netdev
