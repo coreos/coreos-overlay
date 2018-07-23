@@ -38,7 +38,5 @@ UNIPATCH_LIST="
 	${PATCH_DIR}/z0001-kbuild-derive-relative-path-for-KBUILD_SRC-from-CURD.patch \
 	${PATCH_DIR}/z0002-Add-arm64-coreos-verity-hash.patch \
 	${PATCH_DIR}/z0003-tools-objtool-Makefile-Don-t-fail-on-fallthrough-wit.patch \
-	${PATCH_DIR}/z0004-xen-netfront-Fix-mismatched-rtnl_unlock.patch \
-	${PATCH_DIR}/z0005-xen-netfront-Update-features-after-registering-netde.patch \
-	${PATCH_DIR}/z0006-4.17.x-won-t-boot-due-to-x86-boot-compressed-64-Hand.patch \
+	${PATCH_DIR}/z0004-4.17.x-won-t-boot-due-to-x86-boot-compressed-64-Hand.patch \
 "

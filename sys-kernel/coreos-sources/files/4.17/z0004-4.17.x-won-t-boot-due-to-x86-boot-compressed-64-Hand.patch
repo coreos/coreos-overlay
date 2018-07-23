@@ -1,7 +1,7 @@
-From 84fbc45d2085cdfc06a633890a32f7fd9be4a1d1 Mon Sep 17 00:00:00 2001
+From 836ef3dc459a6be5c9640320b2961f573793531f Mon Sep 17 00:00:00 2001
 From: "Kirill A. Shutemov" <kirill@shutemov.name>
 Date: Wed, 4 Jul 2018 18:08:57 +0300
-Subject: [PATCH 6/6] 4.17.x won't boot due to "x86/boot/compressed/64: Handle
+Subject: [PATCH 4/4] 4.17.x won't boot due to "x86/boot/compressed/64: Handle
  5-level paging boot if kernel is above 4G"
 
 On Tue, Jul 03, 2018 at 05:21:50PM +0300, Kirill A. Shutemov wrote:
