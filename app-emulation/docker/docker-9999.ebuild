@@ -19,7 +19,7 @@ else
 	else
 		MY_PV="$PV-ce"
 	fi
-	DOCKER_GITCOMMIT="f150324"
+	DOCKER_GITCOMMIT="0ffa825"
 	SRC_URI="https://${COREOS_GO_PACKAGE}/archive/v${MY_PV}.tar.gz -> ${P}.tar.gz"
 	KEYWORDS="amd64 arm64"
 	[ "$DOCKER_GITCOMMIT" ] || die "DOCKER_GITCOMMIT must be added manually for each bump!"
@@ -59,14 +59,16 @@ DEPEND+="sys-kernel/coreos-kernel"
 # https://github.com/docker/docker/blob/master/project/PACKAGERS.md#optional-dependencies
 RDEPEND="
 	${CDEPEND}
+
+	!app-emulation/docker-bin
 	>=net-firewall/iptables-1.4
 	sys-process/procps
 	>=dev-vcs/git-1.7
 	>=app-arch/xz-utils-4.9
 	dev-libs/libltdl
-	=app-emulation/containerd-1.0.3
-	=app-emulation/docker-runc-1.0.0_rc5[apparmor?,seccomp?]
-	=app-emulation/docker-proxy-0.8.0_p20180411
+	=app-emulation/containerd-1.1.1
+	=app-emulation/docker-runc-1.0.0_rc5_p19[apparmor?,seccomp?]
+	=app-emulation/docker-proxy-0.8.0_p20180709
 	container-init? ( >=sys-process/tini-0.13.1 )
 "
 
@@ -74,9 +76,7 @@ RESTRICT="installsources strip"
 
 S="${WORKDIR}/${P}/src/${COREOS_GO_PACKAGE}"
 
-ENGINE_PATCHES=(
-	"${FILESDIR}/fix-bind-mount-bug2440.patch"
-)
+ENGINE_PATCHES=()
 
 # see "contrib/check-config.sh" from upstream's sources
 CONFIG_CHECK="
@@ -265,7 +265,7 @@ src_compile() {
 
 	pushd components/cli || die
 
-	# Imitating https://github.com/docker/docker-ce/blob/v18.05.0-ce/components/cli/scripts/build/.variables#L7
+	# Imitating https://github.com/docker/docker-ce/blob/v18.06.0-ce/components/cli/scripts/build/.variables#L7
 	CLI_BUILDTIME="$(date -d "@${DOCKER_BUILD_DATE}" --utc --rfc-3339 ns 2> /dev/null | sed -e 's/ /T/')"
 	# build cli
 	emake \
