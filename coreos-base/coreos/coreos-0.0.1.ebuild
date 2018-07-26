@@ -80,6 +80,7 @@ RDEPEND="${RDEPEND}
 		app-crypt/go-tspi
 		app-emulation/xenserver-pv-version
 		app-emulation/xenstore
+		net-fs/cifs-utils
 		sys-auth/realmd
 		sys-auth/sssd
 	)"
