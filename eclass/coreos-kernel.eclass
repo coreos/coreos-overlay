@@ -84,6 +84,7 @@ kernel_path() {
 	case "${kernel_arch}" in
 		arm64)	echo build/arch/arm64/boot/Image;;
 		x86)	echo build/arch/x86/boot/bzImage;;
+		powerpc)	echo build/arch/powerpc/boot/zImage;;
 		*)		die "Unsupported kernel arch '${kernel_arch}'";;
 	esac
 }
