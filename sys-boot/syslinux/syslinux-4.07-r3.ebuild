@@ -1,13 +1,12 @@
-# Copyright 1999-2013 Gentoo Foundation
+# Copyright 1999-2018 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-boot/syslinux/syslinux-4.07.ebuild,v 1.4 2013/09/23 11:56:54 jlec Exp $
 
-EAPI=5
+EAPI=6
 
 inherit eutils toolchain-funcs
 
 DESCRIPTION="SYSLINUX, PXELINUX, ISOLINUX, EXTLINUX and MEMDISK bootloaders"
-HOMEPAGE="http://syslinux.zytor.com/"
+HOMEPAGE="https://syslinux.zytor.com/"
 SRC_URI="mirror://kernel/linux/utils/boot/syslinux/${PV:0:1}.xx/${P/_/-}.tar.bz2"
 
 LICENSE="GPL-2"
@@ -28,11 +27,19 @@ DEPEND="${RDEPEND}
 
 S=${WORKDIR}/${P/_/-}
 
+# This ebuild is a departure from the old way of rebuilding everything in syslinux
+# This departure is necessary since hpa doesn't support the rebuilding of anything other
+# than the installers.
+
+# removed all the unpack/patching stuff since we aren't rebuilding the core stuff anymore
+
 src_unpack() {
 	unpack ${A}
 	cd "${S}"
 	# Fix building on hardened
 	epatch "${FILESDIR}"/${PN}-4.05-nopie.patch
+
+	rm -f gethostip #bug 137081
 
 	# Don't prestrip or override user LDFLAGS, bug #305783
 	local SYSLINUX_MAKEFILES="extlinux/Makefile linux/Makefile mtools/Makefile \
@@ -63,13 +70,16 @@ src_unpack() {
 			|| die "sed remove perl failed"
 		rm man/{lss16toppm.1,ppmtolss16.1,syslinux2ansi.1} || die
 	fi
+
+	# COREOS: Define the major/minor macros with newer glibc versions.
+	sed -i -e '/vfs/a#include <sys/sysmacros.h>' extlinux/main.c
 }
 
 src_compile() {
-	emake CC=$(tc-getCC) installer
+	emake CC="$(tc-getCC)" installer || die
 }
 
 src_install() {
-	emake INSTALLSUBDIRS=utils INSTALLROOT="${D}" MANDIR=/usr/share/man install
-	dodoc README NEWS doc/*.txt
+	emake INSTALLSUBDIRS=utils INSTALLROOT="${D}" MANDIR=/usr/share/man install || die
+	dodoc README NEWS doc/*.txt || die
 }
