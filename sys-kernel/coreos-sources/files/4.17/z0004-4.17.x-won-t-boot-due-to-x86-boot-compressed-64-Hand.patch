@@ -1,4 +1,4 @@
-From c214fd29c8c6ef5d7292afd8771f1f65b43b4a57 Mon Sep 17 00:00:00 2001
+From a027e3f9395e9487792f2ddfee827e13831146f9 Mon Sep 17 00:00:00 2001
 From: "Kirill A. Shutemov" <kirill@shutemov.name>
 Date: Wed, 4 Jul 2018 18:08:57 +0300
 Subject: [PATCH 4/4] 4.17.x won't boot due to "x86/boot/compressed/64: Handle
