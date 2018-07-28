@@ -1,4 +1,4 @@
-From b9554d05bdbfba51274dc2401b4b03bb99725c00 Mon Sep 17 00:00:00 2001
+From f1e1bf9b9adc595a2da4977612200b842ba68448 Mon Sep 17 00:00:00 2001
 From: Jeremy Cline <jeremy@jcline.org>
 Date: Wed, 2 May 2018 15:18:03 -0400
 Subject: [PATCH 7/7] Revert "random: fix crng_ready() test"
