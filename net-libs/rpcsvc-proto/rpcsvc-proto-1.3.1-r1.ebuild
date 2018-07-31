@@ -19,6 +19,8 @@ RDEPEND="!<sys-libs/glibc-2.26"
 src_prepare(){
 	default
 	eapply "${FILESDIR}"/${P}-old-preprocessor.patch #650852
+	# COREOS: Support cross-compilation by using the host rpcgen command.
+	[ "x${CBUILD}" = "x${CHOST}" ] || sed -i -e 's,^\t.*/rpcgen,\trpcgen,' rpcsvc/Makefile.am
 	eautoreconf
 }
 
