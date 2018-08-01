@@ -1,19 +1,26 @@
-# Copyright 1999-2015 Gentoo Foundation
+# Copyright 1999-2018 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Id$
 
-EAPI="5"
+EAPI=6
 
-inherit eutils flag-o-matic multilib autotools systemd
+inherit autotools flag-o-matic multilib systemd
 
 DESCRIPTION="NFS client and server daemons"
 HOMEPAGE="http://linux-nfs.org/"
-SRC_URI="mirror://sourceforge/nfs/${P}.tar.bz2"
+
+if [[ "${PV}" = *_rc* ]] ; then
+	inherit versionator
+	MY_PV="$(replace_all_version_separators -)"
+	SRC_URI="http://git.linux-nfs.org/?p=steved/nfs-utils.git;a=snapshot;h=refs/tags/${PN}-${MY_PV};sf=tgz -> ${P}.tar.gz"
+	S="${WORKDIR}/${PN}-${PN}-${MY_PV}"
+else
+	SRC_URI="mirror://sourceforge/nfs/${P}.tar.bz2"
+	KEYWORDS="alpha amd64 arm arm64 hppa ia64 ~mips ppc ppc64 s390 sh sparc x86"
+fi
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="~alpha amd64 ~arm arm64 ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86"
-IUSE="caps ipv6 kerberos +libmount nfsdcld +nfsidmap +nfsv4 nfsv41 selinux tcpd +uuid"
+IUSE="caps ipv6 kerberos ldap +libmount nfsdcld +nfsidmap +nfsv4 nfsv41 selinux tcpd +uuid"
 REQUIRED_USE="kerberos? ( nfsv4 )"
 RESTRICT="test" #315573
 
@@ -21,30 +28,29 @@ RESTRICT="test" #315573
 # files, and nfs-utils doesn't build against heimdal either,
 # so don't depend on virtual/krb.
 # (04 Feb 2005 agriffis)
-DEPEND_COMMON="tcpd? ( sys-apps/tcp-wrappers )
-	caps? ( sys-libs/libcap )
+DEPEND_COMMON="
+	net-libs/libtirpc:=
+	>=net-nds/rpcbind-0.2.4
 	sys-libs/e2fsprogs-libs
-	>=net-nds/rpcbind-0.2.0-r1
-	net-libs/libtirpc
+	caps? ( sys-libs/libcap )
+	ldap? ( net-nds/openldap )
 	libmount? ( sys-apps/util-linux )
 	nfsdcld? ( >=dev-db/sqlite-3.3 )
 	nfsv4? (
-		dev-libs/libevent
-		>=net-libs/libnfsidmap-0.21-r1
+		dev-libs/libevent:=
+		>=sys-apps/keyutils-1.5.9
 		kerberos? (
 			>=net-libs/libtirpc-0.2.4-r1[kerberos]
 			app-crypt/mit-krb5
-		)
-		nfsidmap? (
-			>=net-libs/libnfsidmap-0.24
-			>=sys-apps/keyutils-1.5.9
 		)
 	)
 	nfsv41? (
 		sys-fs/lvm2
 	)
+	tcpd? ( sys-apps/tcp-wrappers )
 	uuid? ( sys-apps/util-linux )"
 RDEPEND="${DEPEND_COMMON}
+	!net-libs/libnfsidmap
 	!net-nds/portmap
 	!<sys-apps/openrc-0.13.9
 	selinux? (
@@ -53,39 +59,49 @@ RDEPEND="${DEPEND_COMMON}
 	)
 "
 DEPEND="${DEPEND_COMMON}
+	net-libs/rpcsvc-proto
 	virtual/pkgconfig"
 
+PATCHES=(
+	"${FILESDIR}"/${PN}-1.1.4-mtab-sym.patch
+	"${FILESDIR}"/${PN}-1.2.8-cross-build.patch
+	"${FILESDIR}"/${P}-svcgssd_undefined_reference.patch #641912
+)
+
 src_prepare() {
-	epatch "${FILESDIR}"/${PN}-1.1.4-mtab-sym.patch
-	epatch "${FILESDIR}"/${PN}-1.2.8-cross-build.patch
-	epatch "${FILESDIR}"/${PN}-1.3.2-background-statd.patch
-	epatch "${FILESDIR}"/${PN}-1.3.2-rpcbind-after.patch
+	default
 
 	sed \
 		-e "/^sbindir/s:= := \"${EPREFIX}\":g" \
 		-i utils/*/Makefile.am || die
 
-	epatch_user
 	eautoreconf
 }
 
 src_configure() {
 	export libsqlite3_cv_is_recent=yes # Our DEPEND forces this.
 	export ac_cv_header_keyutils_h=$(usex nfsidmap)
-	econf \
-		--with-statedir="${EPREFIX}"/var/lib/nfs \
-		--enable-tirpc \
-		--with-tirpcinclude="${EPREFIX}"/usr/include/tirpc/ \
-		$(use_enable libmount libmount-mount) \
-		$(use_with tcpd tcp-wrappers) \
-		$(use_enable nfsdcld nfsdcltrack) \
-		$(use_enable nfsv4) \
-		$(use_enable nfsv41) \
-		$(use_enable ipv6) \
-		$(use_enable caps) \
-		$(use_enable uuid) \
-		$(use_enable kerberos gss) \
+	local myeconfargs=(
+		--with-statedir="${EPREFIX%/}"/var/lib/nfs
+		--enable-tirpc
+		--with-tirpcinclude="${EPREFIX%/}"/usr/include/tirpc/
+		--with-pluginpath="${EPREFIX%/}"/usr/$(get_libdir)/libnfsidmap
+		--with-rpcgen
+		--with-systemd="$(systemd_get_systemunitdir)"
 		--without-gssglue
+		$(use_enable caps)
+		$(use_enable ipv6)
+		$(use_enable kerberos gss)
+		$(use_enable kerberos svcgss)
+		$(use_enable ldap)
+		$(use_enable libmount libmount-mount)
+		$(use_enable nfsdcld nfsdcltrack)
+		$(use_enable nfsv4)
+		$(use_enable nfsv41)
+		$(use_enable uuid)
+		$(use_with tcpd tcp-wrappers)
+	)
+	econf "${myeconfargs[@]}"
 }
 
 src_compile(){
@@ -102,11 +118,11 @@ src_install() {
 	# Don't overwrite existing xtab/etab, install the original
 	# versions somewhere safe...  more info in pkg_postinst
 	keepdir /var/lib/nfs/{,sm,sm.bak}
-	mv "${ED}"/var/lib "${ED}"/usr/$(get_libdir) || die
+	mv "${ED%/}"/var/lib/nfs "${ED%/}"/usr/$(get_libdir)/ || die
 
 	# Install some client-side binaries in /sbin
 	dodir /sbin
-	mv "${ED}"/usr/sbin/rpc.statd "${ED}"/sbin/ || die
+	mv "${ED%/}"/usr/sbin/rpc.statd "${ED%/}"/sbin/ || die
 
 	if use nfsv4 && use nfsidmap ; then
 		# Install a config file for idmappers in newer kernels. #415625
@@ -115,25 +131,35 @@ src_install() {
 		doins id_resolver.conf
 	fi
 
-	systemd_dotmpfilesd "${FILESDIR}"/nfs-utils.conf
-	systemd_dounit systemd/*.{mount,service,target}
-	if ! use nfsv4 || ! use kerberos ; then
-		rm "${D}$(systemd_get_unitdir)"/rpc-{gssd,svcgssd}.service || die
-	fi
-	if ! use nfsv41 ; then
-		rm "${D}$(systemd_get_unitdir)"/nfs-blkmap.* || die
-	fi
-	rm "${D}$(systemd_get_unitdir)"/nfs-config.service || die
-	sed -i -r \
-		-e "/^EnvironmentFile=/d" \
-		-e '/^(After|Wants)=nfs-config.service$/d' \
-		-e 's:/usr/sbin/rpc.statd:/sbin/rpc.statd:' \
-		"${D}$(systemd_get_unitdir)"/* || die
+	insinto /etc
+	doins "${FILESDIR}"/exports
+	keepdir /etc/exports.d
 
-	# maintain compatibility with the old gentoo systemd unit names, since nfs-utils has units upstream now.
-	dosym nfs-server.service "$(systemd_get_unitdir)"/nfsd.service
-	dosym nfs-idmapd.service "$(systemd_get_unitdir)"/rpc-idmapd.service
-	dosym nfs-mountd.service "$(systemd_get_unitdir)"/rpc-mountd.service
+	local f list=() opt_need=""
+	if use nfsv4 ; then
+		opt_need="rpc.idmapd"
+		list+=( rpc.idmapd rpc.pipefs )
+		use kerberos && list+=( rpc.gssd rpc.svcgssd )
+	fi
+	for f in nfs nfsclient rpc.statd "${list[@]}" ; do
+		newinitd "${FILESDIR}"/${f}.initd ${f}
+	done
+	newinitd "${FILESDIR}"/nfsmount.initd-1.3.1 nfsmount # Nuke after 2015/08/01
+	for f in nfs nfsclient ; do
+		newconfd "${FILESDIR}"/${f}.confd ${f}
+	done
+	sed -i \
+		-e "/^NFS_NEEDED_SERVICES=/s:=.*:=\"${opt_need}\":" \
+		"${ED%/}"/etc/conf.d/nfs || die #234132
+
+	local systemd_systemunitdir="$(systemd_get_systemunitdir)"
+	sed -i \
+		-e 's:/usr/sbin/rpc.statd:/sbin/rpc.statd:' \
+		"${ED%/}${systemd_systemunitdir}"/* || die
+
+	keepdir /var/lib/nfs #368505
+	keepdir /var/lib/nfs/v4recovery #603628
+
 }
 
 pkg_postinst() {
@@ -141,11 +167,10 @@ pkg_postinst() {
 	# src_install we put them in /usr/lib/nfs for safe-keeping, but
 	# the daemons actually use the files in /var/lib/nfs.  #30486
 	local f
-	mkdir -p "${EROOT}"/var/lib/nfs #368505
-	for f in "${EROOT}"/usr/$(get_libdir)/nfs/*; do
-		[[ -e ${EROOT}/var/lib/nfs/${f##*/} ]] && continue
+	for f in "${EROOT%/}"/usr/$(get_libdir)/nfs/*; do
+		[[ -e ${EROOT%/}/var/lib/nfs/${f##*/} ]] && continue
 		einfo "Copying default ${f##*/} from ${EPREFIX}/usr/$(get_libdir)/nfs to ${EPREFIX}/var/lib/nfs"
-		cp -pPR "${f}" "${EROOT}"/var/lib/nfs/
+		cp -pPR "${f}" "${EROOT%/}"/var/lib/nfs/
 	done
 
 	if systemd_is_booted; then
