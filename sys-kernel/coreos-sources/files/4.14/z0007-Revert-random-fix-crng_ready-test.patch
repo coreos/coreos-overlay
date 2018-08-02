@@ -1,7 +1,7 @@
 From f1e1bf9b9adc595a2da4977612200b842ba68448 Mon Sep 17 00:00:00 2001
 From: Jeremy Cline <jeremy@jcline.org>
 Date: Wed, 2 May 2018 15:18:03 -0400
-Subject: [PATCH 7/7] Revert "random: fix crng_ready() test"
+Subject: [PATCH 07/11] Revert "random: fix crng_ready() test"
 
 This reverts commit 6e513bc20ca63f594632eca4e1968791240b8f18.
 ---
