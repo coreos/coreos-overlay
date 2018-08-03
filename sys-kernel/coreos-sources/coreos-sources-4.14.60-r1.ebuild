@@ -37,4 +37,5 @@ UNIPATCH_LIST="
 	${PATCH_DIR}/z0004-xen-netfront-Fix-mismatched-rtnl_unlock.patch \
 	${PATCH_DIR}/z0005-xen-netfront-Update-features-after-registering-netde.patch \
 	${PATCH_DIR}/z0006-ext4-fix-false-negatives-and-false-positives-in-ext4.patch \
+	${PATCH_DIR}/z0007-x86-entry-64-Remove-ebx-handling-from-error_entry-ex.patch \
 "
