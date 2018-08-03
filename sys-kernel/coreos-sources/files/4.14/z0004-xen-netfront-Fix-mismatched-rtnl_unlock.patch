@@ -1,7 +1,7 @@
-From 146b4a73c3a9a4f3e21d38af6293eb2efee3bbfa Mon Sep 17 00:00:00 2001
+From b65e40359a4d927c704ad7170dd7b6e77d3aaaa4 Mon Sep 17 00:00:00 2001
 From: Ross Lagerwall <ross.lagerwall@citrix.com>
 Date: Thu, 21 Jun 2018 14:00:20 +0100
-Subject: [PATCH 4/5] xen-netfront: Fix mismatched rtnl_unlock
+Subject: [PATCH 4/6] xen-netfront: Fix mismatched rtnl_unlock
 
 Fixes: f599c64fdf7d ("xen-netfront: Fix race between device setup and open")
 Reported-by: Ben Hutchings <ben.hutchings@codethink.co.uk>
@@ -13,10 +13,10 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/net/xen-netfront.c b/drivers/net/xen-netfront.c
-index f07b9c9bb5ba..95514b1ac0ae 100644
+index dfc076f9ee4b..dee55e2efa54 100644
 --- a/drivers/net/xen-netfront.c
 +++ b/drivers/net/xen-netfront.c
-@@ -1811,7 +1811,7 @@ static int talk_to_netback(struct xenbus_device *dev,
+@@ -1817,7 +1817,7 @@ static int talk_to_netback(struct xenbus_device *dev,
  	err = xen_net_read_mac(dev, info->netdev->dev_addr);
  	if (err) {
  		xenbus_dev_fatal(dev, err, "parsing %s/mac", dev->nodename);
@@ -25,7 +25,7 @@ index f07b9c9bb5ba..95514b1ac0ae 100644
  	}
  
  	rtnl_lock();
-@@ -1926,6 +1926,7 @@ static int talk_to_netback(struct xenbus_device *dev,
+@@ -1932,6 +1932,7 @@ static int talk_to_netback(struct xenbus_device *dev,
  	xennet_destroy_queues(info);
   out:
  	rtnl_unlock();
