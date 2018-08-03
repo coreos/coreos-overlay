@@ -1,7 +1,7 @@
-From 0a60d25416a36da56d5fc2df21e0eba0224dc2e9 Mon Sep 17 00:00:00 2001
+From db8a5080561668bdd8cc989c8c02e2dddb42e7b8 Mon Sep 17 00:00:00 2001
 From: Ross Lagerwall <ross.lagerwall@citrix.com>
 Date: Thu, 21 Jun 2018 14:00:21 +0100
-Subject: [PATCH 5/5] xen-netfront: Update features after registering netdev
+Subject: [PATCH 5/6] xen-netfront: Update features after registering netdev
 
 Update the features after calling register_netdev() otherwise the
 device features are not set up correctly and it not possible to change
@@ -19,10 +19,10 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
  1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/net/xen-netfront.c b/drivers/net/xen-netfront.c
-index 95514b1ac0ae..238744ebe9e0 100644
+index dee55e2efa54..a246e4ff1985 100644
 --- a/drivers/net/xen-netfront.c
 +++ b/drivers/net/xen-netfront.c
-@@ -1952,10 +1952,6 @@ static int xennet_connect(struct net_device *dev)
+@@ -1958,10 +1958,6 @@ static int xennet_connect(struct net_device *dev)
  	/* talk_to_netback() sets the correct number of queues */
  	num_queues = dev->real_num_tx_queues;
  
@@ -33,7 +33,7 @@ index 95514b1ac0ae..238744ebe9e0 100644
  	if (dev->reg_state == NETREG_UNINITIALIZED) {
  		err = register_netdev(dev);
  		if (err) {
-@@ -1965,6 +1961,10 @@ static int xennet_connect(struct net_device *dev)
+@@ -1971,6 +1967,10 @@ static int xennet_connect(struct net_device *dev)
  		}
  	}
  
