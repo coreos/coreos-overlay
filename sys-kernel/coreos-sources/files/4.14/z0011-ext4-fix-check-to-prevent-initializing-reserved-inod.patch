@@ -1,7 +1,7 @@
 From 78ce356c5d84e0ad5a541797994130487e01abc0 Mon Sep 17 00:00:00 2001
 From: Theodore Ts'o <tytso@mit.edu>
 Date: Sat, 28 Jul 2018 08:12:04 -0400
-Subject: [PATCH 11/11] ext4: fix check to prevent initializing reserved inodes
+Subject: [PATCH 11/12] ext4: fix check to prevent initializing reserved inodes
 
 commit 5012284700775a4e6e3fbe7eac4c543c4874b559 upstream.
 

@@ -1,7 +1,7 @@
 From 01fd9d9440910033b7c78baa77fec7d752df8d8f Mon Sep 17 00:00:00 2001
 From: Theodore Ts'o <tytso@mit.edu>
 Date: Tue, 10 Jul 2018 01:07:43 -0400
-Subject: [PATCH 09/11] ext4: fix inline data updates with checksums enabled
+Subject: [PATCH 09/12] ext4: fix inline data updates with checksums enabled
 
 commit 362eca70b53389bddf3143fe20f53dcce2cfdf61 upstream.
 
