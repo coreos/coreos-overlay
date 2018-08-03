@@ -1,7 +1,7 @@
 From f19ca61fdbb1c5a9964a3ceca61411888c717a84 Mon Sep 17 00:00:00 2001
 From: Theodore Ts'o <tytso@mit.edu>
 Date: Thu, 12 Jul 2018 19:08:05 -0400
-Subject: [PATCH 10/11] ext4: check for allocation block validity with block
+Subject: [PATCH 10/12] ext4: check for allocation block validity with block
  group locked
 
 commit 8d5a803c6a6ce4ec258e31f76059ea5153ba46ef upstream.
