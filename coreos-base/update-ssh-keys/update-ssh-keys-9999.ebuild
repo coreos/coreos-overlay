@@ -10,7 +10,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ ${PV} == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64"
 else
-	CROS_WORKON_COMMIT="380418faa84e5077358b49b067df45f95a9e867c" # v0.1.2
+	CROS_WORKON_COMMIT="bad90e3943ba7e66f812a35abb4405986d8fd045" # v0.2.1
 	KEYWORDS="amd64 arm64"
 fi
 
@@ -27,37 +27,37 @@ RDEPEND="!<coreos-base/coreos-init-0.0.1-r152"
 
 # sed -n 's/^"checksum \([^ ]*\) \([^ ]*\) .*/\1-\2/p' Cargo.lock
 CRATES="
-ansi_term-0.10.2
+ansi_term-0.11.0
 arrayref-0.3.4
-atty-0.2.3
-base64-0.8.0
-bitflags-1.0.1
+atty-0.2.10
+base64-0.9.2
+bitflags-1.0.3
 block-buffer-0.3.3
 byte-tools-0.2.0
-byteorder-1.2.1
-clap-2.29.0
-digest-0.7.2
-error-chain-0.11.0
+byteorder-1.2.3
+clap-2.32.0
+digest-0.7.4
+error-chain-0.12.0
 fake-simd-0.1.2
-fs2-0.4.2
+fs2-0.4.3
 generic-array-0.9.0
-kernel32-sys-0.2.2
-libc-0.2.34
+libc-0.2.42
 md-5-0.7.0
-openssh-keys-0.2.2
-redox_syscall-0.1.32
+openssh-keys-0.3.0
+redox_syscall-0.1.40
 redox_termios-0.1.1
 safemem-0.2.0
-sha2-0.7.0
-strsim-0.6.0
+sha2-0.7.1
+strsim-0.7.0
 termion-1.5.1
-textwrap-0.9.0
-typenum-1.9.0
-unicode-width-0.1.4
-users-0.6.0
-vec_map-0.8.0
-winapi-0.2.8
-winapi-build-0.1.1
+textwrap-0.10.0
+typenum-1.10.0
+unicode-width-0.1.5
+users-0.6.1
+vec_map-0.8.1
+winapi-0.3.5
+winapi-i686-pc-windows-gnu-0.4.0
+winapi-x86_64-pc-windows-gnu-0.4.0
 "
 
 SRC_URI="$(cargo_crate_uris ${CRATES})"

@@ -7,12 +7,12 @@ CROS_WORKON_PROJECT="coreos/coreos-metadata"
 CROS_WORKON_LOCALNAME="coreos-metadata"
 CROS_WORKON_REPO="git://github.com"
 
-UPDATE_SSH_KEYS_VERSION="0.1.2"
+UPDATE_SSH_KEYS_VERSION="0.2.1"
 
 if [[ ${PV} == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64"
 else
-	CROS_WORKON_COMMIT="254093086f15d8380cc0e7f7e58e8e5d43b379a3" # v1.0.6
+	CROS_WORKON_COMMIT="9f0dfdbf07c5d70a94983e1a0b9be6cf681fe9ff" # v2.0.0
 	KEYWORDS="amd64 arm64"
 fi
 
@@ -59,8 +59,6 @@ ansi_term-0.11.0
 arrayref-0.3.4
 arrayvec-0.4.7
 atty-0.2.8
-base64-0.6.0
-base64-0.8.0
 base64-0.9.0
 bitflags-0.5.0
 bitflags-0.7.0
@@ -75,8 +73,6 @@ cc-1.0.10
 cfg-if-0.1.2
 chrono-0.4.2
 clap-2.31.2
-clippy-0.0.195
-clippy_lints-0.0.195
 core-foundation-0.2.3
 core-foundation-sys-0.2.3
 crc-1.7.0
@@ -87,8 +83,7 @@ crossbeam-utils-0.2.2
 crossbeam-utils-0.3.2
 digest-0.7.2
 dtoa-0.4.2
-either-1.5.0
-error-chain-0.11.0
+error-chain-0.12.0
 fake-simd-0.1.2
 foreign-types-0.3.2
 foreign-types-shared-0.1.1
@@ -99,7 +94,6 @@ futures-0.1.21
 futures-cpupool-0.1.8
 gcc-0.3.54
 generic-array-0.9.0
-getopts-0.2.17
 glob-0.2.11
 hostname-0.1.4
 http-muncher-0.3.1
@@ -107,11 +101,9 @@ httparse-1.2.4
 hyper-0.11.25
 hyper-tls-0.1.3
 idna-0.1.4
-if_chain-0.1.2
 iovec-0.1.2
 ipnetwork-0.12.8
 isatty-0.1.7
-itertools-0.7.8
 itoa-0.3.4
 itoa-0.4.1
 kernel32-sys-0.2.2
@@ -138,7 +130,7 @@ nodrop-0.1.12
 num-integer-0.1.36
 num-traits-0.2.2
 num_cpus-1.8.0
-openssh-keys-0.2.2
+openssh-keys-0.3.0
 openssl-0.9.24
 openssl-sys-0.9.28
 percent-encoding-1.0.1
@@ -152,8 +144,6 @@ pnet_packet-0.21.0
 pnet_sys-0.21.0
 pnet_transport-0.21.0
 proc-macro2-0.3.6
-pulldown-cmark-0.1.2
-quine-mc_cluskey-0.2.4
 quote-0.5.1
 rand-0.3.22
 rand-0.4.2
@@ -171,8 +161,6 @@ scoped-tls-0.1.1
 scopeguard-0.3.3
 security-framework-0.1.16
 security-framework-sys-0.1.16
-semver-0.9.0
-semver-parser-0.7.0
 serde-1.0.41
 serde-xml-rs-0.2.1
 serde_derive-1.0.41
@@ -214,7 +202,6 @@ tokio-threadpool-0.1.2
 tokio-timer-0.2.1
 tokio-tls-0.1.4
 tokio-udp-0.1.0
-toml-0.4.6
 typenum-1.10.0
 ucd-util-0.1.1
 unicase-2.1.0
@@ -241,7 +228,7 @@ ws2_32-sys-0.2.1
 xml-rs-0.3.6
 "
 # not listed:
-# update-ssh-keys-0.1.2
+# update-ssh-keys-0.2.1
 
 SRC_URI="$(cargo_crate_uris ${CRATES})
 https://github.com/coreos/update-ssh-keys/archive/v${UPDATE_SSH_KEYS_VERSION}.tar.gz -> update-ssh-keys-${UPDATE_SSH_KEYS_VERSION}.tar.gz
