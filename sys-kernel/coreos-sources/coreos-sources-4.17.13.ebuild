@@ -39,5 +39,4 @@ UNIPATCH_LIST="
 	${PATCH_DIR}/z0002-Add-arm64-coreos-verity-hash.patch \
 	${PATCH_DIR}/z0003-tools-objtool-Makefile-Don-t-fail-on-fallthrough-wit.patch \
 	${PATCH_DIR}/z0004-4.17.x-won-t-boot-due-to-x86-boot-compressed-64-Hand.patch \
-	${PATCH_DIR}/z0005-x86-entry-64-Remove-ebx-handling-from-error_entry-ex.patch \
 "
