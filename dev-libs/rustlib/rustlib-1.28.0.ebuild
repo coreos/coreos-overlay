@@ -54,10 +54,6 @@ src_compile() {
 		--manifest-path src/libterm/Cargo.toml \
 		--target "${RUST_TARGET}" || die
 
-	cargo build -p proc_macro -v --lib $(usex debug '' --release) \
-		--manifest-path src/libproc_macro/Cargo.toml \
-		--target "${RUST_TARGET}" || die
-
 	# Correct the directory name prior to installing it.
 	mv "${CARGO_TARGET_DIR}/${RUST_TARGET}/release/deps" "${CARGO_TARGET_DIR}/${RUST_TARGET}/release/lib"
 }
