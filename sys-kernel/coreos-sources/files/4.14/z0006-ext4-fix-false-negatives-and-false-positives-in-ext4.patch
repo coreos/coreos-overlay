@@ -1,7 +1,7 @@
-From 9768a3646f317194d886fd7369d265f3907ddb73 Mon Sep 17 00:00:00 2001
+From 2a32248fe5410a7c051d7676732001193e23cc31 Mon Sep 17 00:00:00 2001
 From: Theodore Ts'o <tytso@mit.edu>
 Date: Sun, 8 Jul 2018 19:35:02 -0400
-Subject: [PATCH 6/7] ext4: fix false negatives *and* false positives in
+Subject: [PATCH 6/6] ext4: fix false negatives *and* false positives in
  ext4_check_descriptors()
 
 commit 44de022c4382541cebdd6de4465d1f4f465ff1dd upstream.

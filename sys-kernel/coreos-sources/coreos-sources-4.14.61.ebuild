@@ -8,7 +8,7 @@ ETYPE="sources"
 # Final releases should be versioned L.M.N, even for N == 0
 
 # Only needed for RCs
-K_BASE_VER="4.17"
+K_BASE_VER="4.14"
 
 inherit kernel-2
 detect_version
@@ -25,10 +25,6 @@ fi
 
 KEYWORDS="amd64 arm64"
 IUSE=""
-RDEPEND+="
-	sys-devel/bison
-	sys-devel/flex
-"
 
 # XXX: Note we must prefix the patch filenames with "z" to ensure they are
 # applied _after_ a potential patch-${KV}.patch file, present when building a
@@ -38,6 +34,7 @@ UNIPATCH_LIST="
 	${PATCH_DIR}/z0001-kbuild-derive-relative-path-for-KBUILD_SRC-from-CURD.patch \
 	${PATCH_DIR}/z0002-Add-arm64-coreos-verity-hash.patch \
 	${PATCH_DIR}/z0003-tools-objtool-Makefile-Don-t-fail-on-fallthrough-wit.patch \
-	${PATCH_DIR}/z0004-4.17.x-won-t-boot-due-to-x86-boot-compressed-64-Hand.patch \
-	${PATCH_DIR}/z0005-x86-entry-64-Remove-ebx-handling-from-error_entry-ex.patch \
+	${PATCH_DIR}/z0004-xen-netfront-Fix-mismatched-rtnl_unlock.patch \
+	${PATCH_DIR}/z0005-xen-netfront-Update-features-after-registering-netde.patch \
+	${PATCH_DIR}/z0006-ext4-fix-false-negatives-and-false-positives-in-ext4.patch \
 "
