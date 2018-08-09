@@ -36,5 +36,4 @@ UNIPATCH_LIST="
 	${PATCH_DIR}/z0003-tools-objtool-Makefile-Don-t-fail-on-fallthrough-wit.patch \
 	${PATCH_DIR}/z0004-xen-netfront-Fix-mismatched-rtnl_unlock.patch \
 	${PATCH_DIR}/z0005-xen-netfront-Update-features-after-registering-netde.patch \
-	${PATCH_DIR}/z0006-ext4-fix-false-negatives-and-false-positives-in-ext4.patch \
 "
