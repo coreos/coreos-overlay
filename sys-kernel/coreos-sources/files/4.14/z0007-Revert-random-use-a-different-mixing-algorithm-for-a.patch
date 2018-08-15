@@ -1,7 +1,7 @@
-From 45897c51a0df59a7fccf95c83a3a8a4b5e06b550 Mon Sep 17 00:00:00 2001
+From 6526a165259c2ed3f1620feaa313d8ef37429070 Mon Sep 17 00:00:00 2001
 From: Jeremy Cline <jeremy@jcline.org>
 Date: Wed, 2 May 2018 15:16:29 -0400
-Subject: [PATCH 06/12] Revert "random: use a different mixing algorithm for
+Subject: [PATCH 7/8] Revert "random: use a different mixing algorithm for
  add_device_randomness()"
 
 This reverts commit 7b6b1f3a192372937164d1293b432c640ffc7c8f.
@@ -10,7 +10,7 @@ This reverts commit 7b6b1f3a192372937164d1293b432c640ffc7c8f.
  1 file changed, 4 insertions(+), 51 deletions(-)
 
 diff --git a/drivers/char/random.c b/drivers/char/random.c
-index ddc493d976fd..42ed176c4bfd 100644
+index ea4dbfa30657..b1a0a6635351 100644
 --- a/drivers/char/random.c
 +++ b/drivers/char/random.c
 @@ -831,10 +831,6 @@ static void numa_crng_init(void)
