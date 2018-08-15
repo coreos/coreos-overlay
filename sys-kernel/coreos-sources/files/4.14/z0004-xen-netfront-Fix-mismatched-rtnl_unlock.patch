@@ -1,7 +1,7 @@
-From 442e935e14fbfc3a4d4b2dec0345eacdaeca948d Mon Sep 17 00:00:00 2001
+From 0d3a9acb7215379fbf9f447ff1896120e8b8c473 Mon Sep 17 00:00:00 2001
 From: Ross Lagerwall <ross.lagerwall@citrix.com>
 Date: Thu, 21 Jun 2018 14:00:20 +0100
-Subject: [PATCH 4/5] xen-netfront: Fix mismatched rtnl_unlock
+Subject: [PATCH 4/6] xen-netfront: Fix mismatched rtnl_unlock
 
 Fixes: f599c64fdf7d ("xen-netfront: Fix race between device setup and open")
 Reported-by: Ben Hutchings <ben.hutchings@codethink.co.uk>
@@ -13,7 +13,7 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/net/xen-netfront.c b/drivers/net/xen-netfront.c
-index dfc076f9ee4b..dee55e2efa54 100644
+index d5e790dd589a..d7dc95f58dae 100644
 --- a/drivers/net/xen-netfront.c
 +++ b/drivers/net/xen-netfront.c
 @@ -1817,7 +1817,7 @@ static int talk_to_netback(struct xenbus_device *dev,
