@@ -36,11 +36,7 @@ UNIPATCH_LIST="
 	${PATCH_DIR}/z0003-tools-objtool-Makefile-Don-t-fail-on-fallthrough-wit.patch \
 	${PATCH_DIR}/z0004-xen-netfront-Fix-mismatched-rtnl_unlock.patch \
 	${PATCH_DIR}/z0005-xen-netfront-Update-features-after-registering-netde.patch \
-	${PATCH_DIR}/z0006-Revert-random-use-a-different-mixing-algorithm-for-a.patch \
-	${PATCH_DIR}/z0007-Revert-random-fix-crng_ready-test.patch \
-	${PATCH_DIR}/z0008-ext4-fix-false-negatives-and-false-positives-in-ext4.patch \
-	${PATCH_DIR}/z0009-ext4-fix-inline-data-updates-with-checksums-enabled.patch \
-	${PATCH_DIR}/z0010-ext4-check-for-allocation-block-validity-with-block-.patch \
-	${PATCH_DIR}/z0011-ext4-fix-check-to-prevent-initializing-reserved-inod.patch \
-	${PATCH_DIR}/z0012-x86-entry-64-Remove-ebx-handling-from-error_entry-ex.patch \
+	${PATCH_DIR}/z0006-Revert-net-increase-fragment-memory-usage-limits.patch \
+	${PATCH_DIR}/z0007-Revert-random-use-a-different-mixing-algorithm-for-a.patch \
+	${PATCH_DIR}/z0008-Revert-random-fix-crng_ready-test.patch \
 "

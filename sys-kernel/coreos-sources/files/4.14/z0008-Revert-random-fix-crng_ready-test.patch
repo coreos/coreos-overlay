@@ -1,7 +1,7 @@
-From f1e1bf9b9adc595a2da4977612200b842ba68448 Mon Sep 17 00:00:00 2001
+From ebf4010e5610030de7a36f9fee596384c9b2d3e3 Mon Sep 17 00:00:00 2001
 From: Jeremy Cline <jeremy@jcline.org>
 Date: Wed, 2 May 2018 15:18:03 -0400
-Subject: [PATCH 07/12] Revert "random: fix crng_ready() test"
+Subject: [PATCH 8/8] Revert "random: fix crng_ready() test"
 
 This reverts commit 6e513bc20ca63f594632eca4e1968791240b8f18.
 ---
@@ -9,7 +9,7 @@ This reverts commit 6e513bc20ca63f594632eca4e1968791240b8f18.
  1 file changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/char/random.c b/drivers/char/random.c
-index 42ed176c4bfd..0bb3d0cd7d2d 100644
+index b1a0a6635351..02c75b7f1c28 100644
 --- a/drivers/char/random.c
 +++ b/drivers/char/random.c
 @@ -428,7 +428,7 @@ struct crng_state primary_crng = {
@@ -48,7 +48,7 @@ index 42ed176c4bfd..0bb3d0cd7d2d 100644
  		if ((fast_pool->count >= 64) &&
  		    crng_fast_load((char *) fast_pool->pool,
  				   sizeof(fast_pool->pool))) {
-@@ -2269,7 +2269,7 @@ void add_hwgenerator_randomness(const char *buffer, size_t count,
+@@ -2277,7 +2277,7 @@ void add_hwgenerator_randomness(const char *buffer, size_t count,
  {
  	struct entropy_store *poolp = &input_pool;
  
