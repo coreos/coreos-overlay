@@ -6,11 +6,11 @@ EAPI="6"
 inherit linux-info toolchain-funcs mount-boot
 
 # Find updates by searching and clicking the first link (hopefully it's the one):
-# http://www.intel.com/content/www/us/en/search.html?keyword=Processor+Microcode+Data+File
+# https://www.intel.com/content/www/us/en/search.html?keyword=Processor+Microcode+Data+File
 
-COLLECTION_SNAPSHOT="20180630"
-INTEL_SNAPSHOT="20180703"
-NUM="27945"
+COLLECTION_SNAPSHOT="${PV##*_p}"
+INTEL_SNAPSHOT="${PV/_p*}"
+NUM="28039"
 DESCRIPTION="Intel IA32/IA64 microcode update data"
 HOMEPAGE="http://inertiawar.com/microcode/ https://downloadcenter.intel.com/Detail_Desc.aspx?DwnldID=${NUM}"
 SRC_URI="https://downloadmirror.intel.com/${NUM}/eng/microcode-${INTEL_SNAPSHOT}.tgz
@@ -27,6 +27,8 @@ DEPEND="sys-apps/iucode_tool"
 # !<sys-apps/microcode-ctl-1.17-r2 due to bug #268586
 RDEPEND="!<sys-apps/microcode-ctl-1.17-r2
 	hostonly? ( sys-apps/iucode_tool )"
+
+RESTRICT="binchecks strip"
 
 S=${WORKDIR}
 
