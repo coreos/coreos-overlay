@@ -1,4 +1,4 @@
-From 70f3f467481cf1cba819db0e6891b62375b1c3c9 Mon Sep 17 00:00:00 2001
+From 7cb07c499f25adc5920b80794c7e82388987f190 Mon Sep 17 00:00:00 2001
 From: David Michael <dm0@redhat.com>
 Date: Wed, 15 Aug 2018 12:43:38 -0400
 Subject: [PATCH 6/6] Revert "net: increase fragment memory usage limits"
