@@ -14,7 +14,6 @@ echo -e > /etc/default/instance_configs.cfg.template \
 
 # Run the initialization scripts.
 /usr/bin/google_instance_setup
-/usr/bin/google_network_setup
 /usr/bin/google_metadata_script_runner --script-type startup
 
 # Handle the signal to shut down this service.
@@ -22,7 +21,7 @@ trap 'stopping=1 ; kill "${daemon_pids[@]}" || :' SIGTERM
 
 # Fork the daemon processes.
 daemon_pids=()
-for d in accounts clock_skew ip_forwarding
+for d in accounts clock_skew network
 do
         /usr/bin/google_${d}_daemon & daemon_pids+=($!)
 done
