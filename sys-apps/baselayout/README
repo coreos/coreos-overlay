@@ -1,0 +1,2 @@
+If nsswitch.conf changes make sure to apply the change to sys-auth/google-oslogin
+Those files must be kept in sync.
