@@ -1,4 +1,4 @@
-From 5914e46df50d9ffd62e7e88138bf86257d4e7420 Mon Sep 17 00:00:00 2001
+From df9d06c34425afae456b03bac53b1402035bdd9c Mon Sep 17 00:00:00 2001
 From: Geoff Levand <geoff@infradead.org>
 Date: Fri, 11 Nov 2016 17:28:52 -0800
 Subject: [PATCH 2/5] Add arm64 coreos verity hash
