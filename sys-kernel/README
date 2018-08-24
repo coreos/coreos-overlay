@@ -12,13 +12,6 @@ on the ebuild version and revision. For example version 3.12.4-r2:
  - amd64_defconfig-3.12
  - amd64_defconfig
 
-This is combined with a cross-architecture common configuration file, searched
-for using the same rules - for example:
- - commonconfig-3.12.4-r2
- - commonconfig-3.12.4
- - commonconfig-3.12
- - commonconfig
-
 coreos-kernel uses the installed sources and coreos-modules to build the
 kernel image and initramfs. Many of its build dependencies are copied into
 the initramfs by dracut, and several of these are significant enough that we
