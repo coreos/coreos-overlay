@@ -2,20 +2,19 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=5
-COREOS_SOURCE_REVISION=""
+COREOS_SOURCE_REVISION="-r1"
 inherit coreos-kernel savedconfig
 
 DESCRIPTION="CoreOS Linux kernel modules"
-KEYWORDS="amd64 arm64"
+KEYWORDS="amd64"
 RDEPEND="!<sys-kernel/coreos-kernel-4.6.3-r1"
 
 src_prepare() {
 	restore_config build/.config
 	if [[ ! -f build/.config ]]; then
 		local archconfig="$(find_archconfig)"
-		local commonconfig="$(find_commonconfig)"
-		elog "Building using config ${archconfig} and ${commonconfig}"
-		cat "${archconfig}" "${commonconfig}" >> build/.config || die
+		elog "Building using config ${archconfig}"
+		cat "${archconfig}" >> build/.config || die
 	fi
 
 	# Check that an old pre-ebuild-split config didn't leak in.
