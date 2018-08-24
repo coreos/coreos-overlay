@@ -23,7 +23,7 @@ else
 	PATCH_DIR="${FILESDIR}/${KV_MAJOR}.${KV_MINOR}"
 fi
 
-KEYWORDS="amd64 arm64"
+KEYWORDS="amd64"
 IUSE=""
 
 # XXX: Note we must prefix the patch filenames with "z" to ensure they are
