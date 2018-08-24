@@ -1,4 +1,4 @@
-From 7cb07c499f25adc5920b80794c7e82388987f190 Mon Sep 17 00:00:00 2001
+From 2fab52938039e0b40f177bda0bb178b311314f1c Mon Sep 17 00:00:00 2001
 From: David Michael <dm0@redhat.com>
 Date: Wed, 15 Aug 2018 12:43:38 -0400
 Subject: [PATCH 6/6] Revert "net: increase fragment memory usage limits"
@@ -10,10 +10,10 @@ This reverts commit c2a936600f78aea00d3312ea4b66a79a4619f9b4.
  2 files changed, 9 insertions(+), 17 deletions(-)
 
 diff --git a/include/net/ipv6.h b/include/net/ipv6.h
-index e59f385da38e..a0ee27c52d93 100644
+index f280c61e019a..bd6f26ae53f1 100644
 --- a/include/net/ipv6.h
 +++ b/include/net/ipv6.h
-@@ -345,8 +345,8 @@ static inline int ip6_frag_mem(struct net *net)
+@@ -338,8 +338,8 @@ static inline int ip6_frag_mem(struct net *net)
  }
  #endif
  
