@@ -2706,8 +2706,11 @@ print_keys | gpg2 -q --import
 awk '{print $2, $5}' Manifest | while read filename sha256; do
     echo "Checking ${filename}..."
     signame="${filename%.xz}.sign"
+    if ! wget -q "https://cdn.kernel.org/pub/linux/kernel/v4.x/$signame"; then
+        echo "No signature available; skipping ${filename}"
+        continue
+    fi
     wget -q "https://cdn.kernel.org/pub/linux/kernel/v4.x/$filename"
-    wget -q "https://cdn.kernel.org/pub/linux/kernel/v4.x/$signame"
     sha256sum --quiet --strict -c - <<<"$sha256 $filename"
     xz -dc "$filename" | gpg2 --verify --trust-model always "$signame" -
     rm "$filename" "$signame"
