@@ -11,9 +11,9 @@
 #
 # Example:
 # @CODE
-# COREOS_GO_VERSION=go1.10
+# COREOS_GO_VERSION=go1.11
 # @CODE
-export COREOS_GO_VERSION="${COREOS_GO_VERSION:-go1.10}"
+export COREOS_GO_VERSION="${COREOS_GO_VERSION:-go1.11}"
 
 case "${EAPI:-0}" in
 	5|6) ;;
