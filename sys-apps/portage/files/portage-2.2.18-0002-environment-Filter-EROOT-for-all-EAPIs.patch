@@ -13,12 +13,13 @@ diff --git a/bin/phase-functions.sh b/bin/phase-functions.sh
 index def2080..f4b5a8d 100644
 --- a/bin/phase-functions.sh
 +++ b/bin/phase-functions.sh
-@@ -101,10 +101,13 @@ __filter_readonly_variables() {
- 	filtered_vars="$readonly_bash_vars $bash_misc_vars
- 		$PORTAGE_READONLY_VARS $misc_garbage_vars"
- 
+@@ -106,10 +106,14 @@ __filter_readonly_variables() {
+ 	if ___eapi_has_SYSROOT; then
+ 		filtered_vars+=" SYSROOT"
+ 	fi
 -	# Don't filter/interfere with prefix variables unless they are
 -	# supported by the current EAPI.
++
 +	# Always filter EROOT to ensure it is redefined based on ROOT
 +	filtered_vars+=" EROOT"
 +
@@ -27,9 +28,9 @@ index def2080..f4b5a8d 100644
  	if ___eapi_has_prefix_variables; then
 -		filtered_vars+=" ED EPREFIX EROOT"
 +		filtered_vars+=" ED EPREFIX"
- 	fi
- 
- 	if has --filter-sandbox $* ; then
+ 		if ___eapi_has_SYSROOT; then
+ 			filtered_vars+=" ESYSROOT"
+ 		fi
 -- 
 2.0.5
 
