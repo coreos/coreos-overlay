@@ -1,7 +1,7 @@
-From 53b1565b99be431a49b75d3fb1bc079b0a047870 Mon Sep 17 00:00:00 2001
+From 21ab82366dac9712d3100d8b56e48582cba9c548 Mon Sep 17 00:00:00 2001
 From: David Michael <david.michael@coreos.com>
 Date: Thu, 8 Feb 2018 21:23:12 -0500
-Subject: [PATCH 3/6] tools/objtool/Makefile: Don't fail on fallthrough with
+Subject: [PATCH 2/5] tools/objtool/Makefile: Don't fail on fallthrough with
  new GCCs
 
 ---
