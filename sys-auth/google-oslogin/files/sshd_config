@@ -1,0 +1,11 @@
+# Use most defaults for sshd configuration.
+# Keep this in sync with coreos/init/configs/sshd_config
+Subsystem sftp internal-sftp
+ClientAliveInterval 180
+UseDNS no
+UsePAM yes
+PrintLastLog no # handled by PAM
+PrintMotd no # handled by PAM
+# Needed for google oslogin
+AuthorizedKeysCommand /usr/libexec/google_authorized_keys
+AuthorizedKeysCommandUser root

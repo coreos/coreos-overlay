@@ -27,4 +27,6 @@ src_install() {
 	doins -r "${FILESDIR}/base"
 	doins -r "${FILESDIR}/files"
 	doins -r "${FILESDIR}/units"
+	exeinto "/usr/share/oem/bin"
+	doexe "${FILESDIR}/bin/enable-oslogin"
 }

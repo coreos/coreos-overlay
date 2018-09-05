@@ -167,4 +167,9 @@ RDEPEND="${RDEPEND}
 	sys-libs/timezone-data
 	sys-process/lsof
 	sys-process/procps
-	"
+"
+
+# OEM specific bits that need to go in USR
+RDEPEND+="
+	sys-auth/google-oslogin
+"

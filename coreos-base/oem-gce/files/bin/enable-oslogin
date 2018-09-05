@@ -1,0 +1,29 @@
+#!/usr/bin/bash
+
+# Verify all the config files were not touched by the user. Do not try to
+# enable oslogin if the user has messed with them
+
+if [ -e '/etc/pam.d/sshd' ]; then
+	echo '/etc/pam.d/sshd already exists. Not enabling OS Login'
+	exit 0
+fi
+
+if [ "$(readlink -f /etc/nsswitch.conf)" != '/usr/share/baselayout/nsswitch.conf' ]; then
+	echo '/etc/nsswitch.conf is not a symlink to /usr/share/baselayout/nsswitch.conf. Not enabling OS Login'
+	exit 0
+fi
+
+if [ "$(readlink -f /etc/ssh/sshd_config)" != '/usr/share/ssh/sshd_config' ]; then
+	echo '/etc/ssh/sshd_config is not a symlink to /usr/share/ssh/sshd_config. Not enabling OS Login'
+	exit 0
+fi
+
+# Actually start enabling things. Die if we fail.
+set -e
+
+mkdir -m 0750 -p '/var/lib/google-sudoers.d'
+mkdir -m 0750 -p '/var/lib/google-users.d'
+ln -f -s '/usr/share/google-oslogin/pam_sshd' '/etc/pam.d/sshd'
+ln -f -s '/usr/share/google-oslogin/nsswitch.conf' '/etc/nsswitch.conf'
+ln -f -s '/usr/share/google-oslogin/sshd_config' '/etc/ssh/sshd_config'
+ln -f -s '/usr/share/google-oslogin/oslogin-sudoers' '/etc/sudoers.d/oslogin-sudoers'
