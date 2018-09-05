@@ -1,7 +1,7 @@
-From 190d59068f0cd28f18d618c5ff14f683d79bd58b Mon Sep 17 00:00:00 2001
+From b60cc8a48990259d9ff23b1a7b0e3cba3a6dc616 Mon Sep 17 00:00:00 2001
 From: Ross Lagerwall <ross.lagerwall@citrix.com>
 Date: Thu, 21 Jun 2018 14:00:21 +0100
-Subject: [PATCH 5/6] xen-netfront: Update features after registering netdev
+Subject: [PATCH 4/5] xen-netfront: Update features after registering netdev
 
 Update the features after calling register_netdev() otherwise the
 device features are not set up correctly and it not possible to change
