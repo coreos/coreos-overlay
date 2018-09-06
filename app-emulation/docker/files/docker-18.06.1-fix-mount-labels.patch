@@ -1,0 +1,39 @@
+From 27d9030b2371aa4a6b167fded6b8dc25987a0af7 Mon Sep 17 00:00:00 2001
+From: Kir Kolyshkin <kolyshkin@gmail.com>
+Date: Thu, 30 Aug 2018 15:32:14 -0700
+Subject: [PATCH] Fix relabeling local volume source dir
+
+In case a volume is specified via Mounts API, and SELinux is enabled,
+the following error happens on container start:
+
+> $ docker volume create testvol
+> $ docker run --rm --mount source=testvol,target=/tmp busybox true
+> docker: Error response from daemon: error setting label on mount
+> source '': no such file or directory.
+
+The functionality to relabel the source of a local mount specified via
+Mounts API was introduced in commit 5bbf5cc and later broken by commit
+e4b6adc, which removed setting mp.Source field.
+
+With the current data structures, the host dir is already available in
+v.Mountpoint, so let's just use it.
+
+Fixes: e4b6adc
+Signed-off-by: Kir Kolyshkin <kolyshkin@gmail.com>
+---
+ daemon/volumes.go | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/daemon/volumes.go b/daemon/volumes.go
+index d1c98d0a4fae..ad3c96a94599 100644
+--- a/daemon/volumes.go
++++ b/daemon/volumes.go
+@@ -210,6 +210,8 @@ func (daemon *Daemon) registerMountPoints(container *container.Container, hostCo
+ 			mp.Name = v.Name
+ 			mp.Driver = v.Driver
+ 
++			// need to selinux-relabel local mounts
++			mp.Source = v.Mountpoint
+ 			if mp.Driver == volume.DefaultDriverName {
+ 				setBindModeIfNull(mp)
+ 			}
