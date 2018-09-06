@@ -1,7 +1,8 @@
 [Unit]
 Description=Enable GCE OS Login
-After=local-fs.target
 ConditionFirstBoot=true
+DefaultDependencies=false
+After=local-fs.target
 Before=sshd.service
 Before=sshd.socket
 
