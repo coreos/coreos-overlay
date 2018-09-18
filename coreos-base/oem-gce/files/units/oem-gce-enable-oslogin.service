@@ -2,7 +2,7 @@
 Description=Enable GCE OS Login
 ConditionFirstBoot=true
 DefaultDependencies=false
-After=local-fs.target
+After=systemd-tmpfiles-setup.service
 Before=sshd.service
 Before=sshd.socket
 
