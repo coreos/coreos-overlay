@@ -1,7 +1,7 @@
-From 0cc00462e589c2f6f096d1766834f755849b78b1 Mon Sep 17 00:00:00 2001
+From 26cbc9599e1c002071ed12fdb937ead86a8a49b3 Mon Sep 17 00:00:00 2001
 From: Ross Lagerwall <ross.lagerwall@citrix.com>
 Date: Thu, 21 Jun 2018 14:00:20 +0100
-Subject: [PATCH 3/5] xen-netfront: Fix mismatched rtnl_unlock
+Subject: [PATCH 3/4] xen-netfront: Fix mismatched rtnl_unlock
 
 Fixes: f599c64fdf7d ("xen-netfront: Fix race between device setup and open")
 Reported-by: Ben Hutchings <ben.hutchings@codethink.co.uk>
