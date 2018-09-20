@@ -35,5 +35,4 @@ UNIPATCH_LIST="
 	${PATCH_DIR}/z0002-tools-objtool-Makefile-Don-t-fail-on-fallthrough-wit.patch \
 	${PATCH_DIR}/z0003-xen-netfront-Fix-mismatched-rtnl_unlock.patch \
 	${PATCH_DIR}/z0004-xen-netfront-Update-features-after-registering-netde.patch \
-	${PATCH_DIR}/z0005-Revert-net-increase-fragment-memory-usage-limits.patch \
 "
