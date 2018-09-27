@@ -1,4 +1,4 @@
-From cd43fe5ac9411608f0db670fd07c89037b3eae56 Mon Sep 17 00:00:00 2001
+From b213c4c77fcd72aa433981597a702f96ac7e1ec1 Mon Sep 17 00:00:00 2001
 From: Ross Lagerwall <ross.lagerwall@citrix.com>
 Date: Thu, 21 Jun 2018 14:00:21 +0100
 Subject: [PATCH 4/4] xen-netfront: Update features after registering netdev
@@ -19,10 +19,10 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
  1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/net/xen-netfront.c b/drivers/net/xen-netfront.c
-index d7dc95f58dae..31bc4210f969 100644
+index cc4fe86db39e..bc0363e2bdb1 100644
 --- a/drivers/net/xen-netfront.c
 +++ b/drivers/net/xen-netfront.c
-@@ -1958,10 +1958,6 @@ static int xennet_connect(struct net_device *dev)
+@@ -1959,10 +1959,6 @@ static int xennet_connect(struct net_device *dev)
  	/* talk_to_netback() sets the correct number of queues */
  	num_queues = dev->real_num_tx_queues;
  
@@ -33,7 +33,7 @@ index d7dc95f58dae..31bc4210f969 100644
  	if (dev->reg_state == NETREG_UNINITIALIZED) {
  		err = register_netdev(dev);
  		if (err) {
-@@ -1971,6 +1967,10 @@ static int xennet_connect(struct net_device *dev)
+@@ -1972,6 +1968,10 @@ static int xennet_connect(struct net_device *dev)
  		}
  	}
  
