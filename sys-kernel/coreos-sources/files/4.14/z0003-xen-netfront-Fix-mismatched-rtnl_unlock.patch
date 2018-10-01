@@ -1,4 +1,4 @@
-From 52a5fcf3447aa2e0d9ef5cf2ee67fc3cd86db591 Mon Sep 17 00:00:00 2001
+From 091facbd059cdb65ee8af4ee607563d237f26706 Mon Sep 17 00:00:00 2001
 From: Ross Lagerwall <ross.lagerwall@citrix.com>
 Date: Thu, 21 Jun 2018 14:00:20 +0100
 Subject: [PATCH 3/4] xen-netfront: Fix mismatched rtnl_unlock
@@ -13,10 +13,10 @@ Signed-off-by: David S. Miller <davem@davemloft.net>
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/net/xen-netfront.c b/drivers/net/xen-netfront.c
-index d80343429de5..cc4fe86db39e 100644
+index 1a40fc3517a8..3cb39e089cd0 100644
 --- a/drivers/net/xen-netfront.c
 +++ b/drivers/net/xen-netfront.c
-@@ -1818,7 +1818,7 @@ static int talk_to_netback(struct xenbus_device *dev,
+@@ -1824,7 +1824,7 @@ static int talk_to_netback(struct xenbus_device *dev,
  	err = xen_net_read_mac(dev, info->netdev->dev_addr);
  	if (err) {
  		xenbus_dev_fatal(dev, err, "parsing %s/mac", dev->nodename);
@@ -25,7 +25,7 @@ index d80343429de5..cc4fe86db39e 100644
  	}
  
  	rtnl_lock();
-@@ -1933,6 +1933,7 @@ static int talk_to_netback(struct xenbus_device *dev,
+@@ -1939,6 +1939,7 @@ static int talk_to_netback(struct xenbus_device *dev,
  	xennet_destroy_queues(info);
   out:
  	rtnl_unlock();
