@@ -1,4 +1,4 @@
-From 091facbd059cdb65ee8af4ee607563d237f26706 Mon Sep 17 00:00:00 2001
+From 085c43c065dac244dacaf5ddaf4587186353c606 Mon Sep 17 00:00:00 2001
 From: Ross Lagerwall <ross.lagerwall@citrix.com>
 Date: Thu, 21 Jun 2018 14:00:20 +0100
 Subject: [PATCH 3/4] xen-netfront: Fix mismatched rtnl_unlock
