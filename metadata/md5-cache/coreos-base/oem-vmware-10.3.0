@@ -1,10 +1,10 @@
 DEFINED_PHASES=install prepare
-DEPEND=app-emulation/open-vm-tools
+DEPEND=~app-emulation/open-vm-tools-10.3.0
 DESCRIPTION=OEM suite for VMware
 EAPI=5
 HOMEPAGE=https://github.com/coreos/coreos-overlay/tree/master/coreos-base
 KEYWORDS=amd64
 LICENSE=Apache-2.0
-RDEPEND=app-emulation/open-vm-tools
+RDEPEND=~app-emulation/open-vm-tools-10.3.0
 SLOT=0
-_md5_=b10b48b7139062c15549fea0d4888fc5
+_md5_=a702025b812e6ed3667bc7f24c842298

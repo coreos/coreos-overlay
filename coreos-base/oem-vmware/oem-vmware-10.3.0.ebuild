@@ -13,7 +13,7 @@ KEYWORDS="amd64"
 IUSE=""
 
 DEPEND="
-	app-emulation/open-vm-tools
+	~app-emulation/open-vm-tools-${PV}
 	"
 RDEPEND="${DEPEND}"
 

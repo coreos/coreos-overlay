@@ -35,6 +35,7 @@ DEPEND="
 	dev-util/patchelf
 	dev-vcs/repo
 	net-dns/bind-tools
+	net-libs/rpcsvc-proto
 	net-misc/curl
 	sys-apps/debianutils
 	sys-apps/iproute2

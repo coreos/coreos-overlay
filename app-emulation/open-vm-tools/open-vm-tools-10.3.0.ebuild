@@ -1,26 +1,22 @@
-# Copyright 1999-2014 Gentoo Foundation
+# Copyright 1999-2018 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=5
+EAPI=6
 
-AUTOTOOLS_AUTORECONF=1
-AUTOTOOLS_IN_SOURCE_BUILD=1
+inherit autotools flag-o-matic multilib toolchain-funcs
 
-inherit autotools-utils flag-o-matic git-2 multilib toolchain-funcs
-
-DESCRIPTION="VMware tools for distribution via /usr/share/oem"
+DESCRIPTION="Opensourced tools for VMware guests"
 HOMEPAGE="https://github.com/vmware/open-vm-tools"
+MY_P="${P}-8931395"
+SRC_URI="https://github.com/vmware/open-vm-tools/releases/download/stable-${PV}/${MY_P}.tar.gz"
 
-EGIT_REPO_URI="https://github.com/vmware/open-vm-tools"
-EGIT_COMMIT="380a3d9747999e8bcbcbcd03b1402b702770db79"
-EGIT_SOURCEDIR="${WORKDIR}"
-
-LICENSE="LGPL-2"
+LICENSE="LGPL-2.1"
 SLOT="0"
 KEYWORDS="amd64 ~x86"
 IUSE="+dnet +pic +deploypkg" # TODO: pam
 
 DEPEND="dev-libs/glib:2
+	net-libs/libtirpc
 	deploypkg? ( dev-libs/libmspack )
 	dnet? ( dev-libs/libdnet )"
 
@@ -31,18 +27,16 @@ DEPEND="dev-libs/glib:2
 RDEPEND="dnet? ( dev-libs/libdnet )
 	deploypkg? ( dev-libs/libmspack )"
 
-S="${WORKDIR}/${PN}"
+S="${WORKDIR}/${MY_P}"
 
 PATCHES=(
 	"${FILESDIR}/${P}-0001-configure-Add-options-for-fuse-hgfs-and-udev.patch"
 )
 
-#pkg_setup() {
-#	enewgroup vmware
-#}
-
 src_prepare() {
-	autotools-utils_src_prepare
+	eapply -p2 "${PATCHES[@]}"
+	eapply_user
+	eautoreconf
 }
 
 # Override configure's use of pkg-config to ensure ${SYSROOT} is respected.
