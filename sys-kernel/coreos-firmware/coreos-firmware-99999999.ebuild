@@ -15,7 +15,7 @@ if [[ ${PV} == 99999999* ]]; then
 	EGIT_REPO_URI="git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git"
 	KEYWORDS=""
 else
-	GIT_COMMIT="d1147327232ec4616a66ab898df84f9700c816c1"
+	GIT_COMMIT="7c81f23ad903f72e87e2102d8f52408305c0f7a2"
 	SRC_URI="https://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/snapshot/linux-firmware-${GIT_COMMIT}.tar.gz -> linux-firmware-${PV}.tar.gz"
 	KEYWORDS="~alpha amd64 ~arm arm64 hppa ia64 ~mips ppc ppc64 ~s390 ~sh ~sparc x86"
 fi
@@ -67,6 +67,8 @@ RDEPEND="${CDEPEND}
 	!x11-drivers/radeon-ucode
 	"
 #add anything else that collides to this
+
+RESTRICT="binchecks strip"
 
 # source name is linux-firmware, not coreos-firmware
 S="${WORKDIR}/linux-firmware-${PV}"
