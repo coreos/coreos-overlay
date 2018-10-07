@@ -28,7 +28,7 @@ LICENSE="BSD GPL-2"
 SLOT="0"
 KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~ppc-aix ~x64-cygwin ~amd64-fbsd ~x86-fbsd ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~m68k-mint ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
 # Probably want to drop ssl defaulting to on in a future version.
-IUSE="abi_mips_n32 audit bindist debug hpn kerberos kernel_linux ldns libedit libressl livecd pam +pie sctp selinux skey +ssl static test X X509"
+IUSE="abi_mips_n32 audit debug hpn kerberos kernel_linux ldns libedit libressl livecd pam +pie sctp selinux skey +ssl static test X X509"
 RESTRICT="!test? ( test )"
 REQUIRED_USE="ldns? ( ssl )
 	pie? ( !static )
@@ -39,9 +39,7 @@ REQUIRED_USE="ldns? ( ssl )
 LIB_DEPEND="
 	audit? ( sys-process/audit[static-libs(+)] )
 	ldns? (
-		net-libs/ldns[static-libs(+)]
-		!bindist? ( net-libs/ldns[ecdsa,ssl(+)] )
-		bindist? ( net-libs/ldns[-ecdsa,ssl(+)] )
+		net-libs/ldns[ecdsa,ssl(+),static-libs(+)]
 	)
 	libedit? ( dev-libs/libedit:=[static-libs(+)] )
 	sctp? ( net-misc/lksctp-tools[static-libs(+)] )
@@ -49,7 +47,7 @@ LIB_DEPEND="
 	skey? ( >=sys-auth/skey-1.1.5-r1[static-libs(+)] )
 	ssl? (
 		!libressl? (
-			>=dev-libs/openssl-1.0.1:0=[bindist=]
+			>=dev-libs/openssl-1.0.1:0=[-bindist(-)]
 			dev-libs/openssl:0=[static-libs(+)]
 		)
 		libressl? ( dev-libs/libressl:0=[static-libs(+)] )
@@ -367,8 +365,6 @@ src_install() {
 	emake install-nokeys DESTDIR="${D}"
 	fperms 600 /etc/ssh/sshd_config
 	dobin contrib/ssh-copy-id
-	newinitd "${FILESDIR}"/sshd.initd sshd
-	newconfd "${FILESDIR}"/sshd-r1.confd sshd
 
 	newpamd "${FILESDIR}"/sshd.pam_include.2 sshd
 
