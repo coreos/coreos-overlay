@@ -53,6 +53,8 @@ pkg_setup() {
 src_prepare() {
 	# KV_OUT_DIR points to the minimal build tree installed by coreos-modules
 	# Pull in the config and public module signing key
+	# FIXME(bgilbert): remove after final release
+	KV_OUT_DIR=/build/amd64-usr/usr/lib/modules/4.19.0-rc7-coreos/build
 	cp -v "${KV_OUT_DIR}/.config" build/ || die
 	local sig_key="$(getconfig MODULE_SIG_KEY)"
 	mkdir -p "build/${sig_key%/*}" || die
