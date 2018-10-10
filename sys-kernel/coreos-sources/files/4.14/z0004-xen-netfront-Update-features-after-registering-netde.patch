@@ -1,4 +1,4 @@
-From 8981b3f553866356b517d9a7f41c7da2c244cf8a Mon Sep 17 00:00:00 2001
+From 6883c792a04705f8f265f7ed4950e22e43dbe040 Mon Sep 17 00:00:00 2001
 From: Ross Lagerwall <ross.lagerwall@citrix.com>
 Date: Thu, 21 Jun 2018 14:00:21 +0100
 Subject: [PATCH 4/4] xen-netfront: Update features after registering netdev
