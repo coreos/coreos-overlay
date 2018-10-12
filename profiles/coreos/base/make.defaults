@@ -14,12 +14,12 @@ USE_EXPAND="${USE_EXPAND} GO_VERSION"
 USE="${USE} cros_host expat -cracklib -introspection -cups -tcpd -berkdb"
 
 # Continue using Python 2 as the default version, but build Python 3 support.
-USE="${USE} python_single_target_python2_7 -python_single_target_python3_5 -python_single_target_python3_6"
-USE="${USE} python_targets_python2_7 -python_targets_python3_5 python_targets_python3_6"
+USE="${USE} python_single_target_python2_7 -python_single_target_python3_6"
+USE="${USE} python_targets_python2_7 python_targets_python3_6"
 
 # Disable Python 3 while building the SDK until we transition off Python 2.
-BOOTSTRAP_USE="${BOOTSTRAP_USE} python_single_target_python2_7 -python_single_target_python3_5 -python_single_target_python3_6"
-BOOTSTRAP_USE="${BOOTSTRAP_USE} python_targets_python2_7 -python_targets_python3_5 -python_targets_python3_6"
+BOOTSTRAP_USE="${BOOTSTRAP_USE} python_single_target_python2_7 -python_single_target_python3_6"
+BOOTSTRAP_USE="${BOOTSTRAP_USE} python_targets_python2_7 -python_targets_python3_6"
 
 # Never install cron or cron jobs
 USE="${USE} -cron"
