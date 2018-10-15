@@ -1,4 +1,4 @@
-From 0c2429d044c5432e2292b394d405cd10be081cde Mon Sep 17 00:00:00 2001
+From 695cb22a9bb7487b246fc36ce38152fbfe239d19 Mon Sep 17 00:00:00 2001
 From: David Michael <dm0@redhat.com>
 Date: Wed, 15 Aug 2018 12:50:10 -0400
 Subject: [PATCH 4/4] Revert "net: increase fragment memory usage limits"
@@ -59,5 +59,5 @@ index d14d741fb05e..bd10399eb916 100644
  	 * Important NOTE! Fragment queue must be destroyed before MSL expires.
  	 * RFC791 is wrong proposing to prolongate timer each fragment arrival
 -- 
-2.17.1
+2.17.2
 
