@@ -3,12 +3,12 @@ DEPEND=>=dev-db/sqlite-3.7.9:3 device-mapper? ( >=sys-fs/lvm2-2.02.89[thin] ) se
 DESCRIPTION=The core functions you need to create Docker images and run Docker containers
 EAPI=6
 HOMEPAGE=https://dockerproject.org
-IUSE=apparmor aufs +btrfs +container-init +device-mapper hardened +overlay pkcs11 seccomp +journald +selinux +go_version_go1_10
+IUSE=apparmor aufs +btrfs +container-init +device-mapper hardened +overlay pkcs11 seccomp +journald +selinux +go_version_go1_10 kernel_linux
 KEYWORDS=~amd64 ~arm64
 LICENSE=Apache-2.0
 RDEPEND=>=dev-db/sqlite-3.7.9:3 device-mapper? ( >=sys-fs/lvm2-2.02.89[thin] ) seccomp? ( >=sys-libs/libseccomp-2.2.1[static-libs] ) apparmor? ( sys-libs/libapparmor ) !app-emulation/docker-bin >=net-firewall/iptables-1.4 sys-process/procps >=dev-vcs/git-1.7 >=app-arch/xz-utils-4.9 dev-libs/libltdl =app-emulation/containerd-1.1.2 =app-emulation/docker-runc-1.0.0_rc5_p19[apparmor?,seccomp?] =app-emulation/docker-proxy-0.8.0_p20180709 container-init? ( >=sys-process/tini-0.13.1 )
 REQUIRED_USE=go_version_go1_10
 RESTRICT=installsources strip
 SLOT=0
-_eclasses_=bash-completion-r1	6af26c1ffe65d92d3f525cb715f6250c	coreos-go-depend	c1ef355151971b96934101203331f30c	coreos-go-utils	c34072f13165bb85e5106cc6e082a4e1	desktop	1b286a7e7143d8c4ec89cd0d2743a097	epatch	9a5f039771f143195164a15a4faa41a1	estack	43ddf5aaffa7a8d0482df54d25a66a1f	eutils	5b8ce72259e08104b337fe28c6de5dbc	flag-o-matic	5128c4729303400bd8d4b0b966530955	git-r3	8f6de46b0aa318aea0e8cac62ece098b	linux-info	aedb720bff5a5dec9b87edd351382bfc	ltprune	607e058da37aa6dabfa408b7d61da72e	multilib	97f470f374f2e94ccab04a2fb21d811e	preserve-libs	ef207dc62baddfddfd39a164d9797648	systemd	04e50685fbf3d89e5c67ac6a385dd595	toolchain-funcs	1e35303c63cd707f6c3422b4493d5607	udev	79c22815770535c8ae27f6f356559a88	user	8bc2845510e2109af75e3eeac607ec81	vcs-clean	2a0f74a496fa2b1552c4f3398258b7bf	versionator	26ca8a8bd95d6a74122c08ba98a4ee72
+_eclasses_=bash-completion-r1	47a7402d95930413ce25ba8d857339bb	coreos-go-depend	c1ef355151971b96934101203331f30c	coreos-go-utils	c34072f13165bb85e5106cc6e082a4e1	desktop	b1d22ac8bdd4679ab79c71aca235009d	eapi7-ver	756b3f27d8e46131d5cf3c51bd876446	epatch	a1bf4756dba418a7238f3be0cb010c54	estack	43ddf5aaffa7a8d0482df54d25a66a1f	eutils	6e6c2737b59a4b982de6fb3ecefd87f8	flag-o-matic	55aaa148741116aa54ad0d80e361818e	git-r3	0d4635eeb5a96cd5315597a47eba25c9	linux-info	953c3b1c472dcadbf62098a9301327f2	ltprune	08f9e1d9ee0af8f5d9a7854efbcd8c0e	multilib	b2f01ad412baf81650c23fcf0975fa33	preserve-libs	ef207dc62baddfddfd39a164d9797648	systemd	47c677ae1d7b69031f11f630ac09f0d1	toolchain-funcs	f164325a2cdb5b3ea39311d483988861	udev	7752f306eec7b286d00bdb47b763e7ac	user	8bc2845510e2109af75e3eeac607ec81	vcs-clean	2a0f74a496fa2b1552c4f3398258b7bf
 _md5_=79bd7c5b3f7cebf69838dda3acffdf10

@@ -3,11 +3,11 @@ DEPEND=net-misc/openssh net-nds/rpcbind !coreos-base/oem-service test? ( dev-lan
 DESCRIPTION=Init scripts for CoreOS
 EAPI=4
 HOMEPAGE=http://www.coreos.com/
-IUSE=test symlink-usr cros_workon_tree_* profiling
+IUSE=test symlink-usr cros_workon_tree_ profiling
 KEYWORDS=amd64 arm arm64 x86
 LICENSE=BSD
 RDEPEND=net-misc/openssh net-nds/rpcbind !coreos-base/oem-service test? ( dev-lang/python:2.7 ) app-admin/logrotate sys-block/parted sys-apps/gptfdisk >=sys-apps/systemd-207-r5 >=coreos-base/coreos-cloudinit-0.1.2-r5
 REQUIRED_USE=symlink-usr
 SLOT=0
-_eclasses_=cros-workon	4ad6e6491a1010ad7c875302b3be18ba	git-r3	8f6de46b0aa318aea0e8cac62ece098b	multilib	97f470f374f2e94ccab04a2fb21d811e	systemd	04e50685fbf3d89e5c67ac6a385dd595	toolchain-funcs	1e35303c63cd707f6c3422b4493d5607
+_eclasses_=cros-workon	4ad6e6491a1010ad7c875302b3be18ba	git-r3	0d4635eeb5a96cd5315597a47eba25c9	multilib	b2f01ad412baf81650c23fcf0975fa33	systemd	47c677ae1d7b69031f11f630ac09f0d1	toolchain-funcs	f164325a2cdb5b3ea39311d483988861
 _md5_=6281132ee91c233cfeaf4ca7b5335f87
