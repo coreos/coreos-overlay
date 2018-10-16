@@ -4,8 +4,3 @@ amd64   coreos/amd64/generic/prod           dev
 amd64   coreos/amd64/sdk                    dev
 amd64   default/linux/amd64/10.0            dev
 amd64   default/linux/amd64/10.0/coreos     dev
-
-arm64   coreos/arm64/generic                dev
-arm64   coreos/arm64/generic/dev            dev
-arm64   coreos/arm64/generic/prod           dev
-arm64   coreos/arm64/sdk                    dev

@@ -1,2 +1,0 @@
-sys-auth/polkit -introspection
-sys-apps/systemd -introspection

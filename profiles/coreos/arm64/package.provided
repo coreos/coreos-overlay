@@ -1,6 +1,0 @@
-# arm64 provided
-
-dev-libs/gobject-introspection-1.40.0-r1
-
-# build errors
-net-dns/bind-tools-9.11.2_p1

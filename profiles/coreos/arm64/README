@@ -1,4 +1,0 @@
-This profile (and its sub-profiles) should *only* contain
-architecture specific settings. Architecture independent settings should
-go under coreos/base (applies to everything) or coreos/targets/*
-(applies to the sdk, amd64-usr, etc.).
