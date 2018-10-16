@@ -1,5 +1,5 @@
 DEFINED_PHASES=compile configure install test
-DEPEND=app-arch/zstd fuse? ( sys-fs/fuse ) >=dev-util/meson-0.40.0 >=dev-util/ninja-1.7.2
+DEPEND=app-arch/zstd fuse? ( sys-fs/fuse ) >=dev-util/meson-0.45.1 >=dev-util/ninja-1.7.2
 DESCRIPTION=casync - Content-Addressable Data Synchronization Tool - is a tool similar to rsync for backing up and updating directory trees
 EAPI=6
 HOMEPAGE=https://github.com/systemd/casync
@@ -9,5 +9,5 @@ LICENSE=LGPL-2.1
 RDEPEND=app-arch/zstd fuse? ( sys-fs/fuse )
 SLOT=0
 SRC_URI=https://github.com/systemd/casync/archive/v2.tar.gz
-_eclasses_=desktop	1b286a7e7143d8c4ec89cd0d2743a097	epatch	9a5f039771f143195164a15a4faa41a1	estack	43ddf5aaffa7a8d0482df54d25a66a1f	eutils	5b8ce72259e08104b337fe28c6de5dbc	ltprune	607e058da37aa6dabfa408b7d61da72e	meson	eb124b9e9d7a5f1ebc89589fe73c816f	multilib	97f470f374f2e94ccab04a2fb21d811e	multiprocessing	cac3169468f893670dac3e7cb940e045	ninja-utils	d2e7e7d290428bb25c56dcf2502badc1	preserve-libs	ef207dc62baddfddfd39a164d9797648	python-utils-r1	ffa9c3284c6b07b8c9f7933911f63812	toolchain-funcs	1e35303c63cd707f6c3422b4493d5607	vcs-clean	2a0f74a496fa2b1552c4f3398258b7bf
+_eclasses_=desktop	b1d22ac8bdd4679ab79c71aca235009d	epatch	a1bf4756dba418a7238f3be0cb010c54	estack	43ddf5aaffa7a8d0482df54d25a66a1f	eutils	6e6c2737b59a4b982de6fb3ecefd87f8	ltprune	08f9e1d9ee0af8f5d9a7854efbcd8c0e	meson	29ef682942c6ff558de2f797a61790c2	multilib	b2f01ad412baf81650c23fcf0975fa33	multiprocessing	cac3169468f893670dac3e7cb940e045	ninja-utils	132cbb376048d079b5a012f5467c4e7f	preserve-libs	ef207dc62baddfddfd39a164d9797648	python-utils-r1	12114a2a9aab35b93efc037a196b3234	toolchain-funcs	f164325a2cdb5b3ea39311d483988861	vcs-clean	2a0f74a496fa2b1552c4f3398258b7bf
 _md5_=71060a8c0a9bc9200b5eb72bc90f1d98

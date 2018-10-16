@@ -3,9 +3,9 @@ DEPEND=>=dev-vcs/git-1.8.2.1[curl]
 DESCRIPTION=NSS module for data sources under /usr on for CoreOS
 EAPI=5
 HOMEPAGE=https://github.com/coreos/nss-altfiles
-IUSE=cros_workon_tree_* profiling
+IUSE=cros_workon_tree_ profiling
 KEYWORDS=~amd64 ~arm ~arm64 ~x86
 LICENSE=LGPL-2.1+
 SLOT=0
-_eclasses_=cros-workon	4ad6e6491a1010ad7c875302b3be18ba	git-r3	8f6de46b0aa318aea0e8cac62ece098b	multilib	97f470f374f2e94ccab04a2fb21d811e	toolchain-funcs	1e35303c63cd707f6c3422b4493d5607
+_eclasses_=cros-workon	4ad6e6491a1010ad7c875302b3be18ba	git-r3	0d4635eeb5a96cd5315597a47eba25c9	multilib	b2f01ad412baf81650c23fcf0975fa33	toolchain-funcs	f164325a2cdb5b3ea39311d483988861
 _md5_=bad00cc4ab37160eeaa42678acbc40e8

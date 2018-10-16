@@ -3,9 +3,9 @@ DEPEND=>=dev-vcs/git-1.8.2.1[curl]
 DESCRIPTION=Chromium OS build utilities
 EAPI=6
 HOMEPAGE=http://www.chromium.org/chromium-os
-IUSE=cros_workon_tree_* profiling
+IUSE=cros_workon_tree_ profiling
 KEYWORDS=~amd64
 LICENSE=BSD
 SLOT=0
-_eclasses_=cros-workon	4ad6e6491a1010ad7c875302b3be18ba	git-r3	8f6de46b0aa318aea0e8cac62ece098b	multilib	97f470f374f2e94ccab04a2fb21d811e	python-utils-r1	ffa9c3284c6b07b8c9f7933911f63812	toolchain-funcs	1e35303c63cd707f6c3422b4493d5607
+_eclasses_=cros-workon	4ad6e6491a1010ad7c875302b3be18ba	git-r3	0d4635eeb5a96cd5315597a47eba25c9	multilib	b2f01ad412baf81650c23fcf0975fa33	python-utils-r1	12114a2a9aab35b93efc037a196b3234	toolchain-funcs	f164325a2cdb5b3ea39311d483988861
 _md5_=87567fe3de380a226e82bc6dc5b87b6a
