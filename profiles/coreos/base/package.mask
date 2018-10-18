@@ -14,3 +14,5 @@
 # mask an accidental rkt major version bump to ensure it's not chosen over more
 # recent releases
 =app-emulation/rkt-13.0
+
+>=dev-vcs/git-2.17
