@@ -8,6 +8,7 @@ INSTALL_MASK="${INSTALL_MASK}
   /lib*/pkgconfig
   /usr/include
   /usr/lib*/*/include
+  -/usr/lib*/modules/*/include
   /usr/lib*/cmake
   /usr/lib*/debug
   /usr/lib*/pkgconfig
