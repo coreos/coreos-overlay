@@ -64,3 +64,5 @@ dev-util/checkbashisms
 =app-crypt/gnupg-2.2.7 ~amd64 ~arm64
 =sys-apps/gptfdisk-1.0.3 ~amd64 ~arm64
 =sys-apps/util-linux-2.32 ~amd64 ~arm64
+
+=dev-vcs/git-2.16.5 ~amd64
