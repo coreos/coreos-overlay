@@ -17,7 +17,6 @@ IUSE=""
 
 RDEPEND="
 	app-admin/python-updater
-	app-backup/casync
 	app-crypt/efitools
 	app-crypt/tpm-tools
 	app-editors/emacs
