@@ -43,7 +43,7 @@ DEPEND="
 	sys-apps/seismograph
 	sys-boot/grub
 	sys-boot/shim
-	sys-firmware/edk2
+	sys-firmware/edk2-ovmf
 	sys-fs/btrfs-progs
 	sys-fs/cryptsetup
 	"

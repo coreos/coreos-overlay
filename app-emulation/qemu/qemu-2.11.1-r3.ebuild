@@ -162,7 +162,7 @@ X86_FIRMWARE_DEPEND="
 		~sys-firmware/sgabios-0.1_pre8
 	)
 	!pin-upstream-blobs? (
-		sys-firmware/edk2
+		sys-firmware/edk2-ovmf
 		sys-firmware/ipxe
 		>=sys-firmware/seabios-1.10.2[seavgabios]
 		sys-firmware/sgabios

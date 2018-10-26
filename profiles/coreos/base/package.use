@@ -95,3 +95,6 @@ net-misc/socat -ssl
 
 # Prevent pulling in a ton of perl dependencies
 sys-apps/man-db -nls
+
+# Always build the firmware from source.
+sys-firmware/edk2-ovmf -binary

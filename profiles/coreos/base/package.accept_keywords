@@ -21,11 +21,11 @@ dev-python/boto
 dev-util/checkbashisms
 
 # Older versions of sssd fail to build
-=sys-auth/sssd-1.13.1 ~amd64 ~arm64
+=sys-auth/sssd-1.13.1 ~amd64
 
 # heap overflow fix
 # https://bugs.gentoo.org/show_bug.cgi?id=580606
-=app-misc/jq-1.5-r2 ~amd64 ~arm64
+=app-misc/jq-1.5-r2 ~amd64
 
 # Must use the same version across all architectures
 =dev-libs/protobuf-2.6.1-r3
@@ -42,7 +42,7 @@ dev-util/checkbashisms
 # systemd v238 requires libseccomp 2.3.3
 =sys-libs/libseccomp-2.3.3 **
 
-# All versions are ~amd64 and not enabled on arm64
+# All versions are ~amd64
 =sys-apps/nvme-cli-1.1 **
 
 # CVE-2017-8779
@@ -53,14 +53,9 @@ dev-util/checkbashisms
 
 # iproute2 4.13 includes a patch to avoid leaking netns mounts in rkt 
 # https://git.kernel.org/pub/scm/linux/kernel/git/shemminger/iproute2.git/commit/?id=d6a4076b6ba6547d7e52c377a7c58c56eb5ea16e
-=sys-apps/iproute2-4.13.0 ~amd64 ~arm64
-
-# Upgrade to GCC 7.3 for retpoline support.
-=sys-devel/gcc-7.3.0
-=cross-aarch64-cros-linux-gnu/gcc-7.3.0 ~arm64
-=cross-x86_64-cros-linux-gnu/gcc-7.3.0 ~amd64
+=sys-apps/iproute2-4.13.0 ~amd64
 
 # Force upgrades to work around catalyst problems while upgrading ncurses.
-=app-crypt/gnupg-2.2.7 ~amd64 ~arm64
-=sys-apps/gptfdisk-1.0.3 ~amd64 ~arm64
-=sys-apps/util-linux-2.32 ~amd64 ~arm64
+=app-crypt/gnupg-2.2.7 ~amd64
+=sys-apps/gptfdisk-1.0.3 ~amd64
+=sys-apps/util-linux-2.32 ~amd64

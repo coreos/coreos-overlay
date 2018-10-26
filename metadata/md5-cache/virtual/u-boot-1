@@ -1,9 +1,0 @@
-DEFINED_PHASES=-
-DESCRIPTION=Chrome OS u-boot virtual package
-EAPI=4
-HOMEPAGE=http://src.chromium.org
-KEYWORDS=amd64 arm x86
-LICENSE=GPL-2
-RDEPEND=sys-boot/chromeos-u-boot
-SLOT=0
-_md5_=dcf6dd7328b99ac163c91473a0ff2597
