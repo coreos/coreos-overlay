@@ -1,7 +1,7 @@
 # Copyright (c) 2018 CoreOS, Inc.. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=6
+EAPI=7
 
 CROS_WORKON_PROJECT="coreos/fero"
 CROS_WORKON_LOCALNAME="fero"
@@ -14,7 +14,7 @@ else
 	KEYWORDS="amd64"
 fi
 
-inherit coreos-cargo cros-workon
+inherit cargo cros-workon
 
 DESCRIPTION="Client for fero signing server"
 HOMEPAGE="https://github.com/coreos/fero"
@@ -28,7 +28,7 @@ RDEPEND="${DEPEND}"
 
 src_unpack() {
 	cros-workon_src_unpack "$@"
-	coreos-cargo_src_unpack "$@"
+	cargo_src_unpack "$@"
 }
 
 src_compile() {
