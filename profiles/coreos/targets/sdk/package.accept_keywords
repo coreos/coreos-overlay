@@ -6,6 +6,7 @@ dev-python/botocore ~amd64
 # Accept unstable host Rust compilers
 dev-lang/rust ~amd64
 dev-util/cargo ~amd64
+virtual/cargo ~amd64
 virtual/rust ~amd64
 
 # Accept go utilities
