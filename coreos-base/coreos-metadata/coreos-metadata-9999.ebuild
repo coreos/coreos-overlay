@@ -1,7 +1,7 @@
 # Copyright (c) 2017 CoreOS, Inc.. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=6
+EAPI=7
 
 CROS_WORKON_PROJECT="coreos/coreos-metadata"
 CROS_WORKON_LOCALNAME="coreos-metadata"
@@ -14,7 +14,7 @@ else
 	KEYWORDS="amd64 arm64"
 fi
 
-inherit coreos-cargo cros-workon systemd
+inherit cargo cros-workon systemd
 
 DESCRIPTION="A tool for collecting instance metadata from various providers"
 HOMEPAGE="https://github.com/coreos/coreos-metadata"
@@ -203,7 +203,7 @@ SRC_URI="$(cargo_crate_uris ${CRATES})"
 
 src_unpack() {
 	cros-workon_src_unpack "$@"
-	coreos-cargo_src_unpack "$@"
+	cargo_src_unpack "$@"
 }
 
 src_prepare() {
