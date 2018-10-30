@@ -1,7 +1,7 @@
 # Copyright (c) 2017 CoreOS, Inc.. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=6
+EAPI=7
 
 CROS_WORKON_PROJECT="coreos/update-ssh-keys"
 CROS_WORKON_LOCALNAME="update-ssh-keys"
@@ -14,7 +14,7 @@ else
 	KEYWORDS="amd64 arm64"
 fi
 
-inherit coreos-cargo cros-workon
+inherit cargo cros-workon
 
 DESCRIPTION="Utility for managing OpenSSH authorized public keys"
 HOMEPAGE="https://github.com/coreos/update-ssh-keys"
@@ -64,5 +64,5 @@ SRC_URI="$(cargo_crate_uris ${CRATES})"
 
 src_unpack() {
 	cros-workon_src_unpack "$@"
-	coreos-cargo_src_unpack "$@"
+	cargo_src_unpack "$@"
 }
