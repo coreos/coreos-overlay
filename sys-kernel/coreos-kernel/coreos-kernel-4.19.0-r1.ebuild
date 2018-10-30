@@ -17,6 +17,7 @@ DEPEND="${RDEPEND}
 	sys-apps/grep
 	sys-apps/ignition:=
 	sys-apps/less
+	sys-apps/nvme-cli
 	sys-apps/sed
 	sys-apps/shadow
 	sys-apps/systemd[cryptsetup]
