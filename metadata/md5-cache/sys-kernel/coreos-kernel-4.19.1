@@ -1,0 +1,13 @@
+DEFINED_PHASES=compile configure install prepare pretend setup unpack
+DEPEND==sys-kernel/coreos-modules-4.19.1 app-arch/gzip app-shells/bash sys-apps/coreutils sys-apps/findutils sys-apps/grep sys-apps/ignition:= sys-apps/less sys-apps/nvme-cli sys-apps/sed sys-apps/shadow sys-apps/systemd[cryptsetup] sys-apps/seismograph sys-apps/util-linux sys-fs/btrfs-progs sys-fs/e2fsprogs sys-fs/mdadm sys-fs/xfsprogs >=sys-kernel/coreos-firmware-20180103-r1:= >=sys-kernel/bootengine-0.0.4:= sys-kernel/dracut virtual/udev amd64? ( sys-firmware/intel-microcode:= ) =sys-kernel/coreos-sources-4.19.1
+DESCRIPTION=CoreOS Linux kernel
+EAPI=5
+HOMEPAGE=http://www.kernel.org
+IUSE=kernel_linux
+KEYWORDS=amd64
+LICENSE=GPL-2 freedist
+RDEPEND==sys-kernel/coreos-modules-4.19.1
+RESTRICT=binchecks strip
+SLOT=0/4.19.1
+_eclasses_=coreos-kernel	588460f26859c559935beb69c53cb5c0	eapi7-ver	756b3f27d8e46131d5cf3c51bd876446	linux-info	953c3b1c472dcadbf62098a9301327f2	multilib	b2f01ad412baf81650c23fcf0975fa33	toolchain-funcs	f164325a2cdb5b3ea39311d483988861
+_md5_=42753b8cebb468da769ebfda0bcf0620
