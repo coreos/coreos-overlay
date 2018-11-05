@@ -53,6 +53,7 @@ pkg_setup() {
 src_prepare() {
 	# KV_OUT_DIR points to the minimal build tree installed by coreos-modules
 	# Pull in the config and public module signing key
+	KV_OUT_DIR="${ROOT%/}/lib/modules/${COREOS_SOURCE_NAME#linux-}/build"
 	cp -v "${KV_OUT_DIR}/.config" build/ || die
 	local sig_key="$(getconfig MODULE_SIG_KEY)"
 	mkdir -p "build/${sig_key%/*}" || die
