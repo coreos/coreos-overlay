@@ -10,7 +10,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ ${PV} == 9999 ]]; then
 	KEYWORDS="~amd64"
 else
-	CROS_WORKON_COMMIT="c6784bebaecaac4b1712fe17263890143e5c37c7" # v0.1.0
+	CROS_WORKON_COMMIT="1fb33da499e51b2699394d158b0b66d36fc52974" # v0.1.1
 	KEYWORDS="amd64"
 fi
 
@@ -43,6 +43,7 @@ src_install() {
 	rm -f "${D}/usr/.crates.toml"
 }
 
+# sed -n 's/^"checksum \([^ ]*\) \([^ ]*\) .*/\1-\2/p' Cargo.lock
 CRATES="
 aho-corasick-0.6.4
 ansi_term-0.11.0
@@ -70,7 +71,7 @@ conv-0.3.3
 cstr-argument-0.0.2
 custom_derive-0.1.7
 diesel-1.2.2
-diesel-derive-enum-0.4.3
+diesel-derive-enum-0.4.4
 diesel_derives-1.2.0
 diesel_migrations-1.2.0
 digest-0.7.2
@@ -144,7 +145,7 @@ semver-0.9.0
 semver-parser-0.7.0
 sha-1-0.7.0
 sha2-0.7.1
-smallvec-0.6.1
+smallvec-0.6.5
 strsim-0.7.0
 structopt-0.2.10
 structopt-derive-0.2.10
@@ -178,4 +179,5 @@ winapi-i686-pc-windows-gnu-0.4.0
 winapi-x86_64-pc-windows-gnu-0.4.0
 yasna-0.1.3
 "
+
 SRC_URI="$(cargo_crate_uris ${CRATES})"
