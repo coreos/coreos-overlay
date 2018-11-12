@@ -10,7 +10,7 @@ CROS_WORKON_REPO="git://github.com"
 if [[ ${PV} == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64"
 else
-	CROS_WORKON_COMMIT="bf3e1b5ba611187f80de85f89d301cf3d2e2fe38" # v3.0.1
+	CROS_WORKON_COMMIT="35003b4c33cce3a8ca1b36777a209fe343e6d03a" # v3.0.2
 	KEYWORDS="amd64 arm64"
 fi
 
@@ -29,7 +29,7 @@ ansi_term-0.11.0
 arrayref-0.3.5
 arrayvec-0.4.7
 atty-0.2.11
-base64-0.9.2
+base64-0.9.3
 bitflags-0.5.0
 bitflags-0.7.0
 bitflags-0.9.1
@@ -37,7 +37,7 @@ bitflags-1.0.3
 block-buffer-0.3.3
 build_const-0.2.1
 byte-tools-0.2.0
-byteorder-1.2.4
+byteorder-1.2.6
 bytes-0.4.9
 cc-1.0.18
 cfg-if-0.1.5
@@ -86,7 +86,7 @@ matches-0.1.7
 md-5-0.7.0
 memchr-2.0.1
 memoffset-0.2.1
-mime-0.3.9
+mime-0.3.12
 mio-0.6.15
 miow-0.2.1
 mockito-0.9.1
@@ -123,27 +123,27 @@ remove_dir_all-0.5.1
 reqwest-0.7.3
 rustc-serialize-0.3.24
 ryu-0.2.3
-safemem-0.2.0
+safemem-0.3.0
 schannel-0.1.13
 scoped-tls-0.1.2
 scopeguard-0.3.3
 security-framework-0.1.16
 security-framework-sys-0.1.16
-serde-1.0.71
+serde-1.0.80
 serde-xml-rs-0.2.1
-serde_derive-1.0.71
-serde_json-1.0.26
+serde_derive-1.0.80
+serde_json-1.0.27
 serde_urlencoded-0.5.3
 sha2-0.7.1
 slab-0.3.0
 slab-0.4.1
-slog-2.3.2
+slog-2.4.1
 slog-async-2.3.0
 slog-scope-4.0.1
 slog-term-2.4.0
 smallvec-0.2.1
 strsim-0.7.0
-syn-0.14.8
+syn-0.15.13
 syntex-0.42.2
 syntex_errors-0.42.0
 syntex_pos-0.42.0
