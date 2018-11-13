@@ -24,8 +24,9 @@ DEPEND="
 	app-shells/bash-completion
 	coreos-base/hard-host-depends
 	coreos-base/coreos-sb-keys
-	coreos-devel/mantle
+	coreos-devel/fero-client
 	coreos-devel/kola-data
+	coreos-devel/mantle
 	dev-libs/gobject-introspection
 	dev-libs/nss
 	dev-python/setuptools
