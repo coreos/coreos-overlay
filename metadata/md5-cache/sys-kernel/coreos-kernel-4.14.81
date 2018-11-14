@@ -6,8 +6,8 @@ HOMEPAGE=http://www.kernel.org
 IUSE=kernel_linux
 KEYWORDS=amd64
 LICENSE=GPL-2 freedist
-RDEPEND==sys-kernel/coreos-modules-4.14.80
+RDEPEND==sys-kernel/coreos-modules-4.14.81
 RESTRICT=binchecks strip
-SLOT=0/4.14.80
+SLOT=0/4.14.81
 _eclasses_=coreos-kernel	588460f26859c559935beb69c53cb5c0	eapi7-ver	756b3f27d8e46131d5cf3c51bd876446	linux-info	953c3b1c472dcadbf62098a9301327f2	multilib	b2f01ad412baf81650c23fcf0975fa33	toolchain-funcs	f164325a2cdb5b3ea39311d483988861
 _md5_=f01c9d4be3dffb725f2e4f183dc4ceff
