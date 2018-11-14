@@ -1,22 +1,25 @@
-# Copyright 1999-2018 Gentoo Foundation
+# Copyright 1999-2018 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="6"
 
 inherit eutils flag-o-matic toolchain-funcs multilib multilib-minimal systemd
 
-PATCH_SET="openssl-1.0.2-patches-1.4"
+PATCH_SET="openssl-1.0.2-patches-1.6"
 MY_P=${P/_/-}
 DESCRIPTION="full-strength general purpose cryptography library (including SSL and TLS)"
 HOMEPAGE="https://www.openssl.org/"
 SRC_URI="mirror://openssl/source/${MY_P}.tar.gz
-	mirror://gentoo/${PATCH_SET}.tar.xz
-	https://dev.gentoo.org/~whissi/dist/${PN}/${PATCH_SET}.tar.xz
-	https://dev.gentoo.org/~polynomial-c/dist/${PATCH_SET}.tar.xz"
+	!vanilla? (
+		mirror://gentoo/${PATCH_SET}.tar.xz
+		https://dev.gentoo.org/~chutzpah/dist/${PN}/${PATCH_SET}.tar.xz
+		https://dev.gentoo.org/~whissi/dist/${PN}/${PATCH_SET}.tar.xz
+		https://dev.gentoo.org/~polynomial-c/dist/${PATCH_SET}.tar.xz
+	)"
 
 LICENSE="openssl"
 SLOT="0"
-KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~x86-fbsd ~arm-linux ~x86-linux"
+KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~x86-fbsd ~x86-linux"
 IUSE="+asm gmp kerberos rfc3779 sctp cpu_flags_x86_sse2 sslv2 +sslv3 static-libs test +tls-heartbeat vanilla zlib"
 
 RDEPEND=">=app-misc/c_rehash-1.7-r1
@@ -32,6 +35,28 @@ DEPEND="${RDEPEND}
 	)"
 PDEPEND="app-misc/ca-certificates"
 
+# This does not copy the entire Fedora patchset, but JUST the parts that
+# are needed to make it safe to use EC with RESTRICT=bindist.
+# See openssl.spec for the matching numbering of SourceNNN, PatchNNN
+SOURCE1=hobble-openssl
+SOURCE12=ec_curve.c
+SOURCE13=ectest.c
+# These are ported instead
+#PATCH1=openssl-1.1.0-build.patch # Fixes EVP testcase for EC
+#PATCH37=openssl-1.1.0-ec-curves.patch
+FEDORA_GIT_BASE='https://src.fedoraproject.org/cgit/rpms/openssl.git/plain/'
+FEDORA_GIT_BRANCH='f25'
+FEDORA_SRC_URI=()
+FEDORA_SOURCE=( $SOURCE1 $SOURCE12 $SOURCE13 )
+FEDORA_PATCH=( $PATCH1 $PATCH37 )
+for i in "${FEDORA_SOURCE[@]}" ; do
+	FEDORA_SRC_URI+=( "${FEDORA_GIT_BASE}/${i}?h=${FEDORA_GIT_BRANCH} -> ${P}_${i}" )
+done
+for i in "${FEDORA_PATCH[@]}" ; do # Already have a version prefix
+	FEDORA_SRC_URI+=( "${FEDORA_GIT_BASE}/${i}?h=${FEDORA_GIT_BRANCH} -> ${i}" )
+done
+SRC_URI+=" ${FEDORA_SRC_URI[*]} "
+
 S="${WORKDIR}/${MY_P}"
 
 MULTILIB_WRAPPED_HEADERS=(
@@ -39,6 +64,25 @@ MULTILIB_WRAPPED_HEADERS=(
 )
 
 src_prepare() {
+	if :; then
+		# This just removes the prefix, and puts it into WORKDIR like the RPM.
+		for i in "${FEDORA_SOURCE[@]}" ; do
+			cp -f "${DISTDIR}"/"${P}_${i}" "${WORKDIR}"/"${i}" || die
+		done
+		# .spec %prep
+		bash "${WORKDIR}"/"${SOURCE1}" || die
+		cp -f "${WORKDIR}"/"${SOURCE12}" "${S}"/crypto/ec/ || die
+		cp -f "${WORKDIR}"/"${SOURCE13}" "${S}"/crypto/ec/ || die # Moves to test/ in OpenSSL-1.1
+		for i in "${FEDORA_PATCH[@]}" ; do
+			eapply "${DISTDIR}"/"${i}"
+		done
+		eapply "${FILESDIR}"/openssl-1.0.2p-hobble-ecc.patch
+		# Also see the configure parts below:
+		# enable-ec \
+		# $(use_ssl !bindist ec2m) \
+		# $(use_ssl !bindist srp) \
+	fi
+
 	# keep this in sync with app-misc/c_rehash
 	SSL_CNF_DIR="/etc/ssl"
 
@@ -61,7 +105,7 @@ src_prepare() {
 		-e '/^MAKEDEPPROG/s:=.*:=$(CC):' \
 		-e $(has noman FEATURES \
 			&& echo '/^install:/s:install_docs::' \
-			|| echo '/^MANDIR=/s:=.*:='${EPREFIX}'/usr/share/man:') \
+			|| echo '/^MANDIR=/s:=.*:='${EPREFIX%/}'/usr/share/man:') \
 		Makefile.org \
 		|| die
 	# show the actual commands in the log
@@ -70,7 +114,8 @@ src_prepare() {
 	# since we're forcing $(CC) as makedep anyway, just fix
 	# the conditional as always-on
 	# helps clang (#417795), and versioned gcc (#499818)
-	sed -i 's/expr.*MAKEDEPEND.*;/true;/' util/domd || die
+	# this breaks build with 1.0.2p, not sure if it is needed anymore
+	#sed -i 's/expr.*MAKEDEPEND.*;/true;/' util/domd || die
 
 	# quiet out unknown driver argument warnings since openssl
 	# doesn't have well-split CFLAGS and we're making it even worse
@@ -85,7 +130,7 @@ src_prepare() {
 	append-flags $(test-flags-CC -Wa,--noexecstack)
 	append-cppflags -DOPENSSL_NO_BUF_FREELISTS
 
-	sed -i '1s,^:$,#!'${EPREFIX}'/usr/bin/perl,' Configure #141906
+	sed -i '1s,^:$,#!'${EPREFIX%/}'/usr/bin/perl,' Configure #141906
 	# The config script does stupid stuff to prompt the user.  Kill it.
 	sed -i '/stty -icanon min 0 time 50; read waste/d' config || die
 	./config --test-sanity || die "I AM NOT SANE"
@@ -134,11 +179,15 @@ multilib_src_configure() {
 	local config="Configure"
 	[[ -z ${sslout} ]] && config="config"
 
+	# Fedora hobbled-EC needs 'no-ec2m', 'no-srp'
 	echoit \
 	./${config} \
 		${sslout} \
 		$(use cpu_flags_x86_sse2 || echo "no-sse2") \
 		enable-camellia \
+		enable-ec \
+		no-ec2m \
+		no-srp \
 		${ec_nistp_64_gcc_128} \
 		enable-idea \
 		enable-mdc2 \
@@ -153,8 +202,8 @@ multilib_src_configure() {
 		$(use_ssl sslv3 ssl3) \
 		$(use_ssl tls-heartbeat heartbeats) \
 		$(use_ssl zlib) \
-		--prefix="${EPREFIX}"/usr \
-		--openssldir="${EPREFIX}"${SSL_CNF_DIR} \
+		--prefix="${EPREFIX%/}"/usr \
+		--openssldir="${EPREFIX%/}"${SSL_CNF_DIR} \
 		--libdir=$(get_libdir) \
 		shared threads \
 		|| die
@@ -177,7 +226,7 @@ multilib_src_configure() {
 multilib_src_compile() {
 	# depend is needed to use $confopts; it also doesn't matter
 	# that it's -j1 as the code itself serializes subdirs
-	emake -j1 depend
+	emake -j1 V=1 depend
 	emake all
 	# rehash is needed to prep the certs/ dir; do this
 	# separately to avoid parallel build issues.
@@ -189,13 +238,19 @@ multilib_src_test() {
 }
 
 multilib_src_install() {
-	emake INSTALL_PREFIX="${D}" install
+	# We need to create $ED/usr on our own to avoid a race condition #665130
+	if [[ ! -d "${ED%/}/usr" ]]; then
+		# We can only create this directory once
+		mkdir "${ED%/}"/usr || die
+	fi
+
+	emake INSTALL_PREFIX="${D%/}" install
 }
 
 multilib_src_install_all() {
 	# openssl installs perl version of c_rehash by default, but
 	# we provide a shell version via app-misc/c_rehash
-	rm "${ED}"/usr/bin/c_rehash || die
+	rm "${ED%/}"/usr/bin/c_rehash || die
 
 	local -a DOCS=( CHANGES* FAQ NEWS README doc/*.txt doc/c-indentation.el )
 	einstalldocs
