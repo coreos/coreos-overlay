@@ -31,7 +31,6 @@ DEPEND="
 	dev-libs/nss
 	dev-python/setuptools
 	dev-util/boost-build
-	dev-util/cargo
 	dev-util/checkbashisms
 	dev-util/patchelf
 	dev-vcs/repo
