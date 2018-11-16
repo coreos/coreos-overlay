@@ -6,6 +6,8 @@ state = "/run/docker/libcontainerd/containerd"
 subreaper = true
 # set containerd's OOM score
 oom_score = -999
+# CRI plugin listens on a TCP port by default
+disabled_plugins = ["cri"]
 
 # grpc configuration
 [grpc]
