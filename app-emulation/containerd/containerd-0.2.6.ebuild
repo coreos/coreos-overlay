@@ -21,7 +21,7 @@ SLOT="0"
 IUSE="hardened +seccomp"
 
 DEPEND=""
-RDEPEND=">=app-emulation/docker-runc-1.0.0_rc2
+RDEPEND="~app-emulation/docker-runc-1.0.0_rc2
 	seccomp? ( sys-libs/libseccomp )"
 
 S=${WORKDIR}/${P}/src/${COREOS_GO_PACKAGE}
