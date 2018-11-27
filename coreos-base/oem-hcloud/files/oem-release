@@ -1,0 +1,5 @@
+ID=hcloud
+VERSION_ID=@@OEM_VERSION_ID@@
+NAME="Hetzner Cloud"
+HOME_URL="https://www.hetzner.com/cloud"
+BUG_REPORT_URL="https://issues.coreos.com"

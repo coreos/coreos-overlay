@@ -1,0 +1,22 @@
+{
+  "ignition": {
+    "version": "2.1.0"
+  },
+  "systemd": {
+    "units": [
+      {
+        "name": "coreos-metadata-sshkeys@.service",
+        "enabled": true
+      },
+      {
+        "name": "coreos-metadata.service",
+        "enabled": true
+      },
+      {
+        "contents": "[Unit]\nDescription=Setting the hostname from the metadata\n\n[Service]\nType=oneshot\nEnvironment=COREOS_METADATA_OPT_PROVIDER=--cmdline\nExecStart=/usr/bin/coreos-metadata ${COREOS_METADATA_OPT_PROVIDER} --hostname=/etc/hostname\n\n[Install]\nRequiredBy=multi-user.target",
+        "enable": true,
+        "name": "coreos-metadata-hostname.service"
+      }
+    ]
+  }
+}
