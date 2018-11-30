@@ -16,7 +16,7 @@ LICENSE="GPL-2"
 # Subslot tracks libxtables as that's the one other packages generally link
 # against and iptables changes.  Will have to revisit if other sonames change.
 SLOT="0/12"
-KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86"
+KEYWORDS="~alpha amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86"
 IUSE="conntrack ipv6 netlink nftables pcap static-libs"
 
 COMMON_DEPEND="
@@ -111,9 +111,9 @@ src_install() {
 		rm "${ED%/}"/etc/ethertypes || die
 	fi
 
-	systemd_dounit "${FILESDIR}"/systemd/iptables-{re,}store.service
+	systemd_dounit "${FILESDIR}"/systemd/iptables{,-{re,}store}.service
 	if use ipv6 ; then
-		systemd_dounit "${FILESDIR}"/systemd/ip6tables-{re,}store.service
+		systemd_dounit "${FILESDIR}"/systemd/ip6tables{,-{re,}store}.service
 	fi
 
 	# Move important libs to /lib #332175
