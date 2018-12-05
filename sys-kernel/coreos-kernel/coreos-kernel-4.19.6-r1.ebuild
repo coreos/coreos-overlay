@@ -12,6 +12,7 @@ RDEPEND="=sys-kernel/coreos-modules-${PVR}"
 DEPEND="${RDEPEND}
 	app-arch/gzip
 	app-shells/bash
+	coreos-base/coreos-init:=
 	sys-apps/coreutils
 	sys-apps/findutils
 	sys-apps/grep
