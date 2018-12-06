@@ -2,7 +2,7 @@
 # Copyright (c) 2011 The Chromium OS Authors. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI="4"
+EAPI="5"
 CROS_WORKON_PROJECT="coreos/init"
 CROS_WORKON_LOCALNAME="init"
 CROS_WORKON_REPO="git://github.com"
@@ -21,7 +21,7 @@ HOMEPAGE="http://www.coreos.com/"
 SRC_URI=""
 
 LICENSE="BSD"
-SLOT="0"
+SLOT="0/${PVR}"
 IUSE="test symlink-usr"
 
 REQUIRED_USE="symlink-usr"
