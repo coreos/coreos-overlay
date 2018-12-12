@@ -3,7 +3,7 @@ DEPEND=sys-boot/gnu-efi dev-libs/openssl >=dev-vcs/git-1.8.2.1[curl]
 DESCRIPTION=UEFI Shim loader
 EAPI=5
 HOMEPAGE=https://github.com/rhinstaller/shim
-IUSE=cros_workon_tree_* profiling
+IUSE=cros_workon_tree_ profiling
 KEYWORDS=amd64 arm64
 LICENSE=BSD
 SLOT=0

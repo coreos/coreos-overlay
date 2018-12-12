@@ -3,7 +3,7 @@ DEPEND=app-arch/xz-utils >=sys-libs/ncurses-5.2-r5 debug? ( sdl? ( media-libs/li
 DESCRIPTION=GNU GRUB boot loader
 EAPI=6
 HOMEPAGE=https://www.gnu.org/software/grub/
-IUSE=debug device-mapper doc efiemu +fonts mount multislot nls static sdl test +themes truetype libzfs grub_platforms_coreboot grub_platforms_efi-32 grub_platforms_efi-64 grub_platforms_emu grub_platforms_ieee1275 grub_platforms_loongson grub_platforms_multiboot grub_platforms_qemu grub_platforms_qemu-mips grub_platforms_pc grub_platforms_uboot grub_platforms_xen grub_platforms_xen-32 grub_platforms_arm64 cros_workon_tree_* profiling
+IUSE=debug device-mapper doc efiemu +fonts mount multislot nls static sdl test +themes truetype libzfs grub_platforms_coreboot grub_platforms_efi-32 grub_platforms_efi-64 grub_platforms_emu grub_platforms_ieee1275 grub_platforms_loongson grub_platforms_multiboot grub_platforms_qemu grub_platforms_qemu-mips grub_platforms_pc grub_platforms_uboot grub_platforms_xen grub_platforms_xen-32 grub_platforms_arm64 cros_workon_tree_ profiling
 KEYWORDS=~amd64 ~arm64 ~x86
 LICENSE=GPL-3 fonts? ( GPL-2-with-font-exception ) themes? ( BitstreamVera )
 RDEPEND=app-arch/xz-utils >=sys-libs/ncurses-5.2-r5 debug? ( sdl? ( media-libs/libsdl ) ) device-mapper? ( >=sys-fs/lvm2-2.02.45 ) libzfs? ( sys-fs/zfs ) mount? ( sys-fs/fuse ) truetype? ( media-libs/freetype:2= ) ppc? ( sys-apps/ibm-powerpc-utils sys-apps/powerpc-utils ) ppc64? ( sys-apps/ibm-powerpc-utils sys-apps/powerpc-utils ) kernel_linux? ( grub_platforms_efi-32? ( sys-boot/efibootmgr ) grub_platforms_efi-64? ( sys-boot/efibootmgr ) ) !multislot? ( !sys-boot/grub:0 !sys-boot/grub-static ) nls? ( sys-devel/gettext )
