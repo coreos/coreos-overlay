@@ -1,7 +1,7 @@
 # Copyright (c) 2015 CoreOS, Inc.
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=5
+EAPI=7
 CROS_WORKON_PROJECT="appc/spec"
 CROS_WORKON_REPO="git://github.com"
 CROS_WORKON_LOCALNAME="appc-spec"
