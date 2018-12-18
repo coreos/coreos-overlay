@@ -1,7 +1,8 @@
-DEFINED_PHASES=compile configure info install prepare test unpack
-DEPEND=app-arch/cpio sys-fs/squashfs-tools rkt_stage1_src? ( >=sys-apps/systemd-222 app-shells/bash ) sys-apps/acl tpm? ( app-crypt/trousers ) >=app-portage/elt-patches-20170815 !<sys-devel/gettext-0.18.1.1-r3 || ( >=sys-devel/automake-1.16.1:1.16 >=sys-devel/automake-1.15.1:1.15 ) >=sys-devel/autoconf-2.69 >=sys-devel/libtool-2.4 virtual/pkgconfig >=dev-vcs/git-1.8.2.1[curl] dev-lang/go:1.9=
+BDEPEND=>=app-portage/elt-patches-20170815 !<sys-devel/gettext-0.18.1.1-r3 || ( >=sys-devel/automake-1.16.1:1.16 >=sys-devel/automake-1.15.1:1.15 ) >=sys-devel/autoconf-2.69 >=sys-devel/libtool-2.4 virtual/pkgconfig >=dev-vcs/git-1.8.2.1[curl] dev-lang/go:1.9=
+DEFINED_PHASES=configure info install prepare unpack
+DEPEND=app-arch/cpio sys-fs/squashfs-tools rkt_stage1_src? ( >=sys-apps/systemd-222 app-shells/bash ) sys-apps/acl tpm? ( app-crypt/trousers )
 DESCRIPTION=A CLI for running app containers, and an implementation of the App Container Spec.
-EAPI=5
+EAPI=7
 HOMEPAGE=https://github.com/rkt/rkt
 IUSE=doc examples +rkt_stage1_coreos +rkt_stage1_fly rkt_stage1_host rkt_stage1_src tpm cros_workon_tree_ profiling +go_version_go1_9
 KEYWORDS=amd64 arm64
@@ -10,5 +11,5 @@ RDEPEND=!app-emulation/rocket rkt_stage1_host? ( >=sys-apps/systemd-220 app-shel
 REQUIRED_USE=|| ( rkt_stage1_coreos rkt_stage1_fly rkt_stage1_host rkt_stage1_src ) go_version_go1_9
 SLOT=0
 SRC_URI=rkt_stage1_coreos? ( amd64? ( https://alpha.release.core-os.net/amd64-usr/1478.0.0/coreos_production_pxe_image.cpio.gz -> rkt-pxe-amd64-usr-1478.0.0.img ) arm64? ( https://alpha.release.core-os.net/arm64-usr/1478.0.0/coreos_production_pxe_image.cpio.gz -> rkt-pxe-arm64-usr-1478.0.0.img ) )
-_eclasses_=autotools	1bf086cdd7356f5c9a4acd9727bd2065	autotools-utils	696393cddf6200db17a31641f597b403	coreos-go-depend	c1ef355151971b96934101203331f30c	coreos-go-utils	c34072f13165bb85e5106cc6e082a4e1	cros-workon	4ad6e6491a1010ad7c875302b3be18ba	desktop	b1d22ac8bdd4679ab79c71aca235009d	epatch	a1bf4756dba418a7238f3be0cb010c54	estack	43ddf5aaffa7a8d0482df54d25a66a1f	eutils	6e6c2737b59a4b982de6fb3ecefd87f8	flag-o-matic	55aaa148741116aa54ad0d80e361818e	git-r3	0d4635eeb5a96cd5315597a47eba25c9	libtool	f143db5a74ccd9ca28c1234deffede96	ltprune	08f9e1d9ee0af8f5d9a7854efbcd8c0e	multilib	b2f01ad412baf81650c23fcf0975fa33	preserve-libs	ef207dc62baddfddfd39a164d9797648	systemd	47c677ae1d7b69031f11f630ac09f0d1	toolchain-funcs	f164325a2cdb5b3ea39311d483988861	vcs-clean	2a0f74a496fa2b1552c4f3398258b7bf
-_md5_=334cbd4ce8b25a40852cbbbaa7b5e44c
+_eclasses_=autotools	1bf086cdd7356f5c9a4acd9727bd2065	coreos-go-depend	cec6567f1c69a9b3e529a49eedaeed55	coreos-go-utils	67004337b6f831adc5f1ff107ee2f157	cros-workon	4ad6e6491a1010ad7c875302b3be18ba	eutils	6e6c2737b59a4b982de6fb3ecefd87f8	flag-o-matic	55aaa148741116aa54ad0d80e361818e	git-r3	0d4635eeb5a96cd5315597a47eba25c9	libtool	f143db5a74ccd9ca28c1234deffede96	multilib	b2f01ad412baf81650c23fcf0975fa33	systemd	47c677ae1d7b69031f11f630ac09f0d1	toolchain-funcs	f164325a2cdb5b3ea39311d483988861
+_md5_=224c6264b30c8285e08730d7e8d3f345
