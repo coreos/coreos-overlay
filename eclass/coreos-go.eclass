@@ -25,7 +25,7 @@
 # @CODE
 
 case "${EAPI:-0}" in
-	5|6) ;;
+	5|6|7) ;;
 	*) die "Unsupported EAPI=${EAPI} for ${ECLASS}"
 esac
 
@@ -56,7 +56,7 @@ go_build() {
 
 coreos-go_src_prepare() {
 	debug-print-function ${FUNCNAME} "$@"
-	has ${EAPI:-0} 6 && default
+	has ${EAPI:-0} 6 7 && default
 
 	go_export
 	export GOPATH="${WORKDIR}/gopath"
