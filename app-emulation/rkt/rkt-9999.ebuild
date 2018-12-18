@@ -1,7 +1,7 @@
 # Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=5
+EAPI=7
 
 AUTOTOOLS_AUTORECONF=yes
 AUTOTOOLS_IN_SOURCE_BUILD=yes
@@ -9,7 +9,7 @@ AUTOTOOLS_IN_SOURCE_BUILD=yes
 # temporary downgrade for https://github.com/coreos/bugs/issues/2402
 COREOS_GO_VERSION="go1.9"
 
-inherit autotools-utils flag-o-matic systemd toolchain-funcs multilib
+inherit autotools flag-o-matic systemd toolchain-funcs multilib
 inherit cros-workon coreos-go-depend
 
 CROS_WORKON_PROJECT="rkt/rkt"
@@ -65,7 +65,7 @@ RDEPEND="!app-emulation/rocket
 
 BUILDDIR="build-${P}"
 
-STAGE1INSTALLDIR="/usr/$(get_libdir)/rkt/stage1-images"
+STAGE1INSTALLDIR=""
 STAGE1FIRST=""
 STAGE1FLAVORS=""
 
@@ -79,15 +79,17 @@ function add_stage1() {
 }
 
 src_prepare() {
-	# ensure we use a CoreOS PXE image version that matches rkt's expectations.
-	local rkt_coreos_version
+	eapply_user
 
-	rkt_coreos_version=$(awk '/^CCN_IMG_RELEASE/ { print $3 }' stage1/usr_from_coreos/coreos-common.mk)
+	STAGE1INSTALLDIR="/usr/$(get_libdir)/rkt/stage1-images"
+
+	# ensure we use a CoreOS PXE image version that matches rkt's expectations.
+	local rkt_coreos_version=$(awk '/^CCN_IMG_RELEASE/ { print $3 }' stage1/usr_from_coreos/coreos-common.mk)
 	if [ "${rkt_coreos_version}" != "${PXE_VERSION}" ]; then
 		die "CoreOS versions in ebuild and rkt build scripts are mismatched, expecting ${rkt_coreos_version}!"
 	fi
 
-	autotools-utils_src_prepare
+	eautoreconf
 }
 
 src_configure() {
@@ -117,7 +119,7 @@ src_configure() {
 	export BUILDDIR
 	export V=1
 
-	autotools-utils_src_configure
+	econf "${myeconfargs[@]}"
 }
 
 src_install() {
