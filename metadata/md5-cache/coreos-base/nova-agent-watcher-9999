@@ -1,12 +1,12 @@
+BDEPEND=>=dev-vcs/git-1.8.2.1[curl] virtual/pkgconfig dev-lang/go:1.11=
 DEFINED_PHASES=compile info install prepare unpack
-DEPEND=>=dev-vcs/git-1.8.2.1[curl] virtual/pkgconfig dev-lang/go:1.11=
 DESCRIPTION=nova-agent-watcher
-EAPI=5
+EAPI=7
 HOMEPAGE=https://github.com/coreos/nova-agent-watcher
 IUSE=cros_workon_tree_ profiling +go_version_go1_11
 KEYWORDS=~amd64 ~arm64
 LICENSE=Apache-2.0
 REQUIRED_USE=go_version_go1_11
 SLOT=0
-_eclasses_=coreos-go	6ac9cfd14732c366af8df9447772fa8c	coreos-go-depend	c1ef355151971b96934101203331f30c	coreos-go-utils	c34072f13165bb85e5106cc6e082a4e1	cros-workon	4ad6e6491a1010ad7c875302b3be18ba	desktop	b1d22ac8bdd4679ab79c71aca235009d	epatch	a1bf4756dba418a7238f3be0cb010c54	estack	43ddf5aaffa7a8d0482df54d25a66a1f	eutils	6e6c2737b59a4b982de6fb3ecefd87f8	flag-o-matic	55aaa148741116aa54ad0d80e361818e	git-r3	0d4635eeb5a96cd5315597a47eba25c9	ltprune	08f9e1d9ee0af8f5d9a7854efbcd8c0e	multilib	b2f01ad412baf81650c23fcf0975fa33	multiprocessing	cac3169468f893670dac3e7cb940e045	preserve-libs	ef207dc62baddfddfd39a164d9797648	systemd	47c677ae1d7b69031f11f630ac09f0d1	toolchain-funcs	f164325a2cdb5b3ea39311d483988861	vcs-clean	2a0f74a496fa2b1552c4f3398258b7bf
-_md5_=5f033e01316562b13f6837d69b2042a8
+_eclasses_=coreos-go	e0b9bd13413783cf7a2859afc20534a2	coreos-go-depend	cec6567f1c69a9b3e529a49eedaeed55	coreos-go-utils	67004337b6f831adc5f1ff107ee2f157	cros-workon	4ad6e6491a1010ad7c875302b3be18ba	eutils	6e6c2737b59a4b982de6fb3ecefd87f8	flag-o-matic	55aaa148741116aa54ad0d80e361818e	git-r3	0d4635eeb5a96cd5315597a47eba25c9	multilib	b2f01ad412baf81650c23fcf0975fa33	multiprocessing	cac3169468f893670dac3e7cb940e045	systemd	47c677ae1d7b69031f11f630ac09f0d1	toolchain-funcs	f164325a2cdb5b3ea39311d483988861
+_md5_=bca552e19d925e1dba18a19506b23079

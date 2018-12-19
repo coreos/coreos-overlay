@@ -1,7 +1,7 @@
 # Copyright (c) 2014 CoreOS, Inc.. All rights reserved.
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=5
+EAPI=7
 CROS_WORKON_PROJECT="coreos/nova-agent-watcher"
 CROS_WORKON_LOCALNAME="nova-agent-watcher"
 CROS_WORKON_REPO="git://github.com"

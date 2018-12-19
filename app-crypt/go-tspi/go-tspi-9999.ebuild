@@ -1,4 +1,4 @@
-EAPI=5
+EAPI=7
 
 inherit coreos-go eutils git-r3 systemd
 COREOS_GO_PACKAGE="github.com/coreos/go-tspi"

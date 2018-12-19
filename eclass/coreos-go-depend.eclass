@@ -16,7 +16,8 @@
 export COREOS_GO_VERSION="${COREOS_GO_VERSION:-go1.11}"
 
 case "${EAPI:-0}" in
-	5|6) ;;
+	5|6) DEPEND="dev-lang/go:${COREOS_GO_VERSION#go}=" ;;
+	7) BDEPEND="dev-lang/go:${COREOS_GO_VERSION#go}=" ;;
 	*) die "Unsupported EAPI=${EAPI} for ${ECLASS}"
 esac
 
@@ -26,4 +27,3 @@ inherit coreos-go-utils
 # the package gets rebuilt when the version changes.
 IUSE="+go_version_${COREOS_GO_VERSION//./_}"
 REQUIRED_USE="go_version_${COREOS_GO_VERSION//./_}"
-DEPEND="dev-lang/go:${COREOS_GO_VERSION#go}="
