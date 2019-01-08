@@ -1,4 +1,4 @@
-# Copyright 1999-2018 Gentoo Foundation
+# Copyright 1999-2019 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
@@ -13,7 +13,7 @@ SRC_URI="http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-${PV:0:3}/${MY_P}.tar
 
 LICENSE="HPND BSD ISC"
 SLOT="0"
-KEYWORDS="alpha amd64 arm arm64 hppa ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh sparc x86 ~amd64-fbsd ~x86-fbsd ~amd64-linux ~x86-linux ~m68k-mint"
+KEYWORDS="alpha amd64 arm arm64 hppa ia64 ~m68k ~mips ppc ppc64 ~s390 ~sh sparc x86 ~amd64-fbsd ~x86-fbsd ~amd64-linux ~x86-linux ~m68k-mint"
 IUSE="caps debug ipv6 libressl openntpd parse-clocks perl readline samba selinux snmp ssl threads vim-syntax zeroconf"
 
 CDEPEND="readline? ( >=sys-libs/readline-4.1:0= )
@@ -42,6 +42,7 @@ PATCHES=(
 	"${FILESDIR}"/${PN}-4.2.8-ipc-caps.patch #533966
 	"${FILESDIR}"/${PN}-4.2.8-sntp-test-pthreads.patch #563922
 	"${FILESDIR}"/${PN}-4.2.8_p10-fix-build-wo-ssl-or-libressl.patch
+	"${FILESDIR}"/${PN}-4.2.8_p12-libressl-2.8.patch
 )
 
 pkg_setup() {
