@@ -1,0 +1,2 @@
+# Do not install SSSD in the container.
+sys-auth/sssd-1.13.1
