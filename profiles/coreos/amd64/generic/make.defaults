@@ -1,3 +1,3 @@
 # Enable optimizations for common x86_64 CPUs
-CFLAGS="-O2 -pipe -mtune=generic -g"
+CFLAGS="-O2 -pipe -mtune=generic -g -mindirect-branch=thunk -mindirect-branch-register"
 CXXFLAGS="${CFLAGS}"
