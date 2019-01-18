@@ -592,9 +592,6 @@ get_kheader_version() {
 # pkg_ and src_ phases, so we call this function both in pkg_pretend and in
 # src_unpack.
 sanity_prechecks() {
-	# Make sure devpts is mounted correctly for use w/out setuid pt_chown
-	check_devpts
-
 	# Prevent native builds from downgrading
 	if [[ ${MERGE_TYPE} != "buildonly" ]] && \
 	   [[ ${ROOT} == "/" ]] && \
@@ -715,14 +712,6 @@ sanity_prechecks() {
 # the phases
 #
 
-# pkg_pretend
-
-pkg_pretend() {
-	# All the checks...
-	einfo "Checking general environment sanity."
-	sanity_prechecks
-}
-
 # src_unpack
 
 src_unpack() {
@@ -745,6 +734,11 @@ src_unpack() {
 	cd "${WORKDIR}" || die
 	unpack glibc-${RELEASE_VER}-patches-${PATCH_VER}.tar.bz2
 }
+
+PATCHES=(
+	"${FILESDIR}"/${PV}/${P}-c-utf8-locale.patch
+	"${FILESDIR}"/2.25/glibc-2.25-gshadow-handle-erange.patch
+)
 
 src_prepare() {
 	if ! use vanilla ; then
@@ -1282,6 +1276,23 @@ glibc_do_src_install() {
 	if use compile-locales && ! is_crosscompile ; then
 		run_locale_gen "${ED}"
 	fi
+
+	## COREOS: Add some local changes:
+	# - Config files are installed by baselayout, not glibc.
+	# - Install nscd/systemd stuff in /usr.
+
+	# Use tmpfiles to put nscd.conf in /etc and create directories.
+	insinto /usr/share/baselayout
+	if ! in_iuse nscd || use nscd ; then
+		doins "${S}"/nscd/nscd.conf || die
+		systemd_newtmpfilesd "${FILESDIR}"/nscd-conf.tmpfiles nscd-conf.conf || die
+	fi
+
+	# Clean out any default configs.
+	rm -rf "${ED}"/etc
+
+	# Restore this one for the SDK.
+	test ! -e "${T}"/00glibc || doenvd "${T}"/00glibc
 }
 
 glibc_headers_install() {
