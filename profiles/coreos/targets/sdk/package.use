@@ -5,6 +5,8 @@ dev-vcs/git pcre
 dev-util/catalyst ccache
 dev-lang/python sqlite
 
+dev-lang/rust rustfmt
+
 # Allow smartcard support in the SDK for image signing
 app-crypt/gnupg smartcard usb
 
