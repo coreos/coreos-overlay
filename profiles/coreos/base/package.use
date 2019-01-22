@@ -98,3 +98,6 @@ sys-apps/man-db -nls
 
 # Always build the firmware from source.
 sys-firmware/edk2-ovmf -binary
+
+# Disable zstd to avoid adding it to prod images until something needs it
+sys-fs/btrfs-progs -zstd
