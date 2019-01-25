@@ -33,7 +33,7 @@ INSTALL_MASK="${INSTALL_MASK}
 
 # Remove files which depend on interpreters not present in boards.
 INSTALL_MASK="${INSTALL_MASK}
-  /lib/systemd/system/xfs_scrub_all*
+  /usr/lib*/systemd/system/xfs_scrub_all*
   /usr/share/git/contrib/*
   /usr/bin/diff-highlight
   /usr/bin/autoscan-2.13
