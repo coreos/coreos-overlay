@@ -43,3 +43,6 @@ sys-libs/libseccomp static-libs
 
 # bind-tools' configure script breaks when cross-compiling with seccomp enabled
 net-dns/bind-tools -seccomp
+
+# Gentoo's new hardened profile disables PIC, but open-vm-tools needs it
+app-emulation/open-vm-tools pic
