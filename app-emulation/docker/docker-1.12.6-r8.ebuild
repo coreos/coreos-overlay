@@ -62,7 +62,7 @@ RDEPEND="
 	>=sys-apps/shadow-4.4
 
 	=app-emulation/containerd-0.2.5-r3[seccomp?]
-	=app-emulation/runc-1.0.0_rc2_p9[apparmor?,seccomp?]
+	=app-emulation/runc-1.0.0_rc2_p9-r1[apparmor?,seccomp?]
 "
 
 RESTRICT="installsources strip"
