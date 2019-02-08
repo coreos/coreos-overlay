@@ -14,13 +14,13 @@ RDEPEND="
 	=app-emulation/docker-17.03.2-r1
 	=app-emulation/containerd-0.2.6
 	=app-emulation/docker-proxy-0.8.0_p20161019
-	=app-emulation/docker-runc-1.0.0_rc2_p136
+	=app-emulation/docker-runc-1.0.0_rc2_p136-r1
 	=sys-process/tini-0.13.2
 "
 
 src_install() {
 	insinto /.torcx
-	newins "${FILESDIR}/${PN}-${PV}-manifest.json" manifest.json
+	newins "${FILESDIR}/${P}-manifest.json" manifest.json
 
 	# Enable the Docker socket by default.
 	local unitdir=/usr/lib/systemd/system
