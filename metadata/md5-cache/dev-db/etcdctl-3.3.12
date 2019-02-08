@@ -8,6 +8,6 @@ KEYWORDS=amd64 arm64
 LICENSE=Apache-2.0
 REQUIRED_USE=go_version_go1_11
 SLOT=0
-SRC_URI=https://github.com/etcd-io/etcd/archive/v3.3.11.tar.gz -> etcdctl-3.3.11.tar.gz
+SRC_URI=https://github.com/etcd-io/etcd/archive/v3.3.12.tar.gz -> etcdctl-3.3.12.tar.gz
 _eclasses_=coreos-go	e0b9bd13413783cf7a2859afc20534a2	coreos-go-depend	cec6567f1c69a9b3e529a49eedaeed55	coreos-go-utils	67004337b6f831adc5f1ff107ee2f157	eutils	6e6c2737b59a4b982de6fb3ecefd87f8	flag-o-matic	55aaa148741116aa54ad0d80e361818e	multilib	b2f01ad412baf81650c23fcf0975fa33	multiprocessing	cac3169468f893670dac3e7cb940e045	toolchain-funcs	f164325a2cdb5b3ea39311d483988861
 _md5_=bdac903f4b5b7f1f75b6b0aa78f86161
