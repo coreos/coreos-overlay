@@ -43,6 +43,7 @@ src_unpack() {
 
 PATCHES=(
 	"${FILESDIR}/0001-Delay-unshare-of-clone-newipc-for-selinux.patch"
+	"${FILESDIR}/0001-nsenter-clone-proc-self-exe-to-avoid-exposing-host-b.patch"
 )
 
 src_compile() {
