@@ -14,6 +14,3 @@
 # mask an accidental rkt major version bump to ensure it's not chosen over more
 # recent releases
 =app-emulation/rkt-13.0
-
-# This causes build failures from loop device partitions never being cleaned.
->=sys-apps/util-linux-2.33
