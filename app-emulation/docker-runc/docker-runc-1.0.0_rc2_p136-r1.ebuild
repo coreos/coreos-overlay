@@ -44,6 +44,7 @@ src_unpack() {
 
 PATCHES=(
 	"${FILESDIR}/${PN}-1.0.0_rc2-mount-propagation.patch"
+	"${FILESDIR}/0001-nsenter-clone-proc-self-exe-to-avoid-exposing-host-b.patch"
 )
 
 src_compile() {
