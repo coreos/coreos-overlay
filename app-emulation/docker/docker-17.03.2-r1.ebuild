@@ -63,7 +63,7 @@ RDEPEND="
 	>=app-arch/xz-utils-4.9
 
 	=app-emulation/containerd-0.2.6[seccomp?]
-	=app-emulation/docker-runc-1.0.0_rc2_p136[apparmor?,seccomp?]
+	=app-emulation/docker-runc-1.0.0_rc2_p136-r1[apparmor?,seccomp?]
 	=app-emulation/docker-proxy-0.8.0_p20161019
 	container-init? ( >=sys-process/tini-0.13.0 )
 "
