@@ -29,7 +29,7 @@ SLOT="0"
 IUSE="+btrfs hardened"
 
 DEPEND="btrfs? ( sys-fs/btrfs-progs )"
-RDEPEND="~app-emulation/docker-runc-1.0.0_rc5_p19
+RDEPEND="~app-emulation/docker-runc-1.0.0_rc5_p22
 	sys-libs/libseccomp"
 
 S=${WORKDIR}/${P}/src/${COREOS_GO_PACKAGE}

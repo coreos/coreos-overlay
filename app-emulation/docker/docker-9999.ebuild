@@ -1,4 +1,4 @@
-# Copyright 1999-2018 Gentoo Foundation
+# Copyright 1999-2019 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
@@ -19,7 +19,7 @@ else
 	else
 		MY_PV="$PV-ce"
 	fi
-	DOCKER_GITCOMMIT="e68fc7a"
+	DOCKER_GITCOMMIT="6d37f41"
 	SRC_URI="https://${COREOS_GO_PACKAGE}/archive/v${MY_PV}.tar.gz -> ${P}.tar.gz"
 	KEYWORDS="amd64 arm64"
 	[ "$DOCKER_GITCOMMIT" ] || die "DOCKER_GITCOMMIT must be added manually for each bump!"
@@ -59,15 +59,13 @@ DEPEND+="sys-kernel/coreos-kernel"
 # https://github.com/docker/docker/blob/master/project/PACKAGERS.md#optional-dependencies
 RDEPEND="
 	${CDEPEND}
-
-	!app-emulation/docker-bin
 	>=net-firewall/iptables-1.4
 	sys-process/procps
 	>=dev-vcs/git-1.7
 	>=app-arch/xz-utils-4.9
 	dev-libs/libltdl
 	~app-emulation/containerd-1.1.2
-	~app-emulation/docker-runc-1.0.0_rc5_p19[apparmor?,seccomp?]
+	~app-emulation/docker-runc-1.0.0_rc5_p22[apparmor?,seccomp?]
 	~app-emulation/docker-proxy-0.8.0_p20180709
 	container-init? ( >=sys-process/tini-0.13.1 )
 "
@@ -87,8 +85,8 @@ CONFIG_CHECK="
 	~KEYS
 	~VETH ~BRIDGE ~BRIDGE_NETFILTER
 	~NF_NAT_IPV4 ~IP_NF_FILTER ~IP_NF_TARGET_MASQUERADE
-	~NETFILTER_XT_MATCH_ADDRTYPE ~NETFILTER_XT_MATCH_CONNTRACK
-	~NF_NAT ~NF_NAT_NEEDED
+	~NETFILTER_XT_MATCH_ADDRTYPE ~NETFILTER_XT_MATCH_CONNTRACK ~NETFILTER_XT_MATCH_IPVS
+	~IP_NF_NAT ~NF_NAT ~NF_NAT_NEEDED
 	~POSIX_MQUEUE
 
 	~USER_NS
@@ -104,7 +102,7 @@ CONFIG_CHECK="
 	~IP_VS ~IP_VS_PROTO_TCP ~IP_VS_PROTO_UDP ~IP_VS_NFCT ~IP_VS_RR
 
 	~VXLAN
-	~XFRM_ALGO ~XFRM_USER
+	~CRYPTO ~CRYPTO_AEAD ~CRYPTO_GCM ~CRYPTO_SEQIV ~CRYPTO_GHASH ~XFRM_ALGO ~XFRM_USER
 	~IPVLAN
 	~MACVLAN ~DUMMY
 "
@@ -125,21 +123,6 @@ pkg_setup() {
 		ewarn ""
 		ewarn "Using Docker with kernels older than 3.10 is unstable and unsupported."
 		ewarn " - http://docs.docker.com/engine/installation/binaries/#check-kernel-dependencies"
-	fi
-
-	# for where these kernel versions come from, see:
-	# https://www.google.com/search?q=945b2b2d259d1a4364a2799e80e8ff32f8c6ee6f+site%3Akernel.org%2Fpub%2Flinux%2Fkernel+file%3AChangeLog*
-	if ! {
-		kernel_is ge 3 16 \
-		|| { kernel_is 3 15 && kernel_is ge 3 15 5; } \
-		|| { kernel_is 3 14 && kernel_is ge 3 14 12; } \
-		|| { kernel_is 3 12 && kernel_is ge 3 12 25; }
-	}; then
-		ewarn ""
-		ewarn "There is a serious Docker-related kernel panic that has been fixed in 3.16+"
-		ewarn "  (and was backported to 3.15.5+, 3.14.12+, and 3.12.25+)"
-		ewarn ""
-		ewarn "See also https://github.com/docker/docker/issues/2960"
 	fi
 
 	if kernel_is le 3 18; then
@@ -267,7 +250,7 @@ src_compile() {
 
 	pushd components/cli || die
 
-	# Imitating https://github.com/docker/docker-ce/blob/v18.06.1-ce/components/cli/scripts/build/.variables#L7
+	# Imitating https://github.com/docker/docker-ce/blob/v18.06.2-ce/components/cli/scripts/build/.variables#L7
 	CLI_BUILDTIME="$(date -d "@${DOCKER_BUILD_DATE}" --utc --rfc-3339 ns 2> /dev/null | sed -e 's/ /T/')"
 	# build cli
 	emake \
