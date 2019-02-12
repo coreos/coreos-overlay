@@ -33,4 +33,5 @@ IUSE=""
 UNIPATCH_LIST="
 	${PATCH_DIR}/z0001-kbuild-derive-relative-path-for-KBUILD_SRC-from-CURD.patch \
 	${PATCH_DIR}/z0002-tools-objtool-Makefile-Don-t-fail-on-fallthrough-wit.patch \
+	${PATCH_DIR}/z0003-posix-cpu-timers-Unbreak-timer-rearming.patch \
 "
