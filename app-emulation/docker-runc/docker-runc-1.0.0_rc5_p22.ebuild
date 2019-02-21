@@ -7,14 +7,12 @@ GITHUB_URI="github.com/opencontainers/runc"
 COREOS_GO_PACKAGE="${GITHUB_URI}"
 COREOS_GO_VERSION="go1.10"
 # the commit of runc that docker uses.
-# see https://github.com/docker/docker-ce/blob/v18.06.2-ce/components/engine/hack/dockerfile/install/runc.installer#L5
+# see https://github.com/docker/docker-ce/blob/v18.06.3-ce/components/engine/hack/dockerfile/install/runc.installer#L4
 # Update the patch number when this commit is changed (i.e. the _p in the ebuild).
 # The patch version is arbitrarily the number of commits since the tag version
 # specified in the ebuild name. For example:
 # $ git log --oneline v1.0.0-rc5..${COMMIT_ID} | wc -l
 COMMIT_ID="a592beb5bc4c4092b1b1bac971afed27687340c5"
-# This is the expected commit ID, which ignores the patch in the commit above.
-RUNC_COMMIT="69663f0bd4b60df09991c08812a60108003fa340"
 
 inherit eutils flag-o-matic coreos-go vcs-snapshot
 
@@ -63,7 +61,7 @@ src_compile() {
 
 	GOPATH="${WORKDIR}/${P}" emake BUILDTAGS="${options[*]}" \
 		VERSION=1.0.0-rc5+dev.docker-18.06 \
-		COMMIT="${RUNC_COMMIT}"
+		COMMIT="${COMMIT_ID}"
 }
 
 src_install() {
