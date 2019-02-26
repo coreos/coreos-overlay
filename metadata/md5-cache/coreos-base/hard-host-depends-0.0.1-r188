@@ -1,9 +1,0 @@
-DEFINED_PHASES=-
-DESCRIPTION=List of packages that are needed on the buildhost (meta package)
-EAPI=2
-HOMEPAGE=http://src.chromium.org
-KEYWORDS=amd64 x86
-LICENSE=GPL-2
-RDEPEND=app-arch/lzop app-arch/pigz app-admin/sudo sys-apps/less dev-embedded/u-boot-tools dev-util/ccache dev-util/crosutils sys-boot/syslinux sys-devel/crossdev sys-devel/sysroot-wrappers sys-fs/dosfstools >=app-arch/pbzip2-1.1.1-r1 app-arch/rpm2targz app-arch/sharutils app-arch/unzip app-emulation/qemu coreos-base/cros-devutils[cros_host] =dev-lang/python-2* dev-python/setuptools dev-lang/nasm dev-lang/swig dev-lang/yasm dev-lang/go:1.6 dev-lang/go:1.7 dev-lang/go:1.8 dev-lang/go:1.9 dev-lang/go:1.10 dev-lang/go:1.11 dev-lang/go-bootstrap dev-libs/dbus-glib >=dev-libs/glib-2.26.1 dev-libs/libgcrypt dev-libs/libxslt dev-libs/libyaml dev-libs/protobuf dev-python/ctypesgen dev-python/mako sys-devel/bc dev-util/gdbus-codegen dev-util/gperf >=dev-util/gtk-doc-am-1.13 >=dev-util/intltool-0.30 dev-util/scons dev-vcs/cvs >=dev-vcs/git-1.7.2 dev-vcs/mercurial dev-vcs/subversion[-dso] net-misc/google-cloud-sdk sys-apps/usbutils sys-apps/systemd !sys-apps/nih-dbus-tool =sys-devel/automake-1.10* sys-libs/libnih sys-libs/nss-usrfiles sys-power/iasl virtual/udev app-text/asciidoc app-text/xmlto sys-apps/gptfdisk net-libs/libtirpc sys-apps/dbus sys-process/lsof app-arch/zip app-portage/eclass-manpages app-portage/gentoolkit app-portage/portage-utils app-editors/vim dev-util/perf sys-apps/pv app-shells/bash-completion sys-fs/squashfs-tools coreos-base/update_engine dev-python/pylint net-misc/openssh net-misc/wget virtual/cdrtools !net-misc/dhcpcd !coreos-base/google-breakpad
-SLOT=0
-_md5_=3f559f0e345f95e14cdbbac1636c0d13
