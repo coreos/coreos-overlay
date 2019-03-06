@@ -1,7 +1,7 @@
-# Copyright 1999-2018 Gentoo Foundation
+# Copyright 2011-2019 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=6
+EAPI=7
 
 CROS_WORKON_PROJECT="coreos/systemd"
 CROS_WORKON_REPO="git://github.com"
@@ -10,11 +10,11 @@ if [[ ${PV} == 9999 ]]; then
 	# Use ~arch instead of empty keywords for compatibility with cros-workon
 	KEYWORDS="~amd64 ~arm64 ~arm ~x86"
 else
-	CROS_WORKON_COMMIT="9c17845ee0ba1afda92ccafdfbbe5c15b68e7010" # v238-coreos
+	CROS_WORKON_COMMIT="3166865487773619cc95cb2618146eccd99422f8" # v241-coreos
 	KEYWORDS="~alpha amd64 ~arm arm64 ~ia64 ~ppc ~ppc64 ~sparc ~x86"
 fi
 
-PYTHON_COMPAT=( python{3_4,3_5,3_6} )
+PYTHON_COMPAT=( python{3_5,3_6,3_7} )
 
 # cros-workon must be imported first, in cases where cros-workon and
 # another eclass exports the same function (say src_compile) we want
@@ -28,7 +28,7 @@ HOMEPAGE="https://www.freedesktop.org/wiki/Software/systemd"
 
 LICENSE="GPL-2 LGPL-2.1 MIT public-domain"
 SLOT="0/2"
-IUSE="acl apparmor audit build cryptsetup curl elfutils +gcrypt gnuefi http idn importd +kmod libidn2 +lz4 lzma nat pam pcre policykit qrcode +seccomp selinux ssl +sysv-utils test usrmerge vanilla xkb"
+IUSE="acl apparmor audit build cryptsetup curl elfutils +gcrypt gnuefi http idn importd +kmod libidn2 +lz4 lzma nat pam pcre policykit qrcode +resolvconf +seccomp selinux +split-usr ssl +sysv-utils test vanilla xkb"
 
 REQUIRED_USE="importd? ( curl gcrypt lzma )"
 RESTRICT="!test? ( test )"
@@ -50,8 +50,8 @@ COMMON_DEPEND=">=sys-apps/util-linux-2.30:0=[${MULTILIB_USEDEP}]
 		ssl? ( >=net-libs/gnutls-3.1.4:0= )
 	)
 	idn? (
-		libidn2? ( net-dns/libidn2 )
-		!libidn2? ( net-dns/libidn )
+		libidn2? ( net-dns/libidn2:= )
+		!libidn2? ( net-dns/libidn:= )
 	)
 	importd? (
 		app-arch/bzip2:0=
@@ -66,13 +66,12 @@ COMMON_DEPEND=">=sys-apps/util-linux-2.30:0=[${MULTILIB_USEDEP}]
 	qrcode? ( media-gfx/qrencode:0= )
 	seccomp? ( >=sys-libs/libseccomp-2.3.3:0= )
 	selinux? ( sys-libs/libselinux:0= )
-	xkb? ( >=x11-libs/libxkbcommon-0.4.1:0= )
-	abi_x86_32? ( !<=app-emulation/emul-linux-x86-baselibs-20130224-r9
-		!app-emulation/emul-linux-x86-baselibs[-abi_x86_32(-)] )"
+	xkb? ( >=x11-libs/libxkbcommon-0.4.1:0= )"
 
 RDEPEND="${COMMON_DEPEND}
 	sysv-utils? ( !sys-apps/sysvinit )
 	!sysv-utils? ( sys-apps/sysvinit )
+	resolvconf? ( !net-dns/openresolv )
 	!build? ( || (
 		sys-apps/util-linux[kill(-)]
 		sys-process/procps[kill(+)]
@@ -90,15 +89,18 @@ PDEPEND=">=sys-apps/dbus-1.9.8[systemd]
 	!vanilla? ( sys-apps/gentoo-systemd-integration )"
 
 # Newer linux-headers needed by ia64, bug #480218
-DEPEND="${COMMON_DEPEND}
+DEPEND="
+	>=sys-kernel/linux-headers-${MINKV}
+	gnuefi? ( >=sys-boot/gnu-efi-3.0.2 )
+"
+
+BDEPEND="
 	app-arch/xz-utils:0
 	dev-util/gperf
+	>=dev-util/meson-0.46
 	>=dev-util/intltool-0.50
-	>=dev-util/meson-0.41
 	>=sys-apps/coreutils-8.16
-	>=sys-kernel/linux-headers-${MINKV}
-	virtual/pkgconfig
-	gnuefi? ( >=sys-boot/gnu-efi-3.0.2 )
+	virtual/pkgconfig[${MULTILIB_USEDEP}]
 	test? ( sys-apps/dbus )
 	app-text/docbook-xml-dtd:4.2
 	app-text/docbook-xml-dtd:4.5
@@ -194,8 +196,8 @@ multilib_src_configure() {
 		# avoid bash-completion dep
 		-Dbashcompletiondir="$(get_bashcompdir)"
 		# make sure we get /bin:/sbin in PATH
-		-Dsplit-usr=$(usex usrmerge false true)
-		-Drootprefix="$(usex usrmerge "${EPREFIX}/usr" "${EPREFIX:-/}")"
+		-Dsplit-usr=$(usex split-usr true false)
+		-Drootprefix="$(usex split-usr "${EPREFIX:-/}" "${EPREFIX}/usr")"
 		-Dsysvinit-path=
 		-Dsysvrcnd-path=
 		# Avoid infinite exec recursion, bug 642724
@@ -294,7 +296,7 @@ multilib_src_configure() {
 		-Defi-cc="$(tc-getCC)"
 		-Dquotaon-path=/usr/sbin/quotaon
 		-Dquotacheck-path=/usr/sbin/quotacheck
-		-Drootlibdir="${EPREFIX}$(usex usrmerge /usr '')/$(get_libdir)"
+		-Drootlibdir="${EPREFIX}$(usex split-usr '' /usr)/$(get_libdir)"
 	)
 
 	if multilib_is_native_abi && use idn; then
@@ -317,6 +319,7 @@ multilib_src_compile() {
 }
 
 multilib_src_test() {
+	unset DBUS_SESSION_BUS_ADDRESS XDG_RUNTIME_DIR
 	eninja test
 }
 
@@ -325,25 +328,33 @@ multilib_src_install() {
 }
 
 multilib_src_install_all() {
+	local rootprefix=$(usex split-usr '' /usr)
+
 	# meson doesn't know about docdir
-	mv "${ED%/}"/usr/share/doc/{systemd,${PF}} || die
+	mv "${ED}"/usr/share/doc/{systemd,${PF}} || die
 
 	einstalldocs
 
+	if ! use resolvconf; then
+		rm -f "${ED}${rootprefix}"/sbin/resolvconf || die
+	fi
+
 	if ! use sysv-utils; then
-		local rootprefix=$(usex usrmerge /usr '')
-		rm "${ED%/}${rootprefix}"/sbin/{halt,init,poweroff,reboot,runlevel,shutdown,telinit} || die
-		rmdir "${ED%/}${rootprefix}"/sbin || die
-		rm "${ED%/}"/usr/share/man/man1/init.1 || die
-		rm "${ED%/}"/usr/share/man/man8/{halt,poweroff,reboot,runlevel,shutdown,telinit}.8 || die
+		rm "${ED}${rootprefix}"/sbin/{halt,init,poweroff,reboot,runlevel,shutdown,telinit} || die
+		rm "${ED}"/usr/share/man/man1/init.1 || die
+		rm "${ED}"/usr/share/man/man8/{halt,poweroff,reboot,runlevel,shutdown,telinit}.8 || die
+	fi
+
+	if ! use resolvconf && ! use sysv-utils; then
+		rmdir "${ED}${rootprefix}"/sbin || die
 	fi
 
 	local udevdir=/lib/udev
-	use usrmerge && udevdir=/usr/lib/udev
+	use split-usr || udevdir=/usr/lib/udev
 
-	rm -r "${ED%/}${udevdir}/hwdb.d" || die
+	rm -r "${ED}${udevdir}/hwdb.d" || die
 
-	if ! use usrmerge; then
+	if use split-usr; then
 		# Avoid breaking boot/reboot
 		dosym ../../../lib/systemd/systemd /usr/lib/systemd/systemd
 		dosym ../../../lib/systemd/systemd-shutdown /usr/lib/systemd/systemd-shutdown
@@ -361,11 +372,11 @@ multilib_src_install_all() {
 	systemd_dotmpfilesd "${FILESDIR}"/systemd-resolv.conf
 
 	# Don't default to graphical.target
-	local unitdir=$(systemd_get_systemunitdir)
+	local unitdir=$(PKG_CONFIG_LIBDIR="${PWD}/src/core" systemd_get_systemunitdir)
 	dosym multi-user.target "${unitdir}"/default.target
 
 	# Don't set any extra environment variables by default
-	rm "${ED%/}/usr/lib/environment.d/99-environment.conf" || die
+	rm "${ED}/usr/lib/environment.d/99-environment.conf" || die
 
 	# Move a few services enabled in /etc to /usr, delete files individually
 	# so builds fail if systemd adds any new unexpected stuff to /etc
@@ -389,33 +400,33 @@ multilib_src_install_all() {
 		dodir "${unitdir}/${t}"
 		dosym "../${u}" "${unitdir}/${t}/${s}"
 
-		rm "${ED%/}/etc/systemd/system/${f}" || die
+		rm "${ED}/etc/systemd/system/${f}" || die
 	done
-	rmdir "${ED%/}"/etc/systemd/system/*.wants || die
+	rmdir "${ED}"/etc/systemd/system/*.wants || die
 	for f in \
 		systemd-networkd.service:dbus-org.freedesktop.network1.service \
 		systemd-resolved.service:dbus-org.freedesktop.resolve1.service
 	do
-		rm "${ED%/}/etc/systemd/system/${f#*:}" || die
+		rm "${ED}/etc/systemd/system/${f#*:}" || die
 		dosym "${f%%:*}" "${unitdir}/${f#*:}"
 	done
 
 	# Do not enable random services if /etc was detected as empty!!!
-	rm "${ED%/}$(usex usrmerge /usr '')/lib/systemd/system-preset/90-systemd.preset" || die
-	insinto $(usex usrmerge /usr '')/lib/systemd/system-preset
+	rm "${ED}$(usex split-usr '' /usr)/lib/systemd/system-preset/90-systemd.preset" || die
+	insinto $(usex split-usr '' /usr)/lib/systemd/system-preset
 	doins "${FILESDIR}"/99-default.preset
 
 	# Do not ship distro-specific files (nsswitch.conf pam.d)
-	rm -rf "${ED%/}"/usr/share/factory
-	sed -i "${ED%/}"/usr/lib/tmpfiles.d/etc.conf \
+	rm -rf "${ED}"/usr/share/factory
+	sed -i "${ED}"/usr/lib/tmpfiles.d/etc.conf \
 		-e '/^C \/etc\/nsswitch\.conf/d' \
 		-e '/^C \/etc\/pam\.d/d'
 }
 
 migrate_locale() {
-	local envd_locale_def="${EROOT%/}/etc/env.d/02locale"
-	local envd_locale=( "${EROOT%/}"/etc/env.d/??locale )
-	local locale_conf="${EROOT%/}/etc/locale.conf"
+	local envd_locale_def="${EROOT}/etc/env.d/02locale"
+	local envd_locale=( "${EROOT}"/etc/env.d/??locale )
+	local locale_conf="${EROOT}/etc/locale.conf"
 
 	if [[ ! -L ${locale_conf} && ! -e ${locale_conf} ]]; then
 		# If locale.conf does not exist...
@@ -470,13 +481,14 @@ pkg_postinst() {
 	newusergroup systemd-journal-remote
 	newusergroup systemd-network
 	newusergroup systemd-resolve
+	newusergroup systemd-timesync
 
 	systemd_update_catalog
 
 	# Keep this here in case the database format changes so it gets updated
 	# when required. Despite that this file is owned by sys-apps/hwids.
 	if has_version "sys-apps/hwids[udev]"; then
-		udevadm hwdb --update --root="${EROOT%/}"
+		udevadm hwdb --update --root="${EROOT}"
 	fi
 
 	udev_reload || FAIL=1
