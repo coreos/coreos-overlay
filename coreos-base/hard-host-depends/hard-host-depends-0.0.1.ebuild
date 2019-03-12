@@ -70,7 +70,6 @@ RDEPEND="${RDEPEND}
 	sys-apps/usbutils
 	sys-apps/systemd
 	!sys-apps/nih-dbus-tool
-	=sys-devel/automake-1.10*
 	sys-libs/libnih
 	sys-libs/nss-usrfiles
 	sys-power/iasl
