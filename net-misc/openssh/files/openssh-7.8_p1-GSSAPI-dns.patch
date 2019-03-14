@@ -1,9 +1,8 @@
-https://bugs.gentoo.org/165444
-https://bugzilla.mindrot.org/show_bug.cgi?id=1008
-
+diff --git a/auth.c b/auth.c
+index 9a3bc96f..fc2c3620 100644
 --- a/auth.c
 +++ b/auth.c
-@@ -728,120 +728,6 @@ fakepw(void)
+@@ -733,120 +733,6 @@ fakepw(void)
  	return (&fake);
  }
  
@@ -122,8 +121,10 @@ https://bugzilla.mindrot.org/show_bug.cgi?id=1008
 -}
 -
  /*
-  * Runs command in a subprocess wuth a minimal environment.
+  * Runs command in a subprocess with a minimal environment.
   * Returns pid on success, 0 on failure.
+diff --git a/canohost.c b/canohost.c
+index f71a0856..3e162d8c 100644
 --- a/canohost.c
 +++ b/canohost.c
 @@ -202,3 +202,117 @@ get_local_port(int sock)
@@ -244,17 +245,19 @@ https://bugzilla.mindrot.org/show_bug.cgi?id=1008
 +		return dnsname;
 +	}
 +}
+diff --git a/readconf.c b/readconf.c
+index db5f2d54..67feffa5 100644
 --- a/readconf.c
 +++ b/readconf.c
-@@ -160,6 +160,7 @@ typedef enum {
+@@ -161,6 +161,7 @@ typedef enum {
  	oClearAllForwardings, oNoHostAuthenticationForLocalhost,
  	oEnableSSHKeysign, oRekeyLimit, oVerifyHostKeyDNS, oConnectTimeout,
  	oAddressFamily, oGssAuthentication, oGssDelegateCreds,
 +	oGssTrustDns,
  	oServerAliveInterval, oServerAliveCountMax, oIdentitiesOnly,
- 	oSendEnv, oControlPath, oControlMaster, oControlPersist,
+ 	oSendEnv, oSetEnv, oControlPath, oControlMaster, oControlPersist,
  	oHashKnownHosts,
-@@ -200,9 +201,11 @@ static struct {
+@@ -202,9 +203,11 @@ static struct {
  #if defined(GSSAPI)
  	{ "gssapiauthentication", oGssAuthentication },
  	{ "gssapidelegatecredentials", oGssDelegateCreds },
@@ -266,7 +269,7 @@ https://bugzilla.mindrot.org/show_bug.cgi?id=1008
  #endif
  #ifdef ENABLE_PKCS11
  	{ "smartcarddevice", oPKCS11Provider },
-@@ -954,6 +957,10 @@ parse_time:
+@@ -977,6 +980,10 @@ parse_time:
  		intptr = &options->gss_deleg_creds;
  		goto parse_flag;
  
@@ -277,7 +280,7 @@ https://bugzilla.mindrot.org/show_bug.cgi?id=1008
  	case oBatchMode:
  		intptr = &options->batch_mode;
  		goto parse_flag;
-@@ -1766,6 +1773,7 @@ initialize_options(Options * options)
+@@ -1818,6 +1825,7 @@ initialize_options(Options * options)
  	options->challenge_response_authentication = -1;
  	options->gss_authentication = -1;
  	options->gss_deleg_creds = -1;
@@ -285,7 +288,7 @@ https://bugzilla.mindrot.org/show_bug.cgi?id=1008
  	options->password_authentication = -1;
  	options->kbd_interactive_authentication = -1;
  	options->kbd_interactive_devices = NULL;
-@@ -1908,6 +1916,8 @@ fill_default_options(Options * options)
+@@ -1964,6 +1972,8 @@ fill_default_options(Options * options)
  		options->gss_authentication = 0;
  	if (options->gss_deleg_creds == -1)
  		options->gss_deleg_creds = 0;
@@ -294,9 +297,11 @@ https://bugzilla.mindrot.org/show_bug.cgi?id=1008
  	if (options->password_authentication == -1)
  		options->password_authentication = 1;
  	if (options->kbd_interactive_authentication == -1)
+diff --git a/readconf.h b/readconf.h
+index c5688781..af809cc8 100644
 --- a/readconf.h
 +++ b/readconf.h
-@@ -43,6 +43,7 @@ typedef struct {
+@@ -41,6 +41,7 @@ typedef struct {
  					/* Try S/Key or TIS, authentication. */
  	int     gss_authentication;	/* Try GSS authentication */
  	int     gss_deleg_creds;	/* Delegate GSS credentials */
@@ -304,9 +309,11 @@ https://bugzilla.mindrot.org/show_bug.cgi?id=1008
  	int     password_authentication;	/* Try password
  						 * authentication. */
  	int     kbd_interactive_authentication; /* Try keyboard-interactive auth. */
+diff --git a/ssh_config.5 b/ssh_config.5
+index f499396a..be758544 100644
 --- a/ssh_config.5
 +++ b/ssh_config.5
-@@ -731,6 +731,16 @@ The default is
+@@ -722,6 +722,16 @@ The default is
  Forward (delegate) credentials to the server.
  The default is
  .Cm no .
@@ -323,12 +330,14 @@ https://bugzilla.mindrot.org/show_bug.cgi?id=1008
  .It Cm HashKnownHosts
  Indicates that
  .Xr ssh 1
+diff --git a/sshconnect2.c b/sshconnect2.c
+index 10e4f0a0..4f7d49e3 100644
 --- a/sshconnect2.c
 +++ b/sshconnect2.c
-@@ -643,6 +643,13 @@ userauth_gssapi(Authctxt *authctxt)
+@@ -657,6 +657,13 @@ userauth_gssapi(Authctxt *authctxt)
  	static u_int mech = 0;
  	OM_uint32 min;
- 	int ok = 0;
+ 	int r, ok = 0;
 +	const char *gss_host;
 +
 +	if (options.gss_trust_dns) {
@@ -339,13 +348,12 @@ https://bugzilla.mindrot.org/show_bug.cgi?id=1008
  
  	/* Try one GSSAPI method at a time, rather than sending them all at
  	 * once. */
-@@ -655,7 +662,7 @@ userauth_gssapi(Authctxt *authctxt)
+@@ -669,7 +676,7 @@ userauth_gssapi(Authctxt *authctxt)
  		/* My DER encoding requires length<128 */
  		if (gss_supported->elements[mech].length < 128 &&
- 		    ssh_gssapi_check_mechanism(&gssctxt, 
+ 		    ssh_gssapi_check_mechanism(&gssctxt,
 -		    &gss_supported->elements[mech], authctxt->host)) {
 +		    &gss_supported->elements[mech], gss_host)) {
  			ok = 1; /* Mechanism works */
  		} else {
  			mech++;
--- 
