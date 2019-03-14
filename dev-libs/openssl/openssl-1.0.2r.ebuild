@@ -1,11 +1,14 @@
-# Copyright 1999-2018 Gentoo Authors
+# Copyright 1999-2019 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="6"
 
-inherit eutils flag-o-matic toolchain-funcs multilib multilib-minimal systemd
+inherit eutils flag-o-matic toolchain-funcs multilib multilib-minimal
 
-PATCH_SET="openssl-1.0.2-patches-1.6"
+# openssl-1.0.2-patches-1.6 contain additional CVE patches
+# which got fixed with this release.
+# Please use 1.7 version number when rolling a new tarball!
+PATCH_SET="openssl-1.0.2-patches-1.5"
 MY_P=${P/_/-}
 DESCRIPTION="full-strength general purpose cryptography library (including SSL and TLS)"
 HOMEPAGE="https://www.openssl.org/"
@@ -20,7 +23,8 @@ SRC_URI="mirror://openssl/source/${MY_P}.tar.gz
 LICENSE="openssl"
 SLOT="0"
 KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~x86-fbsd ~x86-linux"
-IUSE="+asm gmp kerberos rfc3779 sctp cpu_flags_x86_sse2 sslv2 +sslv3 static-libs test +tls-heartbeat vanilla zlib"
+IUSE="+asm bindist gmp kerberos rfc3779 sctp cpu_flags_x86_sse2 sslv2 +sslv3 static-libs test +tls-heartbeat vanilla zlib"
+RESTRICT="!bindist? ( bindist )"
 
 RDEPEND=">=app-misc/c_rehash-1.7-r1
 	gmp? ( >=dev-libs/gmp-5.1.3-r1[static-libs(+)?,${MULTILIB_USEDEP}] )
@@ -55,7 +59,7 @@ done
 for i in "${FEDORA_PATCH[@]}" ; do # Already have a version prefix
 	FEDORA_SRC_URI+=( "${FEDORA_GIT_BASE}/${i}?h=${FEDORA_GIT_BRANCH} -> ${i}" )
 done
-SRC_URI+=" ${FEDORA_SRC_URI[*]} "
+SRC_URI+=" bindist? ( ${FEDORA_SRC_URI[@]} )"
 
 S="${WORKDIR}/${MY_P}"
 
@@ -64,7 +68,7 @@ MULTILIB_WRAPPED_HEADERS=(
 )
 
 src_prepare() {
-	if :; then
+	if use bindist; then
 		# This just removes the prefix, and puts it into WORKDIR like the RPM.
 		for i in "${FEDORA_SOURCE[@]}" ; do
 			cp -f "${DISTDIR}"/"${P}_${i}" "${WORKDIR}"/"${i}" || die
@@ -186,8 +190,8 @@ multilib_src_configure() {
 		$(use cpu_flags_x86_sse2 || echo "no-sse2") \
 		enable-camellia \
 		enable-ec \
-		no-ec2m \
-		no-srp \
+		$(use_ssl !bindist ec2m) \
+		$(use_ssl !bindist srp) \
 		${ec_nistp_64_gcc_128} \
 		enable-idea \
 		enable-mdc2 \
@@ -264,6 +268,11 @@ multilib_src_install_all() {
 	# twice; once with shared lib support enabled and once without.
 	use static-libs || rm -f "${ED}"/usr/lib*/lib*.a
 
+	# create the certs directory
+	dodir ${SSL_CNF_DIR}/certs
+	cp -RP certs/* "${ED}"${SSL_CNF_DIR}/certs/ || die
+	rm -r "${ED}"${SSL_CNF_DIR}/certs/{demo,expired}
+
 	# Namespace openssl programs to prevent conflicts with other man pages
 	cd "${ED}"/usr/share/man
 	local m d s
@@ -289,15 +298,12 @@ multilib_src_install_all() {
 	dodir /etc/sandbox.d #254521
 	echo 'SANDBOX_PREDICT="/dev/crypto"' > "${ED}"/etc/sandbox.d/10openssl
 
-	# Don't keep the sample CA files and their ilk in /etc.
-	rm -r "${ED}"${SSL_CNF_DIR}
+	diropts -m0700
+	keepdir ${SSL_CNF_DIR}/private
+}
 
-	# Save the default openssl.cnf in /usr and link it into place.
-	dodir /usr/share/ssl
-	insinto /usr/share/ssl
-	doins "${S}"/apps/openssl.cnf
-	systemd_dotmpfilesd "${FILESDIR}"/openssl.conf
-
-	# Package the tmpfiles.d setup for SDK bootstrapping.
-	systemd-tmpfiles --create --root="${ED}" "${FILESDIR}"/openssl.conf
+pkg_postinst() {
+	ebegin "Running 'c_rehash ${EROOT%/}${SSL_CNF_DIR}/certs/' to rebuild hashes #333069"
+	c_rehash "${EROOT%/}${SSL_CNF_DIR}/certs" >/dev/null
+	eend $?
 }
