@@ -6,9 +6,6 @@ EAPI=7
 AUTOTOOLS_AUTORECONF=yes
 AUTOTOOLS_IN_SOURCE_BUILD=yes
 
-# temporary downgrade for https://github.com/coreos/bugs/issues/2402
-COREOS_GO_VERSION="go1.9"
-
 inherit autotools flag-o-matic systemd toolchain-funcs multilib
 inherit cros-workon coreos-go-depend
 
