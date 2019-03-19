@@ -33,12 +33,6 @@ dev-util/checkbashisms
 # mtools 4.0.18 has '-i' flag for working with images
 =sys-fs/mtools-4.0.18
 
-# flex 2.6.1 breaks cross-compiling, but 2.6.3 adds a configure workaround
-=sys-devel/flex-2.6.3 **
-
-# xfsprogs 4.5.0 has install conflicts, and versions in between fail to link
-=sys-fs/xfsprogs-4.9.0 **
-
 # systemd v238 requires libseccomp 2.3.3
 =sys-libs/libseccomp-2.3.3 **
 
@@ -58,4 +52,3 @@ dev-util/checkbashisms
 # Force upgrades to work around catalyst problems while upgrading ncurses.
 =app-crypt/gnupg-2.2.7 ~amd64
 =sys-apps/gptfdisk-1.0.3 ~amd64
-=sys-apps/util-linux-2.32 ~amd64
