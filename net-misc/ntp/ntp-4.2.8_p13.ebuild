@@ -13,8 +13,8 @@ SRC_URI="http://www.eecis.udel.edu/~ntp/ntp_spool/ntp4/ntp-${PV:0:3}/${MY_P}.tar
 
 LICENSE="HPND BSD ISC"
 SLOT="0"
-KEYWORDS="alpha amd64 arm arm64 hppa ia64 ~m68k ~mips ppc ppc64 ~s390 ~sh sparc x86 ~amd64-fbsd ~x86-fbsd ~amd64-linux ~x86-linux ~m68k-mint"
-IUSE="caps debug ipv6 libressl openntpd parse-clocks perl readline samba selinux snmp ssl threads vim-syntax zeroconf"
+KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~x86-fbsd ~amd64-linux ~x86-linux ~m68k-mint"
+IUSE="caps debug ipv6 libressl openntpd parse-clocks readline samba selinux snmp ssl +threads vim-syntax zeroconf"
 
 CDEPEND="readline? ( >=sys-libs/readline-4.1:0= )
 	>=dev-libs/libevent-2.0.9:=[threads?]
@@ -23,7 +23,7 @@ CDEPEND="readline? ( >=sys-libs/readline-4.1:0= )
 	snmp? ( net-analyzer/net-snmp )
 	ssl? (
 		!libressl? ( dev-libs/openssl:0= )
-		libressl? ( dev-libs/libressl )
+		libressl? ( dev-libs/libressl:0= )
 	)
 	parse-clocks? ( net-misc/pps-tools )"
 DEPEND="${CDEPEND}
@@ -52,7 +52,6 @@ pkg_setup() {
 
 src_prepare() {
 	default
-	use perl || sed -i -e '/^SUBDIRS *=/,/[^\\]$/{/scripts/d;}' Makefile.am || die
 	append-cppflags -D_GNU_SOURCE #264109
 	# Make sure every build uses the same install layout. #539092
 	find sntp/loc/ -type f '!' -name legacy -delete || die
@@ -98,10 +97,19 @@ src_install() {
 	dodoc INSTALL WHERE-TO-START
 	doman "${WORKDIR}"/man/*.[58]
 
-	insinto /usr/share/ntp
+	insinto /etc
 	doins "${FILESDIR}"/ntp.conf
-	use ipv6 || sed -i '/^restrict .*::1/d' "${ED%/}"/usr/share/ntp/ntp.conf #524726
-	systemd_newtmpfilesd "${FILESDIR}"/ntp.tmpfiles ntp.conf
+	use ipv6 || sed -i '/^restrict .*::1/d' "${ED%/}"/etc/ntp.conf #524726
+	newinitd "${FILESDIR}"/ntpd.rc-r1 ntpd
+	newconfd "${FILESDIR}"/ntpd.confd ntpd
+	newinitd "${FILESDIR}"/ntp-client.rc ntp-client
+	newconfd "${FILESDIR}"/ntp-client.confd ntp-client
+	newinitd "${FILESDIR}"/sntp.rc sntp
+	newconfd "${FILESDIR}"/sntp.confd sntp
+	if ! use caps ; then
+		sed -i "s|-u ntp:ntp||" "${ED%/}"/etc/conf.d/ntpd || die
+	fi
+	sed -i "s:/usr/bin:/usr/sbin:" "${ED%/}"/etc/init.d/ntpd || die
 
 	keepdir /var/lib/ntp
 	use prefix || fowners ntp:ntp /var/lib/ntp
@@ -110,9 +118,10 @@ src_install() {
 		cd "${ED}" || die
 		rm usr/sbin/ntpd || die
 		rm -r var/lib || die
+		rm etc/{conf,init}.d/ntpd || die
 		rm usr/share/man/*/ntpd.8 || die
 	else
-		systemd_dounit "${FILESDIR}"/ntpd.service
+		systemd_newunit "${FILESDIR}"/ntpd.service-r2 ntpd.service
 		if use caps ; then
 			sed -i '/ExecStart/ s|$| -u ntp:ntp|' \
 				"${D%/}$(systemd_get_systemunitdir)"/ntpd.service \
@@ -121,6 +130,17 @@ src_install() {
 		systemd_enable_ntpunit 60-ntpd ntpd.service
 	fi
 
-	systemd_dounit "${FILESDIR}"/ntpdate.service
-	systemd_dounit "${FILESDIR}"/sntp.service
+	systemd_newunit "${FILESDIR}"/ntpdate.service-r1 ntpdate.service
+	systemd_install_serviced "${FILESDIR}"/ntpdate.service.conf
+	systemd_newunit "${FILESDIR}"/sntp.service-r2 sntp.service
+	systemd_install_serviced "${FILESDIR}"/sntp.service.conf
+}
+
+pkg_postinst() {
+	if grep -qs '^[^#].*notrust' "${EROOT}"/etc/ntp.conf ; then
+		eerror "The notrust option was found in your /etc/ntp.conf!"
+		ewarn "If your ntpd starts sending out weird responses,"
+		ewarn "then make sure you have keys properly setup and see"
+		ewarn "https://bugs.gentoo.org/41827"
+	fi
 }
