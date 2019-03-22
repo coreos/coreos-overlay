@@ -1,6 +1,0 @@
-# masked in portage-stable, but is unmasked in upstream.
-# remove this when upstream portage-stable package.mask is sync'd.
-=sys-block/open-iscsi-2.0.873
-
-# masked upstream due to ancientness
-<sys-devel/binutils-2.26

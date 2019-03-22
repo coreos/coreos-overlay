@@ -1,4 +1,4 @@
-# Copyright 1999-2018 Gentoo Foundation
+# Copyright 1999-2019 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="6"
@@ -8,13 +8,13 @@ inherit toolchain-funcs flag-o-matic
 code_ver=${PV}
 data_ver=${PV}
 DESCRIPTION="Timezone data (/usr/share/zoneinfo) and utilities (tzselect/zic/zdump)"
-HOMEPAGE="http://www.iana.org/time-zones http://www.twinsun.com/tz/tz-link.htm"
-SRC_URI="http://www.iana.org/time-zones/repository/releases/tzdata${data_ver}.tar.gz
-	http://www.iana.org/time-zones/repository/releases/tzcode${code_ver}.tar.gz"
+HOMEPAGE="https://www.iana.org/time-zones"
+SRC_URI="https://www.iana.org/time-zones/repository/releases/tzdata${data_ver}.tar.gz
+	https://www.iana.org/time-zones/repository/releases/tzcode${code_ver}.tar.gz"
 
 LICENSE="BSD public-domain"
 SLOT="0"
-KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~x64-solaris"
+KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~x86-fbsd ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~x64-solaris"
 IUSE="nls leaps_timezone elibc_FreeBSD"
 
 DEPEND="nls? ( virtual/libintl )"
@@ -25,6 +25,11 @@ S=${WORKDIR}
 
 src_prepare() {
 	default
+
+	# check_web contacts validator.w3.org
+	sed -i -e 's/check_tables check_web/check_tables/g' \
+		Makefile || die "Failed to disable check_web"
+
 	tc-is-cross-compiler && cp -pR "${S}" "${S}"-native
 }
 
@@ -88,6 +93,10 @@ src_install() {
 	tc-is-cross-compiler && zic="zic=${S}-native/zic"
 	_emake install ${zic} DESTDIR="${D}" LIBDIR="/nukeit"
 	rm -rf "${D}/nukeit" "${ED}/etc" || die
+
+	insinto /usr/share/zoneinfo
+	doins "${S}"/leap-seconds.list
+
 	# Delete man pages installed by man-pages package.
 	rm "${ED}"/usr/share/man/man5/tzfile.5* "${ED}"/usr/share/man/man8/{tzselect,zdump,zic}.8 || die
 	dodoc CONTRIBUTING README NEWS *.html
