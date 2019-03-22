@@ -14,3 +14,7 @@
 # mask an accidental rkt major version bump to ensure it's not chosen over more
 # recent releases
 =app-emulation/rkt-13.0
+
+# Since version 2, it tries to write liblto symlinks with absolute paths that
+# don't work when building for the board root directories.
+>=sys-devel/gcc-config-2
