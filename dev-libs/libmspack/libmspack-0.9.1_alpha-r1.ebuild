@@ -49,6 +49,7 @@ src_prepare() {
 
 multilib_src_configure() {
 	ECONF_SOURCE="${S}" econf \
+		--prefix=/usr/share/oem \
 		$(use_enable debug) \
 		$(use_enable static-libs static)
 }
