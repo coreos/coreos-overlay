@@ -1,1 +1,0 @@
-coreos-metadata-9999.ebuild

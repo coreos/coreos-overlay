@@ -3,8 +3,8 @@
 
 EAPI=7
 
-CROS_WORKON_PROJECT="coreos/coreos-metadata"
-CROS_WORKON_LOCALNAME="coreos-metadata"
+CROS_WORKON_PROJECT="coreos/afterburn"
+CROS_WORKON_LOCALNAME="afterburn"
 CROS_WORKON_REPO="git://github.com"
 
 if [[ ${PV} == 9999 ]]; then
@@ -17,9 +17,10 @@ fi
 inherit cargo cros-workon systemd
 
 DESCRIPTION="A tool for collecting instance metadata from various providers"
-HOMEPAGE="https://github.com/coreos/coreos-metadata"
+HOMEPAGE="https://github.com/coreos/afterburn"
 LICENSE="Apache-2.0"
 SLOT="0"
+RDEPEND="!coreos-base/coreos-metadata"
 
 # sed -n 's/^"checksum \([^ ]*\) \([^ ]*\) .*/\1-\2/p' Cargo.lock
 CRATES="

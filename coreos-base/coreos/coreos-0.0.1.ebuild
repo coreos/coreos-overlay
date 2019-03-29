@@ -107,9 +107,9 @@ RDEPEND="${RDEPEND}
 	app-misc/ca-certificates
 	app-misc/jq
 	app-shells/bash
+	coreos-base/afterburn
 	coreos-base/coreos-cloudinit
 	coreos-base/coreos-init
-	coreos-base/coreos-metadata
 	coreos-base/update-ssh-keys
 	coreos-base/update_engine
 	dev-db/etcdctl
