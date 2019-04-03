@@ -60,10 +60,7 @@ RDEPEND="${RDEPEND}
 	>=dev-util/gtk-doc-am-1.13
 	>=dev-util/intltool-0.30
 	dev-util/scons
-	dev-vcs/cvs
 	>=dev-vcs/git-1.7.2
-	dev-vcs/mercurial
-	dev-vcs/subversion[-dso]
 	net-misc/google-cloud-sdk
 	sys-apps/usbutils
 	sys-apps/systemd
