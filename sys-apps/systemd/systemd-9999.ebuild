@@ -10,7 +10,7 @@ if [[ ${PV} == 9999 ]]; then
 	# Use ~arch instead of empty keywords for compatibility with cros-workon
 	KEYWORDS="~amd64 ~arm64 ~arm ~x86"
 else
-	CROS_WORKON_COMMIT="e9968b58a987c950403e0841510233fc2831cc54" # v241-coreos
+	CROS_WORKON_COMMIT="d1d16e9fb692309580880a4ed99307a560fdeb02" # v242-coreos
 	KEYWORDS="~alpha amd64 ~arm arm64 ~ia64 ~ppc ~ppc64 ~sparc ~x86"
 fi
 
@@ -28,7 +28,7 @@ HOMEPAGE="https://www.freedesktop.org/wiki/Software/systemd"
 
 LICENSE="GPL-2 LGPL-2.1 MIT public-domain"
 SLOT="0/2"
-IUSE="acl apparmor audit build cryptsetup curl elfutils +gcrypt gnuefi http idn importd +kmod libidn2 +lz4 lzma nat pam pcre policykit qrcode +resolvconf +seccomp selinux +split-usr ssl +sysv-utils test vanilla xkb"
+IUSE="acl apparmor audit build cryptsetup curl dns-over-tls elfutils +gcrypt gnuefi gnutls http idn importd +kmod libidn2 +lz4 lzma nat pam pcre policykit qrcode +resolvconf +seccomp selinux +split-usr +sysv-utils test vanilla xkb"
 
 REQUIRED_USE="importd? ( curl gcrypt lzma )"
 RESTRICT="!test? ( test )"
@@ -43,11 +43,15 @@ COMMON_DEPEND=">=sys-apps/util-linux-2.30:0=[${MULTILIB_USEDEP}]
 	audit? ( >=sys-process/audit-2:0= )
 	cryptsetup? ( >=sys-fs/cryptsetup-1.6:0= )
 	curl? ( net-misc/curl:0= )
+	dns-over-tls? (
+		gnutls? ( >=net-libs/gnutls-3.5.3:0= )
+		!gnutls? ( >=dev-libs/openssl-1.1.0:0= )
+	)
 	elfutils? ( >=dev-libs/elfutils-0.158:0= )
 	gcrypt? ( >=dev-libs/libgcrypt-1.4.5:0=[${MULTILIB_USEDEP}] )
 	http? (
 		>=net-libs/libmicrohttpd-0.9.33:0=
-		ssl? ( >=net-libs/gnutls-3.1.4:0= )
+		gnutls? ( >=net-libs/gnutls-3.1.4:0= )
 	)
 	idn? (
 		libidn2? ( net-dns/libidn2:= )
@@ -111,6 +115,11 @@ BDEPEND="
 
 pkg_pretend() {
 	if [[ ${MERGE_TYPE} != buildonly ]]; then
+		if use test && has pid-sandbox ${FEATURES}; then
+			ewarn "Tests are known to fail with PID sandboxing enabled."
+			ewarn "See https://bugs.gentoo.org/674458."
+		fi
+
 		local CONFIG_CHECK="~AUTOFS4_FS ~BLK_DEV_BSG ~CGROUPS
 			~CHECKPOINT_RESTORE ~DEVTMPFS ~EPOLL ~FANOTIFY ~FHANDLE
 			~INOTIFY_USER ~IPV6 ~NET ~NET_NS ~PROC_FS ~SIGNALFD ~SYSFS
@@ -214,9 +223,9 @@ multilib_src_configure() {
 		-Delfutils=$(meson_multilib_native_use elfutils)
 		-Dgcrypt=$(meson_use gcrypt)
 		-Dgnu-efi=$(meson_multilib_native_use gnuefi)
+		-Dgnutls=$(meson_multilib_native_use gnutls)
 		-Defi-libdir="${EPREFIX}/usr/$(get_libdir)"
 		-Dmicrohttpd=$(meson_multilib_native_use http)
-		$(usex http -Dgnutls=$(meson_multilib_native_use ssl) -Dgnutls=false)
 		-Dimportd=$(meson_multilib_native_use importd)
 		-Dbzip2=$(meson_multilib_native_use importd)
 		-Dzlib=$(meson_multilib_native_use importd)
@@ -230,7 +239,6 @@ multilib_src_configure() {
 		-Dqrencode=$(meson_multilib_native_use qrcode)
 		-Dseccomp=$(meson_multilib_native_use seccomp)
 		-Dselinux=$(meson_multilib_native_use selinux)
-		#-Dtests=$(meson_multilib_native_use test)
 		-Ddbus=$(meson_multilib_native_use test)
 		-Dxkbcommon=$(meson_multilib_native_use xkb)
 		# hardcode a few paths to spare some deps
@@ -309,6 +317,15 @@ multilib_src_configure() {
 			-Dlibidn2=false
 			-Dlibidn=false
 		)
+	fi
+
+	if multilib_is_native_abi && use dns-over-tls; then
+		myconf+=(
+			-Ddns-over-tls=true
+			-Dopenssl=$(usex !gnutls true false)
+		)
+	else
+		myconf+=( -Ddns-over-tls=false -Dopenssl=false )
 	fi
 
 	meson_src_configure "${myconf[@]}"
@@ -399,15 +416,12 @@ multilib_src_install_all() {
 		einfo "Enabling ${s} via ${t}"
 		dodir "${unitdir}/${t}"
 		dosym "../${u}" "${unitdir}/${t}/${s}"
-
-		rm "${ED}/etc/systemd/system/${f}" || die
 	done
 	rmdir "${ED}"/etc/systemd/system/*.wants || die
 	for f in \
 		systemd-networkd.service:dbus-org.freedesktop.network1.service \
 		systemd-resolved.service:dbus-org.freedesktop.resolve1.service
 	do
-		rm "${ED}/etc/systemd/system/${f#*:}" || die
 		dosym "${f%%:*}" "${unitdir}/${f#*:}"
 	done
 
