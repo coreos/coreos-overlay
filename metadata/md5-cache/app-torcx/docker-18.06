@@ -3,6 +3,6 @@ DESCRIPTION=Packages to be installed in a torcx image for Docker
 EAPI=2
 KEYWORDS=amd64 arm64
 LICENSE=GPL-2
-RDEPEND=~app-emulation/docker-18.06.3 ~app-emulation/containerd-1.1.2 ~app-emulation/docker-proxy-0.8.0_p20180709 ~app-emulation/docker-runc-1.0.0_rc5_p22 =dev-libs/libltdl-2.4.6 =sys-process/tini-0.13.2
+RDEPEND=~app-emulation/docker-18.06.3 ~app-emulation/containerd-1.1.2 ~app-emulation/docker-proxy-0.8.0_p20180709 ~app-emulation/docker-runc-1.0.0_rc5_p22 =dev-libs/libltdl-2.4.6 =sys-process/tini-0.18.0
 SLOT=0
-_md5_=3db2176202d29e476a0eac4c9c2b0d55
+_md5_=984fbdaedb6fad322e2dcc925c5b32ce
