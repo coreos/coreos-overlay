@@ -33,9 +33,6 @@ dev-util/checkbashisms
 # mtools 4.0.18 has '-i' flag for working with images
 =sys-fs/mtools-4.0.18
 
-# systemd v238 requires libseccomp 2.3.3
-=sys-libs/libseccomp-2.3.3 **
-
 # All versions are ~amd64
 =sys-apps/nvme-cli-1.1 **
 
