@@ -25,6 +25,9 @@ dev-python/pyblake2 -python_targets_python3_6
 dev-python/uritemplate -python_targets_python3_6
 sys-apps/portage -python_targets_python3_6
 
+# python3 only
+dev-util/glib-utils python_single_target_python3_6
+
 sys-apps/gptfdisk -icu
 
 # for profile migration
