@@ -292,6 +292,9 @@ multilib_src_configure() {
 		# Disable the "First Boot Wizard", it isn't very applicable to CoreOS
 		-Dfirstboot=false
 
+		# Preserve the v238 network interface naming scheme for compatibility.
+		-Ddefault-net-naming-scheme=v238
+
 		# unported options, still needed?
 		-Defi-cc="$(tc-getCC)"
 		-Dquotaon-path=/usr/sbin/quotaon
