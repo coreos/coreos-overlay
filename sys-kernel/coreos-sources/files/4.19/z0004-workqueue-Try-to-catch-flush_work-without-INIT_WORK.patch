@@ -1,0 +1,45 @@
+From fcfea2aaf5bae2b7c1089222c18641a1ab027198 Mon Sep 17 00:00:00 2001
+From: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
+Date: Wed, 23 Jan 2019 09:44:12 +0900
+Subject: [PATCH 4/4] workqueue: Try to catch flush_work() without INIT_WORK().
+
+commit 4d43d395fed124631ca02356c711facb90185175 upstream.
+
+syzbot found a flush_work() caller who forgot to call INIT_WORK()
+because that work_struct was allocated by kzalloc() [1]. But the message
+
+  INFO: trying to register non-static key.
+  the code is fine but needs lockdep annotation.
+  turning off the locking correctness validator.
+
+by lock_map_acquire() is failing to tell that INIT_WORK() is missing.
+
+Since flush_work() without INIT_WORK() is a bug, and INIT_WORK() should
+set ->func field to non-zero, let's warn if ->func field is zero.
+
+[1] https://syzkaller.appspot.com/bug?id=a5954455fcfa51c29ca2ab55b203076337e1c770
+
+Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ kernel/workqueue.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/kernel/workqueue.c b/kernel/workqueue.c
+index 0280deac392e..cd8b61bded78 100644
+--- a/kernel/workqueue.c
++++ b/kernel/workqueue.c
+@@ -2908,6 +2908,9 @@ static bool __flush_work(struct work_struct *work, bool from_cancel)
+ 	if (WARN_ON(!wq_online))
+ 		return false;
+ 
++	if (WARN_ON(!work->func))
++		return false;
++
+ 	if (!from_cancel) {
+ 		lock_map_acquire(&work->lockdep_map);
+ 		lock_map_release(&work->lockdep_map);
+-- 
+2.20.1
+
