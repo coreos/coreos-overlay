@@ -4,6 +4,15 @@
 # @ECLASS: coreos-go.eclass
 # @BLURB: utility functions for building Go binaries
 
+# @ECLASS-VARIABLE: COREOS_GO_MOD
+# @DESCRIPTION:
+# Specify the module download mode for Go modules to use.
+#
+# Example:
+# @CODE
+# COREOS_GO_MOD=vendor
+# @CODE
+
 # @ECLASS-VARIABLE: COREOS_GO_PACKAGE
 # @REQUIRED
 # @DESCRIPTION:
@@ -46,6 +55,7 @@ go_build() {
 	${EGO} build -v \
 		-p "$(makeopts_jobs)" \
 		-ldflags "${GO_LDFLAGS} -extldflags '${LDFLAGS}'" \
+		${COREOS_GO_MOD:+-mod "${COREOS_GO_MOD}"} \
 		-o "${GOBIN}/${binary_name}" \
 		"${package_name}"
 
