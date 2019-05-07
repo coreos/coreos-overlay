@@ -8,6 +8,7 @@ CROS_WORKON_REPO="git://github.com"
 COREOS_GO_PACKAGE="github.com/coreos/mantle"
 
 if [[ "${PV}" == 9999 ]]; then
+	COREOS_GO_MOD="vendor"
 	KEYWORDS="~amd64 ~arm64"
 else
 	CROS_WORKON_COMMIT="e7983fc86fae0b77e24611c6f96da3765dc81d1d" # v0.12.0
@@ -37,7 +38,7 @@ src_compile() {
 		go_build "${COREOS_GO_PACKAGE}/cmd/${cmd}"
 	done
 
-	for a in amd64 arm64; do
+	for a in amd64; do
 		mkdir -p "${GOBIN}/${a}"
 		CGO_ENABLED=0 GOBIN="${GOBIN}/${a}" GOARCH=${a} go_build "${COREOS_GO_PACKAGE}/cmd/kolet"
 	done
@@ -52,7 +53,7 @@ src_install() {
 		dobin "${GOBIN}"/"${cmd}"
 	done
 
-	for a in amd64 arm64; do
+	for a in amd64; do
 		exeinto /usr/lib/kola/${a}
 		doexe "${GOBIN}/${a}/kolet"
 	done
