@@ -1,4 +1,4 @@
-From a109d3ac52af4c1b43f6f9af39a164eb9ad895d4 Mon Sep 17 00:00:00 2001
+From 614c0d8f34841583342c5b9e3702566c7fd818f1 Mon Sep 17 00:00:00 2001
 From: Benjamin Gilbert <bgilbert@redhat.com>
 Date: Fri, 26 Oct 2018 17:00:56 -0700
 Subject: [PATCH 3/3] net/netfilter: add nf_conntrack_ipv4 compat module for
@@ -15,7 +15,7 @@ enough to maintain compatibility; we need an actual module.
  create mode 100644 net/netfilter/nf_conntrack_ipv4.c
 
 diff --git a/net/netfilter/Kconfig b/net/netfilter/Kconfig
-index f61c306de1d0..63f2924b5709 100644
+index e0fb56d67d42..a468ee1de6fe 100644
 --- a/net/netfilter/Kconfig
 +++ b/net/netfilter/Kconfig
 @@ -70,6 +70,14 @@ config NF_CONNTRACK
