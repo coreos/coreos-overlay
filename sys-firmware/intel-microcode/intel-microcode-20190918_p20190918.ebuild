@@ -19,7 +19,7 @@ SRC_URI="https://github.com/intel/Intel-Linux-Processor-Microcode-Data-Files/arc
 	https://dev.gentoo.org/~whissi/dist/intel-microcode/intel-microcode-collection-${COLLECTION_SNAPSHOT}.tar.xz"
 
 LICENSE="intel-ucode"
-SLOT="0"
+SLOT="0/${PVR}"
 KEYWORDS="-* amd64 x86"
 IUSE="hostonly initramfs +split-ucode vanilla"
 REQUIRED_USE="|| ( initramfs split-ucode )"
@@ -29,13 +29,12 @@ BDEPEND="sys-apps/iucode_tool"
 # !<sys-apps/microcode-ctl-1.17-r2 due to bug #268586
 RDEPEND="hostonly? ( sys-apps/iucode_tool )"
 
-RESTRICT="binchecks bindist mirror strip"
+RESTRICT="binchecks strip"
 
 S=${WORKDIR}
 
 # Blacklist bad microcode here.
-# 0x000406f1 aka 06-4f-01 aka CPUID 406F1 require newer microcode loader
-MICROCODE_BLACKLIST_DEFAULT="-s !0x000406f1"
+MICROCODE_BLACKLIST_DEFAULT=""
 
 # In case we want to set some defaults ...
 MICROCODE_SIGNATURES_DEFAULT=""
