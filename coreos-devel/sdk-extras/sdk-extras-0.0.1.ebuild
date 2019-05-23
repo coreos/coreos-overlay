@@ -37,8 +37,3 @@ RDEPEND="
 	dev-python/awscli
 	sys-apps/ed
 "
-
-# Needed for Jenkins
-RDEPEND+="
-	dev-util/catalyst
-"
