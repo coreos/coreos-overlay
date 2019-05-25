@@ -1,0 +1,2 @@
+L /etc/nscd.conf	-	-	-	-	../usr/share/baselayout/nscd.conf
+d /var/db/nscd		-	-	-	-	-
