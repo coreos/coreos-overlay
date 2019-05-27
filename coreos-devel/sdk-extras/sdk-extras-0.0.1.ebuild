@@ -29,7 +29,6 @@ RDEPEND="
 	app-text/tree
 	app-text/dos2unix
 	dev-util/cscope
-	dev-util/perf
 	dev-util/strace
 	dev-util/valgrind
 	dev-go/glide

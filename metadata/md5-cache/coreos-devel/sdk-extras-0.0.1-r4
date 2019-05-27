@@ -1,9 +1,0 @@
-DEFINED_PHASES=-
-DESCRIPTION=Meta ebuild for everything that isn't needed in the SDK, but might be useful
-EAPI=5
-HOMEPAGE=http://coreos.com/docs/sdk/
-KEYWORDS=amd64
-LICENSE=GPL-2
-RDEPEND=app-admin/python-updater app-crypt/efitools app-crypt/tpm-tools app-editors/emacs app-editors/nano app-portage/eix app-portage/gentoolkit-dev app-portage/repoman app-misc/screen app-misc/tmux app-text/tree app-text/dos2unix dev-util/cscope dev-util/perf dev-util/strace dev-util/valgrind dev-go/glide dev-go/godep dev-python/awscli sys-apps/ed
-SLOT=0
-_md5_=f70c50a2608fa2c35d9df0fc07eb96f4
