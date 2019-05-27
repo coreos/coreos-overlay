@@ -88,7 +88,7 @@ RDEPEND="${RDEPEND}
 # Useful utilities for developers.
 RDEPEND="${RDEPEND}
 	app-arch/zip
-	app-portage/eclass-manpages
+	app-doc/eclass-manpages
 	app-portage/gentoolkit
 	app-portage/portage-utils
 	app-editors/vim
