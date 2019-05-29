@@ -49,3 +49,7 @@ dev-util/checkbashisms
 # Force upgrades to work around catalyst problems while upgrading ncurses.
 =app-crypt/gnupg-2.2.7 ~amd64
 =sys-apps/gptfdisk-1.0.3 ~amd64
+
+# Choose the newer spidermonkey revision to support GCC 8.3.0.
+# https://bugs.gentoo.org/686744
+=dev-lang/spidermonkey-1.8.5-r7
