@@ -1,2 +1,5 @@
 # Do not install SSSD in the container.
 sys-auth/sssd-1.13.1
+
+# Stick to one version of Python in the ACI.
+dev-lang/python-3.6.5

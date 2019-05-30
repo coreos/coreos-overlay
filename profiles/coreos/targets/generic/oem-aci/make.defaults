@@ -52,3 +52,8 @@ INSTALL_MASK="${INSTALL_MASK}
 INSTALL_MASK="${INSTALL_MASK}
   /boot
 "
+
+# Drop Python 3 modules etc. since Python 2 is the default.
+INSTALL_MASK="${INSTALL_MASK}
+  /usr/*/python3*
+"
