@@ -10,13 +10,13 @@ GRUB_AUTOGEN=1  # We start from Git, so always autogen.
 if [[ ${PV} == 9999 ]]; then
 	KEYWORDS="~amd64 ~arm64 ~x86"
 else
-	CROS_WORKON_COMMIT="93fb3dac4ae7a97c080d51d951d0e5a3109aaac7"
+	CROS_WORKON_COMMIT="c6b9a0af3d7483d5b5c5f79caf7ced64298bd4ac"
 	KEYWORDS="amd64 arm64 x86"
 fi
 inherit cros-workon
 
 if [[ -n ${GRUB_AUTOGEN} ]]; then
-	PYTHON_COMPAT=( python{2_7,3_4,3_5,3_6} )
+	PYTHON_COMPAT=( python{2_7,3_5,3_6,3_7} )
 	WANT_LIBTOOL=none
 	inherit autotools python-any-r1
 fi
