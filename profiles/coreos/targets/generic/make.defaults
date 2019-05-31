@@ -24,6 +24,7 @@ INSTALL_MASK="${INSTALL_MASK}
 # Exclude assorted config files that we can do without
 INSTALL_MASK="${INSTALL_MASK}
   /etc/bash_completion.d
+  /etc/DIR_COLORS
   /etc/dmtab
   /etc/e2fsck.conf
   /etc/libnl

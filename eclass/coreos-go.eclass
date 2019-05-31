@@ -40,6 +40,8 @@ esac
 
 inherit coreos-go-depend multiprocessing
 
+RESTRICT="strip"
+
 # @FUNCTION: go_build
 # @USAGE: <package-name> [<binary-name>]
 go_build() {

@@ -1,9 +1,11 @@
-# Copyright 1999-2018 Gentoo Authors
+# Copyright 1999-2019 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
 
-inherit prefix eutils versionator toolchain-funcs flag-o-matic gnuconfig \
+PYTHON_COMPAT=( python3_{5,6,7} )
+
+inherit python-any-r1 prefix eutils eapi7-ver toolchain-funcs flag-o-matic gnuconfig \
 	multilib systemd multiprocessing
 
 DESCRIPTION="GNU libc C library"
@@ -18,7 +20,7 @@ if [[ ${PV} == 9999* ]]; then
 	EGIT_REPO_URI="https://sourceware.org/git/glibc.git"
 	inherit git-r3
 else
-	KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86"
+	KEYWORDS="~alpha amd64 arm arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~riscv ~s390 ~sh ~sparc x86"
 	SRC_URI="mirror://gnu/glibc/${P}.tar.xz"
 fi
 
@@ -29,10 +31,10 @@ GCC_BOOTSTRAP_VER=20180511
 # Gentoo patchset
 PATCH_VER=3
 
-SRC_URI+=" https://dev.gentoo.org/~dilfridge/distfiles/${P}-patches-${PATCH_VER}.tar.bz2"
+SRC_URI+=" https://dev.gentoo.org/~dilfridge/distfiles/${P}-patches-${PATCH_VER}.tar.xz"
 SRC_URI+=" multilib? ( https://dev.gentoo.org/~dilfridge/distfiles/gcc-multilib-bootstrap-${GCC_BOOTSTRAP_VER}.tar.xz )"
 
-IUSE="audit caps compile-locales doc gd hardened headers-only +multiarch multilib nscd profile selinux suid systemtap vanilla"
+IUSE="audit caps cet compile-locales doc gd headers-only +multiarch multilib nscd profile selinux +ssp suid systemtap test vanilla"
 
 # Minimum kernel version that glibc requires
 MIN_KERN_VER="3.2.0"
@@ -60,7 +62,8 @@ if [[ ${CTARGET} == ${CHOST} ]] ; then
 fi
 
 # We need a new-enough binutils/gcc to match upstream baseline.
-# Also we need to make sure our binutils/gcc supports TLS.
+# Also we need to make sure our binutils/gcc supports TLS,
+# and that gcc already contains the hardened patches.
 COMMON_DEPEND="
 	nscd? ( selinux? (
 		audit? ( sys-process/audit )
@@ -71,12 +74,15 @@ COMMON_DEPEND="
 	systemtap? ( dev-util/systemtap )
 "
 DEPEND="${COMMON_DEPEND}
+	${PYTHON_DEPS}
 	>=app-misc/pax-utils-0.1.10
 	sys-devel/bison
 	!<sys-apps/sandbox-1.6
 	!<sys-apps/portage-2.1.2
 	!<sys-devel/bison-2.7
+	!<sys-devel/make-4
 	doc? ( sys-apps/texinfo )
+	test? ( >=net-dns/libidn2-2.0.5 )
 "
 RDEPEND="${COMMON_DEPEND}
 	sys-apps/gentoo-functions
@@ -87,16 +93,18 @@ RDEPEND="${COMMON_DEPEND}
 if [[ ${CATEGORY} == cross-* ]] ; then
 	DEPEND+=" !headers-only? (
 		>=${CATEGORY}/binutils-2.24
-		>=${CATEGORY}/gcc-4.9
+		>=${CATEGORY}/gcc-6
 	)"
 	[[ ${CATEGORY} == *-linux* ]] && DEPEND+=" ${CATEGORY}/linux-headers"
 else
 	DEPEND+="
 		>=sys-devel/binutils-2.24
-		>=sys-devel/gcc-4.9
+		>=sys-devel/gcc-6
 		virtual/os-headers
 	"
-	RDEPEND+=" vanilla? ( !sys-libs/timezone-data )"
+	RDEPEND+="
+		vanilla? ( !sys-libs/timezone-data )
+	"
 	PDEPEND+=" !vanilla? ( sys-libs/timezone-data )"
 fi
 
@@ -255,18 +263,18 @@ setup_target_flags() {
 			sparc64-*)
 				case $(get-flag mcpu) in
 				niagara[234])
-					if version_is_at_least 2.8 ; then
+					if ver_test -ge 2.8 ; then
 						cpu="sparc64v2"
-					elif version_is_at_least 2.4 ; then
+					elif ver_test -ge 2.4 ; then
 						cpu="sparc64v"
-					elif version_is_at_least 2.2.3 ; then
+					elif ver_test -ge 2.2.3 ; then
 						cpu="sparc64b"
 					fi
 					;;
 				niagara)
-					if version_is_at_least 2.4 ; then
+					if ver_test -ge 2.4 ; then
 						cpu="sparc64v"
-					elif version_is_at_least 2.2.3 ; then
+					elif ver_test -ge 2.2.3 ; then
 						cpu="sparc64b"
 					fi
 					;;
@@ -284,20 +292,20 @@ setup_target_flags() {
 			sparc-*)
 				case $(get-flag mcpu) in
 				niagara[234])
-					if version_is_at_least 2.8 ; then
+					if ver_test -ge 2.8 ; then
 						cpu="sparcv9v2"
-					elif version_is_at_least 2.4 ; then
+					elif ver_test -ge 2.4 ; then
 						cpu="sparcv9v"
-					elif version_is_at_least 2.2.3 ; then
+					elif ver_test -ge 2.2.3 ; then
 						cpu="sparcv9b"
 					else
 						cpu="sparcv9"
 					fi
 					;;
 				niagara)
-					if version_is_at_least 2.4 ; then
+					if ver_test -ge 2.4 ; then
 						cpu="sparcv9v"
-					elif version_is_at_least 2.2.3 ; then
+					elif ver_test -ge 2.2.3 ; then
 						cpu="sparcv9b"
 					else
 						cpu="sparcv9"
@@ -367,21 +375,6 @@ setup_flags() {
 	append-flags -O2 -fno-strict-aliasing
 
 	filter-flags '-fstack-protector*'
-
-	# Starting with gcc-6 (and fully upstreamed pie patches) we control
-	# default enabled/disabled pie via use flags. So nothing to do
-	# here then. #618160
-	if [[ $(gcc-major-version) -lt 6 ]]; then
-		if use hardened && tc-enables-pie ; then
-			# Force PIC macro definition for all compilations since they're all
-			# either -fPIC or -fPIE with the default-PIE compiler.
-			append-cppflags -DPIC
-		else
-			# Don't build -fPIE without the default-PIE compiler and the
-			# hardened-pie patch
-			filter-flags -fPIE
-		fi
-	fi
 }
 
 want_tls() {
@@ -429,7 +422,7 @@ use_multiarch() {
 	sparc)     nver="2.21" ;;
 	*)         return 1 ;;
 	esac
-	version_is_at_least ${nver} ${bver}
+	ver_test ${bver} -ge ${nver}
 }
 
 # Setup toolchain variables that had historically been defined in the
@@ -459,7 +452,7 @@ setup_env() {
 
 	export ABI=${ABI:-${DEFAULT_ABI:-default}}
 
-	if use headers-only ; then
+	if just_headers ; then
 		# Avoid mixing host's CC and target's CFLAGS_${ABI}:
 		# At this bootstrap stage we have only binutils for
 		# target but not compiler yet.
@@ -675,12 +668,6 @@ sanity_prechecks() {
 
 	# When we actually have to compile something...
 	if ! just_headers ; then
-		local run_kv build_kv want_kv
-
-		run_kv=$(g_get_running_KV)
-		build_kv=$(g_int_to_KV $(get_kheader_version))
-		want_kv=${MIN_KERN_VER}
-
 		ebegin "Checking gcc for __thread support"
 		if ! eend $(want__thread ; echo $?) ; then
 			echo
@@ -689,21 +676,29 @@ sanity_prechecks() {
 			die "No __thread support in gcc!"
 		fi
 
-		if ! is_crosscompile && ! tc-is-cross-compiler ; then
-			# Building fails on an non-supporting kernel
-			ebegin "Checking running kernel version (${run_kv} >= ${want_kv})"
-			if ! eend_KV ${run_kv} ${want_kv} ; then
-				echo
-				eerror "You need a kernel of at least ${want_kv}!"
-				die "Kernel version too low!"
-			fi
-		fi
+		if [[ ${CTARGET} == *-linux* ]] ; then
+			local run_kv build_kv want_kv
 
-		ebegin "Checking linux-headers version (${build_kv} >= ${want_kv})"
-		if ! eend_KV ${build_kv} ${want_kv} ; then
-			echo
-			eerror "You need linux-headers of at least ${want_kv}!"
-			die "linux-headers version too low!"
+			run_kv=$(g_get_running_KV)
+			build_kv=$(g_int_to_KV $(get_kheader_version))
+			want_kv=${MIN_KERN_VER}
+
+			if ! is_crosscompile && ! tc-is-cross-compiler ; then
+				# Building fails on an non-supporting kernel
+				ebegin "Checking running kernel version (${run_kv} >= ${want_kv})"
+				if ! eend_KV ${run_kv} ${want_kv} ; then
+					echo
+					eerror "You need a kernel of at least ${want_kv}!"
+					die "Kernel version too low!"
+				fi
+			fi
+
+			ebegin "Checking linux-headers version (${build_kv} >= ${want_kv})"
+			if ! eend_KV ${build_kv} ${want_kv} ; then
+				echo
+				eerror "You need linux-headers of at least ${want_kv}!"
+				die "linux-headers version too low!"
+			fi
 		fi
 	fi
 }
@@ -711,6 +706,11 @@ sanity_prechecks() {
 #
 # the phases
 #
+
+pkg_setup() {
+	# see bug 682570
+	[[ -z ${BOOTSTRAP_RAP} ]] && python-any-r1_pkg_setup
+}
 
 # src_unpack
 
@@ -728,15 +728,11 @@ src_unpack() {
 		unpack ${P}.tar.xz
 	fi
 
-	cd "${S}" || die
-	touch locale/C-translit.h || die #185476 #218003
-
 	cd "${WORKDIR}" || die
-	unpack glibc-${RELEASE_VER}-patches-${PATCH_VER}.tar.bz2
+	unpack glibc-${RELEASE_VER}-patches-${PATCH_VER}.tar.xz
 }
 
 PATCHES=(
-	"${FILESDIR}"/${PV}/${P}-c-utf8-locale.patch
 	"${FILESDIR}"/2.25/glibc-2.25-gshadow-handle-erange.patch
 )
 
@@ -789,13 +785,23 @@ glibc_do_configure() {
 	#    https://sourceware.org/PR23273
 	# Note: Passing CFLAGS via CPPFLAGS overrides glibc's arch-specific CFLAGS
 	# and breaks multiarch support. See 659030#c3 for an example.
-
 	# The glibc configure script doesn't properly use LDFLAGS all the time.
 	export CC="$(tc-getCC ${CTARGET}) ${CFLAGS} ${LDFLAGS}"
 	einfo " $(printf '%15s' 'Manual CC:')   ${CC}"
 
 	# Some of the tests are written in C++, so we need to force our multlib abis in, bug 623548
 	export CXX="$(tc-getCXX ${CTARGET}) $(get_abi_CFLAGS) ${CFLAGS}"
+
+	if is_crosscompile; then
+		# Assume worst-case bootstrap: glibc is buil first time
+		# when ${CTARGET}-g++ is not available yet. We avoid
+		# building auxiliary programs that require C++: bug #683074
+		# It should not affect final result.
+		export libc_cv_cxx_link_ok=no
+		# The line above has the same effect. We set CXX explicitly
+		# to make build logs less confusing.
+		export CXX=
+	fi
 	einfo " $(printf '%15s' 'Manual CXX:')   ${CXX}"
 
 	echo
@@ -803,6 +809,11 @@ glibc_do_configure() {
 	local myconf=()
 
 	case ${CTARGET} in
+		m68k*)
+			# setjmp() is not compatible with stack protection:
+			# https://sourceware.org/PR24202
+			myconf+=( --enable-stack-protector=no )
+			;;
 		powerpc-*)
 			# Currently gcc on powerpc32 generates invalid code for
 			# __builtin_return_address(0) calls. Normally programs
@@ -812,7 +823,7 @@ glibc_do_configure() {
 			myconf+=( --enable-stack-protector=no )
 			;;
 		*)
-			myconf+=( --enable-stack-protector=all )
+			myconf+=( --enable-stack-protector=$(usex ssp all no) )
 			;;
 	esac
 	myconf+=( --enable-stackguard-randomization )
@@ -826,6 +837,12 @@ glibc_do_configure() {
 		amd64|x86|sparc|ppc|ppc64|arm|arm64|s390) ;;
 		# Blacklist everywhere else
 		*) myconf+=( libc_cv_ld_gnu_indirect_function=no ) ;;
+	esac
+
+	# Enable Intel Control-flow Enforcement Technology on amd64 if requested
+	case ${CTARGET} in
+		x86_64-*) myconf+=( $(use_enable cet) ) ;;
+		*) ;;
 	esac
 
 	[[ $(tc-is-softfloat) == "yes" ]] && myconf+=( --without-fp )
@@ -1155,6 +1172,9 @@ glibc_do_src_install() {
 		# powerpc
 		ppc     /lib/ld.so.1
 		ppc64   /lib64/ld64.so.1
+		# riscv
+		lp64d   /lib/ld-linux-riscv64-lp64d.so.1
+		lp64    /lib/ld-linux-riscv64-lp64.so.1
 		# s390
 		s390    /lib/ld.so.1
 		s390x   /lib/ld64.so.1
@@ -1236,6 +1256,17 @@ glibc_do_src_install() {
 			dosym ../$(get_libdir)/locale /usr/$(get_abi_LIBDIR ${a})/locale
 		fi
 	done
+
+	# HACK: If we're building for riscv, we need to additionally make sure that
+	# we can find the locale archive afterwards
+	case ${CTARGET} in
+		riscv*)
+			if [[ ! -e ${ED}/usr/lib/locale ]] ; then
+				dosym ../$(get_libdir)/locale /usr/lib/locale
+			fi
+			;;
+		*) ;;
+	esac
 
 	cd "${S}"
 
