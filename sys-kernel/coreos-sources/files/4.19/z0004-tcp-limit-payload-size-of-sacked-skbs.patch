@@ -1,0 +1,163 @@
+From f56c6c98df943cc9dff78b6881a34a73f2d8f650 Mon Sep 17 00:00:00 2001
+From: Eric Dumazet <edumazet@google.com>
+Date: Thu, 6 Jun 2019 09:38:45 -0700
+Subject: [PATCH 4/7] tcp: limit payload size of sacked skbs
+
+Jonathan Looney reported that TCP can trigger the following crash
+in tcp_shifted_skb() :
+
+	BUG_ON(tcp_skb_pcount(skb) < pcount);
+
+This can happen if the remote peer has advertized the smallest
+MSS that linux TCP accepts : 48
+
+An skb can hold 17 fragments, and each fragment can hold 32KB
+on x86, or 64KB on PowerPC.
+
+This means that the 16bit witdh of TCP_SKB_CB(skb)->tcp_gso_segs
+can overflow.
+
+Note that tcp_sendmsg() builds skbs with less than 64KB
+of payload, so this problem needs SACK to be enabled.
+SACK blocks allow TCP to coalesce multiple skbs in the retransmit
+queue, thus filling the 17 fragments to maximal capacity.
+
+Fixes: 832d11c5cd07 ("tcp: Try to restore large SKBs while SACK processing")
+Signed-off-by: Eric Dumazet <edumazet@google.com>
+Reported-by: Jonathan Looney <jtl@netflix.com>
+Acked-by: Neal Cardwell <ncardwell@google.com>
+Reviewed-by: Tyler Hicks <tyhicks@canonical.com>
+Cc: Yuchung Cheng <ycheng@google.com>
+Cc: Bruce Curtis <brucec@netflix.com>
+---
+ include/linux/tcp.h   |  4 ++++
+ include/net/tcp.h     |  2 ++
+ net/ipv4/tcp.c        |  1 +
+ net/ipv4/tcp_input.c  | 26 ++++++++++++++++++++------
+ net/ipv4/tcp_output.c |  6 +++---
+ 5 files changed, 30 insertions(+), 9 deletions(-)
+
+diff --git a/include/linux/tcp.h b/include/linux/tcp.h
+index d2c8f280e48f..4374196b98ea 100644
+--- a/include/linux/tcp.h
++++ b/include/linux/tcp.h
+@@ -485,4 +485,8 @@ static inline u16 tcp_mss_clamp(const struct tcp_sock *tp, u16 mss)
+ 
+ 	return (user_mss && user_mss < mss) ? user_mss : mss;
+ }
++
++int tcp_skb_shift(struct sk_buff *to, struct sk_buff *from, int pcount,
++		  int shiftlen);
++
+ #endif	/* _LINUX_TCP_H */
+diff --git a/include/net/tcp.h b/include/net/tcp.h
+index 770917d0caa7..e75661f92daa 100644
+--- a/include/net/tcp.h
++++ b/include/net/tcp.h
+@@ -55,6 +55,8 @@ void tcp_time_wait(struct sock *sk, int state, int timeo);
+ 
+ #define MAX_TCP_HEADER	(128 + MAX_HEADER)
+ #define MAX_TCP_OPTION_SPACE 40
++#define TCP_MIN_SND_MSS		48
++#define TCP_MIN_GSO_SIZE	(TCP_MIN_SND_MSS - MAX_TCP_OPTION_SPACE)
+ 
+ /*
+  * Never offer a window over 32767 without using window scaling. Some
+diff --git a/net/ipv4/tcp.c b/net/ipv4/tcp.c
+index 30c6e94b06c4..364e6fdaa38f 100644
+--- a/net/ipv4/tcp.c
++++ b/net/ipv4/tcp.c
+@@ -3829,6 +3829,7 @@ void __init tcp_init(void)
+ 	unsigned long limit;
+ 	unsigned int i;
+ 
++	BUILD_BUG_ON(TCP_MIN_SND_MSS <= MAX_TCP_OPTION_SPACE);
+ 	BUILD_BUG_ON(sizeof(struct tcp_skb_cb) >
+ 		     FIELD_SIZEOF(struct sk_buff, cb));
+ 
+diff --git a/net/ipv4/tcp_input.c b/net/ipv4/tcp_input.c
+index cfdd70e32755..4a8869d39662 100644
+--- a/net/ipv4/tcp_input.c
++++ b/net/ipv4/tcp_input.c
+@@ -1315,7 +1315,7 @@ static bool tcp_shifted_skb(struct sock *sk, struct sk_buff *prev,
+ 	TCP_SKB_CB(skb)->seq += shifted;
+ 
+ 	tcp_skb_pcount_add(prev, pcount);
+-	BUG_ON(tcp_skb_pcount(skb) < pcount);
++	WARN_ON_ONCE(tcp_skb_pcount(skb) < pcount);
+ 	tcp_skb_pcount_add(skb, -pcount);
+ 
+ 	/* When we're adding to gso_segs == 1, gso_size will be zero,
+@@ -1381,6 +1381,21 @@ static int skb_can_shift(const struct sk_buff *skb)
+ 	return !skb_headlen(skb) && skb_is_nonlinear(skb);
+ }
+ 
++int tcp_skb_shift(struct sk_buff *to, struct sk_buff *from,
++		  int pcount, int shiftlen)
++{
++	/* TCP min gso_size is 8 bytes (TCP_MIN_GSO_SIZE)
++	 * Since TCP_SKB_CB(skb)->tcp_gso_segs is 16 bits, we need
++	 * to make sure not storing more than 65535 * 8 bytes per skb,
++	 * even if current MSS is bigger.
++	 */
++	if (unlikely(to->len + shiftlen >= 65535 * TCP_MIN_GSO_SIZE))
++		return 0;
++	if (unlikely(tcp_skb_pcount(to) + pcount > 65535))
++		return 0;
++	return skb_shift(to, from, shiftlen);
++}
++
+ /* Try collapsing SACK blocks spanning across multiple skbs to a single
+  * skb.
+  */
+@@ -1486,7 +1501,7 @@ static struct sk_buff *tcp_shift_skb_data(struct sock *sk, struct sk_buff *skb,
+ 	if (!after(TCP_SKB_CB(skb)->seq + len, tp->snd_una))
+ 		goto fallback;
+ 
+-	if (!skb_shift(prev, skb, len))
++	if (!tcp_skb_shift(prev, skb, pcount, len))
+ 		goto fallback;
+ 	if (!tcp_shifted_skb(sk, prev, skb, state, pcount, len, mss, dup_sack))
+ 		goto out;
+@@ -1504,11 +1519,10 @@ static struct sk_buff *tcp_shift_skb_data(struct sock *sk, struct sk_buff *skb,
+ 		goto out;
+ 
+ 	len = skb->len;
+-	if (skb_shift(prev, skb, len)) {
+-		pcount += tcp_skb_pcount(skb);
+-		tcp_shifted_skb(sk, prev, skb, state, tcp_skb_pcount(skb),
++	pcount = tcp_skb_pcount(skb);
++	if (tcp_skb_shift(prev, skb, pcount, len))
++		tcp_shifted_skb(sk, prev, skb, state, pcount,
+ 				len, mss, 0);
+-	}
+ 
+ out:
+ 	return prev;
+diff --git a/net/ipv4/tcp_output.c b/net/ipv4/tcp_output.c
+index bd134e3a0473..c8a29601a974 100644
+--- a/net/ipv4/tcp_output.c
++++ b/net/ipv4/tcp_output.c
+@@ -1457,8 +1457,8 @@ static inline int __tcp_mtu_to_mss(struct sock *sk, int pmtu)
+ 	mss_now -= icsk->icsk_ext_hdr_len;
+ 
+ 	/* Then reserve room for full set of TCP options and 8 bytes of data */
+-	if (mss_now < 48)
+-		mss_now = 48;
++	if (mss_now < TCP_MIN_SND_MSS)
++		mss_now = TCP_MIN_SND_MSS;
+ 	return mss_now;
+ }
+ 
+@@ -2727,7 +2727,7 @@ static bool tcp_collapse_retrans(struct sock *sk, struct sk_buff *skb)
+ 		if (next_skb_size <= skb_availroom(skb))
+ 			skb_copy_bits(next_skb, 0, skb_put(skb, next_skb_size),
+ 				      next_skb_size);
+-		else if (!skb_shift(skb, next_skb, next_skb_size))
++		else if (!tcp_skb_shift(skb, next_skb, 1, next_skb_size))
+ 			return false;
+ 	}
+ 	tcp_highest_sack_replace(sk, next_skb, skb);
+-- 
+2.21.0
+
