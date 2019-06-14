@@ -34,4 +34,8 @@ UNIPATCH_LIST="
 	${PATCH_DIR}/z0001-kbuild-derive-relative-path-for-KBUILD_SRC-from-CURD.patch \
 	${PATCH_DIR}/z0002-tools-objtool-Makefile-Don-t-fail-on-fallthrough-wit.patch \
 	${PATCH_DIR}/z0003-net-netfilter-add-nf_conntrack_ipv4-compat-module-fo.patch \
+	${PATCH_DIR}/z0004-tcp-limit-payload-size-of-sacked-skbs.patch \
+	${PATCH_DIR}/z0005-tcp-tcp_fragment-should-apply-sane-memory-limits.patch \
+	${PATCH_DIR}/z0006-tcp-add-tcp_min_snd_mss-sysctl.patch \
+	${PATCH_DIR}/z0007-tcp-enforce-tcp_min_snd_mss-in-tcp_mtu_probing.patch \
 "
