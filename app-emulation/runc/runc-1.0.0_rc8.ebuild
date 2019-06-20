@@ -1,44 +1,51 @@
-# Copyright 1999-2018 Gentoo Foundation
+# Copyright 1999-2019 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
+EGO_PN="github.com/opencontainers/${PN}"
 
-GITHUB_URI="github.com/opencontainers/runc"
-COREOS_GO_PACKAGE="${GITHUB_URI}"
+COREOS_GO_PACKAGE="${EGO_PN}"
 COREOS_GO_VERSION="go1.10"
 # the commit of runc that docker uses.
-# see https://github.com/docker/docker-ce/blob/v18.06.3-ce/components/engine/hack/dockerfile/install/runc.installer#L4
+# see https://github.com/docker/docker-ce/blob/v19.03.1/components/engine/hack/dockerfile/install/runc.installer#L7
 # Update the patch number when this commit is changed (i.e. the _p in the ebuild).
 # The patch version is arbitrarily the number of commits since the tag version
 # specified in the ebuild name. For example:
-# $ git log --oneline v1.0.0-rc5..${COMMIT_ID} | wc -l
-COMMIT_ID="a592beb5bc4c4092b1b1bac971afed27687340c5"
+# $ git log --oneline v1.0.0-rc8..${RUNC_COMMIT} | wc -l
+RUNC_COMMIT="425e105d5a03fabd737a126ad93d62a9eeede87f"
 
 inherit eutils flag-o-matic coreos-go vcs-snapshot
 
-SRC_URI="https://${GITHUB_URI}/archive/${COMMIT_ID}.tar.gz -> ${P}.tar.gz"
+SRC_URI="https://${EGO_PN}/archive/${RUNC_COMMIT}.tar.gz -> ${P}.tar.gz"
 KEYWORDS="amd64 arm64"
 
-DESCRIPTION="runc container cli tools (docker fork)"
+DESCRIPTION="runc container cli tools"
 HOMEPAGE="http://runc.io"
 
 LICENSE="Apache-2.0"
 SLOT="0"
-IUSE="ambient apparmor hardened +seccomp selinux"
+IUSE="ambient apparmor hardened +kmem +seccomp selinux"
 
 RDEPEND="
 	apparmor? ( sys-libs/libapparmor )
 	seccomp? ( sys-libs/libseccomp )
-	!app-emulation/runc
+	!app-emulation/docker-runc
 "
 
-S=${WORKDIR}/${P}/src/${COREOS_GO_PACKAGE}
-
-RESTRICT="test"
+S=${WORKDIR}/${P}/src/${EGO_PN}
 
 src_unpack() {
 	mkdir -p "${S}"
 	tar --strip-components=1 -C "${S}" -xf "${DISTDIR}/${A}"
+}
+
+src_prepare() {
+	default
+	sed -i -e "/^GIT_BRANCH/d"\
+		-e "/^GIT_BRANCH_CLEAN/d"\
+		-e "/^COMMIT_NO/d"\
+		-e "s/COMMIT :=.*/COMMIT := ${RUNC_COMMIT}/"\
+		Makefile || die
 }
 
 PATCHES=(
@@ -57,13 +64,13 @@ src_compile() {
 		$(usex apparmor 'apparmor' '')
 		$(usex seccomp 'seccomp' '')
 		$(usex selinux 'selinux' '')
+		$(usex kmem '' 'nokmem')
 	)
 
-	GOPATH="${WORKDIR}/${P}" emake BUILDTAGS="${options[*]}" \
-		VERSION=1.0.0-rc5+dev.docker-18.06 \
-		COMMIT="${COMMIT_ID}"
+	GOPATH="${WORKDIR}/${P}" emake BUILDTAGS="${options[*]}"
 }
 
 src_install() {
 	dobin runc
+	dodoc README.md PRINCIPLES.md
 }
