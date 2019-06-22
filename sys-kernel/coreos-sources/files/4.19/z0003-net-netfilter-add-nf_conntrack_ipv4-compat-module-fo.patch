@@ -1,4 +1,4 @@
-From 5d870c204fadc10deaa25f320196e51123c612a5 Mon Sep 17 00:00:00 2001
+From 1f96d24bd46b0c9b0dec74b213aed8d8dee29380 Mon Sep 17 00:00:00 2001
 From: Benjamin Gilbert <bgilbert@redhat.com>
 Date: Fri, 26 Oct 2018 17:00:56 -0700
 Subject: [PATCH 3/3] net/netfilter: add nf_conntrack_ipv4 compat module for
