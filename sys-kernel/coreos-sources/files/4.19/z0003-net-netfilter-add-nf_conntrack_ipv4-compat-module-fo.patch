@@ -1,7 +1,7 @@
 From 83911c6129649f4f72fdc9ca28cf07d0f8bab253 Mon Sep 17 00:00:00 2001
 From: Benjamin Gilbert <bgilbert@redhat.com>
 Date: Fri, 26 Oct 2018 17:00:56 -0700
-Subject: [PATCH 3/3] net/netfilter: add nf_conntrack_ipv4 compat module for
+Subject: [PATCH 3/4] net/netfilter: add nf_conntrack_ipv4 compat module for
  kube-proxy
 
 kube-proxy won't enable ipvs unless it can modprobe nf_conntrack_ipv4 and
