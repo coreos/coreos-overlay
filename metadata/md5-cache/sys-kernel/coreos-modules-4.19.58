@@ -1,5 +1,5 @@
 DEFINED_PHASES=compile configure install postinst prepare pretend setup unpack
-DEPEND==sys-kernel/coreos-sources-4.19.57-r1
+DEPEND==sys-kernel/coreos-sources-4.19.58
 DESCRIPTION=CoreOS Linux kernel modules
 EAPI=5
 HOMEPAGE=http://www.kernel.org
@@ -8,6 +8,6 @@ KEYWORDS=amd64
 LICENSE=GPL-2 freedist
 RDEPEND=!<sys-kernel/coreos-kernel-4.6.3-r1
 RESTRICT=binchecks strip
-SLOT=0/4.19.57-r1
+SLOT=0/4.19.58
 _eclasses_=coreos-kernel	588460f26859c559935beb69c53cb5c0	eapi7-ver	756b3f27d8e46131d5cf3c51bd876446	linux-info	953c3b1c472dcadbf62098a9301327f2	multilib	1d91b03d42ab6308b5f4f6b598ed110e	portability	2b88d3ecc35035a3b8ab628b49cafb0e	savedconfig	e6948c872ff47e15a10e5ad1be15c18e	toolchain-funcs	8c7f9d80beedd16f2e5a7f612c609529
-_md5_=65a8e80a7f0402418f71511cccc542ba
+_md5_=9bfb20f0c6dec0fbb70b49ec01ba693f

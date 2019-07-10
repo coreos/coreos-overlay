@@ -1,4 +1,4 @@
-From 557eff8a6ee3d61213dc488de8faad93364319da Mon Sep 17 00:00:00 2001
+From abe03f5521e5cbe2c06760011ff8d538a2f1d349 Mon Sep 17 00:00:00 2001
 From: Vito Caputo <vito.caputo@coreos.com>
 Date: Wed, 25 Nov 2015 02:59:45 -0800
 Subject: [PATCH 1/4] kbuild: derive relative path for KBUILD_SRC from CURDIR
@@ -12,7 +12,7 @@ by some undesirable path component.
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/Makefile b/Makefile
-index 5412d556b561..5ddb6f407396 100644
+index 5dcd01cd1bf6..56c2b57f1a95 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -143,7 +143,8 @@ $(filter-out _all sub-make $(CURDIR)/Makefile, $(MAKECMDGOALS)) _all: sub-make
