@@ -1,0 +1,277 @@
+From 27c62d8543b603420e0a951f38d2fe3b8640006c Mon Sep 17 00:00:00 2001
+From: Andrew Jeddeloh <ajeddelo@redhat.com>
+Date: Mon, 22 Jul 2019 11:09:53 -0700
+Subject: [PATCH 1/2] providers: allow FetchConfig to mutate the fetcher
+
+Allow each provider's FetchConfig function to mutate the provider it
+uses. This will allow the aws platform to set the region after it has
+fetched the config.
+---
+ internal/exec/engine.go                         | 2 +-
+ internal/providers/azure/azure.go               | 2 +-
+ internal/providers/cloudstack/cloudstack.go     | 4 ++--
+ internal/providers/cmdline/cmdline.go           | 2 +-
+ internal/providers/digitalocean/digitalocean.go | 2 +-
+ internal/providers/ec2/ec2.go                   | 2 +-
+ internal/providers/file/file.go                 | 2 +-
+ internal/providers/gce/gce.go                   | 2 +-
+ internal/providers/noop/noop.go                 | 2 +-
+ internal/providers/openstack/openstack.go       | 4 ++--
+ internal/providers/packet/packet.go             | 2 +-
+ internal/providers/providers.go                 | 2 +-
+ internal/providers/qemu/qemu.go                 | 2 +-
+ internal/providers/system/system.go             | 2 +-
+ internal/providers/virtualbox/virtualbox.go     | 2 +-
+ internal/providers/vmware/vmware_amd64.go       | 4 ++--
+ internal/providers/vmware/vmware_unsupported.go | 2 +-
+ 17 files changed, 20 insertions(+), 20 deletions(-)
+
+diff --git a/internal/exec/engine.go b/internal/exec/engine.go
+index 1f7ad96..6a82c2d 100644
+--- a/internal/exec/engine.go
++++ b/internal/exec/engine.go
+@@ -196,7 +196,7 @@ func (e *Engine) fetchProviderConfig() (types.Config, error) {
+ 	var r report.Report
+ 	var err error
+ 	for _, fetcher := range fetchers {
+-		cfg, r, err = fetcher(*e.Fetcher)
++		cfg, r, err = fetcher(e.Fetcher)
+ 		if err != providers.ErrNoProvider {
+ 			// successful, or failed on another error
+ 			break
+diff --git a/internal/providers/azure/azure.go b/internal/providers/azure/azure.go
+index b7cfa73..b29e7c6 100644
+--- a/internal/providers/azure/azure.go
++++ b/internal/providers/azure/azure.go
+@@ -51,7 +51,7 @@ const (
+ 	CDS_DISC_OK
+ )
+ 
+-func FetchConfig(f resource.Fetcher) (types.Config, report.Report, error) {
++func FetchConfig(f *resource.Fetcher) (types.Config, report.Report, error) {
+ 	devicePath := filepath.Join(distro.DiskByIDDir(), configDeviceID)
+ 
+ 	logger := f.Logger
+diff --git a/internal/providers/cloudstack/cloudstack.go b/internal/providers/cloudstack/cloudstack.go
+index 26d2550..b8a2e23 100644
+--- a/internal/providers/cloudstack/cloudstack.go
++++ b/internal/providers/cloudstack/cloudstack.go
+@@ -45,7 +45,7 @@ const (
+ 	LeaseRetryInterval      = 500 * time.Millisecond
+ )
+ 
+-func FetchConfig(f resource.Fetcher) (types.Config, report.Report, error) {
++func FetchConfig(f *resource.Fetcher) (types.Config, report.Report, error) {
+ 	var data []byte
+ 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+ 
+@@ -191,7 +191,7 @@ func fetchConfigFromDevice(logger *log.Logger, ctx context.Context, label string
+ 	return ioutil.ReadFile(filepath.Join(mnt, configDriveUserdataPath))
+ }
+ 
+-func fetchConfigFromMetadataService(f resource.Fetcher) ([]byte, error) {
++func fetchConfigFromMetadataService(f *resource.Fetcher) ([]byte, error) {
+ 	addr, err := getDHCPServerAddress()
+ 	if err != nil {
+ 		return nil, err
+diff --git a/internal/providers/cmdline/cmdline.go b/internal/providers/cmdline/cmdline.go
+index 1a393fb..505e48f 100644
+--- a/internal/providers/cmdline/cmdline.go
++++ b/internal/providers/cmdline/cmdline.go
+@@ -36,7 +36,7 @@ const (
+ 	cmdlineUrlFlag       = "ignition.config.url"
+ )
+ 
+-func FetchConfig(f resource.Fetcher) (types.Config, report.Report, error) {
++func FetchConfig(f *resource.Fetcher) (types.Config, report.Report, error) {
+ 	url, err := readCmdline(f.Logger)
+ 	if err != nil {
+ 		return types.Config{}, report.Report{}, err
+diff --git a/internal/providers/digitalocean/digitalocean.go b/internal/providers/digitalocean/digitalocean.go
+index 9fdd72a..2acfea4 100644
+--- a/internal/providers/digitalocean/digitalocean.go
++++ b/internal/providers/digitalocean/digitalocean.go
+@@ -34,7 +34,7 @@ var (
+ 	}
+ )
+ 
+-func FetchConfig(f resource.Fetcher) (types.Config, report.Report, error) {
++func FetchConfig(f *resource.Fetcher) (types.Config, report.Report, error) {
+ 	data, err := f.FetchToBuffer(userdataUrl, resource.FetchOptions{
+ 		Headers: resource.ConfigHeaders,
+ 	})
+diff --git a/internal/providers/ec2/ec2.go b/internal/providers/ec2/ec2.go
+index 19d5d8b..535398e 100644
+--- a/internal/providers/ec2/ec2.go
++++ b/internal/providers/ec2/ec2.go
+@@ -40,7 +40,7 @@ var (
+ 	}
+ )
+ 
+-func FetchConfig(f resource.Fetcher) (types.Config, report.Report, error) {
++func FetchConfig(f *resource.Fetcher) (types.Config, report.Report, error) {
+ 	data, err := f.FetchToBuffer(userdataUrl, resource.FetchOptions{
+ 		Headers: resource.ConfigHeaders,
+ 	})
+diff --git a/internal/providers/file/file.go b/internal/providers/file/file.go
+index b2d2766..245af8d 100644
+--- a/internal/providers/file/file.go
++++ b/internal/providers/file/file.go
+@@ -29,7 +29,7 @@ const (
+ 	defaultFilename   = "config.ign"
+ )
+ 
+-func FetchConfig(f resource.Fetcher) (types.Config, report.Report, error) {
++func FetchConfig(f *resource.Fetcher) (types.Config, report.Report, error) {
+ 	filename := os.Getenv(cfgFilenameEnvVar)
+ 	if filename == "" {
+ 		filename = defaultFilename
+diff --git a/internal/providers/gce/gce.go b/internal/providers/gce/gce.go
+index 991745c..c1f2b75 100644
+--- a/internal/providers/gce/gce.go
++++ b/internal/providers/gce/gce.go
+@@ -36,7 +36,7 @@ var (
+ 	metadataHeaderVal = "Google"
+ )
+ 
+-func FetchConfig(f resource.Fetcher) (types.Config, report.Report, error) {
++func FetchConfig(f *resource.Fetcher) (types.Config, report.Report, error) {
+ 	headers := resource.ConfigHeaders
+ 	headers.Set(metadataHeaderKey, metadataHeaderVal)
+ 	data, err := f.FetchToBuffer(userdataUrl, resource.FetchOptions{
+diff --git a/internal/providers/noop/noop.go b/internal/providers/noop/noop.go
+index c972f47..d9b5798 100644
+--- a/internal/providers/noop/noop.go
++++ b/internal/providers/noop/noop.go
+@@ -23,7 +23,7 @@ import (
+ 	"github.com/coreos/ignition/internal/resource"
+ )
+ 
+-func FetchConfig(f resource.Fetcher) (types.Config, report.Report, error) {
++func FetchConfig(f *resource.Fetcher) (types.Config, report.Report, error) {
+ 	f.Logger.Debug("noop provider fetching empty config")
+ 	return types.Config{}, report.Report{}, errors.ErrEmpty
+ }
+diff --git a/internal/providers/openstack/openstack.go b/internal/providers/openstack/openstack.go
+index 0d90c64..723c10c 100644
+--- a/internal/providers/openstack/openstack.go
++++ b/internal/providers/openstack/openstack.go
+@@ -50,7 +50,7 @@ var (
+ 	}
+ )
+ 
+-func FetchConfig(f resource.Fetcher) (types.Config, report.Report, error) {
++func FetchConfig(f *resource.Fetcher) (types.Config, report.Report, error) {
+ 	var data []byte
+ 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+ 
+@@ -129,7 +129,7 @@ func fetchConfigFromDevice(logger *log.Logger, ctx context.Context, path string)
+ 	return ioutil.ReadFile(filepath.Join(mnt, configDriveUserdataPath))
+ }
+ 
+-func fetchConfigFromMetadataService(f resource.Fetcher) ([]byte, error) {
++func fetchConfigFromMetadataService(f *resource.Fetcher) ([]byte, error) {
+ 	res, err := f.FetchToBuffer(metadataServiceUrl, resource.FetchOptions{
+ 		Headers: resource.ConfigHeaders,
+ 	})
+diff --git a/internal/providers/packet/packet.go b/internal/providers/packet/packet.go
+index 4a010f8..a81ffb9 100644
+--- a/internal/providers/packet/packet.go
++++ b/internal/providers/packet/packet.go
+@@ -51,7 +51,7 @@ var (
+ 	}
+ )
+ 
+-func FetchConfig(f resource.Fetcher) (types.Config, report.Report, error) {
++func FetchConfig(f *resource.Fetcher) (types.Config, report.Report, error) {
+ 	// Packet's metadata service returns "Not Acceptable" when queried
+ 	// with the default Accept header.
+ 	headers := resource.ConfigHeaders
+diff --git a/internal/providers/providers.go b/internal/providers/providers.go
+index 99933cc..8a9c47c 100644
+--- a/internal/providers/providers.go
++++ b/internal/providers/providers.go
+@@ -27,6 +27,6 @@ var (
+ 	ErrNoProvider = errors.New("config provider was not online")
+ )
+ 
+-type FuncFetchConfig func(f resource.Fetcher) (types.Config, report.Report, error)
++type FuncFetchConfig func(f *resource.Fetcher) (types.Config, report.Report, error)
+ type FuncNewFetcher func(logger *log.Logger) (resource.Fetcher, error)
+ type FuncPostStatus func(stageName string, f resource.Fetcher, e error) error
+diff --git a/internal/providers/qemu/qemu.go b/internal/providers/qemu/qemu.go
+index 46df749..676b00c 100644
+--- a/internal/providers/qemu/qemu.go
++++ b/internal/providers/qemu/qemu.go
+@@ -32,7 +32,7 @@ const (
+ 	firmwareConfigPath = "/sys/firmware/qemu_fw_cfg/by_name/opt/com.coreos/config/raw"
+ )
+ 
+-func FetchConfig(f resource.Fetcher) (types.Config, report.Report, error) {
++func FetchConfig(f *resource.Fetcher) (types.Config, report.Report, error) {
+ 	_, err := f.Logger.LogCmd(exec.Command("modprobe", "qemu_fw_cfg"), "loading QEMU firmware config module")
+ 	if err != nil {
+ 		return types.Config{}, report.Report{}, err
+diff --git a/internal/providers/system/system.go b/internal/providers/system/system.go
+index c728caf..49d2f0e 100644
+--- a/internal/providers/system/system.go
++++ b/internal/providers/system/system.go
+@@ -42,7 +42,7 @@ func FetchDefaultConfig(logger *log.Logger) (types.Config, report.Report, error)
+ 	return fetchConfig(logger, defaultFilename)
+ }
+ 
+-func FetchConfig(f resource.Fetcher) (types.Config, report.Report, error) {
++func FetchConfig(f *resource.Fetcher) (types.Config, report.Report, error) {
+ 	return fetchConfig(f.Logger, userFilename)
+ }
+ 
+diff --git a/internal/providers/virtualbox/virtualbox.go b/internal/providers/virtualbox/virtualbox.go
+index ba1f298..f73d451 100644
+--- a/internal/providers/virtualbox/virtualbox.go
++++ b/internal/providers/virtualbox/virtualbox.go
+@@ -35,7 +35,7 @@ const (
+ 	partUUID = "99570a8a-f826-4eb0-ba4e-9dd72d55ea13"
+ )
+ 
+-func FetchConfig(f resource.Fetcher) (types.Config, report.Report, error) {
++func FetchConfig(f *resource.Fetcher) (types.Config, report.Report, error) {
+ 	f.Logger.Debug("Attempting to read config drive")
+ 	rawConfig, err := ioutil.ReadFile(filepath.Join(distro.DiskByPartUUIDDir(), partUUID))
+ 	if os.IsNotExist(err) {
+diff --git a/internal/providers/vmware/vmware_amd64.go b/internal/providers/vmware/vmware_amd64.go
+index 19e1ec4..7fa0f31 100644
+--- a/internal/providers/vmware/vmware_amd64.go
++++ b/internal/providers/vmware/vmware_amd64.go
+@@ -29,7 +29,7 @@ import (
+ 	"github.com/vmware/vmw-ovflib"
+ )
+ 
+-func FetchConfig(f resource.Fetcher) (types.Config, report.Report, error) {
++func FetchConfig(f *resource.Fetcher) (types.Config, report.Report, error) {
+ 	if !vmcheck.IsVirtualWorld() {
+ 		return types.Config{}, report.Report{}, providers.ErrNoProvider
+ 	}
+@@ -49,7 +49,7 @@ func FetchConfig(f resource.Fetcher) (types.Config, report.Report, error) {
+ 	return util.ParseConfig(f.Logger, decodedData)
+ }
+ 
+-func fetchRawConfig(f resource.Fetcher) (config, error) {
++func fetchRawConfig(f *resource.Fetcher) (config, error) {
+ 	info := rpcvmx.NewConfig()
+ 
+ 	var ovfData string
+diff --git a/internal/providers/vmware/vmware_unsupported.go b/internal/providers/vmware/vmware_unsupported.go
+index cbcc322..999eb66 100644
+--- a/internal/providers/vmware/vmware_unsupported.go
++++ b/internal/providers/vmware/vmware_unsupported.go
+@@ -27,6 +27,6 @@ import (
+ 	"github.com/coreos/ignition/internal/resource"
+ )
+ 
+-func FetchConfig(_ resource.Fetcher) (types.Config, report.Report, error) {
++func FetchConfig(_ *resource.Fetcher) (types.Config, report.Report, error) {
+ 	return types.Config{}, report.Report{}, errors.New("vmware provider is not supported on this architecture")
+ }
+-- 
+2.21.0
+
