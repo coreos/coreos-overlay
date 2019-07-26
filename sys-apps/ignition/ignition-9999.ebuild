@@ -40,6 +40,11 @@ RDEPEND="
 
 RDEPEND+="${DEPEND}"
 
+PATCHES=(
+	"${FILESDIR}/0001-providers-allow-FetchConfig-to-mutate-the-fetcher.patch"
+	"${FILESDIR}/0002-providers-aws-get-region-after-getting-config.patch"
+)
+
 src_compile() {
 	export GO15VENDOREXPERIMENT="1"
 	GO_LDFLAGS="-X github.com/coreos/ignition/internal/version.Raw=$(git describe --dirty)" || die
