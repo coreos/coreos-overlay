@@ -1,4 +1,4 @@
-From 8dec183ef172a203a3bb84796a8d61bfe307d172 Mon Sep 17 00:00:00 2001
+From 5cf345692c9b9ce89e0b521c0b4b220c801dfb59 Mon Sep 17 00:00:00 2001
 From: Benjamin Gilbert <bgilbert@redhat.com>
 Date: Tue, 9 Jul 2019 19:53:49 -0400
 Subject: [PATCH 4/4] ovl: drop test for upperdir used as lowerdir
