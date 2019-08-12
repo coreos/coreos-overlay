@@ -1,34 +1,47 @@
 #cloud-config
+# REF: https://coreos.com/os/docs/latest/cloud-config.html
 
 coreos:
     units:
-      - name: exoscale-ssh-key.service
+      - name: exoscale-public-keys.service
         command: restart
         runtime: yes
         content: |
           [Unit]
-          Description=Sets SSH key from metadata
+          Description=Set Exoscale public-keys (cloud-init)
 
           [Service]
           Type=oneshot
           StandardOutput=journal+console
-          ExecStart=/usr/share/oem/bin/exoscale-ssh-key
-      - name: exoscale-cloudinit.service
+          ExecStart=/usr/share/oem/bin/exoscale-public-keys
+      - name: exoscale-meta-data.service
         command: restart
         runtime: yes
         content: |
           [Unit]
-          Description=Cloudinit from exoscale (cloudstack-style) metadata
+          Description=Set Exoscale meta-data (cloud-init)
           Requires=coreos-setup-environment.service
           After=coreos-setup-environment.service
 
           [Service]
           Type=oneshot
-          EnvironmentFile=/etc/environment
-          ExecStart=/usr/share/oem/bin/exoscale-coreos-cloudinit
+          ExecStart=/usr/share/oem/bin/exoscale-meta-data
+      - name: exoscale-user-data.service
+        command: restart
+        runtime: yes
+        content: |
+          [Unit]
+          Description=Set Exoscale user-data (cloud-init)
+          Requires=exoscale-meta-data.service
+          After=exoscale-meta-data.service
+
+          [Service]
+          Type=oneshot
+          ExecStart=/usr/share/oem/bin/exoscale-user-data
     oem:
       id: exoscale
       name: exoscale
-      version-id: @@OEM_VERSION_ID@@
-      home-url: http://www.exoscale.ch
-      bug-report-url: https://github.com/coreos/coreos-overlay
+      version-id: 0.0.6
+      home-url: https://www.exoscale.com
+      bug-report-url: https://portal.exoscale.com/tickets
+

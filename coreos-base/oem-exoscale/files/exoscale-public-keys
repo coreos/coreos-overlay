@@ -1,0 +1,25 @@
+#!/bin/bash
+
+## Usage
+[ "${1##*-}" == 'help' ] && cat << EOF && exit 1
+USAGE: ${0##*/}
+
+SYNOPSIS:
+  Update the user's SSH authorized keys,
+  based on Exoscale provided meta-data.
+EOF
+
+
+## Update SSH authorized keys
+
+# Query Exoscale meta-data provider
+
+# ... locate provider
+. /usr/share/oem/bin/exoscale-provider
+PROVIDER_URL="$(exoscale_provider_url)"
+METADATA_URL="${PROVIDER_URL}/meta-data"
+block-until-url "${METADATA_URL}/"
+
+# Update keys
+curl --silent --fail "${METADATA_URL}/public-keys" | update-ssh-keys -a exoscale
+

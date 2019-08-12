@@ -1,0 +1,64 @@
+#!/bin/bash
+
+## Usage
+[ "${1##*-}" == 'help' ] && cat << EOF && exit 1
+USAGE: ${0##*/}
+
+SYNOPSIS:
+  Perform CoreOS cloud configuration (coreos-cloudinit),
+  based on Exoscale provided meta-data.
+EOF
+
+
+## CoreOS cloud configuration
+
+# Query Exoscale meta-data provider
+
+# ... locate provider
+. /usr/share/oem/bin/exoscale-provider
+PROVIDER_IP="$(exoscale_provider_ip)"
+PROVIDER_URL="$(exoscale_provider_url)"
+METADATA_URL="${PROVIDER_URL}/meta-data"
+block-until-url "${METADATA_URL}/"
+
+# ... retrieve meta-data
+LOCAL_HOSTNAME="$(curl --silent --fail "${METADATA_URL}/local-hostname")"
+#PUBLIC_KEYS="$(curl --silent --fail "${METADATA_URL}/public-keys")"  # let it be handled separately by the 'exoscale-public-keys' script
+
+# ... retrieve password
+PASSWORD="$(curl --silent --fail --header 'DomU_Request: send_my_password' "http://${PROVIDER_IP}:8080")"
+[ "${PASSWORD}" == 'saved_password' ] && PASSWORD=''
+
+# Build CoreOS cloud configuration file
+# REF: https://coreos.com/os/docs/latest/cloud-config.html
+
+# ... temporary file
+TMP_CLOUDCONFIG="$(mktemp)"
+[ -z "${TMP_CLOUDCONFIG}" ] && echo "[${0##*/}]: ERROR: Failed to create temporary file" >&2 && exit 1
+trap "rm -f '${TMP_CLOUDCONFIG}'" EXIT
+echo '#cloud-config' > "${TMP_CLOUDCONFIG}"
+
+# ... hostname
+if [ -n "${LOCAL_HOSTNAME}" ]; then
+  cat >> "${TMP_CLOUDCONFIG}" << EOF
+hostname: "${LOCAL_HOSTNAME}"
+EOF
+fi
+
+# ... password
+if [ -n "${PASSWORD}" ]; then
+  PASSWORD_HASH="$(mkpasswd --method=SHA-512 --rounds=100000 "${PASSWORD}")"
+  cat >> "${TMP_CLOUDCONFIG}" << EOF
+users:
+  - name: "core"
+    passwd: "${PASSWORD_HASH}"
+EOF
+fi
+
+# Cloud configuration
+coreos-cloudinit --from-file="${TMP_CLOUDCONFIG}" || exit $?
+# ... clear password
+if [ -n "${PASSWORD}" ]; then
+  curl --silent --fail --header 'DomU_Request: saved_password' "http://${PROVIDER_IP}:8080" >/dev/null
+fi
+

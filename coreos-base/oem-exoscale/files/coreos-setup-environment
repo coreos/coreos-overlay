@@ -1,32 +1,40 @@
 #!/bin/bash
 
-ENV=$1
+## Usage
+[ $# -lt 1 -o "${1##*-}" == 'help' ] && cat << EOF && exit 1
+USAGE: ${0##*/} <environment-file>
 
-if [[ -z "$ENV" ]]; then
-    echo "usage: $0 /etc/environment" >&2
-    exit 1
-fi
+SYNOPSIS:
+  Update the COREOS_* environment variables in the given file,
+  based on Exoscale provided meta-data.
+EOF
+
+# Arguments
+ENV="${1}"
+
+
+## Update environment
 
 # Make sure that the file is writable
-touch $ENV
-if [[ $? -ne 0 ]]; then
-    echo "$0: unable to modify ${ENV}" >&2
-    exit 1
-fi
+touch "${ENV}"
+[ $? -ne 0 ] && echo "[${0##*/}] ERROR: Unable to modify environment file (${ENV})" && exit 1
 
-sed -i -e '/^COREOS_PUBLIC_IPV4=/d' \
-    -e '/^COREOS_PRIVATE_IPV4=/d' \
-    "${ENV}"
+# Delete existing environment
+sed -i '/^\s*COREOS_PUBLIC_IPV[46]\s*=/d;/^\s*COREOS_PRIVATE_IPV[46]\s*=/d' "${ENV}"
 
-. /usr/share/oem/bin/exoscale-dhcp
+# Query Exoscale meta-data provider
 
-DHCP_SERVER=$(get_dhcp_ip)
-METADATA_URL="http://${DHCP_SERVER}/latest/"
+# ... locate provider
+. /usr/share/oem/bin/exoscale-provider
+PROVIDER_URL="$(exoscale_provider_url)"
+METADATA_URL="${PROVIDER_URL}/meta-data"
+block-until-url "${METADATA_URL}/"
 
-block-until-url "${METADATA_URL}"
+# ... retrieve meta-data
+PUBLIC_IPV4="$(curl --silent --fail "${METADATA_URL}/public-ipv4")"
+PRIVATE_IPV4="$(curl --silent --fail "${METADATA_URL}/local-ipv4")"
 
-PUBLIC_IP=$(curl --fail -s "${METADATA_URL}public-ipv4")
-echo COREOS_PUBLIC_IPV4=${PUBLIC_IP} >> $ENV
+# Update environment
+[ -n "${PUBLIC_IPV4}" ] && echo "COREOS_PUBLIC_IPV4=${PUBLIC_IPV4}" >> "${ENV}"
+[ -n "${PRIVATE_IPV4}" ] && echo "COREOS_PRIVATE_IPV4=${PRIVATE_IPV4}" >> "${ENV}"
 
-PRIVATE_IP=$(curl --fail -s "${METADATA_URL}local-ipv4")
-echo COREOS_PRIVATE_IPV4=${PRIVATE_IP} >> $ENV

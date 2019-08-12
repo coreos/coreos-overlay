@@ -1,0 +1,78 @@
+#!/bin/bash
+
+## Usage
+[ "${1##*-}" == 'help' ] && cat << EOF && exit 1
+USAGE: ${0##*/}
+
+SYNOPSIS:
+  Locate the Exoscale meta-data provider based on obtained DHCP leases data.
+  This script can also be sourced to define the corresponding functions:
+   - exoscale_provider_ip
+   - exoscale_provider_url
+EOF
+
+
+## Parameters
+EXOSCALE_PROVIDER_VERSION='1.0'
+
+
+## Functions
+
+# Retrieve the Exoscale provider IP address
+: ${EXOSCALE_PROVIDER_IP:=}
+exoscale_provider_ip() {
+    if [ -n "${EXOSCALE_PROVIDER_IP}" ]; then
+        echo "${EXOSCALE_PROVIDER_IP}"
+        return
+    fi
+    # Look for a valid HTTP meta-data source
+    local tentative_provider_ip
+    local metadata_url
+    local cloud_identifier
+    while true; do
+        # Canonical link-local IP address
+        tentative_provider_ip='169.254.169.254'
+        metadata_url="http://${tentative_provider_ip}/${EXOSCALE_PROVIDER_VERSION}/meta-data"
+        cloud_identifier="$(curl --silent --fail --connect-timeout 1.0 "${metadata_url}/cloud-identifier")"
+        if [ $? -eq 0 -a -n "${cloud_identifier}" ]; then
+            EXOSCALE_PROVIDER_IP="${tentative_provider_ip}"
+            break
+        fi
+
+        # DHCP server IP address
+        for leasefile in $(find '/run/systemd/netif/leases' -type f -size +1c); do
+            tentative_provider_ip="$(cat "${leasefile}" | awk -F'=' '/SERVER_ADDRESS/ { print $2 }')"
+            if [ -n "${tentative_provider_ip}" ]; then
+                metadata_url="http://${tentative_provider_ip}/${EXOSCALE_PROVIDER_VERSION}/meta-data"
+                cloud_identifier="$(curl --silent --fail --connect-timeout 1.0 "${metadata_url}/cloud-identifier")"
+                if [ $? -eq 0 -a -n "${cloud_identifier}" ]; then
+                    EXOSCALE_PROVIDER_IP="${tentative_provider_ip}"
+                    break 2
+                fi
+            fi
+        done
+
+        # No luck
+        echo "[${0##*/}] WARNING: Failed to locate Exoscale meta-data provider; retrying..." >&2
+        sleep .5
+    done
+    [ -n "${EXOSCALE_PROVIDER_IP}" ] && echo "${EXOSCALE_PROVIDER_IP}"
+}
+
+# Retrieve the Exoscale provider (root) URL
+: ${EXOSCALE_PROVIDER_URL:=}
+exoscale_provider_url() {
+    EXOSCALE_PROVIDER_URL="http://$(exoscale_provider_ip)/${EXOSCALE_PROVIDER_VERSION}"
+    echo "${EXOSCALE_PROVIDER_URL}"
+}
+
+
+# Main
+if [ "${BASH_LINENO[0]}" == '0' ]; then
+  cat << EOF
+EXOSCALE_PROVIDER_VERSION='${EXOSCALE_PROVIDER_VERSION}'
+EXOSCALE_PROVIDER_IP='$(exoscale_provider_ip)'
+EXOSCALE_PROVIDER_URL='$(exoscale_provider_url)'
+EOF
+fi
+

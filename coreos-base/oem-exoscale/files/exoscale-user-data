@@ -1,0 +1,25 @@
+#!/bin/bash
+
+## Usage
+[ "${1##*-}" == 'help' ] && cat << EOF && exit 1
+USAGE: ${0##*/}
+
+SYNOPSIS:
+  Perform CoreOS cloud configuration (coreos-cloudinit),
+  based on Exoscale provided user-data.
+EOF
+
+
+## CoreOS cloud configuration
+
+# Query Exoscale meta-data provider
+
+# ... locate provider
+. /usr/share/oem/bin/exoscale-provider
+PROVIDER_URL="$(exoscale_provider_url)"
+USERDATA_URL="${PROVIDER_URL}/user-data"
+block-until-url "${USERDATA_URL}"
+
+# Cloud configuration
+coreos-cloudinit --from-url="${USERDATA_URL}"
+

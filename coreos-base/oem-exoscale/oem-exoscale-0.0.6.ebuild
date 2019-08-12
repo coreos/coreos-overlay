@@ -26,9 +26,10 @@ src_prepare() {
 
 src_install() {
 	into "/usr/share/oem"
-	dobin "${FILESDIR}/exoscale-dhcp"
-	dobin "${FILESDIR}/exoscale-ssh-key"
-	dobin "${FILESDIR}/exoscale-coreos-cloudinit"
+	dobin "${FILESDIR}/exoscale-provider"
+	dobin "${FILESDIR}/exoscale-public-keys"
+	dobin "${FILESDIR}/exoscale-meta-data"
+	dobin "${FILESDIR}/exoscale-user-data"
 	dobin "${FILESDIR}/coreos-setup-environment"
 
 	insinto "/usr/share/oem"
