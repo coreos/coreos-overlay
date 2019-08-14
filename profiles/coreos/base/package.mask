@@ -18,3 +18,6 @@
 # Since version 2, it tries to write liblto symlinks with absolute paths that
 # don't work when building for the board root directories.
 >=sys-devel/gcc-config-2
+
+# binutil 2.31.x and lower can't read files handled by 2.32.x+
+<sys-devel/binutils-2.32.0
