@@ -66,6 +66,7 @@ src_prepare() {
 	sed -i -e 's|unix-group:wheel|unix-user:0|' src/polkitbackend/*-default.rules || die #401513
 	epatch ${FILESDIR}/polkit-0.113-gir-cross-compile.patch
 	epatch ${FILESDIR}/polkit-0.113-allow-negative-uids-gids.patch
+	epatch ${FILESDIR}/polkit-0.113-allow-uid-of-1-for-a-PolkitUnixProcess.patch
 }
 
 src_configure() {
