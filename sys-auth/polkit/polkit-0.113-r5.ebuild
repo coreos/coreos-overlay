@@ -67,6 +67,7 @@ src_prepare() {
 	epatch ${FILESDIR}/polkit-0.113-gir-cross-compile.patch
 	epatch ${FILESDIR}/polkit-0.113-allow-negative-uids-gids.patch
 	epatch ${FILESDIR}/polkit-0.113-allow-uid-of-1-for-a-PolkitUnixProcess.patch
+	epatch ${FILESDIR}/polkit-0.113-fix-CVE-2018-1116-Trusting-client-supplied-UID.patch
 }
 
 src_configure() {
