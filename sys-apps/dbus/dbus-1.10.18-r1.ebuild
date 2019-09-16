@@ -75,6 +75,7 @@ src_prepare() {
 		bus/test-main.c || die
 
 	eapply "${FILESDIR}/${PN}-enable-elogind.patch"
+	eapply "${FILESDIR}/CVE-2019-12749.patch"
 
 	eapply_user
 
