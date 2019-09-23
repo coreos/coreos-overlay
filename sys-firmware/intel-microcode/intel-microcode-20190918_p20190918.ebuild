@@ -1,7 +1,7 @@
 # Copyright 1999-2019 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI="6"
+EAPI="7"
 
 inherit linux-info toolchain-funcs mount-boot
 
@@ -24,7 +24,7 @@ KEYWORDS="-* amd64 x86"
 IUSE="hostonly initramfs +split-ucode vanilla"
 REQUIRED_USE="|| ( initramfs split-ucode )"
 
-DEPEND="sys-apps/iucode_tool"
+BDEPEND="sys-apps/iucode_tool"
 
 # !<sys-apps/microcode-ctl-1.17-r2 due to bug #268586
 RDEPEND="hostonly? ( sys-apps/iucode_tool )"
@@ -100,10 +100,10 @@ src_install() {
 
 	# The earlyfw cpio needs to be in /boot because it must be loaded before
 	# rootfs is mounted.
-	use initramfs && dodir /boot && opts+=( --write-earlyfw="${ED%/}"/boot/intel-uc.img )
+	use initramfs && dodir /boot && opts+=( --write-earlyfw="${ED}/boot/intel-uc.img" )
 
 	keepdir /lib/firmware/intel-ucode
-	opts+=( --write-firmware="${ED%/}/lib/firmware/intel-ucode" )
+	opts+=( --write-firmware="${ED}/lib/firmware/intel-ucode" )
 
 	iucode_tool \
 		"${opts[@]}" \
@@ -126,7 +126,7 @@ pkg_preinst() {
 	# Make sure /boot is available if needed.
 	use initramfs && mount-boot_pkg_preinst
 
-	local _initramfs_file="${ED%/}/boot/intel-uc.img"
+	local _initramfs_file="${ED}/boot/intel-uc.img"
 
 	if use hostonly; then
 		# While this output looks redundant we do this check to detect
@@ -157,20 +157,20 @@ pkg_preinst() {
 		use initramfs && opts+=( --write-earlyfw=${_initramfs_file} )
 
 		if use split-ucode; then
-			opts+=( --write-firmware="${ED%/}/lib/firmware/intel-ucode" )
+			opts+=( --write-firmware="${ED}/lib/firmware/intel-ucode" )
 		fi
 
-		opts+=( "${ED%/}"/lib/firmware/intel-ucode-temp )
+		opts+=( "${ED}/lib/firmware/intel-ucode-temp" )
 
-		mv "${ED%/}"/lib/firmware/intel-ucode{,-temp} || die
+		mv "${ED}"/lib/firmware/intel-ucode{,-temp} || die
 		keepdir /lib/firmware/intel-ucode
 
 		iucode_tool "${opts[@]}" || die "iucode_tool ${opts[@]}"
 
-		rm -r "${ED%/}"/lib/firmware/intel-ucode-temp || die
+		rm -r "${ED}"/lib/firmware/intel-ucode-temp || die
 
 	elif ! use split-ucode; then # hostonly disabled
-		rm -r "${ED%/}"/lib/firmware/intel-ucode || die
+		rm -r "${ED}"/lib/firmware/intel-ucode || die
 	fi
 
 	# Because it is possible that this package will install not one single file
@@ -181,7 +181,7 @@ pkg_preinst() {
 	if use initramfs && [[ -s "${_initramfs_file}" ]]; then
 		_has_installed_something="yes"
 	elif use split-ucode; then
-		_has_installed_something=$(find "${ED%/}/lib/firmware/intel-ucode" -maxdepth 0 -not -empty -exec echo yes \;)
+		_has_installed_something=$(find "${ED}/lib/firmware/intel-ucode" -maxdepth 0 -not -empty -exec echo yes \;)
 	fi
 
 	if use hostonly && [[ -n "${_has_installed_something}" ]]; then
@@ -241,7 +241,7 @@ pkg_postinst() {
 		ewarn "MICROCODE_BLACKLIST or MICROCODE_SIGNATURES, you maybe have unintentionally"
 		ewarn "re-enabled those microcodes...!"
 		ewarn ""
-		ewarn "Check \"${EROOT%/}/usr/share/doc/${PN}-*/releasenot*\" if your microcode update"
+		ewarn "Check \"${EROOT}/usr/share/doc/${PN}-*/releasenot*\" if your microcode update"
 		ewarn "requires additional kernel patches or not."
 	fi
 }
