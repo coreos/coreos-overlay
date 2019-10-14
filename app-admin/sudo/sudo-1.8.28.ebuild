@@ -22,7 +22,7 @@ else
 	SRC_URI="https://www.sudo.ws/sudo/dist/${uri_prefix}${MY_P}.tar.gz
 		ftp://ftp.sudo.ws/pub/sudo/${uri_prefix}${MY_P}.tar.gz"
 	if [[ ${PV} != *_beta* ]] && [[ ${PV} != *_rc* ]] ; then
-		KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~sparc-solaris"
+		KEYWORDS="~alpha amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~sparc-solaris"
 	fi
 fi
 
@@ -54,7 +54,6 @@ RDEPEND="
 	${DEPEND}
 	>=app-misc/editor-wrapper-3
 	virtual/editor
-	ldap? ( dev-lang/perl )
 	pam? ( sys-auth/pambase )
 	selinux? ( sec-policy/selinux-sudo )
 	sendmail? ( virtual/mta )
@@ -186,9 +185,6 @@ src_install() {
 		insinto /etc
 		doins "${T}"/ldap.conf.sudo
 		fperms 0440 /etc/ldap.conf.sudo
-
-		insinto /etc/openldap/schema
-		newins doc/schema.OpenLDAP sudo.schema
 	fi
 
 	pamd_mimic system-auth sudo auth account session
