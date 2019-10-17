@@ -6,6 +6,8 @@ EAPI=7
 AUTOTOOLS_AUTORECONF=yes
 AUTOTOOLS_IN_SOURCE_BUILD=yes
 
+COREOS_GO_VERSION=go1.12
+
 inherit autotools flag-o-matic systemd toolchain-funcs multilib
 inherit cros-workon coreos-go-depend
 
