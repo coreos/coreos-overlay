@@ -1,7 +1,7 @@
 # Copyright 1999-2019 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI="6"
+EAPI="7"
 
 inherit toolchain-funcs flag-o-matic
 
@@ -14,8 +14,8 @@ SRC_URI="https://www.iana.org/time-zones/repository/releases/tzdata${data_ver}.t
 
 LICENSE="BSD public-domain"
 SLOT="0"
-KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~x86-fbsd ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~x64-solaris"
-IUSE="nls leaps_timezone elibc_FreeBSD"
+KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 ~riscv s390 sh sparc x86 ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~x64-solaris"
+IUSE="nls leaps-timezone elibc_FreeBSD"
 
 DEPEND="nls? ( virtual/libintl )"
 RDEPEND="${DEPEND}
@@ -56,7 +56,7 @@ src_configure() {
 
 _emake() {
 	emake \
-		REDO=$(usex leaps_timezone posix_right posix_only) \
+		REDO=$(usex leaps-timezone posix_right posix_only) \
 		TZDATA_TEXT= \
 		TOPDIR="${EPREFIX}" \
 		ZICDIR='$(TOPDIR)/usr/bin' \
@@ -85,7 +85,7 @@ src_compile() {
 
 src_test() {
 	# VALIDATE_ENV is used for extended/web based tests.  Punt on them.
-	emake -j1 check VALIDATE_ENV=true
+	emake check VALIDATE_ENV=true
 }
 
 src_install() {
