@@ -1,4 +1,4 @@
-From 904854feef2a05d28b51a4a0187058a5c90b0901 Mon Sep 17 00:00:00 2001
+From 7549c118ff8d6e1b85da60eabefae448cabdf229 Mon Sep 17 00:00:00 2001
 From: Benjamin Gilbert <bgilbert@redhat.com>
 Date: Fri, 26 Oct 2018 17:00:56 -0700
 Subject: [PATCH 3/5] net/netfilter: add nf_conntrack_ipv4 compat module for
@@ -83,5 +83,5 @@ index 000000000000..8308772022c6
 +MODULE_DESCRIPTION("kube-proxy compatibility wrapper for nf_conntrack.ko");
 +MODULE_LICENSE("GPL");
 -- 
-2.17.1
+2.21.0
 
