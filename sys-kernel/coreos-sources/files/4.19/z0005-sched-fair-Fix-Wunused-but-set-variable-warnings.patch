@@ -1,4 +1,4 @@
-From 00273c35bff525e75c99a8576541ba29761ee8b8 Mon Sep 17 00:00:00 2001
+From c4b476ba60fc4fd0248de59c5d5cfd7b0a91fc7e Mon Sep 17 00:00:00 2001
 From: Joe Hohertz <joe@viafoura.com>
 Date: Tue, 5 Nov 2019 15:04:09 -0500
 Subject: [PATCH 5/5] sched/fair: Fix -Wunused-but-set-variable warnings
@@ -81,5 +81,5 @@ index cf0f4760d399..e5e8f6721872 100644
  }
  
 -- 
-2.17.1
+2.21.0
 

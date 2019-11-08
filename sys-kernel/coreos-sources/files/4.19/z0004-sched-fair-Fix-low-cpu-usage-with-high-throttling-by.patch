@@ -1,4 +1,4 @@
-From 382ea3deece2ce4ef7571b5b6635e0fa608fba42 Mon Sep 17 00:00:00 2001
+From e431109c0c49f986d7d8a495a36462e844fa2bf8 Mon Sep 17 00:00:00 2001
 From: Joe Hohertz <joe@viafoura.com>
 Date: Tue, 5 Nov 2019 15:00:41 -0500
 Subject: [PATCH 4/5] sched/fair: Fix low cpu usage with high throttling by
@@ -283,5 +283,5 @@ index 9a7c3d08b39f..62058fd6dcf6 100644
  
  	u64			throttled_clock;
 -- 
-2.17.1
+2.21.0
 
