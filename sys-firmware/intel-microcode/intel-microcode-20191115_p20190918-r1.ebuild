@@ -16,6 +16,7 @@ INTEL_SNAPSHOT="${PV/_p*}"
 DESCRIPTION="Intel IA32/IA64 microcode update data"
 HOMEPAGE="https://github.com/intel/Intel-Linux-Processor-Microcode-Data-Files http://inertiawar.com/microcode/"
 SRC_URI="https://github.com/intel/Intel-Linux-Processor-Microcode-Data-Files/archive/microcode-${INTEL_SNAPSHOT}.tar.gz
+	https://github.com/intel/Intel-Linux-Processor-Microcode-Data-Files/archive/microcode-20190918.tar.gz
 	https://dev.gentoo.org/~whissi/dist/intel-microcode/intel-microcode-collection-${COLLECTION_SNAPSHOT}.tar.xz"
 
 LICENSE="intel-ucode"
@@ -52,12 +53,16 @@ pkg_pretend() {
 src_prepare() {
 	default
 
-	if cd Intel-Linux-Processor-Microcode-Data* &>/dev/null; then
+	if cd Intel-Linux-Processor-Microcode-Data*${INTEL_SNAPSHOT} &>/dev/null; then
 		# new tarball format from GitHub
 		mv * ../ || die "Failed to move Intel-Linux-Processor-Microcode-Data*"
 		cd .. || die
-		rm -r Intel-Linux-Processor-Microcode-Data* || die
+		rm -r Intel-Linux-Processor-Microcode-Data*${INTEL_SNAPSHOT} || die
 	fi
+	# Roll back 06-55-04
+	# https://github.com/intel/Intel-Linux-Processor-Microcode-Data-Files/issues/21
+	mv Intel-Linux-Processor-Microcode-Data*/intel-ucode/06-55-04 intel-ucode/ || die
+	rm -r Intel-Linux-Processor-Microcode-Data* || die
 
 	# Prevent "invalid file format" errors from iucode_tool
 	rm -f "${S}"/intel-ucod*/list || die
