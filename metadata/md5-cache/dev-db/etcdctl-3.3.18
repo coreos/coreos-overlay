@@ -9,6 +9,6 @@ LICENSE=Apache-2.0
 REQUIRED_USE=go_version_go1_13
 RESTRICT=strip
 SLOT=0
-SRC_URI=https://github.com/etcd-io/etcd/archive/v3.3.17.tar.gz -> etcdctl-3.3.17.tar.gz
+SRC_URI=https://github.com/etcd-io/etcd/archive/v3.3.18.tar.gz -> etcdctl-3.3.18.tar.gz
 _eclasses_=coreos-go	4598ddc4b4557b56f330dfe7e694d097	coreos-go-depend	6d04011ee25af1da86f7757318d350c1	coreos-go-utils	67004337b6f831adc5f1ff107ee2f157	eutils	6e6c2737b59a4b982de6fb3ecefd87f8	flag-o-matic	a09389deba2c0a7108b581e02c7cecbf	multilib	1d91b03d42ab6308b5f4f6b598ed110e	multiprocessing	cac3169468f893670dac3e7cb940e045	toolchain-funcs	8c7f9d80beedd16f2e5a7f612c609529
 _md5_=845c92d8c2e85566c6b07b1fcb15900b
