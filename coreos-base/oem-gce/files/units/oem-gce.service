@@ -19,6 +19,8 @@ ExecStart=/usr/bin/rkt run \
     --volume=etc,kind=host,source=/etc,readOnly=false \
     --volume=home,kind=host,source=/home,readOnly=false \
     --volume=runsystemd,kind=host,source=/run/systemd,readOnly=false \
+    --volume=nsswitch,kind=host,source=/usr/share/google-oslogin/nsswitch.conf,readOnly=true \
+    --mount=volume=nsswitch,target=/usr/share/google-oslogin/nsswitch.conf \
     /usr/share/oem/coreos-oem-gce.aci
 
 ExecStopPost=/usr/bin/rkt gc --mark-only
