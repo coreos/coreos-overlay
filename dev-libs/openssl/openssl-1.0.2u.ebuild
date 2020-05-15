@@ -1,9 +1,9 @@
-# Copyright 1999-2019 Gentoo Authors
+# Copyright 1999-2020 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="7"
 
-inherit flag-o-matic toolchain-funcs multilib multilib-minimal systemd
+inherit flag-o-matic toolchain-funcs multilib multilib-minimal
 
 # openssl-1.0.2-patches-1.6 contain additional CVE patches
 # which got fixed with this release.
@@ -37,9 +37,10 @@ SRC_URI="mirror://openssl/source/${MY_P}.tar.gz
 
 LICENSE="openssl"
 SLOT="0"
-KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 ~riscv s390 sh sparc x86 ~x86-linux"
+KEYWORDS="~alpha amd64 arm arm64 hppa ~ia64 ~m68k ~mips ppc ppc64 ~riscv s390 sparc x86 ~x86-linux"
 IUSE="+asm bindist gmp kerberos rfc3779 sctp cpu_flags_x86_sse2 sslv2 +sslv3 static-libs test +tls-heartbeat vanilla zlib"
-RESTRICT="!bindist? ( bindist )"
+RESTRICT="!bindist? ( bindist )
+	!test? ( test )"
 
 RDEPEND=">=app-misc/c_rehash-1.7-r1
 	gmp? ( >=dev-libs/gmp-5.1.3-r1[static-libs(+)?,${MULTILIB_USEDEP}] )
@@ -266,6 +267,11 @@ multilib_src_install_all() {
 	# twice; once with shared lib support enabled and once without.
 	use static-libs || rm -f "${ED}"/usr/lib*/lib*.a
 
+	# create the certs directory
+	dodir ${SSL_CNF_DIR}/certs
+	cp -RP certs/* "${ED}"${SSL_CNF_DIR}/certs/ || die
+	rm -r "${ED}"${SSL_CNF_DIR}/certs/{demo,expired}
+
 	# Namespace openssl programs to prevent conflicts with other man pages
 	cd "${ED}"/usr/share/man
 	local m d s
@@ -291,15 +297,12 @@ multilib_src_install_all() {
 	dodir /etc/sandbox.d #254521
 	echo 'SANDBOX_PREDICT="/dev/crypto"' > "${ED}"/etc/sandbox.d/10openssl
 
-	# Don't keep the sample CA files and their ilk in /etc.
-	rm -r "${ED}"${SSL_CNF_DIR}
+	diropts -m0700
+	keepdir ${SSL_CNF_DIR}/private
+}
 
-	# Save the default openssl.cnf in /usr and link it into place.
-	dodir /usr/share/ssl
-	insinto /usr/share/ssl
-	doins "${S}"/apps/openssl.cnf
-	systemd_dotmpfilesd "${FILESDIR}"/openssl.conf
-
-	# Package the tmpfiles.d setup for SDK bootstrapping.
-	systemd-tmpfiles --create --root="${ED}" "${FILESDIR}"/openssl.conf
+pkg_postinst() {
+	ebegin "Running 'c_rehash ${EROOT}${SSL_CNF_DIR}/certs/' to rebuild hashes #333069"
+	c_rehash "${EROOT}${SSL_CNF_DIR}/certs" >/dev/null
+	eend $?
 }
