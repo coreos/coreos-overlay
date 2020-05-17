@@ -36,11 +36,13 @@ FLANNEL_IMAGE_TAG="${FLANNEL_IMAGE_TAG:-${FLANNEL_VER}}"
 
 require_ev_one FLANNEL_IMAGE FLANNEL_IMAGE_TAG
 
-FLANNEL_IMAGE_URL="${FLANNEL_IMAGE_URL:-${FLANNEL_IMG:-quay.io/coreos/flannel}}"
+FLANNEL_IMAGE_URL="${FLANNEL_IMAGE_URL:-${FLANNEL_IMG:-docker://quay.io/coreos/flannel}}"
 FLANNEL_IMAGE="${FLANNEL_IMAGE:-${FLANNEL_IMAGE_URL}:${FLANNEL_IMAGE_TAG}}"
 
 if [[ "${FLANNEL_IMAGE%%/*}" == "quay.io" ]]; then
 	RKT_RUN_ARGS="${RKT_RUN_ARGS} --trust-keys-from-https"
+elif [[ "${FLANNEL_IMAGE%%/*}" == "docker:" ]]; then
+	RKT_RUN_ARGS="${RKT_RUN_ARGS} --insecure-options=image"
 fi
 
 ETCD_SSL_DIR="${ETCD_SSL_DIR:-/etc/ssl/etcd}"

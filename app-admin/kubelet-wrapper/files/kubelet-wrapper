@@ -42,13 +42,15 @@ KUBELET_IMAGE_TAG="${KUBELET_IMAGE_TAG:-${KUBELET_VERSION}}"
 
 require_ev_one KUBELET_IMAGE KUBELET_IMAGE_TAG
 
-KUBELET_IMAGE_URL="${KUBELET_IMAGE_URL:-${KUBELET_ACI:-quay.io/coreos/hyperkube}}"
+KUBELET_IMAGE_URL="${KUBELET_IMAGE_URL:-${KUBELET_ACI:-docker://quay.io/coreos/hyperkube}}"
 KUBELET_IMAGE="${KUBELET_IMAGE:-${KUBELET_IMAGE_URL}:${KUBELET_IMAGE_TAG}}"
 
 RKT_RUN_ARGS="${RKT_RUN_ARGS} ${RKT_OPTS}"
 
 if [[ "${KUBELET_IMAGE%%/*}" == "quay.io" ]]; then
 	RKT_RUN_ARGS="${RKT_RUN_ARGS} --trust-keys-from-https"
+elif [[ "${KUBELET_IMAGE%%/*}" == "docker:" ]]; then
+	RKT_RUN_ARGS="${RKT_RUN_ARGS} --insecure-options=image"
 fi
 
 mkdir --parents /etc/kubernetes

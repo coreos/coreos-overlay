@@ -27,11 +27,13 @@ function require_ev_one() {
 require_ev_one ETCD_IMAGE ETCD_IMAGE_TAG
 require_ev_all ETCD_USER ETCD_DATA_DIR
 
-ETCD_IMAGE_URL="${ETCD_IMAGE_URL:-quay.io/coreos/etcd}"
+ETCD_IMAGE_URL="${ETCD_IMAGE_URL:-docker://quay.io/coreos/etcd}"
 ETCD_IMAGE="${ETCD_IMAGE:-${ETCD_IMAGE_URL}:${ETCD_IMAGE_TAG}}"
 
 if [[ "${ETCD_IMAGE%%/*}" == "quay.io" ]]; then
 	RKT_RUN_ARGS="${RKT_RUN_ARGS} --trust-keys-from-https"
+elif [[ "${ETCD_IMAGE%%/*}" == "docker:" ]]; then
+	RKT_RUN_ARGS="${RKT_RUN_ARGS} --insecure-options=image"
 fi
 
 if [[ ! -e "${ETCD_DATA_DIR}" ]]; then
